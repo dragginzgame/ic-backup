@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 command custody",
+  "description": "Retained local sidecar identity. Fresh matching lock admission is required; this record grants no paid-call or terminal-completion authority. Runtime additionally enforces UTF-8 byte bounds and canonical path spelling.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "journal", "operation_sequence", "device", "inode"],
+  "x-max-encoded-bytes": 32768,
+  "properties": {
+    "version": {"type": "integer", "const": 1},
+    "journal": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 4096,
+      "x-max-utf8-bytes": 4096,
+      "pattern": "^/(?:(?!\\.{1,2}(?:/|$))[^/\\u0000]+/)*(?!\\.{1,2}$)[^/\\u0000]+$"
+    },
+    "operation_sequence": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+    "device": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+    "inode": {"type": "integer", "minimum": 1, "maximum": 18446744073709551615}
+  }
+}

@@ -182,7 +182,8 @@ code; those commands are adapters with behavior, not compatibility aliases.
 ## 5. Repository and package layout
 
 The workspace-only root and `crates/ic-backup` library package are established.
-The first local artifact/persistence machinery is implemented; see
+Local artifact/persistence machinery, layout lifetime exclusion and conservative
+restore-reference retention are implemented; see
 [its maintained boundary](extraction-boundary.md) and
 [fresh source provenance](extraction-source.json). Capture/restore runners and
 transport are not implemented. Create the remaining proposed layout with its
@@ -460,6 +461,12 @@ replay uses retained completion evidence rather than silently reacquiring them.
 
 ## 12. Filesystem custody, durability and retention
 
+Layout lifetime exclusion and durable reference retention are implemented with
+the bounded v1 contract in [the maintained boundary](extraction-boundary.md).
+Owned command descriptor custody and exact existing-sidecar quiescence are also
+implemented with native process evidence. Backend-specific custody qualification
+and terminal reference release remain unimplemented.
+
 Preserve the existing three concrete protections: layout lifetime exclusion,
 operation journal serialization and subprocess lifetime custody. A path-local
 lock inside a directory being deleted is insufficient. Layout lifetime locks
@@ -727,7 +734,11 @@ can be delivered earlier with that ownership distinction stated explicitly.
 The initial documentation bootstrap created none of these implementation
 packages. Subsequent setup established the library and contributor tooling.
 The first extraction refreshed source hashes, traced consumers and established
-the local artifact/persistence contracts with native regression evidence.
+the local artifact/persistence contracts with native regression evidence. The
+next local batch adds stable layout locking and bounded immutable restore
+dependencies, with fresh publication/owner-death and replaced-root evidence.
+Command custody now has owned inheritance, retained v1 file identity, bounded
+finish and fresh exclusive probes with real owner/descendant exit evidence.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
 typed authority/consistency, journal and executor contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.

@@ -20,9 +20,9 @@ Keep one populated `## [Unreleased]` changelog section. A maintainer-selected
 undated numbered draft may immediately follow an empty Unreleased section.
 Preparation promotes/dates that draft while preserving historical notes.
 The maintainer completed the tagged `0.1.1` repository release; initial setup
-notes remain under undated `0.1.0`. Add subsequent completed changes to
-Unreleased. Cargo metadata remains at `0.1.1` until preparation selects its
-successor.
+notes remain under undated `0.1.0`. The maintainer selected the undated `0.1.2`
+draft for subsequent completed changes; keep Unreleased empty while it is open.
+Cargo metadata remains at `0.1.1` until release preparation.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.

@@ -1,92 +1,87 @@
 # Current handoff — 2026-10-04
 
-The maintainer committed the first local artifact/persistence extraction and
-completed the tagged `0.1.1` repository release (`4b0432c`). After `make publish`
-failed because workspace metadata still disabled publication, they requested a
-fix and committed it as `d4f7b6f`. They then reported receipt-based publication
-checks as overly brittle. `publish` and `publish-dry-run` now delegate directly
-to Cargo for the current library, while receipt/tag checks remain with the
-repository release transaction. Script, changelog and documentation changes
-remain uncommitted for review.
-Canic and sibling repositories were inspected read-only; their source and
-existing worktree state were preserved. No live IC effects, release transactions, commits
-or pushes ran during this configuration batch.
+The maintainer requested continued extraction after the layout/reference batch.
+This batch adds owned command descriptor custody and exact existing-sidecar
+quiescence admission. Both batches remain uncommitted for review on `8fc3a77`;
+the pre-existing dirty work and recovery evidence were preserved. Canic and
+sibling repositories remain read-only. No live IC effects, release transactions,
+commits, pushes or package uploads ran.
 
-A real `make publish-dry-run` passed, including standalone package compilation,
-despite the stale `0.1.1` receipt and the tag preceding HEAD. The retained log is
-`target/publish-workflow-dry-run.log`. No package was uploaded. Cargo still checks
-package cleanliness, locked dependencies and registry eligibility; commit the
-reviewed package-file changes before publishing. No extra patch release is
-required by the publish wrapper. Existing versions, lockfile, `0.1.1` tag and
-receipt remain unchanged. The earlier configuration dry-run log remains retained.
+`CommandLifetimeLock` acquires a private operation sidecar and exposes a
+validated v1 `CommandCustodyRecord` binding the canonical journal path, exact
+operation sequence and filesystem device/inode. Callers must durably retain
+this evidence and exact intent before dispatch. `spawn` consumes one local
+allowance before attempting creation, preserves stdio and consumes the command
+so no parent-side descriptor copy survives spawn. The owned child duplicate
+inherits custody; the owner remains close-on-exec. Durable paid-call authority
+and bounded backend execution remain separate contracts.
 
-Targeted shell syntax, ShellCheck and isolated release regressions passed.
-Both public Make publication targets forward exactly to Cargo with stale or
-absent receipts/tags and retain local evidence. Cargo errors propagate; strict
-stage/push receipt validation and release retry behavior remain tested.
-Regression log: `target/publish-workflow-tests.log`. No broad validation ran.
+`finish` closes owner custody without explicitly unlocking inherited holders
+and probes within a 250 ms grace period. Fresh `CommandQuiescenceGuard`
+admission opens only an existing sidecar and checks the retained device/inode;
+missing or replaced evidence never causes blind recreation. Success retains an
+exclusive non-spawning guard. The selected backend must preserve custody in
+all relevant descendants; these mechanisms do not establish remote success,
+terminal completion or permission to retry an unresolved effect. Read
+[the maintained boundary](../extraction-boundary.md) and
+[the custody schema](../contracts/command-custody.schema.json).
 
-`crates/ic-backup` now provides canonical SHA-256 checksum records, descriptor
-based no-follow artifact traversal and private staging, verified durable
-directory publication/recovery, bounded JSON reads, durable JSON create/replace
-and nonblocking journal locks. Pure checksum records live in `model`; host IO
-lives in `ops`. Read [the implemented boundary](../extraction-boundary.md) for
-the maintained contracts, caller responsibilities and remaining ownership work.
-There are no capture/restore runners, transport or CLI packages yet.
+The preceding layout/reference implementation remains intact:
+`BackupLayoutGuard` locks a stable parent sidecar and retains an open root
+identity. Model-owned v1 restore references bind exact journal/immutable-intent
+identities, bounded to 1 MiB of encoded JSON, 1,024 entries and 4,096 UTF-8 bytes
+per journal location. Retention publishes before a recoverable journal;
+exact-repeat adoption completes synchronization after a lost response. Missing
+or moved journals retain source artifacts. No reference release or prune API is
+exposed; exact terminal evidence and qualified backend custody must govern it.
 
-[Fresh source provenance](../extraction-source.json) records the inspected Canic
-working tree at HEAD `3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3`, exact file
-hashes, copied inputs/destinations and consumer references. Canic was clean at
-this inspection; the exact hashes also identify the copied bytes. The original
-[planning baseline](../source-baseline.json) remains retained. Both records are
-provenance, not test evidence. Existing Canic consumers and source remain in place.
+Fresh targeted Linux qualification passed: 48 unit tests and one public-API
+integration journey, warning-denied Clippy/docs, formatting, Rust 1.91.0
+all-target/all-feature compilation and standalone Cargo package verification.
+Actual exec/descriptor checks cover child/owner close-on-exec flags, exact file
+identity, one-spawn admission, failed spawn, unsafe/replaced/missing evidence
+and bounded finish. Acknowledged process-death cases prove that a descendant
+blocks admission after both owner and direct child exit; only final descendant
+exit permits fresh exclusive admission. The public recovery journey now retains
+custody evidence before dispatch and separately admits quiescence. Existing
+artifact, publication, layout and reference regressions also passed. This is
+native filesystem/process evidence; no PocketIC or real IC backend was used.
+No broad validation ran.
 
-Targeted fresh qualification passed on Linux: 28 unit tests and one public-API
-integration test, warning-denied Clippy and documentation, formatting, Rust
-1.91.0 all-target/all-feature compilation and standalone Cargo package
-verification. The copied regressions and new cases exercise exact checksums,
-unsafe entries, private staging, bounded reads, create-only publication and
-acknowledged child-process death around JSON/directory publication. The public
-journey retains original intent, adopts matching published bytes after a lost
-reply and rejects later corruption. This is local persistence/process evidence;
-no PocketIC or real local IC backend was used and no IC effects are qualified.
-No broad CI/release validation ran.
+Retained logs: `target/command-custody-tests.log`,
+`target/command-custody-clippy.log`, `target/command-custody-msrv.log`,
+`target/command-custody-docs.log` and `target/command-custody-package.log`.
+The registry fetch log is `target/command-custody-fetch.log`. Packaged source
+and builds remain under this repository's `target/package/`. Earlier extraction,
+layout/publication logs and evidence remain retained.
 
-Retained logs: `target/extraction-local-tests.log`, `target/extraction-msrv.log`,
-`target/extraction-docs.log` and `target/extraction-package.log`. The packaged
-crate compiled independently under `target/package/`; build artifacts remain
-retained. Earlier foundation/tooling logs and provenance remain available.
+[Command custody provenance](../command-custody-source.json) records exact
+inspected Canic source hashes, adapted destinations, consumer references,
+dependency source inspection and retained ownership.
+[Layout provenance](../layout-source.json), the original
+[planning baseline](../source-baseline.json) and
+[first extraction provenance](../extraction-source.json) remain retained.
+Canic HEAD remains `3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3`; its worktree
+was dirty during inspection. Provenance records do not constitute qualification.
 
-The workspace-only root owns version `0.1.1`, Rust 2024 metadata, dependencies
-and lints. Development Rust is pinned to 1.99.0; MSRV is 1.91.0. Dependencies
-inherit from this workspace and use no sibling Cargo patches or Canic crates.
-Registry publication is configured for crates.io. Make commands, Linux CI and release helpers
-follow the sibling conventions using this repository's own `target/`.
-`core.hooksPath` is set locally to `.githooks`. See
-[development](../development.md), [releasing](../releasing.md) and
-[tooling provenance](../tooling-provenance.json).
+The workspace remains at `0.1.1`, Rust 2024, development Rust 1.99.0 and MSRV
+1.91.0. Unix builds inherit pinned published `command-fds` 0.3.3 for safe owned
+descriptor setup; no Rust unsafe hook or borrowed/clonable raw handle was copied.
+The lockfile adds only `command-fds`, `nix` and `cfg_aliases`; previously locked
+versions remain unchanged. No Canic dependencies, sibling patches or shared
+build target exist. At the maintainer's request, completed changes now sit in
+the undated `0.1.2` changelog draft beneath an empty Unreleased entry. Cargo
+metadata remains at `0.1.1`; no release preparation ran. Existing release receipt
+and historical changelog notes remain unchanged. Registry publication continues
+to delegate to Cargo; strict receipts/tags govern repository release transactions. See
+[development](../development.md) and [releasing](../releasing.md).
+This continuation does not authorize publication.
 
-The changelog retains the original undated `0.1.0` notes and dated `0.1.1`
-extraction notes. The publication fix is recorded in the sole open Unreleased
-entry, alongside the simplified publication wrapper. Cargo metadata and the
-lockfile remain at `0.1.1`; `docs/release.json`
-retains that release's exact file hashes. All three Make release entry points
-were previously exercised against isolated substitutes, with no real release
-effects. Maintainers own commit-producing release commands.
-
-Read [the design](../extraction-design.md) for the proposed architecture and
-implementation sequence. The inventory refresh, consumer trace and local
-contracts are implemented; full B1/B2 completion is not established. Generic v1
-authority/consistency, budget, journal/transition and executor contracts still
-need to be specified before importing runners. Layout lifetime/restore-reference
-retention and command custody also remain in Canic. Its backup executor topology
-preflight still rejects. This crate is not yet an independently usable canister
-backup/restore product.
-
-The public remote is
-[dragginzgame/ic-backup](https://github.com/dragginzgame/ic-backup). The initial
-documentation commit/push used a one-time authorization (`680baf9`); the
-maintainer committed the Rust foundation as `edc8e4b` (`0.1.0`), extraction as
-`384bab8`, and the `0.1.1` release as `4b0432c`. The standing
-no-commit rule remains in force. Canic adoption, release/publication and live
+Full B1/B2 completion and independently usable canister backup/restore are not
+established. Generic authority/consistency, journal/transition, spending-budget
+and executor contracts still precede runner extraction. Backend custody
+qualification, terminal reference release, prune, transport and CLI remain
+pending. Canic's current backup executor topology preflight still rejects.
+Read [the design](../extraction-design.md) for the maintained implementation
+sequence. The standing no-commit rule remains in force; Canic adoption and live
 IC effects require their own instructions.

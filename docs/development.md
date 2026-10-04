@@ -6,6 +6,9 @@ artifact and persistence mechanisms described in
 [the implemented extraction boundary](extraction-boundary.md). Capture/restore
 runners and transport remain unimplemented. Pure checksum records belong to
 model; filesystem operations belong to ops.
+Restore dependency records and immutable retention transitions belong to model;
+layout exclusion, canonical journal-parent resolution and durable publication
+belong to persistence ops. No reference release or prune API is exposed.
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for
@@ -23,6 +26,13 @@ metadata without changing the workspace.
 `publish-dry-run` and `publish` delegate to Cargo for the current library version.
 They use locked dependencies and crates.io. Cargo checks package cleanliness and
 publication eligibility; receipt/tag checks belong to repository release commands.
+
+Native custody regressions require Python 3 on the selected Unix host. They use
+real inherited descriptors and acknowledged owner/direct-child/descendant exit
+with bounded fixture waits. The production library uses the pinned `command-fds`
+dependency for owned child descriptor setup and contains no Rust unsafe code.
+It does not invoke Python; those commands are local test fixtures. A transport
+still needs its own output/deadline/retry and inherited-descriptor qualification.
 
 The Makefile exports this checkout's absolute `target/` directory. Never point
 it at Canic's target or add Cargo patches to sibling checkouts. Before editing

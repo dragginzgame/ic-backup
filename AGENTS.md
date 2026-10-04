@@ -42,6 +42,15 @@ into an issue tracker or release authority.
   [the implemented boundary](docs/extraction-boundary.md) and
   [fresh source provenance](docs/extraction-source.json) before extending it.
   Runner/authority contract work remains part of B1 before importing runners.
+- Continued extraction includes layout lifetime exclusion and durable restore
+  reference retention. The v1 records and bounds are documented in
+  [the implemented boundary](docs/extraction-boundary.md). No reference release
+  or prune operation is implemented; terminal proof and command custody must own
+  release admission before that API is added.
+- Command custody now uses owned descriptor inheritance, exact v1 filesystem
+  identity records and fresh non-spawning quiescence guards. Preserve the
+  unsafe-code prohibition. These local contracts do not qualify an ICP backend
+  or grant terminal/reference-release or paid-call authority.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,

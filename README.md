@@ -7,7 +7,10 @@ execution plans, durable interruption recovery and safe local retention.
 This repository contains an independent Rust workspace with one library package
 at `crates/ic-backup`, contributor tooling and an extraction design. The library
 provides local artifact checksums, secure staging, durable verified-directory
-publication, bounded JSON persistence and journal locking extracted from Canic.
+publication, bounded JSON persistence, journal/layout locking, durable restore
+dependencies and inherited command custody extracted from Canic. References
+remain retained until terminal completion and subprocess-custody contracts
+support their release.
 Capture/restore runners, an IC transport and the CLI have not been extracted.
 It cannot yet perform a canister backup or restore.
 The public repository is

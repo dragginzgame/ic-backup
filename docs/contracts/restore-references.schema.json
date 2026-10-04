@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 restore references",
+  "description": "Durable local dependencies; does not grant restore authority. Runtime additionally enforces unique journal keys, canonical digest normalization and UTF-8 byte limits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "restores"],
+  "x-max-encoded-bytes": 1048576,
+  "properties": {
+    "version": {"type": "integer", "const": 1},
+    "restores": {
+      "type": "array",
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["journal", "authority"],
+        "properties": {
+          "journal": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 4096,
+            "x-max-utf8-bytes": 4096,
+            "pattern": "^/(?:(?!\\.{1,2}(?:/|$))[^/\\u0000]+/)*(?!\\.{1,2}$)[^/\\u0000]+$"
+          },
+          "authority": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64,
+            "pattern": "^[0-9A-Fa-f]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

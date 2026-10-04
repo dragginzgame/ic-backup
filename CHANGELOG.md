@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.1.2]
+
+- Extract command lifetime custody with owned descriptor inheritance and exact
+  v1 sidecar identity records. Add one-spawn guards, bounded finish and fresh
+  exclusive quiescence probes; qualify owner/direct-child/descendant death,
+  failed spawns and replaced or missing sidecars without Rust unsafe code.
+
+- Extract stable layout lifetime locks and durable v1 restore dependencies.
+  Validate exact journal/intent binding, bounded records and replaced roots;
+  qualify process-death recovery and conservative missing-journal retention.
+
 - Enable crates.io publication for `ic-backup` through inherited workspace
   metadata, fixing the Cargo rejection from `make publish`.
 - Delegate publication and its dry run to Cargo for the current package;

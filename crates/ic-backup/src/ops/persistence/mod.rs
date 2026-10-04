@@ -1,13 +1,20 @@
-//! Durable local publication and journal locking; no domain transitions.
+//! Durable publication, journal/layout exclusion and retained local dependencies.
 
 mod artifact_commit;
+mod command_lifetime_lock;
 mod file_lock;
 mod journal_lock;
 mod json;
+mod layout_lifetime;
 
 pub use artifact_commit::{ArtifactCommitOutcome, commit_artifact_directory};
+pub use command_lifetime_lock::{
+    COMMAND_CUSTODY_DESCRIPTOR_ENV, CommandLifetimeLock, CommandLifetimeLockError,
+    CommandQuiescenceGuard,
+};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub use json::{create_json_durable, read_json, write_json_durable};
+pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
 
 use crate::{model::artifacts::ChecksumError, ops::artifacts::ArtifactError};
 use std::io;
@@ -16,6 +23,21 @@ use thiserror::Error;
 /// Typed local persistence failure.
 #[derive(Debug, Error)]
 pub enum PersistenceError {
+    /// An existing layout path no longer denotes the held directory.
+    #[error("backup layout changed while held: {path:?}")]
+    LayoutChanged {
+        /// Resolved layout location.
+        path: std::path::PathBuf,
+    },
+    /// A retained dependency document or journal location has an unsafe entry type.
+    #[error("unsafe restore reference entry: {path:?}")]
+    InvalidRestoreReferences {
+        /// Rejected local path.
+        path: std::path::PathBuf,
+    },
+    /// Restore dependency validation or an immutable retention transition failed.
+    #[error(transparent)]
+    RestoreReference(#[from] crate::model::restore_references::RestoreReferenceError),
     /// Filesystem IO failed; publication may require local reconciliation.
     #[error(transparent)]
     Io(#[from] io::Error),
