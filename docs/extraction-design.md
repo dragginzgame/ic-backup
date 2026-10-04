@@ -263,13 +263,15 @@ status/read visibility must never be mistaken for write authority.
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
 | `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
 | `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
-| `ConsistencyCoordinator` | Application fence acquisition, validation and controlled release |
+| `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
+| `ConsistencyProvider` | Implemented ephemeral current stopped/drained target and existing exact application fence validation under original guarantee; no provider or acquisition/release effects |
+| `ConsistencyCoordinator` | Intended application fence acquisition and controlled release, with durable obligations and uncertain-effect reconciliation |
 | `RestoreSafetyProvider` | Same-release admission and external-obligation disposition before load/start |
 | `ArtifactStore` | Local durable custody, streamed verification, references and retention locks |
 | `Clock` | Testable deadline/lease policy; time is not an authority identifier |
 
-Membership and direct-control ports currently have maintained Rust signatures; the other
-rows remain intended responsibilities. Its request derives exact original intent
+Membership, direct-control, snapshot-read and consistency observation ports have maintained Rust signatures;
+the other rows remain intended responsibilities. The membership request derives exact original intent
 and operation identity, immutable full inventory/selection, a caller-owned fresh
 challenge, explicit before/after boundary and 0–1,024 descriptive remote-call
 ceiling. Actual result context and full inventory must match; policy rejects old
@@ -287,6 +289,14 @@ read visibility or subnet-admin exception cannot satisfy this direct-host lane.
 Control results are ephemeral too; no Proven flag upgrades a plan. Actual provider
 authentication/freshness, load source/origin permissions and full effect admission
 remain separate qualification work.
+The [typed snapshot-read contract](contracts/snapshot-read-port.json) binds exact
+independent list bytes to original mutation intent. Its actual snapshot visibility
+is distinct from status/log visibility. Known exact controllers, public visibility
+or exact allowed viewers can establish a read-only matching view. Unknown controller
+evidence cannot establish a controller path; independent public/viewer access needs
+no controller projection. No Root-configured/Proven declaration, read success or
+matching digest supplies mutation control, fresh spending or settlement of a lost
+observation. Metadata/data request codecs and actual provider qualification remain pending.
 Prefer separate ports over a single all-powerful executor. Requests and results
 use named passive structs/enums. Integration implementations convert their framework evidence into
 generic inputs; they do not give the engine raw application journals or code.
@@ -312,6 +322,25 @@ Maintain two explicit consistency guarantees:
 2. `application_coordinated`: a qualified application adapter fences writes,
    membership changes, relevant timers and external work for the entire selected
    unit, proves drained work and retains that fence across interruption.
+
+`ConsistencyRequirementRecord` now retains this requested choice under exact full
+original plan intent; immutable local publication/read has a strict v1 schema and
+1 KiB input/output bound. Declaration equality establishes no actual guarantee.
+No missing or edited declaration silently downgrades coordinated capture. See
+[the requirement schema](contracts/consistency-requirement.schema.json).
+The [typed current consistency port](contracts/consistency-port.json) binds the
+original requirement/operation, challenge, before/after capture boundary and exact
+integration-retained fence identity plus original membership revision. Actual
+context/full inventory/exact selected target rows must match, with every target
+stopped and drained evidence qualified by its owner. Coordinated results require
+an actually Active exact fence, with actual/fence revisions both equal to the
+original retained revision, plus whole-unit write/membership/timer/external-work
+fencing and drained-work evidence. No accepted/expiry/Proven flag upgrades a plan.
+This port validates existing obligations; acquisition/release, actual continuous
+fence custody, per-call accounting and backend/lifecycle qualification remain with
+their owners. Models/policy cannot authenticate opaque evidence hashes or prove
+continuity by matching before/after values. Capture wire/effect admission and
+restore/external-obligation safety remain separate contracts.
 
 Stopping canisters sequentially is not an application-consistent distributed
 checkpoint. A matching topology hash before and after capture also cannot
@@ -835,7 +864,7 @@ argument-shape decoding, bounded strict records and native byte-bound journal
 recovery qualification. This does not qualify an authenticated backend or actual
 snapshot/lifecycle effects. Transfer/response codecs and live admission remain pending.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
-snapshot read authority, application consistency, journal and executor
+application fence acquisition/release and restore safety, journal and executor
 contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.
 The membership request/result/provider contract and pure exact-result admission now
@@ -846,6 +875,15 @@ Direct-control request/result/provider contracts and pure caller-controller chec
 now have exact payload/context/target/challenge/set-bound and revoked-caller tests,
 plus public spent-journal recovery. They qualify local admission only; authenticated
 current permissions, delegated framework routing and complete preflight remain pending.
+Snapshot-list permission requests/results/provider contracts and pure visibility
+policy now have exact read-payload/challenge/context/target/viewer-bound tests and
+public lost-observation recovery. They establish no actual live read access,
+transfer completeness, mutation control, observation settlement or backend qualification.
+Original consistency declarations and current capture/fence matching now have
+strict schema/hash, no-downgrade local persistence, exact original revision/fence,
+inactive/non-stopped denial and public retained-obligation/spent-journal recovery
+qualification. Actual distributed checkpoint, continuous application fencing,
+acquisition/release and same-release restore settlement remain unestablished.
 
 ## 20. Completion criteria
 

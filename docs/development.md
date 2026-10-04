@@ -97,6 +97,35 @@ snapshot origin permissions and full restore/lifecycle/application safety remain
 integration-owned. See [the typed control contract](contracts/control-authority-port.json)
 and [control provenance](control-authority-source.json).
 
+`model::snapshot_read` binds original mutation intent and independently declared
+exact snapshot-list bytes to an ephemeral challenge. Its fallible
+`ports::snapshot_read::SnapshotReadProvider` has no installed implementation.
+Pure `policy::snapshot_read::validate` checks actual context/target/call reporting
+and known controller, public or exact allowed-viewer access. Canonical viewers
+are unique and bounded to 10; unknown controllers cannot establish controller access.
+Public/viewer evidence grants no mutation control. No Serde/default authority,
+fresh spending or lost-observation settlement is introduced. Provider authentication,
+freshness, custody and per-call accounting remain integration-owned; metadata/data
+codecs remain pending. See [the typed read contract](contracts/snapshot-read-port.json)
+and [fresh read provenance](snapshot-read-source.json).
+
+`model::consistency` now owns a strict v1 original-plan-bound guarantee declaration,
+retained at fixed `consistency-requirement.json` under layout exclusion with 1 KiB
+input/output bounds and no-replace publication. Exact expected requirement/plan
+reads reject downgraded or rebound declarations. Ephemeral current requests bind
+original operation, challenge, capture boundary and retained fence/original revision.
+The fallible `ports::consistency::ConsistencyProvider` observes existing obligations;
+no provider or acquisition/release operation is installed. Pure admission checks
+actual full inventory/exact selected stopped/drained targets and original guarantee;
+coordinated evidence requires exact Active fence and original membership revision.
+Opaque evidence authenticity, current observations, continuous whole-unit fencing,
+retained custody and prior per-call accounting remain integration-owned. No request/
+result/view can be admitted from JSON as fresh authority. Native fixtures qualify
+local declarations, persistence and spent-journal/obligation recovery only. See
+[the requirement schema](contracts/consistency-requirement.schema.json),
+[typed current port](contracts/consistency-port.json) and
+[fresh consistency provenance](consistency-source.json).
+
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for
 `make check-msrv`. Native builds are the supported product lane; the toolkit

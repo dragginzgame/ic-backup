@@ -1,0 +1,1068 @@
+{
+  "schema_version": 1,
+  "kind": "consistency_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only selected quiescence declarations/request/receipt admission, negative regressions, manifest-unit inference and CLI consumers. Full working-tree hashes identify inspected bytes and sections identify inspection scope; consumer reference enumeration is a text inventory, not qualification of every consumer.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217,
+      "inspected_sections": [
+        {
+          "first_line": 222,
+          "last_line": 234
+        },
+        {
+          "first_line": 419,
+          "last_line": 485
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+      "bytes": 2017,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 51
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "sha256": "6fa3af5737687c6155f13f74caa0901bac0e8ffa43b99c55b52d54bf73b30d3c",
+      "bytes": 6173,
+      "inspected_sections": [
+        {
+          "first_line": 134,
+          "last_line": 173
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "sha256": "60bad6ed4872b84108e5de2f52b8cb4280110d55bbb2fc9fbd703523fd371e54",
+      "bytes": 5795,
+      "inspected_sections": [
+        {
+          "first_line": 126,
+          "last_line": 162
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "sha256": "6cf16fc6147ebf3e064a1f849cf84358cbd497fad4f77760176151a3989b0128",
+      "bytes": 6807,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 202
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+      "bytes": 4353,
+      "inspected_sections": [
+        {
+          "first_line": 70,
+          "last_line": 85
+        }
+      ]
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/types.rs",
+          "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+          "bytes": 14217
+        },
+        {
+          "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+          "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+          "bytes": 2017
+        },
+        {
+          "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+          "sha256": "6fa3af5737687c6155f13f74caa0901bac0e8ffa43b99c55b52d54bf73b30d3c",
+          "bytes": 6173
+        },
+        {
+          "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+          "sha256": "60bad6ed4872b84108e5de2f52b8cb4280110d55bbb2fc9fbd703523fd371e54",
+          "bytes": 5795
+        },
+        {
+          "path": "crates/canic-backup/src/runner/manifest.rs",
+          "sha256": "6cf16fc6147ebf3e064a1f849cf84358cbd497fad4f77760176151a3989b0128",
+          "bytes": 6807
+        },
+        {
+          "path": "crates/canic-cli/src/backup/create/mod.rs",
+          "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+          "bytes": 4353
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/consistency/mod.rs",
+        "crates/ic-backup/src/policy/consistency/mod.rs",
+        "crates/ic-backup/src/ports/consistency/mod.rs"
+      ],
+      "adaptation": "Distinct requested quiescence choice and exact plan/target receipt responsibilities become immutable original-plan-bound requested guarantees and ephemeral actual stopped/drained whole-selection evidence. Coordinated results require current Active fence identity and original membership revision, with application-qualified writes/membership/timers/external-work/drain evidence. CrashConsistent/RootCoordinated names, accepted/Proven flags, expiry, mutable plan upgrades and parent-derived application units are not copied."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/model/consistency/requirement/mod.rs",
+        "crates/ic-backup/src/ops/persistence/consistency/mod.rs",
+        "crates/ic-backup/src/ops/persistence/consistency/tests/mod.rs",
+        "crates/ic-backup/src/model/consistency/tests/mod.rs",
+        "crates/ic-backup/src/policy/consistency/tests/mod.rs",
+        "crates/ic-backup/src/test_support/consistency/mod.rs",
+        "crates/ic-backup/tests/consistency.rs",
+        "docs/contracts/consistency-requirement.schema.json",
+        "docs/contracts/consistency-port.json"
+      ],
+      "purpose": "Strict original requirement retention/exact no-downgrade reads, domain-separated requirement/request goldens, bounded canonical target evidence and native lost-response/spent-journal/retained-obligation fixture recovery; no actual fencing/backend."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 17,
+      "excerpt": "        ControlAuthority, QuiescencePreflightReceipt, QuiescencePreflightTarget,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 133,
+      "excerpt": "        quiescence_policy: crate::plan::QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 145,
+      "excerpt": "    let quiescence_targets = plan"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 148,
+      "excerpt": "        .map(QuiescencePreflightTarget::from)"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 167,
+      "excerpt": "        quiescence: QuiescencePreflightReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 170,
+      "excerpt": "            quiescence_policy: plan.quiescence_policy.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 172,
+      "excerpt": "            targets: quiescence_targets,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/validation.rs",
+      "line": 16,
+      "excerpt": "            | BackupOperationKind::ValidateQuiescencePolicy"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/summary.rs",
+      "line": 11,
+      "excerpt": "        \"backup_unit_count\": manifest.consistency.backup_units.len(),"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/summary.rs",
+      "line": 18,
+      "excerpt": "            .consistency"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/summary.rs",
+      "line": 33,
+      "excerpt": "    for unit in &manifest.consistency.backup_units {"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 21,
+      "excerpt": "        consistency: ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 181,
+      "excerpt": "    manifest.consistency.backup_units[0]"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 196,
+      "excerpt": "        .consistency"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 198,
+      "excerpt": "        .push(manifest.consistency.backup_units[0].clone());"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 210,
+      "excerpt": "    manifest.consistency.backup_units[0]"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 224,
+      "excerpt": "    manifest.consistency.backup_units[0].kind = BackupUnitKind::Single;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 225,
+      "excerpt": "    manifest.consistency.backup_units[0].roles = vec![\"root\".to_string()];"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 345,
+      "excerpt": "    manifest.consistency.backup_units[0].kind = BackupUnitKind::Subtree;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 346,
+      "excerpt": "    manifest.consistency.backup_units[0].roles = vec![\"root\".to_string()];"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 367,
+      "excerpt": "    manifest.consistency.backup_units[0].kind = BackupUnitKind::Subtree;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "line": 368,
+      "excerpt": "    manifest.consistency.backup_units[0].roles = vec![\"app\".to_string(), \"worker\".to_string()];"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "line": 24,
+      "excerpt": "    pub consistency: ConsistencySection,"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "line": 58,
+      "excerpt": "/// ConsistencySection"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "line": 60,
+      "excerpt": "/// Backup unit grouping used to validate deployment consistency."
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "line": 66,
+      "excerpt": "pub struct ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "line": 73,
+      "excerpt": "/// Role grouping that must be captured and restored as one consistency unit."
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "line": 88,
+      "excerpt": "/// Consistency grouping mode for a backup unit."
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/binding.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: compares consistency and verification sections against deployment state."
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/binding.rs",
+      "line": 8,
+      "excerpt": "    BackupUnit, BackupUnitKind, ConsistencySection, DeploymentMember, DeploymentSection,"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/binding.rs",
+      "line": 14,
+      "excerpt": "pub(super) fn validate_consistency_against_deployment("
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/binding.rs",
+      "line": 15,
+      "excerpt": "    consistency: &ConsistencySection,"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/binding.rs",
+      "line": 25,
+      "excerpt": "    for unit in &consistency.backup_units {"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/mod.rs",
+      "line": 13,
+      "excerpt": "use binding::{validate_consistency_against_deployment, validate_verification_against_deployment};"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/mod.rs",
+      "line": 27,
+      "excerpt": "        self.consistency.validate()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/mod.rs",
+      "line": 30,
+      "excerpt": "        validate_consistency_against_deployment(&self.consistency, &self.deployment)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 15,
+      "excerpt": "    BackupUnit, ConsistencySection, DeploymentMember, DeploymentSection, ManifestValidationError,"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 36,
+      "excerpt": "impl ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 40,
+      "excerpt": "                \"consistency.backup_units\","
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 60,
+      "excerpt": "        validate_nonempty(\"consistency.backup_units[].unit_id\", &self.unit_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 64,
+      "excerpt": "                \"consistency.backup_units[].roles\","
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 69,
+      "excerpt": "            validate_nonempty(\"consistency.backup_units[].roles[]\", role)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "line": 71,
+      "excerpt": "        validate_unique_values(\"consistency.backup_units[].roles[]\", &self.roles, |role| {"
+    },
+    {
+      "path": "crates/canic-backup/src/operational_readiness/manifest/mod.rs",
+      "line": 387,
+      "excerpt": "        BackupOperationKind::ValidateQuiescencePolicy => \"validate-quiescence-policy\","
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 3,
+      "excerpt": "//! Responsibility: verify manifest, journal, and artifact checksum consistency."
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "line": 13,
+      "excerpt": "        BackupUnit, BackupUnitKind, ConsistencySection, DeploymentBackupManifest, DeploymentMember,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "line": 497,
+      "excerpt": "        consistency: ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "line": 575,
+      "excerpt": "        quiescence_policy: crate::plan::QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+      "line": 164,
+      "excerpt": "    wait_for_command_quiescence(layout, target_sequence);"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+      "line": 526,
+      "excerpt": "fn wait_for_command_quiescence(layout: &BackupLayout, sequence: usize) {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+      "line": 531,
+      "excerpt": "                lock.finish().expect(\"finish quiescence probe\");"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: binds command quiescence and exact status to stop/start reconciliation."
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs",
+      "line": 451,
+      "excerpt": "        | BackupOperationKind::ValidateQuiescencePolicy => {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 15,
+      "excerpt": "    QuiescencePolicy, SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 42,
+      "excerpt": "    pub quiescence_policy: QuiescencePolicy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 49,
+      "excerpt": "    let quiescence_policy = input.quiescence_policy.clone();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 82,
+      "excerpt": "        quiescence_policy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/phases.rs",
+      "line": 27,
+      "excerpt": "            \"validate-quiescence-policy\","
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/phases.rs",
+      "line": 28,
+      "excerpt": "            BackupOperationKind::ValidateQuiescencePolicy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 142,
+      "excerpt": "    #[error(\"quiescence preflight policy does not match plan\")]"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 143,
+      "excerpt": "    QuiescencePolicyMismatch,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 145,
+      "excerpt": "    #[error(\"quiescence preflight was not accepted\")]"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 146,
+      "excerpt": "    QuiescencePreflightRejected,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 148,
+      "excerpt": "    #[error(\"quiescence preflight targets do not match selected plan targets\")]"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 149,
+      "excerpt": "    QuiescencePreflightTargetsMismatch,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 4,
+      "excerpt": "//! Does not own: authority probing, topology observation, or quiescence enforcement."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: gates backup mutation on accepted topology, authority, and quiescence receipts."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 8,
+      "excerpt": "    BackupExecutionPreflightReceipts, BackupPlan, BackupPlanError, QuiescencePreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 21,
+      "excerpt": "        quiescence_receipt: &QuiescencePreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 29,
+      "excerpt": "        validate_quiescence_preflight_receipt(self, quiescence_receipt, preflight_id, as_of)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 47,
+      "excerpt": "            &receipts.quiescence,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 134,
+      "excerpt": "fn validate_quiescence_preflight_receipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 136,
+      "excerpt": "    receipt: &QuiescencePreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 140,
+      "excerpt": "    validate_nonempty(\"quiescence_receipt.plan_id\", &receipt.plan_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 142,
+      "excerpt": "    validate_optional_nonempty(\"quiescence_receipt.message\", receipt.message.as_deref())?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 162,
+      "excerpt": "    if receipt.quiescence_policy != plan.quiescence_policy {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 163,
+      "excerpt": "        return Err(BackupPlanError::QuiescencePolicyMismatch);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 166,
+      "excerpt": "        return Err(BackupPlanError::QuiescencePreflightRejected);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 168,
+      "excerpt": "    if receipt.targets != plan.quiescence_preflight_request().targets {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 169,
+      "excerpt": "        return Err(BackupPlanError::QuiescencePreflightTargetsMismatch);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 8,
+      "excerpt": "    BackupPlan, QuiescencePreflightRequest, QuiescencePreflightTarget, TopologyPreflightRequest,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 33,
+      "excerpt": "    /// Build the typed quiescence preflight request for this plan."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 35,
+      "excerpt": "    pub fn quiescence_preflight_request(&self) -> QuiescencePreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 36,
+      "excerpt": "        QuiescencePreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 43,
+      "excerpt": "            quiescence_policy: self.quiescence_policy.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 47,
+      "excerpt": "                .map(QuiescencePreflightTarget::from)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/builder.rs",
+      "line": 40,
+      "excerpt": "            (\"validate-quiescence-policy\", None),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: topology, quiescence, and bundled preflight receipts."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 9,
+      "excerpt": "// Ensure topology and quiescence receipts gate mutating execution preflights."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 16,
+      "excerpt": "        &quiescence_receipt(&plan),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 49,
+      "excerpt": "        serde_json::to_value(&receipts.quiescence).expect(\"serialize quiescence receipt\"),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 61,
+      "excerpt": "    assert!(serde_json::from_value::<QuiescencePreflightReceipt>(values[1].clone()).is_err());"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 112,
+      "excerpt": "            &quiescence_receipt(&plan),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 126,
+      "excerpt": "// Ensure quiescence rejection fails before mutation."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 128,
+      "excerpt": "fn rejects_unaccepted_quiescence_preflight() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 130,
+      "excerpt": "    let mut receipt = quiescence_receipt(&plan);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 140,
+      "excerpt": "        .expect_err(\"quiescence rejection rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 142,
+      "excerpt": "    std::assert_matches!(err, BackupPlanError::QuiescencePreflightRejected);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 145,
+      "excerpt": "// Ensure quiescence receipts cannot silently cover a different target set."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 147,
+      "excerpt": "fn rejects_quiescence_target_mismatch() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 149,
+      "excerpt": "    let mut receipt = quiescence_receipt(&plan);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 159,
+      "excerpt": "        .expect_err(\"quiescence target mismatch rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 161,
+      "excerpt": "    std::assert_matches!(err, BackupPlanError::QuiescencePreflightTargetsMismatch);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 51,
+      "excerpt": "        quiescence_policy: QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 74,
+      "excerpt": "        quiescence_policy: QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 129,
+      "excerpt": "fn quiescence_receipt(plan: &BackupPlan) -> QuiescencePreflightReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 130,
+      "excerpt": "    QuiescencePreflightReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 133,
+      "excerpt": "        quiescence_policy: plan.quiescence_policy.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 135,
+      "excerpt": "        targets: plan.quiescence_preflight_request().targets,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 151,
+      "excerpt": "        quiescence: quiescence_receipt(plan),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 29,
+      "excerpt": "// Ensure quiescence preflights have a stable typed request shape."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 31,
+      "excerpt": "fn builds_quiescence_preflight_request() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 33,
+      "excerpt": "    let request = plan.quiescence_preflight_request();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 38,
+      "excerpt": "    assert_eq!(request.quiescence_policy, QuiescencePolicy::RootCoordinated);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 68,
+      "excerpt": "    let request = plan.quiescence_preflight_request();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 69,
+      "excerpt": "    let mut value = serde_json::to_value(&request).expect(\"serialize quiescence request\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 72,
+      "excerpt": "        .expect(\"quiescence request object\")"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 74,
+      "excerpt": "    let err = serde_json::from_value::<QuiescencePreflightRequest>(value)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 80,
+      "excerpt": "            serde_json::to_value(&request.targets[0]).expect(\"serialize quiescence target\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 83,
+      "excerpt": "            .expect(\"quiescence target object\")"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 85,
+      "excerpt": "        let err = serde_json::from_value::<QuiescencePreflightTarget>(value)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 86,
+      "excerpt": "            .expect_err(\"current quiescence target field must be present\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 34,
+      "excerpt": "    pub quiescence_policy: QuiescencePolicy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 222,
+      "excerpt": "/// QuiescencePolicy"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 224,
+      "excerpt": "/// Consistency policy requested before backup mutation begins."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 230,
+      "excerpt": "pub enum QuiescencePolicy {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 265,
+      "excerpt": "    ValidateQuiescencePolicy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 291,
+      "excerpt": "    pub quiescence: QuiescencePreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 419,
+      "excerpt": "/// QuiescencePreflightRequest"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 421,
+      "excerpt": "/// Request shape for confirming the selected quiescence policy."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 427,
+      "excerpt": "pub struct QuiescencePreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 435,
+      "excerpt": "    pub quiescence_policy: QuiescencePolicy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 436,
+      "excerpt": "    pub targets: Vec<QuiescencePreflightTarget>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 440,
+      "excerpt": "/// QuiescencePreflightTarget"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 442,
+      "excerpt": "/// Target row included in a quiescence preflight request and receipt."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 448,
+      "excerpt": "pub struct QuiescencePreflightTarget {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 456,
+      "excerpt": "impl From<&BackupTarget> for QuiescencePreflightTarget {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 467,
+      "excerpt": "/// QuiescencePreflightReceipt"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 469,
+      "excerpt": "/// Quiescence preflight result accepted before backup mutation begins."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 475,
+      "excerpt": "pub struct QuiescencePreflightReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 478,
+      "excerpt": "    pub quiescence_policy: QuiescencePolicy,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 480,
+      "excerpt": "    pub targets: Vec<QuiescencePreflightTarget>,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/mod.rs",
+      "line": 124,
+      "excerpt": "    /// Validate the structural consistency of a restore apply journal."
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/tests.rs",
+      "line": 2045,
+      "excerpt": "        wait_for_command_quiescence(&fixture.config.journal, target_sequence);"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/tests.rs",
+      "line": 2231,
+      "excerpt": "    fn wait_for_command_quiescence(journal: &Path, sequence: usize) {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/tests.rs",
+      "line": 2236,
+      "excerpt": "                    lock.finish().expect(\"finish restore quiescence probe\");"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/mod.rs",
+      "line": 4,
+      "excerpt": "    BackupUnit, BackupUnitKind, ConsistencySection, DeploymentBackupManifest, DeploymentMember,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/mod.rs",
+      "line": 92,
+      "excerpt": "        consistency: ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "line": 5,
+      "excerpt": "        BackupUnit, BackupUnitKind, ConsistencySection, DeploymentBackupManifest, DeploymentMember,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "line": 31,
+      "excerpt": "        consistency: ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 76,
+      "excerpt": "        | BackupOperationKind::ValidateQuiescencePolicy => {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 10,
+      "excerpt": "        ControlAuthority, QuiescencePolicy, SnapshotReadAuthority, build_backup_plan,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 241,
+      "excerpt": "    assert_eq!(manifest.consistency.backup_units.len(), 2);"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 243,
+      "excerpt": "        manifest.consistency.backup_units[0].unit_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 247,
+      "excerpt": "        manifest.consistency.backup_units[0].kind,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 251,
+      "excerpt": "        manifest.consistency.backup_units[0].roles,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 255,
+      "excerpt": "        manifest.consistency.backup_units[1].unit_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 259,
+      "excerpt": "        manifest.consistency.backup_units[1].kind,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 263,
+      "excerpt": "        manifest.consistency.backup_units[1].roles,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 765,
+      "excerpt": "        quiescence_policy: QuiescencePolicy::CrashConsistent,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 809,
+      "excerpt": "        quiescence_policy: QuiescencePolicy::CrashConsistent,"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 5,
+      "excerpt": "        ControlAuthorityReceipt, QuiescencePreflightReceipt, QuiescencePreflightTarget,"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 118,
+      "excerpt": "            quiescence: QuiescencePreflightReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 121,
+      "excerpt": "                quiescence_policy: plan.quiescence_policy.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 126,
+      "excerpt": "                    .map(QuiescencePreflightTarget::from)"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 21,
+      "excerpt": "        QuiescencePolicy, SnapshotReadAuthority, build_backup_plan, resolve_backup_selector,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 83,
+      "excerpt": "        quiescence_policy: QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 79,
+      "excerpt": "        \"quiescence_policy\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 80,
+      "excerpt": "        &format!(\"{:?}\", existing.quiescence_policy),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 81,
+      "excerpt": "        &format!(\"{:?}\", requested.quiescence_policy),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/error.rs",
+      "line": 24,
+      "excerpt": "        \"live backup creation is unavailable: current Fleet membership, controller/read authority and capture consistency are not implemented; --dry-run writes planning files only and does not create a backup\""
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 114,
+      "excerpt": "        BackupOperationKind::ValidateQuiescencePolicy => \"validate-quiescence-policy\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/manifest/tests.rs",
+      "line": 4,
+      "excerpt": "    BackupUnit, BackupUnitKind, ConsistencySection, DeploymentMember, DeploymentSection,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/manifest/tests.rs",
+      "line": 103,
+      "excerpt": "        consistency: ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/manifest.rs",
+      "line": 9,
+      "excerpt": "    BackupUnit, BackupUnitKind, ConsistencySection, DeploymentBackupManifest, DeploymentMember,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/manifest.rs",
+      "line": 36,
+      "excerpt": "        consistency: ConsistencySection {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 49,
+      "excerpt": "        quiescence_policy: canic_backup::plan::QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 87,
+      "excerpt": "        quiescence_policy: canic_backup::plan::QuiescencePolicy::CrashConsistent,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/mod.rs",
+      "line": 14,
+      "excerpt": "        BackupUnit, BackupUnitKind, ConsistencySection, DeploymentBackupManifest, DeploymentMember,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/mod.rs",
+      "line": 218,
+      "excerpt": "        consistency: ConsistencySection {"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "owner": "Canic quiescence plan/preflight/runner/persistence/CLI consumers",
+      "disposition": "Unchanged and read-only. No accepted/expiry receipt or RootCoordinated flag grants fresh authority here."
+    },
+    {
+      "owner": "Canic manifest consistency units",
+      "disposition": "Unchanged. Parent/component grouping is not used to infer application fencing or a distributed checkpoint; application qualification belongs to its owner."
+    }
+  ],
+  "qualification": "Native local declared guarantee/persistence/exact current evidence checks and spent-journal/retained-obligation fixtures only. Provider authenticity, actual stopped/drained targets, active whole-unit fence continuity, challenge freshness, prior per-call accounting and custody remain integration-owned. Acquisition/release, capture dispatch/completion, restore settlement and complete B1/B2 remain pending.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json",
+    "docs/operation-plan-source.json",
+    "docs/execution-progress-source.json",
+    "docs/ic-request-source.json",
+    "docs/membership-source.json",
+    "docs/control-authority-source.json",
+    "docs/snapshot-read-source.json"
+  ]
+}

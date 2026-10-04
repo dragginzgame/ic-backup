@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.1.7]
+
+- Add an ephemeral snapshot-read provider contract bound to original mutation
+  intent and independently declared exact snapshot-list bytes. Validate current
+  context, target and controller/public/allowed-viewer access without granting
+  mutation control; preserve spent pending observations through local recovery.
+- Retain immutable original-plan consistency requirements without replacement or
+  downgrade. Add current stopped/drained target and application-fence observation
+  contracts bound to exact selection, challenge, capture boundary, retained fence
+  identity and original membership revision. Native recovery preserves spent
+  journals and retained obligations; fence effects and backend qualification remain pending.
+
 ## [0.1.6] - 2026-10-04
 
 - Add a closed host-ingress IC management request codec for status, snapshot

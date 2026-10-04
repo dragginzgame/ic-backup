@@ -24,6 +24,10 @@
 //! Pure matching views grant neither controller authority nor application continuity.
 //! The separate control port checks direct caller-controller evidence for exact
 //! IC mutation payloads; its matching views still grant no dispatch or restore safety.
+//! A separate snapshot-read port checks current snapshot-list visibility and exact
+//! caller read paths, without granting mutation control or settling lost replies.
+//! Immutable consistency requirements retain the original requested guarantee;
+//! current target/fence checks acquire or release no application obligations.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport

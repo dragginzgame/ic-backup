@@ -23,10 +23,12 @@ The maintainer completed the tagged `0.1.1` repository release; initial setup
 notes remain under undated `0.1.0`. The maintainer completed the tagged `0.1.2`
 release with layout/reference retention and command custody. The maintainer completed
 `0.1.4` with inventories, selection and dependency graphs, then `0.1.5` with
-operation-plan binding and retained-journal progress. Cargo metadata is at `0.1.5`;
-the maintainer selected an undated `0.1.6` changelog draft for the IC request codec
-and membership/control contracts. Cargo remains `0.1.5`; selecting notes does not run a
-release/version transaction.
+operation-plan binding and retained-journal progress. The checkout is now at the
+maintainer's `640e6c2` (Release 0.1.6), with Cargo metadata and dated changelog
+entry at `0.1.6` for the IC request codec and membership/control contracts.
+The maintainer selected an undated `0.1.7` changelog draft for snapshot-read and
+consistency contract work, immediately after empty Unreleased. Cargo stays `0.1.6`;
+selecting the notes runs no release/version transaction.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.

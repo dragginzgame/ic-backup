@@ -1,0 +1,807 @@
+{
+  "schema_version": 1,
+  "kind": "snapshot_read_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only snapshot-read declarations, receipt admission/validation, regressions, visibility projections and CLI consumers. Full hashes identify inspected working-tree bytes; sections identify read scope. Reference enumeration is a fresh text inventory, not qualification of every consumer.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217,
+      "inspected_sections": [
+        {
+          "first_line": 161,
+          "last_line": 220
+        },
+        {
+          "first_line": 316,
+          "last_line": 334
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "sha256": "a084d53450855077952b9e8a9b7910d3cb4aeb5848d3fc5def49d41b34529f35",
+      "bytes": 8045,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 223
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "sha256": "28df94447dc56fbdd3e38d2ec074142ae65eacf78c2562e54dcbd38da5f9b5a8",
+      "bytes": 4354,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 138
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+      "bytes": 12387,
+      "inspected_sections": [
+        {
+          "first_line": 41,
+          "last_line": 65
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "sha256": "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729",
+      "bytes": 5345,
+      "inspected_sections": [
+        {
+          "first_line": 95,
+          "last_line": 113
+        },
+        {
+          "first_line": 147,
+          "last_line": 160
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+      "bytes": 4353,
+      "inspected_sections": [
+        {
+          "first_line": 70,
+          "last_line": 85
+        }
+      ]
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/types.rs",
+          "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+          "bytes": 14217
+        },
+        {
+          "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+          "sha256": "a084d53450855077952b9e8a9b7910d3cb4aeb5848d3fc5def49d41b34529f35",
+          "bytes": 8045
+        },
+        {
+          "path": "crates/canic-backup/src/plan/tests/authority.rs",
+          "sha256": "28df94447dc56fbdd3e38d2ec074142ae65eacf78c2562e54dcbd38da5f9b5a8",
+          "bytes": 4354
+        },
+        {
+          "path": "crates/canic-backup/src/plan/validation.rs",
+          "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+          "bytes": 12387
+        },
+        {
+          "path": "crates/canic-host/src/icp/model.rs",
+          "sha256": "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729",
+          "bytes": 5345
+        },
+        {
+          "path": "crates/canic-cli/src/backup/create/mod.rs",
+          "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+          "bytes": 4353
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/snapshot_read/mod.rs",
+        "crates/ic-backup/src/ports/snapshot_read/mod.rs",
+        "crates/ic-backup/src/policy/snapshot_read/mod.rs"
+      ],
+      "adaptation": "Distinct read declarations, exact plan/preflight/target receipt responsibilities and visibility projections become original mutation intent plus independent exact list payload, fresh integration-owned challenge and actual context/target/snapshot visibility evidence. Current exact caller-controller, public and exact allowed-viewer paths are separate from mutation control. Root-configured/Proven flags, expiry, mutable plan upgrades and optional/default/alias status decoding are not copied."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/model/snapshot_read/tests/mod.rs",
+        "crates/ic-backup/src/policy/snapshot_read/tests/mod.rs",
+        "crates/ic-backup/src/test_support/snapshot_read/mod.rs",
+        "crates/ic-backup/tests/snapshot_read.rs",
+        "docs/contracts/snapshot-read-port.json"
+      ],
+      "purpose": "Canonical bounded ephemeral viewer/evidence models, exact independent list digest validation, domain-separated request golden and native pure admission/lost-observation recovery. No live provider or backend."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 18,
+      "excerpt": "        SnapshotReadAuthority, TopologyPreflightReceipt, TopologyPreflightTarget,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 130,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::root_configured_read("
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "line": 166,
+      "excerpt": "        snapshot_read_authority: Vec::new(),"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/validation.rs",
+      "line": 15,
+      "excerpt": "            | BackupOperationKind::ValidateSnapshotReadAuthority"
+    },
+    {
+      "path": "crates/canic-backup/src/operational_readiness/manifest/mod.rs",
+      "line": 386,
+      "excerpt": "        BackupOperationKind::ValidateSnapshotReadAuthority => \"validate-snapshot-read-authority\","
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "line": 20,
+      "excerpt": "        SnapshotReadAuthority, build_backup_plan,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "line": 572,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::root_configured_read("
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/mod.rs",
+      "line": 417,
+      "excerpt": "        target.snapshot_read_authority.evidence = AuthorityEvidence::Declared;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs",
+      "line": 450,
+      "excerpt": "        | BackupOperationKind::ValidateSnapshotReadAuthority"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 15,
+      "excerpt": "    QuiescencePolicy, SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 41,
+      "excerpt": "    pub snapshot_read_authority: SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 48,
+      "excerpt": "    let snapshot_read_authority = input.snapshot_read_authority.clone();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 61,
+      "excerpt": "                input.snapshot_read_authority.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 81,
+      "excerpt": "        snapshot_read_authority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/phases.rs",
+      "line": 23,
+      "excerpt": "            BackupOperationKind::ValidateSnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 12,
+      "excerpt": "        SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 67,
+      "excerpt": "    snapshot_read_authority: SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 79,
+      "excerpt": "        snapshot_read_authority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 88,
+      "excerpt": "    UnprovenTargetSnapshotReadAuthority(String),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "line": 97,
+      "excerpt": "    MissingSnapshotReadAuthorityReceipt(String),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 9,
+      "excerpt": "    SnapshotReadAuthorityReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 24,
+      "excerpt": "        snapshot_read_receipts: &[SnapshotReadAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 28,
+      "excerpt": "        self.apply_snapshot_read_authority_receipts(preflight_id, snapshot_read_receipts, as_of)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 68,
+      "excerpt": "    pub fn apply_snapshot_read_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 71,
+      "excerpt": "        receipts: &[SnapshotReadAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 75,
+      "excerpt": "            snapshot_read_receipt_map(&self.plan_id, preflight_id, as_of, &self.targets, receipts)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 79,
+      "excerpt": "                BackupPlanError::MissingSnapshotReadAuthorityReceipt(target.canister_id.clone())"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 82,
+      "excerpt": "                return Err(BackupPlanError::UnprovenTargetSnapshotReadAuthority("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 90,
+      "excerpt": "            self.targets[index].snapshot_read_authority = authority;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 135,
+      "excerpt": "fn snapshot_read_receipt_map("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 140,
+      "excerpt": "    receipts: &[SnapshotReadAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 141,
+      "excerpt": ") -> Result<BTreeMap<String, SnapshotReadAuthorityReceipt>, BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 42,
+      "excerpt": "            &receipts.snapshot_read_authority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 15,
+      "excerpt": "    plan.targets[0].snapshot_read_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 16,
+      "excerpt": "        SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 21,
+      "excerpt": "        &[snapshot_read_receipt(APP, proven_root_read())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 27,
+      "excerpt": "    assert_eq!(plan.targets[0].snapshot_read_authority, proven_root_read());"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 29,
+      "excerpt": "    plan.targets[0].snapshot_read_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 30,
+      "excerpt": "        SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 37,
+      "excerpt": "    assert_eq!(plan.targets[0].snapshot_read_authority, proven_root_read());"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 51,
+      "excerpt": "        serde_json::to_value(&receipts.snapshot_read_authority[0]).expect(\"serialize read receipt\"),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 63,
+      "excerpt": "    assert!(serde_json::from_value::<SnapshotReadAuthorityReceipt>(values[3].clone()).is_err());"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 32,
+      "excerpt": "        snapshot_read_authority: proven_root_read(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 50,
+      "excerpt": "        snapshot_read_authority: proven_root_read(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 73,
+      "excerpt": "        snapshot_read_authority: proven_root_read(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 83,
+      "excerpt": "fn proven_root_read() -> SnapshotReadAuthority {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 84,
+      "excerpt": "    SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Proven)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 100,
+      "excerpt": "fn snapshot_read_receipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 102,
+      "excerpt": "    authority: SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 103,
+      "excerpt": ") -> SnapshotReadAuthorityReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 104,
+      "excerpt": "    SnapshotReadAuthorityReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "line": 150,
+      "excerpt": "        snapshot_read_authority: vec![snapshot_read_receipt(APP, proven_root_read())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 30,
+      "excerpt": "        snapshot_read_authority: proven_root_read(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 46,
+      "excerpt": "    plan.snapshot_read_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 47,
+      "excerpt": "        SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 50,
+      "excerpt": "    plan.targets[0].snapshot_read_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 51,
+      "excerpt": "        SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 68,
+      "excerpt": "    plan.snapshot_read_authority = SnapshotReadAuthority::unknown();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 70,
+      "excerpt": "    plan.targets[0].snapshot_read_authority = SnapshotReadAuthority::unknown();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 102,
+      "excerpt": "fn rejects_unproven_snapshot_read_authority() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 104,
+      "excerpt": "    plan.targets[0].snapshot_read_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 105,
+      "excerpt": "        SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 113,
+      "excerpt": "        BackupPlanError::UnprovenTargetSnapshotReadAuthority(canister) if canister == APP"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 352,
+      "excerpt": "        snapshot_read_authority: proven_root_read(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 33,
+      "excerpt": "    pub snapshot_read_authority: SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 73,
+      "excerpt": "    pub snapshot_read_authority: SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 161,
+      "excerpt": "/// SnapshotReadAuthority"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 169,
+      "excerpt": "pub struct SnapshotReadAuthority {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 170,
+      "excerpt": "    pub source: SnapshotReadAuthoritySource,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 174,
+      "excerpt": "impl SnapshotReadAuthority {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 178,
+      "excerpt": "            source: SnapshotReadAuthoritySource::Unknown,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 186,
+      "excerpt": "            source: SnapshotReadAuthoritySource::OperatorController,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 194,
+      "excerpt": "            source: SnapshotReadAuthoritySource::RootConfiguredRead,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 202,
+      "excerpt": "            && self.source != SnapshotReadAuthoritySource::Unknown"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 207,
+      "excerpt": "/// SnapshotReadAuthoritySource"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 215,
+      "excerpt": "pub enum SnapshotReadAuthoritySource {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 264,
+      "excerpt": "    ValidateSnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 290,
+      "excerpt": "    pub snapshot_read_authority: Vec<SnapshotReadAuthorityReceipt>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 316,
+      "excerpt": "/// SnapshotReadAuthorityReceipt"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 324,
+      "excerpt": "pub struct SnapshotReadAuthorityReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 328,
+      "excerpt": "    pub authority: SnapshotReadAuthority,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 52,
+      "excerpt": "            if !target.snapshot_read_authority.is_proven() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 53,
+      "excerpt": "                return Err(BackupPlanError::UnprovenTargetSnapshotReadAuthority("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 75,
+      "excerpt": "        | BackupOperationKind::ValidateSnapshotReadAuthority"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 10,
+      "excerpt": "        ControlAuthority, QuiescencePolicy, SnapshotReadAuthority, build_backup_plan,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 762,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::operator_controller("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "line": 806,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::operator_controller("
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 6,
+      "excerpt": "        SnapshotReadAuthorityReceipt, TopologyPreflightReceipt, TopologyPreflightTarget,"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 100,
+      "excerpt": "            snapshot_read_authority: plan"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 104,
+      "excerpt": "                    let mut authority = target.snapshot_read_authority.clone();"
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "line": 106,
+      "excerpt": "                    SnapshotReadAuthorityReceipt {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 21,
+      "excerpt": "        QuiescencePolicy, SnapshotReadAuthority, build_backup_plan, resolve_backup_selector,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 80,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::root_configured_read("
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 74,
+      "excerpt": "        \"snapshot_read_authority\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 75,
+      "excerpt": "        &format!(\"{:?}\", existing.snapshot_read_authority),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 76,
+      "excerpt": "        &format!(\"{:?}\", requested.snapshot_read_authority),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 127,
+      "excerpt": "                target.snapshot_read_authority,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 15,
+      "excerpt": "        SnapshotReadAuthoritySource,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 61,
+      "excerpt": "        snapshot_read_authority: format_authority("
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 62,
+      "excerpt": "            snapshot_read_authority_source_label(&target.snapshot_read_authority.source),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 63,
+      "excerpt": "            &target.snapshot_read_authority.evidence,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 93,
+      "excerpt": "const fn snapshot_read_authority_source_label(source: &SnapshotReadAuthoritySource) -> &str {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 95,
+      "excerpt": "        SnapshotReadAuthoritySource::Unknown => \"unknown\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 96,
+      "excerpt": "        SnapshotReadAuthoritySource::OperatorController => \"operator-controller\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 97,
+      "excerpt": "        SnapshotReadAuthoritySource::RootConfiguredRead => \"root-configured-read\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 113,
+      "excerpt": "        BackupOperationKind::ValidateSnapshotReadAuthority => \"validate-snapshot-read-authority\","
+    },
+    {
+      "path": "crates/canic-cli/src/backup/model.rs",
+      "line": 264,
+      "excerpt": "    pub snapshot_read_authority: String,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/inspect.rs",
+      "line": 34,
+      "excerpt": "                target.snapshot_read_authority.clone(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/inspect.rs",
+      "line": 147,
+      "excerpt": "                snapshot_read_authority: \"root-configured-read/proven\".to_string(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 12,
+      "excerpt": "        SnapshotReadAuthority, build_backup_plan,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 46,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::root_configured_read("
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 84,
+      "excerpt": "        snapshot_read_authority: SnapshotReadAuthority::operator_controller("
+    },
+    {
+      "path": "crates/canic-host/src/icp/mod.rs",
+      "line": 34,
+      "excerpt": "    IcpCanisterVisibility, IcpCli, IcpRawOutput, IcpSnapshot, LocalReplicaTarget,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 111,
+      "excerpt": "    pub log_visibility: Option<IcpCanisterVisibility>,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 112,
+      "excerpt": "    pub snapshot_visibility: Option<IcpCanisterVisibility>,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 113,
+      "excerpt": "    pub status_visibility: Option<IcpCanisterVisibility>,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 149,
+      "excerpt": "/// IcpCanisterVisibility"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 156,
+      "excerpt": "pub enum IcpCanisterVisibility {"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 323,
+      "excerpt": "        IcpCanisterVisibility::Controllers,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 324,
+      "excerpt": "        IcpCanisterVisibility::Public,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 325,
+      "excerpt": "        IcpCanisterVisibility::AllowedViewers(vec![::candid::Principal::anonymous()]),"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 330,
+      "excerpt": "            serde_json::from_value::<IcpCanisterVisibility>(output).unwrap(),"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 461,
+      "excerpt": "            \"snapshot_visibility\": {\"type\": \"Controllers\"},"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 476,
+      "excerpt": "        Some(IcpCanisterVisibility::AllowedViewers(vec!["
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 481,
+      "excerpt": "        settings.snapshot_visibility,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 482,
+      "excerpt": "        Some(IcpCanisterVisibility::Controllers)"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 484,
+      "excerpt": "    assert_eq!(settings.log_visibility, Some(IcpCanisterVisibility::Public));"
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "line": 494,
+      "excerpt": "        assert!(serde_json::from_value::<IcpCanisterVisibility>(visibility).is_err());"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "owner": "Canic declarations/preflight/runner/persistence/CLI consumers",
+      "disposition": "Unchanged and read-only. Serialized Root-configured/Proven flags and full executor loops remain Canic-owned; no fresh read permission inferred."
+    },
+    {
+      "owner": "Canic ICP status settings/visibility decoder",
+      "disposition": "Unchanged. Snapshot/status/log visibility remain distinct; no optional/default transport parser copied."
+    }
+  ],
+  "qualification": "Native model/policy/port and exact retained spent mutation/lost-observation recovery only. Integrations own authenticated actual settings/context, challenge uniqueness/timing, custody, prior per-call accounting and unknown-result failure. Matching read evidence grants no call/settlement/control/transfer/lifecycle/fence/terminal authority.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json",
+    "docs/operation-plan-source.json",
+    "docs/execution-progress-source.json",
+    "docs/ic-request-source.json",
+    "docs/membership-source.json",
+    "docs/control-authority-source.json"
+  ]
+}

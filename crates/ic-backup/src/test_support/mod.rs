@@ -1,7 +1,9 @@
 //! Local filesystem regression helpers, independent of IC executors.
 
+pub mod consistency;
 pub mod control_authority;
 pub mod membership;
+pub mod snapshot_read;
 
 #[cfg(unix)]
 use std::{

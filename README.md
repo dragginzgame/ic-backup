@@ -38,6 +38,12 @@ context and inventory, with pure validation and no default provider. Integration
 still qualify freshness, permissions and application consistency.
 The control port checks direct caller-controller evidence for exact mutation
 payloads, with pure admission and no implicit delegation or dispatch permission.
+The snapshot-read port separately checks controller, public and exact allowed-viewer
+access for independently bound snapshot-list requests. Read evidence grants no
+mutation control or paid-call authority; actual providers remain integration-owned.
+Consistency requirements retain the original requested guarantee. A separate port
+checks current stopped/drained targets and exact active application fence evidence,
+without acquiring or releasing fences. Application qualification remains with integrations.
 Capture/restore runners, an IC transport and the CLI have not been extracted.
 It cannot yet perform a canister backup or restore.
 The public repository is

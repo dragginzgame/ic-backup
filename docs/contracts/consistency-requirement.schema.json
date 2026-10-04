@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dragginzgame/ic-backup/blob/main/docs/contracts/consistency-requirement.schema.json",
+  "title": "ConsistencyRequirementRecord v1",
+  "description": "Immutable declared guarantee under exact original full operation-plan intent; not fresh consistency, fence or dispatch evidence. Caller IO bound is 1024 raw input/canonical output bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "plan_intent",
+    "guarantee"
+  ],
+  "properties": {
+    "version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "plan_intent": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$",
+      "description": "SHA-256 of full original plan; model normalizes lowercase.",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "guarantee": {
+      "enum": [
+        "per_canister",
+        "application_coordinated"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "version": 1,
+      "plan_intent": "5385eead7d20b830b36459b1e34edfef024f319b76477d0217a370a27481017a",
+      "guarantee": "per_canister"
+    },
+    {
+      "version": 1,
+      "plan_intent": "5385eead7d20b830b36459b1e34edfef024f319b76477d0217a370a27481017a",
+      "guarantee": "application_coordinated"
+    }
+  ],
+  "x-canonical-digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/consistency-requirement/v1 followed by NUL",
+      "64 canonical lowercase ASCII original plan-intent bytes",
+      "guarantee byte: per_canister=0, application_coordinated=1"
+    ],
+    "encoded_bytes": 102,
+    "goldens": {
+      "plan_intent": "5385eead7d20b830b36459b1e34edfef024f319b76477d0217a370a27481017a",
+      "per_canister": "bac43771b54e06dd441102d2cde0f76daa143b9e34fe1dfe796a13ea1af90924",
+      "application_coordinated": "206da6d94c3bc11ae48d492f15c730b2b73c5ab7a44a25755eb6cf44a82b1e4c"
+    }
+  }
+}

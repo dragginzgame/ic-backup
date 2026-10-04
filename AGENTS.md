@@ -106,6 +106,22 @@ into an issue tracker or release authority.
   call ceiling distinct from spending authority. Provider freshness/custody and
   load origin permissions, lifecycle/fence/restore safety remain separately qualified.
   No serialized Proven flag, live provider or dispatch permit is implemented.
+- Snapshot-read observations now bind original mutation intent and an independent
+  exact list payload, challenge and actual context/target/snapshot visibility.
+  Preserve 10 unique canonical viewers and the 1,024 descriptive call ceiling.
+  Known public or exact viewer access needs no controller projection; unobserved
+  controllers cannot establish the controller path. Read evidence grants no control,
+  spending or lost-reply settlement. Status/log/Root-configured flags never substitute.
+  Metadata/data codecs and actual authenticated providers remain unimplemented.
+- Consistency requirements now retain a strict v1 original-plan-bound guarantee
+  under 1 KiB IO and immutable layout publication. Current consistency requests bind
+  original operation, challenge, capture boundary and retained exact fence/revision.
+  Preserve 1,024 unique canonical actual target rows and the separate descriptive
+  call ceiling. Pure checks require full current inventory/exact selection, every
+  target stopped, exact requested lane and coordinated Active fence/original revision.
+  Opaque stopped/drained and whole-unit fence evidence requires actual integration
+  qualification. No acquired/released fence, restart, spending or restore-safety
+  permit exists; failures/drop retain original obligations and consumed allowances.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,

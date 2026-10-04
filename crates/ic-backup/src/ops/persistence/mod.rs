@@ -3,6 +3,7 @@
 mod artifact_commit;
 mod attempt_journal;
 mod command_lifetime_lock;
+mod consistency;
 mod download_journal;
 mod effect_graph;
 mod file_lock;
@@ -17,6 +18,9 @@ pub use attempt_journal::{AttemptJournalError, AttemptJournalGuard};
 pub use command_lifetime_lock::{
     COMMAND_CUSTODY_DESCRIPTOR_ENV, CommandLifetimeLock, CommandLifetimeLockError,
     CommandQuiescenceGuard,
+};
+pub use consistency::{
+    ConsistencyPersistenceError, create_consistency_requirement, read_consistency_requirement,
 };
 pub use download_journal::{DownloadJournalError, DownloadJournalGuard};
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
