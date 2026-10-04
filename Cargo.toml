@@ -11,10 +11,12 @@ repository = "https://github.com/dragginzgame/ic-backup"
 publish = ["crates-io"]
 
 [workspace.dependencies]
-candid = "=0.10.35"
+candid = "0.10"
 command-fds = "=0.3.3"
 ic-management-canister-types = "=0.8.0"
-ic_principal = { version = "=0.1.5", default-features = false, features = ["convert"] }
+ic_principal = { version = "=0.1.5", default-features = false, features = [
+    "convert",
+] }
 rustix = { version = "1.1.4", features = ["fs"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
