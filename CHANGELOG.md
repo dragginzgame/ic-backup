@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.1.4]
+## [0.1.4] - 2026-10-04
 
 - Adapt Canic phase and restore ordering into bounded explicit operation dependency
   graphs with deterministic planning order and pure causal readiness views. Reject
