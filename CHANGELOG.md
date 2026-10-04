@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.1.7]
+## [0.1.7] - 2026-10-04
 
 - Add an ephemeral snapshot-read provider contract bound to original mutation
   intent and independently declared exact snapshot-list bytes. Validate current
