@@ -1,0 +1,475 @@
+{
+  "schema_version": 1,
+  "kind": "ic_request_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only inspection of selected backup runner method contracts, operation identities and host/restore command consumers. Exact full working-tree hashes identify inspected files; section ranges identify scope. These responsibilities are adapted into a new closed typed host-ingress payload model, not imported runners or live backend qualification.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "bytes": 13445,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 100
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217,
+      "inspected_sections": [
+        {
+          "first_line": 238,
+          "last_line": 275
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571",
+      "bytes": 1620,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 48
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "sha256": "5b67c901184ea29b3874f54a6c07e0cd22e30e7c43d5c7640793e787f57da930",
+      "bytes": 11861,
+      "inspected_sections": [
+        {
+          "first_line": 245,
+          "last_line": 271
+        },
+        {
+          "first_line": 298,
+          "last_line": 308
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "sha256": "b584bc7269f4b52ee830205c68c494a3a6e92135eba730e43f9a1c6ae80ed707",
+      "bytes": 9197,
+      "inspected_sections": [
+        {
+          "first_line": 110,
+          "last_line": 194
+        }
+      ]
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/runner/types.rs",
+          "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+          "bytes": 13445
+        },
+        {
+          "path": "crates/canic-backup/src/plan/types.rs",
+          "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+          "bytes": 14217
+        },
+        {
+          "path": "crates/canic-host/src/icp/snapshot.rs",
+          "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571",
+          "bytes": 1620
+        },
+        {
+          "path": "crates/canic-host/src/icp/canister.rs",
+          "sha256": "5b67c901184ea29b3874f54a6c07e0cd22e30e7c43d5c7640793e787f57da930",
+          "bytes": 11861
+        },
+        {
+          "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+          "sha256": "b584bc7269f4b52ee830205c68c494a3a6e92135eba730e43f9a1c6ae80ed707",
+          "bytes": 9197
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/ic_request/mod.rs",
+        "crates/ic-backup/src/model/ic_request/method/mod.rs"
+      ],
+      "adaptation": "Selected status/inventory, stop/start, capture and load responsibilities become six closed protocol method names, one canonical effective target and exact raw load snapshot bytes. Pinned official DTOs derive Candid arguments. Management receiver and update-ingress mode are fixed; capture retains code and never replaces a snapshot; host sender-canister version stays absent. Request digest binds exact routing/mode/method/bytes. No raw command/program/config/preflight flag, backend token converter, download/upload runner or target-version CAS is copied."
+    }
+  ],
+  "upstream_dependencies": [
+    {
+      "name": "candid",
+      "version": "0.10.35",
+      "registry_checksum": "5cdba86ff862a2cc6b244f273a8713ffdf82b84254470e90bd029ee87c283f25",
+      "repository": "https://github.com/dfinity/candid",
+      "license": "Apache-2.0",
+      "use": "Pinned registry dependency; no SDK or Candid source copied into this repository.",
+      "inspected_files": [
+        {
+          "path": "src/ser.rs",
+          "sha256": "8f0b1b71eac4a801cff8a9e95cb0587d50b05b472858a9225284a267cd533aac",
+          "bytes": 15943,
+          "inspected_sections": [
+            {
+              "first_line": 170,
+              "last_line": 272
+            },
+            {
+              "first_line": 278,
+              "last_line": 324
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.8.0",
+      "registry_checksum": "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3",
+      "repository": "https://github.com/dfinity/ic",
+      "license": "Apache-2.0",
+      "use": "Pinned registry dependency; no SDK or Candid source copied into this repository.",
+      "inspected_files": [
+        {
+          "path": "src/lib.rs",
+          "sha256": "6374759c1d620e0cf7286a66a17ed5f68a53190d0f43fea0a5a1f44695b7c032",
+          "bytes": 63996,
+          "inspected_sections": [
+            {
+              "first_line": 1,
+              "last_line": 26
+            },
+            {
+              "first_line": 1440,
+              "last_line": 1482
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "protocol_reference": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/model/ic_request/tests/mod.rs",
+        "crates/ic-backup/src/model/ic_request/tests/golden.json",
+        "docs/contracts/ic-request.schema.json"
+      ],
+      "description": "Fresh strict v1 admission, exact payload-binding, raw-byte bounds and pinned DTO decoding tests. Six registered golden argument/digest vectors are independently constructed using principal CRC/base32 decoding, Candid label hashes, signed/unsigned LEB128, parent-first type tables and value encoding, plus the documented binary wire-digest framing. No production Rust/Candid encoder is used to generate the golden bytes. The persisted model reconstructs private argument caches and rejects cache/authority/unsafe-option injection."
+    },
+    {
+      "destinations": [
+        "crates/ic-backup/tests/ic_request.rs"
+      ],
+      "description": "Public native recovery retains exact typed payload through existing bounded JSON ops, binds its digest into the original plan/attempt authority and reopens already-consumed mutation/independent observation allowances. Qualified local Uncertain receipt fixtures preserve the unresolved mutation and prevent blind retry. No management backend is modeled or called."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 44,
+      "excerpt": "fn canister_status("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 46,
+      "excerpt": "canister_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 50,
+      "excerpt": "fn snapshot_inventory("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 52,
+      "excerpt": "canister_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 55,
+      "excerpt": "/// Stop one selected canister."
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 56,
+      "excerpt": "fn stop_canister("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 58,
+      "excerpt": "canister_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 62,
+      "excerpt": "/// Start one selected canister."
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 63,
+      "excerpt": "fn start_canister("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 65,
+      "excerpt": "canister_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 70,
+      "excerpt": "fn create_snapshot("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 72,
+      "excerpt": "canister_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 79,
+      "excerpt": "canister_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 80,
+      "excerpt": "snapshot_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 95,
+      "excerpt": "Stopped,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 96,
+      "excerpt": "Stopping,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 249,
+      "excerpt": "pub target_canister_id: Option<String>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 266,
+      "excerpt": "Stop,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 267,
+      "excerpt": "CreateSnapshot,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 268,
+      "excerpt": "Start,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 13,
+      "excerpt": "pub fn snapshot_create(&self, canister: &str) -> Result<IcpSnapshot, IcpCommandError> {"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 14,
+      "excerpt": "let mut command = self.canister_command();"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 15,
+      "excerpt": "command.args([\"snapshot\", \"create\", canister]);"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 22,
+      "excerpt": "pub fn snapshot_inventory(&self, canister: &str) -> Result<Vec<IcpSnapshot>, IcpCommandError> {"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 23,
+      "excerpt": "let mut command = self.canister_command();"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 24,
+      "excerpt": "command.args([\"snapshot\", \"list\", canister]);"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 31,
+      "excerpt": "pub fn snapshot_download("
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 34,
+      "excerpt": "snapshot_id: &str,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 37,
+      "excerpt": "let mut command = self.canister_command();"
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "line": 38,
+      "excerpt": "command.args([\"snapshot\", \"download\", canister, snapshot_id, \"--output\"]);"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 245,
+      "excerpt": "pub fn canister_status_report("
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 249,
+      "excerpt": "let mut command = self.canister_command();"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 250,
+      "excerpt": "command.args([\"status\", canister]);"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 259,
+      "excerpt": "/// Stop one canister."
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 260,
+      "excerpt": "pub fn stop_canister(&self, canister: &str) -> Result<(), IcpCommandError> {"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 261,
+      "excerpt": "let mut command = self.canister_command();"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 262,
+      "excerpt": "command.args([\"stop\", canister]);"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 265,
+      "excerpt": "self.measure_request(super::IcpRequestKind::Stop, Some(canister), None, || {"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 298,
+      "excerpt": "pub fn start_canister(&self, canister: &str) -> Result<(), IcpCommandError> {"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 299,
+      "excerpt": "let mut command = self.canister_command();"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 300,
+      "excerpt": "command.args([\"start\", canister]);"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "line": 303,
+      "excerpt": "self.measure_request(super::IcpRequestKind::Start, Some(canister), None, || {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 125,
+      "excerpt": "RestoreApplyOperationKind::StopCanister => Some(Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 129,
+      "excerpt": "vec![\"stop\".to_string(), operation.target_canister.clone()],"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 132,
+      "excerpt": "requires_stopped_canister: false,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 135,
+      "excerpt": "RestoreApplyOperationKind::StartCanister => Some(Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 139,
+      "excerpt": "vec![\"start\".to_string(), operation.target_canister.clone()],"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 142,
+      "excerpt": "requires_stopped_canister: false,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 157,
+      "excerpt": "operation.target_canister.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 164,
+      "excerpt": "requires_stopped_canister: false,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 169,
+      "excerpt": "RestoreApplyOperationKind::LoadSnapshot => {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 170,
+      "excerpt": "let snapshot_id = journal.uploaded_snapshot_id_for_load(operation)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 178,
+      "excerpt": "operation.target_canister.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 179,
+      "excerpt": "snapshot_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "line": 183,
+      "excerpt": "requires_stopped_canister: true,"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "owner": "Canic backup runner and executor",
+      "disposition": "Unchanged. Fresh authority, membership/release/application consistency, response qualification and full runner admission remain external contracts; selected method declarations are not dispatch permits."
+    },
+    {
+      "owner": "Canic host ICP CLI and restore command consumers",
+      "disposition": "Unchanged. Program/network/config/argv rendering and rendered snapshot tokens remain in Canic. Upload/download, management response codecs, actual stopped-state safety, authenticated transport and lost paid-effect reconciliation are not extracted by this batch."
+    }
+  ],
+  "qualification": "Fresh native tests qualify strict bounded records, exact Candid request bytes/digests, payload identity checks and byte-bound local retained accounting only. Neither upstream DTO decoding nor independent request vectors establish actual IC snapshot/lifecycle behavior, authoritative receipts, same-release recovery, live permissions, terminal proof or full B1/B2 completion.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json",
+    "docs/operation-plan-source.json",
+    "docs/execution-progress-source.json"
+  ]
+}

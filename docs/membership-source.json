@@ -1,0 +1,815 @@
+{
+  "schema_version": 1,
+  "kind": "membership_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only selected topology request/receipt, exact plan/preflight/hash/target admission and provider contract inspection. Full working-tree hashes identify inspected bytes; section ranges identify scope. The adaptation establishes a new ephemeral membership port and pure matching boundary, not a live provider, retained fresh-authority receipt or complete preflight.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217,
+      "inspected_sections": [
+        {
+          "first_line": 350,
+          "last_line": 416
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+      "bytes": 2017,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 32
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "sha256": "6fa3af5737687c6155f13f74caa0901bac0e8ffa43b99c55b52d54bf73b30d3c",
+      "bytes": 6173,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 130
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "sha256": "60bad6ed4872b84108e5de2f52b8cb4280110d55bbb2fc9fbd703523fd371e54",
+      "bytes": 5795,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 19
+        },
+        {
+          "first_line": 88,
+          "last_line": 132
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "bytes": 13445,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 55
+        }
+      ]
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/types.rs",
+          "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+          "bytes": 14217
+        },
+        {
+          "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+          "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+          "bytes": 2017
+        },
+        {
+          "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+          "sha256": "6fa3af5737687c6155f13f74caa0901bac0e8ffa43b99c55b52d54bf73b30d3c",
+          "bytes": 6173
+        },
+        {
+          "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+          "sha256": "60bad6ed4872b84108e5de2f52b8cb4280110d55bbb2fc9fbd703523fd371e54",
+          "bytes": 5795
+        },
+        {
+          "path": "crates/canic-backup/src/runner/types.rs",
+          "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+          "bytes": 13445
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/membership/mod.rs",
+        "crates/ic-backup/src/policy/membership/mod.rs",
+        "crates/ic-backup/src/ports/membership/mod.rs"
+      ],
+      "adaptation": "Topology projection and exact plan/preflight/hash/target responsibilities become original canonical full-plan/operation binding, immutable full inventory/selection, integration-owned challenge, explicit before/after boundary, actual observed context/full inventory and pure result admission. Serialized proven/apply-receipt flags, fleet/root/scope labels and timestamp expiry are not copied. Membership alone grants no controller/read authority, application fence, continuity or dispatch permit. The separately bounded descriptive call ceiling is not an attempt allowance, reconciliation allowance, reservation or preflight budget owner."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/model/membership/tests/mod.rs",
+        "crates/ic-backup/src/policy/membership/tests/mod.rs",
+        "crates/ic-backup/src/test_support/membership/mod.rs",
+        "docs/contracts/membership-port.json"
+      ],
+      "description": "Fresh native exact request hashing with independently computed binary golden, canonical alias and original intent sensitivity, unknown operation/zero/max call bound, request replay/context/full-inventory mismatch, maximum 1024-target admission and missing unselected target rejection. Result views borrow validated owners, have no Serde admission and change no plan/journal."
+    },
+    {
+      "destinations": [
+        "crates/ic-backup/tests/membership.rs"
+      ],
+      "description": "External native fixture implements the public fallible port, reopens retained original plan and spent pending journal, rejects prior observation under a new challenge/boundary without calling the provider and retains accounting through unavailable/unsupported/indeterminate failures. Local fixture data qualifies API binding and filesystem recovery only; no actual current membership or management backend is faked or qualified."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 350,
+      "excerpt": "/// TopologyPreflightRequest"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 352,
+      "excerpt": "/// Request shape for confirming selected topology before mutation."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 353,
+      "excerpt": "/// Owned by backup planning and sent to execution preflight providers."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 358,
+      "excerpt": "pub struct TopologyPreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 359,
+      "excerpt": "pub plan_id: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 363,
+      "excerpt": "pub root_canister_id: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 365,
+      "excerpt": "pub selected_subtree_root: Option<String>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 366,
+      "excerpt": "pub selected_scope_kind: BackupScopeKind,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 367,
+      "excerpt": "pub topology_hash_before_quiesce: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 368,
+      "excerpt": "pub targets: Vec<TopologyPreflightTarget>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 372,
+      "excerpt": "/// TopologyPreflightTarget"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 374,
+      "excerpt": "/// Target row included in a topology preflight request and receipt."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 375,
+      "excerpt": "/// Owned by backup planning and projected from selected backup targets."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 380,
+      "excerpt": "pub struct TopologyPreflightTarget {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 387,
+      "excerpt": "impl From<&BackupTarget> for TopologyPreflightTarget {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 398,
+      "excerpt": "/// TopologyPreflightReceipt"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 400,
+      "excerpt": "/// Topology preflight result accepted before backup mutation begins."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 406,
+      "excerpt": "pub struct TopologyPreflightReceipt {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 407,
+      "excerpt": "pub plan_id: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 408,
+      "excerpt": "pub preflight_id: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 409,
+      "excerpt": "pub topology_hash_before_quiesce: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 410,
+      "excerpt": "pub topology_hash_at_preflight: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 411,
+      "excerpt": "pub targets: Vec<TopologyPreflightTarget>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 412,
+      "excerpt": "pub validated_at: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 413,
+      "excerpt": "pub expires_at: String,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 1,
+      "excerpt": "//! Module: plan::preflight::requests"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 3,
+      "excerpt": "//! Responsibility: project backup plans into typed execution preflight requests."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: exposes immutable request views for external preflight providers."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 8,
+      "excerpt": "BackupPlan, QuiescencePreflightRequest, QuiescencePreflightTarget, TopologyPreflightRequest,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 9,
+      "excerpt": "TopologyPreflightTarget,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 13,
+      "excerpt": "/// Build the typed topology preflight request for this plan."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 15,
+      "excerpt": "pub fn topology_preflight_request(&self) -> TopologyPreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 16,
+      "excerpt": "TopologyPreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 17,
+      "excerpt": "plan_id: self.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 21,
+      "excerpt": "root_canister_id: self.root_canister_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 22,
+      "excerpt": "selected_subtree_root: self.selected_subtree_root.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 23,
+      "excerpt": "selected_scope_kind: self.selected_scope_kind.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 24,
+      "excerpt": "topology_hash_before_quiesce: self.topology_hash_before_quiesce.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 25,
+      "excerpt": "targets: self"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 26,
+      "excerpt": ".targets"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 28,
+      "excerpt": ".map(TopologyPreflightTarget::from)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 1,
+      "excerpt": "//! Module: plan::preflight::receipts"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 3,
+      "excerpt": "//! Responsibility: validate execution preflight receipt bundles."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 4,
+      "excerpt": "//! Does not own: authority probing, topology observation, or quiescence enforcement."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: gates backup mutation on accepted topology, authority, and quiescence receipts."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 9,
+      "excerpt": "TopologyPreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 11,
+      "excerpt": "validate_nonempty, validate_optional_nonempty, validate_preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 12,
+      "excerpt": "validate_preflight_timestamp, validate_preflight_window, validate_required_hash,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 17,
+      "excerpt": "/// Validate execution-only preflight receipts before mutation starts."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 18,
+      "excerpt": "pub fn validate_execution_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 20,
+      "excerpt": "topology_receipt: &TopologyPreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 22,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 25,
+      "excerpt": "self.validate_for_execution()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 26,
+      "excerpt": "validate_preflight_id(preflight_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 27,
+      "excerpt": "validate_preflight_timestamp(\"preflight.as_of\", as_of)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 28,
+      "excerpt": "validate_topology_preflight_receipt(self, topology_receipt, preflight_id, as_of)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 29,
+      "excerpt": "validate_quiescence_preflight_receipt(self, quiescence_receipt, preflight_id, as_of)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 32,
+      "excerpt": "/// Apply and validate the full execution preflight receipt bundle."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 33,
+      "excerpt": "pub fn apply_execution_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 38,
+      "excerpt": "validate_execution_preflight_bundle(self, receipts, as_of)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 39,
+      "excerpt": "self.apply_authority_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 40,
+      "excerpt": "&receipts.preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 45,
+      "excerpt": "self.validate_execution_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 46,
+      "excerpt": "&receipts.topology,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 48,
+      "excerpt": "&receipts.preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 54,
+      "excerpt": "fn validate_execution_preflight_bundle("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 59,
+      "excerpt": "validate_nonempty(\"preflight_receipts.plan_id\", &receipts.plan_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 60,
+      "excerpt": "validate_preflight_id(&receipts.preflight_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 61,
+      "excerpt": "validate_preflight_timestamp(\"preflight_receipts.as_of\", as_of)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 62,
+      "excerpt": "validate_preflight_window("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 63,
+      "excerpt": "&receipts.preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 64,
+      "excerpt": "&receipts.validated_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 65,
+      "excerpt": "&receipts.expires_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 69,
+      "excerpt": "if receipts.plan_id != plan.plan_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 71,
+      "excerpt": "expected: plan.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 72,
+      "excerpt": "actual: receipts.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 79,
+      "excerpt": "fn validate_topology_preflight_receipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 81,
+      "excerpt": "receipt: &TopologyPreflightReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 82,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 85,
+      "excerpt": "validate_nonempty(\"topology_receipt.plan_id\", &receipt.plan_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 86,
+      "excerpt": "validate_preflight_id(&receipt.preflight_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 87,
+      "excerpt": "validate_required_hash("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 88,
+      "excerpt": "\"topology_receipt.topology_hash_before_quiesce\","
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 89,
+      "excerpt": "&receipt.topology_hash_before_quiesce,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 91,
+      "excerpt": "validate_required_hash("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 92,
+      "excerpt": "\"topology_receipt.topology_hash_at_preflight\","
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 93,
+      "excerpt": "&receipt.topology_hash_at_preflight,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 95,
+      "excerpt": "validate_optional_nonempty(\"topology_receipt.message\", receipt.message.as_deref())?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 96,
+      "excerpt": "validate_preflight_window("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 97,
+      "excerpt": "&receipt.preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 98,
+      "excerpt": "&receipt.validated_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 99,
+      "excerpt": "&receipt.expires_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 103,
+      "excerpt": "if receipt.plan_id != plan.plan_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 105,
+      "excerpt": "expected: plan.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 106,
+      "excerpt": "actual: receipt.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 109,
+      "excerpt": "if receipt.preflight_id != preflight_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 111,
+      "excerpt": "expected: preflight_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 112,
+      "excerpt": "actual: receipt.preflight_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 115,
+      "excerpt": "if receipt.topology_hash_before_quiesce != plan.topology_hash_before_quiesce {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 116,
+      "excerpt": "return Err(BackupPlanError::TopologyPreflightHashMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 117,
+      "excerpt": "expected: plan.topology_hash_before_quiesce.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 118,
+      "excerpt": "actual: receipt.topology_hash_before_quiesce.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 121,
+      "excerpt": "if receipt.topology_hash_at_preflight != plan.topology_hash_before_quiesce {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 122,
+      "excerpt": "return Err(BackupPlanError::TopologyPreflightHashMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 123,
+      "excerpt": "expected: plan.topology_hash_before_quiesce.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 124,
+      "excerpt": "actual: receipt.topology_hash_at_preflight.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 127,
+      "excerpt": "if receipt.targets != plan.topology_preflight_request().targets {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "line": 128,
+      "excerpt": "return Err(BackupPlanError::TopologyPreflightTargetsMismatch);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 1,
+      "excerpt": "//! Module: plan::tests::execution_preflight"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 3,
+      "excerpt": "//! Responsibility: execution preflight receipt validation tests."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: topology, quiescence, and bundled preflight receipts."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 9,
+      "excerpt": "// Ensure topology and quiescence receipts gate mutating execution preflights."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 11,
+      "excerpt": "fn validates_execution_preflight_receipts() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 14,
+      "excerpt": "plan.validate_execution_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 15,
+      "excerpt": "&topology_receipt(&plan),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 88,
+      "excerpt": "receipts.topology.preflight_id = \"preflight-other\".to_string();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 91,
+      "excerpt": ".apply_execution_preflight_receipts(&receipts, AS_OF)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 92,
+      "excerpt": ".expect_err(\"mismatched preflight receipt rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 97,
+      "excerpt": "if expected == PREFLIGHT_ID && actual == \"preflight-other\""
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 101,
+      "excerpt": "// Ensure topology drift fails before mutation."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 103,
+      "excerpt": "fn rejects_topology_preflight_hash_drift() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 105,
+      "excerpt": "let mut receipt = topology_receipt(&plan);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 106,
+      "excerpt": "receipt.topology_hash_at_preflight ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 110,
+      "excerpt": ".validate_execution_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 116,
+      "excerpt": ".expect_err(\"topology drift rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 120,
+      "excerpt": "BackupPlanError::TopologyPreflightHashMismatch { expected, actual }"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 121,
+      "excerpt": "if expected == plan.topology_hash_before_quiesce"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "line": 128,
+      "excerpt": "fn rejects_unaccepted_quiescence_preflight() {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 34,
+      "excerpt": "/// Prove execution preflights before any mutating operation runs."
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 35,
+      "excerpt": "fn preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 38,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 39,
+      "excerpt": "validated_at: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 40,
+      "excerpt": "expires_at: &str,"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "owner": "Canic topology preflight requests and receipt admission",
+      "disposition": "Unchanged. Canic fleet/root/scopes and serialized timestamp/proven receipt semantics stay downstream; the generic boundary derives full original intent and matches current provider data without applying authority flags or timestamps."
+    },
+    {
+      "owner": "Canic backup runner/executor",
+      "disposition": "Unchanged. No preflight bundle, provider execution loop, control/read probe, lifecycle runner or command is imported. Integrations still own actual freshness, per-call prior approved accounting, retained lost-response evidence, revision/fence qualification and application release semantics."
+    }
+  ],
+  "qualification": "Native local contract/model/policy and public recovery only. A fresh challenge and opaque evidence/revision digest are not self-authenticating; providers and actual observations require independent qualification. Matching before/after inventories/revisions prove no uninterrupted membership or application consistency. No live provider, IC effects, full preflight, complete B1/B2 or independently usable backup/restore is established.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json",
+    "docs/operation-plan-source.json",
+    "docs/execution-progress-source.json",
+    "docs/ic-request-source.json"
+  ]
+}

@@ -1,0 +1,481 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 immutable declared operation plan",
+  "description": "Local original intent binding only, not an authenticated backup/restore plan, executable request, preflight or dispatch permit. Runtime checks canonical principal/hash admission, selected identity membership/coverage, one exact operation binding per graph node and checked assigned allowances within each original aggregate ceiling. Duplicate JSON fields reject.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "context",
+    "inventory",
+    "selected_targets",
+    "graph",
+    "operations",
+    "budget"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "inventory": {
+      "$ref": "#/$defs/inventory"
+    },
+    "selected_targets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 63,
+        "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+        "description": "Runtime verifies principal checksum/grouping and emits canonical lowercase ASCII."
+      },
+      "x-canonical-order": "canonical principal ASCII text",
+      "x-runtime-constraint": "Unique normalized exact targets inside the full original inventory, each covered by at least one operation."
+    },
+    "graph": {
+      "$ref": "#/$defs/graph"
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8192,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/operation"
+      },
+      "x-canonical-order": "ascending exact operation_sequence",
+      "x-runtime-constraint": "Unique exact sequence identities match graph nodes one for one; each target is explicitly selected."
+    },
+    "budget": {
+      "$ref": "#/$defs/plan_budget"
+    }
+  },
+  "x-max-encoded-bytes": 1048576,
+  "x-max-canonical-output-bytes": 1048576,
+  "x-runtime-assignment-constraint": "Checked sums of operation mutation/observation allowances must fit the matching original aggregate ceilings independently. Combined original ceilings <= 65536; per-operation combined limits <= 1024. Unassigned headroom grants no new allowance.",
+  "x-canonical-digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/operation-plan/v1 followed by one zero byte",
+      "context.network: fixed 64-byte canonical lowercase ASCII SHA-256; context.caller: u8 ASCII byte length then canonical text; context.release: fixed 64-byte canonical lowercase ASCII SHA-256",
+      "Canonical full inventory digest then full graph digest: each fixed 64-byte lowercase ASCII SHA-256 under their maintained v1 owner encoding",
+      "Canonical selected count: u32 big-endian; each selected principal in ASCII order: u8 ASCII byte length followed by canonical text (<=63 bytes)",
+      "Original plan budget.mutations then budget.observations: each unsigned u32 big-endian",
+      "Operation count: unsigned u32 big-endian; each operation in ascending operation_sequence order: u64 big-endian sequence, u8 target byte length then canonical target ASCII, fixed 64-byte canonical lowercase request SHA-256, u32 big-endian original mutation limit, u32 big-endian original observation limit"
+    ],
+    "excluded": [
+      "version (fixed by domain)",
+      "JSON formatting",
+      "derived plan intent/attempt authority",
+      "allocated totals",
+      "all journal progress",
+      "current authority and actual receipts"
+    ],
+    "golden-vector": {
+      "record": {
+        "version": 1,
+        "context": {
+          "network": "abababababababababababababababababababababababababababababababab",
+          "caller": "2vxsx-fae",
+          "release": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "inventory": {
+          "version": 1,
+          "targets": [
+            {
+              "canister_id": "aaaaa-aa",
+              "parent_canister_id": null,
+              "role": null,
+              "module_hash": null
+            },
+            {
+              "canister_id": "renrk-eyaaa-aaaaa-aaada-cai",
+              "parent_canister_id": "aaaaa-aa",
+              "role": null,
+              "module_hash": null
+            }
+          ]
+        },
+        "selected_targets": [
+          "renrk-eyaaa-aaaaa-aaada-cai"
+        ],
+        "graph": {
+          "version": 1,
+          "nodes": [
+            {
+              "operation_sequence": 0,
+              "depends_on": []
+            },
+            {
+              "operation_sequence": 7,
+              "depends_on": [
+                0
+              ]
+            }
+          ]
+        },
+        "operations": [
+          {
+            "operation_sequence": 0,
+            "target": "renrk-eyaaa-aaaaa-aaada-cai",
+            "request": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+            "budget": {
+              "mutations": 1,
+              "observations": 1
+            }
+          },
+          {
+            "operation_sequence": 7,
+            "target": "renrk-eyaaa-aaaaa-aaada-cai",
+            "request": "0101010101010101010101010101010101010101010101010101010101010101",
+            "budget": {
+              "mutations": 2,
+              "observations": 1
+            }
+          }
+        ],
+        "budget": {
+          "mutations": 3,
+          "observations": 2
+        }
+      },
+      "inventory-sha256": "f4167ccd71f36ba5d717097ff9cd8233a69096951dd9bd8476b1efd1d91f98bc",
+      "graph-sha256": "c3c67b57d350898d1fa55941b6ea807bd6551905bab54a08a768957523db6908",
+      "plan-sha256": "5385eead7d20b830b36459b1e34edfef024f319b76477d0217a370a27481017a"
+    }
+  },
+  "$defs": {
+    "inventory_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canister_id",
+        "parent_canister_id",
+        "role",
+        "module_hash"
+      ],
+      "properties": {
+        "canister_id": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+          "description": "Runtime checks principal checksum/grouping and emits canonical lowercase ASCII."
+        },
+        "parent_canister_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 63,
+              "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+              "description": "Runtime checks principal checksum/grouping and emits canonical lowercase ASCII."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "x-max-utf8-bytes": 256,
+              "description": "Runtime bounds UTF-8 bytes to 256. Opaque integration label; null, empty and literal null are distinct."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "module_hash": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9A-Fa-f]{64}$",
+              "description": "Runtime normalizes exact SHA-256 text to lowercase."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "graph_node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_sequence",
+        "depends_on"
+      ],
+      "properties": {
+        "operation_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615,
+          "description": "Exact opaque operation identity; zero and nonconsecutive sequences are allowed."
+        },
+        "depends_on": {
+          "type": "array",
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18446744073709551615,
+            "description": "Exact opaque operation identity; zero and nonconsecutive sequences are allowed."
+          },
+          "x-canonical-order": "ascending operation_sequence numeric value"
+        }
+      }
+    },
+    "inventory": {
+      "description": "A bounded closed parent forest of exact physical identities. Runtime verifies canonical principal/hash admission, unique normalized principals, closed parent edges and absence of cycles. Multiple disconnected roots are allowed; declarations and hashes establish no fresh live membership, authority, application fencing or consistency. Duplicate JSON fields reject at runtime.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "targets"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "const": 1
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "x-unique-key": "canonical canister_id",
+          "x-canonical-order": "canonical canister_id ASCII text",
+          "items": {
+            "$ref": "#/$defs/inventory_target"
+          }
+        }
+      },
+      "x-max-encoded-bytes": 1048576,
+      "x-max-canonical-output-bytes": 1048576,
+      "x-runtime-max-parent-depth": 1023
+    },
+    "graph": {
+      "description": "Immutable bounded dependencies over exact opaque operation identities. Runtime verifies unique sequences, closed prerequisite references, acyclicity and aggregate edge bounds. The graph contains no effect payload, inventory/request/release binding, budgets, authority or receipts; it is one component of a future complete plan. Duplicate JSON fields reject at runtime.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "nodes"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "const": 1
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8192,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/graph_node"
+          },
+          "x-unique-key": "exact operation_sequence",
+          "x-canonical-order": "ascending operation_sequence numeric value"
+        }
+      },
+      "x-max-total-edges": 65536,
+      "x-runtime-max-chain-depth": 8191,
+      "x-max-encoded-bytes": 1048576,
+      "x-max-canonical-output-bytes": 1048576,
+      "x-topological-order": "Repeatedly emit the smallest currently ready sequence; computed order is not persisted. Order grants no effect authority or dispatch permission. Application dependencies are explicitly integration-qualified, not inferred from inventory parents."
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "network",
+        "caller",
+        "release"
+      ],
+      "properties": {
+        "network": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Canonical SHA-256 admission normalizes hexadecimal case."
+        },
+        "caller": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+          "description": "Runtime verifies principal checksum/grouping and emits canonical lowercase ASCII."
+        },
+        "release": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Canonical SHA-256 admission normalizes hexadecimal case."
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_sequence",
+        "target",
+        "request",
+        "budget"
+      ],
+      "properties": {
+        "operation_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "target": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+          "description": "Runtime verifies principal checksum/grouping and emits canonical lowercase ASCII."
+        },
+        "request": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Canonical SHA-256 admission normalizes hexadecimal case."
+        },
+        "budget": {
+          "$ref": "#/$defs/operation_budget"
+        }
+      }
+    },
+    "operation_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutations",
+        "observations"
+      ],
+      "properties": {
+        "mutations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "observations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        }
+      },
+      "x-runtime-constraint": "Checked mutations + observations <= 1024; original ceilings never replaced/refunded by plan derivation."
+    },
+    "plan_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutations",
+        "observations"
+      ],
+      "properties": {
+        "mutations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "observations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        }
+      },
+      "x-runtime-constraint": "Checked mutations + observations <= 65536; original ceilings never replaced/refunded by plan derivation."
+    }
+  },
+  "examples": [
+    {
+      "version": 1,
+      "context": {
+        "network": "abababababababababababababababababababababababababababababababab",
+        "caller": "2vxsx-fae",
+        "release": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+      },
+      "inventory": {
+        "version": 1,
+        "targets": [
+          {
+            "canister_id": "aaaaa-aa",
+            "parent_canister_id": null,
+            "role": null,
+            "module_hash": null
+          },
+          {
+            "canister_id": "renrk-eyaaa-aaaaa-aaada-cai",
+            "parent_canister_id": "aaaaa-aa",
+            "role": null,
+            "module_hash": null
+          }
+        ]
+      },
+      "selected_targets": [
+        "renrk-eyaaa-aaaaa-aaada-cai"
+      ],
+      "graph": {
+        "version": 1,
+        "nodes": [
+          {
+            "operation_sequence": 0,
+            "depends_on": []
+          },
+          {
+            "operation_sequence": 7,
+            "depends_on": [
+              0
+            ]
+          }
+        ]
+      },
+      "operations": [
+        {
+          "operation_sequence": 0,
+          "target": "renrk-eyaaa-aaaaa-aaada-cai",
+          "request": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+          "budget": {
+            "mutations": 1,
+            "observations": 1
+          }
+        },
+        {
+          "operation_sequence": 7,
+          "target": "renrk-eyaaa-aaaaa-aaada-cai",
+          "request": "0101010101010101010101010101010101010101010101010101010101010101",
+          "budget": {
+            "mutations": 2,
+            "observations": 1
+          }
+        }
+      ],
+      "budget": {
+        "mutations": 3,
+        "observations": 2
+      }
+    }
+  ]
+}

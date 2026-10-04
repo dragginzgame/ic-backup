@@ -1,0 +1,1109 @@
+{
+  "schema_version": 1,
+  "kind": "control_authority_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only selected control declarations, receipt admission, negative regressions, controller projection and CLI consumers. Full working-tree hashes identify inspected bytes; section ranges identify scope. Ephemeral direct caller-controller admission only, not a live provider, serialized proven receipt, full preflight or Root-proxy/subnet-admin lane.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217,
+      "inspected_sections": [
+        {
+          "first_line": 95,
+          "last_line": 161
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "sha256": "a084d53450855077952b9e8a9b7910d3cb4aeb5848d3fc5def49d41b34529f35",
+      "bytes": 8045,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 223
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "sha256": "28df94447dc56fbdd3e38d2ec074142ae65eacf78c2562e54dcbd38da5f9b5a8",
+      "bytes": 4354,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 138
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "sha256": "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729",
+      "bytes": 5345,
+      "inspected_sections": [
+        {
+          "first_line": 75,
+          "last_line": 110
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+      "bytes": 4353,
+      "inspected_sections": [
+        {
+          "first_line": 70,
+          "last_line": 85
+        }
+      ]
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/types.rs",
+          "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+          "bytes": 14217
+        },
+        {
+          "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+          "sha256": "a084d53450855077952b9e8a9b7910d3cb4aeb5848d3fc5def49d41b34529f35",
+          "bytes": 8045
+        },
+        {
+          "path": "crates/canic-backup/src/plan/tests/authority.rs",
+          "sha256": "28df94447dc56fbdd3e38d2ec074142ae65eacf78c2562e54dcbd38da5f9b5a8",
+          "bytes": 4354
+        },
+        {
+          "path": "crates/canic-host/src/icp/model.rs",
+          "sha256": "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729",
+          "bytes": 5345
+        },
+        {
+          "path": "crates/canic-cli/src/backup/create/mod.rs",
+          "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+          "bytes": 4353
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/control_authority/mod.rs",
+        "crates/ic-backup/src/policy/control_authority/mod.rs",
+        "crates/ic-backup/src/ports/control_authority/mod.rs"
+      ],
+      "adaptation": "Exact plan/preflight/target and distinct control/read responsibilities become original full intent/operation/mutating-wire binding, integration-owned challenge, canonical actual observed context/target and complete bounded known controllers. Policy requires the original caller itself in that set. Root/Operator/Proven flags, mutable authority upgrades, expiry and optional/default/alias status parsing are not copied. Unknown actual evidence fails at provider admission; an explicitly empty set denies control. Read/status success or another controller never admits direct ingress."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/model/control_authority/tests/mod.rs",
+        "crates/ic-backup/src/policy/control_authority/tests/mod.rs",
+        "crates/ic-backup/src/test_support/control_authority/mod.rs",
+        "docs/contracts/control-authority-port.json"
+      ],
+      "description": "Fresh canonical/duplicate/bound/empty controller tests and all registered mutation cases from the IC golden registry. Exact identity/class/payload/target/context/challenge/ceiling denial, revoked caller/Root-only negatives and zero/max call bounds. Independent Python inventory/graph/plan/control-request binary construction verifies existing owner and new request goldens, without production codec generation."
+    },
+    {
+      "destinations": [
+        "crates/ic-backup/tests/control_authority.rs"
+      ],
+      "description": "External local provider fixture reopens original plan and spent pending journal, rejects stale challenge without provider invocation, denies revoked caller and retains allowances/bytes through every typed provider failure. Native API/persistence qualification only; no actual controller custody or management backend modeled."
+    }
+  ],
+  "protocol_reference": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+  "protocol_scope": "10-controller bound, exact encoded capture/load/stop/start mutation lane, original caller itself in current target controllers. Subnet-admin/Root-proxy lanes and status/snapshot read access are excluded. Load additionally needs source/origin controller permission and same-ID recovery qualification; target controller membership proves none of these.",
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 95,
+      "excerpt": "/// ControlAuthority"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 97,
+      "excerpt": "/// Control authority decision for one selected backup target."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 103,
+      "excerpt": "pub struct ControlAuthority {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 104,
+      "excerpt": "pub source: ControlAuthoritySource,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 105,
+      "excerpt": "pub evidence: AuthorityEvidence,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 108,
+      "excerpt": "impl ControlAuthority {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 112,
+      "excerpt": "source: ControlAuthoritySource::Unknown,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 113,
+      "excerpt": "evidence: AuthorityEvidence::Unknown,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 118,
+      "excerpt": "pub const fn root_controller(evidence: AuthorityEvidence) -> Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 120,
+      "excerpt": "source: ControlAuthoritySource::RootController,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 126,
+      "excerpt": "pub const fn operator_controller(evidence: AuthorityEvidence) -> Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 128,
+      "excerpt": "source: ControlAuthoritySource::OperatorController,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 135,
+      "excerpt": "self.evidence == AuthorityEvidence::Proven && self.source != ControlAuthoritySource::Unknown"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 139,
+      "excerpt": "pub fn is_proven_root_controller(&self) -> bool {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 140,
+      "excerpt": "self.evidence == AuthorityEvidence::Proven"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 141,
+      "excerpt": "&& self.source == ControlAuthoritySource::RootController"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 146,
+      "excerpt": "/// ControlAuthoritySource"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 148,
+      "excerpt": "/// Source of a control authority decision for one backup target."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 149,
+      "excerpt": "/// Owned by backup planning and interpreted by preflight validation."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 154,
+      "excerpt": "pub enum ControlAuthoritySource {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 156,
+      "excerpt": "RootController,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 157,
+      "excerpt": "OperatorController,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "line": 161,
+      "excerpt": "/// SnapshotReadAuthority"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 1,
+      "excerpt": "//! Module: plan::preflight::authority"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 3,
+      "excerpt": "//! Responsibility: apply authority preflight receipts to backup plan targets."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 4,
+      "excerpt": "//! Does not own: authority probing, plan construction, or execution mutation."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: validates receipt headers before upgrading target authority evidence."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 8,
+      "excerpt": "BackupPlan, BackupPlanError, BackupTarget, ControlAuthorityReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 9,
+      "excerpt": "SnapshotReadAuthorityReceipt,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 11,
+      "excerpt": "validate_nonempty, validate_optional_nonempty, validate_preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 12,
+      "excerpt": "validate_preflight_window, validate_principal,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 19,
+      "excerpt": "/// Apply proven authority receipts produced by execution preflights."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 20,
+      "excerpt": "pub fn apply_authority_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 22,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 23,
+      "excerpt": "control_receipts: &[ControlAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 24,
+      "excerpt": "snapshot_read_receipts: &[SnapshotReadAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 27,
+      "excerpt": "self.apply_control_authority_receipts(preflight_id, control_receipts, as_of)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 28,
+      "excerpt": "self.apply_snapshot_read_authority_receipts(preflight_id, snapshot_read_receipts, as_of)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 31,
+      "excerpt": "/// Apply proven control authority receipts for every selected target."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 32,
+      "excerpt": "pub fn apply_control_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 34,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 35,
+      "excerpt": "receipts: &[ControlAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 38,
+      "excerpt": "let mut receipts ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 39,
+      "excerpt": "control_receipt_map(&self.plan_id, preflight_id, as_of, &self.targets, receipts)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 42,
+      "excerpt": "let receipt = receipts.remove(&target.canister_id).ok_or_else(|| {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 43,
+      "excerpt": "BackupPlanError::MissingControlAuthorityReceipt(target.canister_id.clone())"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 45,
+      "excerpt": "if !receipt.authority.is_proven() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 46,
+      "excerpt": "return Err(BackupPlanError::UnprovenControlAuthority("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 50,
+      "excerpt": "if self.requires_root_controller"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 52,
+      "excerpt": "&& !receipt.authority.is_proven_root_controller()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 54,
+      "excerpt": "return Err(BackupPlanError::MissingRootController("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 58,
+      "excerpt": "updates.push((index, receipt.authority));"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 61,
+      "excerpt": "for (index, authority) in updates {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 62,
+      "excerpt": "self.targets[index].control_authority = authority;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 67,
+      "excerpt": "/// Apply proven snapshot read authority receipts for every selected target."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 68,
+      "excerpt": "pub fn apply_snapshot_read_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 70,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 71,
+      "excerpt": "receipts: &[SnapshotReadAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 74,
+      "excerpt": "let mut receipts ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 75,
+      "excerpt": "snapshot_read_receipt_map(&self.plan_id, preflight_id, as_of, &self.targets, receipts)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 78,
+      "excerpt": "let receipt = receipts.remove(&target.canister_id).ok_or_else(|| {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 79,
+      "excerpt": "BackupPlanError::MissingSnapshotReadAuthorityReceipt(target.canister_id.clone())"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 81,
+      "excerpt": "if !receipt.authority.is_proven() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 82,
+      "excerpt": "return Err(BackupPlanError::UnprovenTargetSnapshotReadAuthority("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 86,
+      "excerpt": "updates.push((index, receipt.authority));"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 89,
+      "excerpt": "for (index, authority) in updates {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 90,
+      "excerpt": "self.targets[index].snapshot_read_authority = authority;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 96,
+      "excerpt": "fn control_receipt_map("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 97,
+      "excerpt": "plan_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 98,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 101,
+      "excerpt": "receipts: &[ControlAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 102,
+      "excerpt": ") -> Result<BTreeMap<String, ControlAuthorityReceipt>, BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 107,
+      "excerpt": "let mut receipt_map = BTreeMap::new();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 109,
+      "excerpt": "for receipt in receipts {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 110,
+      "excerpt": "validate_authority_receipt_header(AuthorityReceiptHeaderInput {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 111,
+      "excerpt": "expected_plan_id: plan_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 112,
+      "excerpt": "expected_preflight_id: preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 115,
+      "excerpt": "actual_plan_id: &receipt.plan_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 116,
+      "excerpt": "actual_preflight_id: &receipt.preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 117,
+      "excerpt": "target_canister_id: &receipt.target_canister_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 118,
+      "excerpt": "validated_at: &receipt.validated_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 119,
+      "excerpt": "expires_at: &receipt.expires_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 120,
+      "excerpt": "message: receipt.message.as_deref(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 122,
+      "excerpt": "if receipt_map"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 123,
+      "excerpt": ".insert(receipt.target_canister_id.clone(), receipt.clone())"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 126,
+      "excerpt": "return Err(BackupPlanError::DuplicateAuthorityReceipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 127,
+      "excerpt": "receipt.target_canister_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 132,
+      "excerpt": "Ok(receipt_map)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 135,
+      "excerpt": "fn snapshot_read_receipt_map("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 136,
+      "excerpt": "plan_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 137,
+      "excerpt": "preflight_id: &str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 140,
+      "excerpt": "receipts: &[SnapshotReadAuthorityReceipt],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 141,
+      "excerpt": ") -> Result<BTreeMap<String, SnapshotReadAuthorityReceipt>, BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 146,
+      "excerpt": "let mut receipt_map = BTreeMap::new();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 148,
+      "excerpt": "for receipt in receipts {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 149,
+      "excerpt": "validate_authority_receipt_header(AuthorityReceiptHeaderInput {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 150,
+      "excerpt": "expected_plan_id: plan_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 151,
+      "excerpt": "expected_preflight_id: preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 154,
+      "excerpt": "actual_plan_id: &receipt.plan_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 155,
+      "excerpt": "actual_preflight_id: &receipt.preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 156,
+      "excerpt": "target_canister_id: &receipt.target_canister_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 157,
+      "excerpt": "validated_at: &receipt.validated_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 158,
+      "excerpt": "expires_at: &receipt.expires_at,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 159,
+      "excerpt": "message: receipt.message.as_deref(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 161,
+      "excerpt": "if receipt_map"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 162,
+      "excerpt": ".insert(receipt.target_canister_id.clone(), receipt.clone())"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 165,
+      "excerpt": "return Err(BackupPlanError::DuplicateAuthorityReceipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 166,
+      "excerpt": "receipt.target_canister_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 171,
+      "excerpt": "Ok(receipt_map)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 174,
+      "excerpt": "struct AuthorityReceiptHeaderInput<'a> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 175,
+      "excerpt": "expected_plan_id: &'a str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 176,
+      "excerpt": "expected_preflight_id: &'a str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 179,
+      "excerpt": "actual_plan_id: &'a str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 180,
+      "excerpt": "actual_preflight_id: &'a str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 181,
+      "excerpt": "target_canister_id: &'a str,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 187,
+      "excerpt": "fn validate_authority_receipt_header("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 188,
+      "excerpt": "input: AuthorityReceiptHeaderInput<'_>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 190,
+      "excerpt": "validate_nonempty(\"authority_receipts[].plan_id\", input.actual_plan_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 191,
+      "excerpt": "validate_preflight_id(input.actual_preflight_id)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 192,
+      "excerpt": "validate_principal("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 193,
+      "excerpt": "\"authority_receipts[].target_canister_id\","
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 194,
+      "excerpt": "input.target_canister_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 196,
+      "excerpt": "validate_optional_nonempty(\"authority_receipts[].message\", input.message)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 197,
+      "excerpt": "validate_preflight_window("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 198,
+      "excerpt": "input.actual_preflight_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 204,
+      "excerpt": "if input.actual_plan_id != input.expected_plan_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 205,
+      "excerpt": "return Err(BackupPlanError::AuthorityReceiptPlanMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 206,
+      "excerpt": "expected: input.expected_plan_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 207,
+      "excerpt": "actual: input.actual_plan_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 210,
+      "excerpt": "if input.actual_preflight_id != input.expected_preflight_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 211,
+      "excerpt": "return Err(BackupPlanError::AuthorityReceiptPreflightMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 212,
+      "excerpt": "expected: input.expected_preflight_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 213,
+      "excerpt": "actual: input.actual_preflight_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 216,
+      "excerpt": "if !input.target_ids.contains(input.target_canister_id) {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 217,
+      "excerpt": "return Err(BackupPlanError::UnknownAuthorityReceiptTarget("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "line": 218,
+      "excerpt": "input.target_canister_id.to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 1,
+      "excerpt": "//! Module: plan::tests::authority"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 3,
+      "excerpt": "//! Responsibility: backup authority receipt application tests."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 4,
+      "excerpt": "//! Does not own: request shape or topology preflight tests."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 5,
+      "excerpt": "//! Boundary: authority receipts that upgrade dry-run plans for execution."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 9,
+      "excerpt": "// Ensure authority receipts are the bridge from dry-run planning to execution."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 11,
+      "excerpt": "fn authority_receipts_upgrade_declared_plan_for_execution() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 13,
+      "excerpt": "plan.targets[0].control_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 14,
+      "excerpt": "ControlAuthority::root_controller(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 15,
+      "excerpt": "plan.targets[0].snapshot_read_authority ="
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 16,
+      "excerpt": "SnapshotReadAuthority::root_configured_read(AuthorityEvidence::Declared);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 18,
+      "excerpt": "plan.apply_authority_preflight_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 20,
+      "excerpt": "&[control_receipt(APP, proven_root_control())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 21,
+      "excerpt": "&[snapshot_read_receipt(APP, proven_root_read())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 24,
+      "excerpt": ".expect(\"apply authority receipts\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 26,
+      "excerpt": "assert_eq!(plan.targets[0].control_authority, proven_root_control());"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 27,
+      "excerpt": "assert_eq!(plan.targets[0].snapshot_read_authority, proven_root_read());"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 28,
+      "excerpt": "plan.validate_for_execution()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 29,
+      "excerpt": ".expect(\"receipts make plan executable\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 32,
+      "excerpt": "// Ensure control authority preflight must cover every selected target."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 34,
+      "excerpt": "fn control_authority_receipts_must_cover_all_targets() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 44,
+      "excerpt": ".apply_control_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 46,
+      "excerpt": "&[control_receipt(APP, proven_root_control())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 49,
+      "excerpt": ".expect_err(\"missing worker receipt rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 53,
+      "excerpt": "BackupPlanError::MissingControlAuthorityReceipt(canister) if canister == WORKER"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 57,
+      "excerpt": "// Ensure receipts cannot prove authority for canisters outside the plan."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 59,
+      "excerpt": "fn authority_receipts_reject_unknown_targets() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 63,
+      "excerpt": ".apply_control_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 65,
+      "excerpt": "&[control_receipt(WORKER, proven_root_control())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 68,
+      "excerpt": ".expect_err(\"unknown target receipt rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 72,
+      "excerpt": "BackupPlanError::UnknownAuthorityReceiptTarget(canister) if canister == WORKER"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 76,
+      "excerpt": "// Ensure receipt application does not treat declarations as execution proof."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 78,
+      "excerpt": "fn authority_receipts_reject_unproven_authority() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 82,
+      "excerpt": ".apply_control_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 84,
+      "excerpt": "&[control_receipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 86,
+      "excerpt": "ControlAuthority::root_controller(AuthorityEvidence::Declared),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 90,
+      "excerpt": ".expect_err(\"declared receipt rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 94,
+      "excerpt": "BackupPlanError::UnprovenControlAuthority(canister) if canister == APP"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 100,
+      "excerpt": "fn root_controller_plans_require_root_controller_receipts() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 104,
+      "excerpt": ".apply_control_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 106,
+      "excerpt": "&[control_receipt("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 108,
+      "excerpt": "ControlAuthority::operator_controller(AuthorityEvidence::Proven),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 112,
+      "excerpt": ".expect_err(\"operator controller does not satisfy root controller plan\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 116,
+      "excerpt": "BackupPlanError::MissingRootController(canister) if canister == APP"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 120,
+      "excerpt": "// Ensure standalone authority proofs also expire."
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 122,
+      "excerpt": "fn rejects_expired_authority_receipt() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 126,
+      "excerpt": ".apply_control_authority_receipts("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 128,
+      "excerpt": "&[control_receipt(APP, proven_root_control())],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 131,
+      "excerpt": ".expect_err(\"expired authority receipt rejects\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 135,
+      "excerpt": "BackupPlanError::PreflightReceiptExpired { preflight_id, expires_at, as_of }"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "line": 136,
+      "excerpt": "if preflight_id == PREFLIGHT_ID && expires_at == EXPIRES_AT && as_of == \"unix:250\""
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 82,
+      "excerpt": "#[serde(default, rename = \"controllers\")]"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 83,
+      "excerpt": "pub public_controllers: Option<Vec<String>>,"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "line": 103,
+      "excerpt": "pub controllers: Vec<String>,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 79,
+      "excerpt": "control_authority: ControlAuthority::root_controller(AuthorityEvidence::Declared),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 80,
+      "excerpt": "snapshot_read_authority: SnapshotReadAuthority::root_configured_read("
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 81,
+      "excerpt": "AuthorityEvidence::Declared,"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "owner": "Canic control/read declarations and receipts",
+      "disposition": "Unchanged. Framework routing and Proven receipt upgrades remain downstream. No delegation inferred from Root/parent/controller identities."
+    },
+    {
+      "owner": "Canic ICP status and backup CLI",
+      "disposition": "Unchanged. Optional/default/alias parsing, framework flags and rendered configuration remain in Canic. No decoder, provider or runner imported."
+    }
+  ],
+  "qualification": "Native exact payload/controller evidence admission and spent-journal recovery only. Actual provider authenticity, fresh authenticated observations, challenge uniqueness/timing, per-call prior accounting and custody remain integration-owned. No signing/dispatch, lifecycle/capacity/fence/source-snapshot permission, full preflight or B1/B2 completion established.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json",
+    "docs/operation-plan-source.json",
+    "docs/execution-progress-source.json",
+    "docs/ic-request-source.json",
+    "docs/membership-source.json"
+  ]
+}

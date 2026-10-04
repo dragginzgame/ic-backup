@@ -2,9 +2,9 @@
 
 The command family follows `ic-delegated-auth` and `ic-blob-storage`, using their
 MIT-licensed bounded Bash/Perl helpers adapted to one host-side workspace.
-`0.1.0` is an initial unreleased package version. `publish = false` currently
-disables registry uploads. Creating release tooling does not authorize a release
-or claim an implemented backup/restore product.
+The library inherits `publish = ["crates-io"]` from workspace metadata.
+Creating release tooling does not authorize a release or claim an implemented
+backup/restore product.
 
 ## Preview and preparation
 
@@ -19,9 +19,14 @@ routine implementation does not allocate a version per slice.
 Keep one populated `## [Unreleased]` changelog section. A maintainer-selected
 undated numbered draft may immediately follow an empty Unreleased section.
 Preparation promotes/dates that draft while preserving historical notes.
-The selected draft is currently `0.1.1`; initial setup notes are retained under
-undated `0.1.0`. Add completed changes to `0.1.1` before preparing it. Cargo
-metadata remains at `0.1.0` until the release transaction selects its successor.
+The maintainer completed the tagged `0.1.1` repository release; initial setup
+notes remain under undated `0.1.0`. The maintainer completed the tagged `0.1.2`
+release with layout/reference retention and command custody. The maintainer completed
+`0.1.4` with inventories, selection and dependency graphs, then `0.1.5` with
+operation-plan binding and retained-journal progress. Cargo metadata is at `0.1.5`;
+the maintainer selected an undated `0.1.6` changelog draft for the IC request codec
+and membership/control contracts. Cargo remains `0.1.5`; selecting notes does not run a
+release/version transaction.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.
@@ -68,11 +73,20 @@ cleanup action; never discard recovery evidence as ordinary cleanup.
 
 ## Registry publication
 
-`make package` verifies a local package during development. It works while
-publication is disabled and does not upload anything. The maintainer must
-separately enable publication and authorize uploads when an actual library is
-ready. `make publish-dry-run` and `make publish` require the clean tagged release
-and its matching receipt, then delegate to Cargo for crates.io checks.
+`make package` verifies a local package during development without uploading.
+`make publish-dry-run` and `make publish` delegate directly to
+`cargo publish --locked --registry crates-io -p ic-backup`, with `--dry-run`
+for the former. Cargo owns package-file cleanliness, locked dependency checks,
+package compilation, registry eligibility and authentication. Commit changes to
+files included in the package before publishing. The dry run verifies without
+uploading; `make publish` uploads the current library version.
+
+Receipts and annotated tags govern the repository release transaction. Registry
+publication uses the current checkout independently of that receipt and tag;
+development changelog edits and later publishing-configuration commits do not
+require an extra version bump just to satisfy the release helpers. Cargo and
+crates.io enforce whether the chosen package version can be published.
+Publication leaves existing receipts, versions and tags unchanged.
 
 Repository tags, registry publication and live IC backup/restore are separate
 effects. Passing the native gate proves only implemented behavior; platform

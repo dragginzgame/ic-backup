@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 local download journal",
+  "description": "Local artifact identity and publication progress. This record grants no remote authority or retry budget and does not qualify complete IC transfer/terminal completion. Runtime verifies exact derived paths, normalized identity and unique physical targets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "intent",
+    "artifacts"
+  ],
+  "x-max-encoded-bytes": 1048576,
+  "x-max-canonical-output-bytes": 1048576,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "intent": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "x-unique-key": "canonical canister_id",
+      "x-canonical-order": "canonical canister_id text",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    }
+  },
+  "$defs": {
+    "checksum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "hash"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canister_id",
+        "snapshot_id",
+        "snapshot_taken_at_timestamp",
+        "snapshot_total_size_bytes",
+        "staging_path",
+        "artifact_path",
+        "state",
+        "checksum"
+      ],
+      "properties": {
+        "canister_id": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+          "description": "Runtime verifies principal checksum/grouping and emits canonical lowercase text."
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[!-~]+$",
+          "description": "Exact opaque backend token. Backend codec qualification is separate."
+        },
+        "snapshot_taken_at_timestamp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "snapshot_total_size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615,
+          "description": "Observed IC snapshot size, not encoded directory length."
+        },
+        "staging_path": {
+          "type": "string",
+          "pattern": "^artifacts/[a-z2-7-]+\\.tmp$",
+          "maxLength": 77,
+          "x-derived-from": "artifacts/<canonical canister_id>.tmp"
+        },
+        "artifact_path": {
+          "type": "string",
+          "pattern": "^artifacts/[a-z2-7-]+$",
+          "maxLength": 73,
+          "x-derived-from": "artifacts/<canonical canister_id>"
+        },
+        "state": {
+          "enum": [
+            "Created",
+            "Downloaded",
+            "ChecksumVerified",
+            "Durable"
+          ]
+        },
+        "checksum": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/checksum"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "Created",
+                  "Downloaded"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checksum": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "checksum": {
+                "$ref": "#/$defs/checksum"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

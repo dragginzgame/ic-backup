@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "kind": "command_custody_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Exact working-tree inspection for owned command custody and retained existing-sidecar quiescence. No Rust raw borrowed handle or unsafe child hook copied; no ICP backend or IC-effect qualification. Previous extraction/layout evidence remains retained.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/persistence/command_lifetime_lock/mod.rs",
+      "sha256": "926343325c3a6c38b25463d8718f663226d0d7a61c22fc6be60d7cb18abfe287",
+      "bytes": 8261
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/file_lock/mod.rs",
+      "sha256": "1fcb1ed309c6d941833fbd0e41aa8679d745fa63a7599e533d5613e7b6ea1d66",
+      "bytes": 2725
+    },
+    {
+      "path": "crates/canic-host/src/icp/command.rs",
+      "sha256": "852c7c0c257ec0ea7cbe2720b20f036b2fdad94f5e2d53bcff9fde005472bc7a",
+      "bytes": 14569
+    },
+    {
+      "path": "crates/canic-host/src/icp/run.rs",
+      "sha256": "f8bceeb9304157faa5626eb61f39d8201809843a3ee0b3e4da24633a27f20d00",
+      "bytes": 7659
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "bytes": 13445
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "sha256": "2e2760d815be749cfe9cfa71f9604ae026ea26ca143770cc88896f0142fe4569",
+      "bytes": 5030
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/types.rs",
+      "sha256": "b31a5de1e92ad0c65ccacbdfa6ae68a51cc3c45f854e53338670aa512767e412",
+      "bytes": 20009
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "sha256": "ea01cb63e620a1e8b0abd5ab0a70ae232dc093a0927222e5447247ac0095f980",
+      "bytes": 5547
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "sha256": "2e4b817f56cb5b8fcac0fa499ce3b210984d5b4d2df80e48aaf8da229e95bdc3",
+      "bytes": 10679
+    }
+  ],
+  "copied_sources": [
+    {
+      "source": "crates/canic-backup/src/persistence/command_lifetime_lock/mod.rs",
+      "source_sha256": "926343325c3a6c38b25463d8718f663226d0d7a61c22fc6be60d7cb18abfe287",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/command_lifetime_lock/mod.rs",
+        "crates/ic-backup/src/ops/persistence/command_lifetime_lock/tests/mod.rs"
+      ],
+      "adaptation": "Operation lock paths, close-only custody, bounded finish and owner-death regression reshaped; owned spawn, v1 exact filesystem identity, fresh exclusive probes and acknowledged descendants added."
+    },
+    {
+      "source": "crates/canic-backup/src/persistence/file_lock/mod.rs",
+      "source_sha256": "1fcb1ed309c6d941833fbd0e41aa8679d745fa63a7599e533d5613e7b6ea1d66",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/file_lock/mod.rs"
+      ],
+      "adaptation": "Retain first extraction; add existing-only admission for reconciliation, with no sidecar recreation."
+    },
+    {
+      "source": "crates/canic-host/src/icp/command.rs",
+      "source_sha256": "852c7c0c257ec0ea7cbe2720b20f036b2fdad94f5e2d53bcff9fde005472bc7a",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/command_lifetime_lock/mod.rs"
+      ],
+      "adaptation": "Inherited descriptor responsibility adapted through command-fds owned API; unsafe pre_exec/raw handle and unrelated Host logic not copied."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 7,
+      "excerpt": "persistence::CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 59,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 66,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 73,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 82,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "line": 243,
+      "excerpt": "MissingCommandLifetime {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 15,
+      "excerpt": "persistence::{BackupLayout, CommandLifetimeHandle},"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 39,
+      "excerpt": "command_lifetime: Option<CommandLifetimeHandle>,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 90,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 107,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 122,
+      "excerpt": "command_lifetime: Option<CommandLifetimeHandle>,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 123,
+      "excerpt": ") -> Result<CommandLifetimeHandle, BackupRunnerError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "line": 124,
+      "excerpt": "command_lifetime.ok_or_else(|| BackupRunnerError::MissingCommandLifetime {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/types.rs",
+      "line": 9,
+      "excerpt": "persistence::{CommandLifetimeHandle, CommandLifetimeLock, JournalLockError},"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/types.rs",
+      "line": 52,
+      "excerpt": "command_lifetime: Option<CommandLifetimeHandle>,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/types.rs",
+      "line": 629,
+      "excerpt": "pub(super) command_lock: Option<CommandLifetimeLock>,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 12,
+      "excerpt": "persistence::CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 37,
+      "excerpt": "fn command_icp(&self, command_lifetime: CommandLifetimeHandle) -> IcpCli {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 40,
+      "excerpt": ".with_inherited_fd(Some(command_lifetime.raw_fd()))"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 88,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 98,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 108,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 125,
+      "excerpt": "command_lifetime: CommandLifetimeHandle,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 204,
+      "excerpt": "command_lifetime: Option<canic_backup::persistence::CommandLifetimeHandle>,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 209,
+      "excerpt": "command_lifetime.map(canic_backup::persistence::CommandLifetimeHandle::raw_fd),"
+    }
+  ],
+  "dependency": {
+    "name": "command-fds",
+    "version": "0.3.3",
+    "registry_checksum": "1b60b5124979fccd9addd89d8b97a1d6eebb4950694520c75ddd722535ea443f",
+    "repository": "https://github.com/google/command-fds/",
+    "api_documentation": "https://docs.rs/command-fds/0.3.3/command_fds/trait.CommandFdExt.html",
+    "license": "Apache-2.0",
+    "relationship": "Published dependency; its source was inspected, not copied into this repository.",
+    "inspected_files": [
+      {
+        "path": "Cargo.toml",
+        "sha256": "4dba3fd58c12442b94ac4f3d1a023689f6ae7011cd5d1be554202662b9d6473b"
+      },
+      {
+        "path": "src/lib.rs",
+        "sha256": "48ae3cee2aecd732eea345c97dc3e569d5f4e7227100fa246546fd0af66bc886"
+      }
+    ]
+  },
+  "qualification_environment": {
+    "os": "Linux",
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "architecture": "x86_64",
+    "python": "3.12.3",
+    "rust": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "msrv": "1.91.0",
+    "backend": "Native local filesystem/process fixtures; no IC executor"
+  },
+  "dispositions": [
+    {
+      "source": "CommandLifetimeHandle",
+      "disposition": "Not copied. No borrowed/clonable raw descriptor handle API; command is consumed by an owned inheritance step."
+    },
+    {
+      "source": "command_lifetime_lock unsafe regression setup",
+      "disposition": "Not copied. Fresh safe Rust public API drives acknowledged real native Python/direct/descendant process cases."
+    },
+    {
+      "source": "ICP subprocess retries/output/compatibility",
+      "disposition": "Not copied. Selected backend bounds, exact outcome and custody capabilities remain required before transport extraction."
+    },
+    {
+      "source": "runner and CLI executor ports",
+      "disposition": "Read-only consumers retained in Canic. Future generic ports must own authority, durable attempts and unsettled effects; custody records alone grant none."
+    }
+  ]
+}

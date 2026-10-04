@@ -18,7 +18,7 @@ pub(super) enum FileLockError {
 pub(super) fn acquire(path: &Path) -> Result<fs::File, FileLockError> {
     #[cfg(unix)]
     {
-        acquire_supported(path)
+        acquire_supported(path, true)
     }
 
     #[cfg(not(unix))]
@@ -33,23 +33,33 @@ pub(super) fn acquire(path: &Path) -> Result<fs::File, FileLockError> {
     }
 }
 
+pub(super) fn acquire_existing(path: &Path) -> Result<fs::File, FileLockError> {
+    #[cfg(unix)]
+    {
+        acquire_supported(path, false)
+    }
+    #[cfg(not(unix))]
+    {
+        acquire(path)
+    }
+}
+
 #[cfg(unix)]
 pub(super) fn unlock(file: &fs::File) {
     let _ = flock(file, FlockOperation::Unlock);
 }
 
 #[cfg(unix)]
-fn acquire_supported(path: &Path) -> Result<fs::File, FileLockError> {
+fn acquire_supported(path: &Path, create: bool) -> Result<fs::File, FileLockError> {
     reject_existing_unsafe_entry(path)?;
 
-    let fd = openat(
-        CWD,
-        path,
-        OFlags::RDWR | OFlags::CREATE | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
-        Mode::RUSR | Mode::WUSR,
-    )
-    .map_err(errno_to_io)
-    .map_err(FileLockError::Io)?;
+    let mut flags = OFlags::RDWR | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
+    if create {
+        flags |= OFlags::CREATE;
+    }
+    let fd = openat(CWD, path, flags, Mode::RUSR | Mode::WUSR)
+        .map_err(errno_to_io)
+        .map_err(FileLockError::Io)?;
     let metadata = fstat(&fd).map_err(errno_to_io).map_err(FileLockError::Io)?;
     let kind = FileType::from_raw_mode(metadata.st_mode);
     if !kind.is_file() {

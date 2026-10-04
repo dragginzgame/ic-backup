@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 explicit operation dependency graph",
+  "description": "Immutable bounded dependencies over exact opaque operation identities. Runtime verifies unique sequences, closed prerequisite references, acyclicity and aggregate edge bounds. The graph contains no effect payload, inventory/request/release binding, budgets, authority or receipts; it is one component of a future complete plan. Duplicate JSON fields reject at runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "nodes"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8192,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/node"
+      },
+      "x-unique-key": "exact operation_sequence",
+      "x-canonical-order": "ascending operation_sequence numeric value"
+    }
+  },
+  "x-max-total-edges": 65536,
+  "x-runtime-max-chain-depth": 8191,
+  "x-max-encoded-bytes": 1048576,
+  "x-max-canonical-output-bytes": 1048576,
+  "x-topological-order": "Repeatedly emit the smallest currently ready sequence; computed order is not persisted. Order grants no effect authority or dispatch permission. Application dependencies are explicitly integration-qualified, not inferred from inventory parents.",
+  "x-canonical-digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/effect-graph/v1 followed by one zero byte",
+      "Canonical sorted node count: unsigned u32 big-endian",
+      "For each node in ascending operation_sequence order: unsigned u64 big-endian operation_sequence followed by unsigned u32 big-endian direct prerequisite count",
+      "Each prerequisite in ascending numeric order: unsigned u64 big-endian operation_sequence"
+    ],
+    "excluded": [
+      "version (fixed by domain)",
+      "JSON formatting",
+      "computed planning order",
+      "caller-declared progress",
+      "all operation payloads, authority and receipts"
+    ],
+    "golden-vector": {
+      "record": {
+        "version": 1,
+        "nodes": [
+          {
+            "operation_sequence": 0,
+            "depends_on": []
+          },
+          {
+            "operation_sequence": 2,
+            "depends_on": [
+              0
+            ]
+          },
+          {
+            "operation_sequence": 9,
+            "depends_on": [
+              0
+            ]
+          },
+          {
+            "operation_sequence": 18446744073709551615,
+            "depends_on": [
+              2,
+              9
+            ]
+          }
+        ]
+      },
+      "sha256": "e4c817eec02d0579d3aae92526818ba26863ae8ee406963659f0a51c4e99f188"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_sequence",
+        "depends_on"
+      ],
+      "properties": {
+        "operation_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615,
+          "description": "Exact opaque operation identity; zero and nonconsecutive sequences are allowed."
+        },
+        "depends_on": {
+          "type": "array",
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18446744073709551615,
+            "description": "Exact opaque operation identity; zero and nonconsecutive sequences are allowed."
+          },
+          "x-canonical-order": "ascending operation_sequence numeric value"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "version": 1,
+      "nodes": [
+        {
+          "operation_sequence": 0,
+          "depends_on": []
+        },
+        {
+          "operation_sequence": 2,
+          "depends_on": [
+            0
+          ]
+        },
+        {
+          "operation_sequence": 9,
+          "depends_on": [
+            0
+          ]
+        },
+        {
+          "operation_sequence": 18446744073709551615,
+          "depends_on": [
+            2,
+            9
+          ]
+        }
+      ]
+    }
+  ]
+}

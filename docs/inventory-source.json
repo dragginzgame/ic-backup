@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "kind": "inventory_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only topology/registry projection, target expansion, selector and consumer inspection. Adapted declared inventories, pure selection and immutable local persistence only; no authoritative discovery, Fleet/Root routing, plan effects, backend or consumer changes. Working-tree file hashes identify inspected bytes; provenance is separate from qualification.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/topology/mod.rs",
+      "sha256": "cc4dabfc51f446d0887e3d8d52db4914f8f880396235ab533bcae9aacb17dc2a",
+      "bytes": 2711
+    },
+    {
+      "path": "crates/canic-backup/src/topology/tests/mod.rs",
+      "sha256": "8f75bfc22ebd42a7b32821232e7c3e38d5e67c2bef30735bd2e8947399ad9ec2",
+      "bytes": 1589
+    },
+    {
+      "path": "crates/canic-backup/src/discovery/mod.rs",
+      "sha256": "349dfb17b8504b29d3d39e0e51495a0c6f093e8a13c8004774ba2c9a858dd68e",
+      "bytes": 2656
+    },
+    {
+      "path": "crates/canic-backup/src/discovery/tests/mod.rs",
+      "sha256": "582923e0692bbb98801c51e9237b6a79a7c150e6170b753d4eff937909178407",
+      "bytes": 2034
+    },
+    {
+      "path": "crates/canic-backup/src/registry.rs",
+      "sha256": "1e9293debae27f35b45a46cbe42b86e4986601fb0258533842b4da011266f2a7",
+      "bytes": 661
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "sha256": "246ab8ee4da1ec6c8e69b7773cc6b7f2e66e92c5d5951981d838493c77f85a88",
+      "bytes": 3812
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "sha256": "07520d509b2eab0207b56b2825ad8ee604de0eb364a8b57622c609cbcd06ab62",
+      "bytes": 3169
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "sha256": "379e749223361126275523c82974f3c1814afa18c2eeb26cb916695f57d5d2ae",
+      "bytes": 1408
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "sha256": "b123b2d0ed63744ae41535b4a205e7d424f5e9d4dff4325f169b0df7ac44e8ca",
+      "bytes": 2512
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "sha256": "918015a197ead951bb951b9dbeddba04e538ff3d2954bf380170d0b074019eea",
+      "bytes": 3176
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/topology/mod.rs",
+          "sha256": "cc4dabfc51f446d0887e3d8d52db4914f8f880396235ab533bcae9aacb17dc2a",
+          "bytes": 2711
+        },
+        {
+          "path": "crates/canic-backup/src/registry.rs",
+          "sha256": "1e9293debae27f35b45a46cbe42b86e4986601fb0258533842b4da011266f2a7",
+          "bytes": 661
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/inventory/mod.rs",
+        "crates/ic-backup/src/model/inventory/target/mod.rs"
+      ],
+      "adaptation": "Physical principal/parent/role/module projection and canonical order-independent SHA-256 hashing reshaped into private validated v1 Record fields. Required nullable fields, canonical principals/hashes, bounded UTF-8 role bytes, nonempty unique physical forest and closed acyclic parent edges added. Length-prefixed binary encoding with nullable tags replaces Canic sorted text; no compatibility reader or old digest equivalence."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/discovery/mod.rs",
+          "sha256": "349dfb17b8504b29d3d39e0e51495a0c6f093e8a13c8004774ba2c9a858dd68e",
+          "bytes": 2656
+        },
+        {
+          "path": "crates/canic-backup/src/plan/build/targets.rs",
+          "sha256": "246ab8ee4da1ec6c8e69b7773cc6b7f2e66e92c5d5951981d838493c77f85a88",
+          "bytes": 3812
+        },
+        {
+          "path": "crates/canic-backup/src/plan/build/selector.rs",
+          "sha256": "379e749223361126275523c82974f3c1814afa18c2eeb26cb916695f57d5d2ae",
+          "bytes": 1408
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/policy/selection/mod.rs"
+      ],
+      "adaptation": "Canic direct-child/recursive expansion adapted to pure explicit Exact/DirectChildren/Descendants decisions over validated records. Canonical selected order, full inventory digest binding, duplicate exact selector rejection and overlapping expansion union added. Role selection, privileged Root exclusions, framework scopes and silent missing/cyclic depth truncation not copied."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/topology/tests/mod.rs",
+          "sha256": "8f75bfc22ebd42a7b32821232e7c3e38d5e67c2bef30735bd2e8947399ad9ec2",
+          "bytes": 1589
+        },
+        {
+          "path": "crates/canic-backup/src/discovery/tests/mod.rs",
+          "sha256": "582923e0692bbb98801c51e9237b6a79a7c150e6170b753d4eff937909178407",
+          "bytes": 2034
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/inventory/tests/mod.rs",
+        "crates/ic-backup/src/policy/selection/tests/mod.rs"
+      ],
+      "adaptation": "Relevant order-independent hash, parent binding, optional distinctions and direct/recursive children cases rerun against extracted production owners. Old dangling-parent hash fixtures use closed valid forests here. New golden bytes, alias, graph, resource/UTF-8 and exact-selector regressions added."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/inventory/mod.rs",
+        "crates/ic-backup/src/ops/persistence/inventory/tests/mod.rs",
+        "crates/ic-backup/tests/inventory_selection.rs"
+      ],
+      "description": "Compose existing qualified layout exclusion, journal locks and no-overwrite bounded durable JSON into immutable inventory publication/admission by exact declared digest. Requalify native API evidence retention, private permissions, contention, byte bounds and unsafe/replaced paths; public journey uses no live discovery or IC backend."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 8,
+      "excerpt": "discovery::{SnapshotTarget, targets_from_registry},"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 36,
+      "excerpt": ") -> Result<Vec<SnapshotTarget>, BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 46,
+      "excerpt": "targets_from_registry(input.registry, selected, recursive)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 53,
+      "excerpt": ".map(|entry| SnapshotTarget {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 64,
+      "excerpt": "target: SnapshotTarget,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 65,
+      "excerpt": "target_depths: &BTreeMap<String, u32>,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 71,
+      "excerpt": "depth: target_depths"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 85,
+      "excerpt": "pub(super) fn target_depths(registry: &[RegistryEntry]) -> BTreeMap<String, u32> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 95,
+      "excerpt": "target_depth(entry.pid.as_str(), &parents),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "line": 101,
+      "excerpt": "fn target_depth(canister_id: &str, parents: &BTreeMap<&str, Option<&str>>) -> u32 {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 17,
+      "excerpt": "use crate::{manifest::IdentityMode, registry::RegistryEntry};"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 18,
+      "excerpt": "use targets::{backup_target, selected_subtree_root, snapshot_targets, target_depths};"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 39,
+      "excerpt": "pub registry: &'a [RegistryEntry],"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 50,
+      "excerpt": "let root_included = input.selected_scope_kind == BackupScopeKind::MaintenanceRoot;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 52,
+      "excerpt": "let snapshot_targets = snapshot_targets(&input)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 53,
+      "excerpt": "let target_depths = target_depths(input.registry);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 54,
+      "excerpt": "let targets = snapshot_targets"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 57,
+      "excerpt": "backup_target("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 59,
+      "excerpt": "&target_depths,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 78,
+      "excerpt": "root_included,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "line": 17,
+      "excerpt": "pub fn resolve_backup_selector("
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "line": 27,
+      "excerpt": ".ok_or_else(|| BackupPlanError::UnknownSelector(selector.to_string()));"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "line": 32,
+      "excerpt": ".filter(|entry| entry.role.as_deref() == Some(selector))"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "line": 37,
+      "excerpt": "[] => Err(BackupPlanError::UnknownSelector(selector.to_string())),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "line": 38,
+      "excerpt": "_ => Err(BackupPlanError::AmbiguousSelector {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 14,
+      "excerpt": "/// TopologyReceiptMismatch"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 22,
+      "excerpt": "struct TopologyReceiptMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 39,
+      "excerpt": "if let Some(mismatch) = topology_receipt_mismatches(manifest, journal)"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 43,
+      "excerpt": "return Err(PersistenceError::ManifestJournalTopologyReceiptMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 53,
+      "excerpt": "fn topology_receipt_mismatches("
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 56,
+      "excerpt": ") -> Vec<TopologyReceiptMismatch> {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 58,
+      "excerpt": "record_topology_receipt_mismatch("
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 60,
+      "excerpt": "\"discovery_topology_hash\","
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 61,
+      "excerpt": "&manifest.deployment.discovery_topology_hash,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 62,
+      "excerpt": "&journal.discovery_topology_hash,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 64,
+      "excerpt": "record_topology_receipt_mismatch("
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 66,
+      "excerpt": "\"pre_snapshot_topology_hash\","
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 67,
+      "excerpt": "&manifest.deployment.pre_snapshot_topology_hash,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 68,
+      "excerpt": "&journal.pre_snapshot_topology_hash,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 73,
+      "excerpt": "fn record_topology_receipt_mismatch("
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 74,
+      "excerpt": "mismatches: &mut Vec<TopologyReceiptMismatch>,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "line": 83,
+      "excerpt": "mismatches.push(TopologyReceiptMismatch {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 12,
+      "excerpt": "topology::{TopologyHasher, TopologyRecord},"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 14,
+      "excerpt": "use canic_host::registry::RegistryEntry as HostRegistryEntry;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 17,
+      "excerpt": "pub(super) fn backup_registry_entries(entries: &[HostRegistryEntry]) -> Vec<BackupRegistryEntry> {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 30,
+      "excerpt": "pub(super) fn registry_topology_hash("
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 36,
+      "excerpt": "Ok(TopologyRecord {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 56,
+      "excerpt": "Ok(TopologyHasher::hash(&records).hash)"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "paths": [
+        "crates/canic-backup/src/plan/build/mod.rs",
+        "crates/canic-backup/src/plan/build/targets.rs",
+        "crates/canic-backup/src/plan/build/selector.rs"
+      ],
+      "disposition": "Canic retains Fleet/Root scopes, role selectors, control/read authority and execution phase generation. Generic inventory/selection supplies declarations only; no existing consumer changed."
+    },
+    {
+      "paths": [
+        "crates/canic-cli/src/backup/create/plan.rs"
+      ],
+      "disposition": "Canic CLI retains authoritative Host registry conversion and source topology digest production. Integration adoption must deliberately project validated exact declarations; no automatic digest conversion or privileged-root semantics supplied."
+    },
+    {
+      "paths": [
+        "crates/canic-backup/src/persistence/integrity/topology.rs"
+      ],
+      "disposition": "Existing full manifest/download journal topology-receipt comparison remains Canic-owned. Equal generic inventory digests do not establish current membership revision, fence or full terminal completion."
+    }
+  ],
+  "qualification": "Fresh targeted native tests against extracted model, policy, persistence and public APIs; independent binary golden encodings plus schema validation. No live authority, PocketIC, IC effects, complete plan or runner qualification.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json"
+  ]
+}

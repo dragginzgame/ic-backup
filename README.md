@@ -27,7 +27,37 @@ execution plans, durable interruption recovery and safe local retention.
 This repository contains an independent Rust workspace with one library package
 at `crates/ic-backup`, contributor tooling and an extraction design. The library
 provides local artifact checksums, secure staging, durable verified-directory
-publication, bounded JSON persistence and journal locking extracted from Canic.
+publication, bounded JSON persistence, journal/layout locking, durable restore
+dependencies, inherited command custody and local download journals extracted
+from Canic. Journal transitions retain exact snapshot identity and reconcile
+verified artifact publication after interruption. References
+remain retained until terminal completion and subprocess-custody contracts
+support their release.
+Local attempt journals bind exact declared operation identity and immutable
+mutation/observation limits. They durably consume allowances and preserve
+unresolved outcomes across interruption; integrations still supply fresh
+authority, qualified receipts and remote-effect reconciliation.
+Canonical physical inventories retain exact declared targets and parent forests.
+Pure selection supports exact principals, direct children and descendants;
+inventory hashes bind declarations while authoritative discovery stays integration-owned.
+Explicit operation dependency graphs provide deterministic planning order and pure
+readiness checks. Integrations qualify application ordering and actual completion;
+graph declarations and ready views grant no authority to execute effects.
+Immutable operation plans bind those declarations to exact targets/request digests
+and original per-operation and aggregate attempt ceilings. Their full canonical
+digest supplies journal intent; fresh authority and backend qualification remain
+integration-owned.
+Pure execution progress joins the complete original plan with exact retained attempt
+journals. It checks causal Applied evidence and reports pending/exhausted allowances;
+missing journals never become fresh zero-consumption declarations.
+The IC request codec provides closed typed status/inventory, stop/start, capture
+and load declarations with exact Candid bytes and request digests. It checks payload
+binding for original mutations and separately reserved reconciliation observations.
+A separate membership port binds provider observations to original intent, exact
+context and inventory, with pure validation and no default provider. Integrations
+still qualify freshness, permissions and application consistency.
+The control port checks direct caller-controller evidence for exact mutation
+payloads, with pure admission and no implicit delegation or dispatch permission.
 Capture/restore runners, an IC transport and the CLI have not been extracted.
 It cannot yet perform a canister backup or restore.
 The public repository is
@@ -36,8 +66,8 @@ The public repository is
 Development uses Rust 1.99.0, edition 2024 and a minimum supported Rust version
 of 1.91.0, following the sibling library conventions. The workspace owns package
 metadata, dependency declarations and lints. Builds stay in this repository's
-`target/`. The initial unreleased version is `0.1.0`; registry publication is
-disabled.
+`target/`. Package metadata permits crates.io publication; `make publish`
+delegates to Cargo for the current library version.
 
 ```bash
 make hooks-install

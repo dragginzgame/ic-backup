@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 typed IC management request",
+  "description": "Closed host-ingress wire codec declaration. Runtime canonicalizes principal text and derives exact Candid bytes under pinned upstream argument types. Record/digest proves no caller credentials, fresh permissions, same-release safety, cost bound, effect dispatch or completion. Duplicate JSON fields reject.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "method",
+    "target",
+    "snapshot_id"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "canister_status",
+        "list_canister_snapshots",
+        "load_canister_snapshot",
+        "start_canister",
+        "stop_canister",
+        "take_canister_snapshot"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 63,
+      "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+      "description": "Runtime validates principal checksum/grouping and emits canonical lowercase ASCII. This is the effective routing target and exact Candid canister_id; current existence/authority remains backend-owned."
+    },
+    "snapshot_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/snapshot_bytes"
+        }
+      ],
+      "description": "Required nullable key. Load requires exact raw binary bytes; every other method requires null. No hex/token conversion, case folding, sorting or identity remapping."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "load_canister_snapshot"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "snapshot_id": {
+            "$ref": "#/$defs/snapshot_bytes"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "snapshot_id": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "snapshot_bytes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  },
+  "x-max-encoded-bytes": 8192,
+  "x-max-canonical-output-bytes": 8192,
+  "x-max-candid-argument-bytes": 4096,
+  "x-codec": {
+    "candid": "=0.10.35",
+    "ic-management-canister-types": "=0.8.0",
+    "receiver": "aaaaa-aa",
+    "call-mode": "replicated update ingress",
+    "methods": {
+      "canister_status": {
+        "effect": "observation",
+        "arguments": "CanisterIdRecord { canister_id: target }"
+      },
+      "list_canister_snapshots": {
+        "effect": "observation",
+        "arguments": "CanisterIdRecord { canister_id: target }"
+      },
+      "stop_canister": {
+        "effect": "mutation",
+        "arguments": "CanisterIdRecord { canister_id: target }"
+      },
+      "start_canister": {
+        "effect": "mutation",
+        "arguments": "CanisterIdRecord { canister_id: target }"
+      },
+      "take_canister_snapshot": {
+        "effect": "mutation",
+        "arguments": "TakeCanisterSnapshotArgs { canister_id: target, replace_snapshot: None, uninstall_code: Some(false), sender_canister_version: None }"
+      },
+      "load_canister_snapshot": {
+        "effect": "mutation",
+        "arguments": "LoadCanisterSnapshotArgs { canister_id: target, snapshot_id: exact bytes, sender_canister_version: None }"
+      }
+    },
+    "sender-canister-version": "Absent for operator-host ingress. It concerns the caller canister, never a target-version compare-and-swap guard.",
+    "source": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/"
+  },
+  "x-canonical-digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/ic-management-request/v1 followed by one zero byte",
+      "Fixed management receiver raw-principal length: u8 zero, followed by zero principal bytes",
+      "Effective target raw-principal byte length: u8 (0..29), followed by exact canonical raw principal bytes",
+      "Call-mode byte: 0x01 for replicated update ingress",
+      "Exact closed method name ASCII byte length: u8, followed by exact method bytes",
+      "Derived argument byte length: u32 big-endian, followed by exact pinned Candid argument bytes"
+    ],
+    "excluded": [
+      "JSON formatting",
+      "principal text case aliases",
+      "version (fixed by domain)",
+      "network/caller/intent/release/budgets (owned by outer operation binding)",
+      "derived caches/digest",
+      "fresh authority",
+      "reply/effect evidence"
+    ],
+    "golden-vectors": [
+      {
+        "method": "canister_status",
+        "target": "renrk-eyaaa-aaaaa-aaada-cai",
+        "snapshot_id": null,
+        "arguments_hex": "4449444c016c01b3c4b1f204680100010a00000000000000060101",
+        "digest": "4d9b090b52a40ecaf86729b9fecd20f7bad1bfa2e8e7f7871ee0d497da6983e6"
+      },
+      {
+        "method": "list_canister_snapshots",
+        "target": "renrk-eyaaa-aaaaa-aaada-cai",
+        "snapshot_id": null,
+        "arguments_hex": "4449444c016c01b3c4b1f204680100010a00000000000000060101",
+        "digest": "0c7376bf66247fd0813e673b50b2a91c35a372239214dca503d5ba083a6ff146"
+      },
+      {
+        "method": "load_canister_snapshot",
+        "target": "renrk-eyaaa-aaaaa-aaada-cai",
+        "snapshot_id": [
+          0,
+          255,
+          17
+        ],
+        "arguments_hex": "4449444c036c03b3c4b1f20468ca9998b40d01b6b897890f026e786d7b0100010a00000000000000060101000300ff11",
+        "digest": "919f7b965cd0c0c6082ed193ff5796b116bc554bc71670135e5e00c419a1983d"
+      },
+      {
+        "method": "start_canister",
+        "target": "renrk-eyaaa-aaaaa-aaada-cai",
+        "snapshot_id": null,
+        "arguments_hex": "4449444c016c01b3c4b1f204680100010a00000000000000060101",
+        "digest": "6973f03b8cfa7d0e90e0f52663b0ca615d357a3685a762064b78fc16fa75c1da"
+      },
+      {
+        "method": "stop_canister",
+        "target": "renrk-eyaaa-aaaaa-aaada-cai",
+        "snapshot_id": null,
+        "arguments_hex": "4449444c016c01b3c4b1f204680100010a00000000000000060101",
+        "digest": "03e7008814fef428ea4a1bb4ffebc8e02aa99e770ef5cc193cf93e5c9b5ebfa7"
+      },
+      {
+        "method": "take_canister_snapshot",
+        "target": "renrk-eyaaa-aaaaa-aaada-cai",
+        "snapshot_id": null,
+        "arguments_hex": "4449444c056c04efc1e4cf0101b3c4b1f20468eabb9ad30903ca9998b40d046e026d7b6e7e6e78010000010a00000000000000060101010000",
+        "digest": "5748517eed542c48b62534fe4d025d8649426eb75ae0ab3894434adc30a04075"
+      }
+    ],
+    "golden-source": "Independent Python field-ID hashing, unsigned/signed LEB128 and direct Candid type/value construction from published argument definitions; no Rust production or Candid encoder invoked."
+  },
+  "examples": [
+    {
+      "version": 1,
+      "method": "canister_status",
+      "target": "renrk-eyaaa-aaaaa-aaada-cai",
+      "snapshot_id": null
+    },
+    {
+      "version": 1,
+      "method": "list_canister_snapshots",
+      "target": "renrk-eyaaa-aaaaa-aaada-cai",
+      "snapshot_id": null
+    },
+    {
+      "version": 1,
+      "method": "load_canister_snapshot",
+      "target": "renrk-eyaaa-aaaaa-aaada-cai",
+      "snapshot_id": [
+        0,
+        255,
+        17
+      ]
+    },
+    {
+      "version": 1,
+      "method": "start_canister",
+      "target": "renrk-eyaaa-aaaaa-aaada-cai",
+      "snapshot_id": null
+    },
+    {
+      "version": 1,
+      "method": "stop_canister",
+      "target": "renrk-eyaaa-aaaaa-aaada-cai",
+      "snapshot_id": null
+    },
+    {
+      "version": 1,
+      "method": "take_canister_snapshot",
+      "target": "renrk-eyaaa-aaaaa-aaada-cai",
+      "snapshot_id": null
+    }
+  ]
+}

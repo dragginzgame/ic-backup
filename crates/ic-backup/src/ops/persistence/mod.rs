@@ -1,13 +1,32 @@
-//! Durable local publication and journal locking; no domain transitions.
+//! Durable publication, journal/layout exclusion and retained local dependencies.
 
 mod artifact_commit;
+mod attempt_journal;
+mod command_lifetime_lock;
+mod download_journal;
+mod effect_graph;
 mod file_lock;
+mod inventory;
 mod journal_lock;
 mod json;
+mod layout_lifetime;
+mod operation_plan;
 
 pub use artifact_commit::{ArtifactCommitOutcome, commit_artifact_directory};
+pub use attempt_journal::{AttemptJournalError, AttemptJournalGuard};
+pub use command_lifetime_lock::{
+    COMMAND_CUSTODY_DESCRIPTOR_ENV, CommandLifetimeLock, CommandLifetimeLockError,
+    CommandQuiescenceGuard,
+};
+pub use download_journal::{DownloadJournalError, DownloadJournalGuard};
+pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
+pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub use json::{create_json_durable, read_json, write_json_durable};
+pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
+pub use operation_plan::{
+    OperationPlanPersistenceError, create_operation_plan, read_operation_plan,
+};
 
 use crate::{model::artifacts::ChecksumError, ops::artifacts::ArtifactError};
 use std::io;
@@ -16,6 +35,21 @@ use thiserror::Error;
 /// Typed local persistence failure.
 #[derive(Debug, Error)]
 pub enum PersistenceError {
+    /// An existing layout path no longer denotes the held directory.
+    #[error("backup layout changed while held: {path:?}")]
+    LayoutChanged {
+        /// Resolved layout location.
+        path: std::path::PathBuf,
+    },
+    /// A retained dependency document or journal location has an unsafe entry type.
+    #[error("unsafe restore reference entry: {path:?}")]
+    InvalidRestoreReferences {
+        /// Rejected local path.
+        path: std::path::PathBuf,
+    },
+    /// Restore dependency validation or an immutable retention transition failed.
+    #[error(transparent)]
+    RestoreReference(#[from] crate::model::restore_references::RestoreReferenceError),
     /// Filesystem IO failed; publication may require local reconciliation.
     #[error(transparent)]
     Io(#[from] io::Error),

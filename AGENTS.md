@@ -42,8 +42,75 @@ into an issue tracker or release authority.
   [the implemented boundary](docs/extraction-boundary.md) and
   [fresh source provenance](docs/extraction-source.json) before extending it.
   Runner/authority contract work remains part of B1 before importing runners.
-- Package metadata starts at the unreleased `0.1.0`; registry publication is
-  disabled. Repository setup is not release or publication authority.
+- Continued extraction includes layout lifetime exclusion and durable restore
+  reference retention. The v1 records and bounds are documented in
+  [the implemented boundary](docs/extraction-boundary.md). No reference release
+  or prune operation is implemented; terminal proof and command custody must own
+  release admission before that API is added.
+- Command custody now uses owned descriptor inheritance, exact v1 filesystem
+  identity records and fresh non-spawning quiescence guards. Preserve the
+  unsafe-code prohibition. These local contracts do not qualify an ICP backend
+  or grant terminal/reference-release or paid-call authority.
+- Local download journals now retain immutable snapshot identity, model-owned
+  four-state transitions and derived resume views. Persistence guards borrow
+  layout exclusion and verify/publish exact local bytes. Download completion is
+  an integration attestation; backend metadata/extent qualification and
+  remote-effect reconciliation remain pending.
+- Local attempt journals bind immutable operation identity and original mutation/
+  observation limits, with chronological reservations and exact receipts.
+  Preserve the 1,024 total-attempt, 2,048 event and 1 MiB input/output bounds.
+  A persisted reservation grants no fresh authority or backend dispatch permit.
+  Uncertain means a qualified settled observation cannot resolve its mutation;
+  a lost observation reply stays pending. No allowance is refunded or replenished.
+- Physical inventories now retain a bounded, canonical, closed parent forest.
+  Preserve unique normalized principals, required nullable fields, acyclic edges,
+  the 1,024 target/selector limits, 256 UTF-8 role-byte bound and 1 MiB IO bounds.
+  Pure selection expands exact principals into read-only views in canonical order;
+  that order grants no dispatch/lifecycle order. A declared inventory and its hash
+  prove no fresh membership, controller custody or application consistency.
+- Explicit effect graphs now retain unique opaque operation sequences and closed
+  acyclic dependencies. Preserve the 8,192 node, 1,024 dependency-per-node,
+  65,536 total-edge and 1 MiB persistence bounds. Graph order and causal declared
+  progress are pure projections, not completion receipts or dispatch permits.
+  Do not infer universal parent/lifecycle order from physical inventories.
+- Operation plans now bind declared network/caller/release, original inventory,
+  exact selected targets, dependency graph, request digests and immutable attempt
+  allowances. Preserve one exact binding per graph node, selected-target coverage,
+  the 65,536 combined plan-attempt ceiling and existing node/selection/IO bounds.
+  Derive journal intent from the full canonical plan digest; repeated derivation
+  never creates/resets a journal. Declarations grant no fresh preflight or executable
+  request, consistency/lifecycle contract, receipt or dispatch permit.
+- Execution progress now admits a complete exact set of original attempt journals
+  under the plan digest, context, operation and original limits. Missing evidence
+  never means zero consumption. Attempted operations require retained Applied
+  prerequisites; projections cannot prove cross-journal dispatch chronology,
+  authenticate receipts, grant fresh authority or establish terminal/reference release.
+  Keep unused aggregate headroom out of assigned allowance totals.
+- The IC request boundary now owns closed host-ingress management argument encoding
+  and exact receiver/routing/method/update-mode/byte digests. Preserve 256 raw snapshot
+  bytes, 4 KiB derived arguments and 8 KiB JSON IO bounds. Capture creates a new
+  snapshot with code retained; sender canister version stays absent for host ingress
+  and is never a target-version guard. Raw IDs are distinct from generic backend
+  tokens. Codec/binding checks grant no freshness, signing, dispatch or effect proof.
+- The membership port now has ephemeral challenge/boundary-bound original-plan
+  requests and passive provider results. Pure admission checks actual context/full
+  inventory and a 1,024 remote-observation descriptive ceiling. That ceiling is no
+  spending allowance; provider freshness, prior per-call accounting and opaque
+  revision/evidence meaning remain integration-owned. Matching revisions or hashes
+  do not prove continuity, a fence, permissions or dispatch authority. No default
+  provider, persisted fresh-authority flag or membership backend is implemented.
+- Direct control observations now bind exact original IC mutation payloads to an
+  ephemeral challenge and actual context/target/complete canonical controller set
+  (at most 10). Pure admission requires the selected caller itself; no Root proxy,
+  subnet-admin or status/read-visibility fallback exists. Keep the 1,024 descriptive
+  call ceiling distinct from spending authority. Provider freshness/custody and
+  load origin permissions, lifecycle/fence/restore safety remain separately qualified.
+  No serialized Proven flag, live provider or dispatch permit is implemented.
+- The maintainer requested fixing registry publication after a rejected upload.
+  Package metadata permits crates.io publication. Configuration changes and dry
+  runs do not themselves upload packages. Repository release preparation,
+  tagging and pushing retain their clean-source, tag and receipt requirements;
+  registry publication delegates admission to Cargo for the current package.
 
 ## Tracking
 

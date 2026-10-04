@@ -1,0 +1,350 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ic-backup v1 local operation attempt journal",
+  "description": "Bounded chronological local reservations and qualified receipts. Runtime validates sequence, pending attempt/request identities, separate budgets and no events after Applied. This grants no dispatch, fresh authority, backend settlement or full terminal completion. Duplicate JSON fields reject at runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "authority",
+    "events"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "authority": {
+      "$ref": "#/$defs/authority"
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 2048,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "event",
+              "attempt"
+            ],
+            "properties": {
+              "event": {
+                "const": "mutation_reserved"
+              },
+              "attempt": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "event",
+              "attempt",
+              "mutation",
+              "request"
+            ],
+            "properties": {
+              "event": {
+                "const": "observation_reserved"
+              },
+              "attempt": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "mutation": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "request": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[0-9A-Fa-f]{64}$",
+                "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "event",
+              "mutation",
+              "outcome",
+              "evidence"
+            ],
+            "properties": {
+              "event": {
+                "const": "mutation_resolved"
+              },
+              "mutation": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "outcome": {
+                "enum": [
+                  "applied",
+                  "not_applied"
+                ]
+              },
+              "evidence": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[0-9A-Fa-f]{64}$",
+                "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "event",
+              "observation",
+              "request",
+              "outcome",
+              "evidence"
+            ],
+            "properties": {
+              "event": {
+                "const": "observation_recorded"
+              },
+              "observation": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "request": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[0-9A-Fa-f]{64}$",
+                "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+              },
+              "outcome": {
+                "enum": [
+                  "applied",
+                  "not_applied",
+                  "uncertain"
+                ],
+                "description": "Uncertain requires qualified completed/settled observation unable to resolve mutation; a lost observation reply stays pending."
+              },
+              "evidence": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[0-9A-Fa-f]{64}$",
+                "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+              }
+            }
+          }
+        ]
+      },
+      "x-runtime-constraint": "Global reservation numbers start at 1 without gaps. Only one pending mutation and observation. Observations bind exact unresolved mutation; receipts match exact pending identity/request. Uncertain keeps mutation pending. Counts derive from events and never refund."
+    }
+  },
+  "x-max-encoded-bytes": 1048576,
+  "x-max-canonical-output-bytes": 1048576,
+  "x-authority-digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/attempt-authority/v1 followed by one zero byte",
+      "Fixed-width 64-byte canonical lowercase ASCII hashes: binding.intent, binding.network, binding.release, binding.request",
+      "binding.operation_sequence: unsigned u64 big-endian",
+      "binding.caller then binding.target: unsigned u8 ASCII byte length followed by canonical principal ASCII bytes (each <= 63 bytes)",
+      "budget.mutations then budget.observations: unsigned u32 big-endian"
+    ],
+    "excluded": [
+      "version (fixed by domain)",
+      "mutable events",
+      "derived projection",
+      "JSON formatting"
+    ],
+    "golden-sha256": "83bfc98d1310e756e20500d80220a08f2e15ab93ef064fb15d9e7b9674dd3bfb",
+    "golden-authority": {
+      "binding": {
+        "intent": "abababababababababababababababababababababababababababababababab",
+        "operation_sequence": 7,
+        "network": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+        "caller": "2vxsx-fae",
+        "target": "aaaaa-aa",
+        "release": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+        "request": "0101010101010101010101010101010101010101010101010101010101010101"
+      },
+      "budget": {
+        "mutations": 2,
+        "observations": 2
+      }
+    }
+  },
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent",
+        "operation_sequence",
+        "network",
+        "caller",
+        "target",
+        "release",
+        "request"
+      ],
+      "properties": {
+        "intent": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+        },
+        "operation_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "network": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+        },
+        "caller": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+          "description": "Runtime checks principal checksum/grouping and emits canonical lowercase ASCII."
+        },
+        "target": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z2-7]{5}(?:-[a-zA-Z2-7]{5})*(?:-[a-zA-Z2-7]{1,5})?$",
+          "description": "Runtime checks principal checksum/grouping and emits canonical lowercase ASCII."
+        },
+        "release": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+        },
+        "request": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9A-Fa-f]{64}$",
+          "description": "Runtime normalizes SHA-256 hexadecimal text to lowercase."
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutations",
+        "observations"
+      ],
+      "properties": {
+        "mutations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "observations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        }
+      },
+      "x-runtime-constraint": "Checked mutations + observations <= 1024; immutable original limits, no refunds or replacement."
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding",
+        "budget"
+      ],
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "budget": {
+          "$ref": "#/$defs/budget"
+        }
+      },
+      "description": "Declared identity and original allowances, not authenticated intent or fresh IC authority."
+    }
+  },
+  "examples": [
+    {
+      "version": 1,
+      "authority": {
+        "binding": {
+          "intent": "abababababababababababababababababababababababababababababababab",
+          "operation_sequence": 7,
+          "network": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "caller": "2vxsx-fae",
+          "target": "aaaaa-aa",
+          "release": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+          "request": "0101010101010101010101010101010101010101010101010101010101010101"
+        },
+        "budget": {
+          "mutations": 2,
+          "observations": 2
+        }
+      },
+      "events": []
+    },
+    {
+      "version": 1,
+      "authority": {
+        "binding": {
+          "intent": "abababababababababababababababababababababababababababababababab",
+          "operation_sequence": 7,
+          "network": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "caller": "2vxsx-fae",
+          "target": "aaaaa-aa",
+          "release": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+          "request": "0101010101010101010101010101010101010101010101010101010101010101"
+        },
+        "budget": {
+          "mutations": 2,
+          "observations": 2
+        }
+      },
+      "events": [
+        {
+          "event": "mutation_reserved",
+          "attempt": 1
+        },
+        {
+          "event": "observation_reserved",
+          "attempt": 2,
+          "mutation": 1,
+          "request": "4545454545454545454545454545454545454545454545454545454545454545"
+        },
+        {
+          "event": "observation_recorded",
+          "observation": 2,
+          "request": "4545454545454545454545454545454545454545454545454545454545454545",
+          "outcome": "applied",
+          "evidence": "6767676767676767676767676767676767676767676767676767676767676767"
+        }
+      ]
+    }
+  ]
+}

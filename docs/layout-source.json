@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "kind": "layout_retention_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Working-tree inspection for layout lifetime locking and conservative restore-reference retention. Exact source bytes, not IC qualification or terminal/custody/release authority. First-batch provenance remains retained.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/persistence/layout_lifetime/mod.rs",
+      "sha256": "fd3bd364dbbcd09fe6209aac3e10314f8efd5ed665b4d23742f96a99dd803d16",
+      "bytes": 5662
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout_lifetime/tests.rs",
+      "sha256": "10534425ae81f071cc92c170cb4c9fc2cfc5ec5e783da9e620334c34c586dc5b",
+      "bytes": 3112
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "sha256": "05cb82f67ac829be1aed58f53ace06a6f6bac36e320a52c07178b09631f95243",
+      "bytes": 4520
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "sha256": "94aeb745515694e95e94ba8275be521f1ad80f9afc7d15014e17e84b9d825219",
+      "bytes": 8747
+    },
+    {
+      "path": "crates/canic-cli/src/backup/prune.rs",
+      "sha256": "a42be1c8145d05342edb130388f4c4f471532809de0215db656d15d8d034b730",
+      "bytes": 4370
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "sha256": "d4e25a3398e3342d35535c062045b6b31cb9937ac312968c8dc2b8785c3f4f2c",
+      "bytes": 12637
+    }
+  ],
+  "copied_sources": [
+    {
+      "source": "crates/canic-backup/src/persistence/layout_lifetime/mod.rs",
+      "source_sha256": "fd3bd364dbbcd09fe6209aac3e10314f8efd5ed665b4d23742f96a99dd803d16",
+      "destinations": [
+        "crates/ic-backup/src/model/restore_references/mod.rs",
+        "crates/ic-backup/src/ops/persistence/layout_lifetime/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/persistence/layout_lifetime/tests.rs",
+      "source_sha256": "10534425ae81f071cc92c170cb4c9fc2cfc5ec5e783da9e620334c34c586dc5b",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/layout_lifetime/tests/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "source_sha256": "05cb82f67ac829be1aed58f53ace06a6f6bac36e320a52c07178b09631f95243",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/layout_lifetime/mod.rs"
+      ]
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "line": 26,
+      "excerpt": "match BackupLayout::new(root.into()).lock_lifetime() {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "line": 38,
+      "excerpt": "pub(in crate::restore) fn retain_restore("
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "line": 50,
+      "excerpt": "layout.retain_restore(&journal_identity(path)?, &restore_authority(journal)?)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "line": 54,
+      "excerpt": "pub(in crate::restore) fn release_restore("
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "line": 59,
+      "excerpt": "layout.release_restore(&journal_identity(path)?, &restore_authority(journal)?)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 88,
+      "excerpt": "let lifetime = self.lock_lifetime()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 97,
+      "excerpt": "pub fn lock_lifetime(&self) -> Result<BackupLayoutGuard, JournalLockError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 98,
+      "excerpt": "BackupLayoutGuard::acquire(&self.root)"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/prune.rs",
+      "line": 66,
+      "excerpt": "match guard.has_restore_references() {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/prune.rs",
+      "line": 108,
+      "excerpt": "let guard = layout.lock_lifetime().map_err(|error| match error {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "line": 70,
+      "excerpt": "BackupLayout::new(path.to_path_buf()).lock_lifetime(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "line": 78,
+      "excerpt": "std::assert_matches!(layout.lock_lifetime(), Err(canic_backup::persistence::JournalLockError::Io(error)) if error.kind() == std::io::ErrorKind::NotFound);"
+    }
+  ],
+  "dispositions": [
+    {
+      "source": "BackupLayoutGuard",
+      "disposition": "Stable parent-side exclusion copied; open directory identity and bounded record IO added."
+    },
+    {
+      "source": "RestoreReferencesRecord and RestoreReferenceRecord",
+      "disposition": "Reshaped into model-owned validated v1 records; canonical digest/path, duplicate/count admission and retention transitions."
+    },
+    {
+      "source": "journal_identity",
+      "disposition": "Canonical parent resolution copied; requires existing parent, no directory creation, rejects unsafe existing journal leaf."
+    },
+    {
+      "source": "release_restore and restore_authority",
+      "disposition": "Not copied. Terminal-completion and command-custody contracts must govern release; integration still owns immutable plan digest generation."
+    },
+    {
+      "source": "BackupExecutionGuard and BackupLayout",
+      "disposition": "Not copied; require extracted journal/schema and runner owners."
+    },
+    {
+      "source": "Canic CLI prune",
+      "disposition": "Read-only consumer trace; standalone pruning remains unimplemented."
+    },
+    {
+      "source": "reference_release_requires_exact_restore_authority regression",
+      "disposition": "Retention/conflict/reopen portion adapted and rerun; release portion remains Canic-owned and is not claimed as extracted qualification."
+    }
+  ]
+}
