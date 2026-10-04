@@ -1,0 +1,6 @@
+/target/
+/.tmp/
+/.ic-backup/
+/backups/
+*.log
+.DS_Store
