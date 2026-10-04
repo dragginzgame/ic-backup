@@ -17,7 +17,7 @@ Development uses Rust 1.99.0, edition 2024 and a minimum supported Rust version
 of 1.91.0, following the sibling library conventions. The workspace owns package
 metadata, dependency declarations and lints. Builds stay in this repository's
 `target/`. Package metadata permits crates.io publication; `make publish`
-requires a clean tagged release and matching receipt.
+delegates to Cargo for the current library version.
 
 ```bash
 make hooks-install

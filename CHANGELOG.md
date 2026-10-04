@@ -4,6 +4,8 @@
 
 - Enable crates.io publication for `ic-backup` through inherited workspace
   metadata, fixing the Cargo rejection from `make publish`.
+- Delegate publication and its dry run to Cargo for the current package;
+  keep receipt/tag checks within the repository release workflow.
 
 ## [0.1.1] - 2026-10-04
 

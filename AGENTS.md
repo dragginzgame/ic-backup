@@ -44,8 +44,9 @@ into an issue tracker or release authority.
   Runner/authority contract work remains part of B1 before importing runners.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
-  runs do not themselves upload packages; release commands retain their existing
-  clean-source, tag and receipt requirements.
+  runs do not themselves upload packages. Repository release preparation,
+  tagging and pushing retain their clean-source, tag and receipt requirements;
+  registry publication delegates admission to Cargo for the current package.
 
 ## Tracking
 

@@ -163,9 +163,8 @@ push_release() {
 
 publish() {
     case "${1:-}" in "" | --dry-run) ;; *) fail "expected publish [--dry-run]" ;; esac
-    tag_check
-    # Cargo owns registry eligibility and authentication. Package publication
-    # does not qualify live backup or restore behavior.
+    # Publish the current package through Cargo. Release receipts and tags own
+    # the repository release transaction, not registry publication admission.
     cargo publish --locked --registry crates-io -p ic-backup ${1:+"$1"}
 }
 

@@ -20,6 +20,10 @@ workspace; `fmt-check` checks it. `shell-check`, `release-check` and `hooks-chec
 validate contributor tooling. `version` and `release-plan` inspect release
 metadata without changing the workspace.
 
+`publish-dry-run` and `publish` delegate to Cargo for the current library version.
+They use locked dependencies and crates.io. Cargo checks package cleanliness and
+publication eligibility; receipt/tag checks belong to repository release commands.
+
 The Makefile exports this checkout's absolute `target/` directory. Never point
 it at Canic's target or add Cargo patches to sibling checkouts. Before editing
 source or locks and before compilation, check for an active command using this

@@ -70,16 +70,19 @@ cleanup action; never discard recovery evidence as ordinary cleanup.
 ## Registry publication
 
 `make package` verifies a local package during development without uploading.
-`make publish-dry-run` and `make publish` require the clean tagged release and
-its matching receipt, then delegate to Cargo for crates.io checks. The dry run
-performs verification without uploading; `make publish` uploads the package.
+`make publish-dry-run` and `make publish` delegate directly to
+`cargo publish --locked --registry crates-io -p ic-backup`, with `--dry-run`
+for the former. Cargo owns package-file cleanliness, locked dependency checks,
+package compilation, registry eligibility and authentication. Commit changes to
+files included in the package before publishing. The dry run verifies without
+uploading; `make publish` uploads the current library version.
 
-The `0.1.1` tag was prepared with publication disabled. Enabling it changes the
-manifest bound by that release receipt. Commit the configuration fix, then use
-`make release-patch` to prepare, tag and push the next release before running
-`make publish-dry-run` and `make publish`. Retain the original tag and receipt
-until ordinary preparation creates the successor receipt; do not rewrite them
-to admit different source under `0.1.1`.
+Receipts and annotated tags govern the repository release transaction. Registry
+publication uses the current checkout independently of that receipt and tag;
+development changelog edits and later publishing-configuration commits do not
+require an extra version bump just to satisfy the release helpers. Cargo and
+crates.io enforce whether the chosen package version can be published.
+Publication leaves existing receipts, versions and tags unchanged.
 
 Repository tags, registry publication and live IC backup/restore are separate
 effects. Passing the native gate proves only implemented behavior; platform

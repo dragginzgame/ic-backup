@@ -63,6 +63,7 @@ TOML
 name = "ic-backup"
 version.workspace = true
 edition.workspace = true
+publish.workspace = true
 TOML
     cat > Cargo.lock <<'LOCK'
 version = 4
@@ -81,7 +82,7 @@ NOTES
     : > "$TEST_LOG"
     : > "$TEST_EFFECTS"
     printf 'retained build artifact\n' > target/debug/cache-sentinel
-    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_UPDATE_FAIL TEST_GATE_DIRTY TEST_GATE_HEAD TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL
+    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_UPDATE_FAIL TEST_GATE_DIRTY TEST_GATE_HEAD TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL
 }
 
 expect_failure() {
@@ -203,6 +204,10 @@ case "$*" in
         ;;
     'publish --locked --registry crates-io -p ic-backup' | \
     'publish --locked --registry crates-io -p ic-backup --dry-run')
+        if [[ "${TEST_PUBLISH_FAIL:-0}" == 1 ]]; then
+            echo 'error: simulated Cargo package rejection' >&2
+            exit 101
+        fi
         echo publish >> "$TEST_EFFECTS"
         ;;
     clean) echo clean >> "$TEST_EFFECTS"; rm -rf target/debug ;;
@@ -380,26 +385,72 @@ test_release() {
 }
 
 test_publish() {
-    prepare_tagged_release
+    local mode="$1" state="$2" expected receipt_before
+    case "$state" in
+        no-release) ;;
+        tagged) prepare_tagged_release ;;
+        stale-changelog)
+            prepare_tagged_release
+            printf '\n- Next development notes.\n' >> CHANGELOG.md
+            ;;
+        publication-config)
+            sed -i 's/publish = \["crates-io"\]/publish = false/' Cargo.toml
+            prepare_tagged_release
+            # A committed publishing correction after a repository release
+            # leaves its receipt and tag behind without changing crate version.
+            sed -i 's/publish = false/publish = ["crates-io"]/' Cargo.toml
+            echo 4444444444444444444444444444444444444444 > target/mock-head
+            ;;
+        missing-tag)
+            prepare_tagged_release
+            rm target/mock-tag
+            ;;
+        missing-receipt)
+            prepare_tagged_release
+            rm docs/release.json
+            ;;
+        *) echo "unexpected publication state: $state" >&2; exit 1 ;;
+    esac
     : > "$TEST_LOG"
     : > "$TEST_EFFECTS"
     before="$(fingerprint)"
-    local expected
-    if [[ "$1" == dry-run ]]; then
-        bash scripts/release/release.sh publish --dry-run
+    receipt_before="$(if [[ -f docs/release.json ]]; then sha256sum docs/release.json; fi)"
+    cp "$ROOT/Makefile" Makefile
+    if [[ "$mode" == dry-run ]]; then
+        "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
         expected='cargo publish --locked --registry crates-io -p ic-backup --dry-run'
     else
-        bash scripts/release/release.sh publish
+        "$TEST_REAL_MAKE" --no-print-directory publish
         expected='cargo publish --locked --registry crates-io -p ic-backup'
     fi
-    [[ "$(rg '^cargo publish' "$TEST_LOG")" == "$expected" ]]
+    [[ "$(cat "$TEST_LOG")" == "$expected" ]]
     [[ "$(cat "$TEST_EFFECTS")" == publish ]]
     [[ "$(fingerprint)" == "$before" ]]
-    perl "$DATA" verify
+    [[ "$(if [[ -f docs/release.json ]]; then sha256sum docs/release.json; fi)" == "$receipt_before" ]]
     assert_cache_retained
 }
 
-test_invalid_publish() {
+test_publish_failure() {
+    : > "$TEST_LOG"
+    : > "$TEST_EFFECTS"
+    before="$(fingerprint)"
+    export TEST_PUBLISH_FAIL=1
+    local args=()
+    [[ "$1" == dry-run ]] && args=(--dry-run)
+    if bash scripts/release/release.sh publish "${args[@]}" >target/cargo-rejection.log 2>&1; then
+        echo 'expected Cargo publication failure' >&2
+        exit 1
+    else
+        [[ "$?" == 101 ]]
+    fi
+    rg -q '^error: simulated Cargo package rejection$' target/cargo-rejection.log
+    [[ "$(cat "$TEST_LOG")" == "cargo publish --locked --registry crates-io -p ic-backup${args[*]:+ ${args[*]}}" ]]
+    [[ ! -s "$TEST_EFFECTS" ]]
+    assert_unchanged
+    assert_cache_retained
+}
+
+test_invalid_release() {
     prepare_tagged_release
     : > "$TEST_LOG"
     : > "$TEST_EFFECTS"
@@ -409,7 +460,7 @@ test_invalid_publish() {
         changed-release) printf '\n- Changed after release.\n' >> CHANGELOG.md ;;
         changed-library-manifest) printf '\n# Changed after release.\n' >> crates/ic-backup/Cargo.toml ;;
     esac
-    expect_failure bash scripts/release/release.sh publish
+    expect_failure bash scripts/release/release.sh push
     [[ ! -s "$TEST_EFFECTS" ]]
     assert_cache_retained
 }
@@ -450,10 +501,13 @@ for kind in patch minor major; do
     run_case "release-$kind" test_release "$kind"
 done
 for mode in dry-run upload; do
-    run_case "publish-$mode" test_publish "$mode"
+    for state in no-release tagged stale-changelog publication-config missing-tag missing-receipt; do
+        run_case "publish-$mode-$state" test_publish "$mode" "$state"
+    done
+    run_case "publish-$mode-cargo-failure" test_publish_failure "$mode"
 done
 for invalid in dirty missing-tag changed-release changed-library-manifest; do
-    run_case "publish-$invalid" test_invalid_publish "$invalid"
+    run_case "release-push-$invalid" test_invalid_release "$invalid"
 done
 run_case push-retry test_push_retry
 echo "Release-helper tests: PASS (dependency bootstrap, preparation, rollback, publication and retry)."
