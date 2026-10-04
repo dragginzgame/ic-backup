@@ -86,6 +86,26 @@ into an issue tracker or release authority.
   prerequisites; projections cannot prove cross-journal dispatch chronology,
   authenticate receipts, grant fresh authority or establish terminal/reference release.
   Keep unused aggregate headroom out of assigned allowance totals.
+- The IC request boundary now owns closed host-ingress management argument encoding
+  and exact receiver/routing/method/update-mode/byte digests. Preserve 256 raw snapshot
+  bytes, 4 KiB derived arguments and 8 KiB JSON IO bounds. Capture creates a new
+  snapshot with code retained; sender canister version stays absent for host ingress
+  and is never a target-version guard. Raw IDs are distinct from generic backend
+  tokens. Codec/binding checks grant no freshness, signing, dispatch or effect proof.
+- The membership port now has ephemeral challenge/boundary-bound original-plan
+  requests and passive provider results. Pure admission checks actual context/full
+  inventory and a 1,024 remote-observation descriptive ceiling. That ceiling is no
+  spending allowance; provider freshness, prior per-call accounting and opaque
+  revision/evidence meaning remain integration-owned. Matching revisions or hashes
+  do not prove continuity, a fence, permissions or dispatch authority. No default
+  provider, persisted fresh-authority flag or membership backend is implemented.
+- Direct control observations now bind exact original IC mutation payloads to an
+  ephemeral challenge and actual context/target/complete canonical controller set
+  (at most 10). Pure admission requires the selected caller itself; no Root proxy,
+  subnet-admin or status/read-visibility fallback exists. Keep the 1,024 descriptive
+  call ceiling distinct from spending authority. Provider freshness/custody and
+  load origin permissions, lifecycle/fence/restore safety remain separately qualified.
+  No serialized Proven flag, live provider or dispatch permit is implemented.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,

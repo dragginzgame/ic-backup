@@ -16,6 +16,14 @@
 //! and original attempt allowances, deriving journal authority under the full plan digest.
 //! Pure execution progress joins exact retained journals to the original plan and
 //! projects causal Applied evidence, pending attempts and exhaustion without dispatch.
+//! The IC request boundary encodes closed host-ingress management operations and
+//! binds exact method/routing/Candid bytes to original mutation or observation digests.
+//! Codec qualification does not establish IC effects or fresh execution authority.
+//! A separate membership port binds ephemeral provider results to original intent,
+//! exact current context/full inventory and an integration-owned challenge.
+//! Pure matching views grant neither controller authority nor application continuity.
+//! The separate control port checks direct caller-controller evidence for exact
+//! IC mutation payloads; its matching views still grant no dispatch or restore safety.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport
@@ -26,6 +34,7 @@ mod hash;
 pub mod model;
 pub mod ops;
 pub mod policy;
+pub mod ports;
 
 #[cfg(test)]
 mod test_support;

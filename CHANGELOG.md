@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.1.6]
+
+- Add a closed host-ingress IC management request codec for status, snapshot
+  inventory, stop/start, new snapshot capture and exact snapshot load. Bind fixed
+  receiver, routing target, replicated call mode, method and exact Candid bytes;
+  validate original mutation and independently reserved observation payloads with
+  bounded records, independent wire goldens and local journal recovery qualification.
+- Add a fallible membership-provider contract with ephemeral requests bound to
+  original plan/operation, challenge, effect boundary and bounded observation calls.
+  Pure validation rejects changed context/full inventory and replayed results;
+  native recovery preserves spent allowances without claiming authority or continuity.
+- Add direct controller-observation contracts for exact IC mutation payloads.
+  Validate canonical current target/context/controller sets; reject revoked callers,
+  other-controller routing assumptions and stale results while retaining spent
+  journal authority. Provider qualification and full effect admission remain pending.
+
 ## [0.1.5] - 2026-10-04
 
 - Bind canonical inventory, explicit physical selection, dependency graph and exact

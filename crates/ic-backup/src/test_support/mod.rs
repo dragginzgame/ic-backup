@@ -1,5 +1,8 @@
 //! Local filesystem regression helpers, independent of IC executors.
 
+pub mod control_authority;
+pub mod membership;
+
 #[cfg(unix)]
 use std::{
     fs,

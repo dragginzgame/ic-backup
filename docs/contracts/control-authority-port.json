@@ -1,0 +1,112 @@
+{
+  "protocol_version": 1,
+  "kind": "control_authority_port_contract",
+  "rust": {
+    "request": "model::control_authority::ControlObservationRequest",
+    "input": "model::control_authority::ControlObservationInput",
+    "observation": "model::control_authority::ControlObservation",
+    "controllers": "model::control_authority::ControllerSet",
+    "provider": "ports::control_authority::ControlAuthorityProvider::observe_control",
+    "policy": "policy::control_authority::validate",
+    "view": "policy::control_authority::ControlAuthorityView"
+  },
+  "persistence": "None. Request/input/observation/controller set/view have no Serde or persisted authority admission.",
+  "scope": "Direct original caller-controller membership for exact existing IC mutation payloads; not complete effect admission.",
+  "supported_methods": [
+    "load_canister_snapshot",
+    "start_canister",
+    "stop_canister",
+    "take_canister_snapshot"
+  ],
+  "request": {
+    "original_plan": "Full original intent and operation binding, including context/target/request/allowances",
+    "wire": "Exact closed mutation target/digest must equal original binding",
+    "challenge": "Canonical SHA-256 value; integration owns freshness/uniqueness",
+    "max_remote_observations": {
+      "minimum": 0,
+      "maximum": 1024,
+      "meaning": "Descriptive invocation ceiling, not reservation/budget/spending"
+    }
+  },
+  "observation": {
+    "request": "Exact current request digest",
+    "context": "Actually observed canonical network/caller/release",
+    "target": "Actually observed canonical physical target",
+    "controllers": {
+      "minimum": 0,
+      "maximum": 10,
+      "canonicalization": "Bounded normalized sorted principals; equivalent duplicates reject",
+      "empty": "Known empty set; denies caller control",
+      "unknown": "Required qualified provider fails; no default success"
+    },
+    "evidence": "Opaque qualified evidence identifier, not signature/permission",
+    "remote_observations": "Actual calls, each requiring separate prior approved accounting"
+  },
+  "admission": [
+    "Exact request digest",
+    "Exact actual network/caller/release",
+    "Exact actual target",
+    "Reported calls <= ceiling",
+    "Original caller itself in observed controllers"
+  ],
+  "request_errors": [
+    "ObservationLimitTooLarge",
+    "Plan(owner rejection)",
+    "Payload(effect/target/digest mismatch)"
+  ],
+  "observation_errors": [
+    "InvalidPrincipal",
+    "TooManyControllers",
+    "DuplicateController"
+  ],
+  "policy_errors": [
+    "RequestMismatch",
+    "ContextMismatch(network|caller|release)",
+    "TargetMismatch",
+    "ObservationLimitExceeded(limit, reported)",
+    "CallerNotController"
+  ],
+  "provider_errors": {
+    "Unavailable": "No qualified provider; no remote effects",
+    "Unsupported": "Cannot meet contract; no remote effects",
+    "Indeterminate": "Uncertain observation/reply/accounting; retain allowance/evidence and stop; no retry"
+  },
+  "canonical_digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/control-observation/v1 followed by NUL",
+      "64 canonical lowercase ASCII intent bytes",
+      "u64 big-endian operation sequence",
+      "64 canonical lowercase ASCII exact mutation wire-digest bytes",
+      "64 canonical lowercase ASCII challenge bytes",
+      "u32 big-endian descriptive call ceiling"
+    ],
+    "golden": {
+      "intent": "0bc4d5875ff8cffc4420b7acf34288a96ba487199e7c114892839e69effa5830",
+      "operation_sequence": 7,
+      "wire": "03e7008814fef428ea4a1bb4ffebc8e02aa99e770ef5cc193cf93e5c9b5ebfa7",
+      "challenge": "1212121212121212121212121212121212121212121212121212121212121212",
+      "max_remote_observations": 1,
+      "encoded_bytes": 237,
+      "digest": "6b10d4d75fb9b8aa9636c8f19fce614b2f8f2976213a295bcf0dadbd819efc84"
+    }
+  },
+  "excluded_authority": [
+    "Public/allowed-viewer status or snapshot read access",
+    "Root/parent/controller proxies",
+    "Subnet-admin exceptions",
+    "Signing/dispatch/fresh spending",
+    "Lifecycle/source-snapshot permissions/same-ID/same-release restore safety",
+    "Application consistency/fence/settlement/completion/reference release"
+  ],
+  "integration_obligations": [
+    "Qualify fresh authenticated actual context/target/complete controllers and challenge timing/uniqueness",
+    "No echoed declarations, old receipts or unqualified query responses as current authority",
+    "Own coherent custody and prior approved per-call spending; ceiling cannot replenish journals",
+    "Retain uncertainty; no automatic retry/reset",
+    "Load needs separate source/origin control and same-ID safety qualification",
+    "Terminal replay stays effect-free"
+  ],
+  "protocol_reference": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+  "qualified_scope": "Native local model/policy/port and spent-journal recovery only; no live provider/backend or full preflight."
+}

@@ -21,11 +21,12 @@ undated numbered draft may immediately follow an empty Unreleased section.
 Preparation promotes/dates that draft while preserving historical notes.
 The maintainer completed the tagged `0.1.1` repository release; initial setup
 notes remain under undated `0.1.0`. The maintainer completed the tagged `0.1.2`
-release with layout/reference retention and command custody. Cargo metadata is
-at `0.1.4`; the maintainer completed that release with inventories, selection and
-dependency graphs. The maintainer selected an undated `0.1.5` changelog draft for
-operation-plan binding and retained-journal progress. Cargo metadata remains
-`0.1.4` until maintainer release preparation.
+release with layout/reference retention and command custody. The maintainer completed
+`0.1.4` with inventories, selection and dependency graphs, then `0.1.5` with
+operation-plan binding and retained-journal progress. Cargo metadata is at `0.1.5`;
+the maintainer selected an undated `0.1.6` changelog draft for the IC request codec
+and membership/control contracts. Cargo remains `0.1.5`; selecting notes does not run a
+release/version transaction.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.

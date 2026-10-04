@@ -22,6 +22,12 @@ Plan-to-journal declaration binding has
 [its own provenance](operation-plan-source.json).
 Retained-journal execution progress has
 [separate source provenance](execution-progress-source.json).
+Closed IC request encoding has
+[its own source and upstream codec provenance](ic-request-source.json).
+Typed ephemeral membership observations have
+[separate source provenance](membership-source.json).
+Direct caller-controller observations have
+[separate control provenance](control-authority-source.json).
 
 ## Maintained local contracts
 
@@ -235,8 +241,9 @@ intent digest, operation sequence, network fingerprint, caller and physical targ
 principals, release digest and exact mutating-request digest. Principal and hash
 aliases normalize at admission; unknown/missing/duplicate fields and generations
 other than v1 reject. The record is a declaration, not authenticated intent or
-fresh network/caller/controller/read authority. Integration-owned codecs qualify
-network, release and request meaning; this library validates their digest shape.
+fresh network/caller/controller/read authority. This generic owner validates digest
+shape; the separate IC request model qualifies supported payload bytes. Network,
+release and authoritative backend meaning remain integration-owned.
 
 Mutation and reconciliation-observation ceilings are separate, immutable u32
 limits with a checked combined maximum of 1,024; zero is allowed. No transition
@@ -522,8 +529,9 @@ under appropriate layout/journal custody. Existing persisted v1 schemas are unch
 Retained receipts remain integration-qualified evidence, not self-authenticating
 signatures or current live authority. Even all operations Applied establishes no
 full backup/restore terminal proof, complete artifact/manifest verification,
-application fence disposition or reference release. Actual request codecs, fresh
-authority, lifecycle safety and backend reconciliation still precede runners.
+application fence disposition or reference release. Remaining transfer/response
+codecs, fresh authority, lifecycle safety and backend reconciliation still precede
+runners.
 
 Fresh native cases cover every original binding, complete coverage/counts, exact
 65,536 assigned allowance, maximum journal count, reverse numeric dependency order,
@@ -531,6 +539,174 @@ attempted unmet prerequisites and all projected conditions. Public recovery
 reopens exact persisted plan/journals, preserves bytes/consumption through a lost
 observation response and rejects omitted or discarded prerequisite evidence.
 These qualify local model/policy/persistence behavior only, without IC effects.
+
+### Closed IC host-ingress request codec
+
+`model::ic_request::IcManagementRequestRecord` retains v1 private `method`, canonical
+effective `target` and required nullable `snapshot_id`. The closed methods are
+`canister_status`, `list_canister_snapshots`, `load_canister_snapshot`,
+`start_canister`, `stop_canister` and `take_canister_snapshot`. Load requires
+1–256 exact raw snapshot bytes; every other method requires null. Byte ordering,
+zero bytes and repeated bytes remain exact. Generic download snapshot strings are
+backend tokens and are not implicitly converted, folded or adopted here.
+Unknown/missing/duplicate fields, unsupported methods/generations and injected
+argument/digest/receiver/authority fields reject. Decode bounds raw byte retention.
+
+The model derives cached Candid arguments with pinned `candid = 0.10.35` and
+`ic-management-canister-types = 0.8.0`. Receiver is fixed to the management principal
+`aaaaa-aa`; target is the effective routing principal and encoded `canister_id`.
+All supported methods use replicated update ingress, including the two semantic
+observations. Capture fixes `replace_snapshot = None`, `uninstall_code = Some(false)`
+and `sender_canister_version = None`. Load fixes sender version to None and names
+exact raw snapshot bytes. Sender version concerns the calling canister, not a
+target-version compare-and-swap guard. These field/mode definitions follow the
+[IC management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
+The operator host still needs separately qualified current lifecycle/permission
+checks. Target existence, snapshot ownership and same-release restore safety are
+not inferred by the encoder.
+
+Derived Candid arguments admit at most 4 KiB. Callers retaining records use the
+existing bounded JSON ops with independent 8 KiB input/canonical-output bounds and
+their own custody. The model owns field/count admission; no runner request layout,
+transport or dispatch persistence API is added. Cached argument/raw-principal bytes
+are private and excluded from JSON; decoding reconstructs them from exact fields.
+This creates one maintained product v1 shape, without alternate codec readers.
+
+The domain-separated request digest binds fixed raw receiver, exact raw effective
+principal, the replicated-update byte, exact method name and exact derived Candid
+bytes with specified u8/u32 lengths. It distinguishes stop/start and status/inventory
+even when argument bytes match. Text principal aliases canonicalize; raw snapshot
+bytes never normalize. Network/caller/intent/release/budgets remain bound by the
+outer operation plan and authority, keeping payload hashing nonrecursive. See
+[the wire schema](contracts/ic-request.schema.json) for exact encoding, closed
+method policy and registered independently constructed Candid/hash golden vectors.
+
+`validate_mutation_binding` requires mutation class and exact original target/payload
+digest. `validate_observation_binding` requires observation class, the same original
+target and a separately reserved observation digest; the original binding still
+names its mutation. These checks return byte-admission results, not credentials,
+fresh preflight, custody, spending or dispatch permits. Observations can still cost
+resources and consume their original independent allowance. No reply, settlement,
+Applied receipt, lifecycle effect, transfer or terminal proof is fabricated.
+
+Fresh native regressions compare every registered independent wire vector, decode
+the official upstream types, check fixed host-ingress/capture fields, principal
+aliases, method/routing/snapshot sensitivity, exact binding classes and raw/JSON
+bounds. A public journey retains a typed payload and original plan, reopens spent
+mutation authority and records a separate exact observation reservation without
+reset or replacing evidence. It qualifies local encoding/accounting only; actual
+snapshot/lifecycle behavior still requires a selected IC backend. Application
+ports, transfer/response codecs and full uncertain-effect reconciliation remain pending.
+
+### Ephemeral membership port and pure result admission
+
+`model::membership::MembershipObservationRequest` borrows the immutable original
+operation plan and derives its exact operation binding. Its private fields bind
+full plan intent, sequence, canonical network/caller/target/release/mutation request,
+full original inventory/selection, an integration-owned challenge, explicit
+BeforeEffect/AfterEffect boundary and a 0–1,024 descriptive remote-observation
+ceiling. Unknown operations and excessive ceilings reject before provider use.
+Zero admits a qualified local observation path, never a paid probe.
+
+The canonical request digest uses a NUL-terminated v1 domain, 64 ASCII intent
+bytes, u64 big-endian sequence, 64 ASCII challenge bytes, a before/after byte and
+u32 big-endian call ceiling. Full original intent binds context, inventory,
+selection, graph, payloads and original allowances; none is reissued or replaced.
+The challenge's unpredictability, uniqueness and current applicability stay
+integration-owned. A digest proves binding, not freshness or authentic observations.
+
+`ports::membership::MembershipProvider` returns a passive `MembershipObservation`:
+exact current request digest, actually observed canonical context, complete current
+inventory, optional opaque current revision, required opaque evidence identifier
+and actual remote-observation count. A provider must qualify actual observations
+and locked authenticated context; echoed declarations or decoded old receipts are
+not observations. No provider/default implementation or live backend is installed.
+Unavailable/Unsupported fail before remote effects; Indeterminate retains consumed
+allowance/evidence and stops without implying retry. Diagnostics carry typed redacted
+errors rather than provider credentials or raw output.
+
+The descriptive ceiling bounds one invocation's reported calls; it is not an
+original spending allowance, current remaining reconciliation allowance, reservation
+or dispatch permit. Integrations still need separately approved prior per-call
+accounting and retained uncertainty. No preflight budget owner or paid-call workflow
+is implemented by this port; repeated requests do not replenish any journal.
+
+Pure `policy::membership::validate` admits exact current request, observed network,
+caller and release, full original inventory equality and calls within the descriptive
+ceiling. Changed unselected parents/metadata reject too. Its private-field view
+borrows current inventory, original selected targets, optional revision and evidence;
+it performs no IO, provider call, record serialization, journal mutation or scheduling.
+Request, result and view have no Serde/persisted fresh-authority admission. This adds
+one typed v1 port contract without changing existing persisted schemas. See
+[the machine-readable typed contract](contracts/membership-port.json).
+
+Matching hashes or current revisions before/after do not exclude intermediate
+membership changes or prove a consistency fence, fresh controller/read permissions,
+same-release restoration safety or effect completion. Required qualified application
+and authority ports remain separate. Terminal replay must never call this provider;
+a new live verification is a distinct operation.
+
+Fresh native cases cover exact independent request hash, canonical aliases, original
+intent/operation/challenge/boundary/ceiling sensitivity, observed context mismatch,
+full inventory drift, zero/max call ceilings and the 1,024-target bound. A public
+integration journey reopens original intent and spent pending journal authority,
+rejects an old result under a new challenge without a provider call, and preserves
+consumption through all typed provider failures. These qualify local contracts and
+recovery only, not actual current membership, authority or IC effects.
+
+### Direct caller-controller observations for exact IC mutation payloads
+
+`model::control_authority::ControlObservationRequest` derives the exact original
+operation binding and checks the supplied `IcManagementRequestRecord` with the
+existing mutation-payload validator. Only encoded capture/load/stop/start methods
+admit this request; status/inventory observation methods and changed target/digest
+reject before provider use. The request retains exact wire bytes, integration-owned
+challenge and a 0–1,024 descriptive remote-call ceiling. Its domain-separated digest
+binds full original intent, sequence, exact wire digest, challenge and ceiling using
+documented fixed ASCII/u64/u32 framing. Creation changes no plan or original allowance.
+
+`ControllerSet` admits at most 10 known principals, normalizes/sorts canonical
+identities and rejects equivalent duplicates. An explicitly known empty set is
+representable and always denies caller control. Unknown/missing controllers require
+a provider failure; no status decoder, permissive defaults or old flags are copied.
+`ControlObservationInput` is passive provider data. Model admission canonicalizes
+the actual target and retains actual canonical context, known controllers, current
+request digest, opaque qualified evidence and reported actual calls in an immutable
+`ControlObservation`. All these types have no Serde or persisted authority lane.
+
+`ports::control_authority::ControlAuthorityProvider` has no installed/default
+implementation. It owns fresh authenticated observations, actual context/target,
+complete controller evidence, challenge timing/uniqueness, coherent custody and
+separately approved prior per-call accounting. Unavailable/Unsupported fail before
+remote effects; Indeterminate retains consumed allowance/evidence and stops without
+retry admission. Public/read success, echoed declarations, old receipts and
+unqualified query responses cannot supply current controller authority.
+
+Pure `policy::control_authority::validate` checks exact current request,
+actually observed network/caller/release and target, reported calls within the
+descriptive ceiling, then original caller membership in the controller set. Its
+private-field view borrows observed evidence and grants no signing, dispatch or
+spending permit. Another controller, a controlling Root/parent or status/snapshot
+read access never satisfies this lane. Subnet-admin exceptions are also excluded.
+The controller bound and distinction between control and read visibility follow
+the [IC management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
+No provider call, record serialization, plan/journal mutation or scheduling occurs
+inside policy. The descriptive ceiling is no fresh budget or reservation.
+
+Target-controller membership is one component of preflight. Load additionally needs
+qualified snapshot source/origin permissions, ownership and same-ID/same-release
+recovery safety. Current lifecycle, capacity, application fence/settlement, fresh
+effect-boundary permission and actual backend effects remain separately qualified.
+Terminal replay performs no provider calls. See
+[the typed machine contract](contracts/control-authority-port.json).
+
+Fresh native tests cover every registered mutation, independent canonical request
+hash, wrong payload/class/target/context/challenge/ceiling, canonical controller
+aliases/duplicates/bounds, empty/Root-only/revoked-caller denial and zero/max call
+reporting. A public journey reopens original plan and spent pending journal, rejects
+stale results without calling the provider, denies revoked caller control and
+preserves bytes/allowances across every typed provider failure. These qualify local
+contracts/recovery only; no actual controller custody or IC backend is modeled.
 
 | Canic surface | Extraction disposition |
 | --- | --- |
@@ -545,8 +721,11 @@ These qualify local model/policy/persistence behavior only, without IC effects.
 | Topology hashing and declared registry target expansion | Adapted into bounded canonical forest records, unambiguous v1 binary hashes, pure exact/direct-child/subtree selection and immutable local persistence |
 | Authoritative discovery, registry revisions and routing | Fleet/Root observation, membership authority and application fencing stay integration-owned; no live provider imported |
 | Backup phase and restore member ordering | Adapted explicit bounded DAG records, deterministic planning order and pure causal declared-progress views; application dependency semantics remain adapter-owned |
-| Plan structure, operation projection and original-plan resume binding | Adapted immutable declared context/inventory/selection/graph/request/allowance binding, canonical full intent and derived original attempt authority; complete backup/restore safety semantics and actual request codecs remain pending |
+| Plan structure, operation projection and original-plan resume binding | Adapted immutable declared context/inventory/selection/graph/request/allowance binding, canonical full intent and derived original attempt authority; complete backup/restore safety semantics and transfer/response codecs remain pending |
 | Plan/journal integrity and resume reporting | Adapted complete exact journal binding, retained causal Applied checks and pure graph-ordered condition/assigned-accounting projections; no accepted-preflight, retry or terminal flags imported |
+| Typed backup executor and snapshot/lifecycle command payloads | Adapted closed IC host-ingress method/target/raw-snapshot declarations, official Candid encoding and exact wire digests; argv rendering, transport selection, actual permissions/receipts and transfer remain with their owners |
+| Topology preflight projection/admission and provider boundary | Adapted into ephemeral original-plan/challenge/boundary membership requests, fallible provider results and pure actual-context/full-inventory matching; freshness, permissions, fence/revision semantics and actual provider remain integration-owned |
+| Control authority declarations, receipt headers and controller projections | Adapted into exact original IC mutation/challenge requests, complete known canonical controller sets and pure direct caller-controller admission; Root/Proven upgrades, read visibility, proxy/admin lanes, live observations and full preflight remain with their owners |
 | Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
 | ICP subprocess transport | Narrow extraction into the transport package after executor contracts and selected backend capabilities are qualified |
 | Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |

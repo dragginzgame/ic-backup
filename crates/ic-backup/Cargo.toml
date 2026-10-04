@@ -10,6 +10,8 @@ description = "Host-side snapshot backup and same-release recovery for Internet 
 readme = "../../README.md"
 
 [dependencies]
+candid.workspace = true
+ic-management-canister-types.workspace = true
 ic_principal.workspace = true
 serde.workspace = true
 serde_json.workspace = true

@@ -25,11 +25,19 @@ readiness checks. Integrations qualify application ordering and actual completio
 graph declarations and ready views grant no authority to execute effects.
 Immutable operation plans bind those declarations to exact targets/request digests
 and original per-operation and aggregate attempt ceilings. Their full canonical
-digest supplies journal intent; fresh authority and qualified request codecs remain
+digest supplies journal intent; fresh authority and backend qualification remain
 integration-owned.
 Pure execution progress joins the complete original plan with exact retained attempt
 journals. It checks causal Applied evidence and reports pending/exhausted allowances;
 missing journals never become fresh zero-consumption declarations.
+The IC request codec provides closed typed status/inventory, stop/start, capture
+and load declarations with exact Candid bytes and request digests. It checks payload
+binding for original mutations and separately reserved reconciliation observations.
+A separate membership port binds provider observations to original intent, exact
+context and inventory, with pure validation and no default provider. Integrations
+still qualify freshness, permissions and application consistency.
+The control port checks direct caller-controller evidence for exact mutation
+payloads, with pure admission and no implicit delegation or dispatch permission.
 Capture/restore runners, an IC transport and the CLI have not been extracted.
 It cannot yet perform a canister backup or restore.
 The public repository is

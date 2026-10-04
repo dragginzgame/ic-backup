@@ -185,7 +185,8 @@ The workspace-only root and `crates/ic-backup` library package are established.
 Local artifact/persistence machinery, layout lifetime exclusion and conservative
 restore-reference retention, command custody, local download/attempt journals and
 canonical physical inventories with pure selection, explicit dependency graphs and
-immutable declared operation plans with pure retained-journal progress
+immutable declared operation plans with pure retained-journal progress and a closed
+IC host-ingress request codec and typed membership/control ports with pure result admission
 are implemented; see
 [its maintained boundary](extraction-boundary.md) and
 [fresh source provenance](extraction-source.json). Capture/restore runners and
@@ -247,26 +248,47 @@ The implemented `InventoryRecord` admits a canonical declared forest and hashes
 its exact fields. Pure `policy::selection` expands exact principals into read-only
 subsets; immutable bounded persistence checks the full original inventory digest.
 Missing parent relationships and cycles reject. This declaration/selection boundary
-does not implement the proposed live `MembershipProvider` below. See
+does not itself perform live membership observation. The separate typed
+`MembershipProvider` contract and pure matching admission are now implemented;
+no qualified provider/backend is installed. See
 [the maintained contracts](extraction-boundary.md).
 Preflight obtains current status, applicable controller/read permissions and
 snapshot capacity evidence through the selected authenticated transport. Public
 status/read visibility must never be mistaken for write authority.
 
-### Proposed named ports
+### Named ports and implementation boundary
 
 | Port | Owned contract |
 | --- | --- |
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
-| `MembershipProvider` | Selected physical set, revision/evidence and bounded before/after checks |
+| `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
+| `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
 | `ConsistencyCoordinator` | Application fence acquisition, validation and controlled release |
 | `RestoreSafetyProvider` | Same-release admission and external-obligation disposition before load/start |
 | `ArtifactStore` | Local durable custody, streamed verification, references and retention locks |
 | `Clock` | Testable deadline/lease policy; time is not an authority identifier |
 
-These are intended responsibilities, not frozen Rust signatures. Prefer separate
-ports over a single all-powerful executor. Requests and results use named passive
-structs/enums. Integration implementations convert their framework evidence into
+Membership and direct-control ports currently have maintained Rust signatures; the other
+rows remain intended responsibilities. Its request derives exact original intent
+and operation identity, immutable full inventory/selection, a caller-owned fresh
+challenge, explicit before/after boundary and 0–1,024 descriptive remote-call
+ceiling. Actual result context and full inventory must match; policy rejects old
+challenge/boundary results and excess reported calls without IO or state changes.
+No request/result/view has Serde or persisted authority admission. Provider
+freshness, prior approved per-call accounting, lost replies and revision/evidence
+meaning remain integration-owned. A ceiling is not a reservation or fresh budget.
+Matching hashes or revisions before and after do not exclude changes between
+observations.
+See [the typed membership contract](contracts/membership-port.json).
+The [typed control contract](contracts/control-authority-port.json) separately
+validates original mutation bytes and requires the actual selected caller in a
+complete known canonical controller set. Another controller, Root/parent proxy,
+read visibility or subnet-admin exception cannot satisfy this direct-host lane.
+Control results are ephemeral too; no Proven flag upgrades a plan. Actual provider
+authentication/freshness, load source/origin permissions and full effect admission
+remain separate qualification work.
+Prefer separate ports over a single all-powerful executor. Requests and results
+use named passive structs/enums. Integration implementations convert their framework evidence into
 generic inputs; they do not give the engine raw application journals or code.
 
 A `ReleaseBinding` is exact opaque evidence supplied by the application owner.
@@ -364,6 +386,13 @@ Applied/pending/exhausted conditions in explicit graph order. Attempted operatio
 with unmet Applied prerequisites reject. This local projection does not prove
 cross-journal dispatch chronology, authenticate receipts or establish terminal
 completion; missing journals are never reconstructed as empty evidence.
+The IC-specific request boundary now encodes exact status/inventory, stop/start,
+capture and load Candid arguments under pinned upstream types. Its v1 wire digest
+binds fixed receiver, effective target, replicated update mode, method and argument
+bytes; original mutation and separate observation digests admit exact payloads.
+Raw snapshot bytes and generic backend tokens remain distinct owner boundaries.
+This freezes request encoding only; response/transfer semantics, transport and
+fresh effect-boundary authority still require qualification.
 
 Persist immutable reviewed intent separately from mutable execution observations.
 Refreshing authority, progress or timestamps cannot change issued spending limits,
@@ -795,15 +824,28 @@ completion remain outside this graph primitive.
 Immutable declared operation plans now join the local inventory/graph/budget owners
 and derive original journal intent under a specified canonical hash. Fresh native
 qualification covers structural/physical binding, assigned limits and unchanged
-consumption through repeated declaration/reopen. Qualified request codecs, complete
-backup/restore semantics and fresh preflight remain necessary for runners.
+consumption through repeated declaration/reopen. Complete backup/restore semantics,
+transfer/response codecs and fresh preflight remain necessary for runners.
 Pure original-plan progress now joins exact retained attempt journals and rejects
 missing evidence, changed authority/limits and attempted unmet dependencies. Native
 recovery qualification preserves pending observations and assigned allowance totals
 without reset or IO in policy. Actual backend effects and terminal proof remain pending.
+The closed IC host-ingress codec now has independent Candid/hash goldens, official
+argument-shape decoding, bounded strict records and native byte-bound journal
+recovery qualification. This does not qualify an authenticated backend or actual
+snapshot/lifecycle effects. Transfer/response codecs and live admission remain pending.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
-typed authority/consistency, journal and executor contracts before importing
+snapshot read authority, application consistency, journal and executor
+contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.
+The membership request/result/provider contract and pure exact-result admission now
+have fresh native context/inventory/challenge/call-bound qualification and public
+spent-journal recovery. No live authoritative membership, continuity, application
+fence or permission is inferred from those tests.
+Direct-control request/result/provider contracts and pure caller-controller checks
+now have exact payload/context/target/challenge/set-bound and revoked-caller tests,
+plus public spent-journal recovery. They qualify local admission only; authenticated
+current permissions, delegated framework routing and complete preflight remain pending.
 
 ## 20. Completion criteria
 

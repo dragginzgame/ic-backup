@@ -1,0 +1,95 @@
+{
+  "protocol_version": 1,
+  "kind": "membership_port_contract",
+  "rust": {
+    "request": "model::membership::MembershipObservationRequest",
+    "observation": "model::membership::MembershipObservation",
+    "provider": "ports::membership::MembershipProvider::observe_membership",
+    "policy": "policy::membership::validate",
+    "view": "policy::membership::MembershipView"
+  },
+  "persistence": "None. Request, observation and view have no Serialize/Deserialize implementations or fresh-authority record admission.",
+  "request": {
+    "owner": "Derived immutable borrow of original OperationPlanRecord and exact operation",
+    "fields": {
+      "binding": "Original full plan intent, operation sequence, network/caller/target/release/mutation request; normalized by existing owners",
+      "inventory": "Full original canonical InventoryRecord, including unselected relationships/metadata",
+      "selected_targets": "Exact original canonical selection, bounded to 1024",
+      "challenge": "Canonical SHA-256 value supplied by integration; freshness/unpredictability/uniqueness must be qualified externally",
+      "boundary": [
+        "BeforeEffect",
+        "AfterEffect"
+      ],
+      "max_remote_observations": {
+        "type": "u32",
+        "minimum": 0,
+        "maximum": 1024,
+        "meaning": "Descriptive per-invocation ceiling, not spending authority, a reservation, new budget or remaining reconciliation allowance"
+      }
+    }
+  },
+  "observation": {
+    "owner": "Trusted integration; actual observations rather than copied expected labels",
+    "fields": {
+      "request": "Exact canonical current request digest",
+      "context": "Actually observed canonical network/caller/release",
+      "inventory": "Complete current canonical bounded closed forest, 1..1024 targets",
+      "revision": "Optional opaque current authority revision digest; not continuity/fence proof",
+      "evidence": "Required opaque qualified evidence digest; not a signature or permission",
+      "remote_observations": "Actual bounded reported remote calls; each needs separate prior approved accounting"
+    }
+  },
+  "admission": [
+    "Exact current request digest",
+    "Exact observed network",
+    "Exact observed caller",
+    "Exact observed release",
+    "Exact full inventory including unselected parents and metadata",
+    "Reported remote calls <= original descriptive ceiling"
+  ],
+  "provider_errors": {
+    "Unavailable": "Absent provider, reject before remote effects",
+    "Unsupported": "Cannot meet current contract, reject before remote effects",
+    "Indeterminate": "Observation/reply/accounting failed or uncertain; retain consumed allowance/evidence and stop; no retry implied"
+  },
+  "request_errors": [
+    "ObservationLimitTooLarge",
+    "Plan(UnknownOperation or existing owner rejection)"
+  ],
+  "policy_errors": [
+    "RequestMismatch",
+    "ContextMismatch(network|caller|release)",
+    "InventoryMismatch",
+    "ObservationLimitExceeded(limit, reported)"
+  ],
+  "canonical_digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/membership-request/v1 followed by one zero byte",
+      "Original full plan intent: canonical 64-byte lowercase ASCII digest",
+      "Operation sequence: u64 big-endian",
+      "Challenge: canonical 64-byte lowercase ASCII digest",
+      "Boundary: byte 0 before effect, byte 1 after effect",
+      "Descriptive remote-call ceiling: u32 big-endian"
+    ],
+    "golden": {
+      "intent": "5385eead7d20b830b36459b1e34edfef024f319b76477d0217a370a27481017a",
+      "operation_sequence": 7,
+      "challenge": "1212121212121212121212121212121212121212121212121212121212121212",
+      "boundary": 0,
+      "max_remote_observations": 2,
+      "encoded_bytes": 173,
+      "digest": "cf998adb6201b5b2fc398c536c73762da4cd2e48411b7d2d6aa698fb56ffa28c"
+    }
+  },
+  "integration_obligations": [
+    "Qualify provider and locked authenticated context, actual release/membership observations and coherent custody",
+    "Own fresh challenge uniqueness/timing; equality cannot establish freshness by itself",
+    "Consume original approved observation spending and retain per-call reservations before each remote call; the membership port implements no preflight budget or dispatch owner",
+    "Retain uncertain paid replies; do not retry/reset automatically",
+    "Qualify revision/evidence meaning and application fences separately; matching before/after revisions/hashes cannot exclude intermediate changes",
+    "Provide current controller/read permissions, same-release safety and external-obligation settlement through separately qualified contracts",
+    "Keep terminal replay effect-free; fresh verification is distinct"
+  ],
+  "qualified_scope": "Native exact declaration/result binding and spent-journal recovery only; no actual provider/backend, current authority, consistency fence or IC effects."
+}
