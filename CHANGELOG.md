@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Enable crates.io publication for `ic-backup` through inherited workspace
+  metadata, fixing the Cargo rejection from `make publish`.
+
 ## [0.1.1] - 2026-10-04
 
 - Extract local artifact hashing, no-follow traversal/staging, durable verified

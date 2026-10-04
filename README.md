@@ -16,8 +16,8 @@ The public repository is
 Development uses Rust 1.99.0, edition 2024 and a minimum supported Rust version
 of 1.91.0, following the sibling library conventions. The workspace owns package
 metadata, dependency declarations and lints. Builds stay in this repository's
-`target/`. The initial unreleased version is `0.1.0`; registry publication is
-disabled.
+`target/`. Package metadata permits crates.io publication; `make publish`
+requires a clean tagged release and matching receipt.
 
 ```bash
 make hooks-install

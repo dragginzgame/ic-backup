@@ -42,8 +42,10 @@ into an issue tracker or release authority.
   [the implemented boundary](docs/extraction-boundary.md) and
   [fresh source provenance](docs/extraction-source.json) before extending it.
   Runner/authority contract work remains part of B1 before importing runners.
-- Package metadata starts at the unreleased `0.1.0`; registry publication is
-  disabled. Repository setup is not release or publication authority.
+- The maintainer requested fixing registry publication after a rejected upload.
+  Package metadata permits crates.io publication. Configuration changes and dry
+  runs do not themselves upload packages; release commands retain their existing
+  clean-source, tag and receipt requirements.
 
 ## Tracking
 

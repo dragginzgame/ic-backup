@@ -1,10 +1,21 @@
 # Current handoff — 2026-10-04
 
-The maintainer authorized copying backup machinery from Canic. The first local
-artifact/persistence extraction is complete and remains uncommitted for review.
+The maintainer committed the first local artifact/persistence extraction and
+completed the tagged `0.1.1` repository release (`4b0432c`). After `make publish`
+failed because workspace metadata still disabled publication, they requested a
+fix. Metadata now permits crates.io publication; the configuration, changelog
+and documentation changes remain uncommitted for review.
 Canic and sibling repositories were inspected read-only; their source and
 existing worktree state were preserved. No live IC effects, release transactions, commits
-or pushes ran during this batch.
+or pushes ran during this configuration batch.
+
+A real Cargo publish dry run passed, including standalone package compilation,
+with `--locked --registry crates-io --dry-run --allow-dirty -p ic-backup`.
+The retained log is `target/publish-config-dry-run.log`. No package was uploaded.
+The dry run used reviewed dirty source directly; the public Make publish commands
+still require a clean tagged release and matching receipt. Commit this fix, then
+prepare the next patch release before publishing. The original `0.1.1` tag and
+receipt bind the disabled-publication manifest and remain unchanged here.
 
 `crates/ic-backup` now provides canonical SHA-256 checksum records, descriptor
 based no-follow artifact traversal and private staging, verified durable
@@ -37,19 +48,19 @@ Retained logs: `target/extraction-local-tests.log`, `target/extraction-msrv.log`
 crate compiled independently under `target/package/`; build artifacts remain
 retained. Earlier foundation/tooling logs and provenance remain available.
 
-The workspace-only root owns version `0.1.0`, Rust 2024 metadata, dependencies
+The workspace-only root owns version `0.1.1`, Rust 2024 metadata, dependencies
 and lints. Development Rust is pinned to 1.99.0; MSRV is 1.91.0. Dependencies
 inherit from this workspace and use no sibling Cargo patches or Canic crates.
-Registry publication is disabled. Make commands, Linux CI and release helpers
+Registry publication is configured for crates.io. Make commands, Linux CI and release helpers
 follow the sibling conventions using this repository's own `target/`.
 `core.hooksPath` is set locally to `.githooks`. See
 [development](../development.md), [releasing](../releasing.md) and
 [tooling provenance](../tooling-provenance.json).
 
-The changelog retains the original undated `0.1.0` notes and has one active
-undated `0.1.1` draft below the empty Unreleased section. This batch's completed
-changes are recorded in `0.1.1`. Cargo metadata and the lockfile remain at
-`0.1.0`; no tag or release receipt exists. All three Make release entry points
+The changelog retains the original undated `0.1.0` notes and dated `0.1.1`
+extraction notes. The publication fix is recorded in the sole open Unreleased
+entry. Cargo metadata and the lockfile remain at `0.1.1`; `docs/release.json`
+retains that release's exact file hashes. All three Make release entry points
 were previously exercised against isolated substitutes, with no real release
 effects. Maintainers own commit-producing release commands.
 
@@ -65,6 +76,7 @@ backup/restore product.
 The public remote is
 [dragginzgame/ic-backup](https://github.com/dragginzgame/ic-backup). The initial
 documentation commit/push used a one-time authorization (`680baf9`); the
-maintainer committed the Rust foundation as `edc8e4b` (`0.1.0`). The standing
+maintainer committed the Rust foundation as `edc8e4b` (`0.1.0`), extraction as
+`384bab8`, and the `0.1.1` release as `4b0432c`. The standing
 no-commit rule remains in force. Canic adoption, release/publication and live
 IC effects require their own instructions.
