@@ -73,6 +73,19 @@ into an issue tracker or release authority.
   65,536 total-edge and 1 MiB persistence bounds. Graph order and causal declared
   progress are pure projections, not completion receipts or dispatch permits.
   Do not infer universal parent/lifecycle order from physical inventories.
+- Operation plans now bind declared network/caller/release, original inventory,
+  exact selected targets, dependency graph, request digests and immutable attempt
+  allowances. Preserve one exact binding per graph node, selected-target coverage,
+  the 65,536 combined plan-attempt ceiling and existing node/selection/IO bounds.
+  Derive journal intent from the full canonical plan digest; repeated derivation
+  never creates/resets a journal. Declarations grant no fresh preflight or executable
+  request, consistency/lifecycle contract, receipt or dispatch permit.
+- Execution progress now admits a complete exact set of original attempt journals
+  under the plan digest, context, operation and original limits. Missing evidence
+  never means zero consumption. Attempted operations require retained Applied
+  prerequisites; projections cannot prove cross-journal dispatch chronology,
+  authenticate receipts, grant fresh authority or establish terminal/reference release.
+  Keep unused aggregate headroom out of assigned allowance totals.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,

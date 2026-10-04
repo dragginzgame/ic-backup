@@ -12,6 +12,10 @@
 //! selection policy expands exact principals without live discovery or authority.
 //! Explicit effect graphs retain validated operation dependencies and project
 //! deterministic planning order/readiness without authorizing dispatch.
+//! Immutable operation plans bind these declarations to exact target/request digests
+//! and original attempt allowances, deriving journal authority under the full plan digest.
+//! Pure execution progress joins exact retained journals to the original plan and
+//! projects causal Applied evidence, pending attempts and exhaustion without dispatch.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport

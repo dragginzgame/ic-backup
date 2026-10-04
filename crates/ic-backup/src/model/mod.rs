@@ -7,5 +7,6 @@ pub mod download_journal;
 pub mod effect_graph;
 pub mod inventory;
 mod journal_path;
+pub mod operation_plan;
 mod principal;
 pub mod restore_references;

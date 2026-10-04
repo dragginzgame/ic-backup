@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.1.5]
+
+- Bind canonical inventory, explicit physical selection, dependency graph and exact
+  network/caller/release/request declarations into immutable operation plans. Check
+  graph/table identity and aggregate assigned limits, derive exact original journal
+  authority and qualify bounded no-overwrite persistence and consumed-attempt replay.
+- Derive local execution progress from the complete original plan and exact retained
+  attempt journals. Reject missing/mismatched evidence and attempted unmet dependencies;
+  project unresolved observations and exhausted allowances without resetting budgets,
+  scheduling calls or claiming terminal completion.
+
 ## [0.1.4] - 2026-10-04
 
 - Adapt Canic phase and restore ordering into bounded explicit operation dependency

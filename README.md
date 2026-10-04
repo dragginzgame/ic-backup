@@ -23,6 +23,13 @@ inventory hashes bind declarations while authoritative discovery stays integrati
 Explicit operation dependency graphs provide deterministic planning order and pure
 readiness checks. Integrations qualify application ordering and actual completion;
 graph declarations and ready views grant no authority to execute effects.
+Immutable operation plans bind those declarations to exact targets/request digests
+and original per-operation and aggregate attempt ceilings. Their full canonical
+digest supplies journal intent; fresh authority and qualified request codecs remain
+integration-owned.
+Pure execution progress joins the complete original plan with exact retained attempt
+journals. It checks causal Applied evidence and reports pending/exhausted allowances;
+missing journals never become fresh zero-consumption declarations.
 Capture/restore runners, an IC transport and the CLI have not been extracted.
 It cannot yet perform a canister backup or restore.
 The public repository is

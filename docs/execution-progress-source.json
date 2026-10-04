@@ -1,0 +1,577 @@
+{
+  "schema_version": 1,
+  "kind": "execution_progress_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only inspection of original plan/journal integrity, retained receipt admission, progress/report projection and related regression/CLI consumers. Exact full working-tree hashes identify inspected files; section ranges identify scope rather than a claim that complete files or live execution behavior were extracted or qualified. Pure local retained-journal projection only.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+      "bytes": 20163,
+      "inspected_sections": [
+        {
+          "first_line": 138,
+          "last_line": 157
+        },
+        {
+          "first_line": 419,
+          "last_line": 447
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "sha256": "48ee1bee54c5862265482e98f36b8c7a762e93c4e3eace8b205740b2a167a6a1",
+      "bytes": 6309,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 161
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/counts.rs",
+      "sha256": "b387840de15ef8259dd1247edab9709910c1ce6ff10310d561a8bc3e4d1d6674",
+      "bytes": 5175,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 48
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "sha256": "0aadf70893919aa1eb8a6e53009f85300f4b289fd386bf8b0cface4f55721a89",
+      "bytes": 9499,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 81
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "sha256": "879fff65fcfe97dd118d20403c881ed724df372613d75b7e7320672122f0ca25",
+      "bytes": 2470,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 79
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "sha256": "53542db36ceb8e812ed67f6e497b9d7627a803ac010c5851c8cf266456053a29",
+      "bytes": 3391,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 78
+        }
+      ]
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "sha256": "fbe00b9f8211f8f1f3efe37e71f293fe59a1d657ebcc13daddafcb5dbd0f21a9",
+      "bytes": 2683,
+      "inspected_sections": [
+        {
+          "first_line": 1,
+          "last_line": 73
+        }
+      ]
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+          "sha256": "48ee1bee54c5862265482e98f36b8c7a762e93c4e3eace8b205740b2a167a6a1",
+          "bytes": 6309
+        },
+        {
+          "path": "crates/canic-backup/src/execution/mod.rs",
+          "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+          "bytes": 20163
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/policy/execution_progress/mod.rs"
+      ],
+      "adaptation": "Exact plan/journal identity and retained receipt ownership become complete one-to-one admission under original full plan intent, canonical context, operation target/request and original attempt limits. Applied evidence comes only from validated chronological AttemptJournalRecord replay. Consumed dependent mutations require retained Applied prerequisite evidence. Current per-operation evidence does not establish cross-journal dispatch chronology or authenticate receipt ownership. Missing journals never imply zero consumption."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/restore/apply/journal/counts.rs",
+          "sha256": "b387840de15ef8259dd1247edab9709910c1ce6ff10310d561a8bc3e4d1d6674",
+          "bytes": 5175
+        },
+        {
+          "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+          "sha256": "0aadf70893919aa1eb8a6e53009f85300f4b289fd386bf8b0cface4f55721a89",
+          "bytes": 9499
+        },
+        {
+          "path": "crates/canic-backup/src/execution/mod.rs",
+          "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+          "bytes": 20163
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/policy/execution_progress/mod.rs"
+      ],
+      "adaptation": "Resume/report projection responsibilities become read-only graph-ordered exact accounting and seven local conditions separating unresolved mutation, pending observation, exhaustion, prerequisites and Applied receipts. Checked totals sum original assigned allowances only and exclude unassigned root headroom. No mutable Ready/Failed/Complete counters, next-dispatch choice, restart requirement, accepted preflight flag or automatic retry/reset is copied. Output views have no Deserialize or persisted admission API."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/execution/tests/restart.rs",
+          "sha256": "879fff65fcfe97dd118d20403c881ed724df372613d75b7e7320672122f0ca25",
+          "bytes": 2470
+        },
+        {
+          "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+          "sha256": "53542db36ceb8e812ed67f6e497b9d7627a803ac010c5851c8cf266456053a29",
+          "bytes": 3391
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/policy/execution_progress/tests/mod.rs"
+      ],
+      "adaptation": "Relevant receipt-required and evidence-derived resume responsibilities are adapted into exact original binding, causal prerequisite and immutable allowance regression cases rerun against production local owners. Source lifecycle/restart flags, incomplete snapshot metadata and failed-create retry assumptions stay with Canic; they are not IC qualification. Fresh tests cover all seven local conditions, lost observation replies, settled Uncertain/NotApplied/Applied receipts, zero allowance, every changed authority field/limit, missing/duplicate/unknown journals, maximum 8192 count, exact 65536 assigned limit and explicit reverse dependencies."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/tests/execution_progress.rs"
+      ],
+      "description": "Public native recovery persists original plan and journals, retains an Applied prerequisite plus unresolved exhausted observation, reopens under exact original authorities and compares unchanged bytes/projection/allowances. Missing or discarded prerequisite evidence rejects. Caller-qualified local receipt fixtures exercise accounting only; no management backend or external call is modeled or claimed."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 142,
+      "excerpt": "pub fn next_ready_operation(&self) -> Option<&BackupExecutionJournalOperation> {"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 147,
+      "excerpt": "operation.state,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 420,
+      "excerpt": "pub fn resume_summary(&self) -> BackupExecutionResumeSummary {"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 425,
+      "excerpt": "preflight_accepted: self.preflight_accepted,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 428,
+      "excerpt": "ready_operations: 0,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 429,
+      "excerpt": "pending_operations: 0,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 431,
+      "excerpt": "completed_operations: 0,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 434,
+      "excerpt": "next_operation: self.next_ready_operation().cloned(),"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 437,
+      "excerpt": "match operation.state {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 16,
+      "excerpt": "pub(in crate::persistence) fn verify_execution_integrity("
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 20,
+      "excerpt": "if plan.plan_id != journal.plan_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 23,
+      "excerpt": "plan: plan.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 27,
+      "excerpt": "if plan.run_id != journal.run_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 30,
+      "excerpt": "plan: plan.run_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 34,
+      "excerpt": "if plan.phases.len() != journal.operations.len() {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 37,
+      "excerpt": "plan: plan.phases.len().to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 38,
+      "excerpt": "journal: journal.operations.len().to_string(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 42,
+      "excerpt": "for (phase, operation) in plan.phases.iter().zip(&journal.operations) {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 43,
+      "excerpt": "let expected_sequence = usize::try_from(phase.order).unwrap_or(usize::MAX);"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 52,
+      "excerpt": "if phase.operation_id != operation.operation_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 56,
+      "excerpt": "plan: phase.operation_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 60,
+      "excerpt": "if phase.kind != operation.kind {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 64,
+      "excerpt": "plan: format!(\"{:?}\", phase.kind),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 68,
+      "excerpt": "if phase.target_canister_id != operation.target_canister_id {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 72,
+      "excerpt": "plan: phase.target_canister_id.clone().unwrap_or_default(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 80,
+      "excerpt": "plan_id: plan.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 81,
+      "excerpt": "run_id: plan.run_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 83,
+      "excerpt": "plan_operations: plan.phases.len(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 84,
+      "excerpt": "journal_operations: journal.operations.len(),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 91,
+      "excerpt": "for operation in journal.operations.iter().filter(|operation| {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 94,
+      "excerpt": "operation.state,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 100,
+      "excerpt": "let expected_outcome = receipt_outcome_for_state(&operation.state);"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 101,
+      "excerpt": "let latest_receipt = journal"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 106,
+      "excerpt": "let Some(latest_receipt) = latest_receipt else {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 109,
+      "excerpt": "state: format!(\"{:?}\", operation.state),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 112,
+      "excerpt": "let latest_matches = latest_receipt.operation_id == operation.operation_id"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 113,
+      "excerpt": "&& latest_receipt.kind == operation.kind"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 114,
+      "excerpt": "&& latest_receipt.target_canister_id == operation.target_canister_id"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 115,
+      "excerpt": "&& latest_receipt.outcome == expected_outcome;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 119,
+      "excerpt": "state: format!(\"{:?}\", operation.state),"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "line": 122,
+      "excerpt": "if latest_receipt.updated_at.as_deref() != operation.state_updated_at.as_deref() {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/counts.rs",
+      "line": 31,
+      "excerpt": "pub(super) fn from_operations(operations: &[RestoreApplyJournalOperation]) -> Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/counts.rs",
+      "line": 34,
+      "excerpt": "match operation.state {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 35,
+      "excerpt": "pub pending_operations: usize,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 36,
+      "excerpt": "pub ready_operations: usize,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 38,
+      "excerpt": "pub completed_operations: usize,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 49,
+      "excerpt": "pub(in crate::restore) fn from_journal(journal: &RestoreApplyJournal) -> Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 51,
+      "excerpt": "let outcome = RestoreApplyReportOutcome::from_journal(journal, complete);"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 66,
+      "excerpt": "progress: RestoreApplyProgressSummary::from_journal(journal),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 67,
+      "excerpt": "pending_summary: RestoreApplyPendingSummary::from_journal(journal),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 68,
+      "excerpt": "pending_operations: journal.pending_operations,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 69,
+      "excerpt": "ready_operations: journal.ready_operations,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 71,
+      "excerpt": "completed_operations: journal.completed_operations,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "line": 75,
+      "excerpt": ".map(RestoreApplyReportOperation::from_journal_operation),"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "line": 17,
+      "excerpt": "let summary = journal.resume_summary();"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "line": 20,
+      "excerpt": "summary.next_operation.expect(\"next op\").kind,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "line": 48,
+      "excerpt": "let operation = journal.operations[5].clone();"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "line": 62,
+      "excerpt": "journal.next_ready_operation().expect(\"next op\").state,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "line": 69,
+      "excerpt": "journal.next_ready_operation().expect(\"next op\").state,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "line": 74,
+      "excerpt": ".next_ready_operation()"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 12,
+      "excerpt": "let operation = journal.operations[4].clone();"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 48,
+      "excerpt": "let operation = journal.operations[5].clone();"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 54,
+      "excerpt": "let receipt_count = journal.operation_receipts.len();"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 63,
+      "excerpt": "assert_eq!(journal.operation_receipts.len(), receipt_count);"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 65,
+      "excerpt": "journal.operations[5].state,"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 69,
+      "excerpt": "journal.operations[5].state_updated_at.as_deref(),"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "line": 72,
+      "excerpt": "assert!(journal.operations[5].blocking_reasons.is_empty());"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 7,
+      "excerpt": "layout::ensure_execution_journal_exists,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 20,
+      "excerpt": "let plan = layout.read_backup_plan()?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 21,
+      "excerpt": "ensure_execution_journal_exists(&layout)?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 22,
+      "excerpt": "let journal = layout.read_execution_journal()?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 23,
+      "excerpt": "layout.verify_execution_integrity()?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 26,
+      "excerpt": "plan_id: plan.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 27,
+      "excerpt": "run_id: plan.run_id.clone(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 31,
+      "excerpt": "operations: plan.phases.len(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 32,
+      "excerpt": "execution: journal.resume_summary(),"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "paths": [
+        "crates/canic-backup/src/execution/mod.rs",
+        "crates/canic-backup/src/persistence/integrity/execution.rs"
+      ],
+      "disposition": "Canic retains complete execution journals, typed operation payload/kind validation, preflight/lifecycle obligations, runners and actual effect reconciliation. Generic policy joins validated local records without dispatch or terminal proof; exact request codecs, effect-boundary authority and cross-journal chronology remain future owners."
+    },
+    {
+      "paths": [
+        "crates/canic-backup/src/restore/apply/journal/counts.rs",
+        "crates/canic-backup/src/restore/apply/journal/reports/mod.rs"
+      ],
+      "disposition": "Canic retains restore-kind/state counters, mutable journal summaries, next-transition and application terminal/restart semantics. Extracted projection does not create compatibility readers, full restore reports or terminal/reference-release authority."
+    },
+    {
+      "paths": [
+        "crates/canic-cli/src/backup/status.rs"
+      ],
+      "disposition": "Canic CLI retains local layout reads, integrity verification, status output and require-complete enforcement. No CLI or source consumer changed. Generic all-Applied count does not establish CLI/product completion."
+    }
+  ],
+  "qualification": "Fresh targeted native production model/policy regressions and public filesystem recovery exercise exact original local evidence and allowance continuity. No shared dispatch chronology, authenticated/current authority, complete backup/restore plan, request codec, terminal proof, runner, PocketIC or live IC qualification.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json",
+    "docs/operation-plan-source.json"
+  ]
+}

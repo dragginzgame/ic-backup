@@ -184,7 +184,8 @@ code; those commands are adapters with behavior, not compatibility aliases.
 The workspace-only root and `crates/ic-backup` library package are established.
 Local artifact/persistence machinery, layout lifetime exclusion and conservative
 restore-reference retention, command custody, local download/attempt journals and
-canonical physical inventories with pure selection and explicit dependency graphs
+canonical physical inventories with pure selection, explicit dependency graphs and
+immutable declared operation plans with pure retained-journal progress
 are implemented; see
 [its maintained boundary](extraction-boundary.md) and
 [fresh source provenance](extraction-source.json). Capture/restore runners and
@@ -351,6 +352,18 @@ explicit closed acyclic dependencies. Canonical hashing and deterministic planni
 order are model-owned; pure readiness validates declared causal progress. This
 graph is one component of a future complete plan, not a plan, receipt or execution
 permit. Integration-qualified application dependencies must be declared explicitly.
+`OperationPlanRecord` now binds full inventory/selection, graph and one exact
+target/request/original-budget declaration per graph node to shared network/caller/
+release context. Its canonical digest owns intent for derived attempt authority;
+checked assigned totals fit immutable aggregate ceilings. It is not a complete
+authenticated backup/restore plan: typed payloads, application safety, lifecycle,
+preflight and actual execution remain outside this local binding primitive.
+Pure execution progress now admits the complete original attempt-journal set,
+checks exact plan/context/target/request/limit binding and projects retained
+Applied/pending/exhausted conditions in explicit graph order. Attempted operations
+with unmet Applied prerequisites reject. This local projection does not prove
+cross-journal dispatch chronology, authenticate receipts or establish terminal
+completion; missing journals are never reconstructed as empty evidence.
 
 Persist immutable reviewed intent separately from mutable execution observations.
 Refreshing authority, progress or timestamps cannot change issued spending limits,
@@ -779,6 +792,15 @@ Explicit operation dependency graphs now have deterministic model-owned ordering
 causal declared-progress policy and bounded immutable local persistence with fresh
 native qualification. Complete operation requests, full plans and qualified actual
 completion remain outside this graph primitive.
+Immutable declared operation plans now join the local inventory/graph/budget owners
+and derive original journal intent under a specified canonical hash. Fresh native
+qualification covers structural/physical binding, assigned limits and unchanged
+consumption through repeated declaration/reopen. Qualified request codecs, complete
+backup/restore semantics and fresh preflight remain necessary for runners.
+Pure original-plan progress now joins exact retained attempt journals and rejects
+missing evidence, changed authority/limits and attempted unmet dependencies. Native
+recovery qualification preserves pending observations and assigned allowance totals
+without reset or IO in policy. Actual backend effects and terminal proof remain pending.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
 typed authority/consistency, journal and executor contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.

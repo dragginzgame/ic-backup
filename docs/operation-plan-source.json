@@ -1,0 +1,504 @@
+{
+  "schema_version": 1,
+  "kind": "operation_plan_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only inspection of declared plan ownership, structural validation, exact immutable request projections, original operation identity materialization and CLI resume admission. File hashes identify current working-tree bytes; inspected sections identify the relevant source, not a claim that whole files or live preflight/execution behavior were copied or qualified. Generic local operation-plan binding only; existing Canic consumers remain unchanged.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217,
+      "inspected": "BackupPlan and BackupTarget declaration fields, lines 1-100"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+      "bytes": 12387,
+      "inspected": "Structural versus execution authority validation, lines 1-100; exact operation projection validation, lines 239-270"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "sha256": "07520d509b2eab0207b56b2825ad8ee604de0eb364a8b57622c609cbcd06ab62",
+      "bytes": 3169,
+      "inspected": "Validated inventory/selection/phase assembly, full file"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+      "bytes": 2017,
+      "inspected": "Typed immutable request projections, full file"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "sha256": "d446e08273bbf328cd20f6c70e743dd20a575d84e7a9e1ea93d4e134a38c6006",
+      "bytes": 3550,
+      "inspected": "Exact projected identity and required-field regression contracts, full file"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "sha256": "3929530902a1f8942c594f53657464dff6d64f55fd599beea4fbfd156031a627",
+      "bytes": 10627,
+      "inspected": "Structural/execution separation and exact operation projection regressions, lines 1-200"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+      "bytes": 20163,
+      "inspected": "Validated plan to journal materialization, lines 1-58"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/operation.rs",
+      "sha256": "c512078399126bfbc1d79ca1ce7612dfa9cc0a016546cf42ea6230b568e1b056",
+      "bytes": 4211,
+      "inspected": "Exact operation identity/target projection, lines 1-70"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "sha256": "1519f4ebab5b4a51b9944b9fc0464e85f3d78706b323db8f10e0e1df3c2f2096",
+      "bytes": 4737,
+      "inspected": "Retained original plan and resume field/target/operation admission, full file"
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/types.rs",
+          "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+          "bytes": 14217
+        },
+        {
+          "path": "crates/canic-backup/src/plan/validation.rs",
+          "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+          "bytes": 12387
+        },
+        {
+          "path": "crates/canic-backup/src/plan/build/mod.rs",
+          "sha256": "07520d509b2eab0207b56b2825ad8ee604de0eb364a8b57622c609cbcd06ab62",
+          "bytes": 3169
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/operation_plan/mod.rs",
+        "crates/ic-backup/src/model/operation_plan/context/mod.rs",
+        "crates/ic-backup/src/model/operation_plan/operation/mod.rs",
+        "crates/ic-backup/src/model/operation_plan/budget/mod.rs"
+      ],
+      "adaptation": "Plan declaration and complete operation projection responsibilities become a private canonical v1 record binding full existing inventory/graph owners, explicit physical selection, shared network/caller/release, exact per-operation target/request digest and original finite budgets. Every graph operation has exactly one binding and every selected target is covered. New checked aggregate original ceilings admit at most 65,536 mutation plus observation attempts, while each existing operation owner admits at most 1,024. No Root/fleet privileges, accepted authority flags, request payload codecs, lifecycle semantics or execution qualification are imported."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+          "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+          "bytes": 2017
+        },
+        {
+          "path": "crates/canic-backup/src/execution/mod.rs",
+          "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+          "bytes": 20163
+        },
+        {
+          "path": "crates/canic-backup/src/execution/operation.rs",
+          "sha256": "c512078399126bfbc1d79ca1ce7612dfa9cc0a016546cf42ea6230b568e1b056",
+          "bytes": 4211
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/operation_plan/mod.rs"
+      ],
+      "adaptation": "Exact original plan/operation projection ownership informs deterministic derivation of existing AttemptAuthorityRecord. Full domain-separated canonical plan digest becomes intent, binding unselected inventory and every original ceiling as well as operation context. Derived authority is a declaration, never a journal creation/reset, preflight permit, progress receipt or dispatch authority. Existing finite attempt journal reservations and receipts remain the consumption owner."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-cli/src/backup/create/persistence.rs",
+          "sha256": "1519f4ebab5b4a51b9944b9fc0464e85f3d78706b323db8f10e0e1df3c2f2096",
+          "bytes": 4737
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/operation_plan/mod.rs"
+      ],
+      "adaptation": "Resume admission retains the exact original immutable plan rather than replacing evidence. Existing qualified layout/journal exclusion and bounded durable no-overwrite JSON compose into operation-plan.json creation/read under exact expected intent. Canonical binary hashing replaces delimiter signatures; lost creation replies reconcile locally without journal or allowance reset. Separate inventory/graph files are not adopted or rewritten."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/tests/requests.rs",
+          "sha256": "d446e08273bbf328cd20f6c70e743dd20a575d84e7a9e1ea93d4e134a38c6006",
+          "bytes": 3550
+        },
+        {
+          "path": "crates/canic-backup/src/plan/tests/validation.rs",
+          "sha256": "3929530902a1f8942c594f53657464dff6d64f55fd599beea4fbfd156031a627",
+          "bytes": 10627
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/operation_plan/tests/mod.rs"
+      ],
+      "adaptation": "Relevant exact identity, required-field and complete operation projection regression responsibilities rerun against extracted generic production owners. Fresh independent binary golden, changed-component intent/authority, canonical ordering, strict closed records, selected-target coverage, count/aggregate budget limits and overflow cases added. No source tests claiming live authority or executable lifecycle are counted as extracted qualification."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/operation_plan/tests/mod.rs",
+        "crates/ic-backup/tests/operation_plan.rs",
+        "docs/contracts/operation-plan.schema.json"
+      ],
+      "description": "Fresh native regressions qualify immutable exact-digest admission, unchanged evidence, lock/root identity, unsafe entries and independent 1 MiB input/canonical output bounds. Public journey reopens the plan and exhausted pending attempt journal using the same original derived authority without replenishment. Machine schema embeds owner constraints and documents runtime invariants and independent canonical binary golden. No remote calls occur."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 36,
+      "excerpt": "validate_targets(self)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 37,
+      "excerpt": "validate_selected_scope(self)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 39,
+      "excerpt": "validate_phase_projection(self)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 43,
+      "excerpt": "pub fn validate_for_execution(&self) -> Result<(), BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 240,
+      "excerpt": "fn validate_phase_projection(plan: &BackupPlan) -> Result<(), BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 242,
+      "excerpt": "if plan.phases.len() != expected.len() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 245,
+      "excerpt": "actual: plan.phases.len(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 249,
+      "excerpt": "for (index, (actual, expected)) in plan.phases.iter().zip(expected).enumerate() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 47,
+      "excerpt": "pub fn build_backup_plan(input: BackupPlanBuildInput<'_>) -> Result<BackupPlan, BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 66,
+      "excerpt": "let phases = build_backup_phases(&targets);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 74,
+      "excerpt": "root_canister_id: input.root_canister_id,"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 87,
+      "excerpt": "plan.validate()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 15,
+      "excerpt": "pub fn topology_preflight_request(&self) -> TopologyPreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 17,
+      "excerpt": "plan_id: self.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 18,
+      "excerpt": "run_id: self.run_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 35,
+      "excerpt": "pub fn quiescence_preflight_request(&self) -> QuiescencePreflightRequest {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 37,
+      "excerpt": "plan_id: self.plan_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "line": 38,
+      "excerpt": "run_id: self.run_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 11,
+      "excerpt": "fn builds_topology_preflight_request() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 13,
+      "excerpt": "let request = plan.topology_preflight_request();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 24,
+      "excerpt": "assert_eq!(request.targets[0].canister_id, APP);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 31,
+      "excerpt": "fn builds_quiescence_preflight_request() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 33,
+      "excerpt": "let request = plan.quiescence_preflight_request();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 40,
+      "excerpt": "assert_eq!(request.targets[0].canister_id, APP);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 49,
+      "excerpt": "let request = plan.topology_preflight_request();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "line": 68,
+      "excerpt": "let request = plan.quiescence_preflight_request();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 14,
+      "excerpt": "plan.validate().expect(\"valid subtree plan\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 15,
+      "excerpt": "plan.validate_for_execution()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 53,
+      "excerpt": "plan.validate().expect(\"declared authority can plan\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 55,
+      "excerpt": ".validate_for_execution()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 72,
+      "excerpt": "plan.validate().expect(\"unknown authority can plan\");"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 74,
+      "excerpt": ".validate_for_execution()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 91,
+      "excerpt": ".validate_for_execution()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 108,
+      "excerpt": ".validate_for_execution()"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 119,
+      "excerpt": "fn rejects_incomplete_operation_projection() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 121,
+      "excerpt": "plan.phases.pop();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 151,
+      "excerpt": "fn rejects_operation_order_mismatch() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 153,
+      "excerpt": "plan.phases[1].order = 42;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 170,
+      "excerpt": "fn rejects_operation_id_mismatch() {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 172,
+      "excerpt": "plan.phases[4].operation_id = \"stop-other\".to_string();"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "line": 191,
+      "excerpt": "plan.phases[4].kind = BackupOperationKind::CreateSnapshot;"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 27,
+      "excerpt": "pub fn from_plan(plan: &BackupPlan) -> Result<Self, BackupExecutionJournalError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 28,
+      "excerpt": "plan.validate()"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 33,
+      "excerpt": ".map(BackupExecutionJournalOperation::from_plan_operation)"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/operation.rs",
+      "line": 7,
+      "excerpt": "pub(super) fn from_plan_operation(operation: &crate::plan::BackupOperation) -> Self {"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/operation.rs",
+      "line": 10,
+      "excerpt": "operation_id: operation.operation_id.clone(),"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/operation.rs",
+      "line": 12,
+      "excerpt": "target_canister_id: operation.target_canister_id.clone(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 27,
+      "excerpt": "let existing = layout.read_backup_plan()?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 28,
+      "excerpt": "ensure_resume_plan_compatible(&existing, plan)?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 37,
+      "excerpt": "let journal = BackupExecutionJournal::from_plan(plan)?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 38,
+      "excerpt": "layout.write_backup_plan(plan)?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 47,
+      "excerpt": "fn ensure_resume_plan_compatible("
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 55,
+      "excerpt": "&existing.root_canister_id,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 56,
+      "excerpt": "&requested.root_canister_id,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 85,
+      "excerpt": "&target_signature(existing),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 86,
+      "excerpt": "&target_signature(requested),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 90,
+      "excerpt": "&operation_signature(existing),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 91,
+      "excerpt": "&operation_signature(requested),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 116,
+      "excerpt": "fn target_signature(plan: &BackupPlan) -> String {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 122,
+      "excerpt": "target.canister_id,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 136,
+      "excerpt": "fn operation_signature(plan: &BackupPlan) -> String {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 137,
+      "excerpt": "plan.phases"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "paths": [
+        "crates/canic-backup/src/plan/types.rs",
+        "crates/canic-backup/src/plan/validation.rs",
+        "crates/canic-backup/src/plan/build/mod.rs",
+        "crates/canic-backup/src/plan/preflight/requests.rs"
+      ],
+      "disposition": "Canic retains complete application backup plans, Root/fleet selection policy, typed preflight request generation, authority evidence and live execution admission. Generic declarations require separately qualified exact request codecs, authoritative membership/revision/fence ports and fresh effect-boundary authority before runners."
+    },
+    {
+      "paths": [
+        "crates/canic-backup/src/execution/mod.rs",
+        "crates/canic-backup/src/execution/operation.rs"
+      ],
+      "disposition": "Canic retains complete journal materialization, accepted preflight flags, operation kinds, actual progress and runner/executor consumers. Generic authority derivation performs no completion projection, dispatch or allowance replenishment."
+    },
+    {
+      "paths": [
+        "crates/canic-cli/src/backup/create/persistence.rs"
+      ],
+      "disposition": "Canic CLI retains existing resume signature comparisons, journal/layout integrity and create/resume workflow. No CLI consumer changes, aliases, cross-schema readers or compatibility wrappers added."
+    }
+  ],
+  "qualification": "Fresh targeted native model/persistence/public-API tests against extracted production owners, independent binary golden and strict schema examples. Local declarations and journal allowance continuity only; no authenticated complete backup/restore plan, request codec, fresh authority, remote effect, runner, PocketIC or live IC qualification.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json",
+    "docs/effect-graph-source.json"
+  ]
+}

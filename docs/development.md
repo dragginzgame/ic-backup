@@ -37,6 +37,23 @@ projects ready/blocked nodes without reading receipts, scheduling or executing.
 Qualified receipts and application ordering remain integration-owned. See
 [the graph schema](contracts/effect-graph.schema.json) and
 [ordering provenance](effect-graph-source.json).
+Operation-plan context, exact graph/target/request binding, aggregate assigned
+ceilings, canonical hashing and derived original attempt authority belong to model.
+Ops owns immutable `operation-plan.json` admission under the exact reviewed digest.
+Native public tests derive authority and reopen an already-consumed attempt through
+the original plan, without remote calls or allowance replenishment. See
+[the plan schema](contracts/operation-plan.schema.json) and
+[binding provenance](operation-plan-source.json). Complete backup/restore plan
+semantics, typed request codecs, preflight and runner wiring remain unimplemented.
+Pure `policy::execution_progress` joins the original plan with one retained
+`AttemptJournalRecord` per operation. It validates complete exact authority/limit
+binding and causal Applied prerequisites for attempted operations, then derives
+graph-ordered local conditions and totals over assigned allowances only. It never
+reads files, creates missing journals, schedules work, serializes records or changes
+state. The caller owns coherent retained custody and qualified actual receipts;
+the projection proves neither freshness nor cross-journal dispatch chronology.
+See [progress provenance](execution-progress-source.json) and
+[the maintained boundary](extraction-boundary.md).
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for

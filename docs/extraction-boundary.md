@@ -18,6 +18,10 @@ Canonical inventory and pure target expansion follow with
 [their own provenance](inventory-source.json).
 Explicit operation ordering follows with
 [separate graph provenance](effect-graph-source.json).
+Plan-to-journal declaration binding has
+[its own provenance](operation-plan-source.json).
+Retained-journal execution progress has
+[separate source provenance](execution-progress-source.json).
 
 ## Maintained local contracts
 
@@ -404,6 +408,130 @@ original bytes, contention and unsafe/replaced paths. A public-API journey reope
 the original graph and projects declared progress locally. These checks qualify
 graph/policy/persistence behavior, not full plans, live effects or actual completion.
 
+### Immutable operation plan and derived original attempt authority
+
+`model::operation_plan::OperationPlanRecord` adapts Canic's plan validation,
+operation projection and original-plan resume discipline into a generic local
+binding. Private v1 fields retain canonical `PlanContextRecord`, the full original
+`InventoryRecord`, nonempty exact `selected_targets`, original `EffectGraphRecord`,
+one `PlannedOperationRecord` per node and original aggregate `PlanBudgetRecord`.
+The context binds declared network fingerprint, caller principal and opaque release
+evidence digest. Each operation binds exact sequence, canonical physical target,
+integration-owned mutating-request digest and original `AttemptBudgetRecord`.
+Hashes/principals normalize at their owning boundaries. Unknown/missing/duplicate
+fields, other generations and editable derived intent/authority/views reject.
+
+The explicit selection admits at most 1,024 unique exact inventory targets.
+Operations admit at most 8,192 unique sequences and match graph identities one for
+one; missing/extra/mismatched operation bindings reject. Every operation targets
+the selected physical set, and every selected target must have at least one bound
+operation. Original inventory parents can remain unselected. Canonical selection
+and operation ordering is presentation/hash order, not dispatch order. Plan
+construction does not infer application consistency or lifecycle requirements.
+
+Per-operation allowances retain the existing combined maximum of 1,024 attempts.
+Separate aggregate mutation/observation ceilings have a checked combined maximum
+of 65,536, including zero. Checked sums of assigned original operation allowances
+must fit each original aggregate ceiling. Unassigned headroom cannot be spent by
+derivation: there is no budget replacement/reallocation API. Allocated totals are
+read-only projections, not consumed allowance, charged cycles or current balances.
+Backend internal retries/calls/costs still need their own qualified executor bounds.
+
+The full canonical plan digest binds context, original inventory/graph digests,
+explicit selection, original aggregate ceilings and every exact operation target,
+request and allowance. Binary encoding uses a separate v1 domain and exact byte
+lengths/widths; JSON formatting, allocated views, journal progress and derived
+authority are excluded. This avoids hashing an intent into itself. Changing even
+an unselected inventory row, another operation's request or unused aggregate ceiling
+changes the original intent and every derived authority. See
+[the machine schema](contracts/operation-plan.schema.json) for fields, invariants,
+embedded inventory/graph contracts and independently encoded golden bytes.
+
+`attempt_authority(sequence)` derives existing `AttemptAuthorityRecord` with the
+full original plan digest as intent, shared exact context, exact target/request and
+that operation's original limits. Repeated derivation returns the same declaration;
+it consumes no allowance and creates/resets no journal. Journal creation remains
+no-overwrite and reopening uses retained consumption. An exhausted pending mutation
+therefore stays spent/pending when its authority is derived again. Derivation does
+not check graph progress, fresh permissions, paid-effect settlement or actual bytes;
+future workflow admission must bind qualified receipts and request codecs before
+calling the existing approved ops boundaries.
+
+`ops::persistence::create_operation_plan` durably creates fixed `operation-plan.json`
+under layout/journal exclusion without replacing evidence. `read_operation_plan`
+admits only the bounded validated declaration under its exact original expected
+digest. Lost creation replies reconcile by that exact local read. Embedded inventory
+and graph are the plan's original bindings; separate retained files are not adopted,
+rewritten or assumed equal. Encoded input and canonical pretty-output each admit at
+most 1 MiB; structurally valid maximum-count plans can exceed persistence bounds
+and reject before publication. Unsafe entries and replaced roots reject without
+repair or remote observations.
+
+This record is a declaration binding primitive, not a complete authenticated
+backup/restore plan or an executable request. Typed payload meaning, release/network
+qualification, fresh membership/controller/read checks, capacity, lifecycle policy,
+application consistency/fencing and external-effect settlement remain their owners'
+contracts. No serialized accepted-preflight/Proven flag grants dispatch. No runner,
+snapshot effect, terminal proof, relocation/migration or reference release is added.
+
+Fresh native regressions cover canonical plan golden bytes, case/order aliases,
+all declaration owners, full intent/derived authority, wrong graph/table/selection,
+assigned/aggregate limits, closed schemas and rejected view/preflight injection.
+They also qualify count/output bounds, original no-overwrite bytes, lock contention,
+unsafe files and replaced roots. An external public-API journey persists/reopens
+the original plan, derives its exact journal authority and recovers spent pending
+allowance without resetting it. This proves local binding/persistence/accounting,
+not IC authority, typed management requests or canister effects.
+
+### Pure execution progress from exact original journals
+
+`policy::execution_progress::progress` adapts Canic's plan/journal integrity and
+resume-report responsibilities into a pure local evidence join. Its passive request
+borrows the original `OperationPlanRecord` and a complete set of validated
+`AttemptJournalRecord` references. At most 8,192 journals are admitted. Every
+original graph operation requires exactly one journal; duplicate/unknown identities,
+missing evidence and changed full intent/context/target/request/original limits
+reject. Missing journals are never implicitly created or treated as unused allowance.
+The original full plan digest is computed once, rather than once per journal.
+
+Applied identities come from model-replayed retained receipts, not a supplied
+completion list or editable progress counter. Every operation with consumed
+mutation allowance must have retained Applied evidence for each declared
+prerequisite, including pending, settled NotApplied and Applied operations. This
+checks causal retained evidence. Per-operation journals lack a shared dispatch
+sequence; a set of current Applied receipts cannot prove that a dependent call
+actually began after its prerequisite. Trusted workflow admission must enforce
+that chronology and retain appropriate evidence before future effects.
+
+Views bind the original plan/graph digests and project exact operation identities
+in deterministic graph planning order. Conditions distinguish awaiting dependencies,
+available/exhausted mutation allowance, unresolved mutation, unresolved observation,
+exhausted reconciliation and retained Applied evidence. A lost observation reply
+stays observation-unresolved even when its allowance is exhausted. A qualified
+settled Uncertain observation leaves the mutation unresolved; exhaustion never
+refunds or grants a fresh retry. Zero mutation allowance yields exhaustion, not
+completion. Applied operations may retain unspent allowances that cannot be used.
+
+Checked totals sum original per-operation used/remaining allowances. Unassigned
+aggregate headroom stays excluded and no original ceiling changes. Read-only views
+serialize for output but have no deserialization/record-admission or persistence
+API. The policy performs no IO, record serialization, authority probes, state
+mutation, journal creation or scheduling. Callers own coherent retained evidence
+under appropriate layout/journal custody. Existing persisted v1 schemas are unchanged.
+
+Retained receipts remain integration-qualified evidence, not self-authenticating
+signatures or current live authority. Even all operations Applied establishes no
+full backup/restore terminal proof, complete artifact/manifest verification,
+application fence disposition or reference release. Actual request codecs, fresh
+authority, lifecycle safety and backend reconciliation still precede runners.
+
+Fresh native cases cover every original binding, complete coverage/counts, exact
+65,536 assigned allowance, maximum journal count, reverse numeric dependency order,
+attempted unmet prerequisites and all projected conditions. Public recovery
+reopens exact persisted plan/journals, preserves bytes/consumption through a lost
+observation response and rejects omitted or discarded prerequisite evidence.
+These qualify local model/policy/persistence behavior only, without IC effects.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
 | Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |
@@ -417,6 +545,8 @@ graph/policy/persistence behavior, not full plans, live effects or actual comple
 | Topology hashing and declared registry target expansion | Adapted into bounded canonical forest records, unambiguous v1 binary hashes, pure exact/direct-child/subtree selection and immutable local persistence |
 | Authoritative discovery, registry revisions and routing | Fleet/Root observation, membership authority and application fencing stay integration-owned; no live provider imported |
 | Backup phase and restore member ordering | Adapted explicit bounded DAG records, deterministic planning order and pure causal declared-progress views; application dependency semantics remain adapter-owned |
+| Plan structure, operation projection and original-plan resume binding | Adapted immutable declared context/inventory/selection/graph/request/allowance binding, canonical full intent and derived original attempt authority; complete backup/restore safety semantics and actual request codecs remain pending |
+| Plan/journal integrity and resume reporting | Adapted complete exact journal binding, retained causal Applied checks and pure graph-ordered condition/assigned-accounting projections; no accepted-preflight, retry or terminal flags imported |
 | Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
 | ICP subprocess transport | Narrow extraction into the transport package after executor contracts and selected backend capabilities are qualified |
 | Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |

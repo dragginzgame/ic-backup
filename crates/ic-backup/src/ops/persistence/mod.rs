@@ -10,6 +10,7 @@ mod inventory;
 mod journal_lock;
 mod json;
 mod layout_lifetime;
+mod operation_plan;
 
 pub use artifact_commit::{ArtifactCommitOutcome, commit_artifact_directory};
 pub use attempt_journal::{AttemptJournalError, AttemptJournalGuard};
@@ -23,6 +24,9 @@ pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub use json::{create_json_durable, read_json, write_json_durable};
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
+pub use operation_plan::{
+    OperationPlanPersistenceError, create_operation_plan, read_operation_plan,
+};
 
 use crate::{model::artifacts::ChecksumError, ops::artifacts::ArtifactError};
 use std::io;
