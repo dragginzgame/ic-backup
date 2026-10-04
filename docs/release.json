@@ -1,0 +1,13 @@
+{
+   "date" : "2026-10-04",
+   "files" : {
+      "CHANGELOG.md" : "9cfddf842e2115bdbc19db2f88794c5eed7e657ae2a8ea4eefe743608866a071",
+      "Cargo.lock" : "60128fe90533ddeb6eb72102200e137ae63ed9451ded85d6bde2a36a1b5fda2f",
+      "Cargo.toml" : "264edcce1fef3aa635c700c1688a8274eba4acb58a90d4dd683f38704fc9cab4",
+      "crates/ic-backup/Cargo.toml" : "9562dee533517a02b94d0258ea07949e9ab612ec4aef5dec40db5e6067e4dd8b"
+   },
+   "gate" : "release-verify",
+   "schema" : 1,
+   "source" : "384bab857bd37b0204cc29bfbabf07b70df0dee9",
+   "version" : "0.1.1"
+}

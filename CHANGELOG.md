@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.1.1]
+## [0.1.1] - 2026-10-04
 
 - Extract local artifact hashing, no-follow traversal/staging, durable verified
   directory publication, JSON persistence and journal locks from Canic without
