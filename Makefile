@@ -1,0 +1,159 @@
+SHELL := /bin/bash
+.DEFAULT_GOAL := help
+export CARGO_TARGET_DIR := $(CURDIR)/target
+VERSION ?=
+RELEASE := bash scripts/release/release.sh
+CI_TARGETS := deps shell-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+
+.PHONY: bump-x check check-msrv ci clean clippy deps doc ensure-clean fmt fmt-check \
+        help hooks-check hooks-install major minor package patch publish publish-dry-run \
+        release-check release-commit release-major release-minor release-patch release-plan \
+        release-push release-stage release-tag-check release-verify release-x shell-check \
+        tags test validate version
+
+help:
+	@echo "bump-x VERSION=x.y.z         Prepare an exact release version"
+	@echo "check                       Compile this library's native targets"
+	@echo "check-msrv                  Check Rust 1.91.0"
+	@echo "ci                          Fetch dependencies and run the full gate"
+	@echo "clean                       Explicitly remove build artifacts"
+	@echo "clippy                      Lint native targets with warnings denied"
+	@echo "deps                        Fetch locked dependencies"
+	@echo "doc                         Build documentation with warnings denied"
+	@echo "ensure-clean                Check the worktree is committed and clean"
+	@echo "fmt                         Format Rust"
+	@echo "fmt-check                   Check Rust formatting"
+	@echo "help                        Show available commands"
+	@echo "hooks-check                 Test the pre-commit formatter"
+	@echo "hooks-install               Enable the tracked pre-commit formatter"
+	@echo "major                       Validate and prepare a major release"
+	@echo "minor                       Validate and prepare a minor release"
+	@echo "package                     Verify the standalone package locally"
+	@echo "patch                       Validate and prepare a patch release"
+	@echo "publish                     Upload a tagged release; requires publication enabled"
+	@echo "publish-dry-run             Verify registry upload; requires publication enabled"
+	@echo "release-check               Test release helpers with isolated substitutes"
+	@echo "release-commit              Maintainer: commit and tag prepared release files"
+	@echo "release-major               Maintainer: prepare, commit, tag and push a major"
+	@echo "release-minor               Maintainer: prepare, commit, tag and push a minor"
+	@echo "release-patch               Maintainer: prepare, commit, tag and push a patch"
+	@echo "release-plan VERSION=minor  Preview patch/minor/major or an exact version"
+	@echo "release-push                Push exactly main and its current release tag"
+	@echo "release-stage               Stage only prepared release files"
+	@echo "release-tag-check           Verify the current annotated release tag"
+	@echo "release-verify              Run the full release validation gate"
+	@echo "release-x VERSION=x.y.z     Maintainer: release an exact version"
+	@echo "shell-check                 Check maintained shell and Perl tooling"
+	@echo "tags                        List local version tags"
+	@echo "test                        Run native library tests and doctests"
+	@echo "validate                    Run the full validation gate"
+	@echo "version                     Print the workspace package version"
+
+bump-x:
+	$(RELEASE) bump "$(VERSION)"
+
+check:
+	cargo check --offline --locked -p ic-backup --all-targets --all-features
+
+check-msrv:
+	cargo +1.91.0 check --offline --locked -p ic-backup --all-targets --all-features
+
+ci:
+	+@set -e; for target in $(CI_TARGETS); do \
+		$(MAKE) --no-print-directory "$$target"; \
+	done
+
+clean:
+	cargo clean
+
+clippy:
+	cargo clippy --offline --locked -p ic-backup --all-targets --all-features -- -D warnings
+
+deps:
+	cargo fetch --locked
+
+doc:
+	RUSTDOCFLAGS="-D warnings" cargo doc --offline --locked -p ic-backup --no-deps --all-features
+
+ensure-clean:
+	@$(RELEASE) ensure-clean
+
+fmt:
+	cargo fmt --all
+
+fmt-check:
+	cargo fmt --all -- --check
+
+hooks-check:
+	bash scripts/hooks/test-hooks.sh
+
+hooks-install:
+	bash scripts/hooks/install.sh
+
+major:
+	$(RELEASE) bump major
+
+minor:
+	$(RELEASE) bump minor
+
+package:
+	cargo package --offline --locked --allow-dirty -p ic-backup
+
+patch:
+	$(RELEASE) bump patch
+
+publish:
+	$(RELEASE) publish
+
+publish-dry-run:
+	$(RELEASE) publish --dry-run
+
+release-check:
+	bash scripts/release/test-release.sh
+
+release-commit:
+	$(RELEASE) commit
+
+release-major:
+	$(RELEASE) release major
+
+release-minor:
+	$(RELEASE) release minor
+
+release-patch:
+	$(RELEASE) release patch
+
+release-plan:
+	@$(RELEASE) plan "$(if $(VERSION),$(VERSION),patch)"
+
+release-push:
+	$(RELEASE) push
+
+release-stage:
+	$(RELEASE) stage
+
+release-tag-check:
+	$(RELEASE) tag-check
+
+release-verify: ci
+
+release-x:
+	$(RELEASE) release "$(VERSION)"
+
+shell-check:
+	@for script in scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit; do \
+		bash -n "$$script" || exit $$?; \
+	done
+	shellcheck scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
+	perl -c scripts/release/release-data.pl
+
+tags:
+	@git tag --sort=-version:refname
+
+test:
+	cargo test --offline --locked -p ic-backup --all-features
+
+validate: ci
+
+version:
+	@$(RELEASE) version

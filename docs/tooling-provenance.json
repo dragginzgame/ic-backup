@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "repository_tooling_source_provenance",
+  "inspection_date": "2026-10-04",
+  "scope": "MIT-licensed repository tooling only. Source hashes describe inspected working-tree bytes. Adapted to one host-side ic-backup workspace; no qualification workspace or canister runtime was copied. Regression fixtures must be rerun here.",
+  "files": [
+    {
+      "destination": "scripts/release/release.sh",
+      "source_repository": "https://github.com/dragginzgame/ic-blob-storage",
+      "source_path": "scripts/release/release.sh",
+      "source_head": "556b52fd6a3eccc5efd7e687ffd2e9cde0f41126",
+      "source_has_uncommitted_changes": true,
+      "source_sha256": "5d0b3d65d6785cffc83b7d22bd288d72af3ed864331b0f9092d3b8303c1f63a2"
+    },
+    {
+      "destination": "scripts/release/test-release.sh",
+      "source_repository": "https://github.com/dragginzgame/ic-blob-storage",
+      "source_path": "scripts/release/test-release.sh",
+      "source_head": "556b52fd6a3eccc5efd7e687ffd2e9cde0f41126",
+      "source_has_uncommitted_changes": true,
+      "source_sha256": "1f16ede83f6e5a7158efcbf75701875e0e2a8407f8010ac543e06b31823eff06"
+    },
+    {
+      "destination": "scripts/release/release-data.pl",
+      "source_repository": "https://github.com/dragginzgame/ic-delegated-auth",
+      "source_path": "scripts/release/release-data.pl",
+      "source_head": "67b107f835ae59e6811a47e9f971d90f86daab07",
+      "source_has_uncommitted_changes": true,
+      "source_sha256": "8b9542479c944e22d6d64a046e2ca7344b5c788ae129ffaf31f9002811c9e0b4"
+    },
+    {
+      "destination": ".githooks/pre-commit",
+      "source_repository": "https://github.com/dragginzgame/ic-delegated-auth",
+      "source_path": ".githooks/pre-commit",
+      "source_head": "67b107f835ae59e6811a47e9f971d90f86daab07",
+      "source_has_uncommitted_changes": true,
+      "source_sha256": "4d3f61616a32a05234bd4b64be78f607694736cf4077625cbe60098b5dc89012"
+    },
+    {
+      "destination": "scripts/hooks/install.sh",
+      "source_repository": "https://github.com/dragginzgame/ic-delegated-auth",
+      "source_path": "scripts/hooks/install.sh",
+      "source_head": "67b107f835ae59e6811a47e9f971d90f86daab07",
+      "source_has_uncommitted_changes": true,
+      "source_sha256": "884c124767ef0954ecd7e0b07478593f088ba7f8411629590b47898b929ffe91"
+    },
+    {
+      "destination": "scripts/hooks/test-hooks.sh",
+      "source_repository": "https://github.com/dragginzgame/ic-delegated-auth",
+      "source_path": "scripts/hooks/test-hooks.sh",
+      "source_head": "67b107f835ae59e6811a47e9f971d90f86daab07",
+      "source_has_uncommitted_changes": true,
+      "source_sha256": "18169d9a2f71c3a356880a0e7addf1fe8b9bfb7e0f97e1f074c238f0a9ce3df6"
+    }
+  ]
+}

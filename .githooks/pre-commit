@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Never stage automatically or format over partially staged Rust work.
+RUST_PATHS=('*.rs' '*rustfmt.toml' '*Cargo.toml')
+if ! git diff --quiet -- "${RUST_PATHS[@]}"; then
+    echo 'pre-commit: review and stage or stash unstaged Rust sources/configuration before formatting.' >&2
+    exit 1
+fi
+
+make --no-print-directory fmt
+
+if ! git diff --quiet -- "${RUST_PATHS[@]}"; then
+    git diff --stat -- "${RUST_PATHS[@]}" >&2
+    echo 'pre-commit: formatting changed files; review, stage the formatting, and retry the commit.' >&2
+    exit 1
+fi

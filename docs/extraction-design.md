@@ -1,8 +1,9 @@
 # ic-backup extraction and implementation design
 
-Date: 2026-10-04. Status: proposed implementation design; documentation bootstrap
-only. This document defines a concrete destination and delivery sequence. It
-does not claim an implemented product or accept a Canic release/minor boundary.
+Date: 2026-10-04. Status: proposed product implementation design; the Rust
+repository foundation is implemented. This document defines a destination and
+delivery sequence. It does not claim an implemented product or accept a Canic
+release/minor boundary.
 
 ## 1. Outcome
 
@@ -180,7 +181,9 @@ code; those commands are adapters with behavior, not compatibility aliases.
 
 ## 5. Repository and package layout
 
-Proposed layout, to create during implementation rather than as empty stubs:
+The workspace-only root and `crates/ic-backup` library package are established.
+The library currently has no backup/restore API. Create the remaining proposed
+layout with its implementation rather than as empty stubs:
 
 ```text
 crates/
@@ -202,6 +205,12 @@ workspace-inherited dependency declarations and versions, normal directory
 modules and separate build artifacts. Do not reuse Canic's `.cargo` settings,
 absolute overrides or `target/` directory. Prefer existing published dependencies
 over new abstractions and publish packages in dependency order when authorized.
+
+The foundation follows the sibling Rust library conventions: workspace-inherited
+metadata/lints, a pinned development toolchain, a local target directory, native
+CI, formatter hooks and bounded release helpers. See [development](development.md),
+[releasing](releasing.md) and [tooling provenance](tooling-provenance.json).
+The host product does not inherit the sibling canister/Wasm validation lanes.
 
 The library should have small owners for model, policy, ops, workflow and DTOs.
 CLI endpoints parse/authenticate/select and delegate; workflow coordinates;
@@ -712,10 +721,12 @@ the independently qualified product and Canic's own accepted boundary. B6 does
 not claim complete Canic extraction if B5 remains undone. The standalone toolkit
 can be delivered earlier with that ownership distinction stated explicitly.
 
-The bootstrap creates none of these implementation packages. Its next concrete
-task, when implementation is requested, is B1: rehash source inputs, trace crate/
-CLI/Host consumers, specify lost create/upload/load reconciliation and freeze
-typed authority/consistency records before importing runners.
+The initial documentation bootstrap created none of these implementation
+packages. Subsequent repository setup established only the library package and
+contributor tooling. The next product implementation task is B1: rehash source
+inputs, trace crate/CLI/Host consumers, specify lost create/upload/load
+reconciliation and freeze typed authority/consistency records before importing
+runners.
 
 ## 20. Completion criteria
 

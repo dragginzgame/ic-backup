@@ -27,6 +27,18 @@ into an issue tracker or release authority.
 - Do not add local Cargo patches pointing at sibling checkouts, shared target
   directories or dependencies on Canic runtime/control-plane crates.
 
+## Current implementation scope
+
+- The maintainer authorized Rust repository setup following `ic-delegated-auth`
+  and `ic-blob-storage`. The root is workspace-only; the initial library lives
+  in `crates/ic-backup/`. Add transport and CLI packages when their behavior is
+  implemented, rather than creating placeholder packages.
+- The repository foundation does not qualify backup/restore or complete B1.
+  Follow the extraction design's inventory and contract work before importing
+  the engine. Canic adoption remains separately authorized downstream work.
+- Package metadata starts at the unreleased `0.1.0`; registry publication is
+  disabled. Repository setup is not release or publication authority.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.
@@ -85,10 +97,10 @@ was recorded. Linking provenance or describing implementation status is allowed.
 
 ## Validation and delivery
 
-- This bootstrap is documentation-only; there is no Cargo workspace to compile.
-- Once implementation exists, run only checks targeted to changed packages and
-  behavior during coding. Broad validation requires the maintainer's explicit
-  command or the repository's configured CI/release pipeline.
+- Run only checks targeted to changed packages and behavior during coding.
+  Broad validation requires the maintainer's explicit command or the repository's
+  configured CI/release pipeline. [Development](docs/development.md) describes
+  the local commands and target-directory ownership.
 - Before compilation, check for an active command using this repository's
   target directory. Do not alter source or locks beneath active validation.
 - Unit tests live beside code; integration tests live in `tests/`. Canister
@@ -101,5 +113,11 @@ was recorded. Linking provenance or describing implementation status is allowed.
   qualification; rerun it against the extracted production implementation.
 - Keep a root `CHANGELOG.md` with one open entry when meaningful implementation
   begins. Do not allocate one patch version per slice or bump without authority.
+- Read [the release guide](docs/releasing.md) before release/version work.
+  Preparing commands does not authorize running them. Agents may inspect
+  `release-plan` and test isolated helpers; maintainers own `release-commit`
+  and commit-producing `release-*` commands.
+- Use `make hooks-install` once per clone for the tracked pre-commit formatter.
+  Release validation checks formatting without editing source.
 - Report complete-batch readiness and material limitations. Passing one test
   does not prove a finished extraction or independently usable product.
