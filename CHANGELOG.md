@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.1.2]
+## [0.1.2] - 2026-10-04
 
 - Extract command lifetime custody with owned descriptor inheritance and exact
   v1 sidecar identity records. Add one-spawn guards, bounded finish and fresh
