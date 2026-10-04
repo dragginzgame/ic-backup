@@ -1,62 +1,70 @@
 # Current handoff — 2026-10-04
 
-The maintainer requested Rust repository setup following `ic-delegated-auth`
-and `ic-blob-storage`, as part of moving independent mechanisms out of Canic.
-The Rust foundation is complete and uncommitted for review. Canic and sibling
-repositories were inspected read-only; their source and dirty worktrees were
-not changed.
+The maintainer authorized copying backup machinery from Canic. The first local
+artifact/persistence extraction is complete and remains uncommitted for review.
+Canic and sibling repositories were inspected read-only; their source and
+existing worktree state were preserved. No live IC effects, release transactions, commits
+or pushes ran during this batch.
 
-The workspace-only root owns the initial unreleased `0.1.0` version, Rust 2024
-metadata, dependencies and lints. Its only member is `crates/ic-backup`, with
-a documented library entry point and no backup/restore API yet. Development
-Rust is pinned to 1.99.0; MSRV is 1.91.0. The lockfile has no dependencies.
-Registry publication is disabled. Transport, CLI and IC fixtures have not been
-created.
+`crates/ic-backup` now provides canonical SHA-256 checksum records, descriptor
+based no-follow artifact traversal and private staging, verified durable
+directory publication/recovery, bounded JSON reads, durable JSON create/replace
+and nonblocking journal locks. Pure checksum records live in `model`; host IO
+lives in `ops`. Read [the implemented boundary](../extraction-boundary.md) for
+the maintained contracts, caller responsibilities and remaining ownership work.
+There are no capture/restore runners, transport or CLI packages yet.
 
-Native Make commands, Linux CI, formatter hooks and bounded release helpers
-follow the sibling conventions, using this repository's own `target/`.
-`core.hooksPath` is set locally to `.githooks`. The adapted helpers retain MIT
-attribution and exact inspected source hashes in
-[tooling provenance](../tooling-provenance.json). See
-[development](../development.md) and [releasing](../releasing.md).
+[Fresh source provenance](../extraction-source.json) records the inspected Canic
+working tree at HEAD `3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3`, exact file
+hashes, copied inputs/destinations and consumer references. Canic was clean at
+this inspection; the exact hashes also identify the copied bytes. The original
+[planning baseline](../source-baseline.json) remains retained. Both records are
+provenance, not test evidence. Existing Canic consumers and source remain in place.
 
-The initial Unreleased changelog now covers the documentation bootstrap,
-workspace, native tooling, formatter hooks and release workflow. All three
-public Make entry points (`release-patch`, `release-minor`, `release-major`)
-were exercised against isolated substitutes, checking their selected versions
-and validation/stage/commit/tag/push sequence. Shell checks, release regressions
-and initial changelog validation passed. The real package version remains
-`0.1.0`; no release effects ran.
+Targeted fresh qualification passed on Linux: 28 unit tests and one public-API
+integration test, warning-denied Clippy and documentation, formatting, Rust
+1.91.0 all-target/all-feature compilation and standalone Cargo package
+verification. The copied regressions and new cases exercise exact checksums,
+unsafe entries, private staging, bounded reads, create-only publication and
+acknowledged child-process death around JSON/directory publication. The public
+journey retains original intent, adopts matching published bytes after a lost
+reply and rejects later corruption. This is local persistence/process evidence;
+no PocketIC or real local IC backend was used and no IC effects are qualified.
+No broad CI/release validation ran.
 
-Targeted validation passed: formatting, native all-target/all-feature compilation,
-warning-denied Clippy and docs, Rust 1.91.0 compilation, and standalone Cargo
-package verification. Release-helper and Git-hook regressions were rerun here
-and passed, including failure/retry, index preservation and dependency-bootstrap
-behavior. These tooling fixtures create no real commits, tags, pushes or uploads.
-The empty library test/doctest harness passes but supplies no backup/restore
-qualification. No full CI/release gate or PocketIC suite was run.
+Retained logs: `target/extraction-local-tests.log`, `target/extraction-msrv.log`,
+`target/extraction-docs.log` and `target/extraction-package.log`. The packaged
+crate compiled independently under `target/package/`; build artifacts remain
+retained. Earlier foundation/tooling logs and provenance remain available.
 
-Retained logs: `target/repository-setup-tooling.log` and
-`target/repository-setup-package.log`. The packaged crate compiled independently
-under `target/package/`; build artifacts remain retained.
+The workspace-only root owns version `0.1.0`, Rust 2024 metadata, dependencies
+and lints. Development Rust is pinned to 1.99.0; MSRV is 1.91.0. Dependencies
+inherit from this workspace and use no sibling Cargo patches or Canic crates.
+Registry publication is disabled. Make commands, Linux CI and release helpers
+follow the sibling conventions using this repository's own `target/`.
+`core.hooksPath` is set locally to `.githooks`. See
+[development](../development.md), [releasing](../releasing.md) and
+[tooling provenance](../tooling-provenance.json).
 
-Read [the design](../extraction-design.md) for the proposed architecture,
-contracts, extraction inventory, recovery cases, testing and implementation
-sequence. [The baseline](../source-baseline.json) records source hashes and
-the inspected Canic HEAD; its working-tree files, not that commit alone, were
-the planning input. These hashes are provenance, not test evidence.
+The changelog retains the original undated `0.1.0` notes and has one active
+undated `0.1.1` draft below the empty Unreleased section. This batch's completed
+changes are recorded in `0.1.1`. Cargo metadata and the lockfile remain at
+`0.1.0`; no tag or release receipt exists. All three Make release entry points
+were previously exercised against isolated substitutes, with no real release
+effects. Maintainers own commit-producing release commands.
 
-The next product implementation batch is B1: refresh the source inventory, trace public
-consumers and freeze the current v1 contracts. The current Canic backup crate
-has no direct Canic dependencies, but contains Canic-specific Root/Fleet schema
-and consistency assumptions. Its live CLI backup preflight remains unavailable.
-Neither independence nor live backup availability is established by the design.
+Read [the design](../extraction-design.md) for the proposed architecture and
+implementation sequence. The inventory refresh, consumer trace and local
+contracts are implemented; full B1/B2 completion is not established. Generic v1
+authority/consistency, budget, journal/transition and executor contracts still
+need to be specified before importing runners. Layout lifetime/restore-reference
+retention and command custody also remain in Canic. Its backup executor topology
+preflight still rejects. This crate is not yet an independently usable canister
+backup/restore product.
 
 The public remote is
-[dragginzgame/ic-backup](https://github.com/dragginzgame/ic-backup). The maintainer
-previously authorized a one-time initial documentation commit and push; that
-published commit is `680baf9`. No further commit or push ran during Rust setup.
-The standing no-commit rule remains in force. Repository foundation readiness
-does not establish B1 contract completion, independent backup/restore usability
-or completed extraction. Canic adoption, release/publication and live IC effects
-require their own instructions.
+[dragginzgame/ic-backup](https://github.com/dragginzgame/ic-backup). The initial
+documentation commit/push used a one-time authorization (`680baf9`); the
+maintainer committed the Rust foundation as `edc8e4b` (`0.1.0`). The standing
+no-commit rule remains in force. Canic adoption, release/publication and live
+IC effects require their own instructions.

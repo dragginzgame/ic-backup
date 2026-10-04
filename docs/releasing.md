@@ -19,6 +19,9 @@ routine implementation does not allocate a version per slice.
 Keep one populated `## [Unreleased]` changelog section. A maintainer-selected
 undated numbered draft may immediately follow an empty Unreleased section.
 Preparation promotes/dates that draft while preserving historical notes.
+The selected draft is currently `0.1.1`; initial setup notes are retained under
+undated `0.1.0`. Add completed changes to `0.1.1` before preparing it. Cargo
+metadata remains at `0.1.0` until the release transaction selects its successor.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.

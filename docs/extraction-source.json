@@ -1,0 +1,1728 @@
+{
+  "schema_version": 1,
+  "kind": "extraction_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": false,
+  "scope": "Inspected working-tree source for the first local artifact/persistence extraction. Not immutable release identity, IC qualification, or complete B1 authority/runner contracts. The original planning baseline remains retained.",
+  "inventory": [
+    {
+      "path": "crates/canic-backup/src",
+      "rust_files": 131,
+      "rust_lines_including_tests_and_comments": 32416
+    },
+    {
+      "path": "crates/canic-cli/src/backup",
+      "rust_files": 68,
+      "rust_lines_including_tests_and_comments": 5122
+    },
+    {
+      "path": "crates/canic-cli/src/restore",
+      "rust_files": 10,
+      "rust_lines_including_tests_and_comments": 3328
+    },
+    {
+      "path": "crates/canic-host/src/icp",
+      "rust_files": 22,
+      "rust_lines_including_tests_and_comments": 4836
+    }
+  ],
+  "inventory_hash_encoding": "sorted UTF-8 relative path, NUL, lowercase file SHA-256, LF for each entry",
+  "inventory_sha256": "91c92725701a955e0dd9c95cc1d2598feb15f309b1a53fa834332196131c0739",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "3fc2c8efb29f0e3a450c09086ba4662498fc10424797ecff10d26a55d2cde9ef",
+      "bytes": 18806
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "915ed983a5e44493b6085cd653cff9962326631c80624d4384aa46a851b2a1a7",
+      "bytes": 131478
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "6bcb62333eee006dbbb8f8aea252a05fd2616d7b904ac919ce29898f5a70f6a5",
+      "bytes": 6179
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "b60b434e41bfd40b2725e9ac085da0ebfa5f9d4c20f0623e54ff77336cc5c95b",
+      "bytes": 1076
+    },
+    {
+      "path": "crates/canic-backup/Cargo.toml",
+      "sha256": "9f7928dbd0e1a88ffb00cde46ed3707424dda75150f860b1ca3ed236c1d24f45",
+      "bytes": 754
+    },
+    {
+      "path": "crates/canic-backup/README.md",
+      "sha256": "510d40fabb22d0e9ea3033238796eb547cd63db2fe3d3e9a9c2fd7ccd30c8876",
+      "bytes": 1837
+    },
+    {
+      "path": "crates/canic-backup/src/artifacts/mod.rs",
+      "sha256": "6477d8eba85b01ec0ea8044aa7a7f06659ea18d728368898b2a4df7af860bb54",
+      "bytes": 6640
+    },
+    {
+      "path": "crates/canic-backup/src/artifacts/secure.rs",
+      "sha256": "5d88b69950a690473177bb2af6865033ea9dabd0a0a699ea221212e923f1e562",
+      "bytes": 12600
+    },
+    {
+      "path": "crates/canic-backup/src/artifacts/tests/mod.rs",
+      "sha256": "593e88ddbf9dfae42ad80df642373e53346f4e5ef282dd0c18f5577d5bbba526",
+      "bytes": 4231
+    },
+    {
+      "path": "crates/canic-backup/src/discovery/mod.rs",
+      "sha256": "349dfb17b8504b29d3d39e0e51495a0c6f093e8a13c8004774ba2c9a858dd68e",
+      "bytes": 2656
+    },
+    {
+      "path": "crates/canic-backup/src/discovery/tests/mod.rs",
+      "sha256": "582923e0692bbb98801c51e9237b6a79a7c150e6170b753d4eff937909178407",
+      "bytes": 2034
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+      "bytes": 20163
+    },
+    {
+      "path": "crates/canic-backup/src/execution/operation.rs",
+      "sha256": "c512078399126bfbc1d79ca1ce7612dfa9cc0a016546cf42ea6230b568e1b056",
+      "bytes": 4211
+    },
+    {
+      "path": "crates/canic-backup/src/execution/receipt.rs",
+      "sha256": "b27b9208ba71123c87c244c1c9ffbd76609156acb82ff1d2e02515429d3eb9e2",
+      "bytes": 5695
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/mod.rs",
+      "sha256": "8115fde049a971be5aa18d9402839c880a94ea4016416411997385b41682e1a4",
+      "bytes": 6879
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/preflight.rs",
+      "sha256": "e245fa07654d3f1b0f0c785e07c4fe81a614efa74281b4211c89d4fb7d07e46f",
+      "bytes": 2899
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/receipts.rs",
+      "sha256": "53542db36ceb8e812ed67f6e497b9d7627a803ac010c5851c8cf266456053a29",
+      "bytes": 3391
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/restart.rs",
+      "sha256": "879fff65fcfe97dd118d20403c881ed724df372613d75b7e7320672122f0ca25",
+      "bytes": 2470
+    },
+    {
+      "path": "crates/canic-backup/src/execution/tests/transitions.rs",
+      "sha256": "782d7fd4a3603a44f0f8314b4c50f18c6fad4f501a7fe2027f3dd94971ffdf43",
+      "bytes": 4129
+    },
+    {
+      "path": "crates/canic-backup/src/execution/types.rs",
+      "sha256": "71c021f6f90c638426463942eddda168033ea0fada3384099f07c11b68108ba6",
+      "bytes": 8402
+    },
+    {
+      "path": "crates/canic-backup/src/execution/validation.rs",
+      "sha256": "c8e8ce79c9027d443a5f7885d01fdc921a654269da42857eb13684b8a8c6883c",
+      "bytes": 1981
+    },
+    {
+      "path": "crates/canic-backup/src/hash.rs",
+      "sha256": "7ddc4d15d95e4f3b06aa54f7d388496a1ddc521c6701180c01bf67d42f7a7581",
+      "bytes": 907
+    },
+    {
+      "path": "crates/canic-backup/src/journal/mod.rs",
+      "sha256": "8d89ca17bb58e73798b8d7b8c7251987faa1725dc2ce6a3f3f58b803d67de756",
+      "bytes": 561
+    },
+    {
+      "path": "crates/canic-backup/src/journal/report.rs",
+      "sha256": "4a6eeeab4727b2d65ec16ad16c26e3192eec93007748307814e967406974899c",
+      "bytes": 4133
+    },
+    {
+      "path": "crates/canic-backup/src/journal/tests/mod.rs",
+      "sha256": "629eaecfd58f8ce39353c07f81f5db9469f9056c0cd4222b814c2f89b77e136b",
+      "bytes": 9081
+    },
+    {
+      "path": "crates/canic-backup/src/journal/types.rs",
+      "sha256": "eaf087e8d86020a551f98a3eba77015c048ffa76e054db9973faeb90c2508823",
+      "bytes": 4508
+    },
+    {
+      "path": "crates/canic-backup/src/journal/validation.rs",
+      "sha256": "232e70f0d97741688519281af5f215705dce2e1d939185d71a33fc3d9ca70ad4",
+      "bytes": 7410
+    },
+    {
+      "path": "crates/canic-backup/src/lib.rs",
+      "sha256": "cd72e82098539167ab5091ff65533ee642d1cd828689a02fac8ae53c47baa66a",
+      "bytes": 615
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/error.rs",
+      "sha256": "1c1666370b46792e8808657ceae85e3bcf1d6545f3a8f15708a1a5240bf38d2d",
+      "bytes": 2905
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/mod.rs",
+      "sha256": "4e80a8e7163bf39aa0f2138a631acab958f3e996aa686fff460fd67b2ebb4885",
+      "bytes": 434
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/summary.rs",
+      "sha256": "b47f3570adfae4a67c02d9b50d6798c0a5a6ec3784cf15c65f83ccbc8c92102b",
+      "bytes": 1722
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/tests/mod.rs",
+      "sha256": "b05eacc6e81952afa80a07489624e657c487737e84b3ea639f018174ccca8906",
+      "bytes": 12617
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/types.rs",
+      "sha256": "d5a76eb8e59c1df04924f177ee6074d33f421b18efa918064299b40bd7e22993",
+      "bytes": 6147
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/binding.rs",
+      "sha256": "3a9060b1dda01a11c52b6ea5c9051076c1328f2982e1c878b97e001b517eb837",
+      "bytes": 5897
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/mod.rs",
+      "sha256": "97707429e9fb023158fa46df056fe2bd5129c1ea86b4657f9e24682d2162ea9e",
+      "bytes": 1395
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/scalar.rs",
+      "sha256": "5e562928f73625e3fe7f6790d5ada7170e6c83a0fc1311800f191c586be2c4fd",
+      "bytes": 2754
+    },
+    {
+      "path": "crates/canic-backup/src/manifest/validation/sections.rs",
+      "sha256": "4dc6629b08f40562ebf218f8f7fb2b2c11bb7a444ed1e59ea2ab1e0f9aadab14",
+      "bytes": 8396
+    },
+    {
+      "path": "crates/canic-backup/src/operational_readiness/manifest/mod.rs",
+      "sha256": "8825ac4d37b8a766abac8b7f41ccb62afab948491d1215d2d86badf2bc9c9424",
+      "bytes": 13721
+    },
+    {
+      "path": "crates/canic-backup/src/operational_readiness/manifest/tests.rs",
+      "sha256": "0c00f8f0c2ed04fbd3aa26aa806f6efc228f08a34b1976b0141bfb0946fd361b",
+      "bytes": 2965
+    },
+    {
+      "path": "crates/canic-backup/src/operational_readiness/mod.rs",
+      "sha256": "c5da4c58f076eb54ed4f0ea8db6ade85ed649951aca53f37d51fe16058c059c1",
+      "bytes": 266
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/artifact_commit.rs",
+      "sha256": "7d24d39716bc0c15d1cc2abfcb165b667c5bb816d0542eb69b0a6e97c225854a",
+      "bytes": 18519
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/command_lifetime_lock/mod.rs",
+      "sha256": "926343325c3a6c38b25463d8718f663226d0d7a61c22fc6be60d7cb18abfe287",
+      "bytes": 8261
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/error.rs",
+      "sha256": "d4f41c1359351fe1da362d7fc20de150bbb82fbcd21075081a9396c20329faf1",
+      "bytes": 5551
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/file_lock/mod.rs",
+      "sha256": "1fcb1ed309c6d941833fbd0e41aa8679d745fa63a7599e533d5613e7b6ea1d66",
+      "bytes": 2725
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "sha256": "8295190a585fedc79659b828dd3709f5a146f014856e17910f6b7e30988f0109",
+      "bytes": 5501
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/execution.rs",
+      "sha256": "48ee1bee54c5862265482e98f36b8c7a762e93c4e3eace8b205740b2a167a6a1",
+      "bytes": 6309
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/mod.rs",
+      "sha256": "24435f07d77b268d985c920230ee28be5325d7e39d880f6fc7f421678874f23e",
+      "bytes": 644
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/path.rs",
+      "sha256": "d0d09eb8ddb8e2493fd93811bea32b4c24aa24439d111343a80a422b91de396b",
+      "bytes": 838
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/reports.rs",
+      "sha256": "db08eb7e42ff7f01a7f562d9ff068c9ac0d38f39acaa776db45e7387ed4b551f",
+      "bytes": 1756
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/topology.rs",
+      "sha256": "b123b2d0ed63744ae41535b4a205e7d424f5e9d4dff4325f169b0df7ac44e8ca",
+      "bytes": 2512
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/journal_lock/mod.rs",
+      "sha256": "c2605d7fb211931ebb4d892fd46242ca690de9df65c6e6df4b077df4cc9e6f6e",
+      "bytes": 6906
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/json.rs",
+      "sha256": "c318766e876164ee68a66577994045a4e79e0da9600bdd9e4812f8b51ff91bc3",
+      "bytes": 8604
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "sha256": "94aeb745515694e95e94ba8275be521f1ad80f9afc7d15014e17e84b9d825219",
+      "bytes": 8747
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout_lifetime/mod.rs",
+      "sha256": "fd3bd364dbbcd09fe6209aac3e10314f8efd5ed665b4d23742f96a99dd803d16",
+      "bytes": 5662
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout_lifetime/tests.rs",
+      "sha256": "10534425ae81f071cc92c170cb4c9fc2cfc5ec5e783da9e620334c34c586dc5b",
+      "bytes": 3112
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/mod.rs",
+      "sha256": "afee9689c0d745a9ce1c92107a16ef21b55cde5d2809a5ee5af901dda68fbb66",
+      "bytes": 1451
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "sha256": "7c357a9aeb56e187fff6990a5571f51170b76952a1360a1a27245806cc95b676",
+      "bytes": 22195
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs",
+      "sha256": "84efde08d719a5a63548485e82458230cf5974bfe8272ac9fc9614bb39f36875",
+      "bytes": 12365
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_effect.rs",
+      "sha256": "7bb19943064a930771a2e5e9eac12989bbc2628ca3542bfbfd8ac0f0f6464062",
+      "bytes": 10496
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_transition.rs",
+      "sha256": "f2a85e4c086d71f949b9ffe1cdc0974e3fbaea6b7553749af2d803a1a2e33c4f",
+      "bytes": 9307
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+      "sha256": "8576c467193141ad2ad3b7ea7fa177ddd1d6459e0dce54fb8d254d7b92b55b11",
+      "bytes": 21718
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+      "sha256": "709ce4a134dfe9c68ba107f73facec5a286a648a6baa61ce6caa9ade7ff08da3",
+      "bytes": 17811
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/download_transition.rs",
+      "sha256": "6ce12bac109d380126cd72c8759ce95986e6b43abebb1523110a00d82e2850fc",
+      "bytes": 11590
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/durable_transition.rs",
+      "sha256": "d354a58384f4d565aec644a49747a5c8635ff19751411b394ea141ec59632f68",
+      "bytes": 9777
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+      "sha256": "5fda677adbf1b162f61ea82144d1c03b6e9c66b9ffcc96c673bed9bd7d947532",
+      "bytes": 21578
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs",
+      "sha256": "c55b5ca897cc9587406896d2a6cc0a41956592e3d49f1b5865098626de6e1b96",
+      "bytes": 15428
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/mod.rs",
+      "sha256": "0abf2bd7e59d760950a75c4f76e4aa71ad57ed0601e082b1032059a626a7d556",
+      "bytes": 18726
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs",
+      "sha256": "c0d9f0bf95038189fd2d9f18b346ebc7595ae1cb910a09d46c2778e7faf80371",
+      "bytes": 17585
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/response_loss.rs",
+      "sha256": "fa1b905ab6471fe5da75fff0a1ab4e1b99e0885ec55502707ad870aa3c2647e1",
+      "bytes": 4868
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+      "sha256": "23c035968ec5b237ad327b66e79894b2d3b094c0b30ecd42b7bf100382936376",
+      "bytes": 22412
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs",
+      "sha256": "e86368338af4a8dc799c6f59263bdcaddb5ea14e260b07caef8d7c968019e325",
+      "bytes": 9223
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "sha256": "07520d509b2eab0207b56b2825ad8ee604de0eb364a8b57622c609cbcd06ab62",
+      "bytes": 3169
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/phases.rs",
+      "sha256": "c314ef19c19f05de6089e32632fc700adccfb0ae5d02cf0bbc2280f086190a5d",
+      "bytes": 3031
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/selector.rs",
+      "sha256": "379e749223361126275523c82974f3c1814afa18c2eeb26cb916695f57d5d2ae",
+      "bytes": 1408
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/targets.rs",
+      "sha256": "246ab8ee4da1ec6c8e69b7773cc6b7f2e66e92c5d5951981d838493c77f85a88",
+      "bytes": 3812
+    },
+    {
+      "path": "crates/canic-backup/src/plan/error.rs",
+      "sha256": "3dca305caf9f45c44ed02d2a16abffc8a21b8c109694f094086275f701f59af7",
+      "bytes": 5648
+    },
+    {
+      "path": "crates/canic-backup/src/plan/mod.rs",
+      "sha256": "627d30be14f376ea039b5378471ac460bc0ca90e9dca07d7f6338e9bfa6bb60f",
+      "bytes": 507
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/authority.rs",
+      "sha256": "a084d53450855077952b9e8a9b7910d3cb4aeb5848d3fc5def49d41b34529f35",
+      "bytes": 8045
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/mod.rs",
+      "sha256": "c865c9acf021c6895db2eb4e2b11d900550399a71734818f3a643d67795d5f8f",
+      "bytes": 308
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/receipts.rs",
+      "sha256": "6fa3af5737687c6155f13f74caa0901bac0e8ffa43b99c55b52d54bf73b30d3c",
+      "bytes": 6173
+    },
+    {
+      "path": "crates/canic-backup/src/plan/preflight/requests.rs",
+      "sha256": "91c9cb49db34fe55a510cb9e21e17586c0b395012b5245a6e54eaebce2c8c02a",
+      "bytes": 2017
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/authority.rs",
+      "sha256": "28df94447dc56fbdd3e38d2ec074142ae65eacf78c2562e54dcbd38da5f9b5a8",
+      "bytes": 4354
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/builder.rs",
+      "sha256": "fc7d35fdfdf8425e903c6b7f98c3800a33aebb221ad0cc1b96138d592d18d3e9",
+      "bytes": 4357
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/execution_preflight.rs",
+      "sha256": "60bad6ed4872b84108e5de2f52b8cb4280110d55bbb2fc9fbd703523fd371e54",
+      "bytes": 5795
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/mod.rs",
+      "sha256": "c6a57c9babb162b177f776766f51968b7ed7e8d0ba7d012df15702956170a9e0",
+      "bytes": 8945
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/requests.rs",
+      "sha256": "d446e08273bbf328cd20f6c70e743dd20a575d84e7a9e1ea93d4e134a38c6006",
+      "bytes": 3550
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/validation.rs",
+      "sha256": "3929530902a1f8942c594f53657464dff6d64f55fd599beea4fbfd156031a627",
+      "bytes": 10627
+    },
+    {
+      "path": "crates/canic-backup/src/plan/types.rs",
+      "sha256": "65d77c6e28c56615500630d73860ade5b96416c3810bc28c41f561ffd67c0e02",
+      "bytes": 14217
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+      "bytes": 12387
+    },
+    {
+      "path": "crates/canic-backup/src/registry.rs",
+      "sha256": "1e9293debae27f35b45a46cbe42b86e4986601fb0258533842b4da011266f2a7",
+      "bytes": 661
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+      "sha256": "b584bc7269f4b52ee830205c68c494a3a6e92135eba730e43f9a1c6ae80ed707",
+      "bytes": 9197
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/counts.rs",
+      "sha256": "b387840de15ef8259dd1247edab9709910c1ce6ff10310d561a8bc3e4d1d6674",
+      "bytes": 5175
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/mod.rs",
+      "sha256": "95788d62174c05e79c871a9c805f35ce667f8f72ed36686008bf513475cb920e",
+      "bytes": 16476
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs",
+      "sha256": "9f308a2284d16a67cf1fd52cf9c7fbe3230795175fa4c871f28885d4eb530525",
+      "bytes": 12265
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/reports/mod.rs",
+      "sha256": "0aadf70893919aa1eb8a6e53009f85300f4b289fd386bf8b0cface4f55721a89",
+      "bytes": 9499
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/journal/types.rs",
+      "sha256": "291d62328be8f30b317bde87f6e5a50fcc45ca9e804e7bc4400808dd7101a15c",
+      "bytes": 17997
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "sha256": "ecdae22edac29885eb1907b799b7d489b3fba7633667556e74b021b2d4fb79bd",
+      "bytes": 20175
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/validation.rs",
+      "sha256": "89249e9a452d00af6d18230a67a138055bfe1ef39d2d4460a53f9a00edde60a3",
+      "bytes": 12550
+    },
+    {
+      "path": "crates/canic-backup/src/restore/mod.rs",
+      "sha256": "74318de93d353ede6bb579a85ec75f76b04cab7ffe271071e87af59f22b22b9b",
+      "bytes": 2173
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/mod.rs",
+      "sha256": "668e24df0220e501a7bb61c06a2f281dfa9d0cf1243b6041d23d7c2f87299fc8",
+      "bytes": 4736
+    },
+    {
+      "path": "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+      "sha256": "05cb82f67ac829be1aed58f53ace06a6f6bac36e320a52c07178b09631f95243",
+      "bytes": 4520
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/error.rs",
+      "sha256": "0055bbb3741656e1e7096d859297892297736586d9a7705bd7a7a5623d9b9778",
+      "bytes": 2206
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mapping.rs",
+      "sha256": "a171aa51871a5206e83d84df953be2a72436ae00786e7179d37a6a3ba6513877",
+      "bytes": 2089
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/members.rs",
+      "sha256": "5da88b01f0b28beb6bcf6e09a78c1993014abac93d268607944d1383598db80e",
+      "bytes": 3660
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mod.rs",
+      "sha256": "a9134cbbb6ec08e5144c5dc17201587326ae80e6f29bbd1cc1f727cd61380904",
+      "bytes": 2858
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/ordering.rs",
+      "sha256": "c1f8b257434f88ea337267be25547270d2cfe2fc738da8495fb7a8f75e1c3264",
+      "bytes": 2616
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/summary.rs",
+      "sha256": "7ccfdae4a757d451a46e97723c093eda5a80793061307090c5657f9247ee960b",
+      "bytes": 4365
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/types.rs",
+      "sha256": "d3a086558829183d5280e7a96475b00169e6d34f3319bc78cca49013255ad7da",
+      "bytes": 7030
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "sha256": "fa6139061870d05dc32d06b368801253f71ba79d0f264eed016ba305786ffad2",
+      "bytes": 7632
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/artifact.rs",
+      "sha256": "d3e34cb28e1c60c05859e471be028e78a09fb8aab758ee12c51a650b10156bbc",
+      "bytes": 8638
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/constants.rs",
+      "sha256": "3e3173f4f74f2fb0293ee866dd3a7b7291d94d4bef10edc7ded73c7b681d151d",
+      "bytes": 2212
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/execute.rs",
+      "sha256": "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079",
+      "bytes": 33401
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/io.rs",
+      "sha256": "fcbbd718bfc0ae87c33110c5eeb040783985910503096b307d938e68a777e475",
+      "bytes": 9919
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/mod.rs",
+      "sha256": "592475df9b77fd2444cf6afd9554896674acf2db0873256e131defb1599aa8a5",
+      "bytes": 1560
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/precondition.rs",
+      "sha256": "1bfacebee715ddf0bdec2aba905eb875ad68e39269d818edb64d67faeae85ddd",
+      "bytes": 6885
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/preview.rs",
+      "sha256": "a73008a34627e5a2609f82e34ec46994127a166c319fb0e79e9985744ef9da65",
+      "bytes": 3269
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/status.rs",
+      "sha256": "45005902f6aa2dcc6ee48f7bf21f9eb36bf082c17b22378c782e8b30e79d0358",
+      "bytes": 4489
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/tests.rs",
+      "sha256": "e71343c86cb0ac9c93fa630fce3f67e738dcfe5b7bf509782c5a4b3c0862bee0",
+      "bytes": 90104
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/types.rs",
+      "sha256": "b31a5de1e92ad0c65ccacbdfa6ae68a51cc3c45f854e53338670aa512767e412",
+      "bytes": 20009
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/apply_dry_run.rs",
+      "sha256": "9296cb6af2958ee4e63c9675f3efc1de6d90cf8128f276d655d937fd1c4a158e",
+      "bytes": 21180
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/apply_journal.rs",
+      "sha256": "8d7ab6ca3e36b9463d1b17a0c491d29f1df3b372894025d99d3e96b5a9e33517",
+      "bytes": 52268
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/mod.rs",
+      "sha256": "e1877939d6c812148688d5d8a56c1016331d9a9e6081fccb115f11e6a8f6444a",
+      "bytes": 6355
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/operational_readiness.rs",
+      "sha256": "1a6e40487a36fb5f14a889391dcdc84824dd7bb9c14454492b483ceb5ee4c172",
+      "bytes": 8118
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/plan.rs",
+      "sha256": "bf971245afb1d50250644a12b9fdbebb8f2fc7fb553771ab703fdcc860458f2a",
+      "bytes": 18381
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "sha256": "6cf16fc6147ebf3e064a1f849cf84358cbd497fad4f77760176151a3989b0128",
+      "bytes": 6807
+    },
+    {
+      "path": "crates/canic-backup/src/runner/mod.rs",
+      "sha256": "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1",
+      "bytes": 30112
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573",
+      "bytes": 17718
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "sha256": "708c10a080a688ea7c160e4c95e45429f0afa1e11c271f7e2f476455ecf6e844",
+      "bytes": 4645
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "sha256": "2e2760d815be749cfe9cfa71f9604ae026ea26ca143770cc88896f0142fe4569",
+      "bytes": 5030
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/path.rs",
+      "sha256": "5e74ff0af1688f69e795a3764a8e44aac71a035ae8e9b61cfeddd8b467eba155",
+      "bytes": 1222
+    },
+    {
+      "path": "crates/canic-backup/src/runner/tests.rs",
+      "sha256": "06edd6126ca94ad81c5d1e61ece657b68cb8852bb2c19a7712cddfc94c8f47b1",
+      "bytes": 30901
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "bytes": 13445
+    },
+    {
+      "path": "crates/canic-backup/src/serialization.rs",
+      "sha256": "8b095e702f096c238b92edb291aa913f5a66dd14d8446df01a1b6f325efdcad7",
+      "bytes": 584
+    },
+    {
+      "path": "crates/canic-backup/src/test_support.rs",
+      "sha256": "8f01c4ba56f55900f113ce945e386a704317c360c300d3a75ce22282b6d2a9e9",
+      "bytes": 11090
+    },
+    {
+      "path": "crates/canic-backup/src/timestamp/mod.rs",
+      "sha256": "8e69248970473b5e28f3e31f2abedea7767fb352c7ce4e49f87c73d04a4897e2",
+      "bytes": 1758
+    },
+    {
+      "path": "crates/canic-backup/src/topology/mod.rs",
+      "sha256": "cc4dabfc51f446d0887e3d8d52db4914f8f880396235ab533bcae9aacb17dc2a",
+      "bytes": 2711
+    },
+    {
+      "path": "crates/canic-backup/src/topology/tests/mod.rs",
+      "sha256": "8f75bfc22ebd42a7b32821232e7c3e38d5e67c2bef30735bd2e8947399ad9ec2",
+      "bytes": 1589
+    },
+    {
+      "path": "crates/canic-cli/Cargo.toml",
+      "sha256": "60a761c5120a4b030a9a424690edd6db085aa35703ced5d6d8b238d0a768ff57",
+      "bytes": 956
+    },
+    {
+      "path": "crates/canic-cli/src/backup/command.rs",
+      "sha256": "9c7240beea4cfea4e095870ead175dc86503a0decf1669b9cb43fe9511bb3c23",
+      "bytes": 2377
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "sha256": "ea01cb63e620a1e8b0abd5ab0a70ae232dc093a0927222e5447247ac0095f980",
+      "bytes": 5547
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/tests.rs",
+      "sha256": "3bd5323a719a71878c54966012f75d752cfc2c2bde133960279de8dcbe6ec866",
+      "bytes": 2011
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "sha256": "37e1b4a63fe210fce4e412ee1d4c597f8e5901bf4e970f59fb9d56dbfb751415",
+      "bytes": 5026
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "sha256": "1519f4ebab5b4a51b9944b9fc0464e85f3d78706b323db8f10e0e1df3c2f2096",
+      "bytes": 4737
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "sha256": "ca1d11c1178cddaaa8d3a890f67a8f8dc80a083407250ea1513ec3bf1f2e3160",
+      "bytes": 4076
+    },
+    {
+      "path": "crates/canic-cli/src/backup/dispatch.rs",
+      "sha256": "e8294c652c1a876b953fb5c0fb03503225c85c5cd5e0aea56b80cc1adc1db95d",
+      "bytes": 3876
+    },
+    {
+      "path": "crates/canic-cli/src/backup/error.rs",
+      "sha256": "3979c405be424a1d0583c005742b0ef39f73dad113843011f9c035a3331c3df1",
+      "bytes": 3089
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "sha256": "24c4cd47c449786034ffe58e7737ffe4eee0e7f670cd6b57b380d7d2322d0cc4",
+      "bytes": 5278
+    },
+    {
+      "path": "crates/canic-cli/src/backup/labels.rs",
+      "sha256": "979364e90d5ee731c5970cc60186f975f8efbd9c8cc1f625da2509008b4c15fa",
+      "bytes": 1572
+    },
+    {
+      "path": "crates/canic-cli/src/backup/layout.rs",
+      "sha256": "61336705b8d9667af621bd32b6328f3416bac3153811df20f6819c8433f3e756",
+      "bytes": 454
+    },
+    {
+      "path": "crates/canic-cli/src/backup/manifest/mod.rs",
+      "sha256": "30a88c27711f6f404932a0f80d200fcac1f759d9a0025b370029e89e0bb1c052",
+      "bytes": 3925
+    },
+    {
+      "path": "crates/canic-cli/src/backup/manifest/tests.rs",
+      "sha256": "d9e1ce823e2fcff0daa11fdc149c1059f9e556b5560bbc1c020edab15d40e997",
+      "bytes": 5412
+    },
+    {
+      "path": "crates/canic-cli/src/backup/mod.rs",
+      "sha256": "7a31ba8e858f3e60a9ede5f7cf5b735d1ef0ce0cd3869382f5fa4dd63d859493",
+      "bytes": 1476
+    },
+    {
+      "path": "crates/canic-cli/src/backup/model.rs",
+      "sha256": "08d2e8bbee66426b38f8abdc1c4d2f5d7957d79656782af4e6bb837e4ae7d6b4",
+      "bytes": 6023
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/create.rs",
+      "sha256": "60ace473e6adc6078852c81177b2ae992837fd3940742de89fd1c6359d690fa5",
+      "bytes": 2776
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/inspect.rs",
+      "sha256": "842845a8a2362bd18e13e42839ccbf7fdc3f11263491efd3fe3b11b877c2b751",
+      "bytes": 1527
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/list.rs",
+      "sha256": "9341a2ee8b14f1d73f15594c207fb64428b92b55b35f6e646a65cb437dacd546",
+      "bytes": 1578
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/mod.rs",
+      "sha256": "492808e6187623a422626c7c64eaa87328da710b265c6cf04c7172db63846e10",
+      "bytes": 733
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/prune.rs",
+      "sha256": "d87e0c9a3afee4b9e0c2ebc3fe5201bf80b456fde4c4f702806445c1914b553d",
+      "bytes": 2291
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/shared.rs",
+      "sha256": "2f02cfee4acac836c59142be5a0870cb49fe665eba60ec87df7850cef50d7670",
+      "bytes": 1888
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/status.rs",
+      "sha256": "be37af89616979c382481d8fa6156b9bfef64225acae1fb1da5592d0efc0c62c",
+      "bytes": 1595
+    },
+    {
+      "path": "crates/canic-cli/src/backup/options/verify.rs",
+      "sha256": "101e95917e3b8f8625b2b1c2e657835cc12d67142e28d68e3e0c8602133149e6",
+      "bytes": 1396
+    },
+    {
+      "path": "crates/canic-cli/src/backup/prune.rs",
+      "sha256": "a42be1c8145d05342edb130388f4c4f471532809de0215db656d15d8d034b730",
+      "bytes": 4370
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/entry.rs",
+      "sha256": "579c068d684810b71c0bc1ee69269ddeec48296e76a1fa80d8bf8d26e552e33a",
+      "bytes": 3581
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/list.rs",
+      "sha256": "e69415e12613bc87a6b46fcf1a672457f550afb32a89f7935c7360c85671c340",
+      "bytes": 1146
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/mod.rs",
+      "sha256": "0a9318424cf4dddd3f30cbd8077b0575a7d50fcdd323eb5f962bf9974d9bb1b3",
+      "bytes": 524
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/resolve.rs",
+      "sha256": "6974551f6420e9be9dd7395cffc007138702fb2eadc84a6e0af5fc61e3ed1876",
+      "bytes": 2124
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/timestamp.rs",
+      "sha256": "522380cbcc66a33acaafd8c42834b2379b0bf8ef7a8a0bc27b0d9d3d7843c027",
+      "bytes": 1405
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/create.rs",
+      "sha256": "cc9da2ee7b0686dd1290034c9c6df94979e9e6f4be0adcaa6aa20c3a82b0c84b",
+      "bytes": 2132
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/inspect.rs",
+      "sha256": "f3b484de45f9d308c00630b7df9bc100e5b42667b6cb36be5c9666d602a0e703",
+      "bytes": 5864
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/list.rs",
+      "sha256": "aeb8c8c6c702ff9e6b9eef6159ac62733a4e25425d13b2e91014a38c9ba065dd",
+      "bytes": 2242
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/mod.rs",
+      "sha256": "ed11cdf92fbc3a206a10a2d1ada9f284f02a72647a7e0ad820fcca88b44ef06f",
+      "bytes": 1851
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/prune.rs",
+      "sha256": "54ae4d43aa940a354d60e35b8e97b0a935d6d16958438536d23ab9d66f30ba39",
+      "bytes": 1630
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "sha256": "fbe00b9f8211f8f1f3efe37e71f293fe59a1d657ebcc13daddafcb5dbd0f21a9",
+      "bytes": 2683
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/mod.rs",
+      "sha256": "7ee97be64b502b53a06cc76518a6a02cbfff32406d68ca91a448343137f3dba9",
+      "bytes": 277
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/persistence.rs",
+      "sha256": "be9c04ede955de612537fd0cabde0c527d4469ff3f65bec33f4fc5443841099a",
+      "bytes": 3940
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/rejection.rs",
+      "sha256": "936825498b98234fd09f9dcc380f161d14a3c551aac7924133c062611f50fea1",
+      "bytes": 3530
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/resume.rs",
+      "sha256": "8d5c7d1d58dfac1393b7dca6e9e1475e24e989f21e454091a430fd75b64f92b8",
+      "bytes": 1755
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/artifact.rs",
+      "sha256": "e9030cff2942d3bd3ce99c33b7b28e19d5f88cce7a6523dc5c1753ce221e3db8",
+      "bytes": 738
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/download.rs",
+      "sha256": "2e20aeb8fd9c57c2c78ca5b48f1624558f21c2038b10d0811ab3b1c49417e8ee",
+      "bytes": 2297
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/execution.rs",
+      "sha256": "b5955924afc295f93e5febe395b35b21ba9e6ed2958289dee157ffad213fe923",
+      "bytes": 3388
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/layout.rs",
+      "sha256": "32d16511c68ed8b5ac747b7e133e2a620cd0377ef804c108e9bc3d54e4d95fa5",
+      "bytes": 2576
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/manifest.rs",
+      "sha256": "2feccb1e49c3815d82a5f78f907f9b5adaced713901829306941244ec8a1c68f",
+      "bytes": 2875
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/mod.rs",
+      "sha256": "4532c636f532bcaabb5d5332ed07b4794598ceb353d5dece049452fb6ae7c7a7",
+      "bytes": 1114
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "sha256": "52b2901a0d5d3a26b03851ebf7e636b7452452642f377e753561e3f14f7fbe98",
+      "bytes": 3623
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/stamp.rs",
+      "sha256": "b7c68ae756849830e1c16c1429e634e27b79e5d66e5f8cad17aaf234f9f24cc3",
+      "bytes": 529
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/inspect.rs",
+      "sha256": "a737904dd43533d45e66ac22bedd2611c57fbffa847a8178050525bf1b4755e3",
+      "bytes": 1940
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/created_at.rs",
+      "sha256": "1d59e6de1acc5f5fa7cb58bfdbbffe37523da88f552b7a7b127a65b162950618",
+      "bytes": 1346
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/execution_status.rs",
+      "sha256": "ba84f5c540db0045c087c6b50976227fe9e4ef658493172e3c8993df05cdaf96",
+      "bytes": 2606
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/mod.rs",
+      "sha256": "c2875022eab89636b9bc7953e905acda016d931733c5e26890920db1b78723bf",
+      "bytes": 277
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/scan.rs",
+      "sha256": "50520b63b40414bb106ad9a8625ee40d6385deda5ff2032974b66a060c0d2fd1",
+      "bytes": 2443
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/mod.rs",
+      "sha256": "e044d62d606ac06c100c9cc94cd998aca81baf6520037ee17a25f385a88bb363",
+      "bytes": 348
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/options/mod.rs",
+      "sha256": "cfcc0a0c4f314f608483f5401a9fa21194e89c1153b4d0b215895714e7fb5127",
+      "bytes": 295
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/options/parse.rs",
+      "sha256": "0da7417879a0bd2107ae66a37932b85a56971329109d0d614d6e9ec04832c184",
+      "bytes": 4881
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/options/selector.rs",
+      "sha256": "a9bf89501277ee661b39e78b24f957444222bf0a961da9d45db040f47e7f3eb4",
+      "bytes": 1270
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/options/usage.rs",
+      "sha256": "96b4c5d26f6bfbbe3b7bd78e00d2dd5c0430250a2f7169470ec06955e150fb0f",
+      "bytes": 2035
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "sha256": "d4e25a3398e3342d35535c062045b6b31cb9937ac312968c8dc2b8785c3f4f2c",
+      "bytes": 12637
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/reference.rs",
+      "sha256": "fd557fe2635ac9f7fe19e2cd3fa9ddd8af3d65705f816062d3d8c8d4e09f7509",
+      "bytes": 2591
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/execution.rs",
+      "sha256": "8f1e548c0bc700460ab0af0df06ee2ef60414456d5ec1296b17cd36f833de77d",
+      "bytes": 2268
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/json.rs",
+      "sha256": "b2754f087c32243bdb57f709b0a620a87459c35d40cb8af7273ed41ef167a074",
+      "bytes": 1188
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/mod.rs",
+      "sha256": "e74225d6fcc1ae4dd90e5e68db403937d7bfaf41ac2f5dbd8ecc127ed8ee86e5",
+      "bytes": 315
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/read.rs",
+      "sha256": "9b87fcb2992b874be2622db9bf339204b7a92deb9e26664341fde3d84ce8c38a",
+      "bytes": 3113
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/requirements.rs",
+      "sha256": "993df232e8455f6a95683d3815a493aaf59b2ac9b04fc57429c70df04fa54745",
+      "bytes": 3564
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/verify/integrity.rs",
+      "sha256": "654d825b837ec5cdb5c73c6d54de7f359ae258c21d3db872278ef6b687450e61",
+      "bytes": 1336
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/verify/mod.rs",
+      "sha256": "b844ebf0b3b9ff4ed2a81f9a4f8ebf74332cc9dbd70d3c0263d6b0995c4179b4",
+      "bytes": 293
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/verify/rejection.rs",
+      "sha256": "473f939a5cbad188dbc682f270c47f43520478f8aeccbfa0e3f8d2cd1b419024",
+      "bytes": 4402
+    },
+    {
+      "path": "crates/canic-cli/src/backup/verify.rs",
+      "sha256": "6d5b5307bbd8fab93ec046d477a33d596e0d0c1c1202fca7cf6c2fc825f06019",
+      "bytes": 1266
+    },
+    {
+      "path": "crates/canic-cli/src/restore/enforce.rs",
+      "sha256": "aadea867d5ab0649e4429284f54318d4ff98f463532fc9dfa466a946496e1456",
+      "bytes": 2593
+    },
+    {
+      "path": "crates/canic-cli/src/restore/error.rs",
+      "sha256": "ce6850cd8539d319448e466cd4afd41570468a98d075b710fbbb9eec687a6916",
+      "bytes": 12551
+    },
+    {
+      "path": "crates/canic-cli/src/restore/io.rs",
+      "sha256": "d159a674f98333b677d5c2af8572c1a37dd5b9c6d296e71570d11da24326998b",
+      "bytes": 8026
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "sha256": "2e4b817f56cb5b8fcac0fa499ce3b210984d5b4d2df80e48aaf8da229e95bdc3",
+      "bytes": 10679
+    },
+    {
+      "path": "crates/canic-cli/src/restore/options.rs",
+      "sha256": "e76b950ddbd421c2921b1d26d62f4ef75898c559ec4cd123aecd8600334b0cbb",
+      "bytes": 11296
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/mod.rs",
+      "sha256": "3f305cfc76c54e8b7817167d7dc098beb880d8c580da733ff98a62b1eb591487",
+      "bytes": 12697
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/operational_readiness.rs",
+      "sha256": "923ce265d066ffc39b0b3d021cf1623054a8f869bda8287c8dade06065b15f52",
+      "bytes": 7540
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/options.rs",
+      "sha256": "27df6d859be893274339d2d9d4139e17197acd096cfecaf59cb00aab2f5ea9c1",
+      "bytes": 10073
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/plan.rs",
+      "sha256": "f081cc2997ff27e8cf380b8f5b2aab1e04a41a0fea6d91015ad96f772b1dc991",
+      "bytes": 12027
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/run.rs",
+      "sha256": "a8461a373cd2cb89b61ef184e4abc0e213cc4c2d00d7f58c496d435ee38e45cc",
+      "bytes": 30745
+    },
+    {
+      "path": "crates/canic-host/Cargo.toml",
+      "sha256": "07d753dec0828f5f82caccb4082b129cfc0bd229ec025b2678c5eeb887d1f21f",
+      "bytes": 2000
+    },
+    {
+      "path": "crates/canic-host/src/icp/balance.rs",
+      "sha256": "2f67fd2c613c9fad836f829d0ef638a015ff2b0fee353f87a3611f9b05fe9049",
+      "bytes": 3392
+    },
+    {
+      "path": "crates/canic-host/src/icp/candid.rs",
+      "sha256": "9d2cea25ef4c033b219b69aafa601b9a0e7a8278ab268b085647ed2e5282dcaa",
+      "bytes": 8533
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "sha256": "5b67c901184ea29b3874f54a6c07e0cd22e30e7c43d5c7640793e787f57da930",
+      "bytes": 11861
+    },
+    {
+      "path": "crates/canic-host/src/icp/command.rs",
+      "sha256": "852c7c0c257ec0ea7cbe2720b20f036b2fdad94f5e2d53bcff9fde005472bc7a",
+      "bytes": 14569
+    },
+    {
+      "path": "crates/canic-host/src/icp/cycles_ledger/mod.rs",
+      "sha256": "592015f4bc7b9cc6c54af7d6525ecac2ed1501f34455246ce7c1da6e496fe6cf",
+      "bytes": 1505
+    },
+    {
+      "path": "crates/canic-host/src/icp/diagnostic/mod.rs",
+      "sha256": "ee497c54482b81f9b20a92502c4f0d2358d8cab84b04bc1647c8b784fd7f55f1",
+      "bytes": 7390
+    },
+    {
+      "path": "crates/canic-host/src/icp/error.rs",
+      "sha256": "20a43ec1d13c0f81ef444ba260491a6e72584a8aeb410837969b1433944142cd",
+      "bytes": 3616
+    },
+    {
+      "path": "crates/canic-host/src/icp/identity.rs",
+      "sha256": "9c607707611b1311b3b61e2efc7f81c452352976d98b8f9e479562497fee7b33",
+      "bytes": 9169
+    },
+    {
+      "path": "crates/canic-host/src/icp/management.rs",
+      "sha256": "2113535381759eb95e4f8ded12f5dd9b3dbd8d10f5941ee7566b0c2e7c97e1cf",
+      "bytes": 18463
+    },
+    {
+      "path": "crates/canic-host/src/icp/mod.rs",
+      "sha256": "1a8f7c758379d59ea44489bee78dbc65cf5ee070da9b38fea3d2b810a43db42f",
+      "bytes": 1299
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "sha256": "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729",
+      "bytes": 5345
+    },
+    {
+      "path": "crates/canic-host/src/icp/query/mod.rs",
+      "sha256": "c0da4bf298373765d280cedd3b1bfd0e16fd87ff8d7757917a38762fd174bf1a",
+      "bytes": 7001
+    },
+    {
+      "path": "crates/canic-host/src/icp/query/tests.rs",
+      "sha256": "407612bb2a875946267d008c3a7fed6bfaacfb422cb4ad6fe2d7f6f341b69eb9",
+      "bytes": 12114
+    },
+    {
+      "path": "crates/canic-host/src/icp/replica.rs",
+      "sha256": "6247c218c04666d17c0664e948205b28b7073a267371475d61cfdc0df7313750",
+      "bytes": 3251
+    },
+    {
+      "path": "crates/canic-host/src/icp/response/mod.rs",
+      "sha256": "0c0c6890000d3c8466f5b7cbd72ea045085175b212b94ca5aeeaa3b15ed8b7bc",
+      "bytes": 2467
+    },
+    {
+      "path": "crates/canic-host/src/icp/response/tests.rs",
+      "sha256": "83a3387d35f839a7a869e14a37be367522f42ce1e8d8c7b7ecbe5d995f6ccdc7",
+      "bytes": 2288
+    },
+    {
+      "path": "crates/canic-host/src/icp/run.rs",
+      "sha256": "f8bceeb9304157faa5626eb61f39d8201809843a3ee0b3e4da24633a27f20d00",
+      "bytes": 7659
+    },
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571",
+      "bytes": 1620
+    },
+    {
+      "path": "crates/canic-host/src/icp/tests.rs",
+      "sha256": "611025605320f778d67cf921a7c241dc68a390601172067c6db8e3cda2bf8c08",
+      "bytes": 18007
+    },
+    {
+      "path": "crates/canic-host/src/icp/timing/async_tests/mod.rs",
+      "sha256": "0ed511b0225613248d95585cad17031b2202212030760ee34524f45701b3fc70",
+      "bytes": 5504
+    },
+    {
+      "path": "crates/canic-host/src/icp/timing/mod.rs",
+      "sha256": "7a05e5b9c832a01c2c563797414f7fcc7bbef7c43dd65577b9ba038c8f33d2b9",
+      "bytes": 16601
+    },
+    {
+      "path": "crates/canic-host/src/icp/version.rs",
+      "sha256": "d2f551567b4c3b743a19b37a77af9e6734f438bd9fa9180f42b35e7f24bd4789",
+      "bytes": 3560
+    },
+    {
+      "path": "docs/features/backup-and-restore/README.md",
+      "sha256": "8fc470a9cbecc82aec714eac62ee373b234ea61f978872f0f020cc4c1c7647d4",
+      "bytes": 7044
+    },
+    {
+      "path": "docs/features/runtime/README.md",
+      "sha256": "f8041265c6a217f03289d5f23c3aa7b76cb228d30cc50dcf14ebc6fea8c549e7",
+      "bytes": 8136
+    },
+    {
+      "path": "docs/operations/recovery-retry-runbooks.md",
+      "sha256": "0dfb6c7cd44b46c2a879ef892714efbd6460a8315b5f3ee102fb45b7de759f35",
+      "bytes": 25686
+    }
+  ],
+  "copied_sources": [
+    {
+      "source": "crates/canic-backup/src/hash.rs",
+      "source_sha256": "7ddc4d15d95e4f3b06aa54f7d388496a1ddc521c6701180c01bf67d42f7a7581",
+      "destinations": [
+        "crates/ic-backup/src/hash/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/artifacts/mod.rs",
+      "source_sha256": "6477d8eba85b01ec0ea8044aa7a7f06659ea18d728368898b2a4df7af860bb54",
+      "destinations": [
+        "crates/ic-backup/src/model/artifacts/mod.rs",
+        "crates/ic-backup/src/ops/artifacts/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/artifacts/secure.rs",
+      "source_sha256": "5d88b69950a690473177bb2af6865033ea9dabd0a0a699ea221212e923f1e562",
+      "destinations": [
+        "crates/ic-backup/src/ops/artifacts/secure/mod.rs",
+        "crates/ic-backup/src/ops/artifacts/secure/unix/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/artifacts/tests/mod.rs",
+      "source_sha256": "593e88ddbf9dfae42ad80df642373e53346f4e5ef282dd0c18f5577d5bbba526",
+      "destinations": [
+        "crates/ic-backup/src/ops/artifacts/tests/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/persistence/file_lock/mod.rs",
+      "source_sha256": "1fcb1ed309c6d941833fbd0e41aa8679d745fa63a7599e533d5613e7b6ea1d66",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/file_lock/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/persistence/journal_lock/mod.rs",
+      "source_sha256": "c2605d7fb211931ebb4d892fd46242ca690de9df65c6e6df4b077df4cc9e6f6e",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/journal_lock/mod.rs",
+        "crates/ic-backup/src/ops/persistence/journal_lock/tests/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/persistence/json.rs",
+      "source_sha256": "c318766e876164ee68a66577994045a4e79e0da9600bdd9e4812f8b51ff91bc3",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/json/mod.rs",
+        "crates/ic-backup/src/ops/persistence/json/tests/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/persistence/artifact_commit.rs",
+      "source_sha256": "7d24d39716bc0c15d1cc2abfcb165b667c5bb816d0542eb69b0a6e97c225854a",
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/artifact_commit/mod.rs",
+        "crates/ic-backup/src/ops/persistence/artifact_commit/supported/mod.rs",
+        "crates/ic-backup/src/ops/persistence/artifact_commit/tests/mod.rs"
+      ]
+    },
+    {
+      "source": "crates/canic-backup/src/test_support.rs",
+      "source_sha256": "8f01c4ba56f55900f113ce945e386a704317c360c300d3a75ce22282b6d2a9e9",
+      "destinations": [
+        "crates/ic-backup/src/test_support/mod.rs"
+      ]
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-cli/src/metrics/mod.rs",
+      "line": 16,
+      "excerpt": "use canic_backup::discovery::DiscoveryError;"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/io.rs",
+      "line": 2,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/io.rs",
+      "line": 210,
+      "excerpt": "layout: &canic_backup::persistence::BackupLayoutGuard,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 11,
+      "excerpt": "use canic_backup::restore::{"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 80,
+      "excerpt": "canic_backup::restore::RestoreRunnerOutcome {"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 85,
+      "excerpt": "canic_backup::restore::RestoreRunnerOutcome {"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 115,
+      "excerpt": "let layout = canic_backup::persistence::BackupLayout::new(backup_dir.clone())"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 117,
+      "excerpt": ".map_err(canic_backup::restore::RestoreRunnerError::from)?;"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 164,
+      "excerpt": "canic_backup::restore::restore_run_dry_run(&restore_runner_config(options)?)"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 171,
+      "excerpt": "canic_backup::restore::restore_run_retry_failed(&restore_runner_config(options)?)"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 178,
+      "excerpt": "canic_backup::restore::restore_run_dry_run(&restore_status_runner_config(options)?)"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 185,
+      "excerpt": ") -> Result<canic_backup::restore::RestoreRunnerOutcome, RestoreCommandError> {"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 187,
+      "excerpt": "canic_backup::restore::restore_run_execute_result_with_executor("
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 203,
+      "excerpt": "command: &canic_backup::restore::RestoreApplyRunnerCommand,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 204,
+      "excerpt": "command_lifetime: Option<canic_backup::persistence::CommandLifetimeHandle>,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/mod.rs",
+      "line": 209,
+      "excerpt": "command_lifetime.map(canic_backup::persistence::CommandLifetimeHandle::raw_fd),"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/enforce.rs",
+      "line": 1,
+      "excerpt": "use canic_backup::restore::{RestorePlan, RestoreRunResponse};"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/error.rs",
+      "line": 1,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/error.rs",
+      "line": 61,
+      "excerpt": "operation: canic_backup::restore::RestoreApplyOperationKind,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/error.rs",
+      "line": 70,
+      "excerpt": "operation: canic_backup::restore::RestoreApplyOperationKind,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/error.rs",
+      "line": 138,
+      "excerpt": "outcome: canic_backup::restore::RestoreApplyReportOutcome,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/run.rs",
+      "line": 3,
+      "excerpt": "use canic_backup::restore::{"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/run.rs",
+      "line": 784,
+      "excerpt": "outcome: canic_backup::restore::RestoreApplyReportOutcome::Pending,"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/operational_readiness.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/mod.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/mod.rs",
+      "line": 182,
+      "excerpt": "operation.state = canic_backup::restore::RestoreApplyOperationState::Ready;"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/mod.rs",
+      "line": 317,
+      "excerpt": "operation_metrics: canic_backup::journal::DownloadOperationMetrics::default(),"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/plan.rs",
+      "line": 3,
+      "excerpt": "use canic_backup::{persistence::BackupLayout, restore::RestorePlan};"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/tests/options.rs",
+      "line": 2,
+      "excerpt": "use canic_backup::restore::parse_uploaded_snapshot_id;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/mod.rs",
+      "line": 7,
+      "excerpt": "use canic_backup::persistence::BackupIntegrityReport;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/render/inspect.rs",
+      "line": 156,
+      "excerpt": "execution: canic_backup::execution::BackupExecutionResumeSummary {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/prune.rs",
+      "line": 15,
+      "excerpt": "use canic_backup::persistence::{BackupLayout, BackupLayoutGuard, JournalLockError};"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/labels.rs",
+      "line": 1,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/layout.rs",
+      "line": 2,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/executor/mod.rs",
+      "line": 11,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 7,
+      "excerpt": "use canic_backup::plan::BackupPlan;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 94,
+      "excerpt": ") -> canic_backup::plan::QuiescencePolicy {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 96,
+      "excerpt": "canic_backup::plan::QuiescencePolicy::RootCoordinated"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/plan.rs",
+      "line": 98,
+      "excerpt": "canic_backup::plan::QuiescencePolicy::CrashConsistent"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/manifest/mod.rs",
+      "line": 9,
+      "excerpt": "use canic_backup::manifest::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/manifest/tests.rs",
+      "line": 3,
+      "excerpt": "use canic_backup::manifest::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/error.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/verify/rejection.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/verify/rejection.rs",
+      "line": 123,
+      "excerpt": "canic_backup::persistence::PersistenceError::PlanJournalOperationMismatch {"
+    },
+    {
+      "path": "crates/canic-cli/src/cycles/mod.rs",
+      "line": 23,
+      "excerpt": "use canic_backup::discovery::DiscoveryError;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/verify/integrity.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "line": 71,
+      "excerpt": "Err(canic_backup::persistence::JournalLockError::Locked { .. })"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/prune.rs",
+      "line": 78,
+      "excerpt": "std::assert_matches!(layout.lock_lifetime(), Err(canic_backup::persistence::JournalLockError::Io(error)) if error.kind() == std::io::ErrorKind::NotFound);"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/json.rs",
+      "line": 9,
+      "excerpt": "use canic_backup::execution::BackupExecutionJournal;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/read.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/status/requirements.rs",
+      "line": 9,
+      "excerpt": "use canic_backup::execution::BackupExecutionJournal;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/reference.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/Cargo.toml",
+      "line": 22,
+      "excerpt": "canic-backup = { workspace = true }"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/verify.rs",
+      "line": 6,
+      "excerpt": "use canic_backup::persistence::{BackupIntegrityReport, BackupLayout};"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/download.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::journal::{ArtifactJournalEntry, ArtifactState, DownloadJournal};"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/download.rs",
+      "line": 17,
+      "excerpt": "operation_metrics: canic_backup::journal::DownloadOperationMetrics::default(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/download.rs",
+      "line": 40,
+      "excerpt": "operation_metrics: canic_backup::journal::DownloadOperationMetrics::default(),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/manifest.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::manifest::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/inspect.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/layout.rs",
+      "line": 12,
+      "excerpt": "use canic_backup::{execution::BackupExecutionJournal, persistence::BackupLayout};"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/model.rs",
+      "line": 1,
+      "excerpt": "use canic_backup::journal::JournalResumeReport;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/model.rs",
+      "line": 208,
+      "excerpt": "pub execution: canic_backup::execution::BackupExecutionResumeSummary,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/model.rs",
+      "line": 257,
+      "excerpt": "pub execution: canic_backup::execution::BackupExecutionResumeSummary,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/execution.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/entry.rs",
+      "line": 11,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::{"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 49,
+      "excerpt": "quiescence_policy: canic_backup::plan::QuiescencePolicy::RootCoordinated,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/plan.rs",
+      "line": 87,
+      "excerpt": "quiescence_policy: canic_backup::plan::QuiescencePolicy::CrashConsistent,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/reference/timestamp.rs",
+      "line": 8,
+      "excerpt": "use canic_backup::execution::BackupExecutionJournal;"
+    },
+    {
+      "path": "crates/canic-cli/src/list/mod.rs",
+      "line": 7,
+      "excerpt": "use canic_backup::discovery::DiscoveryError;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/execution_status.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/fixtures/artifact.rs",
+      "line": 7,
+      "excerpt": "use canic_backup::artifacts::ArtifactChecksum;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/created_at.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/list/scan.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::{execution::BackupExecutionJournal, persistence::BackupLayout};"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/rejection.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/resume.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::persistence::BackupLayout;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/tests/create/persistence.rs",
+      "line": 10,
+      "excerpt": "use canic_backup::{persistence::BackupLayout, runner::BackupRunnerError};"
+    }
+  ]
+}

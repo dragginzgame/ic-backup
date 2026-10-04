@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.1.1]
+
+- Extract local artifact hashing, no-follow traversal/staging, durable verified
+  directory publication, JSON persistence and journal locks from Canic without
+  framework dependencies. Separate checksum records from host IO operations.
+- Normalize checksum records at decode, reject ambiguous non-UTF-8 artifact
+  names, bound record reads and create private record files/directories.
+- Requalify copied regressions and add real process-death publication checks,
+  staging/byte-limit cases and a public-API local recovery journey. Retain fresh
+  source hashes and trace the existing Canic consumers.
+
+## [0.1.0]
+
 - Document the extraction of host-side backup/restore from Canic, including
   ownership boundaries, same-release recovery to the same canister IDs,
   source provenance and the implementation sequence.

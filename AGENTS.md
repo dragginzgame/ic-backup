@@ -36,6 +36,12 @@ into an issue tracker or release authority.
 - The repository foundation does not qualify backup/restore or complete B1.
   Follow the extraction design's inventory and contract work before importing
   the engine. Canic adoption remains separately authorized downstream work.
+- The maintainer authorized copying backup machinery from Canic. The first
+  accepted extraction covers local artifact checksums, secure staging, durable
+  publication, bounded JSON IO and journal locks. Read
+  [the implemented boundary](docs/extraction-boundary.md) and
+  [fresh source provenance](docs/extraction-source.json) before extending it.
+  Runner/authority contract work remains part of B1 before importing runners.
 - Package metadata starts at the unreleased `0.1.0`; registry publication is
   disabled. Repository setup is not release or publication authority.
 

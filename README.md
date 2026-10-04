@@ -6,8 +6,10 @@ execution plans, durable interruption recovery and safe local retention.
 
 This repository contains an independent Rust workspace with one library package
 at `crates/ic-backup`, contributor tooling and an extraction design. The library
-currently establishes the package boundary; backup/restore APIs and the CLI
-have not been extracted. No backup or restore capability is available yet.
+provides local artifact checksums, secure staging, durable verified-directory
+publication, bounded JSON persistence and journal locking extracted from Canic.
+Capture/restore runners, an IC transport and the CLI have not been extracted.
+It cannot yet perform a canister backup or restore.
 The public repository is
 [dragginzgame/ic-backup](https://github.com/dragginzgame/ic-backup).
 
@@ -31,6 +33,8 @@ effects when they are implemented.
 - [Agent and contributor instructions](AGENTS.md)
 - [Current handoff](docs/status/current.md)
 - [Source baseline and provenance](docs/source-baseline.json)
+- [Implemented extraction boundary](docs/extraction-boundary.md)
+- [Fresh extraction source provenance](docs/extraction-source.json)
 - [Development commands](docs/development.md)
 - [Release workflow](docs/releasing.md)
 - [Repository tooling provenance](docs/tooling-provenance.json)
@@ -46,8 +50,8 @@ These are design names; package availability and naming must be checked before
 publication. Start with one library and add the other packages when their
 implementation batches require them.
 
-The next implementation work is the source inventory and current v1 contract
-freeze described in the design. Do not start by deleting Canic's recovery code
-or copying its entire CLI and deployment framework.
+The local machinery has fresh native regression evidence. The remaining B1
+work freezes generic authority, journal and runner contracts before their
+extraction. Canic adoption and real IC qualification remain separate work.
 
 MIT licensed, with Canic and sibling tooling contributor attribution retained.

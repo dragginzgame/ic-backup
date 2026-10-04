@@ -1,9 +1,11 @@
 # Development
 
 The root `Cargo.toml` owns the workspace, package metadata, dependency versions
-and shared lints. The sole member is `crates/ic-backup`. It currently provides
-the independent package boundary, with no backup/restore API or transport.
-Add directory modules and tests alongside the behavior they implement.
+and shared lints. The sole member is `crates/ic-backup`. It provides the local
+artifact and persistence mechanisms described in
+[the implemented extraction boundary](extraction-boundary.md). Capture/restore
+runners and transport remain unimplemented. Pure checksum records belong to
+model; filesystem operations belong to ops.
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for
@@ -25,9 +27,10 @@ repository's build directory. Let that command finish first. Direct Cargo
 commands must use the same local directory.
 
 Compilation uses `--offline --locked`. `make deps` fetches the committed lockfile's
-dependencies when needed; it does not select new versions. The foundation has
-no dependencies. Future declarations belong in `[workspace.dependencies]`,
-with package-level entries inheriting them.
+dependencies when needed; it does not select new versions. Serde/JSON, SHA-256,
+thiserror and Unix rustix declarations belong in `[workspace.dependencies]`,
+with package-level entries inheriting them. There are no Canic dependencies or
+sibling checkout patches.
 
 Run checks targeted to changed packages and behavior while developing. Full
 validation requires a maintainer request or CI. `make ci`, `make validate` and
@@ -50,8 +53,10 @@ rustfmt, with no commits. Failed fixtures remain under `target/` for inspection.
 [Tooling provenance](tooling-provenance.json) records the inspected sibling source
 bytes; the MIT notices remain in the root license.
 
-These checks establish repository tooling and packaging. An empty library test
-run provides no product qualification. Snapshot and lifecycle behavior will
+Native tests qualify the extracted local mechanisms, including actual child
+process death around publication and lock ownership. They perform no IC effects.
+Snapshot and lifecycle behavior will
 require PocketIC or a deliberately selected real local IC backend. The original
-[Canic source baseline](source-baseline.json) remains planning evidence and must
-be refreshed during B1 before engine extraction.
+[Canic source baseline](source-baseline.json) remains retained planning evidence.
+[Fresh source provenance](extraction-source.json) records this extraction input
+and the public consumers; it is separate from test qualification.

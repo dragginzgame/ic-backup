@@ -182,8 +182,11 @@ code; those commands are adapters with behavior, not compatibility aliases.
 ## 5. Repository and package layout
 
 The workspace-only root and `crates/ic-backup` library package are established.
-The library currently has no backup/restore API. Create the remaining proposed
-layout with its implementation rather than as empty stubs:
+The first local artifact/persistence machinery is implemented; see
+[its maintained boundary](extraction-boundary.md) and
+[fresh source provenance](extraction-source.json). Capture/restore runners and
+transport are not implemented. Create the remaining proposed layout with its
+implementation rather than as empty stubs:
 
 ```text
 crates/
@@ -722,11 +725,12 @@ not claim complete Canic extraction if B5 remains undone. The standalone toolkit
 can be delivered earlier with that ownership distinction stated explicitly.
 
 The initial documentation bootstrap created none of these implementation
-packages. Subsequent repository setup established only the library package and
-contributor tooling. The next product implementation task is B1: rehash source
-inputs, trace crate/CLI/Host consumers, specify lost create/upload/load
-reconciliation and freeze typed authority/consistency records before importing
-runners.
+packages. Subsequent setup established the library and contributor tooling.
+The first extraction refreshed source hashes, traced consumers and established
+the local artifact/persistence contracts with native regression evidence.
+Remaining B1 work specifies lost create/upload/load reconciliation and freezes
+typed authority/consistency, journal and executor contracts before importing
+runners. This local machinery batch does not establish full B1/B2 completion.
 
 ## 20. Completion criteria
 
