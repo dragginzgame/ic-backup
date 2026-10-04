@@ -51,6 +51,17 @@ into an issue tracker or release authority.
   identity records and fresh non-spawning quiescence guards. Preserve the
   unsafe-code prohibition. These local contracts do not qualify an ICP backend
   or grant terminal/reference-release or paid-call authority.
+- Local download journals now retain immutable snapshot identity, model-owned
+  four-state transitions and derived resume views. Persistence guards borrow
+  layout exclusion and verify/publish exact local bytes. Download completion is
+  an integration attestation; backend metadata/extent qualification and
+  remote-effect reconciliation remain pending.
+- Local attempt journals bind immutable operation identity and original mutation/
+  observation limits, with chronological reservations and exact receipts.
+  Preserve the 1,024 total-attempt, 2,048 event and 1 MiB input/output bounds.
+  A persisted reservation grants no fresh authority or backend dispatch permit.
+  Uncertain means a qualified settled observation cannot resolve its mutation;
+  a lost observation reply stays pending. No allowance is refunded or replenished.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,

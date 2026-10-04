@@ -3,7 +3,10 @@
 //! The library provides artifact checksums, no-follow traversal and staging,
 //! verified durable directory publication, bounded JSON persistence and journal
 //! locking, layout lifetime exclusion, durable restore dependencies and
-//! inherited command custody. These local mechanisms do not authorize canister
+//! inherited command custody. Local download journals retain exact snapshot
+//! identity and verified publication progress. Local attempt journals bind exact
+//! declared identity and finite mutation/observation allowances, retaining durable
+//! reservations and qualified receipts. These mechanisms do not authorize canister
 //! effects.
 //!
 //! Applications own membership, release identity, control routing, quiescence

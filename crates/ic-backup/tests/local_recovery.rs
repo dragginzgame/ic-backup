@@ -4,13 +4,14 @@ use ic_backup::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
         command_custody::{CommandCustodyRecord, MAX_COMMAND_CUSTODY_RECORD_BYTES},
+        download_journal::{DownloadArtifactRequest, ResumeAction},
     },
     ops::{
         artifacts::stage_relative_path,
         persistence::{
             ArtifactCommitOutcome, BackupLayoutGuard, CommandLifetimeLock, CommandQuiescenceGuard,
-            JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,
-            create_json_durable, read_json,
+            DownloadJournalGuard, JournalLock, JournalLockError, PersistenceError,
+            commit_artifact_directory, create_json_durable, read_json,
         },
     },
 };
@@ -113,4 +114,80 @@ fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
     drop(layout);
     drop(guard);
     fs::remove_dir_all(root).expect("remove successful fixture");
+}
+
+#[test]
+fn public_download_journal_adopts_publication_before_retained_progress() {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock")
+        .as_nanos();
+    let root = std::env::temp_dir()
+        .canonicalize()
+        .expect("resolved parent")
+        .join(format!(
+            "ic-backup-public-download-{}-{nonce}",
+            std::process::id()
+        ));
+    fs::create_dir_all(root.join("source")).expect("source");
+    fs::create_dir(root.join("artifacts")).expect("artifact parent");
+    fs::write(
+        root.join("source/stable.bin"),
+        b"opaque complete transfer fixture",
+    )
+    .expect("source bytes");
+    let layout = BackupLayoutGuard::acquire(&root).expect("layout");
+    let intent = ArtifactChecksumRecord::from_bytes(b"caller-owned exact transfer intent");
+    let mut guard = DownloadJournalGuard::create(
+        &layout,
+        intent.hash(),
+        vec![DownloadArtifactRequest {
+            canister_id: "AAAAA-AA".to_owned(),
+            snapshot_id: "exact-snapshot".to_owned(),
+            snapshot_taken_at_timestamp: 5,
+            snapshot_total_size_bytes: 65536,
+        }],
+    )
+    .expect("retain exact snapshot before transfer");
+    let entry = guard.record().expect("retained record").artifacts()[0].clone();
+    let checksum =
+        stage_relative_path(&root, Path::new("source"), &root.join(entry.staging_path()))
+            .expect("stage native fixture");
+    guard
+        .record_downloaded(entry.canister_id(), entry.snapshot_id())
+        .expect("caller attests completed transfer");
+    guard
+        .verify_artifact(entry.canister_id(), entry.snapshot_id())
+        .expect("verify exact local bytes");
+    assert_eq!(
+        guard.record().expect("verified").artifacts()[0].checksum(),
+        Some(&checksum)
+    );
+    commit_artifact_directory(
+        &root.join(entry.staging_path()),
+        &root.join(entry.artifact_path()),
+        checksum.hash(),
+    )
+    .expect("publish before journal advancement");
+    drop(guard);
+    let mut guard =
+        DownloadJournalGuard::open(&layout, intent.hash()).expect("recover original intent");
+    assert_eq!(
+        guard.record().expect("recovered").resume_view().artifacts[0].resume_action,
+        ResumeAction::Finalize
+    );
+    guard
+        .finalize_artifact(entry.canister_id(), entry.snapshot_id())
+        .expect("adopt matching publication");
+    let record = guard.record().expect("retained durable evidence");
+    assert!(record.resume_view().is_complete);
+    assert_eq!(record.artifacts()[0].snapshot_taken_at_timestamp(), 5);
+    assert_eq!(record.artifacts()[0].snapshot_total_size_bytes(), 65536);
+    assert_eq!(
+        fs::read(root.join(entry.artifact_path()).join("stable.bin")).expect("published bytes"),
+        b"opaque complete transfer fixture"
+    );
+    drop(guard);
+    drop(layout);
+    fs::remove_dir_all(root).expect("clean successful fixture");
 }

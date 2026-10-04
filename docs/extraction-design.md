@@ -183,7 +183,8 @@ code; those commands are adapters with behavior, not compatibility aliases.
 
 The workspace-only root and `crates/ic-backup` library package are established.
 Local artifact/persistence machinery, layout lifetime exclusion and conservative
-restore-reference retention are implemented; see
+restore-reference retention, command custody and local download/attempt journals
+are implemented; see
 [its maintained boundary](extraction-boundary.md) and
 [fresh source provenance](extraction-source.json). Capture/restore runners and
 transport are not implemented. Create the remaining proposed layout with its
@@ -324,6 +325,17 @@ contract. Bound counts, strings, depth and total metadata bytes before allocatio
 | `RestoreJournalRecord` | Upload/load/lifecycle/verification progress and uncertain-effect reconciliation |
 | `RestoreReferenceRecord` | Durable dependency on source artifacts, including external journal location |
 | `CompletionReceiptRecord` | Exact local terminal evidence and effect/accounting summary for replay |
+
+The local `DownloadJournalRecord` lifecycle now retains exact principal/snapshot
+identity and observed timestamp/size, fixed relative locations, checksum evidence
+and the four local states. Its schema and guarded persistence are documented in
+[the maintained boundary](extraction-boundary.md). This implements local artifact
+progress only. `AttemptJournalRecord` additionally binds exact declared operation
+identity and immutable mutation/observation limits, consumes reservations durably
+and replays chronological receipts. Its schema specifies canonical authority
+hashing. This local accounting grants no fresh authority or dispatch permit;
+backend metadata/extent qualification, bounded backend calls, remote-effect
+reconciliation and full completion/manifest binding remain required before runners.
 
 Persist immutable reviewed intent separately from mutable execution observations.
 Refreshing authority, progress or timestamps cannot change issued spending limits,
@@ -739,6 +751,12 @@ next local batch adds stable layout locking and bounded immutable restore
 dependencies, with fresh publication/owner-death and replaced-root evidence.
 Command custody now has owned inheritance, retained v1 file identity, bounded
 finish and fresh exclusive probes with real owner/descendant exit evidence.
+Local download lifecycle records and guarded verified publication now have fresh
+native lost-write, changed-byte and owner-death recovery evidence.
+Local operation accounting now has exact identity/budget binding, a canonical
+authority digest and append-only reservation/receipt history with fresh native
+lost-write, exhaustion, stale-receipt and owner-death qualification. Complete
+execution journals, preflight/consistency and backend reconciliation remain proposed.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
 typed authority/consistency, journal and executor contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.

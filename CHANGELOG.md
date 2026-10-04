@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.1.3]
+
+- Adapt Canic's pending claims and exact receipts into immutable per-operation
+  identity and separate finite mutation/observation allowances. Persist append-only
+  reservations before returning, block blind retries and qualify lost writes,
+  exhausted budgets, stale receipts and acknowledged process death.
+- Extract the local download journal lifecycle from Canic with immutable snapshot
+  identities, model-owned transitions and derived resume views. Add locked bounded
+  persistence, staged-byte verification and durable publication recovery; qualify
+  lost writes, changed bytes and acknowledged owner death before journal advancement.
+- Include the workspace MIT license and contributor notices in the standalone
+  crate archive through a member license link to the maintained root file.
+
 ## [0.1.2] - 2026-10-04
 
 - Extract command lifetime custody with owned descriptor inheritance and exact

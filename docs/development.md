@@ -9,6 +9,18 @@ model; filesystem operations belong to ops.
 Restore dependency records and immutable retention transitions belong to model;
 layout exclusion, canonical journal-parent resolution and durable publication
 belong to persistence ops. No reference release or prune API is exposed.
+Local download journal identities/transitions and derived resume views belong to
+model; its guard borrows layout exclusion and owns bounded durable updates,
+byte verification and publication reconciliation. Remote download completeness,
+execution journals and runner authority remain integration/contract work.
+Local attempt journal identity, immutable budgets and chronological replay belong
+to model. Its persistence guard reserves before returning and stops after an
+indeterminate write. Qualified receipts, fresh authority, backend call/retry bounds
+and remote reconciliation remain caller-owned; the ledger performs no dispatch.
+See [the v1 attempt schema](contracts/attempt-journal.schema.json) and
+[source provenance](attempt-journal-source.json). Native fixtures kill acknowledged
+owners before/after reservation persistence and after the returned reservation;
+they qualify local accounting, not IC paid effects.
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for
@@ -42,9 +54,13 @@ commands must use the same local directory.
 
 Compilation uses `--offline --locked`. `make deps` fetches the committed lockfile's
 dependencies when needed; it does not select new versions. Serde/JSON, SHA-256,
-thiserror and Unix rustix declarations belong in `[workspace.dependencies]`,
+thiserror, pinned `ic_principal` conversion and Unix rustix/command-fds
+declarations belong in `[workspace.dependencies]`,
 with package-level entries inheriting them. There are no Canic dependencies or
 sibling checkout patches.
+License metadata also inherits from the workspace. The member's `LICENSE` link
+points at the maintained root MIT notice; Cargo includes its exact regular-file
+content and contributor attribution in the standalone crate archive.
 
 Run checks targeted to changed packages and behavior while developing. Full
 validation requires a maintainer request or CI. `make ci`, `make validate` and

@@ -1,0 +1,517 @@
+{
+  "schema_version": 1,
+  "kind": "download_journal_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Local download identity/state lifecycle and verified durable artifact publication only. No remote transfer extent, snapshot completeness, executor or backend qualification. Existing provenance remains retained.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/journal/types.rs",
+      "sha256": "eaf087e8d86020a551f98a3eba77015c048ffa76e054db9973faeb90c2508823",
+      "bytes": 4508
+    },
+    {
+      "path": "crates/canic-backup/src/journal/validation.rs",
+      "sha256": "232e70f0d97741688519281af5f215705dce2e1d939185d71a33fc3d9ca70ad4",
+      "bytes": 7410
+    },
+    {
+      "path": "crates/canic-backup/src/journal/report.rs",
+      "sha256": "4a6eeeab4727b2d65ec16ad16c26e3192eec93007748307814e967406974899c",
+      "bytes": 4133
+    },
+    {
+      "path": "crates/canic-backup/src/journal/tests/mod.rs",
+      "sha256": "629eaecfd58f8ce39353c07f81f5db9469f9056c0cd4222b814c2f89b77e136b",
+      "bytes": 9081
+    },
+    {
+      "path": "crates/canic-backup/src/serialization.rs",
+      "sha256": "8b095e702f096c238b92edb291aa913f5a66dd14d8446df01a1b6f325efdcad7",
+      "bytes": 584
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "sha256": "708c10a080a688ea7c160e4c95e45429f0afa1e11c271f7e2f476455ecf6e844",
+      "bytes": 4645
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573",
+      "bytes": 17718
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "sha256": "94aeb745515694e95e94ba8275be521f1ad80f9afc7d15014e17e84b9d825219",
+      "bytes": 8747
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "sha256": "8295190a585fedc79659b828dd3709f5a146f014856e17910f6b7e30988f0109",
+      "bytes": 5501
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "sha256": "6cf16fc6147ebf3e064a1f849cf84358cbd497fad4f77760176151a3989b0128",
+      "bytes": 6807
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "sha256": "fbe00b9f8211f8f1f3efe37e71f293fe59a1d657ebcc13daddafcb5dbd0f21a9",
+      "bytes": 2683
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/download_transition.rs",
+      "sha256": "6ce12bac109d380126cd72c8759ce95986e6b43abebb1523110a00d82e2850fc",
+      "bytes": 11590
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_transition.rs",
+      "sha256": "f2a85e4c086d71f949b9ffe1cdc0974e3fbaea6b7553749af2d803a1a2e33c4f",
+      "bytes": 9307
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs",
+      "sha256": "84efde08d719a5a63548485e82458230cf5974bfe8272ac9fc9614bb39f36875",
+      "bytes": 12365
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/journal/types.rs",
+          "sha256": "eaf087e8d86020a551f98a3eba77015c048ffa76e054db9973faeb90c2508823",
+          "bytes": 4508
+        },
+        {
+          "path": "crates/canic-backup/src/journal/validation.rs",
+          "sha256": "232e70f0d97741688519281af5f215705dce2e1d939185d71a33fc3d9ca70ad4",
+          "bytes": 7410
+        },
+        {
+          "path": "crates/canic-backup/src/serialization.rs",
+          "sha256": "8b095e702f096c238b92edb291aa913f5a66dd14d8446df01a1b6f325efdcad7",
+          "bytes": 584
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/download_journal/mod.rs"
+      ],
+      "adaptation": "Four-state immediate transitions, required nullable field decoding and journal admission reshaped into private v1 Record fields. Canonical principals, one exact snapshot per target, required timestamp/size, fixed paths and bounded collections added; framework topology/metrics removed."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/journal/report.rs",
+          "sha256": "4a6eeeab4727b2d65ec16ad16c26e3192eec93007748307814e967406974899c",
+          "bytes": 4133
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/download_journal/view/mod.rs"
+      ],
+      "adaptation": "Read-only resume projection adapted; entry-derived progress/actions only, without persisted counters or mutable authority declarations."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/runner/operations/journal.rs",
+          "sha256": "708c10a080a688ea7c160e4c95e45429f0afa1e11c271f7e2f476455ecf6e844",
+          "bytes": 4645
+        },
+        {
+          "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+          "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573",
+          "bytes": 17718
+        },
+        {
+          "path": "crates/canic-backup/src/persistence/layout.rs",
+          "sha256": "94aeb745515694e95e94ba8275be521f1ad80f9afc7d15014e17e84b9d825219",
+          "bytes": 8747
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/download_journal/mod.rs"
+      ],
+      "adaptation": "Retained exact identity checks and local verify/publish responsibilities adapted into a borrowed layout/journal guard. Model owns transitions; failed writes/effects stop the guard. Remote execution, destructive re-download and manifest operations not copied."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/journal/tests/mod.rs",
+          "sha256": "629eaecfd58f8ce39353c07f81f5db9469f9056c0cd4222b814c2f89b77e136b",
+          "bytes": 9081
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/download_journal/tests/mod.rs"
+      ],
+      "adaptation": "Canic state/action, canonical transition, required-field, checksum, duplicate/path and roundtrip cases rerun against extracted production records; stronger exact identity/count/token tests added."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/persistence/tests/operational_readiness/download_transition.rs",
+          "sha256": "6ce12bac109d380126cd72c8759ce95986e6b43abebb1523110a00d82e2850fc",
+          "bytes": 11590
+        },
+        {
+          "path": "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_transition.rs",
+          "sha256": "f2a85e4c086d71f949b9ffe1cdc0974e3fbaea6b7553749af2d803a1a2e33c4f",
+          "bytes": 9307
+        },
+        {
+          "path": "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs",
+          "sha256": "84efde08d719a5a63548485e82458230cf5974bfe8272ac9fc9614bb39f36875",
+          "bytes": 12365
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/download_journal/tests/mod.rs",
+        "crates/ic-backup/tests/local_recovery.rs"
+      ],
+      "adaptation": "Local identity/path mismatch, changed verified staging and publication-before-journal interruption cases adapted without fake IC executors. Actual acknowledged owner death and public-API recovery rerun here; original full-runner qualification remains in Canic."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 9,
+      "excerpt": "journal::{ArtifactJournalEntry, DownloadJournal, DownloadOperationMetrics},"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 19,
+      "excerpt": ") -> Result<DownloadJournal, BackupRunnerError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 21,
+      "excerpt": "let journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 23,
+      "excerpt": "return Err(BackupRunnerError::DownloadJournalBackupIdMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 41,
+      "excerpt": "Ok(DownloadJournal {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 59,
+      "excerpt": "Err(BackupRunnerError::DownloadJournalTopologyMismatch {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 67,
+      "excerpt": "pub(super) fn upsert_artifact_entry(journal: &mut DownloadJournal, entry: ArtifactJournalEntry) {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 81,
+      "excerpt": "journal: &'a mut DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 84,
+      "excerpt": ") -> Result<&'a mut ArtifactJournalEntry, BackupRunnerError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 90,
+      "excerpt": "journal: &'a DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 93,
+      "excerpt": ") -> Result<&'a ArtifactJournalEntry, BackupRunnerError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/journal.rs",
+      "line": 99,
+      "excerpt": "journal: &DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 12,
+      "excerpt": "journal::{ArtifactJournalEntry, ArtifactState},"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 25,
+      "excerpt": "snapshot_id_for_target, upsert_artifact_entry,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 106,
+      "excerpt": "upsert_artifact_entry("
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 108,
+      "excerpt": "ArtifactJournalEntry {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 113,
+      "excerpt": "state: ArtifactState::Created,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 121,
+      "excerpt": "layout.write_journal(&download_journal)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 156,
+      "excerpt": "let mut download_journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 159,
+      "excerpt": "entry.advance_to(ArtifactState::Downloaded, current_timestamp_marker())?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 160,
+      "excerpt": "layout.write_journal(&download_journal)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 172,
+      "excerpt": "let download_journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 176,
+      "excerpt": "ArtifactState::Created => Ok(None),"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 177,
+      "excerpt": "ArtifactState::Downloaded => {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 201,
+      "excerpt": "let download_journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 206,
+      "excerpt": "ArtifactState::Downloaded => Ok(None),"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 207,
+      "excerpt": "ArtifactState::ChecksumVerified => {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 237,
+      "excerpt": "entry: &ArtifactJournalEntry,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 347,
+      "excerpt": "let mut download_journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 351,
+      "excerpt": "if entry.state != ArtifactState::Downloaded {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 367,
+      "excerpt": "entry.advance_to(ArtifactState::ChecksumVerified, current_timestamp_marker())?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 368,
+      "excerpt": "layout.write_journal(&download_journal)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 394,
+      "excerpt": "let mut download_journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 396,
+      "excerpt": "if download_journal.artifacts[index].state == ArtifactState::Durable {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 402,
+      "excerpt": "if download_journal.artifacts[index].state != ArtifactState::ChecksumVerified {"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 433,
+      "excerpt": ".advance_to(ArtifactState::Durable, current_timestamp_marker())?;"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "line": 434,
+      "excerpt": "layout.write_journal(&completed_journal)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 9,
+      "excerpt": "journal::DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 187,
+      "excerpt": "pub fn write_journal(&self, journal: &DownloadJournal) -> Result<(), PersistenceError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 193,
+      "excerpt": "pub fn read_journal(&self) -> Result<DownloadJournal, PersistenceError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 195,
+      "excerpt": "DownloadJournal::validate(&journal)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "line": 231,
+      "excerpt": "let journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 9,
+      "excerpt": "journal::{ArtifactJournalEntry, ArtifactState, DownloadJournal},"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 22,
+      "excerpt": "journal: &DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 67,
+      "excerpt": "journal: &DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 87,
+      "excerpt": "entry: &ArtifactJournalEntry,"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 113,
+      "excerpt": "fn durable_artifact_checksum(entry: &ArtifactJournalEntry) -> Result<&str, PersistenceError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 114,
+      "excerpt": "if entry.state != ArtifactState::Durable {"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "line": 131,
+      "excerpt": "entry: &ArtifactJournalEntry,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "line": 3,
+      "excerpt": "journal::{ArtifactState, DownloadJournal},"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "line": 17,
+      "excerpt": "journal: &DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "line": 154,
+      "excerpt": "journal: &DownloadJournal,"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/manifest.rs",
+      "line": 161,
+      "excerpt": "entry.canister_id == target.canister_id && entry.state == ArtifactState::Durable"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 36,
+      "excerpt": "let journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 37,
+      "excerpt": "return Ok(BackupStatusReport::Download(journal.resume_report()));"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 40,
+      "excerpt": "let journal = layout.read_journal()?;"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/status.rs",
+      "line": 41,
+      "excerpt": "Ok(BackupStatusReport::Download(journal.resume_report()))"
+    }
+  ],
+  "dependency": {
+    "name": "ic_principal",
+    "version": "0.1.5",
+    "registry_checksum": "0c2732829022822ec69021c336d23b32a053e07abdd08553c71407d6e2d1675d",
+    "features": [
+      "convert"
+    ],
+    "default_features": false,
+    "license": "Apache-2.0",
+    "relationship": "Published DFINITY principal conversion dependency; local source inspected, not copied. No Candid runtime or Canic dependency.",
+    "inspected_files": [
+      {
+        "path": "Cargo.toml",
+        "sha256": "b728f9e3def6a3396f344793637f98e2e1bc66292168bea8fd4270ea47500481"
+      },
+      {
+        "path": "src/lib.rs",
+        "sha256": "fd5197d11c98263b83e73f2ff94b58bda611159de59b692b2142246af2fbfe3b"
+      }
+    ]
+  },
+  "qualification_environment": {
+    "os": "Linux",
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "architecture": "x86_64",
+    "rust": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "msrv": "1.91.0",
+    "backend": "Native local filesystem/process fixtures; no IC transport"
+  },
+  "dispositions": [
+    {
+      "source": "Discovery/pre-snapshot topology hashes and operation metrics",
+      "disposition": "Not copied into local artifact progress. Application membership/authority needs its own exact future plan/preflight contracts; progress derives from records."
+    },
+    {
+      "source": "Mutable entry upsert and arbitrary temporary/artifact paths",
+      "disposition": "Replaced by immutable canonical principal/snapshot bindings and fixed relative paths. No rebinding/upsert or destructive staging preparation API."
+    },
+    {
+      "source": "Required optional snapshot metadata and updated_at",
+      "disposition": "Timestamp/size become required observations; unused progress timestamp not copied. Current local record has no compatibility reader for Canic journals."
+    },
+    {
+      "source": "Remote download retry and transfer extent validation",
+      "disposition": "Retained in Canic pending selected backend metadata/custody qualification and generic durable attempt/uncertain-effect contracts. Download resume projection is not effect permission."
+    },
+    {
+      "source": "Runner receipt/manifest/reference release/prune",
+      "disposition": "Retained in Canic. Durable local artifact progress does not prove full terminal backup/restore completion or authorize reference release."
+    }
+  ]
+}

@@ -129,7 +129,7 @@ impl BackupLayoutGuard {
         Ok(reference)
     }
 
-    fn check_root(&self) -> Result<(), PersistenceError> {
+    pub(super) fn check_root(&self) -> Result<(), PersistenceError> {
         #[cfg(unix)]
         {
             use std::os::unix::fs::MetadataExt;
