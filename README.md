@@ -17,6 +17,12 @@ Local attempt journals bind exact declared operation identity and immutable
 mutation/observation limits. They durably consume allowances and preserve
 unresolved outcomes across interruption; integrations still supply fresh
 authority, qualified receipts and remote-effect reconciliation.
+Canonical physical inventories retain exact declared targets and parent forests.
+Pure selection supports exact principals, direct children and descendants;
+inventory hashes bind declarations while authoritative discovery stays integration-owned.
+Explicit operation dependency graphs provide deterministic planning order and pure
+readiness checks. Integrations qualify application ordering and actual completion;
+graph declarations and ready views grant no authority to execute effects.
 Capture/restore runners, an IC transport and the CLI have not been extracted.
 It cannot yet perform a canister backup or restore.
 The public repository is

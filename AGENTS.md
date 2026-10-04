@@ -62,6 +62,17 @@ into an issue tracker or release authority.
   A persisted reservation grants no fresh authority or backend dispatch permit.
   Uncertain means a qualified settled observation cannot resolve its mutation;
   a lost observation reply stays pending. No allowance is refunded or replenished.
+- Physical inventories now retain a bounded, canonical, closed parent forest.
+  Preserve unique normalized principals, required nullable fields, acyclic edges,
+  the 1,024 target/selector limits, 256 UTF-8 role-byte bound and 1 MiB IO bounds.
+  Pure selection expands exact principals into read-only views in canonical order;
+  that order grants no dispatch/lifecycle order. A declared inventory and its hash
+  prove no fresh membership, controller custody or application consistency.
+- Explicit effect graphs now retain unique opaque operation sequences and closed
+  acyclic dependencies. Preserve the 8,192 node, 1,024 dependency-per-node,
+  65,536 total-edge and 1 MiB persistence bounds. Graph order and causal declared
+  progress are pure projections, not completion receipts or dispatch permits.
+  Do not infer universal parent/lifecycle order from physical inventories.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,

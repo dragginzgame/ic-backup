@@ -1,0 +1,401 @@
+{
+  "schema_version": 1,
+  "kind": "effect_graph_source_provenance",
+  "inspection_date": "2026-10-04",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only inspection of backup phases, restore ordering, ordering regressions and relevant projection/consumer sections. Adapted bounded explicit operation dependencies and pure causal declared-progress policy only. Full plan payloads, target mapping/relocation, effects, preflight flags, actual completion receipts and existing consumers remain in Canic. Full working-tree hashes identify inspected files, not a claim that every source section was extracted or qualified.",
+  "files": [
+    {
+      "path": "crates/canic-backup/src/plan/build/phases.rs",
+      "sha256": "c314ef19c19f05de6089e32632fc700adccfb0ae5d02cf0bbc2280f086190a5d",
+      "bytes": 3031
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+      "bytes": 12387
+    },
+    {
+      "path": "crates/canic-backup/src/plan/tests/builder.rs",
+      "sha256": "fc7d35fdfdf8425e903c6b7f98c3800a33aebb221ad0cc1b96138d592d18d3e9",
+      "bytes": 4357
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/ordering.rs",
+      "sha256": "c1f8b257434f88ea337267be25547270d2cfe2fc738da8495fb7a8f75e1c3264",
+      "bytes": 2616
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mod.rs",
+      "sha256": "a9134cbbb6ec08e5144c5dc17201587326ae80e6f29bbd1cc1f727cd61380904",
+      "bytes": 2858
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "sha256": "fa6139061870d05dc32d06b368801253f71ba79d0f264eed016ba305786ffad2",
+      "bytes": 7632
+    },
+    {
+      "path": "crates/canic-backup/src/restore/tests/plan.rs",
+      "sha256": "bf971245afb1d50250644a12b9fdbebb8f2fc7fb553771ab703fdcc860458f2a",
+      "bytes": 18381
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+      "bytes": 20163
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "sha256": "ecdae22edac29885eb1907b799b7d489b3fba7633667556e74b021b2d4fb79bd",
+      "bytes": 20175
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "sha256": "1519f4ebab5b4a51b9944b9fc0464e85f3d78706b323db8f10e0e1df3c2f2096",
+      "bytes": 4737
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "sha256": "dd56753c6e3367d5d084c919a8f7767ceff4c9a5d30e20095de38a78ea148a71",
+      "bytes": 4353
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "sha256": "07520d509b2eab0207b56b2825ad8ee604de0eb364a8b57622c609cbcd06ab62",
+      "bytes": 3169
+    }
+  ],
+  "adapted_sources": [
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/build/phases.rs",
+          "sha256": "c314ef19c19f05de6089e32632fc700adccfb0ae5d02cf0bbc2280f086190a5d",
+          "bytes": 3031
+        },
+        {
+          "path": "crates/canic-backup/src/restore/plan/ordering.rs",
+          "sha256": "c1f8b257434f88ea337267be25547270d2cfe2fc738da8495fb7a8f75e1c3264",
+          "bytes": 2616
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/effect_graph/mod.rs",
+        "crates/ic-backup/src/model/effect_graph/node/mod.rs"
+      ],
+      "adaptation": "Explicit dependency records generalize Canic parent-first/reverse-lifecycle ordering mechanics. Model-owned immutable unique u64 identities, closed acyclic edges, iterative deterministic topological projection, canonical binary graph hashing and streaming count/aggregate-edge bounds replace framework depth/target/mapping assumptions. Parent or restart semantics are not inferred; integrations qualify explicit edges."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/validation.rs",
+          "sha256": "794ea5b0db5e32e4f94bb1c4d5e6c5754c006db71ebb79273911d6161633c562",
+          "bytes": 12387
+        },
+        {
+          "path": "crates/canic-backup/src/restore/plan/validation.rs",
+          "sha256": "fa6139061870d05dc32d06b368801253f71ba79d0f264eed016ba305786ffad2",
+          "bytes": 7632
+        },
+        {
+          "path": "crates/canic-backup/src/execution/mod.rs",
+          "sha256": "e6b94b154bc6ad5e8e8162a09c2c54bafdf4a71da4475ddc9098f856598ec378",
+          "bytes": 20163
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/policy/effect_order/mod.rs"
+      ],
+      "adaptation": "Existing ordering projection/next-ready responsibilities are reshaped into pure causal caller-declared completion validation and ready/blocked views. No IO, scheduling, persisted Ready/Completed flags, accepted preflight declaration, authority or actual receipt validation is copied; complete plans/qualified receipts remain required for runners."
+    },
+    {
+      "sources": [
+        {
+          "path": "crates/canic-backup/src/plan/tests/builder.rs",
+          "sha256": "fc7d35fdfdf8425e903c6b7f98c3800a33aebb221ad0cc1b96138d592d18d3e9",
+          "bytes": 4357
+        },
+        {
+          "path": "crates/canic-backup/src/restore/tests/plan.rs",
+          "sha256": "bf971245afb1d50250644a12b9fdbebb8f2fc7fb553771ab703fdcc860458f2a",
+          "bytes": 18381
+        }
+      ],
+      "destinations": [
+        "crates/ic-backup/src/model/effect_graph/tests/mod.rs"
+      ],
+      "adaptation": "Relevant backup stop/start and in-place restore ordering cases rerun as explicit dependencies against extracted graph implementation. Relocation, Root scope policy, artifact/manifest/preflight tests remain with their owners. Fresh canonical golden hash, explicit reverse order, tie ordering, malformed/duplicate/cyclic references, cache injection and exact count/depth/direct/aggregate bounds added."
+    }
+  ],
+  "new_local_mechanisms": [
+    {
+      "destinations": [
+        "crates/ic-backup/src/ops/persistence/effect_graph/mod.rs",
+        "crates/ic-backup/src/ops/persistence/effect_graph/tests/mod.rs",
+        "crates/ic-backup/src/policy/effect_order/tests/mod.rs",
+        "crates/ic-backup/tests/effect_order.rs"
+      ],
+      "description": "Compose existing qualified layout/journal exclusion and no-overwrite bounded durable JSON into immutable graph publication/admission under the original exact digest. Fresh native evidence covers causal declaration inconsistency, unchanged graph bytes, locking, unsafe/replaced paths and independently bounded canonical output; public journey performs no effects or actual completion qualification."
+    }
+  ],
+  "consumer_references": [
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 7,
+      "excerpt": "use super::{BackupPlan, BackupPlanError, BackupScopeKind, BackupTarget, build_backup_phases};"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 39,
+      "excerpt": "validate_phase_projection(self)"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 240,
+      "excerpt": "fn validate_phase_projection(plan: &BackupPlan) -> Result<(), BackupPlanError> {"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 241,
+      "excerpt": "let expected = build_backup_phases(&plan.targets);"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/validation.rs",
+      "line": 262,
+      "excerpt": "return Err(BackupPlanError::OperationProjectionMismatch { index, field });"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mod.rs",
+      "line": 22,
+      "excerpt": "use ordering::{order_members, restore_ordering_summary};"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mod.rs",
+      "line": 55,
+      "excerpt": "let members = order_members(members)?;"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mod.rs",
+      "line": 56,
+      "excerpt": "let ordering_summary = restore_ordering_summary(&members);"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/mod.rs",
+      "line": 72,
+      "excerpt": "ordering_summary,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "line": 8,
+      "excerpt": "RestorePlan, RestorePlanError, RestorePlanMember, order_members, restore_identity_summary,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "line": 9,
+      "excerpt": "restore_operation_summary, restore_ordering_summary, restore_readiness_summary,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "line": 114,
+      "excerpt": "let canonical = order_members(plan.members.clone())?;"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "line": 160,
+      "excerpt": "let ordering = restore_ordering_summary(&plan.members);"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/plan/validation.rs",
+      "line": 161,
+      "excerpt": "require_projection(\"ordering_summary\", &plan.ordering_summary, &ordering)"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 31,
+      "excerpt": ".phases"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 33,
+      "excerpt": ".map(BackupExecutionJournalOperation::from_plan_operation)"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 142,
+      "excerpt": "pub fn next_ready_operation(&self) -> Option<&BackupExecutionJournalOperation> {"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 275,
+      "excerpt": ".next_ready_operation()"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 312,
+      "excerpt": ".next_ready_operation()"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/mod.rs",
+      "line": 434,
+      "excerpt": "next_operation: self.next_ready_operation().cloned(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 74,
+      "excerpt": "let ordered_members = plan.ordered_members();"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 79,
+      "excerpt": "RestoreApplyOperationKind::UploadSnapshot,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 80,
+      "excerpt": "ordered_members.iter().copied(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 85,
+      "excerpt": "RestoreApplyOperationKind::StopCanister,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 86,
+      "excerpt": "ordered_members.iter().copied(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 91,
+      "excerpt": "RestoreApplyOperationKind::LoadSnapshot,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 92,
+      "excerpt": "ordered_members.iter().copied(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 97,
+      "excerpt": "RestoreApplyOperationKind::StartCanister,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 98,
+      "excerpt": "ordered_members.iter().rev().copied(),"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 103,
+      "excerpt": "&ordered_members,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 138,
+      "excerpt": "for member in plan.ordered_members() {"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 388,
+      "excerpt": "member_order: member.member_order,"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 406,
+      "excerpt": "RestoreApplyOperationKind::UploadSnapshot | RestoreApplyOperationKind::LoadSnapshot"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 417,
+      "excerpt": "RestoreApplyOperationKind::UploadSnapshot | RestoreApplyOperationKind::LoadSnapshot"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 428,
+      "excerpt": "RestoreApplyOperationKind::UploadSnapshot | RestoreApplyOperationKind::LoadSnapshot"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/apply/mod.rs",
+      "line": 515,
+      "excerpt": "pub member_order: usize,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 90,
+      "excerpt": "&operation_signature(existing),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 91,
+      "excerpt": "&operation_signature(requested),"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 136,
+      "excerpt": "fn operation_signature(plan: &BackupPlan) -> String {"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 137,
+      "excerpt": "plan.phases"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/persistence.rs",
+      "line": 142,
+      "excerpt": "operation.operation_id,"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/create/mod.rs",
+      "line": 105,
+      "excerpt": "operations: plan.phases.len(),"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 20,
+      "excerpt": "pub(in crate::plan) use phases::build_backup_phases;"
+    },
+    {
+      "path": "crates/canic-backup/src/plan/build/mod.rs",
+      "line": 66,
+      "excerpt": "let phases = build_backup_phases(&targets);"
+    }
+  ],
+  "consumer_dispositions": [
+    {
+      "paths": [
+        "crates/canic-backup/src/plan/validation.rs",
+        "crates/canic-backup/src/plan/build/mod.rs",
+        "crates/canic-backup/src/execution/mod.rs"
+      ],
+      "disposition": "Canic keeps complete backup target/request/kind phase projections, validated plan construction and execution journal materialization. Generic graph digest must later be bound to a complete reviewed plan and exact attempt authority; no full backup executor is moved."
+    },
+    {
+      "paths": [
+        "crates/canic-backup/src/restore/plan/mod.rs",
+        "crates/canic-backup/src/restore/plan/validation.rs",
+        "crates/canic-backup/src/restore/apply/mod.rs"
+      ],
+      "disposition": "Canic keeps same-ID/relocation mapping surfaces, application-specific parent/lifecycle semantics, full restore validation and upload/stop/load/start dry-run command generation. Generic graph contains opaque operation sequences only and does not grant restore safety."
+    },
+    {
+      "paths": [
+        "crates/canic-cli/src/backup/create/persistence.rs",
+        "crates/canic-cli/src/backup/create/mod.rs"
+      ],
+      "disposition": "Canic CLI keeps resume operation signature comparison and planned operation reporting. No existing consumer changed; graph/readiness is not an independently usable CLI or current completion receipt."
+    }
+  ],
+  "qualification": "Fresh targeted native graph/model/policy/persistence and external public-API tests against extracted production owners, with independent canonical binary golden bytes/schema validation. No full plan/runner, paid calls, authoritative application dependencies, PocketIC or live IC qualification.",
+  "retained_provenance": [
+    "docs/source-baseline.json",
+    "docs/extraction-source.json",
+    "docs/layout-source.json",
+    "docs/command-custody-source.json",
+    "docs/download-journal-source.json",
+    "docs/attempt-journal-source.json",
+    "docs/inventory-source.json"
+  ]
+}

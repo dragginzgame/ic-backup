@@ -22,9 +22,9 @@ Preparation promotes/dates that draft while preserving historical notes.
 The maintainer completed the tagged `0.1.1` repository release; initial setup
 notes remain under undated `0.1.0`. The maintainer completed the tagged `0.1.2`
 release with layout/reference retention and command custody. Cargo metadata is
-at `0.1.2`; the maintainer selected an undated `0.1.3` draft for the current
-download/attempt journal batches, immediately below the empty Unreleased section.
-This groups reviewed changes without preparing a release or changing Cargo versions.
+at `0.1.3`; the maintainer completed that release with download and attempt journals.
+The maintainer selected an undated `0.1.4` changelog draft below empty Unreleased
+for subsequent implementation; Cargo remains `0.1.3` until release preparation.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.

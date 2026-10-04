@@ -183,7 +183,8 @@ code; those commands are adapters with behavior, not compatibility aliases.
 
 The workspace-only root and `crates/ic-backup` library package are established.
 Local artifact/persistence machinery, layout lifetime exclusion and conservative
-restore-reference retention, command custody and local download/attempt journals
+restore-reference retention, command custody, local download/attempt journals and
+canonical physical inventories with pure selection and explicit dependency graphs
 are implemented; see
 [its maintained boundary](extraction-boundary.md) and
 [fresh source provenance](extraction-source.json). Capture/restore runners and
@@ -241,6 +242,12 @@ records and logs. Canonical principals and digest bytes own equality.
 
 An explicit inventory proves selection only. It does not prove membership of an
 application, current controller custody or a globally consistent checkpoint.
+The implemented `InventoryRecord` admits a canonical declared forest and hashes
+its exact fields. Pure `policy::selection` expands exact principals into read-only
+subsets; immutable bounded persistence checks the full original inventory digest.
+Missing parent relationships and cycles reject. This declaration/selection boundary
+does not implement the proposed live `MembershipProvider` below. See
+[the maintained contracts](extraction-boundary.md).
 Preflight obtains current status, applicable controller/read permissions and
 snapshot capacity evidence through the selected authenticated transport. Public
 status/read visibility must never be mistaken for write authority.
@@ -336,6 +343,14 @@ and replays chronological receipts. Its schema specifies canonical authority
 hashing. This local accounting grants no fresh authority or dispatch permit;
 backend metadata/extent qualification, bounded backend calls, remote-effect
 reconciliation and full completion/manifest binding remain required before runners.
+`InventoryRecord` now has a closed v1 schema with required nullable fields,
+canonical order, bounded graph admission and an unambiguous binary hash. Its
+selection projections preserve original parent links and full inventory binding.
+`EffectGraphRecord` now retains bounded exact opaque operation sequences and
+explicit closed acyclic dependencies. Canonical hashing and deterministic planning
+order are model-owned; pure readiness validates declared causal progress. This
+graph is one component of a future complete plan, not a plan, receipt or execution
+permit. Integration-qualified application dependencies must be declared explicitly.
 
 Persist immutable reviewed intent separately from mutable execution observations.
 Refreshing authority, progress or timestamps cannot change issued spending limits,
@@ -757,6 +772,13 @@ Local operation accounting now has exact identity/budget binding, a canonical
 authority digest and append-only reservation/receipt history with fresh native
 lost-write, exhaustion, stale-receipt and owner-death qualification. Complete
 execution journals, preflight/consistency and backend reconciliation remain proposed.
+Declared physical inventory and pure selection now have fresh canonical hash,
+duplicate/graph/bound and immutable local persistence qualification. Authoritative
+membership observation/revision/fencing remains integration and port work.
+Explicit operation dependency graphs now have deterministic model-owned ordering,
+causal declared-progress policy and bounded immutable local persistence with fresh
+native qualification. Complete operation requests, full plans and qualified actual
+completion remain outside this graph primitive.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
 typed authority/consistency, journal and executor contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.

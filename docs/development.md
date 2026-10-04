@@ -21,6 +21,22 @@ See [the v1 attempt schema](contracts/attempt-journal.schema.json) and
 [source provenance](attempt-journal-source.json). Native fixtures kill acknowledged
 owners before/after reservation persistence and after the returned reservation;
 they qualify local accounting, not IC paid effects.
+Canonical inventory identities, bounded forest validation and binary hashing belong
+to model. Immutable inventory publication/admission belongs to persistence ops;
+exact/direct-child/subtree decisions belong to pure `policy::selection`. Policy
+performs no IO, serializes no records and changes no persisted state. It returns
+read-only references bound to the full inventory digest. Parent links can point
+outside a selected subset while remaining inside the original declared forest.
+See [the v1 inventory schema](contracts/inventory.schema.json) and
+[inventory provenance](inventory-source.json). Current declaration tests qualify
+graph/hash/selection and native local persistence, not authoritative discovery.
+Explicit operation dependencies, cycle checks, deterministic topological order and
+canonical graph hashing belong to model. Immutable graph persistence belongs to
+ops. Pure `policy::effect_order` admits causal declared completion identities and
+projects ready/blocked nodes without reading receipts, scheduling or executing.
+Qualified receipts and application ordering remain integration-owned. See
+[the graph schema](contracts/effect-graph.schema.json) and
+[ordering provenance](effect-graph-source.json).
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for

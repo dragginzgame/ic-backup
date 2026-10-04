@@ -4,7 +4,9 @@ mod artifact_commit;
 mod attempt_journal;
 mod command_lifetime_lock;
 mod download_journal;
+mod effect_graph;
 mod file_lock;
+mod inventory;
 mod journal_lock;
 mod json;
 mod layout_lifetime;
@@ -16,6 +18,8 @@ pub use command_lifetime_lock::{
     CommandQuiescenceGuard,
 };
 pub use download_journal::{DownloadJournalError, DownloadJournalGuard};
+pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
+pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub use json::{create_json_durable, read_json, write_json_durable};
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};

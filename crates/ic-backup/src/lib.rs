@@ -8,6 +8,10 @@
 //! declared identity and finite mutation/observation allowances, retaining durable
 //! reservations and qualified receipts. These mechanisms do not authorize canister
 //! effects.
+//! Bounded physical inventories retain canonical declared parent forests; pure
+//! selection policy expands exact principals without live discovery or authority.
+//! Explicit effect graphs retain validated operation dependencies and project
+//! deterministic planning order/readiness without authorizing dispatch.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport
@@ -17,6 +21,7 @@
 mod hash;
 pub mod model;
 pub mod ops;
+pub mod policy;
 
 #[cfg(test)]
 mod test_support;

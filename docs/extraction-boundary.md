@@ -14,6 +14,10 @@ owned child descriptor setup and exact local quiescence admission. Local downloa
 journal lifecycle adaptation has [its own provenance](download-journal-source.json).
 Pending claims and exact receipts underpin the local attempt ledger, with
 [separate source provenance](attempt-journal-source.json).
+Canonical inventory and pure target expansion follow with
+[their own provenance](inventory-source.json).
+Explicit operation ordering follows with
+[separate graph provenance](effect-graph-source.json).
 
 ## Maintained local contracts
 
@@ -278,6 +282,128 @@ retains the correct consumed allowance. A public-API journey resolves a retained
 exhausted mutation using separate observation allowance. No fake management
 backend or live IC call participates in this qualification.
 
+### Declared physical inventory and pure selection
+
+`model::inventory::InventoryRecord` adapts Canic topology rows and registry target
+projection into a canonical v1 declaration. Each private `InventoryTargetRecord`
+retains exact canonical `canister_id` and required nullable `parent_canister_id`,
+`role` and `module_hash`. Principal text and SHA-256 module digests normalize at
+admission. Role is opaque UTF-8 text, bounded to 256 bytes: null, empty and literal
+"null" are distinct. Roles grant no control, selection or root privileges. Module
+digests are declarations, not fresh observations. No credentials, Fleet/Root types,
+framework runtime dependencies or application membership claims enter the record.
+
+Inventories contain 1–1,024 unique physical targets, sorted by canonical principal
+text. A declared parent must be present in the full inventory; missing parents,
+self-links and longer cycles reject rather than overwrite rows or truncate walks.
+Multiple disconnected parentless entries are valid. None means no declared parent,
+not proof of a physical or authoritative application root. Traversal is iterative;
+the target count bounds parent depth to 1,023. Integrations retain a complete declared
+forest for expansion, or explicitly describe standalone targets without parent edges.
+The library never infers missing parents or silently changes their identity.
+
+The inventory digest hashes a specified domain-separated binary encoding over the
+canonical full target list, with u32 big-endian UTF-8 lengths and explicit nullable
+tags. It includes all identity, parent, role and module fields, so input ordering
+and equivalent principal/hash case normalize without delimiter ambiguity. This is
+a new generic v1 contract, not Canic's existing sorted text digest; no old digest
+reader, converter or compatibility alias is supplied. Matching hashes prove declared
+equality, not fresh membership, controller custody, revision continuity, application
+fencing or consistency. [The machine schema](contracts/inventory.schema.json) specifies
+exact fields, bounds, binary encoding and independently encoded golden vectors.
+
+`policy::selection::select` takes a nonempty bounded list of exact principal
+selectors and explicit `SelectionExpansion`: Exact, DirectChildren or Descendants.
+Exact includes only named targets. DirectChildren adds immediate children of each
+named target. Descendants includes the full declared subtree of each named target.
+Unknown/malformed principals and equivalent explicit duplicates reject; overlapping
+expansions union physical targets. There is no role lookup, implicit exclusion of
+a privileged root or non-neutral request default. Views retain references to the
+original records in canonical order and bind the **full original inventory** digest,
+including unselected targets. Parent links may point outside a selected subset.
+Canonical presentation order is not a lifecycle/effect order. Policy performs no
+IO, serialized record writes, scheduling or persisted transitions.
+
+`ops::persistence::create_inventory` holds layout/journal exclusion and durably
+creates fixed `inventory.json` without replacing prior evidence. `read_inventory`
+validates the retained forest and original expected digest, observing only local
+records. Lost creation responses reconcile by reading that exact declaration;
+existing records cannot be replaced through this API. Symlinks/unsafe entries,
+replaced roots and malformed records reject. Encoded reads and canonical pretty
+writes each admit at most 1 MiB. Canonical output is checked independently because
+JSON escaping of admitted role text can expand beyond input/field byte bounds.
+
+Fresh native regressions rerun Canic's order-independent hash and direct/recursive
+child cases against these owners. New cases cover two golden encodings, nullable
+distinctions, exact field changes, normalized duplicates, missing parents/cycles,
+maximum count/depth, UTF-8 and escaped-output bounds, selector errors, overlapping
+expansions, unchanged prior bytes, locks and unsafe/replaced paths. An external
+public-API journey persists/reopens an explicit declaration and selects a subtree
+without framework or backend dependencies. Live authoritative discovery and IC
+effects remain outside this qualification.
+
+### Explicit operation dependency graphs and causal readiness
+
+`model::effect_graph::EffectGraphRecord` adapts Canic backup phase and restore
+ordering mechanics into a generic v1 dependency declaration. Its private
+`EffectNodeRecord` retains exactly `operation_sequence` and `depends_on`. Sequences
+are opaque unsigned u64 identities: zero, nonconsecutive values and u64::MAX are
+admitted. They are not array indices or a numeric dispatch order. Canonical records
+sort nodes and each prerequisite set by sequence, rejecting duplicates instead
+of overwriting identities or silently collapsing repeated edges.
+
+Graphs admit 1–8,192 operations, at most 1,024 direct prerequisites per operation
+and at most 65,536 total edges. The decoder bounds both node lists and aggregate
+edge retention during parsing. Every prerequisite must name an existing exact
+operation. Self-loops and longer cycles reject. Iterative topological validation
+admits a maximum chain depth of 8,191 without recursion. It emits the smallest
+currently ready sequence at each step, so reordered equivalent declarations yield
+one deterministic planning order. This computed order is not serialized or editable.
+The graph digest uses domain-separated binary encoding with u32 counts and u64
+identities; it binds canonical explicit edges, not JSON formatting or cached order.
+[The machine schema](contracts/effect-graph.schema.json) specifies fields, limits,
+canonical hashing and an independently encoded golden vector.
+
+Application order must be declared and qualified explicitly. The graph does not
+infer parent-before-child, reverse start order, control routing, privileged roots
+or physical inventory edges. Canic can supply its parent-first restoration and
+child-first restart dependencies through its own adapter. Other applications may
+have different valid dependencies. This primitive is one component of a future
+complete plan: it contains no operation payload, target/request/network/release
+binding, consistency guarantee, spending limit, receipt or execution permission.
+Complete plans must bind graph identities to their exact reviewed operations and
+the existing immutable attempt authority; no such runner wiring is implemented.
+
+`policy::effect_order::readiness` takes a passive `EffectProgressRequest` with
+caller-declared completed sequence identities. Excessive, duplicate or unknown
+completed identities reject. A declared completed operation must include all its
+prerequisites in that same completed set; inconsistent causal progress rejects.
+The read-only view binds the original graph digest, counts admitted declared
+completion and separates incomplete ready/blocked nodes in planning order.
+Policy performs no IO, record writes, scheduling or mutations. Ready means only
+that declared prerequisites are present. A completed identity is not a qualified
+receipt: callers own actual evidence, exact binding and remote-effect settlement.
+Neither readiness nor an empty incomplete set grants fresh authority, paid-call
+allowance, command quiescence, terminal completion or reference release.
+
+`ops::persistence::create_effect_graph` durably creates fixed `effect-graph.json`
+under layout/journal exclusion without replacing retained evidence.
+`read_effect_graph` admits only a validated graph under its original exact expected
+digest. Lost creation replies reconcile through that exact local read; no graph
+update/replacement API is exposed. Encoded input and canonical pretty-output each
+admit at most 1 MiB; dense valid graphs can exceed the output bound and reject
+before publication. Missing/unsafe entries, replaced roots and malformed graphs
+reject without repair, progress reset or remote observations.
+
+Fresh native regressions adapt relevant Canic parent/child ordering into explicit
+dependencies, without importing relocation, Root scopes or fake management effects.
+They cover a golden binary hash, changed identities/edges, deterministic ready ties,
+unknown/duplicate/missing dependencies, cycles, closed schemas, cached-order injection,
+maximum chain/count, exact direct/aggregate edge bounds, causal progress, immutable
+original bytes, contention and unsafe/replaced paths. A public-API journey reopens
+the original graph and projects declared progress locally. These checks qualify
+graph/policy/persistence behavior, not full plans, live effects or actual completion.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
 | Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |
@@ -288,7 +414,9 @@ backend or live IC call participates in this qualification.
 | Local download journal lifecycle | Adapted exact v1 identities, state/checksum transitions and derived views; guarded local verification/publication with fresh recovery evidence |
 | Pending claims and operation receipts | Adapted local exact-identity ledger, immutable separate allowances and chronological replay; guarded reservations/receipts with fresh native recovery evidence |
 | Remote transfer extents, execution/restore journals, plans and manifests | Require complete backend metadata, generic v1 identity/budget binding and model-owned transitions before runner import |
-| Topology, discovery and registry contracts | Generic graph/explicit-set mechanics can move; authoritative Fleet/Root discovery and routing stay integration-owned |
+| Topology hashing and declared registry target expansion | Adapted into bounded canonical forest records, unambiguous v1 binary hashes, pure exact/direct-child/subtree selection and immutable local persistence |
+| Authoritative discovery, registry revisions and routing | Fleet/Root observation, membership authority and application fencing stay integration-owned; no live provider imported |
+| Backup phase and restore member ordering | Adapted explicit bounded DAG records, deterministic planning order and pure causal declared-progress views; application dependency semantics remain adapter-owned |
 | Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
 | ICP subprocess transport | Narrow extraction into the transport package after executor contracts and selected backend capabilities are qualified |
 | Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |

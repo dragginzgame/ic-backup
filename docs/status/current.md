@@ -1,102 +1,116 @@
 # Current handoff — 2026-10-04
 
-The maintainer completed `0.1.2` at `575d7d0` (Release 0.1.2) and requested
-continued extraction grouped under `0.1.3`. This session extended the retained
-uncommitted download-journal batch with durable per-operation attempt accounting.
-Source, regressions, schemas and documentation remain uncommitted for review.
-Canic and siblings remain read-only. No live IC effects, release/version
-transactions, commits, pushes or package uploads ran.
+The maintainer completed `0.1.3` at `9cc4be7` (Release 0.1.3), requested a
+`0.1.4` changelog draft and continued extraction. This session extends the retained
+uncommitted inventory/selection batch with explicit operation dependency graphs,
+deterministic planning order and pure causal declared-progress policy. Source,
+regressions, schemas and documentation remain uncommitted for review. Canic and
+siblings remain read-only. No live IC effects, release/version transactions,
+commits, pushes or package uploads ran.
 
-`DownloadJournalRecord` retains v1 immutable intent and a nonempty exact physical
-snapshot set: canonical principal, opaque snapshot token, observed timestamp/size,
-fixed relative paths, four-state progress and required nullable checksum. Model
-owns immediate Created → Downloaded → ChecksumVerified → Durable transitions;
-views derive local resume state without granting remote retries. The borrowed
-`DownloadJournalGuard` exclusively locks bounded records, verifies staging bytes
-and durably publishes/adopts the matching artifact tree. Failed writes/publication
-stop the guard until reopen. Backend complete-transfer attestation stays caller-owned.
-The existing 1,024 artifact, 256 ASCII snapshot-token and 1 MiB read/write bounds,
-no-overwrite creation and nonsymlink artifact-parent contracts remain enforced.
+`EffectGraphRecord` retains v1 unique opaque u64 operation sequences and sorted
+explicit prerequisites. Zero, nonconsecutive identities and u64::MAX are admitted;
+sequences are not array indices or numeric dispatch order. Bounds are 8,192 nodes,
+1,024 direct prerequisites per node and 65,536 total edges. Decode bounds aggregate
+edge retention while parsing. Duplicate/missing prerequisites and self/longer cycles
+reject. Iterative topological validation admits a maximum chain depth of 8,191;
+smallest currently ready sequence wins ties. Computed order is private cached
+projection and never serialized. A domain-separated binary digest binds exact
+canonical identities/edges with u32 counts and u64 big-endian sequence values.
 
-`AttemptJournalRecord` now binds exact intent, operation sequence, network
-fingerprint, caller/target principals, release and mutating-request digests through
-immutable `AttemptAuthorityRecord`. Original mutation and observation limits have
-a checked combined maximum of 1,024 and never refund or replenish. Reservations
-and receipts form append-only chronology; derived counters/flags are not persisted.
-Global attempt numbers and exact request matching reject stale receipts. A pending
-mutation blocks another mutation; a separately reserved observation can resolve it
-after mutation exhaustion. Applied stops new reservations for that operation.
-Uncertain requires a qualified settled observation unable to resolve mutation;
-a lost observation reply remains pending until qualified settlement.
+`policy::effect_order::readiness` admits caller-declared completed identities only
+when bounded, unique, known and causally closed over prerequisites. Read-only views
+bind the original graph digest and project incomplete ready/blocked nodes in
+planning order. Policy performs no IO, record writes, scheduling or mutations.
+Declared completion is not a qualified receipt; ready is not fresh authority,
+spending allowance, custody, external-effect settlement or terminal completion.
+Application dependency semantics must be explicitly qualified by integrations;
+parent-before-child or reverse restart order is never inferred from inventories.
+The graph is one component of a future complete plan, without operation payloads,
+target/request/network/release binding, budgets, actual receipts or runner wiring.
 
-`AttemptJournalGuard` borrows layout exclusion and locks
-`attempt-<operation_sequence>.json`. Creation preserves prior evidence; opening
-requires the full exact original binding and budgets. A reservation is durably
-published before returning its number. Any write failure disables the guard until
-drop/reopen; recovery validates consumption instead of blindly retrying. History
-admits at most 2,048 events; bounded input and canonical pretty-output each admit
-at most 1 MiB. Canonical authority hashing uses a specified domain-separated binary
-encoding and excludes mutable events and JSON formatting. Equivalent principal/hash
-text normalizes at admission; both journals share the pure principal boundary.
+Persistence ops durably create fixed `effect-graph.json` under layout/journal
+exclusion without replacing evidence. Local reads require the validated original
+graph and exact expected digest. Lost creation replies reconcile by reading that
+exact declaration, without repair or progress reset. Encoded input and canonical
+pretty-output each admit at most 1 MiB; dense valid graphs exceeding canonical
+output reject before publication. Unsafe entries and replaced roots reject.
+See [the maintained boundary](../extraction-boundary.md) and
+[the v1 graph schema](../contracts/effect-graph.schema.json).
 
-These are local mechanisms, not authenticated intent, fresh IC authority, a
-subprocess dispatch permit or qualified remote reconciliation. Receipt owners
-retain evidence and qualify current authority, command custody and paid-effect
-settlement. This ledger counts explicit caller reservations; opaque backend
-retries, cycles and calls within commands require their own executor bounds.
-Local replay performs no remote observations/effects. Applied operation evidence
-and Durable artifact progress do not establish full terminal run completion,
-verified manifest or permission to release restore references. See
-[the maintained boundary](../extraction-boundary.md),
-[download schema](../contracts/download-journal.schema.json) and
-[attempt schema](../contracts/attempt-journal.schema.json).
+The prior uncommitted `InventoryRecord`/pure selection batch remains intact.
+Physical forests admit 1–1,024 unique canonical principals, closed acyclic parent
+edges and required nullable parent/role/module fields. Role text admits 256 UTF-8
+bytes; null, empty and literal "null" remain distinct. Its unambiguous binary hash
+binds declared fields only. Exact/DirectChildren/Descendants selection retains
+original parent links and full inventory digest, including unselected targets.
+Immutable `inventory.json` publication preserves prior evidence and has independent
+1 MiB input/output bounds. Matching inventories prove no fresh membership,
+controller authority, revision continuity or application consistency. See
+[the inventory schema](../contracts/inventory.schema.json).
 
-Fresh targeted Linux checks passed: 72 unit tests and three public-API integration
+Earlier qualified owners remain intact: artifact checksums/staging/publication,
+bounded JSON and journal locks, stable layout exclusion and conservative restore
+dependencies, inherited command custody, exact local download lifecycle and finite
+per-operation mutation/observation accounting. Qualified receipts and backend
+complete-transfer evidence remain caller-owned. Lost paid responses block blind
+retries; budgets never refund/replenish. Uncertain requires a qualified settled
+observation unable to resolve mutation; a lost observation reply stays pending.
+Local replay performs no remote calls. Durable artifact progress, Applied operation
+evidence and dependency readiness do not establish full terminal completion or
+permit restore-reference release.
+
+Fresh targeted Linux checks passed: 93 unit tests and five public-API integration
 journeys, warning-denied Clippy/rustdoc, formatting, Rust 1.91.0 all-target/all-feature
-compilation and standalone Cargo package verification. Fresh regressions cover
-exact identity/hash bytes, exhausted budgets, stale/mismatched receipts, closed
-schema/bounds, locking, unsafe/replaced paths and lost writes on both publication
-sides. A real acknowledged owner dies before reservation writing, after writing
-and after its returned number; reopening retains the correct consumed allowance.
-Existing artifact, download/publication, JSON, lock, layout/reference and command
-custody regressions also passed. Schemas/examples and independently encoded
-canonical authority golden bytes validate. This is native filesystem/process
-qualification only; no PocketIC or real IC backend was used. No broad gate ran.
+compilation and standalone Cargo package verification. Adapted ordering cases
+exercise explicitly qualified parent-first/child-first edges. Fresh regressions
+cover canonical golden bytes, changed identities/edges, deterministic ties, causal
+progress, malformed schemas/cache injection, cycles/closure, maximum chain/count,
+exact direct/aggregate edge bounds, independently bounded IO, unchanged bytes,
+contention and unsafe/replaced paths. A public journey reopens the original graph
+and projects declared progress locally. Existing inventory, artifact/download,
+attempt, layout and real process/custody regressions also passed. Machine schemas,
+required fields/examples and independent binary golden encodings validate.
+This is native graph/declaration/filesystem/process qualification only; no
+PocketIC, live authority, actual completion proof or IC backend was used.
+No broad gate ran.
 
-Retained fresh logs are `target/attempt-journal-tests.log`,
-`target/attempt-journal-clippy.log`, `target/attempt-journal-msrv.log`,
-`target/attempt-journal-docs.log` and `target/attempt-journal-package.log`.
-Package inspection verifies all archived Rust source bytes and the exact regular
-MIT license contents. The member `LICENSE` links to the maintained root contributor
-notices. Current source/archive remain under `target/package/`; prior package
-evidence is retained under `target/attempt-journal-package-evidence.kqp9ti8e/` and
-`target/download-journal-package-evidence.45iah_5j/`. Earlier logs and recovery/
-release evidence remain retained. No package upload occurred.
+Fresh logs are `target/effect-graph-tests.log`, `target/effect-graph-clippy.log`,
+`target/effect-graph-msrv.log`, `target/effect-graph-docs.log` and
+`target/effect-graph-package.log`. Current verified source/archive remain under
+`target/package/`; prior package evidence is retained under
+`target/effect-graph-package-evidence.asr33i_v/`,
+`target/inventory-package-evidence.a7jne1oj/`,
+`target/attempt-journal-package-evidence.kqp9ti8e/` and
+`target/download-journal-package-evidence.45iah_5j/`. Earlier logs, recovery fixtures
+and release evidence remain retained. The member license still archives exact
+regular MIT contributor notices from the maintained root file.
 
-[Download provenance](../download-journal-source.json) retains 14 inspected Canic
-files, 57 consumer references and published principal dependency inspection.
-[Attempt provenance](../attempt-journal-source.json) adds 14 inspected files,
-56 consumer references and dispositions for existing engine/CLI owners. Canic
-HEAD remains `3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3`; its dirty working-tree
-source hashes identify inspected bytes, not fresh qualification. No consumer or
-source was removed. The original [planning baseline](../source-baseline.json),
-[first extraction](../extraction-source.json), [layout](../layout-source.json) and
-[command custody](../command-custody-source.json) provenance remain unchanged.
+[Graph provenance](../effect-graph-source.json) records 12 inspected Canic files,
+44 exact consumer references and dispositions for full backup phase projections,
+restore application ordering and CLI resume/reporting. Canic HEAD was
+`3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3` with dirty working-tree source at
+inspection; hashes identify inspected files/sections, not qualification. No
+consumer or source was changed/removed. [Inventory provenance](../inventory-source.json)
+retains 10 inspected files and 48 consumer references. Earlier
+[planning](../source-baseline.json), [artifact](../extraction-source.json),
+[layout](../layout-source.json), [command custody](../command-custody-source.json),
+[download](../download-journal-source.json) and [attempt](../attempt-journal-source.json)
+provenance remain unchanged.
 
-Cargo stays at `0.1.2`, Rust 2024, development Rust 1.99.0 and MSRV 1.91.0.
-The previous download batch adds published `ic_principal` 0.1.5 conversion with
-default features disabled and six lockfile packages, preserving previous locked
-versions/checksums. Attempt accounting adds no dependencies. No Canic dependencies,
-sibling patches, unsafe Rust or shared target exist. The sole populated changelog
-draft is undated `0.1.3` beneath empty Unreleased; dated `0.1.2`, older notes and
-`docs/release.json` remain unchanged. Maintainers own release preparation.
-See [development](../development.md) and [releasing](../releasing.md).
+Cargo remains `0.1.3`, Rust 2024, development Rust 1.99.0 and MSRV 1.91.0.
+No dependencies/lockfile changes, Canic imports, sibling patches, unsafe Rust or
+shared target were introduced. The sole populated changelog draft is undated
+`0.1.4` beneath empty Unreleased. Dated `0.1.3`, older changelog history and
+`docs/release.json` remain unchanged. Maintainers own release preparation; see
+[development](../development.md) and [releasing](../releasing.md).
 
 Full B1/B2 completion and independently usable canister backup/restore remain
-unestablished. Complete backend metadata/transfer extents, authenticated generic
-plans, fresh authority/consistency and executor reconciliation of lost create/
-upload/load responses still precede runner extraction. Full execution/restore
-journals, completion manifests, terminal reference release, prune, transport and
-CLI remain proposed. Canic's backup executor preflight still rejects. Read
-[the design](../extraction-design.md) for the maintained sequence. Canic adoption
-and live IC effects need their own instructions; the no-commit rule remains in force.
+unestablished. Authoritative membership/revision/fence ports, complete authenticated
+plans and exact operation payload/budget bindings still precede runner extraction.
+Fresh authority/consistency, full backend metadata/transfer extents and bounded
+executor calls/lost create-upload-load reconciliation remain integration/port work.
+Full execution/restore journals, completion manifests, terminal reference release,
+prune, transport and CLI remain proposed. Canic's backup executor preflight still
+rejects. Read [the design](../extraction-design.md) for the maintained sequence.
+Canic adoption/live IC effects need their own instructions; the no-commit rule remains.

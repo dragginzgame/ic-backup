@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.1.4]
+
+- Adapt Canic phase and restore ordering into bounded explicit operation dependency
+  graphs with deterministic planning order and pure causal readiness views. Reject
+  duplicate/missing dependencies, cycles and inconsistent declared progress; retain
+  immutable graphs with exact-digest admission and independent input/output bounds.
+- Adapt Canic topology hashing and target expansion into canonical bounded v1
+  physical inventories and pure exact/direct-child/subtree selection. Reject
+  normalized duplicates, missing parents and cycles; retain immutable inventories
+  under layout exclusion with exact-digest replay and explicit byte bounds.
+
 ## [0.1.3] - 2026-10-04
 
 - Adapt Canic's pending claims and exact receipts into immutable per-operation
