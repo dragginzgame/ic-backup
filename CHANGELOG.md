@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.1.3]
+## [0.1.3] - 2026-10-04
 
 - Adapt Canic's pending claims and exact receipts into immutable per-operation
   identity and separate finite mutation/observation allowances. Persist append-only
