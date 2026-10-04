@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.1.6]
+## [0.1.6] - 2026-10-04
 
 - Add a closed host-ingress IC management request codec for status, snapshot
   inventory, stop/start, new snapshot capture and exact snapshot load. Bind fixed
