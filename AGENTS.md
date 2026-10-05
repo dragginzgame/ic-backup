@@ -253,6 +253,18 @@ into an issue tracker or release authority.
   durable publication, spending transition, upload/load/start permit or release
   admission. Integrations own stable noncooperating destination/byte custody.
 
+- The IC mutation port now binds exact existing capture/load/start/stop payloads to
+  the full original plan, operation authority and already pending mutation. Preserve
+  original allowances, the separate recovery-observation owner and existing codecs:
+  1 MiB raw replies, 256 raw snapshot-ID bytes and 4 KiB arguments. Pure association
+  checks actual claimed context/target, authority/attempt and bounded method-specific
+  wire shape. It authenticates no reply and produces no outcome, receipt, retry,
+  spending replenishment, terminal or release permit. One provider invocation permits
+  only the originally accounted exact update; no hidden reissues or observations.
+  Durable originals, proof of no prior dispatch, fresh permissions/prerequisites,
+  capture consistency, same-release load/start safety and command/byte custody remain
+  integration-qualified. No provider, transport or runner is installed.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

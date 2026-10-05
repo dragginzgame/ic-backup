@@ -25,18 +25,93 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.2.3` pushed. The latest finalized baseline is release commit
-`22d26ca70992c0d408a312e11901620a26ee27c7`, with manifest `0.2.3` and receipt
-source `603e3b26a75df43cab6f2e61838f656961498c84` under `release-verify`.
-Read-only receipt verification passed before opening the new draft. The maintainer
-has now selected undated `0.3.0` for the breaking shared release workflow adoption,
-carrying all pending `0.2.4` implementation notes. Package version remains `0.2.3`.
-Registry publication was not independently observed. Package versions, dependency
-selection, lockfile and release receipt remain unchanged; the member manifest is
-sorted and the reviewed tooling snapshot is refreshed.
-No commits, tags, pushes, package uploads or live IC effects occurred.
+The maintainer reports `0.3.0` live. The clean starting baseline is release commit
+`7fecf72`, with annotated local `v0.3.0`, manifest `0.3.0`, dated changelog and receipt
+source `18c7c0996e3a06cf092cdbd74ccaa758e38d366b` under `release-verify`.
+Read-only exact receipt/tag/parent verification passed before continuing. Registry
+publication was not independently observed. Compatible original IC update/reply
+contract additions automatically open one undated `0.3.1` pending entry. Package
+metadata, lock selection, receipt and reviewed Shared Tooling snapshot are unchanged.
+This continuation creates no commits, tags, pushes, uploads or live IC effects.
 
-## Release-check isolation fix
+## Exact originally reserved IC mutation port
+
+`IcMutationRequest` joins full original plan/operation authority, immutable attempt
+limits and the existing exact canonical IC capture/load/start/stop payload with an
+already pending mutation. `IcMutationProvider::submit_mutation` describes one
+previously accounted host update; no implementation or runner is installed. A
+bounded immutable passive acknowledgement carries actual claimed context/target,
+original authority/attempt, exact raw reply and opaque evidence. Pure association
+rechecks current reservations and exact claims, then delegates to existing capture/
+lifecycle codecs. No second record, codec, digest encoder or spending owner appears.
+See [the boundary](../extraction-boundary.md#exact-originally-reserved-ic-mutation-updates),
+[typed contract](../contracts/ic-mutation-port.json) and
+[fresh source inspection](../ic-mutation-source.json).
+
+Preserve the original 1,024-attempt, 256 raw snapshot-ID byte, 4 KiB argument and
+1 MiB raw-reply bounds plus existing decoder-work limits. Observations cannot use
+this mutation path. Missing/different original authority/bytes/attempt and pending
+observation recovery reject; matching acknowledgements leave the mutation pending.
+Reconstruction proves no previous-dispatch exclusion. Actual fresh control/load-origin
+permissions, prerequisite/consistency/application safety, complete source/upload
+association and exclusive command/byte custody remain integration-owned. Errors,
+drop and lost replies retain spent attempts, obligations and source references.
+No automatic receipt, retry, refund, restart or terminal/fence/reference release
+follows from a raw snapshot ID or canonical empty acknowledgement.
+
+Fresh focused Linux evidence:
+
+- Eight new model/policy cases pass: `target/ic-mutation-unit-final.log`. They cover
+  all four original payloads, exact load bytes, authority/budget/target/context/attempt
+  drift, absent/replaced/settled/recovering reservations, raw/attempt bounds,
+  canonical principals, redacted Debug and method-specific malformed replies.
+- One public recovery journey passes across every method and all three provider
+  failure variants plus acknowledgement: `target/ic-mutation-public-final.log`.
+  Native provider fixtures implement no IC behavior. Exact journal, plan, argument,
+  retained raw reply, opaque fixture obligation marker and durable source-reference
+  evidence remain unchanged across drop/reopen; a late acknowledgement invokes no
+  provider again, and pending observation recovery stays with its original owner.
+  The marker is not a qualified application fence. Six existing exact request-owner
+  wire/shape/binding goldens also pass: `target/ic-mutation-request-owner.log`.
+  These are fifteen distinct registered targeted cases, not live IC qualification.
+- Warning-denied all-target/all-feature Clippy and API docs, plus all-target/all-feature
+  Rust 1.91.0 checks pass: `target/ic-mutation-clippy-final.log`,
+  `target/ic-mutation-docs.log` and `target/ic-mutation-msrv.log`.
+- Actual test registries and passing case names agree in
+  `target/ic-mutation-cases.txt`. Exact committed source hashes/ranges, deterministic
+  contract regeneration, local documentation links, unchanged package/receipt bytes
+  and finalized changelog history pass `target/ic-mutation-evidence-check.log`.
+  The initial checker wrongly assumed the inspected Canic worktree was clean;
+  `target/ic-mutation-evidence-check-first.log` retains that failure. Corrected
+  checks distinguish retained dirty state from the exact reviewed committed files.
+  Formatting and all 22 vendored snapshot files pass
+  `target/ic-mutation-format.log` and `target/ic-mutation-snapshot-check.log`;
+  read-only `target/ic-mutation-release-plan.log` previews `0.3.0` to `0.3.1`.
+- Initial fixture compilation incorrectly borrowed a model-owned receipt and passed
+  an owned authority to the persistence borrow boundary; the first raw-target test
+  also supplied an invalid unhyphenated principal. Corrected fixtures preserve the
+  canonical owners. Retained failures are `target/ic-mutation-unit-first.log`,
+  `target/ic-mutation-unit-second.log`, `target/ic-mutation-public-first.log` and
+  `target/ic-mutation-clippy-first.log`.
+
+Fresh Canic inspection binds committed `abeb37ad9e062d730fe84da3539b9b79e4ed1336`
+with separately retained dirty worktree evidence and exact source files under
+`target/ic-mutation-source.Jpj2ZW`. Canic advanced independently during this batch;
+the inspected files still match the retained committed bytes. Its dirty changes
+are neither incorporated nor overwritten.
+The reviewed executor/stop/start/capture/restore-preparation ranges identify the
+existing dispatch and automatic completion conversions; none are imported or
+modified. This batch is a local contract refinement using already maintained
+wire/plan/journal owners. No existing public/private function, method or type is
+removed; all prior schemas and public request/reply behavior remain unchanged.
+
+Work remains uncommitted under the automatically selected compatible `0.3.1` draft.
+Native macOS/real IC providers, capture/upload/load reconciliation, complete terminal
+artifact/application/command-custody admission and reference release remain pending.
+No full CI/release gate, release transaction or live effect ran in this continuation.
+Earlier completed batches below retain their historical source and scope.
+
+## Released 0.3.0 release-check isolation fix
 
 The maintainer committed the pending batch at
 `505e0994ecbb4b94ec6f7483336e73b7c9b0c477` (`0.3.0` source notes), then reported

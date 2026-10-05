@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1]
+
+- Bind exact IC capture, load, start and stop requests to already reserved original
+  mutation attempts. Add a single-update provider contract and bounded passive
+  reply association, preserving spent journals and restore references through
+  failures and recovery without automatic settlement, retries or release.
+
 ## [0.3.0] - 2026-10-05
 
 - **Breaking:** Use the shared release workflow for patch, minor and major releases,

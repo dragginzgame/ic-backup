@@ -1,0 +1,74 @@
+{
+   "adaptation" : "Reuse exact original plan/IC mutation binding and pending journal owners, canonical principal admission and the existing bounded capture/lifecycle reply decoders. Add a single-update passive port/association boundary, not a runner, ledger, codec, persisted record or dispatch flag.",
+   "consumer_baseline" : "target/ic-mutation-source.Jpj2ZW/consumer-source.txt",
+   "consumer_disposition" : "All Canic consumers remain unchanged/read only. Inspected source callback/receipt conversions are not imported. Existing source provenance and license attribution remain retained.",
+   "consumers" : [
+      "crates/ic-backup/src/model/ic_mutation/mod.rs",
+      "crates/ic-backup/src/policy/ic_mutation/mod.rs",
+      "crates/ic-backup/src/ports/ic_mutation/mod.rs",
+      "crates/ic-backup/src/test_support/ic_mutation/mod.rs",
+      "crates/ic-backup/tests/ic_mutation.rs"
+   ],
+   "contract" : "docs/contracts/ic-mutation-port.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Exact source retained read only; local contract refinement, no source copied.",
+         "finding" : "BackupRunnerExecutor broad lifecycle/snapshot callback declarations and optional backend snapshot metadata.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               125
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "retained_copy" : "target/ic-mutation-source.Jpj2ZW/crates/canic-backup/src/runner/types.rs",
+         "sha256" : "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136"
+      },
+      {
+         "disposition" : "Exact source retained read only; local contract refinement, no source copied.",
+         "finding" : "Stop/start executor calls directly producing completed receipts; these settlement conversions are not imported.",
+         "inspected_line_ranges" : [
+            [
+               76,
+               128
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs",
+         "retained_copy" : "target/ic-mutation-source.Jpj2ZW/crates/canic-backup/src/runner/operations/mod.rs",
+         "sha256" : "2e2760d815be749cfe9cfa71f9604ae026ea26ca143770cc88896f0142fe4569"
+      },
+      {
+         "disposition" : "Exact source retained read only; local contract refinement, no source copied.",
+         "finding" : "Capture executor dispatch and existing retained snapshot receipt handling; no runner/adoption or automatic receipt conversion is imported.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               100
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "retained_copy" : "target/ic-mutation-source.Jpj2ZW/crates/canic-backup/src/runner/operations/artifacts.rs",
+         "sha256" : "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573"
+      },
+      {
+         "disposition" : "Exact source retained read only; local contract refinement, no source copied.",
+         "finding" : "Restore preparation/reconciliation/staging command flow; no dispatcher, mutable command construction or upload behavior is imported.",
+         "inspected_line_ranges" : [
+            [
+               130,
+               215
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "retained_copy" : "target/ic-mutation-source.Jpj2ZW/crates/canic-backup/src/restore/runner/execute.rs",
+         "sha256" : "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native structural/byte/typed-denial and exact spent-journal/reference recovery only; provider fixtures implement no IC behavior. Fresh authentication, actual dispatch/attribution, application source/upload/safety, lost-effect reconciliation, terminal and fence/reference release remain integration-qualified.",
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "abeb37ad9e062d730fe84da3539b9b79e4ed1336",
+   "source_status" : "target/ic-mutation-source.Jpj2ZW/source-status.txt",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

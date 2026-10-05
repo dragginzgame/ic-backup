@@ -47,9 +47,10 @@ separate explicit action. Build, validation and recovery artifacts remain retain
 
 Read [the changelog rules](../rules/changelogs.md) before maintaining notes. Keep
 one current pending entry above finalized history and preserve historical bytes.
-The selected undated `0.3.0` includes the complete pending batch since `0.2.3`;
-its release workflow hard cut requires a minor version before 1.0. A numbered
-pending heading must agree with the selected release command. Changelog presentation
+The numbered undated pending entry covers the complete batch since the latest
+finalized release. Before 1.0, compatible additions/fixes use the next patch and
+breaking public contracts use the next minor. A numbered pending heading must
+agree with the selected release command. Changelog presentation
 does not gate registry publication or prove package publication.
 
 The workspace owns package versions; selecting notes changes neither manifest nor

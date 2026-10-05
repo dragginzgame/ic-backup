@@ -154,6 +154,8 @@ implemented foundation includes:
 - local progress derived from the original plan and retained journals;
 - typed Internet Computer request and reply encoding for selected snapshot and
   lifecycle operations;
+- contracts for exact originally reserved IC updates and bounded passive reply
+  association, preserving pending spending without automatic settlement;
 - fresh verification of durable local backup files against their original plan;
 - retained same-release source/safety requirements and application evidence checks
   before snapshot load or controlled start;

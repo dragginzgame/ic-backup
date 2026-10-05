@@ -1462,6 +1462,58 @@ and actual callers. Its stale-copy deletion, drop cleanup, upload gating and run
 execution are not imported. No transfer/extent/authentication, current permissions,
 command dispatch, terminal proof or fence/reference release is qualified here.
 
+### Exact originally reserved IC mutation updates
+
+`model::ic_mutation::IcMutationRequest` derives the exact original operation authority
+from the complete plan and binds an existing pending mutation to the unchanged
+`IcManagementRequestRecord` target/digest/effect class. Only capture, load, start and
+stop are admitted; status/list are separately accounted observations. Missing or
+different original identity/allowances, changed bytes and pending observation recovery
+reject. Binding and repeated reconstruction create no journal, spending or undispatched
+proof. The request retains immutable plan/payload borrows and rechecks the current
+pending reservation before association.
+
+`ports::ic_mutation::IcMutationProvider::submit_mutation` describes one originally
+accounted host replicated update with exact management receiver, routing target,
+method and Candid bytes. No implementation is installed. Integrations retain originals
+and qualify fresh actual permissions/context, complete prerequisite evidence,
+capture consistency/quiescence, exact load-origin permissions and same-release
+load/start source/upload/application safety, and exclusive dispatch/command/byte
+custody. Pending state alone never admits
+a repeat. Hidden observations/retries/funding/proxy/query substitution are excluded;
+lost outcomes require original-effect reconciliation. Provider errors/drop/death
+retain consumed pending mutations, obligations and source references.
+
+`IcMutationAcknowledgement` retains a full original authority digest, mutation attempt,
+actual claimed network/caller/release/target, exact raw reply and opaque evidence.
+The existing 1,024-attempt and 1 MiB raw-reply bounds apply; target admission reuses
+canonical principals and Debug redacts raw bytes. No Serde or Default flag exists.
+Pure `policy::ic_mutation::validate_acknowledgement` rechecks current original evidence
+and exact association claims, then delegates capture to `IcSnapshotReply` and
+stop/start/load to `IcLifecycleReply`. Existing raw IDs, required metadata, exact empty
+tuple, finite decoding work and request/raw-reply digests retain their single owners.
+No additional codec, record, spending ledger or evidence hash is introduced.
+
+Successful matching is a passive read-only wire projection. It authenticates no
+network/caller/target/reply or timing, proves no exclusive attribution, and produces
+no Applied/NotApplied/Uncertain receipt, fresh authority, restart/load safety, terminal
+proof or fence/reference release. Retained late replies may be associated under the
+same pending mutation before observation recovery; this performs no provider call.
+Once a recovery observation is pending, association rejects rather than bypass its
+original owner. Terminal replay never invokes a provider.
+
+Native tests cover all four original envelopes, exact opaque load bytes, original
+authority/budget/target/attempt/context drift, absent/replaced/settled/recovering
+reservations, raw/attempt bounds, canonical targets, redacted Debug and method-specific
+invalid wire. A public journey qualifies one passive fixture invocation and exact
+retained journal/plan/raw argument/reply/reference bytes across drop/reopen for each
+method and provider failure. It implements no IC behavior. See
+[the typed contract](contracts/ic-mutation-port.json) and
+[fresh read-only inspection](ic-mutation-source.json). Canic executor dispatch,
+automatic completion/receipt conversion, restore upload and all consumers remain
+unchanged. Actual providers, capture/upload/load/reconciliation and runners/transport
+remain independently qualified.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

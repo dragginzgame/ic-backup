@@ -340,6 +340,23 @@ See the [typed contract and independent goldens](contracts/fence-acquisition-por
 Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_acquisition`
 and `cargo test --offline --locked -p ic-backup --test fence_acquisition`.
 
+`model::ic_mutation::IcMutationRequest` binds the exact original plan operation,
+immutable allowances and existing closed IC payload to an already pending mutation.
+The provider contract describes one previously accounted host update. Pure
+`policy::ic_mutation::validate_acknowledgement` checks current reservation and actual
+claimed context/target/authority/attempt, then uses the existing bounded snapshot or
+lifecycle decoder. Raw reply ownership is capped at 1 MiB and Debug is redacted;
+matching preserves all pending spending and establishes no receipt or fresh permit.
+Lost replies need original reconciliation, and pending recovery observations cannot
+be bypassed. Fresh authentication, permissions/prerequisites, capture consistency,
+same-release load/start source/upload/application safety and exclusive custody remain
+integration-owned. No transport/provider implementation exists. See
+[the typed contract](contracts/ic-mutation-port.json),
+[fresh source inspection](ic-mutation-source.json) and
+[maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-mutation-updates).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib ic_mutation`
+and `cargo test --offline --locked -p ic-backup --test ic_mutation`.
+
 `model::execution_settlement` retains bounded strict v1 original plan/journal
 fingerprints, with independent binary goldens for full chronological history.
 Pure admission reuses `execution_progress` and requires the exact original journal
@@ -403,7 +420,7 @@ or compilation. [Shared adoption](shared-tooling.md) identifies the reviewed
 source and the product overlay. `version` and `release-plan` inspect release
 metadata without changing the workspace.
 
-The selected `0.3.0` release tooling uses the exact vendored common runner.
+Release tooling uses the exact vendored common runner.
 Patch/minor/major share one workflow and explicit branch/remote inputs; exact
 interruption recovery uses `release-resume VERSION=X.Y.Z`. Old standalone
 preparation/stage/commit/push commands are removed. Consumer adapters own original

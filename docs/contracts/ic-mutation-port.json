@@ -1,0 +1,37 @@
+{
+   "acknowledgement" : {
+      "association" : "Match exact current original reservation, full authority digest, mutation attempt and actual claimed network/caller/release/target. Authenticate actual context/target/reply and opaque evidence independently.",
+      "bounds" : "Attempt 1..=1024; canonical target; raw reply <=1048576 bytes, derived from the minimum of existing snapshot/lifecycle decoder bounds. No implicit Default or Serde admission; Debug redacts raw bytes.",
+      "fields" : [
+         "authority",
+         "mutation_attempt",
+         "context",
+         "target",
+         "reply",
+         "evidence"
+      ],
+      "wire" : "Delegate capture to IcSnapshotReply and stop/start/load to IcLifecycleReply. Reuse existing exact request/raw-reply digests, raw IDs/required timestamp/size, canonical empty tuple and finite decoding quotas. No additional decoder or evidence hash."
+   },
+   "effects" : [
+      "Exactly one previously durably accounted original host update. No extra observations, implicit retries, proxy/query substitution, funding or hidden calls.",
+      "Reconstruction never proves no previous dispatch. Lost replies require original-effect reconciliation, not another mutation invocation; a pending reservation supplies no retry permission.",
+      "Unavailable, Unsupported, Indeterminate, drop and death retain consumed pending mutations, obligations/source references and original evidence. No automatic NotApplied, Applied, Uncertain, retry, refund, terminal proof or release.",
+      "Passive association can admit retained late reply bytes while the exact mutation remains pending and no recovery observation is pending. It writes no receipt. Recovery observations retain their existing independent owner.",
+      "Terminal replay invokes no provider. No installed implementation, transport, runner, PocketIC or live IC effect qualification is introduced."
+   ],
+   "kind" : "ephemeral exact originally reserved IC mutation port; no persisted authority schema",
+   "methods" : [
+      "load_canister_snapshot",
+      "start_canister",
+      "stop_canister",
+      "take_canister_snapshot"
+   ],
+   "provider" : "IcMutationProvider::submit_mutation",
+   "request" : {
+      "admission" : "Integrations retain durable originals and qualify exact fresh context/control, full prerequisite evidence, capture consistency, exact load snapshot-origin permissions and same-release load/start safety, complete original/upload bytes and exclusive dispatch/command custody. Target control/read visibility cannot substitute for load-origin permission. Structural binding is not a permit.",
+      "bytes" : "Reuse canonical management receiver, effective target, replicated update ingress, exact closed method and derived Candid arguments. Existing 256 raw snapshot-ID byte and 4096 argument byte bounds remain.",
+      "original" : "Full original OperationPlanRecord and operation sequence; derive the existing original attempt authority including immutable limits. IcManagementRequestRecord validates exact target/digest and mutation class.",
+      "reservation" : "Require exact pending original mutation and no pending observation. Recheck authority/current mutation/observation state before passive reply association. No spending, journal creation/reset or proof of undispatched custody."
+   },
+   "version" : 1
+}

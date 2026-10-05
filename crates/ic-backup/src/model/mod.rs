@@ -12,6 +12,7 @@ pub mod fence_acquisition;
 pub mod fence_obligation;
 pub mod fence_reconciliation;
 pub mod ic_lifecycle_reply;
+pub mod ic_mutation;
 pub mod ic_request;
 pub mod ic_snapshot_reply;
 pub mod inventory;

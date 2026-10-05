@@ -38,6 +38,9 @@
 //! candidate cardinality never attributes or settles a lost capture.
 //! Bounded lifecycle replies retain exact empty acknowledgements and required
 //! status/controller projections without converting them into fresh authority.
+//! Exact IC mutation envelopes bind already reserved original updates; a single-call
+//! provider contract and bounded passive reply association preserve pending spending.
+//! Existing codecs decode replies without automatic settlement, retries or release.
 //! A separate membership port binds ephemeral provider results to original intent,
 //! exact current context/full inventory and an integration-owned challenge.
 //! Pure matching views grant neither controller authority nor application continuity.

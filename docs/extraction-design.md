@@ -674,6 +674,17 @@ or recreating a copy. Staging is not durable publication; future byte custody, b
 upload/extent completeness and current dispatch/application safety remain separate.
 See [the maintained boundary](extraction-boundary.md#private-original-operation-restore-artifacts).
 
+Exact originally reserved IC capture/load/start/stop requests now join the full
+original plan, immutable attempt authority and existing canonical IC payloads.
+A single-update port and bounded passive reply association reuse existing capture
+and lifecycle codecs; no provider implementation or dispatch/effect settlement is
+imported. Missing/different reservation or pending recovery observation rejects.
+Retained context/target claims and wire bytes authenticate no provider and grant
+no fresh permissions, replay/retry, restoration safety or terminal/release proof.
+Actual dispatch custody, source/upload/application qualification and lost-effect
+reconciliation remain necessary before runners. See
+[the maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-mutation-updates).
+
 ## 12. Filesystem custody, durability and retention
 
 Layout lifetime exclusion and durable reference retention are implemented with
