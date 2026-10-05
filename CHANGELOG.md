@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.3]
+## [0.3.3] - 2026-10-05
 
 - Durably publish exact staged restore artifacts and recover canonical copies after
   interruption without rereading source trees or resetting journals, obligations
