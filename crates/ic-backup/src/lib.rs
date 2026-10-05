@@ -44,6 +44,13 @@
 //! Immutable fence obligations retain original scope and acquisition identity;
 //! recovery joins their exact original attempt journals without new accounting,
 //! automatic release or a claim of current Active custody.
+//! Reserved fence-acquisition reconciliation matches original-request attribution
+//! under exact pending mutation and observation identities. Passive claims and
+//! late-reply admission perform no automatic settlement, redispatch or release;
+//! authenticated providers and actual application effects remain integration-owned.
+//! Exact application acquisition envelopes bind receiver, update mode, method and
+//! opaque bytes to already reserved original mutations. Passive acknowledgement
+//! association establishes no acquisition outcome or fresh dispatch permission.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport

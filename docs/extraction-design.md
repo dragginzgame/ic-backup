@@ -266,12 +266,16 @@ status/read visibility must never be mistaken for write authority.
 | `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
 | `ConsistencyProvider` | Implemented ephemeral current stopped/drained target and existing exact application fence validation under original guarantee; no provider or acquisition/release effects |
 | `ConsistencyCoordinator` | Original fence obligation retention and exact acquisition-journal projections are implemented; actual acquisition, authenticated uncertain-effect reconciliation and controlled release remain intended integration responsibilities |
+| `FenceReconciliationProvider` | Implemented read-only original pending acquisition/reserved observation binding and pure actual unit/attribution checks; no installed provider, automatic receipts or acquisition/release effects |
+| `FenceAcquisitionProvider` | Implemented bounded original application update envelope and exact reserved-mutation/passive acknowledgement association contract; actual permissions, whole-unit semantics and exclusive dispatch custody remain integration-owned, with no installed provider |
 | `RestoreSafetyProvider` | Implemented immutable original source/safety requirement and fresh exact load/start evidence matching; actual source, fence, restored acceptance and external-obligation qualification remain integration-owned |
 | `ArtifactStore` | Local durable custody, streamed verification, references and retention locks |
 | `Clock` | Testable deadline/lease policy; time is not an authority identifier |
 
-Membership, direct-control, snapshot-read, consistency and restore-safety observation ports have maintained Rust signatures;
-the other rows remain intended responsibilities. The membership request derives exact original intent
+Membership, direct-control, snapshot-read, consistency, restore-safety and
+fence-reconciliation observation ports have maintained Rust signatures. The acquisition
+update port also has a maintained Rust signature; other rows remain intended
+responsibilities. The membership request derives exact original intent
 and operation identity, immutable full inventory/selection, a caller-owned fresh
 challenge, explicit before/after boundary and 0–1,024 descriptive remote-call
 ceiling. Actual result context and full inventory must match; policy rejects old
@@ -366,6 +370,30 @@ or terminal admission exists. Original request semantics and whole-selection
 fence custody remain integration-qualified. See
 [the schema](contracts/fence-obligation.schema.json) and
 [implemented boundary](extraction-boundary.md#original-application-fence-obligation-retention).
+
+Fence reconciliation now binds an already pending original acquisition and its exact
+reserved observation. Actual context, full inventory, selection and both attempt IDs
+must match. Acquisition needs exclusive original-request attribution and the exact
+Active fence/revisions; restore also retains whole-unit, rewind-independent custody
+and replay-safety evidence. Current absence/inactivity cannot prove nonapplication.
+Lost provider replies remain pending and spent; settled uncertainty and retained
+late replies are distinct. Pure views create no receipts, redispatch or release.
+Actual authenticated providers, acquisition and controlled release remain pending.
+See the [typed contract](contracts/fence-reconciliation-port.json).
+
+Application acquisition now has a bounded exact host update envelope. Its canonical
+receiver, mode, exact method and opaque arguments are hashed before the plan, avoiding
+a cycle through requirement/obligation digests. The original acquisition operation
+subsequently binds that digest. Requests require an already reserved exact mutation
+and no pending observation recovery. Provider admission still needs actual context,
+permissions, original whole-unit argument semantics, complete prerequisites and
+exclusive proof of no prior dispatch. The single-update contract forbids hidden
+reissues/observations; reconstructed pending requests supply no retry authority.
+Acknowledgements associate full original authority and exact mutation only, with
+no outcome, current Active proof or automatic receipt. Failures keep pending consumed
+spending and original obligations/source references. Actual application codecs,
+authenticated providers and controlled release remain unimplemented. See the
+[typed contract](contracts/fence-acquisition-port.json).
 
 Snapshot load can restore old journals, timer state and application intent while
 external payments, providers and other canisters have already advanced. An

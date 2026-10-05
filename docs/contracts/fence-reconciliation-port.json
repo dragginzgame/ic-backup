@@ -1,0 +1,47 @@
+{
+   "digest_goldens" : [
+      {
+         "authority" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+         "challenge" : "1212121212121212121212121212121212121212121212121212121212121212",
+         "mutation_attempt" : 1,
+         "obligation" : "abababababababababababababababababababababababababababababababab",
+         "sha256" : "774234e24a1ff45dcc5511ff3adebac4aba0cf9d9fcf539bd88578add07eb9c0"
+      },
+      {
+         "authority" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+         "challenge" : "1212121212121212121212121212121212121212121212121212121212121212",
+         "mutation_attempt" : 258,
+         "obligation" : "abababababababababababababababababababababababababababababababab",
+         "sha256" : "e7afeb875eb28fb8537ec06ab3bb4ae8adb400b84f3dc6738452f7bdad84699d"
+      }
+   ],
+   "kind" : "ephemeral original fence-acquisition reconciliation port; no persisted authority schema",
+   "observations" : {
+      "acquired_capture" : "Actual Active original fence and membership revision, whole-unit write/membership/timer/external-work/drained evidence, exclusive original-request attribution.",
+      "acquired_restore" : "Actual Active original fence/membership/external-obligation revisions, whole-selection rewind-independent/replay-safe custody, exclusive original-request attribution. Controlled start requires its separate fresh safety contract.",
+      "actual" : "Authenticated actual context/full inventory, nonempty unique canonical original selected unit, exact request/attempt association and opaque evidence binding all fields.",
+      "bounds" : {
+         "remote_observations_per_request" : 1,
+         "selected_targets" : 1024,
+         "total_attempts" : "existing immutable 1024 combined mutation/observation limit"
+      },
+      "not_acquired" : "Qualified exact nonapplication excluding transient acquisition/release; current absence/inactivity alone is insufficient.",
+      "unresolved" : "Qualified settled observation cannot resolve acquisition; not a lost reply or provider failure."
+   },
+   "provider" : "FenceReconciliationProvider::observe_fence_acquisition",
+   "recovery" : [
+      "No new persistence schema/counter, automatic receipt, default provider or authenticated backend. Existing journals/obligations remain the owners.",
+      "Observation reservation has consumed original allowance before provider invocation. Reconstructing a request grants no repeat-dispatch permission.",
+      "Unavailable, Unsupported and Indeterminate retain the exact pending observation and mutation; never record Uncertain from a lost reply.",
+      "Only a separately qualified actual integration may submit the exact observed receipt to the existing guarded journal owner.",
+      "Pending, Applied, NotApplied and Uncertain retain original obligations and source references; no refund, acquisition retry, capture/load/start or terminal/fence/reference release.",
+      "Terminal replay is local and invokes no provider. Fresh live evidence is separate. Actual single-call accounting, authority, attribution, custody and exclusive chronology require integration qualification."
+   ],
+   "request" : {
+      "digest" : "NUL-terminated ASCII ic-backup/fence-reconciliation/v1 domain; 64 lowercase ASCII obligation hash; 64 lowercase ASCII original authority hash; big-endian u32 mutation attempt; 64 lowercase ASCII challenge hash.",
+      "intent" : "Exact original whole-unit obligation, full-plan derived acquisition authority including budgets, pending mutation and fresh caller-owned challenge.",
+      "reservation" : "Derive intent digest before reserving; bind request only after exact pending observation reservation. Recheck original current journal before admitting result.",
+      "result_association" : "Exact request hash and both original mutation/allocated observation IDs. Observation ID is allocated after intent hashing; independent result association rejects cross-attempt replay."
+   },
+   "version" : 1
+}

@@ -151,6 +151,17 @@ impl AttemptJournalRecord {
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
         &self.authority
     }
+    /// Read the exact canonical request of the unresolved observation, if any.
+    ///
+    /// This projects existing validated history. It creates no reservation or
+    /// repeat-dispatch permission and returns None after a settled observation.
+    #[must_use]
+    pub fn pending_observation_request(&self) -> Option<&str> {
+        self.projection
+            .pending_observation
+            .as_ref()
+            .map(|pending| pending.request.as_str())
+    }
     /// Project local evidence without IO or replenishing authority.
     #[must_use]
     pub fn view(&self) -> AttemptJournalView {

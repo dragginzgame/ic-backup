@@ -25,15 +25,110 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer's released repository baseline is `0.2.0` at `3e76590`. The
-workspace manifest remains `0.2.0`; the maintainer selected one undated `0.2.1`
-changelog draft for the current work.
-The implementation and selected changelog were committed by the maintainer at
-`8646589`; the release-helper correction below remains uncommitted.
-The retained release receipt identifies validated source
-`65c9532d85de0d74f9ed19b9237f1dbbcc961a61` and its `release-verify` gate. The
-maintainer reports pushing the release; registry publication was not observed.
-This continuation performs no real version transaction or release command.
+The maintainer reports `0.2.1` live. The repository baseline is release commit
+`6a912e3d53967311e6bf9825f2f8960d31d9190d`, with manifest `0.2.1` and receipt
+source `014391d606eacfb61f38519e457aad0e140dd2a3` under `release-verify`.
+Read-only receipt verification passed before opening the new draft; the maintainer
+has now selected its undated `0.2.2` changelog label. Package version remains `0.2.1`.
+Registry publication was not independently observed. This continuation changes
+no package version, dependency lock, release receipt or vendored tooling and
+performs no real release transaction, commits, pushes or live effects.
+
+## Exact application fence acquisition requests
+
+The [maintained boundary](../extraction-boundary.md#exact-application-fence-acquisition-requests)
+adds immutable bounded application receiver/method/argument envelopes and a
+single-update provider contract under the exact already reserved original mutation.
+The nonrecursive payload digest binds raw canonical receiver, update mode and exact
+method/argument bytes before the plan/requirement/obligation. Methods retain 1..128
+visible ASCII bytes; opaque arguments are bounded to 1 MiB before copying and Debug
+excludes their contents. See the
+[typed contract and independent goldens](../contracts/fence-acquisition-port.json).
+
+Passive acknowledgement association binds full original authority and mutation
+attempt, while retaining the pending original journal unchanged. It produces no
+outcome or receipt. Provider admission requires actual whole-unit application
+semantics, original bytes/custody, fresh context/permissions, complete prerequisites
+and proof of no prior dispatch. Reconstruction after interruption grants no retry.
+Acknowledgements/all provider failures retain original obligations, source references
+and consumed pending attempts; recovery uses the reserved observation contract.
+
+Fresh targeted Linux evidence:
+
+- Eight new unit cases pass; the focused `fence_` selection also reran related owners:
+  32 total passing tests in `target/fence-acquisition-related-unit.log`.
+- The new public recovery journey and two existing reconciliation journeys pass:
+  `target/fence-acquisition-public.log`. Native fixtures retain exact inputs and
+  obligations/references through acknowledgement/failure, reopen and observation
+  handoff without a second acquisition invocation. No IC/application effects occur.
+- All-target/all-feature warning-denied Clippy passes:
+  `target/fence-acquisition-clippy.log`. Earlier cast/test-format and long-test
+  failures are retained in `clippy-first.log` and `clippy-second.log` with the same prefix.
+- Warning-denied rustdoc and Rust 1.91.0 all-target/all-feature compilation pass:
+  `target/fence-acquisition-docs.log` and `target/fence-acquisition-msrv.log`.
+- Formatting/diff checks pass; Shared Tooling verifies all 12 pinned files in
+  `target/fence-acquisition-shared-tooling.log`. Source revision/checksums, retained
+  inputs, exact consumers and independent goldens pass
+  `target/fence-acquisition-provenance-check.log`.
+- Read-only `release-plan VERSION=0.2.2` reports `0.2.1` -> `0.2.2`; changelog
+  admission accepts the selected draft. No preparation or release gate ran.
+
+[Fresh Canic inspection](../fence-acquisition-source.json) is bound to
+`071a9c64d7ff71ba7a0a695d24a66de11b651aed` with a separately identified dirty
+working tree; exact source copies/generators are retained under
+`target/fence-acquisition-*`. Earlier provenance is unchanged. No Canic default
+program, command flags, runner, acquisition code or generic fence proof is imported.
+All additions remain uncommitted and additive; existing public contracts and v1
+records are unchanged. Actual application codecs/providers, exclusive dispatch
+admission/custody and terminal-controlled release remain pending before runners.
+Native macOS and actual application/IC qualification remain outside these checks.
+
+## Reserved fence acquisition reconciliation
+
+The [maintained boundary](../extraction-boundary.md#reserved-fence-acquisition-reconciliation)
+adds a read-only observer contract for an existing pending original acquisition
+under its exact reserved observation. Requests/results bind original authority,
+budgets, obligation, challenge and both attempt IDs. Pure checks require exact
+actual context, full inventory, selected unit and explicitly attributed Active
+fence/revisions. Absence alone proves no nonapplication; a lost reply remains
+pending rather than becoming settled uncertainty. See the
+[typed contract and independent goldens](../contracts/fence-reconciliation-port.json)
+and [fresh source inspection](../fence-reconciliation-source.json).
+
+Fresh targeted Linux evidence:
+
+- Ten unit cases pass: `target/fence-reconciliation-unit-final.log`.
+- Two public native recovery journeys pass: `target/fence-reconciliation-public.log`.
+  Provider failures retain exact spent pending evidence and references across reopen;
+  retained late replies need no repeat provider call. Passive fixture claims exercise
+  existing guarded receipt transitions without qualifying real application effects.
+- Clippy passes for package all-targets/all-features with warnings denied:
+  `target/fence-reconciliation-clippy.log`.
+- Rust 1.91.0 all-targets/all-features check passes:
+  `target/fence-reconciliation-msrv.log`.
+- Rustdoc with warnings denied passes: `target/fence-reconciliation-docs.log`.
+- Formatting and diff whitespace checks pass; Shared Tooling verifies all 12 pinned
+  files in `target/fence-reconciliation-shared-tooling.log`. Source checksums,
+  retained copies, exact consumer references and independent binary goldens pass
+  `target/fence-reconciliation-provenance-check.log`.
+
+Initial Clippy documentation-formatting and unused-import failures remain in
+`target/fence-reconciliation-clippy-first-attempt.log` and
+`target/fence-reconciliation-clippy-second-attempt.log`; corrected code passes.
+Source inspection copies and independent Perl generators are retained under
+`target/fence-reconciliation-*`. Earlier target logs/source copies referenced
+below are absent in this checkout; older entries describe historical results,
+not freshly retained qualification. This batch leaves all changes uncommitted.
+
+The observer installs no authenticated provider or acquisition/release workflow;
+views create no automatic receipts, spending, dispatch permits or terminal proof.
+Actual original acquisition semantics, authenticated attribution/custody and
+dispatch admission remain integration-owned, followed by controlled terminal
+release and unresolved IC effects before runners. Native macOS, actual application
+fencing and PocketIC/real-IC effects remain unqualified by these checks.
+
+The following entries record work now included in the released 0.2.1 baseline;
+their versions and evidence paths describe the conditions at implementation time.
 
 ## Explicit release selection and provisional changelog labels
 
@@ -67,13 +162,13 @@ fix; vendored Shared Tooling bytes and sibling repositories are unchanged.
 | What works today? | Local artifacts, bounded records, journals, plans, selected IC codecs and pure integration checks |
 | What has been qualified? | Native local filesystem, record, policy and process behavior within the evidence described below |
 | What remains integration-owned? | Live membership, authority, application consistency, authenticated calls and restored-state acceptance |
-| What is the next product boundary? | Fence lifecycle and uncertain-effect reconciliation contracts, then runners, transport and PocketIC/real-IC qualification |
+| What is the next product boundary? | Qualified application acquisition codecs/providers and exclusive dispatch custody, then controlled release, remaining IC reconciliation and runners/transport qualification |
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-product-readiness.svg" alt="Product readiness stages showing the implemented local safety foundation followed by application adapters, authenticated IC transport and runners, and PocketIC and live qualification" width="800">
 </p>
 
-The current batch adds immutable original application fence obligations and exact
+The released batch added immutable original application fence obligations and exact
 acquisition-journal recovery, following the restore/source/safety declaration batch.
 Candid 0.10.37 and management SDK 0.11.0 remain
 locked unchanged. The manifest, lockfile, release receipt, earlier provenance and

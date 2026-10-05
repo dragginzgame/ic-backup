@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.2]
+
+- Bind exact bounded application acquisition receiver/method/arguments to the
+  original reserved mutation. Add a single-update provider and passive reply
+  association contract; failures and acknowledgements retain pending spending
+  and obligations without automatic settlement, retries or release.
+- Bind fence-acquisition reconciliation to exact original pending mutation and
+  observation reservations. Add passive application attribution checks and a
+  read-only provider contract, preserving spent attempts, obligations and source
+  references through failures and late replies without automatic settlement or release.
+
 ## [0.2.1] - 2026-10-05
 
 - Let an explicit release command relabel the single current numbered draft to

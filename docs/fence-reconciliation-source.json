@@ -1,0 +1,739 @@
+{
+   "adaptation" : "Local design contract refinement reusing original plan, obligation and journal owners. Source exact receipt association informs binding; no application fence proof or source code is copied.",
+   "consumer_disposition" : "All Canic consumers remain unchanged and read only; original source licenses and earlier provenance remain retained. Reference excerpts identify callers, not inspected behavior outside the stated ranges.",
+   "consumer_references" : [
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionOperationReceiptOutcome,",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Completed",
+         "line" : 219,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionOperationReceiptOutcome, BackupExecutionOperationState},",
+         "line" : 12,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionOperationReceiptOutcome::Completed",
+         "line" : 477,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionOperationReceipt, BackupExecutionOperationState,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let failed_receipt = BackupExecutionOperationReceipt::failed(",
+         "line" : 218,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let completed_receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 234,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let completed_receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 279,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionOperationReceiptOutcome,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/persistence/integrity/execution.rs"
+      },
+      {
+         "excerpt" : ") -> BackupExecutionOperationReceiptOutcome {",
+         "line" : 148,
+         "path" : "crates/canic-backup/src/persistence/integrity/execution.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Completed",
+         "line" : 151,
+         "path" : "crates/canic-backup/src/persistence/integrity/execution.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionOperationState::Failed => BackupExecutionOperationReceiptOutcome::Failed,",
+         "line" : 153,
+         "path" : "crates/canic-backup/src/persistence/integrity/execution.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionOperationState::Skipped => BackupExecutionOperationReceiptOutcome::Skipped,",
+         "line" : 154,
+         "path" : "crates/canic-backup/src/persistence/integrity/execution.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionJournalOperation, BackupExecutionOperationReceipt,",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 49,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 66,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 102,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> BackupExecutionOperationReceipt {",
+         "line" : 129,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    let mut receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 130,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 147,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 169,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 198,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> BackupExecutionOperationReceipt {",
+         "line" : 263,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    let mut receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 264,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 344,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> BackupExecutionOperationReceipt {",
+         "line" : 377,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    let mut receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 378,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 393,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    Ok(BackupExecutionOperationReceipt::completed(",
+         "line" : 448,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournal, BackupExecutionOperationReceipt},",
+         "line" : 9,
+         "path" : "crates/canic-cli/src/backup/tests/fixtures/execution.rs"
+      },
+      {
+         "excerpt" : "    let mut receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 35,
+         "path" : "crates/canic-cli/src/backup/tests/fixtures/execution.rs"
+      },
+      {
+         "excerpt" : "    let receipt = BackupExecutionOperationReceipt::failed(",
+         "line" : 70,
+         "path" : "crates/canic-cli/src/backup/tests/fixtures/execution.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionJournalOperation, BackupExecutionOperationReceipt,",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 40,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "            Ok(BackupExecutionOperationReceipt::completed(",
+         "line" : 77,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 91,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    Ok(BackupExecutionOperationReceipt::completed(",
+         "line" : 96,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<BackupExecutionOperationReceipt, BackupRunnerError> {",
+         "line" : 108,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    Ok(BackupExecutionOperationReceipt::completed(",
+         "line" : 113,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionOperationReceipt,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionOperationReceiptOutcome, BackupExecutionOperationState,",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "                let receipt = crate::execution::BackupExecutionOperationReceipt::failed(",
+         "line" : 226,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 278,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "                    && receipt.outcome == BackupExecutionOperationReceiptOutcome::Failed",
+         "line" : 390,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "                let receipt = BackupExecutionOperationReceipt::failed(",
+         "line" : 452,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "            journal.record_operation_receipt(BackupExecutionOperationReceipt::completed(",
+         "line" : 513,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 531,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "                && receipt.outcome == BackupExecutionOperationReceiptOutcome::Failed",
+         "line" : 535,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 563,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 607,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Option<BackupExecutionOperationReceipt>, BackupRunnerError> {",
+         "line" : 691,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "        return Ok(Some(BackupExecutionOperationReceipt::completed(",
+         "line" : 705,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyJournal, RestoreApplyOperationReceiptOutcome, RestoreApplyOperationState,",
+         "line" : 8,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : ") -> RestoreApplyOperationReceiptOutcome {",
+         "line" : 88,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyOperationReceiptOutcome::CommandCompleted",
+         "line" : 91,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyOperationState::Failed => RestoreApplyOperationReceiptOutcome::CommandFailed,",
+         "line" : 93,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyOperationKindCounts, RestoreApplyOperationReceipt, RestoreApplyRunnerCommand,",
+         "line" : 117,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            .push(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 130,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            .push(RestoreApplyOperationReceipt::command_failed(",
+         "line" : 141,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            .push(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 170,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            .push(RestoreApplyOperationReceipt::command_failed(",
+         "line" : 199,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            .push(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 210,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationReceipt, RestoreApplyRunnerCommand,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let reconciled_success = reconcile_restore_operation(",
+         "line" : 182,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn reconcile_restore_operation(",
+         "line" : 475,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyOperationKind::StopCanister => reconcile_lifecycle_operation(",
+         "line" : 489,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyOperationKind::StartCanister => reconcile_lifecycle_operation(",
+         "line" : 496,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn reconcile_lifecycle_operation(",
+         "line" : 512,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    journal.record_operation_receipt(RestoreApplyOperationReceipt::command_failed(",
+         "line" : 745,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    journal.record_operation_receipt(RestoreApplyOperationReceipt::command_failed(",
+         "line" : 785,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    journal.record_operation_receipt(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 823,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    journal.record_operation_receipt(RestoreApplyOperationReceipt::command_failed(",
+         "line" : 864,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationReceipt, RestoreApplyOperationReceiptOutcome, RestoreApplyOperationState,",
+         "line" : 22,
+         "path" : "crates/canic-backup/src/restore/runner/mod.rs"
+      },
+      {
+         "excerpt" : "        let upload_receipt = RestoreApplyOperationReceipt::command_completed(",
+         "line" : 1404,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let upload_receipt = RestoreApplyOperationReceipt::command_completed(",
+         "line" : 1687,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationKind, RestoreApplyOperationKindCounts, RestoreApplyOperationReceipt,",
+         "line" : 19,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationReceiptOutcome, RestoreApplyOperationState, RestoreApplyPendingSummary,",
+         "line" : 20,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationKind, RestoreApplyOperationKindCounts, RestoreApplyOperationReceipt,",
+         "line" : 22,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationReceiptOutcome, RestoreApplyOperationState, RestoreApplyPendingSummary,",
+         "line" : 23,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyCommandOutput, RestoreApplyOperationReceipt, RestoreApplyOperationReceiptOutcome,",
+         "line" : 20,
+         "path" : "crates/canic-backup/src/restore/apply/journal/mod.rs"
+      },
+      {
+         "excerpt" : "    pub operation_receipts: Vec<RestoreApplyOperationReceipt>,",
+         "line" : 67,
+         "path" : "crates/canic-backup/src/restore/apply/journal/mod.rs"
+      },
+      {
+         "excerpt" : "        receipt: RestoreApplyOperationReceipt,",
+         "line" : 218,
+         "path" : "crates/canic-backup/src/restore/apply/journal/mod.rs"
+      },
+      {
+         "excerpt" : "    pub operation_receipts: Vec<BackupExecutionOperationReceipt>,",
+         "line" : 30,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "/// BackupExecutionOperationReceipt",
+         "line" : 75,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "pub struct BackupExecutionOperationReceipt {",
+         "line" : 83,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "    pub outcome: BackupExecutionOperationReceiptOutcome,",
+         "line" : 93,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "/// BackupExecutionOperationReceiptOutcome",
+         "line" : 111,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "pub enum BackupExecutionOperationReceiptOutcome {",
+         "line" : 119,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : ") -> RestoreApplyOperationReceipt {",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationReceipt::command_completed(",
+         "line" : 11,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let receipt = RestoreApplyOperationReceipt::command_completed(",
+         "line" : 55,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        let err = serde_json::from_value::<RestoreApplyOperationReceipt>(value)",
+         "line" : 148,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    serde_json::from_value::<RestoreApplyOperationReceipt>(value)",
+         "line" : 162,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let receipt = RestoreApplyOperationReceipt::command_completed(",
+         "line" : 174,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    receipt: RestoreApplyOperationReceipt,",
+         "line" : 283,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        .record_operation_receipt(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 729,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        .record_operation_receipt(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 755,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        .record_operation_receipt(RestoreApplyOperationReceipt::command_completed(",
+         "line" : 835,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        receipt: BackupExecutionOperationReceipt,",
+         "line" : 356,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Completed => {",
+         "line" : 370,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Failed => BackupExecutionOperationState::Failed,",
+         "line" : 373,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Skipped => {",
+         "line" : 374,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "    BackupExecutionOperationReceipt, BackupExecutionOperationReceiptOutcome,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "impl BackupExecutionOperationReceipt {",
+         "line" : 14,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Completed,",
+         "line" : 25,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "            BackupExecutionOperationReceiptOutcome::Failed,",
+         "line" : 42,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "        outcome: BackupExecutionOperationReceiptOutcome,",
+         "line" : 51,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "        if self.outcome == BackupExecutionOperationReceiptOutcome::Failed {",
+         "line" : 121,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "            && self.outcome == BackupExecutionOperationReceiptOutcome::Completed",
+         "line" : 128,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "            && self.outcome == BackupExecutionOperationReceiptOutcome::Completed",
+         "line" : 136,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "            && self.outcome == BackupExecutionOperationReceiptOutcome::Completed",
+         "line" : 144,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "/// RestoreApplyOperationReceipt",
+         "line" : 16,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "pub struct RestoreApplyOperationReceipt {",
+         "line" : 24,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "    pub outcome: RestoreApplyOperationReceiptOutcome,",
+         "line" : 27,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "impl RestoreApplyOperationReceipt {",
+         "line" : 53,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyOperationReceiptOutcome::CommandCompleted,",
+         "line" : 68,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyOperationReceiptDetails {",
+         "line" : 69,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyOperationReceiptOutcome::CommandFailed,",
+         "line" : 96,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyOperationReceiptDetails {",
+         "line" : 97,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "        outcome: RestoreApplyOperationReceiptOutcome,",
+         "line" : 113,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "        details: RestoreApplyOperationReceiptDetails,",
+         "line" : 114,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "            && self.outcome == RestoreApplyOperationReceiptOutcome::CommandCompleted",
+         "line" : 138,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "            if self.outcome == RestoreApplyOperationReceiptOutcome::CommandCompleted {",
+         "line" : 203,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "        if self.outcome == RestoreApplyOperationReceiptOutcome::CommandFailed {",
+         "line" : 210,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "/// RestoreApplyOperationReceiptOutcome",
+         "line" : 238,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "pub enum RestoreApplyOperationReceiptOutcome {",
+         "line" : 246,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "/// RestoreApplyOperationReceiptDetails",
+         "line" : 252,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "struct RestoreApplyOperationReceiptDetails {",
+         "line" : 259,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "    let receipt = BackupExecutionOperationReceipt::failed(",
+         "line" : 40,
+         "path" : "crates/canic-backup/src/execution/tests/transitions.rs"
+      },
+      {
+         "excerpt" : "    let mut receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 96,
+         "path" : "crates/canic-backup/src/execution/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let receipt = BackupExecutionOperationReceipt::failed(",
+         "line" : 49,
+         "path" : "crates/canic-backup/src/execution/tests/restart.rs"
+      },
+      {
+         "excerpt" : "    let receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/execution/tests/receipts.rs"
+      },
+      {
+         "excerpt" : "        let err = serde_json::from_value::<BackupExecutionOperationReceipt>(value)",
+         "line" : 33,
+         "path" : "crates/canic-backup/src/execution/tests/receipts.rs"
+      },
+      {
+         "excerpt" : "    let receipt = BackupExecutionOperationReceipt::completed(",
+         "line" : 49,
+         "path" : "crates/canic-backup/src/execution/tests/receipts.rs"
+      },
+      {
+         "excerpt" : "    let receipt = BackupExecutionOperationReceipt::completed(&journal, &operation, None);",
+         "line" : 83,
+         "path" : "crates/canic-backup/src/execution/tests/receipts.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/model/fence_reconciliation/mod.rs",
+      "crates/ic-backup/src/policy/fence_reconciliation/mod.rs",
+      "crates/ic-backup/src/ports/fence_reconciliation/mod.rs",
+      "crates/ic-backup/src/model/attempt_journal/mod.rs",
+      "crates/ic-backup/src/test_support/fence_reconciliation/mod.rs",
+      "crates/ic-backup/tests/fence_reconciliation.rs"
+   ],
+   "contract" : "docs/contracts/fence-reconciliation-port.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Read only; no product source copied. Exact source bytes retained solely as inspection evidence.",
+         "inspected_line_ranges" : [
+            [
+               475,
+               595
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "retained_copy" : "target/fence-reconciliation-source.qsb2he/crates/canic-backup/src/restore/runner/execute.rs",
+         "sha256" : "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079"
+      },
+      {
+         "disposition" : "Read only; no product source copied. Exact source bytes retained solely as inspection evidence.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               319
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs",
+         "retained_copy" : "target/fence-reconciliation-source.qsb2he/crates/canic-backup/src/restore/apply/journal/receipts/mod.rs",
+         "sha256" : "9f308a2284d16a67cf1fd52cf9c7fbe3230795175fa4c871f28885d4eb530525"
+      },
+      {
+         "disposition" : "Read only; no product source copied. Exact source bytes retained solely as inspection evidence.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               154
+            ]
+         ],
+         "path" : "crates/canic-backup/src/execution/receipt.rs",
+         "retained_copy" : "target/fence-reconciliation-source.qsb2he/crates/canic-backup/src/execution/receipt.rs",
+         "sha256" : "b27b9208ba71123c87c244c1c9ffbd76609156acb82ff1d2e02515429d3eb9e2"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Fresh native record, pure policy and guarded persistence recovery only. Actual authentication, original request custody, exclusive attribution/chronology, permissions, spending and application/backend effects require separate qualification.",
+   "source_findings" : [
+      "Inspected lifecycle reconciliation uses current state equivalence; upload reconciliation uses baseline/candidate inventory. Neither proves exclusive original application-fence attribution; load and verify remain unreconciled in the match.",
+      "Inspected apply/execution receipts validate original plan/run/operation/target/attempt/command and artifact identity. Command completion or matching state is not generic fence acquisition proof.",
+      "The local observer separately binds pending mutation, exact observation reservation and attributed acquisition/nonapplication/settled uncertainty. It installs no provider or settlement workflow."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "a2108801d7b2d5802f3e864556dc8781b3b382df",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

@@ -1,0 +1,42 @@
+{
+   "acknowledgement" : "Passive full original authority digest, exact mutation attempt and opaque retained reply evidence. Pure association authenticates no response/context and produces no outcome/receipt, Active custody or negative proof.",
+   "digest_goldens" : [
+      {
+         "arguments_hex" : "000102ff",
+         "method" : "acquire_fence",
+         "principal_hex" : "00000000000000060101",
+         "sha256" : "fecac647c166e16ec299de78dc8c9e3bd4360d6eab6eec78adcb2cd8566375fd",
+         "target" : "renrk-eyaaa-aaaaa-aaada-cai"
+      },
+      {
+         "arguments_hex" : "",
+         "method" : "Acquire.v1",
+         "principal_hex" : "00000000000000010101",
+         "sha256" : "885d708ad2afbb0208df83eff07605d8b7fd14edd1bdfad81a1792480d1f8bb5",
+         "target" : "rrkah-fqaaa-aaaaa-aaaaq-cai"
+      }
+   ],
+   "effects" : [
+      "Exactly one previously durably accounted application host update; no hidden reissues, batching, proxy/query substitution or funding.",
+      "Retain original obligations and restore source references before invocation. A routing target does not narrow whole-selection coverage.",
+      "Unavailable, Unsupported, Indeterminate, drop and death retain spent pending mutation, obligation and source references. No automatic nonapplication or refund.",
+      "Unknown dispatch or lost reply reconciles under an exact observation reservation; reconstructing a pending request never authorizes repeating mutation.",
+      "Separately qualified integrations may submit direct receipts through canonical journal owners only after actual original-request attribution. An acknowledgement alone is insufficient.",
+      "Terminal replay invokes no provider; no default implementation, actual acquisition qualification or terminal/fence/reference release exists."
+   ],
+   "kind" : "ephemeral exact application acquisition update port; no persisted authority schema",
+   "payload" : {
+      "arguments" : "0..1048576 opaque original bytes; checked before copying, debug redacts content. Application codec owns whole-unit/purpose/fence/revision semantics.",
+      "digest" : "NUL-terminated ASCII ic-backup/application-fence-acquisition/v1 domain; u8 raw principal length and raw identity; fixed update byte 1; big-endian u32 method byte length and exact ASCII bytes; big-endian u64 argument length and exact bytes.",
+      "method" : "1..128 visible ASCII bytes, case and punctuation retained exactly.",
+      "nonrecursive" : "Payload is constructed before plan/requirement/obligation. These later owners bind exact payload digest; payload excludes their hashes and budgets. Application retains original bytes outside rewindable snapshots before effects.",
+      "routing" : "Exact canonical application receiver equals original operation target and effective routing target; no management/proxy/query/default method."
+   },
+   "provider" : "FenceAcquisitionProvider::acquire_fence",
+   "request" : {
+      "admission" : "Structural binding is not a dispatch permit. Actual context, permissions, membership, original argument semantics, prerequisite evidence, exclusive custody and proof of no prior dispatch remain integration-owned.",
+      "original" : "Exact retained full plan, requirement-bound whole-unit obligation, payload target/digest and existing original acquisition journal authority including immutable budgets.",
+      "reservation" : "Requires exact already pending mutation and no pending observation; recheck current journal before reply association. Never create/reset/reserve spending."
+   },
+   "version" : 1
+}

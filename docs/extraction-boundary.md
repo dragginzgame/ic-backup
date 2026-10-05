@@ -1227,6 +1227,98 @@ dispatch, current Active proof, terminal proof or fence/reference release is
 implemented. [Fresh Canic inspection](fence-obligation-source.json) copies no code
 and supplies no generic application-fence release qualification.
 
+### Reserved fence acquisition reconciliation
+
+`model::fence_reconciliation::FenceReconciliationIntent` binds the retained original
+obligation and full-plan-derived acquisition authority, including original limits,
+to an existing pending mutation and caller-owned challenge. Intent hashing precedes
+observation reservation; `FenceReconciliationRequest` requires that exact pending
+observation. The journal's `pending_observation_request` reads its existing validated
+projection without changing v1 records, counters or transitions. Structural admission
+is not a dispatch permit; durable custody and no prior dispatch remain integration-owned.
+
+The [typed contract and independent binary goldens](contracts/fence-reconciliation-port.json)
+hash the NUL-terminated `ic-backup/fence-reconciliation/v1` domain, lowercase ASCII
+obligation/authority hashes, big-endian u32 mutation attempt and challenge hash.
+Actual results bind both mutation and observation IDs separately, rejecting replay
+across reservations even when a challenge is reused. Passive observations require
+canonical unique actual targets within 1,024 entries and the existing combined
+1,024-attempt bound. The single-remote-observation descriptive ceiling grants no
+call allowance or fresh permissions; batching paid calls under one reservation is forbidden.
+
+`policy::fence_reconciliation::validate` rechecks the unchanged current journal and
+matches exact actual context, full original inventory, selected unit and request/IDs.
+Acquired capture/restore evidence reuses existing whole-unit safety fields, requiring
+the exact Active fence and original revisions plus exclusive original-request
+attribution. Restore additionally retains rewind-independent custody and replay
+safety; fresh load/start admission remains separate. Current absence or inactivity
+cannot establish nonapplication: negative evidence must exclude transient acquisition
+and release. Only an authenticated settled observation can claim unresolved uncertainty.
+
+The returned view is a passive outcome claim. It performs no IO, serialization,
+provider call or automatic journal receipt. Only a separately qualified integration
+can submit an actual receipt to existing guarded transition owners. Provider failure,
+drop or process death leaves the observation pending and spent; retained late replies
+may be admitted without another provider call. All outcomes retain obligations and
+source references, with no refund, acquisition retry or fence/reference release.
+Terminal replay invokes no provider. There is no installed authenticated provider,
+acquisition/release implementation or terminal proof.
+
+Ten focused unit cases and two public native recovery journeys cover exact identities,
+bounds, negative/uncertain claims, replay rejection, all provider failures, exhausted
+spending, late replies and reopen retention. Passive native fixtures qualify local
+contracts and persistence only. [Fresh Canic inspection](fence-reconciliation-source.json)
+copies no product code and supplies no generic application-fence attribution proof;
+actual freshness, authenticated association, exclusive chronology, accounting and
+custody require application/backend qualification.
+
+### Exact application fence acquisition requests
+
+`model::fence_acquisition::FenceAcquisitionPayload` owns an immutable exact
+application receiver/method/argument envelope. Receiver equals effective routing
+target; the management canister is excluded. Method spelling is 1..128 visible ASCII
+bytes and opaque arguments are at most 1 MiB, checked before copying. Debug output
+retains length but excludes argument content. There is no query/default/proxy lane
+or generic application argument codec. Integrations own retained original bytes and
+their whole-unit purpose/fence/revision semantics; the routing target narrows no scope.
+
+The [typed contract and independent goldens](contracts/fence-acquisition-port.json)
+specify SHA-256 over the NUL-terminated `ic-backup/application-fence-acquisition/v1`
+domain, u8 principal length/raw canonical identity, fixed update byte 1, big-endian
+u32 method length/exact bytes and u64 argument length/exact bytes. Payload construction
+precedes the plan; later original plan/requirement/obligation owners bind the payload
+without recursive hashes. No persisted schema, counter or new accounting owner is added.
+
+`FenceAcquisitionRequest` validates exact original obligation/plan and journal
+authority/limits, payload target/digest and already pending mutation. A pending
+observation rejects mutation association; current journal admission is rechecked for
+acknowledgements. The structural request supplies no fresh dispatch permission or
+proof of no earlier dispatch. Qualified integrations must retain original inputs
+and source references, establish actual context/whole-unit membership/permissions,
+application semantics, prerequisites, exclusive custody and no prior dispatch before
+one original accounted update. Hidden retries, batching, proxy/query substitutions,
+funding and extra remote observations are forbidden within that invocation.
+
+`FenceAcquisitionAcknowledgement` is passive full authority/attempt/reply-evidence
+association. Pure `validate_acknowledgement` performs no IO, serialization, provider
+call or transition and returns no outcome. An associated acknowledgement proves no
+acquisition, actual authentication, Active custody, exclusive attribution or negative
+effect. Qualified direct settlement remains integration-owned through existing
+journal transition owners. Provider failures, drop and death retain pending spent
+attempts, obligations and source references. Unknown dispatch/lost replies require
+reserved reconciliation; request reconstruction never authorizes another mutation.
+Terminal replay remains provider-free; no installed provider, live effects or release
+API is implemented.
+
+Focused native cases cover independent envelope bytes, canonical targets, bounds,
+original authority/budget drift, pending/settled/recovering requests and passive
+acknowledgement association. A public native journey retains exact inputs, obligations
+and references across acknowledgements/all provider errors, reopen and handoff to
+reserved reconciliation without another mutation invocation. These fixtures establish
+local association/persistence only. [Fresh Canic inspection](fence-acquisition-source.json)
+imports no production code, default command, effect flag or dispatch/outcome proof.
+Actual application/IC backend qualification remains required.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
 | Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |

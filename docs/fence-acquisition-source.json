@@ -1,0 +1,823 @@
+{
+   "adaptation" : "Local contract refinement reusing canonical principal/checksum, original obligation/plan/attempt-journal and reserved reconciliation owners. No original application-fence acquisition codec or proof exists in these inspected Canic sources.",
+   "consumer_disposition" : "All Canic backup/restore/CLI consumers remain unchanged and read only. Earlier source provenance/licenses remain retained. Reference excerpts identify consumers without claiming behavior inspection outside the stated ranges.",
+   "consumer_references" : [
+      {
+         "excerpt" : "fn target(operation: &crate::execution::BackupExecutionJournalOperation) -> &str {",
+         "line" : 571,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 14,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs"
+      },
+      {
+         "excerpt" : "    BackupExecutionJournalOperation,",
+         "line" : 305,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs"
+      },
+      {
+         "excerpt" : "    finalize: &BackupExecutionJournalOperation,",
+         "line" : 341,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs"
+      },
+      {
+         "excerpt" : "fn assert_failed_finalize(layout: &BackupLayout, finalize: &BackupExecutionJournalOperation) {",
+         "line" : 402,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs"
+      },
+      {
+         "excerpt" : "    target_operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 154,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs"
+      },
+      {
+         "excerpt" : "    target: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 427,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyCommandConfig, RestoreApplyOperationState, RestoreApplyRunnerCommand,",
+         "line" : 11,
+         "path" : "crates/canic-cli/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 121,
+         "path" : "crates/canic-cli/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs"
+      },
+      {
+         "excerpt" : "    BackupExecutionJournalOperation,",
+         "line" : 212,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs"
+      },
+      {
+         "excerpt" : "    finalize: &BackupExecutionJournalOperation,",
+         "line" : 256,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs"
+      },
+      {
+         "excerpt" : "    finalize: &BackupExecutionJournalOperation,",
+         "line" : 301,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/artifact_publication.rs"
+      },
+      {
+         "excerpt" : "        command: &canic_backup::restore::RestoreApplyRunnerCommand,",
+         "line" : 203,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/durable_transition.rs"
+      },
+      {
+         "excerpt" : "    finalize: &BackupExecutionJournalOperation,",
+         "line" : 160,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/durable_transition.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionJournalOperation, BackupExecutionOperationState,",
+         "line" : 12,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 177,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 205,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 233,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 265,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 320,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 352,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 380,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    expected_operation: &BackupExecutionJournalOperation,",
+         "line" : 400,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : ") -> &BackupExecutionJournalOperation {",
+         "line" : 421,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 431,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_transition.rs"
+      },
+      {
+         "excerpt" : "    verify: &BackupExecutionJournalOperation,",
+         "line" : 179,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_transition.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn target(operation: &crate::execution::BackupExecutionJournalOperation) -> &str {",
+         "line" : 463,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs"
+      },
+      {
+         "excerpt" : "    crate::execution::BackupExecutionJournalOperation,",
+         "line" : 397,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs"
+      },
+      {
+         "excerpt" : "fn target(operation: &crate::execution::BackupExecutionJournalOperation) -> String {",
+         "line" : 587,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 15,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_transition.rs"
+      },
+      {
+         "excerpt" : "    download: &BackupExecutionJournalOperation,",
+         "line" : 223,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_transition.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_effect.rs"
+      },
+      {
+         "excerpt" : "    BackupExecutionJournalOperation,",
+         "line" : 206,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_effect.rs"
+      },
+      {
+         "excerpt" : "fn assert_failed_checksum_state(layout: &BackupLayout, verify: &BackupExecutionJournalOperation) {",
+         "line" : 233,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/checksum_effect.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyOperationKindCounts, RestoreApplyOperationReceipt, RestoreApplyRunnerCommand,",
+         "line" : 117,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "    fn runner_command() -> RestoreApplyRunnerCommand {",
+         "line" : 262,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyRunnerCommand {",
+         "line" : 263,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationReceipt, RestoreApplyRunnerCommand,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        command = crate::restore::RestoreApplyRunnerCommand::from_operation_with_artifact_path(",
+         "line" : 201,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    command: RestoreApplyRunnerCommand,",
+         "line" : 596,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let command = RestoreApplyRunnerCommand {",
+         "line" : 635,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyReportOperation, RestoreApplyReportOutcome, RestoreApplyRunnerCommand,",
+         "line" : 21,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 51,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub command: Option<RestoreApplyRunnerCommand>,",
+         "line" : 283,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub command: Option<RestoreApplyRunnerCommand>,",
+         "line" : 391,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 398,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 414,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: Option<RestoreApplyRunnerCommand>,",
+         "line" : 447,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub command: RestoreApplyRunnerCommand,",
+         "line" : 475,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 483,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 491,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 499,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub(super) command: RestoreApplyRunnerCommand,",
+         "line" : 543,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub(super) command: RestoreApplyRunnerCommand,",
+         "line" : 626,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub(super) command: RestoreApplyRunnerCommand,",
+         "line" : 635,
+         "path" : "crates/canic-backup/src/restore/runner/types.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyCommandOutputPair, RestoreApplyJournalOperation, RestoreApplyRunnerCommand,",
+         "line" : 8,
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs"
+      },
+      {
+         "excerpt" : "    pub(super) command: RestoreApplyRunnerCommand,",
+         "line" : 82,
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs"
+      },
+      {
+         "excerpt" : ") -> RestoreApplyRunnerCommand {",
+         "line" : 115,
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyRunnerCommand {",
+         "line" : 125,
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyReportOutcome, RestoreApplyRunnerCommand, RestorePersistenceError,",
+         "line" : 24,
+         "path" : "crates/canic-backup/src/restore/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    commands: &[RestoreApplyRunnerCommand],",
+         "line" : 640,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        let upload_command = RestoreApplyRunnerCommand {",
+         "line" : 1393,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    commands: &[RestoreApplyRunnerCommand],",
+         "line" : 1548,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "fn restore_mutating_command_count(commands: &[RestoreApplyRunnerCommand]) -> usize {",
+         "line" : 1576,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let upload_command = RestoreApplyRunnerCommand {",
+         "line" : 1676,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    commands: Vec<RestoreApplyRunnerCommand>,",
+         "line" : 1729,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 1744,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 1763,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 1778,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 1808,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        _command: &RestoreApplyRunnerCommand,",
+         "line" : 1859,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "fn is_snapshot_inventory_command(command: &RestoreApplyRunnerCommand) -> bool {",
+         "line" : 1872,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 1894,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "            command: &RestoreApplyRunnerCommand,",
+         "line" : 2174,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        command: &RestoreApplyRunnerCommand,",
+         "line" : 2222,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    execution::{BackupExecutionJournalOperation, BackupExecutionOperationState},",
+         "line" : 11,
+         "path" : "crates/canic-cli/src/backup/inspect.rs"
+      },
+      {
+         "excerpt" : "fn inspect_operation(operation: &BackupExecutionJournalOperation) -> BackupInspectOperation {",
+         "line" : 68,
+         "path" : "crates/canic-cli/src/backup/inspect.rs"
+      },
+      {
+         "excerpt" : "    pub operations: Vec<BackupExecutionJournalOperation>,",
+         "line" : 29,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "/// BackupExecutionJournalOperation",
+         "line" : 34,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "pub struct BackupExecutionJournalOperation {",
+         "line" : 42,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "    pub next_operation: Option<BackupExecutionJournalOperation>,",
+         "line" : 147,
+         "path" : "crates/canic-backup/src/execution/types.rs"
+      },
+      {
+         "excerpt" : "            .map(BackupExecutionJournalOperation::from_plan_operation)",
+         "line" : 33,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "    pub fn next_ready_operation(&self) -> Option<&BackupExecutionJournalOperation> {",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "    ) -> Option<&BackupExecutionJournalOperation> {",
+         "line" : 160,
+         "path" : "crates/canic-backup/src/execution/mod.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyRunnerCommand {",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyRunnerCommand {",
+         "line" : 57,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyRunnerCommand {",
+         "line" : 176,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyRunnerCommand {",
+         "line" : 731,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyRunnerCommand {",
+         "line" : 757,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyRunnerCommand {",
+         "line" : 837,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    BackupExecutionJournal, BackupExecutionJournalError, BackupExecutionJournalOperation,",
+         "line" : 8,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "        operation: &BackupExecutionJournalOperation,",
+         "line" : 19,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "        operation: &BackupExecutionJournalOperation,",
+         "line" : 35,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "        operation: &BackupExecutionJournalOperation,",
+         "line" : 50,
+         "path" : "crates/canic-backup/src/execution/receipt.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyRunnerCommand,",
+         "line" : 22,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    BackupExecutionJournalError, BackupExecutionJournalOperation, BackupExecutionOperationState,",
+         "line" : 2,
+         "path" : "crates/canic-backup/src/execution/operation.rs"
+      },
+      {
+         "excerpt" : "impl BackupExecutionJournalOperation {",
+         "line" : 6,
+         "path" : "crates/canic-backup/src/execution/operation.rs"
+      },
+      {
+         "excerpt" : "use super::{BackupExecutionJournalError, BackupExecutionJournalOperation};",
+         "line" : 7,
+         "path" : "crates/canic-backup/src/execution/validation.rs"
+      },
+      {
+         "excerpt" : "    operations: &[BackupExecutionJournalOperation],",
+         "line" : 25,
+         "path" : "crates/canic-backup/src/execution/validation.rs"
+      },
+      {
+         "excerpt" : "        let err = serde_json::from_value::<BackupExecutionJournalOperation>(value)",
+         "line" : 75,
+         "path" : "crates/canic-backup/src/execution/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyRunnerCommand,",
+         "line" : 25,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyCommandConfig, RestoreApplyCommandPreview, RestoreApplyRunnerCommand,",
+         "line" : 14,
+         "path" : "crates/canic-backup/src/restore/apply/journal/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyOperationKind, RestoreApplyRunnerCommand, validate_apply_journal_nonempty,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "    pub command: Option<RestoreApplyRunnerCommand>,",
+         "line" : 34,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 58,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "        command: RestoreApplyRunnerCommand,",
+         "line" : 86,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "    command: Option<RestoreApplyRunnerCommand>,",
+         "line" : 262,
+         "path" : "crates/canic-backup/src/restore/apply/journal/receipts/mod.rs"
+      },
+      {
+         "excerpt" : "    pub command: Option<RestoreApplyRunnerCommand>,",
+         "line" : 39,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "            RestoreApplyRunnerCommand::from_operation(operation, journal, config)",
+         "line" : 51,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "/// RestoreApplyRunnerCommand",
+         "line" : 93,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "pub struct RestoreApplyRunnerCommand {",
+         "line" : 101,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "impl RestoreApplyRunnerCommand {",
+         "line" : 109,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 251,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 276,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    primary_operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 323,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    primary_operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 365,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    primary_operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 473,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 529,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 562,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 606,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 657,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 689,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 732,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 760,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 779,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &crate::execution::BackupExecutionJournalOperation,",
+         "line" : 791,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionJournalOperation, BackupExecutionOperationReceipt,",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 47,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 64,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 99,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 127,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 145,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 168,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 197,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 234,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 261,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 343,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 375,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 392,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournal, BackupExecutionJournalOperation, BackupExecutionOperationReceipt,",
+         "line" : 13,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 38,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 89,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 106,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 121,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "    operation: &BackupExecutionJournalOperation,",
+         "line" : 131,
+         "path" : "crates/canic-backup/src/runner/operations/mod.rs"
+      },
+      {
+         "excerpt" : "        BackupExecutionJournalOperation, BackupExecutionOperationState,",
+         "line" : 3,
+         "path" : "crates/canic-backup/src/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub(super) fn completed(operation: &BackupExecutionJournalOperation) -> Self {",
+         "line" : 453,
+         "path" : "crates/canic-backup/src/runner/types.rs"
+      },
+      {
+         "excerpt" : "    pub(super) fn failed(operation: &BackupExecutionJournalOperation) -> Self {",
+         "line" : 457,
+         "path" : "crates/canic-backup/src/runner/types.rs"
+      },
+      {
+         "excerpt" : "    fn from_operation(operation: &BackupExecutionJournalOperation, outcome: &str) -> Self {",
+         "line" : 461,
+         "path" : "crates/canic-backup/src/runner/types.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/model/fence_acquisition/mod.rs",
+      "crates/ic-backup/src/policy/fence_acquisition/mod.rs",
+      "crates/ic-backup/src/ports/fence_acquisition/mod.rs",
+      "crates/ic-backup/src/test_support/fence_acquisition/mod.rs",
+      "crates/ic-backup/tests/fence_acquisition.rs"
+   ],
+   "contract" : "docs/contracts/fence-acquisition-port.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Read only; no product code copied. Exact input retained as source inspection evidence only.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               103
+            ]
+         ],
+         "path" : "crates/canic-backup/src/execution/operation.rs",
+         "retained_copy" : "target/fence-acquisition-source.c8h6s6/crates/canic-backup/src/execution/operation.rs",
+         "sha256" : "c512078399126bfbc1d79ca1ce7612dfa9cc0a016546cf42ea6230b568e1b056"
+      },
+      {
+         "disposition" : "Read only; no product code copied. Exact input retained as source inspection evidence only.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               62
+            ]
+         ],
+         "path" : "crates/canic-backup/src/execution/validation.rs",
+         "retained_copy" : "target/fence-acquisition-source.c8h6s6/crates/canic-backup/src/execution/validation.rs",
+         "sha256" : "c8e8ce79c9027d443a5f7885d01fdc921a654269da42857eb13684b8a8c6883c"
+      },
+      {
+         "disposition" : "Read only; no product code copied. Exact input retained as source inspection evidence only.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               170
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+         "retained_copy" : "target/fence-acquisition-source.c8h6s6/crates/canic-backup/src/restore/apply/journal/commands/mod.rs",
+         "sha256" : "b584bc7269f4b52ee830205c68c494a3a6e92135eba730e43f9a1c6ae80ed707"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Fresh native envelope/association and guarded recovery only. No IC/application update, live permissions, exclusive dispatch custody, attribution, actual fencing, terminal proof or release is qualified.",
+   "source_findings" : [
+      "Canic execution operation admission retains original identity, state and snapshot inventories; local preflight/effect classification grants no generic application permission or no-prior-dispatch proof.",
+      "Inspected command preview code derives argv/mutation/stopped metadata from restore operation/config. A program name, boolean, preview or process reply cannot bind or qualify a generic whole-unit application acquisition.",
+      "The new application update envelope binds exact receiver/mode/method/bytes before the full plan and obligation to avoid recursive digest identity. Actual argument codecs and immutable origin custody remain application-owned."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "071a9c64d7ff71ba7a0a695d24a66de11b651aed",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

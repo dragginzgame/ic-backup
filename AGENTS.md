@@ -189,6 +189,28 @@ into an issue tracker or release authority.
   and rewind-independent custody/replay safety. Preserve 1,024 target/call bounds.
   Pure views settle no lost load, spend nothing and release no fence or source reference.
 
+- Fence-acquisition reconciliation binds the original obligation, authority, mutation
+  and challenge to an already reserved exact observation and rechecks the current
+  journal. Preserve the existing 1,024 combined-attempt bound, 1,024 canonical actual
+  targets and separate single-remote-observation descriptive ceiling. Acquisition
+  requires exclusive original-request attribution and exact Active fence/revisions;
+  negative evidence must exclude transient acquisition, not merely show absence.
+  Provider failures stay pending; only a qualified settled observation can claim
+  uncertainty. Passive views grant no automatic receipts, redispatch, refund,
+  acquisition/release, installed provider or terminal proof. Integrations own actual
+  authentication, freshness, custody, permissions and prior per-call accounting.
+
+- The application fence acquisition port binds exact original canonical receiver,
+  replicated update mode, 1..128 visible ASCII method bytes and at most 1 MiB opaque
+  arguments to the existing reserved mutation. Preserve nonrecursive payload hashing:
+  build payload before plan/requirement/obligation. Integrations retain original bytes
+  and qualify whole-unit purpose/fence/revision semantics, current permissions and
+  proof of no prior dispatch. A reconstructed pending request grants no repeat call.
+  Only one previously accounted update is allowed, without hidden retries/observations.
+  Acknowledgements are passive association only and never produce an acquisition
+  outcome, Active custody or receipt. Failures retain pending spending and original
+  obligations/references; no provider implementation or release authority is installed.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

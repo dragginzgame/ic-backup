@@ -158,7 +158,8 @@ implemented foundation includes:
 - retained same-release source/safety requirements and application evidence checks
   before snapshot load or controlled start; and
 - retained original application fence obligations and exact acquisition-journal
-  recovery across interruption.
+  recovery, exact application update envelopes and reserved reconciliation checks
+  across interruption.
 
 These components have native regression evidence for their local filesystem,
 record and process behavior. They do not establish real Internet Computer backup

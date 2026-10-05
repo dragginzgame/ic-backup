@@ -270,6 +270,32 @@ can be added. See [the schema](contracts/fence-obligation.schema.json),
 Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_obligation`
 and `cargo test --offline --locked -p ic-backup --test fence_obligation`.
 
+`model::fence_reconciliation`, its read-only provider port and pure policy bind an
+existing pending acquisition to the exact reserved observation. The journal's
+pending-request accessor reads its existing projection without changing v1 records
+or accounting. Responses require exact original unit/context and attributed fence
+evidence; a single descriptive remote observation never grants spending authority.
+Provider failures retain pending spent attempts, obligations and source references;
+retained late replies can be admitted without another provider call. See the
+[typed contract](contracts/fence-reconciliation-port.json),
+[fresh source inspection](fence-reconciliation-source.json) and
+[maintained boundary](extraction-boundary.md#reserved-fence-acquisition-reconciliation).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_reconciliation`
+and `cargo test --offline --locked -p ic-backup --test fence_reconciliation`.
+
+`model::fence_acquisition` admits exact original application update envelopes and
+checks their target/digest against the existing reserved acquisition journal.
+Opaque arguments are bounded to 1 MiB before copying; methods retain 1..128 visible
+ASCII bytes. Application codecs retain/qualify original whole-unit semantics and
+actual dispatch authority. The provider contract permits one prior-accounted update
+without hidden retries or observations. Pure acknowledgement association writes no
+receipt or outcome; errors/acknowledgements leave the original mutation pending.
+See the [typed contract and independent goldens](contracts/fence-acquisition-port.json),
+[fresh inspection](fence-acquisition-source.json) and
+[maintained boundary](extraction-boundary.md#exact-application-fence-acquisition-requests).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_acquisition`
+and `cargo test --offline --locked -p ic-backup --test fence_acquisition`.
+
 ## Supported host scope
 
 IC Backup runs on the operator host. The [vendored host matrix](supported-hosts.md)
