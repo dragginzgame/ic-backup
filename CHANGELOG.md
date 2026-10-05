@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.1]
+## [0.3.1] - 2026-10-05
 
 - Bind exact IC capture, load, start and stop requests to already reserved original
   mutation attempts. Add a single-update provider contract and bounded passive
