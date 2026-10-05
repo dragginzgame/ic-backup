@@ -22,8 +22,6 @@
 </p>
 <!-- helper-navigation:end -->
 
-# ic-backup
-
 `ic-backup` is being built to help application operators save verified copies of
 an Internet Computer application's data on their own computer or server, then
 safely restore the same canisters if something goes wrong.
