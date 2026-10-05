@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.2]
+## [0.2.2] - 2026-10-05
 
 - Bind exact bounded application acquisition receiver/method/arguments to the
   original reserved mutation. Add a single-update provider and passive reply
