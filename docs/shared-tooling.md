@@ -33,6 +33,9 @@ does not prescribe consumer commands.
 
 ## What this adoption means
 
+Here, a tooling snapshot means a reviewed local copy of Shared Tooling files,
+distinct from an Internet Computer canister snapshot or application backup.
+
 | Layer | Responsibility |
 | --- | --- |
 | Shared Tooling source | Supplies reviewed repository-neutral rules and helper files |
@@ -74,6 +77,9 @@ Keep vendored files unchanged. Refresh from a reviewed clean revision using
 [the upstream consumption procedure](consuming-snapshots.md), inspect the diff
 and rerun affected consumer checks. Keep consumer adapters outside the snapshot;
 `scripts/ci/test-tooling.sh`, the Makefile and release helpers are consumer-owned.
+Exclude all manifest-declared paths from local banner, navigation and prose
+rewrites. Consumer explanations belong here, in [the documentation index](README.md)
+or [development](development.md); the manifest continues to bind exact upstream bytes.
 Earlier [tooling provenance](tooling-provenance.json) remains historical evidence
 for the adapted release/hook helpers, not a Shared Tooling snapshot identity.
 The inspected Shared Tooling revision contains no standalone license file; retain

@@ -235,6 +235,20 @@ integrations maintain stable byte custody during sequential checks. See
 `cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::integrity`
 and `cargo test --offline --locked -p ic-backup --test download_integrity`.
 
+## Supported host scope
+
+IC Backup runs on the operator host. The [vendored host matrix](supported-hosts.md)
+describes Shared Tooling's own scripts, CI and installers; its macOS and installer
+entries do not establish IC Backup qualification.
+
+| Scope | Current position |
+| --- | --- |
+| Native library development | Pinned Rust toolchains and repository-local build directory; native evidence is retained in the handoff |
+| Repository scripts | Bash 3.2 or newer with the dependencies listed below |
+| IC Backup CI | Linux only; the configured workflow uses `ubuntu-latest` |
+| Windows and non-Bash shells | No supported product lane |
+| Complete backup/restore | Unimplemented; no host has end-to-end product qualification |
+
 ## Commands and build ownership
 
 `make help` lists the command family. `check`, `clippy`, `test`, `doc`,

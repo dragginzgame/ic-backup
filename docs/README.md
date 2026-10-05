@@ -41,7 +41,7 @@ below to find the document that matches your task.
 | Document | Use it for |
 | --- | --- |
 | [Development](development.md) | Quick start, code ownership, validation commands and build-directory rules |
-| [Supported hosts](supported-hosts.md) | Qualified CI and script environments and their dependencies |
+| [IC Backup host scope](development.md#supported-host-scope) | Local native development and CI scope, distinct from upstream tooling claims |
 | [Releasing](releasing.md) | Preview, preparation, maintainer release and registry publication workflows |
 
 ## Understand shared engineering inputs
@@ -51,6 +51,15 @@ below to find the document that matches your task.
 | [Shared Tooling adoption](shared-tooling.md) | Reviewed upstream identity, local overlay and validation evidence |
 | [Consuming Shared Tooling snapshots](consuming-snapshots.md) | Creating, refreshing and verifying vendored tooling files |
 | [Engineering principles](principles/README.md) | Repository-neutral guidance used across participating projects |
+
+The principle guides help with these decisions:
+
+| Principle | Use it when |
+| --- | --- |
+| [Simplicity and maintainability](principles/simplicity-and-maintainability.md) | Choosing whether to delete, reuse, narrow, extend or add a concept |
+| [Decision artifact discipline](principles/decision-artifact-discipline.md) | Carrying an authoritative decision across components without recomputing it |
+| [Reviewable changes](principles/reviewable-changes.md) | Defining a bounded change with its required proof and propagation |
+| [Rust code hygiene baseline](principles/rust-code-hygiene.md) | Reviewing ownership, module structure, errors, comments and tests |
 
 Machine-readable schemas and provenance records under `contracts/` and the
 remaining JSON files support the detailed implementation evidence. They are not

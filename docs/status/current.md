@@ -55,6 +55,31 @@ unchanged by the implementation batches recorded below. No version transaction,
 tag, package upload or live IC effect is claimed. Only targeted native checks are
 recorded; no full CI or release gate is claimed.
 
+## Retained Shared Tooling document restoration
+
+The documentation sweep in `c16b909` changed all seven manifest-declared Markdown
+files: it added local banners/navigation, removed trailing blank lines and added
+consumer prose/tables. The snapshot verifier correctly rejected the first drifted
+file, `docs/principles/README.md`. All seven documents now match the existing pinned
+Shared Tooling revision `956236a3848c2cfae6ae05f5c77e9c37b01b3366` again. Restoration
+used read-only Git objects, verified the complete staged snapshot before copying
+and changed neither the manifest nor verifier. No sibling checkout was modified.
+
+Useful local principle navigation, host scope and tooling-snapshot terminology
+now live in the consumer-owned documentation index, development guide and adoption
+guide. AGENTS.md explicitly excludes manifest paths from branding/documentation
+sweeps. `make shared-tooling-check` and `make tooling-check` passed, including exact
+bytes/modes, drift/missing/symlink rejection, runner and evidence-retention cases.
+Local link and changelog checks passed. Ordinary `git diff --check` reports only
+the five restored upstream EOF blank lines; that diagnostic is retained. Scoped
+diff checks passed with those checksum-bound EOF lines permitted for the principle
+guides, while all other changed files used the ordinary whitespace check.
+Original files, pinned restoration bytes and passing logs remain under
+`target/shared-tooling-repair.g3TJaJ/`. The reported failure log remains at
+`target/validation-failures/20261005T124750Z-588243-0-shared-tooling-check.log`.
+No Rust compilation, full CI/release gate or release transaction ran for this
+documentation/snapshot correction.
+
 ## Focused 0.1.9 draft review
 
 Review of the four selected implementation batches at repository HEAD

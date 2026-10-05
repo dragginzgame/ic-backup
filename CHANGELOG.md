@@ -2,6 +2,9 @@
 
 ## [0.1.9]
 
+- Restore the seven vendored Shared Tooling documents to their pinned bytes after
+  local branding and prose edits caused snapshot verification to fail. Keep local
+  navigation and host guidance outside the verified snapshot.
 - Extract explicit fresh verification of durable downloaded artifacts under the
   retained original plan and exact selected targets. Reject changed declarations,
   unsafe paths and checksum mismatches without rewriting journals, replenishing

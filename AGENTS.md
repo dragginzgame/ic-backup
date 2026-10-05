@@ -10,6 +10,8 @@ This is a reviewed local snapshot of Shared Tooling's working-tree rules, not
 implicit inheritance from a moving sibling checkout.
 [Adoption and provenance](docs/shared-tooling.md) identify the committed tooling revision and the separately
 hashed rules. Refresh them deliberately; never edit vendored tooling in place.
+Exclude every path declared in `.shared-tooling.snapshot` from local branding
+and documentation rewrites; keep consumer guidance in unlisted local documents.
 
 This file is the product-specific overlay: backup contracts, effect targets,
 numeric bounds, commands, supported hosts and qualification gates stay local.
