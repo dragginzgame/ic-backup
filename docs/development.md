@@ -243,6 +243,33 @@ integrations maintain stable byte custody during sequential checks. See
 `cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::integrity`
 and `cargo test --offline --locked -p ic-backup --test download_integrity`.
 
+`model::restore_safety` retains an immutable original restore/source/artifact/safety
+requirement. Persistence requires both original plans under unchanged layout guards
+and never replaces the 1 KiB declaration. Ephemeral exact load/start requests and
+canonical actual evidence feed pure `policy::restore_safety`; the provider port has
+no installed implementation. Applications qualify source/upload completeness,
+fresh lifecycle, irreversible-work absence or rewind-independent retained fence/
+replay safety, and restored-state acceptance. Views grant no effects or release.
+See [the requirement schema](contracts/restore-safety-requirement.schema.json),
+[typed port contract](contracts/restore-safety-port.json) and
+[source provenance](restore-safety-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib restore_safety` and
+`cargo test --offline --locked -p ic-backup --test restore_safety`.
+
+`model::fence_obligation` retains exact original capture/restore requirements,
+fence revisions and the explicit application acquisition operation. Fixed
+`fence-obligation.json` publication is immutable and bounded to 1 KiB; existing
+plan/requirement owners and both restore/source layout guards admit its originals.
+`policy::fence_obligation::acquisition_progress` returns the existing exact attempt
+journal view. It creates no spending owner, Active/released flag or dispatch permit.
+Actual request semantics, acquisition and authenticated reconciliation remain
+integration-owned; controlled release requires terminal evidence before an API
+can be added. See [the schema](contracts/fence-obligation.schema.json),
+[source inspection](fence-obligation-source.json) and
+[maintained boundary](extraction-boundary.md#original-application-fence-obligation-retention).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_obligation`
+and `cargo test --offline --locked -p ic-backup --test fence_obligation`.
+
 ## Supported host scope
 
 IC Backup runs on the operator host. The [vendored host matrix](supported-hosts.md)

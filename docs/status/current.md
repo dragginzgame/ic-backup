@@ -25,11 +25,13 @@
 
 # Current handoff — 2026-10-05
 
-The released package baseline is `0.1.8` at `9a9330a`. The workspace manifest
-remains `0.1.8`, while the changelog contains a selected, undated `0.2.0` draft.
-Later repository commits and working-tree documentation do not constitute a
-package release. Release preparation owns the next date, version transaction and
-receipt.
+The maintainer's released repository baseline is `0.2.0` at `3e76590`. The
+workspace manifest remains `0.2.0`; the maintainer selected one undated `0.2.1`
+changelog draft for the current work.
+The retained release receipt identifies validated source
+`65c9532d85de0d74f9ed19b9237f1dbbcc961a61` and its `release-verify` gate. The
+maintainer reports pushing the release; registry publication was not observed.
+This continuation performs no version transaction or release command.
 
 ## At a glance
 
@@ -39,23 +41,122 @@ receipt.
 | What works today? | Local artifacts, bounded records, journals, plans, selected IC codecs and pure integration checks |
 | What has been qualified? | Native local filesystem, record, policy and process behavior within the evidence described below |
 | What remains integration-owned? | Live membership, authority, application consistency, authenticated calls and restored-state acceptance |
-| What is the next product boundary? | Complete authority and runner contracts, then transport and PocketIC/real-IC qualification |
+| What is the next product boundary? | Fence lifecycle and uncertain-effect reconciliation contracts, then runners, transport and PocketIC/real-IC qualification |
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-product-readiness.svg" alt="Product readiness stages showing the implemented local safety foundation followed by application adapters, authenticated IC transport and runners, and PocketIC and live qualification" width="800">
 </p>
 
-The selected `0.2.0` draft preserves earlier snapshot reply/comparison behavior
-and adds lifecycle reply and fresh local download-integrity foundations.
-The workspace lockfile selects Candid 0.10.37 and management SDK 0.11.0; the SDK
-upgrade below preserves every other dependency selection. The release guide refers
-to the manifest/changelog owners
-instead of repeating a stale current version; historical evidence remains intact.
-Dated history, licenses and the historical release receipt remain unchanged.
-The SDK upgrade changes its workspace pin and corresponding lock entry. No product
-version transaction,
-tag, package upload or live IC effect is claimed. Only targeted native checks are
-recorded; no full CI or release gate is claimed.
+The current batch adds immutable original application fence obligations and exact
+acquisition-journal recovery, following the restore/source/safety declaration batch.
+Candid 0.10.37 and management SDK 0.11.0 remain
+locked unchanged. The manifest, lockfile, release receipt, earlier provenance and
+vendored Shared Tooling bytes are unchanged. Only targeted Linux checks ran for
+this continuation; native macOS and actual IC/application qualification remain
+unestablished by these checks.
+
+## Original application fence obligations and acquisition recovery
+
+The [maintained boundary](../extraction-boundary.md#original-application-fence-obligation-retention)
+now retains exact full-plan/selected-unit capture or restore fence obligations,
+original requirements/revisions and an explicit application acquisition operation.
+Fixed `fence-obligation.json` has strict v1 1 KiB immutable publication/read with
+exact original retained requirements and plans, including both restore/source
+layout guards. Weaker lanes, zero acquisition allowance, missing/changed originals,
+rebound identities, unsafe/excessive bytes and contention reject. See
+[the schema and independent binary goldens](../contracts/fence-obligation.schema.json).
+
+The attempt journal remains the sole spending/reconciliation owner. Pure
+`acquisition_progress` joins its exact original operation/context/request/limits
+and returns its existing view. Missing evidence cannot mean zero consumption,
+lost observations stay pending, Uncertain leaves the mutation unresolved, and
+no outcome refunds attempts. Pending, Applied, NotApplied and Uncertain outcomes
+retain the original obligation and unfinished source references. An Applied
+projection proves no current Active custody or release permission.
+
+Ten focused unit tests and one public native filesystem recovery journey passed.
+All-target/all-feature warning-denied Clippy, rustdoc and Rust 1.91.0 compilation
+passed. Logs are `target/fence-obligation-unit.log`, `public-final.log`,
+`clippy-final.log`, `docs-final.log` and `msrv-final.log`, each with the
+`fence-obligation-` prefix. No test or
+lint attempt failed in this batch. The public journey preserves exact obligation/
+journal bytes and unfinished source references through exhausted lost replies,
+every passive settled outcome and drop/reopen. These qualify local contracts only.
+Formatting/whitespace checks, all twelve Shared Tooling snapshot files, schema
+generator replay, exact inspected source/consumer references and 156 local
+Markdown targets also passed; evidence is `target/fence-obligation-format.log`,
+`diff-check.log`, `snapshot-check.log` and `evidence-check.log`, each with the same
+prefix. Manifest, lockfile, release receipt and vendored baseline remain unchanged.
+
+[Fresh Canic inspection](../fence-obligation-source.json) identifies the same
+dirty source HEAD `a2108801d7b2d5802f3e864556dc8781b3b382df`, three exact source
+files and their actual text consumers. It confirms retained-reference/terminal
+command-custody responsibilities and unreconciled load behavior, supplying no
+generic application-fence acquisition or release proof. No source code was copied;
+the new contract refines the local product design and reuses existing owners.
+Exact read-only inputs, schema/provenance generators and consumer-reference
+evidence remain under `target/fence-obligation-*`; earlier provenance is unchanged.
+
+No coordinator implementation, authenticated acquisition reconciliation, fresh
+Active proof, dispatch, terminal evidence or controlled fence/reference release
+is implemented. Original opaque request semantics, identity and whole-selection
+fence custody remain integration-qualified. The next contract work covers actual
+coordinator requests and qualified reconciliation, then terminal evidence before
+release admission. No full gate, release/version transaction, upload, commit or
+live effect ran. Work remains uncommitted under the undated 0.2.1 changelog draft
+at package 0.2.0.
+
+## Original restore/source safety batch
+
+The [maintained boundary](../extraction-boundary.md#original-restore-safety-requirements-and-current-loadstart-checks)
+now has immutable same-network/release selected-source declarations and a fresh
+`RestoreSafetyProvider` contract for original exact load/start bytes. Required
+safety lanes have no generic default. Load needs all selected targets stopped;
+start needs its target stopped, every selected restored state accepted for the
+exact source and fenced execution qualified. A still-stopping member rejects.
+Original source artifacts and fence/membership/external-obligation revisions
+cannot silently rebind. Both retained plans and 1 KiB no-replace requirement IO
+are checked under unchanged layout exclusion. See
+[the schema and independent goldens](../contracts/restore-safety-requirement.schema.json)
+and [typed contract](../contracts/restore-safety-port.json).
+
+Sixteen focused unit tests and one public recovery journey passed, with
+warning-denied all-target/all-feature package Clippy/rustdoc and Rust 1.91.0
+all-target/all-feature compilation. Logs are `target/restore-safety-unit.log`,
+`public.log`, `clippy.log`, `docs.log` and `msrv.log`, each with the same
+`restore-safety-` prefix. Cases cover strict schema/binary hashes, canonical target
+bounds, exact source/context/payload/lane/revision/lifecycle/acceptance denials,
+immutable both-layout persistence and unsafe/oversized/rebound files. The public
+native fixture preserves exact journal/requirement/outside-source obligation
+bytes and unfinished restore references through exhausted pending attempts,
+stale/inactive/rebound results, every typed provider failure and drop/reopen.
+
+[Fresh Canic inspection](../restore-safety-source.json) records six working-tree
+files and 334 exact text consumer references under HEAD
+`a2108801d7b2d5802f3e864556dc8781b3b382df`, with dirty source explicitly recorded.
+Fixed-ID/stopped-load checks are adapted; mapping/Root/argv, module-hash-only
+verification and status reconciliation are not imported as safety or load receipts.
+The source supplies no generic outside-snapshot external-work proof; that contract
+is designed from the local product requirements, not claimed as copied qualification.
+Exact inspected source bytes remain at `target/restore-safety-source.Z5hWZi/`;
+reference inventory and independent contract generation/check evidence remain
+under `target/restore-safety-*`. Earlier provenance and licenses are unchanged.
+
+Initial Clippy attempts flagged function length; responsibilities were split and
+successful checks rerun. Diagnostics remain at
+`target/restore-safety-clippy-first-attempt.log`, `second-attempt.log` and
+`third-attempt.log`, each with the same prefix. No full CI/release gate, package
+upload, commit or live IC effect ran. The next release version was undecided
+at that batch's completion; the current selection is recorded above.
+Applications still qualify
+authentic complete source/upload association, fresh lifecycle/release/drain,
+irreversible-work absence or continuous rewind-independent fence/replay safety,
+restored acceptance and prior per-call accounting. No provider, fence acquisition/
+release, lost-load settlement, dispatch or terminal/source-reference release is
+implemented. These are local contracts, not actual management/application safety.
+
+The entries below retain earlier development evidence. Their draft/version/gate
+statements describe original execution before the maintainer's 0.2.0 release.
 
 ## Shared Tooling best-practice review and refresh
 
@@ -607,8 +708,9 @@ patches, unsafe code or shared target. Rust remains 2024, development 1.99.0 and
 [releasing](../releasing.md).
 
 Full B1/B2 and independently usable backup/restore remain unestablished. Application
-fence acquisition/release/uncertain-effect recovery and same-release restore safety
-still precede runners. Real membership/control/read/consistency providers, transfer/
+fence acquisition/release/uncertain-effect recovery and actual same-release restore
+safety still precede runners. Real membership/control/read/consistency/restore-safety
+providers, transfer/
 response codecs, selected backend snapshot/lifecycle qualification, bounded authenticated
 calls and lost create/upload/load reconciliation remain necessary. Prior per-call
 observation spending, actual cross-journal chronology, complete execution/restore journals/

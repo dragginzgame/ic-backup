@@ -1,0 +1,1811 @@
+{
+   "adapted_sources" : [
+      {
+         "adaptation" : "Fixed same-ID source admission and actual stopped-load preconditions become exact same-network/release selected-source declarations and current load/start evidence matching. Root/environment fields, relocatable mappings, rendered commands, universal parent order and CLI readiness flags are not imported.",
+         "consumers" : [
+            "crates/ic-backup/src/model/restore_safety/requirement/mod.rs",
+            "crates/ic-backup/src/model/restore_safety/mod.rs",
+            "crates/ic-backup/src/policy/restore_safety/mod.rs"
+         ],
+         "sources" : [
+            "crates/canic-backup/src/restore/runner/precondition.rs",
+            "crates/canic-backup/src/restore/plan/validation.rs",
+            "crates/canic-backup/src/restore/plan/types.rs"
+         ]
+      },
+      {
+         "adaptation" : "Source only exposes status/module-hash verification and lifecycle reconciliation; it has no generic rewind-independent external-obligation safety proof. Application-owned safety/acceptance and original outside-snapshot fence revisions are designed from the local extraction contract, not claimed as copied Canic qualifications. Status/module hashes never settle load or prove restored-work safety.",
+         "consumers" : [
+            "crates/ic-backup/src/ports/restore_safety/mod.rs",
+            "crates/ic-backup/tests/restore_safety.rs"
+         ],
+         "sources" : [
+            "crates/canic-backup/src/restore/runner/execute.rs"
+         ]
+      }
+   ],
+   "consumer_dispositions" : [
+      {
+         "disposition" : "Unchanged and read-only. Framework fields, remapping, command rendering, hash-only restored verification and state-equivalent reconciliation grant no generic restoration safety here.",
+         "owner" : "Canic restore planning/apply/runner/persistence/CLI/host consumers"
+      }
+   ],
+   "consumer_references" : [
+      {
+         "excerpt" : "use canic_backup::restore::{RestorePlan, RestoreRunResponse};",
+         "line" : 1,
+         "path" : "crates/canic-cli/src/restore/enforce.rs"
+      },
+      {
+         "excerpt" : "use super::{RestoreCommandError, RestorePlanOptions, RestoreRunOptions, RestoreStatusOptions};",
+         "line" : 3,
+         "path" : "crates/canic-cli/src/restore/enforce.rs"
+      },
+      {
+         "excerpt" : "    options: &RestorePlanOptions,",
+         "line" : 68,
+         "path" : "crates/canic-cli/src/restore/enforce.rs"
+      },
+      {
+         "excerpt" : "    plan: &RestorePlan,",
+         "line" : 69,
+         "path" : "crates/canic-cli/src/restore/enforce.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyDryRun, RestoreApplyJournal, RestoreMapping, RestorePlan, RestoreRunResponse,",
+         "line" : 6,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    RestoreCommandError, RestorePlanOptions, RestorePrepareOptions, RestoreRunOptions,",
+         "line" : 14,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    options: &RestorePlanOptions,",
+         "line" : 39,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    options: &RestorePlanOptions,",
+         "line" : 55,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    options: &RestorePlanOptions,",
+         "line" : 73,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    plan: &RestorePlan,",
+         "line" : 212,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    options: &RestorePlanOptions,",
+         "line" : 231,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "    plan: &RestorePlan,",
+         "line" : 232,
+         "path" : "crates/canic-cli/src/restore/io.rs"
+      },
+      {
+         "excerpt" : "        RestorePlanError, RestoreRunnerError,",
+         "line" : 6,
+         "path" : "crates/canic-cli/src/restore/error.rs"
+      },
+      {
+         "excerpt" : "    RestorePlan(#[from] RestorePlanError),",
+         "line" : 216,
+         "path" : "crates/canic-cli/src/restore/error.rs"
+      },
+      {
+         "excerpt" : "/// RestorePlanOptions",
+         "line" : 35,
+         "path" : "crates/canic-cli/src/restore/options.rs"
+      },
+      {
+         "excerpt" : "pub(super) struct RestorePlanOptions {",
+         "line" : 39,
+         "path" : "crates/canic-cli/src/restore/options.rs"
+      },
+      {
+         "excerpt" : "impl RestorePlanOptions {",
+         "line" : 49,
+         "path" : "crates/canic-cli/src/restore/options.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_with_executor,",
+         "line" : 13,
+         "path" : "crates/canic-cli/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_with_executor(",
+         "line" : 40,
+         "path" : "crates/canic-cli/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(",
+         "line" : 77,
+         "path" : "crates/canic-cli/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions::parse([",
+         "line" : 8,
+         "path" : "crates/canic-cli/src/restore/tests/options.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions::parse([",
+         "line" : 66,
+         "path" : "crates/canic-cli/src/restore/tests/options.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions::parse([",
+         "line" : 85,
+         "path" : "crates/canic-cli/src/restore/tests/options.rs"
+      },
+      {
+         "excerpt" : "fn parses_restore_run_execute_options() {",
+         "line" : 164,
+         "path" : "crates/canic-cli/src/restore/tests/options.rs"
+      },
+      {
+         "excerpt" : "fn run_restore_run_execute_marks_completed_operation() {",
+         "line" : 228,
+         "path" : "crates/canic-cli/src/restore/tests/run.rs"
+      },
+      {
+         "excerpt" : "fn run_restore_run_execute_records_uploaded_snapshot_receipt() {",
+         "line" : 328,
+         "path" : "crates/canic-cli/src/restore/tests/run.rs"
+      },
+      {
+         "excerpt" : "fn run_restore_run_execute_rejects_upload_without_snapshot_id() {",
+         "line" : 398,
+         "path" : "crates/canic-cli/src/restore/tests/run.rs"
+      },
+      {
+         "excerpt" : "fn run_restore_run_execute_rejects_locked_journal() {",
+         "line" : 466,
+         "path" : "crates/canic-cli/src/restore/tests/run.rs"
+      },
+      {
+         "excerpt" : "fn run_restore_run_execute_marks_failed_operation() {",
+         "line" : 585,
+         "path" : "crates/canic-cli/src/restore/tests/run.rs"
+      },
+      {
+         "excerpt" : "use canic_backup::{persistence::BackupLayout, restore::RestorePlan};",
+         "line" : 3,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions {",
+         "line" : 16,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanOptions::parse([",
+         "line" : 36,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanOptions::parse([",
+         "line" : 50,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions {",
+         "line" : 68,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions {",
+         "line" : 94,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let options = RestorePlanOptions {",
+         "line" : 135,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan: RestorePlan =",
+         "line" : 179,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan: RestorePlan =",
+         "line" : 217,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan: RestorePlan =",
+         "line" : 250,
+         "path" : "crates/canic-cli/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        RestoreApplyDryRun, RestoreApplyJournal, RestorePersistenceError, RestorePlanner,",
+         "line" : 20,
+         "path" : "crates/canic-cli/src/restore/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&restore_ready_manifest(), None).expect(\"build plan\");",
+         "line" : 174,
+         "path" : "crates/canic-cli/src/restore/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"build plan\");",
+         "line" : 195,
+         "path" : "crates/canic-cli/src/restore/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreApplyCommandConfig, RestoreApplyDryRun, RestorePlan, RestorePlanner, RestoreRunResponse,",
+         "line" : 12,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "use options::{RestorePlanOptions, RestorePrepareOptions, RestoreRunOptions, RestoreStatusOptions};",
+         "line" : 38,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "            let options = RestorePlanOptions::parse(args)?;",
+         "line" : 57,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "                restore_run_execute_result(&options)?",
+         "line" : 78,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    let plan_options = RestorePlanOptions {",
+         "line" : 126,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "fn plan_restore(options: &RestorePlanOptions) -> Result<RestorePlan, RestoreCommandError> {",
+         "line" : 152,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    RestorePlanner::plan(&manifest, mapping.as_ref()).map_err(RestoreCommandError::from)",
+         "line" : 158,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "fn restore_run_execute_result(",
+         "line" : 183,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    canic_backup::restore::restore_run_execute_result_with_executor(",
+         "line" : 187,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "use super::{RestoreApplyJournal, RestoreApplyJournalError, RestorePlan, RestorePlanError};",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "    InvalidPlan(#[from] RestorePlanError),",
+         "line" : 40,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "    plan: &RestorePlan,",
+         "line" : 55,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "    match read_json::<RestorePlan>(path) {",
+         "line" : 58,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "pub fn write_restore_plan(path: &Path, plan: &RestorePlan) -> Result<(), RestorePersistenceError> {",
+         "line" : 105,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "    RestoreOrderingDependency, RestoreOrderingRelationship, RestoreOrderingSummary, RestorePlan,",
+         "line" : 30,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    RestorePlanError, RestorePlanMember, RestorePlanner, RestoreReadinessSummary,",
+         "line" : 31,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    parse_uploaded_snapshot_id, restore_run_dry_run, restore_run_execute_result_with_executor,",
+         "line" : 39,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    restore_run_execute_with_executor, restore_run_retry_failed,",
+         "line" : 40,
+         "path" : "crates/canic-backup/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "            expected_module_hash: operation.expected_module_hash.as_deref(),",
+         "line" : 92,
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs"
+      },
+      {
+         "excerpt" : "    expected_module_hash: Option<&'a str>,",
+         "line" : 134,
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs"
+      },
+      {
+         "excerpt" : "                expected_module_hash: None,",
+         "line" : 255,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "            requires_stopped_canister: false,",
+         "line" : 271,
+         "path" : "crates/canic-backup/src/restore/runner/io.rs"
+      },
+      {
+         "excerpt" : "    pub expected_module_hash: Option<String>,",
+         "line" : 47,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs"
+      },
+      {
+         "excerpt" : "            expected_module_hash: operation.expected_module_hash.clone(),",
+         "line" : 76,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs"
+      },
+      {
+         "excerpt" : "        self.validate_expected_module_hash()?;",
+         "line" : 90,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs"
+      },
+      {
+         "excerpt" : "    fn validate_expected_module_hash(&self) -> Result<(), RestoreApplyJournalError> {",
+         "line" : 209,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs"
+      },
+      {
+         "excerpt" : "        let Some(expected) = &self.expected_module_hash else {",
+         "line" : 210,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs"
+      },
+      {
+         "excerpt" : "        validate_apply_journal_nonempty(\"operations[].expected_module_hash\", expected)?;",
+         "line" : 213,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs"
+      },
+      {
+         "excerpt" : "pub fn restore_run_execute_with_executor(",
+         "line" : 42,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let run = restore_run_execute_result_with_executor(config, executor)?;",
+         "line" : 46,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "pub fn restore_run_execute_result_with_executor(",
+         "line" : 54,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    restore_run_execute_result_with_terminal_writer(config, executor, &mut |path, journal| {",
+         "line" : 58,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "pub fn restore_run_execute_with_terminal_barriers(",
+         "line" : 64,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_result_with_terminal_writer(config, executor, &mut |path, journal| {",
+         "line" : 70,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn restore_run_execute_result_with_terminal_writer(",
+         "line" : 79,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "            return Ok(RestoreRunnerOutcome::ok(restore_run_execute_summary(",
+         "line" : 109,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        match restore_run_execute_prepared_operation(",
+         "line" : 121,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "                let response = restore_run_execute_summary(",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn restore_run_execute_prepared_operation(",
+         "line" : 251,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    if !prepared.command.requires_stopped_canister {",
+         "line" : 345,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        operation.expected_module_hash.as_deref(),",
+         "line" : 423,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        operation.expected_module_hash.as_deref(),",
+         "line" : 426,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn verification_json_matches(output: &str, expected_module_hash: Option<&str>) -> bool {",
+         "line" : 430,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let Some(expected_module_hash) = expected_module_hash else {",
+         "line" : 437,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        normalize_module_hash(actual) == normalize_module_hash(expected_module_hash)",
+         "line" : 441,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        requires_stopped_canister: false,",
+         "line" : 639,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn restore_run_execute_summary(",
+         "line" : 891,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    pub expected_module_hash: Option<String>,",
+         "line" : 76,
+         "path" : "crates/canic-backup/src/plan/types.rs"
+      },
+      {
+         "excerpt" : "    pub requires_stopped_canister: bool,",
+         "line" : 105,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "                requires_stopped_canister: false,",
+         "line" : 132,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "                requires_stopped_canister: false,",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "                    requires_stopped_canister: false,",
+         "line" : 164,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "                    requires_stopped_canister: true,",
+         "line" : 183,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "                        requires_stopped_canister: false,",
+         "line" : 201,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "        requires_stopped_canister: false,",
+         "line" : 129,
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs"
+      },
+      {
+         "excerpt" : "pub use execute::{restore_run_execute_result_with_executor, restore_run_execute_with_executor};",
+         "line" : 30,
+         "path" : "crates/canic-backup/src/restore/runner/mod.rs"
+      },
+      {
+         "excerpt" : "            module_hash: target.expected_module_hash.clone(),",
+         "line" : 180,
+         "path" : "crates/canic-backup/src/runner/manifest.rs"
+      },
+      {
+         "excerpt" : "use super::{RestorePlan, RestorePlanError, RestorePlanMember};",
+         "line" : 1,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    pub fn from_plan(plan: &RestorePlan) -> Result<Self, RestorePlanError> {",
+         "line" : 56,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "        plan: &RestorePlan,",
+         "line" : 63,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    fn from_validated_plan(plan: &RestorePlan) -> Self {",
+         "line" : 72,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    plan: &RestorePlan,",
+         "line" : 132,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    member: &RestorePlanMember,",
+         "line" : 162,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    members: impl IntoIterator<Item = &'a RestorePlanMember>,",
+         "line" : 344,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    members: &[&RestorePlanMember],",
+         "line" : 355,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    member: &RestorePlanMember,",
+         "line" : 375,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: check.and_then(|_| member.source_snapshot.module_hash.clone()),",
+         "line" : 395,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    member: &RestorePlanMember,",
+         "line" : 402,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    member: &RestorePlanMember,",
+         "line" : 413,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    member: &RestorePlanMember,",
+         "line" : 424,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    plan: &RestorePlan,",
+         "line" : 445,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    let expected_module_hash = root.and_then(|member| member.source_snapshot.module_hash.clone());",
+         "line" : 465,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "            expected_module_hash.clone(),",
+         "line" : 472,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    expected_module_hash: Option<String>,",
+         "line" : 484,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash,",
+         "line" : 501,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    pub expected_module_hash: Option<String>,",
+         "line" : 526,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "    InvalidPlan(#[from] RestorePlanError),",
+         "line" : 538,
+         "path" : "crates/canic-backup/src/restore/apply/mod.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: target.module_hash,",
+         "line" : 81,
+         "path" : "crates/canic-backup/src/plan/build/targets.rs"
+      },
+      {
+         "excerpt" : "    restore::{RestoreMapping, RestorePlanError},",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn validate_mapping(mapping: &RestoreMapping) -> Result<(), RestorePlanError> {",
+         "line" : 16,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::DuplicateMappingSource(",
+         "line" : 25,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::DuplicateMappingTarget(",
+         "line" : 31,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : ") -> Result<(), RestorePlanError> {",
+         "line" : 43,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::UnknownMappingSource(",
+         "line" : 53,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "fn validate_principal(field: &'static str, value: &str) -> Result<(), RestorePlanError> {",
+         "line" : 62,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "        .map_err(|_| RestorePlanError::InvalidPrincipal {",
+         "line" : 65,
+         "path" : "crates/canic-backup/src/restore/plan/mapping.rs"
+      },
+      {
+         "excerpt" : "                read_json::<RestorePlan>(&plan_path).expect(\"read published restore plan\"),",
+         "line" : 138,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "        read_json::<RestorePlan>(&plan_path).expect(\"restart reads exact restore plan\"),",
+         "line" : 155,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "fn prepared_restore_documents(root: &Path) -> (RestorePlan, RestoreApplyJournal) {",
+         "line" : 198,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"build restore fixture plan\");",
+         "line" : 202,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_with_executor(&paused, &mut executor).expect(\"pause restore\");",
+         "line" : 50,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let failed = restore_run_execute_result_with_executor(&fixture.config, &mut failed_executor)",
+         "line" : 67,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 83,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_with_executor(&config, &mut executor).expect(\"finish external restore\");",
+         "line" : 101,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_with_executor(&config, &mut executor).expect(\"replay after retention\");",
+         "line" : 115,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 220,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 276,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 434,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    super::execute::restore_run_execute_with_terminal_barriers(",
+         "line" : 514,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 592,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 683,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 723,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 754,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 783,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 816,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 843,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 923,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 956,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 979,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 996,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 1018,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 1039,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 1070,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 1111,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 1130,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 1158,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&fixture.config, &mut executor)",
+         "line" : 1180,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let response = restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 1206,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    let error = restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 1224,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: Some(\"abcd\".to_string()),",
+         "line" : 1264,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 1333,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "            requires_stopped_canister: false,",
+         "line" : 1401,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 1478,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 1612,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 1656,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 1673,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        requires_stopped_canister: false,",
+         "line" : 1684,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        let error = restore_run_execute_with_executor(&fixture.config, &mut blocked_executor)",
+         "line" : 2017,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        let response = restore_run_execute_with_executor(&fixture.config, &mut recovery_executor)",
+         "line" : 2049,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_with_executor(&config, &mut executor)",
+         "line" : 2095,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 32,
+         "path" : "crates/canic-backup/src/plan/tests/validation.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 354,
+         "path" : "crates/canic-backup/src/plan/tests/validation.rs"
+      },
+      {
+         "excerpt" : "    RestorePlanError, RestorePlanMember,",
+         "line" : 9,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : "    members: Vec<RestorePlanMember>,",
+         "line" : 15,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Vec<RestorePlanMember>, RestorePlanError> {",
+         "line" : 16,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::RestoreOrderCycle);",
+         "line" : 30,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : "fn ordering_dependency(member: &RestorePlanMember) -> Option<RestoreOrderingDependency> {",
+         "line" : 43,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn restore_ordering_summary(members: &[RestorePlanMember]) -> RestoreOrderingSummary {",
+         "line" : 55,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : "    member: &RestorePlanMember,",
+         "line" : 74,
+         "path" : "crates/canic-backup/src/restore/plan/ordering.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"uppercase hashes are valid\");",
+         "line" : 17,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 45,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 116,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let mut plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 162,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    std::assert_matches!(err, RestorePlanError::UnsupportedVersion(2));",
+         "line" : 167,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 173,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 196,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "        \"expected_module_hash\",",
+         "line" : 213,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 247,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 283,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 309,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 340,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 426,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 457,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 473,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 503,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 520,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 566,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    restore::{RestoreMapping, RestorePlanError, RestorePlanMember},",
+         "line" : 12,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : ") -> Result<Vec<RestorePlanMember>, RestorePlanError> {",
+         "line" : 20,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::DuplicatePlanTarget(target));",
+         "line" : 28,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : "        plan_members.push(RestorePlanMember {",
+         "line" : 32,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : ") -> Result<String, RestorePlanError> {",
+         "line" : 95,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : "            .ok_or_else(|| RestorePlanError::MissingMappingSource(member.canister_id.clone()))?",
+         "line" : 99,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : "        return Err(RestorePlanError::FixedIdentityRemap {",
+         "line" : 105,
+         "path" : "crates/canic-backup/src/restore/plan/members.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: None,",
+         "line" : 34,
+         "path" : "crates/canic-backup/src/plan/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    for field in [\"role\", \"parent_canister_id\", \"expected_module_hash\"] {",
+         "line" : 238,
+         "path" : "crates/canic-backup/src/plan/tests/mod.rs"
+      },
+      {
+         "excerpt" : "/// RestorePlan",
+         "line" : 49,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "pub struct RestorePlan {",
+         "line" : 57,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "    pub members: Vec<RestorePlanMember>,",
+         "line" : 71,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "impl RestorePlan {",
+         "line" : 74,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "    pub fn ordered_members(&self) -> Vec<&RestorePlanMember> {",
+         "line" : 77,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlan`.",
+         "line" : 86,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlan`.",
+         "line" : 105,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlan`.",
+         "line" : 123,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlan`.",
+         "line" : 141,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlan`.",
+         "line" : 155,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlan`.",
+         "line" : 173,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// RestorePlanMember",
+         "line" : 185,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "pub struct RestorePlanMember {",
+         "line" : 193,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "/// Owned by restore planning and embedded in `RestorePlanMember`.",
+         "line" : 213,
+         "path" : "crates/canic-backup/src/restore/plan/types.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: decode_sha256(root_wasm_sha256, \"Fleet Subnet Root\")?,",
+         "line" : 543,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/canic_init/mod.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 8,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 53,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = serde_json::from_value::<RestorePlan>(value).expect_err(\"unknown field rejects\");",
+         "line" : 57,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 65,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = serde_json::from_value::<RestorePlan>(value).expect_err(\"plan version is required\");",
+         "line" : 71,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    std::assert_matches!(err, RestorePlanError::UnsupportedVersion(2));",
+         "line" : 79,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let mut plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 85,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        RestorePlanError::ProjectionMismatch(\"readiness_summary\")",
+         "line" : 94,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let mut plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 101,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        RestorePlanError::ProjectionMismatch(\"members[].parent_target_canister\")",
+         "line" : 115,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 122,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        let err = serde_json::from_value::<RestorePlan>(value)",
+         "line" : 132,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        let err = serde_json::from_value::<RestorePlanMember>(value)",
+         "line" : 156,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanner::plan(&manifest, Some(&mapping))",
+         "line" : 179,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    std::assert_matches!(err, RestorePlanError::FixedIdentityRemap { .. });",
+         "line" : 182,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, Some(&mapping)).expect(\"plan should build\");",
+         "line" : 202,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 223,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let in_place = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 240,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let mapped = RestorePlanner::plan(&manifest, Some(&mapping)).expect(\"plan should build\");",
+         "line" : 258,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 273,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 310,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 333,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 364,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 399,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanner::plan(&manifest, Some(&mapping))",
+         "line" : 441,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    std::assert_matches!(err, RestorePlanError::MissingMappingSource(_));",
+         "line" : 444,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanner::plan(&manifest, Some(&mapping))",
+         "line" : 469,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    std::assert_matches!(err, RestorePlanError::UnknownMappingSource(_));",
+         "line" : 472,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        RestorePlanner::plan(&manifest, Some(&mapping)).expect_err(\"duplicate targets should fail\");",
+         "line" : 493,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    std::assert_matches!(err, RestorePlanError::DuplicateMappingTarget(_));",
+         "line" : 495,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "            \"targets[].expected_module_hash\",",
+         "line" : 100,
+         "path" : "crates/canic-backup/src/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            target.expected_module_hash.as_deref(),",
+         "line" : 101,
+         "path" : "crates/canic-backup/src/plan/validation.rs"
+      },
+      {
+         "excerpt" : "/// RestorePlanError",
+         "line" : 12,
+         "path" : "crates/canic-backup/src/restore/plan/error.rs"
+      },
+      {
+         "excerpt" : "pub enum RestorePlanError {",
+         "line" : 19,
+         "path" : "crates/canic-backup/src/restore/plan/error.rs"
+      },
+      {
+         "excerpt" : "    FixedIdentityRemap {",
+         "line" : 51,
+         "path" : "crates/canic-backup/src/restore/plan/error.rs"
+      },
+      {
+         "excerpt" : "    RestorePlan, RestorePlanError, RestorePlanMember, order_members, restore_identity_summary,",
+         "line" : 8,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "impl RestorePlan {",
+         "line" : 22,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "    pub fn validate(&self) -> Result<(), RestorePlanError> {",
+         "line" : 24,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::UnsupportedVersion(self.plan_version));",
+         "line" : 26,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::MemberCountMismatch {",
+         "line" : 33,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::EmptyField(\"members\"));",
+         "line" : 39,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "fn validate_members(plan: &RestorePlan) -> Result<(), RestorePlanError> {",
+         "line" : 47,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::DuplicatePlanSource(",
+         "line" : 56,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::DuplicatePlanTarget(",
+         "line" : 61,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::FixedIdentityRemap {",
+         "line" : 68,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "                    return Err(RestorePlanError::ProjectionMismatch(",
+         "line" : 95,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            return Err(RestorePlanError::ProjectionMismatch(",
+         "line" : 101,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "        return Err(RestorePlanError::ProjectionMismatch(\"members\"));",
+         "line" : 116,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "fn validate_member_snapshot(member: &RestorePlanMember) -> Result<(), RestorePlanError> {",
+         "line" : 121,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "        return Err(RestorePlanError::ProjectionMismatch(",
+         "line" : 131,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "fn validate_projections(plan: &RestorePlan) -> Result<(), RestorePlanError> {",
+         "line" : 144,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : ") -> Result<(), RestorePlanError> {",
+         "line" : 168,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "        Err(RestorePlanError::ProjectionMismatch(field))",
+         "line" : 172,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "fn validate_nonempty(field: &'static str, value: &str) -> Result<(), RestorePlanError> {",
+         "line" : 176,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "        Err(RestorePlanError::EmptyField(field))",
+         "line" : 178,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "fn validate_principal(field: &'static str, value: &str) -> Result<(), RestorePlanError> {",
+         "line" : 184,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "        .map_err(|_| RestorePlanError::InvalidPrincipal {",
+         "line" : 188,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "fn validate_hash(field: &'static str, value: &str) -> Result<(), RestorePlanError> {",
+         "line" : 194,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "        Err(RestorePlanError::InvalidHash {",
+         "line" : 198,
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs"
+      },
+      {
+         "excerpt" : "            expected_module_hash: None,",
+         "line" : 66,
+         "path" : "crates/canic-backup/src/restore/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: [11; 32],",
+         "line" : 480,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/canic_init/tests.rs"
+      },
+      {
+         "excerpt" : "            requires_stopped_canister: false,",
+         "line" : 22,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "            requires_stopped_canister: false,",
+         "line" : 66,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "            requires_stopped_canister: false,",
+         "line" : 185,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 319,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 348,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 363,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 381,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 404,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        \"expected_module_hash\",",
+         "line" : 424,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 451,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 491,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 554,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 583,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 619,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    assert!(!command.requires_stopped_canister);",
+         "line" : 645,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 669,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 719,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "                requires_stopped_canister: false,",
+         "line" : 741,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "                requires_stopped_canister: false,",
+         "line" : 767,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    assert!(command.requires_stopped_canister);",
+         "line" : 798,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 822,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "                requires_stopped_canister: false,",
+         "line" : 847,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    assert!(!command.requires_stopped_canister);",
+         "line" : 895,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    assert!(!command.requires_stopped_canister);",
+         "line" : 929,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "            expected_module_hash: None,",
+         "line" : 966,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 989,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1038,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1055,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1239,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1281,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1334,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1376,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1420,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1447,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "        RestoreIdentitySummary, RestoreOperationSummary, RestorePlanMember,",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/restore/plan/summary.rs"
+      },
+      {
+         "excerpt" : "    members: &[RestorePlanMember],",
+         "line" : 16,
+         "path" : "crates/canic-backup/src/restore/plan/summary.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn restore_snapshot_summary(members: &[RestorePlanMember]) -> RestoreSnapshotSummary {",
+         "line" : 50,
+         "path" : "crates/canic-backup/src/restore/plan/summary.rs"
+      },
+      {
+         "excerpt" : "    members: &[RestorePlanMember],",
+         "line" : 95,
+         "path" : "crates/canic-backup/src/restore/plan/summary.rs"
+      },
+      {
+         "excerpt" : "pub use error::RestorePlanError;",
+         "line" : 15,
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs"
+      },
+      {
+         "excerpt" : "/// RestorePlanner",
+         "line" : 29,
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs"
+      },
+      {
+         "excerpt" : "pub struct RestorePlanner;",
+         "line" : 35,
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs"
+      },
+      {
+         "excerpt" : "impl RestorePlanner {",
+         "line" : 37,
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs"
+      },
+      {
+         "excerpt" : "    ) -> Result<RestorePlan, RestorePlanError> {",
+         "line" : 42,
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs"
+      },
+      {
+         "excerpt" : "        let plan = RestorePlan {",
+         "line" : 60,
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs"
+      },
+      {
+         "excerpt" : "        let matching_module = canic_core::cdk::utils::hash::hex_bytes(root.expected_module_hash)",
+         "line" : 272,
+         "path" : "crates/canic-host/src/component_operation/ops/transport/mod.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: [31; 32],",
+         "line" : 1898,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/current_protocol/tests.rs"
+      },
+      {
+         "excerpt" : "            expected_module_hash: [31; 32],",
+         "line" : 2132,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/current_protocol/tests.rs"
+      },
+      {
+         "excerpt" : "        expected_module_hash: [79; 32],",
+         "line" : 4687,
+         "path" : "crates/canic-host/src/fleet_ensure/generate/tests.rs"
+      }
+   ],
+   "files" : [
+      {
+         "bytes" : 6885,
+         "inspected_sections" : [
+            {
+               "first_line" : 1,
+               "last_line" : 198
+            }
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs",
+         "sha256" : "1bfacebee715ddf0bdec2aba905eb875ad68e39269d818edb64d67faeae85ddd"
+      },
+      {
+         "bytes" : 7632,
+         "inspected_sections" : [
+            {
+               "first_line" : 1,
+               "last_line" : 203
+            }
+         ],
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs",
+         "sha256" : "fa6139061870d05dc32d06b368801253f71ba79d0f264eed016ba305786ffad2"
+      },
+      {
+         "bytes" : 7030,
+         "inspected_sections" : [
+            {
+               "first_line" : 1,
+               "last_line" : 235
+            }
+         ],
+         "path" : "crates/canic-backup/src/restore/plan/types.rs",
+         "sha256" : "d3a086558829183d5280e7a96475b00169e6d34f3319bc78cca49013255ad7da"
+      },
+      {
+         "bytes" : 33401,
+         "inspected_sections" : [
+            {
+               "first_line" : 410,
+               "last_line" : 547
+            }
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "sha256" : "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079"
+      },
+      {
+         "bytes" : 10679,
+         "inspected_sections" : [
+            {
+               "first_line" : 1,
+               "last_line" : 125
+            }
+         ],
+         "path" : "crates/canic-cli/src/restore/mod.rs",
+         "sha256" : "2e4b817f56cb5b8fcac0fa499ce3b210984d5b4d2df80e48aaf8da229e95bdc3"
+      },
+      {
+         "bytes" : 2593,
+         "inspected_sections" : [
+            {
+               "first_line" : 1,
+               "last_line" : 79
+            }
+         ],
+         "path" : "crates/canic-cli/src/restore/enforce.rs",
+         "sha256" : "aadea867d5ab0649e4429284f54318d4ff98f463532fc9dfa466a946496e1456"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "kind" : "restore_safety_source_provenance",
+   "license" : "No sibling license changed or reassigned. Existing MIT notice and earlier copied-source provenance remain retained; this batch refines contracts rather than importing runner source.",
+   "local_ownership" : {
+      "integration" : "Original source authenticity, complete artifacts/uploaded snapshot association, fresh observations, actual no-irreversible-effects knowledge or rewind-independent fence/replay/controlled-execution qualification, original obligation retention and prior per-call accounting.",
+      "observation" : "Nonempty canonical unique bounded actual target rows and actual context/full inventory/source/safety evidence; no Serde current authority.",
+      "policy" : "Pure exact original-source/lane/revision/actual lifecycle/acceptance checks; no IO, accounting, dispatch or release.",
+      "request" : "Original exact load/start payload, requirement, operation, challenge and descriptive 1024-call ceiling.",
+      "requirement" : "Strict immutable v1 original restore/source/artifact/safety declaration under 1024-byte IO; exact both-layout plan checks and no-replace publication."
+   },
+   "qualification" : "Focused native record/policy/persistence and public retained-source/spent-attempt/obligation/reference fixture recovery only. No actual IC load/start, source transfer, fencing, irreversible-work settlement, authenticated provider, macOS qualification, terminal proof or full B1/B2 is established.",
+   "retained_provenance" : [
+      "docs/source-baseline.json",
+      "docs/extraction-source.json",
+      "docs/layout-source.json",
+      "docs/command-custody-source.json",
+      "docs/download-journal-source.json",
+      "docs/attempt-journal-source.json",
+      "docs/inventory-source.json",
+      "docs/effect-graph-source.json",
+      "docs/operation-plan-source.json",
+      "docs/execution-progress-source.json",
+      "docs/ic-request-source.json",
+      "docs/membership-source.json",
+      "docs/control-authority-source.json",
+      "docs/snapshot-read-source.json",
+      "docs/consistency-source.json",
+      "docs/ic-snapshot-reply-source.json",
+      "docs/snapshot-inventory-delta-source.json",
+      "docs/ic-lifecycle-reply-source.json",
+      "docs/download-integrity-source.json",
+      "docs/management-types-upgrade.json"
+   ],
+   "schema_version" : 1,
+   "scope" : "Read-only selected restore source identity/mapping declarations and validation, stopped-load preconditions, module-hash verification/lifecycle reconciliation and CLI owners. Working-tree hashes identify inspected bytes; reference enumeration is text evidence, not qualification of every consumer.",
+   "source_has_uncommitted_changes" : true,
+   "source_head" : "a2108801d7b2d5802f3e864556dc8781b3b382df",
+   "source_repository" : "https://github.com/dragginzgame/canic"
+}

@@ -6,12 +6,14 @@ mod command_lifetime_lock;
 mod consistency;
 mod download_journal;
 mod effect_graph;
+mod fence_obligation;
 mod file_lock;
 mod inventory;
 mod journal_lock;
 mod json;
 mod layout_lifetime;
 mod operation_plan;
+mod restore_safety;
 
 pub use artifact_commit::{ArtifactCommitOutcome, commit_artifact_directory};
 pub use attempt_journal::{AttemptJournalError, AttemptJournalGuard};
@@ -24,12 +26,20 @@ pub use consistency::{
 };
 pub use download_journal::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard};
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
+pub use fence_obligation::{
+    FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,
+    read_fence_obligation,
+};
 pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub use json::{create_json_durable, read_json, write_json_durable};
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
 pub use operation_plan::{
     OperationPlanPersistenceError, create_operation_plan, read_operation_plan,
+};
+pub use restore_safety::{
+    RestoreSafetyPersistenceError, create_restore_safety_requirement,
+    read_restore_safety_requirement,
 };
 
 use crate::{model::artifacts::ChecksumError, ops::artifacts::ArtifactError};

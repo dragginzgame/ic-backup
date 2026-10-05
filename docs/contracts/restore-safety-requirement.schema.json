@@ -1,0 +1,187 @@
+{
+   "$defs" : {
+      "checksum" : {
+         "additionalProperties" : false,
+         "properties" : {
+            "algorithm" : {
+               "const" : "sha256"
+            },
+            "hash" : {
+               "maxLength" : 64,
+               "minLength" : 64,
+               "pattern" : "^[0-9a-fA-F]{64}$",
+               "type" : "string"
+            }
+         },
+         "required" : [
+            "algorithm",
+            "hash"
+         ],
+         "type" : "object"
+      },
+      "fence" : {
+         "additionalProperties" : false,
+         "properties" : {
+            "external_obligations_revision" : {
+               "$ref" : "#/$defs/checksum"
+            },
+            "identity" : {
+               "$ref" : "#/$defs/checksum"
+            },
+            "membership_revision" : {
+               "$ref" : "#/$defs/checksum"
+            }
+         },
+         "required" : [
+            "identity",
+            "membership_revision",
+            "external_obligations_revision"
+         ],
+         "type" : "object"
+      }
+   },
+   "$id" : "https://github.com/dragginzgame/ic-backup/blob/main/docs/contracts/restore-safety-requirement.schema.json",
+   "$schema" : "https://json-schema.org/draft/2020-12/schema",
+   "additionalProperties" : false,
+   "allOf" : [
+      {
+         "else" : {
+            "properties" : {
+               "expected_fence" : {
+                  "$ref" : "#/$defs/fence"
+               }
+            }
+         },
+         "if" : {
+            "properties" : {
+               "safety" : {
+                  "const" : "no_irreversible_effects"
+               }
+            }
+         },
+         "then" : {
+            "properties" : {
+               "expected_fence" : {
+                  "type" : "null"
+               }
+            }
+         }
+      }
+   ],
+   "description" : "Immutable original restore/source/artifact/safety binding, not current safety, source completeness or fence authority. Raw input and canonical output bound: 1024 bytes.",
+   "examples" : [
+      {
+         "expected_fence" : null,
+         "plan_intent" : "abababababababababababababababababababababababababababababababab",
+         "safety" : "no_irreversible_effects",
+         "source_artifacts" : {
+            "algorithm" : "sha256",
+            "hash" : "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef"
+         },
+         "source_plan_intent" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+         "version" : 1
+      },
+      {
+         "expected_fence" : {
+            "external_obligations_revision" : {
+               "algorithm" : "sha256",
+               "hash" : "9090909090909090909090909090909090909090909090909090909090909090"
+            },
+            "identity" : {
+               "algorithm" : "sha256",
+               "hash" : "5656565656565656565656565656565656565656565656565656565656565656"
+            },
+            "membership_revision" : {
+               "algorithm" : "sha256",
+               "hash" : "7878787878787878787878787878787878787878787878787878787878787878"
+            }
+         },
+         "plan_intent" : "abababababababababababababababababababababababababababababababab",
+         "safety" : "application_fenced",
+         "source_artifacts" : {
+            "algorithm" : "sha256",
+            "hash" : "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef"
+         },
+         "source_plan_intent" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+         "version" : 1
+      }
+   ],
+   "properties" : {
+      "expected_fence" : {
+         "oneOf" : [
+            {
+               "type" : "null"
+            },
+            {
+               "$ref" : "#/$defs/fence"
+            }
+         ]
+      },
+      "plan_intent" : {
+         "maxLength" : 64,
+         "minLength" : 64,
+         "pattern" : "^[0-9a-fA-F]{64}$",
+         "type" : "string"
+      },
+      "safety" : {
+         "enum" : [
+            "no_irreversible_effects",
+            "application_fenced"
+         ]
+      },
+      "source_artifacts" : {
+         "$ref" : "#/$defs/checksum"
+      },
+      "source_plan_intent" : {
+         "maxLength" : 64,
+         "minLength" : 64,
+         "pattern" : "^[0-9a-fA-F]{64}$",
+         "type" : "string"
+      },
+      "version" : {
+         "const" : 1,
+         "type" : "integer"
+      }
+   },
+   "required" : [
+      "version",
+      "plan_intent",
+      "source_plan_intent",
+      "source_artifacts",
+      "safety",
+      "expected_fence"
+   ],
+   "title" : "RestoreSafetyRequirementRecord v1",
+   "type" : "object",
+   "x-canonical-digest" : {
+      "algorithm" : "sha256",
+      "encoding" : [
+         "ASCII ic-backup/restore-safety-requirement/v1 followed by NUL",
+         "64 lowercase ASCII original restore-plan intent bytes",
+         "64 lowercase ASCII original source-plan intent bytes",
+         "64 lowercase ASCII source-artifacts hash bytes",
+         "Safety tag: no_irreversible_effects=0; application_fenced=1",
+         "Fenced lane only: 64 lowercase ASCII bytes each of fence identity, original membership revision, original external-obligations revision"
+      ],
+      "goldens" : [
+         {
+            "digest" : "08fb9eb918168e12029a96a5d4919f9cc8a7ff5824d850ad5feadfe6ec6b4f29",
+            "encoded_bytes" : 233,
+            "safety" : "no_irreversible_effects"
+         },
+         {
+            "digest" : "4965578322aef471bf8e6efdd64f35bc7c69729b80ef8b06402ea97c363d5297",
+            "encoded_bytes" : 425,
+            "safety" : "application_fenced"
+         }
+      ]
+   },
+   "x-semantic-admission" : [
+      "Exact original restore and source plan digests",
+      "Same declared source/restore network and release; source caller may differ",
+      "Every selected restore ID was selected in the source; a subset needs application safety qualification",
+      "Exact source artifacts and original fence revisions remain immutable",
+      "Both original plans retained under unchanged layout exclusion before immutable no-replace publication; exact expected digest on read",
+      "Canonical lowercase SHA-256 owner normalization; expected_fence is required, explicitly null only in the no-irreversible-effects lane"
+   ]
+}

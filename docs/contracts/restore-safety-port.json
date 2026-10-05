@@ -1,0 +1,79 @@
+{
+   "admission" : [
+      "Exact request/challenge, actual context/full inventory/exact original selection/source/lane",
+      "Actual reported calls within descriptive ceiling",
+      "Before load, every selected target Stopped with application-qualified drain evidence",
+      "Before start, exact operation target Stopped and every selected restored state accepted for this exact source",
+      "Other selected targets may already be Running under qualified controlled execution; still-Stopping members reject. Canonical order grants no dispatch or lifecycle order",
+      "Fenced lane requires exact original active outside-snapshot custody/revisions/replay safety; start also requires controlled execution"
+   ],
+   "canonical_request_digest" : {
+      "algorithm" : "sha256",
+      "boundary" : "The exact original wire digest distinguishes load from start; no independent editable boundary flag",
+      "encoding" : [
+         "ASCII ic-backup/restore-safety-request/v1 followed by NUL",
+         "64 lowercase ASCII requirement-digest bytes",
+         "u64 BE original operation sequence",
+         "64 lowercase ASCII exact original wire-digest bytes",
+         "64 lowercase ASCII fresh challenge hash bytes",
+         "u32 BE descriptive call ceiling"
+      ]
+   },
+   "integration_qualification" : [
+      "Original source authenticity, complete stable artifacts and target-local load snapshot association",
+      "Same-release existing targets and actual current release identity",
+      "Fresh actual challenge/context/full inventory/lifecycle/drain observations",
+      "Actual no-irreversible-effects knowledge or continuously retained whole-selection fence outside rewindable state",
+      "External obligation authority revision, settlement/replayed-work suppression and controlled restored execution",
+      "Source-specific restored-state acceptance, independently of module hashes/load acknowledgements",
+      "Prior bounded per-call accounting and complete lifecycle graph/receipt/dispatch admission"
+   ],
+   "kind" : "restore_safety_port_contract",
+   "non_authority" : [
+      "No installed/default provider, Serde current observation or Proven/expiry flag",
+      "No fence acquisition/release, paid calls, signing or load/start dispatch",
+      "No load receipt/uncertain-effect settlement, reset/refund or transfer completeness from digests",
+      "No terminal proof or source-reference release",
+      "Terminal replay never calls this provider; fresh live verification is separate",
+      "No actual IC/application/macOS qualification"
+   ],
+   "observation" : {
+      "context" : "Actual canonical network/caller/release",
+      "evidence" : "Opaque current integration-qualified evidence identity; no signatures or self-authenticating proof",
+      "inventory" : "Complete actual canonical inventory including unselected metadata",
+      "remote_observations" : "Actual remote calls, requiring separate prior approved accounting",
+      "safety" : [
+         "NoIrreversibleEffects: application-qualified absence of irreversible work, including restored intent/timers; no generic default",
+         "ApplicationFenced: current Active exact fence and original membership/external-obligation revisions, whole-selection write/membership/timer/external-work/drain proof, rewind-independent continuous custody and qualified settlement/replay prevention; controlled-execution evidence required before start",
+         "Unresolved: known unsafe/unresolved irreversible obligations; always denied"
+      ],
+      "source" : "Exact qualified original source plan and complete artifacts; before load, complete metadata/data and target-local snapshot ID association to the original source",
+      "targets" : "1..1024 normalized sorted unique inventory-backed actual target rows, upstream CanisterStatusType, lifecycle/drained-work evidence and nullable source-specific restored acceptance"
+   },
+   "provider_errors" : {
+      "Indeterminate" : "Unknown actual state/custody/source/reply/accounting; retain consumed authority and obligations and stop without retry/reset/release",
+      "Unavailable" : "No qualified provider; reject before effects",
+      "Unsupported" : "Cannot qualify original safety/source contract; reject before effects"
+   },
+   "request" : {
+      "challenge" : "Fresh unique integration-owned challenge; matching digests alone cannot prove freshness",
+      "max_remote_observations" : {
+         "maximum" : 1024,
+         "meaning" : "Descriptive ceiling only; not a reservation, preflight allowance or paid-call permit",
+         "minimum" : 0
+      },
+      "methods" : [
+         "load_canister_snapshot",
+         "start_canister"
+      ],
+      "original_binding" : "Full original restore/source intents, exact original artifacts/lane/fence revisions, operation sequence, exact target/raw snapshot ID/method/Candid bytes"
+   },
+   "requirement" : {
+      "file" : "restore-safety-requirement.json",
+      "io_bound_bytes" : 1024,
+      "retention" : "Both exact original plans retained under their unchanged guards; immutable no-replace publication and exact expected digest/plan reads. Artifact custody and source references remain separate owners.",
+      "schema" : "restore-safety-requirement.schema.json"
+   },
+   "schema_version" : 1,
+   "scope" : "Pure original-plan/source safety declaration and fresh application-owned evidence admission, not actual restore or a live provider."
+}

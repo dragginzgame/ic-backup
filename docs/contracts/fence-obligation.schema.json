@@ -1,0 +1,172 @@
+{
+   "$defs" : {
+      "checksum" : {
+         "additionalProperties" : false,
+         "properties" : {
+            "algorithm" : {
+               "const" : "sha256"
+            },
+            "hash" : {
+               "pattern" : "^[0-9a-fA-F]{64}$",
+               "type" : "string"
+            }
+         },
+         "required" : [
+            "algorithm",
+            "hash"
+         ],
+         "type" : "object"
+      }
+   },
+   "$id" : "https://github.com/dragginzgame/ic-backup/blob/main/docs/contracts/fence-obligation.schema.json",
+   "$schema" : "https://json-schema.org/draft/2020-12/schema",
+   "additionalProperties" : false,
+   "description" : "Immutable declaration, published before acquisition. Full original plan and retained requirement must match. Exact attempt journals own spending and reconciliation. No Active/released flag, automatic release, missing-evidence refund or dispatch authority.",
+   "properties" : {
+      "acquisition_operation" : {
+         "maximum" : 18446744073709551615,
+         "minimum" : 0,
+         "type" : "integer"
+      },
+      "plan_intent" : {
+         "$ref" : "#/$defs/checksum"
+      },
+      "scope" : {
+         "oneOf" : [
+            {
+               "additionalProperties" : false,
+               "properties" : {
+                  "identity" : {
+                     "$ref" : "#/$defs/checksum"
+                  },
+                  "membership_revision" : {
+                     "$ref" : "#/$defs/checksum"
+                  },
+                  "purpose" : {
+                     "const" : "capture"
+                  },
+                  "requirement" : {
+                     "$ref" : "#/$defs/checksum"
+                  }
+               },
+               "required" : [
+                  "purpose",
+                  "requirement",
+                  "identity",
+                  "membership_revision"
+               ],
+               "type" : "object"
+            },
+            {
+               "additionalProperties" : false,
+               "properties" : {
+                  "fence" : {
+                     "additionalProperties" : false,
+                     "properties" : {
+                        "external_obligations_revision" : {
+                           "$ref" : "#/$defs/checksum"
+                        },
+                        "identity" : {
+                           "$ref" : "#/$defs/checksum"
+                        },
+                        "membership_revision" : {
+                           "$ref" : "#/$defs/checksum"
+                        }
+                     },
+                     "required" : [
+                        "identity",
+                        "membership_revision",
+                        "external_obligations_revision"
+                     ],
+                     "type" : "object"
+                  },
+                  "purpose" : {
+                     "const" : "restore"
+                  },
+                  "requirement" : {
+                     "$ref" : "#/$defs/checksum"
+                  }
+               },
+               "required" : [
+                  "purpose",
+                  "requirement",
+                  "fence"
+               ],
+               "type" : "object"
+            }
+         ]
+      },
+      "version" : {
+         "const" : 1
+      }
+   },
+   "required" : [
+      "version",
+      "plan_intent",
+      "acquisition_operation",
+      "scope"
+   ],
+   "title" : "Original application fence obligation v1",
+   "type" : "object",
+   "x-canonical-digest" : [
+      {
+         "record" : {
+            "acquisition_operation" : 7,
+            "plan_intent" : {
+               "algorithm" : "sha256",
+               "hash" : "abababababababababababababababababababababababababababababababab"
+            },
+            "scope" : {
+               "identity" : {
+                  "algorithm" : "sha256",
+                  "hash" : "5656565656565656565656565656565656565656565656565656565656565656"
+               },
+               "membership_revision" : {
+                  "algorithm" : "sha256",
+                  "hash" : "7878787878787878787878787878787878787878787878787878787878787878"
+               },
+               "purpose" : "capture",
+               "requirement" : {
+                  "algorithm" : "sha256",
+                  "hash" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+               }
+            },
+            "version" : 1
+         },
+         "sha256" : "6236378847fc5a3dfc820daf817dc8a8c3888fdcf485b7120b983520f3be9d1f"
+      },
+      {
+         "record" : {
+            "acquisition_operation" : 7,
+            "plan_intent" : {
+               "algorithm" : "sha256",
+               "hash" : "abababababababababababababababababababababababababababababababab"
+            },
+            "scope" : {
+               "fence" : {
+                  "external_obligations_revision" : {
+                     "algorithm" : "sha256",
+                     "hash" : "9090909090909090909090909090909090909090909090909090909090909090"
+                  },
+                  "identity" : {
+                     "algorithm" : "sha256",
+                     "hash" : "5656565656565656565656565656565656565656565656565656565656565656"
+                  },
+                  "membership_revision" : {
+                     "algorithm" : "sha256",
+                     "hash" : "7878787878787878787878787878787878787878787878787878787878787878"
+                  }
+               },
+               "purpose" : "restore",
+               "requirement" : {
+                  "algorithm" : "sha256",
+                  "hash" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+               }
+            },
+            "version" : 1
+         },
+         "sha256" : "89611b2d321711b6a94151c297c6e2f8df47cd0221df9db90c3a49e74f41121d"
+      }
+   ],
+   "x-max-io-bytes" : 1024
+}

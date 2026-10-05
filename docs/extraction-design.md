@@ -265,12 +265,12 @@ status/read visibility must never be mistaken for write authority.
 | `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
 | `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
 | `ConsistencyProvider` | Implemented ephemeral current stopped/drained target and existing exact application fence validation under original guarantee; no provider or acquisition/release effects |
-| `ConsistencyCoordinator` | Intended application fence acquisition and controlled release, with durable obligations and uncertain-effect reconciliation |
-| `RestoreSafetyProvider` | Same-release admission and external-obligation disposition before load/start |
+| `ConsistencyCoordinator` | Original fence obligation retention and exact acquisition-journal projections are implemented; actual acquisition, authenticated uncertain-effect reconciliation and controlled release remain intended integration responsibilities |
+| `RestoreSafetyProvider` | Implemented immutable original source/safety requirement and fresh exact load/start evidence matching; actual source, fence, restored acceptance and external-obligation qualification remain integration-owned |
 | `ArtifactStore` | Local durable custody, streamed verification, references and retention locks |
 | `Clock` | Testable deadline/lease policy; time is not an authority identifier |
 
-Membership, direct-control, snapshot-read and consistency observation ports have maintained Rust signatures;
+Membership, direct-control, snapshot-read, consistency and restore-safety observation ports have maintained Rust signatures;
 the other rows remain intended responsibilities. The membership request derives exact original intent
 and operation identity, immutable full inventory/selection, a caller-owned fresh
 challenge, explicit before/after boundary and 0–1,024 descriptive remote-call
@@ -354,12 +354,37 @@ Do not automatically release a consistency fence on timeout, process death,
 partial capture or restore failure. A failed operation retains the exact safety
 obligation and exposes a reviewed continuation/disposition action.
 
+`FenceObligationRecord` now retains the exact original plan/selection, capture or
+restore requirement, chosen fence/revisions and explicit application acquisition
+operation before reservation/dispatch. Its immutable 1 KiB publication requires
+retained originals; restore checks both guarded plans. Recovery joins the exact
+original attempt journal, without inventing another accounting ledger or treating
+missing evidence as unspent. Pending and settled outcomes retain the declaration.
+An Applied projection does not establish current Active custody or authorize
+release. No coordinator implementation, acquisition/release action, release flag
+or terminal admission exists. Original request semantics and whole-selection
+fence custody remain integration-qualified. See
+[the schema](contracts/fence-obligation.schema.json) and
+[implemented boundary](extraction-boundary.md#original-application-fence-obligation-retention).
+
 Snapshot load can restore old journals, timer state and application intent while
 external payments, providers and other canisters have already advanced. An
 application with irreversible effects must prove settlement or maintain a
 restore fence outside the rewindable snapshot. A generic default cannot certify
 that property. Canic's custody restrictions and blob/auth service contracts
 remain their owners' qualification work; extraction must not bypass them.
+
+The implemented restore-safety declaration retains exact original restore/source
+intent and source artifact binding, same-network/release existing IDs, explicit
+no-irreversible-effects or application-fenced lane and original outside-snapshot
+fence revisions. Fresh requests bind original exact load/start bytes and challenge.
+Pure admission requires actual full inventory/selection/source/lane, all stopped
+targets before load and source-specific restored acceptance before start. A
+fenced start additionally needs qualified controlled execution. No provider,
+fence acquisition/release, complete source manifest/transfer qualification or
+uncertain-load settlement is installed. See
+[the requirement schema](contracts/restore-safety-requirement.schema.json) and
+[typed port contract](contracts/restore-safety-port.json).
 
 The standalone single-canister example must state its assumption: the selected
 application has no unreconciled irreversible external effects. Applications that
@@ -886,7 +911,7 @@ argument-shape decoding, bounded strict records and native byte-bound journal
 recovery qualification. This does not qualify an authenticated backend or actual
 snapshot/lifecycle effects. Transfer/response codecs and live admission remain pending.
 Remaining B1 work specifies lost create/upload/load reconciliation and freezes
-application fence acquisition/release and restore safety, journal and executor
+application fence acquisition/release and actual restore safety, journal and executor
 contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.
 The membership request/result/provider contract and pure exact-result admission now
@@ -906,6 +931,11 @@ strict schema/hash, no-downgrade local persistence, exact original revision/fenc
 inactive/non-stopped denial and public retained-obligation/spent-journal recovery
 qualification. Actual distributed checkpoint, continuous application fencing,
 acquisition/release and same-release restore settlement remain unestablished.
+Original restore/source/safety requirements and fresh exact load/start checks now
+have strict schema/hash, immutable both-layout persistence, current source/lane/
+fence-revision/lifecycle/acceptance denial and retained-spending/obligation/reference
+recovery evidence. These are local contracts; actual source/upload qualification,
+outside-snapshot application safety, providers and lost-load settlement remain pending.
 
 ## 20. Completion criteria
 

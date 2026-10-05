@@ -94,6 +94,9 @@ Original consistency requirements and current capture/fence observations have
 [separate consistency provenance](consistency-source.json).
 Snapshot capture/inventory reply admission has
 [separate reply provenance](ic-snapshot-reply-source.json).
+Original fence obligation retention is a local contract refinement; its
+[fresh source inspection](fence-obligation-source.json) distinguishes Canic
+terminal/custody behavior from unimplemented generic acquisition/release.
 
 ## Maintained local contracts
 
@@ -1091,6 +1094,139 @@ fixture bytes across all typed failures/drop. These establish local contracts on
 application fence acquisition/release, actual lifecycle/drain/continuous custody,
 capture completion and same-release restore/external-payment settlement remain pending.
 
+### Original restore safety requirements and current load/start checks
+
+`model::restore_safety::RestoreSafetyRequirementRecord` retains strict v1 `version`,
+canonical full `plan_intent`, full `source_plan_intent`, exact `source_artifacts`,
+explicit `safety` lane and required nullable `expected_fence`. Both declared plans
+must share network/release, and every selected restore ID must have been selected
+in the source. A restore subset is allowed only with application qualification;
+source caller may differ from the current caller. The application-fenced lane
+retains exact original identity, membership revision and external-obligations
+revision; the no-irreversible-effects lane requires explicit null. Missing/unknown
+fields, other versions, inappropriate fence lanes and malformed hashes reject.
+Canonical domain-separated hashing binds every original field. See
+[the schema and independent binary goldens](contracts/restore-safety-requirement.schema.json).
+
+`create_restore_safety_requirement` requires both exact plans already retained
+under their unchanged layout guards, then durably creates fixed
+`restore-safety-requirement.json` under journal exclusion without replacement.
+`read_restore_safety_requirement` checks both retained plans, the original source
+binding and exact expected requirement digest. Raw input and canonical output
+have a 1 KiB ceiling. Lost local creation replies reconcile through exact reads;
+missing/corrupt/changed evidence never changes the lane, source or obligation.
+This declaration does not verify artifacts or automatically retain a source
+reference; those remain separate existing owners before any recoverable effects.
+
+`RestoreSafetyRequest` derives exact original operation authority and validates
+original load/start target/method/Candid bytes, including the raw load snapshot ID.
+It binds the original requirement, operation, wire digest, integration-owned fresh
+challenge and 0–1,024 descriptive call ceiling. The wire digest owns the effect
+boundary, with no independent mutable phase flag. Canonical current observations
+admit 1–1,024 unique normalized inventory-backed target rows, upstream
+`CanisterStatusType`, lifecycle/drain evidence and nullable source-specific restored
+acceptance, actual context/full inventory/source bindings, application safety lane,
+opaque evidence and actual calls. Requests, observations and views have no Serde,
+default provider, persisted Proven/expiry or fresh-authority flag.
+
+Pure `policy::restore_safety::validate` requires exact request/context/full
+inventory/original selection/source/lane and bounded actual calls. Load needs every
+selected target Stopped with integration-qualified drain evidence. Start needs its
+exact target Stopped and every selected restored state accepted for this source;
+other selected targets may already be Running under the integration's controlled
+execution contract, while a still-Stopping member rejects. Graph order and actual
+receipt/dispatch chronology remain
+separate, with no universal parent or canonical lifecycle order.
+
+The explicit no-irreversible-effects lane requires actual application knowledge
+about restored intent/timers; there is no generic standalone assumption/default.
+The fenced lane requires current Active exact original fence/revisions plus
+whole-selection write/membership/timer/external-work/drain, continuous
+rewind-independent custody and qualified external-obligation/replay prevention
+evidence. Before start it additionally requires current controlled-execution
+evidence. Known unresolved external obligations and inactive/rebound fences deny.
+Settlement alone cannot qualify restored work that may replay an irreversible
+effect. Hash equality and passive DTO construction cannot authenticate these facts.
+
+`ports::restore_safety::RestoreSafetyProvider` has no installed implementation.
+Integrations qualify complete original source artifacts and target-local uploaded
+snapshot association, actual freshness/release/lifecycle/drain, outside-snapshot
+fence custody/revisions/replay safety, restored acceptance and prior per-call
+accounting. A descriptive ceiling grants no spending. Unavailable/Unsupported
+reject before effects; Indeterminate retains evidence, original spent authority
+and obligations and stops without retry, reset or release. Dropping values,
+timeouts and process death release no obligation. Terminal replay invokes no
+provider. No view settles a lost load, proves complete transfer, signs/dispatches
+load/start or grants terminal, fence or source-reference release. See
+[the current typed contract](contracts/restore-safety-port.json).
+
+Fresh native tests cover strict schema and independent hash goldens, source and
+original attempt sensitivity, canonical bounded targets, exact load/start payloads,
+source/network/release/selection/lane mismatch, stale challenges, full inventory
+drift, active original fence revisions and required restored/controlled-execution
+evidence. Persistence tests reject downgrade/replacement, missing original plans,
+oversized/malformed/rebound records, contention, symlinks and either replaced layout.
+A public passive provider fixture reopens original source/safety/spent attempts,
+rejects stale/inactive/rebound results and preserves exact requirement/journal/
+outside-source obligation bytes and unfinished restore references across failures
+and drop/reopen. These qualify local contracts, not actual IC or application safety.
+[Fresh Canic inspection](restore-safety-source.json) identifies source ownership;
+no runner, framework mapping or hash-only restored verification was copied.
+
+### Original application fence obligation retention
+
+`model::fence_obligation::FenceObligationRecord` is the immutable v1 declaration
+for the full original selected unit. It binds the canonical original plan digest,
+explicit application acquisition sequence and exact purpose. Capture binds the
+original coordinated requirement, fence identity and membership revision. Restore
+derives its original requirement and fence/membership/external-obligation revisions
+from the existing fenced safety owner, including source/artifact identity. Per-canister
+capture and no-irreversible-effects restore lanes reject; absent operations and
+zero original mutation allowances reject. The physical operation target describes
+routing, never whole-unit coverage or authority. Integrations qualify the opaque
+application request's exact semantics and chosen identity before dispatch.
+
+The strict [schema and independent binary goldens](contracts/fence-obligation.schema.json)
+reject unknown/missing fields, other versions, invalid checksums and invented
+purposes. SHA-256 uses the NUL-terminated `ic-backup/fence-obligation/v1` domain,
+64 ASCII original intent bytes, big-endian u64 acquisition sequence, purpose byte
+(capture=0, restore=1), then 64 ASCII requirement, fence identity and membership
+revision bytes. Restore appends 64 ASCII external-obligations revision bytes.
+Mutable status, receipts and release flags are absent.
+
+`create_fence_obligation` publishes fixed `fence-obligation.json` with no replacement
+under layout and journal exclusion. `read_fence_obligation` admits raw/canonical
+1 KiB bounds, the expected digest and exact original plan/requirement bindings.
+Capture checks the retained consistency requirement; restore checks both retained
+plans/unchanged layout guards and the retained restore safety requirement. Changed,
+missing, malformed, oversized, unsafe or rebound evidence rejects without repair.
+Local lost publication replies reconcile through the exact read, never recreation.
+Publish this declaration before acquisition reservation/dispatch. Source-reference
+retention remains separately required before restore journals/effects.
+
+`policy::fence_obligation::acquisition_progress` checks exact original journal
+authority, including context, request, operation and both original limits, and
+returns its existing `AttemptJournalView`. No second spending counter/state machine
+exists. Missing evidence cannot be passed as zero consumption. Lost observation
+replies stay pending; settled Uncertain observations leave the mutation unresolved
+and no outcome refunds attempts. Full dependency admission remains with
+`execution_progress`; this projection proves no cross-journal chronology or receipt
+authenticity. Applied acquisition evidence is not fresh Active custody. Pending,
+Applied, NotApplied and Uncertain outcomes all retain the original obligation.
+There is no automatic release/disposition on drop, timeout or process death.
+
+Fresh native tests cover strict schema/goldens, purpose/lane/source/revision/plan
+binding, original authority/allowance denial, immutable publication, retained
+requirements, both layouts, private permissions, contention, unsafe and excessive
+bytes. A public filesystem journey reopens exhausted pending acquisition and
+observation reservations, records each passive native settled outcome and preserves
+exact obligation/journal bytes and unfinished source references through drop/reopen.
+These are local persistence/recovery checks, not application/IC effects. No
+`ConsistencyCoordinator` implementation, authenticated reconciliation, signing,
+dispatch, current Active proof, terminal proof or fence/reference release is
+implemented. [Fresh Canic inspection](fence-obligation-source.json) copies no code
+and supplies no generic application-fence release qualification.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
 | Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |
@@ -1111,6 +1247,7 @@ capture completion and same-release restore/external-payment settlement remain p
 | Control authority declarations, receipt headers and controller projections | Adapted into exact original IC mutation/challenge requests, complete known canonical controller sets and pure direct caller-controller admission; Root/Proven upgrades, read visibility, proxy/admin lanes, live observations and full preflight remain with their owners |
 | Snapshot-read declarations/receipts and visibility projections | Adapted into original mutation intent plus independent exact list/challenge binding and pure actual-context/target/controller/public/viewer read paths; no Root-configured/Proven upgrades, status/log fallback, provider or paid-call admission imported |
 | Quiescence declarations, receipt admission and consistency-unit projection | Adapted immutable original requested guarantee plus ephemeral exact stopped/drained/fence evidence matching; accepted/expiry/RootCoordinated flags and parent-derived application consistency are not copied; real fencing/custody and acquisition/release remain integration-owned |
+| Restore source identities, stopped-load checks and verification consumers | Adapted immutable same-network/release selected-source declarations and fresh exact load/start safety matching; remapping, Root fields, rendered commands and module-hash-only safety/settlement are not copied |
 | Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
 | ICP subprocess transport | Narrow extraction into the transport package after executor contracts and selected backend capabilities are qualified |
 | Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |

@@ -1,0 +1,203 @@
+{
+   "adaptation" : "Local contract refinement from the extraction design. Existing operation plan, requirement, attempt journal and guarded persistence owners are reused; no generic application fence acquisition/release proof exists in these inspected sources.",
+   "consumer_disposition" : "All Canic backup/restore/CLI consumers remain unchanged and read only. Earlier extraction provenance and licenses remain retained.",
+   "consumer_references" : [
+      {
+         "excerpt" : "    pub(crate) fn retain_restore(",
+         "line" : 66,
+         "path" : "crates/canic-backup/src/persistence/layout_lifetime/mod.rs"
+      },
+      {
+         "excerpt" : "    pub(crate) fn release_restore(",
+         "line" : 95,
+         "path" : "crates/canic-backup/src/persistence/layout_lifetime/mod.rs"
+      },
+      {
+         "excerpt" : "        .retain_restore(&journal, \"original\")",
+         "line" : 36,
+         "path" : "crates/canic-backup/src/persistence/layout_lifetime/tests.rs"
+      },
+      {
+         "excerpt" : "        guard.release_restore(&journal, \"different\"),",
+         "line" : 39,
+         "path" : "crates/canic-backup/src/persistence/layout_lifetime/tests.rs"
+      },
+      {
+         "excerpt" : "        guard.retain_restore(&journal, \"different\"),",
+         "line" : 43,
+         "path" : "crates/canic-backup/src/persistence/layout_lifetime/tests.rs"
+      },
+      {
+         "excerpt" : "        .release_restore(&journal, \"original\")",
+         "line" : 59,
+         "path" : "crates/canic-backup/src/persistence/layout_lifetime/tests.rs"
+      },
+      {
+         "excerpt" : "pub(in crate::restore) use retention::{lock_restore_layout, release_restore, retain_restore};",
+         "line" : 19,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "                retain_restore(layout, path, journal)?;",
+         "line" : 88,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "            retain_restore(layout, path, journal)?;",
+         "line" : 97,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "        retain_restore(layout, path, journal)?;",
+         "line" : 126,
+         "path" : "crates/canic-backup/src/restore/persistence/mod.rs"
+      },
+      {
+         "excerpt" : "pub(in crate::restore) fn retain_restore(",
+         "line" : 38,
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs"
+      },
+      {
+         "excerpt" : "    layout.retain_restore(&journal_identity(path)?, &restore_authority(journal)?)?;",
+         "line" : 50,
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs"
+      },
+      {
+         "excerpt" : "pub(in crate::restore) fn release_restore(",
+         "line" : 54,
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs"
+      },
+      {
+         "excerpt" : "    layout.release_restore(&journal_identity(path)?, &restore_authority(journal)?)?;",
+         "line" : 59,
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn enforce_stopped_canister_precondition(",
+         "line" : 18,
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs"
+      },
+      {
+         "excerpt" : "            crate::restore::persistence::retain_restore(&layout, &path, &journal)",
+         "line" : 71,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    restore::persistence::{lock_restore_layout, retain_restore},",
+         "line" : 18,
+         "path" : "crates/canic-backup/src/restore/runner/preview.rs"
+      },
+      {
+         "excerpt" : "        retain_restore(layout, &config.journal, &journal)?;",
+         "line" : 52,
+         "path" : "crates/canic-backup/src/restore/runner/preview.rs"
+      },
+      {
+         "excerpt" : "        RestoreObservedCanisterStatus, enforce_stopped_canister_precondition,",
+         "line" : 18,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    restore::persistence::{lock_restore_layout, release_restore, retain_restore},",
+         "line" : 36,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    restore_run_execute_result_with_terminal_writer(config, executor, &mut |path, journal| {",
+         "line" : 58,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_result_with_terminal_writer(config, executor, &mut |path, journal| {",
+         "line" : 70,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn restore_run_execute_result_with_terminal_writer(",
+         "line" : 79,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        retain_restore(layout, &config.journal, &journal)?;",
+         "line" : 90,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "                    release_restore(layout, &config.journal, &journal)?;",
+         "line" : 106,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let reconciled_success = reconcile_restore_operation(",
+         "line" : 182,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let precondition = enforce_stopped_canister_precondition(",
+         "line" : 349,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn reconcile_restore_operation(",
+         "line" : 475,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/model/fence_obligation/mod.rs",
+      "crates/ic-backup/src/policy/fence_obligation/mod.rs",
+      "crates/ic-backup/src/ops/persistence/fence_obligation/mod.rs",
+      "crates/ic-backup/tests/fence_obligation.rs",
+      "docs/contracts/fence-obligation.schema.json"
+   ],
+   "inspected_files" : [
+      {
+         "disposition" : "Read only; no code copied into product source. Exact inspection input retained as evidence.",
+         "inspected_line_ranges" : [
+            [
+               64,
+               120
+            ],
+            [
+               410,
+               547
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "sha256" : "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079"
+      },
+      {
+         "disposition" : "Read only; no code copied into product source. Exact inspection input retained as evidence.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               136
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/persistence/retention/mod.rs",
+         "sha256" : "05cb82f67ac829be1aed58f53ace06a6f6bac36e320a52c07178b09631f95243"
+      },
+      {
+         "disposition" : "Read only; no code copied into product source. Exact inspection input retained as evidence.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               198
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/precondition.rs",
+         "sha256" : "1bfacebee715ddf0bdec2aba905eb875ad68e39269d818edb64d67faeae85ddd"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native local records, pure exact attempt admission, guarded persistence and interrupted recovery only. No application fence acquisition, authenticated reconciliation, release, real IC provider or independently usable product is qualified.",
+   "source_findings" : [
+      "Canic retains restore references before unfinished runner work and releases them only on runner completion after inherited command custody checks. No reference release is imported here.",
+      "Source status/module-hash checks and lifecycle reconciliation do not qualify application fence continuity or external-obligation safety; load remains unreconciled in the inspected match.",
+      "An explicit original application acquisition operation and its scope/revisions need durable retention before effects. The new immutable obligation does not grant dispatch, claim Active custody, replenish attempts or permit release."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "a2108801d7b2d5802f3e864556dc8781b3b382df",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

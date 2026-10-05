@@ -171,6 +171,23 @@ into an issue tracker or release authority.
   resume reads retained progress only. Structural views and sequential byte checks
   grant no transfer completeness, atomic snapshot, terminal proof, new spending or
   reference-release authority; integrations own stable byte custody.
+- Original fence obligations now bind the full plan, explicit application acquisition
+  operation, original capture/restore requirement and exact fence revisions. Preserve
+  strict v1 1 KiB immutable IO under retained plans/requirements and both restore/source
+  layout guards. Attempt journals remain the only spending/reconciliation owner;
+  absence cannot mean zero consumption. Retain obligations for pending, Applied,
+  NotApplied and Uncertain outcomes. No active fence, dispatch, automatic disposition,
+  terminal proof or fence/reference release is inferred from local declarations/views.
+- Restore safety requirements now bind exact original restore/source plans and
+  artifacts under strict immutable v1 publication and 1 KiB IO. Preserve same-network/
+  same-release existing selected IDs; a restore subset needs application qualification.
+  Fresh exact load/start requests bind original bytes, challenge and descriptive calls.
+  Current full inventory/exact selection must match. Load needs every target stopped;
+  start needs its target stopped, every selected restored state accepted and fenced
+  execution qualified. The explicit no-irreversible-effects lane has no generic default;
+  the fenced lane requires original identity/membership/external-obligation revisions
+  and rewind-independent custody/replay safety. Preserve 1,024 target/call bounds.
+  Pure views settle no lost load, spend nothing and release no fence or source reference.
 
 ## Tracking
 

@@ -38,6 +38,12 @@
 //! caller read paths, without granting mutation control or settling lost replies.
 //! Immutable consistency requirements retain the original requested guarantee;
 //! current target/fence checks acquire or release no application obligations.
+//! Immutable restore safety requirements bind exact original source and same-release
+//! targets; fresh application evidence checks load/start safety without effects,
+//! lost-load settlement or fence/reference release.
+//! Immutable fence obligations retain original scope and acquisition identity;
+//! recovery joins their exact original attempt journals without new accounting,
+//! automatic release or a claim of current Active custody.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport

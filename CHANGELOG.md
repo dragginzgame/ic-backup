@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.1]
+
+- Retain exact original capture/restore fence obligations before acquisition under
+  bounded immutable publication. Reuse original attempt journals for recovery and
+  retain obligations and source references through lost replies and settled outcomes;
+  no current fence custody, dispatch or release is inferred.
+- Retain immutable same-network/same-release restore safety requirements under exact
+  original source and restore plans. Add fresh load/start application safety evidence
+  checks, requiring stopped targets, outside-snapshot fence custody and restored-state
+  acceptance without settling lost effects, replenishing attempts or releasing references.
+
 ## [0.2.0] - 2026-10-05
 
 - Refresh the checksum-bound Shared Tooling baseline and helpers from one reviewed

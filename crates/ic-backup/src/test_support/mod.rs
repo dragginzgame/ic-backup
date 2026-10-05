@@ -3,6 +3,7 @@
 pub mod consistency;
 pub mod control_authority;
 pub mod membership;
+pub mod restore_safety;
 pub mod snapshot_read;
 
 #[cfg(unix)]
