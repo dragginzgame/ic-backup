@@ -163,6 +163,8 @@ impl AttemptJournalRecord {
             .map(|pending| pending.request.as_str())
     }
     /// Project local evidence without IO or replenishing authority.
+    ///
+    /// This excludes individual receipt evidence; use `Self::digest` for exact history identity.
     #[must_use]
     pub fn view(&self) -> AttemptJournalView {
         AttemptJournalView {
@@ -182,6 +184,21 @@ impl AttemptJournalRecord {
             applied: self.projection.applied,
             history_len: self.events.len(),
         }
+    }
+    /// Hash full original authority and every canonical chronological reservation/receipt.
+    ///
+    /// The NUL-terminated v1 domain precedes 64 ASCII authority hash bytes, a
+    /// big-endian u64 event count and closed tagged event bytes. Derived projections,
+    /// JSON formatting and filesystem paths are excluded. This authenticates no receipt.
+    #[must_use]
+    pub fn digest(&self) -> ArtifactChecksumRecord {
+        let mut bytes = b"ic-backup/attempt-journal-history/v1\0".to_vec();
+        bytes.extend_from_slice(self.authority.digest().hash().as_bytes());
+        bytes.extend_from_slice(&(self.events.len() as u64).to_be_bytes());
+        for event in &self.events {
+            event.append_digest_bytes(&mut bytes);
+        }
+        ArtifactChecksumRecord::from_bytes(&bytes)
     }
     pub(crate) fn reserve_mutation(&mut self) -> Result<u32, AttemptJournalRecordError> {
         let attempt = self.projection.next_attempt;

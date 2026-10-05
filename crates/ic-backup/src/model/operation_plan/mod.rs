@@ -231,9 +231,29 @@ impl OperationPlanRecord {
         sequence: u64,
     ) -> Result<AttemptAuthorityRecord, OperationPlanError> {
         let operation = self.operation(sequence)?;
+        self.authority_for_operation(operation, &self.digest())
+    }
+    /// Derive every original authority in canonical sequence order with one full plan hash.
+    ///
+    /// This avoids repeated full-plan encoding for bounded complete evidence scans.
+    /// It grants no new allowance, journal creation/reset or fresh dispatch permission.
+    /// # Errors
+    /// Rejects invalid derived identity admission through the same scalar authority owner.
+    pub fn attempt_authorities(&self) -> Result<Vec<AttemptAuthorityRecord>, OperationPlanError> {
+        let intent = self.digest();
+        self.operations
+            .iter()
+            .map(|operation| self.authority_for_operation(operation, &intent))
+            .collect()
+    }
+    fn authority_for_operation(
+        &self,
+        operation: &PlannedOperationRecord,
+        intent: &ArtifactChecksumRecord,
+    ) -> Result<AttemptAuthorityRecord, OperationPlanError> {
         let binding = OperationBindingRecord::new(&OperationBindingRequest {
-            intent: self.digest().hash().into(),
-            operation_sequence: sequence,
+            intent: intent.hash().into(),
+            operation_sequence: operation.operation_sequence(),
             network: self.context.network().into(),
             caller: self.context.caller().into(),
             target: operation.target().into(),

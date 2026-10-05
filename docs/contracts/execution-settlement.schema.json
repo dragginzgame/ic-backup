@@ -1,0 +1,246 @@
+{
+   "$defs" : {
+      "hash" : {
+         "additionalProperties" : false,
+         "properties" : {
+            "algorithm" : {
+               "const" : "sha256"
+            },
+            "hash" : {
+               "pattern" : "^[0-9A-Fa-f]{64}$",
+               "type" : "string"
+            }
+         },
+         "required" : [
+            "algorithm",
+            "hash"
+         ],
+         "type" : "object"
+      },
+      "journal" : {
+         "additionalProperties" : false,
+         "properties" : {
+            "history" : {
+               "$ref" : "#/$defs/hash"
+            },
+            "operation_sequence" : {
+               "maximum" : 18446744073709551615,
+               "minimum" : 0,
+               "type" : "integer"
+            }
+         },
+         "required" : [
+            "operation_sequence",
+            "history"
+         ],
+         "type" : "object"
+      }
+   },
+   "$schema" : "https://json-schema.org/draft/2020-12/schema",
+   "additionalProperties" : false,
+   "properties" : {
+      "journals" : {
+         "items" : {
+            "$ref" : "#/$defs/journal"
+         },
+         "maxItems" : 8192,
+         "minItems" : 1,
+         "type" : "array"
+      },
+      "plan_intent" : {
+         "$ref" : "#/$defs/hash"
+      },
+      "version" : {
+         "const" : 1
+      }
+   },
+   "required" : [
+      "version",
+      "plan_intent",
+      "journals"
+   ],
+   "title" : "ExecutionSettlementRecord",
+   "type" : "object",
+   "x-admission" : [
+      "Bounded unique normalized rows are canonicalized by sequence; no implied lifecycle/dispatch order.",
+      "Reuse canonical execution progress admission for complete exact original journals and causal retained Applied prerequisite evidence. Every original operation must be Applied and exact history fingerprints unchanged.",
+      "Guarded publication/read require retained original plan and every journal under the held exclusive layout. Sequential journal locks bound descriptors; Applied owners permit no subsequent transitions.",
+      "Fixed execution-settlement.json has immutable no-replace durable publication. Lost reply reopens exact local evidence; replay invokes no provider and performs no remote/fresh artifact verification.",
+      "No duplicate accounting, counters, terminal/Proven flags or outcomes. No full backup/restore completion, receipt authentication, cross-journal chronology, artifact/extent qualification, command quiescence or fence/reference-release authority."
+   ],
+   "x-bounds" : {
+      "input_output_bytes" : 2097152,
+      "journal_events_each" : 2048,
+      "journal_input_bytes_each" : 1048576,
+      "operations" : 8192,
+      "original_combined_plan_attempts" : 65536
+   },
+   "x-checkpoint-encoding" : "NUL-terminated ic-backup/execution-settlement/v1 domain; 64 lowercase ASCII full plan hash; big-endian u64 row count; ascending u64 opaque operation sequence and 64 lowercase ASCII history hash pairs.",
+   "x-checkpoint-golden" : {
+      "record" : {
+         "journals" : [
+            {
+               "history" : {
+                  "algorithm" : "sha256",
+                  "hash" : "1212121212121212121212121212121212121212121212121212121212121212"
+               },
+               "operation_sequence" : 0
+            },
+            {
+               "history" : {
+                  "algorithm" : "sha256",
+                  "hash" : "3434343434343434343434343434343434343434343434343434343434343434"
+               },
+               "operation_sequence" : 18446744073709551615
+            }
+         ],
+         "plan_intent" : {
+            "algorithm" : "sha256",
+            "hash" : "abababababababababababababababababababababababababababababababab"
+         },
+         "version" : 1
+      },
+      "sha256" : "824d310c9b145862662fd0c900fee124acdb260bd5ff2fe4aa8e0bb298220ed0"
+   },
+   "x-history-encoding" : "NUL-terminated ic-backup/attempt-journal-history/v1 domain; 64 lowercase ASCII original authority hash; big-endian u64 event count; chronological events: tag0/u32 attempt, tag1/u32 attempt/u32 mutation/64 ASCII request, tag2/u32 mutation/u8 outcome(0 Applied,1 NotApplied)/64 ASCII evidence, tag3/u32 observation/64 ASCII request/u8 outcome(0 Applied,1 NotApplied,2 Uncertain)/64 ASCII evidence. Integers big-endian; no derived state or JSON bytes.",
+   "x-history-goldens" : [
+      {
+         "authority_sha256" : "dbb7db598a53ff1633228242c7caab65ad8552d71932291bd65d4fdb46407762",
+         "record" : {
+            "authority" : {
+               "binding" : {
+                  "caller" : "2vxsx-fae",
+                  "intent" : "abababababababababababababababababababababababababababababababab",
+                  "network" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                  "operation_sequence" : 258,
+                  "release" : "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                  "request" : "0101010101010101010101010101010101010101010101010101010101010101",
+                  "target" : "aaaaa-aa"
+               },
+               "budget" : {
+                  "mutations" : 3,
+                  "observations" : 3
+               }
+            },
+            "events" : [],
+            "version" : 1
+         },
+         "sha256" : "af66edeb40e3e088cae66941e82eaa1f0868f1b9224793698c1b5543c64bcb68"
+      },
+      {
+         "authority_sha256" : "dbb7db598a53ff1633228242c7caab65ad8552d71932291bd65d4fdb46407762",
+         "record" : {
+            "authority" : {
+               "binding" : {
+                  "caller" : "2vxsx-fae",
+                  "intent" : "abababababababababababababababababababababababababababababababab",
+                  "network" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                  "operation_sequence" : 258,
+                  "release" : "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                  "request" : "0101010101010101010101010101010101010101010101010101010101010101",
+                  "target" : "aaaaa-aa"
+               },
+               "budget" : {
+                  "mutations" : 3,
+                  "observations" : 3
+               }
+            },
+            "events" : [
+               {
+                  "attempt" : 1,
+                  "event" : "mutation_reserved"
+               },
+               {
+                  "event" : "mutation_resolved",
+                  "evidence" : "2323232323232323232323232323232323232323232323232323232323232323",
+                  "mutation" : 1,
+                  "outcome" : "applied"
+               }
+            ],
+            "version" : 1
+         },
+         "sha256" : "e35e0da3fd0a77f397e098f3dde3e314b2d2a95cf9e48d48689c85e4eb494820"
+      },
+      {
+         "authority_sha256" : "dbb7db598a53ff1633228242c7caab65ad8552d71932291bd65d4fdb46407762",
+         "record" : {
+            "authority" : {
+               "binding" : {
+                  "caller" : "2vxsx-fae",
+                  "intent" : "abababababababababababababababababababababababababababababababab",
+                  "network" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                  "operation_sequence" : 258,
+                  "release" : "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                  "request" : "0101010101010101010101010101010101010101010101010101010101010101",
+                  "target" : "aaaaa-aa"
+               },
+               "budget" : {
+                  "mutations" : 3,
+                  "observations" : 3
+               }
+            },
+            "events" : [
+               {
+                  "attempt" : 1,
+                  "event" : "mutation_reserved"
+               },
+               {
+                  "attempt" : 2,
+                  "event" : "observation_reserved",
+                  "mutation" : 1,
+                  "request" : "4545454545454545454545454545454545454545454545454545454545454545"
+               },
+               {
+                  "event" : "observation_recorded",
+                  "evidence" : "6767676767676767676767676767676767676767676767676767676767676767",
+                  "observation" : 2,
+                  "outcome" : "uncertain",
+                  "request" : "4545454545454545454545454545454545454545454545454545454545454545"
+               },
+               {
+                  "attempt" : 3,
+                  "event" : "observation_reserved",
+                  "mutation" : 1,
+                  "request" : "8989898989898989898989898989898989898989898989898989898989898989"
+               },
+               {
+                  "event" : "observation_recorded",
+                  "evidence" : "0101010101010101010101010101010101010101010101010101010101010101",
+                  "observation" : 3,
+                  "outcome" : "not_applied",
+                  "request" : "8989898989898989898989898989898989898989898989898989898989898989"
+               },
+               {
+                  "attempt" : 4,
+                  "event" : "mutation_reserved"
+               },
+               {
+                  "event" : "mutation_resolved",
+                  "evidence" : "2323232323232323232323232323232323232323232323232323232323232323",
+                  "mutation" : 4,
+                  "outcome" : "not_applied"
+               },
+               {
+                  "attempt" : 5,
+                  "event" : "mutation_reserved"
+               },
+               {
+                  "attempt" : 6,
+                  "event" : "observation_reserved",
+                  "mutation" : 5,
+                  "request" : "4545454545454545454545454545454545454545454545454545454545454545"
+               },
+               {
+                  "event" : "observation_recorded",
+                  "evidence" : "6767676767676767676767676767676767676767676767676767676767676767",
+                  "observation" : 6,
+                  "outcome" : "applied",
+                  "request" : "4545454545454545454545454545454545454545454545454545454545454545"
+               }
+            ],
+            "version" : 1
+         },
+         "sha256" : "209999acd19254b0227aab0b07461d2f3756511a82fbf3c5466339e5ebf77177"
+      }
+   ]
+}

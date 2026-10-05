@@ -243,6 +243,19 @@ integrations maintain stable byte custody during sequential checks. See
 `cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::integrity`
 and `cargo test --offline --locked -p ic-backup --test download_integrity`.
 
+`DownloadJournalGuard::publish_download_manifest` reuses that guarded fresh byte
+verification and immutably publishes the exact existing `DownloadJournalRecord` at
+`download-manifest.json`, under its original plan. The v1 schema/1 MiB/1,024-entry
+bounds are unchanged; its model-owned binary digest binds exact snapshot metadata,
+paths, state and checksums. `read_download_manifest` validates the expected digest,
+original plan and unchanged retained download journal under exclusion. Drop active
+download guards before replay; replay reads records only, even with absent artifact
+trees. Complete backend transfer/consistency and full terminal proof remain separate.
+See [the contract and independent goldens](contracts/download-manifest.json) and
+[source inspection](download-manifest-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib download_manifest` and
+`cargo test --offline --locked -p ic-backup --test execution_settlement`.
+
 `model::restore_safety` retains an immutable original restore/source/artifact/safety
 requirement. Persistence requires both original plans under unchanged layout guards
 and never replaces the 1 KiB declaration. Ephemeral exact load/start requests and
@@ -295,6 +308,21 @@ See the [typed contract and independent goldens](contracts/fence-acquisition-por
 [maintained boundary](extraction-boundary.md#exact-application-fence-acquisition-requests).
 Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_acquisition`
 and `cargo test --offline --locked -p ic-backup --test fence_acquisition`.
+
+`model::execution_settlement` retains bounded strict v1 original plan/journal
+fingerprints, with independent binary goldens for full chronological history.
+Pure admission reuses `execution_progress` and requires the exact original journal
+set, every operation Applied and unchanged receipt/reservation histories. Fixed
+`execution-settlement.json` has immutable 2 MiB publication/read under retained
+original plans and per-journal guards. Drop active journal guards before invoking
+these operations. Bulk canonical authority derivation hashes the full plan once;
+sequential journal locks bound descriptor use. Replay performs local IO only and
+supplies no terminal, fresh verification, command-quiescence or release authority.
+See the [schema and goldens](contracts/execution-settlement.schema.json),
+[fresh inspection](execution-settlement-source.json) and
+[maintained boundary](extraction-boundary.md#original-execution-settlement-checkpoints).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib execution_settlement`
+and `cargo test --offline --locked -p ic-backup --test execution_settlement`.
 
 ## Supported host scope
 

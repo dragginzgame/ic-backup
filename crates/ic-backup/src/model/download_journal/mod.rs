@@ -261,6 +261,49 @@ impl DownloadJournalRecord {
         &self.artifacts
     }
 
+    /// Hash canonical original intent, exact snapshot metadata, paths and local evidence.
+    ///
+    /// The NUL-terminated v1 domain precedes 64 ASCII intent bytes and a big-endian
+    /// u64 entry count. Each canonical entry has four u32-length-prefixed UTF-8
+    /// strings (principal, snapshot token, staging path, artifact path), two u64
+    /// metadata values, a state byte (Created=0 through Durable=3), then a checksum
+    /// presence byte and its 64 ASCII hash when present. Integers are big-endian.
+    /// This grants no transfer, snapshot authenticity or terminal proof.
+    #[must_use]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "record admission bounds principals, snapshot tokens and identity-derived paths below u32"
+    )]
+    pub fn digest(&self) -> ArtifactChecksumRecord {
+        let mut bytes = b"ic-backup/download-journal/v1\0".to_vec();
+        bytes.extend_from_slice(self.intent.as_bytes());
+        bytes.extend_from_slice(&(self.artifacts.len() as u64).to_be_bytes());
+        for entry in &self.artifacts {
+            for value in [
+                entry.canister_id(),
+                entry.snapshot_id(),
+                entry.staging_path(),
+                entry.artifact_path(),
+            ] {
+                bytes.extend_from_slice(&(value.len() as u32).to_be_bytes());
+                bytes.extend_from_slice(value.as_bytes());
+            }
+            bytes.extend_from_slice(&entry.snapshot_taken_at_timestamp.to_be_bytes());
+            bytes.extend_from_slice(&entry.snapshot_total_size_bytes.to_be_bytes());
+            bytes.push(match entry.state {
+                ArtifactStateRecord::Created => 0,
+                ArtifactStateRecord::Downloaded => 1,
+                ArtifactStateRecord::ChecksumVerified => 2,
+                ArtifactStateRecord::Durable => 3,
+            });
+            bytes.push(u8::from(entry.checksum.is_some()));
+            if let Some(checksum) = &entry.checksum {
+                bytes.extend_from_slice(checksum.hash().as_bytes());
+            }
+        }
+        ArtifactChecksumRecord::from_bytes(&bytes)
+    }
+
     pub(crate) fn artifact(
         &self,
         canister: &str,

@@ -2,6 +2,7 @@
 
 pub mod consistency;
 pub mod control_authority;
+pub mod execution_settlement;
 pub mod fence_acquisition;
 pub mod fence_reconciliation;
 pub mod membership;

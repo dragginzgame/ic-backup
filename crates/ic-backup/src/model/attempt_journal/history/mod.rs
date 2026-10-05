@@ -30,6 +30,53 @@ pub(super) enum AttemptEventRecord {
 }
 
 impl AttemptEventRecord {
+    pub(super) fn append_digest_bytes(&self, bytes: &mut Vec<u8>) {
+        match self {
+            Self::MutationReserved { attempt } => {
+                bytes.push(0);
+                bytes.extend_from_slice(&attempt.to_be_bytes());
+            }
+            Self::ObservationReserved {
+                attempt,
+                mutation,
+                request,
+            } => {
+                bytes.push(1);
+                bytes.extend_from_slice(&attempt.to_be_bytes());
+                bytes.extend_from_slice(&mutation.to_be_bytes());
+                bytes.extend_from_slice(request.as_bytes());
+            }
+            Self::MutationResolved {
+                mutation,
+                outcome,
+                evidence,
+            } => {
+                bytes.push(2);
+                bytes.extend_from_slice(&mutation.to_be_bytes());
+                bytes.push(match outcome {
+                    MutationOutcomeRecord::Applied => 0,
+                    MutationOutcomeRecord::NotApplied => 1,
+                });
+                bytes.extend_from_slice(evidence.as_bytes());
+            }
+            Self::ObservationRecorded {
+                observation,
+                request,
+                outcome,
+                evidence,
+            } => {
+                bytes.push(3);
+                bytes.extend_from_slice(&observation.to_be_bytes());
+                bytes.extend_from_slice(request.as_bytes());
+                bytes.push(match outcome {
+                    ObservationOutcomeRecord::Applied => 0,
+                    ObservationOutcomeRecord::NotApplied => 1,
+                    ObservationOutcomeRecord::Uncertain => 2,
+                });
+                bytes.extend_from_slice(evidence.as_bytes());
+            }
+        }
+    }
     pub(super) fn normalize(&mut self) -> Result<(), AttemptJournalRecordError> {
         match self {
             Self::MutationReserved { .. } => {}

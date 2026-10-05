@@ -1,7 +1,9 @@
 //! Locked durable local lifecycle updates and verified artifact publication.
 
 mod integrity;
+mod manifest;
 pub use integrity::DownloadIntegrityError;
+pub use manifest::{DownloadManifestError, read_download_manifest};
 
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,

@@ -12,6 +12,9 @@
 //! exact selected set to published directory bytes without changing journals,
 //! replenishing allowances or releasing dependencies. Stable byte custody and
 //! backend transfer completeness remain integration-owned.
+//! Immutable local download manifests reuse that exact v1 journal schema after
+//! fresh byte verification. Exact replay reads original retained records only,
+//! preserving snapshot/checksum provenance even when artifact trees are absent.
 //! Bounded physical inventories retain canonical declared parent forests; pure
 //! selection policy expands exact principals without live discovery or authority.
 //! Explicit effect graphs retain validated operation dependencies and project
@@ -51,6 +54,9 @@
 //! Exact application acquisition envelopes bind receiver, update mode, method and
 //! opaque bytes to already reserved original mutations. Passive acknowledgement
 //! association establishes no acquisition outcome or fresh dispatch permission.
+//! Immutable execution settlement checkpoints bind complete original Applied
+//! journals and their exact chronological histories for local replay. They prove
+//! no full backup/restore completion, command quiescence or fence/reference release.
 //!
 //! Applications own membership, release identity, control routing, quiescence
 //! and external-effect settlement. Capture/restore runners and an IC transport

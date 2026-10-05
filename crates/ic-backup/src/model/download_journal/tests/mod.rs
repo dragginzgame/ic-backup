@@ -298,3 +298,49 @@ fn snapshot_tokens_are_exact_bounded_ascii_and_principals_are_validated() {
         ));
     }
 }
+
+#[test]
+fn download_manifest_independent_goldens_cover_states_metadata_and_exact_tokens() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../../docs/contracts/download-manifest.json"
+    ))
+    .unwrap();
+    for golden in contract["goldens"].as_array().unwrap() {
+        let record: DownloadJournalRecord =
+            serde_json::from_value(golden["record"].clone()).unwrap();
+        assert_eq!(record.digest().hash(), golden["sha256"].as_str().unwrap());
+        let mut changed = golden["record"].clone();
+        changed["intent"] = serde_json::json!(HASH.to_uppercase());
+        changed["artifacts"][0]["canister_id"] = serde_json::json!("AAAAA-AA");
+        let normalized: DownloadJournalRecord = serde_json::from_value(changed).unwrap();
+        assert_eq!(record.digest(), normalized.digest());
+        for (field, value) in [
+            ("snapshot_id", serde_json::json!("s".repeat(256))),
+            ("snapshot_taken_at_timestamp", serde_json::json!(0)),
+            ("snapshot_total_size_bytes", serde_json::json!(0)),
+        ] {
+            let mut changed = golden["record"].clone();
+            changed["artifacts"][0][field] = value;
+            let changed: DownloadJournalRecord = serde_json::from_value(changed).unwrap();
+            assert_ne!(record.digest(), changed.digest());
+        }
+    }
+}
+
+#[test]
+fn download_manifest_fingerprint_is_canonical_and_binds_each_checksum() {
+    let requests = vec![request(CANISTER, "snap-1"), request("2vxsx-fae", "snap-2")];
+    let record = DownloadJournalRecord::new(HASH, requests.clone()).unwrap();
+    let reordered = DownloadJournalRecord::new(HASH, requests.into_iter().rev().collect()).unwrap();
+    assert_eq!(record.digest(), reordered.digest());
+    let mut first = serde_json::to_value(&record).unwrap();
+    for entry in first["artifacts"].as_array_mut().unwrap() {
+        entry["state"] = serde_json::json!("Durable");
+        entry["checksum"] = serde_json::json!({"algorithm":"sha256","hash":HASH});
+    }
+    let mut second = first.clone();
+    second["artifacts"][1]["checksum"]["hash"] = serde_json::json!("cd".repeat(32));
+    let first: DownloadJournalRecord = serde_json::from_value(first).unwrap();
+    let second: DownloadJournalRecord = serde_json::from_value(second).unwrap();
+    assert_ne!(first.digest(), second.digest());
+}

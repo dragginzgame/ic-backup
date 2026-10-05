@@ -1,0 +1,106 @@
+{
+   "adaptation" : "Local extraction-design refinement reusing original plan, chronological attempt journal, execution progress and durable publication/layout owners. Retain immutable exact histories rather than copying a completion flag/count or introducing another accounting owner.",
+   "consumer_disposition" : "All Canic backup/restore/CLI consumers remain unchanged and read only. Earlier source provenance/licenses remain retained. Reference excerpts identify consumers without claiming behavioral inspection outside the stated ranges.",
+   "consumer_references" : [
+      {
+         "excerpt" : "    restore_run_execute_result_with_terminal_writer(config, executor, &mut |path, journal| {",
+         "line" : 58,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "pub fn restore_run_execute_with_terminal_barriers(",
+         "line" : 64,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "        restore_run_execute_result_with_terminal_writer(config, executor, &mut |path, journal| {",
+         "line" : 70,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "fn restore_run_execute_result_with_terminal_writer(",
+         "line" : 79,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    pub(super) const fn is_complete(&self) -> bool {",
+         "line" : 408,
+         "path" : "crates/canic-backup/src/restore/apply/journal/mod.rs"
+      },
+      {
+         "excerpt" : "    super::execute::restore_run_execute_with_terminal_barriers(",
+         "line" : 514,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "            complete: journal.is_complete(),",
+         "line" : 58,
+         "path" : "crates/canic-backup/src/restore/apply/journal/commands/mod.rs"
+      },
+      {
+         "excerpt" : "        let complete = journal.is_complete();",
+         "line" : 50,
+         "path" : "crates/canic-backup/src/restore/apply/journal/reports/mod.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/model/execution_settlement/mod.rs",
+      "crates/ic-backup/src/policy/execution_settlement/mod.rs",
+      "crates/ic-backup/src/ops/persistence/execution_settlement/mod.rs",
+      "crates/ic-backup/src/model/attempt_journal/mod.rs",
+      "crates/ic-backup/src/model/attempt_journal/history/mod.rs",
+      "crates/ic-backup/src/model/operation_plan/mod.rs",
+      "crates/ic-backup/src/test_support/execution_settlement/mod.rs",
+      "crates/ic-backup/tests/execution_settlement.rs"
+   ],
+   "contract" : "docs/contracts/execution-settlement.schema.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Read only; no product source copied. Exact source inspection inputs retained as evidence only.",
+         "inspected_line_ranges" : [
+            [
+               64,
+               120
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "retained_copy" : "target/execution-settlement-source.igm5gK/crates/canic-backup/src/restore/runner/execute.rs",
+         "sha256" : "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079"
+      },
+      {
+         "disposition" : "Read only; no product source copied. Exact source inspection inputs retained as evidence only.",
+         "inspected_line_ranges" : [
+            [
+               397,
+               411
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/apply/journal/mod.rs",
+         "retained_copy" : "target/execution-settlement-source.igm5gK/crates/canic-backup/src/restore/apply/journal/mod.rs",
+         "sha256" : "95788d62174c05e79c871a9c805f35ce667f8f72ed36686008bf513475cb920e"
+      },
+      {
+         "disposition" : "Read only; no product source copied. Exact source inspection inputs retained as evidence only.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               115
+            ]
+         ],
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs",
+         "retained_copy" : "target/execution-settlement-source.igm5gK/crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs",
+         "sha256" : "e86368338af4a8dc799c6f59263bdcaddb5ea14e260b07caef8d7c968019e325"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Fresh native bounded models/policy, guarded immutable publication and exact local replay/recovery only. Receipt authentication, cross-journal dispatch chronology, stable noncooperating byte custody, backend transfer/manifests, application safety, command quiescence, full product terminal proof and reference/fence release remain independently qualified responsibilities.",
+   "source_findings" : [
+      "Inspected restore completion releases references only after checking inherited command custody. That release path is not imported; a generic all-Applied ledger checkpoint is insufficient for command/application/artifact terminal safety.",
+      "The source journal completion predicate uses nonzero completed-operation counts. The local checkpoint instead admits the exact complete original journal set through its canonical progress owner and seals full chronological fingerprints.",
+      "Source terminal-transition tests use acknowledged child-process death and a native fake executor. The new tests exercise the extracted local production writer and journal owners; they qualify no actual IC/application effects or terminal release."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "c6da13cc478b76c83eb51f4600f5acd66e47501a",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

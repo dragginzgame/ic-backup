@@ -468,6 +468,15 @@ Applied/pending/exhausted conditions in explicit graph order. Attempted operatio
 with unmet Applied prerequisites reject. This local projection does not prove
 cross-journal dispatch chronology, authenticate receipts or establish terminal
 completion; missing journals are never reconstructed as empty evidence.
+`ExecutionSettlementRecord` now retains the complete exact original journal
+fingerprints under the full plan digest. Pure admission reuses progress, requires
+every operation Applied and matches full chronological authority/reservation/receipt
+hashes; equal final projections cannot hide changed evidence. Its immutable v1
+checkpoint has 8,192-row/2 MiB bounds. Guarded publication/reopen read the retained
+original plan and journal set locally, using bulk canonical authority derivation
+and sequential journal locks. It adds no accounting owner or terminal flag and
+qualifies no actual receipt, full backup/restore completion, command quiescence or
+release admission. See the [schema](contracts/execution-settlement.schema.json).
 The IC-specific request boundary now encodes exact status/inventory, stop/start,
 capture and load Candid arguments under pinned upstream types. Its v1 wire digest
 binds fixed receiver, effective target, replicated update mode, method and argument
@@ -627,6 +636,21 @@ does not invoke remote status, inventory, discovery, identity-tool probes or
 paid commands. A new live verification operation reports current state separately.
 After source references are released, pruning may remove artifact bytes; terminal
 replay uses retained completion evidence rather than silently reacquiring them.
+
+Original all-Applied execution settlement replay is now implemented as a local
+checkpoint primitive. It verifies retained original plan/journal fingerprints,
+without calling providers or fresh artifact/application checks. Full product terminal
+evidence still requires qualified effects, manifests/transfer, application safety
+and command custody before reference or fence release; these are not inferred from
+the local ledger checkpoint.
+
+Immutable local download manifest publication now reuses the existing v1 download
+journal record after guarded original-plan-bound fresh verification. Its canonical
+digest seals exact snapshot tokens/metadata, derived paths, Durable states and
+checksums. Local replay checks original retained plan/journal identity and reads no
+artifact trees. This is a retained local artifact-set declaration, not the proposed
+complete `BackupManifestRecord`: authenticated capture/transfer, consistency/effect
+evidence and product terminal admission remain necessary. It releases no references.
 
 ## 12. Filesystem custody, durability and retention
 

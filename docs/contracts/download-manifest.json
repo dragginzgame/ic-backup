@@ -1,0 +1,102 @@
+{
+   "digest_encoding" : "NUL-terminated ic-backup/download-journal/v1; 64 lowercase ASCII original intent; big-endian u64 canonical entry count; canonical principal-text order; each row: four u32-length-prefixed UTF-8 strings (principal, exact snapshot token, staging path, artifact path), u64 timestamp and u64 snapshot size, one byte state (Created=0,Downloaded=1,ChecksumVerified=2,Durable=3), checksum presence byte (0 absent,1 present), then 64 lowercase ASCII checksum hash if present. All integers big-endian.",
+   "goldens" : [
+      {
+         "record" : {
+            "artifacts" : [
+               {
+                  "artifact_path" : "artifacts/aaaaa-aa",
+                  "canister_id" : "aaaaa-aa",
+                  "checksum" : null,
+                  "snapshot_id" : "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+                  "snapshot_taken_at_timestamp" : 18446744073709551615,
+                  "snapshot_total_size_bytes" : 18446744073709551615,
+                  "staging_path" : "artifacts/aaaaa-aa.tmp",
+                  "state" : "Created"
+               }
+            ],
+            "intent" : "abababababababababababababababababababababababababababababababab",
+            "version" : 1
+         },
+         "sha256" : "5e713d6be16dc74cb11be0ca8243450ce5fde87f08cda736868a5a26d78cfa0b"
+      },
+      {
+         "record" : {
+            "artifacts" : [
+               {
+                  "artifact_path" : "artifacts/aaaaa-aa",
+                  "canister_id" : "aaaaa-aa",
+                  "checksum" : null,
+                  "snapshot_id" : "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+                  "snapshot_taken_at_timestamp" : 18446744073709551615,
+                  "snapshot_total_size_bytes" : 18446744073709551615,
+                  "staging_path" : "artifacts/aaaaa-aa.tmp",
+                  "state" : "Downloaded"
+               }
+            ],
+            "intent" : "abababababababababababababababababababababababababababababababab",
+            "version" : 1
+         },
+         "sha256" : "90d6cc298d2ba4b654f7499c7edf4faae2e57f646f422e37d8eec9aeb447b85e"
+      },
+      {
+         "record" : {
+            "artifacts" : [
+               {
+                  "artifact_path" : "artifacts/aaaaa-aa",
+                  "canister_id" : "aaaaa-aa",
+                  "checksum" : {
+                     "algorithm" : "sha256",
+                     "hash" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+                  },
+                  "snapshot_id" : "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+                  "snapshot_taken_at_timestamp" : 18446744073709551615,
+                  "snapshot_total_size_bytes" : 18446744073709551615,
+                  "staging_path" : "artifacts/aaaaa-aa.tmp",
+                  "state" : "ChecksumVerified"
+               }
+            ],
+            "intent" : "abababababababababababababababababababababababababababababababab",
+            "version" : 1
+         },
+         "sha256" : "d51d0bb9409c62933ab6ae008372fa590a2d809a82efae99216fcbcf0fff350f"
+      },
+      {
+         "record" : {
+            "artifacts" : [
+               {
+                  "artifact_path" : "artifacts/aaaaa-aa",
+                  "canister_id" : "aaaaa-aa",
+                  "checksum" : {
+                     "algorithm" : "sha256",
+                     "hash" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+                  },
+                  "snapshot_id" : "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+                  "snapshot_taken_at_timestamp" : 18446744073709551615,
+                  "snapshot_total_size_bytes" : 18446744073709551615,
+                  "staging_path" : "artifacts/aaaaa-aa.tmp",
+                  "state" : "Durable"
+               }
+            ],
+            "intent" : "abababababababababababababababababababababababababababababababab",
+            "version" : 1
+         },
+         "sha256" : "344cd4116a2b8cf334b7a740e6c27e93ee634995bbe1ae05dd3f582c0eb6cf0e"
+      }
+   ],
+   "max_artifacts" : 1024,
+   "max_input_output_bytes" : 1048576,
+   "publication" : [
+      "Held original download/layout guards reuse fresh no-follow artifact verification, exact retained original plan and full selected-target coverage; every artifact must be Durable with a checksum.",
+      "Immutable private 0600 no-replace durable publication reuses the current DownloadJournalRecord v1 schema and original identity/state owners. No second progress ledger or manifest schema.",
+      "Conflict or lost reply preserves original journal/reference bytes and requires explicit exact replay; no overwrite, provenance reconstruction, repair, reset or automatic adoption."
+   ],
+   "publication_file" : "download-manifest.json",
+   "record_schema" : "docs/contracts/download-journal.schema.json",
+   "replay" : [
+      "Bounded no-follow manifest read checks expected full record digest, retained exact original plan, complete Durable selected set and unchanged retained download journal under exclusive guards.",
+      "Local record reads only: artifact trees can be absent or changed. Explicit fresh byte verification is separate. Replay invokes no backend/provider or new paid calls.",
+      "Stable noncooperating byte custody, authenticated snapshot identities, complete backend extents, consistency/lifecycle and full product terminal proof remain integration-owned. No fence/reference release or prune authority."
+   ],
+   "version" : 1
+}

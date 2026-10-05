@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.3]
+
+- Retain immutable original execution settlement checkpoints with exact chronological
+  journal fingerprints. Local replay requires every original operation Applied and
+  unchanged evidence, without remote calls, new spending or fence/reference release.
+- Publish an immutable, freshly byte-checked local download manifest under the
+  original plan. Replay exact retained snapshot/checksum evidence locally without
+  reading artifact trees, changing progress or releasing obligations.
+
 ## [0.2.2] - 2026-10-05
 
 - Bind exact bounded application acquisition receiver/method/arguments to the

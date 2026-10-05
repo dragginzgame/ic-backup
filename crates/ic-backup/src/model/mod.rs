@@ -7,6 +7,7 @@ pub mod consistency;
 pub mod control_authority;
 pub mod download_journal;
 pub mod effect_graph;
+pub mod execution_settlement;
 pub mod fence_acquisition;
 pub mod fence_obligation;
 pub mod fence_reconciliation;

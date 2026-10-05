@@ -1,0 +1,206 @@
+{
+   "adaptation" : "Reuse maintained local v1 DownloadJournalRecord identity/schema, guarded original-plan fresh integrity admission and durable no-replace publication. Do not add a second progress ledger, framework topology/consistency inference or product terminal receipt.",
+   "consumer_disposition" : "Source consumers remain unchanged/read only. Reference excerpts identify actual callers without claiming behavioral inspection outside stated ranges. Earlier provenance and licenses remain unchanged.",
+   "consumer_references" : [
+      {
+         "excerpt" : "        .publish_manifest(&expected)",
+         "line" : 78,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&expected)",
+         "line" : 107,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&valid_manifest())",
+         "line" : 290,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&manifest)",
+         "line" : 37,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&manifest)",
+         "line" : 313,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&valid_manifest())",
+         "line" : 330,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&valid_manifest())",
+         "line" : 353,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&valid_manifest())",
+         "line" : 375,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&valid_manifest())",
+         "line" : 399,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&valid_manifest())",
+         "line" : 422,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    layout.publish_manifest(&manifest).expect(\"write manifest\");",
+         "line" : 443,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    layout.publish_manifest(&manifest).expect(\"write manifest\");",
+         "line" : 468,
+         "path" : "crates/canic-backup/src/persistence/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let mut manifest = build_manifest(config, plan, &download_journal)?;",
+         "line" : 438,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "    layout.publish_manifest(&manifest)?;",
+         "line" : 447,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn build_manifest(",
+         "line" : 14,
+         "path" : "crates/canic-backup/src/runner/manifest.rs"
+      },
+      {
+         "excerpt" : "    manifest::build_manifest(config, plan, journal)",
+         "line" : 30,
+         "path" : "crates/canic-backup/src/runner/mod.rs"
+      },
+      {
+         "excerpt" : "    pub fn publish_manifest(",
+         "line" : 102,
+         "path" : "crates/canic-backup/src/persistence/layout.rs"
+      },
+      {
+         "excerpt" : "        .publish_manifest(&manifest)",
+         "line" : 194,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    crate::release_build::validate_finalized_release_build_manifest(&root, release, &path)",
+         "line" : 78,
+         "path" : "crates/canic-host/src/release_set/current/tests.rs"
+      },
+      {
+         "excerpt" : "    validate_finalized_release_build_manifest(root, bootstrap.release_build_id, &complete.path)",
+         "line" : 152,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/canic_init/mod.rs"
+      },
+      {
+         "excerpt" : "    validate_finalized_release_build_manifest(",
+         "line" : 234,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/canic_init/mod.rs"
+      },
+      {
+         "excerpt" : "    validate_finalized_release_build_manifest(root, release_build_id, &release.path)?;",
+         "line" : 91,
+         "path" : "crates/canic-host/src/release_set/candid/mod.rs"
+      },
+      {
+         "excerpt" : "            validate_finalized_release_build_manifest(&context.icp_root, id, &current.path)?;",
+         "line" : 306,
+         "path" : "crates/canic-host/src/canister_build/reuse/mod.rs"
+      },
+      {
+         "excerpt" : "pub fn validate_finalized_release_build_manifest(",
+         "line" : 194,
+         "path" : "crates/canic-host/src/release_build/mod.rs"
+      },
+      {
+         "excerpt" : "    validate_finalized_release_build_manifest(root, release_build_id, &release.path)?;",
+         "line" : 59,
+         "path" : "crates/canic-host/src/protocol_binding/release/mod.rs"
+      },
+      {
+         "excerpt" : "    validate_finalized_release_build_manifest(",
+         "line" : 2202,
+         "path" : "crates/canic-host/src/fleet_ensure/generate/mod.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/model/download_journal/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/manifest/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/integrity/mod.rs",
+      "crates/ic-backup/src/policy/download_integrity/mod.rs",
+      "crates/ic-backup/tests/execution_settlement.rs"
+   ],
+   "contract" : "docs/contracts/download-manifest.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               98,
+               175
+            ]
+         ],
+         "path" : "crates/canic-backup/src/persistence/layout.rs",
+         "retained_copy" : "target/download-manifest-source.Gedhro/crates/canic-backup/src/persistence/layout.rs",
+         "sha256" : "94aeb745515694e95e94ba8275be521f1ad80f9afc7d15014e17e84b9d825219"
+      },
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               438,
+               454
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "retained_copy" : "target/download-manifest-source.Gedhro/crates/canic-backup/src/runner/operations/artifacts.rs",
+         "sha256" : "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573"
+      },
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               14,
+               125
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/manifest.rs",
+         "retained_copy" : "target/download-manifest-source.Gedhro/crates/canic-backup/src/runner/manifest.rs",
+         "sha256" : "6cf16fc6147ebf3e064a1f849cf84358cbd497fad4f77760176151a3989b0128"
+      },
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               145
+            ]
+         ],
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs",
+         "retained_copy" : "target/download-manifest-source.Gedhro/crates/canic-backup/src/persistence/tests/operational_readiness/manifest_publication.rs",
+         "sha256" : "c55b5ca897cc9587406896d2a6cc0a41956592e3d49f1b5865098626de6e1b96"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native local identity/record, no-follow checksum, immutable publication, exact replay, references and acknowledged process recovery only. Stable noncooperating bytes, complete backend extents, authentic snapshot/capture association, consistency/application safety, command custody and terminal/fence/reference release require separate qualification.",
+   "source_findings" : [
+      "Source publication can adopt an exact retained full manifest and sync it; the local mechanism preserves immutable evidence and requires explicit expected-digest replay after conflict or lost reply.",
+      "Source runner reconstructs authority/artifact fields while preserving original publisher tool/time provenance. The local manifest retains the entire unchanged canonical download record and regenerates no snapshot/tool/time identities.",
+      "Source manifest construction derives application consistency units from parent components; that framework contract is not imported. Original local download selection/bytes prove no application consistency or complete backend transfer.",
+      "Source crash tests include a native fake executor and completed-operation receipts; new tests run local production publication/verification/replay and qualify no actual IC effects or full terminal proof."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "c6da13cc478b76c83eb51f4600f5acd66e47501a",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

@@ -1319,8 +1319,112 @@ local association/persistence only. [Fresh Canic inspection](fence-acquisition-s
 imports no production code, default command, effect flag or dispatch/outcome proof.
 Actual application/IC backend qualification remains required.
 
+### Immutable local download manifests
+
+`DownloadJournalGuard::publish_download_manifest` publishes the exact guarded
+Durable download record at fixed `download-manifest.json`. It reuses the existing
+strict v1 `DownloadJournalRecord` schema and model/policy owners, adding no second
+progress ledger or mutable manifest state. Existing bounds remain 1 MiB raw and
+canonical IO, 1,024 artifacts and 256 ASCII snapshot-token bytes. Every selected
+target needs its retained exact snapshot metadata, derived paths and checksum.
+
+`DownloadJournalRecord::digest` owns canonical binary identity for all four local
+states. A NUL-terminated `ic-backup/download-journal/v1` domain precedes the 64 ASCII
+intent and big-endian u64 entry count. Canonical principal-text rows each encode four
+u32-length-prefixed UTF-8 strings (principal, exact token, staging and artifact paths),
+two u64 metadata values, a state byte (Created=0 through Durable=3), a checksum
+presence byte and the 64 ASCII hash when present. All integers are big-endian.
+Identity normalization comes from existing record admission; no timestamp, release
+tool metadata or snapshot provenance is regenerated. See the
+[contract and independent goldens](contracts/download-manifest.json).
+
+Publication borrows exclusive layout/journal custody, holds a manifest lock and
+calls the existing fresh durable-artifact verifier before private 0600 durable
+no-replace publication. All selected trees are checked with existing no-follow
+traversal. Missing/changed originals, incomplete sets, unsafe trees, checksum drift,
+contention and existing destinations reject without repairing records or bytes.
+Cooperating writers use layout exclusion; noncooperating stable byte custody remains
+integration-owned. Sequential checksum observations are not an atomic snapshot.
+
+`read_download_manifest` is explicit exact local replay after publication or a lost
+reply. It admits the bounded regular no-follow manifest under its expected digest,
+the full original retained plan, exact selected Durable set and equal retained
+download journal. Active download guards must be dropped first. Artifact trees can
+be absent or changed: replay reads records only and makes no provider calls, fresh
+byte checks, writes, repairs, progress changes or allowance resets. Conflict and
+unknown publication outcomes preserve all recovery evidence and source references.
+
+Native tests cover independent hashes for every state and maximum metadata/token
+values, canonical order/checksum drift, changed final-tree bytes, changed originals,
+unsafe/excessive evidence, contention, immutable publication/lost replies and
+acknowledged process death before publication and after directory sync. A public
+reopen/replay journey retains unfinished restore references and fence obligations
+with artifact trees moved aside. These are local model/filesystem/process checks;
+they qualify no complete IC transfer, authenticated snapshots or application effects.
+
+[Fresh read-only source inspection](download-manifest-source.json) records Canic's
+manifest construction/publication and actual consumers. Its tool/time provenance,
+parent-derived unit consistency, completed-operation receipt and exact-file adoption
+are not imported. The local mechanism reuses maintained download owners and releases
+no fence/reference. A full product backup manifest, authenticated capture/transfer,
+consistency/effect evidence, command custody and terminal admission remain pending.
+
+### Original execution settlement checkpoints
+
+`model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local
+checkpoint for the exact full original plan and unique journal-history fingerprints.
+It has no copied counters, outcomes or completion/terminal flags. Required checksum
+records reuse the existing owner; rows normalize and sort opaque u64 sequences,
+rejecting duplicate identities even with different hashes. The 8,192-row ceiling
+fits the 2 MiB raw/canonical IO bound, including maximum operation IDs. This is not
+a product completion receipt. See the [strict schema and independent binary goldens](contracts/execution-settlement.schema.json).
+
+`AttemptJournalRecord::digest` now hashes its full original authority and every
+chronological reservation/receipt through the existing private event owner. The
+NUL-terminated `ic-backup/attempt-journal-history/v1` domain precedes 64 ASCII
+authority hash bytes and a big-endian u64 event count. Closed tags and integer
+widths/outcome bytes bind every request/evidence hash. Derived progress, JSON
+formatting and filesystem location are excluded; no v1 journal fields change.
+Equal final views with changed receipt evidence therefore retain different histories.
+The checkpoint's separate `ic-backup/execution-settlement/v1` domain binds original
+plan hash, u64 row count and ascending u64 sequence/64 ASCII history pairs.
+
+`policy::execution_settlement::validate` reuses canonical `execution_progress`
+for complete exact original journal/context/operation/allowance admission and
+retained Applied prerequisite checks. Every original operation must be Applied;
+unused, pending, lost observations, Uncertain, NotApplied and exhausted unresolved
+evidence cannot seal. Checkpoint coverage and every full history must match. Policy
+performs no IO, serialization, mutation or scheduling and returns the existing view.
+Original unused assigned allowances remain unchanged and confer no future authority.
+
+Guarded `create_execution_settlement` and `read_execution_settlement` use fixed
+`execution-settlement.json`, the original retained plan and every original journal
+under layout exclusion. Sequential journal locks bound descriptor use, while Applied
+owners prohibit subsequent transitions; drop active guards before invoking these
+operations. `OperationPlanRecord::attempt_authorities` reuses scalar derivation through
+one canonical helper, computing the full plan digest once per bulk scan. There is no
+new cache or accounting owner. Existing no-follow bounded readers and durable private
+no-replace publication retain prior bytes on conflict. Lost publication replies and
+process death reopen exact local evidence, without paid calls or rewriting originals.
+
+The checkpoint qualifies local ledger binding only. Authentication, cross-journal
+dispatch chronology, stable noncooperating byte custody, transfer completeness,
+manifest/application safety and command quiescence remain separate qualification.
+No terminal, fence release, source-reference release or prune API is inferred or added.
+All original spending, obligations and references remain retained across replay.
+
+Fresh native cases cover independent hashes/schema, maximum bounds, missing/changed
+originals, unsettled histories, exact receipt drift under identical final views,
+contention, symlinks, layout replacement, failed publication and acknowledged process
+death before publication/after directory sync. A public journey replays all-Applied
+native fixture journals while retaining original fence/source dependencies. These
+fixtures perform no IC/application effects. [Fresh Canic inspection](execution-settlement-source.json)
+imports no completion counts, terminal flags, runner or release proof; actual backend
+qualification and full product terminal evidence remain pending.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
+| Original all-Applied journal settlement | Adapted immutable full-plan/exact-history local checkpoint and guarded replay; completion counts/flags, command exit, actual terminal proof and release authority are not imported |
 | Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |
 | JSON IO, journal/file locking, artifact publication | Copied into persistence ops; record byte bounds/private permissions added; direct regressions rerun |
 | Layout lifetime locks and reference retention | Copied with model-owned v1 validation/transitions, stable parent-side locking, directory identity and explicit bounds |

@@ -156,10 +156,14 @@ implemented foundation includes:
   lifecycle operations;
 - fresh verification of durable local backup files against their original plan;
 - retained same-release source/safety requirements and application evidence checks
-  before snapshot load or controlled start; and
+  before snapshot load or controlled start;
 - retained original application fence obligations and exact acquisition-journal
   recovery, exact application update envelopes and reserved reconciliation checks
-  across interruption.
+  across interruption;
+- immutable original execution settlement checkpoints with exact journal histories
+  for local replay; and
+- immutable manifests of the exact verified local download set, with local record
+  replay that preserves original snapshot/checksum evidence.
 
 These components have native regression evidence for their local filesystem,
 record and process behavior. They do not establish real Internet Computer backup

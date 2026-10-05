@@ -6,6 +6,7 @@ mod command_lifetime_lock;
 mod consistency;
 mod download_journal;
 mod effect_graph;
+mod execution_settlement;
 mod fence_obligation;
 mod file_lock;
 mod inventory;
@@ -24,8 +25,14 @@ pub use command_lifetime_lock::{
 pub use consistency::{
     ConsistencyPersistenceError, create_consistency_requirement, read_consistency_requirement,
 };
-pub use download_journal::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard};
+pub use download_journal::{
+    DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard, DownloadManifestError,
+    read_download_manifest,
+};
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
+pub use execution_settlement::{
+    ExecutionSettlementPersistenceError, create_execution_settlement, read_execution_settlement,
+};
 pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,
     read_fence_obligation,

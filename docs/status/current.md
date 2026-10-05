@@ -25,14 +25,144 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.2.1` live. The repository baseline is release commit
-`6a912e3d53967311e6bf9825f2f8960d31d9190d`, with manifest `0.2.1` and receipt
-source `014391d606eacfb61f38519e457aad0e140dd2a3` under `release-verify`.
-Read-only receipt verification passed before opening the new draft; the maintainer
-has now selected its undated `0.2.2` changelog label. Package version remains `0.2.1`.
+The maintainer reports `0.2.2` live. The repository baseline is release commit
+`e11227bbbdc6716097d95c5896e41f42f2f1898b`, with manifest `0.2.2` and receipt
+source `bff4e86264200307614d1ae7d7ec7f58aaffb73d` under `release-verify`.
+Read-only receipt verification passed before opening the draft; the maintainer
+has now selected its undated `0.2.3` changelog label. Package version remains `0.2.2`.
 Registry publication was not independently observed. This continuation changes
 no package version, dependency lock, release receipt or vendored tooling and
 performs no real release transaction, commits, pushes or live effects.
+
+## Immutable local download manifests
+
+The [maintained boundary](../extraction-boundary.md#immutable-local-download-manifests)
+adds immutable publication of the exact verified local download set. It reuses
+`DownloadJournalRecord`, canonical selected-target/Durable checksum policy and
+guarded fresh no-follow verification, adding no second schema or progress ledger.
+The original plan, exact snapshot token/metadata, derived paths, state and checksum
+have a model-owned binary digest. Existing 1 MiB IO, 1,024-artifact and 256-token-byte
+bounds are unchanged. See the [contract and independent goldens](../contracts/download-manifest.json).
+
+Private no-replace `download-manifest.json` publication rejects conflicts; an unknown
+reply is reconciled explicitly under the expected full digest. Local replay admits
+the original retained plan and unchanged original download journal using exclusion.
+It never reads artifact trees, invokes providers, reconstructs provenance or changes
+progress, allowances or references. Fresh byte verification remains a separate action.
+Complete backend extents, authentic snapshots, consistency and full terminal admission
+remain integration-owned; sequential checks need stable noncooperating byte custody.
+
+Fresh targeted Linux evidence:
+
+- Seven new unit cases pass in the 28-case download-owner selection:
+  `target/download-manifest-download-owner.log`. Coverage includes all-state independent
+  binary goldens with maximum metadata/token values, canonical order/checksum identity,
+  changed final-tree bytes and original journal, private immutable publication, exact
+  replay, contention, missing/unsafe/excessive records, lost replies and acknowledged
+  process death before publication and after directory sync.
+- All five pure selected-set/Durable policy-owner regressions pass:
+  `target/download-manifest-policy-owner.log`.
+- The new public manifest replay journey and existing settlement journey pass:
+  `target/download-manifest-public.log`. Repeated reopen/replay with artifact trees
+  moved aside preserves original journal bytes, unfinished source references and the
+  original fence obligation. There are 35 passing targeted cases in this continuation.
+- All-target/all-feature warning-denied Clippy, rustdoc and Rust 1.91.0 checks pass:
+  `target/download-manifest-clippy-final.log`, `target/download-manifest-docs.log`
+  and `target/download-manifest-msrv.log`. Initial cast/test-format lint failures remain
+  in `target/download-manifest-clippy-first.log`; corrected code passes.
+- Formatting/whitespace and all 12 pinned Shared Tooling files pass:
+  `target/download-manifest-format.log`, `target/download-manifest-diff-check.log`
+  and `target/download-manifest-shared-tooling.log`. Exact retained sources/consumers,
+  independent contract/golden replay and local Markdown links pass
+  `target/download-manifest-provenance-check.log`.
+- Read-only `release-plan VERSION=0.2.3` reports `0.2.2` -> `0.2.3`:
+  `target/download-manifest-release-plan.log`. Changelog admission accepts that selected
+  draft. No preparation, full validation gate or real release transaction ran.
+
+[Fresh read-only Canic inspection](../download-manifest-source.json) identifies
+`c6da13cc478b76c83eb51f4600f5acd66e47501a`, separately records dirty source and retains
+exact inputs under `target/download-manifest-source.Gedhro`. No product source is
+copied, no sibling changes occur and earlier provenance/evidence is unchanged.
+Framework parent-derived consistency, tool/time provenance reconstruction, completed
+receipts and automatic adoption are not imported. Current additions remain uncommitted
+and remove no existing public or private symbols; the public fixture now returns its
+existing source declaration for the additional journey. Existing v1 records are unchanged.
+
+The selected 0.2.3 draft includes both this manifest batch and the execution settlement
+batch below. These are local retained evidence components, not a complete backup/restore
+product. Full manifest/transfer and authenticated effect qualification, actual application
+safety and command custody still precede terminal fence/reference release. Application
+providers, dispatch admission, remaining IC reconciliation, runners/transport and native
+macOS/actual application/IC qualification remain pending.
+
+## Original execution settlement checkpoints
+
+The [maintained boundary](../extraction-boundary.md#original-execution-settlement-checkpoints)
+adds an immutable local checkpoint of every original operation's exact chronological
+attempt history. Admission reuses canonical execution progress for complete original
+plan/context/operation/budget coverage and retained Applied prerequisites, requires
+every operation Applied, and matches all history fingerprints. Fingerprints include
+negative/uncertain receipts, evidence and consumed reservations; identical final views
+cannot hide changed receipts. There is no second spending ledger or completion flag.
+See the [strict v1 schema and independent binary goldens](../contracts/execution-settlement.schema.json).
+
+Fixed `execution-settlement.json` has bounded 2 MiB immutable private publication and
+exact local replay under exclusive layout custody. Existing 8,192-operation,
+65,536 combined original-attempt, 2,048-event and 1 MiB per-journal limits remain.
+Bulk authority derivation hashes the original plan once; sequential exact journal
+locks bound descriptor use. Callers drop journal guards before admission; Applied
+owners reject further transitions. Noncooperating byte custody remains separately
+qualified. Lost publication replies reopen exact local evidence without rewriting,
+provider calls, fresh artifact verification or replenishing original allowances.
+
+Fresh targeted Linux evidence:
+
+- Fifteen new unit cases pass: `target/execution-settlement-unit-final.log`.
+  They cover independent full-history/checkpoint goldens, strict bounded admission,
+  receipt drift, missing/pending/uncertain/NotApplied evidence, publication failure,
+  contention and acknowledged process death before publication and after directory sync.
+- One public replay journey passes after the fixture refactor:
+  `target/execution-settlement-public-final.log`. Drop/reopen and repeated replay retain
+  exact spent journal bytes, remaining original allowances, fence obligations and
+  unfinished source references without provider or IC/application effects.
+- Eight plan-owner and ten attempt-journal-owner regressions pass:
+  `target/execution-settlement-plan-owner.log` and
+  `target/execution-settlement-attempt-owner.log`. There are 34 targeted passing tests
+  in this batch, comprising 33 unit cases and one public integration case.
+- All-target/all-feature warning-denied Clippy, rustdoc and Rust 1.91.0 checks pass:
+  `target/execution-settlement-clippy.log`, `target/execution-settlement-docs.log`
+  and `target/execution-settlement-msrv.log`.
+- Formatting/whitespace checks and all 12 pinned Shared Tooling files pass:
+  `target/execution-settlement-format.log`, `target/execution-settlement-diff-check.log`
+  and `target/execution-settlement-shared-tooling.log`. Exact source copies/consumers,
+  independent schema/golden replay and local Markdown targets pass
+  `target/execution-settlement-provenance-check.log`.
+
+Initial fixture/schema checksum-string failures remain in
+`target/execution-settlement-unit-first.log` and
+`target/execution-settlement-schema-first-attempt.json`; corrected fixtures reuse
+existing checksum record objects. The public-test length lint failure remains in
+`target/execution-settlement-clippy-public-first.log`; the extracted fixture helper
+passes. Earlier successful runs and independent generators remain retained too.
+
+[Fresh read-only Canic inspection](../execution-settlement-source.json) binds
+`c6da13cc478b76c83eb51f4600f5acd66e47501a` and a separately identified dirty working
+tree; exact source inputs remain under `target/execution-settlement-source.igm5gK`.
+The source's completion counts and command-controlled reference release are not
+imported. This batch adds local contracts using existing owners; no existing public
+symbols or v1 records are removed or replaced. Changes remain uncommitted.
+
+This checkpoint proves retained original journal settlement only. Full product
+terminal admission still needs artifact/manifest/transfer evidence, authenticated
+effect attribution and chronology, actual application safety and command quiescence
+before fence/reference release. Application codecs/providers, exclusive dispatch
+custody, remaining IC reconciliation, runners and transport remain pending. Native
+macOS and actual application/IC behavior remain unqualified by these native checks.
+
+The next two entries describe implementation now included in released `0.2.2`.
+Their versions and evidence paths record conditions at implementation time. Earlier
+target logs/source copies are absent in this checkout; they are historical results,
+not freshly retained qualification. Current `execution-settlement-*` evidence is retained.
 
 ## Exact application fence acquisition requests
 
@@ -78,8 +208,8 @@ Fresh targeted Linux evidence:
 working tree; exact source copies/generators are retained under
 `target/fence-acquisition-*`. Earlier provenance is unchanged. No Canic default
 program, command flags, runner, acquisition code or generic fence proof is imported.
-All additions remain uncommitted and additive; existing public contracts and v1
-records are unchanged. Actual application codecs/providers, exclusive dispatch
+The additions were additive; existing public contracts and v1 records were unchanged.
+Actual application codecs/providers, exclusive dispatch
 admission/custody and terminal-controlled release remain pending before runners.
 Native macOS and actual application/IC qualification remain outside these checks.
 
@@ -115,10 +245,8 @@ Fresh targeted Linux evidence:
 Initial Clippy documentation-formatting and unused-import failures remain in
 `target/fence-reconciliation-clippy-first-attempt.log` and
 `target/fence-reconciliation-clippy-second-attempt.log`; corrected code passes.
-Source inspection copies and independent Perl generators are retained under
-`target/fence-reconciliation-*`. Earlier target logs/source copies referenced
-below are absent in this checkout; older entries describe historical results,
-not freshly retained qualification. This batch leaves all changes uncommitted.
+Source inspection copies and independent Perl generators were retained under
+`target/fence-reconciliation-*` at implementation time.
 
 The observer installs no authenticated provider or acquisition/release workflow;
 views create no automatic receipts, spending, dispatch permits or terminal proof.
@@ -159,17 +287,19 @@ fix; vendored Shared Tooling bytes and sibling repositories are unchanged.
 | Question | Current answer |
 | --- | --- |
 | Can it perform a complete backup or restore? | No. The transport, runners and CLI remain unimplemented |
-| What works today? | Local artifacts, bounded records, journals, plans, selected IC codecs and pure integration checks |
+| What works today? | Local artifacts, bounded records, journals, plans, immutable download manifests and settlement checkpoints, selected IC codecs and pure integration checks |
 | What has been qualified? | Native local filesystem, record, policy and process behavior within the evidence described below |
 | What remains integration-owned? | Live membership, authority, application consistency, authenticated calls and restored-state acceptance |
-| What is the next product boundary? | Qualified application acquisition codecs/providers and exclusive dispatch custody, then controlled release, remaining IC reconciliation and runners/transport qualification |
+| What is the next product boundary? | Full terminal artifact/application/command-custody admission before controlled release, qualified application providers and exclusive dispatch custody, remaining IC reconciliation and runners/transport qualification |
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-product-readiness.svg" alt="Product readiness stages showing the implemented local safety foundation followed by application adapters, authenticated IC transport and runners, and PocketIC and live qualification" width="800">
 </p>
 
-The released batch added immutable original application fence obligations and exact
-acquisition-journal recovery, following the restore/source/safety declaration batch.
+The released baseline includes original application fence obligations, acquisition
+reconciliation and exact acquisition envelopes. The new draft adds original local
+execution settlement checkpoints and immutable download manifests without releasing
+those obligations or references.
 Candid 0.10.37 and management SDK 0.11.0 remain
 locked unchanged. The manifest, lockfile, release receipt, earlier provenance and
 vendored Shared Tooling bytes are unchanged. Only targeted Linux checks ran for

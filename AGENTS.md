@@ -211,6 +211,26 @@ into an issue tracker or release authority.
   outcome, Active custody or receipt. Failures retain pending spending and original
   obligations/references; no provider implementation or release authority is installed.
 
+- Execution settlement now retains exact full original plan and complete unique
+  Applied journal fingerprints, without copying counters or terminal flags. Preserve
+  v1, 8,192 rows, 2 MiB checkpoint IO and original per-journal/plan-attempt bounds.
+  Full chronological hashes bind original authority, reservations, outcomes and
+  evidence; identical final views cannot substitute. Reuse canonical execution progress
+  for original identity/coverage/causality admission. Immutable publication/read require
+  retained original plan and all journals under layout exclusion, with sequential
+  journal locks and bulk original authority derivation. Replay is local and retains
+  all spending, obligations and references. This is not full backup/restore completion,
+  authenticated receipts, cross-journal chronology, byte/extent/application qualification,
+  command quiescence or fence/reference release. No release API is implemented.
+
+- Immutable local download manifests now reuse the exact v1 download journal schema
+  after original-plan-bound fresh byte verification. Preserve 1 MiB IO, 1,024 artifacts,
+  exact tokens/metadata/derived paths/checksums and canonical binary identity. Replay
+  admits exact original retained plan/journal evidence locally and never reads artifact
+  trees or calls providers. Publication/replay changes no progress, allowance or
+  references. Complete backend transfer, authentic snapshots, consistency, full product
+  manifests/terminal proof and fence/reference release remain independently qualified.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.
