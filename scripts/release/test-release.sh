@@ -2,6 +2,13 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+# Fixtures own their release identities and Make invocations. A real release
+# exports both environment values and command-line overrides through GNU Make;
+# neither may reach the fixture's standalone gates or select a parent helper.
+# This child-only reset leaves the enclosing release and its evidence intact.
+unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND \
+    RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE VERSION \
+    MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL
 TEST_REAL_MAKE="$(command -v make)"
 TEST_REAL_GIT="$(command -v git)"
 export TEST_REAL_MAKE TEST_REAL_GIT
@@ -196,6 +203,24 @@ test_nested_dependency_bootstrap() {
     test_dependency_bootstrap "$1"
     [[ "$(cat target/parent/summary)" == 'parent evidence' ]]
 }
+test_validation_source_identity() {
+    before="$(fingerprint)"
+    # Explicit per-call identity still reaches the real production guard after
+    # the suite has excluded enclosing release/Make context at its entry.
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-verify \
+        'CI_TARGETS=deps check' RELEASE_SOURCE=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+        RELEASE_PREVIOUS=0.1.0 RELEASE_VERSION=0.1.1 RELEASE_DATE=2026-10-05
+    assert_unchanged
+    [[ ! -e target/release-state/0.1.1.validation.json ]]
+    "$TEST_REAL_MAKE" --no-print-directory release-verify 'CI_TARGETS=deps check' \
+        "RELEASE_SOURCE=$TEST_SOURCE" RELEASE_PREVIOUS=0.1.0 \
+        RELEASE_VERSION=0.1.1 RELEASE_DATE=2026-10-05
+    perl scripts/release/release-data.pl validation-check \
+        target/release-state/0.1.1.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.1.1 original
+    assert_unchanged
+    [[ ! -e target/release-state/0.1.1.plan && ! -e target/mock-staged && ! -e target/mock-tag && ! -e target/remote-head ]]
+    assert_cache_retained
+}
 test_versions() {
     [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 patch)" == 0.1.1 ]]
     [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 minor)" == 0.2.0 ]]
@@ -377,6 +402,7 @@ for outcome in success failure; do
     run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"
     run_case "nested-dependency-$outcome" test_nested_dependency_bootstrap "$outcome"
 done
+run_case validation-source-identity test_validation_source_identity
 run_case versions test_versions
 for invalid in conflict duplicate empty dated unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
 run_case preparation test_preparation

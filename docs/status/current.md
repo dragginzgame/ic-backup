@@ -25,7 +25,7 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.2.3` pushed. The clean repository baseline is release commit
+The maintainer reports `0.2.3` pushed. The latest finalized baseline is release commit
 `22d26ca70992c0d408a312e11901620a26ee27c7`, with manifest `0.2.3` and receipt
 source `603e3b26a75df43cab6f2e61838f656961498c84` under `release-verify`.
 Read-only receipt verification passed before opening the new draft. The maintainer
@@ -35,6 +35,55 @@ Registry publication was not independently observed. Package versions, dependenc
 selection, lockfile and release receipt remain unchanged; the member manifest is
 sorted and the reviewed tooling snapshot is refreshed.
 No commits, tags, pushes, package uploads or live IC effects occurred.
+
+## Release-check isolation fix
+
+The maintainer committed the pending batch at
+`505e0994ecbb4b94ec6f7483336e73b7c9b0c477` (`0.3.0` source notes), then reported
+release validation failure. Package version remains `0.2.3`, notes remain undated
+`0.3.0` and the latest local release tag remains `v0.2.3`. The real release state
+directory is empty: preparation did not start, and there is no saved plan to resume.
+Review/commit this fix before retrying the normal selected release command.
+
+The retained failure log is
+`target/validation-failures/20261005T170113Z-2464655-4-release-check.log`, with exact
+failed fixture evidence under `target/shared-release-tests.CqY8hy`. Its dependency
+targets passed, but the fixture inherited the enclosing source SHA and Make
+command-line overrides. Its standalone gate then tried to record validation under
+the real source rather than its mock source and correctly rejected the mismatch.
+Earlier standalone qualification did not exercise that enclosing context.
+
+The consumer suite now clears inherited release identity/helper inputs and GNU
+Make recursion/override variables in its child process. Fixture calls still supply
+their own exact original context. The unchanged shared runner test is invoked with
+its own `make` substitute from both Make and macOS system-Bash CI; an intentionally
+invalid inherited `RELEASE_MAKE` otherwise exposed that second boundary. The parent
+release environment and production source-SHA guard remain unchanged. No functions,
+methods or types are removed. The compatible fix extends the same selected `0.3.0`
+pending entry, whose command hard cut still owns its minor-release requirement.
+
+Fresh focused evidence under `target/release-context-review.RtbqlD`:
+
+- `reproduction.log` reproduces the exact failure through actual Make with enclosing
+  release identities/command-line overrides; failed fixture evidence is retained
+  under `target/shared-release-tests.qfMter`.
+- `parent-context-final.log` passes all 40 registered consumer cases in
+  `target/shared-release-tests.YBYtdc/cases.txt` and the exact shared runner suite.
+  This run explicitly supplies source/previous/candidate/date/kind/remote/branch,
+  `VERSION`, nested Make/validation depth and an invalid parent helper. The new
+  `validation-source-identity` case admits matching source evidence and rejects
+  explicit source mismatch without changing metadata or creating a release plan,
+  staged payload, tag or push. All Git/Cargo effects are fixture substitutes.
+- `shell-check-final.log` and `workflow-check.log` pass Bash/ShellCheck/Perl and
+  Actionlint. An intermediate run passed the consumer suite but exposed the
+  inherited helper in shared runner tests; `parent-context-validation.log` and
+  `target/shared-release-tests.RFLYRS` retain its actual evidence.
+
+Only consumer fixture setup/callers, CI invocation, pending notes and local docs
+changed. No product Rust, vendored bytes, package/lock/receipt identity, real release
+transaction or upstream repository was changed. Work remains uncommitted; full
+CI/release execution and native macOS qualification were not performed here.
+Earlier audit and product evidence below retains its original source and scope.
 
 ## Latest Shared Tooling refresh and formatting contract
 

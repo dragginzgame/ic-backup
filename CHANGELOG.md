@@ -14,6 +14,9 @@
 - Retry preflight or validation-only release failures through the normal target
   against corrected source, retaining earlier evidence. Once preparation starts,
   resume the exact saved version instead of selecting another increment.
+- Isolate release-check fixtures from enclosing release identities and Make
+  overrides so their dependency checks also succeed inside the release gate,
+  while preserving rejection of an explicitly changed validated source.
 
 - Bind fresh local restore-source verification to the exact original requirement,
   source manifest and selected existing IDs. Retain both layout/journal guards and

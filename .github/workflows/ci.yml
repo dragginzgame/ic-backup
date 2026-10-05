@@ -40,7 +40,7 @@ jobs:
         run: |
           /bin/bash scripts/ci/test-tooling.sh
           /bin/bash scripts/release/test-release.sh
-          /bin/bash scripts/ci/test-release-runner.sh
+          RELEASE_MAKE=make /bin/bash scripts/ci/test-release-runner.sh
           /bin/bash scripts/hooks/test-hooks.sh
       - name: Validate the native library and repository tooling
         run: make ci

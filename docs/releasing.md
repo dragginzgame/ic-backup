@@ -154,6 +154,14 @@ mutation, dependency bootstrap, original-input validation, retained metadata/his
 rollback, lost commit/tag/push replies and completed replay. Fixture command traces
 and failure evidence are retained under `target/shared-release-tests.*`.
 
+The consumer suite clears inherited release identities and GNU Make recursion/
+override state in its child process; each fixture owns its exact context. The
+unchanged shared runner suite uses its own `make` substitute, including in macOS
+system-Bash CI. Qualification under parent release variables and command-line
+overrides checks this boundary. Explicit source mismatches still reject before
+recording validation evidence; successful dependency targets do not bypass that
+production guard.
+
 `make shell-check`, `make shared-tooling-check` and `make tooling-check` cover syntax,
 lints, pinned bytes/modes and rejection/evidence behavior. These are focused tooling
 checks, not actual releases, native macOS qualification or real registry publication.

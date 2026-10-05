@@ -103,7 +103,7 @@ publish-dry-run:
 
 release-check:
 	bash scripts/release/test-release.sh
-	bash scripts/ci/test-release-runner.sh
+	RELEASE_MAKE=make bash scripts/ci/test-release-runner.sh
 
 release-patch release-minor release-major:
 	@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
