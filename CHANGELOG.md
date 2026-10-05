@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0]
+## [0.3.0] - 2026-10-05
 
 - **Breaking:** Use the shared release workflow for patch, minor and major releases,
   with exact saved-version recovery through `make release-resume VERSION=X.Y.Z`.
