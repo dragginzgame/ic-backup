@@ -19,7 +19,8 @@ trap finish EXIT
 
 # Run the unchanged upstream cases against the actual vendored runner, while
 # retaining its output if qualification fails.
-bash "$ROOT/scripts/ci/test-validation-target-runner.sh" >"$FIXTURE/runner.log" 2>&1
+GITHUB_STEP_SUMMARY="$FIXTURE/runner-summary.md" \
+    bash "$ROOT/scripts/ci/test-validation-target-runner.sh" >"$FIXTURE/runner.log" 2>&1
 cat "$FIXTURE/runner.log"
 
 reset_consumer() {

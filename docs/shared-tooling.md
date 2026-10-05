@@ -61,6 +61,9 @@ runs upstream runner cases against the vendored implementation plus local
 byte/mode/missing-file/symlink/manifest rejection and evidence-retention cases.
 `make release-check` exercises the actual Make gate with substituted Cargo and
 checks failed dependency preparation stops later targets while retaining logs.
+Fixture-based checks bind their repository, failure-log and GitHub summary paths
+locally, including when a parent CI runner supplies a different context. Expected
+fixture failures do not alter the parent's retained logs or reported results.
 These native tool checks establish no IC behavior or additional supported host.
 The shared host matrix describes upstream evidence; consumer CI remains Linux.
 

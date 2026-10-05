@@ -8,6 +8,8 @@
 - Keep one top-level changelog draft until release selection; prepare and date
   unnumbered or selected numbered notes without an Unreleased queue. Registry
   publication continues to delegate admission to Cargo.
+- Isolate release-test repository, failure-log and summary paths from the calling
+  CI runner so nested checks use their own fixtures and retain failure evidence.
 
 ## [0.1.7] - 2026-10-04
 

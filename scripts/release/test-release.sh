@@ -220,6 +220,11 @@ export PATH="$TEMPORARY/bin:$PATH"
 test_dependency_bootstrap() {
     # Exercise the actual Make gate/recipes against an initially empty cache.
     # Skip unrelated validation; neither network nor compilation is needed.
+    # A caller's CI runner exports its root. This nested runner must own the
+    # fixture root, failure logs and summary instead of inheriting that context.
+    export VALIDATION_REPOSITORY_ROOT="$FIXTURE"
+    export VALIDATION_FAILURE_LOG_DIR="$FIXTURE/target/validation-failures"
+    export GITHUB_STEP_SUMMARY="$FIXTURE/target/github-summary.md"
     cp "$ROOT/Makefile" Makefile
     mkdir -p scripts/ci target/gate-bin
     cp "$ROOT/scripts/ci/run-validation-targets.sh" scripts/ci/
@@ -258,6 +263,19 @@ MOCK
     fi
     assert_unchanged
     assert_cache_retained
+}
+
+test_nested_dependency_bootstrap() {
+    local parent="$FIXTURE/target/parent-runner"
+    mkdir -p "$parent"
+    printf 'parent summary\n' > "$parent/summary.md"
+    export VALIDATION_REPOSITORY_ROOT="$parent"
+    export VALIDATION_FAILURE_LOG_DIR="$parent/failures"
+    export GITHUB_STEP_SUMMARY="$parent/summary.md"
+    export VALIDATION_RUNNER_DEPTH=1
+    test_dependency_bootstrap "$1"
+    [[ ! -e "$parent/failures" ]]
+    [[ "$(cat "$parent/summary.md")" == 'parent summary' ]]
 }
 
 test_versions() {
@@ -501,6 +519,7 @@ test_push_retry() {
 echo "Release-helper tests: isolated fixtures; no real commits, tags or uploads."
 for outcome in success failure; do
     run_case "dependency-bootstrap-$outcome" test_dependency_bootstrap "$outcome"
+    run_case "nested-dependency-bootstrap-$outcome" test_nested_dependency_bootstrap "$outcome"
 done
 run_case versions test_versions
 for invalid in duplicate empty competing misplaced dated missing conflicting two-drafts wrong-version; do

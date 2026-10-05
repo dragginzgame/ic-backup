@@ -1,15 +1,43 @@
 # Current handoff — 2026-10-05
 
-The maintainer selected a `0.1.8` changelog entry for the Shared Tooling batch below.
-The starting worktree was clean at `e822c1b` (0.1.8), which contains that tooling
-work; Cargo remains `0.1.7`. One undated `0.1.8` entry now heads the changelog with
-the existing engineering-baseline, tooling and release-preparation notes.
-Only the changelog label and this handoff changed, and those edits are uncommitted.
+The maintainer reported release-check failure inside the configured validation
+runner. The starting worktree was clean at `a6a2626` (0.1.8); Cargo remains `0.1.7`.
+The selected undated `0.1.8` entry now also records the nested-fixture isolation fix.
+Release/tooling test adapters, these changelog notes and documentation are uncommitted.
 Dated history, Cargo/lockfile, licenses and historical release receipt remain
 unchanged. No version transaction, commit, tag, push, upload or live IC effect ran.
 Canic and every sibling remain read-only.
-Read-only changelog admission for `0.1.8` and diff checks passed. This documentation
-change required no compilation or broad validation.
+No compilation or broad validation ran for this tooling correction.
+
+## Nested release-check correction
+
+The outer validation runner exports `VALIDATION_REPOSITORY_ROOT` for its children.
+The dependency-bootstrap fixture inherited the real repository root and dispatched
+its simulated Make target there, where the fixture's exact-path substitute rejected
+it before Cargo ran. Direct release checks had passed without this parent context.
+
+The consumer-owned release adapter now binds repository, failure-log and GitHub
+summary paths to its own fixture. Added success/failure cases seed a different
+parent runner context, verify the actual Make gate and require parent summary/log
+state to remain unchanged. The tooling adapter similarly owns the upstream runner
+test's GitHub summary, keeping simulated failures out of the real parent summary.
+Vendored tools, snapshot identity, production release requirements and Rust are
+unchanged.
+
+Direct `make release-check` passed. The actual shared runner then passed the
+selected `release-check`, `tooling-check` and `shell-check` targets with an explicit
+parent failure-log directory and GitHub summary. Only the three real passing
+targets appear in that summary; no fixture failure logs escaped into the parent.
+Evidence remains at `target/nested-release-check.FPFCKV/`. This was targeted tooling
+validation, not full CI or release preparation. Changelog admission and diff checks
+also passed.
+
+The original `target/release-tests.QebrYj/` and retained validation logs remain.
+A pre-fix reproduction through the shared runner failed identically; its output
+is `target/release-check-reproduction.log`, with logs under
+`target/release-check-reproduction/` and fixture `target/release-tests.y6HiMu/`.
+Earlier failed evidence remains retained too. Successful test fixtures cleaned
+only their own temporaries.
 
 ## Shared engineering and tooling batch
 
