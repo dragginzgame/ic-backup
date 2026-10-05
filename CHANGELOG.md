@@ -2,6 +2,9 @@
 
 ## [0.2.1]
 
+- Let an explicit release command relabel the single current numbered draft to
+  its requested version, preserving notes and history. Keep competing/released
+  version rejection and restore the original draft on preparation failure.
 - Retain exact original capture/restore fence obligations before acquisition under
   bounded immutable publication. Reuse original attempt journals for recovery and
   retain obligations and source references through lost replies and settled outcomes;

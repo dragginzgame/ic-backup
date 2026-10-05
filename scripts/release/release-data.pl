@@ -78,11 +78,15 @@ sub changelog {
         die "duplicate changelog section: $section\n" if $seen{$section}++;
         parts($section) unless $section eq 'Draft';
     }
-    die "top section must be Draft or the selected undated release\n"
-        unless @sections && ($sections[0] eq 'Draft' || $sections[0] eq $target);
+    die "changelog must have a current draft\n" unless @sections;
     my $draft = $sections[0];
+    # A release command owns the final version. A numbered future draft is a
+    # provisional label; never reinterpret imported history as new release notes.
+    die "top section is historical; add an undated draft above it\n"
+        if $draft ne 'Draft' && $draft ne $target
+            && compare_versions($draft, version()) <= 0;
     die "another draft is open\n" if $draft ne 'Draft' && $seen{Draft};
-    die "selected version already has a section\n" if $draft eq 'Draft' && $seen{$target};
+    die "selected version already has a section\n" if $draft ne $target && $seen{$target};
     $text =~ /^## \[\Q$draft\E\]\n(.*?)(?=^## \[|\z)/ms
         or die "release draft must be undated\n";
     my $notes = $1;
@@ -92,7 +96,7 @@ sub changelog {
     # package are competing drafts; never rewrite historical release notes.
     my @drafts = $text =~ /^## \[([0-9.]+)\]$/mg;
     die "another numbered release draft is open\n"
-        if grep { $_ ne $target && compare_versions($_, version()) > 0 } @drafts;
+        if grep { $_ ne $draft && compare_versions($_, version()) > 0 } @drafts;
     die "release draft notes are empty\n" unless $notes =~ /\S/;
     $text =~ s/^## \[\Q$draft\E\]$/## [$target] - $date/m;
     return $text;

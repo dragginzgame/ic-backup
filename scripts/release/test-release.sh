@@ -312,8 +312,12 @@ test_invalid_changelog() {
             printf '\n## [0.1.1]\n\n- Duplicate selected intent.\n' >> CHANGELOG.md ;;
         two-drafts)
             printf '# Changelog\n\n## [0.1.1]\n\n- Selected notes.\n\n## [Draft]\n\n- Other notes.\n' > CHANGELOG.md ;;
-        wrong-version)
-            printf '# Changelog\n\n## [0.2.0]\n\n- Other release.\n' > CHANGELOG.md ;;
+        historical-top)
+            printf '# Changelog\n\n## [0.0.9]\n\n- Imported history.\n' > CHANGELOG.md ;;
+        released-target)
+            printf '\n## [0.1.1] - 2026-09-24\n\n- Released notes.\n' >> CHANGELOG.md ;;
+        target-in-history)
+            printf '# Changelog\n\n## [0.2.0]\n\n- Current draft.\n\n## [0.1.1]\n\n- Existing target.\n' > CHANGELOG.md ;;
         competing)
             perl "$DATA" set-version 0.9.0
             cat >> CHANGELOG.md <<'NOTES'
@@ -334,15 +338,10 @@ NOTES
 }
 
 test_preparation() {
-    if [[ "$1" == named ]]; then
-        cat > CHANGELOG.md <<'NOTES'
-# Changelog
-
-## [0.1.1]
-
-- Named release.
-NOTES
-    fi
+    case "$1" in
+        named) printf '# Changelog\n\n## [0.1.1]\n\n- Named release.\n' > CHANGELOG.md ;;
+        retargeted) printf '# Changelog\n\n## [0.2.0]\n\n- Named release.\n' > CHANGELOG.md ;;
+    esac
     # Undated imported history remains supported regardless of today's version.
     cat >> CHANGELOG.md <<'NOTES'
 
@@ -367,6 +366,9 @@ NOTES
     [[ "$(sed -n '/^## /{p;q;}' CHANGELOG.md)" == "## [0.1.1] - $release_date" ]]
     [[ "$(perl "$DATA" source)" == "$TEST_SOURCE" ]]
     cmp target/historical-notes <(sed -n '/^## \[0.1.0\]$/,$p' CHANGELOG.md)
+    if [[ "$1" != draft ]]; then
+        rg -q '^- Named release\.$' CHANGELOG.md
+    fi
     expect_failure perl "$DATA" finalize 0.1.1 2026-09-25
     expect_failure bash scripts/release/release.sh bump 0.1.1
     # This must hold for each fixture, not just the last reset in the suite.
@@ -375,6 +377,9 @@ NOTES
 }
 
 test_rejected_preparation() {
+    if [[ "${2:-draft}" == retargeted ]]; then
+        printf '# Changelog\n\n## [0.2.0]\n\n- Retain this provisional draft on failure.\n' > CHANGELOG.md
+    fi
     before="$(fingerprint)"
     export "$1=1"
     expect_failure bash scripts/release/release.sh bump patch
@@ -416,11 +421,21 @@ test_release() {
         major) expected=1.0.0 ;;
         *) echo "unexpected release kind: $requested" >&2; exit 1 ;;
     esac
+    if [[ "${2:-draft}" == retargeted ]]; then
+        local draft=0.1.1
+        [[ "$requested" != patch ]] || draft=0.2.0
+        printf '# Changelog\n\n## [%s]\n\n- Retargeted notes.\n\n## [0.1.0]\n\n- Imported history.\n' "$draft" > CHANGELOG.md
+        sed -n '/^## \[0.1.0\]$/,$p' CHANGELOG.md > target/historical-notes
+    fi
     cp "$ROOT/Makefile" Makefile
     # Run the real public Make target; its release effects remain substituted.
     "$TEST_REAL_MAKE" --no-print-directory "release-$requested"
     [[ "$(perl "$DATA" version)" == "$expected" ]]
     perl "$DATA" verify
+    if [[ "${2:-draft}" == retargeted ]]; then
+        rg -q '^- Retargeted notes\.$' CHANGELOG.md
+        cmp target/historical-notes <(sed -n '/^## \[0.1.0\]$/,$p' CHANGELOG.md)
+    fi
     # Exact observable effects; incidental read-only commands do not matter.
     printf '%s\n' validate stage commit tag push > target/expected-effects
     diff -u target/expected-effects "$TEST_EFFECTS"
@@ -534,11 +549,14 @@ for outcome in success failure; do
     run_case "nested-dependency-bootstrap-$outcome" test_nested_dependency_bootstrap "$outcome"
 done
 run_case versions test_versions
-for invalid in duplicate empty competing misplaced dated missing conflicting two-drafts wrong-version; do
+for invalid in duplicate empty competing misplaced dated missing conflicting two-drafts historical-top released-target target-in-history; do
     run_case "changelog-$invalid" test_invalid_changelog "$invalid"
 done
-for notes in draft named; do
+for notes in draft named retargeted; do
     run_case "prepare-$notes" test_preparation "$notes"
+done
+for failure in TEST_GATE_FAIL TEST_UPDATE_FAIL TEST_METADATA_FAIL; do
+    run_case "reject-retargeted-$failure" test_rejected_preparation "$failure" retargeted
 done
 for failure in TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_UPDATE_FAIL TEST_GATE_DIRTY TEST_GATE_HEAD TEST_METADATA_FAIL; do
     run_case "reject-$failure" test_rejected_preparation "$failure"
@@ -547,6 +565,7 @@ run_case staging test_staging
 run_case initial-version test_initial_version
 for kind in patch minor major; do
     run_case "release-$kind" test_release "$kind"
+    run_case "release-retargeted-$kind" test_release "$kind" retargeted
 done
 for mode in dry-run upload; do
     for state in no-release tagged stale-changelog publication-config missing-tag missing-receipt; do

@@ -60,10 +60,17 @@ routine implementation does not allocate a version per slice.
 Keep the latest release or one populated current draft at the top of
 `CHANGELOG.md`, without an Unreleased section or separate notes queue. Use
 `## [Draft]` while the next version is undecided. A maintainer-selected undated
-numbered draft may occupy the same top position. Preparation assigns the selected
-version and date to that section, preserving its notes and historical bytes.
+numbered draft may occupy the same top position. The explicit preparation/release
+command selects the final version; an earlier numbered future draft is provisional.
+Preparation relabels that section and assigns the date, preserving its notes and
+historical bytes. For example, with package `0.2.0` and draft `0.2.1`,
+`make release-minor` selects `0.3.0` and relabels the same notes during preparation;
+`make release-patch` selects `0.2.1`.
 It rejects empty, duplicate, misplaced or competing drafts before mutation.
 Undated imported historical versions remain history, not competing future drafts.
+Preparation cannot promote a historical top section to a new draft or overwrite
+an existing target version. Failed preparation restores the exact original label
+and notes along with the other release files.
 Changelog presentation does not gate registry publication.
 
 The workspace manifest owns the package version; the changelog owns selected

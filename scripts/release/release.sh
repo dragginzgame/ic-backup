@@ -75,6 +75,7 @@ bump() {
     fi
     release_date="$(date -u +%F)"
     perl "$DATA" changelog-check "$next" "$release_date"
+    echo "Preparing $previous -> $next; the current draft will be labeled $next."
     source="$(git rev-parse HEAD)"
     make --no-print-directory release-verify
     ensure_clean
@@ -99,10 +100,13 @@ bump() {
               rm -f docs/release.json
           fi
           rm -rf "$RELEASE_BACKUP_DIR"' EXIT
+    # Resolve the draft while the manifest still identifies the original release;
+    # this distinguishes a provisional future label from imported undated history.
+    # The same rollback restores the exact draft if a later mutation fails.
+    perl "$DATA" finalize "$next" "$release_date"
     perl "$DATA" set-version "$next"
     cargo update --offline -p ic-backup
     cargo metadata --offline --locked --no-deps --format-version 1 >/dev/null
-    perl "$DATA" finalize "$next" "$release_date"
     perl "$DATA" receipt "$source" "$release_date"
     perl "$DATA" verify
     trap - EXIT

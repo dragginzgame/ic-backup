@@ -28,10 +28,36 @@
 The maintainer's released repository baseline is `0.2.0` at `3e76590`. The
 workspace manifest remains `0.2.0`; the maintainer selected one undated `0.2.1`
 changelog draft for the current work.
+The implementation and selected changelog were committed by the maintainer at
+`8646589`; the release-helper correction below remains uncommitted.
 The retained release receipt identifies validated source
 `65c9532d85de0d74f9ed19b9237f1dbbcc961a61` and its `release-verify` gate. The
 maintainer reports pushing the release; registry publication was not observed.
-This continuation performs no version transaction or release command.
+This continuation performs no real version transaction or release command.
+
+## Explicit release selection and provisional changelog labels
+
+Preparation now lets the explicit release command relabel the single current
+future draft, preserving its exact notes and history. The reported `release-minor`
+attempt selected `0.3.0` from package `0.2.0` but was blocked by the provisional
+`0.2.1` heading. A future draft label now yields to the explicit target; duplicate,
+competing, empty, misplaced or dated drafts and existing target sections still
+reject. Imported undated history cannot become the new top draft. The final draft
+label is resolved against the original manifest before version mutation, under
+the existing rollback that restores the original label and all release bytes.
+Preparation prints its exact current/target versions before validation.
+
+`make release-check` passed against isolated Git/Cargo/gate substitutes, including
+patch/minor/major retargeting, exact preserved notes/history, receipt checks and
+gate/update/metadata failure rollback. Evidence is
+`target/changelog-retarget-release-check.log`. These tests perform no real commits,
+tags, pushes, uploads or cleanup of consumer build/evidence artifacts.
+`make shell-check` also passed, including Perl syntax; evidence is
+`target/changelog-retarget-shell-check.log`. Read-only admission accepts both
+the current `0.2.1` target and explicit `0.3.0` target without changing files.
+The manifest remains `0.2.0`, the current changelog stays undated `0.2.1`, and the
+existing release receipt is unchanged. This is a consumer-owned release-helper
+fix; vendored Shared Tooling bytes and sibling repositories are unchanged.
 
 ## At a glance
 
@@ -103,8 +129,9 @@ is implemented. Original opaque request semantics, identity and whole-selection
 fence custody remain integration-qualified. The next contract work covers actual
 coordinator requests and qualified reconciliation, then terminal evidence before
 release admission. No full gate, release/version transaction, upload, commit or
-live effect ran. Work remains uncommitted under the undated 0.2.1 changelog draft
-at package 0.2.0.
+live effect ran. This batch was delivered uncommitted under the undated 0.2.1
+changelog draft at package 0.2.0; the maintainer subsequently committed it at
+`8646589`.
 
 ## Original restore/source safety batch
 
