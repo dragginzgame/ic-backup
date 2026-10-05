@@ -3,13 +3,13 @@ SHELL := /bin/bash
 export CARGO_TARGET_DIR := $(CURDIR)/target
 VERSION ?=
 RELEASE := bash scripts/release/release.sh
-CI_TARGETS := deps shell-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 .PHONY: bump-x check check-msrv ci clean clippy deps doc ensure-clean fmt fmt-check \
         help hooks-check hooks-install major minor package patch publish publish-dry-run \
         release-check release-commit release-major release-minor release-patch release-plan \
-        release-push release-stage release-tag-check release-verify release-x shell-check \
-        tags test validate version
+        release-push release-stage release-tag-check release-verify release-x shared-tooling-check shell-check \
+        tags test tooling-check validate version
 
 help:
 	@echo "bump-x VERSION=x.y.z         Prepare an exact release version"
@@ -43,9 +43,11 @@ help:
 	@echo "release-tag-check           Verify the current annotated release tag"
 	@echo "release-verify              Run the full release validation gate"
 	@echo "release-x VERSION=x.y.z     Maintainer: release an exact version"
+	@echo "shared-tooling-check        Verify the reviewed local tooling snapshot"
 	@echo "shell-check                 Check maintained shell and Perl tooling"
 	@echo "tags                        List local version tags"
 	@echo "test                        Run native library tests and doctests"
+	@echo "tooling-check               Test snapshot integrity and CI diagnostics"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 
@@ -59,9 +61,7 @@ check-msrv:
 	cargo +1.91.0 check --offline --locked -p ic-backup --all-targets --all-features
 
 ci:
-	+@set -e; for target in $(CI_TARGETS); do \
-		$(MAKE) --no-print-directory "$$target"; \
-	done
+	+@bash scripts/ci/run-validation-targets.sh --fail-fast $(CI_TARGETS)
 
 clean:
 	cargo clean
@@ -140,11 +140,14 @@ release-verify: ci
 release-x:
 	$(RELEASE) release "$(VERSION)"
 
+shared-tooling-check:
+	bash scripts/ci/verify-shared-tooling-snapshot.sh
+
 shell-check:
-	@for script in scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit; do \
+	@for script in scripts/ci/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit; do \
 		bash -n "$$script" || exit $$?; \
 	done
-	shellcheck scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
+	shellcheck scripts/ci/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
 	perl -c scripts/release/release-data.pl
 
 tags:
@@ -152,6 +155,9 @@ tags:
 
 test:
 	cargo test --offline --locked -p ic-backup --all-features
+
+tooling-check: shared-tooling-check
+	bash scripts/ci/test-tooling.sh
 
 validate: ci
 

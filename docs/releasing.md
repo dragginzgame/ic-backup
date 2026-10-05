@@ -16,19 +16,17 @@ any version tag or completed local receipt exists. Subsequent releases must
 increase it. Breaking pre-1.0 contracts use a minor version and a hard cut;
 routine implementation does not allocate a version per slice.
 
-Keep one populated `## [Unreleased]` changelog section. A maintainer-selected
-undated numbered draft may immediately follow an empty Unreleased section.
-Preparation promotes/dates that draft while preserving historical notes.
-The maintainer completed the tagged `0.1.1` repository release; initial setup
-notes remain under undated `0.1.0`. The maintainer completed the tagged `0.1.2`
-release with layout/reference retention and command custody. The maintainer completed
-`0.1.4` with inventories, selection and dependency graphs, then `0.1.5` with
-operation-plan binding and retained-journal progress. The checkout is now at the
-maintainer's `640e6c2` (Release 0.1.6), with Cargo metadata and dated changelog
-entry at `0.1.6` for the IC request codec and membership/control contracts.
-The maintainer selected an undated `0.1.7` changelog draft for snapshot-read and
-consistency contract work, immediately after empty Unreleased. Cargo stays `0.1.6`;
-selecting the notes runs no release/version transaction.
+Keep the latest release or one populated current draft at the top of
+`CHANGELOG.md`, without an Unreleased section or separate notes queue. Use
+`## [Draft]` while the next version is undecided. A maintainer-selected undated
+numbered draft may occupy the same top position. Preparation assigns the selected
+version and date to that section, preserving its notes and historical bytes.
+It rejects empty, duplicate, misplaced or competing drafts before mutation.
+Undated imported historical versions remain history, not competing future drafts.
+Changelog presentation does not gate registry publication.
+
+The current committed package and dated changelog are `0.1.7`; the initial `0.1.0`
+history remains undated. Selecting draft notes runs no release/version transaction.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.
@@ -36,8 +34,9 @@ through release scripts.
 Preparation runs `make release-verify`, the complete native and tooling gate
 described in [development](development.md). Required tools are the pinned Rust
 toolchain, rustfmt, Clippy, Rust 1.91.0, Bash, Git, Make, Perl with core JSON::PP
-and Digest::SHA, ripgrep, flock and ShellCheck. Locked dependency fetch precedes
-offline compilation. Version mutation uses an offline Cargo update.
+and Digest::SHA, ripgrep, flock, ShellCheck and a SHA-256 implementation. Local
+Shared Tooling snapshot verification precedes locked dependency fetch and offline
+compilation. Version mutation uses an offline Cargo update.
 
 After validation, preparation updates only root `Cargo.toml`, `Cargo.lock`,
 `CHANGELOG.md` and generated `docs/release.json`. The v1 receipt binds the exact

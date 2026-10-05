@@ -136,7 +136,10 @@ runs on an operator host.
 `make help` lists the command family. `check`, `clippy`, `test`, `doc`,
 `check-msrv` and `package` select `ic-backup` explicitly. `fmt` formats the
 workspace; `fmt-check` checks it. `shell-check`, `release-check` and `hooks-check`
-validate contributor tooling. `version` and `release-plan` inspect release
+validate contributor tooling. `shared-tooling-check` verifies the exact local
+snapshot; `tooling-check` tests its integrity and CI diagnostics without network
+or compilation. [Shared adoption](shared-tooling.md) identifies the reviewed
+source and the product overlay. `version` and `release-plan` inspect release
 metadata without changing the workspace.
 
 `publish-dry-run` and `publish` delegate to Cargo for the current library version.
@@ -168,9 +171,16 @@ content and contributor attribution in the standalone crate archive.
 
 Run checks targeted to changed packages and behavior while developing. Full
 validation requires a maintainer request or CI. `make ci`, `make validate` and
-`make release-verify` run the full configured gate: dependency fetch, tooling,
-formatting, native compilation, Clippy, tests, docs, MSRV and package verification.
-CI runs this gate on Linux. Local package verification permits reviewed dirty
+`make release-verify` run the full configured gate: snapshot verification,
+dependency fetch, tooling, formatting, native compilation, Clippy, tests, docs,
+MSRV and package verification.
+CI runs this gate on Linux. The shared runner preserves target order, stops at
+the first failure and prints target-labelled diagnostics and a result/timing
+summary. Full and highlighted failure logs remain under
+`target/validation-failures/`; GitHub Actions also gets a step summary.
+The runner requires GNU Make, `awk`, `sed`, `tail`, `tee` and ripgrep or grep.
+Snapshot verification requires `sha256sum` or `shasum`. Shared Tooling is never
+fetched at validation time. Local package verification permits reviewed dirty
 source and builds the packaged crate; it does not publish it.
 
 ## Formatting and evidence

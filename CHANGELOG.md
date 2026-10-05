@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased]
+## [Draft]
+
+- Adopt the Dragginzgame engineering baseline with explicit source identity and
+  local backup rules. Vendor reviewed shared principles and tooling with offline
+  checksum/mode verification, fail-fast CI summaries and retained failure logs.
+- Keep one top-level changelog draft until release selection; prepare and date
+  unnumbered or selected numbered notes without an Unreleased queue. Registry
+  publication continues to delegate admission to Cargo.
 
 ## [0.1.7] - 2026-10-04
 

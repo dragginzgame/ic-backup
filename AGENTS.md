@@ -3,6 +3,21 @@
 This file is normative for automated agents and contributors working in
 `ic-backup`.
 
+## Shared baseline and local overlay
+
+Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
+This is a reviewed local snapshot of Shared Tooling's working-tree rules, not
+implicit inheritance from a moving sibling checkout.
+[Adoption and provenance](docs/shared-tooling.md) identify the committed tooling revision and the separately
+hashed rules. Refresh them deliberately; never edit vendored tooling in place.
+
+This file is the product-specific overlay: backup contracts, effect targets,
+numeric bounds, commands, supported hosts and qualification gates stay local.
+Common engineering rules are mandatory; record maintainer-approved exceptions
+with their scope and reason. GitHub issues also own reusable feedback, with the
+baseline's evidence fields instead of a duplicate feedback file.
+Shared Tooling's own validation commands apply upstream, not to this repository.
+
 ## Start of session
 
 Read `docs/status/current.md` first, then the relevant sections of
@@ -201,7 +216,10 @@ was recorded. Linking provenance or describing implementation status is allowed.
 - Preserve licenses and source provenance. A copied regression is not fresh
   qualification; rerun it against the extracted production implementation.
 - Keep a root `CHANGELOG.md` with one open entry when meaningful implementation
-  begins. Do not allocate one patch version per slice or bump without authority.
+  begins. Put the current draft or latest release first, with no Unreleased queue.
+  Use an undated `## [Draft]` until a maintainer selects a version. Do not allocate
+  one patch version per slice or bump without authority. Release preparation owns
+  final labeling; changelog presentation never gates registry publication.
 - Read [the release guide](docs/releasing.md) before release/version work.
   Preparing commands does not authorize running them. Agents may inspect
   `release-plan` and test isolated helpers; maintainers own `release-commit`

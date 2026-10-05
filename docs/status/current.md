@@ -1,12 +1,48 @@
 # Current handoff — 2026-10-04
 
-The maintainer requested a `0.1.7` changelog and continued implementation. One undated
-`0.1.7` draft now follows empty Unreleased and contains snapshot-read and consistency
-contract notes. Cargo stays `0.1.6`; HEAD stays `640e6c2` (Release 0.1.6). This turn
-preserved the prior dirty snapshot-read batch and leaves all work uncommitted.
-Dated changelog history, versions/lockfile, licenses and historical release receipt
-remain unchanged. No release/version transaction, commit, tag, push, package upload
-or live IC effect ran. Canic and every sibling remain read-only.
+The maintainer requested adoption of Shared Tooling as the top-level Dragginzgame
+rules. The starting worktree was clean at `3a94848` (merge after Release 0.1.7),
+with Cargo and the dated changelog at `0.1.7`. The tooling batch below is uncommitted.
+One undated `Draft` now heads the changelog; no next version has been selected.
+Dated history, Cargo/lockfile, licenses and historical release receipt remain
+unchanged. No version transaction, commit, tag, push, upload or live IC effect ran.
+Canic and every sibling remain read-only.
+
+## Shared engineering and tooling batch
+
+[Shared adoption](../shared-tooling.md) records upstream committed revision
+`956236a3848c2cfae6ae05f5c77e9c37b01b3366` and the separately hashed dirty upstream
+rules. `DRAGGINZGAME.md` retains those exact reviewed working-tree rules locally;
+AGENTS.md identifies its backup-specific overlay within the mandatory shared
+baseline. Shared and local rules agree on GitHub-only feedback tracking and
+explicit broad-validation authority. CI does not inherit a mutable sibling checkout.
+
+The local snapshot manifest binds exact committed principles, consumption/host
+guides, checksum/snapshot verifiers, validation runner and runner regressions.
+Make verifies it before fetching dependencies, then preserves the prior sequential
+fail-fast gate with target-labelled failures, timing/result and GitHub summaries,
+and full/highlighted failure logs under `target/validation-failures/`. The consumer
+adapter checks exact bytes/modes, missing files, symlinks, duplicate/escaping manifest
+paths and artifact retention. Vendored files stay unchanged.
+
+Release preparation now labels/dates one top-level unnumbered or selected numbered
+draft. It rejects ambiguous/empty/misplaced drafts, preserves imported undated
+history and keeps the exact receipt/tag requirements. Registry publication still
+delegates directly to Cargo. No package version or backup contract changed.
+
+Targeted checks passed: `make tooling-check`, `make release-check` and
+`make shell-check`. The real Make dependency gate was exercised with substituted
+Cargo and selected targets, not a full native build or network fetch. Read-only
+release planning, snapshot identity/mode checks and diff checks also passed.
+An initial new test used a fixed date instead of the generated receipt date;
+the corrected test passed. Its failed fixture and trace remain at
+`target/release-tests.7mc795/`. Successful isolated test temporaries were removed
+by their owners; existing build/package/recovery evidence remains retained.
+
+The consistency qualification below is retained evidence from the prior extraction
+batch, not a fresh Rust run for this tooling change. The maintainer's current Candid
+dependency declaration is preserved. No broad CI/release gate or native compilation
+was requested; product and host qualification boundaries remain as described below.
 
 ## Current consistency batch
 

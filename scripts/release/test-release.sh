@@ -75,7 +75,7 @@ LOCK
     cat > CHANGELOG.md <<'NOTES'
 # Changelog
 
-## [Unreleased]
+## [Draft]
 
 - Test release notes.
 NOTES
@@ -221,20 +221,24 @@ test_dependency_bootstrap() {
     # Exercise the actual Make gate/recipes against an initially empty cache.
     # Skip unrelated validation; neither network nor compilation is needed.
     cp "$ROOT/Makefile" Makefile
-    cat > target/gate-make <<'MOCK'
+    mkdir -p scripts/ci target/gate-bin
+    cp "$ROOT/scripts/ci/run-validation-targets.sh" scripts/ci/
+    cat > target/gate-bin/make <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
 echo "gate $*" >> "$TEST_LOG"
 case "$*" in
-    '--no-print-directory deps' | '--no-print-directory check')
+    "--no-print-directory -C $PWD deps" | "--no-print-directory -C $PWD check")
         exec "$TEST_REAL_MAKE" "$@" ;;
+    *) exit 97 ;;
 esac
 MOCK
-    chmod +x target/gate-make
+    chmod +x target/gate-bin/make
+    export PATH="$FIXTURE/target/gate-bin:$PATH"
     before="$(fingerprint)"
     if [[ "$1" == failure ]]; then
         export TEST_FETCH_FAIL=1
-        if "$TEST_REAL_MAKE" --no-print-directory validate "MAKE=$FIXTURE/target/gate-make" >target/fetch-rejection.log 2>&1; then
+        if "$TEST_REAL_MAKE" --no-print-directory validate 'CI_TARGETS=deps check' >target/fetch-rejection.log 2>&1; then
             echo 'expected fetch failure to stop validation' >&2
             exit 1
         else
@@ -242,13 +246,15 @@ MOCK
         fi
         cat target/fetch-rejection.log
         [[ "$(cat "$TEST_EFFECTS")" == fetch ]]
-        [[ "$(rg '^gate ' "$TEST_LOG")" == 'gate --no-print-directory deps' ]]
+        [[ "$(rg '^gate ' "$TEST_LOG")" == "gate --no-print-directory -C $PWD deps" ]]
         [[ ! -f target/mock-cargo-cache ]]
+        rg -q '^cargo fetch --locked$' target/validation-failures/latest.log
+        [[ -s target/validation-failures/latest-errors.log ]]
     else
-        "$TEST_REAL_MAKE" --no-print-directory release-verify "MAKE=$FIXTURE/target/gate-make"
+        "$TEST_REAL_MAKE" --no-print-directory release-verify 'CI_TARGETS=deps check'
         printf '%s\n' fetch check >target/expected-effects
         diff -u target/expected-effects "$TEST_EFFECTS"
-        [[ "$(rg '^gate ' "$TEST_LOG" | head -n 1)" == 'gate --no-print-directory deps' ]]
+        [[ "$(rg '^gate ' "$TEST_LOG" | head -n 1)" == "gate --no-print-directory -C $PWD deps" ]]
     fi
     assert_unchanged
     assert_cache_retained
@@ -270,8 +276,18 @@ test_versions() {
 
 test_invalid_changelog() {
     case "$1" in
-        duplicate) printf '\n## [Unreleased]\n' >> CHANGELOG.md ;;
-        empty) printf '# Changelog\n\n## [Unreleased]\n' > CHANGELOG.md ;;
+        duplicate) printf '\n## [Draft]\n' >> CHANGELOG.md ;;
+        empty) printf '# Changelog\n\n## [Draft]\n' > CHANGELOG.md ;;
+        misplaced)
+            printf '# Changelog\n\n## [0.1.0]\n\n- History.\n\n## [Draft]\n\n- Notes.\n' > CHANGELOG.md ;;
+        dated) printf '# Changelog\n\n## [Draft] - 2026-09-25\n\n- Notes.\n' > CHANGELOG.md ;;
+        missing) printf '# Changelog\n\n## [0.1.0]\n\n- History.\n' > CHANGELOG.md ;;
+        conflicting)
+            printf '\n## [0.1.1]\n\n- Duplicate selected intent.\n' >> CHANGELOG.md ;;
+        two-drafts)
+            printf '# Changelog\n\n## [0.1.1]\n\n- Selected notes.\n\n## [Draft]\n\n- Other notes.\n' > CHANGELOG.md ;;
+        wrong-version)
+            printf '# Changelog\n\n## [0.2.0]\n\n- Other release.\n' > CHANGELOG.md ;;
         competing)
             perl "$DATA" set-version 0.9.0
             cat >> CHANGELOG.md <<'NOTES'
@@ -295,8 +311,6 @@ test_preparation() {
     if [[ "$1" == named ]]; then
         cat > CHANGELOG.md <<'NOTES'
 # Changelog
-
-## [Unreleased]
 
 ## [0.1.1]
 
@@ -322,6 +336,9 @@ NOTES
     [[ "$(perl "$DATA" version)" == 0.1.1 ]]
     rg -q '^version = "0.1.1"$' Cargo.lock
     perl "$DATA" verify
+    local release_date
+    release_date="$(perl -MJSON::PP -0777 -ne 'print decode_json($_)->{date}' docs/release.json)"
+    [[ "$(sed -n '/^## /{p;q;}' CHANGELOG.md)" == "## [0.1.1] - $release_date" ]]
     [[ "$(perl "$DATA" source)" == "$TEST_SOURCE" ]]
     cmp target/historical-notes <(sed -n '/^## \[0.1.0\]$/,$p' CHANGELOG.md)
     expect_failure perl "$DATA" finalize 0.1.1 2026-09-25
@@ -486,10 +503,10 @@ for outcome in success failure; do
     run_case "dependency-bootstrap-$outcome" test_dependency_bootstrap "$outcome"
 done
 run_case versions test_versions
-for invalid in duplicate empty competing; do
+for invalid in duplicate empty competing misplaced dated missing conflicting two-drafts wrong-version; do
     run_case "changelog-$invalid" test_invalid_changelog "$invalid"
 done
-for notes in unreleased named; do
+for notes in draft named; do
     run_case "prepare-$notes" test_preparation "$notes"
 done
 for failure in TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_UPDATE_FAIL TEST_GATE_DIRTY TEST_GATE_HEAD TEST_METADATA_FAIL; do

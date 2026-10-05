@@ -4,3 +4,4 @@
 /backups/
 *.log
 .DS_Store
+/.shared-tooling-refresh.*
