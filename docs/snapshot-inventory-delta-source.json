@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "kind": "extraction_source_provenance",
+  "inspection_date": "2026-10-05",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Exact read-only working-tree sections and consumer references. Not immutable release identity, actual IC qualification or finished capture reconciliation.",
+  "source_files": [
+    {
+      "path": "crates/canic-backup/src/runner/mod.rs",
+      "sha256": "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1",
+      "inspected_line_ranges": [
+        [
+          556,
+          692
+        ]
+      ],
+      "responsibility": "Original baseline retention and capture inventory set difference; no receipt inference adopted"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "inspected_line_ranges": [
+        [
+          210,
+          225
+        ]
+      ],
+      "responsibility": "Typed baseline-loss and identity-ambiguity failures"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/operation.rs",
+      "sha256": "c512078399126bfbc1d79ca1ce7612dfa9cc0a016546cf42ea6230b568e1b056",
+      "inspected_line_ranges": [
+        [
+          70,
+          100
+        ]
+      ],
+      "responsibility": "Required retained baseline and unique original identities"
+    },
+    {
+      "path": "crates/canic-backup/src/execution/types.rs",
+      "sha256": "71c021f6f90c638426463942eddda168033ea0fada3384099f07c11b68108ba6",
+      "inspected_line_ranges": [
+        [
+          46,
+          58
+        ]
+      ],
+      "responsibility": "Original per-operation snapshot baseline custody"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+      "sha256": "23c035968ec5b237ad327b66e79894b2d3b094c0b30ecd42b7bf100382936376",
+      "inspected_line_ranges": [
+        [
+          108,
+          185
+        ]
+      ],
+      "responsibility": "Lost-baseline/multiple-candidate regressions; restart and journal cleanup not adopted"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/execute.rs",
+      "sha256": "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079",
+      "inspected_line_ranges": [
+        [
+          547,
+          593
+        ]
+      ],
+      "responsibility": "Related upload-delta consumer inspected; completeness and upload attribution remain separate, not adopted"
+    }
+  ],
+  "consumer_trace": {
+    "pattern": "snapshot_ids_before|SnapshotInventoryLostBaseline|SnapshotIdentityAmbiguous|reconcile_pending_snapshot_create|UploadedSnapshotIdentityAmbiguous",
+    "roots": [
+      "crates/canic-backup/src",
+      "crates/canic-cli/src"
+    ],
+    "references": [
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 129,
+        "text": "        crate::runner::BackupRunnerError::SnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 171,
+        "text": "        crate::runner::BackupRunnerError::SnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 260,
+        "text": "    assert_eq!(operation.snapshot_ids_before, Some(Vec::new()));"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 272,
+        "text": "            .snapshot_ids_before,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 333,
+        "text": "    assert_eq!(operation.snapshot_ids_before, Some(Vec::new()));"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 394,
+        "text": "    snapshot_ids_before: Vec<String>,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 412,
+        "text": "            snapshot_ids_before,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 211,
+        "text": "        && operation.snapshot_ids_before.is_none()"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 229,
+        "text": "        let snapshot_ids_before = operation"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 230,
+        "text": "            .snapshot_ids_before"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 234,
+        "text": "        journal.mark_upload_snapshot_pending_at(sequence, pending_at, snapshot_ids_before)?;"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 483,
+        "text": "            && operation.snapshot_ids_before.is_some());"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 554,
+        "text": "    let baseline = operation.snapshot_ids_before.as_ref().ok_or("
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 571,
+        "text": "        return Err(RestoreRunnerError::SnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/execute.rs",
+        "line": 588,
+        "text": "        _ => Err(RestoreRunnerError::UploadedSnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/error.rs",
+        "line": 93,
+        "text": "    RestoreSnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/error.rs",
+        "line": 101,
+        "text": "    RestoreUploadedSnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/error.rs",
+        "line": 291,
+        "text": "            RestoreRunnerError::SnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/error.rs",
+        "line": 294,
+        "text": "            } => Self::RestoreSnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/error.rs",
+        "line": 298,
+        "text": "            RestoreRunnerError::UploadedSnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/error.rs",
+        "line": 301,
+        "text": "            } => Self::RestoreUploadedSnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/types.rs",
+        "line": 210,
+        "text": "    SnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/types.rs",
+        "line": 219,
+        "text": "    SnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/operation.rs",
+        "line": 15,
+        "text": "            snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/operation.rs",
+        "line": 71,
+        "text": "        let Some(snapshot_ids) = &self.snapshot_ids_before else {"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/operation.rs",
+        "line": 81,
+        "text": "                    \"operations[].snapshot_ids_before\","
+      },
+      {
+        "path": "crates/canic-backup/src/execution/operation.rs",
+        "line": 93,
+        "text": "            validate_nonempty(\"operations[].snapshot_ids_before[]\", snapshot_id)?;"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/types.rs",
+        "line": 52,
+        "text": "    pub snapshot_ids_before: Option<Vec<String>>,"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 283,
+        "text": "            reconcile_pending_snapshot_create(executor, layout, plan, journal, operation)"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 564,
+        "text": "    let recovering_previous_attempt = operation.snapshot_ids_before.is_some();"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 565,
+        "text": "    let snapshot_ids_before = if recovering_previous_attempt {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 566,
+        "text": "        operation.snapshot_ids_before.clone().ok_or("
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 568,
+        "text": "                \"operations[].snapshot_ids_before\","
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 584,
+        "text": "        snapshot_ids_before,"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 598,
+        "text": "    reconcile_pending_snapshot_create(executor, layout, plan, journal, &pending_operation)"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 601,
+        "text": "fn reconcile_pending_snapshot_create("
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 612,
+        "text": "    let baseline = operation.snapshot_ids_before.as_ref().ok_or("
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 614,
+        "text": "            \"operations[].snapshot_ids_before\","
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 628,
+        "text": "        return Err(BackupRunnerError::SnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 644,
+        "text": "        _ => Err(BackupRunnerError::SnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/types.rs",
+        "line": 149,
+        "text": "    SnapshotInventoryLostBaseline {"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/types.rs",
+        "line": 157,
+        "text": "    UploadedSnapshotIdentityAmbiguous {"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/mod.rs",
+        "line": 295,
+        "text": "        snapshot_ids_before: Vec<String>,"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/mod.rs",
+        "line": 300,
+        "text": "            Some(snapshot_ids_before),"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/mod.rs",
+        "line": 308,
+        "text": "        snapshot_ids_before: Option<Vec<String>>,"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/mod.rs",
+        "line": 342,
+        "text": "        operation.snapshot_ids_before = snapshot_ids_before;"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/tests/run.rs",
+        "line": 508,
+        "text": "    journal.operations[0].snapshot_ids_before = Some(Vec::new());"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/tests/operational_readiness.rs",
+        "line": 68,
+        "text": "    assert!(interrupted.operations[0].snapshot_ids_before.is_some());"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/io.rs",
+        "line": 254,
+        "text": "                snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/tests/mod.rs",
+        "line": 166,
+        "text": "    journal.operations[0].snapshot_ids_before = Some(Vec::new());"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/types.rs",
+        "line": 45,
+        "text": "    pub snapshot_ids_before: Option<Vec<String>>,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/types.rs",
+        "line": 75,
+        "text": "            snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/types.rs",
+        "line": 176,
+        "text": "        let Some(snapshot_ids) = &self.snapshot_ids_before else {"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/types.rs",
+        "line": 186,
+        "text": "                    \"operations[].snapshot_ids_before\","
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/types.rs",
+        "line": 198,
+        "text": "            validate_apply_journal_nonempty(\"operations[].snapshot_ids_before[]\", snapshot_id)?;"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 427,
+        "text": "            assert_eq!(interrupted_operation.snapshot_ids_before, Some(Vec::new()));"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1145,
+        "text": "    journal.operations[0].snapshot_ids_before = Some(Vec::new());"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1263,
+        "text": "        snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1332,
+        "text": "        snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1460,
+        "text": "    let snapshot_ids_before = (operation == RestoreApplyOperationKind::UploadSnapshot"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1477,
+        "text": "        snapshot_ids_before,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1611,
+        "text": "        snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1655,
+        "text": "        snapshot_ids_before: Some(Vec::new()),"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/runner/tests.rs",
+        "line": 1672,
+        "text": "        snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/mod.rs",
+        "line": 259,
+        "text": "        snapshot_ids_before: Vec<String>,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/mod.rs",
+        "line": 271,
+        "text": "        let previous = self.operations[index].snapshot_ids_before.clone();"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/mod.rs",
+        "line": 272,
+        "text": "        self.operations[index].snapshot_ids_before = Some(snapshot_ids_before);"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/apply/journal/mod.rs",
+        "line": 279,
+        "text": "            self.operations[index].snapshot_ids_before = previous;"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/tests/transitions.rs",
+        "line": 106,
+        "text": "        matches!(error, BackupExecutionJournalError::MissingField(field) if field == \"operations[].snapshot_ids_before\")"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/tests/restart.rs",
+        "line": 76,
+        "text": "            .snapshot_ids_before,"
+      },
+      {
+        "path": "crates/canic-backup/src/execution/tests/mod.rs",
+        "line": 66,
+        "text": "        \"snapshot_ids_before\","
+      },
+      {
+        "path": "crates/canic-backup/src/restore/tests/mod.rs",
+        "line": 65,
+        "text": "            snapshot_ids_before: None,"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/tests/apply_journal.rs",
+        "line": 4,
+        "text": "    journal.operations[sequence].snapshot_ids_before = Some(Vec::new());"
+      },
+      {
+        "path": "crates/canic-backup/src/restore/tests/apply_journal.rs",
+        "line": 423,
+        "text": "        \"snapshot_ids_before\","
+      },
+      {
+        "path": "crates/canic-backup/src/restore/tests/apply_journal.rs",
+        "line": 965,
+        "text": "            snapshot_ids_before: None,"
+      }
+    ]
+  },
+  "existing_reply_owner": {
+    "provenance": "docs/ic-snapshot-reply-source.json",
+    "sha256": "f33bbcfa9bfb538e4b986e7a301d1e8c41586f79ccd48fd6bc87b4551de9c38b",
+    "reuse": "Existing bounded exact raw IDs, canonical inventories, required metadata, request and raw-reply digests; no duplicate codec or hash encoder"
+  },
+  "adaptation": {
+    "destination": "crates/ic-backup/src/policy/snapshot_inventory_delta/",
+    "preserved": "Exact baseline preservation and set-difference projection with explicit multiple candidates",
+    "changed": "Borrow bounded raw-byte reply owners; validate exact capture/list methods and targets; require unchanged baseline timestamp and size; expose candidates without attributing any effect",
+    "not_adopted": "Singleton-to-completed-receipt inference; no-candidate-to-failure/retry inference; implicit observation chronology; generic token IDs; runner dispatch; upload reconciliation; restart and journal/artifact cleanup",
+    "qualification": "Fresh native extracted-policy and public exhausted-journal recovery cases; no fake or live IC management effects"
+  },
+  "license": {
+    "source": "Canic MIT",
+    "retained_notice": "LICENSE"
+  },
+  "source_mutation": "none; downstream Canic producers and consumers remain unchanged",
+  "retained_evidence": "No earlier provenance, journals, recovery fixtures, lockfile or source baseline removed"
+}

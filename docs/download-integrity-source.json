@@ -1,0 +1,366 @@
+{
+  "version": 1,
+  "kind": "extraction_source_provenance",
+  "inspection_date": "2026-10-05",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Read-only working-tree sections and exact consumer trace; not immutable release, complete backup, terminal/reference release or IC backend qualification",
+  "source_files": [
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+      "sha256": "8295190a585fedc79659b828dd3709f5a146f014856e17910f6b7e30988f0109",
+      "inspected_line_ranges": [
+        [
+          19,
+          154
+        ]
+      ],
+      "responsibility": "Exact artifact coverage, required Durable/checksum and explicit fresh byte verification; old manifest and completion flag not adopted"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/integrity/reports.rs",
+      "sha256": "db08eb7e42ff7f01a7f562d9ff068c9ac0d38f39acaa776db45e7387ed4b551f",
+      "inspected_line_ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "responsibility": "Serializable verified report inspected; replaced by borrowed structural views without freshness flag"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/layout.rs",
+      "sha256": "94aeb745515694e95e94ba8275be521f1ad80f9afc7d15014e17e84b9d825219",
+      "inspected_line_ranges": [
+        [
+          220,
+          234
+        ]
+      ],
+      "responsibility": "Explicit retained-record fresh verification entry point; no whole-manifest backend claim"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573",
+      "inspected_line_ranges": [
+        [
+          370,
+          410
+        ]
+      ],
+      "responsibility": "Reverification of already Durable entries before consumption; no finalizer, receipt or dispatch imported"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+      "sha256": "7c357a9aeb56e187fff6990a5571f51170b76952a1360a1a27245806cc95b676",
+      "inspected_line_ranges": [
+        [
+          387,
+          465
+        ]
+      ],
+      "responsibility": "Non-durable and extra-artifact rejection; old manifest checksum/path mismatch inspected, not duplicate metadata ownership"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/verify.rs",
+      "sha256": "6d5b5307bbd8fab93ec046d477a33d596e0d0c1c1202fca7cf6c2fc825f06019",
+      "inspected_line_ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "responsibility": "CLI explicit verification consumer; completion inference and CLI remain integration work"
+    },
+    {
+      "path": "crates/canic-cli/src/restore/io.rs",
+      "sha256": "d159a674f98333b677d5c2af8572c1a37dd5b9c6d296e71570d11da24326998b",
+      "inspected_line_ranges": [
+        [
+          37,
+          51
+        ]
+      ],
+      "responsibility": "Restore pre-consumption verification consumer; no restore admission or runner imported"
+    },
+    {
+      "path": "crates/canic-cli/src/backup/prune.rs",
+      "sha256": "a42be1c8145d05342edb130388f4c4f471532809de0215db656d15d8d034b730",
+      "inspected_line_ranges": [
+        [
+          99,
+          120
+        ]
+      ],
+      "responsibility": "Prune verification consumer inspected; prune remains unimplemented and unauthorized"
+    }
+  ],
+  "consumer_trace": {
+    "roots": [
+      "crates/canic-backup/src",
+      "crates/canic-cli/src/backup",
+      "crates/canic-cli/src/restore"
+    ],
+    "pattern": "verify_durable_artifact|verify_layout_integrity|verify_integrity|ArtifactIntegrityReport|NonDurableArtifact|UnexpectedJournalArtifact",
+    "references": [
+      {
+        "path": "crates/canic-backup/src/persistence/error.rs",
+        "line": 149,
+        "text": "    NonDurableArtifact {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/error.rs",
+        "line": 170,
+        "text": "    UnexpectedJournalArtifact {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 12,
+        "text": "        ArtifactIntegrityReport, BackupIntegrityReport, BackupLayout, PersistenceError,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 19,
+        "text": "pub(in crate::persistence) fn verify_layout_integrity("
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 29,
+        "text": "            return Err(PersistenceError::UnexpectedJournalArtifact {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 69,
+        "text": ") -> Result<ArtifactIntegrityReport, PersistenceError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 82,
+        "text": "    verify_durable_artifact(layout, entry)"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 85,
+        "text": "pub fn verify_durable_artifact("
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 88,
+        "text": ") -> Result<ArtifactIntegrityReport, PersistenceError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 105,
+        "text": "    Ok(ArtifactIntegrityReport {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/artifacts.rs",
+        "line": 115,
+        "text": "        return Err(PersistenceError::NonDurableArtifact {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/mod.rs",
+        "line": 13,
+        "text": "pub use artifacts::verify_durable_artifact;"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/mod.rs",
+        "line": 14,
+        "text": "pub(super) use artifacts::verify_layout_integrity;"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/mod.rs",
+        "line": 17,
+        "text": "pub use reports::{ArtifactIntegrityReport, BackupExecutionIntegrityReport, BackupIntegrityReport};"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/reports.rs",
+        "line": 24,
+        "text": "    pub artifacts: Vec<ArtifactIntegrityReport>,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/reports.rs",
+        "line": 45,
+        "text": "/// ArtifactIntegrityReport"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/integrity/reports.rs",
+        "line": 53,
+        "text": "pub struct ArtifactIntegrityReport {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/layout.rs",
+        "line": 14,
+        "text": "        integrity::{verify_execution_integrity, verify_layout_integrity},"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/layout.rs",
+        "line": 228,
+        "text": "    pub fn verify_integrity(&self) -> Result<BackupIntegrityReport, PersistenceError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/layout.rs",
+        "line": 232,
+        "text": "        verify_layout_integrity(&layout, &manifest, &journal)"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/mod.rs",
+        "line": 26,
+        "text": "pub(crate) use integrity::verify_durable_artifact;"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/mod.rs",
+        "line": 28,
+        "text": "    ArtifactIntegrityReport, BackupExecutionIntegrityReport, BackupIntegrityReport,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 334,
+        "text": "    let report = layout.verify_integrity().expect(\"verify integrity\");"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 358,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 380,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 404,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 408,
+        "text": "    std::assert_matches!(err, PersistenceError::NonDurableArtifact { .. });"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 427,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 431,
+        "text": "    std::assert_matches!(err, PersistenceError::UnexpectedJournalArtifact { .. });"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 449,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/mod.rs",
+        "line": 474,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+        "line": 187,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/mod.rs",
+        "line": 150,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/mod.rs",
+        "line": 310,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/response_loss.rs",
+        "line": 71,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/response_loss.rs",
+        "line": 97,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+        "line": 15,
+        "text": "        verify_durable_artifact,"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+        "line": 397,
+        "text": "            verify_durable_artifact(layout, &download_journal.artifacts[index])?;"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/tests.rs",
+        "line": 126,
+        "text": "    let integrity = layout.verify_integrity().expect(\"verify finalized layout\");"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/tests.rs",
+        "line": 181,
+        "text": "        layout.verify_integrity(),"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/tests.rs",
+        "line": 214,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/tests.rs",
+        "line": 300,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/tests.rs",
+        "line": 395,
+        "text": "    let integrity = layout.verify_integrity().expect(\"verify recovered layout\");"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/tests.rs",
+        "line": 498,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-cli/src/backup/prune.rs",
+        "line": 117,
+        "text": "        .verify_integrity()"
+      },
+      {
+        "path": "crates/canic-cli/src/backup/verify.rs",
+        "line": 33,
+        "text": "    layout.verify_integrity().map_err(BackupCommandError::from)"
+      },
+      {
+        "path": "crates/canic-cli/src/restore/io.rs",
+        "line": 49,
+        "text": "    BackupLayout::new(dir).verify_integrity()?;"
+      }
+    ]
+  },
+  "existing_owners": {
+    "plan": "docs/operation-plan-source.json",
+    "journal": "docs/download-journal-source.json",
+    "artifact_traversal": "docs/extraction-source.json",
+    "reuse": "Full plan digest, canonical selected targets, journal identity/state/checksum validation, bounded IO and no-follow streaming checksum; no new persisted schema or hash encoder"
+  },
+  "adaptation": {
+    "destinations": [
+      "crates/ic-backup/src/policy/download_integrity/",
+      "crates/ic-backup/src/ops/persistence/download_journal/integrity/"
+    ],
+    "preserved": "Explicit fresh Durable directory byte verification and exact artifact coverage before consumption",
+    "changed": "Pure full-original-plan/exact-target admission; before/after retained plan and journal checks under existing borrowed exclusion; require directories and retain new typed failures",
+    "not_adopted": "Old Canic manifest/backup IDs, duplicate artifact metadata, serializable verified flag, topology/control-plane owners, inferred completion receipts, runners, effects, prune or release",
+    "qualification": "Fresh native production regression and public original-spent-journal/unfinished-reference recovery; not copied qualification or IC effects"
+  },
+  "license": {
+    "source": "Canic MIT",
+    "retained_notice": "LICENSE"
+  },
+  "source_mutation": "none; all Canic and sibling producers/consumers unchanged",
+  "retained_evidence": "No earlier provenance, failed fixtures, journals, locks or recovery artifacts removed"
+}

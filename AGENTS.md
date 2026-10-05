@@ -3,6 +3,21 @@
 This file is normative for automated agents and contributors working in
 `ic-backup`.
 
+## Shared baseline and local overlay
+
+Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
+This is a reviewed local snapshot of Shared Tooling's working-tree rules, not
+implicit inheritance from a moving sibling checkout.
+[Adoption and provenance](docs/shared-tooling.md) identify the committed tooling revision and the separately
+hashed rules. Refresh them deliberately; never edit vendored tooling in place.
+
+This file is the product-specific overlay: backup contracts, effect targets,
+numeric bounds, commands, supported hosts and qualification gates stay local.
+Common engineering rules are mandatory; record maintainer-approved exceptions
+with their scope and reason. GitHub issues also own reusable feedback, with the
+baseline's evidence fields instead of a duplicate feedback file.
+Shared Tooling's own validation commands apply upstream, not to this repository.
+
 ## Start of session
 
 Read `docs/status/current.md` first, then the relevant sections of
@@ -106,11 +121,53 @@ into an issue tracker or release authority.
   call ceiling distinct from spending authority. Provider freshness/custody and
   load origin permissions, lifecycle/fence/restore safety remain separately qualified.
   No serialized Proven flag, live provider or dispatch permit is implemented.
+- Snapshot-read observations now bind original mutation intent and an independent
+  exact list payload, challenge and actual context/target/snapshot visibility.
+  Preserve 10 unique canonical viewers and the 1,024 descriptive call ceiling.
+  Known public or exact viewer access needs no controller projection; unobserved
+  controllers cannot establish the controller path. Read evidence grants no control,
+  spending or lost-reply settlement. Status/log/Root-configured flags never substitute.
+  Metadata/data codecs and actual authenticated providers remain unimplemented.
+- Consistency requirements now retain a strict v1 original-plan-bound guarantee
+  under 1 KiB IO and immutable layout publication. Current consistency requests bind
+  original operation, challenge, capture boundary and retained exact fence/revision.
+  Preserve 1,024 unique canonical actual target rows and the separate descriptive
+  call ceiling. Pure checks require full current inventory/exact selection, every
+  target stopped, exact requested lane and coordinated Active fence/original revision.
+  Opaque stopped/drained and whole-unit fence evidence requires actual integration
+  qualification. No acquired/released fence, restart, spending or restore-safety
+  permit exists; failures/drop retain original obligations and consumed allowances.
 - The maintainer requested fixing registry publication after a rejected upload.
   Package metadata permits crates.io publication. Configuration changes and dry
   runs do not themselves upload packages. Repository release preparation,
   tagging and pushing retain their clean-source, tag and receipt requirements;
   registry publication delegates admission to Cargo for the current package.
+- Snapshot capture/inventory reply decoding now retains exact raw IDs and required
+  nat64 timestamp/size fields under a declared request. Preserve the 1 MiB raw,
+  1,024-entry, 256-ID-byte, 16-type-table and finite decoder-work bounds. Canonical
+  inventory views reject duplicate IDs while evidence hashes bind exact raw bytes.
+  Wire association proves no network/caller/target authentication or fresh permission;
+  decoded metadata never settles a pending attempt or attests complete transfer.
+- Pure snapshot inventory comparison requires the exact capture/list targets and
+  retains unchanged baseline IDs/metadata. Candidates borrow bounded canonical
+  replies and retain original evidence. Zero, one or multiple candidates establish
+  neither capture outcome nor attribution; never derive an Applied receipt, retry,
+  restart or release from cardinality. Integrations own original baseline custody,
+  observation chronology, authenticated association and exclusive attribution.
+- Lifecycle reply decoding now admits canonical empty stop/start/load tuples and
+  required status/settings/controller projections. Preserve 1 MiB raw input,
+  2 MiB decoding work, 64 KiB skipped work, 64 type-table entries and the existing
+  10-controller bound. Unknown status metadata is skipped, not qualified; missing
+  required fields reject. Reuse ControllerSet admission and upstream status variants.
+  Reply association authenticates no caller/target/context or timing. Acknowledgements
+  and Stopped/controller projections never settle attempts, prove drain/load safety,
+  authorize restart/release or replenish spending.
+- Explicit fresh download integrity verification now requires the retained original
+  plan, unchanged guarded journal, exact selected targets and durable checksums.
+  Preserve existing bounded owners and no-follow directory traversal. Ordinary
+  resume reads retained progress only. Structural views and sequential byte checks
+  grant no transfer completeness, atomic snapshot, terminal proof, new spending or
+  reference-release authority; integrations own stable byte custody.
 
 ## Tracking
 
@@ -185,7 +242,10 @@ was recorded. Linking provenance or describing implementation status is allowed.
 - Preserve licenses and source provenance. A copied regression is not fresh
   qualification; rerun it against the extracted production implementation.
 - Keep a root `CHANGELOG.md` with one open entry when meaningful implementation
-  begins. Do not allocate one patch version per slice or bump without authority.
+  begins. Put the current draft or latest release first, with no Unreleased queue.
+  Use an undated `## [Draft]` until a maintainer selects a version. Do not allocate
+  one patch version per slice or bump without authority. Release preparation owns
+  final labeling; changelog presentation never gates registry publication.
 - Read [the release guide](docs/releasing.md) before release/version work.
   Preparing commands does not authorize running them. Agents may inspect
   `release-plan` and test isolated helpers; maintainers own `release-commit`

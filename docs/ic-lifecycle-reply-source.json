@@ -1,0 +1,432 @@
+{
+  "version": 1,
+  "kind": "extraction_source_provenance",
+  "inspection_date": "2026-10-05",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+  "source_has_uncommitted_changes": true,
+  "scope": "Exact read-only working-tree sections and consumer trace, not immutable release identity, authenticated IC observations, safe lifecycle/load reconciliation or complete B1.",
+  "source_files": [
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "inspected_line_ranges": [
+        [
+          89,
+          110
+        ]
+      ],
+      "responsibility": "Required typed lifecycle state; upstream executor remains integration-owned"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/mod.rs",
+      "sha256": "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1",
+      "inspected_line_ranges": [
+        [
+          695,
+          733
+        ]
+      ],
+      "responsibility": "Exact target observation and unsettled stopping; equality-to-completed receipt not adopted"
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/mod.rs",
+      "sha256": "2e2760d815be749cfe9cfa71f9604ae026ea26ca143770cc88896f0142fe4569",
+      "inspected_line_ranges": [
+        [
+          92,
+          122
+        ]
+      ],
+      "responsibility": "Stop/start command success path inspected; dispatch and completed receipts not adopted"
+    },
+    {
+      "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+      "sha256": "5fda677adbf1b162f61ea82144d1c03b6e9c66b9ffcc96c673bed9bd7d947532",
+      "inspected_line_ranges": [
+        [
+          129,
+          181
+        ]
+      ],
+      "responsibility": "Unsettled/failed status retains pending journal; rerun local byte/state cases, not fake IC effects"
+    },
+    {
+      "path": "crates/canic-host/src/icp/management.rs",
+      "sha256": "2113535381759eb95e4f8ded12f5dd9b3dbd8d10f5941ee7566b0c2e7c97e1cf",
+      "inspected_line_ranges": [
+        [
+          170,
+          197
+        ]
+      ],
+      "responsibility": "Host authenticated typed status decode responsibility; no agents or calls imported"
+    },
+    {
+      "path": "crates/canic-host/src/icp/model.rs",
+      "sha256": "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729",
+      "inspected_line_ranges": [
+        [
+          79,
+          116
+        ]
+      ],
+      "responsibility": "CLI optional status/settings defaults inspected, not adopted"
+    },
+    {
+      "path": "crates/canic-host/src/icp/canister.rs",
+      "sha256": "5b67c901184ea29b3874f54a6c07e0cd22e30e7c43d5c7640793e787f57da930",
+      "inspected_line_ranges": [
+        [
+          245,
+          271
+        ]
+      ],
+      "responsibility": "CLI status/stop consumers inspected; subprocess dispatch not adopted"
+    },
+    {
+      "path": "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs",
+      "sha256": "8ad7d19fbd33eae5c77e4332bd9aa9f27da837a01ec6b55b1584decea09c1995",
+      "inspected_line_ranges": [
+        [
+          95,
+          124
+        ],
+        [
+          1868,
+          1910
+        ]
+      ],
+      "responsibility": "Partial typed status/controller projection; Fleet, cycles, module hash and routing not adopted"
+    }
+  ],
+  "consumer_trace": {
+    "pattern": "BackupRunnerCanisterStatus|management_canister_status_candid|ManagementCanisterObservationResponse|reconcile_pending_lifecycle|canister_status_report",
+    "roots": [
+      "crates/canic-backup/src",
+      "crates/canic-cli/src/backup",
+      "crates/canic-cli/src/restore",
+      "crates/canic-host/src/icp",
+      "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs"
+    ],
+    "references": [
+      {
+        "path": "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs",
+        "line": 116,
+        "text": "struct ManagementCanisterObservationResponse {"
+      },
+      {
+        "path": "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs",
+        "line": 1805,
+        "text": "        let report = match icp.canister_status_report(principal) {"
+      },
+      {
+        "path": "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs",
+        "line": 1881,
+        "text": "            .management_canister_status_candid::<_, ManagementCanisterObservationResponse>("
+      },
+      {
+        "path": "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs",
+        "line": 5012,
+        "text": "            icp.management_canister_status_candid::<_, ManagementCanisterStatusResponse>("
+      },
+      {
+        "path": "crates/canic-host/src/fleet_ensure/ops/platform/mod.rs",
+        "line": 9398,
+        "text": "            .canister_status_report(canister)"
+      },
+      {
+        "path": "crates/canic-host/src/icp/tests.rs",
+        "line": 338,
+        "text": "fn parses_canister_status_report_json() {"
+      },
+      {
+        "path": "crates/canic-host/src/icp/tests.rs",
+        "line": 364,
+        "text": "fn parses_public_non_controller_canister_status_report_json() {"
+      },
+      {
+        "path": "crates/canic-host/src/icp/canister.rs",
+        "line": 245,
+        "text": "    pub fn canister_status_report("
+      },
+      {
+        "path": "crates/canic-backup/src/test_support.rs",
+        "line": 9,
+        "text": "        BackupRunnerCanisterStatus, BackupRunnerCommandError, BackupRunnerExecutor,"
+      },
+      {
+        "path": "crates/canic-backup/src/test_support.rs",
+        "line": 34,
+        "text": "    pub canister_statuses: BTreeMap<String, BackupRunnerCanisterStatus>,"
+      },
+      {
+        "path": "crates/canic-backup/src/test_support.rs",
+        "line": 138,
+        "text": "    ) -> Result<BackupRunnerCanisterStatus, BackupRunnerCommandError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/test_support.rs",
+        "line": 144,
+        "text": "            .unwrap_or(BackupRunnerCanisterStatus::Running))"
+      },
+      {
+        "path": "crates/canic-backup/src/test_support.rs",
+        "line": 168,
+        "text": "            .insert(canister_id.to_string(), BackupRunnerCanisterStatus::Stopped);"
+      },
+      {
+        "path": "crates/canic-backup/src/test_support.rs",
+        "line": 179,
+        "text": "            .insert(canister_id.to_string(), BackupRunnerCanisterStatus::Running);"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs",
+        "line": 19,
+        "text": "        BackupRunnerCanisterStatus, backup_run_execute_with_executor,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/terminal_transition.rs",
+        "line": 179,
+        "text": "            .insert(target, BackupRunnerCanisterStatus::Stopped);"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+        "line": 14,
+        "text": "        BackupRunnerCanisterStatus, BackupRunnerCommandError, BackupRunnerConfig,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+        "line": 482,
+        "text": "    ) -> Result<BackupRunnerCanisterStatus, BackupRunnerCommandError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+        "line": 485,
+        "text": "            \"Running\" => Ok(BackupRunnerCanisterStatus::Running),"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+        "line": 486,
+        "text": "            \"Stopped\" => Ok(BackupRunnerCanisterStatus::Stopped),"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+        "line": 487,
+        "text": "            \"Stopping\" => Ok(BackupRunnerCanisterStatus::Stopping),"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/types.rs",
+        "line": 47,
+        "text": "    ) -> Result<BackupRunnerCanisterStatus, BackupRunnerCommandError>;"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/types.rs",
+        "line": 87,
+        "text": "/// BackupRunnerCanisterStatus"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/types.rs",
+        "line": 93,
+        "text": "pub enum BackupRunnerCanisterStatus {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/types.rs",
+        "line": 99,
+        "text": "impl BackupRunnerCanisterStatus {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+        "line": 15,
+        "text": "        BackupRunnerCanisterStatus, BackupRunnerCommandError, BackupRunnerConfig,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+        "line": 387,
+        "text": "    ) -> Result<BackupRunnerCanisterStatus, BackupRunnerCommandError> {"
+      },
+      {
+        "path": "crates/canic-host/src/icp/management.rs",
+        "line": 170,
+        "text": "    pub(crate) fn management_canister_status_candid<I, O>("
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 15,
+        "text": "        BackupRunnerCanisterStatus, BackupRunnerCommandError, BackupRunnerConfig,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+        "line": 500,
+        "text": "    ) -> Result<BackupRunnerCanisterStatus, BackupRunnerCommandError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs",
+        "line": 244,
+        "text": "        crate::runner::BackupRunnerCanisterStatus::Stopped,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+        "line": 19,
+        "text": "        BackupRunResponse, BackupRunnerCanisterStatus, BackupRunnerCommandError, BackupRunnerError,"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+        "line": 352,
+        "text": "    ) -> Result<BackupRunnerCanisterStatus, BackupRunnerCommandError> {"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+        "line": 438,
+        "text": "                .insert(target_canister, BackupRunnerCanisterStatus::Stopped);"
+      },
+      {
+        "path": "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+        "line": 446,
+        "text": "                .insert(target_canister, BackupRunnerCanisterStatus::Running);"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 281,
+        "text": "            reconcile_pending_lifecycle(executor, journal, operation, completed_status)"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 410,
+        "text": "            reconcile_pending_lifecycle("
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 414,
+        "text": "                BackupRunnerCanisterStatus::Running,"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 491,
+        "text": "        BackupRunnerCanisterStatus::Running => Ok(()),"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 492,
+        "text": "        BackupRunnerCanisterStatus::Stopping => Err(BackupRunnerError::CanisterStatusUnsettled {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 497,
+        "text": "        BackupRunnerCanisterStatus::Stopped => {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 530,
+        "text": "    completed_status: BackupRunnerCanisterStatus,"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 553,
+        "text": "    reconcile_pending_lifecycle(executor, journal, &pending_operation, completed_status)"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 686,
+        "text": "fn reconcile_pending_lifecycle("
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 690,
+        "text": "    completed_status: BackupRunnerCanisterStatus,"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 711,
+        "text": "    if status == BackupRunnerCanisterStatus::Stopping {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 723,
+        "text": ") -> Option<BackupRunnerCanisterStatus> {"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 725,
+        "text": "        BackupOperationKind::Stop => Some(BackupRunnerCanisterStatus::Stopped),"
+      },
+      {
+        "path": "crates/canic-backup/src/runner/mod.rs",
+        "line": 726,
+        "text": "        BackupOperationKind::Start => Some(BackupRunnerCanisterStatus::Running),"
+      }
+    ]
+  },
+  "upstream_dependencies": [
+    {
+      "package": "candid",
+      "version": "0.10.37",
+      "registry_checksum": "a4dda5edb2bfa2d7703219ba0fd6ec712343fcd03867b76b87405feaa9aae7a0",
+      "license": "Apache-2.0",
+      "path": "src/de.rs",
+      "sha256": "32e166efe5e6eb9bf1db0e952b3cb4f0518891dfc2264a164bcf377d4da327d6",
+      "inspected_line_ranges": [
+        [
+          126,
+          143
+        ],
+        [
+          205,
+          250
+        ],
+        [
+          562,
+          582
+        ],
+        [
+          1160,
+          1215
+        ]
+      ],
+      "use": "Existing published dependency, not copied production source"
+    },
+    {
+      "package": "ic-management-canister-types",
+      "version": "0.8.0",
+      "registry_checksum": "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3",
+      "license": "Apache-2.0",
+      "path": "src/lib.rs",
+      "sha256": "6374759c1d620e0cf7286a66a17ed5f68a53190d0f43fea0a5a1f44695b7c032",
+      "inspected_line_ranges": [
+        [
+          170,
+          200
+        ],
+        [
+          429,
+          478
+        ]
+      ],
+      "use": "Existing published dependency, not copied production source"
+    }
+  ],
+  "primary_interface": {
+    "url": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+    "inspection_date": "2026-10-05",
+    "facts": "Required status/controller projection; stop/start/load empty results. Current spec permits status ingress and query; the maintained request owner retains replicated host ingress."
+  },
+  "golden_fixture": {
+    "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/golden.json",
+    "sha256": "f8a1a251e8e5e38943d9568f14726744211a49b8027d42bab85386224cb0fc0d",
+    "construction": "Independent primitive Candid field-label hashes, ULEB128/type definitions/principal and empty-tuple bytes; reuse independently qualified existing request digest fixtures; Python hashlib computes reply hashes. No production or SDK encoder used to generate registered goldens.",
+    "qualification": "Every registered fixture enters production decoding and external Candid tuple/SDK-enum projection decoding. A separate complete SDK status fixture exercises bounded skipping; membership comes from registered cases, not aggregate counts."
+  },
+  "adaptation": {
+    "destination": "crates/ic-backup/src/model/ic_lifecycle_reply/",
+    "preserved": "Typed lifecycle state, required controller projection and exact immutable method/target/request binding",
+    "changed": "Canonical empty mutation tuple admission; finite raw/controller/work/skip/type bounds; existing ControllerSet normalization; read-only ephemeral evidence; no implied completion",
+    "not_adopted": "Agent/CLI dispatch, optional field defaults, Root/Fleet routing, module/cycles/version assertions, command or status equality-to-Applied receipts, fresh controller custody, load/fence settlement, retries or release",
+    "qualification": "Native codec and retained spent-journal/payload recovery only; no IC effects or remote calls"
+  },
+  "licenses": {
+    "adapted_responsibilities": "Canic MIT; notice retained in LICENSE",
+    "registry_dependencies": "Existing Apache-2.0 published dependencies; no dependency source copied"
+  },
+  "retained_evidence": "Existing schemas, source provenance, snapshots, journals, licenses, Cargo.lock and failed fixtures preserved",
+  "source_mutation": "none; Canic and all sibling producers/consumers unchanged"
+}

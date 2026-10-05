@@ -97,17 +97,91 @@ snapshot origin permissions and full restore/lifecycle/application safety remain
 integration-owned. See [the typed control contract](contracts/control-authority-port.json)
 and [control provenance](control-authority-source.json).
 
+`model::snapshot_read` binds original mutation intent and independently declared
+exact snapshot-list bytes to an ephemeral challenge. Its fallible
+`ports::snapshot_read::SnapshotReadProvider` has no installed implementation.
+Pure `policy::snapshot_read::validate` checks actual context/target/call reporting
+and known controller, public or exact allowed-viewer access. Canonical viewers
+are unique and bounded to 10; unknown controllers cannot establish controller access.
+Public/viewer evidence grants no mutation control. No Serde/default authority,
+fresh spending or lost-observation settlement is introduced. Provider authentication,
+freshness, custody and per-call accounting remain integration-owned; metadata/data
+codecs remain pending. See [the typed read contract](contracts/snapshot-read-port.json)
+and [fresh read provenance](snapshot-read-source.json).
+
+`model::consistency` now owns a strict v1 original-plan-bound guarantee declaration,
+retained at fixed `consistency-requirement.json` under layout exclusion with 1 KiB
+input/output bounds and no-replace publication. Exact expected requirement/plan
+reads reject downgraded or rebound declarations. Ephemeral current requests bind
+original operation, challenge, capture boundary and retained fence/original revision.
+The fallible `ports::consistency::ConsistencyProvider` observes existing obligations;
+no provider or acquisition/release operation is installed. Pure admission checks
+actual full inventory/exact selected stopped/drained targets and original guarantee;
+coordinated evidence requires exact Active fence and original membership revision.
+Opaque evidence authenticity, current observations, continuous whole-unit fencing,
+retained custody and prior per-call accounting remain integration-owned. No request/
+result/view can be admitted from JSON as fresh authority. Native fixtures qualify
+local declarations, persistence and spent-journal/obligation recovery only. See
+[the requirement schema](contracts/consistency-requirement.schema.json),
+[typed current port](contracts/consistency-port.json) and
+[fresh consistency provenance](consistency-source.json).
+
+The snapshot reply codec in `model::ic_snapshot_reply` decodes the existing capture
+singleton and snapshot inventory methods using required upstream fields. It has
+bounded input, sequences and decoder work, canonical unique raw IDs and exact
+request/raw-reply evidence hashing. Neither result nor metadata grants settlement,
+authority or transfer completion. [The reply contract](contracts/ic-snapshot-reply.json)
+and [fresh provenance](ic-snapshot-reply-source.json) define the maintained boundary.
+Focused checks are `cargo test --offline --locked -p ic-backup --lib model::ic_`
+and `cargo test --offline --locked -p ic-backup --test ic_snapshot_reply --test ic_request`.
+
+`policy::snapshot_inventory_delta::compare` borrows the existing capture declaration
+and bounded inventory replies. It rejects method/target mismatch, lost baseline IDs
+and changed baseline metadata, then exposes canonical new descriptors without IO,
+serialization, journal mutation or capture attribution. The original request/reply
+owners supply exact evidence; no new record or hash encoder is added. See
+[the comparison contract](contracts/snapshot-inventory-delta.json) and
+[fresh Canic provenance](snapshot-inventory-delta-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib policy::snapshot_inventory_delta`
+and `cargo test --offline --locked -p ic-backup --test snapshot_inventory_delta`.
+These native fixtures qualify local comparison and retention, not remote settlement.
+
+`model::ic_lifecycle_reply` admits the existing stop/start/load canonical empty
+tuple and required status/settings/controllers projection. Status uses the upstream
+SDK enum and existing bounded `ControllerSet` owner. Unprojected fields are skipped
+under finite work limits and remain unqualified; exact raw evidence hashes retain
+them. Required fields, duplicate controllers, excess counts/work/types, extra
+arguments and trailing bytes reject. No transport, receipt or fresh provider evidence
+is installed. See [the reply contract](contracts/ic-lifecycle-reply.json) and
+[fresh source provenance](ic-lifecycle-reply-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib model::ic_lifecycle_reply` and
+`cargo test --offline --locked -p ic-backup --test ic_lifecycle_reply`.
+
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for
 `make check-msrv`. Native builds are the supported product lane; the toolkit
 runs on an operator host.
+
+`policy::download_integrity::validate` checks retained plan/journal declarations
+without IO. `DownloadJournalGuard::verify_durable_artifacts` separately re-admits
+the persisted original plan and unchanged journal, then verifies every published
+directory checksum. Neither result is a terminal proof or backend transfer permit;
+integrations maintain stable byte custody during sequential checks. See
+[the integrity contract](contracts/download-integrity.json) and
+[fresh source provenance](download-integrity-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib download_integrity`,
+`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::integrity`
+and `cargo test --offline --locked -p ic-backup --test download_integrity`.
 
 ## Commands and build ownership
 
 `make help` lists the command family. `check`, `clippy`, `test`, `doc`,
 `check-msrv` and `package` select `ic-backup` explicitly. `fmt` formats the
 workspace; `fmt-check` checks it. `shell-check`, `release-check` and `hooks-check`
-validate contributor tooling. `version` and `release-plan` inspect release
+validate contributor tooling. `shared-tooling-check` verifies the exact local
+snapshot; `tooling-check` tests its integrity and CI diagnostics without network
+or compilation. [Shared adoption](shared-tooling.md) identifies the reviewed
+source and the product overlay. `version` and `release-plan` inspect release
 metadata without changing the workspace.
 
 `publish-dry-run` and `publish` delegate to Cargo for the current library version.
@@ -139,9 +213,16 @@ content and contributor attribution in the standalone crate archive.
 
 Run checks targeted to changed packages and behavior while developing. Full
 validation requires a maintainer request or CI. `make ci`, `make validate` and
-`make release-verify` run the full configured gate: dependency fetch, tooling,
-formatting, native compilation, Clippy, tests, docs, MSRV and package verification.
-CI runs this gate on Linux. Local package verification permits reviewed dirty
+`make release-verify` run the full configured gate: snapshot verification,
+dependency fetch, tooling, formatting, native compilation, Clippy, tests, docs,
+MSRV and package verification.
+CI runs this gate on Linux. The shared runner preserves target order, stops at
+the first failure and prints target-labelled diagnostics and a result/timing
+summary. Full and highlighted failure logs remain under
+`target/validation-failures/`; GitHub Actions also gets a step summary.
+The runner requires GNU Make, `awk`, `sed`, `tail`, `tee` and ripgrep or grep.
+Snapshot verification requires `sha256sum` or `shasum`. Shared Tooling is never
+fetched at validation time. Local package verification permits reviewed dirty
 source and builds the packaged crate; it does not publish it.
 
 ## Formatting and evidence

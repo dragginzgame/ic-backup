@@ -1,0 +1,87 @@
+[
+  {
+    "name": "status_stopped",
+    "method": "canister_status",
+    "status": "stopped",
+    "controllers": [
+      "2vxsx-fae",
+      "aaaaa-aa"
+    ],
+    "target": "renrk-eyaaa-aaaaa-aaada-cai",
+    "snapshot_id": null,
+    "request_digest": "4d9b090b52a40ecaf86729b9fecd20f7bad1bfa2e8e7f7871ee0d497da6983e6",
+    "reply_hex": "4449444c046b038da4879b047ff496e4910b7fffdba5db0e7f6d686c01d7e09b9002016c02b2ceef2f00e3f9f5d90802010300020101040100",
+    "payload_checksum": "3f618a4d42fb305f3f771d3b06265f854e9bfb1b491e8fbdba8f83cdd0871685",
+    "digest": "19011688a4b067e9bb422ba9efd2298e559194375c0018efc5ef6f34497e0330"
+  },
+  {
+    "name": "status_stopping",
+    "method": "canister_status",
+    "status": "stopping",
+    "controllers": [
+      "2vxsx-fae",
+      "aaaaa-aa"
+    ],
+    "target": "renrk-eyaaa-aaaaa-aaada-cai",
+    "snapshot_id": null,
+    "request_digest": "4d9b090b52a40ecaf86729b9fecd20f7bad1bfa2e8e7f7871ee0d497da6983e6",
+    "reply_hex": "4449444c046b038da4879b047ff496e4910b7fffdba5db0e7f6d686c01d7e09b9002016c02b2ceef2f00e3f9f5d90802010301020101040100",
+    "payload_checksum": "1b521fcff4cc6a421cd9375eb62c6e0b32a8d9ac746b4eb6645fb20226449626",
+    "digest": "8bd5ee6db3f3e4b0a2cc995d72d0e55fd5e9316b9fff5a6e4186926f55311752"
+  },
+  {
+    "name": "status_running",
+    "method": "canister_status",
+    "status": "running",
+    "controllers": [
+      "2vxsx-fae",
+      "aaaaa-aa"
+    ],
+    "target": "renrk-eyaaa-aaaaa-aaada-cai",
+    "snapshot_id": null,
+    "request_digest": "4d9b090b52a40ecaf86729b9fecd20f7bad1bfa2e8e7f7871ee0d497da6983e6",
+    "reply_hex": "4449444c046b038da4879b047ff496e4910b7fffdba5db0e7f6d686c01d7e09b9002016c02b2ceef2f00e3f9f5d90802010302020101040100",
+    "payload_checksum": "7887df26eaadfc8ccdbb1e314307b1db9cfeed9ccb56c8751d387622126bcb91",
+    "digest": "554e820ec63be54eb5deacadd94c49a8bd0d0e2bb8e86148467414011d5e8416"
+  },
+  {
+    "name": "stop_canister_empty_tuple",
+    "method": "stop_canister",
+    "status": null,
+    "controllers": [],
+    "target": "renrk-eyaaa-aaaaa-aaada-cai",
+    "snapshot_id": null,
+    "request_digest": "03e7008814fef428ea4a1bb4ffebc8e02aa99e770ef5cc193cf93e5c9b5ebfa7",
+    "reply_hex": "4449444c0000",
+    "payload_checksum": "0fee102bd16b053022b69f2c65fd5e2f41d150ce9c214ac8731cfaf496ebda4e",
+    "digest": "df710ec0f5afbc0fddbeca43ded72d8ca222c49f511e1cda5965e2e15a97d0ed"
+  },
+  {
+    "name": "start_canister_empty_tuple",
+    "method": "start_canister",
+    "status": null,
+    "controllers": [],
+    "target": "renrk-eyaaa-aaaaa-aaada-cai",
+    "snapshot_id": null,
+    "request_digest": "6973f03b8cfa7d0e90e0f52663b0ca615d357a3685a762064b78fc16fa75c1da",
+    "reply_hex": "4449444c0000",
+    "payload_checksum": "0fee102bd16b053022b69f2c65fd5e2f41d150ce9c214ac8731cfaf496ebda4e",
+    "digest": "4879b6ef5563799b1078c8bb188514300fa123425bc59a6e8addf6276488876d"
+  },
+  {
+    "name": "load_canister_snapshot_empty_tuple",
+    "method": "load_canister_snapshot",
+    "status": null,
+    "controllers": [],
+    "target": "renrk-eyaaa-aaaaa-aaada-cai",
+    "snapshot_id": [
+      0,
+      255,
+      17
+    ],
+    "request_digest": "919f7b965cd0c0c6082ed193ff5796b116bc554bc71670135e5e00c419a1983d",
+    "reply_hex": "4449444c0000",
+    "payload_checksum": "0fee102bd16b053022b69f2c65fd5e2f41d150ce9c214ac8731cfaf496ebda4e",
+    "digest": "5c337e73197188a4b471bdfea1a827ff353d32e637f3730f8cfae23544eba6e9"
+  }
+]

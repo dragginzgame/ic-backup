@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "kind": "pure ephemeral inventory projection; no persisted product record",
+  "entry_point": "policy::snapshot_inventory_delta::compare",
+  "owners": {
+    "capture": "model::ic_request::IcManagementRequestRecord",
+    "baseline_and_observed": "model::ic_snapshot_reply::IcSnapshotReply",
+    "evidence": "existing request and exact raw-reply digests; no new hash encoding"
+  },
+  "admission": {
+    "capture_method": "take_canister_snapshot; existing non-replacing host-ingress request",
+    "both_inventory_methods": "list_canister_snapshots",
+    "targets": "both inventory targets must equal the exact canonical capture target",
+    "baseline": "every exact original ID remains present with unchanged timestamp and size",
+    "candidates": "observed IDs absent from the baseline, in canonical raw-byte order",
+    "errors": ["WrongCaptureMethod", "WrongInventoryMethod", "TargetMismatch", "LostBaseline", "ChangedBaselineMetadata"],
+    "diagnostics": "no raw snapshot IDs, payload bytes or upstream error prose"
+  },
+  "bounds": {
+    "inventory_entries_per_reply": 1024,
+    "snapshot_id_bytes": 256,
+    "candidate_references": 1024,
+    "complexity": "linear merge over existing canonical reply views"
+  },
+  "view": {
+    "ownership": "borrows capture, both replies and exact candidate descriptors",
+    "read_only": true,
+    "serde_or_default_admission": false,
+    "cardinality": "zero, one or multiple candidates remain descriptive; no receipt or candidate chosen automatically"
+  },
+  "integration_obligations": [
+    "retain the exact original baseline before the attempted effect",
+    "authenticate network, caller, target and transport association",
+    "qualify actual observation timing and permissions",
+    "establish exclusive attribution rather than assume that another controller did not act",
+    "consume original per-call authority before effects; retain uncertain obligations"
+  ],
+  "non_authority": [
+    "no IO, serialization, scheduling, provider call or journal mutation",
+    "no inferred success/failure from candidate count",
+    "no capture or upload reconciliation receipt",
+    "no new paid-call, retry, restart, load, prune or release permission",
+    "no allowance refund or replenishment",
+    "no actual IC backend qualification"
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "protocol_version": 1,
+  "kind": "snapshot_read_port_contract",
+  "rust": {
+    "request": "model::snapshot_read::SnapshotReadRequest",
+    "input": "model::snapshot_read::SnapshotReadObservationInput",
+    "observation": "model::snapshot_read::SnapshotReadObservation",
+    "visibility": "model::snapshot_read::SnapshotVisibility",
+    "viewers": "model::snapshot_read::SnapshotViewerSet",
+    "provider": "ports::snapshot_read::SnapshotReadProvider::observe_snapshot_read",
+    "policy": "policy::snapshot_read::validate",
+    "view": "policy::snapshot_read::SnapshotReadView"
+  },
+  "persistence": "None. Typed Rust contract description, not a JSON record/schema reader. All new inputs/requests/results/sets/views have no Serde/default or persisted authority admission.",
+  "supported_methods": [
+    "list_canister_snapshots"
+  ],
+  "request": {
+    "original_plan": "Original mutation full intent/context/target/request/allowances and exact operation sequence",
+    "wire": "Exact independent observation target/method/digest checked against separately supplied declared observer digest; status/mutations reject",
+    "observation_digest": "Supplied by exact retained intent/reservation owner. Model compares bytes only; does not inspect journals or prove retention, spend or dispatch. Original mutation request stays unchanged.",
+    "challenge": "Canonical SHA-256; integration owns freshness/uniqueness",
+    "max_remote_observations": {
+      "minimum": 0,
+      "maximum": 1024,
+      "meaning": "Descriptive invocation ceiling; never a reservation, remaining allowance or spending authority"
+    }
+  },
+  "observation": {
+    "request": "Exact current request digest",
+    "context": "Actually observed canonical network/caller/release",
+    "target": "Actually observed canonical physical target",
+    "visibility": {
+      "Controllers": "Requires known exact caller-controller membership",
+      "Public": "Allows reading without controller projection, never mutation control",
+      "AllowedViewers": "Known normalized sorted unique 0..10 viewer principals; caller viewer or controller may read",
+      "unknown": "No variant/default; provider fails before admission"
+    },
+    "controllers": "Optional complete known ControllerSet (0..10); None is unobserved, Some(empty) known empty. None cannot establish controller path but independent public/explicit caller-viewer evidence can establish read access.",
+    "evidence": "Opaque qualified evidence digest, not signature/dispatch authority",
+    "remote_observations": "Actual calls requiring separate prior approved per-call accounting"
+  },
+  "admission": [
+    "Exact request digest",
+    "Exact actual network/caller/release",
+    "Exact actual target",
+    "Reported calls <= descriptive ceiling",
+    "Known exact caller-controller path first, else Public, else exact caller in AllowedViewers; otherwise fail"
+  ],
+  "request_errors": [
+    "ObservationLimitTooLarge",
+    "UnsupportedMethod",
+    "Plan(owner rejection)",
+    "Payload(target/digest mismatch)"
+  ],
+  "observation_errors": [
+    "InvalidPrincipal",
+    "TooManyViewers",
+    "DuplicateViewer"
+  ],
+  "policy_errors": [
+    "RequestMismatch",
+    "ContextMismatch(network|caller|release)",
+    "TargetMismatch",
+    "ControllersUnobserved",
+    "CallerCannotRead",
+    "ObservationLimitExceeded(limit, reported)"
+  ],
+  "provider_errors": {
+    "Unavailable": "No qualified provider; no remote effects",
+    "Unsupported": "Cannot satisfy contract; no remote effects",
+    "Indeterminate": "Uncertain reply/observation/accounting; retain consumed allowance/evidence, stop without retry"
+  },
+  "canonical_digest": {
+    "algorithm": "sha256",
+    "encoding": [
+      "ASCII ic-backup/snapshot-read/v1 followed by NUL",
+      "64 canonical lowercase ASCII original intent bytes",
+      "u64 big-endian operation sequence",
+      "64 canonical lowercase ASCII independent exact list wire-digest bytes",
+      "64 canonical lowercase ASCII challenge bytes",
+      "u32 big-endian descriptive call ceiling"
+    ],
+    "golden": {
+      "intent": "0bc4d5875ff8cffc4420b7acf34288a96ba487199e7c114892839e69effa5830",
+      "operation_sequence": 7,
+      "wire": "0c7376bf66247fd0813e673b50b2a91c35a372239214dca503d5ba083a6ff146",
+      "challenge": "1212121212121212121212121212121212121212121212121212121212121212",
+      "max_remote_observations": 1,
+      "encoded_bytes": 231,
+      "digest": "f9de63c724de8c8adf277ac28470693f59e6bdbeaa0171609cf20c1268ec9c11"
+    }
+  },
+  "excluded_authority": [
+    "Status/log visibility substitution",
+    "Root-configured/parent/proxy/Proven declarations",
+    "Mutation control/signing/dispatch/fresh spending",
+    "Snapshot metadata/data request or response codecs/transfer completeness",
+    "Effect settlement/lifecycle/application consistency/fence/restore safety/terminal reference release"
+  ],
+  "integration_obligations": [
+    "Qualify authenticated actual snapshot visibility/context/target/viewers and complete controllers when used",
+    "Own fresh unique challenges, timing and coherent custody; echoed labels/old receipts/unqualified queries are insufficient",
+    "Retain exact observer intent/reservation and account each paid call before dispatch; ceilings cannot replenish journals",
+    "A permission observation does not perform the requested list or settle a lost list reply; retain pending uncertainty without retry",
+    "Fail unknown visibility; never substitute status/log visibility or Root-configured flags",
+    "Terminal replay stays effect-free"
+  ],
+  "protocol_reference": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+  "qualified_scope": "Native local binding/permission policy and spent-journal recovery only; no installed provider/backend or full B1/B2 completion."
+}

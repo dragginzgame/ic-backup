@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "owner": "model::ic_snapshot_reply",
+  "kind": "ephemeral local Candid reply decoding; no persisted product record",
+  "request_owner": "model::ic_request::IcManagementRequestRecord",
+  "methods": {
+    "take_canister_snapshot": "exactly one snapshot descriptor",
+    "list_canister_snapshots": "exactly one vector of 0..1024 snapshot descriptors"
+  },
+  "descriptor": {
+    "id": "required blob; 1..256 opaque raw bytes, unchanged",
+    "taken_at_timestamp": "required nat64; full range in nanoseconds",
+    "total_size": "required nat64; declared snapshot size, not local artifact bytes"
+  },
+  "bounds": {
+    "raw_reply_bytes": 1048576,
+    "inventory_entries": 1024,
+    "snapshot_id_bytes": 256,
+    "decoder_work_quota": 2097152,
+    "skipped_work_quota": 0,
+    "type_table_entries": 16
+  },
+  "admission": {
+    "raw_bounds": "checked before Candid parsing",
+    "sequence_bounds": "bounded visitors reject untrusted lengths without preallocating from them",
+    "tuple": "one argument; required exact field types; no skipped fields, extra arguments or trailing bytes",
+    "identity": "sort inventory by exact raw ID bytes; duplicate IDs reject even with changed metadata",
+    "errors": ["UnsupportedMethod", "ReplyTooLarge", "InvalidReply", "DuplicateSnapshotId"],
+    "diagnostics": "no raw response bytes or decoder prose in public errors"
+  },
+  "hashing": {
+    "payload": "SHA-256 of exact raw reply bytes, preserving wire order",
+    "domain_utf8_with_nul": "ic-backup/ic-snapshot-reply/v1\u0000",
+    "body": "existing request digest then raw payload checksum, each 64 lowercase ASCII hex bytes",
+    "result": "SHA-256 of domain plus body",
+    "request": "existing canonical request owner binds method, management receiver, routing target, replicated ingress and exact arguments",
+    "authority": "local declared association only; the wire has no target/network/caller/challenge or application operation identity"
+  },
+  "golden_registry": {
+    "path": "crates/ic-backup/src/model/ic_snapshot_reply/tests/golden.json",
+    "membership": "every registered fixture entry is checked by the production decoder and official SDK DTO decoder",
+    "construction": "independent DIDL/field-hash/LEB128/nat64 assembly and SHA-256 calculation"
+  },
+  "qualification": {
+    "native": "exact bytes, metadata, finite bounds, duplicate/shape rejection, canonical projection, request/reply hashing and spent-journal reopen",
+    "unchanged_on_decode": "original intent, mutation/observation spending, pending states, retained evidence and obligations",
+    "integration_owned": [
+      "authenticated network/caller/target and transport/request association",
+      "fresh permission and original per-call spending",
+      "capture settlement under competing controllers and lost responses",
+      "complete metadata/data extents and verified transfer",
+      "application fencing/restore safety and actual IC backend qualification"
+    ],
+    "grants": "no signing, dispatch, fresh spending, Applied receipt, retry, completion or reference release"
+  }
+}

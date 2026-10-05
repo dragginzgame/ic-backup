@@ -1,6 +1,47 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.9]
+
+- Extract explicit fresh verification of durable downloaded artifacts under the
+  retained original plan and exact selected targets. Reject changed declarations,
+  unsafe paths and checksum mismatches without rewriting journals, replenishing
+  attempts or releasing restore references; ordinary resume remains distinct.
+- Add bounded status/controller reply projections and exact lifecycle
+  acknowledgements for the existing IC request methods. Preserve raw evidence and
+  original load/status attempts through local replay; decoded state and acknowledgements
+  require authenticated integration evidence before effect settlement or fresh authority.
+- Extract pure snapshot inventory comparison from Canic's capture recovery path.
+  Retain exact request/reply evidence, reject lost or changed baseline entries and
+  expose canonical new candidates without attributing them to the capture or
+  settling pending attempts. Native recovery preserves original evidence and limits.
+- Add bounded IC snapshot capture/inventory reply decoding with exact raw IDs,
+  required timestamp/size fields, canonical unique inventories and request/reply
+  evidence hashes. Reject malformed or ambiguous wire data and preserve spent
+  pending journals through local replay; transport and effect settlement remain
+  integration-owned.
+
+## [0.1.8] - 2026-10-05
+
+- Adopt the Dragginzgame engineering baseline with explicit source identity and
+  local backup rules. Vendor reviewed shared principles and tooling with offline
+  checksum/mode verification, fail-fast CI summaries and retained failure logs.
+- Keep one top-level changelog draft until release selection; prepare and date
+  unnumbered or selected numbered notes without an Unreleased queue. Registry
+  publication continues to delegate admission to Cargo.
+- Isolate release-test repository, failure-log and summary paths from the calling
+  CI runner so nested checks use their own fixtures and retain failure evidence.
+
+## [0.1.7] - 2026-10-04
+
+- Add an ephemeral snapshot-read provider contract bound to original mutation
+  intent and independently declared exact snapshot-list bytes. Validate current
+  context, target and controller/public/allowed-viewer access without granting
+  mutation control; preserve spent pending observations through local recovery.
+- Retain immutable original-plan consistency requirements without replacement or
+  downgrade. Add current stopped/drained target and application-fence observation
+  contracts bound to exact selection, challenge, capture boundary, retained fence
+  identity and original membership revision. Native recovery preserves spent
+  journals and retained obligations; fence effects and backend qualification remain pending.
 
 ## [0.1.6] - 2026-10-04
 

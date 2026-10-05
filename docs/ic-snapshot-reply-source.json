@@ -1,0 +1,661 @@
+{
+   "adaptation" : {
+      "changed" : "Complete required timestamp/size fields; bounded 1024 entries and 256 raw ID bytes; exact one-argument/no-skipped-field/no-trailing-byte consumption; declared-request/raw-reply digest association.",
+      "destination" : "crates/ic-backup/src/model/ic_snapshot_reply/",
+      "not_adopted" : "ICP JSON token readers, agent calls, optional metadata, inferred target authentication, inventory-delta settlement, completed execution receipts or dispatch authority.",
+      "preserved" : "Exact raw ID identity, finite raw/decoder bounds and explicit duplicate rejection; native oversized/malformed source regressions rerun against the new codec."
+   },
+   "consumer_references" : [
+      {
+         "line" : 15,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+         "text" : "        BackupRunnerExecutor, BackupRunnerSnapshot, backup_run_execute_with_executor,"
+      },
+      {
+         "line" : 495,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+         "text" : "    fn snapshot_inventory("
+      },
+      {
+         "line" : 498,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+         "text" : "    ) -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 499,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+         "text" : "        self.delegate.snapshot_inventory(canister_id)"
+      },
+      {
+         "line" : 544,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/lifecycle_effect.rs",
+         "text" : "    ) -> Result<BackupRunnerSnapshot, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 1,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "//! Module: persistence::tests::operational_readiness::snapshot_create"
+      },
+      {
+         "line" : 16,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "        BackupRunnerExecutor, BackupRunnerSnapshot, backup_run_execute_with_executor,"
+      },
+      {
+         "line" : 70,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "        .mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 313,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "            \"persistence::tests::operational_readiness::snapshot_create::committed_snapshot_without_artifact_or_receipt_is_reconciled_from_exact_inventory\","
+      },
+      {
+         "line" : 409,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "        .mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 504,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "    fn snapshot_inventory("
+      },
+      {
+         "line" : 507,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "    ) -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 534,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "    ) -> Result<BackupRunnerSnapshot, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 567,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "fn snapshot(snapshot_id: String) -> BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 568,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/snapshot_create.rs",
+         "text" : "    BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 28,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/mod.rs",
+         "text" : "mod snapshot_create;"
+      },
+      {
+         "line" : 67,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/pending_claim.rs",
+         "text" : "            .mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 20,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "        BackupRunnerExecutor, BackupRunnerSnapshot, backup_run_execute_with_executor,"
+      },
+      {
+         "line" : 356,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "    fn snapshot_inventory("
+      },
+      {
+         "line" : 359,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "    ) -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 360,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "        self.delegate.snapshot_inventory(canister_id)"
+      },
+      {
+         "line" : 383,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "    ) -> Result<BackupRunnerSnapshot, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 561,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "fn snapshot() -> BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 562,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/command_in_flight/mod.rs",
+         "text" : "    BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 16,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+         "text" : "        BackupRunnerExecutor, BackupRunnerSnapshot, backup_run_execute_with_executor,"
+      },
+      {
+         "line" : 391,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+         "text" : "    fn snapshot_inventory("
+      },
+      {
+         "line" : 394,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+         "text" : "    ) -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 395,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+         "text" : "        self.delegate.snapshot_inventory(canister_id)"
+      },
+      {
+         "line" : 418,
+         "path" : "crates/canic-backup/src/persistence/tests/operational_readiness/download_effect.rs",
+         "text" : "    ) -> Result<BackupRunnerSnapshot, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 90,
+         "path" : "crates/canic-cli/src/backup/tests/fixtures/execution.rs",
+         "text" : "            .mark_snapshot_create_pending_at(sequence, updated_at, Vec::new())"
+      },
+      {
+         "line" : 40,
+         "path" : "crates/canic-backup/src/journal/types.rs",
+         "text" : "    pub snapshot_create_started: usize,"
+      },
+      {
+         "line" : 41,
+         "path" : "crates/canic-backup/src/journal/types.rs",
+         "text" : "    pub snapshot_create_completed: usize,"
+      },
+      {
+         "line" : 214,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "text" : "            observe_snapshot_inventory("
+      },
+      {
+         "line" : 559,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "text" : "    let observation = observe_snapshot_inventory(config, executor, operation, command_lifetime)?;"
+      },
+      {
+         "line" : 618,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs",
+         "text" : "fn observe_snapshot_inventory("
+      },
+      {
+         "line" : 50,
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "text" : "    fn snapshot_inventory("
+      },
+      {
+         "line" : 53,
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "text" : "    ) -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerCommandError>;"
+      },
+      {
+         "line" : 74,
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "text" : "    ) -> Result<BackupRunnerSnapshot, BackupRunnerCommandError>;"
+      },
+      {
+         "line" : 111,
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "text" : "/// BackupRunnerSnapshot"
+      },
+      {
+         "line" : 115,
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "text" : "pub struct BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 287,
+         "path" : "crates/canic-backup/src/execution/mod.rs",
+         "text" : "        self.mark_operation_pending_with_snapshot_inventory_at(sequence, updated_at, None)"
+      },
+      {
+         "line" : 291,
+         "path" : "crates/canic-backup/src/execution/mod.rs",
+         "text" : "    pub fn mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 297,
+         "path" : "crates/canic-backup/src/execution/mod.rs",
+         "text" : "        self.mark_operation_pending_with_snapshot_inventory_at("
+      },
+      {
+         "line" : 304,
+         "path" : "crates/canic-backup/src/execution/mod.rs",
+         "text" : "    fn mark_operation_pending_with_snapshot_inventory_at("
+      },
+      {
+         "line" : 30,
+         "path" : "crates/canic-backup/src/execution/operation.rs",
+         "text" : "        self.validate_snapshot_inventory()?;"
+      },
+      {
+         "line" : 70,
+         "path" : "crates/canic-backup/src/execution/operation.rs",
+         "text" : "    fn validate_snapshot_inventory(&self) -> Result<(), BackupExecutionJournalError> {"
+      },
+      {
+         "line" : 283,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "            reconcile_pending_snapshot_create(executor, layout, plan, journal, operation)"
+      },
+      {
+         "line" : 302,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "        prepare_snapshot_create_attempt(config, executor, layout, plan, journal, operation)"
+      },
+      {
+         "line" : 556,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "fn prepare_snapshot_create_attempt("
+      },
+      {
+         "line" : 573,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "        let snapshots = observe_snapshot_inventory(executor, operation, &target)?;"
+      },
+      {
+         "line" : 581,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "    journal.mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 598,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "    reconcile_pending_snapshot_create(executor, layout, plan, journal, &pending_operation)"
+      },
+      {
+         "line" : 601,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "fn reconcile_pending_snapshot_create("
+      },
+      {
+         "line" : 618,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "    let observed = observe_snapshot_inventory(executor, operation, &target)?"
+      },
+      {
+         "line" : 655,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "fn observe_snapshot_inventory("
+      },
+      {
+         "line" : 659,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : ") -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerError> {"
+      },
+      {
+         "line" : 660,
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "text" : "    let snapshots = executor.snapshot_inventory(target).map_err(|error| {"
+      },
+      {
+         "line" : 10,
+         "path" : "crates/canic-backup/src/test_support.rs",
+         "text" : "        BackupRunnerSnapshot,"
+      },
+      {
+         "line" : 35,
+         "path" : "crates/canic-backup/src/test_support.rs",
+         "text" : "    pub snapshots: BTreeMap<String, Vec<BackupRunnerSnapshot>>,"
+      },
+      {
+         "line" : 147,
+         "path" : "crates/canic-backup/src/test_support.rs",
+         "text" : "    fn snapshot_inventory("
+      },
+      {
+         "line" : 150,
+         "path" : "crates/canic-backup/src/test_support.rs",
+         "text" : "    ) -> Result<Vec<BackupRunnerSnapshot>, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 187,
+         "path" : "crates/canic-backup/src/test_support.rs",
+         "text" : "    ) -> Result<BackupRunnerSnapshot, BackupRunnerCommandError> {"
+      },
+      {
+         "line" : 195,
+         "path" : "crates/canic-backup/src/test_support.rs",
+         "text" : "        let snapshot = BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 646,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "            assert!(is_snapshot_inventory_command(&commands[0]));"
+      },
+      {
+         "line" : 834,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "        snapshot_inventory_output(&[]),"
+      },
+      {
+         "line" : 1495,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "            snapshot_inventory_output(&[]),"
+      },
+      {
+         "line" : 1532,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "            vec![snapshot_inventory_output("
+      },
+      {
+         "line" : 1811,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "        if is_snapshot_inventory_command(command) {"
+      },
+      {
+         "line" : 1812,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "            return Ok(snapshot_inventory_output(&[]));"
+      },
+      {
+         "line" : 1872,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "fn is_snapshot_inventory_command(command: &RestoreApplyRunnerCommand) -> bool {"
+      },
+      {
+         "line" : 1877,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "fn snapshot_inventory_output(snapshot_ids: &[String]) -> RestoreRunnerCommandOutput {"
+      },
+      {
+         "line" : 1897,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "        if is_snapshot_inventory_command(command) {"
+      },
+      {
+         "line" : 1898,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "            return Ok(snapshot_inventory_output(&self.snapshot_ids));"
+      },
+      {
+         "line" : 2178,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "                if is_snapshot_inventory_command(command) {"
+      },
+      {
+         "line" : 2179,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs",
+         "text" : "                    return Ok(snapshot_inventory_output(&[]));"
+      },
+      {
+         "line" : 46,
+         "path" : "crates/canic-backup/src/execution/tests/restart.rs",
+         "text" : "        .mark_snapshot_create_pending_at(5, Some(\"unix:30\".to_string()), Vec::new())"
+      },
+      {
+         "line" : 46,
+         "path" : "crates/canic-backup/src/execution/tests/receipts.rs",
+         "text" : "        .mark_snapshot_create_pending_at(5, Some(\"unix:30\".to_string()), Vec::new())"
+      },
+      {
+         "line" : 118,
+         "path" : "crates/canic-backup/src/execution/tests/transitions.rs",
+         "text" : "        .mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 19,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "text" : "        BackupRunnerConfig, BackupRunnerError, BackupRunnerExecutor, BackupRunnerSnapshot,"
+      },
+      {
+         "line" : 78,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "text" : "            BackupRunnerSnapshot {"
+      },
+      {
+         "line" : 101,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "text" : "    snapshot: BackupRunnerSnapshot,"
+      },
+      {
+         "line" : 128,
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "text" : "    snapshot: BackupRunnerSnapshot,"
+      },
+      {
+         "line" : 89,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs",
+         "text" : "        self.validate_snapshot_inventory()?;"
+      },
+      {
+         "line" : 175,
+         "path" : "crates/canic-backup/src/restore/apply/journal/types.rs",
+         "text" : "    fn validate_snapshot_inventory(&self) -> Result<(), RestoreApplyJournalError> {"
+      },
+      {
+         "line" : 84,
+         "path" : "crates/canic-backup/src/execution/tests/mod.rs",
+         "text" : "            .mark_snapshot_create_pending_at("
+      },
+      {
+         "line" : 34,
+         "path" : "crates/canic-host/src/icp/mod.rs",
+         "text" : "    IcpCanisterVisibility, IcpCli, IcpRawOutput, IcpSnapshot, LocalReplicaTarget,"
+      },
+      {
+         "line" : 269,
+         "path" : "crates/canic-host/src/icp/tests.rs",
+         "text" : "    let snapshot = serde_json::from_str::<IcpSnapshot>("
+      },
+      {
+         "line" : 283,
+         "path" : "crates/canic-host/src/icp/tests.rs",
+         "text" : "fn parses_snapshot_inventory_json() {"
+      },
+      {
+         "line" : 284,
+         "path" : "crates/canic-host/src/icp/tests.rs",
+         "text" : "    let inventory = serde_json::from_str::<super::snapshot::IcpSnapshotInventory>("
+      },
+      {
+         "line" : 302,
+         "path" : "crates/canic-host/src/icp/tests.rs",
+         "text" : "fn snapshot_inventory_accepts_additive_fields_and_requires_snapshot_identities() {"
+      },
+      {
+         "line" : 304,
+         "path" : "crates/canic-host/src/icp/tests.rs",
+         "text" : "        serde_json::from_value::<super::snapshot::IcpSnapshotInventory>(serde_json::json!({"
+      },
+      {
+         "line" : 316,
+         "path" : "crates/canic-host/src/icp/tests.rs",
+         "text" : "        assert!(serde_json::from_value::<super::snapshot::IcpSnapshotInventory>(invalid).is_err());"
+      },
+      {
+         "line" : 7,
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "text" : "    model::{IcpCli, IcpSnapshot},"
+      },
+      {
+         "line" : 13,
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "text" : "    pub fn snapshot_create(&self, canister: &str) -> Result<IcpSnapshot, IcpCommandError> {"
+      },
+      {
+         "line" : 22,
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "text" : "    pub fn snapshot_inventory(&self, canister: &str) -> Result<Vec<IcpSnapshot>, IcpCommandError> {"
+      },
+      {
+         "line" : 27,
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "text" : "        run_json::<IcpSnapshotInventory>(&mut command, self).map(|inventory| inventory.snapshots)"
+      },
+      {
+         "line" : 46,
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "text" : "pub(super) struct IcpSnapshotInventory {"
+      },
+      {
+         "line" : 47,
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "text" : "    pub(super) snapshots: Vec<IcpSnapshot>,"
+      },
+      {
+         "line" : 425,
+         "path" : "crates/canic-host/src/icp/management.rs",
+         "text" : "    fn snapshot_inventory_decoder_preserves_ids_and_refuses_oversized_or_malformed_replies() {"
+      },
+      {
+         "line" : 64,
+         "path" : "crates/canic-host/src/icp/model.rs",
+         "text" : "/// IcpSnapshot"
+      },
+      {
+         "line" : 68,
+         "path" : "crates/canic-host/src/icp/model.rs",
+         "text" : "pub struct IcpSnapshot {"
+      },
+      {
+         "line" : 96,
+         "path" : "crates/canic-host/src/fleet_ensure/ops/release/observation/tests.rs",
+         "text" : "fn physical_samples_reject_changed_versions_custody_and_snapshot_inventory() {"
+      }
+   ],
+   "files" : [
+      {
+         "bytes" : 13445,
+         "inspected_sections" : [
+            {
+               "first_line" : 85,
+               "last_line" : 125
+            }
+         ],
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "sha256" : "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136"
+      },
+      {
+         "bytes" : 30112,
+         "inspected_sections" : [
+            {
+               "first_line" : 556,
+               "last_line" : 692
+            }
+         ],
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "sha256" : "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1"
+      },
+      {
+         "bytes" : 17718,
+         "inspected_sections" : [
+            {
+               "first_line" : 90,
+               "last_line" : 139
+            }
+         ],
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "sha256" : "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573"
+      },
+      {
+         "bytes" : 5345,
+         "inspected_sections" : [
+            {
+               "first_line" : 60,
+               "last_line" : 80
+            }
+         ],
+         "path" : "crates/canic-host/src/icp/model.rs",
+         "sha256" : "9e5d75b6adc7481d3b389941a72322e88379df075c617c8eb3f0186f57870729"
+      },
+      {
+         "bytes" : 1620,
+         "inspected_sections" : [
+            {
+               "first_line" : 1,
+               "last_line" : 48
+            }
+         ],
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "sha256" : "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571"
+      },
+      {
+         "bytes" : 18463,
+         "inspected_sections" : [
+            {
+               "first_line" : 25,
+               "last_line" : 54
+            },
+            {
+               "first_line" : 314,
+               "last_line" : 355
+            },
+            {
+               "first_line" : 425,
+               "last_line" : 437
+            }
+         ],
+         "path" : "crates/canic-host/src/icp/management.rs",
+         "sha256" : "2113535381759eb95e4f8ded12f5dd9b3dbd8d10f5941ee7566b0c2e7c97e1cf"
+      }
+   ],
+   "golden_registry" : {
+      "construction" : "Independent Perl assembly of DIDL, 223-based field hashes, ULEB128 and little-endian nat64 values; reply/request evidence hashes constructed independently. No production decoder/encoder used to generate fixtures.",
+      "path" : "crates/ic-backup/src/model/ic_snapshot_reply/tests/golden.json",
+      "validation" : "Every registered case is decoded by the extracted production implementation and pinned official snapshot DTOs; registry membership derives from the fixture entries."
+   },
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native exact-byte decoding, bounded negative cases and public spent-journal reopen only. Actual authenticated IC capture/list, fresh permission and lost-effect settlement remain unqualified.",
+   "schema" : 1,
+   "scope" : "Read-only snapshot descriptor, bounded Candid inventory parsing, exact identity/duplicate admission and consumer inspection. Adapted into a local capture/inventory reply codec; no runner, agent, identity, optional-metadata fallback or live effect copied.",
+   "source_has_uncommitted_changes" : true,
+   "source_head" : "3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3",
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "upstream_dependencies" : [
+      {
+         "inspected_files" : [
+            {
+               "bytes" : 77620,
+               "inspected_sections" : [
+                  {
+                     "first_line" : 126,
+                     "last_line" : 155
+                  },
+                  {
+                     "first_line" : 157,
+                     "last_line" : 252
+                  },
+                  {
+                     "first_line" : 1178,
+                     "last_line" : 1220
+                  }
+               ],
+               "path" : "src/de.rs",
+               "sha256" : "32e166efe5e6eb9bf1db0e952b3cb4f0518891dfc2264a164bcf377d4da327d6"
+            }
+         ],
+         "name" : "candid",
+         "registry_checksum" : "a4dda5edb2bfa2d7703219ba0fd6ec712343fcd03867b76b87405feaa9aae7a0",
+         "use" : "Existing committed-lockfile dependency; SDK source is inspected, not copied.",
+         "version" : "0.10.37"
+      },
+      {
+         "inspected_files" : [
+            {
+               "bytes" : 63996,
+               "inspected_sections" : [
+                  {
+                     "first_line" : 1420,
+                     "last_line" : 1490
+                  }
+               ],
+               "path" : "src/lib.rs",
+               "sha256" : "6374759c1d620e0cf7286a66a17ed5f68a53190d0f43fea0a5a1f44695b7c032"
+            }
+         ],
+         "name" : "ic-management-canister-types",
+         "registry_checksum" : "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3",
+         "use" : "Existing committed-lockfile dependency; SDK source is inspected, not copied.",
+         "version" : "0.8.0"
+      }
+   ],
+   "upstream_reference" : {
+      "observed_date" : "2026-10-05",
+      "selected_contract" : "snapshot record has id blob, taken_at_timestamp nat64 and total_size nat64; capture returns one snapshot, inventory a vector. This reply has no target/network/caller/challenge fields.",
+      "url" : "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/"
+   }
+}

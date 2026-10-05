@@ -28,6 +28,12 @@ Typed ephemeral membership observations have
 [separate source provenance](membership-source.json).
 Direct caller-controller observations have
 [separate control provenance](control-authority-source.json).
+Snapshot-list permission observations have
+[separate read provenance](snapshot-read-source.json).
+Original consistency requirements and current capture/fence observations have
+[separate consistency provenance](consistency-source.json).
+Snapshot capture/inventory reply admission has
+[separate reply provenance](ic-snapshot-reply-source.json).
 
 ## Maintained local contracts
 
@@ -231,6 +237,41 @@ dies at an acknowledged barrier after artifact publication and before journal
 advancement; recovery adopts the original tree. An external public-API journey
 also exercises this interruption boundary. These are filesystem/process tests,
 not PocketIC/real IC transfer or snapshot-effect qualification.
+
+### Fresh local download integrity
+
+`policy::download_integrity::validate` borrows the existing original operation plan
+and download journal. It requires the full plan digest as journal intent, exact
+canonical selected-target coverage and Durable state with checksums for every
+entry. Missing, extra and substituted targets reject before byte IO. Views retain
+the exact snapshot token, metadata, derived paths and checksum owned by the journal;
+they are structural projections, not verified-byte permits or serialized receipts.
+The pre-capture plan cannot independently prove the later captured snapshot ID.
+
+`DownloadJournalGuard::verify_durable_artifacts` explicitly reads current published
+bytes. Under borrowed layout and journal exclusion, it re-admits the retained plan
+by its full digest and requires the retained journal to equal the held record before
+and after traversal. Existing bounded record owners enforce 1 MiB input/output;
+selection and journals remain capped at 1,024 targets and snapshot tokens at 256
+ASCII bytes. Every identity-derived artifact must be a directory; the existing
+no-follow traversal streams its checksum and compares it to retained evidence.
+Typed failures retain all original records and artifact evidence. No persisted
+schema, state transition, checksum algorithm or freshness flag is added.
+
+Ordinary open/resume remains a local progress projection, even after published
+bytes change. This explicit operation writes no journal, creates no receipt,
+replenishes no allowance and releases no restore reference. Checks are sequential
+observations, not an atomic tree/set snapshot; integrations maintain stable byte
+custody and separately qualify authentic capture identity, metadata/extent transfer,
+application consistency, completion and release admission.
+
+Fresh native production tests cover exact coverage, original-intent changes, every
+non-durable state, maximum target/token bounds, changed bytes, retained-plan/journal
+changes, absent/file/symlink substitutions and unusable custody. Public recovery
+checks preserve exhausted pending reservations and unfinished restore references.
+These qualify local persistence and traversal, not IC management or backup completion.
+See [the contract](contracts/download-integrity.json) and
+[fresh source/consumer provenance](download-integrity-source.json).
 
 ### Per-operation local attempt accounting
 
@@ -552,8 +593,10 @@ backend tokens and are not implicitly converted, folded or adopted here.
 Unknown/missing/duplicate fields, unsupported methods/generations and injected
 argument/digest/receiver/authority fields reject. Decode bounds raw byte retention.
 
-The model derives cached Candid arguments with pinned `candid = 0.10.35` and
-`ic-management-canister-types = 0.8.0`. Receiver is fixed to the management principal
+The model derives cached Candid arguments with the existing lockfile-selected
+`candid` (currently 0.10.37) and `ic-management-canister-types = 0.8.0`. Original
+0.10.35 source evidence remains historical; the request wire goldens have also
+been rerun against the current selection. Receiver is fixed to the management principal
 `aaaaa-aa`; target is the effective routing principal and encoded `canister_id`.
 All supported methods use replicated update ingress, including the two semantic
 observations. Capture fixes `replace_snapshot = None`, `uninstall_code = Some(false)`
@@ -595,8 +638,159 @@ aliases, method/routing/snapshot sensitivity, exact binding classes and raw/JSON
 bounds. A public journey retains a typed payload and original plan, reopens spent
 mutation authority and records a separate exact observation reservation without
 reset or replacing evidence. It qualifies local encoding/accounting only; actual
-snapshot/lifecycle behavior still requires a selected IC backend. Application
-ports, transfer/response codecs and full uncertain-effect reconciliation remain pending.
+snapshot/lifecycle behavior still requires a selected IC backend. Live application
+providers, remaining transfer/response codecs and full uncertain-effect reconciliation
+remain pending.
+
+### Bounded IC snapshot capture/inventory replies
+
+`model::ic_snapshot_reply::IcSnapshotReply::decode` accepts only the existing
+`take_canister_snapshot` and `list_canister_snapshots` requests. It borrows the
+immutable request owner and decodes exactly one upstream Candid value: a snapshot
+record for capture or a vector of snapshot records for inventory. Every descriptor
+requires `id : blob`, `taken_at_timestamp : nat64` and `total_size : nat64`, matching
+the [primary management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
+and the existing pinned SDK. No optional-metadata fallback or ICP JSON reader is added.
+
+Raw input admits at most 1 MiB before parsing. Decoding has a 2 MiB work quota,
+zero skipped work and at most 16 type-table entries. Bounded Serde sequence visitors
+retain at most 1,024 inventory descriptors and 1–256 exact ID bytes per descriptor
+without preallocating from untrusted lengths. Missing/wrong fields, unknown/skipped
+fields, oversized sequences, extra arguments, trailing bytes and invalid Candid
+reject as typed `InvalidReply`; raw overflow and unsupported methods have separate
+typed errors. This local bound is not a claim about IC capacity or universal replies.
+Timestamp/size accept the full nat64 range, including zero; neither is a local
+artifact-byte length or evidence of a completed download.
+
+Inventory views are sorted by exact raw IDs and reject duplicates even when metadata
+differs. Zero and repeated bytes remain distinct; no token renderer/converter or
+downstream string identity is inferred. `IcSnapshotInfo` exposes read-only fields.
+Capture has exactly one descriptor; inventory may be empty. These result types have
+no Serde admission, persisted authority flags or receipt transition.
+
+The payload checksum hashes exact raw bytes, so reordering equal inventory entries
+does not collapse evidence. A separate v1 domain hashes the existing request digest
+and raw checksum as two fixed 64-byte lowercase SHA-256 strings. This binds method,
+routing/target/argument bytes through their existing canonical owner. The response
+itself contains no target, network, caller, challenge or application operation ID.
+An integration can associate the same bytes with another declared request; the hash
+then differs, but decoding cannot identify which transport association is authentic.
+Actual authenticated target/network/caller, freshness, permissions and original
+per-call spending remain with the integration.
+
+No inventory delta, timestamp or parsed capture descriptor settles a lost mutation,
+completes a transfer, fabricates an Applied receipt, refunds spending or permits a
+new paid call. Local replay decodes retained bytes without any remote observation.
+It is not a product terminal receipt or terminal/reference-release API.
+
+Native qualification runs every registered independently assembled Candid/hash
+golden through production decoding and official SDK types. It covers all combined
+entry/ID bounds, full nat64 values, raw ordering/target hash sensitivity, malformed
+headers/types/lengths, truncation, extra/skipped/trailing data and duplicate identity.
+A public recovery journey reopens retained original intent and exhausted pending
+mutation/observation reservations, checks exact retained reply bytes and rejects
+changed request association while keeping journal bytes and allowances unchanged.
+This proves local wire/persistence behavior, not authenticated IC snapshot effects.
+See [the machine contract](contracts/ic-snapshot-reply.json) and
+[fresh source and consumer provenance](ic-snapshot-reply-source.json).
+
+Snapshot metadata/data transfer codecs, full status metadata, live transport,
+fresh effect admission, safe capture/load reconciliation and runner wiring remain pending.
+
+### Pure snapshot inventory comparison
+
+`policy::snapshot_inventory_delta::compare` borrows an immutable new-snapshot
+capture request and two admitted inventory replies. Both replies must belong to
+the existing list method and the exact canonical capture target. The reply owner
+already bounds counts/raw IDs and rejects duplicates; comparison uses a linear
+merge over those canonical views. Every original baseline ID must still exist with
+the exact timestamp and size. Missing IDs and metadata drift are typed failures,
+including when one apparent new candidate remains. Method/target errors disclose
+neither raw IDs nor payloads.
+
+`SnapshotInventoryDeltaView` exposes borrowed original capture, baseline and
+observed reply owners plus read-only candidate references in exact raw-ID order.
+Empty, singleton and multiple candidate sets remain descriptive. Raw ordering and
+exact request/reply hashes stay available through their original owners; no new
+wire record, hash encoding, provider, journal transition or persisted baseline
+layout is introduced. At most 1,024 candidate references can be retained, following
+the existing inventory bound; comparison performs no IO or serialization.
+
+Canic's baseline preservation and set-difference responsibilities are adapted.
+Its singleton-to-completed-receipt inference, ambiguity cleanup/restart, generic
+token IDs and upload reconciliation are not copied. Another controller could have
+created a singleton; zero candidates do not prove that capture failed. Integrations
+must qualify original pre-effect baseline retention, actual authenticated context,
+observation chronology, current permissions and exclusive effect attribution.
+Neither a timestamp nor this projection supplies those facts or permits a retry.
+Uncertain capture and lost observation replies retain their existing obligations
+and consumed allowances. No receipt or reconciliation provider is implemented.
+
+Native cases cover zero/single/multiple new IDs, byte-prefix ordering and raw-order
+hash preservation, baseline loss at every merge position, timestamp/size drift,
+each request role/target mismatch and the full 1,024-entry/256-ID-byte combination.
+A public recovery journey durably retains original intent and integration-owned
+baseline/observation fixture bytes, reopens exhausted pending journals, compares
+all candidate cardinalities and rejects baseline loss. Exact journal/evidence bytes
+and original allowances remain unchanged, including after a denied fresh mutation.
+These qualify pure comparison and local custody only. See
+[the machine contract](contracts/snapshot-inventory-delta.json) and
+[fresh source/consumer provenance](snapshot-inventory-delta-source.json).
+
+### Bounded IC lifecycle reply evidence
+
+`model::ic_lifecycle_reply::IcLifecycleReply::decode` borrows the existing immutable
+status, stop, start or snapshot-load request. Stop/start/load admit only the canonical
+six-byte empty Candid argument tuple, `DIDL` followed by two zero bytes. A Candid
+null value, unused type definitions, extra arguments and trailing bytes reject.
+The [management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
+specifies those empty results; strict canonical admission is a local boundary.
+
+Status decoding is a projection: exactly one Candid value with required `status`
+and `settings.controllers`. It preserves the upstream Running/Stopping/Stopped
+enum and passes the complete declared controller vector through the existing
+`ControllerSet` owner for canonical sorting and duplicate rejection. A bounded
+sequence visitor retains at most 10 principals without allocation from the declared
+length. Missing settings/controllers never default into an empty set; an explicitly
+empty set remains empty. No other status field is retained or qualified. This
+projection may admit records lacking fields outside its scope and skips unfamiliar
+extensions under finite work limits; it is not full SDK result validation.
+
+Raw replies are capped at 1 MiB before parsing. Status decoding has 2 MiB work,
+64 KiB skipped-work and 64 type-table-entry bounds. Malformed types, unsupported
+status variants, required-field/count failures, quota exhaustion, extra arguments
+and trailing bytes reject as typed InvalidReply. Raw overflow, unsupported methods
+and canonical controller failures remain separately typed. No raw identifiers,
+payloads or Candid diagnostics enter public error messages.
+
+Read-only kinds expose a status/controller projection or local acknowledgement.
+Exact raw SHA-256 retains skipped fields and original controller ordering. A v1
+NUL-terminated domain plus the existing request digest and raw checksum as two
+fixed 64-byte lowercase SHA-256 strings binds declared association. It authenticates
+no network/caller/target/challenge, origin or timing; identical empty replies can
+be associated with different methods or raw load IDs, producing different hashes.
+
+The integration owns fresh authenticated observations, original per-call spending,
+controller custody, continuous application fencing, stopped/drained evidence and
+same-ID/same-release load safety. A decoded Stopped value is not drain or actual
+load-history evidence. Status visibility alone grants no mutation control. A wire
+acknowledgement is not a local completion receipt, terminal proof, fresh dispatch
+permit or fence/reference release. Pending attempts and consumed limits remain
+unchanged; no provider or workflow dispatch is installed.
+
+Canic's typed lifecycle states, status/controller projection and required pending
+observation responsibilities are adapted. Agent/CLI calls, optional status defaults,
+Root/Fleet routing, command success-to-completed receipts and status-equality
+reconciliation are not copied. The same existing SDK/Candid dependencies remain.
+Native evidence includes all registered hand-assembled Candid/hash fixtures, a full
+SDK status fixture, required-field/variant/controller admission, count/raw/work/type
+bounds, malformed tuples/truncation and exact method/target/load-ID hash sensitivity.
+A public journey reopens original pending load/status reservations and retained raw
+fixture bytes, admits Stopped/controller and acknowledgement views, rejects rebound
+load evidence and malformed replies, and preserves exact journals/evidence/allowances.
+It performs no IC effects or settlement. See
+[the contract](contracts/ic-lifecycle-reply.json) and
+[fresh source/consumer provenance](ic-lifecycle-reply-source.json).
 
 ### Ephemeral membership port and pure result admission
 
@@ -708,6 +902,130 @@ stale results without calling the provider, denies revoked caller control and
 preserves bytes/allowances across every typed provider failure. These qualify local
 contracts/recovery only; no actual controller custody or IC backend is modeled.
 
+### Snapshot-list permission observations and pure caller read paths
+
+`model::snapshot_read::SnapshotReadRequest` derives the original operation binding
+and checks exact independently declared `list_canister_snapshots` target/digest.
+Status and mutation methods reject. The constructor accepts a separate expected
+observer digest from its exact intent/reservation owner; equality validates bytes,
+not retained accounting or dispatch. Original mutation digest and allowances stay
+unchanged. The canonical request hash binds full original intent, operation sequence,
+exact list wire digest, caller-owned challenge and a 0–1,024 descriptive call ceiling.
+The ceiling grants no paid calls; provider observations and the list call itself
+need separately approved prior per-call accounting and coherent command custody.
+
+The model owns a normalized, sorted unique 0–10 `SnapshotViewerSet` and explicit
+`SnapshotVisibility::{Controllers, Public, AllowedViewers}`. No unknown/default
+visibility or status/log substitution exists. Passive input and immutable observation
+retain exact current request, actually observed context/target, snapshot visibility,
+optional complete known controllers, opaque evidence and reported calls. Target text
+canonicalizes on model admission. `None` controllers means unobserved; known empty
+is distinct. Public or exact viewer membership needs no controller projection;
+unobserved controllers never establish controller access. All new types lack Serde
+and persisted fresh-authority admission. Existing schemas remain unchanged.
+
+`ports::snapshot_read::SnapshotReadProvider` is fallible with no installed/default
+implementation. Actual authenticated snapshot settings/context, freshness, challenge
+uniqueness/timing, evidence meaning and custody remain integration-owned. Unknown
+visibility must fail. Unavailable/Unsupported reject before effects; Indeterminate
+retains consumed accounting/evidence and stops without retry or replenishment.
+An observation of permissions does not perform the list or settle a lost list reply.
+Terminal replay must never invoke the provider; live verification is separate.
+
+Pure `policy::snapshot_read::validate` matches current request, actual context/target
+and reported calls, then requires a known exact caller-controller path, public
+visibility or exact allowed-viewer membership. Controller evidence takes precedence
+when present. A private-field matching view grants no mutation control, signing,
+dispatch, fresh spending, snapshot identity/extent completeness, lifecycle safety,
+application fence or terminal proof. Root-configured/Proven declarations, parents
+and other viewers/controllers do not substitute for the original caller.
+The visibility semantics and viewer bound follow the
+[primary management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
+Only the existing list codec is admitted; metadata/data request and response codecs,
+actual providers and complete read preflight remain unimplemented. See
+[the typed Rust contract](contracts/snapshot-read-port.json).
+
+Fresh native tests cover independent binary request goldens, original mutation vs
+read binding, every registered unsupported method, exact target/hash/context/challenge/
+ceiling mismatch, viewer aliases/duplicates/bounds, unknown vs empty controllers,
+all three caller paths and Root-only/revoked-caller denial. A public local fixture
+reopens original plan and spent pending mutation/observation, reads the exact observer
+digest from the retained reservation, rejects stale results without provider use and
+preserves exact bytes/allowances across typed failures. Permission evidence cannot
+settle the lost observation or reserve another. These qualify local binding/recovery,
+not actual IC permissions or effects.
+
+### Original consistency requirements and current capture/fence checks
+
+`model::consistency::ConsistencyRequirementRecord` retains exactly v1 `version`,
+canonical `plan_intent` and explicit `guarantee` (`per_canister` or
+`application_coordinated`). Missing/unknown fields, obsolete flag names and other
+versions reject. The original full plan intent binds context/inventory/selection/
+graph/requests/allowances. A domain-separated hash binds that intent and guarantee;
+neither the declaration nor its digest proves current consistency. See
+[the v1 schema and binary goldens](contracts/consistency-requirement.schema.json).
+
+`create_consistency_requirement` requires the exact original plan already retained
+in the held layout, then durably creates fixed `consistency-requirement.json` under
+journal exclusion with no replacement. Reads require the exact expected requirement
+digest and original retained plan; raw input and canonical output are bounded to
+1 KiB. Missing/corrupt/changed evidence cannot silently downgrade or recreate the
+original requirement. Lost local create replies reconcile by an exact retained read.
+This storage owns no fence, fresh allowance or dispatch authority.
+
+Ephemeral `ConsistencyRequest` binds the original requirement/operation, caller-owned
+challenge, explicit BeforeCapture/AfterCapture boundary, 0–1,024 descriptive remote-call
+ceiling and optional exact expected `ApplicationFenceBinding`. Per-canister requests
+require no fence; coordinated requests require the retained fence identity AND original
+membership revision recovered by the integration's durable obligation owner. Constructors
+match declarations but inspect no retained fence evidence and interpret no capture wire
+payload. The original mutation digest and allowances remain unchanged. The request hash
+binds both expected fence fields. Requests, parameters, observations, target/fence
+evidence and views have no Serde/default or persisted fresh-authority admission.
+
+Model observation admission canonicalizes/sorts a nonempty set of at most 1,024
+unique actual physical targets backed by the actual inventory. Passive provider input
+retains current request, actual canonical context/full inventory, exact selected target
+state and opaque stopped/drained evidence, actual membership revision, explicit evidence
+lane, opaque qualified observation evidence and reported calls. Coordinated evidence
+includes actual Active/Inactive fence state, identity, revision and required whole-unit
+write/membership/timer/external-work fencing and drained-work evidence digests.
+No parent/component ordering or unit grouping implies a distributed checkpoint.
+
+`ports::consistency::ConsistencyProvider` observes existing obligations, with no
+installed/default implementation or acquisition/release API. Providers qualify actual
+authenticated context/selection/state, drain and continuously retained whole-selection
+fencing across capture/interruption. Fresh challenges, timing, custody, evidence meaning
+and prior approved per-call accounting remain integration-owned. Unknown custody fails;
+known inactive fences produce denial. Unavailable/Unsupported reject before effects;
+Indeterminate retains consumed allowance/evidence and obligations, then stops without
+retry/reset/release. Failure, timeout, process death or dropping model values must not
+release the integration's fence. Terminal replay invokes no provider.
+
+Pure `policy::consistency::validate` matches exact current request/context/full inventory/
+selection/call reporting, requires every selected target Stopped and the exact original
+guarantee. Coordinated results must have the exact retained Active fence, with both actual
+and fence revisions equal to the original retained revision. It performs no IO, serialization,
+provider calls, plan/journal transition, dispatch, restart or release. Opaque evidence hashes
+are integration attestations, not signatures or independently proven active fencing.
+Sequential stops and before/after identity/revision equality cannot prove continuity.
+The observed lifecycle names follow the
+[primary management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/);
+their actual backend decoding/qualification remains unimplemented. See
+[the typed current consistency contract](contracts/consistency-port.json).
+
+Fresh native cases cover strict records and independent hash goldens, original plan/
+budget/request sensitivity, fence/challenge/boundary/revision binding, inactive fences,
+running/stopping members, complete inventory drift including unselected metadata,
+exact selection/lane mismatches, canonical aliases/duplicates and 1,024-target admission.
+Local persistence tests cover original requirement retention/no downgrade, contention,
+1 KiB raw bounds, malformed/rebound records, symlinks and replaced layouts. A public
+native provider fixture reopens original requirement and spent pending journals,
+rejects stale/wrong-fence results and preserves exact retained integration obligation
+fixture bytes across all typed failures/drop. These establish local contracts only;
+application fence acquisition/release, actual lifecycle/drain/continuous custody,
+capture completion and same-release restore/external-payment settlement remain pending.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
 | Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |
@@ -715,7 +1033,7 @@ contracts/recovery only; no actual controller custody or IC backend is modeled.
 | Layout lifetime locks and reference retention | Copied with model-owned v1 validation/transitions, stable parent-side locking, directory identity and explicit bounds |
 | Command lifetime locks | Copied with owned inheritance, exact v1 sidecar identity, one-spawn allowance and retained exclusive quiescence; fresh native process evidence |
 | Reference release and prune | Remain in Canic until terminal completion, backend custody and runner integration govern release/deletion |
-| Local download journal lifecycle | Adapted exact v1 identities, state/checksum transitions and derived views; guarded local verification/publication with fresh recovery evidence |
+| Local download journal lifecycle | Adapted exact v1 identities, state/checksum transitions and derived views; guarded local verification/publication and explicit original-plan/exact-set published-byte checks with fresh recovery evidence |
 | Pending claims and operation receipts | Adapted local exact-identity ledger, immutable separate allowances and chronological replay; guarded reservations/receipts with fresh native recovery evidence |
 | Remote transfer extents, execution/restore journals, plans and manifests | Require complete backend metadata, generic v1 identity/budget binding and model-owned transitions before runner import |
 | Topology hashing and declared registry target expansion | Adapted into bounded canonical forest records, unambiguous v1 binary hashes, pure exact/direct-child/subtree selection and immutable local persistence |
@@ -726,6 +1044,8 @@ contracts/recovery only; no actual controller custody or IC backend is modeled.
 | Typed backup executor and snapshot/lifecycle command payloads | Adapted closed IC host-ingress method/target/raw-snapshot declarations, official Candid encoding and exact wire digests; argv rendering, transport selection, actual permissions/receipts and transfer remain with their owners |
 | Topology preflight projection/admission and provider boundary | Adapted into ephemeral original-plan/challenge/boundary membership requests, fallible provider results and pure actual-context/full-inventory matching; freshness, permissions, fence/revision semantics and actual provider remain integration-owned |
 | Control authority declarations, receipt headers and controller projections | Adapted into exact original IC mutation/challenge requests, complete known canonical controller sets and pure direct caller-controller admission; Root/Proven upgrades, read visibility, proxy/admin lanes, live observations and full preflight remain with their owners |
+| Snapshot-read declarations/receipts and visibility projections | Adapted into original mutation intent plus independent exact list/challenge binding and pure actual-context/target/controller/public/viewer read paths; no Root-configured/Proven upgrades, status/log fallback, provider or paid-call admission imported |
+| Quiescence declarations, receipt admission and consistency-unit projection | Adapted immutable original requested guarantee plus ephemeral exact stopped/drained/fence evidence matching; accepted/expiry/RootCoordinated flags and parent-derived application consistency are not copied; real fencing/custody and acquisition/release remain integration-owned |
 | Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
 | ICP subprocess transport | Narrow extraction into the transport package after executor contracts and selected backend capabilities are qualified |
 | Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |

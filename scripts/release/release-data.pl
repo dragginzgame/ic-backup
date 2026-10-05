@@ -76,12 +76,15 @@ sub changelog {
     my %seen;
     for my $section (@sections) {
         die "duplicate changelog section: $section\n" if $seen{$section}++;
-        parts($section) unless $section eq 'Unreleased';
+        parts($section) unless $section eq 'Draft';
     }
-    die "Unreleased must be the first section\n"
-        unless @sections && $sections[0] eq 'Unreleased';
-    $text =~ /^## \[Unreleased\]\n(.*?)(?=^## \[|\z)/ms
-        or die "missing Unreleased section\n";
+    die "top section must be Draft or the selected undated release\n"
+        unless @sections && ($sections[0] eq 'Draft' || $sections[0] eq $target);
+    my $draft = $sections[0];
+    die "another draft is open\n" if $draft ne 'Draft' && $seen{Draft};
+    die "selected version already has a section\n" if $draft eq 'Draft' && $seen{$target};
+    $text =~ /^## \[\Q$draft\E\]\n(.*?)(?=^## \[|\z)/ms
+        or die "release draft must be undated\n";
     my $notes = $1;
     die "release is already dated\n"
         if $text =~ /^## \[\Q$target\E\] - /m;
@@ -90,17 +93,8 @@ sub changelog {
     my @drafts = $text =~ /^## \[([0-9.]+)\]$/mg;
     die "another numbered release draft is open\n"
         if grep { $_ ne $target && compare_versions($_, version()) > 0 } @drafts;
-    if ($text =~ /^## \[\Q$target\E\]\n(.*?)(?=^## \[|\z)/ms) {
-        die "named release must immediately follow Unreleased\n"
-            unless @sections > 1 && $sections[1] eq $target;
-        die "Unreleased must be empty with a named draft\n" if $notes =~ /\S/;
-        die "named release notes are empty\n" unless $1 =~ /\S/;
-        $text =~ s/^## \[\Q$target\E\]$/## [$target] - $date/m;
-    } else {
-        die "Unreleased notes are empty\n" unless $notes =~ /\S/;
-        my $replacement = "## [Unreleased]\n\n## [$target] - $date\n$notes";
-        $text =~ s/^## \[Unreleased\]\n.*?(?=^## \[|\z)/$replacement/ms;
-    }
+    die "release draft notes are empty\n" unless $notes =~ /\S/;
+    $text =~ s/^## \[\Q$draft\E\]$/## [$target] - $date/m;
     return $text;
 }
 

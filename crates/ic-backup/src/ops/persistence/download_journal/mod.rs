@@ -1,5 +1,8 @@
 //! Locked durable local lifecycle updates and verified artifact publication.
 
+mod integrity;
+pub use integrity::DownloadIntegrityError;
+
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,
     create_json_durable, read_json, write_json_durable,

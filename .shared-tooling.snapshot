@@ -1,0 +1,15 @@
+# Shared Tooling snapshot v1
+format	1
+source	git@github.com:dragginzgame/shared-tooling.git
+revision	956236a3848c2cfae6ae05f5c77e9c37b01b3366
+file	423b3fca9fedaf237e01d776e67f8b7d9fd3533d8e22ea60272397e96a6e410b	-	docs/principles/README.md
+file	9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7	-	docs/principles/decision-artifact-discipline.md
+file	a9a5fc8b6bd2440be1550a69aae878dd5c278f22e7d814543400436b46389c93	-	docs/principles/reviewable-changes.md
+file	8228b63d3a6255750b141162efb2a3b33e0342f6909f4b0b999a13da79c685f5	-	docs/principles/rust-code-hygiene.md
+file	d85ba23911930671e5c794981c9e262039c030251967ed6d64e9a91a967deeb5	-	docs/principles/simplicity-and-maintainability.md
+file	6215ec5daaaf4ec44f8c0d962074e49fdc383647ae1f455330691d4b85f138ba	-	docs/consuming-snapshots.md
+file	dad242005587027aec60a754e2f2b1e7f9ffc4827f0eb65388ad3be768e589b0	-	docs/supported-hosts.md
+file	99de53db4bbe7af00d2da5591b18f65e6022d474769d1e3b9a8424010e0eccf6	x	scripts/ci/verify-file-checksum.sh
+file	5357b125a816455e8e20562b980344e863754377988b61f55076acd5ed42068b	x	scripts/ci/verify-shared-tooling-snapshot.sh
+file	e2e9d50c6734f99c3e979019c005cfb3f74ce892ec514a94cbdbfe7d9df2e272	x	scripts/ci/run-validation-targets.sh
+file	c8d49193be50476175e8abe882f2fc85a1cffdb166a4453c48c22a0b78b09b34	x	scripts/ci/test-validation-target-runner.sh
