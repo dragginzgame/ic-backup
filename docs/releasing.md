@@ -1,3 +1,28 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-readme-header.svg" alt="IC Backup — Verified backups and safe recovery for Internet Computer apps" width="100%">
+</p>
+
+<!-- helper-navigation:start -->
+<p align="center">
+  <a href="https://github.com/dragginzgame/canic"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/canic.svg" width="18" height="18" alt=""> <strong>canic</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/icydb"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/icydb.svg" width="18" height="18" alt=""> <strong>icydb</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-timers"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-timers.svg" width="18" height="18" alt=""> <strong>ic-timers</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-memory"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-memory.svg" width="18" height="18" alt=""> <strong>ic-memory</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-query"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-query.svg" width="18" height="18" alt=""> <strong>ic-query</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-backup"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-backup.svg" width="18" height="18" alt=""> <strong>ic-backup</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-blob-storage"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-blob-storage.svg" width="18" height="18" alt=""> <strong>ic-blob-storage</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-testkit"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-testkit.svg" width="18" height="18" alt=""> <strong>ic-testkit</strong></a>
+</p>
+<!-- helper-navigation:end -->
+
+
 # Releasing
 
 The command family follows `ic-delegated-auth` and `ic-blob-storage`, using their
@@ -5,6 +30,22 @@ MIT-licensed bounded Bash/Perl helpers adapted to one host-side workspace.
 The library inherits `publish = ["crates-io"]` from workspace metadata.
 Creating release tooling does not authorize a release or claim an implemented
 backup/restore product.
+
+> **Authority:** Preview and local validation commands are available to
+> contributors. Commands that create commits, tags, pushes or registry uploads
+> remain maintainer-owned.
+
+## Command effects at a glance
+
+| Command | Effect | Owner |
+| --- | --- | --- |
+| `make release-plan VERSION=…` | Inspects and previews a proposed version; changes nothing | Contributor |
+| `make release-check` | Tests the release helpers locally; performs no release | Contributor |
+| `make patch`, `make minor`, `make major`, `make bump-x VERSION=…` | Validates and prepares the bounded release files | Maintainer or explicitly authorized preparation |
+| `make release-patch`, `make release-minor`, `make release-major`, `make release-x VERSION=…` | Prepares, commits, tags and atomically pushes the repository release | Maintainer only |
+| `make package` | Verifies a local package without uploading | Contributor |
+| `make publish-dry-run` | Runs Cargo's registry checks without uploading | Maintainer |
+| `make publish` | Uploads the current library version to crates.io | Maintainer only |
 
 ## Preview and preparation
 

@@ -209,6 +209,7 @@ platform effects when they are implemented.
 
 | Document | Use it for |
 | --- | --- |
+| [Documentation index](docs/README.md) | Choose the right product, development, evidence or governance document |
 | [Current handoff](docs/status/current.md) | Current implementation state, evidence and next work |
 | [Extraction and implementation design](docs/extraction-design.md) | Complete proposed product behavior and safety design |
 | [Implemented extraction boundary](docs/extraction-boundary.md) | Exact behavior currently provided by the library |

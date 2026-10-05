@@ -22,26 +22,36 @@
 </p>
 <!-- helper-navigation:end -->
 
+# Documentation
 
-# Shared Engineering Principles
+Start with the [project overview](../README.md) for a plain-language explanation
+of what IC Backup is intended to do and its current limitations. Use the guide
+below to find the document that matches your task.
 
-These documents contain repository-neutral decision guidance. They are
-maintained from experience across consuming repositories, initially Canic and
-IcyDB.
+## Understand the project
 
-A principle becomes binding only when a consumer adopts a reviewed Shared
-Tooling revision. The consumer's `AGENTS.md` and local governance remain the
-authority for product architecture, exact commands, release behavior,
-deployment, and exceptions.
-
-Current principles:
-
-| Principle | Use it when |
+| Document | Use it for |
 | --- | --- |
-| [Simplicity and maintainability](simplicity-and-maintainability.md) | Choosing whether to delete, reuse, narrow, extend or add a concept |
-| [Decision artifact discipline](decision-artifact-discipline.md) | Carrying an authoritative decision across components without recomputing it |
-| [Reviewable changes](reviewable-changes.md) | Defining a bounded change with its required proof and propagation |
-| [Rust code hygiene baseline](rust-code-hygiene.md) | Reviewing ownership, module structure, errors, comments and tests |
+| [Current status](status/current.md) | Released baseline, current implementation evidence and remaining work |
+| [Implemented extraction boundary](extraction-boundary.md) | Exact behavior currently provided by the library and what it does not establish |
+| [Extraction and implementation design](extraction-design.md) | Detailed proposed product architecture, workflows and completion criteria |
 
-When experience differs between repositories, update the common decision test
-here and preserve the valid local choices in consumer overlays.
+## Develop and maintain it
+
+| Document | Use it for |
+| --- | --- |
+| [Development](development.md) | Quick start, code ownership, validation commands and build-directory rules |
+| [Supported hosts](supported-hosts.md) | Qualified CI and script environments and their dependencies |
+| [Releasing](releasing.md) | Preview, preparation, maintainer release and registry publication workflows |
+
+## Understand shared engineering inputs
+
+| Document | Use it for |
+| --- | --- |
+| [Shared Tooling adoption](shared-tooling.md) | Reviewed upstream identity, local overlay and validation evidence |
+| [Consuming Shared Tooling snapshots](consuming-snapshots.md) | Creating, refreshing and verifying vendored tooling files |
+| [Engineering principles](principles/README.md) | Repository-neutral guidance used across participating projects |
+
+Machine-readable schemas and provenance records under `contracts/` and the
+remaining JSON files support the detailed implementation evidence. They are not
+introductory documentation.

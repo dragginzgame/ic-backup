@@ -1,20 +1,63 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-readme-header.svg" alt="IC Backup — Verified backups and safe recovery for Internet Computer apps" width="100%">
+</p>
+
+<!-- helper-navigation:start -->
+<p align="center">
+  <a href="https://github.com/dragginzgame/canic"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/canic.svg" width="18" height="18" alt=""> <strong>canic</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/icydb"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/icydb.svg" width="18" height="18" alt=""> <strong>icydb</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-timers"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-timers.svg" width="18" height="18" alt=""> <strong>ic-timers</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-memory"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-memory.svg" width="18" height="18" alt=""> <strong>ic-memory</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-query"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-query.svg" width="18" height="18" alt=""> <strong>ic-query</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-backup"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-backup.svg" width="18" height="18" alt=""> <strong>ic-backup</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-blob-storage"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-blob-storage.svg" width="18" height="18" alt=""> <strong>ic-blob-storage</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-testkit"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-testkit.svg" width="18" height="18" alt=""> <strong>ic-testkit</strong></a>
+</p>
+<!-- helper-navigation:end -->
+
+
 # Current handoff — 2026-10-05
 
-The maintainer selected a `0.1.9` changelog and requested continued extraction.
-HEAD remains `9a9330a` (Release 0.1.8), with Cargo and the latest dated changelog
-at `0.1.8`. The selected `## [0.1.9]` draft is undated; release preparation owns its
-date and package version transaction. Existing snapshot reply/comparison work is
-preserved; lifecycle reply and fresh local download integrity batches below are
-added, all uncommitted.
+The released package baseline is `0.1.8` at `9a9330a`. The workspace manifest
+remains `0.1.8`, while the changelog contains a selected, undated `0.1.9` draft.
+Later repository commits and working-tree documentation do not constitute a
+package release. Release preparation owns the next date, version transaction and
+receipt.
+
+## At a glance
+
+| Question | Current answer |
+| --- | --- |
+| Can it perform a complete backup or restore? | No. The transport, runners and CLI remain unimplemented |
+| What works today? | Local artifacts, bounded records, journals, plans, selected IC codecs and pure integration checks |
+| What has been qualified? | Native local filesystem, record, policy and process behavior within the evidence described below |
+| What remains integration-owned? | Live membership, authority, application consistency, authenticated calls and restored-state acceptance |
+| What is the next product boundary? | Complete authority and runner contracts, then transport and PocketIC/real-IC qualification |
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-product-readiness.svg" alt="Product readiness stages showing the implemented local safety foundation followed by application adapters, authenticated IC transport and runners, and PocketIC and live qualification" width="800">
+</p>
+
+The selected `0.1.9` work preserves earlier snapshot reply/comparison behavior
+and adds lifecycle reply and fresh local download-integrity foundations.
 The committed lockfile selects Candid 0.10.37; this batch preserves that selection
 and all dependencies. The release guide now refers to the manifest/changelog owners
 instead of repeating a stale current version; historical evidence remains intact.
-Dated history, Cargo/lockfile, licenses and historical release receipt remain
-unchanged. No version transaction, commit, tag, push, upload or live IC effect ran.
-Canic and every sibling remain read-only.
-Only targeted native checks ran; no full CI or release gate ran.
+Dated history, Cargo/lockfile, licenses and the historical release receipt remain
+unchanged by the implementation batches recorded below. No version transaction,
+tag, package upload or live IC effect is claimed. Only targeted native checks are
+recorded; no full CI or release gate is claimed.
 
-## Fresh local download integrity batch
+## Retained implementation batches
+
+### Fresh local download integrity batch
 
 `policy::download_integrity::validate` borrows the original full plan and download
 journal, requiring exact intent, canonical selected coverage and Durable checksums.
@@ -59,7 +102,7 @@ drops fixed it. Successful tests cleaned only owned runtime fixtures; all earlie
 failure/recovery artifacts remain retained. No full suite, package/release gate,
 version transaction or publication ran.
 
-## Lifecycle reply batch
+### Lifecycle reply batch
 
 `model::ic_lifecycle_reply` admits the existing status/stop/start/load methods.
 Mutation acknowledgements require the canonical six-byte empty Candid tuple.
@@ -113,7 +156,7 @@ Corrected cases passed. Successful runtime fixtures cleaned only their owned
 temporaries; prior failed/build/recovery evidence remains retained. No full suite,
 package verification, full CI/release gate or publication ran.
 
-## Snapshot inventory comparison batch
+### Snapshot inventory comparison batch
 
 `policy::snapshot_inventory_delta::compare` borrows the exact existing capture and
 two inventory reply owners. It requires the closed capture/list methods and exact
@@ -160,7 +203,7 @@ passed. Successful runtime fixtures cleaned only their owned temporary directori
 No full suite/package/full CI/release gate or actual IC effect ran. Transport,
 metadata/data transfers, safe lost-effect settlement and runners remain unimplemented.
 
-## Snapshot capture/inventory reply batch
+### Snapshot capture/inventory reply batch
 
 `model::ic_snapshot_reply` decodes exactly one capture descriptor or inventory
 vector tied to the caller's borrowed immutable request. Required upstream fields
@@ -212,7 +255,7 @@ they do not claim fresh broad validation for this batch. Live providers, complet
 transfer/remaining response codecs, fencing and safe restore settlement still
 precede runners. Independently usable backup/restore remains unimplemented.
 
-## Retained nested release-check correction
+### Retained nested release-check correction
 
 The outer validation runner exports `VALIDATION_REPOSITORY_ROOT` for its children.
 The dependency-bootstrap fixture inherited the real repository root and dispatched
@@ -242,7 +285,7 @@ is `target/release-check-reproduction.log`, with logs under
 Earlier failed evidence remains retained too. Successful test fixtures cleaned
 only their own temporaries.
 
-## Shared engineering and tooling batch
+### Shared engineering and tooling batch
 
 [Shared adoption](../shared-tooling.md) records upstream committed revision
 `956236a3848c2cfae6ae05f5c77e9c37b01b3366` and the separately hashed dirty upstream
@@ -278,7 +321,7 @@ batch, not a fresh Rust run for this tooling change. The maintainer's current Ca
 dependency declaration is preserved. No broad CI/release gate or native compilation
 was requested; product and host qualification boundaries remain as described below.
 
-## Current consistency batch
+### Current consistency batch
 
 `model::consistency::ConsistencyRequirementRecord` retains strict v1 `version`,
 canonical full original `plan_intent` and explicit `per_canister` or

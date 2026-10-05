@@ -1,4 +1,64 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-readme-header.svg" alt="IC Backup — Verified backups and safe recovery for Internet Computer apps" width="100%">
+</p>
+
+<!-- helper-navigation:start -->
+<p align="center">
+  <a href="https://github.com/dragginzgame/canic"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/canic.svg" width="18" height="18" alt=""> <strong>canic</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/icydb"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/icydb.svg" width="18" height="18" alt=""> <strong>icydb</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-timers"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-timers.svg" width="18" height="18" alt=""> <strong>ic-timers</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-memory"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-memory.svg" width="18" height="18" alt=""> <strong>ic-memory</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-query"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-query.svg" width="18" height="18" alt=""> <strong>ic-query</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-backup"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-backup.svg" width="18" height="18" alt=""> <strong>ic-backup</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-blob-storage"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-blob-storage.svg" width="18" height="18" alt=""> <strong>ic-blob-storage</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dragginzgame/ic-testkit"><img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/icons/ic-testkit.svg" width="18" height="18" alt=""> <strong>ic-testkit</strong></a>
+</p>
+<!-- helper-navigation:end -->
+
+
 # Implemented extraction boundary
+
+This is the detailed reference for behavior already implemented in `ic-backup`.
+It distinguishes locally qualified mechanisms from integration responsibilities
+and planned product work. Start with the [project overview](../README.md) for the
+plain-language product concept or [current status](status/current.md) for the
+active implementation baseline.
+
+## At a glance
+
+| Area | Implemented here | Does not yet establish |
+| --- | --- | --- |
+| Local artifacts | Checksums, secure staging and durable verified-directory publication | Complete transfer from an IC snapshot backend |
+| Durable records | Bounded JSON, locks, journals and interruption-safe local transitions | Permission to repeat or settle a remote operation |
+| Inventory and plans | Exact targets, dependency graphs, request bindings and finite attempt limits | Current membership, control or application consistency |
+| IC request/reply codecs | Typed bytes and bounded decoding for selected snapshot and lifecycle calls | Authenticated transport or trustworthy reply association |
+| Integration ports | Explicit contracts for membership, control, read access and consistency evidence | Installed live providers or application-specific safety |
+| End-to-end product | Local foundations only | Capture/restore runners, transport, CLI or a qualified backup journey |
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-implementation-boundary.svg" alt="Implementation boundary showing locally tested models, policy and persistence, application-supplied integration contracts, and the planned IC transport, runners and CLI" width="800">
+</p>
+
+## Terms used in this reference
+
+| Term | Meaning here |
+| --- | --- |
+| Record | Bounded persisted data with a maintained schema and validation rules |
+| Journal | Durable progress and evidence for one exact operation |
+| Plan | An immutable declaration of targets, requests, ordering and attempt limits |
+| Policy | A pure decision or validation step that performs no IO |
+| Port | A contract an integration implements to supply current external evidence |
+| Qualified | Demonstrated within the named evidence boundary; not a universal product claim |
+| Reconciliation | Inspecting retained evidence to determine an uncertain operation's outcome without blindly repeating it |
+
+## Extraction history and provenance
 
 The first extraction copies and reshapes Canic's local artifact and persistence
 mechanisms into `ic-backup`. It performs no IC calls and introduces no Canic
@@ -169,6 +229,10 @@ terminal journal/completion evidence; it remains unimplemented.
 ## Source ownership and remaining contract work
 
 ### Local download journal lifecycle
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-download-journal.svg" alt="Local download journal states from created through downloaded and checksum verified to durable, including explicit inspection and reconciliation after interruption" width="800">
+</p>
 
 The [download journal provenance](download-journal-source.json) records adapted
 Canic journal states, validation, projections, artifact operations and consumer
