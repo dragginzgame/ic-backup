@@ -1,12 +1,15 @@
-# Current handoff — 2026-10-04
+# Current handoff — 2026-10-05
 
-The maintainer requested adoption of Shared Tooling as the top-level Dragginzgame
-rules. The starting worktree was clean at `3a94848` (merge after Release 0.1.7),
-with Cargo and the dated changelog at `0.1.7`. The tooling batch below is uncommitted.
-One undated `Draft` now heads the changelog; no next version has been selected.
+The maintainer selected a `0.1.8` changelog entry for the Shared Tooling batch below.
+The starting worktree was clean at `e822c1b` (0.1.8), which contains that tooling
+work; Cargo remains `0.1.7`. One undated `0.1.8` entry now heads the changelog with
+the existing engineering-baseline, tooling and release-preparation notes.
+Only the changelog label and this handoff changed, and those edits are uncommitted.
 Dated history, Cargo/lockfile, licenses and historical release receipt remain
 unchanged. No version transaction, commit, tag, push, upload or live IC effect ran.
 Canic and every sibling remain read-only.
+Read-only changelog admission for `0.1.8` and diff checks passed. This documentation
+change required no compilation or broad validation.
 
 ## Shared engineering and tooling batch
 

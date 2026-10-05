@@ -1,6 +1,6 @@
 # Changelog
 
-## [Draft]
+## [0.1.8]
 
 - Adopt the Dragginzgame engineering baseline with explicit source identity and
   local backup rules. Vendor reviewed shared principles and tooling with offline
