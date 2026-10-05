@@ -19,6 +19,31 @@ use thiserror::Error;
 const MANIFEST_FILE: &str = "download-manifest.json";
 
 impl DownloadJournalGuard<'_> {
+    /// Replay exact manifest evidence while borrowing the already-held original journal.
+    ///
+    /// Requires the retained plan and unchanged guarded journal before/after admission,
+    /// without acquiring a second journal lock or reading artifact trees. This grants
+    /// no current byte, backend, application or effect authority.
+    /// # Errors
+    /// Rejects unsafe/missing/changed originals, wrong identity and manifest contention.
+    pub fn read_download_manifest(
+        &self,
+        plan: &OperationPlanRecord,
+        expected: &ArtifactChecksumRecord,
+    ) -> Result<DownloadJournalRecord, DownloadManifestError> {
+        self.check_usable()?;
+        self.require_unchanged_integrity_journal()?;
+        let path = self.layout.root().join(MANIFEST_FILE);
+        let _lock = JournalLock::acquire(&path)?;
+        let record = read_manifest_record(self.layout, plan, expected)?;
+        if self.record()? != &record {
+            return Err(DownloadManifestError::JournalChanged);
+        }
+        self.require_unchanged_integrity_journal()?;
+        self.layout.check_root()?;
+        Ok(record)
+    }
+
     /// Freshly verify and immutably publish the exact original durable download set.
     ///
     /// Reuses the existing journal schema/identity owner and guarded no-follow byte
@@ -67,6 +92,21 @@ pub fn read_download_manifest(
     layout.check_root()?;
     let path = layout.root().join(MANIFEST_FILE);
     let _lock = JournalLock::acquire(&path)?;
+    let record = read_manifest_record(layout, plan, expected)?;
+    let journal = DownloadJournalGuard::open(layout, plan.digest().hash())?;
+    if journal.record()? != &record {
+        return Err(DownloadManifestError::JournalChanged);
+    }
+    layout.check_root()?;
+    Ok(record)
+}
+
+fn read_manifest_record(
+    layout: &BackupLayoutGuard,
+    plan: &OperationPlanRecord,
+    expected: &ArtifactChecksumRecord,
+) -> Result<DownloadJournalRecord, DownloadManifestError> {
+    let path = layout.root().join(MANIFEST_FILE);
     let record: DownloadJournalRecord = read_json(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
     check_size(&record)?;
     if &record.digest() != expected {
@@ -74,11 +114,6 @@ pub fn read_download_manifest(
     }
     read_operation_plan(layout, &plan.digest()).map_err(DownloadIntegrityError::from)?;
     validate(plan, &record).map_err(DownloadIntegrityError::from)?;
-    let journal = DownloadJournalGuard::open(layout, plan.digest().hash())?;
-    if journal.record()? != &record {
-        return Err(DownloadManifestError::JournalChanged);
-    }
-    layout.check_root()?;
     Ok(record)
 }
 

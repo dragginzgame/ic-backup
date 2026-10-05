@@ -24,6 +24,8 @@ jobs:
         run: rustup show active-toolchain
       - name: Install the minimum supported Rust toolchain
         run: rustup toolchain install 1.91.0 --profile minimal
+      - name: Install the reviewed manifest formatter
+        run: cargo install cargo-sort --version 2.1.4 --locked
       - name: Install Linux shell tooling
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes shellcheck ripgrep
@@ -38,6 +40,7 @@ jobs:
         run: |
           /bin/bash scripts/ci/test-tooling.sh
           /bin/bash scripts/release/test-release.sh
+          /bin/bash scripts/ci/test-release-runner.sh
           /bin/bash scripts/hooks/test-hooks.sh
       - name: Validate the native library and repository tooling
         run: make ci

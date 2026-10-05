@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.0]
+
+- **Breaking:** Use the shared release workflow for patch, minor and major releases,
+  with exact saved-version recovery through `make release-resume VERSION=X.Y.Z`.
+  Replace standalone preparation/stage/commit/push and `release-x` commands with
+  the selected one-shot release command. Preserve build and recovery evidence,
+  and atomically push only the selected branch and tag, disabling implicit tag pushes.
+- **Breaking:** Update developer setup to `make install-hooks` and install
+  cargo-sort 2.1.4. The shared hook formats and refreshes only selected files,
+  rejects partial staging, and preserves unrelated edits. CI and releases check
+  both Cargo manifest ordering and Rust formatting independently.
+- Retry preflight or validation-only release failures through the normal target
+  against corrected source, retaining earlier evidence. Once preparation starts,
+  resume the exact saved version instead of selecting another increment.
+
+- Bind fresh local restore-source verification to the exact original requirement,
+  source manifest and selected existing IDs. Retain both layout/journal guards and
+  all obligations without changing spending or authorizing upload, load or release.
+- Privately stage exact checksum-bound local restore artifacts for original operation
+  identities. Verify retained copies explicitly after interruption, preserving partial
+  evidence, spent attempts and source references without upload or automatic cleanup.
+
 ## [0.2.3] - 2026-10-05
 
 - Retain immutable original execution settlement checkpoints with exact chronological

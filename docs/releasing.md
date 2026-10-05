@@ -25,121 +25,136 @@
 
 # Releasing
 
-The command family follows `ic-delegated-auth` and `ic-blob-storage`, using their
-MIT-licensed bounded Bash/Perl helpers adapted to one host-side workspace.
-The library inherits `publish = ["crates-io"]` from workspace metadata.
-Creating release tooling does not authorize a release or claim an implemented
-backup/restore product.
-
-> **Authority:** Preview and local validation commands are available to
-> contributors. Commands that create commits, tags, pushes or registry uploads
-> remain maintainer-owned.
-
-## Command effects at a glance
+Patch, minor and major use the [common release contract](releases.md) and the exact
+vendored Shared Tooling runner. Consumer adapters own Cargo metadata, original-input
+validation and the v1 release receipt. The maintainer owns commits, tags and pushes;
+agents must never execute these one-shot commands or resume them. Publication is a
+separate explicit action. Build, validation and recovery artifacts remain retained.
 
 | Command | Effect | Owner |
 | --- | --- | --- |
-| `make release-plan VERSION=…` | Inspects and previews a proposed version; changes nothing | Contributor |
-| `make release-check` | Tests the release helpers locally; performs no release | Contributor |
-| `make patch`, `make minor`, `make major`, `make bump-x VERSION=…` | Validates and prepares the bounded release files | Maintainer or explicitly authorized preparation |
-| `make release-patch`, `make release-minor`, `make release-major`, `make release-x VERSION=…` | Prepares, commits, tags and atomically pushes the repository release | Maintainer only |
-| `make package` | Verifies a local package without uploading | Contributor |
-| `make publish-dry-run` | Runs Cargo's registry checks without uploading | Maintainer |
-| `make publish` | Uploads the current library version to crates.io | Maintainer only |
+| `make release-plan VERSION=minor` | Preview the proposed version without effects | Contributor |
+| `make release-check` | Run isolated release adapter/runner regressions | Contributor |
+| `make release-patch` | Increment patch, validate, prepare, commit/tag and atomically push | Maintainer |
+| `make release-minor` | Increment minor/reset patch through the same workflow | Maintainer |
+| `make release-major` | Increment major/reset lower components through the same workflow | Maintainer |
+| `make release-resume VERSION=X.Y.Z` | Continue that exact retained release plan | Maintainer |
+| `make release-tag-check` | Inspect current local annotated tag and receipt | Contributor |
+| `make publish-dry-run` | Run Cargo registry admission without uploading | Maintainer |
+| `make publish` | Upload the current package to crates.io | Maintainer |
 
-## Preview and preparation
+## Pending notes and compatibility
 
-`make release-plan VERSION=patch` accepts patch, minor, major or an exact x.y.z
-and performs no effects. `make patch`, `make minor`, `make major` and
-`make bump-x VERSION=x.y.z` prepare release files after validating clean committed
-source. Only the first release may reuse the initial package version, before
-any version tag or completed local receipt exists. Subsequent releases must
-increase it. Breaking pre-1.0 contracts use a minor version and a hard cut;
-routine implementation does not allocate a version per slice.
+Read [the changelog rules](../rules/changelogs.md) before maintaining notes. Keep
+one current pending entry above finalized history and preserve historical bytes.
+The selected undated `0.3.0` includes the complete pending batch since `0.2.3`;
+its release workflow hard cut requires a minor version before 1.0. A numbered
+pending heading must agree with the selected release command. Changelog presentation
+does not gate registry publication or prove package publication.
 
-Keep the latest release or one populated current draft at the top of
-`CHANGELOG.md`, without an Unreleased section or separate notes queue. Use
-`## [Draft]` while the next version is undecided. A maintainer-selected undated
-numbered draft may occupy the same top position. The explicit preparation/release
-command selects the final version; an earlier numbered future draft is provisional.
-Preparation relabels that section and assigns the date, preserving its notes and
-historical bytes. For example, with package `0.2.0` and draft `0.2.1`,
-`make release-minor` selects `0.3.0` and relabels the same notes during preparation;
-`make release-patch` selects `0.2.1`.
-It rejects empty, duplicate, misplaced or competing drafts before mutation.
-Undated imported historical versions remain history, not competing future drafts.
-Preparation cannot promote a historical top section to a new draft or overwrite
-an existing target version. Failed preparation restores the exact original label
-and notes along with the other release files.
-Changelog presentation does not gate registry publication.
+The workspace owns package versions; selecting notes changes neither manifest nor
+lockfile. `release-plan` accepts patch/minor/major or an exact preview, but one-shot
+release execution accepts the three common increments. The old `bump-x`, `patch`,
+`minor`, `major`, `release-x`, `release-stage`, `release-commit` and `release-push`
+commands are removed. Use the selected common one-shot command; after interruption,
+use `release-resume` once preparation has started. A preflight or validation-only
+failure retries the normal target against current reviewed source with fresh
+preflight and the complete gate. Do not infer completion from old
+standalone prepared metadata: inspect its original receipt/source/tag and retained
+backups before choosing a disposition. No compatibility release workflow is retained.
 
-The workspace manifest owns the package version; the changelog owns selected
-notes and dated history. The initial `0.1.0` history remains undated. Selecting
-draft notes runs no release/version transaction.
-Finish source, changelog and handoff edits before the maintainer commits and
-starts release work. Agents must never create or amend commits, including
-through release scripts.
+## Maintainer execution
 
-Preparation runs `make release-verify`, the complete native and tooling gate
-described in [development](development.md). Required tools are the pinned Rust
-toolchain, rustfmt, Clippy, Rust 1.91.0, Bash, Git, Make, Perl with core JSON::PP
-and Digest::SHA, ripgrep, flock, ShellCheck and a SHA-256 implementation. Local
-host-specific setup, including GNU Make and flock on macOS, is documented in
-[the supported host matrix](development.md#supported-host-scope).
-Shared Tooling snapshot verification precedes locked dependency fetch and offline
-compilation. Version mutation uses an offline Cargo update.
+Commit and review the completed source before starting a release. Set the intended
+`RELEASE_REMOTE` and `RELEASE_BRANCH` explicitly when they differ from `origin` and
+`main`. Exactly one release selection is admitted. All three increments run the same
+complete `release-verify` gate; see [development](development.md). Required tools are
+GNU Make, Bash 3.2 or newer, Git, core Perl modules, SHA-256, ShellCheck, ripgrep, flock
+and cargo-sort 2.1.4 plus the declared Rust toolchains. Install the formatter during
+explicit developer setup; validation never installs it. Supported host evidence
+remains separately qualified.
 
-After validation, preparation updates only root `Cargo.toml`, `Cargo.lock`,
-`CHANGELOG.md` and generated `docs/release.json`. The v1 receipt binds the exact
-validated source commit, date, version and hashes of the manifest, lockfile,
-changelog and unchanged member manifest. Package versions inherit the root
-workspace value. Failed mutation restores the original release files and any
-prior receipt. Preparation never stages, commits, tags, pushes or publishes.
+The runner selects the source SHA, previous/candidate versions, UTC date, branch and
+single push URL before mutation. Preflight admits pending notes and rejects unrelated
+staged/unstaged/untracked work and changed original manifest/lock/receipt. It verifies
+the snapshot and fetches the selected locked dependency cache. The full gate runs
+offline; a consumer validation sidecar binds the original source, selections and
+manifest/lock/member/notes bytes before preparation. Missing evidence is never approval.
 
-`make release-check` reruns isolated helper regressions here; copied tests are
-not qualification until executed against the adapted helpers. It exercises
-the real `release-patch`, `release-minor` and `release-major` Make entry points
-against substituted Git/Cargo/validation commands. `make hooks-check`
-checks formatting/index preservation without creating commits. Failed fixtures
-retain logs under `target/`.
+Preparation requires those exact original inputs. It finalizes the matching pending
+notes and edits only root `Cargo.toml`, this package's `Cargo.lock` version and generated
+`docs/release.json`. No dependency update occurs. Cargo checks the selected offline
+metadata and non-mutating `fmt-check`, and the unchanged v1 receipt binds source,
+date, version, gate and exact
+manifest/lock/member/changelog hashes. Exact original backups remain under
+`target/release-backup.*`; ordinary preparation failure restores the original metadata.
 
-## Maintainer execution and recovery
+The shared runner alone stages the four explicit release files, records the exact
+index tree, creates `Release X.Y.Z` and annotated `vX.Y.Z`, and pushes exactly:
 
-From committed clean `main` with the intended origin configured, the maintainer
-can use `make release-patch`, `make release-minor`, `make release-major` or
-`make release-x VERSION=x.y.z`. These prepare, stage the exact release files,
-create a release commit and annotated tag, and atomically push `main` and that
-tag. Agents must not run commit-producing commands.
+```bash
+git push --no-follow-tags --atomic "$remote" \
+  "HEAD:refs/heads/$branch" "refs/tags/v$candidate:refs/tags/v$candidate"
+```
 
-Individual commands are `release-stage`, `release-commit`, `release-tag-check`
-and `release-push`. Staging must start at the validated source. The release
-commit must directly follow that source. Pushing requires a clean `main`, the
-matching annotated tag at HEAD and unchanged receipt-bound release files.
-It uses no force push and sends no unrelated tags.
+This disables implicit tag publication and requires both selected refs to succeed
+together. It performs no registry upload, deployment, additional version bump or
+post-release cleanup. Read-only plan inspection and isolated tests do not authorize
+running this workflow.
 
-After failed preparation, fix the cause and retry. After successful preparation,
-resume the failed step without bumping again. If tagging or pushing fails after
-commit, retain the commit/tag and reconcile before retrying the exact step.
-Release operations retain build artifacts. `make clean` is a separate explicit
-cleanup action; never discard recovery evidence as ordinary cleanup.
+## Exact interruption recovery
+
+Preflight and validation-only failures create no new release plan or prepared
+metadata. Retry the normal selected target after fixing/reviewing source; it selects
+the current source and repeats preflight and the full gate. Earlier failure logs
+remain retained. Safe earlier plans at preflight/validate are archived in unique
+attempt directories after checking base, destination and absence of preparation/tag
+effects. An earlier validation sidecar is also copied to a unique retained directory
+before a new successful gate records its exact original inputs; no proof is reused.
+
+Immediately after successful validation, before preparation can mutate metadata,
+the runner retains `.git/release-state/X.Y.Z.plan`, its NUL-separated release paths
+and the consumer `.validation.json` evidence. The directory lock records its owner;
+inspect that owner before disposing of a stale lock. Never steal an active release
+lock or discard plans, source backups, validation logs or build artifacts as cleanup.
+
+Inspect the saved source/date/version/destination, current metadata/index/HEAD/tag
+and exact remote refs before resuming. `make release-resume VERSION=X.Y.Z` uses the
+saved phase without incrementing again. Completed commit/tag/push identities are
+reconciled rather than blindly repeated. Lost push replies can resolve to the exact
+already-published branch and tag. Changed destinations, unrelated work, receipt drift,
+missing original validation and conflicting identities reject. A normal release
+target rejects every unfinished prepared plan, even if a partial/prepared manifest
+would otherwise select a different next version. Resume never increments again.
+
+The local resume wrapper checks retained prepared evidence before dispatch and the
+exact local annotated tag after completion. Completed replay validates local receipt/
+tag evidence; the runner's complete phase performs no remote push or observations.
+An interrupted multi-file metadata replacement may leave a partial candidate; this
+fails prepared admission. Review the exact saved inputs/backups and restore or finish
+the intended candidate before resuming. Do not launch a fresh increment from partial
+metadata, overwrite a tag, force-push or fall back to separate branch/tag pushes.
 
 ## Registry publication
 
-`make package` verifies a local package during development without uploading.
-`make publish-dry-run` and `make publish` delegate directly to
-`cargo publish --locked --registry crates-io -p ic-backup`, with `--dry-run`
-for the former. Cargo owns package-file cleanliness, locked dependency checks,
-package compilation, registry eligibility and authentication. Commit changes to
-files included in the package before publishing. The dry run verifies without
-uploading; `make publish` uploads the current library version.
+`make publish` delegates the current library package's admission to Cargo with
+`--locked --registry crates-io`; the package inherits publication policy from the
+workspace. `make publish-dry-run` performs that admission without uploading. Neither
+command uses changelog presentation, release receipt or local tag as a registry gate.
+Both share release exclusion and perform no repository version or Git transaction.
+A successful repository push proves neither crates.io publication nor downstream
+adoption. Follow-up publication is an explicit maintainer action.
 
-Receipts and annotated tags govern the repository release transaction. Registry
-publication uses the current checkout independently of that receipt and tag;
-development changelog edits and later publishing-configuration commits do not
-require an extra version bump just to satisfy the release helpers. Cargo and
-crates.io enforce whether the chosen package version can be published.
-Publication leaves existing receipts, versions and tags unchanged.
+## Focused qualification
 
-Repository tags, registry publication and live IC backup/restore are separate
-effects. Passing the native gate proves only implemented behavior; platform
-and application safety need their own qualification evidence.
+`make release-check` exercises actual consumer Make entry points with Git/Cargo
+substitutes, plus the exact vendored runner's command-stub regressions. It covers
+all three increments, identical phase order, exact staging/push, failure before
+mutation, dependency bootstrap, original-input validation, retained metadata/history,
+rollback, lost commit/tag/push replies and completed replay. Fixture command traces
+and failure evidence are retained under `target/shared-release-tests.*`.
+
+`make shell-check`, `make shared-tooling-check` and `make tooling-check` cover syntax,
+lints, pinned bytes/modes and rejection/evidence behavior. These are focused tooling
+checks, not actual releases, native macOS qualification or real registry publication.
+The full `make ci`/`make release-verify` gate remains separately authorized/configured.

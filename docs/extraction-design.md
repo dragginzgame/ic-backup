@@ -652,6 +652,28 @@ artifact trees. This is a retained local artifact-set declaration, not the propo
 complete `BackupManifestRecord`: authenticated capture/transfer, consistency/effect
 evidence and product terminal admission remain necessary. It releases no references.
 
+Explicit fresh local restore-source verification now joins both retained original
+plans, immutable safety requirement and exact local download-manifest digest with
+the unchanged guarded source journal. Canonical owners require same network/release,
+existing selected IDs and complete Durable source coverage. A read-only selection
+borrows original artifacts without rebinding; a subset still needs application
+qualification. Every original source tree is verified, including those outside that
+subset, with original records re-admitted before/after traversal under both layout
+lifetimes. Generic integration source digests are not reinterpreted. Local replay
+performs no fresh verification; no transfer, upload/load/start, current authority,
+application safety, terminal or reference/fence release proof follows from this join.
+
+Private operation-bound local restore artifact staging is also implemented. Complete
+fresh original-source admission precedes a no-follow descriptor copy into a new private
+direct child of the held restore layout. Copied and freshly checked destination hashes
+must match the exact original artifact checksum. Retained declarations are re-admitted
+before returning; original accounting/fences/references remain unchanged. Occupied
+destinations reject and failures/drop retain unfinished bytes. Explicit retained-copy
+verification needs exact original metadata and copy bytes, without reading source trees
+or recreating a copy. Staging is not durable publication; future byte custody, backend
+upload/extent completeness and current dispatch/application safety remain separate.
+See [the maintained boundary](extraction-boundary.md#private-original-operation-restore-artifacts).
+
 ## 12. Filesystem custody, durability and retention
 
 Layout lifetime exclusion and durable reference retention are implemented with

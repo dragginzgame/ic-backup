@@ -1,0 +1,94 @@
+{
+   "adaptation" : "Reuse exact original-source admission, opaque operation identity, existing safe descriptor-copy/checksum and JournalLock owners. Add fixed direct-child private staging and explicit retained-copy verification; source absence is allowed only for copy verification with exact retained metadata. No new records/digests/accounting or authority flags.",
+   "consumer_disposition" : "Canic consumers remain read only/unchanged. Exact reference excerpts identify callers without claiming behavioral inspection outside stated ranges. Existing source provenance/licenses remain unchanged.",
+   "consumer_references" : [
+      {
+         "excerpt" : "pub(super) fn stage_upload_artifact(",
+         "line" : 41,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "    stage_upload_artifact_at_barrier(config, journal, operation, || {})",
+         "line" : 46,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn cleanup_upload_staging(",
+         "line" : 49,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn stage_upload_artifact_at_test_barrier(",
+         "line" : 80,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "    stage_upload_artifact_at_barrier(config, journal, operation, barrier)",
+         "line" : 86,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "fn stage_upload_artifact_at_barrier(",
+         "line" : 89,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "    super::artifact::stage_upload_artifact_at_test_barrier(&config, &journal, operation, || {",
+         "line" : 170,
+         "path" : "crates/canic-backup/src/restore/runner/tests.rs"
+      },
+      {
+         "excerpt" : "    artifact::{cleanup_upload_staging, stage_upload_artifact},",
+         "line" : 10,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    let staged_artifact = stage_upload_artifact(config, journal, &operation)?;",
+         "line" : 199,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    cleanup_upload_staging(config, &prepared.operation)?;",
+         "line" : 279,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "    cleanup_upload_staging(config, &prepared.operation)?;",
+         "line" : 404,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/tests/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_source/mod.rs",
+      "crates/ic-backup/src/ops/persistence/mod.rs",
+      "crates/ic-backup/tests/local_restore_source.rs"
+   ],
+   "contract" : "docs/contracts/local-restore-artifact.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Exact source bytes retained read only; no product source copied.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               225
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs",
+         "retained_copy" : "target/local-restore-artifact-source.TpBbbV/crates/canic-backup/src/restore/runner/artifact.rs",
+         "sha256" : "d3e34cb28e1c60c05859e471be028e78a09fb8aab758ee12c51a650b10156bbc"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native exact local original-record/copy bytes/private permission/rejection/interruption recovery only. Stable noncooperating destination/byte custody, actual IC upload/extent/authentication, application safety, command dispatch and terminal/fence/reference release remain independently qualified.",
+   "source_findings" : [
+      "Source staging requires UploadSnapshot kind, existing backup/artifact paths and checksum; descriptor copying verifies exact staged bytes.",
+      "Source removes stale operation roots before staging and deletes staging on Drop and runner cleanup. These deletions are not imported: unfinished local recovery evidence remains retained.",
+      "Source upload kind/runner command integration is not imported. Generic local original operations associate exact selected artifact bytes without declaring an executable upload request or effect permission."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "cb596fc722dad1b0b6fb94c9fd42511920244f57",
+   "source_worktree_dirty" : false,
+   "version" : 1
+}

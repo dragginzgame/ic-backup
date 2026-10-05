@@ -256,6 +256,37 @@ See [the contract and independent goldens](contracts/download-manifest.json) and
 `cargo test --offline --locked -p ic-backup --lib download_manifest` and
 `cargo test --offline --locked -p ic-backup --test execution_settlement`.
 
+`policy::local_restore_source::validate` joins the original restore/source plans,
+requirement and exact local manifest without IO. Its selected artifacts borrow the
+complete original durable source; no IDs are rebound. Opt into this local source
+binding by retaining the existing download-manifest digest as `source_artifacts`;
+generic integration artifact digests keep their existing meaning.
+`DownloadJournalGuard::read_download_manifest` reads exact retained evidence while
+borrowing its held original journal, without reacquiring that journal's lock.
+`verify_local_restore_source` additionally admits the retained requirement and both
+plans before/after fresh no-follow checks of every source tree, including artifacts
+outside a restore subset. The view borrows both layout lifetimes. Record-only replay
+never invokes this explicit verification. No references, spending or obligations change;
+stable noncooperating bytes and actual capture/transfer/application safety remain
+integration-owned. See [the contract](contracts/local-restore-source.json) and
+[fresh inspection](local-restore-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib local_restore_source` and
+`cargo test --offline --locked -p ic-backup --test local_restore_source`.
+
+`DownloadJournalGuard::stage_local_restore_artifact` binds a private copy to an
+original operation and checksum after complete fresh source verification. Existing
+destinations reject, and failures/drop preserve unfinished bytes. Explicit
+`verify_staged_local_restore_artifact` re-admits retained originals and hashes the
+copy without re-reading source trees or repeating a copy. Both views borrow the
+original guards; no records, references, spending or fences change. Staging is
+not durable publication or upload/load authority. Destination custody and actual
+backend/application qualification remain integration-owned. See
+[the contract](contracts/local-restore-artifact.json) and
+[fresh inspection](local-restore-artifact-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal`,
+`cargo test --offline --locked -p ic-backup --lib ops::artifacts` and
+`cargo test --offline --locked -p ic-backup --test local_restore_source`.
+
 `model::restore_safety` retains an immutable original restore/source/artifact/safety
 requirement. Persistence requires both original plans under unchanged layout guards
 and never replaces the 1 KiB declaration. Ephemeral exact load/start requests and
@@ -341,7 +372,7 @@ entries do not establish IC Backup qualification.
 
 The pinned development toolchain, Rust 1.91.0, rustfmt and Clippy are required on
 each native host. Repository tooling requires Git, GNU Make, Bash, Perl with core
-JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck and either `sha256sum` or
+JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck, cargo-sort 2.1.4 and either `sha256sum` or
 `shasum`. Native process fixtures also require Python 3. The standard Unix utilities
 listed below may use their GNU or BSD implementations.
 
@@ -351,7 +382,10 @@ tools and Homebrew, then run `brew install flock make ripgrep shellcheck`; provi
 Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
 `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through
 rustup, then run `rustup show active-toolchain` and
-`rustup toolchain install 1.91.0 --profile minimal` in this checkout. CI installs
+`rustup toolchain install 1.91.0 --profile minimal` in this checkout. Install the
+reviewed manifest formatter with `cargo install cargo-sort --version 2.1.4 --locked`,
+then run `make install-hooks` once per clone or after updating the hook contract.
+Setup is explicit; hooks and validation never install tools. CI installs
 the host-specific tooling and uses the same native validation gate on all three
 hosts, with additional system Bash 3.2 tooling checks on macOS. These setup paths
 and configured jobs are not evidence that the pending native macOS runs passed.
@@ -360,12 +394,24 @@ and configured jobs are not evidence that the pending native macOS runs passed.
 
 `make help` lists the command family. `check`, `clippy`, `test`, `doc`,
 `check-msrv` and `package` select `ic-backup` explicitly. `fmt` formats the
-workspace; `fmt-check` checks it. `shell-check`, `release-check` and `hooks-check`
+workspace after `cargo sort --workspace`; `fmt-check` independently checks both
+manifest ordering and Rust formatting with the same pinned cargo-sort version.
+`shell-check`, `release-check` and `hooks-check`
 validate contributor tooling. `shared-tooling-check` verifies the exact local
 snapshot; `tooling-check` tests its integrity and CI diagnostics without network
 or compilation. [Shared adoption](shared-tooling.md) identifies the reviewed
 source and the product overlay. `version` and `release-plan` inspect release
 metadata without changing the workspace.
+
+The selected `0.3.0` release tooling uses the exact vendored common runner.
+Patch/minor/major share one workflow and explicit branch/remote inputs; exact
+interruption recovery uses `release-resume VERSION=X.Y.Z`. Old standalone
+preparation/stage/commit/push commands are removed. Consumer adapters own original
+validation evidence and bounded package metadata, and preserve dependency selection,
+build artifacts and source backups. `release-check` runs actual Make entry points
+with Git/Cargo substitutes plus the common runner's isolated regressions. Read
+[the release guide](releasing.md) before using maintainer-owned commands; agents
+never execute a real one-shot release or resume. `make -n` remains read-only.
 
 `publish-dry-run` and `publish` delegate to Cargo for the current library version.
 They use locked dependencies and crates.io. Cargo checks package cleanliness and
@@ -390,9 +436,10 @@ thiserror, pinned `ic_principal` conversion and Unix rustix/command-fds
 declarations belong in `[workspace.dependencies]`,
 with package-level entries inheriting them. There are no Canic dependencies or
 sibling checkout patches.
-License metadata also inherits from the workspace. The member's `LICENSE` link
-points at the maintained root MIT notice; Cargo includes its exact regular-file
-content and contributor attribution in the standalone crate archive.
+License metadata also inherits from the workspace. The member's regular `LICENSE`
+copies the maintained root MIT notice exactly, preserving contributor attribution
+in the standalone crate archive. Update both copies together; a tracked symlink
+would violate the shared index-snapshot formatting contract.
 
 Run checks targeted to changed packages and behavior while developing. Full
 validation requires a maintainer request or CI. `make ci`, `make validate` and
@@ -410,15 +457,19 @@ source and builds the packaged crate; it does not publish it.
 
 ## Formatting and evidence
 
-Install the tracked pre-commit formatter once per clone with `make hooks-install`.
-It refuses unstaged Rust source/configuration, formats staged source and requires
-review/restaging if formatting changes files. It never stages automatically.
-The installer preserves an existing different hooks path. Agents still leave
-source uncommitted for the maintainer.
+Install the exact shared pre-commit formatter with `make install-hooks`. It formats
+an isolated export of the selected index, copies back and automatically refreshes
+only selected regular files. Partial staging rejects before formatting; unrelated
+tracked/untracked edits remain untouched. A failed formatter leaves the working
+files and index unchanged. Review concurrent copy/staging failures before retrying.
+The installer preserves different, inherited or disabled hook paths and executable
+private hooks. `hooks-install` is retired; update setup automation to the standard
+command. Agents still leave source uncommitted for the maintainer.
 
 Release-helper regressions use isolated Git/Cargo/Make substitutes, with no real
 commits, tags, pushes or uploads. Hook regressions use temporary Git indexes and
-rustfmt, with no commits. Failed fixtures remain under `target/` for inspection.
+the actual Make formatting targets, cargo-sort and rustfmt, with no commits.
+All consumer fixtures and registered case logs remain under `target/` for inspection.
 [Tooling provenance](tooling-provenance.json) records the inspected sibling source
 bytes; the MIT notices remain in the root license.
 

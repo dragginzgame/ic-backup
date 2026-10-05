@@ -1,0 +1,48 @@
+{
+   "bounds" : {
+      "copy_buffer_bytes" : 65536,
+      "journal_io_bytes" : 1048576,
+      "manifest_io_bytes" : 1048576,
+      "plan_io_bytes_each" : 1048576,
+      "requirement_io_bytes" : 1024,
+      "snapshot_token_bytes" : 256,
+      "targets" : 1024
+   },
+   "independent_qualification" : [
+      "Sequential source/copy observations and pathname destination creation require stable noncooperating destination/byte custody. A borrowed view does not freeze the filesystem or admit future backend bytes.",
+      "Actual authenticated snapshot capture, complete backend extents/upload, application subset safety, current effect-boundary permissions, command custody/dispatch and terminal proof remain independently qualified.",
+      "No provider call, paid effect, new spending, Applied receipt, upload/load/start permission, fence/reference release or cleanup API is created."
+   ],
+   "original_binding" : [
+      "Exact original restore/source plans, requirement, complete local manifest and unchanged original source journal are admitted by existing canonical owners. No new record, persistence schema, digest encoder, progress/accounting owner or authority flag.",
+      "Original opaque u64 operation sequence resolves the exact original selected target and its snapshot token, timestamp, size, source path and retained checksum. Sequence association is not an upload request or dispatch permit.",
+      "Returned private-field view borrows both layouts, original plans/requirement and source journal. It exposes exact original operation/artifact identities and the checked copy path without promising future path or byte stability."
+   ],
+   "owners" : {
+      "manifest_digest" : "docs/contracts/download-manifest.json",
+      "manifest_schema" : "docs/contracts/download-journal.schema.json",
+      "original_admission" : "DownloadJournalGuard::admit_local_restore_source",
+      "original_source_contract" : "docs/contracts/local-restore-source.json",
+      "requirement_schema" : "docs/contracts/restore-safety-requirement.schema.json",
+      "retained_copy_verification" : "DownloadJournalGuard::verify_staged_local_restore_artifact",
+      "secure_copy" : "ops::artifacts::stage_relative_path",
+      "stage" : "DownloadJournalGuard::stage_local_restore_artifact",
+      "view" : "ops::persistence::LocalRestoreArtifactView"
+   },
+   "recovery" : {
+      "operation" : "Explicit verification re-admits retained original metadata before/after fresh no-follow hashing of the copy under original sequence exclusion.",
+      "rejection" : "Missing/unsafe/incomplete/corrupt copies and changed original custody reject without repair or recreation. Operator-owned disposition must preserve needed recovery evidence.",
+      "replay" : "Ordinary resume and terminal replay never invoke fresh source/copy verification.",
+      "source_bytes" : "No source tree reads or repeated copies. Original trees may be absent; exact retained original plans/requirement/manifest/journal are still required."
+   },
+   "staging" : {
+      "durability" : "Staging only; no fsync or durable publication/complete transfer attestation.",
+      "exclusion" : "Existing JournalLock on exact destination plus borrowed source download-journal and both layout exclusions.",
+      "existing_destination" : "Reject without adoption, replacement, deletion or automatic retry.",
+      "failures" : "Retain partial/full copies, exact original records, spent attempts, fence obligations and unfinished source references. Drop deletes nothing.",
+      "path" : "restore-artifact-{original_operation_sequence}.tmp directly under held restore layout",
+      "permissions" : "New directories 0700 and files 0600; trusted destination parent is the operator-selected held restore layout.",
+      "verification" : "Complete fresh original source verification before descriptor-based no-follow copying; copied checksum and fresh destination checksum equal original artifact checksum; retained original metadata is re-admitted before returning."
+   },
+   "version" : 1
+}

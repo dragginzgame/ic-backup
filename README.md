@@ -161,9 +161,13 @@ implemented foundation includes:
   recovery, exact application update envelopes and reserved reconciliation checks
   across interruption;
 - immutable original execution settlement checkpoints with exact journal histories
-  for local replay; and
+  for local replay;
 - immutable manifests of the exact verified local download set, with local record
-  replay that preserves original snapshot/checksum evidence.
+  replay that preserves original snapshot/checksum evidence;
+- fresh local restore-source verification under the original requirement, exact
+  manifest and existing selected canister IDs; and
+- private operation-bound restore artifact copies and explicit retained-copy
+  verification that preserves partial evidence and original obligations.
 
 These components have native regression evidence for their local filesystem,
 record and process behavior. They do not establish real Internet Computer backup
@@ -203,7 +207,8 @@ of 1.91.0. The workspace owns package metadata, dependency declarations and
 lints. Builds stay in this repository's `target/` directory.
 
 ```bash
-make hooks-install
+cargo install cargo-sort --version 2.1.4 --locked
+make install-hooks
 make check
 make test
 ```

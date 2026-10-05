@@ -28,8 +28,8 @@
 The maintainer requested adoption of Shared Tooling as the top-level Dragginzgame
 engineering rules on 2026-10-04. [AGENTS.md](../AGENTS.md) identifies the local
 product overlay; [DRAGGINZGAME.md](../DRAGGINZGAME.md) is the reviewed, byte-for-byte
-local copy of the upstream engineering rules. Its upstream-only validation section
-does not prescribe consumer commands.
+local copy of the upstream engineering rules. Common validation rules apply here;
+Shared Tooling's own `AGENTS.md` script-suite commands apply only upstream.
 
 ## What this adoption means
 
@@ -52,16 +52,27 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 The inspected upstream repository is
 [`dragginzgame/shared-tooling`](https://github.com/dragginzgame/shared-tooling).
 The current committed baseline and tooling revision is
-[`41e1fd0ba41460bd2127cbf98ac8a4b2b2020d3e`](https://github.com/dragginzgame/shared-tooling/tree/41e1fd0ba41460bd2127cbf98ac8a4b2b2020d3e),
-reviewed on 2026-10-05 from a clean read-only source checkout. The refresh uses
-the upstream Git-object exporter, not copied mutable working-tree bytes. The
-manifest's source was deliberately recreated with the checkout's canonical HTTPS
-remote, replacing the earlier SSH spelling of the same repository. Adding
-`DRAGGINZGAME.md` expands the declared set from eleven to twelve files and binds
-the engineering rules and linked guides to the same revision as the tools.
-Future upstream edits do not change the adopted copy automatically. Product
-choices stay within the mandatory common baseline's delegated scope; no exception
-is claimed for tracking, validation or required macOS support.
+[`c0206f1943238e21bd00fbe01658e6a0864c24fa`](https://github.com/dragginzgame/shared-tooling/tree/c0206f1943238e21bd00fbe01658e6a0864c24fa),
+reviewed on 2026-10-05. A read-only remote query confirmed that exact `HEAD`/`main`.
+The sibling and temporary source checkouts were clean. A clean temporary checkout
+of the reviewed commit supplies the upstream Git-object exporter. The file set
+expands from eighteen to twenty-two, adding Cargo dependency and Git-hook rules,
+the exact standard pre-commit hook and its installer. The refreshed release runner
+also distinguishes validation-only retries from prepared release recovery.
+No vendored file is patched locally. See [the review provenance](shared-tooling-review.json).
+
+The previous `b8537873ac124ad17b30e32aa23e9006a3e6ec21` files, manifest and audit
+record are retained under `target/shared-tooling-refresh.BOQlFZ/previous`,
+`previous.snapshot` and `previous-review.json`. That audit's separately hashed dirty
+proposals and all earlier evidence remain historical; this revision now commits
+the automatic changelog/root dependency rules plus the new hook contract.
+
+The earlier snapshot at `41e1fd0ba41460bd2127cbf98ac8a4b2b2020d3e` and all its
+exact files are retained under `target/shared-tooling-review.ztA5F9/previous`;
+its manifest is `target/shared-tooling-review.ztA5F9/previous.snapshot`. The
+refresh records the same canonical HTTPS source. Product choices stay within
+the shared baseline; no exception is claimed for required macOS support,
+release ordering, artifact retention or effect authority.
 
 [The snapshot manifest](../.shared-tooling.snapshot) binds the committed source,
 exact SHA-256 bytes and executable modes of the vendored principles, consumption
@@ -89,12 +100,61 @@ for the adapted release/hook helpers, not a Shared Tooling snapshot identity.
 The inspected Shared Tooling revision contains no standalone license file; retain
 its source attribution rather than assigning it a sibling's license notice.
 
+## Common release workflow adoption
+
+The maintainer selected pending `0.3.0` because replacing the public release
+workflow is breaking before 1.0. Existing pending implementation notes move into
+that same entry; package metadata remains `0.2.3`. The public patch/minor/major
+entry points invoke the exact vendored runner with explicit branch/remote inputs.
+`release-resume VERSION=X.Y.Z` continues its saved source/date/version/destination
+and phase. Conflicting selections reject; `make -n` remains read-only because local
+recipes omit the upstream example's recursive `+` prefix. The shared runner still
+owns all staging, commits, annotated tags and the exact atomic branch/tag push
+with `--no-follow-tags`. Consumers retain original metadata, validation evidence
+and build artifacts. See [the local release guide](releasing.md).
+
+The obsolete public preparation aliases and separate stage/commit/push workflow
+are removed, including arbitrary one-shot `release-x`. There is one current
+workflow, without compatibility wrappers. Consumer adapters reuse the existing
+v1 package receipt owner and retain original-input validation evidence under the
+runner's Git state directory. Bounded package version parsing and exact inherited
+member ownership remain unchanged. Preparation edits only the package's lockfile
+version; no Cargo update or dependency reselection occurs. Ordinary failures restore
+original metadata; interruption evidence/metadata backups remain retained.
+
+Standalone publication still delegates package admission to Cargo, and read-only
+version, plan and tag inspection remain available. Resume additionally checks
+retained validation/receipt evidence and the exact completed local tag, including
+when the shared plan is already complete. Consumer checks use actual Make entry
+points with Git/Cargo substitutes; they establish no real release/publication.
+Native macOS qualification remains pending. Snapshot integrity, consumer behavior
+and actual host/publication evidence are distinct.
+
+The committed rules now require automatic numbered pending headings and an explicit
+root Cargo dependency catalog. The selected `0.3.0` remains the next minor from
+finalized `0.2.3` because the complete batch breaks public release/setup commands;
+compatible slices extend it. All nine direct dependencies already inherit the root
+catalog. Cargo-sort 2.1.4 sorts both manifests without changing effective package
+metadata, dependency/feature selection or the lockfile. Package version selection
+and release transactions remain separately authorized.
+
+`make install-hooks` replaces `hooks-install` and activates the unchanged shared
+hook locally. Formatting uses an isolated exact index export, refreshes only selected
+files and rejects partial staging while retaining unrelated edits. The member license
+is now an identical regular copy of the root notice because the standard hook rejects
+symlinks anywhere in its tracked snapshot. The obsolete local installer is removed;
+its protected-hook-path obligation is covered by the stricter shared installer.
+Both `fmt` and `fmt-check` use the pinned manifest sorter before Rust formatting;
+the latter also admits prepared release metadata before staging. Setup installs
+tools explicitly and independent CI/release checks never mutate formatting.
+
 ## Local choices and evidence
 
 Backup contracts, v1 records, same-ID/same-release recovery, finite call authority,
 target ownership and the targeted-check boundary remain local. Rust stays at
-edition 2024, development 1.99.0 and MSRV 1.91.0. This adoption changes no crate
-API, dependency selection, version or live-effect authority.
+edition 2024, development 1.99.0 and MSRV 1.91.0. The library API, dependency
+selection, package version and live-effect authority are unchanged by this tooling
+adoption. Its release command hard cut is described above.
 
 The shared baseline and maintainer-provided local tracking instructions require
 GitHub issues as the sole record for bugs and follow-up work. For reusable Shared
@@ -120,13 +180,13 @@ Passing native macOS evidence remains pending; Linux checks and configured jobs
 alone cannot qualify it. Local release/hook regressions use portable SHA-256
 selection and Perl editing; the refreshed verifier handles empty Bash 3.2 arrays.
 
-The public GitHub description was inspected during this adoption. It still says
-the repository contains extraction design and contributor instructions, although
-the library now implements local artifacts, journals, plans and bounded IC codecs.
-Suggested replacement: "Host-side Rust library for Internet Computer backup and
-same-release recovery foundations: local artifacts, journals, plans and bounded IC
-codecs. Transport and runners are not yet implemented." Repository metadata was
-read only; no remote write or issue creation was performed.
+The stale design-only GitHub description was corrected with explicit maintainer
+approval and read back on 2026-10-05: "Host-side Rust foundations for Internet
+Computer backup and same-release recovery: local artifacts, journals, plans and
+bounded IC codecs. Transport and runners are not yet implemented." Initial
+automatic approval review rejected the remote metadata effect under audit-only
+authority; the update ran only after the maintainer separately approved its exact
+text. No issue, commit, tag, push or package publication was created.
 
 `make ci` preserves target order and stops at the first failure. It adds live
 target-labelled errors, a timing/result summary, a GitHub step summary when

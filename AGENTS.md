@@ -15,7 +15,8 @@ Exclude every path declared in `.shared-tooling.snapshot` from local branding
 and documentation rewrites; keep consumer guidance in unlisted local documents.
 
 This file is the product-specific overlay: backup contracts, effect targets,
-numeric bounds, commands, supported hosts and qualification gates stay local.
+numeric bounds, consumer adapters, supported hosts and qualification gates stay local.
+Release entry points follow the common command contract.
 Common engineering rules are mandatory; record maintainer-approved exceptions
 with their scope and reason. GitHub issues also own reusable feedback, with the
 baseline's evidence fields instead of a duplicate feedback file.
@@ -231,6 +232,27 @@ into an issue tracker or release authority.
   references. Complete backend transfer, authentic snapshots, consistency, full product
   manifests/terminal proof and fence/reference release remain independently qualified.
 
+- Explicit fresh local restore-source verification now joins the original requirement,
+  both exact retained plans, immutable local manifest and unchanged guarded download
+  journal. Reuse canonical same-network/release/ID subset and complete Durable source
+  owners. The opt-in source binding is the existing manifest digest; generic integration
+  artifact digests keep their meaning. Preserve existing 1 KiB requirement, 1 MiB IO,
+  1,024-target and 256-token-byte bounds, and both layout/journal lifetimes. Check every
+  original source tree, including artifacts outside a restore subset. No new record,
+  progress/accounting owner, provider, upload/load/start or terminal/release permit is
+  introduced. Integrations own authentic capture/complete transfer, stable noncooperating
+  bytes, application subset safety and effect-boundary permissions/custody.
+
+- Private local restore artifact staging now binds an original opaque operation
+  sequence to its exact selected source artifact and retained checksum. Reuse the
+  original-source admission and safe descriptor-copy owners under both layout
+  lifetimes. Create fixed direct children with 0700/0600 permissions; preserve
+  partial copies and reject occupied destinations without replacement or cleanup.
+  Explicit retained-copy verification checks exact retained originals and copy bytes
+  without re-reading source trees or creating an artifact. This staging has no fsync/
+  durable publication, spending transition, upload/load/start permit or release
+  admission. Integrations own stable noncooperating destination/byte custody.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.
@@ -305,14 +327,20 @@ was recorded. Linking provenance or describing implementation status is allowed.
   qualification; rerun it against the extracted production implementation.
 - Keep a root `CHANGELOG.md` with one open entry when meaningful implementation
   begins. Put the current draft or latest release first, with no Unreleased queue.
-  Use an undated `## [Draft]` until a maintainer selects a version. Do not allocate
-  one patch version per slice or bump without authority. Release preparation owns
-  final labeling; changelog presentation never gates registry publication.
+  Automatically maintain one numbered, undated `## [X.Y.Z]` under
+  [the shared changelog rules](rules/changelogs.md), using the latest finalized
+  release and the complete pending batch's compatibility impact. Keep a compatible
+  maintainer selection; never allocate one patch per slice or change package
+  versions without authority. Changelog presentation never gates registry publication.
 - Read [the release guide](docs/releasing.md) before release/version work.
   Preparing commands does not authorize running them. Agents may inspect
-  `release-plan` and test isolated helpers; maintainers own `release-commit`
-  and commit-producing `release-*` commands.
-- Use `make hooks-install` once per clone for the tracked pre-commit formatter.
-  Release validation checks formatting without editing source.
+  `release-plan` and test isolated helpers; maintainers own `release-patch`,
+  `release-minor`, `release-major` and `release-resume`. All delegate to the shared
+  runner; consumer adapters own metadata and validation, never Git effects.
+- Use `make install-hooks` once per clone for the exact shared pre-commit formatter.
+  Install cargo-sort 2.1.4 explicitly with `--locked`; `fmt` sorts Cargo manifests
+  before formatting Rust. The hook refreshes only selected files, rejects partial
+  staging and preserves unrelated edits. CI/release use matching non-mutating
+  `fmt-check`; prepared release metadata must also pass it before staging.
 - Report complete-batch readiness and material limitations. Passing one test
   does not prove a finished extraction or independently usable product.

@@ -1,0 +1,389 @@
+{
+   "adaptation" : "Reuse existing immutable restore safety requirement, original plans, local manifest/journal digest and durable integrity owners; add read-only same-ID subset projection and explicit guarded fresh join. No new record, persistence schema, accounting owner or authority flags.",
+   "consumer_disposition" : "Canic consumers remain read only/unchanged. Reference excerpts identify actual callers without claiming behavioral inspection outside stated ranges. Earlier source provenance/licenses remain unchanged.",
+   "consumer_references" : [
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&restore_ready_manifest(), None).expect(\"build plan\");",
+         "line" : 174,
+         "path" : "crates/canic-cli/src/restore/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"build plan\");",
+         "line" : 195,
+         "path" : "crates/canic-cli/src/restore/tests/mod.rs"
+      },
+      {
+         "excerpt" : "    RestorePlanner::plan(&manifest, mapping.as_ref()).map_err(RestoreCommandError::from)",
+         "line" : 158,
+         "path" : "crates/canic-cli/src/restore/mod.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"build restore fixture plan\");",
+         "line" : 202,
+         "path" : "crates/canic-backup/src/restore/tests/operational_readiness.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 8,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 53,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 65,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let mut plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 85,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let mut plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 101,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 122,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanner::plan(&manifest, Some(&mapping))",
+         "line" : 179,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, Some(&mapping)).expect(\"plan should build\");",
+         "line" : 202,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 223,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let in_place = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 240,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let mapped = RestorePlanner::plan(&manifest, Some(&mapping)).expect(\"plan should build\");",
+         "line" : 258,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 273,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 310,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 333,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 364,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 399,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanner::plan(&manifest, Some(&mapping))",
+         "line" : 441,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let err = RestorePlanner::plan(&manifest, Some(&mapping))",
+         "line" : 469,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "        RestorePlanner::plan(&manifest, Some(&mapping)).expect_err(\"duplicate targets should fail\");",
+         "line" : 493,
+         "path" : "crates/canic-backup/src/restore/tests/plan.rs"
+      },
+      {
+         "excerpt" : "    let staged_artifact = stage_upload_artifact(config, journal, &operation)?;",
+         "line" : 199,
+         "path" : "crates/canic-backup/src/restore/runner/execute.rs"
+      },
+      {
+         "excerpt" : "pub(super) fn stage_upload_artifact(",
+         "line" : 41,
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 319,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 348,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 363,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 381,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 404,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 451,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 491,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 554,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 583,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 619,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 669,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 719,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 822,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 989,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1038,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1055,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1239,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1281,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1334,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1376,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1420,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 1447,
+         "path" : "crates/canic-backup/src/restore/tests/apply_journal.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"uppercase hashes are valid\");",
+         "line" : 17,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 45,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 116,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 142,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let mut plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 162,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 173,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 196,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 247,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 283,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 309,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 340,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 426,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 457,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 473,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 503,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 520,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      },
+      {
+         "excerpt" : "    let plan = RestorePlanner::plan(&manifest, None).expect(\"plan should build\");",
+         "line" : 566,
+         "path" : "crates/canic-backup/src/restore/tests/apply_dry_run.rs"
+      }
+   ],
+   "consumers" : [
+      "crates/ic-backup/src/policy/local_restore_source/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_source/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/manifest/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/integrity/mod.rs",
+      "crates/ic-backup/src/test_support/local_restore_source/mod.rs",
+      "crates/ic-backup/tests/local_restore_source.rs"
+   ],
+   "contract" : "docs/contracts/local-restore-source.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               99,
+               188
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs",
+         "retained_copy" : "target/local-restore-source.1QbU5M/crates/canic-backup/src/restore/runner/artifact.rs",
+         "sha256" : "d3e34cb28e1c60c05859e471be028e78a09fb8aab758ee12c51a650b10156bbc"
+      },
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               37,
+               81
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/plan/mod.rs",
+         "retained_copy" : "target/local-restore-source.1QbU5M/crates/canic-backup/src/restore/plan/mod.rs",
+         "sha256" : "a9134cbbb6ec08e5144c5dc17201587326ae80e6f29bbd1cc1f727cd61380904"
+      },
+      {
+         "disposition" : "Read only; exact source input retained as evidence. No product source copied.",
+         "inspected_line_ranges" : [
+            [
+               122,
+               144
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/plan/validation.rs",
+         "retained_copy" : "target/local-restore-source.1QbU5M/crates/canic-backup/src/restore/plan/validation.rs",
+         "sha256" : "fa6139061870d05dc32d06b368801253f71ba79d0f264eed016ba305786ffad2"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native pure declaration/selection and guarded local original-record/no-follow byte/reference/spent-attempt recovery only. Actual IC capture/transfer, stable noncooperating bytes, application subset safety, dispatch/custody and terminal/fence/reference release remain independently qualified.",
+   "source_findings" : [
+      "Source restore planning validates manifest declarations while permitting optional target mappings and framework-derived ordering; the local same-ID requirement owner is reused instead, with no relocation/mapping or lifecycle-order import.",
+      "Source snapshot validation can retain a missing checksum as a readiness concern; the local durable source policy requires complete exact selected coverage and every retained checksum.",
+      "Source runner stages private checksum-verified descriptor-copied upload artifacts. No staging/cleanup/runner or upload is imported here: the local view is explicitly fresh source verification and proves no future copied bytes or command dispatch."
+   ],
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "c6da13cc478b76c83eb51f4600f5acd66e47501a",
+   "source_worktree_dirty" : true,
+   "version" : 1
+}

@@ -9,6 +9,10 @@ publish.workspace = true
 description = "Host-side snapshot backup and same-release recovery for Internet Computer canisters"
 readme = "../../README.md"
 
+[target.'cfg(unix)'.dependencies]
+command-fds.workspace = true
+rustix.workspace = true
+
 [dependencies]
 candid.workspace = true
 ic-management-canister-types.workspace = true
@@ -17,10 +21,6 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
-
-[target.'cfg(unix)'.dependencies]
-command-fds.workspace = true
-rustix.workspace = true
 
 [lints]
 workspace = true

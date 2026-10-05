@@ -15,6 +15,12 @@
 //! Immutable local download manifests reuse that exact v1 journal schema after
 //! fresh byte verification. Exact replay reads original retained records only,
 //! preserving snapshot/checksum provenance even when artifact trees are absent.
+//! Explicit local restore-source verification joins both original plans, retained
+//! safety requirement and exact local manifest before checking every source tree.
+//! Borrowed same-ID selection views grant no upload/load, application or release authority.
+//! Private operation-bound artifact copies check original and copied checksums;
+//! explicit retained-copy verification recovers without re-reading source trees.
+//! Failed copies and drop retain evidence, spending and source references without cleanup.
 //! Bounded physical inventories retain canonical declared parent forests; pure
 //! selection policy expands exact principals without live discovery or authority.
 //! Explicit effect graphs retain validated operation dependencies and project

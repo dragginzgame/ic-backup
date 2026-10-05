@@ -1,0 +1,37 @@
+{
+   "bounds" : {
+      "journal_io_bytes" : 1048576,
+      "manifest_io_bytes" : 1048576,
+      "plan_io_bytes_each" : 1048576,
+      "requirement_io_bytes" : 1024,
+      "snapshot_token_bytes" : 256,
+      "targets" : 1024
+   },
+   "independent_qualification" : [
+      "Sequential local byte observations require stable noncooperating byte custody and prove no atomic snapshot or future copied/upload bytes.",
+      "Authentic original capture/transfer/extent metadata, application subset safety/consistency and restored acceptance, exact current permissions, command custody and qualified dispatch remain integration-owned.",
+      "No provider calls, paid effects, upload/load/start permit, current Active fence, automatic receipt, terminal proof or fence/reference-release/prune admission is created."
+   ],
+   "local_effects" : [
+      "Held source download journal borrows source layout; returned view also borrows restore layout/plans/requirement. Exact retained requirement/plans/manifest/journal are admitted before and after fresh no-follow checks of every original source tree, including source artifacts outside a restore subset.",
+      "The manifest owner admits reads under an already-held download journal without reacquiring its lock, retaining the unchanged original journal check and expected full digest. Existing standalone manifest replay remains record-only.",
+      "No data records, spending, fence obligations or references are changed. Missing/unsafe/changed evidence and bytes, contention or replaced custody return typed failures without repair or reset."
+   ],
+   "original_binding" : [
+      "Exact full original restore/source plan hashes and original requirement digest; same declared network/release and existing selected restore IDs contained in the source selection.",
+      "Opt-in local source binding requires source_artifacts equal the existing complete canonical DownloadJournalRecord digest. Generic integration artifact digests are not reinterpreted or rejected by their existing owners.",
+      "Manifest requires exact full original source intent, complete selected-source coverage and every entry Durable with its retained checksum. Exact snapshot tokens, metadata and derived paths are reused, never rebound.",
+      "Selected restore artifact views borrow the original complete durable source declarations in canonical principal order. Source and restore callers can differ; current permissions remain separate."
+   ],
+   "owners" : {
+      "complete_source_policy" : "policy::download_integrity::validate",
+      "guarded_verification" : "DownloadJournalGuard::verify_local_restore_source",
+      "manifest_digest" : "docs/contracts/download-manifest.json",
+      "manifest_schema" : "docs/contracts/download-journal.schema.json",
+      "original_source_policy" : "RestoreSafetyRequirementRecord::validate_plans",
+      "requirement_schema" : "docs/contracts/restore-safety-requirement.schema.json",
+      "selected_view" : "policy::local_restore_source::LocalRestoreSourceView"
+   },
+   "recovery" : "Drop/reopen retains exact original requirement/manifest/journal and pending spent attempts. Fresh verification is explicitly repeated only when requested; ordinary manifest replay and terminal replay perform no artifact/provider verification.",
+   "version" : 1
+}

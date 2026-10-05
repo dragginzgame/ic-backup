@@ -41,18 +41,18 @@ sub parts {
 
 sub next_version {
     my ($requested) = @_;
-    my @old = parts(version());
-    my @new;
-    if ($requested eq 'patch') { @new = ($old[0], $old[1], $old[2] + 1); }
-    elsif ($requested eq 'minor') { @new = ($old[0], $old[1] + 1, 0); }
-    elsif ($requested eq 'major') { @new = ($old[0] + 1, 0, 0); }
-    else { @new = parts($requested); }
-    my $next = join '.', @new;
-    parts($next);
-    for my $i (0..2) {
-        last if $new[$i] > $old[$i];
-        die "target version must not decrease\n" if $new[$i] < $old[$i];
+    my $previous = version();
+    parts($previous);
+    my $next = $requested;
+    if ($requested =~ /\A(?:patch|minor|major)\z/) {
+        open my $helper, '-|', 'bash', 'scripts/ci/next-release-version.sh', $previous, $requested
+            or die "cannot inspect common release increment\n";
+        $next = do { local $/; <$helper> };
+        close $helper or die "common release increment rejected\n";
+        chomp $next;
     }
+    parts($next);
+    die "target version must not decrease\n" if compare_versions($next, $previous) < 0;
     return $next;
 }
 
@@ -76,17 +76,14 @@ sub changelog {
     my %seen;
     for my $section (@sections) {
         die "duplicate changelog section: $section\n" if $seen{$section}++;
-        parts($section) unless $section eq 'Draft';
+        parts($section);
     }
     die "changelog must have a current draft\n" unless @sections;
     my $draft = $sections[0];
-    # A release command owns the final version. A numbered future draft is a
-    # provisional label; never reinterpret imported history as new release notes.
-    die "top section is historical; add an undated draft above it\n"
-        if $draft ne 'Draft' && $draft ne $target
-            && compare_versions($draft, version()) <= 0;
-    die "another draft is open\n" if $draft ne 'Draft' && $seen{Draft};
-    die "selected version already has a section\n" if $draft ne $target && $seen{$target};
+    # A numbered pending release must match the selected command; retained
+    # historical sections are never rebound as new release notes.
+    die "pending changelog version conflicts with selected release\n"
+        if $draft ne $target;
     $text =~ /^## \[\Q$draft\E\]\n(.*?)(?=^## \[|\z)/ms
         or die "release draft must be undated\n";
     my $notes = $1;
@@ -121,6 +118,56 @@ if ($command eq 'version') {
     $text =~ s/(^\[workspace\.package\]\n(?:(?!^\[).)*?^version = ")[^"]+(")$/$1$target$2/ms
         or die "cannot update workspace package version\n";
     write_file('Cargo.toml', $text);
+} elsif ($command eq 'prepare-version') {
+    my ($target) = @args;
+    parts($target);
+    my $previous = version();
+    my $lock = read_file('Cargo.lock');
+    my $matches = $lock =~ s/(^\[\[package\]\]\nname = "ic-backup"\nversion = ")\Q$previous\E("$)/$1$target$2/mg;
+    die "lockfile must contain one exact original ic-backup version\n" unless $matches == 1;
+    my $manifest = read_file('Cargo.toml');
+    $manifest =~ s/(^\[workspace\.package\]\n(?:(?!^\[).)*?^version = ")[^"]+("$)/$1$target$2/ms
+        or die "cannot update workspace package version\n";
+    write_file('Cargo.toml', $manifest);
+    write_file('Cargo.lock', $lock);
+} elsif ($command eq 'validation-receipt' || $command eq 'validation-check') {
+    my ($path, $source, $date, $previous, $candidate, $mode) = @args;
+    parts($previous); parts($candidate);
+    die "invalid validation source/date\n" unless $source =~ /\A[0-9a-f]{40,64}\z/
+        && $date =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/;
+    if ($command eq 'validation-receipt') {
+        die "validation version changed\n" unless version() eq $previous;
+        my %files = map { $_ => sha256_hex(read_file($_)) }
+            qw(Cargo.toml Cargo.lock crates/ic-backup/Cargo.toml CHANGELOG.md);
+        write_file($path, JSON::PP->new->canonical->pretty->encode({
+            schema=>1,source=>$source,date=>$date,previous=>$previous,candidate=>$candidate,
+            gate=>'release-verify',files=>\%files,
+        }));
+    } else {
+        my $record = decode_json(read_file($path));
+        die "validation identity mismatch\n" unless $record->{schema} == 1
+            && $record->{source} eq $source && $record->{date} eq $date
+            && $record->{previous} eq $previous && $record->{candidate} eq $candidate
+            && $record->{gate} eq 'release-verify';
+        die "validation files mismatch\n" unless join(',',sort keys %{$record->{files}})
+            eq 'CHANGELOG.md,Cargo.lock,Cargo.toml,crates/ic-backup/Cargo.toml';
+        die "invalid validation check mode\n" unless $mode eq 'original' || $mode eq 'prepared';
+        for my $file (keys %{$record->{files}}) {
+            next if $mode eq 'prepared' && $file ne 'crates/ic-backup/Cargo.toml';
+            die "validated input changed: $file\n" unless sha256_hex(read_file($file)) eq $record->{files}{$file};
+        }
+    }
+} elsif ($command eq 'resume-validation-check') {
+    my ($path, $candidate) = @args;
+    parts($candidate);
+    my $proof = decode_json(read_file($path));
+    my $receipt = decode_json(read_file('docs/release.json'));
+    die "resumed validation differs from receipt\n" unless $proof->{candidate} eq $candidate
+        && $receipt->{version} eq $candidate && $proof->{source} eq $receipt->{source}
+        && $proof->{date} eq $receipt->{date};
+    system($^X, $0, 'validation-check', $path, $proof->{source}, $proof->{date},
+        $proof->{previous}, $candidate, 'prepared') == 0 or die "resumed validation failed\n";
+    system($^X, $0, 'verify') == 0 or die "resumed receipt failed\n";
 } elsif ($command eq 'receipt') {
     my ($source, $date) = @args;
     my %hashes = map { $_ => sha256_hex(read_file($_)) }

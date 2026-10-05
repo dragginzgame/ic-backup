@@ -25,14 +25,306 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.2.2` live. The repository baseline is release commit
-`e11227bbbdc6716097d95c5896e41f42f2f1898b`, with manifest `0.2.2` and receipt
-source `bff4e86264200307614d1ae7d7ec7f58aaffb73d` under `release-verify`.
-Read-only receipt verification passed before opening the draft; the maintainer
-has now selected its undated `0.2.3` changelog label. Package version remains `0.2.2`.
-Registry publication was not independently observed. This continuation changes
-no package version, dependency lock, release receipt or vendored tooling and
-performs no real release transaction, commits, pushes or live effects.
+The maintainer reports `0.2.3` pushed. The clean repository baseline is release commit
+`22d26ca70992c0d408a312e11901620a26ee27c7`, with manifest `0.2.3` and receipt
+source `603e3b26a75df43cab6f2e61838f656961498c84` under `release-verify`.
+Read-only receipt verification passed before opening the new draft. The maintainer
+has now selected undated `0.3.0` for the breaking shared release workflow adoption,
+carrying all pending `0.2.4` implementation notes. Package version remains `0.2.3`.
+Registry publication was not independently observed. Package versions, dependency
+selection, lockfile and release receipt remain unchanged; the member manifest is
+sorted and the reviewed tooling snapshot is refreshed.
+No commits, tags, pushes, package uploads or live IC effects occurred.
+
+## Latest Shared Tooling refresh and formatting contract
+
+The second read-only upstream check confirmed `HEAD`/`main` at committed
+`c0206f1943238e21bd00fbe01658e6a0864c24fa` (`0.1.2`), with clean source checkouts.
+The Git-object refresh expands eighteen files to twenty-two: exact standard
+hook/installer plus Cargo ownership and Git-hook rules. Automatic numbered
+changelog maintenance and root dependency ownership are now committed rules.
+The selected undated `0.3.0` remains correct for the complete breaking release/setup
+command batch from finalized `0.2.3`; package version remains `0.2.3`.
+Previous exact files, manifest, audit JSON and consumer inputs are retained under
+`target/shared-tooling-refresh.BOQlFZ`; earlier failures/evidence are unchanged.
+See [current adoption](../shared-tooling.md) and [provenance](../shared-tooling-review.json).
+
+`make install-hooks` activates the unchanged shared hook; it was run and local
+`core.hooksPath=.githooks` verified separately from qualification. The old
+`hooks-install` command and local installer are retired. Exact index exports
+auto-format and refresh only selected regular files, reject partial staging and
+preserve unrelated tracked/untracked edits. The crate license is an identical
+regular copy of the root notice: **stage it with the batch**, because historical
+HEAD/index symlinks reject under the standard hook. No functions or types were
+removed from the old installer (it declared none); all consumer test functions
+remain and now qualify the maintained behavior.
+
+Cargo-sort 2.1.4 is required consistently by Make, setup and CI; formatting sorts
+the root/member manifests before Rust, and independent CI/release checks include
+both. Prepared metadata passes non-mutating formatting before receipt/staging.
+Normalized offline Cargo metadata is identical before/after sorting, all nine
+direct dependencies remain inherited and lockfile/receipt bytes are unchanged.
+Package file-list admission includes the regular MIT notice; no archive build or
+registry upload was performed. No toolchain or MSRV change occurs.
+
+Release preflight/validation-only failures retry the normal target against corrected
+current source with a fresh preflight and full gate. Intent is persisted immediately
+after successful validation, before preparation. Safe prior early plans and exact
+validation sidecars retain unique attempt archives. Any unfinished prepared plan
+blocks another increment, even if the current manifest would select a new version;
+only exact saved-version resume proceeds. Local adapters retain original-input
+checks, backups, dependency selection and all earlier evidence.
+
+Fresh focused Linux evidence:
+
+- The 39 registered consumer release cases in
+  `target/shared-release-tests.XDoQUJ/cases.txt` pass through actual Make entry
+  points with Git/Cargo substitutes, followed by the exact updated shared runner
+  suite: `target/shared-latest-release-first.log`. New cases cover corrected-source
+  gate retry, retained early plans/proofs, prepared-plan rejection, numbered notes
+  and failed prepared formatting rollback. No real commits/tags/pushes occur.
+- The five registered consumer hook cases in `target/hook-tests.63wRAM/cases.txt`
+  pass using actual Make, Git indexes, cargo-sort and rustfmt:
+  `target/shared-latest-hooks-final.log`. Shared Tooling's own unchanged hook suite
+  independently passes from the clean source checkout:
+  `target/shared-latest-upstream-hooks.log`. Its inherited/disabled/private hook,
+  concurrency/alternate-index and nested-workspace fixtures qualify the exact
+  source owner; they are not installed as a second consumer workflow.
+- ShellCheck/Bash/Perl, exact snapshot/consumer integrity and rejection/retention,
+  format checking and Actionlint pass in `target/shared-latest-shell-final.log`,
+  `target/shared-latest-tooling.log`, `target/shared-latest-format.log` and
+  `target/shared-latest-workflow.log`. All twenty-two bytes/modes are checked
+  against committed Git objects; provenance, registry membership, package identity,
+  license bytes and 172 relevant local links pass in `target/shared-latest-provenance.log`.
+  CI installs the pinned formatter explicitly and
+  retains native Linux/Apple Silicon/Intel jobs plus macOS system Bash 3.2 checks.
+- Initial consumer hook qualification selected the unrelated README accidentally;
+  corrected fixtures borrow existing source commits without creating new ones.
+  Invoking upstream's suite directly against our historical HEAD exposed its license
+  symlink; qualification now runs that upstream suite from its own clean source,
+  with actual consumer Make/formatter tests locally. A literal shell-fixture string
+  produced ShellCheck SC2016 and was replaced with a literal heredoc. These failures
+  remain at `target/shared-latest-hooks-first.log`, `target/shared-latest-hooks-second.log`
+  and `target/shared-latest-shell-final.log.initial`.
+
+All work remains uncommitted; no sibling is modified, and no product Rust source,
+live provider, release/version transaction or registry publication was changed in
+this refresh. Native macOS/real release qualification and the full CI/release gate
+were not run. Earlier product and tooling evidence below retains its original source.
+
+## Previous Shared Tooling rules and release workflow adoption
+
+The read-only remote query confirmed Shared Tooling `HEAD`/`main` at
+`b8537873ac124ad17b30e32aa23e9006a3e6ec21`. The reviewed Git-object export expands
+the snapshot from twelve to eighteen files, including common changelog rules,
+release contract/runner and helpers/regressions. Exact former files/manifest remain
+under `target/shared-tooling-review.ztA5F9`. Newer uncommitted upstream proposals
+are separately hashed evidence, never exported as committed policy. See
+[adoption](../shared-tooling.md) and [review provenance](../shared-tooling-review.json).
+
+Public patch/minor/major now invoke one exact shared runner with explicit branch/
+remote inputs. Exact saved-version recovery uses `release-resume VERSION=X.Y.Z`.
+Standalone preparation/stage/commit/push aliases and arbitrary one-shot `release-x`
+are removed without compatibility wrappers. This command/semantics hard cut is why
+the complete pending batch requires `0.3.0`, despite unchanged Rust APIs/v1 records.
+Consumers must select the common one-shot command, then resume its exact saved plan
+after interruption; older standalone prepared releases need original identity review.
+Package versions/publication remain maintainer-owned; see [the guide](../releasing.md).
+
+Consumer adapters retain original-input validation and metadata backups, preserve
+the exact dependency selection, and reuse the existing v1 package receipt. Missing
+evidence or changed original inputs rejects before preparation. Only this package's
+lockfile version changes during preparation; no Cargo update is called. Ordinary
+failure restores originals and retains backups. The shared runner owns the explicit
+release index, commit/tag identity and exact atomic branch/tag push with
+`--no-follow-tags`. Completed local resume validates original receipt/validation and
+tag evidence. Source, plans, build outputs and recovery evidence remain retained.
+There is one release workflow; the metadata adapter has no Git mutation functions.
+
+Fresh focused Linux evidence:
+
+- All 34 consumer cases registered in `target/shared-release-tests.4aF2lG/cases.txt`
+  pass through actual Make entry points with Git/Cargo substitutes, followed by
+  exact vendored runner regressions: `target/shared-rules-release-final.log`.
+  Coverage includes all increments/same phase order, exact index/push scope,
+  dependency preparation/failure retention, matching pending heading/historical
+  preservation, original validation, rollback, lost commit/tag/push replies,
+  changed destinations, missing evidence/member drift and completed receipt/tag/HEAD
+  drift. All fixture command traces remain retained; no real Git effects or upload
+  occur in qualification. Public `make -n` is also proven read-only.
+- ShellCheck/Bash/Perl checks and snapshot/consumer integrity, rejection and retained
+  evidence regressions pass: `target/shared-rules-shell-final.log` and
+  `target/shared-rules-tooling-final.log`. All eighteen snapshot paths pass exact
+  source bytes/modes and provenance/link checks. CI adds the exact runner suite to
+  the existing macOS system-Bash job; native macOS qualification remains pending.
+- Two initial adapter-suite failures exposed an empty-index predicate's return
+  status and an out-of-scope publication-lock trap variable. Corrected final runs
+  pass; failures remain in `target/shared-rules-release-first.log` and
+  `target/shared-rules-release-second.log`, with their complete isolated fixtures.
+  An early dry-run of the upstream Make example's `+` recipe attempted a real local
+  release lock; the sandbox refused `.git/release-state` creation before validation
+  or Git effects. Consumer recipes omit `+`; actual Make fixture tests prove that
+  dry-run now dispatches nothing. Initial ShellCheck diagnostics and that refusal
+  are retained under the review evidence directory.
+- No Rust/dependency source changed in this tooling batch. The previous 47-case
+  Rust checks below remain their actual retained evidence; they are not relabelled
+  as new runs. No complete CI/release gate, native macOS workflow or real release
+  was run. Manifests, lockfile and receipt remain at the released `0.2.3` baseline.
+
+Removed functions in `scripts/release/release.sh`: `tag_absent`, `bump`, `stage`,
+`commit_release`, `remote_preflight`, `push_release`. Common runner preflight,
+validation/preparation, stage, commit/tag and exact push/reconciliation replace
+their release effects; consumer metadata retains only its canonical preparation
+and checks. No Rust functions/types or test helpers are removed. The tooling batch
+crosses snapshot/governance, release adapters, tests, CI and local documentation;
+The current tooling/governance footprint relative to `0.2.3` is about 24 files,
+1,900 added and 850 removed lines, including pending documentation propagation
+and exact shared exports. Width follows that one command contract. Ownership is simpler with one Git-effects
+owner, while retained validation/recovery adds explicit tooling state. Changes
+remain uncommitted; no sibling checkout is changed. The stale GitHub description
+was corrected and read back only after the maintainer explicitly approved its
+exact replacement. Automatic approval review initially rejected that remote
+metadata action under audit-only authority; no effect occurred before approval.
+
+## Private original-operation restore artifact staging
+
+The [maintained boundary](../extraction-boundary.md#private-original-operation-restore-artifacts)
+adds private staging for exact original opaque operation identities and explicit
+retained-copy verification. It reuses complete fresh original-source admission,
+the existing descriptor-copy/checksum and journal-lock owners. Fixed direct children
+of the held restore layout use 0700/0600 creation permissions. Copied and freshly
+checked destination hashes equal the original retained checksum, and retained
+original records are re-admitted before return. No new record, digest encoder,
+accounting owner or dispatch permit is added. See
+[the typed contract](../contracts/local-restore-artifact.json).
+
+Occupied destinations reject without adoption/overwrite/deletion. Copy errors,
+changed original admission and drop retain partial/full bytes. Explicit
+`verify_staged_local_restore_artifact` admits exact retained originals and copy
+bytes without re-reading source trees or copying again. The original trees may
+be absent; unchanged metadata remains required. Both views borrow original guards
+and preserve spending, unfinished source references and fence obligations. Staging
+has no fsync/durable publication or actual backend transfer attestation. Sequential
+observations and pathname destination creation require stable noncooperating
+destination/byte custody; holding a view does not freeze the filesystem.
+
+Fresh targeted Linux evidence:
+
+- Five new unit cases pass in the 29-case download-owner selection:
+  `target/local-restore-artifact-download-owner.log`. They cover exact original
+  identity/bytes/private permissions, occupied/unknown-operation rejection, corrupt/
+  unsafe/missing retained copies, source changes during copying, changed original
+  admission after copying, contention, partial/lost replies and acknowledged process
+  death before/after copying. Existing original-source/download/manifest interruption
+  and process-death regressions pass in the same selection.
+- Eight existing secure artifact owner cases pass:
+  `target/local-restore-artifact-copy-owner.log`. Three pure original-source join
+  cases and five durable-source owner cases pass:
+  `target/local-restore-artifact-source-policy.log` and
+  `target/local-restore-artifact-integrity-policy.log`.
+- Two public recovery journeys pass: `target/local-restore-artifact-public-final.log`.
+  The new journey reopens a retained copy with source trees moved aside, preserving
+  exact pending spent attempts, manifest/requirement/journal/fence bytes and source
+  references. There are 47 distinct passing targeted cases in this continuation.
+- Warning-denied all-target/all-feature Clippy, rustdoc and Rust 1.91.0 checks pass:
+  `target/local-restore-artifact-clippy-final.log`, `target/local-restore-artifact-docs.log`
+  and `target/local-restore-artifact-msrv.log`. The first five-case unit run passed
+  with two unused-import/variable warnings, retained in
+  `target/local-restore-artifact-unit-first.log`. The first Clippy run rejected a
+  109-line public test (`target/local-restore-artifact-clippy-first.log`); shared
+  original-source fixture setup now replaces duplicate inline setup in both public
+  cases. Final checks are warning-free; no test failed.
+- Formatting/whitespace, all 12 pinned Shared Tooling files, read-only release-plan
+  and selected changelog checks pass under the `target/local-restore-artifact-` prefix.
+  Exact retained source/consumer references, contract replay, canonical owners and
+  local Markdown targets pass `target/local-restore-artifact-provenance-check.log`.
+  Manifest, lockfile, release receipt, existing schemas and vendored tooling remain
+  unchanged. No complete CI/release gate or release transaction was run.
+
+[Fresh read-only Canic inspection](../local-restore-artifact-source.json) binds
+`cb596fc722dad1b0b6fb94c9fd42511920244f57` with separately recorded worktree status.
+The exact source is retained under `target/local-restore-artifact-source.TpBbbV`;
+generators/reference scan remain under the `local-restore-artifact-` prefix.
+Eleven exact reference excerpts identify actual consumers. No product source is
+copied; source stale-copy deletion, drop cleanup, upload gating and runner execution
+are not imported. Existing public/private symbols remain; original-record admission
+is shared inside its owning module. These uncommitted notes now belong to `0.3.0`.
+
+This completes private local copy/recovery admission. Actual authenticated snapshot
+upload/extent completeness, application subset/restore safety, current permissions,
+command dispatch and full terminal/fence/reference release remain independently
+qualified. No paid call, restart or cleanup authority follows. Runners/transport,
+native macOS and actual application/IC qualification remain pending.
+
+## Fresh original local restore-source verification
+
+The [maintained boundary](../extraction-boundary.md#fresh-original-local-restore-source-verification)
+joins both retained original plans, immutable safety requirement, exact local
+download-manifest digest and unchanged guarded journal. Canonical owners admit
+same network/release/existing selected IDs, original intent and complete Durable
+source coverage. Read-only selected views borrow original snapshot metadata, paths
+and checksums. A subset needs separate application safety qualification; differing
+source/restore callers remain allowed. See the [typed contract](../contracts/local-restore-source.json).
+
+The opt-in local binding uses the existing complete manifest digest as original
+`source_artifacts`; generic integration digests keep their meaning. No new record,
+schema, spending owner or authority flag is added. The download guard can now replay
+its manifest without reacquiring its held journal lock, still reading records only.
+Explicit `verify_local_restore_source` admits retained originals before/after fresh
+no-follow checks of every source tree, including those outside the restore subset.
+The returned view borrows both layout lifetimes, original plans/requirement and source
+journal. It changes no records, references, allowances or obligations and invokes
+no provider. Existing 1 KiB requirement, 1 MiB record IO, 1,024-target and 256-token-byte
+bounds remain; sequential checks require stable noncooperating byte custody.
+
+Fresh targeted Linux evidence:
+
+- Seven new unit cases pass. Four are in the 32-case download-owner selection:
+  `target/local-restore-source-download-owner.log`; three pure join cases are in
+  `target/local-restore-source-policy.log`. Coverage includes exact original hashes,
+  subset projections, metadata/checksum drift, incomplete/non-Durable or mismatched
+  local source bindings, changed unselected bytes, missing/unsafe/changed original
+  records, root replacement and manifest contention. Existing manifest/download
+  interruption and process-death regressions also pass in that owner selection.
+- All five pure durable-source owner regressions pass, including maximum selection:
+  `target/local-restore-source-integrity-policy.log`.
+- One public recovery journey passes: `target/local-restore-source-public.log`.
+  Byte corruption rejects explicit verification while record replay succeeds;
+  corrected fixture bytes and drop/reopen preserve exact spent pending attempts,
+  manifest/requirement/journal/fence bytes and unfinished source references without
+  provider calls. There are 41 distinct passing targeted cases in this continuation.
+- All-target/all-feature warning-denied Clippy, rustdoc and Rust 1.91.0 checks pass:
+  `target/local-restore-source-clippy.log`, `target/local-restore-source-docs.log`
+  and `target/local-restore-source-msrv.log`. The first seven-case run passed with
+  an unused test-import warning retained in `target/local-restore-source-unit-first.log`;
+  the import was removed and all final checks are warning-free. No test/lint failed.
+- Formatting/whitespace and all 12 pinned Shared Tooling files pass:
+  `target/local-restore-source-format.log`, `target/local-restore-source-diff-check.log`
+  and `target/local-restore-source-shared-tooling.log`. Exact retained sources/consumers,
+  contract replay, canonical schema/digest owners and local Markdown targets pass
+  `target/local-restore-source-provenance-check.log`.
+
+[Fresh read-only Canic inspection](../local-restore-source.json) binds
+`c6da13cc478b76c83eb51f4600f5acd66e47501a` with separately recorded dirty source.
+Exact inputs remain under `target/local-restore-source.1QbU5M`; generators and reference
+scan are retained with the `local-restore-source-` prefix. No product source is copied;
+relocation/mapping, parent ordering, optional-checksum readiness, staging/cleanup and
+runner behavior are not imported. Existing public/private symbols remain in place;
+common manifest decoding is extracted into its canonical owner and journal equality
+admission is shared within its owning module. Changes remain uncommitted.
+
+This completes the local original-source join, not full restore or terminal admission.
+It proves no atomic source snapshot, future copied/upload bytes, authenticated capture
+or complete backend extents. Application subset safety, effect-boundary permissions,
+exclusive dispatch/command custody, remaining IC reconciliation and full terminal
+fence/reference release remain independently qualified. Runners/transport and native
+macOS/actual application/IC qualification remain pending.
+
+The following two entries describe work now included in released `0.2.3`. Earlier
+target logs and source copies are absent in this checkout; their paths below describe
+historical results, not freshly retained qualification. Offline caches for the selected
+lockfile were explicitly prepared with `cargo fetch --offline --locked`; all new
+`local-restore-source-*` inputs and checks above are retained.
 
 ## Immutable local download manifests
 
@@ -84,11 +376,11 @@ Fresh targeted Linux evidence:
 exact inputs under `target/download-manifest-source.Gedhro`. No product source is
 copied, no sibling changes occur and earlier provenance/evidence is unchanged.
 Framework parent-derived consistency, tool/time provenance reconstruction, completed
-receipts and automatic adoption are not imported. Current additions remain uncommitted
+receipts and automatic adoption were not imported. The additions were additive
 and remove no existing public or private symbols; the public fixture now returns its
 existing source declaration for the additional journey. Existing v1 records are unchanged.
 
-The selected 0.2.3 draft includes both this manifest batch and the execution settlement
+The released 0.2.3 baseline includes both this manifest batch and the execution settlement
 batch below. These are local retained evidence components, not a complete backup/restore
 product. Full manifest/transfer and authenticated effect qualification, actual application
 safety and command custody still precede terminal fence/reference release. Application
@@ -150,7 +442,7 @@ passes. Earlier successful runs and independent generators remain retained too.
 tree; exact source inputs remain under `target/execution-settlement-source.igm5gK`.
 The source's completion counts and command-controlled reference release are not
 imported. This batch adds local contracts using existing owners; no existing public
-symbols or v1 records are removed or replaced. Changes remain uncommitted.
+symbols or v1 records were removed or replaced. The additions are now released in 0.2.3.
 
 This checkpoint proves retained original journal settlement only. Full product
 terminal admission still needs artifact/manifest/transfer evidence, authenticated
@@ -162,7 +454,7 @@ macOS and actual application/IC behavior remain unqualified by these native chec
 The next two entries describe implementation now included in released `0.2.2`.
 Their versions and evidence paths record conditions at implementation time. Earlier
 target logs/source copies are absent in this checkout; they are historical results,
-not freshly retained qualification. Current `execution-settlement-*` evidence is retained.
+not freshly retained qualification. Those evidence paths record retention at implementation time.
 
 ## Exact application fence acquisition requests
 
@@ -287,7 +579,7 @@ fix; vendored Shared Tooling bytes and sibling repositories are unchanged.
 | Question | Current answer |
 | --- | --- |
 | Can it perform a complete backup or restore? | No. The transport, runners and CLI remain unimplemented |
-| What works today? | Local artifacts, bounded records, journals, plans, immutable download manifests and settlement checkpoints, selected IC codecs and pure integration checks |
+| What works today? | Local artifacts, bounded records, journals, plans, immutable manifests/checkpoints, original local restore-source verification, selected IC codecs and pure integration checks |
 | What has been qualified? | Native local filesystem, record, policy and process behavior within the evidence described below |
 | What remains integration-owned? | Live membership, authority, application consistency, authenticated calls and restored-state acceptance |
 | What is the next product boundary? | Full terminal artifact/application/command-custody admission before controlled release, qualified application providers and exclusive dispatch custody, remaining IC reconciliation and runners/transport qualification |
@@ -297,9 +589,9 @@ fix; vendored Shared Tooling bytes and sibling repositories are unchanged.
 </p>
 
 The released baseline includes original application fence obligations, acquisition
-reconciliation and exact acquisition envelopes. The new draft adds original local
-execution settlement checkpoints and immutable download manifests without releasing
-those obligations or references.
+reconciliation/envelopes, local execution settlement checkpoints and immutable download
+manifests. The new draft joins original local restore-source verification without
+releasing those obligations or references.
 Candid 0.10.37 and management SDK 0.11.0 remain
 locked unchanged. The manifest, lockfile, release receipt, earlier provenance and
 vendored Shared Tooling bytes are unchanged. Only targeted Linux checks ran for

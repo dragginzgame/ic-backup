@@ -53,7 +53,7 @@ impl DownloadJournalGuard<'_> {
         Ok(view)
     }
 
-    fn require_unchanged_integrity_journal(&self) -> Result<(), DownloadIntegrityError> {
+    pub(super) fn require_unchanged_integrity_journal(&self) -> Result<(), DownloadIntegrityError> {
         let retained: DownloadJournalRecord = read_json(&self.path(), MAX_DOWNLOAD_JOURNAL_BYTES)?;
         check_size(&retained)?;
         if retained != self.record {

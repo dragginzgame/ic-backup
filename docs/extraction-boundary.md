@@ -1369,6 +1369,99 @@ are not imported. The local mechanism reuses maintained download owners and rele
 no fence/reference. A full product backup manifest, authenticated capture/transfer,
 consistency/effect evidence, command custody and terminal admission remain pending.
 
+### Fresh original local restore-source verification
+
+`policy::local_restore_source::validate` joins the existing original restore/source
+plans, immutable safety requirement and exact local download manifest. It reuses
+`RestoreSafetyRequirementRecord::validate_plans` for full original identities and
+same declared network/release/existing selected-ID subset admission, then the
+canonical durable-download policy for complete original source intent/coverage and
+all Durable checksums. This opt-in local source binding requires `source_artifacts`
+to equal the existing manifest digest; generic integration artifact digests keep
+their meaning under existing owners. No record or persistence schema is added.
+
+`LocalRestoreSourceView` borrows the complete original durable source and exposes
+the exact restore artifacts in canonical principal-text order. Exact snapshot tokens,
+timestamp/size, paths and checksums remain owned by their original records. Source
+and restore callers may differ; matching context is no current control permission.
+A restore subset needs actual application qualification rather than inferred parent
+order or universal unit consistency. Policy performs no IO, serialization, transitions,
+provider calls or scheduling. See [the typed contract](contracts/local-restore-source.json).
+
+`DownloadJournalGuard::read_download_manifest` adds record-only replay borrowing
+an already-held source journal. It reuses the manifest owner's bounded decoder and
+digest/plan/Durable admission, requiring the retained journal unchanged before/after
+the read. It acquires no second journal lock and reads no artifact trees. Existing
+standalone replay retains its exact behavior and failure order.
+
+`verify_local_restore_source` is explicit fresh local verification. The source journal
+borrows source-layout exclusion; the returned view also borrows the restore layout,
+both plans and requirement. The retained exact requirement/plans/manifest/journal are
+admitted before/after existing no-follow verification of every original source tree,
+including source artifacts outside the restore subset. Root replacement, changed
+records/bytes, missing or unsafe evidence and contention return typed failures without
+repair, copying, resetting progress or releasing obligations. Existing 1 KiB requirement,
+1 MiB plan/manifest/journal IO, 1,024-target and 256-token-byte bounds remain unchanged.
+
+Native tests qualify exact original/source digest and snapshot metadata, complete
+source coverage, same-ID subset projections, differing source callers, non-Durable
+or generic incompatible local bindings, changed unselected trees and unsafe/missing
+originals, root replacement and manifest contention. A public recovery journey retains
+spent pending attempts, exact requirement/manifest/journal/fence bytes and unfinished
+source references through checksum failure and drop/reopen, with no provider calls.
+
+[Fresh read-only source inspection](local-restore-source.json) traces Canic's restore
+planner, snapshot validation, descriptor-copied source staging and actual consumers.
+No relocation/mapping, parent ordering, optional-checksum readiness, staging/cleanup
+or runner behavior is imported. This join proves local sequential byte observations,
+not an atomic snapshot, future copied/upload bytes, authenticated original capture or
+complete backend extents. Stable noncooperating bytes, application subset safety,
+current permissions/dispatch and command custody remain independently qualified.
+No upload/load/start, receipt, terminal or fence/reference release permit is created.
+
+### Private original-operation restore artifacts
+
+`DownloadJournalGuard::stage_local_restore_artifact` resolves one exact original
+opaque operation sequence and its selected source artifact through the existing
+original-source view. Complete fresh source verification precedes the existing
+descriptor-based no-follow copy. The destination is fixed as
+`restore-artifact-{sequence}.tmp`, directly under the held restore layout and
+excluded by its existing journal-lock owner. New directories/files use 0700/0600
+permissions. Source and destination hashes must equal the original retained checksum;
+exact retained requirement/plans/manifest/journal are re-admitted before returning.
+No record, schema, digest encoder, accounting owner or dispatch permit is added.
+
+An occupied destination rejects without adoption, replacement or deletion. Copy
+errors, checksum drift, changed original admission and drop retain partial/full
+bytes as recovery evidence. This is staging without fsync/durable publication.
+Operation association proves neither an upload request nor actual transfer or load.
+The returned `LocalRestoreArtifactView` borrows both layout lifetimes, original
+plans/requirement and source journal; it exposes original operation/artifact identity
+and a checked path. Holding the view does not freeze the filesystem or preserve a
+snapshot against noncooperating writers. The operator-selected destination parent
+and stable future byte custody remain integration-owned.
+
+Explicit `verify_staged_local_restore_artifact` takes the original sequence and
+re-admits exact retained original metadata before/after fresh no-follow copy hashing.
+It reads no source trees and performs no copy: originals may be absent while their
+immutable metadata remains required. Missing, unsafe, incomplete or conflicting
+copies reject without repair/recreation. This is fresh retained-copy verification;
+ordinary resume and terminal replay do not invoke it. Partial evidence needs separate
+operator-owned disposition. Both paths preserve exact original spending, unfinished
+source references and fence obligations. Existing original-source IO/target/token
+bounds remain unchanged. See [the typed contract](contracts/local-restore-artifact.json).
+
+Native cases qualify private permissions/exact bytes and original snapshot identity,
+occupied/unknown-operation rejection, source changes during copy, missing/unsafe or
+corrupt retained copies, requirement changes after copy, contention, injected partial
+and lost copy replies, and acknowledged process death before/after copying. A public
+journey reopens a retained copy with source trees moved aside and preserves pending
+spent attempts and all original journal/manifest/requirement/fence/reference evidence.
+[Fresh source inspection](local-restore-artifact-source.json) traces Canic's staging
+and actual callers. Its stale-copy deletion, drop cleanup, upload gating and runner
+execution are not imported. No transfer/extent/authentication, current permissions,
+command dispatch, terminal proof or fence/reference release is qualified here.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local
