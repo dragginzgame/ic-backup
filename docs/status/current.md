@@ -55,6 +55,35 @@ unchanged by the implementation batches recorded below. No version transaction,
 tag, package upload or live IC effect is claimed. Only targeted native checks are
 recorded; no full CI or release gate is claimed.
 
+## Focused 0.1.9 draft review
+
+Review of the four selected implementation batches at repository HEAD
+`6356c0ff00fd950b9e9f106c335ec7450b56f33c` found no blocking correctness issue in
+their maintained local scope. Production owners, bounded wire admission, exact
+request/raw-evidence hashing, baseline preservation and original-plan/durable-byte
+checks agree with the machine contracts and changelog. Decoded state, candidate
+cardinality and local checks remain separate from fresh authority, effect settlement,
+transfer completeness and terminal/reference release. No production change was needed.
+
+Fresh offline/locked checks passed: 26 IC request/reply unit cases, six inventory
+comparison cases, five integrity-policy cases, seven guarded integrity cases and
+five public request/reply/comparison/integrity recovery journeys. The public cases
+retain exact evidence, pending exhausted attempts and unfinished restore references.
+Logs are `target/0.1.9-review-codecs.log`, `target/0.1.9-review-comparison.log`,
+`target/0.1.9-review-integrity-policy.log`, `target/0.1.9-review-integrity-ops.log`
+and `target/0.1.9-review-public.log`. All 28 retained Canic source hashes and 273
+exact consumer references still match the inspected working-tree bytes; evidence
+is `target/0.1.9-review-provenance.log`. The existing Candid/management SDK source
+hashes also match retained provenance. Successful tests cleaned only their owned
+fixtures; earlier failed/build/recovery evidence remains retained.
+
+This is focused draft review, not the full CI/release gate or IC backend qualification.
+The package manifest remains `0.1.8` and the selected changelog draft remains undated
+`0.1.9`. The maintainer still owns source commits and release execution under
+[the release guide](../releasing.md). No version transaction, tag, push, upload or
+live IC effect ran. Restore-safety/fence and lost-effect contracts, providers,
+transport and runners remain unfinished as described below.
+
 ## Retained implementation batches
 
 ### Fresh local download integrity batch
