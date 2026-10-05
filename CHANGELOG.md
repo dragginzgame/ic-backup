@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.1]
+## [0.2.1] - 2026-10-05
 
 - Let an explicit release command relabel the single current numbered draft to
   its requested version, preserving notes and history. Keep competing/released
