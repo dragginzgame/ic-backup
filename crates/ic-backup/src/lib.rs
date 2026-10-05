@@ -8,6 +8,10 @@
 //! declared identity and finite mutation/observation allowances, retaining durable
 //! reservations and qualified receipts. These mechanisms do not authorize canister
 //! effects.
+//! Explicit fresh download integrity checks bind the retained original plan and
+//! exact selected set to published directory bytes without changing journals,
+//! replenishing allowances or releasing dependencies. Stable byte custody and
+//! backend transfer completeness remain integration-owned.
 //! Bounded physical inventories retain canonical declared parent forests; pure
 //! selection policy expands exact principals without live discovery or authority.
 //! Explicit effect graphs retain validated operation dependencies and project
@@ -19,6 +23,12 @@
 //! The IC request boundary encodes closed host-ingress management operations and
 //! binds exact method/routing/Candid bytes to original mutation or observation digests.
 //! Codec qualification does not establish IC effects or fresh execution authority.
+//! Bounded capture/inventory reply decoding preserves raw snapshot identity and
+//! exact request/reply evidence without authenticating origin or settling effects.
+//! Pure inventory comparison exposes new candidates and rejects baseline drift;
+//! candidate cardinality never attributes or settles a lost capture.
+//! Bounded lifecycle replies retain exact empty acknowledgements and required
+//! status/controller projections without converting them into fresh authority.
 //! A separate membership port binds ephemeral provider results to original intent,
 //! exact current context/full inventory and an integration-owned challenge.
 //! Pure matching views grant neither controller authority nor application continuity.

@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "kind": "ephemeral local Candid reply evidence; no persisted product record",
+  "request_owner": "model::ic_request::IcManagementRequestRecord",
+  "entry_point": "model::ic_lifecycle_reply::IcLifecycleReply::decode",
+  "methods": {
+    "canister_status": "exactly one required status/settings/controllers projection",
+    "load_canister_snapshot": "canonical six-byte empty argument tuple",
+    "start_canister": "canonical six-byte empty argument tuple",
+    "stop_canister": "canonical six-byte empty argument tuple"
+  },
+  "status_projection": {
+    "status": "required upstream running/stopping/stopped variant",
+    "settings": "required record",
+    "controllers": "required nonoptional principal vector; explicitly empty is admitted",
+    "controller_owner": "model::control_authority::ControllerSet; canonical sorted unique principal identities",
+    "other_fields": "skipped under finite work; no retained values or shape/presence/semantic validation",
+    "scope": "a projection, not full upstream CanisterStatusResult validation",
+    "tuple": "no additional arguments or trailing bytes"
+  },
+  "acknowledgement": {
+    "exact_bytes_hex": "4449444c0000",
+    "admission": "no type table, arguments or trailing bytes; Candid null is not an empty tuple",
+    "meaning": "local wire shape admission only; no authenticated success or ongoing lifecycle state"
+  },
+  "bounds": {
+    "raw_reply_bytes": 1048576,
+    "controllers": 10,
+    "decoder_work_quota": 2097152,
+    "skipped_work_quota": 65536,
+    "type_table_entries": 64,
+    "allocation": "bounded controller visitor never reserves from untrusted declared length"
+  },
+  "hashing": {
+    "payload": "SHA-256 of exact raw reply bytes, including skipped fields and original order",
+    "domain_utf8": "ic-backup/ic-lifecycle-reply/v1",
+    "domain_terminator": "one NUL byte",
+    "body": "existing request digest as 64 lowercase ASCII hex bytes, then raw payload checksum as 64 lowercase ASCII hex bytes",
+    "digest": "SHA-256 of domain, terminator and body",
+    "association": "declared by caller; no wire network/caller/target/challenge identity"
+  },
+  "errors": ["UnsupportedMethod", "ReplyTooLarge", "InvalidReply", "Controllers"],
+  "diagnostics": "no raw payload, controller IDs or upstream decoder prose",
+  "non_authority": [
+    "no serialized fresh result or default observation",
+    "no installed provider or live transport",
+    "no actual fresh controller custody or continuous fencing",
+    "no drained-work, load-history or same-release restore proof",
+    "no receipt, settlement, retry, restart, spending replenishment or release permission",
+    "no actual IC backend qualification"
+  ]
+}

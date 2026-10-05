@@ -1,15 +1,218 @@
 # Current handoff — 2026-10-05
 
-The maintainer reported release-check failure inside the configured validation
-runner. The starting worktree was clean at `a6a2626` (0.1.8); Cargo remains `0.1.7`.
-The selected undated `0.1.8` entry now also records the nested-fixture isolation fix.
-Release/tooling test adapters, these changelog notes and documentation are uncommitted.
+The maintainer selected a `0.1.9` changelog and requested continued extraction.
+HEAD remains `9a9330a` (Release 0.1.8), with Cargo and the latest dated changelog
+at `0.1.8`. The selected `## [0.1.9]` draft is undated; release preparation owns its
+date and package version transaction. Existing snapshot reply/comparison work is
+preserved; lifecycle reply and fresh local download integrity batches below are
+added, all uncommitted.
+The committed lockfile selects Candid 0.10.37; this batch preserves that selection
+and all dependencies. The release guide now refers to the manifest/changelog owners
+instead of repeating a stale current version; historical evidence remains intact.
 Dated history, Cargo/lockfile, licenses and historical release receipt remain
 unchanged. No version transaction, commit, tag, push, upload or live IC effect ran.
 Canic and every sibling remain read-only.
-No compilation or broad validation ran for this tooling correction.
+Only targeted native checks ran; no full CI or release gate ran.
 
-## Nested release-check correction
+## Fresh local download integrity batch
+
+`policy::download_integrity::validate` borrows the original full plan and download
+journal, requiring exact intent, canonical selected coverage and Durable checksums.
+Views retain journal-owned snapshot identity and metadata without a new schema,
+serialized verified flag or hash encoder. The original pre-capture plan cannot
+independently establish the later captured snapshot ID.
+
+`DownloadJournalGuard::verify_durable_artifacts` explicitly admits the persisted
+original plan and unchanged held journal before and after no-follow directory
+checksum verification. Existing owners retain 1 MiB record IO, 1,024 selected
+entries and 256-byte snapshot tokens. Ordinary reopen/resume still reads retained
+progress without a fresh check. New typed failures write no evidence, transition
+no journal, replenish no attempt and release no reference. Filesystem checks are
+sequential observations rather than an atomic tree/set snapshot; integrations own
+stable byte custody, authentic capture association, complete backend transfer and
+terminal/release admission. No provider, runner, transport or live effect is added.
+
+Eight Canic source sections and 47 exact consumer references were freshly inspected
+under the retained dirty source HEAD. Explicit durable-byte verification and exact
+coverage are adapted; the old manifest, duplicate artifact metadata, serializable
+completion flag, receipt inference, CLI/prune/restore effects are not imported.
+See [the contract](../contracts/download-integrity.json) and
+[fresh source/consumer provenance](../download-integrity-source.json).
+
+Five pure-policy tests, seven guarded filesystem tests and one public recovery
+journey passed. Coverage includes changed original intent/selection, every incomplete
+state, maximum target/token limits, missing or replaced plans/journals, changed
+published bytes, absent/file/symlink substitutions and unusable custody. Public
+recovery preserves exact journal bytes, exhausted pending reservations and unfinished
+restore references after successful checks and checksum failure. Native evidence
+qualifies local mechanisms, not IC effects or a complete independently usable product.
+
+Warning-denied all-target/all-feature package Clippy and rustdoc, Rust 1.91.0
+all-target/all-feature package compilation, formatting/diff, changelog and source/
+reference/contract/link checks passed. Logs are `target/download-integrity-policy.log`,
+`target/download-integrity-ops.log`, `target/download-integrity-public.log`,
+`target/download-integrity-clippy.log`, `target/download-integrity-docs.log` and
+`target/download-integrity-msrv.log`. The initial unit compilation rejected a test
+cleanup helper moving a borrowed layout; its log is retained at
+`target/download-integrity-policy-initial-failure.log`. Explicit ordered fixture
+drops fixed it. Successful tests cleaned only owned runtime fixtures; all earlier
+failure/recovery artifacts remain retained. No full suite, package/release gate,
+version transaction or publication ran.
+
+## Lifecycle reply batch
+
+`model::ic_lifecycle_reply` admits the existing status/stop/start/load methods.
+Mutation acknowledgements require the canonical six-byte empty Candid tuple.
+Status requires exactly one status/settings/controllers projection, reusing the
+upstream state enum and existing `ControllerSet` canonical owner. Explicit empty
+controllers remain empty; missing fields and duplicates reject. Bounded visitors
+retain at most 10 principals without allocating from untrusted declared lengths.
+Raw input is capped at 1 MiB; status work at 2 MiB, skipped work at 64 KiB and
+type-table entries at 64. Extra arguments, trailing data and malformed shapes reject.
+
+Unprojected fields are skipped, not retained or qualified. This may admit records
+lacking fields outside the projection and is not full SDK status validation.
+Read-only kinds retain exact raw checksums plus a separate v1 request/reply digest;
+ignored fields and original controller ordering stay in evidence identity. There
+is no serialized fresh result, provider, dispatch, receipt or journal transition.
+Transport association/authentication, current timing/permissions, continuous fences,
+stopped/drained evidence and safe same-release load settlement remain integration-owned.
+Neither Stopped/controller values nor acknowledgements settle a pending attempt or
+authorize restart, release, retry or new spending. See
+[the contract](../contracts/ic-lifecycle-reply.json) and
+[fresh provenance](../ic-lifecycle-reply-source.json).
+
+Eight Canic files/sections and 49 exact consumer references were inspected read-only
+under the same dirty source HEAD retained below. Typed lifecycle states, required
+status/controller projection and pending-observation rejection are adapted. Agent/
+CLI calls, optional status defaults, Root/Fleet routing, command-success or
+status-equality completion receipts and automatic reconciliation are not copied.
+Existing SDK 0.8.0 and Candid 0.10.37 source/registry identities are recorded; the
+current primary management interface was also checked read-only.
+
+Ten focused unit cases and one public recovery case passed. Every registered
+hand-assembled Candid/hash fixture enters production admission; a separate complete
+SDK status exercises bounded skipped fields. Native cases cover required fields,
+unknown states, empty/maximum/duplicate controllers, raw/work/type/count limits,
+truncations/tuple/trailing rejection and exact target/method/raw load-ID hashes.
+The public journey durably retains local load/status wire fixtures and reopens
+exhausted pending original reservations. Decoding, wrong-shape/malformed rejection
+and changed load association preserve exact journal/evidence bytes and allowances.
+It issues no receipts and performs no remote observations or IC effects.
+
+Warning-denied all-target/all-feature Clippy and rustdoc, Rust 1.91.0 all-target/
+all-feature package compilation, formatting/diff, changelog admission and fresh
+source/reference/dependency/golden/JSON/link checks passed. Logs are
+`target/ic-lifecycle-reply-unit.log`, `target/ic-lifecycle-reply-integration.log`,
+`target/ic-lifecycle-reply-clippy.log`, `target/ic-lifecycle-reply-docs.log` and
+`target/ic-lifecycle-reply-msrv.log`. An initial test enum lacked the Serde derive
+needed for its rename attribute; its compiler log remains at
+`target/ic-lifecycle-reply-unit-initial-failure.log`. The initial hex-helper lint
+failure remains at `target/ic-lifecycle-reply-clippy-initial-failure.log`.
+Corrected cases passed. Successful runtime fixtures cleaned only their owned
+temporaries; prior failed/build/recovery evidence remains retained. No full suite,
+package verification, full CI/release gate or publication ran.
+
+## Snapshot inventory comparison batch
+
+`policy::snapshot_inventory_delta::compare` borrows the exact existing capture and
+two inventory reply owners. It requires the closed capture/list methods and exact
+canonical target, then linearly compares canonical raw IDs. Every baseline ID must
+remain with unchanged timestamp/size; loss and metadata drift reject with typed
+errors. The read-only view exposes zero/single/multiple canonical candidates and
+borrowed original request/reply evidence. Existing 1,024-entry/256-ID-byte bounds
+apply, with no duplicate wire/hash owner or new persisted schema.
+
+Cardinality does not attribute or settle a capture. Another controller could create
+one candidate; no candidate does not prove failure. Integrations own original
+pre-effect baseline custody, authenticated association, actual observation chronology
+and exclusive attribution. No provider, receipt, retry, restart, cleanup, spending
+reset or upload reconciliation is introduced. See
+[the machine contract](../contracts/snapshot-inventory-delta.json) and
+[fresh provenance](../snapshot-inventory-delta-source.json).
+
+Six fresh Canic source sections and 75 exact consumer references were inspected
+read-only under the same dirty HEAD recorded below. Baseline preservation and set
+difference are adapted; singleton-to-completed-receipt inference and restart/journal
+cleanup are not copied. Related upload recovery stays unchanged in Canic and outside
+this capture projection. Earlier source provenance remains exact and retained.
+The maintained request schema's descriptive Candid selection now matches the
+actual `0.10` declaration/0.10.37 lock; historical .35 evidence is unchanged.
+
+Six focused policy cases and one public persistence/recovery case passed. They cover
+all candidate cardinalities, exact byte-prefix/raw-order identity, method/target
+mismatches, baseline loss at every merge position, timestamp/size drift and maximum
+combined bounds. Public recovery retains original baseline/observation bytes and
+reopens original exhausted pending mutation/observation reservations. Singleton,
+multiple and zero projections, baseline rejection and a denied fresh mutation
+preserve exact journal/evidence bytes and original allowances; no receipt is issued.
+
+Warning-denied all-target/all-feature Clippy and rustdoc, Rust 1.91.0 all-target/
+all-feature package compilation, formatting/diff checks and fresh source/reference/
+JSON/document-link checks passed. Logs are `target/snapshot-inventory-delta-unit.log`,
+`target/snapshot-inventory-delta-integration.log`,
+`target/snapshot-inventory-delta-clippy.log`, `target/snapshot-inventory-delta-msrv.log`
+and `target/snapshot-inventory-delta-docs.log`. Initial test-style lint failures and
+an untyped empty-slice assertion compilation failure remain in
+`target/snapshot-inventory-delta-clippy-initial-failure.log` and
+`target/snapshot-inventory-delta-clippy-empty-assertion-failure.log`; corrected cases
+passed. Successful runtime fixtures cleaned only their owned temporary directories.
+No full suite/package/full CI/release gate or actual IC effect ran. Transport,
+metadata/data transfers, safe lost-effect settlement and runners remain unimplemented.
+
+## Snapshot capture/inventory reply batch
+
+`model::ic_snapshot_reply` decodes exactly one capture descriptor or inventory
+vector tied to the caller's borrowed immutable request. Required upstream fields
+retain exact 1–256 raw ID bytes and full nat64 timestamp/size. Raw input is bounded
+to 1 MiB; decoder work to 2 MiB, skipped work to zero and type-table entries to 16.
+Bounded sequence visitors retain at most 1,024 descriptors without allocating from
+untrusted lengths. Unknown/missing/wrong fields, malformed data, extra arguments,
+trailing bytes and duplicate IDs reject with typed errors and no raw diagnostics.
+
+Inventory views sort exact raw IDs; payload hashes preserve raw ordering and a
+separate v1 digest binds the existing request digest plus raw-reply checksum.
+The reply contains no target/network/caller/challenge, so the association is
+declared, not authenticated. Descriptor metadata is neither transfer completeness
+nor a unique lost-capture receipt. No Serde record, reservation, settlement or
+dispatch mechanism is introduced; pending attempts and spent limits remain intact.
+See [the machine contract](../contracts/ic-snapshot-reply.json) and
+[fresh provenance](../ic-snapshot-reply-source.json).
+
+Six Canic source files and 102 consumer references were inspected read-only.
+The source still has dirty working-tree material under HEAD
+`3978e02d28fea9022c7a6e84a7ec6d6e4a0d4af3`; exact hashes identify inspected bytes.
+Raw ID admission, duplicate checks and bounded Candid inventory parsing are adapted.
+ICP token readers, optional metadata, agent calls, inventory-delta settlement and
+completed execution receipts are not copied. Existing SDK 0.8.0 and actual selected
+Candid 0.10.37 source are separately recorded; no dependency or lock update ran.
+
+Native evidence includes every independently assembled DIDL/hash fixture decoded
+by production and official DTOs, maximum combined entry/ID bounds, full nat64
+values, wire/target hash sensitivity, type/length/truncation/tuple/field rejection
+and duplicate identity. A public journey reopens original intent plus exhausted
+pending mutation and observation reservations, decodes retained exact bytes,
+rejects wrong association and preserves exact journal/evidence bytes and budgets.
+It makes no remote observations or receipts. The existing request codec regressions
+are also rerun against the current lockfile selection.
+
+Targeted unit/integration, warning-denied Clippy/rustdoc, Rust 1.91.0 library
+compilation and formatting/diff checks passed. Logs are
+`target/ic-snapshot-reply-unit.log`, `target/ic-snapshot-reply-integration.log`,
+`target/ic-snapshot-reply-clippy.log`, `target/ic-snapshot-reply-msrv.log` and
+`target/ic-snapshot-reply-docs.log`. An initial integration assertion expected
+MutationPending while a separate observation was pending; the corrected typed
+ObservationPending assertion passed. The initial integration/lint failure logs
+remain under `target/ic-snapshot-reply-*-initial-failure.log`, and its interrupted
+fixture remains at `/tmp/ic-backup-public-reply-410-1791184054778669690/`.
+No full native test suite, package verification, full CI or live IC check ran.
+
+The following tooling and consistency sections retain prior qualification evidence;
+they do not claim fresh broad validation for this batch. Live providers, complete
+transfer/remaining response codecs, fencing and safe restore settlement still
+precede runners. Independently usable backup/restore remains unimplemented.
+
+## Retained nested release-check correction
 
 The outer validation runner exports `VALIDATION_REPOSITORY_ROOT` for its children.
 The dependency-bootstrap fixture inherited the real repository root and dispatched

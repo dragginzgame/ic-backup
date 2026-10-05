@@ -2,8 +2,10 @@
 
 pub mod consistency;
 pub mod control_authority;
+pub mod download_integrity;
 pub mod effect_order;
 pub mod execution_progress;
 pub mod membership;
 pub mod selection;
+pub mod snapshot_inventory_delta;
 pub mod snapshot_read;

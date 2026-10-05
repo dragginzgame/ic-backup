@@ -142,6 +142,32 @@ into an issue tracker or release authority.
   runs do not themselves upload packages. Repository release preparation,
   tagging and pushing retain their clean-source, tag and receipt requirements;
   registry publication delegates admission to Cargo for the current package.
+- Snapshot capture/inventory reply decoding now retains exact raw IDs and required
+  nat64 timestamp/size fields under a declared request. Preserve the 1 MiB raw,
+  1,024-entry, 256-ID-byte, 16-type-table and finite decoder-work bounds. Canonical
+  inventory views reject duplicate IDs while evidence hashes bind exact raw bytes.
+  Wire association proves no network/caller/target authentication or fresh permission;
+  decoded metadata never settles a pending attempt or attests complete transfer.
+- Pure snapshot inventory comparison requires the exact capture/list targets and
+  retains unchanged baseline IDs/metadata. Candidates borrow bounded canonical
+  replies and retain original evidence. Zero, one or multiple candidates establish
+  neither capture outcome nor attribution; never derive an Applied receipt, retry,
+  restart or release from cardinality. Integrations own original baseline custody,
+  observation chronology, authenticated association and exclusive attribution.
+- Lifecycle reply decoding now admits canonical empty stop/start/load tuples and
+  required status/settings/controller projections. Preserve 1 MiB raw input,
+  2 MiB decoding work, 64 KiB skipped work, 64 type-table entries and the existing
+  10-controller bound. Unknown status metadata is skipped, not qualified; missing
+  required fields reject. Reuse ControllerSet admission and upstream status variants.
+  Reply association authenticates no caller/target/context or timing. Acknowledgements
+  and Stopped/controller projections never settle attempts, prove drain/load safety,
+  authorize restart/release or replenish spending.
+- Explicit fresh download integrity verification now requires the retained original
+  plan, unchanged guarded journal, exact selected targets and durable checksums.
+  Preserve existing bounded owners and no-follow directory traversal. Ordinary
+  resume reads retained progress only. Structural views and sequential byte checks
+  grant no transfer completeness, atomic snapshot, terminal proof, new spending or
+  reference-release authority; integrations own stable byte custody.
 
 ## Tracking
 

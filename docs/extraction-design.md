@@ -420,8 +420,26 @@ capture and load Candid arguments under pinned upstream types. Its v1 wire diges
 binds fixed receiver, effective target, replicated update mode, method and argument
 bytes; original mutation and separate observation digests admit exact payloads.
 Raw snapshot bytes and generic backend tokens remain distinct owner boundaries.
-This freezes request encoding only; response/transfer semantics, transport and
-fresh effect-boundary authority still require qualification.
+Bounded capture/inventory reply decoding additionally retains exact raw snapshot
+IDs and required nat64 timestamp/size fields. Inventory views are canonical and
+reject duplicate IDs; local evidence hashes bind the declared request and exact
+raw response. The wire contains no target/network/caller identity, so association
+is integration-qualified rather than authenticated by decoding. No decoded reply
+settles a pending journal or attests transfer completeness. See
+[the reply contract](contracts/ic-snapshot-reply.json).
+Pure inventory comparison now rejects lost or changed baseline descriptors and
+projects new exact-ID candidates under the capture/list declarations. It preserves
+original reply evidence but establishes no capture attribution or observation
+chronology; even a singleton cannot settle a lost paid call. See
+[the comparison contract](contracts/snapshot-inventory-delta.json).
+The existing status/stop/start/load methods now have a bounded local lifecycle
+reply owner. It retains required status/controller projections or canonical empty
+acknowledgements, with raw-request/reply evidence binding. Unprojected status
+metadata stays unqualified. Neither a Stopped value nor a decoded acknowledgement
+proves actual freshness, continuous fencing or safe load settlement. See
+[the lifecycle reply contract](contracts/ic-lifecycle-reply.json).
+Remaining response/transfer semantics, transport and fresh effect-boundary
+authority still require qualification.
 
 Persist immutable reviewed intent separately from mutable execution observations.
 Refreshing authority, progress or timestamps cannot change issued spending limits,
@@ -839,6 +857,10 @@ Command custody now has owned inheritance, retained v1 file identity, bounded
 finish and fresh exclusive probes with real owner/descendant exit evidence.
 Local download lifecycle records and guarded verified publication now have fresh
 native lost-write, changed-byte and owner-death recovery evidence.
+Explicit fresh integrity now binds the retained original plan and exact selected
+set to every durable published directory checksum. Native recovery retains pending
+spending and restore references. Sequential local checks require stable byte custody
+and prove neither backend transfer completeness nor terminal/release admission.
 Local operation accounting now has exact identity/budget binding, a canonical
 authority digest and append-only reservation/receipt history with fresh native
 lost-write, exhaustion, stale-receipt and owner-death qualification. Complete

@@ -89,7 +89,8 @@
   "x-max-canonical-output-bytes": 8192,
   "x-max-candid-argument-bytes": 4096,
   "x-codec": {
-    "candid": "=0.10.35",
+    "candid": "0.10",
+    "candid-lock-selection": "0.10.37",
     "ic-management-canister-types": "=0.8.0",
     "receiver": "aaaaa-aa",
     "call-mode": "replicated update ingress",

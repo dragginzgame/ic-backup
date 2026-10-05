@@ -126,10 +126,52 @@ local declarations, persistence and spent-journal/obligation recovery only. See
 [typed current port](contracts/consistency-port.json) and
 [fresh consistency provenance](consistency-source.json).
 
+The snapshot reply codec in `model::ic_snapshot_reply` decodes the existing capture
+singleton and snapshot inventory methods using required upstream fields. It has
+bounded input, sequences and decoder work, canonical unique raw IDs and exact
+request/raw-reply evidence hashing. Neither result nor metadata grants settlement,
+authority or transfer completion. [The reply contract](contracts/ic-snapshot-reply.json)
+and [fresh provenance](ic-snapshot-reply-source.json) define the maintained boundary.
+Focused checks are `cargo test --offline --locked -p ic-backup --lib model::ic_`
+and `cargo test --offline --locked -p ic-backup --test ic_snapshot_reply --test ic_request`.
+
+`policy::snapshot_inventory_delta::compare` borrows the existing capture declaration
+and bounded inventory replies. It rejects method/target mismatch, lost baseline IDs
+and changed baseline metadata, then exposes canonical new descriptors without IO,
+serialization, journal mutation or capture attribution. The original request/reply
+owners supply exact evidence; no new record or hash encoder is added. See
+[the comparison contract](contracts/snapshot-inventory-delta.json) and
+[fresh Canic provenance](snapshot-inventory-delta-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib policy::snapshot_inventory_delta`
+and `cargo test --offline --locked -p ic-backup --test snapshot_inventory_delta`.
+These native fixtures qualify local comparison and retention, not remote settlement.
+
+`model::ic_lifecycle_reply` admits the existing stop/start/load canonical empty
+tuple and required status/settings/controllers projection. Status uses the upstream
+SDK enum and existing bounded `ControllerSet` owner. Unprojected fields are skipped
+under finite work limits and remain unqualified; exact raw evidence hashes retain
+them. Required fields, duplicate controllers, excess counts/work/types, extra
+arguments and trailing bytes reject. No transport, receipt or fresh provider evidence
+is installed. See [the reply contract](contracts/ic-lifecycle-reply.json) and
+[fresh source provenance](ic-lifecycle-reply-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib model::ic_lifecycle_reply` and
+`cargo test --offline --locked -p ic-backup --test ic_lifecycle_reply`.
+
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Install that toolchain separately for
 `make check-msrv`. Native builds are the supported product lane; the toolkit
 runs on an operator host.
+
+`policy::download_integrity::validate` checks retained plan/journal declarations
+without IO. `DownloadJournalGuard::verify_durable_artifacts` separately re-admits
+the persisted original plan and unchanged journal, then verifies every published
+directory checksum. Neither result is a terminal proof or backend transfer permit;
+integrations maintain stable byte custody during sequential checks. See
+[the integrity contract](contracts/download-integrity.json) and
+[fresh source provenance](download-integrity-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib download_integrity`,
+`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::integrity`
+and `cargo test --offline --locked -p ic-backup --test download_integrity`.
 
 ## Commands and build ownership
 

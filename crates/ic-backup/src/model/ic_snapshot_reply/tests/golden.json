@@ -1,0 +1,58 @@
+[
+   {
+      "digest" : "ab7a8bc378506ee800bb90c7a9cfcb041d844be7697081a323015829a84bef49",
+      "method" : "take_canister_snapshot",
+      "name" : "capture",
+      "payload_checksum" : "25ae8cd6872ab757cce440a873cf4c53eea8083c9aad7f1f1d2e739c7d88a1bb",
+      "reply_hex" : "4449444c026d7b6c03dbb70100dc84e196077882bff3a50d7801010300ff11c8010000000000007b00000000000000",
+      "request_digest" : "5748517eed542c48b62534fe4d025d8649426eb75ae0ab3894434adc30a04075",
+      "snapshots" : [
+         {
+            "id" : [
+               0,
+               255,
+               17
+            ],
+            "taken_at_timestamp" : 123,
+            "total_size" : 456
+         }
+      ],
+      "target" : "renrk-eyaaa-aaaaa-aaada-cai"
+   },
+   {
+      "digest" : "dfd3c5d2f65132b4a1b4768aab357a0a406b8c4840739e44323c629afe5c8447",
+      "method" : "list_canister_snapshots",
+      "name" : "inventory",
+      "payload_checksum" : "fb12e5f4deae4fb208f797df2ca3dee7065a7b8e900f0ab44209bf20e30308e8",
+      "reply_hex" : "4449444c036d7b6c03dbb70100dc84e196077882bff3a50d786d0101020201ff0400000000000000020000000000000002000000000000000000000000000000000000",
+      "request_digest" : "0c7376bf66247fd0813e673b50b2a91c35a372239214dca503d5ba083a6ff146",
+      "snapshots" : [
+         {
+            "id" : [
+               255
+            ],
+            "taken_at_timestamp" : 2,
+            "total_size" : 4
+         },
+         {
+            "id" : [
+               0,
+               0
+            ],
+            "taken_at_timestamp" : 0,
+            "total_size" : 0
+         }
+      ],
+      "target" : "renrk-eyaaa-aaaaa-aaada-cai"
+   },
+   {
+      "digest" : "e23afcd38bd7ed79131134ee6ad75ba27cf80e5c3f8cb542b73f49e1bdf32e5b",
+      "method" : "list_canister_snapshots",
+      "name" : "empty-inventory",
+      "payload_checksum" : "b06020c7dadc3b407d906d72bb9c6dd010436f2bd817df3c52d1d876c0f9b7f5",
+      "reply_hex" : "4449444c036d7b6c03dbb70100dc84e196077882bff3a50d786d01010200",
+      "request_digest" : "0c7376bf66247fd0813e673b50b2a91c35a372239214dca503d5ba083a6ff146",
+      "snapshots" : [],
+      "target" : "renrk-eyaaa-aaaaa-aaada-cai"
+   }
+]

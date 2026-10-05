@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.9]
+
+- Extract explicit fresh verification of durable downloaded artifacts under the
+  retained original plan and exact selected targets. Reject changed declarations,
+  unsafe paths and checksum mismatches without rewriting journals, replenishing
+  attempts or releasing restore references; ordinary resume remains distinct.
+- Add bounded status/controller reply projections and exact lifecycle
+  acknowledgements for the existing IC request methods. Preserve raw evidence and
+  original load/status attempts through local replay; decoded state and acknowledgements
+  require authenticated integration evidence before effect settlement or fresh authority.
+- Extract pure snapshot inventory comparison from Canic's capture recovery path.
+  Retain exact request/reply evidence, reject lost or changed baseline entries and
+  expose canonical new candidates without attributing them to the capture or
+  settling pending attempts. Native recovery preserves original evidence and limits.
+- Add bounded IC snapshot capture/inventory reply decoding with exact raw IDs,
+  required timestamp/size fields, canonical unique inventories and request/reply
+  evidence hashes. Reject malformed or ambiguous wire data and preserve spent
+  pending journals through local replay; transport and effect settlement remain
+  integration-owned.
+
 ## [0.1.8] - 2026-10-05
 
 - Adopt the Dragginzgame engineering baseline with explicit source identity and

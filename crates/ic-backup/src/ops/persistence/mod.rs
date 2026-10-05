@@ -22,7 +22,7 @@ pub use command_lifetime_lock::{
 pub use consistency::{
     ConsistencyPersistenceError, create_consistency_requirement, read_consistency_requirement,
 };
-pub use download_journal::{DownloadJournalError, DownloadJournalGuard};
+pub use download_journal::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard};
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};

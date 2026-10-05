@@ -25,8 +25,9 @@ It rejects empty, duplicate, misplaced or competing drafts before mutation.
 Undated imported historical versions remain history, not competing future drafts.
 Changelog presentation does not gate registry publication.
 
-The current committed package and dated changelog are `0.1.7`; the initial `0.1.0`
-history remains undated. Selecting draft notes runs no release/version transaction.
+The workspace manifest owns the package version; the changelog owns selected
+notes and dated history. The initial `0.1.0` history remains undated. Selecting
+draft notes runs no release/version transaction.
 Finish source, changelog and handoff edits before the maintainer commits and
 starts release work. Agents must never create or amend commits, including
 through release scripts.
