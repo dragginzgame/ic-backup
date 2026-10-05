@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.3]
+## [0.2.3] - 2026-10-05
 
 - Retain immutable original execution settlement checkpoints with exact chronological
   journal fingerprints. Local replay requires every original operation Applied and
