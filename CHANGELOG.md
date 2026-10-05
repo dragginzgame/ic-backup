@@ -1,7 +1,13 @@
 # Changelog
 
-## [0.1.9]
+## [0.2.0]
 
+- Refresh the checksum-bound Shared Tooling baseline and helpers from one reviewed
+  committed revision. Add macOS 15 CI on Apple Silicon and Intel, system Bash 3.2
+  checks, and portable checksum/edit helpers; native macOS qualification is pending.
+- Upgrade the exact `ic-management-canister-types` dependency from 0.8.0 to 0.11.0.
+  Preserve the six-method wire bytes, hashes and v1 records; exercise the new status
+  settings through the bounded projection while retaining historical provenance.
 - Let `make shell-check` use an existing `~/.local/bin/shellcheck` when ShellCheck
   is absent from PATH, preserving PATH precedence and mandatory lint failures.
 - Restore the seven vendored Shared Tooling documents to their pinned bytes after

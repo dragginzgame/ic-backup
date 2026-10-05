@@ -658,9 +658,10 @@ Unknown/missing/duplicate fields, unsupported methods/generations and injected
 argument/digest/receiver/authority fields reject. Decode bounds raw byte retention.
 
 The model derives cached Candid arguments with the existing lockfile-selected
-`candid` (currently 0.10.37) and `ic-management-canister-types = 0.8.0`. Original
-0.10.35 source evidence remains historical; the request wire goldens have also
-been rerun against the current selection. Receiver is fixed to the management principal
+`candid` (currently 0.10.37) and `ic-management-canister-types = 0.11.0`. Original
+0.10.35 Candid and 0.8.0 SDK source evidence remain historical; the request/reply
+wire goldens have also been rerun against the current selection. See
+[SDK upgrade evidence](management-types-upgrade.json). Receiver is fixed to the management principal
 `aaaaa-aa`; target is the effective routing principal and encoded `canister_id`.
 All supported methods use replicated update ingress, including the two semantic
 observations. Capture fixes `replace_snapshot = None`, `uninstall_code = Some(false)`

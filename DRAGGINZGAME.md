@@ -8,21 +8,26 @@ Consumer choices described in those guides remain subject to this baseline.
 
 ## Adoption and local authority
 
-- Every consumer must adopt a reviewed revision through a recorded local snapshot or
-  explicit revision-bound reference. Their AGENTS.md must identify that baseline
+- Every consumer must adopt a reviewed revision through a recorded local snapshot
+  or explicit revision-bound reference. Their AGENTS.md must identify that baseline
   and the local overlay. A moving sibling checkout is not hidden inheritance.
 - Shared rules govern engineering practice. Product architecture, identities,
   numeric limits, exact commands, qualification gates and release targets stay
   local. Do not copy one consumer's architecture into the common baseline.
-- Local overlays may strengthen the baseline or define product-specific choices.
-  Record maintainer-approved exceptions with their scope and reason; do not
-  silently weaken a shared rule or claim adoption while leaving conflicts.
+- Local overlays may strengthen the baseline or define product-specific choices
+  within its delegated scope. A change to an explicit common rule, including
+  command authority or delivery cadence, requires a maintainer-approved exception
+  with scope and reason; calling it stricter does not bypass that requirement.
 - Apply the shared baseline and the local overlay within its delegated scope.
-  A conflicting local rule requires a maintainer-approved exception with scope
-  and reason; local instructions do not silently override the common baseline.
+  Local instructions do not silently override the common baseline.
   Read the current handoff for accepted work and implementation status. Treat
   historical documents as evidence, not current authority. Verify documentation
   against implementation; distinguish supported behavior from unfinished plans.
+- Every repository must have a concise, accurate GitHub description of its
+  current purpose and scope, consistent with its README and implementation.
+  Review it during baseline adoption and whenever the repository's purpose,
+  scope or maintenance status changes. Correct missing, stale or misleading
+  descriptions; do not present retired behavior or planned features as current.
 
 ## Scope and authorization
 
@@ -73,6 +78,11 @@ Consumer choices described in those guides remain subject to this baseline.
 - Remove superseded paths completely when their obligations permit retirement.
   Name any remaining consumer or deployment blocker and the evidence needed to
   close it. Do not leave replacement and old implementation indefinitely active.
+- When cleaning up code, list every removed function, method and type in the final
+  user-facing output, including private symbols and those inside deleted files.
+  Give exact names, their former file or module, why each was removed and its
+  replacement when applicable. Distinguish deletions from moves or renames.
+  Shared reasons may be grouped, but every removed name must still be listed.
 - Meaningful completed behavior and tooling changes belong in the current
   changelog draft. Do not choose a new release version for every focused slice.
 
@@ -87,10 +97,12 @@ Consumer choices described in those guides remain subject to this baseline.
 - Breaking public API or semantic changes require a minor release before 1.0;
   a hard cut does not make an incompatible patch acceptable. Release selection
   remains an explicitly authorized consumer action.
-- Never reuse a wire/storage discriminator for an incompatible layout. Identify
-  the frozen format, producers, consumers and retained installations. Coordinate
-  their update and explicit retirement/reset disposition; pre-1.0 is not proof
-  that stored data or external consumers are disposable.
+- Never reuse a wire/storage discriminator for an incompatible layout or interpret
+  retained bytes under a new layout merely because both contracts use V1.
+  A hard cut identifies the frozen format,
+  producers, consumers and retained installations, and coordinates their update
+  and explicit retirement/reset disposition before replacing the current contract.
+  Pre-1.0 is not proof that stored data or external consumers are disposable.
 - Hard cuts do not remove same-contract interruption recovery, backup/restore,
   uncertainty or external obligations. Never discard the only record of effects,
   assets, balances or liabilities merely to remove old source. Product-specific
@@ -160,19 +172,41 @@ Consumer choices described in those guides remain subject to this baseline.
   the support matrix is deliberately changed. Downloaded executables need exact
   consumer-owned versions, pinned digests, HTTPS, verification before extraction
   and a version check before installation. No implicit credentials or targets.
-- Align host-support claims with [the support matrix](docs/supported-hosts.md) and
-  actual CI evidence. An installer branch alone is not a support claim.
+
+## Host support
+
+- Every `dragginzgame` package must work on macOS. This includes its applicable
+  dependency setup, native tools, build, test, CI and deployment workflows.
+  For canister and frontend packages, support includes running their host
+  workflows on macOS; product runtime targets remain locally owned.
+- Consumers declare supported macOS versions and architectures in their local
+  host matrix. Missing coverage or a macOS failure is a support gap to fix,
+  not permission to classify macOS as unsupported. Exceptions require explicit
+  maintainer approval with scope and reason.
+- Host-specific dependency installation, CI setup and deployment commands may
+  differ while preserving the same product contracts, validation obligations,
+  authorization, recovery and artifact preservation. Document prerequisites and
+  isolate host differences at their owning boundary; do not assume Linux tools,
+  paths, package managers or GNU behavior are available on macOS.
+- Qualify supported hosts through native CI or recorded native execution of the
+  relevant workflows. Linux passes, cross-compilation and installer branches
+  alone do not prove macOS behavior. Align evidence with
+  [the host guidance](docs/supported-hosts.md) and the consumer's matrix; report
+  outstanding qualification without weakening the support requirement.
 
 ## Feedback and handoff
 
 - GitHub issues in the owning repository are the sole tracker for bugs, feature
   requests, review findings, reusable gaps and follow-up work. Search existing
   issues before filing; update matching evidence rather than creating duplicates.
-  Handoffs and design documents link to issues, not parallel local feedback queues.
-- A reusable-gap issue records the
-  reviewed upstream revision, affected owner, symptom, focused evidence, smallest
-  proposal and disposition. Identify dirty source separately from a committed
-  revision. Include affected callers/hosts and the smallest useful verification.
+  Do not create or maintain local upstream issue files, feedback ledgers,
+  project-prefixed issue IDs or parallel tracking queues. Handoffs and design
+  documents link to GitHub issues without duplicating triage or issue status.
+  Supporting evidence stays with its existing owner; it is not another tracker.
+- A reusable-gap issue records the reviewed upstream revision, affected owner,
+  symptom, focused evidence, smallest proposal and disposition. Identify dirty
+  source separately from a committed revision. Include affected callers/hosts
+  and the smallest useful verification.
 - Track upstream acceptance separately from verified consumer adoption. Resolve
   product-specific feedback locally instead of promoting it to universal policy.
   Submit feedback or change another repository only within explicit authority.
@@ -181,12 +215,3 @@ Consumer choices described in those guides remain subject to this baseline.
 - Report the outcome, changed files, relevant verification, skipped checks,
   remaining risks and open consumer actions. State compatibility and host impact
   when relevant. Do not claim a release proves publication, adoption or deployment.
-
-## Validation in Shared Tooling itself
-
-These commands apply to this repository, not automatically to every consumer.
-
-- After script changes, run `bash scripts/ci/test-portable-tools.sh` and ShellCheck
-  over scripts/ci/*.sh, scripts/dev/*.sh and scripts/distribution/*.sh.
-- For documentation-only changes, check links, instruction consistency and the
-  diff. Do not run the portable script suite solely because prose changed.

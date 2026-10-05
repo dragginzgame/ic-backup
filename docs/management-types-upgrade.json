@@ -1,0 +1,95 @@
+{
+   "compatibility" : {
+      "lifecycle" : "CanisterStatusType and required status/controller projection unchanged; new minimum_incoming_canister_call_cycles and status_visibility settings are bounded skipped work, not permission evidence",
+      "other_dependencies" : "Cargo.lock changes only this package version/checksum; Candid remains 0.10.37",
+      "qualification" : "Every registered existing request/reply golden enters production admission; complete SDK status fixture includes maximum u128 incoming cycles and a distinct allowed status viewer",
+      "request_and_snapshot_types" : "Used CanisterIdRecord, TakeCanisterSnapshotArgs, LoadCanisterSnapshotArgs and Snapshot retain their existing fields and derives",
+      "released_api" : "The released 0.1.8 baseline at 9a9330a uses SDK request DTOs internally and does not expose CanisterStatusType; the lifecycle reply API exposing that enum was introduced after that release. No published API break requires a product minor release for this upgrade; the maintainer separately selected an undated 0.2.0 draft without a package version transaction.",
+      "untouched_goldens" : [
+         {
+            "path" : "crates/ic-backup/src/model/ic_request/tests/golden.json",
+            "sha256" : "9930c0e2a2fe3c73ce92ca9806eaf218402949f7af8867e0325163ae423fa382"
+         },
+         {
+            "path" : "crates/ic-backup/src/model/ic_snapshot_reply/tests/golden.json",
+            "sha256" : "2b96a955ddd20ac546e0f33aaf14ee2bfafed574c1de39e0e2321803c3bf4bf7"
+         },
+         {
+            "path" : "crates/ic-backup/src/model/ic_lifecycle_reply/tests/golden.json",
+            "sha256" : "f8a1a251e8e5e38943d9568f14726744211a49b8027d42bab85386224cb0fc0d"
+         }
+      ],
+      "wire_and_records" : "Six existing methods, exact bytes/digests and maintained v1 schemas unchanged"
+   },
+   "historical_provenance_retained" : [
+      "docs/ic-request-source.json",
+      "docs/ic-snapshot-reply-source.json",
+      "docs/ic-lifecycle-reply-source.json"
+   ],
+   "inspection_date" : "2026-10-05",
+   "kind" : "registry dependency upgrade inspection",
+   "non_authority" : "Native codec/policy/persistence evidence only; no provider, new method, live IC effect, transfer completeness, effect settlement or release authority",
+   "package" : "ic-management-canister-types",
+   "previous_version" : "0.8.0",
+   "registry" : {
+      "checksum" : "b3e3162bdfbdbc6ca3b4bfa8145f9ba19cddaf3eb8d1af8dc7be6a39557b76c2",
+      "response_sha256" : "433a98d9635d5614b1fb72e9ad9b9184f4719f5b733049da0aad9fc82203d5ff",
+      "retained_response" : "target/management-types-upgrade-registry.jsonl",
+      "selection" : "newest non-yanked entry observed",
+      "url" : "https://index.crates.io/ic/-m/ic-management-canister-types"
+   },
+   "selected_version" : "0.11.0",
+   "source" : {
+      "archive_and_cached_source" : "Exact bytes compared for all inspected files; archive SHA-256 matches the official registry and Cargo.lock",
+      "inspected_files" : [
+         {
+            "bytes" : 77816,
+            "inspected_line_ranges" : [
+               [
+                  1,
+                  20
+               ],
+               [
+                  65,
+                  81
+               ],
+               [
+                  205,
+                  233
+               ],
+               [
+                  464,
+                  559
+               ],
+               [
+                  1733,
+                  1780
+               ]
+            ],
+            "path" : "src/lib.rs",
+            "sha256" : "11f1c93fc9034e3dbcc35ff377e2356a07439382bbcfad8ad213327d83c1c554"
+         },
+         {
+            "bytes" : 1494,
+            "path" : "Cargo.toml",
+            "sha256" : "cf30169064e5eabf91adc41023dcc66666fd5487419a8c63f4c9bdf6545364bb"
+         },
+         {
+            "bytes" : 7041,
+            "path" : "CHANGELOG.md",
+            "sha256" : "055da06fd207e60a606e04720bdf1042fede4e447bd9023c27746585ea55f7a2"
+         },
+         {
+            "bytes" : 131,
+            "path" : ".cargo_vcs_info.json",
+            "sha256" : "714da3c275a54483ab9fb2579429eb6865d5f375c134e51b66d6a6c6c2beb604"
+         }
+      ],
+      "license" : "Apache-2.0",
+      "path_in_vcs" : "packages/ic-management-canister-types",
+      "repository" : "https://github.com/dfinity/ic",
+      "retained_archive_comparison" : "target/management-types-source.IDXDP5/",
+      "revision" : "e74ddee846a8bd664fa0f684ba31dc37e9ebddea"
+   },
+   "version" : 1
+}

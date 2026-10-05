@@ -1,7 +1,42 @@
 # Supported Hosts And Dependencies
 
-Support claims follow executed evidence. An installer branch or an upstream
-release asset does not by itself make a host supported.
+## Required macOS support
+
+Every `dragginzgame` package must work on macOS under the
+[engineering baseline](../DRAGGINZGAME.md#host-support). This covers dependency setup,
+native tools and the applicable build, test and deployment workflows. Canister
+and frontend packages retain their product runtime targets while supporting
+their host workflows on macOS.
+
+Each consumer declares its supported macOS versions and architectures, exact
+prerequisites and qualification commands in its local host matrix. Missing CI
+coverage or a known macOS failure is a support gap to correct. An exception
+requires explicit maintainer approval with scope and reason.
+
+Keep the required support decision separate from passing evidence for a revision.
+Native CI or recorded native execution qualifies relevant host behavior; Linux
+execution, cross-compilation and available download assets do not establish
+macOS filesystem, process or deployment behavior. Report unqualified workflows
+explicitly while retaining the macOS support requirement.
+
+## Host-specific setup and commands
+
+Dependency installation and CI/deployment setup may differ by host. Document
+those differences at the owning boundary and preserve the same product
+contracts, validation obligations, authorization, recovery and retained artifacts.
+
+- Declare the required shell and Make implementation, system utilities and
+  package-manager prerequisites. Check GNU/BSD differences, filesystem modes,
+  paths and process handling wherever the workflow relies on them.
+- Select host-appropriate dependency packages and executable assets explicitly.
+  Preserve reviewed versions, lockfiles and platform digests; dependency setup
+  does not authorize selecting newer versions or making live deployment effects.
+- Exercise applicable package builds, focused tests, dependency setup and
+  operator tooling on the declared native macOS hosts. Deployment-tool validation
+  does not itself require or authorize a live deployment.
+
+The matrix below describes Shared Tooling's own portable scripts. Consumers own
+their package-specific matrices within this required support policy.
 
 ## Portable script baseline
 
@@ -13,10 +48,13 @@ Repository CI exercises the offline regression set on:
 | Ubuntu 24.04 GitHub-hosted runner | Portable scripts, ShellCheck, workflow lint, installer downloads, and secret scan |
 | macOS 15 GitHub-hosted runner | Portable offline regression set with the runner-provided Bash |
 
-The table describes the intended CI contract. A revision is supported only
-after its matching workflow run passes.
+The table describes the intended CI contract. Passing qualification for a
+revision requires its matching workflow run; adding a matrix entry does not
+establish that the run passed.
 
-Windows and non-Bash shells are not supported.
+Shared Tooling's portable scripts do not support Windows or non-Bash shells.
+This does not prohibit a consumer from supporting additional hosts or shells
+through its own qualified tooling.
 
 ## Tool-specific dependencies
 

@@ -49,8 +49,16 @@ TOML
     [[ "$(git config --local --get core.hooksPath)" == .githooks ]]
 }
 
-index_fingerprint() { git ls-files --stage | sha256sum; }
-sources_fingerprint() { sha256sum crates/ic-backup/src/lib.rs; }
+checksum() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$@"
+    else
+        shasum -a 256 "$@"
+    fi
+}
+
+index_fingerprint() { git ls-files --stage | checksum; }
+sources_fingerprint() { checksum crates/ic-backup/src/lib.rs; }
 
 expect_hook_failure() {
     if git hook run pre-commit > rejection.log 2>&1; then

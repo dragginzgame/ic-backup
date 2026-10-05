@@ -55,6 +55,8 @@ or section banners.
 ## Tooling
 
 Use `rustfmt` as the formatting authority and Clippy as a linting baseline.
-Consumers own exact commands, toolchain versions, lint configuration, full
-suite boundaries, and any Wasm or platform-specific constraints.
-
+Consumers own exact commands, toolchain versions, lint configuration and
+qualification gates within the shared baseline. Focused checks run automatically
+during authorized development; broad gates require an explicit request or their
+configured CI pipeline. Wasm and host-specific constraints must preserve the
+baseline's required macOS support and evidence rules.

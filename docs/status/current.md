@@ -26,7 +26,7 @@
 # Current handoff — 2026-10-05
 
 The released package baseline is `0.1.8` at `9a9330a`. The workspace manifest
-remains `0.1.8`, while the changelog contains a selected, undated `0.1.9` draft.
+remains `0.1.8`, while the changelog contains a selected, undated `0.2.0` draft.
 Later repository commits and working-tree documentation do not constitute a
 package release. Release preparation owns the next date, version transaction and
 receipt.
@@ -45,15 +45,98 @@ receipt.
   <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-product-readiness.svg" alt="Product readiness stages showing the implemented local safety foundation followed by application adapters, authenticated IC transport and runners, and PocketIC and live qualification" width="800">
 </p>
 
-The selected `0.1.9` work preserves earlier snapshot reply/comparison behavior
+The selected `0.2.0` draft preserves earlier snapshot reply/comparison behavior
 and adds lifecycle reply and fresh local download-integrity foundations.
-The committed lockfile selects Candid 0.10.37; this batch preserves that selection
-and all dependencies. The release guide now refers to the manifest/changelog owners
+The workspace lockfile selects Candid 0.10.37 and management SDK 0.11.0; the SDK
+upgrade below preserves every other dependency selection. The release guide refers
+to the manifest/changelog owners
 instead of repeating a stale current version; historical evidence remains intact.
-Dated history, Cargo/lockfile, licenses and the historical release receipt remain
-unchanged by the implementation batches recorded below. No version transaction,
+Dated history, licenses and the historical release receipt remain unchanged.
+The SDK upgrade changes its workspace pin and corresponding lock entry. No product
+version transaction,
 tag, package upload or live IC effect is claimed. Only targeted native checks are
 recorded; no full CI or release gate is claimed.
+
+## Shared Tooling best-practice review and refresh
+
+The current common baseline and all twelve declared tooling files now come from
+clean Shared Tooling commit `41e1fd0ba41460bd2127cbf98ac8a4b2b2020d3e`, inspected
+read only on 2026-10-05. The reviewed refresh adds `DRAGGINZGAME.md` to the same
+checksum/mode manifest as its linked guides and helpers; its source remote is
+deliberately recorded with the source checkout's canonical HTTPS spelling.
+The upstream exporter read exact committed Git objects, and the completed
+snapshot verified offline. No sibling source or Git history was changed.
+Previous files and manifest remain at `target/shared-tooling-review.4NA5Aq/previous/`
+and `target/shared-tooling-review.4NA5Aq/previous.snapshot`; the export receipt is
+`target/shared-tooling-review.4NA5Aq/refresh.log`.
+
+The review found a Linux-only CI configuration and nonportable consumer fixture
+helpers. CI now selects Ubuntu 24.04 and macOS 15 on Apple Silicon and Intel, with
+host-specific dependencies and GNU Make setup. The macOS jobs explicitly run
+tooling with system Bash 3.2 before the common native gate. Consumer release/hook
+tests use `shasum` when `sha256sum` is absent and Perl for portable file edits;
+the release fixture uses Bash 3.2 subshell identity and positional arguments instead
+of BASHPID and empty-array expansion. The upstream verifier includes its own
+Bash 3.2 empty-array fix. The local host matrix declares required macOS support
+while preserving the absence of native macOS qualification for this revision.
+
+`make shared-tooling-check tooling-check release-check hooks-check shell-check`
+passed, including snapshot rejection, retained failure artifacts, release rollback/
+retry and hook index preservation. Actionlint passed for the three-host workflow.
+The first four focused targets also passed under an isolated PATH with no
+`sha256sum`, exercising the real `shasum` path. Logs are
+`target/shared-tooling-review-checks.log`, `target/shared-tooling-review-workflow.log`
+and `target/shared-tooling-portable-checks.A6zwiZ/checks.log`. Ordinary whitespace
+checks passed. These are Linux tooling checks, not native macOS or IC evidence.
+No broad CI/release gate or new Rust compilation ran for this refresh.
+
+The public GitHub description review is retained at
+`target/shared-tooling-description-review.json`. It still describes extraction
+design and contributor instructions rather than the implemented Rust foundations;
+[the adoption guide](../shared-tooling.md) contains concrete replacement wording.
+Authenticated GitHub CLI access is unavailable, so no issue was filed or metadata
+changed. Native macOS CI results and the description correction remain maintainer
+actions. No local feedback tracker was created. Product version, earlier SDK
+upgrade work, historical provenance and retained failure/recovery evidence remain
+preserved; no commit, release transaction, package upload or live IC effect ran.
+
+## Management SDK dependency upgrade
+
+The exact `ic-management-canister-types` pin is now `0.11.0`, upgraded from `0.8.0`.
+The official registry index identifies 0.11.0 as the newest non-yanked entry observed
+on 2026-10-05. Its cached archive checksum matches that entry and the new lock entry;
+inspected source, manifest, changelog and revision metadata also match the archive.
+Only this package's version/checksum changed in Cargo.lock; Candid remains 0.10.37.
+See [current dependency inspection](../management-types-upgrade.json); the original
+0.8.0 source provenance remains unchanged historical evidence.
+
+The six request methods and used snapshot shapes retain their wire fields. Every
+original request/reply golden remains byte-for-byte unchanged and passes production
+admission. The full SDK status fixture now includes maximum u128 incoming-call
+cycles and a distinct allowed status viewer; both new settings remain bounded
+skipped work, separate from the required status/controllers and fresh permissions.
+No production codec, product v1 record or request/reply hash encoding changed.
+The released 0.1.8 API uses SDK DTOs internally and does not expose the lifecycle
+status enum; that public API was introduced after the released baseline. The
+maintainer selected an undated 0.2.0 draft for this batch. This is a release choice,
+not a claim that the SDK upgrade breaks the published API or a version transaction.
+
+All 36 focused cases passed: 26 IC request/reply unit cases, six inventory comparison
+cases and four public request/reply/comparison recovery journeys. Warning-denied
+all-target/all-feature package Clippy and rustdoc, plus Rust 1.91.0 all-target/
+all-feature package compilation passed. Logs are `target/management-types-upgrade-`
+`codecs.log`, `comparison.log`, `public.log`, `clippy.log`, `docs.log` and
+`msrv-check.log` with that same prefix. The initial MSRV attempt could not run
+because the toolchain was absent; its log remains at
+`target/management-types-upgrade-msrv.log`. The required toolchain was installed
+before the successful retry; installation evidence is
+`target/management-types-upgrade-msrv-install.log`. Source/archive comparison files
+remain at `target/management-types-source.IDXDP5/`, and the exact registry response
+at `target/management-types-upgrade-registry.jsonl`.
+
+These checks qualify native codecs, pure comparison and retained local recovery.
+No full CI/release gate, package upload, commit or IC effect ran. The product manifest
+remains 0.1.8; the selected undated changelog draft is 0.2.0.
 
 ## Retained local ShellCheck lookup correction
 
@@ -128,8 +211,8 @@ hashes also match retained provenance. Successful tests cleaned only their owned
 fixtures; earlier failed/build/recovery evidence remains retained.
 
 This is focused draft review, not the full CI/release gate or IC backend qualification.
-The package manifest remains `0.1.8` and the selected changelog draft remains undated
-`0.1.9`. The maintainer still owns source commits and release execution under
+This earlier review used the undated `0.1.9` draft; the current draft selection is
+recorded above. The package manifest remains `0.1.8`. The maintainer owns source commits and release execution under
 [the release guide](../releasing.md). No version transaction, tag, push, upload or
 live IC effect ran. Restore-safety/fence and lost-effect contracts, providers,
 transport and runners remain unfinished as described below.
@@ -364,14 +447,15 @@ is `target/release-check-reproduction.log`, with logs under
 Earlier failed evidence remains retained too. Successful test fixtures cleaned
 only their own temporaries.
 
-### Shared engineering and tooling batch
+### Retained initial shared engineering and tooling batch
 
-[Shared adoption](../shared-tooling.md) records upstream committed revision
-`956236a3848c2cfae6ae05f5c77e9c37b01b3366` and the separately hashed dirty upstream
-rules. `DRAGGINZGAME.md` retains those exact reviewed working-tree rules locally;
-AGENTS.md identifies its backup-specific overlay within the mandatory shared
-baseline. Shared and local rules agree on GitHub-only feedback tracking and
-explicit broad-validation authority. CI does not inherit a mutable sibling checkout.
+The initial [shared adoption](../shared-tooling.md) recorded upstream committed
+revision `956236a3848c2cfae6ae05f5c77e9c37b01b3366` and separately hashed dirty
+upstream rules. Those were the reviewed working-tree rules retained locally at
+that time. The current committed snapshot is described above. AGENTS.md retains
+its backup-specific overlay within the mandatory shared baseline. Shared and
+local rules agree on GitHub-only feedback tracking and explicit broad-validation
+authority. CI does not inherit a mutable sibling checkout.
 
 The local snapshot manifest binds exact committed principles, consumption/host
 guides, checksum/snapshot verifiers, validation runner and runner regressions.

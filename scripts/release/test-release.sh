@@ -7,7 +7,7 @@ export TEST_REAL_MAKE
 mkdir -p "$ROOT/target"
 TEMPORARY="$(mktemp -d "$ROOT/target/release-tests.XXXXXX")"
 mkdir -p "$TEMPORARY/bin"
-RUNNER_PID="$BASHPID"
+RUNNER_SUBSHELL="$BASH_SUBSHELL"
 CASE_NAME=setup
 CASE_LOG=/dev/null
 export TEST_LOG=/dev/null TEST_EFFECTS=/dev/null
@@ -15,7 +15,7 @@ export TEST_SOURCE=1111111111111111111111111111111111111111
 
 finish() {
     local status=$?
-    [[ "$BASHPID" == "$RUNNER_PID" ]] || return "$status"
+    [[ "$BASH_SUBSHELL" == "$RUNNER_SUBSHELL" ]] || return "$status"
     if [[ "$status" == 0 ]]; then
         rm -rf "$TEMPORARY"
     else
@@ -100,8 +100,16 @@ expect_failure() {
     case "$status" in 1 | 255) ;; *) echo "unexpected rejection status: $status" >&2; exit 1 ;; esac
 }
 
+checksum() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$@"
+    else
+        shasum -a 256 "$@"
+    fi
+}
+
 fingerprint() {
-    sha256sum Cargo.toml Cargo.lock crates/ic-backup/Cargo.toml CHANGELOG.md
+    checksum Cargo.toml Cargo.lock crates/ic-backup/Cargo.toml CHANGELOG.md
 }
 
 assert_unchanged() {
@@ -196,7 +204,7 @@ case "$*" in
     'update --offline -p ic-backup')
         [[ "${TEST_UPDATE_FAIL:-0}" != 1 ]]
         next="$(perl scripts/release/release-data.pl version)"
-        sed -i "s/^version = \"0.1.0\"$/version = \"$next\"/" Cargo.lock
+        perl -i -pe 'BEGIN { $next = shift @ARGV } s/^version = "0\.1\.0"$/version = "$next"/' "$next" Cargo.lock
         ;;
     'metadata --offline --locked --no-deps --format-version 1')
         [[ "${TEST_METADATA_FAIL:-0}" != 1 ]]
@@ -429,11 +437,11 @@ test_publish() {
             printf '\n- Next development notes.\n' >> CHANGELOG.md
             ;;
         publication-config)
-            sed -i 's/publish = \["crates-io"\]/publish = false/' Cargo.toml
+            perl -i -pe 's/publish = \["crates-io"\]/publish = false/' Cargo.toml
             prepare_tagged_release
             # A committed publishing correction after a repository release
             # leaves its receipt and tag behind without changing crate version.
-            sed -i 's/publish = false/publish = ["crates-io"]/' Cargo.toml
+            perl -i -pe 's/publish = false/publish = ["crates-io"]/' Cargo.toml
             echo 4444444444444444444444444444444444444444 > target/mock-head
             ;;
         missing-tag)
@@ -449,7 +457,7 @@ test_publish() {
     : > "$TEST_LOG"
     : > "$TEST_EFFECTS"
     before="$(fingerprint)"
-    receipt_before="$(if [[ -f docs/release.json ]]; then sha256sum docs/release.json; fi)"
+    receipt_before="$(if [[ -f docs/release.json ]]; then checksum docs/release.json; fi)"
     cp "$ROOT/Makefile" Makefile
     if [[ "$mode" == dry-run ]]; then
         "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
@@ -461,7 +469,7 @@ test_publish() {
     [[ "$(cat "$TEST_LOG")" == "$expected" ]]
     [[ "$(cat "$TEST_EFFECTS")" == publish ]]
     [[ "$(fingerprint)" == "$before" ]]
-    [[ "$(if [[ -f docs/release.json ]]; then sha256sum docs/release.json; fi)" == "$receipt_before" ]]
+    [[ "$(if [[ -f docs/release.json ]]; then checksum docs/release.json; fi)" == "$receipt_before" ]]
     assert_cache_retained
 }
 
@@ -470,16 +478,20 @@ test_publish_failure() {
     : > "$TEST_EFFECTS"
     before="$(fingerprint)"
     export TEST_PUBLISH_FAIL=1
-    local args=()
-    [[ "$1" == dry-run ]] && args=(--dry-run)
-    if bash scripts/release/release.sh publish "${args[@]}" >target/cargo-rejection.log 2>&1; then
+    local mode="$1" expected='cargo publish --locked --registry crates-io -p ic-backup'
+    set --
+    if [[ "$mode" == dry-run ]]; then
+        set -- --dry-run
+        expected+=' --dry-run'
+    fi
+    if bash scripts/release/release.sh publish "$@" >target/cargo-rejection.log 2>&1; then
         echo 'expected Cargo publication failure' >&2
         exit 1
     else
         [[ "$?" == 101 ]]
     fi
     rg -q '^error: simulated Cargo package rejection$' target/cargo-rejection.log
-    [[ "$(cat "$TEST_LOG")" == "cargo publish --locked --registry crates-io -p ic-backup${args[*]:+ ${args[*]}}" ]]
+    [[ "$(cat "$TEST_LOG")" == "$expected" ]]
     [[ ! -s "$TEST_EFFECTS" ]]
     assert_unchanged
     assert_cache_retained

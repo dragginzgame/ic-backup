@@ -4,7 +4,7 @@ use super::*;
 use crate::model::{control_authority::MAX_CONTROLLERS, ic_request::IcManagementRequest};
 use candid::{CandidType, Principal};
 use ic_management_canister_types::{
-    CanisterStatusResult, DefiniteCanisterSettings, MemoryMetrics, QueryStats,
+    CanisterStatusResult, DefiniteCanisterSettings, MemoryMetrics, QueryStats, StatusVisibility,
 };
 use serde::Deserialize;
 
@@ -124,6 +124,8 @@ fn accepts_complete_pinned_sdk_status_without_claiming_unprojected_metadata() {
         version: u64::MAX,
         settings: DefiniteCanisterSettings {
             controllers,
+            minimum_incoming_canister_call_cycles: u128::MAX.into(),
+            status_visibility: StatusVisibility::AllowedViewers(vec![Principal::from_slice(&[17])]),
             ..DefiniteCanisterSettings::default()
         },
         module_hash: Some(vec![0; 32]),

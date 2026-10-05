@@ -91,7 +91,7 @@
   "x-codec": {
     "candid": "0.10",
     "candid-lock-selection": "0.10.37",
-    "ic-management-canister-types": "=0.8.0",
+    "ic-management-canister-types": "=0.11.0",
     "receiver": "aaaaa-aa",
     "call-mode": "replicated update ingress",
     "methods": {

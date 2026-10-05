@@ -251,11 +251,29 @@ entries do not establish IC Backup qualification.
 
 | Scope | Current position |
 | --- | --- |
-| Native library development | Pinned Rust toolchains and repository-local build directory; native evidence is retained in the handoff |
+| Linux x86-64 | Ubuntu 24.04 CI; retained local native evidence is described in the handoff |
+| macOS 15 Apple Silicon | Required native library and tooling support; `macos-15` CI configured, native qualification pending |
+| macOS 15 Intel | Required native library and tooling support; `macos-15-intel` CI configured, native qualification pending |
 | Repository scripts | Bash 3.2 or newer with the dependencies listed below |
-| IC Backup CI | Linux only; the configured workflow uses `ubuntu-latest` |
 | Windows and non-Bash shells | No supported product lane |
 | Complete backup/restore | Unimplemented; no host has end-to-end product qualification |
+
+The pinned development toolchain, Rust 1.91.0, rustfmt and Clippy are required on
+each native host. Repository tooling requires Git, GNU Make, Bash, Perl with core
+JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck and either `sha256sum` or
+`shasum`. Native process fixtures also require Python 3. The standard Unix utilities
+listed below may use their GNU or BSD implementations.
+
+On Ubuntu, install missing tooling with `sudo apt-get install make git perl
+python3 ripgrep shellcheck util-linux`. On macOS 15, install the Xcode command-line
+tools and Homebrew, then run `brew install flock make ripgrep shellcheck`; provide
+Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
+`export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through
+rustup, then run `rustup show active-toolchain` and
+`rustup toolchain install 1.91.0 --profile minimal` in this checkout. CI installs
+the host-specific tooling and uses the same native validation gate on all three
+hosts, with additional system Bash 3.2 tooling checks on macOS. These setup paths
+and configured jobs are not evidence that the pending native macOS runs passed.
 
 ## Commands and build ownership
 
@@ -300,7 +318,7 @@ validation requires a maintainer request or CI. `make ci`, `make validate` and
 `make release-verify` run the full configured gate: snapshot verification,
 dependency fetch, tooling, formatting, native compilation, Clippy, tests, docs,
 MSRV and package verification.
-CI runs this gate on Linux. The shared runner preserves target order, stops at
+CI runs this gate on the Linux and macOS hosts above. The shared runner preserves target order, stops at
 the first failure and prints target-labelled diagnostics and a result/timing
 summary. Full and highlighted failure logs remain under
 `target/validation-failures/`; GitHub Actions also gets a step summary.

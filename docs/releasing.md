@@ -77,6 +77,8 @@ Preparation runs `make release-verify`, the complete native and tooling gate
 described in [development](development.md). Required tools are the pinned Rust
 toolchain, rustfmt, Clippy, Rust 1.91.0, Bash, Git, Make, Perl with core JSON::PP
 and Digest::SHA, ripgrep, flock, ShellCheck and a SHA-256 implementation. Local
+host-specific setup, including GNU Make and flock on macOS, is documented in
+[the supported host matrix](development.md#supported-host-scope).
 Shared Tooling snapshot verification precedes locked dependency fetch and offline
 compilation. Version mutation uses an offline Cargo update.
 

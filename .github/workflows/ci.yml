@@ -10,14 +10,34 @@ permissions:
 
 jobs:
   library:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
       - name: Install the pinned development toolchain
         run: rustup show active-toolchain
       - name: Install the minimum supported Rust toolchain
         run: rustup toolchain install 1.91.0 --profile minimal
-      - name: Install shell tooling
+      - name: Install Linux shell tooling
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes shellcheck ripgrep
+      - name: Install macOS shell tooling
+        if: runner.os == 'macOS'
+        run: |
+          brew install flock make ripgrep shellcheck
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+      - name: Check tooling with macOS system Bash 3.2
+        if: runner.os == 'macOS'
+        shell: /bin/bash --noprofile --norc -eo pipefail {0}
+        run: |
+          /bin/bash scripts/ci/test-tooling.sh
+          /bin/bash scripts/release/test-release.sh
+          /bin/bash scripts/hooks/test-hooks.sh
       - name: Validate the native library and repository tooling
         run: make ci

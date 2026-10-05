@@ -104,6 +104,7 @@ Stop and rescope if the proposal solves more than the demonstrated problem,
 introduces another independent owner or behavior, adds configuration instead
 of making a decision, or cannot explain why no-build is insufficient.
 
-Consumers own product-specific performance metrics, compatibility rules,
-release policy, and required handoff fields.
-
+Consumers own product-specific performance metrics, transition and retirement
+procedures, exact release gates, and additional handoff fields within the shared
+baseline. They do not independently override its hard-cut, continuation,
+validation-authority or effect-authorization rules.
