@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0]
+## [0.2.0] - 2026-10-05
 
 - Refresh the checksum-bound Shared Tooling baseline and helpers from one reviewed
   committed revision. Add macOS 15 CI on Apple Silicon and Intel, system Bash 3.2
