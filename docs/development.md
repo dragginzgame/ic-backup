@@ -43,6 +43,14 @@ make test
 use this repository's own `target/` directory. Check for an active build before
 editing source or lockfiles or starting another compilation.
 
+`make shell-check` also requires ShellCheck and Perl. It uses ShellCheck from
+`PATH` first, then an executable `~/.local/bin/shellcheck` if PATH lookup fails.
+It reports the selected command and fails if neither location provides the tool;
+lint failures never trigger a fallback or skip. Perl must be on PATH. CI installs
+ShellCheck explicitly; locally, install it with the host package manager or in
+the user-local location. An existing user-local installation works with plain
+`make shell-check` in non-login shells without changing the terminal's PATH.
+
 ## Architecture at a glance
 
 | Area | Responsibility |

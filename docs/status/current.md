@@ -55,6 +55,31 @@ unchanged by the implementation batches recorded below. No version transaction,
 tag, package upload or live IC effect is claimed. Only targeted native checks are
 recorded; no full CI or release gate is claimed.
 
+## Retained local ShellCheck lookup correction
+
+The reported `shell-check` failure came from a missing PATH entry, not a script
+diagnostic. ShellCheck 0.11.0 already exists at `/home/adam/.local/bin/shellcheck`.
+The host's login profile includes that directory, but the inherited non-login
+validation environment did not. `make shell-check` now selects the PATH command
+first, then an executable `~/.local/bin/shellcheck` only if PATH lookup fails.
+It reports the selected command and rejects a missing tool; an available tool's
+failure stops validation without another lookup or lint bypass.
+
+Plain Make and the actual shared runner's selected `shell-check` target passed
+ShellCheck, Bash syntax and Perl syntax with PATH restricted to `/usr/bin:/bin`.
+A fixture PATH command exited 53; its marker and failed Make status verified PATH
+precedence and failure propagation. Logs are `target/shellcheck-user-local-validation.log`
+and `target/shellcheck-lookup.HTluDY/`. Earlier validation with an explicitly extended
+PATH remains at `target/shellcheck-path-validation.log`. Both retained failure logs
+remain under `target/validation-failures/` with names
+`20261005T125303Z-600509-2-shell-check.log` and
+`20261005T125321Z-601273-2-shell-check.log`.
+
+The development quick start and selected changelog describe current lookup behavior.
+No dependency download or host-profile edit was needed. The consumer-owned Makefile
+changed; vendored scripts and snapshot identity remain intact. No Rust compilation,
+full CI/release gate or release transaction ran for this lookup correction.
+
 ## Retained Shared Tooling document restoration
 
 The documentation sweep in `c16b909` changed all seven manifest-declared Markdown

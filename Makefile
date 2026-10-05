@@ -147,7 +147,17 @@ shell-check:
 	@for script in scripts/ci/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit; do \
 		bash -n "$$script" || exit $$?; \
 	done
-	shellcheck scripts/ci/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
+	@set -e; \
+	if command -v shellcheck >/dev/null 2>&1; then \
+		shellcheck_bin=shellcheck; \
+	elif [[ -x "$$HOME/.local/bin/shellcheck" ]]; then \
+		shellcheck_bin="$$HOME/.local/bin/shellcheck"; \
+	else \
+		printf '%s\n' 'error: ShellCheck is required; install it on PATH or at ~/.local/bin/shellcheck' >&2; \
+		exit 127; \
+	fi; \
+	printf '%s\n' "$$shellcheck_bin scripts/ci/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit"; \
+	"$$shellcheck_bin" scripts/ci/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
 	perl -c scripts/release/release-data.pl
 
 tags:

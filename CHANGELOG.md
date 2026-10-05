@@ -2,6 +2,8 @@
 
 ## [0.1.9]
 
+- Let `make shell-check` use an existing `~/.local/bin/shellcheck` when ShellCheck
+  is absent from PATH, preserving PATH precedence and mandatory lint failures.
 - Restore the seven vendored Shared Tooling documents to their pinned bytes after
   local branding and prose edits caused snapshot verification to fail. Keep local
   navigation and host guidance outside the verified snapshot.
