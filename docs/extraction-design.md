@@ -677,6 +677,16 @@ or recreating a copy. Staging is not durable publication; future byte custody, b
 upload/extent completeness and current dispatch/application safety remain separate.
 See [the maintained boundary](extraction-boundary.md#private-original-operation-restore-artifacts).
 
+Separate durable restore-copy publication now reuses exact retained original-source
+admission, the selected checksum and canonical descriptor synchronization/atomic
+no-replace publication. Recovery verifies/synchronizes the matching canonical tree
+without rereading source trees or repeating a copy. Original records are re-admitted
+before/after; all accounting, obligations and references remain unchanged. Published-
+copy verification is a distinct fresh local check, not durability inferred from a
+path. Failures retain conflicting/partial/published evidence without repair or cleanup.
+Backend completeness, application safety and effect/release authority remain separate.
+See [the maintained boundary](extraction-boundary.md#durable-original-operation-restore-artifacts).
+
 Exact originally reserved IC capture/load/start/stop requests now join the full
 original plan, immutable attempt authority and existing canonical IC payloads.
 A single-update port and bounded passive reply association reuse existing capture

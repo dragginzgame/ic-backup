@@ -5,7 +5,9 @@ mod local_restore_artifact;
 mod local_restore_source;
 mod manifest;
 pub use integrity::DownloadIntegrityError;
-pub use local_restore_artifact::{LocalRestoreArtifactError, LocalRestoreArtifactView};
+pub use local_restore_artifact::{
+    LocalRestoreArtifactError, LocalRestoreArtifactPublicationError, LocalRestoreArtifactView,
+};
 pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
 

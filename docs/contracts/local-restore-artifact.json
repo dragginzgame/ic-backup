@@ -19,15 +19,30 @@
       "Returned private-field view borrows both layouts, original plans/requirement and source journal. It exposes exact original operation/artifact identities and the checked copy path without promising future path or byte stability."
    ],
    "owners" : {
+      "durable_commit" : "ops::persistence::commit_artifact_directory",
       "manifest_digest" : "docs/contracts/download-manifest.json",
       "manifest_schema" : "docs/contracts/download-journal.schema.json",
       "original_admission" : "DownloadJournalGuard::admit_local_restore_source",
       "original_source_contract" : "docs/contracts/local-restore-source.json",
+      "publication" : "DownloadJournalGuard::publish_staged_local_restore_artifact",
+      "published_copy_verification" : "DownloadJournalGuard::verify_published_local_restore_artifact",
       "requirement_schema" : "docs/contracts/restore-safety-requirement.schema.json",
       "retained_copy_verification" : "DownloadJournalGuard::verify_staged_local_restore_artifact",
       "secure_copy" : "ops::artifacts::stage_relative_path",
       "stage" : "DownloadJournalGuard::stage_local_restore_artifact",
       "view" : "ops::persistence::LocalRestoreArtifactView"
+   },
+   "publication" : {
+      "durability" : "Reuse canonical no-follow file/directory synchronization, exact checksum verification, atomic no-replace rename and parent directory synchronization. Return existing original-artifact view plus explicit Published/Recovered outcome.",
+      "exclusion" : "Share the existing staged-path operation JournalLock with staging and both copy-verification operations; borrow both layouts and the original source journal.",
+      "original_admission" : "Require exact retained plans/requirement/manifest/journal and selected original checksum before publication; re-admit originals and freshly verify canonical bytes after publication. No source tree reads or copies occur.",
+      "paths" : "Fixed staged restore-artifact-{original_operation_sequence}.tmp and canonical sibling restore-artifact-{original_operation_sequence}, directly under held restore layout.",
+      "recovery" : "When only canonical exists, verify and synchronize exact canonical bytes under unchanged original metadata without recopying or source-tree reads. A failed reply/admission may leave publication complete; retain both paths for exact recovery.",
+      "rejection" : "Both/neither paths, changed/unsafe bytes, original metadata or custody mismatch and contention reject without replacement, repair or cleanup. No journals, attempts, obligations, references or fences change."
+   },
+   "published_copy_verification" : {
+      "operation" : "Distinct explicit fresh canonical-copy hash and before/after original metadata admission under the same operation lock. No source tree reads, copies, synchronization or publication attestation.",
+      "replay" : "Ordinary resume/terminal replay never invoke fresh source/copy verification or publication. Path existence does not establish prior durable publication."
    },
    "recovery" : {
       "operation" : "Explicit verification re-admits retained original metadata before/after fresh no-follow hashing of the copy under original sequence exclusion.",

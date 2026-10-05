@@ -1,0 +1,50 @@
+{
+   "adaptation" : "Reuse exact retained original-source and operation/artifact owners, shared operation exclusion, canonical durable artifact commit and existing checked view. Add explicit publication/recovery and fresh published-copy verification without new records/schemas/hashes/accounting or authority flags.",
+   "consumer_baseline" : "target/restore-artifact-publication-review/consumer-head.txt",
+   "consumers" : [
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/publication/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/publication/tests/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/tests/mod.rs",
+      "crates/ic-backup/src/ops/persistence/download_journal/mod.rs",
+      "crates/ic-backup/src/ops/persistence/mod.rs",
+      "crates/ic-backup/src/test_support/mod.rs",
+      "crates/ic-backup/tests/local_restore_source.rs"
+   ],
+   "contract" : "docs/contracts/local-restore-artifact.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Fresh committed source review only. No new source import or Canic consumer change.",
+         "finding" : "Source private staging verifies original checksum but deletes stale roots and cleans copies on Drop. Those deletion/upload/runner behaviors are not imported.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               160
+            ]
+         ],
+         "path" : "crates/canic-backup/src/restore/runner/artifact.rs",
+         "retained_copy" : "target/restore-artifact-publication-review/source/crates/canic-backup/src/restore/runner/artifact.rs",
+         "sha256" : "d3e34cb28e1c60c05859e471be028e78a09fb8aab758ee12c51a650b10156bbc"
+      },
+      {
+         "disposition" : "Fresh committed source review only. No new source import or Canic consumer change.",
+         "finding" : "Committed canonical publication/recovery delegates to descriptor synchronization, checksum verification, atomic no-replace rename and parent fsync. Reuse the already extracted production owner; no second publisher or new source copying.",
+         "inspected_line_ranges" : [
+            [
+               1,
+               172
+            ]
+         ],
+         "path" : "crates/canic-backup/src/persistence/artifact_commit.rs",
+         "retained_copy" : "target/restore-artifact-publication-review/source/crates/canic-backup/src/persistence/artifact_commit.rs",
+         "sha256" : "7d24d39716bc0c15d1cc2abfcb165b667c5bb816d0542eb69b0a6e97c225854a"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native Linux exact bytes/private permissions/original records, conflict/unsafe/drift/lost-reply rejection, acknowledged owner death and retained spending/fence/reference recovery. Existing commit-owner regressions run against production. Stable noncooperating custody, native macOS, backend extents/upload/authentication, application safety, dispatch and terminal/fence/reference release remain independently qualified.",
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "5eb85ddf12bde772123b5e0887308c3c045ac669",
+   "source_status" : "target/restore-artifact-publication-review/source-status.txt",
+   "source_worktree_dirty" : false,
+   "version" : 1
+}

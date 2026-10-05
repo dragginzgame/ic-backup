@@ -1462,6 +1462,51 @@ and actual callers. Its stale-copy deletion, drop cleanup, upload gating and run
 execution are not imported. No transfer/extent/authentication, current permissions,
 command dispatch, terminal proof or fence/reference release is qualified here.
 
+### Durable original-operation restore artifacts
+
+`DownloadJournalGuard::publish_staged_local_restore_artifact` is the explicit local
+durable operation after private staging. It resolves the original opaque operation
+and selected artifact through canonical retained original-source admission under both
+layout lifetimes and the source-journal guard. It shares staging/verification's lock
+on `restore-artifact-{sequence}.tmp` and delegates to `commit_artifact_directory`
+with that fixed temporary path, canonical sibling `restore-artifact-{sequence}` and
+the exact original checksum. Descriptor synchronization, finite-buffer hashing,
+atomic no-replace rename and parent-directory synchronization keep their existing
+owner. No new records, hashes, schemas or progress/accounting state appear.
+
+Publication returns the existing checked original-artifact view plus explicit
+Published/Recovered outcome. The canonical bytes and original retained plans,
+requirement, manifest and journal are re-admitted after publication. Recovery
+synchronizes and verifies the matching canonical tree when temporary bytes are
+absent, without copying or reading source artifact trees. Original metadata is still
+required even when source trees are unavailable. Both paths present, neither present,
+changed/unsafe bytes, missing/changed original declarations and contention reject
+without replacement, repair, automatic cleanup or effects. IO/admission failure may
+leave the canonical publication complete; retain it for exact-path recovery.
+
+`verify_published_local_restore_artifact` freshly admits retained originals and hashes
+the canonical tree under the same operation lock. It performs no fsync/publication,
+source-tree reads or recopying and does not infer durability from the path's existence.
+Neither operation runs as ordinary resume or terminal replay. Existing original-source
+IO/target/token limits and private copy permissions remain unchanged; stable
+noncooperating parent/byte custody remains integration-owned. All journals, spent
+attempts, fence obligations and source references remain unchanged. Success grants
+no complete backend transfer, authenticated snapshot, current permission, command
+dispatch, upload/load/start, application safety, terminal or fence/reference release.
+
+Native tests qualify publication/recovery with source trees moved aside, exact bytes/
+private permissions, missing/conflicting/changed/unsafe trees, lost replies before/
+after actual durable publication, closing original/canonical drift and shared lock
+contention. Acknowledged child death before/after actual publication retains exact
+paths and recovers without cleanup. The public source journey now publishes and
+checks the retained copy while preserving exact original journals/manifest/requirement,
+fence obligation and unfinished references. Existing publication-owner regressions
+also run freshly against the reused production implementation. See
+[the maintained contract](contracts/local-restore-artifact.json) and
+[fresh source inspection](local-restore-artifact-publication-source.json). Canic staging
+cleanup, upload integration and all consumers remain unchanged; no live effect or
+native macOS qualification is claimed.
+
 ### Exact originally reserved IC mutation updates
 
 `model::ic_mutation::IcMutationRequest` derives the exact original operation authority

@@ -287,6 +287,21 @@ backend/application qualification remain integration-owned. See
 `cargo test --offline --locked -p ic-backup --lib ops::artifacts` and
 `cargo test --offline --locked -p ic-backup --test local_restore_source`.
 
+`publish_staged_local_restore_artifact` is the separate explicit durable operation.
+It checks retained original metadata and the exact selected checksum, synchronizes
+the staged tree, publishes without replacement to `restore-artifact-{sequence}` and
+re-admits the originals/canonical bytes before returning the view plus Published or
+Recovered outcome. Recovery synchronizes an existing matching canonical tree without
+source-tree reads or recopying. It shares staging's operation lock; both/neither paths,
+changed bytes, unsafe entries, replaced custody and original drift reject while
+retaining evidence. `verify_published_local_restore_artifact` freshly checks canonical
+bytes without synchronization or a publication attestation. No journals, attempts,
+fences or references change; actual backend/application/dispatch qualification remains
+separate. See [fresh publication inspection](local-restore-artifact-publication-source.json).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib local_restore_artifact`,
+`cargo test --offline --locked -p ic-backup --lib artifact_commit` and
+`cargo test --offline --locked -p ic-backup --test local_restore_source`.
+
 `model::restore_safety` retains an immutable original restore/source/artifact/safety
 requirement. Persistence requires both original plans under unchanged layout guards
 and never replaces the 1 KiB declaration. Ephemeral exact load/start requests and

@@ -12,8 +12,9 @@ use ic_backup::{
         },
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, FenceObligationRequirement,
-        create_fence_obligation, create_operation_plan, create_restore_safety_requirement,
+        ArtifactCommitOutcome, AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard,
+        FenceObligationRequirement, create_fence_obligation, create_operation_plan,
+        create_restore_safety_requirement,
     },
 };
 use serde_json::json;
@@ -262,6 +263,8 @@ fn private_restore_copy_recovers_with_source_trees_absent_and_original_obligatio
         fs::read(copy.path().join("heap.bin")).unwrap(),
         b"original source bytes"
     );
+    drop(copy);
+    publish_and_check_retained_copy(&journal, &layout, &restore, &source, &requirement);
     assert!(
         journal
             .verify_local_restore_source(&layout, &restore, &source, &requirement)
@@ -279,10 +282,43 @@ fn private_restore_copy_recovers_with_source_trees_absent_and_original_obligatio
     for (name, bytes) in names.iter().zip(originals) {
         assert_eq!(fs::read(root.join(name)).unwrap(), bytes);
     }
-    drop(copy);
     drop(attempt);
     drop(journal);
     drop(layout);
     drop(source_layout);
     fs::remove_dir_all(root).unwrap();
+}
+
+fn publish_and_check_retained_copy(
+    journal: &DownloadJournalGuard<'_>,
+    layout: &BackupLayoutGuard,
+    restore: &OperationPlanRecord,
+    source: &OperationPlanRecord,
+    requirement: &RestoreSafetyRequirementRecord,
+) {
+    let (copy, outcome) = journal
+        .publish_staged_local_restore_artifact(layout, restore, source, requirement, 0)
+        .unwrap();
+    assert_eq!(outcome, ArtifactCommitOutcome::Published);
+    assert_eq!(copy.path(), layout.root().join("restore-artifact-0"));
+    assert_eq!(
+        fs::read(copy.path().join("heap.bin")).unwrap(),
+        b"original source bytes"
+    );
+    drop(copy);
+    assert!(!layout.root().join("restore-artifact-0.tmp").exists());
+    let (copy, outcome) = journal
+        .publish_staged_local_restore_artifact(layout, restore, source, requirement, 0)
+        .unwrap();
+    assert_eq!(outcome, ArtifactCommitOutcome::Recovered);
+    let verified = journal
+        .verify_published_local_restore_artifact(layout, restore, source, requirement, 0)
+        .unwrap();
+    assert_eq!(verified.path(), copy.path());
+    assert_eq!(verified.artifact(), copy.artifact());
+    assert!(
+        journal
+            .verify_staged_local_restore_artifact(layout, restore, source, requirement, 0)
+            .is_err()
+    );
 }

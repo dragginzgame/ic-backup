@@ -27,8 +27,8 @@ pub use consistency::{
 };
 pub use download_journal::{
     DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard, DownloadManifestError,
-    LocalRestoreArtifactError, LocalRestoreArtifactView, LocalRestoreSourceError,
-    read_download_manifest,
+    LocalRestoreArtifactError, LocalRestoreArtifactPublicationError, LocalRestoreArtifactView,
+    LocalRestoreSourceError, read_download_manifest,
 };
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use execution_settlement::{

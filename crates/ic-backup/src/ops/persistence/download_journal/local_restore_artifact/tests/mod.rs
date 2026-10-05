@@ -15,15 +15,15 @@ use std::{
     process::Command,
 };
 
-struct Fixture {
-    root: PathBuf,
-    restore_layout: BackupLayoutGuard,
-    source_layout: BackupLayoutGuard,
-    restore: OperationPlanRecord,
-    source: OperationPlanRecord,
-    requirement: RestoreSafetyRequirementRecord,
+pub(super) struct Fixture {
+    pub(super) root: PathBuf,
+    pub(super) restore_layout: BackupLayoutGuard,
+    pub(super) source_layout: BackupLayoutGuard,
+    pub(super) restore: OperationPlanRecord,
+    pub(super) source: OperationPlanRecord,
+    pub(super) requirement: RestoreSafetyRequirementRecord,
 }
-fn fixture() -> Fixture {
+pub(super) fn fixture() -> Fixture {
     let root = temp_dir("ic-backup-local-restore-artifact");
     fs::create_dir_all(root.join("source")).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
@@ -69,7 +69,7 @@ fn fixture() -> Fixture {
         requirement,
     }
 }
-fn stage<'a>(
+pub(super) fn stage<'a>(
     f: &'a Fixture,
     journal: &'a DownloadJournalGuard<'_>,
 ) -> Result<LocalRestoreArtifactView<'a>, LocalRestoreArtifactError> {

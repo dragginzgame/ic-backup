@@ -170,8 +170,8 @@ implemented foundation includes:
   replay that preserves original snapshot/checksum evidence;
 - fresh local restore-source verification under the original requirement, exact
   manifest and existing selected canister IDs; and
-- private operation-bound restore artifact copies and explicit retained-copy
-  verification that preserves partial evidence and original obligations.
+- private operation-bound restore artifact copies, explicit durable publication
+  and retained-copy verification that preserve partial evidence and original obligations.
 
 These components have native regression evidence for their local filesystem,
 record and process behavior. They do not establish real Internet Computer backup

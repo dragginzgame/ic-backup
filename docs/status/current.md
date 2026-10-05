@@ -25,17 +25,88 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.3.1` live. The clean starting baseline is release commit
-`527f0af`, with annotated local `v0.3.1`, manifest `0.3.1`, dated changelog and receipt
-source `e750ee7dccef9256d11aaf030b544a53d70a3493` under `release-verify`.
+The maintainer reports `0.3.2` pushed. The clean starting baseline is release commit
+`a9f9fb9`, with annotated local `v0.3.2`, manifest `0.3.2`, dated changelog and receipt
+source `354035e11d2b86baa6529fc810831e0dcc146dbf` under `release-verify`.
 Read-only exact receipt/tag/parent verification passed before continuing:
-`target/ic-observation-review/release-tag-check.log`. Registry publication was not
-independently observed. Compatible exact reserved recovery-observation additions
-automatically open one undated `0.3.2` pending entry. Package
+`target/restore-artifact-publication-review/release-tag-check.log`. Registry publication
+was not independently observed. Compatible durable original-copy publication additions
+automatically open one undated `0.3.3` pending entry. Package
 metadata, lock selection, receipt and reviewed Shared Tooling snapshot are unchanged.
 This continuation creates no commits, tags, pushes, uploads or live IC effects.
 
-## Exact originally reserved IC recovery observations
+## Durable original-operation restore artifacts
+
+`publish_staged_local_restore_artifact` joins exact original source/operation/artifact
+admission with the existing checksum and descriptor-based durable artifact publisher.
+It synchronizes and atomically publishes fixed staging bytes to their canonical
+original-operation sibling, then re-admits retained originals and canonical bytes.
+The returned existing view plus Published/Recovered outcome borrows both layouts,
+source journal and exact declarations. Recovery synchronizes the matching canonical
+copy without source-tree reads or recopying. Separate
+`verify_published_local_restore_artifact` freshly checks canonical bytes without fsync
+or inferring earlier durability from a path. See
+[the boundary](../extraction-boundary.md#durable-original-operation-restore-artifacts),
+[updated contract](../contracts/local-restore-artifact.json) and
+[fresh source review](../local-restore-artifact-publication-source.json).
+
+Preserve original 1 KiB requirement/1 MiB plan-manifest-journal IO, 1,024 targets,
+256-token-byte and 64 KiB copy/hash-buffer limits. Staging, publication and both
+verification paths share original staging-path exclusion. Held identities are admitted
+before new publication/verification lock-sidecar creation. Missing/conflicting/unsafe/
+changed copies, replaced layouts and original drift reject without replacement,
+repair or cleanup. Failure may retain a completed publication; recover its exact
+original paths. No record/schema/hash/accounting owner or journal transition appears;
+all attempts, fence obligations and source references remain unchanged. Stable
+noncooperating parent/byte custody, authentic snapshots/backend completeness,
+application safety and upload/load/start/terminal/release authority remain independent.
+Ordinary resume and terminal replay do not run these explicit fresh operations.
+
+Fresh targeted Linux evidence under `target/restore-artifact-publication-review`:
+
+- Eleven local artifact cases pass (`unit-final-custody.log`): six new publication
+  cases plus five retained staging cases. They check exact private bytes, source-tree
+  absence, explicit Published/Recovered outcomes, missing/conflicting/changed/unsafe
+  paths, lost replies before/after actual publication, closing original/canonical
+  drift, shared contention, and replaced restore roots with no replacement writes.
+  Acknowledged native child death before/after actual durable publication recovers
+  exact retained paths without cleanup.
+- Two public source journeys pass (`public-final-custody.log`), including the existing
+  retained-copy case extended through durable publication/recovery and canonical
+  verification while preserving exact original journals, manifest, requirement,
+  fence obligation, pending spending and source references. Seven existing canonical
+  commit-owner regressions pass (`commit-owner.log`), including synchronization faults
+  and no-replace publication races. Actual registry/passing membership is retained
+  in the three registry logs and `cases.txt`; these are native local cases, not IC
+  transfer or snapshot-effect qualification.
+- Warning-denied all-target/all-feature Clippy/API docs and all-target/all-feature
+  Rust 1.91 checks pass (`clippy-final-custody.log`, `docs-final.log`, `msrv-final.log`).
+  Initial Clippy rejected a fixture's unnested error pattern (`clippy-first.log`);
+  the assertion now checks the precise error per injected boundary. A repeated
+  native fixture run exposed a timestamp-only temporary-path collision
+  (`unit-second-failure.log`). The existing shared test-name owner now also uses a
+  process-local atomic counter; original helper functions and test cases remain.
+- Formatting and all 22 reviewed snapshot files pass (`format-final.log`, `snapshot.log`).
+  Read-only `release-plan.log` previews `0.3.2` to `0.3.3`. Exact committed source
+  hashes/ranges, deterministic generated JSON, local links, unchanged package/lock/
+  receipt and finalized changelog history pass `evidence-check.log`. Current changed
+  source/document hashes are retained in `consumer-files.sha256`.
+
+Fresh read-only Canic review binds `5eb85ddf12bde772123b5e0887308c3c045ac669`
+with separately retained clean-at-inspection status and committed staging/publication
+source copies under `target/restore-artifact-publication-review/source`. It reviews
+staging/checksum and canonical publisher ranges; stale-copy deletion, drop cleanup,
+upload integration and every Canic consumer remain unchanged and are not imported.
+Existing publisher/source provenance and licenses remain retained. No existing
+public/private function, method or type is removed; all prior schemas and APIs remain.
+
+The complete compatible batch remains uncommitted under `0.3.3`; package stays
+`0.3.2`. Native macOS and authenticated IC providers, concrete capture/upload/load
+reconciliation, complete terminal/application/command-custody admission and controlled
+fence/reference release remain pending. No full CI/release gate, release transaction
+or live IC effect ran. Earlier sections retain historical pre-release batch evidence.
+
+## Released 0.3.2 exact originally reserved IC recovery observations
 
 `IcObservationRequest` binds the full original plan/authority, exact original
 mutation bytes and already reserved canonical status/list bytes to both pending

@@ -276,6 +276,19 @@ into an issue tracker or release authority.
   permissions, chronology, attribution and proof of no prior observation dispatch
   remain integration-owned. No installed provider, reissue or release permit exists.
 
+- Explicit durable local restore-copy publication now reuses original-source admission
+  and canonical descriptor synchronization/checksum/atomic no-replace publication.
+  Fixed temporary/canonical direct-child paths share the existing operation lock.
+  Retain both layouts/source journal and all original plans/requirement/manifest;
+  re-admit original records before and after publication. Recovery checks/synchronizes
+  the canonical copy without source-tree reads or recopying. Conflicting/missing paths,
+  changed/unsafe bytes and failures retain evidence without repair or cleanup.
+  Published-copy verification is a distinct fresh byte check, not durability inferred
+  from a path or ordinary resume/terminal replay. No journal, schema, digest, spending,
+  obligation, reference or fence changes. Stable noncooperating custody, backend
+  completeness, application safety and upload/load/start/terminal/release admission
+  remain integration-owned.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

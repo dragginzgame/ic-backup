@@ -1,5 +1,8 @@
 //! Private original-operation artifact copies and explicit retained-copy verification.
 
+mod publication;
+pub use publication::LocalRestoreArtifactPublicationError;
+
 use super::{DownloadJournalGuard, LocalRestoreSourceError};
 use crate::{
     model::{
@@ -20,7 +23,7 @@ use thiserror::Error;
 /// Borrowed original source/operation identity and the exact freshly checked private copy.
 ///
 /// This view retains both layout/source-journal lifetimes. It grants no future path
-/// stability, durable publication, complete backend transfer, authenticated snapshot,
+/// stability, publication attestation, complete backend transfer, authenticated snapshot,
 /// command dispatch or upload/load permission. Dropping it deletes nothing.
 #[derive(Debug)]
 pub struct LocalRestoreArtifactView<'a> {
@@ -61,7 +64,8 @@ impl DownloadJournalGuard<'_> {
     /// restore layout. Existing destinations are never adopted, replaced or deleted.
     /// Copy hash and fresh destination hash must equal the original artifact checksum;
     /// retained declarations are re-admitted before returning. Directories/files are
-    /// private 0700/0600. This is staging, without fsync/durable publication or dispatch.
+    /// private 0700/0600. This is staging, without fsync/durable publication or dispatch;
+    /// explicit publication is a separate operation.
     /// Failures/drop retain partial bytes and all original spending/references. After
     /// a lost reply, explicitly verify the retained copy; an invalid partial copy needs
     /// operator-owned disposition. Stable noncooperating destination custody remains

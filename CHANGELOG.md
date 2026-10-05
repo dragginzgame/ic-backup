@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3]
+
+- Durably publish exact staged restore artifacts and recover canonical copies after
+  interruption without rereading source trees or resetting journals, obligations
+  or source references. Add explicit published-copy verification; conflicts and
+  changed bytes remain retained for review.
+
 ## [0.3.2] - 2026-10-05
 
 - Bind exact IC status and snapshot-list requests to already reserved recovery
