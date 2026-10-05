@@ -261,6 +261,8 @@ status/read visibility must never be mistaken for write authority.
 | Port | Owned contract |
 | --- | --- |
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
+| `IcMutationProvider` | Implemented exact original IC update/reserved-mutation envelope and bounded passive acknowledgement association; no installed provider or automatic settlement |
+| `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
 | `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
 | `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
 | `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
@@ -274,7 +276,8 @@ status/read visibility must never be mistaken for write authority.
 
 Membership, direct-control, snapshot-read, consistency, restore-safety and
 fence-reconciliation observation ports have maintained Rust signatures. The acquisition
-update port also has a maintained Rust signature; other rows remain intended
+update port and exact IC mutation/recovery-observation ports also have maintained
+Rust signatures; other rows remain intended
 responsibilities. The membership request derives exact original intent
 and operation identity, immutable full inventory/selection, a caller-owned fresh
 challenge, explicit before/after boundary and 0–1,024 descriptive remote-call
@@ -684,6 +687,15 @@ no fresh permissions, replay/retry, restoration safety or terminal/release proof
 Actual dispatch custody, source/upload/application qualification and lost-effect
 reconciliation remain necessary before runners. See
 [the maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-mutation-updates).
+
+Exact status/list recovery observations now bind both pending original attempt IDs,
+the original mutation and already reserved canonical observation bytes. Passive
+association rechecks the current journal and actual claims, then uses existing
+bounded status/inventory codecs. A failed observation stays pending; decoded
+Stopped/controllers or inventory cardinality produce no automatic outcome.
+Fresh method-specific read permissions, authenticated timing/attribution and
+exclusive original dispatch custody remain integration-qualified. See
+[the maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-recovery-observations).
 
 ## 12. Filesystem custody, durability and retention
 

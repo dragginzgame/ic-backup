@@ -1,0 +1,55 @@
+{
+   "adaptation" : "Reuse canonical plan/authority/journal, exact IC mutation/observation binding and existing bounded status/inventory decoders. Add passive single-observation association without automatic receipts or effect settlement.",
+   "consumer_baseline" : "target/ic-observation-review/consumer-head.txt",
+   "consumers" : [
+      "crates/ic-backup/src/model/ic_observation/mod.rs",
+      "crates/ic-backup/src/policy/ic_observation/mod.rs",
+      "crates/ic-backup/src/ports/ic_observation/mod.rs",
+      "crates/ic-backup/src/test_support/ic_observation/mod.rs",
+      "crates/ic-backup/tests/ic_observation.rs"
+   ],
+   "contract" : "docs/contracts/ic-observation-port.json",
+   "inspected_files" : [
+      {
+         "disposition" : "Committed source reviewed read only; no code or automatic completion conversions copied. All Canic consumers remain unchanged.",
+         "finding" : "Broad status/snapshot inventory callbacks and existing optional snapshot metadata. Local ports instead reuse exact bounded IC wire owners and original attempt reservations.",
+         "inspected_line_ranges" : [
+            [
+               43,
+               120
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "retained_copy" : "target/ic-observation-review/source/crates/canic-backup/src/runner/types.rs",
+         "sha256" : "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136"
+      },
+      {
+         "disposition" : "Committed source reviewed read only; no code or automatic completion conversions copied. All Canic consumers remain unchanged.",
+         "finding" : "Lifecycle and snapshot inventory calls plus status/cardinality-to-completion conversions. These conversions are not imported: wire association and snapshot counts never establish original effect attribution.",
+         "inspected_line_ranges" : [
+            [
+               470,
+               505
+            ],
+            [
+               555,
+               575
+            ],
+            [
+               610,
+               710
+            ]
+         ],
+         "path" : "crates/canic-backup/src/runner/mod.rs",
+         "retained_copy" : "target/ic-observation-review/source/crates/canic-backup/src/runner/mod.rs",
+         "sha256" : "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1"
+      }
+   ],
+   "inspection_date" : "2026-10-05",
+   "qualification" : "Native typed identity/byte/bounds/rejection and exact spent-journal/reference recovery only. Fixtures simulate no IC effects. Authenticated freshness, actual read permission/dispatch/chronology, exclusive attribution and concrete lost-effect settlement remain integration-qualified.",
+   "source_repository" : "https://github.com/dragginzgame/canic",
+   "source_revision" : "e739ea9ed59d5cc95517585d31aa82286e76b8d0",
+   "source_status" : "target/ic-observation-review/source-status.txt",
+   "source_worktree_dirty" : false,
+   "version" : 1
+}

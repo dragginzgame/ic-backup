@@ -1514,6 +1514,58 @@ automatic completion/receipt conversion, restore upload and all consumers remain
 unchanged. Actual providers, capture/upload/load/reconciliation and runners/transport
 remain independently qualified.
 
+### Exact originally reserved IC recovery observations
+
+`model::ic_observation::IcObservationRequest` joins the full original plan/operation
+authority, exact original mutation and canonical status/list observation payload with
+both already pending attempts. It reuses the existing observation digest and journal
+owner; original mutation target/digest/class and observation target/class/reserved
+digest must match. Absent, changed or settled reservations reject. Construction and
+reconstruction spend nothing, create no journal or record and grant no repeat call.
+This is recovery of an existing mutation, not a fresh preflight reservation API.
+
+`ports::ic_observation::IcObservationProvider::observe` describes one originally
+accounted host replicated observation at the exact management receiver/routing target,
+method and Candid bytes. Integrations retain durable originals and qualify actual
+context, method-specific current read permission, recovery chronology and exclusive
+command/dispatch custody proving this observation was never dispatched. Hidden
+retries, extra observations, queries/proxies, funding and mutations are excluded.
+Reconstructed pending state supplies no proof of prior nondispatch. Failures/drop/
+death retain consumed pending observations and mutations, obligations and source
+references; a lost observation cannot automatically mean settled Uncertain.
+
+`IcObservationResponse` owns bounded passive original authority, both chronological
+attempt IDs, exact observation digest, actual claimed context/target, raw Candid
+reply and opaque evidence. Admission preserves the 1,024 total-attempt, 1 MiB raw
+reply and canonical principal boundaries; Debug redacts bytes, and no Serde or
+Default admission exists. Pure `policy::ic_observation::validate_response` rechecks
+current reservations and every exact association claim, then delegates inventory to
+`IcSnapshotReply` and status to `IcLifecycleReply`. Existing 1,024-entry/raw-ID/
+metadata/controller/finite-work decoder limits, payload hashes and reply digests
+retain their canonical owners.
+
+Successful association is read-only wire evidence, not authenticated freshness,
+exclusive attribution or Applied/NotApplied/Uncertain settlement. Stopped/controller
+projections do not prove drain/load safety or current authority. Zero/one/multiple
+snapshots do not identify the original capture's outcome. No receipt, retry, refund,
+mutation/restart, terminal proof or fence/reference release follows. Retained late
+replies can be matched under the exact pending observation without calling a provider;
+settled/replaced original reservations reject. Terminal replay invokes no provider.
+
+Native unit tests exercise exact identities, changed budgets/bytes/classes/targets/
+attempts/context, missing/settled/replaced reservations, response bounds, Debug
+redaction, malformed method-specific wire and unchanged spending for zero/one/multiple
+inventory entries. The public recovery journey covers both observations for all four
+original mutations, passive replies and three provider failure variants; exact
+retained original journals, arguments, plan, opaque fixture obligation marker and
+source references survive drop/reopen with no reissue or automatic outcome. These
+fixtures simulate no IC effects or application fence. See
+[the contract](contracts/ic-observation-port.json) and
+[fresh source inspection](ic-observation-source.json). Canic consumers and its status/
+inventory-to-completion conversions remain unchanged and are not imported. Actual
+providers, authenticated reconciliation, upload/load and transport/runners remain
+independently qualified.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

@@ -265,6 +265,17 @@ into an issue tracker or release authority.
   capture consistency, same-release load/start safety and command/byte custody remain
   integration-qualified. No provider, transport or runner is installed.
 
+- Exact IC recovery observations now bind original mutation bytes and pending
+  mutation/observation IDs to the full original plan and already reserved status/list
+  digest. Preserve the separate journal spending owner, 1,024 total attempts, 4 KiB
+  argument and 1 MiB raw-reply bounds plus existing status/inventory decoder quotas.
+  Pure association rechecks current reservations, exact payload and actual claimed
+  context/target. It authenticates no provider and writes no receipt. Status/controller
+  projections and zero/one/multiple snapshots never settle a mutation automatically.
+  Lost replies remain pending, not settled Uncertain. Fresh method-specific read
+  permissions, chronology, attribution and proof of no prior observation dispatch
+  remain integration-owned. No installed provider, reissue or release permit exists.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.2]
+
+- Bind exact IC status and snapshot-list requests to already reserved recovery
+  observations. Associate bounded replies with both original attempts while keeping
+  lost replies pending, without automatic mutation settlement or repeat calls.
+
 ## [0.3.1] - 2026-10-05
 
 - Bind exact IC capture, load, start and stop requests to already reserved original

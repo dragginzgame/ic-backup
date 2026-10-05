@@ -41,6 +41,8 @@
 //! Exact IC mutation envelopes bind already reserved original updates; a single-call
 //! provider contract and bounded passive reply association preserve pending spending.
 //! Existing codecs decode replies without automatic settlement, retries or release.
+//! Exact reserved status/list observations also retain both original attempt identities;
+//! passive association leaves lost observations pending and proves no effect outcome.
 //! A separate membership port binds ephemeral provider results to original intent,
 //! exact current context/full inventory and an integration-owned challenge.
 //! Pure matching views grant neither controller authority nor application continuity.

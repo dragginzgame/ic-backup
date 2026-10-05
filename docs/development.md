@@ -357,6 +357,23 @@ integration-owned. No transport/provider implementation exists. See
 Focused checks are `cargo test --offline --locked -p ic-backup --lib ic_mutation`
 and `cargo test --offline --locked -p ic-backup --test ic_mutation`.
 
+`model::ic_observation::IcObservationRequest` binds both pending original attempts,
+original mutation bytes and exact already reserved status/list payload to the full
+plan and immutable authority. The provider contract permits one previously accounted
+host replicated observation, with no hidden retries or follow-up calls. Pure
+`policy::ic_observation::validate_response` rechecks current reservation, exact payload,
+both attempt IDs and actual claimed context/target, then reuses existing status or
+snapshot inventory decoders. Raw replies are capped at 1 MiB with redacted Debug.
+Matching writes no receipt; lost replies remain pending rather than settled Uncertain.
+Status/controller projections and inventory cardinality establish no automatic effect
+outcome. Authentication, method-specific current read permission, chronology and
+exclusive attribution/dispatch custody remain integration-owned. No implementation
+is installed. See [the contract](contracts/ic-observation-port.json),
+[source inspection](ic-observation-source.json) and
+[boundary](extraction-boundary.md#exact-originally-reserved-ic-recovery-observations).
+Focused checks are `cargo test --offline --locked -p ic-backup --lib ic_observation`
+and `cargo test --offline --locked -p ic-backup --test ic_observation`.
+
 `model::execution_settlement` retains bounded strict v1 original plan/journal
 fingerprints, with independent binary goldens for full chronological history.
 Pure admission reuses `execution_progress` and requires the exact original journal

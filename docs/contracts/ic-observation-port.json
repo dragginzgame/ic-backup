@@ -1,0 +1,37 @@
+{
+   "effects" : [
+      "Exactly one previously durably accounted host replicated observation; no hidden retries, batching, extra observations, query/proxy substitution, funding or mutation.",
+      "Reconstructed pending state cannot prove no previous dispatch or authorize repeating a lost observation. Additional calls require independent prior durable accounting.",
+      "Failures/drop/death preserve spent pending observation and mutation, obligations and source references. Lost replies cannot produce a settled Uncertain outcome.",
+      "Passive local late-reply association leaves both original attempts pending and writes no receipt. Status/controllers or zero/one/multiple snapshots never automatically prove Applied/NotApplied/Uncertain, permission, drain/load safety or exclusive capture attribution.",
+      "Terminal replay invokes no provider. No installed provider/transport/runner, automatic refund/restart or terminal/fence/reference release is introduced."
+   ],
+   "kind" : "ephemeral exact originally reserved IC recovery observation port; no persisted authority schema",
+   "methods" : [
+      "canister_status",
+      "list_canister_snapshots"
+   ],
+   "provider" : "IcObservationProvider::observe",
+   "request" : {
+      "admission" : "Integrations own durable originals, actual context/method-specific current read permissions, original recovery chronology and exclusive dispatch/command custody proving this observation was never dispatched. Structural binding is no permit or reissue authority.",
+      "bytes" : "Exact management receiver, effective target, closed method and host replicated update Candid bytes, within existing 4096-byte argument limit. Not a fresh-preflight reservation API.",
+      "original" : "Full original plan and operation authority, immutable allowances and exact original mutation payload plus independently retained canonical observation payload.",
+      "reservation" : "Require both original pending attempt IDs and exact already reserved observation digest. Reuse IcManagementRequestRecord::validate_mutation_binding/validate_observation_binding and AttemptJournalRecord. No new digest, journal, intent record or spending owner."
+   },
+   "response" : {
+      "association" : "Recheck current original reservation, full authority, both attempt IDs, exact observation payload digest and actual claimed network/caller/release/target. Opaque evidence and claims require independent authentication/timing/attribution qualification.",
+      "bounds" : "Chronological 1 <= mutation_attempt < observation_attempt <= 1024; canonical target; raw reply <=1048576 bytes derived from both existing codec owners. No Default/Serde admission; Debug redacts raw bytes.",
+      "fields" : [
+         "authority",
+         "mutation_attempt",
+         "observation_attempt",
+         "request",
+         "context",
+         "target",
+         "reply",
+         "evidence"
+      ],
+      "wire" : "Reuse IcSnapshotReply inventory and IcLifecycleReply status decoding, existing raw-ID/metadata/controller/type-table/work ceilings and exact request/raw-reply digests. No additional codec or evidence hash."
+   },
+   "version" : 1
+}

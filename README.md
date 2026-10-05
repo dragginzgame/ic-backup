@@ -156,6 +156,8 @@ implemented foundation includes:
   lifecycle operations;
 - contracts for exact originally reserved IC updates and bounded passive reply
   association, preserving pending spending without automatic settlement;
+- exact reserved status/snapshot-list observation contracts that retain both attempt
+  identities and leave lost observations pending without automatic outcomes;
 - fresh verification of durable local backup files against their original plan;
 - retained same-release source/safety requirements and application evidence checks
   before snapshot load or controlled start;

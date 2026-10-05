@@ -25,16 +25,80 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.3.0` live. The clean starting baseline is release commit
-`7fecf72`, with annotated local `v0.3.0`, manifest `0.3.0`, dated changelog and receipt
-source `18c7c0996e3a06cf092cdbd74ccaa758e38d366b` under `release-verify`.
-Read-only exact receipt/tag/parent verification passed before continuing. Registry
-publication was not independently observed. Compatible original IC update/reply
-contract additions automatically open one undated `0.3.1` pending entry. Package
+The maintainer reports `0.3.1` live. The clean starting baseline is release commit
+`527f0af`, with annotated local `v0.3.1`, manifest `0.3.1`, dated changelog and receipt
+source `e750ee7dccef9256d11aaf030b544a53d70a3493` under `release-verify`.
+Read-only exact receipt/tag/parent verification passed before continuing:
+`target/ic-observation-review/release-tag-check.log`. Registry publication was not
+independently observed. Compatible exact reserved recovery-observation additions
+automatically open one undated `0.3.2` pending entry. Package
 metadata, lock selection, receipt and reviewed Shared Tooling snapshot are unchanged.
 This continuation creates no commits, tags, pushes, uploads or live IC effects.
 
-## Exact originally reserved IC mutation port
+## Exact originally reserved IC recovery observations
+
+`IcObservationRequest` binds the full original plan/authority, exact original
+mutation bytes and already reserved canonical status/list bytes to both pending
+original attempt IDs. `IcObservationProvider::observe` describes one previously
+accounted host replicated observation; no implementation is installed. A bounded
+immutable passive response retains both attempts, authority, observation digest,
+actual claimed context/target, exact raw reply and opaque evidence. Pure association
+rechecks the current journal and all claims, then uses existing status/inventory
+decoders. No additional hash, journal, spending owner or persisted schema appears.
+See [the boundary](../extraction-boundary.md#exact-originally-reserved-ic-recovery-observations),
+[contract](../contracts/ic-observation-port.json) and
+[fresh source inspection](../ic-observation-source.json).
+
+Preserve 1,024 total attempts, 4 KiB arguments, 1 MiB raw replies and all existing
+snapshot/controller/decoder-work bounds. This is original-mutation recovery, not
+a fresh-preflight reservation API. Missing/changed/settled reservations or payloads
+reject. Matching writes no receipt and leaves both attempts pending. Lost replies
+are not settled Uncertain. Stopped/controllers and zero/one/multiple snapshots prove
+no original effect outcome, freshness, permission, drain/load safety or exclusive
+attribution. Actual read permissions, authenticated chronology/attribution and proof
+of no prior dispatch remain integration-owned. Failure/drop retains spending,
+obligations and source references. No automatic reissue, refund, restart, terminal
+proof or fence/reference release is admitted.
+
+Fresh targeted Linux evidence under `target/ic-observation-review`:
+
+- Seven new unit cases pass (`unit-final.log`), including exact original payloads,
+  authority/budget/class/target/context/attempt/digest drift, absent/settled/replaced
+  reservations, chronological attempt/raw-byte/principal bounds, redacted Debug,
+  malformed status/list wire and unchanged pending spending for zero/one/multiple
+  inventory entries. One public recovery case passes (`public-final.log`) across both
+  observations, all four original mutations and replies/three provider failures.
+  Exact original journal/plan/argument/reply bytes, durable source references and
+  an opaque native obligation marker survive drop/reopen without another callback.
+  Native fixtures simulate no IC behavior or actual application fence.
+- Existing request, inventory and lifecycle owner cases pass (`request-owner.log`,
+  `inventory-owner.log`, `lifecycle-owner.log`). Actual registered test names and
+  exact passing membership are retained in the corresponding registry logs and
+  `cases.txt`; these are targeted native cases, not real IC qualification.
+- Warning-denied all-target/all-feature Clippy and API docs, plus all-target/all-feature
+  Rust 1.91.0 checks pass (`clippy-final.log`, `docs.log`, `msrv.log`). Initial Clippy
+  failure is retained in `clippy-first.log`: fixtures used constant-size chunk
+  iteration and an oversized recovery helper. They now use `as_chunks` and a
+  focused reopen helper; production contracts were not relaxed.
+- Formatting and all 22 vendored snapshot files pass (`format.log`, `snapshot.log`).
+  Read-only `release-plan.log` previews `0.3.1` to `0.3.2`. Source provenance,
+  deterministic JSON regeneration, local links, exact finalized history and unchanged
+  package/lock/receipt bytes are checked in `evidence-check.log`.
+
+Fresh committed Canic inspection binds `e739ea9ed59d5cc95517585d31aa82286e76b8d0`
+with separately retained clean-at-inspection status and exact committed copies under
+`target/ic-observation-review/source`. Reviewed executor status/inventory signatures
+and runner observation/completion ranges identify the conversions intentionally not
+imported. All Canic consumers remain unchanged. No existing public/private function,
+method or type is removed; prior schemas, codecs and API behavior remain unchanged.
+
+This compatible batch remains uncommitted under `0.3.2`; package version stays
+`0.3.1`. Native macOS and real IC providers, concrete lost capture/upload/load
+reconciliation, complete terminal/application/command-custody admission and controlled
+fence/reference release remain pending. No full CI/release gate, release transaction
+or live effect ran. Earlier sections retain historical pre-release batch evidence.
+
+## Released 0.3.1 exact originally reserved IC mutation port
 
 `IcMutationRequest` joins full original plan/operation authority, immutable attempt
 limits and the existing exact canonical IC capture/load/start/stop payload with an
