@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.2]
+## [0.3.2] - 2026-10-05
 
 - Bind exact IC status and snapshot-list requests to already reserved recovery
   observations. Associate bounded replies with both original attempts while keeping
