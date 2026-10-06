@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "kind": "exact originally reserved data-upload readback review",
+  "inspection_date": "2026-10-06",
+  "consumer_base": "2587259d1c8424e9aac585413c8efbc374c1faeb",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "d815abfc661d791ecf72afc5b1e4b6a990f37a91",
+  "source_worktree_dirty": true,
+  "read_scope": "Exact committed blobs only; sibling dirty source remains untouched. Original planning/extraction and released metadata-observation evidence retain their original source identities.",
+  "reviewed_sources": [
+    {"path": "crates/canic-backup/src/restore/runner/execute.rs", "sha256": "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079", "reviewed_sections": ["upload recovery dispatch (477-510)", "reconcile_upload_operation (548-593)", "observe_snapshot_inventory (618-677)"], "disposition": "Whole-upload CLI inventory recovery has no per-data-update readback owner. Snapshot cardinality success and automatic receipt/process behavior remain unimported; no Canic production source copied."}
+  ],
+  "upstream_interface": {"url": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/", "state_transitions_url": "https://docs.internetcomputer.org/references/ic-interface-spec/abstract-behavior/", "inspection_date": "2026-10-06", "sections": ["read_canister_snapshot_data", "upload_canister_snapshot_metadata", "upload_canister_snapshot_data"], "disposition": "Readback identifies exact region/hash under snapshot metadata. The state-transition specification initializes uploaded regions with zeros, so equal bytes alone cannot attribute this write. Current read permissions and actual backend capability remain integration-qualified."},
+  "sdk": {"package": "ic-management-canister-types", "version": "0.11.0", "scope": "Reuse exact original pinned data read/upload kind codecs and metadata source variants; no SDK/type-identity/dependency upgrade."},
+  "production_destinations": ["crates/ic-backup/src/model/ic_snapshot_upload_data_observation/", "crates/ic-backup/src/policy/ic_snapshot_upload_data_observation/", "crates/ic-backup/src/ports/ic_snapshot_upload_data_observation/"],
+  "reuse": "Canonical upload authority, current reservations, passive chronological/canonical claims, association errors and redaction. Data reply decoding keeps its original bounds and digest; existing status/list response admission keeps its original tighter bound.",
+  "license": "No Canic production code copied; dependency APIs reused and prior source attribution/licenses retained.",
+  "compatibility": "Additive APIs in original compatible 0.3.10 work, now part of complete 0.4.0 draft. Existing public signatures/exhaustive enums and v1 schemas/digests/bounds remain unchanged; package and receipt remain 0.3.9.",
+  "qualification": {"unit_filters": ["upload", "ic_observation", "ic_snapshot_data"], "public_target": "ic_snapshot_upload", "evidence": "target/upload-data-observation-0310-review", "scope": "Passive wire/claim association, provider refusal and actual local retained-byte/reopen only; no simulated management behavior or IC effects."},
+  "removed_symbols": [],
+  "remaining": "Authenticated allocation/write attribution and qualified settled reconciliation, actual fresh read/dispatch authority/custody, provider/transport and backend qualification, complete transfer, application/load/start safety and terminal/reference release."
+}

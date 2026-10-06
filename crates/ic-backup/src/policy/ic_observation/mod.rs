@@ -1,9 +1,13 @@
 //! Pure exact reserved IC observation association; no mutation settlement.
 
 use crate::model::{
+    artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_lifecycle_reply::{IcLifecycleReply, IcLifecycleReplyError},
-    ic_observation::{IcObservationRequest, IcObservationRequestError, IcObservationResponse},
+    ic_observation::{
+        IcObservationRequest, IcObservationRequestError, IcObservationResponse,
+        IcObservationResponseInput,
+    },
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
     ic_snapshot_reply::{IcSnapshotReply, IcSnapshotReplyError},
     operation_plan::PlanContextRecord,
@@ -77,7 +81,43 @@ pub(crate) fn validate_association<'a>(
     binding: &ObservationAssociation<'_, 'a>,
     response: &'a IcObservationResponse,
 ) -> Result<IcObservationResponseView<'a>, IcObservationAssociationError> {
-    let input = response.input();
+    validate_claims(
+        &ObservationClaims {
+            authority: binding.authority,
+            mutation_attempt: binding.mutation_attempt,
+            observation_attempt: binding.observation_attempt,
+            request: binding.payload.digest(),
+            context: binding.context,
+            target: binding.payload.target(),
+        },
+        response.input(),
+    )?;
+    let reply = match binding.payload.method() {
+        IcManagementMethodRecord::ListCanisterSnapshots => IcObservationReplyView::Inventory(
+            IcSnapshotReply::decode(binding.payload, &response.input().reply)?,
+        ),
+        // The sealed request excludes mutations. Status stays with its existing owner.
+        _ => IcObservationReplyView::Status(IcLifecycleReply::decode(
+            binding.payload,
+            &response.input().reply,
+        )?),
+    };
+    Ok(IcObservationResponseView { response, reply })
+}
+
+pub(crate) struct ObservationClaims<'a> {
+    pub authority: &'a AttemptAuthorityRecord,
+    pub mutation_attempt: u32,
+    pub observation_attempt: u32,
+    pub request: ArtifactChecksumRecord,
+    pub context: &'a PlanContextRecord,
+    pub target: &'a str,
+}
+
+pub(crate) fn validate_claims(
+    binding: &ObservationClaims<'_>,
+    input: &IcObservationResponseInput,
+) -> Result<(), IcObservationAssociationError> {
     if input.authority != binding.authority.digest() {
         return Err(IcObservationAssociationError::AuthorityMismatch);
     }
@@ -86,25 +126,16 @@ pub(crate) fn validate_association<'a>(
     {
         return Err(IcObservationAssociationError::AttemptMismatch);
     }
-    if input.request != binding.payload.digest() {
+    if input.request != binding.request {
         return Err(IcObservationAssociationError::RequestMismatch);
     }
     if &input.context != binding.context {
         return Err(IcObservationAssociationError::ContextMismatch);
     }
-    if input.target != binding.payload.target() {
+    if input.target != binding.target {
         return Err(IcObservationAssociationError::TargetMismatch);
     }
-    let reply = match binding.payload.method() {
-        IcManagementMethodRecord::ListCanisterSnapshots => IcObservationReplyView::Inventory(
-            IcSnapshotReply::decode(binding.payload, &input.reply)?,
-        ),
-        // The sealed request excludes mutations. Status wire stays with its existing owner.
-        _ => {
-            IcObservationReplyView::Status(IcLifecycleReply::decode(binding.payload, &input.reply)?)
-        }
-    };
-    Ok(IcObservationResponseView { response, reply })
+    Ok(())
 }
 
 /// Typed passive association denial; all original spending/obligations remain retained.

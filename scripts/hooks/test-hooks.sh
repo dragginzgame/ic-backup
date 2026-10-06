@@ -162,6 +162,22 @@ run_case() {
     ) > "$CASE_LOG" 2>&1
 }
 
+# Qualify the exact shared checker with our real formatter inputs, including
+# uncommitted module files. Keep the older mechanical cases until both native
+# macOS jobs qualify this adoption (ic-backup issue #5).
+CASE_NAME=shared-formatting
+CASE_LOG="$TEMPORARY/$CASE_NAME.log"
+printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
+perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-tools\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
+    "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml)
+while IFS= read -r -d '' path; do
+    formatter_inputs[${#formatter_inputs[@]}]="$path"
+done < <(git -C "$ROOT" ls-files -z --cached --others --exclude-standard -- '*.rs')
+bash "$ROOT/scripts/ci/check-formatting-hooks.sh" "$ROOT" \
+    crates/ic-backup/src/lib.rs crates/ic-backup/Cargo.toml \
+    "$TEMPORARY/unsorted-Cargo.toml" "${formatter_inputs[@]}" > "$CASE_LOG" 2>&1
+
 run_case format-and-retry test_format_and_retry
 for location in root manifest; do
     run_case "unstaged-$location" test_unstaged_protection "$location"

@@ -20,6 +20,7 @@ pub mod ic_snapshot_data;
 pub mod ic_snapshot_metadata;
 pub mod ic_snapshot_reply;
 pub mod ic_snapshot_upload;
+pub mod ic_snapshot_upload_data_observation;
 pub mod ic_snapshot_upload_observation;
 pub mod inventory;
 mod journal_path;

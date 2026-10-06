@@ -1,7 +1,11 @@
 //! Caller-owned host diagnostics using shared arithmetic; no retained authority.
 
 use super::DownloadJournalGuard;
-use ic_metrics::MeasurementSummary;
+/// Canonical shared arithmetic for local diagnostic summaries.
+///
+/// Re-exported so callers can name returned summaries without selecting a separate
+/// Metrics dependency. This is the shared type, with no local wrapper or arithmetic.
+pub use ic_metrics::MeasurementSummary;
 use std::{
     sync::PoisonError,
     time::{Duration, Instant},

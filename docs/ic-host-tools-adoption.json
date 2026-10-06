@@ -3,11 +3,11 @@
   "inspection_date": "2026-10-06",
   "kind": "maintainer-authorized shared record reads, output budgets and private staging copies",
   "registry_package": "ic-host-tools",
-  "selected_version": "0.1.13",
-  "archive_sha256": "2b354a1ee01453accfaa969fc43467e9df3d9ff68d85e0b9005518fe14299bdc",
+  "selected_version": "0.2.0",
+  "archive_sha256": "6491f3e87d4d7b72c7ffddae3360170c65fe0dbd26eaf1a1f0a3d2a04a029dc6",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
   "repository": "https://github.com/dragginzgame/ic-host-tools",
-  "published_source_revision": "8730f9f8635b62106934565bf6550b9dfb094714",
+  "published_source_revision": "be7d73908225e73ab5babf8fbb9fe959f40d439b",
   "reviewed_sources": [
     {
       "path": "src/artifact/mod.rs",
@@ -41,11 +41,11 @@
     "ic_host_tools::artifact::copy_reader",
     "ic_host_tools::artifact::read_reader"
   ],
-  "catalog": "Compatible 0.1.13 minimum admits corrected impossible stream-count handling. The 0.1.12 primitive adoption and earlier dirty manifest range remain retained under target/host-tools-013-review and target/host-tools-012-review; no sibling path or patch.",
+  "catalog": "Root manifest compatible 0.2 range, locked registry 0.2.0; no local patches or sibling dependency.",
   "limits": "Preserve public u64 limit and original RecordTooLarge limit. Convert to representable usize with saturation as before; supported hosts are 64-bit. Shared metadata is an early rejection; actual stream reads remain independently bounded.",
   "errors": "Reads pass IO errors through; map NotRegularFile to original IO InvalidInput and LimitExceeded to original RecordTooLarge. JSON decoding remains unchanged. Output budgets preserve RecordTooLarge with the exact original u64 limit and unrelated JSON errors. Copies pass source/sink IO errors through the existing ArtifactError::Io and return no checksum on failure; interrupted reads retry.",
   "custody": "Reject final symlinks and opened nonregular files without waiting for FIFO writers. Trusted parents and concurrent byte custody remain local; ancestor aliases remain allowed.",
-  "lock_change": "Only ic-host-tools changes from 0.1.12 to 0.1.13 in this refresh, or 0.1.11 to 0.1.13 across the complete pending batch; every other package entry matches the original retained lockfile. Published dependency declarations are unchanged.",
+  "lock_change": "Maintainer worktree dependency selection is ic-host-tools 0.2.0, ic-metrics 0.2.0 and wasmparser 0.261.0; every other package entry remains unchanged from released 0.3.9.",
   "transitive_scope": "Published archive/compression/Wasm modules are nonoptional; this consumer invokes bounded regular-file/stream reads, private copies and portable output-budget counting.",
   "tar": {
     "resolved_version": "0.4.46",
@@ -56,17 +56,23 @@
   "msrv": "Dependency declares Rust 1.88; ic-backup remains Rust 1.91 and edition 2024.",
   "license": "Published MIT dependency used without copying its implementation; existing Canic/source attribution remains retained.",
   "qualification": {
-    "evidence": "target/host-tools-013-review",
-    "registered_cases": "selected-unit-cases.json, ../upload-observation-039-review/registered-unit.log and public-registered.log",
-    "passing_logs": "focused-tests.log and public-tests.log",
+    "evidence": "target/upload-metadata-settlement-0310-review",
+    "registered_cases": "selected-unit-cases.json",
+    "passing_logs": [
+      "focused-tests.log",
+      "selected-02-public-tests.log",
+      "clippy.log",
+      "msrv.log",
+      "docs.log"
+    ],
     "public_targets": [
       "local_recovery",
       "local_restore_source",
       "ic_snapshot_upload"
     ],
-    "scope": "Fresh actual production primitive/recovery-owner tests on published 0.1.13, including invalid reader/writer counts through the private consumer copy owner with exact InvalidData errors and preserved partial output. Native Linux only, no live IC or native macOS qualification."
+    "scope": "Fresh affected production owners and local byte/persistence/settlement/reopen/diagnostic behavior on published 0.2.0; native Linux only. Prior qualification remains tied to its actual old dependency inputs."
   },
-  "compatibility": "Private implementation and compatible dependency update. Public signatures, exhaustive errors, canonical pretty JSON, v1 records/digests/bounds and released package/receipt 0.3.8 remain unchanged. Select compatible pending 0.3.9.",
+  "compatibility": "Used artifact/read/copy/writer APIs and their entire Rust sources remain byte-identical to published 0.1.14. Changed tool-operation and Wasm-error APIs are not used or exposed by this consumer. Metrics type identity independently selects the full 0.4.0 draft; package and receipt remain 0.3.9.",
   "output_budgets": "Nine typed record check_size owners and restore-reference admission serialize pretty JSON through BoundedWriter over io::sink without collecting an encoded buffer. Durable encoding/publication still uses its original owner after admission; no paths or retained bytes change.",
   "copy_budget": "Use u64::MAX to preserve the existing absence of a total artifact-size ceiling. Shared copy chooses no artifact confinement or publication policy; local 0700/0600 creation, descriptor admission and retained checksum comparison remain required.",
   "chunk_read_review": {
@@ -99,5 +105,18 @@
     "upstream_issue": "https://github.com/dragginzgame/ic-host-tools/issues/5",
     "scope": "Shared reads reject counts beyond offered buffers before slicing. Shared copies reuse BoundedWriter validation, retaining original source/sink IO mappings and partial output with no complete checksum on failure. The consumer public checksum_reader owner remains unchanged."
   },
-  "prior_primitive_review": "target/host-tools-013-review/previous-adoption.json retains the exact 0.1.12 adoption, chunk-read review and original qualification scope."
+  "prior_primitive_review": "target/host-tools-013-review/previous-adoption.json retains the exact 0.1.12 adoption, chunk-read review and original qualification scope.",
+  "prior_qualification": {
+    "evidence": "target/host-tools-013-review",
+    "registered_cases": "selected-unit-cases.json, ../upload-observation-039-review/registered-unit.log and public-registered.log",
+    "passing_logs": "focused-tests.log and public-tests.log",
+    "public_targets": [
+      "local_recovery",
+      "local_restore_source",
+      "ic_snapshot_upload"
+    ],
+    "scope": "Fresh actual production primitive/recovery-owner tests on published 0.1.13, including invalid reader/writer counts through the private consumer copy owner with exact InvalidData errors and preserved partial output. Native Linux only, no live IC or native macOS qualification."
+  },
+  "published_review": "All published Rust source blobs match archive and exact committed source. Changes from 0.1.14 occur only in tool/process/tests and wasm modules; consumer does not invoke these. Reviewed artifact source hashes below remain exact.",
+  "previous_adoption_review": "target/upload-metadata-settlement-0310-review/previous-ic-host-tools-adoption.json"
 }

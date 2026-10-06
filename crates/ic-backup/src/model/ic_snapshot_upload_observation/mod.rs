@@ -12,6 +12,9 @@ use crate::model::{
 };
 use thiserror::Error;
 
+mod settlement;
+pub use settlement::{IcSnapshotUploadAttribution, IcSnapshotUploadSettlement};
+
 /// Original metadata-upload intent and its already spent exact list observation.
 ///
 /// This declaration supplies no dispatch permission, authentication or allocation
@@ -110,7 +113,7 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
             authority: &self.authority,
             mutation_attempt: self.mutation_attempt,
             observation_attempt: self.observation_attempt,
-            payload: self.payload,
+            request: self.payload.digest(),
         }
         .validate(journal)
     }

@@ -1,14 +1,14 @@
 {
   "inspection_date": "2026-10-06",
-  "remote_head_and_main": "47cd2ccaf0e8b428f06e6db0262df76cfc1581de",
-  "upstream_version": "VERSION is 0.1.6; committed batch has undated 0.1.7 changelog. No finalized 0.1.7 release is inferred.",
-  "adoption": "Refresh exact declared common files; add the verification guide, local documentation-link parser/regressions and portable file-digest regressions. Consumer owns Markdown roster and CI/release wiring.",
-  "compatibility": "Additive developer check and compatible checksum/installer corrections. Extend existing 0.3.9 draft; package/receipt, public release commands, product APIs/v1 records, tool pins, locked dependency selections and MSRV unchanged by tooling adoption.",
+  "remote_head_and_main": "9f8c7c768793f4ce8f25be9e88282c0f63a06e7f",
+  "upstream_version": "VERSION 0.1.7; undated changelog and no local v0.1.7 tag. Adoption binds the committed revision rather than inferring a finalized release.",
+  "adoption": "Refresh all exact declared files and add lockfile transformer/regressions, actual consumer formatting-hook checker and linked tag guide. Consumer owns explicit inputs, metadata, receipts/recovery and additional cases.",
+  "compatibility": "Compatible tooling changes extend complete 0.4.0 draft (originally 0.3.10). Package/receipt, dependency selections, MSRV, product contracts and public release commands unchanged. Optional ripgrep pins are available but not selected by consumer setup.",
   "snapshot": ".shared-tooling.snapshot",
   "snapshot_files": [
     {
       "path": "docs/verification-helpers.md",
-      "sha256": "fa06be93e809a7b154697dd2c4b27ea6daefc4971558372ace55f1e474716f72",
+      "sha256": "1cf16209ac326cf6fd72d4d819583f8b27b09d32b66448bc8c3446f1cf43b886",
       "executable": false
     },
     {
@@ -63,7 +63,7 @@
     },
     {
       "path": "docs/provenance.md",
-      "sha256": "3f42d18b79684142536f91c84e59dd22c1b71f04fa7bb6417711e6084e029b15",
+      "sha256": "f201174694019b9b01659f5a8ecfe4aee53356ab88c169416ef28caa78d41899",
       "executable": false
     },
     {
@@ -73,7 +73,7 @@
     },
     {
       "path": "docs/local-setup.md",
-      "sha256": "99ca134c61064ec37cf3d22eaaac3476b15c3438461de8819262fb82c9a5d327",
+      "sha256": "b99e4bb2f9e4b95abee6533ef46b39fa5efbce63e13c4b4eb8edba551369f2a7",
       "executable": false
     },
     {
@@ -83,7 +83,7 @@
     },
     {
       "path": "ci/tool-versions.env",
-      "sha256": "c08f9f6385f87a08eb552f57c5e3a701620370ca79c7d495d87d63e7dca62f39",
+      "sha256": "4923b939b682de2311217c232d56fa0cf1c8f37e19e16c16d41be7626cff1285",
       "executable": false
     },
     {
@@ -103,12 +103,12 @@
     },
     {
       "path": "scripts/dev/install-host-tools.sh",
-      "sha256": "c6e5383483b2e82bdcaefdb09fbba05c0b2872e8577d10924b0c16ccf66f4108",
+      "sha256": "591a5d5fc0b8bf0d48179a9d265245ea727ee318894bd10ed962137761465eea",
       "executable": true
     },
     {
       "path": "scripts/dev/install-ic-tools.sh",
-      "sha256": "661349d94e9fe1c837f06ee5a83fd1ff11910bbb2e69a609b09fd607bc3b8d0d",
+      "sha256": "7a78004b2fa56448ffa8a4fc9aac8e7e9343a0243bf857a3db908fb2f59cfb4f",
       "executable": true
     },
     {
@@ -118,7 +118,7 @@
     },
     {
       "path": "scripts/ci/test-host-tools.sh",
-      "sha256": "4189bf99b9c9fb07e366da0d7e497c977ee18b99f6523a2e31ea282a00bd89cc",
+      "sha256": "24f920c00b2068cd1eb85b5a3eb384da10f154183198adab5894e2f44b046036",
       "executable": true
     },
     {
@@ -163,7 +163,7 @@
     },
     {
       "path": "docs/supported-hosts.md",
-      "sha256": "6262e98da48f1ae8038c6ce42dbed22ce18fc2b55cce50aa410505d8532c1878",
+      "sha256": "e9e27d9521c03fce897f686ab9daba9c310a936ffdee9f55851b0acf1c6297ba",
       "executable": false
     },
     {
@@ -228,7 +228,7 @@
     },
     {
       "path": "rules/git-hooks.md",
-      "sha256": "9a95588444f9bbe4c6adc3dd01a84886ab45a763ec514d6a92dac40b0bbc60e9",
+      "sha256": "f81c0eeb2407ec012f9f8f693c8a2787843f213d6b2ad7f76b4777ef29795d1b",
       "executable": false
     },
     {
@@ -245,36 +245,70 @@
       "path": "rules/agent-maintenance.md",
       "sha256": "0de19d6eb5b3dea57d46cd6412dc49ce6a1b5fb591b551dbec16cdb25ee181df",
       "executable": false
+    },
+    {
+      "path": "scripts/ci/rewrite-local-lock-versions.pl",
+      "sha256": "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-local-lock-versions.pl",
+      "sha256": "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/check-formatting-hooks.sh",
+      "sha256": "047fec1744a605e6a0707f6c4b338b40affbaf3e55ebb5fd48e7385fc5b21669",
+      "executable": true
+    },
+    {
+      "path": "docs/tag-maintenance.md",
+      "sha256": "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6",
+      "executable": false
     }
   ],
   "exporter": "Clean committed Git-object exporter; reviewed manifest expansion and digest generation through shared verifier. No vendored patches, source mutation, staging or commits.",
-  "reviewed_diff": "target/shared-tooling-039-adoption/upstream-changes.patch",
+  "reviewed_diff": "target/shared-tooling-0310-adoption/upstream-changes.patch",
   "previous_snapshot": {
-    "revision": "a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3",
-    "files": "target/shared-tooling-039-adoption/previous",
-    "manifest": "target/shared-tooling-039-adoption/previous.snapshot",
-    "review": "target/shared-tooling-039-adoption/previous-review.json"
+    "revision": "47cd2ccaf0e8b428f06e6db0262df76cfc1581de",
+    "files": "target/shared-tooling-0310-adoption/previous",
+    "manifest": "target/shared-tooling-0310-adoption/previous.snapshot",
+    "review": "target/shared-tooling-0310-adoption/previous-review.json"
   },
   "evidence": {
-    "documentation": "target/shared-tooling-039-adoption/doc-links.log",
-    "parser_regressions": "target/shared-tooling-039-adoption/doc-helper.log",
-    "digest_regressions": "target/shared-tooling-039-adoption/digests.log",
-    "installer_regressions": "target/shared-tooling-039-adoption/ic-installer.log",
-    "snapshot_and_runner": "target/shared-tooling-039-adoption/tooling.log",
-    "syntax_and_lints": "target/shared-tooling-039-adoption/shell.log",
-    "actual_offline_tools_and_final_consumer_checks": "target/shared-tooling-039-adoption/consumer-final.log",
-    "native_scope": "Actual native Linux focused consumer checks. Installer failure/host branches use substitutes; upstream cases rerun against exact vendored production scripts. No actual tool download/activation, full CI/release gate or native macOS run in this batch."
+    "export": "target/shared-tooling-0310-adoption/refresh.log",
+    "transformer_regressions": "target/shared-tooling-0310-adoption/lock-transformer.log",
+    "actual_original_and_candidate_cargo": "target/shared-tooling-0310-adoption/actual-cargo-candidate.log",
+    "adapter_and_recovery": "target/shared-tooling-0310-adoption/release-adapter.log",
+    "actual_hooks": "target/shared-tooling-0310-adoption/hooks.log",
+    "host_installer": "target/shared-tooling-0310-adoption/host-installer.log",
+    "ic_installer": "target/shared-tooling-0310-adoption/ic-installer.log",
+    "snapshot_and_runner": "target/shared-tooling-0310-adoption/snapshot-runner.log",
+    "syntax_and_lints": "target/shared-tooling-0310-adoption/shell.log",
+    "offline_tools_pins_formatting": "target/shared-tooling-0310-adoption/consumer-checks.log",
+    "documentation": "target/shared-tooling-0310-adoption/doc-links.log",
+    "native_scope": "Focused native Linux. Host installer branches use substitutes; actual installed tools are checked offline. Actual Cargo metadata uses isolated consumer originals and only a fixture local version change. No actual release, build/full CI/package, native macOS, tool activation or live IC run."
   },
   "optional_helpers_not_selected": {
     "crates_io": "No registry observation/retry workflow exists; publication continues to delegate admission to Cargo.",
     "rustsec": "No advisory database acquisition/audit workflow exists.",
-    "release_commands": "Existing actual-Make consumer tests cover entry points and its extra completed-resume receipt check. The shared runner-only fixture does not replace that consumer-specific obligation."
+    "release_commands": "Existing actual-Make consumer tests cover entry points and its extra completed-resume receipt check. The shared runner-only fixture does not replace that consumer-specific obligation.",
+    "tag_maintenance": "No local tag-maintenance mechanism or authorized operation to replace; only linked shared guide is included.",
+    "ripgrep": "System bootstrap retains current selection; optional --with-ripgrep interface and pins are unchanged upstream bytes, not an activated consumer selection."
   },
   "remote_ci": {
-    "source": "47cd2ccaf0e8b428f06e6db0262df76cfc1581de",
-    "upstream": "https://github.com/dragginzgame/shared-tooling/actions/runs/37458968809",
-    "status": "Queued at inspection; no upstream or consumer native qualification inferred."
+    "released_consumer_source": "2587259d1c8424e9aac585413c8efbc374c1faeb",
+    "main": "https://github.com/dragginzgame/ic-backup/actions/runs/37476081335",
+    "tag": "https://github.com/dragginzgame/ic-backup/actions/runs/37476081385",
+    "consumer_status": "Released-source Linux and both macOS jobs passed; dirty adoption has no remote CI result.",
+    "upstream_source": "9f8c7c768793f4ce8f25be9e88282c0f63a06e7f",
+    "upstream": "https://github.com/dragginzgame/shared-tooling/actions/runs/37479591040",
+    "upstream_status": "Queued at inspection; no consumer qualification inferred."
   },
   "removed_functions": [],
-  "retired_files": []
+  "retired_files": [],
+  "remaining_consumer_qualification": {
+    "issue": "https://github.com/dragginzgame/ic-backup/issues/5",
+    "scope": "Native macOS checker/adapters under current inputs, then retire overlapping mechanical hook functions; exact-status consumer case retained."
+  }
 }

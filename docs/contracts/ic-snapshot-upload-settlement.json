@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "kind": "passive original metadata-allocation settlement over already reserved successful list; no persisted schema",
+  "claim_owners": [
+    "model::ic_snapshot_upload_observation::IcSnapshotUploadSettlement",
+    "model::ic_snapshot_upload_observation::IcSnapshotUploadAttribution"
+  ],
+  "admission_owner": "policy::ic_snapshot_upload_observation::validate_settlement",
+  "canonical_owners": [
+    "IcSnapshotUploadObservationRequest",
+    "validate_response",
+    "IcSnapshotReply::digest",
+    "snapshot_inventory_delta::compare_inventories",
+    "IcSnapshotUploadRequest::validate_data_destination",
+    "AttemptJournalRecord",
+    "AttemptJournalGuard",
+    "ObservationReceiptRequest"
+  ],
+  "binds": [
+    "full original plan/source/upload/immutable allowances via authority",
+    "exact pending mutation and observation IDs",
+    "current caller-owned qualification challenge",
+    "original independent list request/raw baseline digest",
+    "current list request/raw inventory digest and exact opaque observation evidence",
+    "qualified original-allocation attribution/nonapplication/settled uncertainty and complete evidence"
+  ],
+  "baseline": "Retain before mutation; integrations qualify chronology, authentication, actual context/target and stable custody. Require unchanged full original baseline IDs/timestamps/sizes. Matching digests prove no chronology.",
+  "outcomes": {
+    "Applied": "Explicit exclusive original allocation attribution to a bounded new candidate ID distinct from source; never infer from zero/one/many candidates. Multiple candidates can support an explicitly attributed ID.",
+    "NotApplied": "Qualified exclusion of original allocation including transient allocation then deletion; absence alone is insufficient.",
+    "Uncertain": "Actually settled authenticated successful list cannot resolve original allocation; lost/absent/malformed replies remain pending."
+  },
+  "effects": "Pure admission only; no IO, calls, serialization, automatic receipt, refunds, retries, data write/load/start/terminal/reference or fence release.",
+  "spending": "Existing journal alone owns receipt transitions and all consumption. Uncertain clears observation, retains unresolved mutation and original obligations/references.",
+  "bounds": {
+    "snapshots": 1024,
+    "snapshot_id_bytes": 256,
+    "raw_reply_bytes": 1048576,
+    "decoder_work_bytes": 2097152,
+    "type_table_entries": 16,
+    "total_attempts": 1024
+  },
+  "qualification": "Native passive claim/decoder and actual local accounting/reopen only; synthetic declarations are not IC effect evidence.",
+  "remaining": "Actual authenticated allocation attribution, backend reconciliation/provider/transport, complete transfer and application/load/start/terminal/release qualification."
+}

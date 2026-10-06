@@ -522,12 +522,26 @@ metadata fixtures first, then `perl scripts/dev/generate-snapshot-upload.pl`;
 bytes and declarations only; real IC upload and lost-effect reconciliation remain
 unimplemented. See [the boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
 
+Exact data-upload recovery and settlement use
+`policy::ic_snapshot_upload_data_observation::validate_response` and
+`validate_settlement`. Retain original destination metadata/read bytes before
+reservation. The latter also matches independently qualified attribution, a fresh
+challenge and exact readback/provenance evidence. It never records a receipt or
+performs another call. Matching bytes alone do not supply attribution; lost replies
+stay pending. The public local upload case also exercises an explicit synthetic
+settled-uncertainty receipt through the existing journal owner and exhausted reopen.
+This qualifies persistence only. See
+[the contract](contracts/ic-snapshot-upload-data-settlement.json).
+
 ## Local IC artifact diagnostics
 
 Local IC artifact diagnostics are available through
 `DownloadJournalGuard::ic_snapshot_metrics()`. Its duration summaries use nanoseconds;
 `prepared_chunk_bytes()` summarizes successfully returned local data payload sizes.
-Counts, totals, latest and maximum reuse `ic-metrics::MeasurementSummary`. Successful
+Counts, totals, latest and maximum reuse `ic-metrics::MeasurementSummary`, exposed
+as `ic_backup::ops::persistence::MeasurementSummary`. This re-exports the shared type;
+no local summary model or aggregation is maintained. Callers can name returned
+summaries through this path without adding a direct Metrics dependency. Successful
 and rejected calls stay separate. Empty chunks are valid zero samples; repeated
 preparation is repeated work. Preparation timings include nested verification and
 must not be added to verification timings as exclusive work. Measurements are empty
@@ -671,3 +685,28 @@ require PocketIC or a deliberately selected real local IC backend. The original
 [Canic source baseline](source-baseline.json) remains retained planning evidence.
 [Fresh source provenance](extraction-source.json) records this extraction input
 and the public consumers; it is separate from test qualification.
+
+## Metadata-allocation settlement admission
+
+The existing metadata-observation module admits independently qualified allocation
+claims against exact original/current inventory evidence and still-pending attempts.
+Reuse canonical inventory delta and source/destination identity admission; never
+infer outcomes from candidate counts. See [the maintained boundary](extraction-boundary.md#exact-metadata-upload-settlement-claims).
+Focused tests select `upload`, `snapshot_inventory_delta` and `ic_observation` with
+`cargo test --offline --locked -p ic-backup --lib FILTER`, plus the existing public
+`ic_snapshot_upload` target. Native synthetic settled claims qualify only local
+admission/accounting/reopen; actual authenticated providers remain integration-owned.
+
+## The 0.4 hard cut
+
+The public local-metrics getters now return the shared Metrics 0.2 type. Import
+`ic_backup::ops::persistence::MeasurementSummary` to name those results through this
+library. An application that also uses Metrics directly must update its own
+`ic-metrics` dependency to the 0.2 line; arithmetic, units and empty/saturated sample
+semantics are unchanged. There is no Metrics 0.1 adapter, local arithmetic wrapper
+or dual API. Host Tools 0.2 remains private to the existing filesystem adapters.
+
+The maintained v1 records, digests, retained source artifacts, spending reservations,
+fence obligations and restore references retain their exact formats and owners.
+Do not reset or discard unfinished evidence as part of this dependency hard cut.
+Package version changes, release execution and publication remain maintainer-owned.

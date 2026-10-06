@@ -3,21 +3,63 @@
   "inspection_date": "2026-10-06",
   "kind": "explicit maintainer-authorized host arithmetic integration",
   "registry_package": "ic-metrics",
-  "selected_version": "0.1.7",
-  "archive_sha256": "9e8632a16ca69a8a9ab1fd4daa276f7739d9996bd970373992e6c97087a04378",
+  "selected_version": "0.2.0",
+  "archive_sha256": "e6df432373e44c1956cbaa15548625efbebdbad4070a916e9fe0c7e4359f6265",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
   "repository": "https://github.com/dragginzgame/ic-metrics",
-  "source_review": "Cached published Cargo manifest and library/summary source; read-only sibling inspection supplied context but is not a path dependency or copied implementation.",
+  "source_review": "All published Rust sources match archive and exact committed revision. MeasurementSummary implementation is byte-identical to 0.1.9; changed lib.rs removes unused IC adapter/feature. Actual public Rust type identity changes across the minor line.",
   "api": "ic_metrics::MeasurementSummary: allocation-free, dependency-free default arithmetic; consumer owns sampling, units, attribution and reporting",
-  "catalog": "root Cargo.toml, inherited by the Unix-host crate; default-features=false and no ic feature",
-  "lock_change": "Only ic-metrics 0.1.7 added and the ic-backup dependency edge; every previously selected package retained.",
+  "catalog": "Root manifest compatible 0.2 range, default-features=false; locked registry 0.2.0. No removed ic feature or canister counter API is selected.",
+  "lock_change": "Maintainer worktree dependency selection is ic-host-tools 0.2.0, ic-metrics 0.2.0 and wasmparser 0.261.0; every other package entry remains unchanged from released 0.3.9.",
   "msrv": "Published dependency requires Rust 1.88; consumer remains Rust 1.91.",
   "production_owner": "crates/ic-backup/src/ops/persistence/download_journal/metrics/",
-  "consumers": ["verify_ic_snapshot_artifact", "prepare_ic_snapshot_upload_metadata", "prepare_ic_snapshot_upload_data"],
+  "consumers": [
+    "verify_ic_snapshot_artifact",
+    "prepare_ic_snapshot_upload_metadata",
+    "prepare_ic_snapshot_upload_data"
+  ],
   "units": "Monotonic inclusive local durations in nanoseconds, successful local chunk sizes in bytes. Returned successes/rejections separate; internal verification overlaps preparation.",
   "lifetime": "Bounded guard-local in-memory summaries, empty on create/open; no global registry, identifiers, persistence, reset or serialization.",
-  "compatibility": "Additive read-only public view and getter; existing Send+Sync, v1 records, hashes, method signatures, errors, spending, obligations, references and root package/receipt identities retained. Extend pending 0.3.7.",
-  "qualification": {"evidence": "target/ic-metrics-review", "unit_filters": ["metrics", "ops::persistence::download_journal"], "public_target": "ic_snapshot_upload", "scope": "Actual native local sampling/arithmetic, records and reopen; no IC effects, performance saving claim or transport measurement."},
-  "cleanup_review": {"evidence": "target/ic-metrics-cleanup-review", "owners": "Shared crate retains aggregation; local adapter owns operation/outcome routing and duration conversion. Seven unit/outcome summaries and both source checks remain necessary.", "simplification": "Remove result-type generics, mutable chunk-size side channel and unused private checksum return. Derive prepared bytes only from the fully admitted successful result. Replace duplicate manual aggregation tests with focused duration conversion and actual filesystem success/admission/missing-source sampling.", "compatibility": "No public API, record, hash, error, custody-order or dependency selection changes."},
-  "remaining": "Transport/workflow providers and authenticated IC qualification remain separate work. Diagnostics establish no complete transfer, spending, receipt, freshness, effect settlement or terminal/reference release."
+  "compatibility": "Breaking Rust API type identity in all seven IcSnapshotLocalMetrics summary getters: consumers use ic-metrics 0.2 types. Select complete pending 0.4.0 rather than requested 0.3.10. Getter names, arithmetic, empty/saturated semantics, v1 persistence and package/receipt 0.3.9 stay unchanged.",
+  "qualification": {
+    "evidence": "target/upload-metadata-settlement-0310-review",
+    "registered_cases": "selected-unit-cases.json",
+    "passing_logs": [
+      "focused-tests.log",
+      "selected-02-public-tests.log",
+      "clippy.log",
+      "msrv.log",
+      "docs.log"
+    ],
+    "public_targets": [
+      "local_recovery",
+      "local_restore_source",
+      "ic_snapshot_upload"
+    ],
+    "scope": "Fresh affected production owners and local byte/persistence/settlement/reopen/diagnostic behavior on published 0.2.0; native Linux only. Prior qualification remains tied to its actual old dependency inputs."
+  },
+  "cleanup_review": {
+    "evidence": "target/ic-metrics-cleanup-review",
+    "owners": "Shared crate retains aggregation; local adapter owns operation/outcome routing and duration conversion. Seven unit/outcome summaries and both source checks remain necessary.",
+    "simplification": "Remove result-type generics, mutable chunk-size side channel and unused private checksum return. Derive prepared bytes only from the fully admitted successful result. Replace duplicate manual aggregation tests with focused duration conversion and actual filesystem success/admission/missing-source sampling.",
+    "compatibility": "No public API, record, hash, error, custody-order or dependency selection changes."
+  },
+  "remaining": "Transport/workflow providers and authenticated IC qualification remain separate work. Diagnostics establish no complete transfer, spending, receipt, freshness, effect settlement or terminal/reference release.",
+  "published_source_revision": "8657c35e441a0f2e6add7f784892e85c9b5e1117",
+  "prior_qualification": {
+    "evidence": "target/ic-metrics-review",
+    "unit_filters": [
+      "metrics",
+      "ops::persistence::download_journal"
+    ],
+    "public_target": "ic_snapshot_upload",
+    "scope": "Actual native local sampling/arithmetic, records and reopen; no IC effects, performance saving claim or transport measurement."
+  },
+  "previous_adoption_review": "target/upload-metadata-settlement-0310-review/previous-ic-metrics-adoption.json",
+  "public_type": "ic_backup::ops::persistence::MeasurementSummary re-exports canonical ic_metrics::MeasurementSummary from 0.2; no local wrapper/aggregation, deprecated alias or older minor lane.",
+  "hard_cut_review": {
+    "evidence": "target/hard-cut-040-review",
+    "scope": "Public summary type reachable through producer facade; actual local samples retain exact shared identity. Retain distinct seven outcomes/units and per-guard local routing. Dependency/type hard cut preserves v1 evidence, accounting, fences and references.",
+    "verification": "Existing native metrics cases and public upload/source/reopen journey, package Clippy/docs/MSRV and formatting/snapshot/doc references. No live IC or native macOS proof."
+  }
 }

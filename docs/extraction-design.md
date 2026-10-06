@@ -265,6 +265,7 @@ status/read visibility must never be mistaken for write authority.
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented single reserved source-bound metadata/data update signature, reusing exact upload attempts, passive acknowledgements and IC update failures; no installed provider, automatic settlement or retry |
 | `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; no installed provider, allocation outcome, data reconciliation or reissue |
+| `IcSnapshotUploadDataObservationProvider` | Implemented exact original destination/extent/reserved readback observation with passive chunk comparison; no installed provider, write attribution, automatic receipt or reissue |
 | `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
 | `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
 | `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
@@ -780,6 +781,35 @@ snapshots establish no allocation outcome; lost observation replies remain pendi
 Original baseline custody, exclusive authenticated allocation attribution and data-
 upload reconciliation remain integration work. See
 [the maintained boundary](extraction-boundary.md#exact-originally-reserved-metadata-upload-observations).
+
+Data-upload recovery now has an exact original-plan/source-bound destination readback
+request and single already reserved observation port. Known uploaded destination
+metadata, original dimensions and exact raw ID/extent/hash are required. Current
+reservations and passive claims reuse canonical admission; existing bounded data
+decoding returns bytes and original-chunk comparison. Matching/different bytes
+produce no write outcome or receipt. Actual allocation/write attribution, read
+permissions, chronology and backend capability remain integration-qualified. See
+[the maintained boundary](extraction-boundary.md#exact-originally-reserved-data-upload-observations).
+
+Successful exact data-read evidence now supports a separate passive original-write
+settlement admission. It binds full original authority/both pending attempts, a
+fresh qualification challenge and exact existing metadata/read/raw-reply/observation
+identity. Matching bytes additionally require exclusive original-write attribution;
+negative claims require exclusion of transient application/overwrite. Actual settled
+uncertainty is distinct from a lost read. Pure views perform no IO or journal change;
+only qualified integrations use the existing receipt transition, retaining all
+consumption and original obligations/references. Authentic attribution and backend
+qualification remain integration work. See
+[the maintained boundary](extraction-boundary.md#exact-data-upload-settlement-claims).
+
+Metadata-allocation settlement now binds exact original/current inventories,
+reservations and challenge to independent passive attribution. It reuses closed
+baseline comparison; Applied names a new non-source ID rather than selecting a
+singleton. Negative evidence excludes transient allocation/deletion, while settled
+uncertainty remains distinct from lost replies. Existing receipt owners retain all
+consumption and source obligations. Actual authenticated attribution/backend
+qualification remain integration work. See
+[the maintained boundary](extraction-boundary.md#exact-metadata-upload-settlement-claims).
 
 ## 12. Filesystem custody, durability and retention
 

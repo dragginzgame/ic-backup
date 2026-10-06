@@ -373,6 +373,44 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   dispatch as integration responsibilities. Failures/lost replies stay pending; no
   provider, hidden reissue, refund, terminal or fence/source-reference release exists.
 
+- Data-upload readback binds the full original source/upload plan, exact destination
+  raw ID/extent/hash, known uploaded metadata/original dimensions and both pending
+  attempts to an already reserved read digest. Reuse canonical upload authority,
+  reservation/claim checks and bounded data decoding. Preserve 1,024 attempts,
+  256 ID bytes, 4 KiB read arguments, 1 MiB metadata/chunk, 2 MiB raw data reply
+  and original decoder quotas; existing status/list responses remain at 1 MiB.
+  Equal/different bytes establish no original write attribution or outcome, and
+  missing metadata/data cannot supply a default. Authentication, fresh permission,
+  timing, actual allocation/readback capability and never-dispatched observation
+  custody stay integration-owned. Lost replies retain pending spending and all
+  references/obligations; no installed provider, retry/refund, complete upload or
+  terminal/fence/reference-release permit exists.
+
+- Data-upload settlement admission now reuses original-plan-bound successful exact
+  readback and current reservations. Passive claims additionally bind original
+  authority/both attempt IDs, a fresh qualification challenge, the existing metadata/
+  request/raw data digest and exact opaque observation evidence. Applied requires
+  matching bytes plus integration-qualified exclusive original-write attribution;
+  NotApplied requires exclusion of transient application/overwrite, even for matching
+  preexisting bytes. Unresolved requires a settled authenticated read, never lost or
+  malformed replies. Views perform no IO, extra calls or automatic journal transition.
+  The existing journal remains the sole receipt/spending owner; exhaustion never
+  refunds. Original allocation, authenticity, chronology and stable custody remain
+  integration-qualified. No provider, schema/digest, backend completion or release
+  admission is introduced.
+
+- Metadata-allocation settlement now binds original full upload authority, both
+  pending attempts, a current challenge and exact original/current list/raw digests
+  and opaque observation evidence. Reuse closed-baseline inventory comparison and
+  canonical destination admission: all baseline descriptors remain unchanged;
+  Applied names an independently attributed new non-source raw ID. Zero/one/many
+  candidates infer no outcome. Negative proof excludes transient allocation/deletion;
+  Unresolved requires an actually settled authenticated successful list, not a lost
+  reply. Preserve existing 1,024-entry/attempt, 256-ID-byte and 1 MiB raw bounds.
+  Integrations retain original baseline before mutation and qualify chronology,
+  authentication, freshness, custody and exclusive attribution. Passive views change
+  no journal, spending, obligations or references and grant no release permit.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

@@ -138,9 +138,12 @@ if ($command eq 'version') {
     my ($target) = @args;
     parts($target);
     my $previous = version();
-    my $lock = read_file('Cargo.lock');
-    my $matches = $lock =~ s/(^\[\[package\]\]\nname = "ic-backup"\nversion = ")\Q$previous\E("$)/$1$target$2/mg;
-    die "lockfile must contain one exact original ic-backup version\n" unless $matches == 1;
+    open my $rewrite, '-|', $^X, 'scripts/ci/rewrite-local-lock-versions.pl',
+        'Cargo.lock', $previous, $target, 'ic-backup'
+        or die "cannot invoke shared lockfile transformer: $!\n";
+    my $lock = do { local $/; <$rewrite> };
+    close $rewrite or die "shared lockfile transformer failed\n";
+    defined($lock) && length($lock) or die "shared lockfile transformer emitted no candidate\n";
     my $manifest = read_file('Cargo.toml');
     $manifest =~ s/(^\[workspace\.package\]\n(?:(?!^\[).)*?^version = ")[^"]+("$)/$1$target$2/ms
         or die "cannot update workspace package version\n";

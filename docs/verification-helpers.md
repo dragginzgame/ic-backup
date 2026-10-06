@@ -103,6 +103,10 @@ an inconclusive result must stop that flow rather than trigger publication.
 
 ## Snapshot adoption
 
+The additional lockfile transformer and formatting adoption checker below are
+optional snapshot files too. They retain consumer policy at their input boundary;
+do not vendor their upstream fixtures as product tests.
+
 After these files have a reviewed committed revision, adopt each desired helper
 and this guide through the [snapshot workflow](consuming-snapshots.md). The
 documentation, release-command and registry helpers have no dependencies on
@@ -203,3 +207,60 @@ and Git, with no shared-script dependencies. `test-rustsec-db.sh` covers simulat
 online/failure cases and real local isolation using existing Git history; it
 neither creates commits nor performs a live vulnerability audit. Consumer tests
 must retain policy/order checks and prove audit cannot run after preparation fails.
+
+## Local Cargo.lock versions
+
+```sh
+perl scripts/ci/rewrite-local-lock-versions.pl Cargo.lock 0.1.0 0.1.1 my-crate helper-crate > candidate.lock
+```
+
+The Perl/core-only transformer reads a regular Cargo-generated LF lockfile in
+format 3 or 4 and emits a complete candidate on stdout. Supply canonical stable
+versions and the exact local package roster selected by the consumer's Cargo
+metadata. Each selected package must appear exactly once without a `source`
+field and have the previous version. Missing, duplicate or mismatched identities
+fail without emitting a partial candidate. The input file is never written.
+
+Only selected local versions and their exact unqualified dependency references
+change. Registry/Git identities, source-qualified references, checksums, unrelated
+versions, whitespace and comments stay unchanged. This is a narrow transformation
+of Cargo's generated layout, not a general TOML parser or resolver. The caller
+must check exit status before replacing its lockfile, retain failed candidates,
+and run Cargo's locked offline validation against the prepared manifests.
+Selecting independent lockfiles, discovering packages, metadata writes and
+release recovery remain consumer responsibilities. Do not redirect output onto
+the input file, invoke dependency resolution online, or use this to repair an
+already inconsistent graph. The upstream fixture includes independent real-Cargo
+locked/offline validation with local-only dependencies.
+
+## Consumer formatting-hook adoption
+
+```sh
+bash scripts/ci/check-formatting-hooks.sh "$PWD" crates/example/src/lib.rs \
+  crates/example/Cargo.toml /tmp/example-unsorted.toml ci/tool-versions.env
+```
+
+The first two relative paths select an existing Rust module and Cargo manifest.
+The fourth argument is a consumer-prepared unsorted copy of that manifest: change
+only dependency ordering, so the real formatter restores the selected sorted
+bytes exactly. Remaining relative arguments explicitly overlay additional current
+files needed by the consumer's formatter (other manifests, source, lockfiles,
+configuration or Make includes). The checker exports existing HEAD, overlays
+the named inputs plus Makefile/hook/installer, and stages them only in temporary
+repositories. It never creates commits or activates the real checkout's hook.
+README.md must exist as an unrelated-edit preservation input. Tracked files must
+be regular files, matching the shared hook's support contract.
+
+Review the consumer's Makefile and formatting commands before execution. This
+helper executes those commands; it is not a sandbox for arbitrary Make code.
+Prerequisites must already be installed. Cargo is forced offline, rustup auto
+installation is disabled, and inherited Git/Make/logger checkout selections are
+cleared. The baseline must pass its real `fmt-check` before perturbation.
+
+Checks cover selected Rust refresh and manifest sorting, idempotence, partial
+Rust/manifest staging, malformed Rust formatter failure, preservation of selected
+lockfiles and unrelated edits, and installer alias/conflict handling. Failed
+exports and logs are retained; successful helper-owned scratch is removed.
+Consumer-specific formatter stages and runtime obligations still need their local
+tests. Shared Tooling exercises this helper against its real nested Cargo fixture;
+that does not qualify a consumer's formatter or establish native macOS adoption.

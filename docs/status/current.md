@@ -25,7 +25,162 @@
 
 # Current handoff — 2026-10-06
 
-## Pending 0.3.9 metadata-upload recovery and shared primitive fixes
+## Pending 0.4.0 upload settlement and dependency adoption
+
+The maintainer reports 0.3.9 live. Local release HEAD/tag
+`2587259d1c8424e9aac585413c8efbc374c1faeb`, finalized changelog, package version
+and original receipt/source `ce5f09945b86190742b3a163bd1c8366611909d1` agree;
+the worktree was clean before implementation. The original compatible work selected an undated 0.3.10 draft. The maintainer's
+concurrent manifest/lock edits now select Host Tools and Metrics 0.2.0. Metrics is
+returned by seven public local-summary getters, changing Rust type identity; the
+complete pending draft therefore requires 0.4.0. The selected patch conflict was
+reported; the maintainer now confirms continuing the hard cut. Package/lock version and
+receipt remain 0.3.9; only dependency selections changed.
+
+Exact data-upload recovery now binds the full original source/upload plan and
+immutable allowances to an independently retained destination metadata/data-read
+request. The same target/new raw ID and original region/offset/length or known
+chunk hash are required, alongside known uploaded metadata and original region
+sizes. Both attempts must remain pending and the exact read digest reserved.
+No journal or spending owner is added. See
+[the implemented contract](../contracts/ic-snapshot-upload-data-observation.json),
+[maintained boundary](../extraction-boundary.md#exact-originally-reserved-data-upload-observations)
+and [fresh source review](../ic-snapshot-upload-data-observation-source.json).
+
+The single provider signature permits one already accounted exact replicated
+data-read update. Canonical existing authority/reservation/claim admission and
+redaction are reused. The new passive data response preserves its existing
+2 MiB codec bound, admitting a 1 MiB chunk plus wire overhead; status/list responses
+keep their released 1 MiB ceiling. Pure association uses the existing bounded
+data decoder/digest and projects original-chunk SHA-256 equality. Matching bytes
+can predate a write; differing/absent bytes alone cannot establish a negative
+outcome. Unknown destination source cannot supply an uploaded default. No receipt,
+Applied/NotApplied inference, refund, retry, complete upload or reference release
+follows. Authentication, original allocation/write attribution, backend readback,
+fresh read permission/timing and never-dispatched custody remain integration-owned.
+
+All 47 registered selected unit cases pass against current production code,
+including 11 new data-readback cases and the affected original upload, observation
+and data-codec owners. Coverage includes every region and known empty/nonempty
+chunk, exact identities/claims, metadata absence/dimension drift, missing/settled
+reservations, all typed provider failures, malformed/inexact/excess replies and
+maximum data bytes. The public upload journey durably retains destination metadata/
+read originals before reservation, preserves both pending attempts through
+indeterminate failure and matching/different evidence, and reopens unchanged bytes
+without dispatch. Source journals/plans/references and per-guard diagnostics remain
+unchanged. Clippy/docs with warnings denied and Rust 1.91 all-target/all-feature
+checks pass. Formatting, all 421 maintained local document references and the exact
+48-file Shared Tooling snapshot also pass. Registered membership, exact source/
+dependency/release identities and fresh logs remain under
+`target/upload-data-observation-0310-review`. This is focused
+native Linux qualification; native macOS, full CI/package and live IC remain separate.
+
+Continued compatible work adds passive successful-read settlement claims and
+`validate_settlement` under the existing data-observation owner. Admission reuses
+exact original authority/reservations/actual claims and bounded read decoding, then
+matches both attempt IDs, a caller-owned fresh challenge, exact metadata/read/raw
+reply digest and unchanged opaque observation evidence. Applied additionally needs
+matching original bytes and independent exclusive-write attribution; NotApplied
+requires qualified exclusion of transient application/overwrite. Equal preexisting
+bytes imply neither outcome. Unresolved requires a settled authenticated successful
+read; lost, absent or malformed replies remain pending. See
+[the contract](../contracts/ic-snapshot-upload-data-settlement.json),
+[boundary](../extraction-boundary.md#exact-data-upload-settlement-claims) and
+[fresh source review](../ic-snapshot-upload-data-settlement-source.json).
+
+Pure views perform no IO, calls or automatic receipt. Only a qualified integration
+uses the unchanged journal transition. Settled uncertainty clears that observation,
+retains the unresolved mutation and refunds no allowance. The public local journey
+records synthetic settled evidence solely to qualify durable accounting/reopen,
+then rejects repeated settlement and new attempts while retaining every original
+source reference, journal/plan and diagnostic. No IC behavior is simulated.
+
+All 54 registered selected unit cases (7 new settlement cases) and the public
+upload/reopen journey pass against current production code. Exact membership,
+initial fixture/lint failures, fresh final logs and previous local source remain
+under `target/upload-data-settlement-0310-review`. Clippy/API docs with warnings
+denied and Rust 1.91 all-target/all-feature checks pass. Native macOS, full
+CI/package, actual authenticated attribution and backend qualification remain
+separate. No maintained function, method or type was removed; duplicated native
+response-fixture construction now has one local owner. Earlier readback/tooling
+qualification retains its actual prior inputs below and in the retained evidence.
+
+Shared Tooling now adopts exact committed `9f8c7c7` from clean remote/main and
+read-only source. All 52 snapshot files/modes verify. Release preparation uses
+the shared lockfile transformer with status admission before metadata writes;
+actual original/candidate Cargo graphs pass offline/locked, with only the local
+package version changed inside retained fixtures. The hook adapter now invokes
+the shared checker with current formatter inputs and ordering-only child manifest.
+Focused Linux lock/adapter/recovery, hook, installer and snapshot/runner cases,
+shell/Perl checks, offline tools, pins, formatting and local document links pass.
+Evidence and previous snapshot/review remain under
+`target/shared-tooling-0310-adoption`; see
+[the adoption review](../shared-tooling-review.json).
+[Issue #5](https://github.com/dragginzgame/ic-backup/issues/5) remains open for
+native macOS replacement coverage before retiring overlapping hook fixtures.
+Three-host CI and explicit system Bash 3.2 checks are wired; existing additional
+formatter-status and release/receipt cases remain local. No vendored patches.
+
+The initial 0.1.14 archive at `1e01809` matched committed source and unchanged
+0.1.13 Rust bytes. The maintainer then changed dependency inputs during this batch:
+Host Tools 0.2.0 at `be7d739`, Metrics 0.2.0 at `8657c35`, and transitive wasmparser
+0.261.0. Archive checksums, every Rust source blob and exact revisions match.
+Used Host Tools artifact implementations and Metrics summary arithmetic remain
+byte-identical to the prior published inputs; unused tool/Wasm APIs and removed
+IC adapter do not enter this consumer. Public Metrics type identity still changes.
+The current reviews preserve historical dependency qualifications rather than
+relabeling them; see [Host Tools](../ic-host-tools-adoption.json) and
+[Metrics](../ic-metrics-adoption.json). Toolchains remain unchanged. Released 0.3.9
+[main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37476081335) and
+[tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37476081385)
+passed on Linux and both macOS hosts. They do not qualify this dirty draft.
+
+Metadata-allocation settlement now admits exact original/current inventories and
+independent passive attribution under original reservations and a current challenge.
+Closed-baseline comparison has one shared private owner for capture and upload.
+Applied names one new bounded non-source ID even among multiple candidates;
+NotApplied must exclude transient allocation/deletion. Successful settled uncertainty
+remains distinct from lost observations. The public native journey retains baseline/
+list declarations before mutation, explicitly records synthetic settled uncertainty,
+then reopens with pending mutation, exhausted spending and exact original bytes.
+See [contract](../contracts/ic-snapshot-upload-settlement.json),
+[boundary](../extraction-boundary.md#exact-metadata-upload-settlement-claims) and
+[source review](../ic-snapshot-upload-settlement-source.json).
+
+All 91 registered unique selected unit cases (7 new metadata-settlement cases) and
+five public local recovery/source/upload cases pass on the selected 0.2 dependencies.
+Focused Clippy/docs with warnings denied and Rust 1.91 all-target/all-feature checks
+pass. Formatting, all 444 local document references and the exact 52-file Shared
+Tooling snapshot also pass. Exact membership, original/current dependency inputs, published source/archive
+identities and logs remain under `target/upload-metadata-settlement-0310-review`.
+Earlier 0.1.14 logs retain their own inputs. No maintained function, method or type
+was removed; existing public capture comparison is unchanged and shares its baseline
+merge internally. Native macOS, full CI/package and actual authenticated IC/backend
+qualification remain separate.
+
+The continued hard-cut review exposes the canonical shared summary type through
+`ic_backup::ops::persistence::MeasurementSummary`. Consumers can name returned
+metrics without a separate dependency; direct Metrics users adopt 0.2. No local
+arithmetic wrapper or older minor lane is installed. The seven measured outcomes/
+units, method-specific observation response bounds and v1 recovery owners remain
+live, rather than obsolete compatibility code. Unfinished spending, source references
+and fence obligations retain exact records and cannot be reset during the hard cut.
+See [consumer guidance](../development.md#the-04-hard-cut) and
+[the Metrics review](../ic-metrics-adoption.json). No function, method or type was
+removed. All three registered focused metrics cases and the public source/upload/
+reopen journey pass, alongside Clippy/docs with warnings denied and Rust 1.91.
+Formatting, 446 local references and all 52 snapshot files verify. Manifest/lock
+inputs remain byte-identical to this review's start. Fresh membership, source/input
+identities and logs are retained under `target/hard-cut-040-review`.
+
+Work remains uncommitted, with no Git/version/release transaction, publication,
+live effect or cleanup. Next product work remains authenticated allocation/write
+attribution and qualified settled reconciliation, then actual provider/transport,
+selected backend and application/load/start qualification. Full B1/B2 and
+independently usable backup/restore remain unestablished. Prior handoffs and their
+evidence retain the exact historical scope below.
+
+## Retained pre-release 0.3.9 metadata-upload recovery and shared primitive fixes
 
 The continued compatible batch adds an ephemeral original metadata-upload/list
 observation request and single already reserved provider signature. It binds the

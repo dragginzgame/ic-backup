@@ -71,6 +71,19 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         &self.kind
     }
 
+    pub(crate) fn matches_kind(&self, original: &SnapshotDataKind) -> bool {
+        use SnapshotDataKind::{StableMemory, WasmChunk, WasmMemory, WasmModule};
+        match (&self.kind, original) {
+            (WasmModule { offset: a, size: b }, WasmModule { offset: c, size: d })
+            | (WasmMemory { offset: a, size: b }, WasmMemory { offset: c, size: d })
+            | (StableMemory { offset: a, size: b }, StableMemory { offset: c, size: d }) => {
+                a == c && b == d
+            }
+            (WasmChunk { hash: a }, WasmChunk { hash: b }) => a == b,
+            _ => false,
+        }
+    }
+
     /// Read the canonical effective routing target, also encoded in the arguments.
     #[must_use]
     pub fn target(&self) -> &str {

@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.0]
+
+- Bind data-upload recovery reads to the original destination, exact extent and
+  already spent observation. Compare retained chunk evidence without turning
+  matching bytes into a write receipt, retry or source-release permission.
+
+- Admit separately qualified data-upload settlement against exact reserved
+  readback, attempt identities and a fresh challenge. Keep byte comparison
+  independent from write attribution and preserve exhausted spending through reopen.
+- Admit independently qualified metadata-allocation settlement against unchanged
+  original inventory, exact reserved list evidence and a current challenge.
+  Require explicit attribution to a new non-source ID; candidate counts grant no outcome.
+- **Breaking:** use `ic-metrics` 0.2 for public local summary return types.
+  Name returned summaries through `ic_backup::ops::persistence::MeasurementSummary`;
+  consumers also using Metrics directly must use its 0.2 types.
+  Use `ic-host-tools` 0.2 while preserving artifact and persistence behavior.
+- Adopt Shared Tooling’s exact lockfile transformer and actual formatting-hook
+  checker, preserving dependency selections, release recovery and working edits
+  ([#5](https://github.com/dragginzgame/ic-backup/issues/5)).
+  Refresh committed installer failure handling and retain existing hook cases
+  until replacement coverage passes on native macOS.
+
 ## [0.3.9] - 2026-10-06
 
 - Bind metadata-upload recovery inventory to exact original payloads and already

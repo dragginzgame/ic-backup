@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "kind": "passive original-data-write settlement over successful already reserved readback; no persisted schema",
+  "claim_owners": [
+    "model::ic_snapshot_upload_data_observation::IcSnapshotUploadDataSettlement",
+    "model::ic_snapshot_upload_data_observation::IcSnapshotUploadDataAttribution"
+  ],
+  "admission_owner": "policy::ic_snapshot_upload_data_observation::validate_settlement",
+  "view_owner": "policy::ic_snapshot_upload_data_observation::IcSnapshotUploadDataSettlementView",
+  "canonical_owners": [
+    "IcSnapshotUploadDataObservationRequest",
+    "validate_response",
+    "IcSnapshotUploadDataObservationView",
+    "IcSnapshotDataReply::digest",
+    "AttemptJournalRecord",
+    "AttemptJournalGuard",
+    "ObservationOutcomeRecord",
+    "ObservationReceiptRequest"
+  ],
+  "binds": [
+    "complete original plan/source/upload/immutable allowances via authority",
+    "exact original still-pending mutation and observation attempt IDs",
+    "current caller-owned qualification challenge",
+    "existing digest of exact destination metadata/read request/raw data",
+    "exact opaque retained observation evidence",
+    "independently qualified original-write attribution/nonapplication/settled uncertainty and complete evidence"
+  ],
+  "outcomes": {
+    "Applied": "requires matching exact original chunk plus exclusive original-write attribution; exclude preexisting bytes/independent writers and qualify original allocation and stable custody through read",
+    "NotApplied": "requires original nonapplication proof excluding transient write followed by overwrite; matching preexisting or different bytes alone imply no outcome",
+    "Uncertain": "requires an actually settled authenticated successful exact read that cannot resolve the original write; lost/absent/malformed replies remain pending"
+  },
+  "effects": "pure read-only admission; no IO, remote calls, serialization, automatic receipt, retry, refund, provider or dispatch permit",
+  "spending": "existing journal sole owner; qualified integration explicitly records receipt. Uncertain clears only observation, retains original pending mutation and all consumption. No allowance replenishment or new budgets.",
+  "bounds": {
+    "total_attempts": 1024,
+    "snapshot_id_bytes": 256,
+    "read_arguments_bytes": 4096,
+    "data_chunk_bytes": 1048576,
+    "raw_data_reply_bytes": 2097152,
+    "decoder_work_bytes": 8388608,
+    "type_table_entries": 16
+  },
+  "integration_qualification": "authentication, fresh unique challenge, original allocation and exact source/destination custody, observation chronology, exclusive write attribution/nonapplication and retained complete evidence. Extra remote calls require separately accounted authority outside this operation.",
+  "recovery": "pure views leave original journal bytes unchanged. Explicit existing-owner settlement survives local reopen without providers/reissues, refunds or reference changes.",
+  "not_established": [
+    "authenticated provider/backend",
+    "complete upload or transfer",
+    "same-release load/start safety",
+    "terminal proof",
+    "fence or source-reference release"
+  ]
+}

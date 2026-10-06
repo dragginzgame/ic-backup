@@ -71,11 +71,26 @@ pub fn compare<'a>(
     if capture.method() != IcManagementMethodRecord::TakeCanisterSnapshot {
         return Err(SnapshotInventoryDeltaError::WrongCaptureMethod);
     }
+    let candidates = compare_inventories(capture.target(), baseline, observed)?;
+    Ok(SnapshotInventoryDeltaView {
+        capture,
+        baseline,
+        observed,
+        candidates,
+    })
+}
+
+/// Shared closed-baseline admission; candidates remain descriptive only.
+pub(crate) fn compare_inventories<'a>(
+    target: &str,
+    baseline: &IcSnapshotReply<'_>,
+    observed: &'a IcSnapshotReply<'_>,
+) -> Result<Vec<&'a IcSnapshotInfo>, SnapshotInventoryDeltaError> {
     for reply in [baseline, observed] {
         if reply.request().method() != IcManagementMethodRecord::ListCanisterSnapshots {
             return Err(SnapshotInventoryDeltaError::WrongInventoryMethod);
         }
-        if reply.request().target() != capture.target() {
+        if reply.request().target() != target {
             return Err(SnapshotInventoryDeltaError::TargetMismatch);
         }
     }
@@ -98,12 +113,7 @@ pub fn compare<'a>(
     if previous.next().is_some() {
         return Err(SnapshotInventoryDeltaError::LostBaseline);
     }
-    Ok(SnapshotInventoryDeltaView {
-        capture,
-        baseline,
-        observed,
-        candidates,
-    })
+    Ok(candidates)
 }
 
 /// Typed comparison rejection, with no raw identifiers or payload diagnostics.

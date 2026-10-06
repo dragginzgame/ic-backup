@@ -291,9 +291,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-tools"
-version = "0.1.13"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b354a1ee01453accfaa969fc43467e9df3d9ff68d85e0b9005518fe14299bdc"
+checksum = "6491f3e87d4d7b72c7ffddae3360170c65fe0dbd26eaf1a1f0a3d2a04a029dc6"
 dependencies = [
  "flate2",
  "rustix",
@@ -317,9 +317,9 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.1.9"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14478c4b7c31f0b9ac3226cd33056d273b8488dc5cb8820b13e64dff171ded65"
+checksum = "e6df432373e44c1956cbaa15548625efbebdbad4070a916e9fe0c7e4359f6265"
 
 [[package]]
 name = "ic_principal"
@@ -691,9 +691,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "wasmparser"
-version = "0.253.0"
+version = "0.261.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19db11f87d2486580e1e8b6f494c54df7e0566b87d0b599db843c24019667339"
+checksum = "4f20f20e44f7e8aeb6744823ea9d869ede51e51be4fdaedede2852282e54d2d8"
 dependencies = [
  "bitflags",
  "indexmap",

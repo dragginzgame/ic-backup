@@ -111,7 +111,7 @@ impl<'a> IcObservationRequest<'a> {
             authority: &self.authority,
             mutation_attempt: self.mutation_attempt,
             observation_attempt: self.observation_attempt,
-            payload: self.payload,
+            request: self.payload.digest(),
         }
         .validate(journal)
     }
@@ -121,7 +121,7 @@ pub(crate) struct ObservationReservation<'a> {
     pub authority: &'a AttemptAuthorityRecord,
     pub mutation_attempt: u32,
     pub observation_attempt: u32,
-    pub payload: &'a IcManagementRequestRecord,
+    pub request: ArtifactChecksumRecord,
 }
 
 impl ObservationReservation<'_> {
@@ -139,7 +139,7 @@ impl ObservationReservation<'_> {
         if current.pending_observation != Some(self.observation_attempt) {
             return Err(IcObservationRequestError::ObservationMismatch);
         }
-        if journal.pending_observation_request() != Some(self.payload.digest().hash()) {
+        if journal.pending_observation_request() != Some(self.request.hash()) {
             return Err(IcObservationRequestError::RequestMismatch);
         }
         Ok(())
@@ -177,17 +177,7 @@ impl IcObservationResponse {
     /// # Errors
     /// Rejects zero/excessive/reversed attempts, oversized replies and invalid principals.
     pub fn new(mut input: IcObservationResponseInput) -> Result<Self, IcObservationResponseError> {
-        if input.mutation_attempt == 0
-            || input.observation_attempt <= input.mutation_attempt
-            || input.observation_attempt > MAX_OPERATION_ATTEMPTS
-        {
-            return Err(IcObservationResponseError::InvalidAttempts);
-        }
-        if input.reply.len() > MAX_IC_OBSERVATION_REPLY_BYTES {
-            return Err(IcObservationResponseError::ReplyTooLarge);
-        }
-        input.target = crate::model::principal::canonical_text(&input.target)
-            .ok_or(IcObservationResponseError::InvalidTarget)?;
+        validate_response_input(&mut input, MAX_IC_OBSERVATION_REPLY_BYTES)?;
         Ok(Self { input })
     }
     /// Read immutable canonical claims and exact raw bytes; no mutation access.
@@ -198,16 +188,42 @@ impl IcObservationResponse {
 }
 impl fmt::Debug for IcObservationResponse {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("IcObservationResponse")
-            .field("authority", &self.input.authority)
-            .field("mutation_attempt", &self.input.mutation_attempt)
-            .field("observation_attempt", &self.input.observation_attempt)
-            .field("request", &self.input.request)
-            .field("target", &self.input.target)
-            .field("reply_bytes", &self.input.reply.len())
-            .finish_non_exhaustive()
+        fmt_response_input(&self.input, formatter, "IcObservationResponse")
     }
+}
+
+pub(crate) fn validate_response_input(
+    input: &mut IcObservationResponseInput,
+    max_reply_bytes: usize,
+) -> Result<(), IcObservationResponseError> {
+    if input.mutation_attempt == 0
+        || input.observation_attempt <= input.mutation_attempt
+        || input.observation_attempt > MAX_OPERATION_ATTEMPTS
+    {
+        return Err(IcObservationResponseError::InvalidAttempts);
+    }
+    if input.reply.len() > max_reply_bytes {
+        return Err(IcObservationResponseError::ReplyTooLarge);
+    }
+    input.target = crate::model::principal::canonical_text(&input.target)
+        .ok_or(IcObservationResponseError::InvalidTarget)?;
+    Ok(())
+}
+
+pub(crate) fn fmt_response_input(
+    input: &IcObservationResponseInput,
+    formatter: &mut fmt::Formatter<'_>,
+    name: &str,
+) -> fmt::Result {
+    formatter
+        .debug_struct(name)
+        .field("authority", &input.authority)
+        .field("mutation_attempt", &input.mutation_attempt)
+        .field("observation_attempt", &input.observation_attempt)
+        .field("request", &input.request)
+        .field("target", &input.target)
+        .field("reply_bytes", &input.reply.len())
+        .finish_non_exhaustive()
 }
 
 /// Structural original observation denial; no spending or effect outcome changes.

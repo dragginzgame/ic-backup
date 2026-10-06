@@ -37,5 +37,10 @@ pub fn validate_response<'a>(
     )
 }
 
+mod settlement;
+pub use settlement::{
+    IcSnapshotUploadSettlementError, IcSnapshotUploadSettlementView, validate_settlement,
+};
+
 #[cfg(test)]
 mod tests;

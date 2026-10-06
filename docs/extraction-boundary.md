@@ -1970,11 +1970,106 @@ upload, data reconciliation, terminal proof or fence/reference release. See
 [the observation contract](contracts/ic-snapshot-upload-observation.json) and
 [fresh source review](ic-snapshot-upload-observation-source.json).
 
+### Exact originally reserved data-upload observations
+
+`model::ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationRequest`
+joins the full original source-bound data upload plan/bytes/allowances with an
+independently retained `IcSnapshotDataRequest`. The target, new destination raw ID
+and exact original region/offset/length or chunk hash must match. Destination
+metadata must declare `MetadataUpload` and the original three region sizes; unknown/
+taken source or different sizes reject without supplying defaults. The existing
+data request owns bounded extent/hash admission. Destination authentication and
+exclusive original allocation attribution remain integration-owned.
+
+Both original attempt IDs must remain pending, with the exact read digest retained
+by its already consumed observation. Construction and current-journal checks reuse
+canonical upload authority and observation reservation admission and perform no IO,
+spending or settlement. Retain destination metadata/read originals before reservation.
+
+The single `IcSnapshotUploadDataObservationProvider::observe_upload_data` contract
+allows only that original replicated host data-read update. Fresh read permissions,
+actual context/chronology/authentication, backend readback capability, stable command/
+byte custody and proof of no prior observation dispatch remain separately qualified.
+There is no installed provider, hidden retry, metadata/list/status read, query/proxy
+substitution or upload. Every failure retains both pending attempts and obligations;
+lost observation replies never mean settled Uncertain or renewed allowance.
+
+Its passive response reuses existing claim fields, chronological/principal checks
+and redacted diagnostics under the existing 2 MiB data-reply bound. The released
+status/list response keeps its 1 MiB bound. Pure association rechecks current
+reservations and exact actual claims through the canonical common owner, then uses
+the existing data decoder: 1 MiB chunk, 4 KiB arguments/header, 16 type-table entries,
+8 MiB decoder work and no skipped fields. Raw IDs remain bounded to 256 bytes.
+The existing data evidence digest includes exact retained destination metadata,
+read payload and raw reply; no new hash recipe or persisted schema is introduced.
+
+The read-only view compares actual chunk SHA-256 with the original encoded upload
+chunk. Matching bytes can predate this upload or come from another writer; the
+[IC state-transition specification](https://docs.internetcomputer.org/references/ic-interface-spec/abstract-behavior/)
+initializes uploaded regions with zeros. Different or absent bytes alone cannot
+prove a negative outcome either. Chunk-store replies still require the exact known
+hash, including valid empty chunks. No comparison automatically creates a receipt,
+Applied/NotApplied outcome, retry, complete upload or source-reference release.
+
+Native tests cover all region/chunk kinds, exact denials, optional source rejection,
+raw/decoder bounds and a full 1 MiB chunk plus wire overhead. Public local evidence
+survives provider refusal, matching/different passive bytes and journal reopen with
+unchanged originals, source references and diagnostics. These checks qualify no IC
+effect, complete transfer, terminal proof, load/start safety or fence/reference release.
+See [the contract](contracts/ic-snapshot-upload-data-observation.json) and
+[fresh source review](ic-snapshot-upload-data-observation-source.json).
+
+### Exact data-upload settlement claims
+
+`IcSnapshotUploadDataSettlement` and `IcSnapshotUploadDataAttribution` are passive
+integration evidence for an already spent successful exact data read. Pure
+`policy::ic_snapshot_upload_data_observation::validate_settlement` reuses the
+existing readback association, current reservation/actual claim admission and
+bounded data decoder. It additionally requires the original full-plan authority,
+both exact attempt IDs, the caller's current qualification challenge, the existing
+data-reply digest and unchanged opaque observation evidence. That digest includes
+exact destination metadata, request and raw reply; equal bytes with changed
+metadata or provenance cannot rebind a settlement.
+
+Applied claims require matching original bytes and independent exclusive
+original-write attribution. Integrations exclude preexisting bytes and other writers,
+qualify the original allocation and retain stable destination custody through the
+read. NotApplied claims require proof the original update never applied, including
+exclusion of a transient write later overwritten. Equal initialized/preexisting
+bytes remain compatible with nonapplication; different bytes alone establish no
+negative outcome. Unresolved claims require an actually settled authenticated read.
+Lost, absent or malformed read replies stay outside this successful-read boundary.
+The library matches passive claims; it authenticates none of those proofs.
+
+The read-only view retains original readback/attribution and projects the existing
+`ObservationOutcomeRecord`. It performs no IO, calls, serialization, automatic
+receipt, retry or refund. Qualification here uses retained evidence only; extra
+remote observations need their own prior accounting and are outside this operation.
+Only the integration explicitly calls the existing journal transition after
+qualifying all evidence. Recording settled uncertainty clears that observation but
+retains the pending mutation; every original allowance remains consumed. Reopen
+reads only local history and never repeats the provider call.
+
+No provider, spending/progress owner, schema or hash recipe is added. Original
+1,024 attempts, 1 MiB chunks and 2 MiB raw data replies retain their existing owners.
+Single-write attribution establishes no full transfer, authenticated backend,
+load/start safety, terminal proof or fence/source-reference release.
+Native cases check exact identities, changed evidence/metadata, every region,
+known empty chunks, byte conflict, all claimed outcomes and explicit existing-owner
+spending retention. The public local journey preserves lost replies, then records
+synthetic settled uncertainty solely to qualify durable local accounting/reopen;
+it simulates no IC behavior. See
+[the contract](contracts/ic-snapshot-upload-data-settlement.json) and
+[fresh source review](ic-snapshot-upload-data-settlement-source.json).
+
 ### Local IC snapshot diagnostics
 
 `DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
 `IcSnapshotLocalMetrics` view for that guard's lifetime. It reuses registry
-`ic-metrics`'s `MeasurementSummary` arithmetic, declared once in the workspace
+`ic-metrics`'s `MeasurementSummary` arithmetic, re-exported as
+`ic_backup::ops::persistence::MeasurementSummary` so callers can name returned
+summaries without a separate dependency selection. The actual shared type is
+declared once in the workspace
 catalog and inherited for the Unix-host implementation. Default features are
 disabled and the canister instruction-reader feature is absent. Consumers own
 sampling/reporting; no sibling path, global registry, telemetry endpoint or
@@ -2108,3 +2203,31 @@ JSON and directory publication. A public integration journey persists original
 checksum intent, adopts a published tree after a lost reply and rejects changed
 bytes without changing that intent. Full B1 authority/backend qualification,
 full B2 journal/runner extraction and live backup/restore remain incomplete.
+
+## Exact metadata-upload settlement claims
+
+Passive `IcSnapshotUploadSettlement` and `IcSnapshotUploadAttribution` bind the
+full original upload authority, both still-pending attempts, a current challenge,
+exact independently retained baseline/current list digests and opaque observation
+evidence. Pure `policy::ic_snapshot_upload_observation::validate_settlement` reuses
+existing reservation/claim/decoder admission and the same closed-baseline comparison
+as capture. Every original ID, timestamp and size must remain unchanged. Applied
+requires exclusive original-allocation attribution to one explicitly named new ID,
+within existing destination bounds and distinct from the source. Several candidates
+may coexist; zero/one/many candidates never supply an outcome. Views retain exact
+evidence and expose only the explicitly attributed descriptor. Raw claim IDs are
+redacted from diagnostic formatting.
+
+NotApplied requires qualified exclusion including transient allocation/deletion;
+Unresolved requires a settled authenticated successful list, not a lost reply.
+Integrations retain baseline evidence before mutation and qualify actual context,
+authentication, chronology, freshness, stable custody and exclusive attribution.
+Matching hashes cannot establish these properties. Pure admission writes no receipt
+and performs no IO/calls/retries/refunds or complete-upload/load/start/release admission.
+Qualified integrations explicitly use the unchanged journal transition. Settled
+uncertainty clears only observation, retaining pending mutation, all consumption,
+original plans/source evidence and references. The public native journey retains
+baseline/list originals before mutation, records synthetic settled uncertainty and
+reopens exhausted accounting without a new provider call. This qualifies local
+persistence, not IC behavior. See [the contract](contracts/ic-snapshot-upload-settlement.json)
+and [fresh source review](ic-snapshot-upload-settlement-source.json).

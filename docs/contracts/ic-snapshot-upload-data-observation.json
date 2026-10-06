@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "kind": "ephemeral exact original data-upload readback; no persisted schema or installed provider",
+  "request_owner": "model::ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationRequest",
+  "response_owner": "model::ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationResponse",
+  "provider_owner": "ports::ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationProvider::observe_upload_data",
+  "association_owner": "policy::ic_snapshot_upload_data_observation::validate_response",
+  "view_owner": "policy::ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationView",
+  "canonical_owners": ["original source-bound upload authority", "ObservationReservation", "IcObservationResponseInput", "IcObservationResponseError", "ObservationClaims", "IcObservationAssociationError", "IcObservationProviderError", "IcSnapshotDataRequest", "IcSnapshotDataReply", "AttemptJournalRecord", "AttemptJournalGuard"],
+  "originals": "full original plan/context/operation/allowances, exact source/upload bytes and binding digest, independently retained destination metadata and exact original read bytes",
+  "admission": "data intent only; same exact target/destination raw ID/source kind, offset, length or chunk hash; known MetadataUpload destination source and original three region sizes; both original attempts still pending and exact original read digest reserved",
+  "bounds": {"total_attempts": 1024, "raw_snapshot_id_bytes": 256, "read_arguments_bytes": 4096, "destination_metadata_bytes": 1048576, "data_chunk_bytes": 1048576, "raw_data_reply_bytes": 2097152, "data_decoder_work": 8388608, "data_skipped_work": 0, "data_type_table_entries": 16, "data_header_bytes": 4096},
+  "existing_status_list_response_bound": "unchanged 1 MiB; data response reuses canonical claim admission with existing 2 MiB data-codec limit, admitting a full 1 MiB chunk plus Candid overhead",
+  "invocation": "one already accounted exact read_canister_snapshot_data host replicated update; no hidden retries, metadata/list/status reads, query/proxy substitution or uploads",
+  "view": "existing exact bounded decoded bytes and raw/request/destination-metadata evidence; original chunk SHA-256 comparison is a passive projection, not a receipt or authenticated outcome",
+  "equality": "matching bytes may predate this write or come from another writer; differing/absent bytes do not alone prove NotApplied; source/chunk identity and exact range do not establish completeness or exclusive original write attribution",
+  "integration_qualification": "actual allocation and metadata authenticity, backend readback capability, fresh snapshot read permission/context, chronology, authentication, stable command/byte custody and proof of no prior observation dispatch",
+  "failures_and_replay": "all failures/drop/death and lost replies retain both pending attempts, consumed spending, originals, source references and obligations; local reconstruction/reopen/association performs no provider invocation, refund, retry or automatic Uncertain receipt",
+  "unchanged": "existing public signatures/exhaustive errors, all v1 records/digests/bounds, journal spending ownership, dependencies, package version and release receipt",
+  "grants": "no installed transport/provider, outcome, complete upload, load/start safety, terminal proof or fence/reference release"
+}

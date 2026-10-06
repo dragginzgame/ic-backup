@@ -209,6 +209,8 @@ shell-check:
 	perl -c scripts/release/release-data.pl
 	perl -c scripts/ci/check-documentation-links.pl
 	perl -c scripts/ci/test-documentation-links.pl
+	perl -c scripts/ci/rewrite-local-lock-versions.pl
+	perl -c scripts/ci/test-local-lock-versions.pl
 
 tags:
 	@git tag --sort=-version:refname
@@ -219,6 +221,7 @@ test:
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
 	perl scripts/ci/test-documentation-links.pl
+	perl scripts/ci/test-local-lock-versions.pl
 	bash scripts/ci/test-file-digests.sh
 	bash scripts/ci/test-dependency-pins.sh
 	bash scripts/ci/test-evidence-checksums.sh

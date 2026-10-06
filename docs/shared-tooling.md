@@ -49,6 +49,54 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
+The current 52-file snapshot selects committed Shared Tooling
+[`9f8c7c768793f4ce8f25be9e88282c0f63a06e7f`](https://github.com/dragginzgame/shared-tooling/tree/9f8c7c768793f4ce8f25be9e88282c0f63a06e7f),
+matching remote main and the clean read-only sibling. `VERSION` is 0.1.7, while
+its changelog remains undated and no local v0.1.7 tag was found; the commit owns
+this adoption identity. The unchanged Git-object exporter refreshes all declared
+files and adds the lockfile transformer, its regressions, actual formatting-hook
+checker and the linked tag-maintenance guide. No vendored patch is made.
+[The review](shared-tooling-review.json) binds exact files and focused evidence.
+
+Release preparation delegates only the selected local `ic-backup` lockfile version
+rewrite to the shared transformer. It checks the child status and complete output
+before writing either manifest or lockfile. Selection, original inputs, receipts,
+metadata writes and recovery remain consumer-owned. Cargo admits an isolated copy
+of the actual original/candidate manifests offline and locked; every external
+package entry and all other lockfile bytes remain unchanged.
+
+The hook adapter supplies an ordering-only child manifest and explicitly selected
+current Rust, workspace, lockfile and toolchain inputs to the shared checker. It
+qualifies actual `fmt`/`fmt-check`, sorting, index refresh/idempotence, lock and
+unrelated-edit preservation, partial staging, malformed formatter inputs and
+installer conflicts. The existing local cases remain until both native macOS
+jobs qualify this replacement, as required by
+[the hook rules](../rules/git-hooks.md#installation-and-adoption) and
+[issue #5](https://github.com/dragginzgame/ic-backup/issues/5).
+The additional exact formatter-exit-status case remains consumer-owned.
+
+Linux transformer, adapter/recovery, hook, snapshot/runner and installer checks
+pass, alongside offline installed tool checks, dependency declarations, formatting
+and local document links. The configured three-host CI includes the new checks,
+with explicit macOS system Bash 3.2 execution. Released 0.3.9 main/tag CI passed
+on all hosts; those results do not qualify this uncommitted adoption. Native
+macOS replacement coverage remains pending. Evidence and previous files/review
+are retained under `target/shared-tooling-0310-adoption`.
+
+Installer status/type failures now reject explicitly. jq/yq and IC versions,
+package/lock version, dependencies and MSRV remain unchanged. Ripgrep archive pins
+are available through the optional shared interface; our host setup still selects
+jq/yq, while system bootstrap supplies ripgrep as described in
+[development](development.md#supported-host-scope). The vendored setup guide
+also describes upstream's opted-in ripgrep commands. No tag-maintenance helper is
+installed or invoked; its guide is retained to keep shared host-document links
+complete. The common engineering baseline is unchanged. Optional registry,
+RustSec and release-command helpers have no duplicated owner to replace here.
+This compatible tooling work extends the complete 0.4.0 draft (originally 0.3.10). No actual release,
+Git commit, tag, push, publication, live effect or artifact cleanup ran.
+
+### Retained 47cd2cc adoption
+
 The current 48-file snapshot selects the committed 0.1.7 batch at
 [`47cd2ccaf0e8b428f06e6db0262df76cfc1581de`](https://github.com/dragginzgame/shared-tooling/tree/47cd2ccaf0e8b428f06e6db0262df76cfc1581de),
 matching remote main and a clean read-only sibling checkout. Upstream's canonical

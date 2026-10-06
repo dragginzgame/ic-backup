@@ -19,7 +19,7 @@ pub use local_restore_artifact::{
 pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
 #[cfg(unix)]
-pub use metrics::IcSnapshotLocalMetrics;
+pub use metrics::{IcSnapshotLocalMetrics, MeasurementSummary};
 
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,

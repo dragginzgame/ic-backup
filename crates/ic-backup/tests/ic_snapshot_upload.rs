@@ -1,6 +1,7 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
 
+mod upload_data_observation;
 mod upload_observation;
 mod upload_provider;
 
@@ -15,8 +16,8 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, create_operation_plan,
-        read_operation_plan,
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, MeasurementSummary,
+        create_operation_plan, read_operation_plan,
     },
     policy::ic_snapshot_upload::validate_acknowledgement,
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
@@ -135,6 +136,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let source_plan_bytes = fs::read(source_root.join("operation-plan.json")).unwrap();
     let source_journal_bytes = fs::read(downloads.path()).unwrap();
     let references = fs::read(source_root.join("restore-references.json")).unwrap();
+    upload_observation::retain_original_inventory(&upload_layout, &upload);
     let mut attempts =
         AttemptJournalGuard::create(&upload_layout, upload_plan.attempt_authority(7).unwrap())
             .unwrap();
@@ -275,6 +277,9 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         .unwrap();
     assert_eq!(data.binding_digest(), payload_digest);
     let measurements = downloads.ic_snapshot_metrics();
+    let prepared: MeasurementSummary = measurements.prepared_chunk_bytes();
+    let canonical: ic_metrics::MeasurementSummary = prepared;
+    assert_eq!(canonical, measurements.prepared_chunk_bytes());
     assert_eq!(measurements.upload_metadata_success_ns().samples(), 1);
     assert_eq!(measurements.upload_data_success_ns().samples(), 1);
     assert_eq!(measurements.verification_success_ns().samples(), 3);
@@ -284,12 +289,12 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         Some(1)
     );
     assert!(data_attempts.reserve_mutation().is_err());
-    data_attempts
-        .reserve_observation(
-            1,
-            ArtifactChecksumRecord::from_bytes(b"original recovery request").hash(),
-        )
-        .unwrap();
+    data_attempts = upload_data_observation::retained_readback(
+        &retained_data,
+        &data,
+        &data_layout,
+        data_attempts,
+    );
     let before = fs::read(data_attempts.path()).unwrap();
     assert!(
         IcSnapshotUploadAttempt::new(&retained_data, 7, data_attempts.record().unwrap(), &data)
@@ -340,6 +345,18 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         fs::read(source_root.join("operation-plan.json")).unwrap(),
         source_plan_bytes
     );
+    assert_eq!(
+        fs::read(source_root.join("restore-references.json")).unwrap(),
+        references
+    );
+    assert_eq!(downloads.ic_snapshot_metrics(), measurements);
+    upload_data_observation::retained_settled_readback(
+        &retained_data,
+        &data,
+        &data_layout,
+        data_attempts,
+    );
+    assert_eq!(fs::read(downloads.path()).unwrap(), source_journal_bytes);
     assert_eq!(
         fs::read(source_root.join("restore-references.json")).unwrap(),
         references

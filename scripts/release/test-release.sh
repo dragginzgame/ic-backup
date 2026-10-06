@@ -48,6 +48,7 @@ create_fixture() {
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/rewrite-local-lock-versions.pl" "$FIXTURE/scripts/ci/"
     cd "$FIXTURE"
     cat > Cargo.toml <<'TOML'
 [workspace]
@@ -323,6 +324,21 @@ test_preparation() {
     cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
     local backups=(target/release-backup.*)
     [[ -d "${backups[0]}" ]]
+    assert_cache_retained
+}
+test_lockfile_rejection() {
+    case "$1" in
+        mismatch) perl -pi -e 's/0\.1\.0/0.0.9/' Cargo.lock ;;
+        duplicate) printf '\n[[package]]\nname = "ic-backup"\nversion = "0.1.0"\n' >> Cargo.lock ;;
+        missing) perl -pi -e 's/name = "ic-backup"/name = "other-package"/' Cargo.lock ;;
+        failed-output)
+            mv scripts/ci/rewrite-local-lock-versions.pl target/original-transformer.pl
+            printf '%s\n' 'print "version = 4\n"; exit 13;' > scripts/ci/rewrite-local-lock-versions.pl ;;
+    esac
+    before="$(fingerprint)"
+    expect_failure perl scripts/release/release-data.pl prepare-version 0.1.1
+    assert_unchanged
+    [[ ! -s "$TEST_EFFECTS" ]]
     assert_cache_retained
 }
 test_rejected_preparation() {
@@ -659,6 +675,7 @@ run_case validation-source-identity test_validation_source_identity
 run_case versions test_versions
 for invalid in conflict duplicate empty dated unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
 run_case preparation test_preparation
+for failure in mismatch duplicate missing failed-output; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done
 run_case staging test_staging
 run_case initial-version test_initial_version

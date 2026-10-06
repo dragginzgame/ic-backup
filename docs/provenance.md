@@ -97,3 +97,35 @@ RustSec preparation extracts the isolation mechanics from Canic's
 destination selection, recorded commit identity and retained preparation
 diagnostics. It does not adopt either consumer's advisory acceptance policy or
 claim that either consumer has migrated its audit invocation.
+
+## Lockfile versions, formatting adoption and ripgrep
+
+The lockfile transformer consolidates Canic's `retain-lock-selection.pl` at
+`e1a211a00f01568ccc99bedc494c62a7141444dd`, IC Timers' `update-local-lock.sh` at
+`98c4b296d7461525c15a01e30adbe33b75bcfa38`, and IC Blob Storage's release-data
+transformation inspected at `ee7eed5` before concurrent adoption work advanced
+that checkout. Consumer package discovery and recovery remain local.
+
+The formatting adoption checker shares the mechanical cases inspected in IC
+Host Tools, IC Metrics, IC Backup and IC Blob Storage. Those inspections included
+working-tree adoption changes; they are not attributed wholesale to committed
+releases. Consumer formatter inputs remain explicit rather than promoted into a
+universal workspace layout.
+
+Ripgrep's archive matrix comes from Toko Miner `061cfb6e3702a7075ab3c118bfaf315d7d2b0053`.
+The four SHA-256 values were checked against official 15.2.0 release metadata.
+Canic's working-tree installer at base `e1a211a` supplies the PCRE2 requirement.
+Shared host setup reuses its existing activation/retention owner instead of
+copying Toko's standalone installation flow. These implementations do not imply
+that the consumers have adopted their committed snapshots.
+
+## Explicit tag maintenance
+
+The Perl helper replaces the duplicated mechanics reviewed in Canic's
+`scripts/dev/delete-github-tags-up-to.sh` at `e1a211a00f01568ccc99bedc494c62a7141444dd`
+and IcyDB's matching script at `1f4737a9486fa2d0fb0f72927c92b15b6da4d0d4`, recorded
+in [#11](https://github.com/dragginzgame/shared-tooling/issues/11). Both source
+scripts remained locally unchanged when re-inspected. The shared implementation
+requires an explicit cutoff, retains saved object identities for retries, and
+delegates conditional updates to Git. It does not copy either product's cutoff
+defaults or promote their broad tag-deletion commands into the release flow.
