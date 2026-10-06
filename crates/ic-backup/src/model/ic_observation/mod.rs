@@ -107,7 +107,29 @@ impl<'a> IcObservationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        if journal.authority() != &self.authority {
+        ObservationReservation {
+            authority: &self.authority,
+            mutation_attempt: self.mutation_attempt,
+            observation_attempt: self.observation_attempt,
+            payload: self.payload,
+        }
+        .validate(journal)
+    }
+}
+
+pub(crate) struct ObservationReservation<'a> {
+    pub authority: &'a AttemptAuthorityRecord,
+    pub mutation_attempt: u32,
+    pub observation_attempt: u32,
+    pub payload: &'a IcManagementRequestRecord,
+}
+
+impl ObservationReservation<'_> {
+    pub(crate) fn validate(
+        &self,
+        journal: &AttemptJournalRecord,
+    ) -> Result<(), IcObservationRequestError> {
+        if journal.authority() != self.authority {
             return Err(IcObservationRequestError::AuthorityMismatch);
         }
         let current = journal.view();

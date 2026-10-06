@@ -64,12 +64,7 @@ pub fn read_restore_safety_requirement(
     Ok(record)
 }
 fn check_size(record: &RestoreSafetyRequirementRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_RESTORE_SAFETY_REQUIREMENT_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_RESTORE_SAFETY_REQUIREMENT_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)
 }
 /// Typed original restore/source safety persistence denial.
 #[derive(Debug, Error)]

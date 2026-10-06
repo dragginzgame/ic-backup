@@ -1,33 +1,52 @@
 {
   "version": 1,
   "inspection_date": "2026-10-06",
-  "kind": "maintainer-authorized bounded Unix record-read adoption",
+  "kind": "maintainer-authorized shared record reads, output budgets and private staging copies",
   "registry_package": "ic-host-tools",
-  "selected_version": "0.1.11",
-  "archive_sha256": "904f7a1929637ca08b9668cc9197027c71440900b3259d453e2945acf4ce8f40",
+  "selected_version": "0.1.13",
+  "archive_sha256": "2b354a1ee01453accfaa969fc43467e9df3d9ff68d85e0b9005518fe14299bdc",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
   "repository": "https://github.com/dragginzgame/ic-host-tools",
-  "published_source_revision": "3a702743b1b28990607b50bd098b0442c344b60a",
+  "published_source_revision": "8730f9f8635b62106934565bf6550b9dfb094714",
   "reviewed_sources": [
     {
       "path": "src/artifact/mod.rs",
-      "sha256": "8307c2e1a45f8d59949f65464129026d162c6e908102887a0cd5fb17e34e7c70",
-      "scope": "Published regular-file metadata admission, bounded independent stream collection, fallible allocation and error variants."
+      "sha256": "7ad27e339c9139a5d74f832831de6ec721e590835f442239d8c85d219fe9c252",
+      "scope": "Published regular-file metadata admission, shared constant-memory read traversal, independent byte limits, fallible collection and error variants."
     },
     {
       "path": "src/artifact/no_follow/mod.rs",
       "sha256": "a694e905f2b1bf14554bda2d29884d35eb48fdb0a919b5aaf3eb132df9d21813",
       "scope": "Published final-component NOFOLLOW/NONBLOCK/CLOEXEC opening and read_opened_file delegation; no ancestor confinement."
+    },
+    {
+      "path": "src/artifact/copy/mod.rs",
+      "sha256": "f19f7cd091b07071243aba912e39b540efc6b255dd6ab95eeec5009dacc79891",
+      "scope": "Copy through write_all, hash only completely accepted chunks, return no complete identity on failure and preserve partial output. Source and sink failures are distinct; no file opening, synchronization or publication."
+    },
+    {
+      "path": "src/artifact/writer/mod.rs",
+      "sha256": "e68f3cd9081699ec327e6ce39c6d6477846815321eca3730ccfc5367de7392bf",
+      "scope": "Reject entire offered buffers above remaining allowance, count successful accepted bytes and retain limit_exceeded independently of serializer IO error wrapping."
     }
   ],
-  "production_owner": "crates/ic-backup/src/ops/persistence/json/mod.rs",
-  "api": "ic_host_tools::artifact::read_file_no_follow",
-  "catalog": "Root compatible 0.1.11 requirement, inherited only in the Unix host package; no sibling path dependency or patch.",
+  "production_owners": [
+    "crates/ic-backup/src/ops/persistence/json/mod.rs",
+    "crates/ic-backup/src/ops/artifacts/mod.rs",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs"
+  ],
+  "apis": [
+    "ic_host_tools::artifact::read_file_no_follow",
+    "ic_host_tools::artifact::BoundedWriter",
+    "ic_host_tools::artifact::copy_reader",
+    "ic_host_tools::artifact::read_reader"
+  ],
+  "catalog": "Compatible 0.1.13 minimum admits corrected impossible stream-count handling. The 0.1.12 primitive adoption and earlier dirty manifest range remain retained under target/host-tools-013-review and target/host-tools-012-review; no sibling path or patch.",
   "limits": "Preserve public u64 limit and original RecordTooLarge limit. Convert to representable usize with saturation as before; supported hosts are 64-bit. Shared metadata is an early rejection; actual stream reads remain independently bounded.",
-  "errors": "Pass IO errors through; map NotRegularFile to original IO InvalidInput; LimitExceeded to original RecordTooLarge; shared allocation/other failures remain typed IO errors. JSON decoder unchanged, including empty EOF.",
+  "errors": "Reads pass IO errors through; map NotRegularFile to original IO InvalidInput and LimitExceeded to original RecordTooLarge. JSON decoding remains unchanged. Output budgets preserve RecordTooLarge with the exact original u64 limit and unrelated JSON errors. Copies pass source/sink IO errors through the existing ArtifactError::Io and return no checksum on failure; interrupted reads retry.",
   "custody": "Reject final symlinks and opened nonregular files without waiting for FIFO writers. Trusted parents and concurrent byte custody remain local; ancestor aliases remain allowed.",
-  "lock_change": "Add ic-host-tools and ten transitive packages; every previous registry selection retained. The pre-existing maintainer ic-metrics 0.1.9 update is preserved, not attributed to this adoption.",
-  "transitive_scope": "Published archive/compression/Wasm modules and dependencies are nonoptional; this consumer invokes only the regular-file read boundary.",
+  "lock_change": "Only ic-host-tools changes from 0.1.12 to 0.1.13 in this refresh, or 0.1.11 to 0.1.13 across the complete pending batch; every other package entry matches the original retained lockfile. Published dependency declarations are unchanged.",
+  "transitive_scope": "Published archive/compression/Wasm modules are nonoptional; this consumer invokes bounded regular-file/stream reads, private copies and portable output-budget counting.",
   "tar": {
     "resolved_version": "0.4.46",
     "published_requirement": "^0.4.46",
@@ -37,31 +56,48 @@
   "msrv": "Dependency declares Rust 1.88; ic-backup remains Rust 1.91 and edition 2024.",
   "license": "Published MIT dependency used without copying its implementation; existing Canic/source attribution remains retained.",
   "qualification": {
-    "evidence": "target/ic-host-tools-read-review",
-    "unit_filter": "ops::persistence::json::",
+    "evidence": "target/host-tools-013-review",
+    "registered_cases": "selected-unit-cases.json, ../upload-observation-039-review/registered-unit.log and public-registered.log",
+    "passing_logs": "focused-tests.log and public-tests.log",
     "public_targets": [
       "local_recovery",
+      "local_restore_source",
       "ic_snapshot_upload"
     ],
-    "scope": "Actual consumer production reader, native filesystem/FIFO/process-death and retained originals/reopen; no IC effects or macOS qualification."
+    "scope": "Fresh actual production primitive/recovery-owner tests on published 0.1.13, including invalid reader/writer counts through the private consumer copy owner with exact InvalidData errors and preserved partial output. Native Linux only, no live IC or native macOS qualification."
   },
-  "compatibility": "Private read implementation and dependency adoption only; existing public signatures, exhaustive errors, v1 records/digests/bounds, package 0.3.7 and receipt retained. Extend compatible pending 0.3.8.",
+  "compatibility": "Private implementation and compatible dependency update. Public signatures, exhaustive errors, canonical pretty JSON, v1 records/digests/bounds and released package/receipt 0.3.8 remain unchanged. Select compatible pending 0.3.9.",
+  "output_budgets": "Nine typed record check_size owners and restore-reference admission serialize pretty JSON through BoundedWriter over io::sink without collecting an encoded buffer. Durable encoding/publication still uses its original owner after admission; no paths or retained bytes change.",
+  "copy_budget": "Use u64::MAX to preserve the existing absence of a total artifact-size ceiling. Shared copy chooses no artifact confinement or publication policy; local 0700/0600 creation, descriptor admission and retained checksum comparison remain required.",
+  "chunk_read_review": {
+    "evidence": "target/shared-chunk-read-039-review",
+    "unit_filter": "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::",
+    "public_target": "ic_snapshot_upload",
+    "scope": "Existing exact descriptor/seek/take extent now collects with shared read_reader and fallible allocation. The exact requested size remains at most 1 MiB; short reads or excess shape reject, original IO errors pass through and allocation failures become existing typed IO errors. Pure kind/range admission and complete original-source/metadata/checksum/custody checks before and after collection are retained. Native Linux byte, empty/chunk/maximum, unsafe/changed source and journal/reference/reopen cases; no live IC or native macOS proof.",
+    "prior_review": "target/shared-chunk-read-039-review/previous-adoption.json preserves the exact earlier 0.1.12 adoption and its evidence scope."
+  },
   "unchanged_owners": [
     "record schema admission and JSON decoding",
     "durable record publication",
     "descriptor-relative confinement",
-    "tree hashing/copying",
+    "tree digest recipe and descriptor-based staging/publication policy",
     "layout/journal locks and transitions",
     "command descriptor inheritance",
     "spending/reconciliation",
     "source references and fence obligations"
   ],
   "removed_symbols": [],
-  "remaining": "Native macOS qualification and future transport/other shared-tool adoption remain independent work. The reader grants no fresh authority, effect proof, retry, terminal or reference-release admission.",
-  "patch_review": {
+  "remaining": "Native macOS qualification and future transport/other shared-tool adoption remain independent work. Shared helpers grant no fresh authority, effect proof, paid retry, terminal or reference-release admission.",
+  "previous_adoption": "target/host-tools-012-review/previous-adoption.json retains the exact 0.1.11 review and its original qualification scope; earlier read evidence remains under target/ic-host-tools-read-review and target/maintenance-038-review.",
+  "prior_patch_review": {
     "evidence": "target/maintenance-038-review",
     "scope": "All published Rust source files are byte-identical between 0.1.10 and 0.1.11. Only ic-host-tools version/checksum changed in this consumer lock; all other entries retained.",
     "upstream_ci": "https://github.com/dragginzgame/ic-host-tools/actions/runs/37455045709",
     "upstream_ci_limitation": "Native CI fails in the repository tool-installer fixture because rg is not provisioned; MSRV passes. This is not consumer reader or native macOS qualification."
-  }
+  },
+  "stream_count_fix": {
+    "upstream_issue": "https://github.com/dragginzgame/ic-host-tools/issues/5",
+    "scope": "Shared reads reject counts beyond offered buffers before slicing. Shared copies reuse BoundedWriter validation, retaining original source/sink IO mappings and partial output with no complete checksum on failure. The consumer public checksum_reader owner remains unchanged."
+  },
+  "prior_primitive_review": "target/host-tools-013-review/previous-adoption.json retains the exact 0.1.12 adoption, chunk-read review and original qualification scope."
 }

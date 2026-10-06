@@ -8,8 +8,10 @@ mod tests;
 
 use crate::model::artifacts::ArtifactChecksumRecord;
 use sha2::{Digest, Sha256};
+#[cfg(unix)]
+use std::io::Write;
 use std::{
-    io::{self, Read, Write},
+    io::{self, Read},
     path::{Path, PathBuf},
 };
 use thiserror::Error;
@@ -57,22 +59,25 @@ pub fn checksum_reader(reader: &mut impl Read) -> Result<ArtifactChecksumRecord,
     ))
 }
 
+#[cfg(unix)]
 pub(crate) fn copy_from_reader(
     reader: &mut impl Read,
     writer: &mut impl Write,
 ) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    let mut hasher = Sha256::new();
-    let mut buffer = vec![0; 64 * 1024];
-    loop {
-        let read = reader.read(&mut buffer)?;
-        if read == 0 {
-            break;
-        }
-        writer.write_all(&buffer[..read])?;
-        hasher.update(&buffer[..read]);
-    }
+    use ic_host_tools::artifact::{ArtifactError as InputError, CopyError};
+
+    // Artifacts have no total-size ceiling here. Descriptor admission, private
+    // staging, retained checksum comparison and publication remain local.
+    let identity = ic_host_tools::artifact::copy_reader(reader, writer, u64::MAX).map_err(
+        |error| match error {
+            CopyError::Input(InputError::Io(error)) | CopyError::Output(error) => {
+                ArtifactError::Io(error)
+            }
+            CopyError::Input(error) => ArtifactError::Io(io::Error::other(error)),
+        },
+    )?;
     Ok(ArtifactChecksumRecord::from_digest(
-        hasher.finalize().into(),
+        *identity.sha256.as_bytes(),
     ))
 }
 

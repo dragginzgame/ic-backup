@@ -1,6 +1,7 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
 
+mod upload_observation;
 mod upload_provider;
 
 use ic_backup::{
@@ -328,4 +329,20 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     assert_eq!(downloads.ic_snapshot_metrics(), measurements);
     assert_eq!(metadata_provider.calls, 1);
     assert_eq!(data_provider.calls, 1);
+    upload_observation::retained_inventory_observation(
+        &retained_metadata,
+        &upload,
+        &upload_layout,
+        attempts,
+    );
+    assert_eq!(fs::read(downloads.path()).unwrap(), source_journal_bytes);
+    assert_eq!(
+        fs::read(source_root.join("operation-plan.json")).unwrap(),
+        source_plan_bytes
+    );
+    assert_eq!(
+        fs::read(source_root.join("restore-references.json")).unwrap(),
+        references
+    );
+    assert_eq!(downloads.ic_snapshot_metrics(), measurements);
 }

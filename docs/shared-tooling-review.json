@@ -1,267 +1,280 @@
 {
-   "adoption" : "Complete offline audit/governance methods, qualified pin declarations, local host and IC installers/checks, explicit native CI provisioning, logger dispatch isolation and consumer metadata fixture reuse.",
-   "compatibility" : "Additive developer setup/check targets and compatible fixture/logger correction; product APIs/v1 records, locked dependency selections, MSRV, package/receipt identity and release commands retained. Extend pending 0.3.7.",
-   "evidence" : {
-      "artifacts" : "target/shared-tooling-037-adoption/artifacts.log",
-      "ci_yaml" : "target/shared-tooling-037-adoption/ci.json",
-      "clippy" : "target/shared-tooling-037-adoption/clippy.log",
-      "consumer_final" : "target/shared-tooling-037-adoption/consumer-final.log",
-      "installation" : "target/shared-tooling-037-adoption/install-tools.log",
-      "msrv" : "target/shared-tooling-037-adoption/msrv.log",
-      "native_scope" : "Actual Linux x86-64 setup/checks and artifact IO; native macOS consumer results and full gate not executed. Installer host/failure cases and release effects use substitutes; real-index cases reuse existing history without new commits.",
-      "offline_idempotence" : "target/shared-tooling-037-adoption/idempotent-offline.log",
-      "release_adapters_and_hooks" : "target/shared-tooling-037-adoption/release-hooks.log",
-      "retained_failure" : "target/shared-tooling-037-adoption/tooling.log",
-      "tooling" : "target/shared-tooling-037-adoption/tooling-2.log"
-   },
-   "exporter" : "Unchanged clean-source Git-object exporter; explicit reviewed manifest expansion, no source mutation, staging or commits.",
-   "inspection_date" : "2026-10-06",
-   "issues" : [
-      "https://github.com/dragginzgame/ic-backup/issues/2",
-      "https://github.com/dragginzgame/ic-backup/issues/3",
-      "https://github.com/dragginzgame/ic-backup/issues/4"
-   ],
-   "previous_snapshot" : {
-      "files" : "target/shared-tooling-037-adoption/previous",
-      "manifest" : "target/shared-tooling-037-adoption/previous.snapshot",
-      "review" : "target/shared-tooling-037-adoption/previous-review.json",
-      "revision" : "cb86188c5956866564de4fb6ec6be67b27981ab9"
-   },
-   "remote_ci" : {
-      "source" : "a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3",
-      "status" : "Completed success; not native consumer qualification. Released consumer main/tag fail at the separately recorded macOS fixture; dirty source has no CI result.",
-      "upstream" : "https://github.com/dragginzgame/shared-tooling/actions/runs/37450707625"
-   },
-   "remote_head_and_main" : "a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3",
-   "removed_functions" : [],
-   "retired_files" : [],
-   "reviewed_diff" : "target/shared-tooling-037-adoption/upstream-changes.patch",
-   "snapshot" : ".shared-tooling.snapshot",
-   "snapshot_files" : [
-      {
-         "executable" : false,
-         "path" : "rules/dependency-pinning.md",
-         "sha256" : "403c595f0e60bbf81c265c1b1a5732d20534361bd3203d8a84083d0816f5f0e4"
-      },
-      {
-         "executable" : false,
-         "path" : "audits/README.md",
-         "sha256" : "926d5a39ea62a3becd19ff0326c63987b2929d3a1a728e2a0ef8a7180824d231"
-      },
-      {
-         "executable" : false,
-         "path" : "audits/code-hygiene.md",
-         "sha256" : "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3"
-      },
-      {
-         "executable" : false,
-         "path" : "audits/flow-convergence-and-duplication.md",
-         "sha256" : "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484"
-      },
-      {
-         "executable" : false,
-         "path" : "audits/complexity-and-technical-debt.md",
-         "sha256" : "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b"
-      },
-      {
-         "executable" : false,
-         "path" : "audits/module-surface-hardening.md",
-         "sha256" : "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075"
-      },
-      {
-         "executable" : false,
-         "path" : "audits/module-cleanup.md",
-         "sha256" : "d229519014823ad804070e55f7bb5316d7612e1d77a9dc8bf962d564e7b2a5e7"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/provenance.md",
-         "sha256" : "127bad6fa5ac468ba034005a254594da9f60716bdd366c24f41937e2b5b6eb63"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/ic-tools.md",
-         "sha256" : "89243ae92927e7c036fa8938e42acdd4a8f3dc4060600d2fff495fcd844486a9"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/local-setup.md",
-         "sha256" : "99ca134c61064ec37cf3d22eaaac3476b15c3438461de8819262fb82c9a5d327"
-      },
-      {
-         "executable" : false,
-         "path" : "ci/ic-tools.tsv",
-         "sha256" : "5b1ef6bc9e344139f5e171cc1a3783bcee3650275de2f44fe0f8fa10f2bfef87"
-      },
-      {
-         "executable" : false,
-         "path" : "ci/tool-versions.env",
-         "sha256" : "c08f9f6385f87a08eb552f57c5e3a701620370ca79c7d495d87d63e7dca62f39"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/check-dependency-pins.sh",
-         "sha256" : "e734a63980717f4b2cb4bfd69db140bcacfbf03f9709cfadeb2fecabcfc90f92"
-      },
-      {
-         "executable" : false,
-         "path" : "scripts/ci/dependency-pins.jq",
-         "sha256" : "36f37b706673f9e3e2ff167ba3132bb8020947527405435daabcb55b426519d6"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/verify-evidence-checksums.sh",
-         "sha256" : "22bf8001f496799c0e26795479b9e313fe3ceddec2e47b8444f8af8e7bc32bae"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/dev/install-host-tools.sh",
-         "sha256" : "c6e5383483b2e82bdcaefdb09fbba05c0b2872e8577d10924b0c16ccf66f4108"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/dev/install-ic-tools.sh",
-         "sha256" : "cd785d281d1ecd76804f25adbd92532469260a632aedad6ecef72bfef2c7a3c3"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/test-dependency-pins.sh",
-         "sha256" : "6916702870adb5442fbf9f88b41db259edc2b6b0e9d20bd5a7b11539db73947b"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/test-host-tools.sh",
-         "sha256" : "4189bf99b9c9fb07e366da0d7e497c977ee18b99f6523a2e31ea282a00bd89cc"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/test-ic-tools.sh",
-         "sha256" : "2bb887627f850942e6e9d4b29151a4d6f37505e0ba9ae40c80daea10df6ca065"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/test-evidence-checksums.sh",
-         "sha256" : "43e2b571a909c2d63b2e3b11d208744995997575b34f0c1fbe5ea3104d40bcca"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/principles/README.md",
-         "sha256" : "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/principles/decision-artifact-discipline.md",
-         "sha256" : "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/principles/reviewable-changes.md",
-         "sha256" : "56701aba8ce851ac4cce32fb55ce721698a94218b1e46636818f6b43debcb719"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/principles/rust-code-hygiene.md",
-         "sha256" : "7e5fd8a3c3b1dc5a829a19ad1a4933fdc17792c8e923871da1e9f36586baff41"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/principles/simplicity-and-maintainability.md",
-         "sha256" : "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/consuming-snapshots.md",
-         "sha256" : "9d887dab06416f24179e98e80eb2f0d552b8148bb030df5e9c4135a5fb35e540"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/supported-hosts.md",
-         "sha256" : "6262e98da48f1ae8038c6ce42dbed22ce18fc2b55cce50aa410505d8532c1878"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/verify-file-checksum.sh",
-         "sha256" : "99de53db4bbe7af00d2da5591b18f65e6022d474769d1e3b9a8424010e0eccf6"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/verify-shared-tooling-snapshot.sh",
-         "sha256" : "4024efa6850788102bbfa97c471ea3b45d760e547a31b11e7c6a91a79e3eaca8"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/run-validation-targets.sh",
-         "sha256" : "43b649ed7a196e46e6acf60e6307c474c34aa4dfeeb9729e2f37b4ecedca3aba"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/test-validation-target-runner.sh",
-         "sha256" : "9a375841d5638e05ff1ef7a6d804d31b290b0f9cc1a0fb4ff7662daa25e907b7"
-      },
-      {
-         "executable" : false,
-         "path" : "DRAGGINZGAME.md",
-         "sha256" : "4c711609d1e8b30ccd2ddff3974b1418cced91a4484be3911c2a36c7631e31ee"
-      },
-      {
-         "executable" : false,
-         "path" : "rules/changelogs.md",
-         "sha256" : "9c95f254c59a1ef312d37981dcd8af2dadf4eda34cf9026cfeda4092a2716858"
-      },
-      {
-         "executable" : false,
-         "path" : "docs/releases.md",
-         "sha256" : "38ca1b8de289c7d85dda407c85275f9a8ab6bb489513c430cecd50cd80f7a0b9"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/run-release.sh",
-         "sha256" : "cffa84575afcd74836f59f9d8db4be083010048de03c338ec2448857d85dab5e"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/next-release-version.sh",
-         "sha256" : "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642"
-      },
-      {
-         "executable" : false,
-         "path" : "scripts/ci/finalize-release-changelog.awk",
-         "sha256" : "a0f5d6f4639e5a62b8e4d34aef573f982441b85214e4e58e60149f10d72d0137"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/ci/test-release-runner.sh",
-         "sha256" : "1d20624590b6459ec2bd20163bbc6fb69f57dd8e1769dcca2c0d77cf68a510cb"
-      },
-      {
-         "executable" : false,
-         "path" : "rules/cargo-dependencies.md",
-         "sha256" : "b0dfb6f6a1caf0f47f166523a3703bdd88a7667f8b0901e549620eb31adb7a7a"
-      },
-      {
-         "executable" : false,
-         "path" : "rules/git-hooks.md",
-         "sha256" : "9a95588444f9bbe4c6adc3dd01a84886ab45a763ec514d6a92dac40b0bbc60e9"
-      },
-      {
-         "executable" : true,
-         "path" : ".githooks/pre-commit",
-         "sha256" : "6d5bb9cc5ea9a8fdc4b1e075b691f6293d0654483ea3f9e019f2b2f86913ca7c"
-      },
-      {
-         "executable" : true,
-         "path" : "scripts/dev/install-git-hooks.sh",
-         "sha256" : "c48e767cb16fce756bea55492e33c62fd1e57560310d63bfb8a1adc118be2212"
-      },
-      {
-         "executable" : false,
-         "path" : "rules/agent-maintenance.md",
-         "sha256" : "0de19d6eb5b3dea57d46cd6412dc49ce6a1b5fb591b551dbec16cdb25ee181df"
-      }
-   ],
-   "source_repository" : "https://github.com/dragginzgame/shared-tooling",
-   "source_revision" : "a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3",
-   "source_status" : "target/shared-tooling-037-adoption/upstream-status.txt",
-   "source_worktree_dirty" : false,
-   "version" : 1
+  "inspection_date": "2026-10-06",
+  "remote_head_and_main": "47cd2ccaf0e8b428f06e6db0262df76cfc1581de",
+  "upstream_version": "VERSION is 0.1.6; committed batch has undated 0.1.7 changelog. No finalized 0.1.7 release is inferred.",
+  "adoption": "Refresh exact declared common files; add the verification guide, local documentation-link parser/regressions and portable file-digest regressions. Consumer owns Markdown roster and CI/release wiring.",
+  "compatibility": "Additive developer check and compatible checksum/installer corrections. Extend existing 0.3.9 draft; package/receipt, public release commands, product APIs/v1 records, tool pins, locked dependency selections and MSRV unchanged by tooling adoption.",
+  "snapshot": ".shared-tooling.snapshot",
+  "snapshot_files": [
+    {
+      "path": "docs/verification-helpers.md",
+      "sha256": "fa06be93e809a7b154697dd2c4b27ea6daefc4971558372ace55f1e474716f72",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/check-documentation-links.pl",
+      "sha256": "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-documentation-links.pl",
+      "sha256": "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-file-digests.sh",
+      "sha256": "fe64efb6af09c7b3182ed709700472ff803f6b5d54df0473a675b07597dcbb31",
+      "executable": true
+    },
+    {
+      "path": "rules/dependency-pinning.md",
+      "sha256": "403c595f0e60bbf81c265c1b1a5732d20534361bd3203d8a84083d0816f5f0e4",
+      "executable": false
+    },
+    {
+      "path": "audits/README.md",
+      "sha256": "926d5a39ea62a3becd19ff0326c63987b2929d3a1a728e2a0ef8a7180824d231",
+      "executable": false
+    },
+    {
+      "path": "audits/code-hygiene.md",
+      "sha256": "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3",
+      "executable": false
+    },
+    {
+      "path": "audits/flow-convergence-and-duplication.md",
+      "sha256": "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484",
+      "executable": false
+    },
+    {
+      "path": "audits/complexity-and-technical-debt.md",
+      "sha256": "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b",
+      "executable": false
+    },
+    {
+      "path": "audits/module-surface-hardening.md",
+      "sha256": "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075",
+      "executable": false
+    },
+    {
+      "path": "audits/module-cleanup.md",
+      "sha256": "d229519014823ad804070e55f7bb5316d7612e1d77a9dc8bf962d564e7b2a5e7",
+      "executable": false
+    },
+    {
+      "path": "docs/provenance.md",
+      "sha256": "3f42d18b79684142536f91c84e59dd22c1b71f04fa7bb6417711e6084e029b15",
+      "executable": false
+    },
+    {
+      "path": "docs/ic-tools.md",
+      "sha256": "89243ae92927e7c036fa8938e42acdd4a8f3dc4060600d2fff495fcd844486a9",
+      "executable": false
+    },
+    {
+      "path": "docs/local-setup.md",
+      "sha256": "99ca134c61064ec37cf3d22eaaac3476b15c3438461de8819262fb82c9a5d327",
+      "executable": false
+    },
+    {
+      "path": "ci/ic-tools.tsv",
+      "sha256": "5b1ef6bc9e344139f5e171cc1a3783bcee3650275de2f44fe0f8fa10f2bfef87",
+      "executable": false
+    },
+    {
+      "path": "ci/tool-versions.env",
+      "sha256": "c08f9f6385f87a08eb552f57c5e3a701620370ca79c7d495d87d63e7dca62f39",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/check-dependency-pins.sh",
+      "sha256": "e734a63980717f4b2cb4bfd69db140bcacfbf03f9709cfadeb2fecabcfc90f92",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/dependency-pins.jq",
+      "sha256": "36f37b706673f9e3e2ff167ba3132bb8020947527405435daabcb55b426519d6",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/verify-evidence-checksums.sh",
+      "sha256": "22bf8001f496799c0e26795479b9e313fe3ceddec2e47b8444f8af8e7bc32bae",
+      "executable": true
+    },
+    {
+      "path": "scripts/dev/install-host-tools.sh",
+      "sha256": "c6e5383483b2e82bdcaefdb09fbba05c0b2872e8577d10924b0c16ccf66f4108",
+      "executable": true
+    },
+    {
+      "path": "scripts/dev/install-ic-tools.sh",
+      "sha256": "661349d94e9fe1c837f06ee5a83fd1ff11910bbb2e69a609b09fd607bc3b8d0d",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-dependency-pins.sh",
+      "sha256": "6916702870adb5442fbf9f88b41db259edc2b6b0e9d20bd5a7b11539db73947b",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-host-tools.sh",
+      "sha256": "4189bf99b9c9fb07e366da0d7e497c977ee18b99f6523a2e31ea282a00bd89cc",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-ic-tools.sh",
+      "sha256": "0d4a45581e26987baaaa91cd49748e3b7b3ffa76b01f32d1db84560bd5baa68a",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-evidence-checksums.sh",
+      "sha256": "43e2b571a909c2d63b2e3b11d208744995997575b34f0c1fbe5ea3104d40bcca",
+      "executable": true
+    },
+    {
+      "path": "docs/principles/README.md",
+      "sha256": "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/decision-artifact-discipline.md",
+      "sha256": "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/reviewable-changes.md",
+      "sha256": "56701aba8ce851ac4cce32fb55ce721698a94218b1e46636818f6b43debcb719",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/rust-code-hygiene.md",
+      "sha256": "7e5fd8a3c3b1dc5a829a19ad1a4933fdc17792c8e923871da1e9f36586baff41",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/simplicity-and-maintainability.md",
+      "sha256": "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55",
+      "executable": false
+    },
+    {
+      "path": "docs/consuming-snapshots.md",
+      "sha256": "2308bcf27ed0c72203b023b11396f21aaca5f5f35666a865e082e6a0ee837f7f",
+      "executable": false
+    },
+    {
+      "path": "docs/supported-hosts.md",
+      "sha256": "6262e98da48f1ae8038c6ce42dbed22ce18fc2b55cce50aa410505d8532c1878",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/verify-file-checksum.sh",
+      "sha256": "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/verify-shared-tooling-snapshot.sh",
+      "sha256": "4024efa6850788102bbfa97c471ea3b45d760e547a31b11e7c6a91a79e3eaca8",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/run-validation-targets.sh",
+      "sha256": "43b649ed7a196e46e6acf60e6307c474c34aa4dfeeb9729e2f37b4ecedca3aba",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-validation-target-runner.sh",
+      "sha256": "9a375841d5638e05ff1ef7a6d804d31b290b0f9cc1a0fb4ff7662daa25e907b7",
+      "executable": true
+    },
+    {
+      "path": "DRAGGINZGAME.md",
+      "sha256": "4c711609d1e8b30ccd2ddff3974b1418cced91a4484be3911c2a36c7631e31ee",
+      "executable": false
+    },
+    {
+      "path": "rules/changelogs.md",
+      "sha256": "9c95f254c59a1ef312d37981dcd8af2dadf4eda34cf9026cfeda4092a2716858",
+      "executable": false
+    },
+    {
+      "path": "docs/releases.md",
+      "sha256": "837a6d9b6a07224a47b852c073244bbd001abadf91116ab47d86796c017b4e3b",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/run-release.sh",
+      "sha256": "cffa84575afcd74836f59f9d8db4be083010048de03c338ec2448857d85dab5e",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/next-release-version.sh",
+      "sha256": "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/finalize-release-changelog.awk",
+      "sha256": "edda63b29cbdd88c7f1f0b5ab21dbae0635087a4ab6345392d99138c26b28206",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/test-release-runner.sh",
+      "sha256": "1d20624590b6459ec2bd20163bbc6fb69f57dd8e1769dcca2c0d77cf68a510cb",
+      "executable": true
+    },
+    {
+      "path": "rules/cargo-dependencies.md",
+      "sha256": "b0dfb6f6a1caf0f47f166523a3703bdd88a7667f8b0901e549620eb31adb7a7a",
+      "executable": false
+    },
+    {
+      "path": "rules/git-hooks.md",
+      "sha256": "9a95588444f9bbe4c6adc3dd01a84886ab45a763ec514d6a92dac40b0bbc60e9",
+      "executable": false
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "sha256": "6d5bb9cc5ea9a8fdc4b1e075b691f6293d0654483ea3f9e019f2b2f86913ca7c",
+      "executable": true
+    },
+    {
+      "path": "scripts/dev/install-git-hooks.sh",
+      "sha256": "c48e767cb16fce756bea55492e33c62fd1e57560310d63bfb8a1adc118be2212",
+      "executable": true
+    },
+    {
+      "path": "rules/agent-maintenance.md",
+      "sha256": "0de19d6eb5b3dea57d46cd6412dc49ce6a1b5fb591b551dbec16cdb25ee181df",
+      "executable": false
+    }
+  ],
+  "exporter": "Clean committed Git-object exporter; reviewed manifest expansion and digest generation through shared verifier. No vendored patches, source mutation, staging or commits.",
+  "reviewed_diff": "target/shared-tooling-039-adoption/upstream-changes.patch",
+  "previous_snapshot": {
+    "revision": "a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3",
+    "files": "target/shared-tooling-039-adoption/previous",
+    "manifest": "target/shared-tooling-039-adoption/previous.snapshot",
+    "review": "target/shared-tooling-039-adoption/previous-review.json"
+  },
+  "evidence": {
+    "documentation": "target/shared-tooling-039-adoption/doc-links.log",
+    "parser_regressions": "target/shared-tooling-039-adoption/doc-helper.log",
+    "digest_regressions": "target/shared-tooling-039-adoption/digests.log",
+    "installer_regressions": "target/shared-tooling-039-adoption/ic-installer.log",
+    "snapshot_and_runner": "target/shared-tooling-039-adoption/tooling.log",
+    "syntax_and_lints": "target/shared-tooling-039-adoption/shell.log",
+    "actual_offline_tools_and_final_consumer_checks": "target/shared-tooling-039-adoption/consumer-final.log",
+    "native_scope": "Actual native Linux focused consumer checks. Installer failure/host branches use substitutes; upstream cases rerun against exact vendored production scripts. No actual tool download/activation, full CI/release gate or native macOS run in this batch."
+  },
+  "optional_helpers_not_selected": {
+    "crates_io": "No registry observation/retry workflow exists; publication continues to delegate admission to Cargo.",
+    "rustsec": "No advisory database acquisition/audit workflow exists.",
+    "release_commands": "Existing actual-Make consumer tests cover entry points and its extra completed-resume receipt check. The shared runner-only fixture does not replace that consumer-specific obligation."
+  },
+  "remote_ci": {
+    "source": "47cd2ccaf0e8b428f06e6db0262df76cfc1581de",
+    "upstream": "https://github.com/dragginzgame/shared-tooling/actions/runs/37458968809",
+    "status": "Queued at inspection; no upstream or consumer native qualification inferred."
+  },
+  "removed_functions": [],
+  "retired_files": []
 }

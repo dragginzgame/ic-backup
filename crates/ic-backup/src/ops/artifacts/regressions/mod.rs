@@ -4,6 +4,142 @@ use std::fs;
 
 #[cfg(unix)]
 #[test]
+fn staging_copy_retries_interruption_and_preserves_multichunk_identity() {
+    use std::io::{Cursor, Read, Write};
+
+    struct InterruptedSource(Cursor<Vec<u8>>, bool);
+    impl Read for InterruptedSource {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            if !std::mem::replace(&mut self.1, true) {
+                return Err(io::ErrorKind::Interrupted.into());
+            }
+            self.0.read(output)
+        }
+    }
+    struct ShortSink(Vec<u8>);
+    impl Write for ShortSink {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            let accepted = bytes.len().min(7);
+            self.0.extend_from_slice(&bytes[..accepted]);
+            Ok(accepted)
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            panic!("copying does not own flushing")
+        }
+    }
+
+    for bytes in [Vec::new(), b"abc".to_vec(), vec![0x9a; 200_001]] {
+        let mut source = InterruptedSource(Cursor::new(bytes.clone()), false);
+        let mut sink = ShortSink(Vec::new());
+        let checksum = copy_from_reader(&mut source, &mut sink).expect("copy exact bytes");
+        assert_eq!(sink.0, bytes);
+        assert_eq!(checksum, ArtifactChecksumRecord::from_bytes(&bytes));
+        if bytes == b"abc" {
+            assert_eq!(
+                checksum.hash(),
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+            );
+        }
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn staging_copy_preserves_partial_output_and_original_source_or_sink_error() {
+    use std::io::{Cursor, Read, Write};
+
+    struct FailingSource(Cursor<Vec<u8>>);
+    impl Read for FailingSource {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            if self.0.position() == self.0.get_ref().len() as u64 {
+                return Err(io::Error::from_raw_os_error(13));
+            }
+            self.0.read(output)
+        }
+    }
+    struct FailingSink(Vec<u8>);
+    impl Write for FailingSink {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            if self.0.len() == 3 {
+                return Err(io::Error::from_raw_os_error(28));
+            }
+            let accepted = bytes.len().min(3 - self.0.len());
+            self.0.extend_from_slice(&bytes[..accepted]);
+            Ok(accepted)
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            panic!("copying does not own flushing")
+        }
+    }
+
+    let mut retained_prefix = Vec::new();
+    assert!(matches!(
+        copy_from_reader(
+            &mut FailingSource(Cursor::new(b"retained prefix".to_vec())),
+            &mut retained_prefix,
+        ),
+        Err(ArtifactError::Io(error)) if error.raw_os_error() == Some(13)
+    ));
+    assert_eq!(retained_prefix, b"retained prefix");
+
+    let mut sink = FailingSink(Vec::new());
+    assert!(matches!(
+        copy_from_reader(&mut Cursor::new(b"partial write"), &mut sink),
+        Err(ArtifactError::Io(error)) if error.raw_os_error() == Some(28)
+    ));
+    assert_eq!(sink.0, b"par");
+}
+
+#[cfg(unix)]
+#[test]
+fn staging_copy_rejects_impossible_stream_counts_without_panicking_or_discarding_prefix() {
+    use ic_host_tools::artifact::WriterError;
+    use std::io::{Read, Write};
+
+    struct InvalidSource;
+    impl Read for InvalidSource {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            Ok(output.len() + 1)
+        }
+    }
+    struct InvalidSink(Vec<u8>);
+    impl Write for InvalidSink {
+        fn write(&mut self, input: &[u8]) -> io::Result<usize> {
+            if self.0.is_empty() {
+                self.0.extend_from_slice(&input[..2]);
+                Ok(2)
+            } else {
+                Ok(input.len() + 1)
+            }
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            panic!("copying does not own flushing")
+        }
+    }
+    let mut destination = b"retained".to_vec();
+    assert!(
+        matches!(copy_from_reader(&mut InvalidSource, &mut destination),
+        Err(ArtifactError::Io(error)) if error.kind() == io::ErrorKind::InvalidData)
+    );
+    assert_eq!(destination, b"retained");
+    let mut sink = InvalidSink(Vec::new());
+    let Err(ArtifactError::Io(error)) = copy_from_reader(&mut b"abcdef".as_slice(), &mut sink)
+    else {
+        panic!("invalid sink count must preserve typed IO failure")
+    };
+    assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+    assert_eq!(
+        error.get_ref().unwrap().downcast_ref::<WriterError>(),
+        Some(&WriterError::InvalidWriteCount {
+            offered: 4,
+            written: 5
+        })
+    );
+    assert_eq!(sink.0, b"ab");
+}
+
+#[cfg(unix)]
+#[test]
 fn staging_preserves_exact_bytes_checksums_and_private_permissions() {
     use std::os::unix::fs::PermissionsExt;
     let root = temp_path("ic-backup-stage");

@@ -161,12 +161,7 @@ fn journal_path(layout: &BackupLayoutGuard, authority: &AttemptAuthorityRecord) 
     ))
 }
 fn check_size(record: &AttemptJournalRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_ATTEMPT_JOURNAL_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_ATTEMPT_JOURNAL_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_ATTEMPT_JOURNAL_BYTES)
 }
 
 /// Typed exact admission, local accounting or durable publication failure.

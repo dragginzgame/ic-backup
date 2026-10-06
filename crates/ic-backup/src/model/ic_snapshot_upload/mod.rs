@@ -2,6 +2,7 @@
 
 mod attempt;
 mod reply;
+pub(crate) use attempt::original_authority;
 pub use attempt::{IcSnapshotUploadAttempt, IcSnapshotUploadAttemptError};
 pub use reply::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind};
 

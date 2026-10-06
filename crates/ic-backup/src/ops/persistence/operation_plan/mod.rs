@@ -51,12 +51,7 @@ pub fn read_operation_plan(
     Ok(record)
 }
 fn check_size(record: &OperationPlanRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_OPERATION_PLAN_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_OPERATION_PLAN_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_OPERATION_PLAN_BYTES)
 }
 
 /// Typed original operation-plan identity or bounded immutable local admission failure.

@@ -31,20 +31,7 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         journal: &AttemptJournalRecord,
         payload: &'request IcSnapshotUploadRequest<'source>,
     ) -> Result<Self, IcSnapshotUploadAttemptError> {
-        let authority = plan.attempt_authority(operation_sequence)?;
-        if journal.authority() != &authority {
-            return Err(IcSnapshotUploadAttemptError::AuthorityMismatch);
-        }
-        if payload.target() != authority.binding().target()
-            || payload.binding_digest().hash() != authority.binding().request()
-        {
-            return Err(IcSnapshotUploadAttemptError::PayloadMismatch);
-        }
-        if plan.context().network() != payload.source_plan().context().network()
-            || plan.context().release() != payload.source_plan().context().release()
-        {
-            return Err(IcSnapshotUploadAttemptError::SourceContextMismatch);
-        }
+        let authority = original_authority(plan, operation_sequence, journal, payload)?;
         let mutation_attempt = journal
             .view()
             .pending_mutation
@@ -97,6 +84,29 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         }
         Ok(())
     }
+}
+
+pub(crate) fn original_authority(
+    plan: &OperationPlanRecord,
+    operation_sequence: u64,
+    journal: &AttemptJournalRecord,
+    payload: &IcSnapshotUploadRequest<'_>,
+) -> Result<AttemptAuthorityRecord, IcSnapshotUploadAttemptError> {
+    let authority = plan.attempt_authority(operation_sequence)?;
+    if journal.authority() != &authority {
+        return Err(IcSnapshotUploadAttemptError::AuthorityMismatch);
+    }
+    if payload.target() != authority.binding().target()
+        || payload.binding_digest().hash() != authority.binding().request()
+    {
+        return Err(IcSnapshotUploadAttemptError::PayloadMismatch);
+    }
+    if plan.context().network() != payload.source_plan().context().network()
+        || plan.context().release() != payload.source_plan().context().release()
+    {
+        return Err(IcSnapshotUploadAttemptError::SourceContextMismatch);
+    }
+    Ok(authority)
 }
 
 /// Original upload reservation rejection; no variant changes spending or recovery.

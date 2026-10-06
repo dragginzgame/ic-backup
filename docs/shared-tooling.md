@@ -49,8 +49,43 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
+The current 48-file snapshot selects the committed 0.1.7 batch at
+[`47cd2ccaf0e8b428f06e6db0262df76cfc1581de`](https://github.com/dragginzgame/shared-tooling/tree/47cd2ccaf0e8b428f06e6db0262df76cfc1581de),
+matching remote main and a clean read-only sibling checkout. Upstream's canonical
+`VERSION` still reads 0.1.6 and its 0.1.7 notes are undated; this is a committed
+source identity, not a new finalized release claim. The exact Git-object exporter
+refreshes all declared files; no vendored implementation is locally patched.
+[The adoption review](shared-tooling-review.json) binds the files and evidence.
+
+Portable checksum generation now shares one verifier owner with installer
+receipts and snapshot export, validates backend output and handles unusual file
+names through stdin. IC receipts reject names their line format cannot represent,
+and retain failed candidates when traversal or hashing fails. Executable versions,
+pins, receipt formats and activation policy retain their existing owners.
+
+The additive `make check-doc-links` uses the exact shared Perl parser with a local
+tracked/non-ignored Markdown roster. CI/release gates and native macOS tooling
+checks include local target admission and the selected helper regressions. It
+checks local file/directory existence, not anchors or remote URLs. Fresh Linux
+parser, digest, installer and snapshot/runner fixtures pass; native macOS and
+complete configured CI remain separate qualification. No full gate ran locally.
+
+The complete engineering baseline is unchanged. Other new helpers remain optional:
+there is no registry-observation or RustSec preparation flow here to replace.
+Consumer receipt and original-input checks remain local. The release-command
+checker is not installed; this consumer retains its extra completed-resume receipt
+check and existing actual-Make fixtures rather than replacing those obligations
+with a runner-only fixture. No release/version transaction, publication, Git
+commit or cleanup is part of adoption. Extend the compatible pending 0.3.9.
+
+Previous files, manifest and review remain under
+`target/shared-tooling-039-adoption/previous`, `previous.snapshot` and
+`previous-review.json`, alongside fresh focused logs and upstream diff.
+
+### Retained 0.1.6 adoption
+
 The maintainer authorized adoption of committed Shared Tooling 0.1.6 on 2026-10-06.
-The current 44-file snapshot selects
+That 44-file snapshot selects
 [`a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3`](https://github.com/dragginzgame/shared-tooling/tree/a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3),
 matching remote main at inspection and a clean read-only sibling source. The
 unchanged Git-object exporter includes all shared audit methods, pinning rules/

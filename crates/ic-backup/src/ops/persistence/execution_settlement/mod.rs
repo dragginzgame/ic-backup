@@ -82,12 +82,7 @@ fn validate_retained(
     Ok(())
 }
 fn check_size(record: &ExecutionSettlementRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_EXECUTION_SETTLEMENT_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_EXECUTION_SETTLEMENT_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_EXECUTION_SETTLEMENT_BYTES)
 }
 /// Typed immutable publication/replay failure, preserving all original journals and obligations.
 #[derive(Debug, Error)]

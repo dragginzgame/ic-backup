@@ -363,6 +363,16 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   This dependency provides no IC effect, retry or fresh authority. Qualify the
   actual locked graph and reader on supported hosts; no sibling path patch exists.
 
+- Metadata-upload inventory observations bind the full original source/upload plan,
+  exact list bytes and both already pending attempt IDs. Reuse canonical observation
+  responses, errors, reservation checks and inventory decoding; data uploads and status
+  observations reject at this boundary. Preserve existing attempt/argument/reply/ID/
+  inventory bounds and sole journal spending ownership. Zero/one/many snapshots never
+  settle allocation or qualify exclusive attribution. Retain original baseline custody,
+  fresh read permissions, authentication/chronology and proof of no prior observation
+  dispatch as integration responsibilities. Failures/lost replies stay pending; no
+  provider, hidden reissue, refund, terminal or fence/source-reference release exists.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

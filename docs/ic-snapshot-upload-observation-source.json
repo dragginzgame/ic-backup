@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "originally reserved metadata-upload inventory observation review",
+  "inspection_date": "2026-10-06",
+  "consumer_base": "a9bc43ba845c8b6d3d996dee27259b146e98d3e2",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "e1a211a00f01568ccc99bedc494c62a7141444dd",
+  "source_worktree_dirty": true,
+  "read_scope": "Exact committed blobs only; sibling dirty source remains untouched and is not imported.",
+  "evidence": "target/upload-observation-039-review/source",
+  "reviewed_sources": [
+    {"path": "crates/canic-backup/src/restore/runner/execute.rs", "sha256": "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079", "reviewed_sections": ["reconcile_upload_operation (548-593)", "observe_snapshot_inventory (618-677)"], "disposition": "The original before/after inventory motivates an independent observation, but singleton-new-ID success, backend string tokens, optional metadata, whole CLI execution and automatic outcome are not imported. Inventory cardinality does not qualify exclusive allocation attribution."},
+    {"path": "crates/canic-backup/src/restore/apply/journal/types.rs", "sha256": "291d62328be8f30b317bde87f6e5a50fcc45ca9e804e7bc4400808dd7101a15c", "reviewed_sections": ["validate_snapshot_inventory (175-210)"], "disposition": "Retained original baseline custody remains integration-owned; no duplicate mutable upload journal or snapshot_ids_before schema is added."}
+  ],
+  "scope": "Additive original-plan-bound ephemeral metadata/list request and single-observation provider, reusing canonical pending reservation admission, passive response association and inventory decoder.",
+  "production_destinations": ["crates/ic-backup/src/model/ic_snapshot_upload_observation/", "crates/ic-backup/src/policy/ic_snapshot_upload_observation/", "crates/ic-backup/src/ports/ic_snapshot_upload_observation/"],
+  "canonical_owners_reused": ["IcSnapshotUploadRequest", "IcSnapshotUploadAttempt", "IcManagementRequestRecord", "IcObservationResponse", "IcObservationResponseView", "IcObservationAssociationError", "IcObservationProviderError", "IcSnapshotReply", "AttemptJournalRecord", "AttemptJournalGuard"],
+  "license": "No Canic code copied; prior source provenance and licenses retained.",
+  "compatibility": "Additive API within compatible 0.3.9 draft. Existing public signatures/exhaustive enums and v1 records/digests/bounds remain unchanged; package and receipt remain 0.3.8.",
+  "qualification": {"unit_filters": ["upload", "ic_observation"], "public_target": "ic_snapshot_upload", "evidence": "target/upload-observation-039-review", "scope": "Native passive association and actual local retained-byte/reopen/refusal checks; no management effects or installed provider."},
+  "remaining": "Authenticated original allocation attribution, lost data-upload reconciliation, actual read/dispatch authority and custody, installed transport/provider, complete source/destination transfer and backend/application/terminal qualification.",
+  "removed_symbols": []
+}

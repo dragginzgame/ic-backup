@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "kind": "ephemeral original metadata-upload inventory observation; no new persisted schema",
+  "request_owner": "model::ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest",
+  "request_error_owner": "model::ic_snapshot_upload_observation::IcSnapshotUploadObservationError",
+  "provider_owner": "ports::ic_snapshot_upload_observation::IcSnapshotUploadObservationProvider::observe_upload",
+  "association_owner": "policy::ic_snapshot_upload_observation::validate_response",
+  "reused_owners": ["IcSnapshotUploadRequest", "IcSnapshotUploadAttempt original authority admission", "IcManagementRequestRecord", "IcObservationResponse", "IcObservationRequestError", "IcObservationResponseView", "IcObservationAssociationError", "IcObservationProviderError", "IcSnapshotReply", "AttemptJournalRecord", "AttemptJournalGuard"],
+  "original_binding": "complete original plan/context/operation/allowances, exact source-bound metadata-upload digest and independently retained list payload; exact current pending mutation and observation IDs plus original reservation digest",
+  "methods": "metadata allocation only; list_canister_snapshots only, same exact selected target; status/data-upload recovery unsupported",
+  "bounds": {"total_attempts": 1024, "arguments_bytes": 4096, "list_record_json_bytes": 8192, "raw_reply_bytes": 1048576, "inventory_entries": 1024, "snapshot_id_bytes": 256, "inventory_type_table_entries": 16},
+  "decoder": "reuse original finite-work snapshot inventory admission, required nat64 timestamp/size, unique exact raw IDs, canonical view and exact raw-evidence hash",
+  "invocation": "one previously accounted exact host replicated list update; no hidden retry, upload, query/proxy substitution or extra observation",
+  "integration_admission": "retained originals, actual fresh read permission/context, authentication, chronology, original baseline custody, exclusive command custody and proof observation never dispatched; allocation attribution independently qualified",
+  "association": "recheck current journal, actual authority/attempt/request/context/target claims then bounded wire shape; pure and passive, no IO or state transition",
+  "cardinality": "zero, one or many snapshots, timestamps and sizes establish no allocation outcome or exclusive original-request attribution",
+  "failure_and_replay": "lost reply and every provider failure retain pending mutation/observation spending, originals, references and obligations; local reconstruction/reopen grants no redispatch, refund or automatic Uncertain receipt",
+  "qualification": "native structural admission, interface refusal and actual local persistence/reopen only; no simulated management behavior, installed provider or live/backend effects",
+  "grants": "no fresh authority, automatic receipt, data reconciliation, complete upload, terminal proof, fence/source-reference release or runner",
+  "unchanged": "existing v1 records/digests/bounds and exhaustive errors; separate original journal accounting remains sole spending owner"
+}

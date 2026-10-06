@@ -25,6 +25,196 @@
 
 # Current handoff — 2026-10-06
 
+## Pending 0.3.9 metadata-upload recovery and shared primitive fixes
+
+The continued compatible batch adds an ephemeral original metadata-upload/list
+observation request and single already reserved provider signature. It binds the
+full original plan, exact source/upload/list bytes, immutable allowances and both
+pending attempt IDs. Existing upload authority, reservation admission, passive
+response/error/view owners and bounded inventory decoding are reused. Pure
+association performs no IO, spending or settlement. Data uploads and status
+observations reject at this boundary. See
+[the implemented contract](../contracts/ic-snapshot-upload-observation.json) and
+[fresh committed-source review](../ic-snapshot-upload-observation-source.json).
+
+Zero, one or several inventory entries and timestamp/size agreement establish no
+exclusive allocation attribution or upload outcome. Canic's singleton-new-ID
+success inference, optional metadata and whole CLI process behavior were not
+imported. Integrations retain original baseline custody, authenticated chronology,
+fresh read permissions and proof of no prior observation dispatch. Failures/lost
+replies remain pending; local reopen invokes no provider or implicit reissue and
+retains every allowance, obligation and source reference. No schema, digest,
+terminal flag, receipt, reference-release API or installed backend is added.
+
+Published `ic-host-tools` 0.1.13 is now the compatible minimum. It validates
+impossible reader/writer counts with typed IO errors instead of panicking in the
+shared reads/copies; private consumer copies retain partial output and complete
+checksum admission. Its archive, all published Rust sources against the release
+commit/cache and isolated lockfile change were verified. Every other locked
+package is unchanged. The public local `checksum_reader` remains unchanged.
+The exact prior 0.1.12 review/lock/manifest and evidence retain their original
+scope under `target/host-tools-013-review`; see
+[maintained adoption](../ic-host-tools-adoption.json).
+
+All registered selected cases pass against current production code and published
+0.1.13: 137 unit cases across affected primitives/recovery owners and five public
+local recovery/restore-source/upload journeys. Eight new cases cover exact
+metadata/list originals, typed drift/unsupported/missing/settled denials,
+bounded malformed inventory and provider failures. The public upload journey
+durably retains exact list bytes before reservation, preserves both pending
+attempts through indeterminate failure, associates independent zero/one/many
+inventories without settlement and reopens unchanged evidence without dispatch.
+Source journals/plans/references and diagnostics remain unchanged. A new consumer
+copy regression checks invalid stream counts and exact retained partial output.
+Warning-denied Clippy/docs and Rust 1.91 all-target/all-feature checks pass.
+Formatting, dependency declarations, all 415 maintained local document references
+and the exact 48-file Shared Tooling snapshot also pass.
+Fresh membership/source/dependency identities and logs remain under
+`target/upload-observation-039-review` and `target/host-tools-013-review`.
+These are focused native Linux results, not full CI/package, native macOS or
+live IC qualification. Earlier batch evidence below retains its original scope.
+
+Shared Tooling remote main remains the exact adopted committed `47cd2cc` revision.
+New [ic-backup #5](https://github.com/dragginzgame/ic-backup/issues/5) remains open:
+its lockfile/formatting-hook helpers are uncommitted upstream and cannot yet enter
+the reviewed snapshot. No manual vendor patch or GitHub write was made. Published
+0.1.13 [upstream CI](https://github.com/dragginzgame/ic-host-tools/actions/runs/37461197671)
+is queued. Released 0.3.8 main CI passed; its tag CI is still running. These runs
+do not qualify this dirty draft. The undated draft remains 0.3.9; package and
+receipt remain 0.3.8. Work is uncommitted, with no release, commit, push,
+publication, live effect or cleanup.
+
+Next product work remains authenticated original allocation attribution and
+method-specific lost data-upload reconciliation before transport/runners and
+selected real backend qualification. Full B1/B2 and independently usable backup/
+restore remain unestablished.
+
+### Retained earlier 0.3.9 shared primitives and tooling refresh
+
+The requested continued batch refreshes the exact 48-file snapshot to clean,
+committed Shared Tooling `47cd2ccaf0e8b428f06e6db0262df76cfc1581de`, matching
+remote main. Upstream's canonical `VERSION` is 0.1.6 with undated 0.1.7 notes;
+this is the committed 0.1.7 batch, not a finalized-release claim. Core shared
+engineering rules remain unchanged. The new verifier centralizes portable digest
+generation and rejects failed/malformed backend output. IC installer receipts
+reuse it, reject names the line format cannot represent and retain failed
+traversal/hash candidates. Tool pins and receipt formats remain unchanged.
+
+`make check-doc-links` selects tracked and non-ignored new Markdown documents,
+then delegates local target existence to the exact shared parser. It joins the
+configured CI/release gate; native macOS tooling explicitly exercises the new
+parser/digest cases. Its contract excludes anchors and remote URL availability.
+The shared verification guide and selected focused regressions are now readable
+offline. Optional registry/RustSec helpers have no caller to replace; release
+adoption retains the consumer's completed-resume receipt check and existing
+actual-Make fixtures. No vendored patch or sibling mutation was made. See
+[snapshot review](../shared-tooling-review.json) and
+[consumer adoption](../shared-tooling.md).
+
+One additional private upload-source read now uses `ic-host-tools::artifact::read_reader`
+over the already opened, sought and `take`-bounded descriptor. Pure kind/range
+admission, no-follow regular-file checks, exact length and the existing 1 MiB
+limit remain in place, alongside full original source/checksum/journal/custody
+verification before and after collection. Actual IO errors retain their existing
+type; fallible collection replaces the local growing-buffer body. Exact argument
+bytes, source references, original spending and per-guard metrics are unchanged.
+
+All registered upload-source cases and the public source/upload/reopen journey
+pass against this production reader, covering empty/region/chunk bytes, unsafe or
+changed sources, invalid destination/ranges and an exact 1 MiB slice from a larger
+region. Clippy and API docs pass with warnings denied, as do Rust 1.91 all-target/
+all-feature checks. Fresh logs and original source/review remain under
+`target/shared-chunk-read-039-review`. No maintained function, method or type was
+removed; the duplicate private `read_to_end` collector was replaced.
+
+Snapshot integrity, all maintained local document links, actual existing local
+host/IC tool offline checks, dependency declarations and formatting pass.
+Selected parser, digest, IC installer and snapshot/runner regressions and shell/
+Perl checks pass on Linux; evidence and previous snapshot/files/review are under
+`target/shared-tooling-039-adoption`. These are focused checks, not a full native
+suite, package verification or complete CI/release gate. Earlier primitive and
+recovery qualification below retains its original scope and evidence.
+
+ic-backup still has no open issues at inspection; no GitHub writes were needed.
+At final inspection, released 0.3.8 main CI is running; its tag CI and new
+upstream Shared Tooling CI remain queued:
+[shared upstream](https://github.com/dragginzgame/shared-tooling/actions/runs/37458968809).
+This dirty 0.3.9 work has no remote/native macOS or live IC qualification.
+The coherent compatible batch stays in the same undated 0.3.9 draft; package
+version and receipt remain 0.3.8. Changes are uncommitted, with no agent release,
+Git commit, push, publication or destructive cleanup. Next product contract work
+remains method-specific lost-upload observation/reconciliation; transport, runners,
+full B1/B2 and standalone backup/restore remain unestablished.
+
+### Retained initial 0.3.9 primitive adoption
+
+Local release HEAD `a9bc43ba845c8b6d3d996dee27259b146e98d3e2`, annotated
+`v0.3.8`, finalized changelog and original receipt/parent
+`b63d626274c33dcae156353ebd8fa17f43e46db4` agree. Read-only committed-blob
+hashes and tag identities were verified before this batch. `release-tag-check`
+refused the maintainer's pre-existing dirty manifest; no work was restored to
+bypass that guard. Exact-source main/tag CI was queued at inspection:
+[main](https://github.com/dragginzgame/ic-backup/actions/runs/37458336677),
+[tag](https://github.com/dragginzgame/ic-backup/actions/runs/37458336061).
+Registry publication was not inspected. Both prior 0.3.7 CI runs have passed.
+
+The requested host-tools refresh adopts published `ic-host-tools` 0.1.12 at
+`b9fe3fdc5a1565360aa194acea2c5182b206d347`. Its archive checksum, every published
+Rust source against both the registry cache and committed upstream, and the
+isolated lock change were verified. Every other package entry is unchanged.
+The compatible minimum is 0.1.12 because the adopted APIs first appear there;
+the original dirty 0.1 manifest range is retained with the pre-update lock and
+handoff under `target/host-tools-012-review`. The package inherits the dependency
+in its ordinary table for portable output admission; filesystem effects still
+retain their Unix contracts. No sibling path/patch, toolchain or MSRV change.
+
+Private staging copies now delegate stream copying and SHA-256 capture to the
+shared owner with `u64::MAX`, preserving the existing absence of a total artifact
+ceiling. They retry interrupted reads and preserve original source/sink IO
+errors and partial output without returning a complete checksum on failure.
+Local descriptor traversal, 0700/0600 exclusive creation, retained checksum
+comparison, tree digest recipe, byte custody and durable publication stay local.
+The public `checksum_reader` implementation and behavior are unchanged.
+
+Nine typed record size owners and restore-reference admission now use the shared
+bounded writer over `io::sink` to check exact pretty-JSON output budgets without
+allocating the whole encoded record. Inclusive original limits, `RecordTooLarge`
+with its exact u64 limit, unrelated JSON errors and all durable publication bytes
+are retained. This creates no new persisted state or progress/spending owner.
+No maintained function, method or type was removed; the duplicate copy loop and
+ten allocating size-admission bodies were replaced.
+
+All registered focused artifact/changed persistence cases and public local
+recovery/restore-source journeys pass against the production helpers. The fresh
+copy cases check known SHA-256 identity, multichunk/empty input, short writes,
+interrupted reads and exact IO failures with retained partial output. Output
+cases check pretty/escaped/UTF-8 encoding, exact/zero/extreme limits and unrelated
+serialization failure; original journal overflow and interrupted publication/
+owner-death/reopen cases remain qualified locally. Warning-denied Clippy/docs,
+Rust 1.91 all-target/all-feature checks and locked/offline metadata also pass.
+Actual registered/passing membership, source/dependency identities and logs are
+retained under `target/host-tools-012-review`; see
+[the maintained adoption review](../ic-host-tools-adoption.json).
+These are native Linux results. No full suite, package verification, broad
+CI/release gate, native macOS run or live IC effect ran for this dirty batch.
+
+Committed Shared Tooling remains the adopted 44-file 0.1.6 snapshot at
+`a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3`; no newer committed refresh exists.
+ic-backup has no open issues at inspection. The 0.1.12 upstream CI run is queued
+and does not yet supply native qualification:
+[upstream CI](https://github.com/dragginzgame/ic-host-tools/actions/runs/37458519632).
+No GitHub writes were needed. Earlier evidence remains at its original scope.
+
+The compatible implementation/dependency changes select one undated 0.3.9 draft.
+Package version and release receipt remain 0.3.8; public signatures/exhaustive
+errors and v1 schemas/digests/bounds remain unchanged. Work is uncommitted, with
+no agent commit, release/version transaction, push, publication or cleanup.
+Next product work remains method-specific lost-upload observation/reconciliation
+before authenticated transport and selected real backend qualification; full
+B1/B2 and standalone backup/restore remain unestablished.
+
+## Retained pre-release 0.3.8 handoff
+
 The maintainer reports 0.3.7 live. Local release commit
 `1a23d66dd65b1e36e986b8c7d13758cf3c92d193` has original receipt/parent source
 `fafdc0ddc201749c6b16aa41bccd84a8f98d3fe9`; read-only `release-tag-check` passed

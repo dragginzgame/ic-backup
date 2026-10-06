@@ -13,7 +13,7 @@ use crate::model::{
     operation_plan::OperationPlanRecord,
 };
 use ic_management_canister_types::SnapshotDataKind;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{self, Read, Seek, SeekFrom};
 use std::time::Instant;
 use thiserror::Error;
 
@@ -160,8 +160,18 @@ fn read_chunk(
     let (mut file, original) = open_regular_child(directory, &name, length, maximum)?;
     file.seek(SeekFrom::Start(offset))?;
     let size = size.unwrap_or(original.len());
-    let mut bytes = Vec::new();
-    file.take(size).read_to_end(&mut bytes)?;
+    let limit = usize::try_from(size)
+        .ok()
+        .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
+        .ok_or(IcSnapshotArtifactError::FileShape)?;
+    let bytes = ic_host_tools::artifact::read_reader(file.take(size), limit).map_err(|error| {
+        use ic_host_tools::artifact::ArtifactError;
+        match error {
+            ArtifactError::Io(error) => IcSnapshotArtifactError::Io(error),
+            ArtifactError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
+            error => IcSnapshotArtifactError::Io(io::Error::other(error)),
+        }
+    })?;
     if u64::try_from(bytes.len()).ok() != Some(size) {
         return Err(IcSnapshotArtifactError::FileShape);
     }

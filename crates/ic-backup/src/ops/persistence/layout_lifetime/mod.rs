@@ -114,12 +114,7 @@ impl BackupLayoutGuard {
         let reference = RestoreReferenceRecord::new(journal_identity(journal)?, authority)?;
         let path = self.root.join(REFERENCES_FILE);
         if references.retain(reference.clone())? {
-            let bytes = serde_json::to_vec_pretty(&references)?;
-            if bytes.len() as u64 > MAX_RESTORE_REFERENCE_BYTES {
-                return Err(PersistenceError::RecordTooLarge {
-                    limit: MAX_RESTORE_REFERENCE_BYTES,
-                });
-            }
+            super::json::check_json_size(&references, MAX_RESTORE_REFERENCE_BYTES)?;
             write(&path, &references)?;
         } else {
             // Complete durability after a rename whose response was lost.

@@ -48,12 +48,7 @@ pub fn read_effect_graph(
     Ok(record)
 }
 fn check_size(record: &EffectGraphRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_EFFECT_GRAPH_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_EFFECT_GRAPH_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_EFFECT_GRAPH_BYTES)
 }
 
 /// Typed declared graph identity or immutable local persistence rejection.

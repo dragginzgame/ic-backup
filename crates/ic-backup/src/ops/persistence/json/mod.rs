@@ -18,6 +18,20 @@ use serde::{Serialize, de::DeserializeOwned};
 
 static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
+/// Check the maintained pretty-JSON budget without allocating an encoded record.
+pub(super) fn check_json_size(
+    value: &impl Serialize,
+    max_bytes: u64,
+) -> Result<(), PersistenceError> {
+    let mut writer = ic_host_tools::artifact::BoundedWriter::new(io::sink(), max_bytes);
+    let result = serde_json::to_writer_pretty(&mut writer, value);
+    if writer.limit_exceeded() {
+        return Err(PersistenceError::RecordTooLarge { limit: max_bytes });
+    }
+    result?;
+    Ok(())
+}
+
 /// Durably replace a machine record using a sibling temporary and rename.
 ///
 /// # Errors

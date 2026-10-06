@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.9]
+
+- Bind metadata-upload recovery inventory to exact original payloads and already
+  reserved observations. Retain lost replies and spending across reopen without
+  inferring upload success, retry permission or source release from inventory counts.
+- Use `ic-host-tools` 0.1.13 for private artifact copying, preserving exact
+  checksums and partial failure evidence while retrying interrupted reads.
+- Check record output budgets with its shared bounded writer, avoiding full
+  JSON allocations during size admission while retaining existing limits and errors.
+- Read exact upload chunks through its bounded stream collector, retaining local
+  descriptor confinement, range checks and original source verification.
+  Reject invalid shared stream byte counts with IO errors instead of panicking
+  ([ic-host-tools #5](https://github.com/dragginzgame/ic-host-tools/issues/5)).
+- Refresh Shared Tooling's portable checksums and installer receipt handling.
+  Add `make check-doc-links` and check maintained local Markdown targets in CI.
+
 ## [0.3.8] - 2026-10-06
 
 - Delegate bounded regular-file record reads to `ic-host-tools`, retaining exact

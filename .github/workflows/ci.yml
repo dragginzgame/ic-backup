@@ -44,6 +44,8 @@ jobs:
         shell: /bin/bash --noprofile --norc -eo pipefail {0}
         run: |
           /bin/bash scripts/ci/test-tooling.sh
+          perl scripts/ci/test-documentation-links.pl
+          /bin/bash scripts/ci/test-file-digests.sh
           /bin/bash scripts/ci/test-dependency-pins.sh
           /bin/bash scripts/ci/test-evidence-checksums.sh
           /bin/bash scripts/ci/test-host-tools.sh

@@ -46,3 +46,59 @@ pub fn source_plan() -> OperationPlanRecord {
 pub fn upload_plan(payload: &IcSnapshotUploadRequest<'_>) -> OperationPlanRecord {
     plan(payload.binding_digest().hash())
 }
+
+/// Borrow independent original declarations without returning self-referential fixtures.
+pub fn with_observation(
+    check: impl FnOnce(
+        &OperationPlanRecord,
+        &IcSnapshotUploadRequest<'_>,
+        &crate::model::ic_request::IcManagementRequestRecord,
+        &crate::model::attempt_journal::AttemptJournalRecord,
+    ),
+) {
+    use crate::model::{
+        artifacts::ArtifactChecksumRecord,
+        attempt_journal::AttemptJournalRecord,
+        ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
+        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+    };
+    let source = source_plan();
+    let original = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
+    let bytes = raw("upload-source");
+    let metadata = IcSnapshotMetadataReply::decode(&original, &bytes).unwrap();
+    let checksum = ArtifactChecksumRecord::from_bytes(b"retained declared source");
+    let upload = IcSnapshotUploadRequest::metadata(&source, &metadata, &checksum).unwrap();
+    let plan = upload_plan(&upload);
+    let list = IcManagementRequestRecord::new(IcManagementRequest {
+        method: IcManagementMethodRecord::ListCanisterSnapshots,
+        target: TARGET.into(),
+        snapshot_id: None,
+    })
+    .unwrap();
+    let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
+    journal.reserve_mutation().unwrap();
+    journal
+        .reserve_observation(1, list.digest().hash())
+        .unwrap();
+    check(&plan, &upload, &list, &journal);
+}
+
+pub fn observation_input(
+    request: &crate::model::ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest<
+        '_,
+        '_,
+    >,
+) -> crate::model::ic_observation::IcObservationResponseInput {
+    crate::model::ic_observation::IcObservationResponseInput {
+        authority: request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        observation_attempt: request.observation_attempt(),
+        request: request.payload().digest(),
+        context: request.plan().context().clone(),
+        target: request.payload().target().into(),
+        reply: candid::encode_one(Vec::<ic_management_canister_types::Snapshot>::new()).unwrap(),
+        evidence: crate::model::artifacts::ArtifactChecksumRecord::from_bytes(
+            b"passive list evidence",
+        ),
+    }
+}

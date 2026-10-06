@@ -107,7 +107,10 @@ normalized to lowercase during construction/deserialization. Record equality
 uses canonical values. Validation returns typed errors. No predecessor readers
 or alternative schema generation is maintained.
 
-`ops::artifacts` streams file bytes through a 64 KiB buffer. Unix traversal opens
+`ops::artifacts` streams checksums through a 64 KiB buffer. Private staging copies
+delegate constant-memory byte copying and SHA-256 capture to `ic-host-tools`,
+retry interrupted reads and retain partial output on input or sink failure.
+The copy has no new total artifact-size ceiling. Unix traversal opens
 descriptors without following artifact symlinks, checks actual entry types and
 rejects traversal components and special entries. Directory digests preserve
 the source recipe: sort relative UTF-8 paths, then hash each path, NUL, its
@@ -137,6 +140,13 @@ created private parent directories and their links are also synchronized.
 Serialization failure leaves the previous document intact. A failure after
 publication may leave the canonical record present and requires reconciliation.
 Neither helper supplies schema admission or operation transitions.
+
+Typed record output admission and restore-reference retention use the shared
+`BoundedWriter` over a counting sink to check the exact pretty-JSON budget without
+collecting an encoded record. Inclusive limits and `RecordTooLarge` retain their
+original meaning; other serialization errors remain JSON failures. Schema and
+transition owners choose the existing budgets, and durable encoding/publication
+remains separate. See [the shared-tool adoption review](ic-host-tools-adoption.json).
 
 `read_json` requires an explicit byte limit, reads at most that limit plus one,
 and rejects excess bytes before decoding. Unix reads delegate to registry
@@ -1867,6 +1877,11 @@ admission, then verifies the exact opt-in IC tree. `prepare_ic_snapshot_upload_d
 requires unchanged original evidence/checksum, verifies before/after reading a fixed
 direct child through no-follow/nonblocking descriptors, and encodes one exact source
 slice or known chunk. Existing checks reject changed, missing, extra or unsafe files.
+The already selected descriptor/offset and exact `take` extent use shared
+`read_reader` for bounded, fallibly allocated collection. The existing 1 MiB
+ceiling and exact returned-length check still apply; original IO errors pass
+through, and allocation failures use the existing typed IO boundary. See
+[the shared primitive review](ic-host-tools-adoption.json).
 No record, progress, allowance, obligation, source reference or artifact changes.
 The checks are sequential and hold no future noncooperating byte custody. Ordinary
 resume stays artifact-free and supplies no upload input or permit.
@@ -1918,6 +1933,42 @@ not IC behavior. There is no installed provider, transport, runner, complete-upl
 proof or release authority. See [the port contract](contracts/ic-snapshot-upload-port.json)
 and [source review](ic-snapshot-upload-port-source.json). The released upload codec
 contract and existing v1 records/digests/bounds remain unchanged.
+
+### Exact originally reserved metadata-upload observations
+
+`model::ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest` binds
+the complete original upload plan, exact source-bound metadata bytes and immutable
+allowances to an independent original `ListCanisterSnapshots` payload. Both original
+attempt IDs must remain pending; the list digest must match its exact retained
+reservation. Data uploads and status observations reject. Construction performs no
+IO, reservation or settlement. Existing upload authority checks and observation
+reservation checks have one canonical private implementation shared by both ports.
+
+`ports::ic_snapshot_upload_observation::IcSnapshotUploadObservationProvider::observe_upload`
+permits one previously accounted exact host replicated list update. Integrations
+retain original source/upload/list bytes before reservation and independently qualify
+fresh actual context/read permission, timing, authentication, command custody and
+proof this observation has never been dispatched. Reconstruction supplies no reissue
+permission. No provider implementation or hidden observation/retry is installed.
+
+Pure `policy::ic_snapshot_upload_observation::validate_response` reuses the existing
+passive response, exact claim association and bounded inventory decoder. Its view
+retains exact raw evidence, unique canonical raw IDs and required nat64 timestamp/
+size. Original 1,024 attempts/entries, 256 ID bytes, 4 KiB arguments, 8 KiB list
+record, 1 MiB reply and finite decoder-work bounds remain unchanged. Zero, one or
+many snapshots and matching timestamps/sizes establish no exclusive original
+allocation attribution or upload outcome. There is no automatic receipt or Applied
+transition. Original baseline custody and authenticated reconciliation remain owned
+by integrations; Canic's singleton-new-ID success inference is not imported.
+
+Failures and lost replies retain pending mutation/observation spending, references
+and application/fence obligations. Lost observation replies stay pending, rather
+than becoming settled Uncertain. Local reopen and association spend nothing and
+invoke no provider. Native tests cover structural denials, bounded wire, interface
+refusal and exact retained local bytes/reopen. They qualify no IC effect, complete
+upload, data reconciliation, terminal proof or fence/reference release. See
+[the observation contract](contracts/ic-snapshot-upload-observation.json) and
+[fresh source review](ic-snapshot-upload-observation-source.json).
 
 ### Local IC snapshot diagnostics
 

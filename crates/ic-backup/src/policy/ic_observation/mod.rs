@@ -1,11 +1,12 @@
 //! Pure exact reserved IC observation association; no mutation settlement.
 
 use crate::model::{
-    attempt_journal::AttemptJournalRecord,
+    attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_lifecycle_reply::{IcLifecycleReply, IcLifecycleReplyError},
     ic_observation::{IcObservationRequest, IcObservationRequestError, IcObservationResponse},
-    ic_request::IcManagementMethodRecord,
+    ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
     ic_snapshot_reply::{IcSnapshotReply, IcSnapshotReplyError},
+    operation_plan::PlanContextRecord,
 };
 use thiserror::Error;
 
@@ -52,33 +53,56 @@ pub fn validate_response<'a>(
     response: &'a IcObservationResponse,
 ) -> Result<IcObservationResponseView<'a>, IcObservationAssociationError> {
     request.validate_journal(journal)?;
+    validate_association(
+        &ObservationAssociation {
+            authority: request.authority(),
+            mutation_attempt: request.mutation_attempt(),
+            observation_attempt: request.observation_attempt(),
+            payload: request.payload(),
+            context: request.plan().context(),
+        },
+        response,
+    )
+}
+
+pub(crate) struct ObservationAssociation<'binding, 'payload> {
+    pub authority: &'binding AttemptAuthorityRecord,
+    pub mutation_attempt: u32,
+    pub observation_attempt: u32,
+    pub payload: &'payload IcManagementRequestRecord,
+    pub context: &'binding PlanContextRecord,
+}
+
+pub(crate) fn validate_association<'a>(
+    binding: &ObservationAssociation<'_, 'a>,
+    response: &'a IcObservationResponse,
+) -> Result<IcObservationResponseView<'a>, IcObservationAssociationError> {
     let input = response.input();
-    if input.authority != request.authority().digest() {
+    if input.authority != binding.authority.digest() {
         return Err(IcObservationAssociationError::AuthorityMismatch);
     }
-    if input.mutation_attempt != request.mutation_attempt()
-        || input.observation_attempt != request.observation_attempt()
+    if input.mutation_attempt != binding.mutation_attempt
+        || input.observation_attempt != binding.observation_attempt
     {
         return Err(IcObservationAssociationError::AttemptMismatch);
     }
-    if input.request != request.payload().digest() {
+    if input.request != binding.payload.digest() {
         return Err(IcObservationAssociationError::RequestMismatch);
     }
-    if &input.context != request.plan().context() {
+    if &input.context != binding.context {
         return Err(IcObservationAssociationError::ContextMismatch);
     }
-    if input.target != request.payload().target() {
+    if input.target != binding.payload.target() {
         return Err(IcObservationAssociationError::TargetMismatch);
     }
-    let reply = match request.payload().method() {
+    let reply = match binding.payload.method() {
         IcManagementMethodRecord::ListCanisterSnapshots => IcObservationReplyView::Inventory(
-            IcSnapshotReply::decode(request.payload(), &input.reply)?,
+            IcSnapshotReply::decode(binding.payload, &input.reply)?,
         ),
         // The sealed request excludes mutations. Status wire stays with its existing owner.
-        _ => IcObservationReplyView::Status(IcLifecycleReply::decode(
-            request.payload(),
-            &input.reply,
-        )?),
+        _ => {
+            IcObservationReplyView::Status(IcLifecycleReply::decode(binding.payload, &input.reply)?)
+        }
     };
     Ok(IcObservationResponseView { response, reply })
 }

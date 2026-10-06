@@ -112,12 +112,7 @@ pub fn read_fence_obligation(
     Ok(record)
 }
 fn check_size(record: &FenceObligationRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_FENCE_OBLIGATION_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_FENCE_OBLIGATION_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_FENCE_OBLIGATION_BYTES)
 }
 /// Typed denial preserving original obligation bytes and acquisition spending.
 #[derive(Debug, Error)]

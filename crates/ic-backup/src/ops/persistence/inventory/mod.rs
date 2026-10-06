@@ -49,12 +49,7 @@ pub fn read_inventory(
 }
 
 fn check_size(record: &InventoryRecord) -> Result<(), PersistenceError> {
-    if serde_json::to_vec_pretty(record)?.len() as u64 > MAX_INVENTORY_BYTES {
-        return Err(PersistenceError::RecordTooLarge {
-            limit: MAX_INVENTORY_BYTES,
-        });
-    }
-    Ok(())
+    super::json::check_json_size(record, MAX_INVENTORY_BYTES)
 }
 
 /// Typed exact declared-identity or durable local inventory admission failure.

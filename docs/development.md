@@ -64,6 +64,12 @@ and the scoped exception file. CI explicitly runs setup before the full gate;
 CI and releases include offline `tools-check` and the declaration check. Ordinary
 validation never installs missing tools implicitly.
 
+`make check-doc-links` checks supported local Markdown links in all tracked and
+non-ignored new Markdown documents. The consumer selects that roster; the shared
+Perl checker resolves local files/directories and ignores code examples and remote
+URLs. It does not check anchors or network availability. CI and releases include
+this offline check. See [the shared helper contract](verification-helpers.md).
+
 `make deps` fetches the committed lockfile dependencies. The validation commands
 use this repository's own `target/` directory. Check for an active build before
 editing source or lockfiles or starting another compilation.

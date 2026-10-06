@@ -264,6 +264,7 @@ status/read visibility must never be mistaken for write authority.
 | `IcMutationProvider` | Implemented exact original IC update/reserved-mutation envelope and bounded passive acknowledgement association; no installed provider or automatic settlement |
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented single reserved source-bound metadata/data update signature, reusing exact upload attempts, passive acknowledgements and IC update failures; no installed provider, automatic settlement or retry |
+| `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; no installed provider, allocation outcome, data reconciliation or reissue |
 | `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
 | `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
 | `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
@@ -771,6 +772,14 @@ Stopped/controllers or inventory cardinality produce no automatic outcome.
 Fresh method-specific read permissions, authenticated timing/attribution and
 exclusive original dispatch custody remain integration-qualified. See
 [the maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-recovery-observations).
+
+Metadata-upload recovery now has an exact original-plan/source-bound list observation
+request and single previously reserved observation port. It reuses existing passive
+responses, current reservation checks and bounded inventory decoding. Zero/one/many
+snapshots establish no allocation outcome; lost observation replies remain pending.
+Original baseline custody, exclusive authenticated allocation attribution and data-
+upload reconciliation remain integration work. See
+[the maintained boundary](extraction-boundary.md#exact-originally-reserved-metadata-upload-observations).
 
 ## 12. Filesystem custody, durability and retention
 

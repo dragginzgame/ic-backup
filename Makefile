@@ -8,13 +8,13 @@ VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
 RELEASE := bash scripts/release/release.sh
-CI_TARGETS := shared-tooling-check tools-check dependency-pins-check deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 ifneq ($(word 2,$(filter release-patch release-minor release-major release-resume,$(MAKECMDGOALS))),)
 $(error Select exactly one release target)
 endif
 
-.PHONY: check check-msrv ci clean clippy deps doc ensure-clean fmt fmt-check \
+.PHONY: check check-doc-links check-msrv ci clean clippy deps doc ensure-clean fmt fmt-check \
         help hooks-check install-hooks package publish publish-dry-run \
         release-check release-major release-minor release-patch release-plan release-resume \
         release-version release-preflight release-prepare-version release-prepared-check \
@@ -25,6 +25,7 @@ endif
 
 help:
 	@echo "check                       Compile this library's native targets"
+	@echo "check-doc-links             Check maintained local Markdown targets"
 	@echo "check-msrv                  Check Rust 1.91.0"
 	@echo "ci                          Fetch dependencies and run the full gate"
 	@echo "clean                       Explicitly remove build artifacts"
@@ -65,6 +66,9 @@ help:
 
 check:
 	cargo check --offline --locked -p ic-backup --all-targets --all-features
+
+check-doc-links:
+	bash scripts/ci/check-doc-links.sh
 
 check-msrv:
 	cargo +1.91.0 check --offline --locked -p ic-backup --all-targets --all-features
@@ -203,6 +207,8 @@ shell-check:
 	printf '%s\n' "$$shellcheck_bin scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit"; \
 	"$$shellcheck_bin" scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
 	perl -c scripts/release/release-data.pl
+	perl -c scripts/ci/check-documentation-links.pl
+	perl -c scripts/ci/test-documentation-links.pl
 
 tags:
 	@git tag --sort=-version:refname
@@ -212,6 +218,8 @@ test:
 
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
+	perl scripts/ci/test-documentation-links.pl
+	bash scripts/ci/test-file-digests.sh
 	bash scripts/ci/test-dependency-pins.sh
 	bash scripts/ci/test-evidence-checksums.sh
 	bash scripts/ci/test-host-tools.sh

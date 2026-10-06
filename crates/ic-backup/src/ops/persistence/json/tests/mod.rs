@@ -16,6 +16,36 @@ impl Serialize for FailingSerialize {
 }
 
 #[test]
+fn bounded_json_size_uses_exact_pretty_encoding_and_original_limits() {
+    for value in [
+        serde_json::Value::Null,
+        serde_json::json!({"escaped": "\n\t\"\\", "utf8": "é雪", "nested": [1, 2]}),
+        serde_json::json!({"state": "a".repeat(100_001)}),
+    ] {
+        let size = serde_json::to_vec_pretty(&value)
+            .expect("original encoding")
+            .len() as u64;
+        for limit in [size, size + 1, u64::MAX] {
+            check_json_size(&value, limit).expect("inclusive exact encoding budget");
+        }
+        for limit in [0, size - 1] {
+            assert!(matches!(
+                check_json_size(&value, limit),
+                Err(PersistenceError::RecordTooLarge { limit: actual }) if actual == limit
+            ));
+        }
+    }
+}
+
+#[test]
+fn bounded_json_size_preserves_serializer_errors() {
+    assert!(matches!(
+        check_json_size(&FailingSerialize, u64::MAX),
+        Err(PersistenceError::Json(error)) if !error.is_io()
+    ));
+}
+
+#[test]
 fn durable_json_replaces_the_complete_document() {
     let root = temp_dir("canic-backup-durable-json-replace");
     let path = root.join("journal.json");
