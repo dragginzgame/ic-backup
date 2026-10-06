@@ -50,6 +50,84 @@ fn record_reads_enforce_exact_byte_limits_and_reject_symlinks() {
 
 #[cfg(unix)]
 #[test]
+fn shared_record_reads_preserve_extreme_limits_missing_files_and_parent_aliases() {
+    let root = temp_dir("ic-backup-shared-record-read");
+    fs::create_dir_all(&root).expect("create fixture root");
+    let path = root.join("record.json");
+    fs::write(&path, b"null").expect("write exact JSON");
+    assert_eq!(
+        read_json::<serde_json::Value>(&path, u64::MAX).expect("large declared limit"),
+        serde_json::Value::Null
+    );
+    assert!(matches!(
+        read_json::<serde_json::Value>(&path, 0),
+        Err(PersistenceError::RecordTooLarge { limit: 0 })
+    ));
+    assert_eq!(fs::read(&path).expect("original bytes"), b"null");
+    let alias = root.join("parent-alias");
+    std::os::unix::fs::symlink(&root, &alias).expect("selected parent alias");
+    assert_eq!(
+        read_json::<serde_json::Value>(&alias.join("record.json"), 4)
+            .expect("parent selection remains caller owned"),
+        serde_json::Value::Null
+    );
+    assert!(matches!(
+        read_json::<serde_json::Value>(&root.join("missing"), 4),
+        Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::NotFound
+    ));
+    let dangling = root.join("dangling");
+    std::os::unix::fs::symlink("missing", &dangling).expect("dangling final link");
+    assert!(matches!(
+        read_json::<serde_json::Value>(&dangling, 4),
+        Err(PersistenceError::Io(error))
+            if error.raw_os_error() == Some(rustix::io::Errno::LOOP.raw_os_error())
+    ));
+    fs::write(&path, []).expect("empty file");
+    assert!(matches!(
+        read_json::<serde_json::Value>(&path, 0),
+        Err(PersistenceError::Json(error)) if error.is_eof()
+    ));
+    fs::remove_dir_all(root).expect("remove successful fixture");
+}
+
+#[cfg(unix)]
+#[test]
+fn shared_record_reads_reject_real_fifo_and_device_without_waiting_for_a_writer() {
+    use std::{process::Command, sync::mpsc, thread, time::Duration};
+    let root = temp_dir("ic-backup-shared-record-fifo");
+    fs::create_dir_all(&root).expect("create fixture root");
+    let path = root.join("record.fifo");
+    assert!(
+        Command::new("/usr/bin/mkfifo")
+            .args(["-m", "600"])
+            .arg(&path)
+            .env_clear()
+            .status()
+            .expect("create native FIFO")
+            .success()
+    );
+    let (send, receive) = mpsc::channel();
+    let reader = thread::spawn(move || {
+        send.send(read_json::<serde_json::Value>(&path, 1024))
+            .expect("return actual FIFO admission");
+    });
+    // Bound only the blocking-open regression, not ordinary filesystem read latency.
+    assert!(matches!(
+        receive
+            .recv_timeout(Duration::from_secs(5))
+            .expect("record admission must not wait for a FIFO writer"),
+        Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    reader.join().expect("join completed admission");
+    assert!(matches!(
+        read_json::<serde_json::Value>(Path::new("/dev/null"), 1024),
+        Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    fs::remove_dir_all(root).expect("remove successful fixture");
+}
+
+#[cfg(unix)]
+#[test]
 fn new_machine_records_and_directories_have_private_permissions() {
     use std::os::unix::fs::PermissionsExt;
     let root = temp_dir("ic-backup-private-json");

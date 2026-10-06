@@ -42,7 +42,8 @@
 //! Snapshot upload payloads preserve representable metadata and bind exact bounded
 //! source slices to a distinct new ID. Explicit local preparation checks retained
 //! source bytes; passive original-attempt reply admission supplies no dispatch,
-//! settlement, complete upload or new spending. No upload provider is installed.
+//! settlement, complete upload or new spending. A single-update upload provider
+//! contract reuses original accounting and passive replies; no provider is installed.
 //! Local verification/upload preparation expose per-guard host duration and chunk-size
 //! summaries using registry ic-metrics arithmetic. Metrics are diagnostic in-memory
 //! samples, start empty on reopen and change no retained progress or spending.
@@ -87,6 +88,8 @@
 //! and external-effect settlement. Capture/restore runners and an IC transport
 //! have not been extracted yet. Filesystem access and credentials remain on the
 //! operator host.
+//! Bounded Unix record reads reuse ic-host-tools regular-file admission while
+//! publication, record validation, confinement and command custody remain local.
 
 mod hash;
 pub mod model;

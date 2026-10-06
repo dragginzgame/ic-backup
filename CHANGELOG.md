@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.8]
+
+- Delegate bounded regular-file record reads to `ic-host-tools`, retaining exact
+  record limits, no-follow/FIFO rejection and existing typed persistence errors.
+  Require its corrected archive dependency minimum
+  ([ic-host-tools #3](https://github.com/dragginzgame/ic-host-tools/issues/3)). Durable publication, confinement,
+  journals and command custody keep their owners.
+
+- Define a single-update upload provider contract for exact source-bound metadata
+  and data requests under their original pending reservations. Reuse passive reply
+  admission and shared failure types, retaining spent attempts and source references
+  through failures and reopen. Live transport and lost-effect settlement remain pending.
+
 ## [0.3.7] - 2026-10-06
 
 - Prepare snapshot upload metadata and bounded region/chunk bytes from verified

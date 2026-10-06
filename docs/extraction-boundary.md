@@ -139,8 +139,15 @@ publication may leave the canonical record present and requires reconciliation.
 Neither helper supplies schema admission or operation transitions.
 
 `read_json` requires an explicit byte limit, reads at most that limit plus one,
-and rejects excess bytes before decoding. Unix reads reject symlinks and
-non-regular final entries. Record parents are operator-owned trusted directories.
+and rejects excess bytes before decoding. Unix reads delegate to registry
+`ic-host-tools::artifact::read_file_no_follow`, using final-component no-follow,
+nonblocking descriptor admission and bounded, fallibly allocated regular-file
+reads. Local projection retains exact `RecordTooLarge` limits, original IO errors
+and `InvalidInput` for nonregular entries; empty bytes still fail JSON decoding.
+Record parents are operator-owned trusted directories; ancestor aliases remain
+caller-selected and are not new confinement admission. No records are written by
+this read. Durable publication, tree hashing, locks/journal transitions and command
+descriptor custody remain local. See [the shared-reader review](ic-host-tools-adoption.json).
 `JournalLock::acquire` uses a private regular no-follow sidecar, returns immediately
 with a typed contention error, and keeps its descriptor close-on-exec. Dropping
 the guard or owner process releases the lock while retaining the sidecar.
@@ -1883,6 +1890,34 @@ application/fence obligations, same-release load/start safety and terminal/refer
 release remain independently qualified. See [the generated contract](contracts/ic-snapshot-upload.json)
 and [fresh review](ic-snapshot-upload-source.json). Independent wire fixtures and
 native public reopen tests qualify declarations/local bytes only, not IC effects.
+
+### Single originally reserved IC snapshot upload port
+
+`ports::ic_snapshot_upload::IcSnapshotUploadProvider::submit_upload` accepts the
+existing exact `IcSnapshotUploadAttempt` and returns the existing bounded passive
+`IcMutationAcknowledgement` or canonical `IcMutationProviderError`. No additional
+request, receipt, failure enum, journal or accounting owner is introduced.
+Integrations retain source/upload originals and durably reserve each metadata/data
+update before invocation. Qualify authentic complete source, actual fresh controllers
+and prerequisites, stable byte/command custody and proof of no prior dispatch.
+Data additionally needs exclusive original allocation attribution for the new ID;
+passive IDs or inventory cardinality cannot supply it. Metadata spending supplies
+no data allowance or replacement/deletion lane.
+
+One invocation permits only the exact management receiver, routing target, method
+and Candid bytes as one host replicated update. No hidden retries, observations,
+funding, query/proxy substitutions or allocation/data batching occur. Additional
+calls need independent prior accounting and admission. Pure acknowledgement checks
+still re-admit the current journal, exact claims and tighter upload wire bounds;
+they authenticate no provider and perform no settlement. Errors/drop/death preserve
+pending spending, originals, source references and application/fence obligations.
+Lost replies need qualified reconciliation; local reopen invokes no provider.
+
+Native tests exercise refusal at this interface and exact retained local bytes,
+not IC behavior. There is no installed provider, transport, runner, complete-upload
+proof or release authority. See [the port contract](contracts/ic-snapshot-upload-port.json)
+and [source review](ic-snapshot-upload-port-source.json). The released upload codec
+contract and existing v1 records/digests/bounds remain unchanged.
 
 ### Local IC snapshot diagnostics
 

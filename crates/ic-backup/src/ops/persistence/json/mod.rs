@@ -15,8 +15,6 @@ use std::{
 };
 
 use serde::{Serialize, de::DeserializeOwned};
-#[cfg(unix)]
-use std::io::Read;
 
 static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
@@ -46,6 +44,9 @@ where
 
 /// Read one regular no-follow JSON file within an explicit byte limit.
 ///
+/// Reuses the shared bounded regular-file reader; caller-selected parents and
+/// concurrent byte custody remain local. Only the final symlink is rejected.
+///
 /// # Errors
 /// Rejects unsafe files, excessive bytes, invalid JSON and filesystem failures.
 pub fn read_json<T>(path: &Path, max_bytes: u64) -> Result<T, PersistenceError>
@@ -54,37 +55,36 @@ where
 {
     #[cfg(unix)]
     {
-        let file = {
-            use rustix::fs::{FileType, Mode, OFlags, fstat, open};
-            let fd = open(
-                path,
-                OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
-                Mode::empty(),
-            )
-            .map_err(|error| io::Error::from_raw_os_error(error.raw_os_error()))?;
-            let metadata =
-                fstat(&fd).map_err(|error| io::Error::from_raw_os_error(error.raw_os_error()))?;
-            if !FileType::from_raw_mode(metadata.st_mode).is_file() {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "record must be a regular file",
-                )
-                .into());
-            }
-            File::from(fd)
-        };
-        let mut bytes = Vec::new();
-        file.take(max_bytes.saturating_add(1))
-            .read_to_end(&mut bytes)?;
-        if bytes.len() > usize::try_from(max_bytes).unwrap_or(usize::MAX) {
-            return Err(PersistenceError::RecordTooLarge { limit: max_bytes });
-        }
+        let bytes = ic_host_tools::artifact::read_file_no_follow(
+            path,
+            usize::try_from(max_bytes).unwrap_or(usize::MAX),
+        )
+        .map_err(|error| record_read_error(error, max_bytes))?;
         Ok(serde_json::from_slice(&bytes)?)
     }
     #[cfg(not(unix))]
     {
         let _ = (path, max_bytes);
         Err(io::Error::from(io::ErrorKind::Unsupported).into())
+    }
+}
+
+#[cfg(unix)]
+fn record_read_error(
+    error: ic_host_tools::artifact::ArtifactError,
+    max_bytes: u64,
+) -> PersistenceError {
+    use ic_host_tools::artifact::ArtifactError;
+    match error {
+        ArtifactError::Io(error) => PersistenceError::Io(error),
+        ArtifactError::NotRegularFile => PersistenceError::Io(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "record must be a regular file",
+        )),
+        ArtifactError::LimitExceeded { .. } => {
+            PersistenceError::RecordTooLarge { limit: max_bytes }
+        }
+        error => PersistenceError::Io(io::Error::other(error)),
     }
 }
 

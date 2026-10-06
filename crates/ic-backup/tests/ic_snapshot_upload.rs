@@ -1,6 +1,8 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
 
+mod upload_provider;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -16,6 +18,7 @@ use ic_backup::{
         read_operation_plan,
     },
     policy::ic_snapshot_upload::validate_acknowledgement,
+    ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
 };
 use ic_management_canister_types::{
     ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
@@ -139,6 +142,14 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let retained_attempt = attempts.record().unwrap().clone();
     let attempt =
         IcSnapshotUploadAttempt::new(&upload_plan, 7, &retained_attempt, &upload).unwrap();
+    let mut metadata_provider =
+        upload_provider::RefusingProvider::new(IcMutationProviderError::Unavailable);
+    assert_eq!(
+        metadata_provider.submit_upload(&attempt).unwrap_err(),
+        IcMutationProviderError::Unavailable
+    );
+    assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);
+    // Associate separately retained bytes, without invoking or retrying the provider.
     let acknowledgement = IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
         authority: attempt.authority().digest(),
         mutation_attempt: 1,
@@ -185,6 +196,13 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let data_attempt_bytes = fs::read(data_attempts.path()).unwrap();
     let record = data_attempts.record().unwrap();
     let attempt = IcSnapshotUploadAttempt::new(&data_plan, 7, record, &data).unwrap();
+    let mut data_provider =
+        upload_provider::RefusingProvider::new(IcMutationProviderError::Indeterminate);
+    assert_eq!(
+        data_provider.submit_upload(&attempt).unwrap_err(),
+        IcMutationProviderError::Indeterminate
+    );
+    assert_eq!(fs::read(data_attempts.path()).unwrap(), data_attempt_bytes);
     let acknowledgement = IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
         authority: attempt.authority().digest(),
         mutation_attempt: 1,
@@ -308,4 +326,6 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);
     assert_eq!(attempts.record().unwrap().view().pending_mutation, Some(1));
     assert_eq!(downloads.ic_snapshot_metrics(), measurements);
+    assert_eq!(metadata_provider.calls, 1);
+    assert_eq!(data_provider.calls, 1);
 }

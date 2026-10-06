@@ -25,6 +25,106 @@
 
 # Current handoff — 2026-10-06
 
+The maintainer reports 0.3.7 live. Local release commit
+`1a23d66dd65b1e36e986b8c7d13758cf3c92d193` has original receipt/parent source
+`fafdc0ddc201749c6b16aa41bccd84a8f98d3fe9`; read-only `release-tag-check` passed
+before beginning this batch. The package, lock and receipt select 0.3.7, and its
+changelog is finalized. Registry publication was not inspected. Exact-source
+[main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37453307419) and
+[tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37453307321) were
+originally queued. The 0.3.8 maintenance review now confirms the complete tag gate
+passed on Linux and both native macOS architectures. Main's Linux and ARM64 jobs
+passed; Intel was still running at that inspection. This is exact 0.3.7 qualification,
+not a result for dirty 0.3.8. Raw summaries/logs are retained under
+`target/maintenance-038-review`.
+
+## Pending 0.3.8 shared record reads and single-call upload port
+
+The maintainer authorized bounded JSON record-read adoption, initially from
+published `ic-host-tools` 0.1.10 and now selecting compatible 0.1.11. `read_json`
+delegates final-component no-follow,
+nonblocking regular-file admission and bounded/fallible byte collection to the
+shared owner, then uses the unchanged JSON decoder. Local error projection preserves
+`RecordTooLarge` with the caller's exact limit, original IO errors and
+`InvalidInput` for nonregular files. Empty input remains a JSON EOF error.
+Caller-selected parent aliases remain accepted; this is no new confinement claim.
+Durable publication, locks, journals, tree hashing and descriptor custody are unchanged.
+
+The dependency is catalog-owned and inherited only for Unix. Ordinary offline
+resolution adds ic-host-tools and its transitive packages, including tar 0.4.46;
+the earlier unsafe tar selections are absent. Every selection present at this
+batch's start is retained, including the maintainer's pre-existing ic-metrics 0.1.9
+lock update. Published archive identity matches the registry checksum; no sibling
+path/patch or exact-version exception was added. The later 0.1.11 patch publishes
+the corrected compatible tar 0.4.46 minimum and changes only ic-host-tools's version/
+checksum in our existing graph. All published Rust sources match 0.1.10 byte for
+byte; original source/dependency evidence retains its earlier scope.
+
+All registered JSON cases and public local recovery/upload journeys pass against
+the shared production reader, including real FIFO/device rejection, final/dangling
+symlinks, parent aliases, exact/zero/extreme limits, missing/malformed/empty records,
+interrupted durable publication and exhausted original upload spending/reference
+reopen. Evidence and pre-adoption source/lock/handoff are under
+`target/ic-host-tools-read-review`; see [dependency/source review](../ic-host-tools-adoption.json).
+These are native Linux results, not native macOS or IC effect qualification.
+Warning-denied all-target/all-feature Clippy and API docs, Rust 1.91 checks,
+locked/offline metadata, formatting, unchanged Shared Tooling and dependency
+declarations pass against this graph (`clippy.log`, `docs.log`, `msrv.log`,
+`metadata-final.json`, `declarations.log`). Qualification derives JSON/public case
+membership from the actual registry and passing logs and retains final source
+identities in `target/ic-host-tools-read-review/qualified-source.sha256`. No full
+suite, package verification, CI/release gate or macOS run was performed.
+
+The requested maintenance review finds no newer committed Shared Tooling revision:
+remote/local main still matches the reviewed 44-file 0.1.6 snapshot at
+`a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3`. Its documentation/release/registry
+helpers remain uncommitted and were not adopted. ic-host-tools's new bounded writer
+is also uncommitted/unpublished and supplies no maintained API to adopt yet.
+Published 0.1.11 passes fresh consumer JSON/public recovery/upload, Clippy, Rust
+1.91, docs, locked metadata, formatting, pinning and snapshot checks; evidence is
+under `target/maintenance-038-review`. Its upstream native CI fails at installer
+tests because `rg` is missing, while MSRV passes. This host-prerequisite failure
+does not supply consumer/macOS runtime qualification. Supporting failed logs and
+the complete published Rust-source comparison remain retained.
+
+The accepted continuation adds `ports::ic_snapshot_upload::IcSnapshotUploadProvider`
+over the released exact `IcSnapshotUploadAttempt`. It returns the existing passive
+`IcMutationAcknowledgement` and `IcMutationProviderError`, with no new request,
+failure, record, digest, spending or codec owner. The contract permits one exact
+originally reserved replicated update only. Fresh controllers/prerequisites,
+authentic complete source and exclusive new destination attribution, stable byte/
+command custody and proof of no prior dispatch remain integration-qualified.
+No batching, hidden retries/observations, installed provider or automatic receipt,
+lost-effect settlement, load/start, terminal or reference/fence release is added.
+
+The native port test covers both upload kinds and all shared failure variants using
+independent declared accounting; no management behavior is simulated. The real
+public source/upload journey now exercises provider refusal/indeterminate failure,
+checks exact durable journal/source/reference bytes, and reopens exhausted originals
+without any provider reissue. All registered upload cases and the public journey
+pass. Evidence is under `target/snapshot-upload-port-review`; the prior handoff and
+unchanged Cargo lock are retained there. See [the port boundary](../extraction-boundary.md#single-originally-reserved-ic-snapshot-upload-port),
+[contract](../contracts/ic-snapshot-upload-port.json) and
+[fresh committed-source review](../ic-snapshot-upload-port-source.json).
+Warning-denied all-target/all-feature Clippy and API docs, Rust 1.91 checks,
+manifest/Rust formatting, unchanged shared snapshot and dependency declarations
+pass (`clippy.log`, `docs.log`, `msrv.log`, `declarations.log`). Qualification
+derives upload test membership from actual registered/passing cases and binds the
+final source in `qualified-source.sha256`; it does not infer authority from counts.
+No full native suite, CI/release gate or native macOS run was performed for this batch.
+
+This is an additive public trait/module, selecting the compatible 0.3.8 draft.
+Package, receipt and v1 records/digests/bounds remain at their released identities;
+the shared reader dependency and retained pre-existing lock update are described above.
+Work is uncommitted; no agent commit, release/version transaction,
+push, package publication, live IC effect or destructive cleanup ran. No maintained
+function, method or type was removed. Next work is method-specific lost-upload
+observation/reconciliation, then an authenticated single-call implementation and
+selected real backend qualification; complete B1/B2 and standalone backup/restore
+remain unestablished.
+
+## Retained pre-release 0.3.7 handoff
+
 The maintainer reports 0.3.6 pushed. Clean local release commit
 `f4b1426b5afac3ad53d3c862e39f784cef7391f9`, annotated tag and exact receipt/parent
 checks passed before this handoff update; original receipt source is

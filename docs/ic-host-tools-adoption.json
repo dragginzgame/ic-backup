@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "inspection_date": "2026-10-06",
+  "kind": "maintainer-authorized bounded Unix record-read adoption",
+  "registry_package": "ic-host-tools",
+  "selected_version": "0.1.11",
+  "archive_sha256": "904f7a1929637ca08b9668cc9197027c71440900b3259d453e2945acf4ce8f40",
+  "source": "registry+https://github.com/rust-lang/crates.io-index",
+  "repository": "https://github.com/dragginzgame/ic-host-tools",
+  "published_source_revision": "3a702743b1b28990607b50bd098b0442c344b60a",
+  "reviewed_sources": [
+    {
+      "path": "src/artifact/mod.rs",
+      "sha256": "8307c2e1a45f8d59949f65464129026d162c6e908102887a0cd5fb17e34e7c70",
+      "scope": "Published regular-file metadata admission, bounded independent stream collection, fallible allocation and error variants."
+    },
+    {
+      "path": "src/artifact/no_follow/mod.rs",
+      "sha256": "a694e905f2b1bf14554bda2d29884d35eb48fdb0a919b5aaf3eb132df9d21813",
+      "scope": "Published final-component NOFOLLOW/NONBLOCK/CLOEXEC opening and read_opened_file delegation; no ancestor confinement."
+    }
+  ],
+  "production_owner": "crates/ic-backup/src/ops/persistence/json/mod.rs",
+  "api": "ic_host_tools::artifact::read_file_no_follow",
+  "catalog": "Root compatible 0.1.11 requirement, inherited only in the Unix host package; no sibling path dependency or patch.",
+  "limits": "Preserve public u64 limit and original RecordTooLarge limit. Convert to representable usize with saturation as before; supported hosts are 64-bit. Shared metadata is an early rejection; actual stream reads remain independently bounded.",
+  "errors": "Pass IO errors through; map NotRegularFile to original IO InvalidInput; LimitExceeded to original RecordTooLarge; shared allocation/other failures remain typed IO errors. JSON decoder unchanged, including empty EOF.",
+  "custody": "Reject final symlinks and opened nonregular files without waiting for FIFO writers. Trusted parents and concurrent byte custody remain local; ancestor aliases remain allowed.",
+  "lock_change": "Add ic-host-tools and ten transitive packages; every previous registry selection retained. The pre-existing maintainer ic-metrics 0.1.9 update is preserved, not attributed to this adoption.",
+  "transitive_scope": "Published archive/compression/Wasm modules and dependencies are nonoptional; this consumer invokes only the regular-file read boundary.",
+  "tar": {
+    "resolved_version": "0.4.46",
+    "published_requirement": "^0.4.46",
+    "floor_followup": "https://github.com/dragginzgame/ic-host-tools/issues/3",
+    "scope": "Corrected floor is published in 0.1.11; the actual locked consumer retains tar 0.4.46. No local override or suppression was added."
+  },
+  "msrv": "Dependency declares Rust 1.88; ic-backup remains Rust 1.91 and edition 2024.",
+  "license": "Published MIT dependency used without copying its implementation; existing Canic/source attribution remains retained.",
+  "qualification": {
+    "evidence": "target/ic-host-tools-read-review",
+    "unit_filter": "ops::persistence::json::",
+    "public_targets": [
+      "local_recovery",
+      "ic_snapshot_upload"
+    ],
+    "scope": "Actual consumer production reader, native filesystem/FIFO/process-death and retained originals/reopen; no IC effects or macOS qualification."
+  },
+  "compatibility": "Private read implementation and dependency adoption only; existing public signatures, exhaustive errors, v1 records/digests/bounds, package 0.3.7 and receipt retained. Extend compatible pending 0.3.8.",
+  "unchanged_owners": [
+    "record schema admission and JSON decoding",
+    "durable record publication",
+    "descriptor-relative confinement",
+    "tree hashing/copying",
+    "layout/journal locks and transitions",
+    "command descriptor inheritance",
+    "spending/reconciliation",
+    "source references and fence obligations"
+  ],
+  "removed_symbols": [],
+  "remaining": "Native macOS qualification and future transport/other shared-tool adoption remain independent work. The reader grants no fresh authority, effect proof, retry, terminal or reference-release admission.",
+  "patch_review": {
+    "evidence": "target/maintenance-038-review",
+    "scope": "All published Rust source files are byte-identical between 0.1.10 and 0.1.11. Only ic-host-tools version/checksum changed in this consumer lock; all other entries retained.",
+    "upstream_ci": "https://github.com/dragginzgame/ic-host-tools/actions/runs/37455045709",
+    "upstream_ci_limitation": "Native CI fails in the repository tool-installer fixture because rg is not provisioned; MSRV passes. This is not consumer reader or native macOS qualification."
+  }
+}

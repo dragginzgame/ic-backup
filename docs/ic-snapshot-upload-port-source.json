@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "single originally reserved snapshot upload port review",
+  "inspection_date": "2026-10-06",
+  "consumer_base": "1a23d66dd65b1e36e986b8c7d13758cf3c92d193",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "e1a211a00f01568ccc99bedc494c62a7141444dd",
+  "source_worktree_dirty": true,
+  "read_scope": "Exact committed blobs only; sibling dirty work remains untouched and is not imported.",
+  "evidence": "target/snapshot-upload-port-review/source",
+  "reviewed_sources": [
+    {"path": "crates/canic-backup/src/runner/operations/artifacts.rs", "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573", "reviewed_sections": ["execute_create_snapshot (42-58)", "execute_download_snapshot and reconcile_pending_download (141-193)"], "disposition": "Committed whole-command create/download success cannot qualify a single source-bound upload update. No runner or receipt conversion copied."},
+    {"path": "crates/canic-host/src/icp/snapshot.rs", "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571", "disposition": "Reviewed complete committed create/list/download command owner; no metadata/data upload provider exists here. No command or process implementation copied."}
+  ],
+  "scope": "Additive fallible single-call upload signature over existing exact source-bound attempts and canonical passive acknowledgement/failure owners.",
+  "production_destinations": ["crates/ic-backup/src/ports/ic_snapshot_upload/"],
+  "canonical_owners_reused": ["IcSnapshotUploadAttempt", "IcSnapshotUploadRequest", "IcMutationAcknowledgement", "IcMutationProviderError", "policy::ic_snapshot_upload::validate_acknowledgement", "AttemptJournalRecord", "AttemptJournalGuard", "DownloadJournalGuard"],
+  "license": "No Canic source copied; all existing source provenance and licenses retained.",
+  "compatibility": "Additive public trait and module; no existing type identity, exhaustive enum, v1 record, codec, digest, bound or dependency changes. Compatible 0.3.8 draft; package and receipt remain 0.3.7.",
+  "qualification": {"unit_filter": "upload", "public_target": "ic_snapshot_upload", "evidence": "target/snapshot-upload-port-review", "scope": "Native interface refusal and real local retained-byte/reopen checks; not simulated management behavior or an IC effect."},
+  "remaining": "Installed authenticated provider/transport, fresh effect authority and custody, complete source/destination attribution and transfer, method-specific lost-effect recovery, backend qualification, load/start safety and terminal/reference release.",
+  "removed_symbols": []
+}

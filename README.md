@@ -162,8 +162,8 @@ implemented foundation includes:
 - local streaming of admitted snapshot bytes into private verified artifacts, with
   durable publication, local interruption recovery through the original journal,
   and explicit retained metadata/extent/chunk verification;
-- source-bound snapshot upload metadata and bounded byte preparation, with passive
-  reply admission under separate original pending attempts; live upload is pending;
+- source-bound snapshot upload metadata and bounded byte preparation, with a single-update
+  provider contract and passive replies under separate pending attempts; live upload is pending;
 - per-guard host timing and prepared chunk-size summaries using `ic-metrics`, with
   diagnostics kept separate from retained progress, spending and completion evidence;
 - contracts for exact originally reserved IC updates and bounded passive reply

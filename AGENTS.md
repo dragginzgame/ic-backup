@@ -355,6 +355,13 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   Never feed saturated summaries or diagnostic samples into exact spending,
   completion, receipt, retry, fresh-authority or terminal/release admission. Keep
   the IC instruction-reader feature absent from the host implementation.
+- Bounded Unix JSON record reads reuse registry `ic-host-tools` regular-file
+  admission. Preserve existing record limits, JSON decoding and typed persistence
+  errors, including nonblocking FIFO rejection and final-component no-follow.
+  Caller-selected parents, confinement, stable byte custody, durable publication,
+  locks/journals and command descriptor inheritance keep their local owners.
+  This dependency provides no IC effect, retry or fresh authority. Qualify the
+  actual locked graph and reader on supported hosts; no sibling path patch exists.
 
 ## Tracking
 
@@ -390,6 +397,16 @@ was recorded. Linking provenance or describing implementation status is allowed.
   application-owned fencing/settlement evidence before restoring or restarting.
 - Local prune and live snapshot deletion are separate operations. Source
   artifacts referenced by unfinished restores remain retained.
+
+- The snapshot upload port reuses exact source-bound metadata/data attempts,
+  bounded passive IC acknowledgements and the canonical IC update failure owner.
+  Each invocation permits only one original replicated update, with independent
+  original data spending and no batching, hidden retries or observations. Preserve
+  upload codec bounds, current reservation rechecks and all source references.
+  Integrations qualify authentic complete source, new destination attribution,
+  fresh controllers/prerequisites, stable byte/command custody and proof of no prior
+  dispatch. Lost replies stay pending; no provider, transport, settlement, complete
+  upload or terminal/reference-release authority is installed.
 
 ## Qualified dependency constraints
 

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "kind": "single originally accounted snapshot upload port; no persisted schema or installed provider",
+  "owner": "ports::ic_snapshot_upload::IcSnapshotUploadProvider::submit_upload",
+  "request_owner": "model::ic_snapshot_upload::IcSnapshotUploadAttempt",
+  "reply_owner": "model::ic_mutation::IcMutationAcknowledgement",
+  "failure_owner": "ports::ic_mutation::IcMutationProviderError",
+  "association_owner": "policy::ic_snapshot_upload::validate_acknowledgement",
+  "bounds_owner": "contracts/ic-snapshot-upload.json",
+  "accounting": "full original source/upload identity and exact binding_digest retained before each independent mutation reservation; metadata allowance supplies no data allowance",
+  "invocation": "one exact management receiver/routing target/method/Candid host replicated update; no batching, query/proxy substitution, implicit funding, hidden retries or observations",
+  "admission": "integration-owned authentic complete source, fresh actual context/controllers/prerequisites, exclusive new destination attribution for data, stable bytes/command custody and proof of no prior dispatch",
+  "reply": "bounded passive actual claims and exact raw bytes; explicit association rechecks current original journal and tighter method-specific wire bounds; no authenticated outcome",
+  "failure": "all variants/drop/death retain consumed pending mutation, originals, source references, obligations and recovery evidence; no receipt, retry or refund",
+  "replay": "local retained replay invokes no provider; reconstructed pending attempts grant no redispatch",
+  "qualification": "native interface refusal and actual local retained-byte/reopen tests only; no management effect simulation or live/backend qualification",
+  "grants": "no installed provider, transport, runner, fresh permission, outcome, complete upload, load/start safety, terminal proof or fence/reference release",
+  "unchanged": "existing v1 records, codecs, digests, bounds, exhaustive enums, dependencies, allowances, package version and release receipt"
+}
