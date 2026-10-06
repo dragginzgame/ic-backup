@@ -52,14 +52,20 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 The inspected upstream repository is
 [`dragginzgame/shared-tooling`](https://github.com/dragginzgame/shared-tooling).
 The current committed baseline and tooling revision is
-[`c0206f1943238e21bd00fbe01658e6a0864c24fa`](https://github.com/dragginzgame/shared-tooling/tree/c0206f1943238e21bd00fbe01658e6a0864c24fa),
-reviewed on 2026-10-05. A read-only remote query confirmed that exact `HEAD`/`main`.
-The sibling and temporary source checkouts were clean. A clean temporary checkout
-of the reviewed commit supplies the upstream Git-object exporter. The file set
-expands from eighteen to twenty-two, adding Cargo dependency and Git-hook rules,
-the exact standard pre-commit hook and its installer. The refreshed release runner
-also distinguishes validation-only retries from prepared release recovery.
+[`9437bab201bb6071da0bdc4de0336daf553113f5`](https://github.com/dragginzgame/shared-tooling/tree/9437bab201bb6071da0bdc4de0336daf553113f5),
+reviewed on 2026-10-06. A read-only remote query confirmed that exact `HEAD`/`main`;
+the read-only sibling checkout was clean. The unchanged upstream Git-object
+exporter supplies all twenty-three exact files, including the new agent maintenance
+rule. The release runner reconciles saved intent through normal targets before
+selecting another increment. Its late adapters receive `RELEASE_COMMIT`, which may
+precede HEAD. Hook refresh preserves formatter failure and canonicalizes checkout
+paths. Public commands remain the same; these are compatible recovery corrections.
 No vendored file is patched locally. See [the review provenance](shared-tooling-review.json).
+
+The previous `c0206f1943238e21bd00fbe01658e6a0864c24fa` files, manifest and audit
+are retained under `target/shared-tooling-035-review/previous`, `previous.snapshot`
+and `previous-review.json`. Current focused Linux evidence and source review remain
+in that same directory. Native macOS qualification and complete CI remain separate.
 
 The previous `b8537873ac124ad17b30e32aa23e9006a3e6ec21` files, manifest and audit
 record are retained under `target/shared-tooling-refresh.BOQlFZ/previous`,
@@ -101,6 +107,18 @@ The inspected Shared Tooling revision contains no standalone license file; retai
 its source attribution rather than assigning it a sibling's license notice.
 
 ## Common release workflow adoption
+
+Current adapters verify original validation and receipt source/date/version/member
+hashes from the exact selected release commit. Normal targets finish an unchanged
+same-kind saved release only; newer committed fixes or another requested kind then
+require fresh preflight and complete validation before the next increment. Explicit
+resume selects one saved release, with post-completion annotated-tag and original
+validation checks even when the shared plan is already complete. No old proof is
+rebuilt from current source. Unknown remote history or conflicting intent stops.
+See [the maintained release guide](releasing.md) and the adopted
+[issue #2](https://github.com/dragginzgame/ic-backup/issues/2).
+
+The initial workflow adoption below records the reviewed 0.3.0 transition.
 
 The maintainer selected pending `0.3.0` because replacing the public release
 workflow is breaking before 1.0. Existing pending implementation notes move into
@@ -149,6 +167,13 @@ the latter also admits prepared release metadata before staging. Setup installs
 tools explicitly and independent CI/release checks never mutate formatting.
 
 ## Local choices and evidence
+
+The new [agent maintenance rule](../rules/agent-maintenance.md) defines user-triggered
+CI/issue inspection and carries explicit session activation forward. Checks inspect
+and report; repairs and GitHub writes retain their separate authority. One current
+inspection reviewed all workflows/runs for local HEAD, open issues/discussion and PRs.
+The existing description matches the implemented scope; issue #1 remains open with
+already-satisfied metadata. No issue was created, commented on or closed.
 
 Backup contracts, v1 records, same-ID/same-release recovery, finite call authority,
 target ownership and the targeted-check boundary remain local. Rust stays at

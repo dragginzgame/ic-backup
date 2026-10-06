@@ -1,0 +1,97 @@
+{
+   "adaptation" : {
+      "compatibility" : "Additive data module and metadata fixture only; existing v1 records, hashes, exhaustive method/error enums, journals, manifests and package/lock selection unchanged.",
+      "destination" : "crates/ic-backup/src/model/ic_snapshot_data/",
+      "implemented" : "Borrow original metadata, bounded exact data reads/replies, checked region bounds, exact byte lengths and actual chunk SHA-256 association; reply evidence also binds original metadata.",
+      "not_adopted" : "Live provider, fresh permission port, paid dispatch, extent/progress ledger, transfer completion, automatic outcome/receipt or upload/load/start runner.",
+      "owners_reused" : [
+         "IcSnapshotMetadataReply",
+         "management_request_digest",
+         "ArtifactChecksumRecord",
+         "hash::hex_bytes",
+         "upstream SnapshotDataKind"
+      ]
+   },
+   "coverage_continuation_review" : {
+      "destination" : "crates/ic-backup/src/model/ic_snapshot_coverage/",
+      "disposition" : "Committed source only; dirty sibling work remains read-only. Whole-command download and directory presence remain insufficient full-state evidence; no runner code or completion assumptions imported.",
+      "evidence" : "target/snapshot-coverage-review/source",
+      "implementation" : "Local incremental coverage of already admitted replies under exact metadata evidence; three independent cursors and bounded chunk-presence bits. No new record, hash, provider, allowance or IO.",
+      "inspection_date" : "2026-10-06",
+      "qualification" : "Native codec/coverage and original spent-journal/source-reference replay only; authentic transfer, durable byte custody and backend qualification remain separate.",
+      "reviewed_lines" : [
+         141,
+         192
+      ],
+      "source_has_uncommitted_changes_at_inspection" : true,
+      "source_head" : "05707b8c06f658297915c96c4727a8accf98dbdc",
+      "source_path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "source_sha256" : "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573"
+   },
+   "inspection_date" : "2026-10-06",
+   "kind" : "metadata_bound_snapshot_data_codec_review",
+   "pinned_upstream" : {
+      "interface" : "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/#ic-method-read_canister_snapshot_data",
+      "interface_inspected" : "2026-10-06",
+      "license" : "Registry dependency; no Canic/upstream source copied into production. Existing source provenance and licenses retained.",
+      "package" : "ic-management-canister-types",
+      "reviewed_lines" : [
+         1919,
+         1981
+      ],
+      "shape" : "Exact pinned data-kind arguments and one required chunk blob result. Ranges stay inside retained metadata; full chunk hash must be present in metadata.",
+      "source_path" : "src/lib.rs",
+      "source_sha256" : "11f1c93fc9034e3dbcc35ff377e2356a07439382bbcfad8ad213327d83c1c554",
+      "vcs_revision" : "e74ddee846a8bd664fa0f684ba31dc37e9ebddea",
+      "version" : "0.11.0"
+   },
+   "qualification" : {
+      "existing_owner_filters" : [
+         "model::ic_snapshot_metadata",
+         "model::ic_request"
+      ],
+      "generators" : [
+         "scripts/dev/generate-snapshot-metadata.pl",
+         "scripts/dev/generate-snapshot-data.pl"
+      ],
+      "membership" : "Compare registered/passing names; test every actual JSON fixture member rather than fixed aggregate counts.",
+      "native" : "Wire/hash/bounds and local spent-journal/source-reference reopen only; no IC behavior simulated or qualified.",
+      "new_unit_filter" : "model::ic_snapshot_data",
+      "public_test" : "ic_snapshot_data",
+      "remaining" : "Authenticated association, fresh permissions/per-call authority, aggregate complete data coverage, stable custody, upload/load/application safety and terminal/release admission."
+   },
+   "reviewed_sources" : [
+      {
+         "disposition" : "Whole-command download boundary inspected; no process/provider code, per-call accounting assumption or transport imported.",
+         "path" : "crates/canic-host/src/icp/snapshot.rs",
+         "reviewed_lines" : [
+            30,
+            43
+         ],
+         "sha256" : "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571"
+      },
+      {
+         "disposition" : "Executor unit-success download result inspected; not adopted as complete transfer evidence.",
+         "path" : "crates/canic-backup/src/runner/types.rs",
+         "reviewed_lines" : [
+            76,
+            84
+         ],
+         "sha256" : "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136"
+      },
+      {
+         "disposition" : "Consumers of download transition/receipt/interruption evidence inspected. Directory-to-completion assumptions remain unchanged and are not imported.",
+         "path" : "crates/canic-backup/src/runner/operations/artifacts.rs",
+         "reviewed_lines" : [
+            141,
+            192
+         ],
+         "sha256" : "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573"
+      }
+   ],
+   "schema_version" : 1,
+   "source_evidence_directory" : "target/snapshot-data-review/source",
+   "source_has_uncommitted_changes_at_inspection" : false,
+   "source_head" : "05707b8c06f658297915c96c4727a8accf98dbdc",
+   "source_repository" : "https://github.com/dragginzgame/canic"
+}

@@ -23,19 +23,89 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-05
+# Current handoff — 2026-10-06
 
-The maintainer reports `0.3.3` pushed. The clean starting baseline is release commit
-`0be3e41`, with annotated local `v0.3.3`, manifest `0.3.3`, dated changelog and receipt
-source `a443f80e804ea396b35147f5f39223975983cd39` under `release-verify`.
-Read-only exact receipt/tag/parent verification passed before continuing:
-`target/snapshot-metadata-review/release-tag-check.log`. Registry publication
-was not independently observed. Compatible snapshot metadata codec additions
-automatically open one undated `0.3.4` pending entry. Package
-metadata, lock selection, receipt and reviewed Shared Tooling snapshot are unchanged.
-This continuation creates no commits, tags, pushes, uploads or live IC effects.
+The maintainer requested extending the compatible `0.3.5` draft and checking the
+new Shared Tooling. Package metadata remains `0.3.4` at local release commit
+`778acc20fbf0d9950130b8c333e08b68bcdb902f`; its receipt source is
+`2fa8994d6409b397a4225f26a8434b0e182fb06b`. Initial exact local receipt/tag/parent
+checks passed. Current GitHub CI confirms that release source was pushed; registry
+publication was not inspected. All pending work remains uncommitted. No real
+release, commit/tag/push, upload, workflow rerun or live IC effect was performed.
 
-## Bounded snapshot metadata reads
+## Current 0.3.5 batch
+
+- `model::ic_snapshot_data` borrows exact metadata for checked Wasm/heap/stable
+  ranges and known full chunk-store identities. Bounded replies require exact
+  lengths or matching actual SHA-256, retaining metadata/request/raw-wire evidence.
+- `model::ic_snapshot_coverage` admits those replies incrementally through three
+  contiguous nat64 cursors and at most 1,024 presence bits. It rejects gaps,
+  overlaps, duplicates and mixed metadata without advancement. Complete views
+  retain no bytes, durable transfer, journal progress, spending or effect authority.
+- Shared Tooling now pins reviewed remote HEAD/main
+  `9437bab201bb6071da0bdc4de0336daf553113f5`, exported unchanged from its clean
+  read-only source. All 23 files include automatic release recovery, hook fixes and
+  user-triggered maintenance rules. Previous snapshots/reviews remain retained.
+- Late consumer checks use `RELEASE_COMMIT` and original validation/receipt
+  source/date/version/member hashes. Normal targets reconcile saved intent first;
+  newer committed fixes or a different requested kind then require fresh preflight
+  and complete validation. Explicit resume selects one saved release and checks
+  its original annotated tag/proof after completion, without substituting HEAD.
+- Dependency-negative fixtures explicitly fail before cache/metadata success when
+  conditional evaluation disables errexit. Hook setup also handles symlinked
+  checkouts. Public Make commands and v1 receipts remain unchanged.
+
+See [the data/coverage boundary](../extraction-boundary.md#bounded-metadata-bound-ic-snapshot-data),
+[data contract](../contracts/ic-snapshot-data.json),
+[data/source review](../ic-snapshot-data-source.json),
+[shared adoption](../shared-tooling.md), [shared provenance](../shared-tooling-review.json)
+and [release guide](../releasing.md). No previously maintained function, method or
+type was removed. One undated 0.3.5 entry covers the whole compatible batch;
+package/lock/receipt selection is untouched. There is no new provider or runner.
+
+## Qualification and current CI
+
+Native Linux data/coverage/metadata cases pass with exact registered membership
+under `target/snapshot-coverage-review` (19 cases). Initial codec/request-owner
+qualification remains under `target/snapshot-data-review`. Their Rust inputs and
+selected dependencies remain byte-identical through this tooling refresh. These
+are local wire/byte/replay tests, not simulated or actual IC effects.
+
+Final `make release-check` passes with inherited release source/commit variables:
+49 executed consumer cases under `target/shared-release-tests.7gsrl8`, plus the
+unchanged shared runner's command-substitute suite. Six actual hook/index cases
+pass under `target/hook-tests.nXqt5O`, including formatter failure and symlinked
+checkout setup. Shell/Perl checks, formatting, all 23 snapshot files, generated
+fixtures and read-only 0.3.4-to-0.3.5 planning pass. The updated reader also verifies
+0.3.4's receipt from real existing Git objects without writes.
+
+Review logs, exact registries, final source hashes and upstream/previous snapshot
+checks are retained under `target/shared-tooling-035-review`; earlier failures and
+the conditional false-success reproduction remain retained. Prior detailed current
+handoff text is `previous-current.md` there. No full CI/release gate ran locally.
+
+One paginated maintenance inspection read all applicable workflows/runs for
+`778acc2`, issues/discussions, PRs and current description. Linux CI passed; both
+macOS jobs failed at the Bash 3.2 dependency-negative fixture and skipped native
+library validation. Both [main](https://github.com/dragginzgame/ic-backup/actions/runs/37424074777)
+and [tag](https://github.com/dragginzgame/ic-backup/actions/runs/37424074750) remain
+failed. The fixture correction is locally qualified; native macOS confirmation
+and remote CI for this uncommitted batch remain pending. Existing
+[issue #2](https://github.com/dragginzgame/ic-backup/issues/2) owns adoption and is
+linked in the draft. The approved description matches implemented scope; issue
+#1's metadata condition is already satisfied. No GitHub writes were performed.
+
+## Remaining implemented boundary
+
+The next product work is binding admitted full data coverage to exact durable
+artifact bytes. Authenticated transport, fresh permissions/prior per-call spending,
+concrete capture/upload/load reconciliation, application safety, terminal proof and
+controlled fence/reference release remain independently qualified work. B1/B2 are
+incomplete; no transport/CLI/runners or complete backup/restore product is installed.
+Native macOS and real-backend/PocketIC qualification remain pending. Historical
+sections below retain their original batch evidence, not current release authority.
+
+## Local 0.3.4 bounded snapshot metadata reads
 
 The new `model::ic_snapshot_metadata` boundary encodes exact canonical target/raw-ID
 metadata reads and admits bounded pinned SDK metadata. It reuses the existing
@@ -84,7 +154,8 @@ unchanged. The registry SDK stays pinned at 0.11.0; source SHA-256 and VCS ident
 are recorded independently of current interface-document inspection. No source,
 dependency, version or lock selection is imported from Canic.
 
-The compatible `0.3.4` batch remains uncommitted; package stays `0.3.3`. Native
+Historical pre-release assessment: the compatible `0.3.4` batch remained
+uncommitted; package stayed `0.3.3`. Native
 macOS and real backend qualification, concrete capture/upload/load reconciliation
 and runners/transport remain pending. No full CI/release gate or release transaction
 ran. Earlier sections retain historical pre-release batch evidence.

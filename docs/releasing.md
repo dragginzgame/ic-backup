@@ -58,7 +58,8 @@ lockfile. `release-plan` accepts patch/minor/major or an exact preview, but one-
 release execution accepts the three common increments. The old `bump-x`, `patch`,
 `minor`, `major`, `release-x`, `release-stage`, `release-commit` and `release-push`
 commands are removed. Use the selected common one-shot command; after interruption,
-use `release-resume` once preparation has started. A preflight or validation-only
+rerun that normal target to reconcile the exact saved release. `release-resume`
+selects only the explicitly named saved release. A preflight or validation-only
 failure retries the normal target against current reviewed source with fresh
 preflight and the complete gate. Do not infer completion from old
 standalone prepared metadata: inspect its original receipt/source/tag and retained
@@ -95,10 +96,14 @@ index tree, creates `Release X.Y.Z` and annotated `vX.Y.Z`, and pushes exactly:
 
 ```bash
 git push --no-follow-tags --atomic "$remote" \
-  "HEAD:refs/heads/$branch" "refs/tags/v$candidate:refs/tags/v$candidate"
+  "$push_source:refs/heads/$branch" "refs/tags/v$candidate:refs/tags/v$candidate"
 ```
 
-This disables implicit tag publication and requires both selected refs to succeed
+For a new release, `push_source` is HEAD. Recovery of an older release selects its
+exact commit, preserving a verified remote descendant tip when publishing a missing
+tag. Newer fixes receive their own fresh validation before the next release push.
+Unknown/diverged history stops; no branch is rewound. This disables implicit tag
+publication and requires both selected refs to succeed
 together. It performs no registry upload, deployment, additional version bump or
 post-release cleanup. Read-only plan inspection and isolated tests do not authorize
 running this workflow.
@@ -119,17 +124,26 @@ and the consumer `.validation.json` evidence. The directory lock records its own
 inspect that owner before disposing of a stale lock. Never steal an active release
 lock or discard plans, source backups, validation logs or build artifacts as cleanup.
 
-Inspect the saved source/date/version/destination, current metadata/index/HEAD/tag
-and exact remote refs before resuming. `make release-resume VERSION=X.Y.Z` uses the
-saved phase without incrementing again. Completed commit/tag/push identities are
-reconciled rather than blindly repeated. Lost push replies can resolve to the exact
-already-published branch and tag. Changed destinations, unrelated work, receipt drift,
-missing original validation and conflicting identities reject. A normal release
-target rejects every unfinished prepared plan, even if a partial/prepared manifest
-would otherwise select a different next version. Resume never increments again.
+Normal targets select unfinished intent before computing an increment from possibly
+prepared metadata. An unchanged same-kind retry finishes only that release. After
+its exact release commit exists, newer committed fixes on its descendant history or
+a different requested kind cause recovery first, then fresh preflight and full
+validation for the next increment from the actual local version. No old proof is
+recreated, old release commit/tag replaced or unvalidated fix pushed with the old
+release. A failure in the new gate retains the completed older release and both
+attempts' evidence. Dirty source, conflicting payload/history/tag/destination,
+missing original proof and occupied locks stop recovery.
 
-The local resume wrapper checks retained prepared evidence before dispatch and the
-exact local annotated tag after completion. Completed replay validates local receipt/
+`make release-resume VERSION=X.Y.Z` uses only that saved phase without starting a
+new increment. Completed commit/tag/push identities reconcile rather than repeat.
+Lost push replies can resolve to the exact already-published refs; failed remote
+inspection permits no repeat push. Current maintained adapters read metadata and
+receipts from `RELEASE_COMMIT`, validate the exact original source/date/version and
+member hashes, and keep the shared runner as the sole tree/history/Git-effect owner.
+
+After runner completion, the local resume wrapper resolves the requested annotated
+tag and checks its original committed receipt and retained validation sidecar.
+It never substitutes HEAD's newer metadata. Completed replay validates local receipt/
 tag evidence; the runner's complete phase performs no remote push or observations.
 An interrupted multi-file metadata replacement may leave a partial candidate; this
 fails prepared admission. Review the exact saved inputs/backups and restore or finish
@@ -152,7 +166,11 @@ adoption. Follow-up publication is an explicit maintainer action.
 substitutes, plus the exact vendored runner's command-stub regressions. It covers
 all three increments, identical phase order, exact staging/push, failure before
 mutation, dependency bootstrap, original-input validation, retained metadata/history,
-rollback, lost commit/tag/push replies and completed replay. Fixture command traces
+rollback, lost commit/tag/push replies and completed replay. Recovery cases cover
+newer committed fixes, exact older-commit receipts, ordinary patch/minor follow-ups,
+failed fresh gates/retry, missing/changed proof and failed remote inspection. Explicit
+fixture failure statuses remain failures when conditional evaluation suppresses
+automatic shell error handling. Fixture command traces
 and failure evidence are retained under `target/shared-release-tests.*`.
 
 The consumer suite clears inherited release identities and GNU Make recursion/

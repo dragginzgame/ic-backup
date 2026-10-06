@@ -131,8 +131,8 @@ into an issue tracker or release authority.
   Known public or exact viewer access needs no controller projection; unobserved
   controllers cannot establish the controller path. Read evidence grants no control,
   spending or lost-reply settlement. Status/log/Root-configured flags never substitute.
-  Data codecs and actual authenticated providers remain unimplemented; the separate
-  metadata codec grants no fresh read permission.
+  Actual authenticated providers remain unimplemented; separate metadata/data
+  codecs grant no fresh read permission.
 - Consistency requirements now retain a strict v1 original-plan-bound guarantee
   under 1 KiB IO and immutable layout publication. Current consistency requests bind
   original operation, challenge, capture boundary and retained exact fence/revision.
@@ -299,6 +299,23 @@ into an issue tracker or release authority.
   records. Metadata/request association authenticates no target, grants no fresh
   permission/spending, settles no attempt and proves no data extent/transfer completion.
   No provider, transport, upload/load/start or terminal/release admission is installed.
+
+- Snapshot data reads now borrow exact retained metadata and encode one checked
+  Wasm/heap/stable range or known chunk-store hash. Preserve nonzero 1 MiB ranges,
+  checked nat64 offset/size admission, 1 MiB actual data, 2 MiB raw wire, 8 MiB
+  decoder work, zero skipped work, 16 type-table entries and 4 KiB headers/arguments.
+  Replies need exact range lengths or actual matching SHA-256 chunk bytes; known
+  empty chunks are admitted. Evidence binds original metadata, exact request and
+  raw reply; no aggregate coverage, new journal/progress, freshness, spending,
+  automatic settlement, repeat call, upload/load/start or terminal/release follows.
+
+- Incremental snapshot data coverage now owns three independent contiguous nat64
+  region cursors and at most 1,024 chunk-presence bits under exact original metadata
+  request/raw evidence. Preserve gap/overlap/duplicate rejection with unchanged state
+  on errors; regions may interleave and chunks may arrive in any order. Empty regions
+  need no reads; empty known chunks need their exact hash-checked reply. Complete
+  views retain no bytes, durability, authentic transfer or effects. Reconstructed
+  coverage starts empty and supplies no journal, allowance, resume or release permit.
 
 ## Tracking
 

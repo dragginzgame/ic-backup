@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.5]
+
+- Bind snapshot data reads to retained metadata with checked memory ranges and
+  exact chunk identities. Decode bounded replies with exact lengths and chunk
+  hashes, retaining evidence without changing spending or claiming complete transfer.
+- Check full declared snapshot data coverage incrementally, rejecting gaps,
+  overlaps, duplicate chunks and mixed metadata while keeping memory bounded.
+  Coverage retains no bytes and grants no durable-transfer or execution authority.
+- Adopt the latest Shared Tooling release recovery: normal release commands finish
+  the exact interrupted release before validating newer fixes. Check retained
+  receipts against the selected release commit, preserving original evidence.
+  [#2](https://github.com/dragginzgame/ic-backup/issues/2)
+- Preserve formatter failures and support hook setup through symlinked checkout
+  paths. Make dependency-failure fixtures reject explicitly when shell conditional
+  evaluation disables automatic error handling.
+
 ## [0.3.4] - 2026-10-06
 
 - Encode exact snapshot metadata reads and decode bounded replies while preserving

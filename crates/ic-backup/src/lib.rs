@@ -36,6 +36,9 @@
 //! exact request/reply evidence without authenticating origin or settling effects.
 //! Bounded snapshot metadata reads preserve ordered globals, optional timer/hook
 //! values and exact chunk identities, without attesting complete data transfer.
+//! Metadata-bound data reads admit checked ranges, exact reply lengths and chunk
+//! hashes while retaining original evidence without effects. Incremental coverage
+//! checks reject gaps and repeated chunks without retaining or publishing bytes.
 //! Pure inventory comparison exposes new candidates and rejects baseline drift;
 //! candidate cardinality never attributes or settles a lost capture.
 //! Bounded lifecycle replies retain exact empty acknowledgements and required

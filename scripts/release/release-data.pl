@@ -4,8 +4,17 @@ use warnings;
 use JSON::PP;
 use Digest::SHA qw(sha256_hex);
 
+my $read_commit;
+
 sub read_file {
     my ($path) = @_;
+    if (defined $read_commit && $path =~ /\A(?:Cargo\.toml|Cargo\.lock|CHANGELOG\.md|docs\/release\.json|crates\/ic-backup\/Cargo\.toml)\z/) {
+        open my $object, '-|', 'git', 'show', "$read_commit:$path"
+            or die "cannot read selected release file: $path\n";
+        my $text = do { local $/; <$object> };
+        close $object or die "selected release file unavailable: $path\n";
+        return $text;
+    }
     open my $fh, '<', $path or die "$path: $!\n";
     local $/;
     return <$fh>;
@@ -101,6 +110,13 @@ sub changelog {
 
 my ($command, @args) = @ARGV;
 $command //= '';
+if (@args >= 2 && $args[-2] eq '--commit') {
+    $read_commit = pop @args;
+    pop @args;
+    die "invalid selected release commit\n" unless $read_commit =~ /\A[0-9a-f]{40,64}\z/;
+    die "selected commit only supports read-only checks\n"
+        unless $command =~ /\A(?:version|source|verify|validation-check|resume-validation-check)\z/;
+}
 if ($command eq 'version') {
     my $value = version();
     parts($value);
@@ -165,9 +181,10 @@ if ($command eq 'version') {
     die "resumed validation differs from receipt\n" unless $proof->{candidate} eq $candidate
         && $receipt->{version} eq $candidate && $proof->{source} eq $receipt->{source}
         && $proof->{date} eq $receipt->{date};
+    my @selection = defined $read_commit ? ('--commit', $read_commit) : ();
     system($^X, $0, 'validation-check', $path, $proof->{source}, $proof->{date},
-        $proof->{previous}, $candidate, 'prepared') == 0 or die "resumed validation failed\n";
-    system($^X, $0, 'verify') == 0 or die "resumed receipt failed\n";
+        $proof->{previous}, $candidate, 'prepared', @selection) == 0 or die "resumed validation failed\n";
+    system($^X, $0, 'verify', $proof->{source}, $proof->{date}, $candidate, @selection) == 0 or die "resumed receipt failed\n";
 } elsif ($command eq 'receipt') {
     my ($source, $date) = @args;
     my %hashes = map { $_ => sha256_hex(read_file($_)) }
@@ -180,6 +197,9 @@ if ($command eq 'version') {
 } elsif ($command eq 'verify' || $command eq 'source') {
     my $receipt = decode_json(read_file('docs/release.json'));
     die "unsupported release receipt\n" unless $receipt->{schema} == 1;
+    die "release receipt selection mismatch\n" if @args && (@args != 3
+        || $receipt->{source} ne $args[0] || $receipt->{date} ne $args[1]
+        || $receipt->{version} ne $args[2]);
     die "release version mismatch\n" unless $receipt->{version} eq version();
     die "invalid release source\n" unless $receipt->{source} =~ /\A[0-9a-f]{40,64}\z/;
     die "invalid release gate\n" unless $receipt->{gate} eq 'release-verify';

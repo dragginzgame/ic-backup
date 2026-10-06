@@ -37,8 +37,10 @@ context() {
     [[ ! -L "$proof" ]] || fail 'validation evidence is symlinked'
 }
 validation_check() {
+    local mode="$1"
+    shift
     perl "$DATA" validation-check "$proof" "$RELEASE_SOURCE" "$RELEASE_DATE" \
-        "$RELEASE_PREVIOUS" "$RELEASE_VERSION" "$1"
+        "$RELEASE_PREVIOUS" "$RELEASE_VERSION" "$mode" "$@"
 }
 preflight() {
     context
@@ -80,7 +82,7 @@ verify_prepared() {
     context
     [[ "$(version)" == "$RELEASE_VERSION" ]] || fail 'prepared version differs from plan'
     validation_check prepared
-    perl "$DATA" verify
+    perl "$DATA" verify "$RELEASE_SOURCE" "$RELEASE_DATE" "$RELEASE_VERSION"
     [[ "$(perl "$DATA" source)" == "$RELEASE_SOURCE" ]] || fail 'prepared receipt source differs from plan'
     allowed_changes "$RELEASE_SOURCE"
     cargo metadata --offline --locked --no-deps --format-version 1 >/dev/null
@@ -92,20 +94,26 @@ commit_check() {
     if git diff --cached --quiet; then fail 'release index is empty'; fi
 }
 committed_check() {
-    verify_prepared
-    [[ "$(git rev-parse HEAD^)" == "$RELEASE_SOURCE" ]] || fail 'release commit parent differs'
+    context
+    [[ "${RELEASE_COMMIT:-}" =~ ^[0-9a-f]{40,64}$ ]] || fail 'missing exact selected release commit'
     ensure_clean
+    [[ "$(perl "$DATA" version --commit "$RELEASE_COMMIT")" == "$RELEASE_VERSION" ]] || fail 'committed version differs from plan'
+    validation_check prepared --commit "$RELEASE_COMMIT"
+    perl "$DATA" verify "$RELEASE_SOURCE" "$RELEASE_DATE" "$RELEASE_VERSION" --commit "$RELEASE_COMMIT"
+    [[ "$(perl "$DATA" source --commit "$RELEASE_COMMIT")" == "$RELEASE_SOURCE" ]] || fail 'committed receipt source differs from plan'
+    [[ "$(git log -1 --format=%P "$RELEASE_COMMIT")" == "$RELEASE_SOURCE" ]] || fail 'release commit parent differs'
 }
 tag_check() {
     # Standalone tag inspection remains read-only and can inspect an earlier
     # released receipt without requiring the new runner's validation sidecar.
     ensure_clean
-    perl "$DATA" verify
-    local current
-    current="$(version)"
+    local selected current
+    selected="$(git rev-parse "${1:-HEAD}")"
+    perl "$DATA" verify --commit "$selected"
+    current="$(perl "$DATA" version --commit "$selected")"
     [[ "$(git cat-file -t "refs/tags/v$current")" == tag ]] || fail 'release tag must be annotated'
-    [[ "$(git rev-parse "refs/tags/v$current^{commit}")" == "$(git rev-parse HEAD)" ]] || fail 'tag differs from release commit'
-    [[ "$(git rev-parse HEAD^)" == "$(perl "$DATA" source)" ]] || fail 'release parent differs from receipt'
+    [[ "$(git rev-parse "refs/tags/v$current^{commit}")" == "$(git rev-parse "$selected")" ]] || fail 'tag differs from release commit'
+    [[ "$(git log -1 --format=%P "$selected")" == "$(perl "$DATA" source --commit "$selected")" ]] || fail 'release parent differs from receipt'
 }
 lock_release() {
     # Standalone publication shares the runner's exclusion; no stale-lock stealing.
@@ -128,14 +136,14 @@ case "$command" in
         next="$(perl "$DATA" next "${1:-patch}")"
         printf 'Current: %s\nTarget:  %s\n' "$(version)" "$next"
         echo 'Maintainer workflow: preflight -> validate -> prepare -> stage -> commit/tag -> atomic push'
-        echo 'Interrupted releases use release-resume at the exact saved version; no effects performed.' ;;
+        echo 'Normal targets reconcile interrupted releases; release-resume selects only one saved version. No effects performed.' ;;
     ensure-clean) ensure_clean ;;
     preflight) preflight ;;
     prepare) prepare ;;
     prepared-check) verify_prepared ;;
     commit-check) commit_check ;;
     committed-check) committed_check ;;
-    tagged-check|push-check) committed_check; tag_check ;;
+    tagged-check|push-check) committed_check; tag_check "$RELEASE_COMMIT" ;;
     validation-record)
         context
         allowed_changes "$RELEASE_SOURCE"
@@ -151,11 +159,13 @@ case "$command" in
     resume-check)
         requested="${1:-}"
         [[ "$requested" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail 'expected exact saved release version'
-        if [[ "$(version)" == "$requested" ]]; then
-            state="$(git rev-parse --git-path release-state)"
-            [[ ! -L "$state" && ! -L "$state/$requested.validation.json" ]] || fail 'resumed validation is symlinked'
-            perl "$DATA" resume-validation-check "$state/$requested.validation.json" "$requested"
-        fi ;;
+        # The runner owns plan selection. Its completed tag identifies the
+        # consumer receipt, even if HEAD now includes newer reviewed fixes.
+        selected="$(git rev-parse "refs/tags/v$requested^{commit}")"
+        tag_check "$selected"
+        state="$(git rev-parse --git-path release-state)"
+        [[ ! -L "$state" && ! -L "$state/$requested.validation.json" ]] || fail 'resumed validation is symlinked'
+        perl "$DATA" resume-validation-check "$state/$requested.validation.json" "$requested" --commit "$selected" ;;
     publish) lock_release; publish "${1:-}" ;;
     *) fail 'expected version, plan, ensure-clean, preflight, prepare, prepared-check, commit-check, committed-check, tagged-check, push-check, validation-record, files, tag-check, resume-check, or publish' ;;
 esac

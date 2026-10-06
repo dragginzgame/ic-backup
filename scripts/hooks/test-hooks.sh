@@ -139,6 +139,15 @@ test_existing_hooks() {
     rg -q 'refused to replace core.hooksPath=custom-hooks' rejection.log
 }
 
+test_symlink_checkout() {
+    local linked="$TEMPORARY/linked-checkout" before
+    before="$(index_fingerprint)"
+    ln -s "$FIXTURE" "$linked"
+    bash "$linked/scripts/dev/install-git-hooks.sh"
+    [[ "$(git config --local --get core.hooksPath)" == .githooks ]]
+    [[ "$(index_fingerprint)" == "$before" ]]
+}
+
 run_case() {
     CASE_NAME="$1"
     shift
@@ -159,4 +168,5 @@ for location in root manifest; do
 done
 run_case formatter-failure test_formatter_failure
 run_case existing-hooks test_existing_hooks
+run_case symlink-checkout test_symlink_checkout
 echo 'Hook tests: PASS (selected auto-formatting, index refresh, partial-stage rejection, unrelated edit preservation, formatter failure and local installation).'

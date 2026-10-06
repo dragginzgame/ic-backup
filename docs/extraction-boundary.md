@@ -762,7 +762,7 @@ This proves local wire/persistence behavior, not authenticated IC snapshot effec
 See [the machine contract](contracts/ic-snapshot-reply.json) and
 [fresh source and consumer provenance](ic-snapshot-reply-source.json).
 
-Snapshot data transfer codecs, full status metadata, live transport,
+Complete snapshot transfer coverage, full status metadata, live transport,
 fresh effect admission, safe capture/load reconciliation and runner wiring remain pending.
 
 ### Pure snapshot inventory comparison
@@ -1009,9 +1009,9 @@ application fence or terminal proof. Root-configured/Proven declarations, parent
 and other viewers/controllers do not substitute for the original caller.
 The visibility semantics and viewer bound follow the
 [primary management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
-This permission port admits only the existing list codec. The separate metadata
-codec grants no fresh read permission; data codecs, actual providers and complete
-read preflight remain unimplemented. See
+This permission port admits only the existing list codec. Separate metadata/data
+codecs grant no fresh read permission; actual providers and complete read preflight
+remain unimplemented. See
 [the typed Rust contract](contracts/snapshot-read-port.json).
 
 Fresh native tests cover independent binary request goldens, original mutation vs
@@ -1655,6 +1655,83 @@ remain integration-owned. See [the generated contract](contracts/ic-snapshot-met
 and [fresh review](ic-snapshot-metadata-source.json). Canic's whole-command download
 and its completed-transfer/receipt assumptions are not imported; consumers remain
 unchanged. No existing public/private function, method or type is removed.
+
+### Bounded metadata-bound IC snapshot data
+
+`model::ic_snapshot_data::IcSnapshotDataRequest` borrows exact retained metadata
+and its canonical target/raw snapshot ID. It encodes the pinned SDK's data-read
+arguments for Wasm module, Wasm heap, stable memory or a complete chunk-store
+entry. Range size must be nonzero and at most 1 MiB; checked nat64 offset plus size
+must fit its own retained region. A chunk identity must be exactly 32 bytes and
+present in original metadata. No generic token, unchecked region, hash fallback or
+default request appears. The sole replicated host update method is
+`read_canister_snapshot_data`; routing and argument digests reuse the original
+management owner without changing the six-method v1 record or metadata schema.
+
+`IcSnapshotDataReply::decode` admits exactly one record with a required chunk blob.
+Bounded visitors retain at most 1 MiB data without allocating from untrusted length
+hints. The separate raw limit is 2 MiB to allow wire overhead around maximum chunks;
+decoder work is 8 MiB, skipped work zero, type-table entries 16 and headers 4 KiB.
+Existing lifecycle/recovery raw limits remain unchanged. Unknown extensions, missing/
+wrong fields, extra arguments, trailing bytes and hostile work/lengths reject.
+Range replies require exact requested size; chunk-store bytes must hash to the
+requested original SHA-256, including known empty chunks. These checks authenticate
+no target or origin and cannot attribute or settle a lost mutation or observation.
+
+Data checksum and raw-wire checksum stay distinct. The reply evidence uses
+`ic-backup/ic-snapshot-data-reply/v1` plus NUL, followed by the exact original metadata
+reply, data request and raw reply hashes, each 64 lowercase ASCII hex bytes.
+Wire request identity excludes metadata from its nonrecursive payload hash;
+changed metadata remains visible in reply evidence even with equal request/data
+bytes. Read-only owners expose no Serde, persisted progress or non-neutral Default.
+Debug and errors omit actual data, arguments, raw IDs/hashes and decoder diagnostics.
+
+Independent generated DIDL/field-hash/LEB128/nat64/SHA-256 fixtures admit every
+registered kind through production and official SDK decoding. Native cases check
+exact bytes/hashes, all region boundaries, zero/oversized/overflowing ranges,
+maximum range/chunk data, exact lengths and known empty/nonempty chunk hashes,
+changed metadata, malformed/truncated/skipped wire and finite headers. The public
+journey reopens retained metadata/data for every registered kind while preserving
+original plan/journal bytes, pending consumption and source references. It performs
+no provider call, simulated IC effect or automatic settlement.
+
+This is single-call codec/association qualification, not aggregate transfer coverage.
+Complete no-gap/no-overlap regions and all chunk bytes, authenticated current
+snapshot/context association, fresh read access and prior per-call reservations,
+stable byte/command custody, upload/load/start/application safety and terminal or
+fence/reference release remain separately qualified. Canic whole-command downloads
+and directory-to-completion assumptions remain unchanged and are not imported.
+See [the generated contract](contracts/ic-snapshot-data.json) and
+[fresh review](ic-snapshot-data-source.json). No existing public/private function,
+method or type is removed; no journal, manifest or original allowance changes.
+
+### Incremental declared snapshot data coverage
+
+`model::ic_snapshot_coverage::IcSnapshotDataCoverage` is the ephemeral owner of
+coverage over already admitted replies. It compares exact metadata request/raw
+evidence digests, advances three independent nat64 cursors only from each region's
+next contiguous offset, and admits each original chunk-store identity once.
+Regions can interleave; chunk arrival order is independent of metadata order.
+Failed admission leaves all state unchanged. Empty regions need no reads, but
+known empty chunks still need their actual hash-checked reply. `complete()` exposes
+a borrowed read-only view only when all sizes and chunks are exactly covered.
+
+Retained state is three cursors and at most 1,024 presence bits; no data buffers,
+aggregate-size sum, new hash, serialization, journal or accounting owner appears.
+Each admission reuses the existing bounded request/reply owners. Reconstructing
+coverage starts empty; it cannot reconstruct missing durable evidence or reset
+attempts. Admission order is not dispatch order or an allowance. Complete local
+coverage proves no authenticated origin, stable bytes, durable artifact, backend
+transfer, mutation settlement, upload/load/start, terminal or fence/reference release.
+
+Native tests exercise interleaved exact coverage, gap/overlap/duplicate rejection,
+unchanged state on errors, changed metadata/target/raw ID, exact metadata redecoding,
+zero-size regions, empty stored chunks, all 1,024 chunks and streamed 1 MiB replies
+under independent maximum-nat64 regions. Public replay retains original spent
+journals and source references without importing coverage as persisted progress.
+Real-backend transfer and application qualification remain pending. Source review
+extends the existing [data review](ic-snapshot-data-source.json), without importing
+Canic whole-command completion assumptions or changing its consumers.
 
 ### Original execution settlement checkpoints
 

@@ -15,6 +15,8 @@ pub mod ic_lifecycle_reply;
 pub mod ic_mutation;
 pub mod ic_observation;
 pub mod ic_request;
+pub mod ic_snapshot_coverage;
+pub mod ic_snapshot_data;
 pub mod ic_snapshot_metadata;
 pub mod ic_snapshot_reply;
 pub mod inventory;

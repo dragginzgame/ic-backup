@@ -1,57 +1,68 @@
 {
-   "clean_source" : "target/shared-tooling-refresh.BOQlFZ/clean-source.txt",
-   "compatibility" : "Retain selected 0.3.0 from finalized 0.2.3: public release/setup commands and hook semantics break before 1.0. Package stays 0.2.3; no Rust API, v1 record, dependency or lock selection change.",
-   "export" : "Clean temporary committed checkout; unmodified Git-object export.",
-   "exporter_log" : "target/shared-tooling-refresh.BOQlFZ/refresh-final.log",
-   "inspection_date" : "2026-10-05",
+   "compatibility" : "Same public Make commands with compatible interrupted-release and hook corrections; extend 0.3.5 from finalized 0.3.4. Package/lock/receipt/Rust contracts unchanged.",
+   "export" : "Read-only clean sibling; exact committed Git-object exporter, no vendored in-place patches.",
+   "exporter_log" : "target/shared-tooling-035-review/refresh.log",
+   "exporter_sha256" : "3b8975a6d4ac218875be8d1d35466e243e8e903d0abe9bbe8d694659f07bc882",
+   "inspection_date" : "2026-10-06",
+   "issue" : "https://github.com/dragginzgame/ic-backup/issues/2",
    "local_adaptation" : [
-      "Automatically maintain the same numbered pending release for the complete batch; all nine direct dependencies already inherit the root catalog.",
-      "Exact shared hook/installer replace local implementations; install-hooks activated repository-locally. cargo-sort 2.1.4 is pinned in Make, developer setup and CI; fmt-check independently checks sorting/Rust and prepared metadata.",
-      "Member LICENSE becomes an identical regular root-notice copy; stage it with the batch so the maintained index has no symlink.",
-      "Release validation-only retries reselect current source and rerun all gates. Earlier safe plans and exact validation sidecars retain unique archives; unfinished prepared plans admit only exact resume.",
-      "Consumer hook suite uses actual Make/Git indexes/formatters and existing read-only source commit objects; no new fixture commits. Shared Tooling hook suite is run independently from its clean source checkout, not installed in the consumer."
+      "Late metadata/receipt/validation reads use exact RELEASE_COMMIT, retaining original source/date/version/member binding and canonical v1 receipts.",
+      "Normal targets reconcile saved intent before new increment; newer committed fixes or another kind require fresh preflight/full gate. Explicit resume post-checks selected annotated tag and original proof, including complete replay.",
+      "Unchanged shared hook/installer preserve formatter failure and physical checkout path; active core.hooksPath remains .githooks.",
+      "Negative Cargo substitutes exit explicitly before cache/metadata success under conditional errexit suppression; no dependency/network operation occurs.",
+      "User-triggered maintenance inspected current source CI, issues/discussions, open PRs and existing description without remote writes."
    ],
-   "previous_files" : "target/shared-tooling-refresh.BOQlFZ/previous",
-   "previous_manifest" : "target/shared-tooling-refresh.BOQlFZ/previous.snapshot",
-   "previous_review" : "target/shared-tooling-refresh.BOQlFZ/previous-review.json",
+   "previous_files" : "target/shared-tooling-035-review/previous",
+   "previous_manifest" : "target/shared-tooling-035-review/previous.snapshot",
+   "previous_review" : "target/shared-tooling-035-review/previous-review.json",
    "qualification" : {
-      "adapter_fixtures" : "target/shared-release-tests.XDoQUJ",
-      "adapter_registry" : "target/shared-release-tests.XDoQUJ/cases.txt",
-      "format_checks" : "target/shared-latest-format.log",
-      "hook_checks" : "target/shared-latest-hooks-final.log",
-      "hook_fixtures" : "target/hook-tests.63wRAM",
-      "hook_registry" : "target/hook-tests.63wRAM/cases.txt",
-      "metadata_after" : "target/shared-tooling-refresh.BOQlFZ/metadata-after.json",
-      "metadata_before" : "target/shared-tooling-refresh.BOQlFZ/metadata-before.json",
-      "package_file_list" : "target/shared-latest-package-list.log",
-      "pending" : "Native macOS/real release/publication qualification; full CI/release gate not run.",
-      "release_checks" : "target/shared-latest-release-first.log",
-      "scope" : "Native Linux tooling only; release fixtures use Git/Cargo substitutes. No real commits/tags/pushes/uploads, package version transaction or IC effects.",
-      "shell_checks" : "target/shared-latest-shell-final.log",
-      "snapshot_and_consumer_checks" : "target/shared-latest-tooling.log",
-      "upstream_hook_checks" : "target/shared-latest-upstream-hooks.log",
-      "workflow_checks" : "target/shared-latest-workflow.log"
+      "adapter_fixtures" : "target/shared-release-tests.7gsrl8",
+      "adapter_registry" : "target/shared-release-tests.7gsrl8/cases.txt",
+      "consumer_hashes" : "target/shared-tooling-035-review/consumer-files.sha256",
+      "directory" : "target/shared-tooling-035-review",
+      "evidence" : "target/shared-tooling-035-review/evidence-final.log",
+      "format" : "target/shared-tooling-035-review/format.log",
+      "hook_fixtures" : "target/hook-tests.nXqt5O",
+      "hook_registry" : "target/hook-tests.nXqt5O/cases.txt",
+      "hooks" : "target/shared-tooling-035-review/hooks-final.log",
+      "membership" : "Exact executed registry names; 49 consumer release cases and 6 hook/index cases. No fixed expected aggregate count.",
+      "pending" : "Native macOS/Bash 3.2 and complete source CI qualification; full CI/release gate and real releases/publication not run.",
+      "prior_current_handoff" : "target/shared-tooling-035-review/previous-current.md",
+      "read_only_plan" : "target/shared-tooling-035-review/release-plan.log",
+      "real_existing_commit_reader" : "target/shared-tooling-035-review/actual-commit-receipt.log",
+      "release_checks" : "target/shared-tooling-035-review/release-final.log",
+      "retained_initial_findings" : [
+         "adapters-first.log",
+         "adapters-second.log",
+         "adapters-third.log",
+         "shell.log",
+         "conditional-fetch-before.log"
+      ],
+      "rust_qualification" : "All crates/ic-backup inputs from the earlier snapshot-coverage-review source hash manifest unchanged; no Rust checks relabelled as new CI.",
+      "scope" : "Focused native Linux script/Make/Git-index checks only; all release Git/Cargo effects are substitutes. Existing native snapshot codec/coverage evidence unchanged.",
+      "shell" : "target/shared-tooling-035-review/shell-final.log",
+      "snapshot" : "target/shared-tooling-035-review/snapshot.log",
+      "tooling" : "target/shared-tooling-035-review/tooling-final.log"
    },
-   "remote_head_and_main" : "c0206f1943238e21bd00fbe01658e6a0864c24fa",
-   "remote_observation" : "target/shared-tooling-refresh.BOQlFZ/remote-head.txt",
+   "remote_ci" : {
+      "issues" : "target/shared-tooling-035-review/github-issues.ndjson",
+      "main" : "https://github.com/dragginzgame/ic-backup/actions/runs/37424074777",
+      "prs" : "target/shared-tooling-035-review/github-prs.ndjson",
+      "runs" : "target/shared-tooling-035-review/github-runs.ndjson",
+      "source" : "778acc20fbf0d9950130b8c333e08b68bcdb902f",
+      "status" : "Both runs failed in macOS Bash 3.2 dependency-negative fixture; main Linux job passed; dirty changes have no remote CI result.",
+      "tag" : "https://github.com/dragginzgame/ic-backup/actions/runs/37424074750",
+      "workflows" : "target/shared-tooling-035-review/github-workflows.ndjson"
+   },
+   "remote_head_and_main" : "9437bab201bb6071da0bdc4de0336daf553113f5",
+   "remote_observation" : "Read-only git ls-remote HEAD/refs/heads/main; network-restricted initial failure retained in tool transcript, approved read-only retry confirmed exact SHA.",
    "removed_functions" : [],
    "repository_description" : {
-      "disposition" : "Purpose and implementation unchanged; retain previously explicitly approved and independently read-back description.",
-      "evidence" : "target/shared-tooling-review.ztA5F9/repository-description.txt"
+      "disposition" : "Matches implemented scope; no update/issue closure performed.",
+      "evidence" : "target/shared-tooling-035-review/github-description.json"
    },
-   "retained_initial_failures" : [
-      "target/shared-latest-hooks-first.log",
-      "target/shared-latest-hooks-second.log",
-      "target/shared-latest-shell-final.log.initial"
-   ],
-   "retired_files" : [
-      {
-         "path" : "scripts/hooks/install.sh",
-         "reason" : "The exact standard installer owns local hook activation and stricter preserved-obligation checks.",
-         "replacement" : "scripts/dev/install-git-hooks.sh"
-      }
-   ],
-   "reviewed_diff" : "target/shared-tooling-refresh.BOQlFZ/upstream-changes.patch",
+   "retired_files" : [],
+   "reviewed_diff" : "target/shared-tooling-035-review/upstream-changes.patch",
    "snapshot" : ".shared-tooling.snapshot",
    "snapshot_files" : [
       {
@@ -82,7 +93,7 @@
       {
          "executable" : false,
          "path" : "docs/consuming-snapshots.md",
-         "sha256" : "c4ba14b757c11ff28d17f01b9a9bedb624192db5e4c54f8bb5bf18116d697d75"
+         "sha256" : "35152f5e1a93d3bc3cdd60bd7bf835ede48f1ceb1450998fa17f5bc2b4012bcc"
       },
       {
          "executable" : false,
@@ -112,7 +123,7 @@
       {
          "executable" : false,
          "path" : "DRAGGINZGAME.md",
-         "sha256" : "ec0a84e371edff5ed15a70219f2596673d927ff443f5141939d2bcd3b6829a3f"
+         "sha256" : "3a36efbfd50a75d252b533f5dccb0c0447b833a315fe1badb1e9c9be2e37bf86"
       },
       {
          "executable" : false,
@@ -122,12 +133,12 @@
       {
          "executable" : false,
          "path" : "docs/releases.md",
-         "sha256" : "96f328bf06640b1bbd4a2ab80e15421dd986a720546a41ce53e2f26ca93cd33c"
+         "sha256" : "9c6d6b0f575898e09c1953feb74299df7c6ef25a837703797efc1ff97d087c57"
       },
       {
          "executable" : true,
          "path" : "scripts/ci/run-release.sh",
-         "sha256" : "4897a9cb57a63e3e8081d9fef4482b9223dbb21f5d52a08a189de3f1da14f2bf"
+         "sha256" : "cffa84575afcd74836f59f9d8db4be083010048de03c338ec2448857d85dab5e"
       },
       {
          "executable" : true,
@@ -142,7 +153,7 @@
       {
          "executable" : true,
          "path" : "scripts/ci/test-release-runner.sh",
-         "sha256" : "8bef03e3c2c8d35d4e6f485dfe66c7ed5328dee8542480ab75107304d93a06b7"
+         "sha256" : "1d20624590b6459ec2bd20163bbc6fb69f57dd8e1769dcca2c0d77cf68a510cb"
       },
       {
          "executable" : false,
@@ -157,17 +168,22 @@
       {
          "executable" : true,
          "path" : ".githooks/pre-commit",
-         "sha256" : "c65e42e65787821947cb56a9e323ce47b1071de613ab327cbaba6c619e8c084b"
+         "sha256" : "6d5bb9cc5ea9a8fdc4b1e075b691f6293d0654483ea3f9e019f2b2f86913ca7c"
       },
       {
          "executable" : true,
          "path" : "scripts/dev/install-git-hooks.sh",
-         "sha256" : "95ec02f103165bdce3c3c7a0b5ccae9253ac7f32ffa326ed5fb94bc520dffe86"
+         "sha256" : "c48e767cb16fce756bea55492e33c62fd1e57560310d63bfb8a1adc118be2212"
+      },
+      {
+         "executable" : false,
+         "path" : "rules/agent-maintenance.md",
+         "sha256" : "0de19d6eb5b3dea57d46cd6412dc49ce6a1b5fb591b551dbec16cdb25ee181df"
       }
    ],
    "source_repository" : "https://github.com/dragginzgame/shared-tooling",
-   "source_revision" : "c0206f1943238e21bd00fbe01658e6a0864c24fa",
-   "source_status" : "target/shared-tooling-refresh.BOQlFZ/upstream-status.txt",
+   "source_revision" : "9437bab201bb6071da0bdc4de0336daf553113f5",
+   "source_status" : "target/shared-tooling-035-review/source-status.log",
    "source_worktree_dirty" : false,
    "version" : 1
 }

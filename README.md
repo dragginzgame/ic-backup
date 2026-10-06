@@ -156,6 +156,9 @@ implemented foundation includes:
   lifecycle operations;
 - bounded snapshot metadata decoding that retains exact global values, optional
   timer/hook values and chunk identities without claiming complete transfer;
+- metadata-bound snapshot data reads with checked ranges, exact lengths and chunk
+  hashes, plus bounded incremental coverage checks that reject missing or repeated
+  data without claiming durable transfer;
 - contracts for exact originally reserved IC updates and bounded passive reply
   association, preserving pending spending without automatic settlement;
 - exact reserved status/snapshot-list observation contracts that retain both attempt

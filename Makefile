@@ -109,9 +109,8 @@ release-patch release-minor release-major:
 	@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
 
 release-resume:
-	@$(RELEASE) resume-check "$(VERSION)"
 	@bash scripts/ci/run-release.sh resume "$(VERSION)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
-	@$(RELEASE) tag-check
+	@$(RELEASE) resume-check "$(VERSION)"
 
 release-plan:
 	@$(RELEASE) plan "$(if $(VERSION),$(VERSION),patch)"
@@ -149,7 +148,7 @@ release-tagged-check:
 release-push-check:
 	@$(RELEASE) push-check
 
-export RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE
+export RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_COMMIT
 
 shared-tooling-check:
 	bash scripts/ci/verify-shared-tooling-snapshot.sh

@@ -1,0 +1,118 @@
+[
+   {
+      "arguments_hex" : "4449444c056c03d4c2a7b80401b3c4b1f20468b6b897890f046b04a79fc97e02fccbfb9d0502c586d3970902d2c7b5c00f036c02c1c1cee2047893affe8106786c01cedfa0a804046d7b01000003000000000000000500000000000000010a000000000000000601010300ff11",
+      "chunk" : [
+         0,
+         255,
+         17
+      ],
+      "chunk_checksum" : "30839c5ca1457fbfcc1eb092105577319fe48cb01ba11aee56736d17f2d2d406",
+      "digest" : "29068118b20de98da199a983eeca089cd23f19851a4df510cbf3f5c5920a0098",
+      "kind" : {
+         "wasm_module" : {
+            "offset" : 5,
+            "size" : 3
+         }
+      },
+      "metadata_digest" : "9db4b88ca9486c6c335dc09a5d5cd4d4ebdbcc496c0feea022505dae4ba3bd10",
+      "name" : "wasm_module",
+      "payload_checksum" : "651f5fc886329e979548ff97c0f2edebc5470a7c2deadda2e9838ae0bfa47c21",
+      "reply_hex" : "4449444c026c01ed8c8bae04016d7b01000300ff11",
+      "request_digest" : "3da1b7de32467f2591bcd2006bf9ec3c0cdb21832e5734dc52826d3fb10d0417"
+   },
+   {
+      "arguments_hex" : "4449444c056c03d4c2a7b80401b3c4b1f20468b6b897890f046b04a79fc97e02fccbfb9d0502c586d3970902d2c7b5c00f036c02c1c1cee2047893affe8106786c01cedfa0a804046d7b01000103000000000000001100000000000000010a000000000000000601010300ff11",
+      "chunk" : [
+         0,
+         255,
+         17
+      ],
+      "chunk_checksum" : "30839c5ca1457fbfcc1eb092105577319fe48cb01ba11aee56736d17f2d2d406",
+      "digest" : "ad34b49de6687d18265c366f6528fad4140b9e9afcb8f101bcf13e1d8909c14a",
+      "kind" : {
+         "wasm_memory" : {
+            "offset" : 17,
+            "size" : 3
+         }
+      },
+      "metadata_digest" : "9db4b88ca9486c6c335dc09a5d5cd4d4ebdbcc496c0feea022505dae4ba3bd10",
+      "name" : "wasm_memory",
+      "payload_checksum" : "651f5fc886329e979548ff97c0f2edebc5470a7c2deadda2e9838ae0bfa47c21",
+      "reply_hex" : "4449444c026c01ed8c8bae04016d7b01000300ff11",
+      "request_digest" : "ac5500e8ac5637f8930d944ae2e56d0604ac4dd6bbe07ad10d74b31f19826ead"
+   },
+   {
+      "arguments_hex" : "4449444c056c03d4c2a7b80401b3c4b1f20468b6b897890f046b04a79fc97e02fccbfb9d0502c586d3970902d2c7b5c00f036c02c1c1cee2047893affe8106786c01cedfa0a804046d7b0100020300000000000000fcffffffffffffff010a000000000000000601010300ff11",
+      "chunk" : [
+         0,
+         255,
+         17
+      ],
+      "chunk_checksum" : "30839c5ca1457fbfcc1eb092105577319fe48cb01ba11aee56736d17f2d2d406",
+      "digest" : "2f5efc5e66e62793871660ff577282874a3504203b5aae9c961dbb465de0e136",
+      "kind" : {
+         "stable_memory" : {
+            "offset" : 18446744073709551612,
+            "size" : 3
+         }
+      },
+      "metadata_digest" : "9db4b88ca9486c6c335dc09a5d5cd4d4ebdbcc496c0feea022505dae4ba3bd10",
+      "name" : "stable_memory",
+      "payload_checksum" : "651f5fc886329e979548ff97c0f2edebc5470a7c2deadda2e9838ae0bfa47c21",
+      "reply_hex" : "4449444c026c01ed8c8bae04016d7b01000300ff11",
+      "request_digest" : "a1d3ed64f83d0d97cc8233e85835866b240936ad7e834f638e992ad1e830e3c6"
+   },
+   {
+      "arguments_hex" : "4449444c056c03d4c2a7b80401b3c4b1f20468b6b897890f046b04a79fc97e02fccbfb9d0502c586d3970902d2c7b5c00f036c02c1c1cee2047893affe8106786c01cedfa0a804046d7b0100032030839c5ca1457fbfcc1eb092105577319fe48cb01ba11aee56736d17f2d2d406010a000000000000000601010300ff11",
+      "chunk" : [
+         0,
+         255,
+         17
+      ],
+      "chunk_checksum" : "30839c5ca1457fbfcc1eb092105577319fe48cb01ba11aee56736d17f2d2d406",
+      "digest" : "9546ff6689521038a97383d5af4d6069bdfca6dfb720457b8f9bddf72e050268",
+      "kind" : {
+         "wasm_chunk" : {
+            "hash" : [
+               48,
+               131,
+               156,
+               92,
+               161,
+               69,
+               127,
+               191,
+               204,
+               30,
+               176,
+               146,
+               16,
+               85,
+               119,
+               49,
+               159,
+               228,
+               140,
+               176,
+               27,
+               161,
+               26,
+               238,
+               86,
+               115,
+               109,
+               23,
+               242,
+               210,
+               212,
+               6
+            ]
+         }
+      },
+      "metadata_digest" : "9db4b88ca9486c6c335dc09a5d5cd4d4ebdbcc496c0feea022505dae4ba3bd10",
+      "name" : "wasm_chunk",
+      "payload_checksum" : "651f5fc886329e979548ff97c0f2edebc5470a7c2deadda2e9838ae0bfa47c21",
+      "reply_hex" : "4449444c026c01ed8c8bae04016d7b01000300ff11",
+      "request_digest" : "75cf1169531807b01a9b82927fe2d0eb151f6134f9ca51aad140ec83d8d3547e"
+   }
+]
