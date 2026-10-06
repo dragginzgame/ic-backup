@@ -480,7 +480,8 @@ Product transport/runtime qualification stays separate from executable version c
 
 ## Architecture and style
 
-- Rust edition 2024. Versions and dependencies inherit from the owning workspace.
+- Rust edition 2024. Versions and dependencies inherit from the owning workspace;
+  `make dependency-pins-check` enforces the shared Cargo inheritance gate.
 - Use directory modules with `mod.rs`; no `#[path]` module layout overrides.
 - DTOs are passive boundary data; persisted schema types end in `Record`; views
   are read-only projections. Requests do not implement non-neutral `Default`.

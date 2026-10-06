@@ -53,6 +53,19 @@ breaking public contracts use the next minor. A numbered pending heading must
 agree with the selected release command. Changelog presentation
 does not gate registry publication or prove package publication.
 
+Preflight and preparation delegate candidate selection and heading rewriting to
+the shared finalizer with the saved target, UTC date and original version. This
+preserves imported undated history even after package metadata is bumped. A
+missing candidate heading is created; empty note content does not block the
+metadata transaction. Maintain meaningful notes before delivery under the rules
+above. Conflicting candidates, duplicate historical versions and noncanonical
+version identities still reject without changing metadata. Failed or empty helper
+output retains its private candidate and never replaces the input.
+
+Finalization rejects an already dated target, including the same date. Prepared
+and committed recovery instead verifies exact retained payloads and receipts;
+it never rewrites notes or opts into the helper's same-date finalization mode.
+
 The workspace owns package versions; selecting notes changes neither manifest nor
 lockfile. `release-plan` accepts patch/minor/major or an exact preview, but one-shot
 release execution accepts the three common increments. The old `bump-x`, `patch`,

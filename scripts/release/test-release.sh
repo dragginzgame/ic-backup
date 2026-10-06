@@ -19,7 +19,9 @@ elif [[ "$#" != 0 ]]; then
 fi
 TEST_REAL_MAKE="$(command -v make)"
 TEST_REAL_GIT="$(command -v git)"
-export TEST_REAL_MAKE TEST_REAL_GIT
+TEST_REAL_CARGO="$(command -v cargo)"
+export TEST_REAL_MAKE TEST_REAL_GIT TEST_REAL_CARGO
+export PATH="$ROOT/.tools/host/bin:$PATH"
 mkdir -p "$ROOT/target"
 TEMPORARY="$(mktemp -d "$ROOT/target/shared-release-tests.XXXXXX")"
 mkdir -p "$TEMPORARY/bin"
@@ -44,11 +46,12 @@ run_case() {
     (create_fixture; "$@") > "$CASE_LOG" 2>&1
 }
 create_fixture() {
-    mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup" "$FIXTURE/docs" "$FIXTURE/target/debug"
+    mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/scripts/ci/rewrite-local-lock-versions.pl" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/rewrite-local-lock-versions.pl" "$ROOT/scripts/ci/read-cargo-workspace-version.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/finalize-release-changelog.awk" "$FIXTURE/scripts/ci/"
     cd "$FIXTURE"
     cat > Cargo.toml <<'TOML'
 [workspace]
@@ -65,6 +68,7 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 TOML
+    printf '// Native metadata fixture target; no canister behavior.\n' > crates/ic-backup/src/lib.rs
     printf 'version = 4\n\n[[package]]\nname = "ic-backup"\nversion = "0.1.0"\n\n[[package]]\nname = "retained-dependency"\nversion = "9.8.7"\n' > Cargo.lock
     printf '# Changelog\n\n## [0.1.1]\n\n- Completed notes.\n\n## [0.1.0] - 2026-10-01\n\n- Retained history.\n\n## [0.0.9]\n\n- Imported undated history.\n' > CHANGELOG.md
     sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md > target/history
@@ -72,6 +76,7 @@ TOML
     : > "$TEST_LOG"; : > "$TEST_EFFECTS"
     printf 'retained build artifact\n' > target/debug/cache-sentinel
     export VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/target/validation-failures" GITHUB_STEP_SUMMARY="$FIXTURE/target/summary.md"
+    unset YQ
     unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL
 }
 expect_failure() {
@@ -192,11 +197,12 @@ case "$1" in
         [[ "$*" == "commit -m Release $(perl scripts/release/release-data.pl version)" ]] || exit 97
         parent="$(head)"; sha=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
         if [[ -d "target/commits/$sha" ]]; then sha="$(printf '%s\n' "$parent" "$3" | "$TEST_REAL_GIT" hash-object --stdin)"; fi
-        mkdir -p "target/commits/$sha/files/crates/ic-backup" "target/commits/$sha/files/docs"
+        mkdir -p "target/commits/$sha/files/crates/ic-backup/src" "target/commits/$sha/files/docs"
         printf '%s\n' "$parent" > "target/commits/$sha/parent"
         printf '%s\n' "$3" > "target/commits/$sha/subject"
         cp Cargo.toml Cargo.lock CHANGELOG.md "target/commits/$sha/files/"
         cp crates/ic-backup/Cargo.toml "target/commits/$sha/files/crates/ic-backup/"
+        cp crates/ic-backup/src/lib.rs "target/commits/$sha/files/crates/ic-backup/src/"
         cp docs/release.json "target/commits/$sha/files/docs/"
         printf '%s\n' "$sha" > target/mock-head
         echo commit >> "$TEST_EFFECTS"
@@ -245,6 +251,7 @@ cat > "$TEMPORARY/bin/cargo" <<'STUB'
 set -euo pipefail
 printf 'cargo %s\n' "$*" >> "$TEST_LOG"
 case "$*" in
+    'locate-project --workspace --message-format plain --manifest-path '*) exec "$TEST_REAL_CARGO" "$@" ;;
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
     'check --offline --locked -p ic-backup --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
@@ -306,14 +313,100 @@ test_invalid_changelog() {
     case "$1" in
         conflict) sed 's/\[0.1.1\]/[0.2.0]/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md ;;
         duplicate) printf '\n## [0.1.1]\n\n- Other.\n' >> CHANGELOG.md ;;
-        empty) printf '# Changelog\n\n## [0.1.1]\n' > CHANGELOG.md ;;
         dated) sed 's/## \[0.1.1\]/## [0.1.1] - 2026-10-01/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md ;;
+        historical-duplicate) printf '\n## [0.0.9]\n\n- Duplicate history.\n' >> CHANGELOG.md ;;
+        competing) printf '\n## [0.1.2]\n\n- Competing draft.\n' >> CHANGELOG.md ;;
+        same-date) sed 's/## \[0.1.1\]/## [0.1.1] - 2026-10-05/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md ;;
         unnumbered) sed 's/\[0.1.1\]/[Draft]/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md ;;
     esac
     before="$(fingerprint)"
-    expect_failure perl scripts/release/release-data.pl changelog-check 0.1.1 2026-10-05
+    expect_failure perl scripts/release/release-data.pl changelog-check 0.1.1 2026-10-05 0.1.0
     assert_unchanged
 }
+test_shared_changelog() {
+    # Keep rejected transformation evidence inside this retained case directory.
+    export TMPDIR="$FIXTURE/target"
+    case "$1" in
+        empty) printf '# Changelog\n\n## [0.1.1]\n' > CHANGELOG.md ;;
+        missing) cp target/history CHANGELOG.md ;;
+        imported) sed 's/## \[0.1.0\] - 2026-10-01/## [0.1.0]/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md ;;
+        bumped) perl scripts/release/release-data.pl prepare-version 0.1.1 ;;
+        failed-output)
+            cat > scripts/ci/finalize-release-changelog.awk <<'AWK'
+END { print "# Plausible partial candidate"; exit 13 }
+AWK
+            before="$(fingerprint)"
+            expect_failure perl scripts/release/release-data.pl finalize 0.1.1 2026-10-05 0.1.0
+            assert_unchanged
+            rg -F '# Plausible partial candidate' "$TMPDIR"/ic-backup-changelog.*/candidate.md
+            return ;;
+        empty-output)
+            printf 'END { exit 0 }\n' > scripts/ci/finalize-release-changelog.awk
+            before="$(fingerprint)"
+            expect_failure perl scripts/release/release-data.pl finalize 0.1.1 2026-10-05 0.1.0
+            assert_unchanged
+            local candidates=("$TMPDIR"/ic-backup-changelog.*/candidate.md)
+            [[ "${#candidates[@]}" == 1 && -f "${candidates[0]}" && ! -s "${candidates[0]}" ]]
+            return ;;
+    esac
+    cp CHANGELOG.md target/original-notes
+    before="$(fingerprint)"
+    perl scripts/release/release-data.pl changelog-check 0.1.1 2026-10-05 0.1.0
+    assert_unchanged
+    awk -v version=0.1.1 -v previous=0.1.0 -v date=2026-10-05 \
+        -f scripts/ci/finalize-release-changelog.awk target/original-notes > target/expected-notes
+    perl scripts/release/release-data.pl finalize 0.1.1 2026-10-05 0.1.0
+    cmp CHANGELOG.md target/expected-notes
+    # Finalization is never called again for prepared/committed recovery. Those
+    # paths require exact retained payload/receipt admission instead.
+    before="$(fingerprint)"
+    expect_failure perl scripts/release/release-data.pl finalize 0.1.1 2026-10-05 0.1.0
+    assert_unchanged
+    assert_cache_retained
+}
+test_version_reader() {
+    local mode="$1"
+    if [[ "$mode" == comments ]]; then
+        sed 's/version = "0.1.0"/version = '\''0.1.0'\'' # valid TOML comment/' Cargo.toml > target/commented.toml
+        cp target/commented.toml Cargo.toml
+        sed 's/version.workspace = true/version.workspace = true # valid inheritance comment/' crates/ic-backup/Cargo.toml > target/member.toml
+        cp target/member.toml crates/ic-backup/Cargo.toml
+        before="$(fingerprint)"
+        [[ "$(perl scripts/release/release-data.pl version)" == 0.1.0 ]]
+        assert_unchanged
+    elif [[ "$mode" == selected ]]; then
+        mkdir -p "target/commits/$TEST_SOURCE/files/crates/ic-backup/src"
+        cp Cargo.toml "target/commits/$TEST_SOURCE/files/"
+        cp crates/ic-backup/Cargo.toml "target/commits/$TEST_SOURCE/files/crates/ic-backup/"
+        cp crates/ic-backup/src/lib.rs "target/commits/$TEST_SOURCE/files/crates/ic-backup/src/"
+        printf 'invalid working TOML\n' >> Cargo.toml
+        printf 'invalid working member TOML\n' >> crates/ic-backup/Cargo.toml
+        before="$(fingerprint)"
+        [[ "$(perl scripts/release/release-data.pl version --commit "$TEST_SOURCE")" == 0.1.0 ]]
+        assert_unchanged
+        expect_failure perl scripts/release/release-data.pl version
+    else
+        case "$mode" in
+            duplicate) printf '\n[workspace.package]\nversion = "0.1.1"\n' >> Cargo.toml ;;
+            failed-output) printf '%s\n' 'printf "0.1.0\n"; exit 13' > scripts/ci/read-cargo-workspace-version.sh ;;
+            empty) printf '%s\n' 'exit 0' > scripts/ci/read-cargo-workspace-version.sh ;;
+            failed-parser)
+                printf '%s\n' '#!/usr/bin/env bash' 'printf '\''{"workspace":{"package":{"version":"0.1.0"}}}\n'\''; exit 9' > target/failed-parser
+                chmod +x target/failed-parser
+                export YQ="$PWD/target/failed-parser" ;;
+        esac
+        before="$(fingerprint)"
+        expect_failure perl scripts/release/release-data.pl prepare-version 0.1.1
+        assert_unchanged
+        [[ ! -s "$TEST_EFFECTS" ]]
+        if perl scripts/release/release-data.pl version > target/version-output 2> target/version-error; then
+            echo 'invalid version read was accepted' >&2; exit 1
+        fi
+        [[ ! -s target/version-output ]]
+    fi
+    assert_cache_retained
+}
+
 test_preparation() {
     export TEST_LOST_EFFECT=commit
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
@@ -497,11 +590,12 @@ record_reviewed_fix() {
         sed -n '/^## \[0.1.1\]/,$p' CHANGELOG.md
     } > target/new-notes
     cp target/new-notes CHANGELOG.md
-    mkdir -p "target/commits/$fix/files/crates/ic-backup" "target/commits/$fix/files/docs"
+    mkdir -p "target/commits/$fix/files/crates/ic-backup/src" "target/commits/$fix/files/docs"
     printf '%s\n' "$current" > "target/commits/$fix/parent"
     printf 'Reviewed source fix\n' > "target/commits/$fix/subject"
     cp Cargo.toml Cargo.lock CHANGELOG.md "target/commits/$fix/files/"
     cp crates/ic-backup/Cargo.toml "target/commits/$fix/files/crates/ic-backup/"
+    cp crates/ic-backup/src/lib.rs "target/commits/$fix/files/crates/ic-backup/src/"
     cp docs/release.json "target/commits/$fix/files/docs/"
     printf '%s\n' "$fix" > target/mock-head
 }
@@ -673,7 +767,9 @@ for outcome in success failure; do
 done
 run_case validation-source-identity test_validation_source_identity
 run_case versions test_versions
-for invalid in conflict duplicate empty dated unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
+for mode in comments selected duplicate failed-output empty failed-parser; do run_case "version-reader-$mode" test_version_reader "$mode"; done
+for invalid in conflict duplicate dated historical-duplicate competing same-date unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
+for mode in empty missing imported bumped failed-output empty-output; do run_case "shared-notes-$mode" test_shared_changelog "$mode"; done
 run_case preparation test_preparation
 for failure in mismatch duplicate missing failed-output; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done

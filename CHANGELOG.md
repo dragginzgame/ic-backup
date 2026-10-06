@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.1]
+
+- Enforce workspace version and dependency inheritance with the committed shared
+  checker. Read versions through its offline Cargo/TOML parser, preserving exact
+  committed-source checks and rejection before metadata writes
+  ([#6](https://github.com/dragginzgame/ic-backup/issues/6)).
+- Preserve temporary CI fixtures and upload failed validation evidence for native
+  installer and recovery diagnosis. Restore exact authenticated archives in
+  installer refusal fixtures and retain installer diagnostics on failure
+  ([#9](https://github.com/dragginzgame/ic-backup/issues/9)).
+  Keep failed dependency, validation and release regression inputs available
+  for those artifacts while removing successful temporary fixtures
+  ([shared-tooling #21](https://github.com/dragginzgame/shared-tooling/issues/21)).
+- Share the reviewed formatter pin across setup, formatting and checks; reject
+  unavailable or failed formatter probes before changing files
+  ([#7](https://github.com/dragginzgame/ic-backup/issues/7)).
+- Finalize release notes through the shared selector using the saved original
+  version. Preserve historical notes and metadata rollback; missing note content
+  no longer blocks release preparation
+  ([#8](https://github.com/dragginzgame/ic-backup/issues/8)).
+
 ## [0.4.0] - 2026-10-06
 
 - Bind data-upload recovery reads to the original destination, exact extent and

@@ -51,7 +51,7 @@ preflight() {
     # the selected source so a partial prior bump cannot become a new base.
     git diff --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'original release metadata changed'
     git diff --cached --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'staged original release metadata changed'
-    perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE"
+    perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE" "$RELEASE_PREVIOUS"
     make --no-print-directory shared-tooling-check
     cargo fetch --locked
 }
@@ -60,7 +60,7 @@ prepare() {
     [[ "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$(version)" == "$RELEASE_PREVIOUS" ]] || fail 'original source/version changed'
     allowed_changes "$RELEASE_SOURCE"
     validation_check original
-    perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE"
+    perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE" "$RELEASE_PREVIOUS"
     # Retain exact original metadata for manual recovery from SIGKILL or an
     # interrupted multi-file replacement; ordinary failures restore it on exit.
     RELEASE_BACKUP_DIR="$(mktemp -d "$CARGO_TARGET_DIR/release-backup.XXXXXX")"
@@ -72,7 +72,7 @@ prepare() {
           cp "$RELEASE_BACKUP_DIR/Cargo.lock" Cargo.lock
           cp "$RELEASE_BACKUP_DIR/CHANGELOG.md" CHANGELOG.md
           if [[ "$RELEASE_HAD_RECEIPT" == 1 ]]; then cp "$RELEASE_BACKUP_DIR/release.json" docs/release.json; else rm -f docs/release.json; fi' EXIT
-    perl "$DATA" finalize "$RELEASE_VERSION" "$RELEASE_DATE"
+    perl "$DATA" finalize "$RELEASE_VERSION" "$RELEASE_DATE" "$RELEASE_PREVIOUS"
     perl "$DATA" prepare-version "$RELEASE_VERSION"
     cargo metadata --offline --locked --no-deps --format-version 1 >/dev/null
     make --no-print-directory fmt-check

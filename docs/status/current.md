@@ -25,7 +25,135 @@
 
 # Current handoff — 2026-10-06
 
-## Pending 0.4.0 upload settlement and dependency adoption
+## Pending 0.4.1 Shared Tooling 0.1.10 failure retention
+
+The requested Shared Tooling 0.1.10 now binds all 56 exact snapshot files/modes to
+clean committed `21f3ec3dd97f2968c9f0b08924451bb2f71770d1`, matching remote main.
+Private committed export preserves the earlier dirty 0.4.1 work and its real
+qualification. Package/lock version, dependency selections and released receipt
+remain unchanged at live 0.4.0; the complete compatible batch retains one 0.4.1
+draft. See [the current review](../shared-tooling-review.json).
+
+Adopted dependency, validation-runner and release-runner tests retain original
+fixtures and report their paths on unexpected failure, preserving test status.
+Three consumer checks inject failures after actual fixture creation and admit
+exact status/original inputs, including the privately copied validation helper.
+All three, normal tooling checks, common release-runner regressions and shell
+checks pass on Linux. The initial missed-helper interception and corrected logs
+are retained under `target/shared-tooling-041-0110-review`. No function, method or
+type was removed; existing CI artifact selection covers the preserved paths.
+
+[Upstream 0.1.10 CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37491682760)
+passes Linux and fails the new retention test on both macOS hosts. The retained
+macOS 15 artifact proves its substitute shebang is concatenated with the next
+statement (`/bin/bashcase`), preventing execution. That cloc/portable test is not
+used or vendored here; neither are the new sccache installer or tag-delete helper.
+This adoption does not imply the whole upstream CI passed. Current consumer
+native macOS CI remains pending; earlier 0.1.9 native evidence retains its source.
+
+No Git/version/release transaction, publication, live effect or artifact cleanup.
+Actual product transport/backend, authenticated attribution, complete transfer,
+application safety and terminal/reference release remain independently pending.
+Earlier 0.4.1 batches and their qualifications remain below.
+
+## Retained 0.4.1 formatter, finalizer and fixture convergence
+
+The complete compatible batch retains the single undated 0.4.1 draft from live
+0.4.0 (`52532cca4d5276bb67810ffb346aba464d5a719a`). Package versions, locked
+dependency selections and released receipt are unchanged. The earlier version/
+inheritance adoption is retained below with its actual source and evidence.
+
+Shared Tooling now binds 56 exact files/modes to clean committed 0.1.9 at
+`b32d3038c850a7c53470c326b0f7f11263b31669`, matching inspected remote main.
+Private committed export preserves the earlier dirty consumer adoption. The
+formatter availability helper and regressions are included; existing installer
+fixtures and release guidance are refreshed without vendored patches or sibling
+writes. See [the current review](../shared-tooling-review.json).
+
+Setup, `fmt` and `fmt-check` share the existing pin and offline prerequisite.
+Matching version output with failure status and unavailable rustfmt reject before
+formatting. Real hook checks now overlay the current helper/pin files. Release
+changelog selection/rewriting delegates to its canonical AWK owner with saved
+previous/target/date identities. Imported undated history remains intact after
+a package bump. Empty/missing notes no longer gate preparation; duplicate and
+noncanonical identities, conflicting candidates and dated targets still reject.
+Failed/empty transformations retain candidates without replacing metadata.
+Prepared/committed recovery continues exact payload/receipt admission without
+refinalization; original backups, rollback and source validation retain owners.
+No functions, methods or types were removed.
+
+All 69 registered consumer release cases and common runner pass, including six
+new successful/rejected delegation cases and additional identity conflicts. Real
+formatting/hook, shared metadata, formatter, installer, snapshot, ShellCheck/Perl
+and workflow lint checks pass on Linux. The initial missing fixture-helper failure
+and corrected evidence remain under `target/shared-tooling-041-extension`.
+Committed installer cases restore exact authenticated archives rather than
+repacking under an old digest, retain installer traces and prove intended refusal
+payloads ran. [Upstream CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37489483879)
+passes Linux and both native macOS hosts at the adopted revision. This dirty
+consumer batch has no remote CI result; its native qualification remains pending
+with [#7](https://github.com/dragginzgame/ic-backup/issues/7),
+[#8](https://github.com/dragginzgame/ic-backup/issues/8) and
+[#9](https://github.com/dragginzgame/ic-backup/issues/9).
+
+Work stays uncommitted. No release/version transaction, publication, live effect
+or cleanup occurred. Product transport/backend, authenticated attribution,
+complete transfer, application safety and terminal/reference release remain
+independently unqualified; standalone backup/restore is not implemented.
+
+## Retained initial 0.4.1 tooling and native failure evidence
+
+The maintainer reports 0.4.0 live. Clean session HEAD and annotated `v0.4.0`
+resolve to `52532cca4d5276bb67810ffb346aba464d5a719a`; finalized changelog,
+workspace/lock version and source-bound receipt agree at 0.4.0. Original receipt
+source is `c82b03fdc0fb4865a187f6a1da6f4b2c67611d2f`. The current batch opens one
+compatible undated 0.4.1 entry; package versions, dependency inputs and receipt
+remain untouched.
+
+Shared Tooling adopts exact committed 0.1.8 at `d957d1f` across 54 files. Remote
+main matched at inspection; the read-only sibling then became dirty, so refresh
+used a clean private committed checkout. Uncommitted format prerequisite, archive
+repair/diagnostics and changelog work was not imported. The existing pin target
+now enables Cargo inheritance under the same configured CI/release pipeline.
+The adapter replaces duplicate version parsing with the shared offline stable
+Cargo/TOML reader while retaining Git selection, numeric release limits and
+preparation/receipt/recovery owners. Selected reads export exact original manifests
+and library target; helpers resolve from the adapter path. Failed exports remain
+retained, and rejected/empty/partial version output writes no metadata.
+
+Shared metadata cases qualify table forms, aliases, independent discovery and
+invalid inheritance/overrides/catalogs. Six additional consumer cases qualify
+comments, original commit versus invalid working inputs, duplicate TOML, failed
+partial/empty output and failed parsing before preparation. All 61 registered
+consumer release cases, common runner, pin/metadata, formatting-hook, installer,
+snapshot and ShellCheck/Perl checks pass on Linux. The initial helper-path failure
+in a real private-index fixture remains retained beside corrected passing logs.
+Exact inputs, source/mode identities, prior snapshot/review and fresh logs are under
+`target/shared-tooling-041-review`; see [the adoption review](../shared-tooling-review.json).
+No functions, methods or types were removed; version parsing moved to its canonical
+shared owner, without a second reader or compatibility lane.
+
+Released 0.4.0 [main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37486731118)
+and [tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37486733748)
+passed Linux and failed both macOS hosts during system-Bash host-tool fixtures.
+The last successful checksum/pin/evidence stages locate the failed command, but no
+native installer trace was retained. Source review identifies regenerated archive
+bytes under an unchanged digest as a likely fixture integrity cause, not a proven
+production failure. [Issue #9](https://github.com/dragginzgame/ic-backup/issues/9)
+owns that finding and native rerun. CI now retains temporary test/index/log artifacts
+on failure. Uncommitted upstream corrections must first gain a reviewed revision;
+native macOS remains unqualified. [Issue #6](https://github.com/dragginzgame/ic-backup/issues/6)
+keeps adoption/native evidence, and [#5](https://github.com/dragginzgame/ic-backup/issues/5)
+keeps hook replacement coverage. Formatter/changelog adoption remains with its
+own issues, not a handoff queue.
+
+Work stays uncommitted. No Git/version/release transaction, package upload, live IC
+effect or cleanup was performed. Product provider/backend/authenticated attribution,
+complete transfer, application/load/start and terminal/reference release remain
+independent qualification work; full B1/B2 and standalone backup/restore remain
+unestablished. Prior handoffs retain their actual inputs and scope below.
+
+## Retained pre-release 0.4.0 upload settlement and dependency adoption
 
 The maintainer reports 0.3.9 live. Local release HEAD/tag
 `2587259d1c8424e9aac585413c8efbc374c1faeb`, finalized changelog, package version

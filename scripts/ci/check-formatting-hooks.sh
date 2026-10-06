@@ -3,14 +3,19 @@ set -euo pipefail
 
 # Consumer-owned Make code is reviewed executable input, not sandboxed code.
 if [[ $# -lt 4 ]]; then
-    echo 'usage: check-formatting-hooks.sh ROOT RUST_PATH MANIFEST_PATH UNSORTED_MANIFEST [OVERLAY_PATH ...]' >&2
+    echo 'usage: check-formatting-hooks.sh ROOT RUST_PATH MANIFEST_PATH {UNSORTED_MANIFEST|--no-dependency-tables} [OVERLAY_PATH ...]' >&2
     exit 2
 fi
 root="$(cd "$1" && pwd -P)"
 rust="$2"; manifest="$3"; unsorted="$4"
 shift 4
-[[ "$unsorted" == /* ]] || unsorted="$PWD/$unsorted"
-[[ -f "$unsorted" && ! -L "$unsorted" ]] || exit 2
+perturb_manifest=true
+if [[ "$unsorted" == --no-dependency-tables ]]; then
+    perturb_manifest=false
+else
+    [[ "$unsorted" == /* ]] || unsorted="$PWD/$unsorted"
+    [[ -f "$unsorted" && ! -L "$unsorted" ]] || exit 2
+fi
 for path in "$rust" "$manifest" Makefile README.md .githooks/pre-commit scripts/dev/install-git-hooks.sh "$@"; do
     case "$path" in
         ''|/*|..|../*|*/../*|*/..|./*|*/./*|*/.|.git|.git/*) echo "invalid relative input: $path" >&2; exit 2 ;;
@@ -54,7 +59,11 @@ for path in "$rust" "$manifest" Makefile .githooks/pre-commit scripts/dev/instal
 done
 make --no-print-directory fmt-check > "$fixture/baseline.log" 2>&1
 cp "$manifest" "$fixture/sorted-manifest"
-if cmp -s "$unsorted" "$manifest"; then echo 'unsorted input must differ from selected manifest' >&2; exit 2; fi
+if [[ "$perturb_manifest" == true ]]; then
+    if cmp -s "$unsorted" "$manifest"; then echo 'unsorted input must differ from selected manifest' >&2; exit 2; fi
+else
+    echo 'No dependency tables selected; manifest sorting perturbation omitted'
+fi
 git ls-files -z '*Cargo.lock' > "$fixture/locks"
 new_case() {
     cp -R "$fixture/base" "$fixture/$1"
@@ -74,7 +83,7 @@ reject_hook() {
 }
 new_case refresh
 printf '\npub fn shared_tooling_hook_fixture( ) { }\n' >> "$rust"
-cp "$unsorted" "$manifest"
+if [[ "$perturb_manifest" == true ]]; then cp "$unsorted" "$manifest"; fi
 git --literal-pathspecs add -- "$rust" "$manifest"
 printf '\nUnrelated working edit.\n' >> README.md
 cp README.md .git/readme
@@ -118,4 +127,5 @@ ln -s "$PWD" "$fixture/alias"
 git config --local core.hooksPath existing-hooks
 if bash scripts/dev/install-git-hooks.sh > .git/conflict.log 2>&1; then exit 1; fi
 [[ "$(git config --local --get core.hooksPath)" == existing-hooks ]] || exit 1
-echo 'Consumer formatting, sorting, preservation and hook installation checks passed'
+echo 'Consumer formatting, preservation and hook installation checks passed'
+if [[ "$perturb_manifest" == true ]]; then echo 'Dependency sorting perturbation passed'; fi

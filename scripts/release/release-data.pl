@@ -3,12 +3,15 @@ use strict;
 use warnings;
 use JSON::PP;
 use Digest::SHA qw(sha256_hex);
+use File::Path qw(make_path remove_tree);
+use File::Temp qw(tempdir);
+use FindBin;
 
 my $read_commit;
 
 sub read_file {
     my ($path) = @_;
-    if (defined $read_commit && $path =~ /\A(?:Cargo\.toml|Cargo\.lock|CHANGELOG\.md|docs\/release\.json|crates\/ic-backup\/Cargo\.toml)\z/) {
+    if (defined $read_commit && $path =~ /\A(?:Cargo\.toml|Cargo\.lock|CHANGELOG\.md|docs\/release\.json|crates\/ic-backup\/(?:Cargo\.toml|src\/lib\.rs))\z/) {
         open my $object, '-|', 'git', 'show', "$read_commit:$path"
             or die "cannot read selected release file: $path\n";
         my $text = do { local $/; <$object> };
@@ -28,17 +31,34 @@ sub write_file {
 }
 
 sub version {
-    my $text = read_file('Cargo.toml');
-    my $package = read_file('crates/ic-backup/Cargo.toml');
-    $package =~ /^\[package\]\n(.*?)(?=^\[|\z)/ms
-        or die "missing package\n";
-    $1 =~ /^version\.workspace = true$/m
-        or die "package version must inherit from workspace\n";
-    $text =~ /^\[workspace\.package\]\n(.*?)(?=^\[|\z)/ms
-        or die "missing workspace package\n";
-    my $section = $1;
-    $section =~ /^version = "([^"]+)"$/m or die "missing workspace package version\n";
-    return $1;
+    my $manifest = 'Cargo.toml';
+    my ($export, $value);
+    eval {
+        if (defined $read_commit) {
+            # The shared reader owns TOML parsing, not Git selection. Export the
+            # exact selected manifests with their real library target for Cargo's
+            # offline structural validation; never borrow working metadata.
+            $export = tempdir('ic-backup-version.XXXXXX', TMPDIR => 1, CLEANUP => 0);
+            make_path("$export/crates/ic-backup/src");
+            for my $path ('Cargo.toml', 'crates/ic-backup/Cargo.toml', 'crates/ic-backup/src/lib.rs') {
+                write_file("$export/$path", read_file($path));
+            }
+            $manifest = "$export/Cargo.toml";
+        }
+        open my $reader, '-|', 'bash', "$FindBin::Bin/../ci/read-cargo-workspace-version.sh", '--stable', $manifest
+            or die "cannot invoke shared workspace version reader: $!\n";
+        $value = do { local $/; <$reader> };
+        close $reader or die "shared workspace version reader failed\n";
+        die "shared workspace version reader returned no version\n" unless defined $value;
+        chomp $value;
+        parts($value); # Consumer release arithmetic retains its component ceiling.
+        1;
+    } or do {
+        my $error = $@;
+        die $error . (defined $export ? "Selected version export retained: $export\n" : '');
+    };
+    remove_tree($export) if defined $export;
+    return $value;
 }
 
 sub parts {
@@ -77,8 +97,9 @@ sub compare_versions {
 }
 
 sub changelog {
-    my ($target, $date) = @_;
+    my ($target, $date, $previous) = @_;
     parts($target);
+    parts($previous);
     $date =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/ or die "invalid release date\n";
     my $text = read_file('CHANGELOG.md');
     my @sections = $text =~ /^## \[([^\]]+)\](?: - [0-9]{4}-[0-9]{2}-[0-9]{2})?$/mg;
@@ -87,25 +108,22 @@ sub changelog {
         die "duplicate changelog section: $section\n" if $seen{$section}++;
         parts($section);
     }
-    die "changelog must have a current draft\n" unless @sections;
-    my $draft = $sections[0];
-    # A numbered pending release must match the selected command; retained
-    # historical sections are never rebound as new release notes.
-    die "pending changelog version conflicts with selected release\n"
-        if $draft ne $target;
-    $text =~ /^## \[\Q$draft\E\]\n(.*?)(?=^## \[|\z)/ms
-        or die "release draft must be undated\n";
-    my $notes = $1;
-    die "release is already dated\n"
-        if $text =~ /^## \[\Q$target\E\] - /m;
-    # Imported history can be undated. Only versions newer than the current
-    # package are competing drafts; never rewrite historical release notes.
-    my @drafts = $text =~ /^## \[([0-9.]+)\]$/mg;
-    die "another numbered release draft is open\n"
-        if grep { $_ ne $draft && compare_versions($_, version()) > 0 } @drafts;
-    die "release draft notes are empty\n" unless $notes =~ /\S/;
-    $text =~ s/^## \[\Q$draft\E\]$/## [$target] - $date/m;
-    return $text;
+    # Selection and heading rewriting belong to the shared owner. Historical
+    # duplicate/version checks above remain an independent corruption boundary.
+    # Always carry the saved original version, including after a package bump.
+    my $candidate_dir = tempdir("ic-backup-changelog.XXXXXX", TMPDIR => 1, CLEANUP => 0);
+    open my $finalizer, "-|", "awk", "-v", "version=$target",
+        "-v", "previous=$previous", "-v", "date=$date",
+        "-v", "allow_finalized=0", "-f", "$FindBin::Bin/../ci/finalize-release-changelog.awk", "CHANGELOG.md"
+        or die "cannot invoke shared changelog finalizer; retained: $candidate_dir\n";
+    my $candidate = do { local $/; <$finalizer> };
+    my $success = close $finalizer;
+    write_file("$candidate_dir/candidate.md", $candidate // "");
+    die "shared changelog finalizer failed; retained: $candidate_dir\n" unless $success;
+    die "shared changelog finalizer returned no candidate; retained: $candidate_dir\n"
+        unless defined($candidate) && length($candidate);
+    remove_tree($candidate_dir);
+    return $candidate;
 }
 
 my ($command, @args) = @ARGV;

@@ -368,3 +368,94 @@ target-labelled errors, a timing/result summary, a GitHub step summary when
 available, and full/highlighted failure logs under `target/validation-failures/`.
 Consumer build/evidence artifacts survive success, failure and retry.
 Full CI remains a separately authorized/configured gate, not routine validation.
+
+## Retained initial Cargo inheritance and version-reader adoption
+
+The initial 0.4.1 snapshot bound all 54 files to committed Shared Tooling 0.1.8 at
+`d957d1f8801885c5b69e4a9ef900155f5f2a8a9d`. The refresh used a clean private
+checkout after the read-only sibling acquired new uncommitted edits. Those edits
+were not copied. [The review](shared-tooling-review.json) retains exact hashes,
+previous snapshot/review and fresh Linux consumer evidence.
+
+`make dependency-pins-check` now supplies `--cargo-inheritance`; the same target
+already belongs to CI and release validation. Versions and ordinary/dev/build/
+target dependencies inherit their Cargo-discovered workspace catalog. Existing
+exact-version exceptions remain scoped to their original root declarations.
+Nested-workspace discovery grants no governance exception or Canic dependency.
+
+The release adapter delegates TOML projection to the shared offline stable version
+reader. It retains release component bounds and owns Git selection: selected commit
+reads export exact root/member manifests and their real library target into private
+scratch, retaining failed exports. Current metadata never substitutes for selected
+original bytes. Helper paths resolve from the adapter, including when inspecting
+an older checkout. No dependency resolution, compilation or source mutation occurs.
+CI/release run the shared metadata regressions, including aliases, table forms,
+bad overrides/catalogs and malformed/failed parsing. Six consumer cases additionally
+cover valid comments, selected original versus invalid working files, duplicate
+TOML, failed partial output, empty output and failed parsing before any preparation.
+
+Common CI-tool installer entry points are not used here: apt/brew retain that setup,
+so no unused installer implementation is copied. Existing hooks keep their required
+native replacement qualification. The 0.4.0 Linux CI passed; macOS failed during
+host-tool fixtures. New CI failure artifacts preserve temporary fixture/index/log
+evidence. Actual archive restoration/native diagnosis remains tracked in
+[#9](https://github.com/dragginzgame/ic-backup/issues/9); this adoption does not claim
+that native failure fixed or import uncommitted upstream corrections. Formatter and
+changelog convergence await reviewed upstream revisions under their owning issues.
+
+## Retained Shared Tooling 0.1.9 adoption
+
+That snapshot bound 56 exact files and modes to committed
+`b32d3038c850a7c53470c326b0f7f11263b31669` (0.1.9). Remote main matched the
+reviewed clean source; export used clean private source/consumer checkouts to
+preserve the earlier uncommitted adoption. No sibling writes or vendored patches
+were made. The original 0.1.8 inputs and qualification remain under
+`target/shared-tooling-041-review`; the extension and its prior inputs remain
+under `target/shared-tooling-041-extension`. See [the current review](shared-tooling-review.json).
+
+The formatter prerequisite has one shared owner, fed by the existing version
+pin for setup, `fmt` and `fmt-check`. Current helper/pin files are explicit
+formatting-fixture inputs. The adapter delegates changelog selection and heading
+rewriting using saved original release identities. It retains independent ledger
+corruption checks, source-bound validation, backups, rollback and exact recovery.
+Note content remains maintainer-owned rather than an executable release gate.
+No functions, methods or types were removed; the existing `changelog` adapter
+retains its metadata role while its selection body moves to the shared owner.
+
+Committed host-tool fixtures restore exact archive bytes and check authenticated
+payload execution in version/PCRE2 refusals. Installer traces are retained on
+failure. Fresh Linux release, hook, metadata, formatter, installer and shell checks
+pass; native consumer macOS remains pending under
+[#7](https://github.com/dragginzgame/ic-backup/issues/7),
+[#8](https://github.com/dragginzgame/ic-backup/issues/8) and
+[#9](https://github.com/dragginzgame/ic-backup/issues/9).
+Source adoption does not establish that the earlier native failure is resolved.
+The complete compatible batch keeps the single 0.4.1 draft and leaves package
+versions, dependency selections and the released receipt unchanged.
+
+## Shared Tooling 0.1.10 adoption
+
+The current 56-file snapshot binds exact committed
+`21f3ec3dd97f2968c9f0b08924451bb2f71770d1` (0.1.10), matching reviewed clean
+source and remote main. Earlier dirty work, snapshot/review inputs and source
+qualifications remain retained. Export used clean private committed checkouts;
+only reviewed snapshot bytes were replaced. No sibling writes or vendored patches.
+The latest evidence is under `target/shared-tooling-041-0110-review`; see
+[the current review](shared-tooling-review.json).
+
+Applicable dependency, validation-runner and release-runner regression fixtures
+now retain original inputs and print retained paths on unexpected failure. The
+consumer's actual helpers have focused injected failure/status/input checks through
+the existing tooling owner, including the private copied validation helper. Normal
+tooling, the common release runner, shell checks and snapshot qualification pass on
+Linux. Existing CI artifact retention covers these temporary fixture paths.
+
+The new sccache installer/launcher policy and tag-deletion helper are unused here
+and were not added. Nor was the upstream cloc/portable retention test imported:
+[0.1.10 upstream CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37491682760)
+passes Linux and fails that test on both macOS hosts. Its retained macOS 15 artifact
+shows the generated shebang joined to the next statement (`/bin/bashcase`), so the
+substitute cannot run. This is evidence for an unused test's fixture-generation
+failure, not a failed consumer helper or compiler-cache requirement. The reviewed
+adoption is source-bound; consumer native CI remains independently pending.
+The complete compatible batch keeps 0.4.1 without package or dependency changes.

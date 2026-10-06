@@ -71,6 +71,60 @@ This record acknowledges sources; it does not make any consumer's local
 governance authoritative here. Git history remains the exact source history,
 and current repository documents own the maintained shared contract.
 
+## Cargo metadata and CI installer convergence
+
+The 2026-10-06 follow-up compared Canic's workspace inheritance test at
+`d815abfc661d791ecf72afc5b1e4b6a990f37a91` plus its working-tree edits with
+IcyDB's unchanged dependency graph guard at
+`db8a0cc4419a7e0ae0ba419793ae5fea75b1cca7`. The structured inheritance option
+replaces their common rule without copying product dependency bans, role
+discovery or qualification policy. Its fixture covers the ordinary dependency
+table form missed by IcyDB's line-oriented check.
+
+Workspace-version readers were inspected in IC Testkit
+`827157434eb8b2d6c13c4b8e47493bd6a38678b9`, IC Timers
+`902323a9e896ce3771044fdc23a7a2d03d49cf28`, IC Host Tools
+`1e018097a35c48fbc2bbe15c4ffef55d5e3d2e20` and the Canic revision above.
+The shared reader uses Cargo's validation and yq/jq projection rather than
+promoting a consumer's text parser. Version mutation remains local.
+
+CI installer consolidation reuses Shared Tooling's three existing entry points
+at `9f8c7c768793f4ce8f25be9e88282c0f63a06e7f`. Asset mappings, versions and
+checksum contracts are unchanged; the shared implementation stages on the
+destination filesystem and retains failed candidates. Consumers must review
+the expanded snapshot dependency set before refreshing the entry points.
+
+## Compiler-cache setup
+
+The sccache installer extracts Canic's `scripts/ci/install-sccache-ci.sh` at
+`d815abfc661d791ecf72afc5b1e4b6a990f37a91` (source file clean), preserving its
+Linux x86-64 musl archive mapping. Shared Tooling adds it to the existing CI
+installer owner so failure retention and same-filesystem replacement converge.
+Canic's reviewed 0.17.0 archive digest was checked against official release
+metadata; consumers still own their version and digest selections.
+
+Launcher adoption retains Canic's compiler-fallback policy in its own adapter
+while reusing the already-shared runtime-directory/socket owner. Neither
+extraction nor these instructions establish a committed consumer migration or
+qualify fallback behavior against a real cache failure.
+
+## Formatter prerequisites and changelog convergence
+
+The formatter prerequisite checker extracts IC Testkit's
+`scripts/ci/check-format-tools.sh` at
+`827157434eb8b2d6c13c4b8e47493bd6a38678b9` (source script clean; Makefile dirty).
+It adds explicit consumer version/executable inputs and preserves offline,
+prepared-tool checks. Repeated Makefile guards in IC Host Tools, IC Memory,
+IC Backup and IC Blob Storage motivated one shared admission owner; workspace
+rosters, toolchains and extra formatters stay local.
+
+The finalizer adoption guidance traces IC Backup's `release-data.pl` at
+`52532cca4d5276bb67810ffb346aba464d5a719a` and IC Blob Storage's at
+`c3e271449753f782a0193314f4ed3d4db21c453f` plus uncommitted release adapter edits.
+Both retain local changelog selectors while already vendoring the shared AWK
+finalizer. This batch documents convergence on that existing owner; it does not
+claim their metadata transactions or snapshots have been migrated.
+
 ## Documentation, release entry points and registry observation
 
 The local documentation-link checker and exact crates.io observation derive

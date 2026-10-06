@@ -22,7 +22,9 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 
 create_fixture() {
-    mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/.githooks"
+    mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks"
+    cp "$ROOT/scripts/ci/check-format-tools.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/ci/tool-versions.env" "$FIXTURE/ci/"
     cp "$ROOT/.githooks/pre-commit" "$FIXTURE/.githooks/"
     cp "$ROOT/scripts/dev/install-git-hooks.sh" "$FIXTURE/scripts/dev/"
     cp "$ROOT/Makefile" "$FIXTURE/"
@@ -170,7 +172,7 @@ CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
 perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-tools\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
-formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml)
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh)
 while IFS= read -r -d '' path; do
     formatter_inputs[${#formatter_inputs[@]}]="$path"
 done < <(git -C "$ROOT" ls-files -z --cached --others --exclude-standard -- '*.rs')

@@ -583,7 +583,8 @@ Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
 `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through
 rustup, then run `rustup show active-toolchain` and
 `rustup toolchain install 1.91.0 --profile minimal` in this checkout. Install the
-reviewed manifest formatter with `cargo install cargo-sort --version 2.1.4 --locked`,
+reviewed manifest formatter after `source ci/tool-versions.env` with
+`cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked`,
 then run `make install-hooks` once per clone or after updating the hook contract.
 Setup is explicit; hooks and validation never install tools. CI installs
 the host-specific tooling and uses the same native validation gate on all three
@@ -710,3 +711,40 @@ The maintained v1 records, digests, retained source artifacts, spending reservat
 fence obligations and restore references retain their exact formats and owners.
 Do not reset or discard unfinished evidence as part of this dependency hard cut.
 Package version changes, release execution and publication remain maintainer-owned.
+
+## Workspace inheritance and version inspection
+
+`make dependency-pins-check` enforces the shared Cargo inheritance contract as well
+as existing immutable dependency/action selections. Member package versions and
+ordinary/dev/build/target dependencies inherit the owning workspace catalog. Root
+packages use that catalog for their own dependency edges too; independently declared
+workspace discovery does not authorize a new graph or sibling path.
+
+`make version` reads the current workspace version through prepared Cargo, jq and
+yq, offline. Follow [local setup](local-setup.md) first; this command installs nothing
+and neither resolves dependencies nor compiles. The release adapter owns selected
+Git metadata, numeric release bounds and all record/recovery transformations.
+`make tooling-check` includes shared Cargo metadata regressions; `make release-check`
+retains focused consumer source/version/recovery checks using isolated fixtures.
+
+CI creates `target/ci-fixtures` before setting `TMPDIR`, then uploads that directory,
+retained test directories and validation failure logs on job failure. Hidden fixture
+files include private Git index evidence. These test artifacts have seven-day
+retention; they do not replace durable operator journals or source references.
+Linux and native macOS evidence remain distinct. See
+[the current adoption review](shared-tooling-review.json).
+
+Shared dependency, validation-runner and release-runner regressions retain their
+original fixture inputs on unexpected failure. Successful temporary fixtures are
+removed by their owning tests. The consumer tooling check injects failures through
+these actual adopted helpers and checks exact status, retained inputs and reported
+paths; it runs in the existing Linux/macOS CI selection without adding tool setup.
+
+`fmt` and `fmt-check` share `format-tools-check`, which reads the reviewed pin
+from `ci/tool-versions.env`. It requires successful exact cargo-sort and rustfmt
+availability probes, offline with rustup automatic installation disabled. It
+installs nothing and changes no files. CI setup uses that same pin; workspace
+sorting, actual Rust formatting and hook/index custody remain consumer-owned.
+The helper's rejection fixtures run in normal tooling checks and explicitly
+under macOS system Bash 3.2. Native qualification belongs to the configured
+consumer jobs, independently from a Linux pass or upstream source adoption.

@@ -21,7 +21,7 @@ endif
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
         tags test tooling-check validate version
-.PHONY: dependency-pins-check host-tools-check ic-tools-check install-host-tools install-ic-tools install-tools tools-check
+.PHONY: dependency-pins-check format-tools-check host-tools-check ic-tools-check install-host-tools install-ic-tools install-tools tools-check
 
 help:
 	@echo "check                       Compile this library's native targets"
@@ -36,6 +36,7 @@ help:
 	@echo "ensure-clean                Check the worktree is committed and clean"
 	@echo "fmt                         Sort Cargo manifests and format Rust"
 	@echo "fmt-check                   Check Cargo ordering and Rust formatting"
+	@echo "format-tools-check          Check prepared Cargo formatters offline"
 	@echo "help                        Show available commands"
 	@echo "hooks-check                 Test the pre-commit formatter"
 	@echo "host-tools-check            Verify local jq/yq offline"
@@ -91,13 +92,14 @@ doc:
 ensure-clean:
 	@$(RELEASE) ensure-clean
 
-fmt:
-	@[[ "$$(cargo sort --version)" == 'cargo-sort 2.1.4' ]] || { echo 'error: install cargo-sort 2.1.4 with --locked during setup' >&2; exit 1; }
+format-tools-check:
+	@source "$(HOST_TOOL_VERSIONS)" && bash scripts/ci/check-format-tools.sh "$$SHARED_TOOLING_CARGO_SORT_VERSION"
+
+fmt: format-tools-check
 	cargo sort --workspace
 	cargo fmt --all
 
-fmt-check:
-	@[[ "$$(cargo sort --version)" == 'cargo-sort 2.1.4' ]] || { echo 'error: install cargo-sort 2.1.4 with --locked during setup' >&2; exit 1; }
+fmt-check: format-tools-check
 	cargo sort --workspace --check
 	cargo fmt --all -- --check
 
@@ -128,7 +130,7 @@ ic-tools-check:
 	bash scripts/dev/install-ic-tools.sh --pins "$(IC_TOOL_PINS)" --check
 
 dependency-pins-check:
-	bash scripts/ci/check-dependency-pins.sh
+	bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
 
 package:
 	cargo package --offline --locked --allow-dirty -p ic-backup
@@ -224,6 +226,8 @@ tooling-check: shared-tooling-check
 	perl scripts/ci/test-local-lock-versions.pl
 	bash scripts/ci/test-file-digests.sh
 	bash scripts/ci/test-dependency-pins.sh
+	bash scripts/ci/test-cargo-metadata.sh
+	bash scripts/ci/test-format-tools.sh
 	bash scripts/ci/test-evidence-checksums.sh
 	bash scripts/ci/test-host-tools.sh
 	bash scripts/ci/test-ic-tools.sh

@@ -20,12 +20,18 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
+      - name: Retain temporary validation fixtures
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/target/ci-fixtures"
+          echo "TMPDIR=$GITHUB_WORKSPACE/target/ci-fixtures" >> "$GITHUB_ENV"
       - name: Install the pinned development toolchain
         run: rustup show active-toolchain
       - name: Install the minimum supported Rust toolchain
         run: rustup toolchain install 1.91.0 --profile minimal
       - name: Install the reviewed manifest formatter
-        run: cargo install cargo-sort --version 2.1.4 --locked
+        run: |
+          source ci/tool-versions.env
+          cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked
       - name: Install Linux shell tooling
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes shellcheck ripgrep
@@ -48,6 +54,8 @@ jobs:
           perl scripts/ci/test-local-lock-versions.pl
           /bin/bash scripts/ci/test-file-digests.sh
           /bin/bash scripts/ci/test-dependency-pins.sh
+          /bin/bash scripts/ci/test-cargo-metadata.sh
+          /bin/bash scripts/ci/test-format-tools.sh
           /bin/bash scripts/ci/test-evidence-checksums.sh
           /bin/bash scripts/ci/test-host-tools.sh
           /bin/bash scripts/ci/test-ic-tools.sh
@@ -56,3 +64,14 @@ jobs:
           /bin/bash scripts/hooks/test-hooks.sh
       - name: Validate the native library and repository tooling
         run: make ci
+      - name: Retain failed validation evidence
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: validation-${{ matrix.os }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          retention-days: 7
+          path: |
+            target/ci-fixtures/
+            target/validation-failures/
+            target/*-tests.*/

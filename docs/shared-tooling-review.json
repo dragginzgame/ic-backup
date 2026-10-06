@@ -1,314 +1,381 @@
 {
-  "inspection_date": "2026-10-06",
-  "remote_head_and_main": "9f8c7c768793f4ce8f25be9e88282c0f63a06e7f",
-  "upstream_version": "VERSION 0.1.7; undated changelog and no local v0.1.7 tag. Adoption binds the committed revision rather than inferring a finalized release.",
-  "adoption": "Refresh all exact declared files and add lockfile transformer/regressions, actual consumer formatting-hook checker and linked tag guide. Consumer owns explicit inputs, metadata, receipts/recovery and additional cases.",
-  "compatibility": "Compatible tooling changes extend complete 0.4.0 draft (originally 0.3.10). Package/receipt, dependency selections, MSRV, product contracts and public release commands unchanged. Optional ripgrep pins are available but not selected by consumer setup.",
-  "snapshot": ".shared-tooling.snapshot",
-  "snapshot_files": [
-    {
-      "path": "docs/verification-helpers.md",
-      "sha256": "1cf16209ac326cf6fd72d4d819583f8b27b09d32b66448bc8c3446f1cf43b886",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/check-documentation-links.pl",
-      "sha256": "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-documentation-links.pl",
-      "sha256": "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-file-digests.sh",
-      "sha256": "fe64efb6af09c7b3182ed709700472ff803f6b5d54df0473a675b07597dcbb31",
-      "executable": true
-    },
-    {
-      "path": "rules/dependency-pinning.md",
-      "sha256": "403c595f0e60bbf81c265c1b1a5732d20534361bd3203d8a84083d0816f5f0e4",
-      "executable": false
-    },
-    {
-      "path": "audits/README.md",
-      "sha256": "926d5a39ea62a3becd19ff0326c63987b2929d3a1a728e2a0ef8a7180824d231",
-      "executable": false
-    },
-    {
-      "path": "audits/code-hygiene.md",
-      "sha256": "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3",
-      "executable": false
-    },
-    {
-      "path": "audits/flow-convergence-and-duplication.md",
-      "sha256": "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484",
-      "executable": false
-    },
-    {
-      "path": "audits/complexity-and-technical-debt.md",
-      "sha256": "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b",
-      "executable": false
-    },
-    {
-      "path": "audits/module-surface-hardening.md",
-      "sha256": "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075",
-      "executable": false
-    },
-    {
-      "path": "audits/module-cleanup.md",
-      "sha256": "d229519014823ad804070e55f7bb5316d7612e1d77a9dc8bf962d564e7b2a5e7",
-      "executable": false
-    },
-    {
-      "path": "docs/provenance.md",
-      "sha256": "f201174694019b9b01659f5a8ecfe4aee53356ab88c169416ef28caa78d41899",
-      "executable": false
-    },
-    {
-      "path": "docs/ic-tools.md",
-      "sha256": "89243ae92927e7c036fa8938e42acdd4a8f3dc4060600d2fff495fcd844486a9",
-      "executable": false
-    },
-    {
-      "path": "docs/local-setup.md",
-      "sha256": "b99e4bb2f9e4b95abee6533ef46b39fa5efbce63e13c4b4eb8edba551369f2a7",
-      "executable": false
-    },
-    {
-      "path": "ci/ic-tools.tsv",
-      "sha256": "5b1ef6bc9e344139f5e171cc1a3783bcee3650275de2f44fe0f8fa10f2bfef87",
-      "executable": false
-    },
-    {
-      "path": "ci/tool-versions.env",
-      "sha256": "4923b939b682de2311217c232d56fa0cf1c8f37e19e16c16d41be7626cff1285",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/check-dependency-pins.sh",
-      "sha256": "e734a63980717f4b2cb4bfd69db140bcacfbf03f9709cfadeb2fecabcfc90f92",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/dependency-pins.jq",
-      "sha256": "36f37b706673f9e3e2ff167ba3132bb8020947527405435daabcb55b426519d6",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/verify-evidence-checksums.sh",
-      "sha256": "22bf8001f496799c0e26795479b9e313fe3ceddec2e47b8444f8af8e7bc32bae",
-      "executable": true
-    },
-    {
-      "path": "scripts/dev/install-host-tools.sh",
-      "sha256": "591a5d5fc0b8bf0d48179a9d265245ea727ee318894bd10ed962137761465eea",
-      "executable": true
-    },
-    {
-      "path": "scripts/dev/install-ic-tools.sh",
-      "sha256": "7a78004b2fa56448ffa8a4fc9aac8e7e9343a0243bf857a3db908fb2f59cfb4f",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-dependency-pins.sh",
-      "sha256": "6916702870adb5442fbf9f88b41db259edc2b6b0e9d20bd5a7b11539db73947b",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-host-tools.sh",
-      "sha256": "24f920c00b2068cd1eb85b5a3eb384da10f154183198adab5894e2f44b046036",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-ic-tools.sh",
-      "sha256": "0d4a45581e26987baaaa91cd49748e3b7b3ffa76b01f32d1db84560bd5baa68a",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-evidence-checksums.sh",
-      "sha256": "43e2b571a909c2d63b2e3b11d208744995997575b34f0c1fbe5ea3104d40bcca",
-      "executable": true
-    },
-    {
-      "path": "docs/principles/README.md",
-      "sha256": "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499",
-      "executable": false
-    },
-    {
-      "path": "docs/principles/decision-artifact-discipline.md",
-      "sha256": "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7",
-      "executable": false
-    },
-    {
-      "path": "docs/principles/reviewable-changes.md",
-      "sha256": "56701aba8ce851ac4cce32fb55ce721698a94218b1e46636818f6b43debcb719",
-      "executable": false
-    },
-    {
-      "path": "docs/principles/rust-code-hygiene.md",
-      "sha256": "7e5fd8a3c3b1dc5a829a19ad1a4933fdc17792c8e923871da1e9f36586baff41",
-      "executable": false
-    },
-    {
-      "path": "docs/principles/simplicity-and-maintainability.md",
-      "sha256": "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55",
-      "executable": false
-    },
-    {
-      "path": "docs/consuming-snapshots.md",
-      "sha256": "2308bcf27ed0c72203b023b11396f21aaca5f5f35666a865e082e6a0ee837f7f",
-      "executable": false
-    },
-    {
-      "path": "docs/supported-hosts.md",
-      "sha256": "e9e27d9521c03fce897f686ab9daba9c310a936ffdee9f55851b0acf1c6297ba",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/verify-file-checksum.sh",
-      "sha256": "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/verify-shared-tooling-snapshot.sh",
-      "sha256": "4024efa6850788102bbfa97c471ea3b45d760e547a31b11e7c6a91a79e3eaca8",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/run-validation-targets.sh",
-      "sha256": "43b649ed7a196e46e6acf60e6307c474c34aa4dfeeb9729e2f37b4ecedca3aba",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-validation-target-runner.sh",
-      "sha256": "9a375841d5638e05ff1ef7a6d804d31b290b0f9cc1a0fb4ff7662daa25e907b7",
-      "executable": true
-    },
-    {
-      "path": "DRAGGINZGAME.md",
-      "sha256": "4c711609d1e8b30ccd2ddff3974b1418cced91a4484be3911c2a36c7631e31ee",
-      "executable": false
-    },
-    {
-      "path": "rules/changelogs.md",
-      "sha256": "9c95f254c59a1ef312d37981dcd8af2dadf4eda34cf9026cfeda4092a2716858",
-      "executable": false
-    },
-    {
-      "path": "docs/releases.md",
-      "sha256": "837a6d9b6a07224a47b852c073244bbd001abadf91116ab47d86796c017b4e3b",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/run-release.sh",
-      "sha256": "cffa84575afcd74836f59f9d8db4be083010048de03c338ec2448857d85dab5e",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/next-release-version.sh",
-      "sha256": "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/finalize-release-changelog.awk",
-      "sha256": "edda63b29cbdd88c7f1f0b5ab21dbae0635087a4ab6345392d99138c26b28206",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/test-release-runner.sh",
-      "sha256": "1d20624590b6459ec2bd20163bbc6fb69f57dd8e1769dcca2c0d77cf68a510cb",
-      "executable": true
-    },
-    {
-      "path": "rules/cargo-dependencies.md",
-      "sha256": "b0dfb6f6a1caf0f47f166523a3703bdd88a7667f8b0901e549620eb31adb7a7a",
-      "executable": false
-    },
-    {
-      "path": "rules/git-hooks.md",
-      "sha256": "f81c0eeb2407ec012f9f8f693c8a2787843f213d6b2ad7f76b4777ef29795d1b",
-      "executable": false
-    },
-    {
-      "path": ".githooks/pre-commit",
-      "sha256": "6d5bb9cc5ea9a8fdc4b1e075b691f6293d0654483ea3f9e019f2b2f86913ca7c",
-      "executable": true
-    },
-    {
-      "path": "scripts/dev/install-git-hooks.sh",
-      "sha256": "c48e767cb16fce756bea55492e33c62fd1e57560310d63bfb8a1adc118be2212",
-      "executable": true
-    },
-    {
-      "path": "rules/agent-maintenance.md",
-      "sha256": "0de19d6eb5b3dea57d46cd6412dc49ce6a1b5fb591b551dbec16cdb25ee181df",
-      "executable": false
-    },
-    {
-      "path": "scripts/ci/rewrite-local-lock-versions.pl",
-      "sha256": "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/test-local-lock-versions.pl",
-      "sha256": "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6",
-      "executable": true
-    },
-    {
-      "path": "scripts/ci/check-formatting-hooks.sh",
-      "sha256": "047fec1744a605e6a0707f6c4b338b40affbaf3e55ebb5fd48e7385fc5b21669",
-      "executable": true
-    },
-    {
-      "path": "docs/tag-maintenance.md",
-      "sha256": "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6",
-      "executable": false
-    }
-  ],
-  "exporter": "Clean committed Git-object exporter; reviewed manifest expansion and digest generation through shared verifier. No vendored patches, source mutation, staging or commits.",
-  "reviewed_diff": "target/shared-tooling-0310-adoption/upstream-changes.patch",
-  "previous_snapshot": {
-    "revision": "47cd2ccaf0e8b428f06e6db0262df76cfc1581de",
-    "files": "target/shared-tooling-0310-adoption/previous",
-    "manifest": "target/shared-tooling-0310-adoption/previous.snapshot",
-    "review": "target/shared-tooling-0310-adoption/previous-review.json"
-  },
-  "evidence": {
-    "export": "target/shared-tooling-0310-adoption/refresh.log",
-    "transformer_regressions": "target/shared-tooling-0310-adoption/lock-transformer.log",
-    "actual_original_and_candidate_cargo": "target/shared-tooling-0310-adoption/actual-cargo-candidate.log",
-    "adapter_and_recovery": "target/shared-tooling-0310-adoption/release-adapter.log",
-    "actual_hooks": "target/shared-tooling-0310-adoption/hooks.log",
-    "host_installer": "target/shared-tooling-0310-adoption/host-installer.log",
-    "ic_installer": "target/shared-tooling-0310-adoption/ic-installer.log",
-    "snapshot_and_runner": "target/shared-tooling-0310-adoption/snapshot-runner.log",
-    "syntax_and_lints": "target/shared-tooling-0310-adoption/shell.log",
-    "offline_tools_pins_formatting": "target/shared-tooling-0310-adoption/consumer-checks.log",
-    "documentation": "target/shared-tooling-0310-adoption/doc-links.log",
-    "native_scope": "Focused native Linux. Host installer branches use substitutes; actual installed tools are checked offline. Actual Cargo metadata uses isolated consumer originals and only a fixture local version change. No actual release, build/full CI/package, native macOS, tool activation or live IC run."
-  },
-  "optional_helpers_not_selected": {
-    "crates_io": "No registry observation/retry workflow exists; publication continues to delegate admission to Cargo.",
-    "rustsec": "No advisory database acquisition/audit workflow exists.",
-    "release_commands": "Existing actual-Make consumer tests cover entry points and its extra completed-resume receipt check. The shared runner-only fixture does not replace that consumer-specific obligation.",
-    "tag_maintenance": "No local tag-maintenance mechanism or authorized operation to replace; only linked shared guide is included.",
-    "ripgrep": "System bootstrap retains current selection; optional --with-ripgrep interface and pins are unchanged upstream bytes, not an activated consumer selection."
-  },
-  "remote_ci": {
-    "released_consumer_source": "2587259d1c8424e9aac585413c8efbc374c1faeb",
-    "main": "https://github.com/dragginzgame/ic-backup/actions/runs/37476081335",
-    "tag": "https://github.com/dragginzgame/ic-backup/actions/runs/37476081385",
-    "consumer_status": "Released-source Linux and both macOS jobs passed; dirty adoption has no remote CI result.",
-    "upstream_source": "9f8c7c768793f4ce8f25be9e88282c0f63a06e7f",
-    "upstream": "https://github.com/dragginzgame/shared-tooling/actions/runs/37479591040",
-    "upstream_status": "Queued at inspection; no consumer qualification inferred."
-  },
-  "removed_functions": [],
-  "retired_files": [],
-  "remaining_consumer_qualification": {
-    "issue": "https://github.com/dragginzgame/ic-backup/issues/5",
-    "scope": "Native macOS checker/adapters under current inputs, then retire overlapping mechanical hook functions; exact-status consumer case retained."
-  }
+   "adoption" : "Refresh the existing 56-file snapshot. Applicable dependency, validation and release-regression scripts now retain failed fixtures. Exercise actual adopted helpers through existing consumer tooling checks; no new production installer/cache/tag-maintenance entry points.",
+   "compatibility" : "Complete compatible pending 0.4.1 maintenance batch from finalized 0.4.0. Test failures retain inputs/status rather than deleting evidence; successful owned scratch remains disposable. Version output, formatter/release commands, source/version authority, package/dependency selections, Rust APIs and product schemas retain their established contract.",
+   "evidence" : "target/shared-tooling-041-0110-review",
+   "exporter" : "Exact committed refresh-consumer.sh from private clean source and consumer checkouts at 21f3ec3d. Current consumer files must match retained prior bytes before copying exact exported files/modes. No sibling writes or vendored patches.",
+   "initial_failure" : {
+      "cause" : "Failure interceptor selected original validation helper path, while actual test invoked its private copy. Child ran successfully and the consumer fixture rejected status 0; suffix/path matching now covers the actual copy. Corrected checks pass; initial failure retained.",
+      "fixture" : "target/shared-tooling-tests.inYPq4",
+      "log" : "tooling-checks.log"
+   },
+   "inspection_date" : "2026-10-06",
+   "optional_helpers_not_selected" : [
+      "Shared CI actionlint/ShellCheck/gitleaks installers and install-ci-tool: consumer retains apt/brew setup.",
+      "Sccache installer/launcher policy: no compiler wrapper or cache configured in this consumer.",
+      "Tag deletion implementation: no consumer entry point or tag-deletion authority.",
+      "Upstream cloc/portable retention fixture: unrelated dependencies and newly failed native fixture generation; actual consumer helpers tested locally instead.",
+      "Optional ripgrep bundle selection: consumer installer remains jq/yq-only."
+   ],
+   "previous_review" : "target/shared-tooling-041-0110-review/previous/docs/shared-tooling-review.json",
+   "previous_snapshot" : "target/shared-tooling-041-0110-review/previous/.shared-tooling.snapshot",
+   "prior_qualification" : [
+      {
+         "evidence" : "target/shared-tooling-041-review",
+         "revision" : "d957d1f8801885c5b69e4a9ef900155f5f2a8a9d",
+         "scope" : "54-file inheritance/version-reader adoption; its actual source and logs retained."
+      },
+      {
+         "evidence" : "target/shared-tooling-041-extension",
+         "revision" : "b32d3038c850a7c53470c326b0f7f11263b31669",
+         "scope" : "56-file formatter/finalizer/archive adoption; 69 consumer cases and native upstream CI retain those original inputs, not relabelled as current-revision qualification."
+      }
+   ],
+   "qualification" : {
+      "logs" : [
+         "refresh.log",
+         "tooling-checks-with-input-witness.log",
+         "retention-inputs-final.log",
+         "retention-shellcheck-final.log",
+         "release-runner.log",
+         "final-checks-with-input-witness.log"
+      ],
+      "retention_cases" : [
+         {
+            "child_status" : 23,
+            "expected_test_status" : 1,
+            "original" : "consumer/Cargo.toml",
+            "owner" : "dependency-pins"
+         },
+         {
+            "child_status" : 31,
+            "expected_test_status" : 1,
+            "original" : "Makefile",
+            "owner" : "validation-target-runner"
+         },
+         {
+            "child_status" : 33,
+            "expected_test_status" : 33,
+            "original" : "patch/version",
+            "owner" : "release-runner"
+         }
+      ],
+      "scope" : "Fresh Linux focused qualification for affected snapshot/tooling: actual helper failure injection after fixture creation, exact statuses and original inputs; normal shared validation/pin/metadata/formatter/installer/snapshot checks; common release runner with explicit Git/Make substitutes; shell checks. No full Rust/product/consumer release suite rerun for unchanged production source. Current local fixture assertions check original content witnesses, actual child execution markers and exact reported retained paths, without freezing diagnostic prose.",
+      "source_identity" : "0.4.0 release 52532cca4d5276bb67810ffb346aba464d5a719a, receipt original source c82b03fdc0fb4865a187f6a1da6f4b2c67611d2f; package remains 0.4.0."
+   },
+   "remaining_consumer_qualification" : "Configured native consumer macOS CI remains required under existing #5/#6/#7/#8/#9. No CI result exists for this uncommitted consumer source; 0.1.9 upstream native success is historical, while 0.1.10 upstream unused fixture failure is explicit. No real IC/backend/provider qualification.",
+   "remote_ci" : {
+      "evidence" : [
+         "release-040-ci-jobs.json",
+         "release-040-ci-failure.log"
+      ],
+      "evidence_root" : "target/shared-tooling-041-review",
+      "followup" : "https://github.com/dragginzgame/ic-backup/issues/9",
+      "runs" : [
+         "https://github.com/dragginzgame/ic-backup/actions/runs/37486733748",
+         "https://github.com/dragginzgame/ic-backup/actions/runs/37486731118"
+      ],
+      "source" : "52532cca4d5276bb67810ffb346aba464d5a719a",
+      "status" : "Linux passes; both macOS hosts fail after checksum/pin/evidence checks during system-Bash host-tools fixtures. Native failure is not proof of a production installer defect."
+   },
+   "remote_head_and_main" : "21f3ec3dd97f2968c9f0b08924451bb2f71770d1",
+   "removed_functions" : [],
+   "retired_files" : [],
+   "reviewed_diff" : "0.1.9..0.1.10: three adopted regression traps change to success-only disposal plus failure-path diagnostics; shared provenance/host/helper docs updated. Unused cloc/portable retention fixture, CI sccache installer and tag-delete implementation excluded.",
+   "snapshot" : ".shared-tooling.snapshot",
+   "snapshot_files" : [
+      {
+         "executable" : false,
+         "path" : "docs/verification-helpers.md",
+         "sha256" : "c5ffc7c8304da38d3d55289183a5a80a0d61f6218d9157d73d54bc2cdb2fdd91"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/check-documentation-links.pl",
+         "sha256" : "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-documentation-links.pl",
+         "sha256" : "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-file-digests.sh",
+         "sha256" : "fe64efb6af09c7b3182ed709700472ff803f6b5d54df0473a675b07597dcbb31"
+      },
+      {
+         "executable" : false,
+         "path" : "rules/dependency-pinning.md",
+         "sha256" : "403c595f0e60bbf81c265c1b1a5732d20534361bd3203d8a84083d0816f5f0e4"
+      },
+      {
+         "executable" : false,
+         "path" : "audits/README.md",
+         "sha256" : "926d5a39ea62a3becd19ff0326c63987b2929d3a1a728e2a0ef8a7180824d231"
+      },
+      {
+         "executable" : false,
+         "path" : "audits/code-hygiene.md",
+         "sha256" : "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3"
+      },
+      {
+         "executable" : false,
+         "path" : "audits/flow-convergence-and-duplication.md",
+         "sha256" : "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484"
+      },
+      {
+         "executable" : false,
+         "path" : "audits/complexity-and-technical-debt.md",
+         "sha256" : "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b"
+      },
+      {
+         "executable" : false,
+         "path" : "audits/module-surface-hardening.md",
+         "sha256" : "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075"
+      },
+      {
+         "executable" : false,
+         "path" : "audits/module-cleanup.md",
+         "sha256" : "d229519014823ad804070e55f7bb5316d7612e1d77a9dc8bf962d564e7b2a5e7"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/provenance.md",
+         "sha256" : "fa7e67815383cefc6952c70197d66a454b976c6f102d3e47026200ee2da619a3"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/ic-tools.md",
+         "sha256" : "89243ae92927e7c036fa8938e42acdd4a8f3dc4060600d2fff495fcd844486a9"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/local-setup.md",
+         "sha256" : "e1bf529c4610d7a26b86506a831c4c2e09d75c1e6076f527bdd2ad09027501d1"
+      },
+      {
+         "executable" : false,
+         "path" : "ci/ic-tools.tsv",
+         "sha256" : "5b1ef6bc9e344139f5e171cc1a3783bcee3650275de2f44fe0f8fa10f2bfef87"
+      },
+      {
+         "executable" : false,
+         "path" : "ci/tool-versions.env",
+         "sha256" : "4923b939b682de2311217c232d56fa0cf1c8f37e19e16c16d41be7626cff1285"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/check-dependency-pins.sh",
+         "sha256" : "4d875dd6b8822f68ae86a357cde9af67b33302331a11333e31941eb1c41a6929"
+      },
+      {
+         "executable" : false,
+         "path" : "scripts/ci/dependency-pins.jq",
+         "sha256" : "43b22d137421962ab6b34634e60d94b8cc6cf5483f9bc55afa8a0d1cd0964a28"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/verify-evidence-checksums.sh",
+         "sha256" : "22bf8001f496799c0e26795479b9e313fe3ceddec2e47b8444f8af8e7bc32bae"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/dev/install-host-tools.sh",
+         "sha256" : "591a5d5fc0b8bf0d48179a9d265245ea727ee318894bd10ed962137761465eea"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/dev/install-ic-tools.sh",
+         "sha256" : "7a78004b2fa56448ffa8a4fc9aac8e7e9343a0243bf857a3db908fb2f59cfb4f"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-dependency-pins.sh",
+         "sha256" : "75c53efefe025efb4f817879c802c201ca9d06a2c7ba7aefc25701b9aebf6170"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-host-tools.sh",
+         "sha256" : "0c3eb4842578038d15e8510db2beee20c881e75afa7ee8070145ac21c3bb2ceb"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-ic-tools.sh",
+         "sha256" : "0d4a45581e26987baaaa91cd49748e3b7b3ffa76b01f32d1db84560bd5baa68a"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-evidence-checksums.sh",
+         "sha256" : "43e2b571a909c2d63b2e3b11d208744995997575b34f0c1fbe5ea3104d40bcca"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/principles/README.md",
+         "sha256" : "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/principles/decision-artifact-discipline.md",
+         "sha256" : "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/principles/reviewable-changes.md",
+         "sha256" : "56701aba8ce851ac4cce32fb55ce721698a94218b1e46636818f6b43debcb719"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/principles/rust-code-hygiene.md",
+         "sha256" : "7e5fd8a3c3b1dc5a829a19ad1a4933fdc17792c8e923871da1e9f36586baff41"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/principles/simplicity-and-maintainability.md",
+         "sha256" : "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/consuming-snapshots.md",
+         "sha256" : "44a23eec5c7d043b374117d9585c0fc5da09134b717d33fb9937731b8b524261"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/supported-hosts.md",
+         "sha256" : "9573ed9ed4383b72a2b568118433454917697e346dac714452ed2074c23e731a"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/verify-file-checksum.sh",
+         "sha256" : "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/verify-shared-tooling-snapshot.sh",
+         "sha256" : "4024efa6850788102bbfa97c471ea3b45d760e547a31b11e7c6a91a79e3eaca8"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/run-validation-targets.sh",
+         "sha256" : "43b649ed7a196e46e6acf60e6307c474c34aa4dfeeb9729e2f37b4ecedca3aba"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-validation-target-runner.sh",
+         "sha256" : "6c1792ef48f555a3d8e159a24a3c829a8cfb2c27b91651f217bb1cdff8c0523f"
+      },
+      {
+         "executable" : false,
+         "path" : "DRAGGINZGAME.md",
+         "sha256" : "4c711609d1e8b30ccd2ddff3974b1418cced91a4484be3911c2a36c7631e31ee"
+      },
+      {
+         "executable" : false,
+         "path" : "rules/changelogs.md",
+         "sha256" : "9c95f254c59a1ef312d37981dcd8af2dadf4eda34cf9026cfeda4092a2716858"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/releases.md",
+         "sha256" : "681b830cf44aa1842ab68aeafc6e4ae8d2867fe189bbf405cbd74a6f4720d91a"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/run-release.sh",
+         "sha256" : "cffa84575afcd74836f59f9d8db4be083010048de03c338ec2448857d85dab5e"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/next-release-version.sh",
+         "sha256" : "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642"
+      },
+      {
+         "executable" : false,
+         "path" : "scripts/ci/finalize-release-changelog.awk",
+         "sha256" : "edda63b29cbdd88c7f1f0b5ab21dbae0635087a4ab6345392d99138c26b28206"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-release-runner.sh",
+         "sha256" : "8cf1de0e9ff2001f931b168a384a83d5c6f86d05d33abc39bd72adee5589f269"
+      },
+      {
+         "executable" : false,
+         "path" : "rules/cargo-dependencies.md",
+         "sha256" : "b0dfb6f6a1caf0f47f166523a3703bdd88a7667f8b0901e549620eb31adb7a7a"
+      },
+      {
+         "executable" : false,
+         "path" : "rules/git-hooks.md",
+         "sha256" : "fcaa0fef984f57853c2672a787fc2ac3c690dcb912ed475c1c4e95453cfdf00f"
+      },
+      {
+         "executable" : true,
+         "path" : ".githooks/pre-commit",
+         "sha256" : "6d5bb9cc5ea9a8fdc4b1e075b691f6293d0654483ea3f9e019f2b2f86913ca7c"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/dev/install-git-hooks.sh",
+         "sha256" : "c48e767cb16fce756bea55492e33c62fd1e57560310d63bfb8a1adc118be2212"
+      },
+      {
+         "executable" : false,
+         "path" : "rules/agent-maintenance.md",
+         "sha256" : "0de19d6eb5b3dea57d46cd6412dc49ce6a1b5fb591b551dbec16cdb25ee181df"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/rewrite-local-lock-versions.pl",
+         "sha256" : "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-local-lock-versions.pl",
+         "sha256" : "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/check-formatting-hooks.sh",
+         "sha256" : "a74951308598b86742672409c261e7adc62f8243c0fa8a60363124eae7ae67f8"
+      },
+      {
+         "executable" : false,
+         "path" : "docs/tag-maintenance.md",
+         "sha256" : "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/read-cargo-workspace-version.sh",
+         "sha256" : "40f31a19d6115411ebffe7c26e3ed30b8af7eead10dd4830de8d5a9312291222"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-cargo-metadata.sh",
+         "sha256" : "1719211830ee32ef422e12e226179ccf37c1b6a9e2c9a41bb2b71766cad52c3e"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/check-format-tools.sh",
+         "sha256" : "a52db278800a9f02d85a6b8a780a9b1eed860c49d5442cef9db1f7f9d7ddee0a"
+      },
+      {
+         "executable" : true,
+         "path" : "scripts/ci/test-format-tools.sh",
+         "sha256" : "bf3ac5d22e63798ffe67539b138d277cc3364a4665babff5b494b210b1e140ce"
+      }
+   ],
+   "upstream_ci" : {
+      "evidence" : [
+         "upstream-ci-run.json",
+         "upstream-ci-jobs.json",
+         "upstream-ci-failure.log",
+         "macos-artifact/"
+      ],
+      "finding" : "Retained macos-15 cloc.log reports bad interpreter /bin/bashcase; generated bin/bash first line joins shebang and case statement. Direct retained artifact proves that ARM native fixture failure; Intel fails at the same stage but its separate artifact was not inspected.",
+      "source" : "21f3ec3dd97f2968c9f0b08924451bb2f71770d1",
+      "status" : "Linux portable and lint/security pass; both macOS hosts fail new test-fixture-retention.sh after successful cloc/hook/metadata/installer checks. This excluded test is not a failed consumer helper.",
+      "tracking" : "https://github.com/dragginzgame/shared-tooling/issues/21",
+      "url" : "https://github.com/dragginzgame/shared-tooling/actions/runs/37491682760"
+   },
+   "upstream_version" : "0.1.10 source declaration; adoption binds exact committed revision, independently from release/tag/package authority."
 }

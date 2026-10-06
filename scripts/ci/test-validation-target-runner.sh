@@ -7,7 +7,7 @@ unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/validation-runner-test.XXXXXX")"
-trap 'rm -rf "$FIXTURE"' EXIT
+trap 'if [[ $? == 0 ]]; then rm -rf "$FIXTURE"; else printf "Failed validation-target-runner fixture retained: %s\n" "$FIXTURE" >&2; fi' EXIT
 
 mkdir -p "$FIXTURE/scripts/ci" "$FIXTURE/failure-logs"
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
