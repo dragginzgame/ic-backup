@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.6]
+## [0.3.6] - 2026-10-06
 
 - Stream admitted snapshot data into private local artifacts, retaining exact
   metadata and verifying complete region/chunk bytes before durable publication.
