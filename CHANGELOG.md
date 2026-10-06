@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.1]
+## [0.4.1] - 2026-10-06
 
 - Enforce workspace version and dependency inheritance with the committed shared
   checker. Read versions through its offline Cargo/TOML parser, preserving exact
