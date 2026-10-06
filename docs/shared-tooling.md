@@ -49,7 +49,39 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 52-file snapshot selects committed Shared Tooling
+The current 56-file snapshot selects committed Shared Tooling 0.1.11 at
+`46c02774a8335cb3949d6f04284c4f53375353c1`, matching inspected remote main.
+The compatible pending batch selects 0.4.2; package metadata, lockfile and receipt
+remain at released 0.4.1. See
+[the adoption review](shared-tooling-review.json) and
+[the current handoff](status/current.md) for exact local and native evidence.
+Uncommitted sibling work is inspected separately and never becomes inherited
+policy or a vendored patch.
+
+The baseline and maintenance rule are refreshed together. Authorized local fixes
+are applied in the working tree and receive focused checks. Findings are reported
+to their owning repository after searching its issues; that reporting authority
+does not authorize sibling source edits, issue closure or release effects. The
+local product, validation and release restrictions remain in `AGENTS.md`.
+
+The shared logger now distinguishes Rust `error::` names and ordinary failure
+context from actual diagnostics. The finalizer compares large version components
+as exact strings; this repository retains its narrower numeric release bounds.
+Both changes retain their canonical shared regressions. The local retention
+fixture follows the new first logger case and preserves its exact failure status.
+
+Released 0.4.1's shared formatting checker has passed both native macOS system
+Bash 3.2 tooling steps. Its overlapping local refresh, partial-stage and installer
+fixtures are removed; the distinct formatter exit-status case remains local.
+ARM's subsequent full gate fails in an independent fence-reconciliation fixture,
+so passing tooling milestones are not described as complete native CI success.
+Current 0.1.11 upstream CI and this uncommitted consumer's native checks remain
+unqualified. Original inputs and fresh focused evidence are retained under
+`target/shared-tooling-042-0111-review`.
+
+### Retained 52-file adoption
+
+The earlier 52-file snapshot selected committed Shared Tooling
 [`9f8c7c768793f4ce8f25be9e88282c0f63a06e7f`](https://github.com/dragginzgame/shared-tooling/tree/9f8c7c768793f4ce8f25be9e88282c0f63a06e7f),
 matching remote main and the clean read-only sibling. `VERSION` is 0.1.7, while
 its changelog remains undated and no local v0.1.7 tag was found; the commit owns

@@ -46,7 +46,7 @@ for owner in dependency-pins validation-target-runner release-runner; do
             helper=check-dependency-pins.sh; child_status=23; expected_status=1
             prefix=dependency-pins-test; original=consumer/Cargo.toml ;;
         validation-target-runner)
-            helper=run-validation-targets.sh; child_status=31; expected_status=1
+            helper=run-validation-targets.sh; child_status=31; expected_status=31
             prefix=validation-runner-test; original=Makefile ;;
         release-runner)
             helper=run-release.sh; child_status=33; expected_status=33
@@ -70,7 +70,7 @@ for owner in dependency-pins validation-target-runner release-runner; do
     case "$owner" in
         dependency-pins) rg -Fx 'version = "0.1.0"' "${retained[0]}/$original" >/dev/null ;;
         validation-target-runner)
-            captured="${retained[0]}/fail-fast.log"
+            captured="${retained[0]}/passing-tests.log"
             rg -F 'first-failure-marker' "${retained[0]}/$original" >/dev/null ;;
         release-runner) [[ "$(cat "${retained[0]}/$original")" == 0.1.0 ]] ;;
     esac

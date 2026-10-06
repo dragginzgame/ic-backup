@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.2]
+
+- Refresh shared validation and release checks. Keep successful Rust test names
+  and failure context out of error highlights while preserving real diagnostics
+  ([shared-tooling #22](https://github.com/dragginzgame/shared-tooling/issues/22)).
+- Remove duplicate hook fixtures after native consumer qualification; retain the
+  independent formatter exit-status check
+  ([#5](https://github.com/dragginzgame/ic-backup/issues/5)).
+
 ## [0.4.1] - 2026-10-06
 
 - Enforce workspace version and dependency inheritance with the committed shared

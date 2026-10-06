@@ -12,9 +12,13 @@ trap 'if [[ $? == 0 ]]; then rm -rf "$FIXTURE"; else printf "Failed validation-t
 mkdir -p "$FIXTURE/scripts/ci" "$FIXTURE/failure-logs"
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
 printf '%s\n' \
-    '.PHONY: pass mutate-runner fail-one fail-two fail-after-caught-panic' \
+    '.PHONY: pass passing-tests mutate-runner fail-one fail-two fail-after-caught-panic fail-with-test-context' \
     'pass:' \
     $'\t@echo pass-marker' \
+    'passing-tests:' \
+    $'\t@echo "test error::tests::passing ... ok"' \
+    $'\t@echo "test error::tests::ignored ... ignored"' \
+    $'\t@echo "test result: ok. 1 passed; 0 failed; 1 ignored"' \
     'mutate-runner:' \
     $'\t@printf "for broken do\\n" > scripts/ci/run-validation-targets.sh' \
     $'\t@echo mutation-marker' \
@@ -36,7 +40,25 @@ printf '%s\n' \
     $'\t@echo ordinary-context-four' \
     $'\t@echo ordinary-context-five' \
     $'\t@echo "test actual-test ... FAILED"' \
-    $'\t@exit 11' >"$FIXTURE/Makefile"
+    $'\t@exit 11' \
+    'fail-with-test-context:' \
+    $'\t@echo "test error::tests::context ... ok"' \
+    $'\t@echo "error[E0308]: typed-error-marker"' \
+    $'\t@echo "error:no-space-marker"' \
+    $'\t@echo "error:"' \
+    $'\t@echo "test error::tests::actual ... FAILED"' \
+    $'\t@exit 13' >"$FIXTURE/Makefile"
+
+# Namespaced successful and ignored tests must remain ordinary live output.
+VALIDATION_FAILURE_LOG_DIR="$FIXTURE/passing-logs" \
+    VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+    VALIDATION_RUNNER_DEPTH=0 VALIDATION_RUNNER_SNAPSHOT_PATH='' \
+    bash "$FIXTURE/scripts/ci/run-validation-targets.sh" passing-tests \
+    >"$FIXTURE/passing-tests.log" 2>&1
+rg -Fx 'test error::tests::passing ... ok' "$FIXTURE/passing-tests.log" >/dev/null
+rg -Fx 'test error::tests::ignored ... ignored' "$FIXTURE/passing-tests.log" >/dev/null
+rg -F 'VALIDATION PASSED:' "$FIXTURE/passing-tests.log" >/dev/null
+[[ ! -e "$FIXTURE/passing-logs" ]]
 
 fail_fast_status=0
 VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
@@ -63,7 +85,7 @@ VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     VALIDATION_RUNNER_DEPTH=0 \
     VALIDATION_RUNNER_SNAPSHOT_PATH='' \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" \
-    pass mutate-runner fail-one fail-two fail-after-caught-panic \
+    pass mutate-runner fail-one fail-two fail-after-caught-panic fail-with-test-context \
     >"$FIXTURE/output.log" 2>&1 || status=$?
 
 [[ "$status" -eq 1 ]] || {
@@ -81,12 +103,17 @@ for expected in \
     '[ERR:fail-two] error: second-live-error-marker' \
     '[ERR:fail-after-caught-panic] test actual-test ... FAILED' \
     '[ERR:fail-one] Target failed' \
-    '[ERR:fail-one] first-failure-marker' \
+    '[fail-one] first-failure-marker' \
     '[ERR:fail-two] Target failed' \
-    '[ERR:fail-two] second-failure-marker' \
+    '[fail-two] second-failure-marker' \
     '[ERR:fail-after-caught-panic] Target failed' \
     '[ERR:summary] Latest highlighted errors:' \
-    '[ERR:summary] VALIDATION FAILED: fail-one fail-two fail-after-caught-panic' \
+    '[ERR:fail-with-test-context] error[E0308]: typed-error-marker' \
+    '[ERR:fail-with-test-context] error:no-space-marker' \
+    '[ERR:fail-with-test-context] error:' \
+    '[ERR:fail-with-test-context] test error::tests::actual ... FAILED' \
+    '[fail-with-test-context] test error::tests::context ... ok' \
+    '[ERR:summary] VALIDATION FAILED: fail-one fail-two fail-after-caught-panic fail-with-test-context' \
     'PASS' \
     'FAIL' \
     'VALIDATION FAILED: fail-one fail-two fail-after-caught-panic'; do
@@ -121,8 +148,11 @@ fi
     exit 1
 }
 for expected in \
-    '[ERR:fail-one] first-failure-marker' \
-    '[ERR:fail-two] second-failure-marker' \
+    '[fail-one] first-failure-marker' \
+    '[fail-two] second-failure-marker' \
+    '[fail-with-test-context] test error::tests::context ... ok' \
+    '[ERR:fail-with-test-context] error[E0308]: typed-error-marker' \
+    '[ERR:fail-with-test-context] test error::tests::actual ... FAILED' \
     '[ERR:fail-after-caught-panic] test actual-test ... FAILED'; do
     rg -F "$expected" "$FIXTURE/failure-logs/latest-errors.log" >/dev/null || {
         echo "validation target runner test failed: highlighted log omits: $expected" >&2

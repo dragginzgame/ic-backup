@@ -25,7 +25,77 @@
 
 # Current handoff — 2026-10-06
 
-## Pending 0.4.1 Shared Tooling 0.1.10 failure retention
+## Pending 0.4.2 Shared Tooling 0.1.11 adoption
+
+The 56-file snapshot now binds committed Shared Tooling 0.1.11 at
+`46c02774a8335cb3949d6f04284c4f53375353c1`, matching inspected remote main.
+The baseline and agent maintenance rule are refreshed together; product and
+release authority remain local. Canonical logger/finalizer regressions cover
+ordinary Rust test names/context and exact large version comparisons. The
+consumer failure-retention fixture now checks the new first logger case's
+original input, executed child marker and exact status 31. The initial mismatch
+and corrected pass remain under `target/shared-tooling-042-0111-review`.
+
+Both native macOS system Bash 3.2 tooling steps pass for released 0.4.1 at
+`04da09a5a919bbf9aa56e71eaacaf245107021d4`. Their exact shared formatter owner
+is unchanged by 0.1.11. Four overlapping local hook functions are retired after
+that qualification: `test_format_and_retry`, `test_unstaged_protection`,
+`test_existing_hooks` and `test_symlink_checkout`. Shared refresh, partial-stage
+and installer cases own those checks; `test_formatter_failure` retains the
+distinct successful-prerequisite/exact-exit-status boundary locally.
+
+Linux's released full gate passes. ARM's later full gate fails with AlreadyExists
+in `fence_reconciliation.rs:97`; [issue #10](https://github.com/dragginzgame/ic-backup/issues/10)
+owns that independent fixture finding and proposed exclusive-root allocation.
+Its production/Rust repair is outside this tooling batch. Intel's full gate and
+0.1.11 upstream CI were still running/queued at inspection. No complete native
+gate or CI result for this uncommitted batch is inferred.
+
+The single undated 0.4.2 entry covers compatible internal tooling and fixture
+convergence; public API, schemas, package/lock versions and released receipt stay
+at 0.4.1. Original dirty documentation, snapshot/review, hook source and notes
+are retained under `target/shared-tooling-042-0111-review/previous`. No commit,
+tag, push, release, publication, sibling source edit or retained-artifact cleanup.
+Product provider/backend and complete backup/restore remain independently
+unqualified. Fresh Linux logger/retention, shared and consumer release-adapter,
+hook, ShellCheck/Perl, document-link, snapshot and non-mutating format checks pass.
+Registered hook membership is read from the retained case registry. No broad
+Rust/product gate was rerun for this tooling batch. See
+[the adoption review](../shared-tooling-review.json) for exact inputs and logs.
+Released adoption issues #6–#9 are closed with their native tooling evidence;
+#5 records the applied cleanup pending maintainer commit/push, and #10 remains
+open for the independent native fixture failure.
+
+## Retained released 0.4.1 and remaining hook convergence
+
+The maintainer has pushed 0.4.1. Clean local HEAD and annotated `v0.4.1`
+resolve to `04da09a5a919bbf9aa56e71eaacaf245107021d4`; package/lock versions,
+finalized notes and the source-bound receipt agree. Original receipt source is
+`85359068adc532fb69fad96b7b65571b727e6074`. No registry upload is inferred.
+The committed snapshot remains the exact 56-file Shared Tooling 0.1.10 revision.
+
+[Tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37498363329) and
+[main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37498362801)
+are running at that exact release. Tag CI has passed the full Linux gate and
+the ARM macOS system Bash 3.2 tooling step. Intel's system Bash tooling step is
+still running after a bounded watch; both full macOS gates remain incomplete.
+These results do not establish complete native qualification, so owning issues
+remain open. The local hook owner review maps overlapping
+formatting, partial-stage and installation cases to the shared checker, while
+retaining the distinct exact formatter-status failure case. Retirement waits
+for actual consumer native coverage; its source/owner-map evidence is retained
+under `target/hooks-convergence-042-review`. The proposed retirement passes
+syntax and ShellCheck, but is retained only as evidence; the maintained hook
+script remains unchanged. Receipt verification, 458 local documentation links
+and all 56 snapshot files pass. There is no new pending release entry from this
+documentation-only state update.
+
+The handoff and current-source introduction now distinguish released adoption
+from its earlier dirty evidence. Source/version/release/Git effects remain
+maintainer-owned. Product provider/backend and complete backup/restore remain
+independently unqualified. Earlier batch inputs and evidence are retained below.
+
+## Retained 0.4.1 Shared Tooling 0.1.10 failure retention
 
 The requested Shared Tooling 0.1.10 now binds all 56 exact snapshot files/modes to
 clean committed `21f3ec3dd97f2968c9f0b08924451bb2f71770d1`, matching remote main.

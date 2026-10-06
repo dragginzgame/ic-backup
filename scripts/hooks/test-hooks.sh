@@ -79,39 +79,6 @@ expect_hook_failure() {
     cat rejection.log
 }
 
-test_format_and_retry() {
-    local before readme
-    readme="$(git show :README.md)"
-    printf 'Unrelated working edit.\n' >> README.md
-    printf 'Untracked retained content.\n' > untracked.rs
-    before="$(index_fingerprint)"
-    git hook run pre-commit
-    [[ "$(index_fingerprint)" != "$before" ]]
-    [[ "$(git show :README.md)" == "$readme" ]]
-    [[ "$(cat untracked.rs)" == 'Untracked retained content.' && -z "$(git ls-files -- untracked.rs)" ]]
-    rg -q '^Unrelated working edit.$' README.md
-    make --no-print-directory fmt-check
-    git diff --exit-code -- crates/ic-backup/src/lib.rs Cargo.toml crates/ic-backup/Cargo.toml
-    before="$(index_fingerprint)"
-    local sources
-    sources="$(sources_fingerprint)"
-    git hook run pre-commit
-    [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]]
-}
-
-test_unstaged_protection() {
-    local index_before sources_before
-    case "$1" in
-        root) printf '\n// Unstaged edit.\n' >> crates/ic-backup/src/lib.rs ;;
-        manifest) printf '\n# Unstaged config.\n' >> crates/ic-backup/Cargo.toml ;;
-    esac
-    index_before="$(index_fingerprint)"
-    sources_before="$(sources_fingerprint)"
-    expect_hook_failure
-    rg -q 'partially staged file' rejection.log
-    [[ "$(index_fingerprint)" == "$index_before" && "$(sources_fingerprint)" == "$sources_before" ]]
-}
-
 test_formatter_failure() {
     mkdir failing-bin
     export HOOK_TEST_REAL_CARGO
@@ -131,25 +98,6 @@ CARGO
     rg -q 'Error 13' rejection.log
 }
 
-test_existing_hooks() {
-    git config --local core.hooksPath custom-hooks
-    if make --no-print-directory install-hooks > rejection.log 2>&1; then
-        echo 'installer overwrote existing hooks configuration' >&2
-        exit 1
-    fi
-    [[ "$(git config --local --get core.hooksPath)" == custom-hooks ]]
-    rg -q 'refused to replace core.hooksPath=custom-hooks' rejection.log
-}
-
-test_symlink_checkout() {
-    local linked="$TEMPORARY/linked-checkout" before
-    before="$(index_fingerprint)"
-    ln -s "$FIXTURE" "$linked"
-    bash "$linked/scripts/dev/install-git-hooks.sh"
-    [[ "$(git config --local --get core.hooksPath)" == .githooks ]]
-    [[ "$(index_fingerprint)" == "$before" ]]
-}
-
 run_case() {
     CASE_NAME="$1"
     shift
@@ -165,8 +113,8 @@ run_case() {
 }
 
 # Qualify the exact shared checker with our real formatter inputs, including
-# uncommitted module files. Keep the older mechanical cases until both native
-# macOS jobs qualify this adoption (ic-backup issue #5).
+# uncommitted module files. Native released consumer coverage qualifies this
+# owner; the independent exact formatter-status case remains local.
 CASE_NAME=shared-formatting
 CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
@@ -180,11 +128,5 @@ bash "$ROOT/scripts/ci/check-formatting-hooks.sh" "$ROOT" \
     crates/ic-backup/src/lib.rs crates/ic-backup/Cargo.toml \
     "$TEMPORARY/unsorted-Cargo.toml" "${formatter_inputs[@]}" > "$CASE_LOG" 2>&1
 
-run_case format-and-retry test_format_and_retry
-for location in root manifest; do
-    run_case "unstaged-$location" test_unstaged_protection "$location"
-done
 run_case formatter-failure test_formatter_failure
-run_case existing-hooks test_existing_hooks
-run_case symlink-checkout test_symlink_checkout
 echo 'Hook tests: PASS (selected auto-formatting, index refresh, partial-stage rejection, unrelated edit preservation, formatter failure and local installation).'
