@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.2]
+## [0.4.2] - 2026-10-06
 
 - Refresh shared validation and release checks. Keep successful Rust test names
   and failure context out of error highlights while preserving real diagnostics
