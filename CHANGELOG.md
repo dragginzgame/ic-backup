@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.4]
+## [0.3.4] - 2026-10-06
 
 - Encode exact snapshot metadata reads and decode bounded replies while preserving
   global values, optional fields and chunk identities. Retain request/raw-byte
