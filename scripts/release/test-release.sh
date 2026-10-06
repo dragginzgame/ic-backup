@@ -116,20 +116,26 @@ case "$1" in
             HEAD^) cat "target/commits/$(head)/parent" ;;
             *'^{tree}') echo dddddddddddddddddddddddddddddddddddddddd ;;
             'refs/tags/'*'^{commit}')
-                [[ -f target/mock-tag ]]; name="${value#refs/tags/}"; name="${name%\^\{commit\}}"
+                [[ -f target/mock-tag ]] || exit 1
+                name="${value#refs/tags/}"; name="${name%\^\{commit\}}"
                 cat "target/tags/$name.commit" ;;
-            refs/tags/*) [[ -f target/mock-tag ]]; cat "target/tags/${value#refs/tags/}.object" ;;
-            *) [[ "$value" =~ ^[0-9a-f]{40}$ && -d "target/commits/$value" ]]; echo "$value" ;;
+            refs/tags/*) [[ -f target/mock-tag ]] || exit 1; cat "target/tags/${value#refs/tags/}.object" ;;
+            *) [[ "$value" =~ ^[0-9a-f]{40}$ && -d "target/commits/$value" ]] || exit 1; echo "$value" ;;
         esac ;;
     show)
         value="$2"; sha="${value%%:*}"; path="${value#*:}"
-        [[ "$sha" =~ ^[0-9a-f]{40}$ ]]; cat "target/commits/$sha/files/$path" ;;
+        [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 1; cat "target/commits/$sha/files/$path" ;;
     status) if dirty; then echo ' M retained-source'; fi ;;
     diff)
         case "${2:-}" in
             --name-only) if [[ "${TEST_DIRTY:-0}" == 1 ]]; then printf 'src/changed.rs\0'; fi ;;
             --binary) cat Cargo.toml Cargo.lock CHANGELOG.md crates/ic-backup/Cargo.toml ;;
-            --cached) [[ ! -f target/mock-staged ]] ;;
+            --cached)
+                case "$3" in
+                    --name-only) if [[ "${TEST_DIRTY:-0}" == 1 ]]; then printf 'src/changed.rs\0'; fi ;;
+                    --quiet) if [[ "$#" == 3 ]]; then [[ ! -f target/mock-staged ]]; else [[ "${TEST_DIRTY:-0}" != 1 ]]; fi ;;
+                    *) exit 97 ;;
+                esac ;;
             --quiet) if [[ "${3:-}" == HEAD ]]; then ! dirty; else [[ "${TEST_DIRTY:-0}" != 1 ]]; fi ;;
             *) exit 97 ;;
         esac ;;
@@ -155,7 +161,7 @@ case "$1" in
                 if [[ "${TEST_LOST_EFFECT:-}" == tag && ! -e target/lost-tag ]]; then touch target/lost-tag; exit 9; fi ;;
             *) exit 97 ;;
         esac ;;
-    cat-file) [[ -f target/mock-tag && -f "target/tags/${3#refs/tags/}.object" ]]; echo tag ;;
+    cat-file) [[ -f target/mock-tag && -f "target/tags/${3#refs/tags/}.object" ]] || exit 1; echo tag ;;
     ls-remote)
         [[ "${TEST_REMOTE_FAIL:-0}" != 1 ]] || exit 9
         for ref in "$@"; do
@@ -164,7 +170,7 @@ case "$1" in
                 refs/tags/*) if [[ -f "target/remote-tags/${ref#refs/tags/}" ]]; then printf '%s\t%s\n' "$(cat "target/remote-tags/${ref#refs/tags/}")" "$ref"; fi ;;
             esac
         done ;;
-    add) [[ "$*" == 'add -- Cargo.toml Cargo.lock CHANGELOG.md docs/release.json' ]]; touch target/mock-staged; echo stage >> "$TEST_EFFECTS" ;;
+    add) [[ "$*" == 'add -- Cargo.toml Cargo.lock CHANGELOG.md docs/release.json' ]] || exit 97; touch target/mock-staged; echo stage >> "$TEST_EFFECTS" ;;
     write-tree) echo dddddddddddddddddddddddddddddddddddddddd ;;
     log)
         sha="$(resolve "${*: -1}")"
@@ -174,7 +180,7 @@ case "$1" in
             *) exit 97 ;;
         esac ;;
     commit)
-        [[ "$*" == "commit -m Release $(perl scripts/release/release-data.pl version)" ]]
+        [[ "$*" == "commit -m Release $(perl scripts/release/release-data.pl version)" ]] || exit 97
         parent="$(head)"; sha=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
         if [[ -d "target/commits/$sha" ]]; then sha="$(printf '%s\n' "$parent" "$3" | "$TEST_REAL_GIT" hash-object --stdin)"; fi
         mkdir -p "target/commits/$sha/files/crates/ic-backup" "target/commits/$sha/files/docs"
@@ -187,9 +193,9 @@ case "$1" in
         echo commit >> "$TEST_EFFECTS"
         if [[ "${TEST_LOST_EFFECT:-}" == commit && ! -e target/lost-commit ]]; then touch target/lost-commit; exit 9; fi ;;
     push)
-        [[ "$#" == 6 && "$2" == --no-follow-tags && "$3" == --atomic && "$4" == origin && "$5" == *:refs/heads/main && "$6" == refs/tags/v*:refs/tags/v* ]]
+        [[ "$#" == 6 && "$2" == --no-follow-tags && "$3" == --atomic && "$4" == origin && "$5" == *:refs/heads/main && "$6" == refs/tags/v*:refs/tags/v* ]] || exit 97
         sha="$(resolve "${5%:refs/heads/main}")"; tag="${6%%:*}"; tag="${tag#refs/tags/}"
-        if [[ -f target/remote-head ]]; then ancestor "$(cat target/remote-head)" "$sha"; fi
+        if [[ -f target/remote-head ]]; then ancestor "$(cat target/remote-head)" "$sha" || exit 1; fi
         printf '%s %s\n' "$sha" "$tag" >> target/pushes.log
         echo push >> "$TEST_EFFECTS"
         [[ "${TEST_PUSH_FAIL:-0}" != 1 ]] || exit 9
@@ -213,7 +219,7 @@ done
 if [[ "$target" == shared-tooling-check ]]; then exit 0; fi
 if [[ "$target" == fmt-check ]]; then
     echo prepared-format-check >> "$TEST_EFFECTS"
-    [[ "${TEST_PREPARED_FORMAT_FAIL:-0}" != 1 ]]
+    [[ "${TEST_PREPARED_FORMAT_FAIL:-0}" != 1 ]] || exit 7
     exit
 fi
 if [[ "$target" == release-verify ]]; then
@@ -562,6 +568,70 @@ SH
     [[ ! -e target/mock-cache && "$(cat "$TEST_EFFECTS")" == fetch ]]
     assert_cache_retained
 }
+test_conditional_substitute_rejections() {
+    # Bash 3.2 also disables inherited errexit in conditional command substitutions.
+    # Source under a condition to reproduce that rule on the selected native Bash.
+    cat > target/conditional-substitute.sh <<'SH'
+if source "$1" "${@:2}"; then exit 0; else exit $?; fi
+SH
+    expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" cat-file -t refs/tags/v0.1.1
+    expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" rev-parse refs/tags/v0.1.1
+    expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" rev-parse 'refs/tags/v0.1.1^{commit}'
+    expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" rev-parse aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    [[ ! -s "$TEST_EFFECTS" ]]
+    export TEST_PREPARED_FORMAT_FAIL=1
+    expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/make" fmt-check
+    [[ "$(cat "$TEST_EFFECTS")" == prepared-format-check ]]
+    [[ ! -e target/mock-tag && ! -e target/mock-staged && ! -e target/mock-head ]]
+    assert_cache_retained
+}
+
+test_real_index_boundaries() {
+    # Reuse real existing history and private indexes; never create a commit.
+    local native="$FIXTURE/target/real-worktree" source helper="$FIXTURE/target/native-guard.sh"
+    "$TEST_REAL_GIT" clone --shared --quiet "$ROOT" "$native"
+    source="$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)"
+    cat > "$helper" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+git() { "$TEST_REAL_GIT" "$@"; }
+source "$1" version
+cd "$2"
+export CARGO_TARGET_DIR="$PWD/target"
+mkdir -p "$CARGO_TARGET_DIR"
+case "$3" in
+    paths) allowed_changes "$4" ;;
+    preflight)
+        export RELEASE_SOURCE="$4" RELEASE_PREVIOUS="$5" RELEASE_VERSION="$6" RELEASE_DATE=2026-10-06
+        preflight ;;
+    *) exit 97 ;;
+esac
+SH
+    bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
+    printf '\n- Permitted pending notes.\n' >> "$native/CHANGELOG.md"
+    bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
+    "$TEST_REAL_GIT" -C "$native" show HEAD:CHANGELOG.md > "$native/CHANGELOG.md"
+    printf '\nstaged unrelated edit\n' >> "$native/README.md"
+    "$TEST_REAL_GIT" -C "$native" add -- README.md
+    "$TEST_REAL_GIT" -C "$native" show HEAD:README.md > "$native/README.md"
+    expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
+    rg -F 'unrelated release path: README.md' target/rejection.log >/dev/null
+    "$TEST_REAL_GIT" -C "$native" diff --cached --name-only > target/native-staged.txt
+    [[ "$(cat target/native-staged.txt)" == README.md ]]
+    "$TEST_REAL_GIT" -C "$native" restore --staged -- README.md
+    printf '\n# staged original metadata edit\n' >> "$native/Cargo.toml"
+    "$TEST_REAL_GIT" -C "$native" add -- Cargo.toml
+    "$TEST_REAL_GIT" -C "$native" show HEAD:Cargo.toml > "$native/Cargo.toml"
+    local previous candidate
+    previous="$(cd "$native" && perl scripts/release/release-data.pl version)"
+    candidate="$(cd "$native" && perl scripts/release/release-data.pl next patch)"
+    expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" preflight "$source" "$previous" "$candidate"
+    rg -F 'staged original release metadata changed' target/rejection.log >/dev/null
+    [[ ! -f "$native/target/commands.log" ]]
+    "$TEST_REAL_GIT" -C "$native" diff --cached --name-only > target/native-staged.txt
+    [[ "$(cat target/native-staged.txt)" == Cargo.toml ]]
+    [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]]
+}
 
 for outcome in success failure; do
     run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"
@@ -588,4 +658,6 @@ for mode in explicit patch minor gate-failure; do run_case "older-release-$mode"
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
 run_case completed-evidence-replay test_completed_evidence_replay
 run_case dependency-failure-conditional-status test_dependency_failure_conditional_status
-printf 'Release adapters: PASS (actual Make entry points, original metadata, gates, rollback, recovery and exact push; Git/Cargo substitutes only).\n'
+run_case conditional-substitute-rejections test_conditional_substitute_rejections
+run_case real-index-boundaries test_real_index_boundaries
+printf 'Release adapters: PASS (Make/gate/recovery command substitutes and real private-index boundaries; no new Git commits or live publication).\n'

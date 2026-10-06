@@ -17,7 +17,8 @@ ensure_clean() {
 allowed_changes() {
     local base="$1" path paths denied=''
     paths="$(mktemp "$CARGO_TARGET_DIR/release-paths.XXXXXX")"
-    git diff --name-only -z "$base" -- > "$paths"
+    git diff --cached --name-only -z "$base" -- > "$paths"
+    git diff --name-only -z -- >> "$paths"
     git ls-files --others --exclude-standard -z >> "$paths"
     while IFS= read -r -d '' path; do
         case "$path" in Cargo.toml|Cargo.lock|CHANGELOG.md|docs/release.json) ;;
@@ -49,6 +50,7 @@ preflight() {
     # Pending notes may be dirty; package/lock/previous receipt must still match
     # the selected source so a partial prior bump cannot become a new base.
     git diff --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'original release metadata changed'
+    git diff --cached --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'staged original release metadata changed'
     perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE"
     make --no-print-directory shared-tooling-check
     cargo fetch --locked

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "kind": "local metadata-bound snapshot artifact continuation review",
+  "inspection_date": "2026-10-06",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "e1a211a00f01568ccc99bedc494c62a7141444dd",
+  "source_worktree_dirty": false,
+  "evidence": "target/snapshot-artifact-review/source",
+  "reviewed_sources": [
+    {"path": "crates/canic-backup/src/runner/operations/artifacts.rs", "lines": [141, 192], "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573", "disposition": "Whole-command success/directory-to-completion assumptions are unchanged and not imported."},
+    {"path": "crates/canic-host/src/icp/snapshot.rs", "lines": [30, 43], "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571", "disposition": "External snapshot-download process remains integration-owned; no process/provider implementation copied."}
+  ],
+  "consumers_unchanged": ["crates/canic-backup/src/runner/mod.rs:285", "crates/canic-backup/src/runner/operations/mod.rs:62", "crates/canic-host/src/icp/snapshot.rs:31"],
+  "production_destination": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/",
+  "canonical_owners_reused": ["IcSnapshotMetadataReply", "IcSnapshotDataReply", "IcSnapshotDataCoverage", "ArtifactChecksumRecord", "checksum_relative_files", "checksum_directory", "checksum_reader", "policy::download_integrity::validate", "DownloadJournalGuard::require_unchanged_integrity_journal", "DownloadJournalRecord::advance", "DownloadJournalGuard::store", "DownloadJournalGuard::finalize_artifact", "commit_artifact_directory"],
+  "retained_verification_review": {"inspection_date": "2026-10-06", "source_head": "e1a211a00f01568ccc99bedc494c62a7141444dd", "source_worktree_dirty": true, "evidence": "target/snapshot-artifact-review/retained-verification-source", "scope": "Follow-up reviewed the same committed artifact/process sources; sibling dirty paths are retained separately and were neither imported nor changed. Additive explicit original-plan-bound local IC-tree verification reuses integrity/byte owners; no upload reader/provider or Canic consumer change."},
+  "license": "No Canic source copied into production; existing extraction attribution and MIT notices retained.",
+  "qualification": {"unit_filter": "ops::persistence::download_journal", "publisher_filter": "artifact_commit", "public_target": "ic_snapshot_artifact", "evidence": "target/snapshot-artifact-review", "scope": "Actual native local byte persistence and acknowledged process death, not IC effects or authenticated transfer. Exact registered/passing membership is retained."},
+  "compatibility": "Additive Unix-host writer/error and explicit fresh verification entry points, with a distinct opt-in v1 artifact discriminator. Existing opaque artifacts, records, hashes, released exhaustive enums, dependencies and package/lock/receipt selection stay unchanged.",
+  "remaining": "Authenticated context/target/raw-ID/token association and complete transfer; prior per-call authority/fresh permissions; stable noncooperating byte/command custody; upload/load/application safety and terminal/fence/reference release."
+}

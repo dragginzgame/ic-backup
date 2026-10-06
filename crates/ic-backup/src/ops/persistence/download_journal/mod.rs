@@ -1,9 +1,13 @@
 //! Locked durable local lifecycle updates and verified artifact publication.
 
+#[cfg(unix)]
+mod ic_snapshot_artifact;
 mod integrity;
 mod local_restore_artifact;
 mod local_restore_source;
 mod manifest;
+#[cfg(unix)]
+pub use ic_snapshot_artifact::{IcSnapshotArtifactError, IcSnapshotArtifactWriter};
 pub use integrity::DownloadIntegrityError;
 pub use local_restore_artifact::{
     LocalRestoreArtifactError, LocalRestoreArtifactPublicationError, LocalRestoreArtifactView,

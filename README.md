@@ -159,6 +159,9 @@ implemented foundation includes:
 - metadata-bound snapshot data reads with checked ranges, exact lengths and chunk
   hashes, plus bounded incremental coverage checks that reject missing or repeated
   data without claiming durable transfer;
+- local streaming of admitted snapshot bytes into private verified artifacts, with
+  durable publication, local interruption recovery through the original journal,
+  and explicit retained metadata/extent/chunk verification;
 - contracts for exact originally reserved IC updates and bounded passive reply
   association, preserving pending spending without automatic settlement;
 - exact reserved status/snapshot-list observation contracts that retain both attempt

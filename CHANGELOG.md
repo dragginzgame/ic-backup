@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.6]
+
+- Stream admitted snapshot data into private local artifacts, retaining exact
+  metadata and verifying complete region/chunk bytes before durable publication.
+  Recover publication through the original download journal; interrupted transfers
+  retain partial evidence without repeating reads or changing effect spending.
+- Explicitly verify published IC artifacts against the retained original plan,
+  metadata, region lengths and chunk hashes. Reject changed or unsafe files without
+  rewriting evidence or adding artifact reads to ordinary resume.
+- Adopt Shared Tooling's failure-log fallback and stronger release index checks.
+  Reject staged changes hidden by restored working files, and make missing-tag
+  fixtures fail explicitly under conditional shell evaluation.
+  [#2](https://github.com/dragginzgame/ic-backup/issues/2)
+- Make FIFO safety fixtures portable to macOS while preserving real filesystem
+  rejection checks for artifacts and restore-reference records.
+
 ## [0.3.5] - 2026-10-06
 
 - Bind snapshot data reads to retained metadata with checked memory ranges and

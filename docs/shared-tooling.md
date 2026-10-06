@@ -52,20 +52,33 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 The inspected upstream repository is
 [`dragginzgame/shared-tooling`](https://github.com/dragginzgame/shared-tooling).
 The current committed baseline and tooling revision is
-[`9437bab201bb6071da0bdc4de0336daf553113f5`](https://github.com/dragginzgame/shared-tooling/tree/9437bab201bb6071da0bdc4de0336daf553113f5),
+[`cb86188c5956866564de4fb6ec6be67b27981ab9`](https://github.com/dragginzgame/shared-tooling/tree/cb86188c5956866564de4fb6ec6be67b27981ab9),
 reviewed on 2026-10-06. A read-only remote query confirmed that exact `HEAD`/`main`;
 the read-only sibling checkout was clean. The unchanged upstream Git-object
-exporter supplies all twenty-three exact files, including the new agent maintenance
-rule. The release runner reconciles saved intent through normal targets before
+exporter supplies all twenty-three exact files. The validation runner retains raw
+temporary logs if copying them to the configured failure directory fails. Consumer
+release admission checks staged and working paths independently, including original
+metadata hidden by restored working bytes. Existing candidate/changelog and whole
+prepared-index checks remain enforced. Real private-index cases reuse existing
+history without creating commits. Conditional Git/formatter substitutes explicitly
+reject missing evidence; Linux reproduces the shell condition behind 0.3.5's macOS
+completed-tag failure. Native macOS confirmation remains pending.
+
+The release runner reconciles saved intent through normal targets before
 selecting another increment. Its late adapters receive `RELEASE_COMMIT`, which may
 precede HEAD. Hook refresh preserves formatter failure and canonicalizes checkout
 paths. Public commands remain the same; these are compatible recovery corrections.
 No vendored file is patched locally. See [the review provenance](shared-tooling-review.json).
 
+The previous `9437bab201bb6071da0bdc4de0336daf553113f5` files, manifest and audit
+are retained under `target/shared-tooling-036-review/previous`, `previous.snapshot`
+and `previous-review.json`. Current focused Linux tooling evidence remains in that
+same directory; snapshot artifact evidence is under `target/snapshot-artifact-review`.
+
 The previous `c0206f1943238e21bd00fbe01658e6a0864c24fa` files, manifest and audit
 are retained under `target/shared-tooling-035-review/previous`, `previous.snapshot`
-and `previous-review.json`. Current focused Linux evidence and source review remain
-in that same directory. Native macOS qualification and complete CI remain separate.
+and `previous-review.json`. Those are historical source/qualification paths; native
+macOS qualification and complete CI remain separate.
 
 The previous `b8537873ac124ad17b30e32aa23e9006a3e6ec21` files, manifest and audit
 record are retained under `target/shared-tooling-refresh.BOQlFZ/previous`,

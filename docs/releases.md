@@ -21,7 +21,10 @@ these commands must reject ambiguous or unsupported version inputs.
 1. **Preflight.** Select exactly one release kind, compute and display the current
    and candidate versions, repository, branch, remote and exact effects before
    mutation. Reject conflicting release selections, an existing candidate tag,
-   unrelated uncommitted work, missing inputs and concurrent releases. Prepare
+   unrelated uncommitted work, missing inputs and concurrent releases. Check
+   staged and unstaged paths independently: a working file restored to HEAD can
+   still have different staged content. Check pending changelog/candidate
+   agreement here, before the validation gate or saved preparation intent. Prepare
    the selected dependency cache before an offline gate without changing the
    lockfile selection. Never infer a deployment destination or credentials.
 2. **Validate.** Run the repository's documented complete release gate against
@@ -40,6 +43,8 @@ these commands must reject ambiguous or unsupported version inputs.
 5. **Commit and tag.** Create the maintainer-owned release commit with subject
    `Release X.Y.Z` and an annotated `vX.Y.Z` tag on that exact commit. The
    declared release files, candidate version and validation evidence must agree.
+   Before creating the commit, verify that the entire index contains only
+   permitted release changes and matches the prepared metadata.
 6. **Push.** Atomically push only the selected branch and exact release tag to
    the preflight remote. If atomic push is unsupported, fail and retain local
    state. Do not force-push or push unrelated tags.
@@ -66,6 +71,14 @@ keep consumer workspace cleanup as a separately invoked, explicitly scoped
 command. A helper may remove its own disposable scratch files when they contain
 no retained artifacts or evidence and are not needed for recovery. A directory
 being named `tmp` or `cache` does not establish that it is safe to delete.
+
+Shared Tooling's own `release-verify` adapter runs `ci` through
+`scripts/ci/run-validation-targets.sh`. Failed attempts retain unique raw logs
+under the Git directory's `release-state/validation-failures/`, outside tracked
+release inputs. Later attempts preserve those logs; `latest.log` is only a
+convenience copy. If retention fails, the logger preserves its temporary logs
+and reports their location. Consumer adapters must provide equivalent retention
+for their actual validation commands, not just simulated fixture evidence.
 
 The common runner uses exactly this push shape with its saved selections:
 
@@ -141,12 +154,12 @@ Consumer Make targets provide these adapters:
 | Target | Contract |
 | --- | --- |
 | `release-version` | Print only the canonical `X.Y.Z` version. |
-| `release-preflight` | Admit only the declared release metadata as dirty work; reject unrelated staged/unstaged/untracked paths; prepare the selected offline cache. |
+| `release-preflight` | Check candidate/changelog agreement; admit only declared release metadata as dirty work; inspect staged and unstaged paths separately, reject unrelated untracked paths, and prepare the selected offline cache. |
 | `release-verify` | Run the same complete gate for every release kind. |
 | `release-prepare-version` | Apply exactly the saved candidate and finalize notes; preserve dependency selection and verify all directly owned metadata. |
 | `release-prepared-check` | Check the candidate and prepared metadata without another bump. |
 | `release-files` | Print the explicit relative release paths, each terminated by NUL, and no explanatory output. |
-| `release-commit-check` | Admit the exact release index and source-bound validation evidence. |
+| `release-commit-check` | Admit the entire exact release index, ensure it matches prepared metadata, and check source-bound validation evidence. |
 | `release-committed-check` | Check `RELEASE_COMMIT` and its consumer-owned evidence binding. |
 | `release-tagged-check` | Check or record exact tag-bound evidence for `RELEASE_COMMIT` without another Git effect. |
 | `release-push-check` | Check the selected `RELEASE_COMMIT`, tag, evidence and destination before dispatch/reconciliation. |
@@ -233,3 +246,6 @@ push scope, artifact retention on success/failure/retry and interruption recover
 Qualification must not publish a real release
 as a side effect of testing. Documentation review or a stub pass is not evidence
 of live package publication or a native host release.
+Supplement effect/interruption stubs with real Git index/tree checks at staging
+boundaries. Shared Tooling's metadata fixture reuses existing history without
+creating commits and exercises the actual adapter's failed-log retention.

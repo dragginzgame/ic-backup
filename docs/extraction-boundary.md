@@ -1733,6 +1733,93 @@ Real-backend transfer and application qualification remain pending. Source revie
 extends the existing [data review](ic-snapshot-data-source.json), without importing
 Canic whole-command completion assumptions or changing its consumers.
 
+### Durable metadata-bound IC snapshot artifacts
+
+`DownloadJournalGuard::stage_ic_snapshot_artifact` borrows the original guarded
+Created entry and exact decoded metadata. The canonical target and timestamp must
+match; the caller's generic backend token remains unchanged and its association
+with the distinct raw IC ID remains integration-owned. Independently observed
+total snapshot size is preserved, without summing metadata regions. Raw metadata
+must match the decoder's retained checksum and 1 MiB bound before any creation.
+
+The distinct `ic-backup/ic-snapshot-artifact/v1` tree has fixed direct children:
+`format`, exact `metadata.candid` and `metadata-arguments.candid`, three region
+files (`wasm-module.bin`, `wasm-memory.bin`, `stable-memory.bin`), and one
+`chunk-{lowercase-sha256}.bin` per original chunk. Original raw metadata retains
+globals, optional fields, certified data and ordered chunk identities without
+re-encoding or upload defaults. Empty regions have actual empty files; empty
+known chunks require their actual admitted reply. New directories/files use
+0700/0600 permissions and descriptor-relative exclusive/no-follow creation.
+
+`IcSnapshotArtifactWriter::append` reuses the canonical coverage owner, retaining
+each admitted reply's exact bytes with three incremental region hash states and
+at most 1,024 chunk checksum rows. Each chunk is bounded to 1 MiB; no aggregate
+buffer, total-size sum, new progress record or spending owner appears. Root,
+artifact-parent and staging identities are rechecked. An error consumes the
+writer, closes descriptors and retains partial evidence with no journal transition.
+Drop does not delete files. Occupied staging/canonical paths reject recreation.
+
+Explicit `finish` requires complete coverage and a closed fixed tree. Fresh
+no-follow hashing must match checksums derived from actual admitted bytes,
+including exact original metadata/request. Existing model transitions derive
+Downloaded then ChecksumVerified; one atomic journal publication retains their
+expected checksum before the existing descriptor synchronization/no-replace
+artifact publisher and Durable transition. There is no new digest encoder or
+journal/schema flag. Failed persistence can require reopen; failed publication
+can retain exact staging or canonical bytes. ChecksumVerified recovery uses
+ordinary `finalize_artifact` without another transfer. Created partial staging
+is not reconstructed as coverage and supplies no read retry permission; its
+disposition remains operator-owned. Ordinary Durable replay reads retained
+progress without artifact IO. Fresh verification remains an explicit operation.
+Closing root, parent and published-directory identity checks can reject after
+Durable evidence was retained; such a failure preserves that completed local
+evidence without repairing or replacing paths. Holding guards does not fence
+noncooperating file mutations.
+
+`DownloadJournalGuard::verify_ic_snapshot_artifact` is the distinct opt-in fresh
+retained IC-tree check. It requires the full original persisted plan, unchanged held
+journal and canonical complete Durable selection through the existing integrity
+policy. Only the requested target's artifact is read. Exact target/token/timestamp,
+format, original metadata/request hashes, three nat64 region lengths and every known
+bounded chunk hash must match; the closed direct-child tree uses the existing retained
+whole-tree checksum. Generic tokens remain separate from raw IDs. This is stronger
+shape admission for the opt-in format, without changing generic artifact verification.
+
+Descriptor-relative no-follow/nonblocking opens reject symlinks, directories and
+special files. Observed length bounds apply before streaming through the canonical
+64 KiB checksum buffer; reads stop at the observed length plus one even if a writer
+grows a file. Missing/extra children, changed lengths/hashes, replaced file/directory
+identity and closing original plan/journal changes reject without repair. Metadata
+and chunks retain their 1 MiB bounds; region lengths remain independent nat64 values
+without aggregate allocation or a sum. A passive returned checksum holds no future
+byte custody, full-set byte verification or upload permit. Checks are sequential,
+so integrations still fence noncooperating changes. No new record or state owner is
+introduced; ordinary reopen/terminal replay performs no fresh artifact reads.
+
+Native tests exercise interleaved ranges/chunks, exact raw metadata/request and
+private bytes, empty regions/chunks, maximum replies/1,024 chunk identities,
+incomplete or mixed coverage, duplicate/occupied entries, IO errors, changed or
+unsafe files and replaced layout/parent/staging custody. Acknowledged native child
+death during transfer, after retained checksum and after actual publication
+qualifies local recovery only. Public replay preserves original pending mutation/
+observation allowances, plan bytes and a nonempty restore-reference record.
+Fresh retained checks additionally exercise exact reopen, changed/missing/extra
+children (including empty directories), symlinks/FIFOs, pre-read size rejection,
+wrong original metadata/request/plan/journal and non-durable/replaced custody.
+Independent shape and metadata/chunk checks reject even when a deliberately corrupted
+journal checksum matches an invalid tree. Maximum chunk rows and region replies,
+empty files/chunks and a nat64 maximum extent retain bounded local checks. Public
+fresh verification preserves original pending spending, plans and source references;
+missing artifact replay succeeds while explicit verification rejects.
+
+Integrations qualify authentic snapshot association and complete backend transfer,
+generic token/raw-ID mapping, fresh permissions and prior per-call spending,
+stable noncooperating bytes/command custody, consistency and upload/load/start
+safety. No provider, authenticated receipt, effect settlement, full product manifest,
+terminal proof or fence/reference release is installed. Canic consumers remain
+unchanged. See [the local tree contract](contracts/ic-snapshot-artifact.json) and
+[fresh source review](ic-snapshot-artifact-source.json).
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

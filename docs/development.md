@@ -243,6 +243,29 @@ or release permit. The data contract also describes these checks. Focused covera
 checks are `cargo test --offline --locked -p ic-backup --lib model::ic_snapshot_coverage`
 and the existing public `ic_snapshot_data` test target above.
 
+`DownloadJournalGuard::stage_ic_snapshot_artifact` creates the distinct private
+v1 metadata/region/chunk tree for an original Created entry. Its consuming writer
+streams already admitted replies and checks full coverage against actual retained
+bytes. Explicit `finish` persists the exact checksum through existing model/journal
+owners, then synchronizes and publishes through the canonical artifact publisher.
+Errors/drop retain partial bytes; occupied paths reject recreation. Reopen and
+`finalize_artifact` recover ChecksumVerified publication without repeating reads.
+Generic token/raw-ID mapping, authentic transfer, spending/permission and stable
+external custody remain integration-owned. Explicit `verify_ic_snapshot_artifact`
+checks one published tree against the full retained original plan, unchanged journal,
+original metadata/request, region lengths and bounded chunk hashes. Complete Durable
+selection is required, but only the requested target's bytes are verified. No evidence
+is rewritten, ordinary resume reads no artifact bytes, and the returned checksum
+holds no upload permission or fresh byte custody. See
+[the tree contract](contracts/ic-snapshot-artifact.json) and
+[source review](ic-snapshot-artifact-source.json). Focused checks are
+`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal`,
+`cargo test --offline --locked -p ic-backup --lib artifact_commit` and
+`cargo test --offline --locked -p ic-backup --test ic_snapshot_artifact`.
+Unix FIFO fixtures use the host's `mkfifo -m 600` utility and verify the created
+file type and permissions. This works with the standard Linux/macOS utility;
+Rustix's descriptor-relative FIFO creation API is unavailable on Apple targets.
+
 `policy::snapshot_inventory_delta::compare` borrows the existing capture declaration
 and bounded inventory replies. It rejects method/target mismatch, lost baseline IDs
 and changed baseline metadata, then exposes canonical new descriptors without IO,

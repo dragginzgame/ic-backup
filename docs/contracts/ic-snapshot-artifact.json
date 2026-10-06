@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "opt-in local IC snapshot artifact tree; existing download journal owns durable progress",
+  "format_ascii": "ic-backup/ic-snapshot-artifact/v1\n",
+  "fixed_files": ["format", "metadata-arguments.candid", "metadata.candid", "stable-memory.bin", "wasm-memory.bin", "wasm-module.bin"],
+  "chunks": "one chunk-{64 lowercase SHA-256 hex}.bin per exact original metadata hash; empty known chunks require an actual admitted reply",
+  "metadata": "exact original raw Candid reply and metadata request arguments, without re-encoding/defaults; canonical target and timestamp equal original journal entry",
+  "identity": "generic token stays exact and separate from raw IC ID; integration owns authoritative association; original observed total size is never replaced by a region sum",
+  "bounds": {"data_bytes_per_reply": 1048576, "metadata_bytes": 1048576, "metadata_arguments_bytes": 4096, "chunk_rows": 1024, "region_hash_states": 3, "journal_bytes": 1048576},
+  "creation": "private 0700 directory and 0600 files; descriptor-relative no-follow exclusive creation; reject occupied staging/canonical destinations",
+  "append": "consuming ownership; canonical coverage owner checks every contiguous region and unique chunk; hash actual written data without retaining reply buffers",
+  "finish": "require complete coverage and closed fixed tree; fresh no-follow bytes must match hashes of admitted metadata/request/region/chunk bytes; atomically retain existing model-derived ChecksumVerified with exact checksum, then use original publisher and Durable transition",
+  "closing": "recheck original layout, parent and published-directory identity after publication; rejection can follow retained Durable evidence and never repairs or replaces paths",
+  "fresh_verification": "explicit original retained full plan, unchanged guarded journal and complete Durable selection; read only requested target; exact fixed format/metadata/request hashes, nat64 region lengths, bounded known chunk hashes, closed direct children and retained canonical tree checksum; no-follow/nonblocking regular-file checks before bounded checksum streaming; closing file/directory/original-record checks; passive checksum without future custody or upload permission",
+  "checksum": "existing artifact tree owner: UTF-8 sorted relative path, NUL, lowercase file SHA-256, LF; no new encoder",
+  "recovery": "drop/errors retain partial bytes; Created partial trees cannot be reconstructed or recreated; ChecksumVerified reopens and finalizes exact staging/canonical bytes locally; Durable replay reads retained progress only",
+  "custody": "borrow original layout and mutable journal throughout; recheck root/artifact parent/staging identities; stable noncooperating bytes and command custody remain integration-owned",
+  "unchanged": "original journal schema/hash/identities, attempt allowances/history, plans, manifests, fence obligations and source references",
+  "grants": "no authenticated complete backend transfer, fresh permission/spending, repeated reads, remote provider/effect/receipt, upload/load/start, terminal proof or fence/reference release"
+}

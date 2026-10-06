@@ -25,85 +25,129 @@
 
 # Current handoff — 2026-10-06
 
-The maintainer requested extending the compatible `0.3.5` draft and checking the
-new Shared Tooling. Package metadata remains `0.3.4` at local release commit
-`778acc20fbf0d9950130b8c333e08b68bcdb902f`; its receipt source is
-`2fa8994d6409b397a4225f26a8434b0e182fb06b`. Initial exact local receipt/tag/parent
-checks passed. Current GitHub CI confirms that release source was pushed; registry
-publication was not inspected. All pending work remains uncommitted. No real
-release, commit/tag/push, upload, workflow rerun or live IC effect was performed.
+The maintainer reports 0.3.5 live. Local release commit
+`ff6c1582fc23fece7d00d6360336eb715231a015`, annotated tag and exact receipt/parent
+checks passed before editing; original receipt source is
+`08b27521646b0504b50aef3530bb5e92ee66a34a`. GitHub main/tag CI confirms that source
+was pushed; registry publication was not inspected. The complete compatible pending
+batch uses one undated **0.3.6** entry. Package, lock and release receipt remain 0.3.5.
+All work is uncommitted; no real commit, release/tag/push, upload or live IC effect ran.
 
-## Current 0.3.5 batch
+## Current 0.3.6 batch
 
-- `model::ic_snapshot_data` borrows exact metadata for checked Wasm/heap/stable
-  ranges and known full chunk-store identities. Bounded replies require exact
-  lengths or matching actual SHA-256, retaining metadata/request/raw-wire evidence.
-- `model::ic_snapshot_coverage` admits those replies incrementally through three
-  contiguous nat64 cursors and at most 1,024 presence bits. It rejects gaps,
-  overlaps, duplicates and mixed metadata without advancement. Complete views
-  retain no bytes, durable transfer, journal progress, spending or effect authority.
-- Shared Tooling now pins reviewed remote HEAD/main
-  `9437bab201bb6071da0bdc4de0336daf553113f5`, exported unchanged from its clean
-  read-only source. All 23 files include automatic release recovery, hook fixes and
-  user-triggered maintenance rules. Previous snapshots/reviews remain retained.
-- Late consumer checks use `RELEASE_COMMIT` and original validation/receipt
-  source/date/version/member hashes. Normal targets reconcile saved intent first;
-  newer committed fixes or a different requested kind then require fresh preflight
-  and complete validation. Explicit resume selects one saved release and checks
-  its original annotated tag/proof after completion, without substituting HEAD.
-- Dependency-negative fixtures explicitly fail before cache/metadata success when
-  conditional evaluation disables errexit. Hook setup also handles symlinked
-  checkouts. Public Make commands and v1 receipts remain unchanged.
+- `DownloadJournalGuard::stage_ic_snapshot_artifact` binds the original Created
+  artifact to exact metadata target/timestamp and raw wire evidence. Generic tokens
+  stay distinct from raw IC IDs; integrations own their authoritative association.
+- The private opt-in v1 tree retains exact metadata/request, three region files and
+  exact hash-named chunks. Consuming appends reuse bounded coverage and incremental
+  checksums. Errors/drop retain partial bytes without journal completion, recreation
+  or another read. Complete fresh closed-tree checks retain the expected checksum
+  atomically before the existing durable publisher and Durable transition.
+- Original ChecksumVerified recovery adopts exact staging/canonical bytes locally.
+  Closing root/parent/canonical custody drift can reject after Durable evidence was
+  retained; no path repair or cleanup occurs. Ordinary retained replay reads progress
+  only. No transfer/spending journal, new schema/hash owner or release permit appears.
+- Explicit `verify_ic_snapshot_artifact` admits the full retained original plan,
+  unchanged journal and complete Durable selection, then checks one target's fixed
+  format, exact metadata/request, region lengths, bounded known chunk hashes and
+  closed-tree checksum. No-follow/nonblocking bounded streaming and closing custody
+  checks retain all evidence on rejection. Passive checks hold no future byte custody
+  or upload permission; ordinary resume stays artifact-free.
+- Shared Tooling pins reviewed clean remote HEAD/main
+  `cb86188c5956866564de4fb6ec6be67b27981ab9`, exported unchanged across all 23 files.
+  Actual failed validation logs survive a failure to copy into their configured
+  retained directory. Consumer release checks inspect index and working paths
+  independently, including original metadata hidden by restored working bytes.
+- Missing-tag and other conditional Git/formatter fixture checks reject explicitly.
+  Real private-index tests reuse existing history without creating commits. Public
+  Make commands, v1 receipts and prior release-recovery behavior remain unchanged.
+- Both artifact and restore-reference FIFO fixtures use the host's `mkfifo -m 600`
+  utility and verify actual FIFO type/private permissions. This removes calls to
+  Rustix's Apple-excluded `mknodat` without skipping either safety regression.
+  Production behavior, artifact format and dependencies are unchanged.
 
-See [the data/coverage boundary](../extraction-boundary.md#bounded-metadata-bound-ic-snapshot-data),
-[data contract](../contracts/ic-snapshot-data.json),
-[data/source review](../ic-snapshot-data-source.json),
-[shared adoption](../shared-tooling.md), [shared provenance](../shared-tooling-review.json)
-and [release guide](../releasing.md). No previously maintained function, method or
-type was removed. One undated 0.3.5 entry covers the whole compatible batch;
-package/lock/receipt selection is untouched. There is no new provider or runner.
+See [the local artifact boundary](../extraction-boundary.md#durable-metadata-bound-ic-snapshot-artifacts),
+[tree contract](../contracts/ic-snapshot-artifact.json),
+[fresh source review](../ic-snapshot-artifact-source.json),
+[shared adoption](../shared-tooling.md) and [shared audit](../shared-tooling-review.json).
+No previously maintained function, method or type was removed. The new artifact
+format is explicit and opt-in; existing opaque backend artifacts remain unchanged.
 
 ## Qualification and current CI
 
-Native Linux data/coverage/metadata cases pass with exact registered membership
-under `target/snapshot-coverage-review` (19 cases). Initial codec/request-owner
-qualification remains under `target/snapshot-data-review`. Their Rust inputs and
-selected dependencies remain byte-identical through this tooling refresh. These
-are local wire/byte/replay tests, not simulated or actual IC effects.
+Native Linux evidence is under `target/snapshot-artifact-review`. All 48 registered
+local download-journal cases pass (`journal-portable-fifo.log`), including seven new
+writer cases: exact private bytes/full metadata, interleaving, missing/mixed/duplicate
+coverage, real descriptor IO failure, occupied/changed/unsafe paths, replaced and
+closing custody, zero regions/empty chunks, maximum replies/1,024 chunks, and
+acknowledged child death during transfer, after checksum retention and after actual
+publication. Six fresh verification cases cover exact reopen, unsafe/changed/missing/
+extra children (including FIFOs and empty directories), independent checks despite
+forged matching journal checksums, original plan/journal/request admission, replaced
+or non-durable custody, 1,024 chunks/maximum replies and a nat64 maximum extent.
+Public fresh checks and replay (`public-verification.log`) retain original pending
+mutation/observation allowances, exact plan bytes and a nonempty source-reference
+record. Seven unchanged publisher-owner cases also pass (`publisher-final.log`).
+Registries derive membership from actual listed cases; no fixed total grants authority.
 
-Final `make release-check` passes with inherited release source/commit variables:
-49 executed consumer cases under `target/shared-release-tests.7gsrl8`, plus the
-unchanged shared runner's command-substitute suite. Six actual hook/index cases
-pass under `target/hook-tests.nXqt5O`, including formatter failure and symlinked
-checkout setup. Shell/Perl checks, formatting, all 23 snapshot files, generated
-fixtures and read-only 0.3.4-to-0.3.5 planning pass. The updated reader also verifies
-0.3.4's receipt from real existing Git objects without writes.
+Warning-denied all-target/all-feature Clippy and API docs, Rust 1.91 checks, exact
+metadata/data fixture regeneration, formatting and diff checks pass. Earlier compile,
+fixture and lint failures remain retained, including the initial retained-verification
+fixture whose supposedly wrong extent had the original length. Final verifier logs
+use `*-verification-final.log`; exact registered membership and source identities are
+retained by `verification-evidence-check.pl`. Follow-up Canic review reads the same
+committed source; unrelated current dirty sibling paths are retained separately in
+`retained-verification-source` and were neither imported nor changed.
+These native wire/filesystem/process tests
+simulate no IC behavior and qualify no authenticated complete backend transfer.
 
-Review logs, exact registries, final source hashes and upstream/previous snapshot
-checks are retained under `target/shared-tooling-035-review`; earlier failures and
-the conditional false-success reproduction remain retained. Prior detailed current
-handoff text is `previous-current.md` there. No full CI/release gate ran locally.
+Final host review found `mknodat` absent under the pinned Rustix 1.1.5 Apple cfg
+in both the new artifact test and the older restore-reference test. Cached upstream
+source/cfg evidence is retained in `rustix-apple-fifo-api.txt` and
+`rustix-apple-fifo-source.txt`. Real private FIFO rejection passes in both owners;
+the focused restore-reference log is `layout-fifo-portable.log`. Warning-denied
+Clippy and Rust 1.91 all-target checks pass after the fix (`clippy-portable-fifo.log`,
+`msrv-portable-fifo.log`). `portable-fifo-evidence-check.pl` binds current registered
+membership/source identities; earlier qualification logs and inventories remain
+retained. Native macOS execution is still pending. The coherent local artifact and
+tooling batch is ready for maintainer review/configured CI; no upload scope was added.
 
-One paginated maintenance inspection read all applicable workflows/runs for
-`778acc2`, issues/discussions, PRs and current description. Linux CI passed; both
-macOS jobs failed at the Bash 3.2 dependency-negative fixture and skipped native
-library validation. Both [main](https://github.com/dragginzgame/ic-backup/actions/runs/37424074777)
-and [tag](https://github.com/dragginzgame/ic-backup/actions/runs/37424074750) remain
-failed. The fixture correction is locally qualified; native macOS confirmation
-and remote CI for this uncommitted batch remain pending. Existing
-[issue #2](https://github.com/dragginzgame/ic-backup/issues/2) owns adoption and is
-linked in the draft. The approved description matches implemented scope; issue
-#1's metadata condition is already satisfied. No GitHub writes were performed.
+Focused release/tooling checks and all 23 snapshot files pass; 51 executed consumer
+cases include conditional rejection and real index/tree boundaries, alongside the
+unchanged vendored runner's command substitutes. Evidence and previous snapshot/audit
+copies are under `target/shared-tooling-036-review`. The exact original missing-tag
+substitute falsely accepted conditional sourcing; that reproduction remains in
+`target/snapshot-artifact-review/conditional-tag-reproduction`. Read-only planning
+selects 0.3.5 to 0.3.6. No full CI or release gate ran locally.
 
-## Remaining implemented boundary
+Both [main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37431702050)
+and [tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37431702209) for
+0.3.5 failed: Linux passed, while both macOS jobs stopped at the Bash 3.2 completed-tag
+fixture and skipped library validation. The shell condition is reproduced and fixed
+locally; fresh macOS/remote confirmation remains pending. Existing
+[issue #2](https://github.com/dragginzgame/ic-backup/issues/2) owns shared adoption.
+No GitHub writes or workflow reruns were performed. Current dirty changes have no
+remote CI result.
 
-The next product work is binding admitted full data coverage to exact durable
-artifact bytes. Authenticated transport, fresh permissions/prior per-call spending,
-concrete capture/upload/load reconciliation, application safety, terminal proof and
-controlled fence/reference release remain independently qualified work. B1/B2 are
-incomplete; no transport/CLI/runners or complete backup/restore product is installed.
-Native macOS and real-backend/PocketIC qualification remain pending. Historical
-sections below retain their original batch evidence, not current release authority.
+## Remaining product boundary
+
+The next product work is original snapshot upload metadata/range/chunk argument and
+input binding, followed by explicitly bounded providers and their original per-call
+accounting/recovery contracts. The fresh local tree check installs no upload reader,
+runner or default association.
+Authenticated snapshot identity/complete backend transfer, fresh permissions and
+spending, application/byte/command custody, concrete capture/upload/load reconciliation,
+terminal proof and controlled fence/reference release remain independently qualified.
+B1/B2 remain incomplete; no transport, CLI or runners are installed. No host has
+end-to-end backup/restore qualification; native macOS and real IC/PocketIC remain pending.
+
+## Released 0.3.5 data coverage and prior tooling
+
+0.3.5 introduced metadata-bound data codecs, incremental ephemeral coverage and the
+previous 9437bab Shared Tooling snapshot. Its detailed pre-release handoff is retained
+at `target/snapshot-artifact-review/previous-current.md`; finalized notes remain in
+CHANGELOG. Historical sections below retain their original evidence and limitations,
+without supplying current release authority.
 
 ## Local 0.3.4 bounded snapshot metadata reads
 

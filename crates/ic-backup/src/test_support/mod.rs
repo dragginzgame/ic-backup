@@ -15,8 +15,9 @@ pub mod snapshot_read;
 #[cfg(unix)]
 use std::{
     fs,
+    os::unix::fs::{FileTypeExt, PermissionsExt},
     path::Path,
-    process::Child,
+    process::{Child, Command},
     thread,
     time::{Duration, Instant},
 };
@@ -49,6 +50,23 @@ fn unique_name(prefix: &str) -> String {
         .as_nanos();
     let sequence = NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed);
     format!("{prefix}-{}-{nanos}-{sequence}", std::process::id())
+}
+
+/// Create and verify a private real FIFO using the host's portable Unix utility.
+#[cfg(unix)]
+pub fn create_private_fifo(path: &Path) {
+    assert!(
+        Command::new("mkfifo")
+            .args(["-m", "600"])
+            .arg(path)
+            .status()
+            .expect("host mkfifo utility")
+            .success(),
+        "create private fixture FIFO"
+    );
+    let metadata = fs::symlink_metadata(path).expect("fixture FIFO metadata");
+    assert!(metadata.file_type().is_fifo());
+    assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
 }
 
 /// Kill one test child only after both sides acknowledge the named crash barrier.

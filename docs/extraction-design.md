@@ -559,6 +559,24 @@ starts empty when reconstructed. Complete declared coverage therefore supplies
 no byte custody, durable artifact, authentic association or backend completeness.
 Integration qualification of durable exact full-state transfer remains separate.
 
+The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
+private exact region/chunk bytes, original raw metadata/request and incremental
+checksums. Complete fresh tree checks persist the expected checksum in the existing
+download journal before its canonical durable publisher runs. Publication recovery
+uses the retained journal; partial Created transfers are preserved without automatic
+coverage reconstruction or repeated reads. Generic token/raw-ID mapping, authentic
+complete backend transfer, fresh permissions/accounting and stable noncooperating
+custody still require integration qualification. See
+[the implemented local artifact boundary](extraction-boundary.md#durable-metadata-bound-ic-snapshot-artifacts).
+
+Explicit `verify_ic_snapshot_artifact` checks one published tree under the full
+retained original plan and unchanged journal. It reuses complete Durable selected-set
+admission, then verifies exact format/metadata/request, region lengths, bounded chunk
+hashes and the existing retained checksum. Only that target's bytes are checked;
+ordinary resume stays artifact-free. Passive sequential checks retain no fresh byte
+custody and authorize no upload. Upload input/argument binding and actual transfer
+permissions, accounting and recovery remain integration work.
+
 ## 9. Backup workflow
 
 1. Resolve the explicit network, caller, inventory and release inputs. Compile

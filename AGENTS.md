@@ -317,6 +317,23 @@ into an issue tracker or release authority.
   views retain no bytes, durability, authentic transfer or effects. Reconstructed
   coverage starts empty and supplies no journal, allowance, resume or release permit.
 
+The IC local artifact writer now joins exact original metadata/data coverage to the
+existing download journal and durable publisher. Preserve 1 MiB per data chunk,
+three incremental region hashes, 1,024 chunk rows and existing metadata/journal bounds.
+Its distinct v1 tree retains exact metadata wire/request bytes and fixed private files.
+Appends consume the writer on any error; partial bytes remain Created and occupied
+staging rejects recreation. Full fresh byte checks retain the expected checksum
+atomically before publication; recovery uses the existing ChecksumVerified owner.
+No new spending/transfer journal or partial-read resume is added. Generic token/raw-ID
+association, authentic complete transfer, fresh permissions/accounting and stable
+noncooperating custody remain integration-owned; no terminal/release authority appears.
+Explicit retained IC-tree verification requires the full original persisted plan,
+unchanged guarded journal and complete Durable selection. Preserve the fixed closed
+direct-child format, exact original metadata/request hashes, nat64 region lengths and
+bounded known chunk hashes. Only the requested tree is checked; passive sequential
+byte evidence gives no fresh custody, complete-set verification or upload permit.
+Ordinary resume remains artifact-free; no rewriting, accounting or release follows.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

@@ -3,7 +3,10 @@
 use super::*;
 use crate::{
     model::restore_references::RestoreReferenceError,
-    test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
+    test_support::{
+        create_private_fifo, hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
+        temp_dir,
+    },
 };
 use std::{
     os::unix::fs::{PermissionsExt, symlink},
@@ -162,14 +165,7 @@ fn unsafe_reference_entries_fail_closed_without_following_links() {
         Err(PersistenceError::InvalidRestoreReferences { .. })
     ));
     fs::remove_dir(&path).expect("remove test directory");
-    rustix::fs::mknodat(
-        rustix::fs::CWD,
-        &path,
-        rustix::fs::FileType::Fifo,
-        rustix::fs::Mode::RUSR | rustix::fs::Mode::WUSR,
-        0,
-    )
-    .expect("unsafe record FIFO");
+    create_private_fifo(&path);
     assert!(matches!(
         guard.has_restore_references(),
         Err(PersistenceError::InvalidRestoreReferences { .. })

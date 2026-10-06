@@ -131,4 +131,39 @@ if rg -F "[ERR:fail-after-caught-panic] thread 'caught-test' panicked at" \
     exit 1
 fi
 
+# Retention failures must keep the original raw log in the temporary directory.
+cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
+mkdir -p "$FIXTURE/bin"
+REAL_CP="$(command -v cp)"
+export REAL_CP
+cat > "$FIXTURE/bin/cp" <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$2" == "$VALIDATION_FAILURE_LOG_DIR/"* ]]; then exit 1; fi
+exec "$REAL_CP" "$@"
+SCRIPT
+chmod +x "$FIXTURE/bin/cp"
+for failure in mkdir copy; do
+    fallback_tmp="$FIXTURE/fallback-$failure"
+    failure_root="$FIXTURE/blocked-$failure"
+    mkdir -p "$fallback_tmp"
+    if [[ "$failure" == mkdir ]]; then
+        printf 'not a directory\n' > "$failure_root"
+    else
+        mkdir -p "$failure_root"
+    fi
+    status=0
+    TMPDIR="$fallback_tmp" PATH="$FIXTURE/bin:$PATH" \
+        VALIDATION_FAILURE_LOG_DIR="$failure_root" \
+        VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+        VALIDATION_RUNNER_DEPTH=0 VALIDATION_RUNNER_SNAPSHOT_PATH='' \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
+        > "$FIXTURE/fallback-$failure.log" 2>&1 || status=$?
+    [[ "$status" == 1 ]]
+    fallback_logs=("$fallback_tmp"/validation.*/0.log)
+    [[ "${#fallback_logs[@]}" == 1 && -f "${fallback_logs[0]}" ]]
+    rg -F first-failure-marker "${fallback_logs[0]}" >/dev/null
+    rg -F "${fallback_logs[0]}" "$FIXTURE/fallback-$failure.log" >/dev/null
+done
+
 echo "validation target runner test passed"
