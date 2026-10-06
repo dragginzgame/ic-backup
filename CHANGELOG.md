@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.7]
+## [0.3.7] - 2026-10-06
 
 - Prepare snapshot upload metadata and bounded region/chunk bytes from verified
   retained IC artifacts. Preserve globals and optional fields, reject unavailable
