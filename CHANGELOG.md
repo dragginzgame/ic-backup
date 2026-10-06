@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.0]
+## [0.4.0] - 2026-10-06
 
 - Bind data-upload recovery reads to the original destination, exact extent and
   already spent observation. Compare retained chunk evidence without turning
