@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.9]
+## [0.3.9] - 2026-10-06
 
 - Bind metadata-upload recovery inventory to exact original payloads and already
   reserved observations. Retain lost replies and spending across reopen without
