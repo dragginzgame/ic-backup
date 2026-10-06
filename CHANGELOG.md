@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.8]
+## [0.3.8] - 2026-10-06
 
 - Delegate bounded regular-file record reads to `ic-host-tools`, retaining exact
   record limits, no-follow/FIFO rejection and existing typed persistence errors.
