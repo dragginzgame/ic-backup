@@ -39,30 +39,7 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         metadata: &'metadata IcSnapshotMetadataReply<'metadata>,
         kind: SnapshotDataKind,
     ) -> Result<Self, IcSnapshotDataError> {
-        let values = metadata.metadata();
-        match &kind {
-            SnapshotDataKind::WasmModule { offset, size } => {
-                range(*offset, *size, values.wasm_module_size)?;
-            }
-            SnapshotDataKind::WasmMemory { offset, size } => {
-                range(*offset, *size, values.wasm_memory_size)?;
-            }
-            SnapshotDataKind::StableMemory { offset, size } => {
-                range(*offset, *size, values.stable_memory_size)?;
-            }
-            SnapshotDataKind::WasmChunk { hash } => {
-                if hash.len() != 32 {
-                    return Err(IcSnapshotDataError::InvalidChunkHash);
-                }
-                if !values
-                    .wasm_chunk_store
-                    .iter()
-                    .any(|chunk| chunk.hash == *hash)
-                {
-                    return Err(IcSnapshotDataError::ChunkNotInMetadata);
-                }
-            }
-        }
+        validate_kind(metadata, &kind)?;
         let target = Principal::from_text(metadata.request().target())
             .map_err(|_| IcRequestError::InvalidTarget)?;
         let arguments = candid::encode_one(ReadCanisterSnapshotDataArgs {
@@ -132,6 +109,37 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
     pub fn digest(&self) -> ArtifactChecksumRecord {
         management_request_digest(&self.target_bytes, self.method(), &self.arguments)
     }
+}
+
+pub(crate) fn validate_kind(
+    metadata: &IcSnapshotMetadataReply<'_>,
+    kind: &SnapshotDataKind,
+) -> Result<(), IcSnapshotDataError> {
+    let values = metadata.metadata();
+    match kind {
+        SnapshotDataKind::WasmModule { offset, size } => {
+            range(*offset, *size, values.wasm_module_size)?;
+        }
+        SnapshotDataKind::WasmMemory { offset, size } => {
+            range(*offset, *size, values.wasm_memory_size)?;
+        }
+        SnapshotDataKind::StableMemory { offset, size } => {
+            range(*offset, *size, values.stable_memory_size)?;
+        }
+        SnapshotDataKind::WasmChunk { hash } => {
+            if hash.len() != 32 {
+                return Err(IcSnapshotDataError::InvalidChunkHash);
+            }
+            if !values
+                .wasm_chunk_store
+                .iter()
+                .any(|chunk| chunk.hash == *hash)
+            {
+                return Err(IcSnapshotDataError::ChunkNotInMetadata);
+            }
+        }
+    }
+    Ok(())
 }
 
 fn range(offset: u64, size: u64, total: u64) -> Result<(), IcSnapshotDataError> {

@@ -9,6 +9,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND RELEASE_COMMIT \
     RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE VERSION \
     MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL
+unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
+metadata_only=false
+if [[ "$#" == 1 && "$1" == --metadata-only ]]; then
+    metadata_only=true
+elif [[ "$#" != 0 ]]; then
+    echo 'usage: test-release.sh [--metadata-only]' >&2
+    exit 2
+fi
 TEST_REAL_MAKE="$(command -v make)"
 TEST_REAL_GIT="$(command -v git)"
 export TEST_REAL_MAKE TEST_REAL_GIT
@@ -632,6 +640,16 @@ SH
     [[ "$(cat target/native-staged.txt)" == Cargo.toml ]]
     [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]]
 }
+
+if [[ "$metadata_only" == true ]]; then
+    for outcome in success failure; do
+        run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"
+    done
+    run_case validation-source-identity test_validation_source_identity
+    run_case real-index-boundaries test_real_index_boundaries
+    echo 'release metadata real-Git and validation-retention tests passed'
+    exit 0
+fi
 
 for outcome in success failure; do
     run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"

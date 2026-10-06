@@ -13,6 +13,8 @@ use thiserror::Error;
 /// Maximum raw reply bytes, checked before any status decoding.
 pub const MAX_IC_LIFECYCLE_REPLY_BYTES: usize = 1024 * 1024;
 
+pub(crate) const EMPTY_CANDID_REPLY: &[u8] = b"DIDL\0\0";
+
 /// Read-only required status and complete declared controller set.
 ///
 /// Other upstream status fields are skipped under finite work limits; their
@@ -94,7 +96,7 @@ impl<'request> IcLifecycleReply<'request> {
         let kind = if method == IcManagementMethodRecord::CanisterStatus {
             IcLifecycleReplyKind::Status(wire::status(bytes)?)
         } else {
-            if bytes != b"DIDL\0\0" {
+            if bytes != EMPTY_CANDID_REPLY {
                 return Err(IcLifecycleReplyError::InvalidReply);
             }
             IcLifecycleReplyKind::Acknowledgement

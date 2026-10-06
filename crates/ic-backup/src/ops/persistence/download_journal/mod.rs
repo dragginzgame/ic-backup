@@ -7,13 +7,19 @@ mod local_restore_artifact;
 mod local_restore_source;
 mod manifest;
 #[cfg(unix)]
-pub use ic_snapshot_artifact::{IcSnapshotArtifactError, IcSnapshotArtifactWriter};
+mod metrics;
+#[cfg(unix)]
+pub use ic_snapshot_artifact::{
+    IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotUploadArtifactError,
+};
 pub use integrity::DownloadIntegrityError;
 pub use local_restore_artifact::{
     LocalRestoreArtifactError, LocalRestoreArtifactPublicationError, LocalRestoreArtifactView,
 };
 pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
+#[cfg(unix)]
+pub use metrics::IcSnapshotLocalMetrics;
 
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,
@@ -44,6 +50,8 @@ pub struct DownloadJournalGuard<'a> {
     _lock: JournalLock,
     record: DownloadJournalRecord,
     usable: bool,
+    #[cfg(unix)]
+    ic_snapshot_metrics: std::sync::Mutex<IcSnapshotLocalMetrics>,
 }
 
 impl<'a> DownloadJournalGuard<'a> {
@@ -67,6 +75,8 @@ impl<'a> DownloadJournalGuard<'a> {
             _lock: lock,
             record,
             usable: true,
+            #[cfg(unix)]
+            ic_snapshot_metrics: std::sync::Mutex::default(),
         })
     }
 
@@ -94,6 +104,8 @@ impl<'a> DownloadJournalGuard<'a> {
             _lock: lock,
             record,
             usable: true,
+            #[cfg(unix)]
+            ic_snapshot_metrics: std::sync::Mutex::default(),
         })
     }
 

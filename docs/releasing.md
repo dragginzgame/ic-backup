@@ -76,6 +76,13 @@ and cargo-sort 2.1.4 plus the declared Rust toolchains. Install the formatter du
 explicit developer setup; validation never installs it. Supported host evidence
 remains separately qualified.
 
+Prepare the reviewed local executables with `make install-tools` before the
+release gate. Both CI and release validation include offline `make tools-check`
+and `make dependency-pins-check`; missing/changed tools stop the gate without
+implicit installation or unlocked dependency changes. The [local setup guide](local-setup.md)
+owns bootstrap prerequisites; exact registry compatibility constraints remain in
+[the local overlay](../AGENTS.md#qualified-dependency-constraints).
+
 The runner selects the source SHA, previous/candidate versions, UTC date, branch and
 single push URL before mutation. Preflight admits pending notes and rejects unrelated
 staged/unstaged/untracked work and changed original manifest/lock/receipt. Staged

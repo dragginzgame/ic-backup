@@ -1,11 +1,14 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
+export PATH := $(CURDIR)/.tools/host/bin:$(CURDIR)/.tools/ic/bin:$(PATH)
+IC_TOOL_PINS ?= ci/ic-tools.tsv
+HOST_TOOL_VERSIONS ?= ci/tool-versions.env
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
 RELEASE := bash scripts/release/release.sh
-CI_TARGETS := shared-tooling-check deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check dependency-pins-check deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 ifneq ($(word 2,$(filter release-patch release-minor release-major release-resume,$(MAKECMDGOALS))),)
 $(error Select exactly one release target)
@@ -18,6 +21,7 @@ endif
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
         tags test tooling-check validate version
+.PHONY: dependency-pins-check host-tools-check ic-tools-check install-host-tools install-ic-tools install-tools tools-check
 
 help:
 	@echo "check                       Compile this library's native targets"
@@ -25,6 +29,7 @@ help:
 	@echo "ci                          Fetch dependencies and run the full gate"
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
+	@echo "dependency-pins-check       Check dependency declarations and exceptions"
 	@echo "deps                        Fetch locked dependencies"
 	@echo "doc                         Build documentation with warnings denied"
 	@echo "ensure-clean                Check the worktree is committed and clean"
@@ -32,7 +37,12 @@ help:
 	@echo "fmt-check                   Check Cargo ordering and Rust formatting"
 	@echo "help                        Show available commands"
 	@echo "hooks-check                 Test the pre-commit formatter"
+	@echo "host-tools-check            Verify local jq/yq offline"
+	@echo "ic-tools-check              Verify the local IC executables offline"
 	@echo "install-hooks               Enable the tracked pre-commit formatter"
+	@echo "install-host-tools          Prepare pinned local jq/yq"
+	@echo "install-ic-tools            Prepare the pinned local IC executables"
+	@echo "install-tools               Prepare host parsers followed by IC tools"
 	@echo "package                     Verify the standalone package locally"
 	@echo "publish                     Publish the current library to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
@@ -49,6 +59,7 @@ help:
 	@echo "tags                        List local version tags"
 	@echo "test                        Run native library tests and doctests"
 	@echo "tooling-check               Test snapshot integrity and CI diagnostics"
+	@echo "tools-check                 Verify both local executable sets offline"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 
@@ -91,6 +102,29 @@ hooks-check:
 
 install-hooks:
 	bash scripts/dev/install-git-hooks.sh
+
+install-tools:
+	+$(MAKE) --no-print-directory install-host-tools
+	+$(MAKE) --no-print-directory install-ic-tools
+
+tools-check:
+	+$(MAKE) --no-print-directory host-tools-check
+	+$(MAKE) --no-print-directory ic-tools-check
+
+install-host-tools:
+	bash scripts/dev/install-host-tools.sh --versions "$(HOST_TOOL_VERSIONS)"
+
+host-tools-check:
+	bash scripts/dev/install-host-tools.sh --versions "$(HOST_TOOL_VERSIONS)" --check
+
+install-ic-tools:
+	bash scripts/dev/install-ic-tools.sh --pins "$(IC_TOOL_PINS)"
+
+ic-tools-check:
+	bash scripts/dev/install-ic-tools.sh --pins "$(IC_TOOL_PINS)" --check
+
+dependency-pins-check:
+	bash scripts/ci/check-dependency-pins.sh
 
 package:
 	cargo package --offline --locked --allow-dirty -p ic-backup
@@ -178,6 +212,10 @@ test:
 
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
+	bash scripts/ci/test-dependency-pins.sh
+	bash scripts/ci/test-evidence-checksums.sh
+	bash scripts/ci/test-host-tools.sh
+	bash scripts/ci/test-ic-tools.sh
 
 validate: ci
 

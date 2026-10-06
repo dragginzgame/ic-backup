@@ -1,6 +1,7 @@
 //! Bounded capture/inventory reply decoding; transport authenticity stays external.
 
 mod wire;
+pub(crate) use wire::snapshot_id;
 
 use super::{
     artifacts::ArtifactChecksumRecord,

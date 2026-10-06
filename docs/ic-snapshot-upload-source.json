@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "original-source-bound snapshot upload contract review",
+  "inspection_date": "2026-10-06",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "e1a211a00f01568ccc99bedc494c62a7141444dd",
+  "source_worktree_dirty": true,
+  "evidence": "target/snapshot-upload-review/source",
+  "reviewed_sources": [
+    {"path": "crates/canic-backup/src/runner/operations/artifacts.rs", "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573", "disposition": "Whole-command download success does not qualify authentic complete upload; no implementation copied."},
+    {"path": "crates/canic-host/src/icp/snapshot.rs", "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571", "disposition": "Committed download process exposes no upload metadata/data implementation; no process or provider copied."}
+  ],
+  "sdk": "ic-management-canister-types =0.11.0; cached official UploadCanisterSnapshotMetadataArgs/Result, UploadCanisterSnapshotDataArgs, SnapshotDataOffset and original read metadata reviewed",
+  "sdk_source_sha256": "11f1c93fc9034e3dbcc35ff377e2356a07439382bbcfad8ad213327d83c1c554",
+  "specification": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+  "scope": "New additive codecs, exact source/wire intent binding, passive current-reservation association and explicit guarded local byte preparation. Dirty sibling work remains read-only and is not imported.",
+  "production_destinations": ["crates/ic-backup/src/model/ic_snapshot_upload/", "crates/ic-backup/src/policy/ic_snapshot_upload/", "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/"],
+  "canonical_owners_reused": ["management_request_digest", "IcSnapshotMetadataReply", "ic_snapshot_data::validate_kind", "ArtifactChecksumRecord", "ic_snapshot_reply::snapshot_id", "ic_lifecycle_reply::EMPTY_CANDID_REPLY", "OperationPlanRecord::attempt_authority", "AttemptJournalRecord::view", "IcMutationAcknowledgement", "DownloadJournalGuard::verify_ic_snapshot_artifact", "open_regular_child", "check_directory_identity"],
+  "license": "No Canic source copied into production; existing source attribution and MIT notices retained.",
+  "compatibility": "Additive public types and Unix-host preparation; no existing v1 record, digest, exhaustive enum, wire codec, package version or receipt change. A later explicit maintainer request adds registry ic-metrics arithmetic for ephemeral local diagnostics. Compatible pending 0.3.7 draft.",
+  "qualification": {"unit_filter": "upload", "public_target": "ic_snapshot_upload", "golden_generator": "scripts/dev/generate-snapshot-upload.pl", "evidence": "target/snapshot-upload-review", "scope": "Independent wire/hash fixtures and actual native local descriptors, retained records and pending reopen; no simulated or actual IC effect."},
+  "remaining": "Authentic complete source/new allocation and transfer, fresh controllers, prior per-call dispatch and spending proof, lost-effect reconciliation, stable noncooperating bytes/commands, application restore/fence/load/start safety and terminal/reference release."
+}

@@ -54,8 +54,25 @@ fn staging_preserves_exact_bytes_checksums_and_private_permissions() {
 fn non_utf8_tree_names_reject_instead_of_collapsing_path_identity() {
     use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
     let root = temp_path("ic-backup-non-utf8");
+    let name = OsStr::from_bytes(b"\xff");
+    assert!(matches!(
+        require_utf8_tree_name(name, &root),
+        Err(ArtifactError::NonUtf8Path { path }) if path == root.join(name)
+    ));
+    require_utf8_tree_name(OsStr::new("exact-é-name"), &root).expect("valid UTF-8 name");
     fs::create_dir(&root).expect("create tree");
-    fs::write(root.join(OsStr::from_bytes(b"\xff")), b"bytes").expect("write non UTF-8 name");
+    if let Err(error) = fs::write(root.join(name), b"bytes") {
+        // APFS rejects this raw basename before the traversal owner can inspect it.
+        // Other hosts and other IO failures must still fail the real fixture.
+        assert!(
+            cfg!(target_os = "macos")
+                && error.raw_os_error() == Some(rustix::io::Errno::ILSEQ.raw_os_error()),
+            "write non UTF-8 name: {error:?}"
+        );
+        eprintln!("filesystem rejected the raw name; canonical UTF-8 admission checked directly");
+        fs::remove_dir(&root).expect("remove empty successful fixture");
+        return;
+    }
     assert!(matches!(
         checksum_directory(&root),
         Err(ArtifactError::NonUtf8Path { .. })

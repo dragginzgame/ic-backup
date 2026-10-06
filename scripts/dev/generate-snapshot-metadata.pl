@@ -98,7 +98,7 @@ my %values = (source => "\x01" . variant(\%source, 'taken_from_canister', ''),
     global_timer => "\x01" . variant(\%timer, 'active', $max64),
     on_low_wasm_memory_hook_status => "\x01" . variant(\%hook, 'executed', ''));
 my @cases;
-for my $name ('sdk-optional', 'required-source-globals', 'unavailable', 'data-source') {
+for my $name ('sdk-optional', 'required-source-globals', 'unavailable', 'data-source', 'upload-source', 'upload-source-absent') {
     my @types = @common_types;
     my %fields = %metadata;
     my %data = %values;
@@ -111,12 +111,19 @@ for my $name ('sdk-optional', 'required-source-globals', 'unavailable', 'data-so
         $data{source} = "\0"; $data{globals} = uleb(1) . "\0";
         $data{global_timer} = "\0"; $data{on_low_wasm_memory_hook_status} = "\0";
         $data{wasm_chunk_store} = uleb(0); $data{certified_data} = uleb(0);
-    } elsif ($name eq 'data-source') {
+    } elsif ($name eq 'data-source' || $name =~ /^upload-source/) {
         $data{wasm_module_size} = pack('Q<', 64);
         $data{wasm_memory_size} = pack('Q<', 64);
         $data{wasm_chunk_store} = uleb(2)
             . uleb(32) . pack('H*', sha256_hex($snapshot_bytes))
             . uleb(32) . pack('H*', sha256_hex(''));
+        if ($name =~ /^upload-source/) {
+            $data{globals} = uleb(5) . join('', map { "\x01" . $_ } @global_values);
+            if ($name eq 'upload-source-absent') {
+                $data{global_timer} = "\0";
+                $data{on_low_wasm_memory_hook_status} = "\0";
+            }
+        }
     }
     push @types, fields(-20, \%fields);
     my $raw = 'DIDL' . uleb(scalar @types) . join('', @types) . uleb(1) . sleb(12)
@@ -127,7 +134,7 @@ for my $name ('sdk-optional', 'required-source-globals', 'unavailable', 'data-so
         request_digest => $request_digest, reply_hex => unpack('H*', $raw),
         payload_checksum => $checksum,
         digest => sha256_hex("ic-backup/ic-snapshot-metadata-reply/v1\0" . $request_digest . $checksum),
-        globals => $name eq 'unavailable' ? 1 : $name eq 'required-source-globals' ? 5 : 6,
+        globals => $name eq 'unavailable' ? 1 : ($name eq 'required-source-globals' || $name =~ /^upload-source/) ? 5 : 6,
         source_present => $name eq 'unavailable' ? JSON::PP::false : JSON::PP::true };
 }
 write_json('crates/ic-backup/src/model/ic_snapshot_metadata/tests/golden.json', \@cases);

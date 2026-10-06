@@ -1,7 +1,9 @@
 //! Unix descriptor-based artifact traversal and staging.
 
 use super::{ArtifactChecksumRecord, ArtifactError, ExpectedArtifactType};
-use crate::ops::artifacts::{checksum_reader, checksum_relative_files, copy_from_reader};
+use crate::ops::artifacts::{
+    checksum_reader, checksum_relative_files, copy_from_reader, require_utf8_tree_name,
+};
 
 use std::{
     ffi::OsStr,
@@ -144,11 +146,7 @@ fn collect_directory_checksums(
             continue;
         }
         let name = OsStr::from_bytes(name_bytes);
-        if name.to_str().is_none() {
-            return Err(ArtifactError::NonUtf8Path {
-                path: display_root.join(name),
-            });
-        }
+        require_utf8_tree_name(name, display_root)?;
         let relative_path = relative_directory.join(name);
         let display_path = display_root.join(&relative_path);
         let kind = entry_type(directory_fd, entry.file_name())?;
@@ -202,11 +200,7 @@ fn copy_directory_entries(
             continue;
         }
         let name = OsStr::from_bytes(name_bytes);
-        if name.to_str().is_none() {
-            return Err(ArtifactError::NonUtf8Path {
-                path: display_root.join(name),
-            });
-        }
+        require_utf8_tree_name(name, display_root)?;
         let relative_path = relative_directory.join(name);
         let display_path = display_root.join(&relative_path);
         let destination = destination_root.join(&relative_path);

@@ -49,6 +49,8 @@ below to find the document that matches your task.
 | Document | Use it for |
 | --- | --- |
 | [Shared Tooling adoption](shared-tooling.md) | Reviewed upstream identity, local overlay and validation evidence |
+| [Local executable setup](local-setup.md) | Explicit checksum-verified jq/yq and IC setup; offline checks |
+| [Shared audit methods](../audits/README.md) | Common review methods; product scope and check authority stay local |
 | [Consuming Shared Tooling snapshots](consuming-snapshots.md) | Creating, refreshing and verifying vendored tooling files |
 | [Engineering principles](principles/README.md) | Repository-neutral guidance used across participating projects |
 

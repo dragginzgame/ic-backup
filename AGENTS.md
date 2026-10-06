@@ -334,6 +334,28 @@ bounded known chunk hashes. Only the requested tree is checked; passive sequenti
 byte evidence gives no fresh custody, complete-set verification or upload permit.
 Ordinary resume remains artifact-free; no rewriting, accounting or release follows.
 
+- Snapshot upload declarations now bind the original source plan, exact metadata,
+  retained tree checksum and canonical wire bytes. Preserve available global bits
+  and optional timer/hook absence; unavailable globals reject and replacement stays
+  absent. Each 1 MiB region/known-chunk write binds a distinct 1..256-byte destination
+  and its own original plan/reservation. Keep 2 MiB argument, 4 KiB reply and finite
+  decoder quotas separate from lifecycle bounds. Fresh guarded source preparation
+  verifies exact local bytes without progress/reference changes or future custody.
+  Passive current-attempt association authenticates no allocation/write, writes no
+  receipt and grants no retry/refund. Lost replies remain pending; destination
+  attribution, original per-call dispatch, fresh controllers, complete transfer and
+  restore/fence/load/start/terminal safety remain integration-owned. No upload provider,
+  transport or runner is installed.
+
+- Local IC artifact diagnostics reuse registry `ic-metrics` arithmetic under a
+  guard-local synchronized owner. Preserve explicit nanosecond/byte units, separate
+  returned success/rejection samples, valid zero and repeated preparation semantics.
+  Preparation timings include nested verification and are not exclusive totals.
+  Metrics start empty on create/open, retain no IDs/history and write no records.
+  Never feed saturated summaries or diagnostic samples into exact spending,
+  completion, receipt, retry, fresh-authority or terminal/release admission. Keep
+  the IC instruction-reader feature absent from the host implementation.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.
@@ -368,6 +390,28 @@ was recorded. Linking provenance or describing implementation status is allowed.
   application-owned fencing/settlement evidence before restoring or restarting.
 - Local prune and live snapshot deletion are separate operations. Source
   artifacts referenced by unfinished restores remain retained.
+
+## Qualified dependency constraints
+
+The maintainer-authorized tooling adoption retains these existing exact registry
+requirements without changing locked selections. Machine-readable exceptions in
+`ci/dependency-pinning-exceptions.json` match only these root declarations:
+
+- `command-fds =0.3.3` owns the qualified safe descriptor-inheritance API used for
+  command custody. Changing it requires focused process/descriptor qualification
+  on Linux and both macOS architectures; lock reproducibility alone is not the reason.
+- `ic-management-canister-types =0.11.0` owns the qualified management wire DTOs,
+  upstream status variants and public Rust type identity. Changing it requires exact
+  codec/golden/bounds review and public compatibility assessment, then native checks
+  and separately applicable authenticated IC qualification.
+- `ic_principal =0.1.5` owns the qualified normalized principal boundary and exposed
+  Rust identity. Changing it requires normalization/identity/hash regression checks
+  and public compatibility assessment, followed by relevant native qualification.
+
+These are reviewed compatibility constraints, not universal exact-pin policy.
+Shared tools use the vendored version/checksum owners under `ci/`; local setup is
+explicit through `make install-tools`, and `make tools-check` never installs.
+Product transport/runtime qualification stays separate from executable version checks.
 
 ## Architecture and style
 

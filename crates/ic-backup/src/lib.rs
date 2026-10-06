@@ -39,6 +39,13 @@
 //! Metadata-bound data reads admit checked ranges, exact reply lengths and chunk
 //! hashes while retaining original evidence without effects. Incremental coverage
 //! checks reject gaps and repeated chunks without retaining or publishing bytes.
+//! Snapshot upload payloads preserve representable metadata and bind exact bounded
+//! source slices to a distinct new ID. Explicit local preparation checks retained
+//! source bytes; passive original-attempt reply admission supplies no dispatch,
+//! settlement, complete upload or new spending. No upload provider is installed.
+//! Local verification/upload preparation expose per-guard host duration and chunk-size
+//! summaries using registry ic-metrics arithmetic. Metrics are diagnostic in-memory
+//! samples, start empty on reopen and change no retained progress or spending.
 //! Pure inventory comparison exposes new candidates and rejects baseline drift;
 //! candidate cardinality never attributes or settles a lost capture.
 //! Bounded lifecycle replies retain exact empty acknowledgements and required

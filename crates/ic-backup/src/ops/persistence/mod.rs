@@ -31,7 +31,10 @@ pub use download_journal::{
     LocalRestoreSourceError, read_download_manifest,
 };
 #[cfg(unix)]
-pub use download_journal::{IcSnapshotArtifactError, IcSnapshotArtifactWriter};
+pub use download_journal::{
+    IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotLocalMetrics,
+    IcSnapshotUploadArtifactError,
+};
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use execution_settlement::{
     ExecutionSettlementPersistenceError, create_execution_settlement, read_execution_settlement,

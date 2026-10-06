@@ -1,0 +1,44 @@
+{
+   "accounting" : "retain binding_digest in an independently retained original upload plan before reserving its mutation; each later data payload includes actual allocated ID before its own intent/spending; metadata allowance never supplies data allowance",
+   "bounds" : {
+      "argument_bytes" : 2097152,
+      "chunk_bytes" : 1048576,
+      "decoder_work" : 65536,
+      "header_bytes" : 4096,
+      "raw_reply_bytes" : 4096,
+      "skipped_work" : 0,
+      "snapshot_id_bytes" : 256,
+      "type_table_entries" : 16
+   },
+   "data" : "exact new 1..256-byte destination distinct from source; checked original region slice or known SHA-256 chunk including empty; upload chunk wire has no source hash",
+   "golden_registry" : {
+      "construction" : "independent DIDL, field hashes, LEB128, exact global bits and SHA-256; every registered case tested",
+      "generator" : "scripts/dev/generate-snapshot-upload.pl",
+      "path" : "crates/ic-backup/src/model/ic_snapshot_upload/tests/golden.json"
+   },
+   "grants" : "no replacement/deletion, remote IO, provider, dispatch, retry, refund, journal transition, complete upload, load/start, fence or reference release",
+   "hashing" : {
+      "binding_body" : "64 ASCII lowercase hashes: full source plan, metadata evidence, artifact checksum; then byte 0 metadata or byte 1 plus metadata wire hash for data; then current wire hash",
+      "binding_domain_with_nul" : "ic-backup/ic-snapshot-upload-binding/v1\u0000",
+      "reply_body" : "64 ASCII binding hash followed by 64 ASCII exact raw-reply SHA-256",
+      "reply_domain_with_nul" : "ic-backup/ic-snapshot-upload-reply/v1\u0000",
+      "wire" : "existing ic-management-request/v1 owner, before upload plan derivation"
+   },
+   "integration_owned" : [
+      "authenticated authentic complete source and new snapshot attribution",
+      "proof of no prior dispatch and original per-call spending",
+      "fresh controllers/permissions, byte and command custody",
+      "upload completeness and lost-effect settlement",
+      "same-release application/fence/load/start safety and terminal/reference release"
+   ],
+   "kind" : "ephemeral codecs and passive reservation/reply association; no persisted schema, provider or new progress/accounting owner",
+   "loss" : "lost reply remains pending; provider failure, absent data or inventory cardinality supplies no NotApplied/Uncertain result; separately qualified settled reconciliation required before any new authority",
+   "metadata" : "preserve ordered globals and floating bits; unavailable global rejects; optional timer/hook remains absent; replace_snapshot always None",
+   "owner" : "model::ic_snapshot_upload; policy::ic_snapshot_upload; DownloadJournalGuard preparation",
+   "preparation" : "explicit fresh full selected-set original plan/journal admission and IC-tree verification; data verifies tree before/after no-follow descriptor read; no future noncooperating byte custody",
+   "reply" : "bounded exact metadata raw ID or canonical empty data tuple; current original authority/pending mutation and actual claimed context/target must match; no receipt or new destination authority",
+   "schema" : 1,
+   "sdk" : "ic-management-canister-types =0.11.0",
+   "source" : "full original retained source plan, exact metadata reply and durable artifact checksum; same canonical canister and original network/release",
+   "unchanged" : "existing v1 records, exhaustive lifecycle/recovery enums, journals, allowances, artifacts, wire codecs, package version and release receipt"
+}

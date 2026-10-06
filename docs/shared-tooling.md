@@ -49,9 +49,63 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
+The maintainer authorized adoption of committed Shared Tooling 0.1.6 on 2026-10-06.
+The current 44-file snapshot selects
+[`a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3`](https://github.com/dragginzgame/shared-tooling/tree/a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3),
+matching remote main at inspection and a clean read-only sibling source. The
+unchanged Git-object exporter includes all shared audit methods, pinning rules/
+checker, parser and IC pins, installers and their focused regressions. Product
+records, package/MSRV/lock selections, release commands and receipt owners remain
+unchanged. Setup/check targets are compatible additions in pending 0.3.7, under
+[#3](https://github.com/dragginzgame/ic-backup/issues/3).
+
+Explicit `make install-tools` prepares pinned jq/yq followed by six IC executables.
+Each set activates independently after checksum/version checks; previous and failed
+candidates remain retained. Make/CI select local bin paths. `make tools-check` is
+offline. CI/release gates also check declarations and scoped existing exact-version
+reasons in [the local overlay](../AGENTS.md#qualified-dependency-constraints).
+Provisioning adds no transport/provider or IC runtime qualification.
+
+The logger clears checkout/snapshot identity at target dispatch, preserving normal
+release selections. Independent fixtures clear inherited Make/release/logger context.
+Consumer-owned `scripts/ci/test-release-metadata.sh` reuses existing receipt,
+failed-log and real-index cases for the immutable shared regression; Shared
+Tooling's changelog-only adapter is not installed. No vendored file is patched.
+
+Actual Linux setup, offline checks, declaration admission and focused shared
+tooling/installer regressions pass. Evidence and previous snapshot/review remain
+under `target/shared-tooling-037-adoption`; the review record binds file identities
+and check scope. Native macOS setup/changed-source CI remains pending. Upstream's
+[0.1.6 CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37450707625)
+subsequently completed successfully; upstream results do not qualify this consumer.
+Shared audit methods are available offline; no product audit, report migration or
+automatic broad gate was run by adoption.
+
+### Earlier inspected and adopted revisions
+
+A subsequent maintainer-requested update inspection on 2026-10-06 confirmed
+remote main at [committed 0.1.5](https://github.com/dragginzgame/shared-tooling/commit/a7efade1a68e43f148252a1a73908a46c4cbe9e9).
+That revision was inspected before the current adoption. Its new
+dependency-pinning rules require the exact shared declaration checker/jq module,
+reviewed parser preparation, exact-scoped compatibility exceptions and CI/release
+gate wiring. It also documents locked preparation for every affected workspace
+and isolates validation logger checkout/snapshot identity at target dispatch.
+Independent fixtures retain their own Make-selection responsibilities.
+
+Executing the exact committed checker read-only against this consumer reports
+`command-fds =0.3.3`, `ic-management-canister-types =0.11.0` and
+`ic_principal =0.1.5` as requiring compatibility-reason records. Existing source
+qualification needs deliberate review under the new exception contract; inspection
+does not authorize relaxing requirements or changing locked versions. The published
+`ic-metrics` requirement was already compatible rather than exact. At that inspection
+no checker, exception or parser installer was adopted. The then-dirty tool changes
+were retained separately. Historical evidence is under
+`target/maintenance-037-review.B63Hd3`, including
+the committed diff, dirty source status, exact checker bytes and its findings.
+
 The inspected upstream repository is
 [`dragginzgame/shared-tooling`](https://github.com/dragginzgame/shared-tooling).
-The current committed baseline and tooling revision is
+The previous committed baseline and tooling revision was
 [`cb86188c5956866564de4fb6ec6be67b27981ab9`](https://github.com/dragginzgame/shared-tooling/tree/cb86188c5956866564de4fb6ec6be67b27981ab9),
 reviewed on 2026-10-06. A read-only remote query confirmed that exact `HEAD`/`main`;
 the read-only sibling checkout was clean. The unchanged upstream Git-object

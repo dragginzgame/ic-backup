@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.7]
+
+- Prepare snapshot upload metadata and bounded region/chunk bytes from verified
+  retained IC artifacts. Preserve globals and optional fields, reject unavailable
+  values and bind each new snapshot/data request to its original source evidence.
+- Associate bounded upload replies with independently accounted pending attempts.
+  Keep lost replies and spending retained without automatic receipts, retries or
+  source-reference release. Live upload transport remains unimplemented.
+- Use `ic-metrics` for per-guard host verification/preparation durations and prepared
+  chunk sizes. Keep successful and rejected work separate; ordinary reopen starts
+  empty measurements without changing retained progress or spending.
+- Adopt Shared Tooling's pinned local jq/yq and IC executable setup, offline
+  integrity checks and scoped dependency-pinning validation in CI and releases.
+  [#3](https://github.com/dragginzgame/ic-backup/issues/3)
+- Make non-UTF-8 artifact-name coverage portable when macOS rejects the raw
+  filename during fixture setup, preserving exact production name rejection.
+  [#4](https://github.com/dragginzgame/ic-backup/issues/4)
+
 ## [0.3.6] - 2026-10-06
 
 - Stream admitted snapshot data into private local artifacts, retaining exact

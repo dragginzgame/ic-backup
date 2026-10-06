@@ -1820,6 +1820,107 @@ terminal proof or fence/reference release is installed. Canic consumers remain
 unchanged. See [the local tree contract](contracts/ic-snapshot-artifact.json) and
 [fresh source review](ic-snapshot-artifact-source.json).
 
+### Original source-bound IC snapshot upload
+
+`model::ic_snapshot_upload::IcSnapshotUploadRequest` borrows the full original source
+plan and metadata reply, retains the declared tree checksum and encodes official SDK
+upload arguments for that same canonical target. Metadata uploads have no replacement
+ID. Ordered globals retain exact float/v128 values; an unavailable global rejects.
+Optional timer/hook values remain absent rather than inventing states. Read-only source,
+timestamp, version and chunk inventory remain original evidence, without becoming
+upload fields. These mappings follow the pinned SDK and
+[management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
+
+Data construction needs the original metadata-upload declaration and an exact new
+1..256-byte raw destination distinct from the original source. It reuses the data
+owner's nonzero checked ranges and known 32-byte hashes. Actual bytes must match the
+requested region size or chunk SHA-256; empty known chunks are allowed. Only one
+at-most-1-MiB chunk is buffered. Upload chunk wire carries no source hash, so the
+source declaration retains it while exact encoded bytes bind its actual checksum.
+Separate upload ceilings are 2 MiB arguments and 4 KiB raw replies. Existing
+lifecycle arguments, schemas and exhaustive enums retain their original bounds.
+
+`digest()` reuses the management wire owner. `binding_digest()` additionally binds
+the full source-plan digest, exact metadata evidence and retained tree checksum,
+then a metadata/data tag, the original metadata wire digest for data, and current
+wire digest. All hashes are 64 lowercase ASCII bytes after the NUL-terminated
+`ic-backup/ic-snapshot-upload-binding/v1` domain. Retain that binding as the operation's
+request in its original upload plan before consuming its mutation allowance.
+`IcSnapshotUploadAttempt` derives full original authority from that plan, checks
+exact target/binding and original source network/release, and requires the unchanged
+pending mutation with no pending recovery observation. Reconstruction permits no
+dispatch. A newly allocated destination must precede each later data intent and its
+independent reservation; the metadata allowance cannot be reused or replenished.
+Integration-owned allocation attribution and cross-operation accounting are not
+inferred from an ID, matching declarations or a passive acknowledgement.
+
+The explicit `DownloadJournalGuard::prepare_ic_snapshot_upload_metadata` entry point
+uses existing full retained source-plan/journal and complete Durable selected-set
+admission, then verifies the exact opt-in IC tree. `prepare_ic_snapshot_upload_data`
+requires unchanged original evidence/checksum, verifies before/after reading a fixed
+direct child through no-follow/nonblocking descriptors, and encodes one exact source
+slice or known chunk. Existing checks reject changed, missing, extra or unsafe files.
+No record, progress, allowance, obligation, source reference or artifact changes.
+The checks are sequential and hold no future noncooperating byte custody. Ordinary
+resume stays artifact-free and supplies no upload input or permit.
+
+`IcSnapshotUploadReply` admits an exact metadata ID through the existing bounded raw-ID
+visitor, or the lifecycle owner's canonical empty Candid tuple for data. Metadata
+decoding has 64 KiB work, zero skipped work, 16 type-table entries and 4 KiB header
+bounds. Extra arguments, skipped extensions and trailing bytes reject. The evidence
+hash domain is `ic-backup/ic-snapshot-upload-reply/v1` plus NUL, original binding hash
+and exact raw-reply SHA-256. Pure `policy::ic_snapshot_upload::validate_acknowledgement`
+rechecks the current journal and exact claimed original authority, attempt, actual
+context and target through the existing passive acknowledgement owner. Its result
+authenticates no provider or allocated ID, records no receipt and grants no new call.
+
+Lost metadata/data replies remain pending. Provider failure, absent bytes or zero/one/
+multiple snapshot entries never prove NotApplied or Uncertain. Qualified settled
+reconciliation and proof of no prior dispatch remain integration-owned; no upload
+observation backend, blind retry, refund or default provider is installed. Authentic
+complete source/new snapshot transfer, fresh controllers, command/byte custody,
+application/fence obligations, same-release load/start safety and terminal/reference
+release remain independently qualified. See [the generated contract](contracts/ic-snapshot-upload.json)
+and [fresh review](ic-snapshot-upload-source.json). Independent wire fixtures and
+native public reopen tests qualify declarations/local bytes only, not IC effects.
+
+### Local IC snapshot diagnostics
+
+`DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
+`IcSnapshotLocalMetrics` view for that guard's lifetime. It reuses registry
+`ic-metrics`'s `MeasurementSummary` arithmetic, declared once in the workspace
+catalog and inherited for the Unix-host implementation. Default features are
+disabled and the canister instruction-reader feature is absent. Consumers own
+sampling/reporting; no sibling path, global registry, telemetry endpoint or
+transport metric is introduced.
+
+The existing explicit `verify_ic_snapshot_artifact`,
+`prepare_ic_snapshot_upload_metadata` and `prepare_ic_snapshot_upload_data` calls
+record their returned successes/rejections separately. Host monotonic elapsed
+durations use nanoseconds and clamp to `u64::MAX` before shared saturating aggregation.
+Only a successfully returned data payload contributes its actual bounded chunk
+length in bytes. Empty known chunks contribute a measured zero; repeated preparation
+contributes repeated work, not unique or remotely transferred bytes. Internal
+verification samples are included, so enclosing preparation durations overlap those
+checks and must not be added as exclusive work. Calls that do not return supply no
+sample. No wall-clock threshold, IC instruction/cycle cost or receipt is inferred.
+
+Sampling is empty on create/open. Ordinary retained record access and metric reads
+perform no fresh artifact IO or sampling, even when artifact trees are missing.
+Guard-local synchronization preserves `Send + Sync`; no metric lock spans filesystem
+work or caller code. Diagnostic poison recovery changes no operation result.
+Counts/totals saturate independently, and either at `u64::MAX` is unavailable for
+exact interval arithmetic. There is no persistence, reset API, serialization,
+identifier label or retained metric history. Existing v1 bytes/hashes, typed failures,
+spending, obligations and source references keep their original owners.
+
+Native tests check exact sample membership and units, error/zero/repeated-byte
+semantics, duration clamping, copied views, guard traits and fresh empty reopen.
+Public source/upload replay retains original record/reference bytes and exhausted
+pending spending while diagnostic samples grow. This qualifies local arithmetic
+and sampling only. [Dependency review](ic-metrics-adoption.json) binds the verified
+registry archive; real IC effects and transport measurements remain unimplemented.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

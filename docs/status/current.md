@@ -25,15 +25,178 @@
 
 # Current handoff — 2026-10-06
 
-The maintainer reports 0.3.5 live. Local release commit
-`ff6c1582fc23fece7d00d6360336eb715231a015`, annotated tag and exact receipt/parent
-checks passed before editing; original receipt source is
-`08b27521646b0504b50aef3530bb5e92ee66a34a`. GitHub main/tag CI confirms that source
-was pushed; registry publication was not inspected. The complete compatible pending
-batch uses one undated **0.3.6** entry. Package, lock and release receipt remain 0.3.5.
-All work is uncommitted; no real commit, release/tag/push, upload or live IC effect ran.
+The maintainer reports 0.3.6 pushed. Clean local release commit
+`f4b1426b5afac3ad53d3c862e39f784cef7391f9`, annotated tag and exact receipt/parent
+checks passed before this handoff update; original receipt source is
+`9478fcae1ee6d859908d7602efe75153fab0e2fc`. GitHub main/tag CI confirms that commit
+was pushed. Package, lock, receipt and finalized changelog now select 0.3.6; registry
+publication was not inspected. The accepted snapshot-upload contract and explicitly
+requested ic-metrics integration, tooling adoption and native fixture repair share
+one compatible undated 0.3.7 draft. Package
+version and receipt stay at 0.3.6; the lockfile only adds registry ic-metrics 0.1.7. Work is
+uncommitted. No agent commit, tag, push, publication or live IC effect ran. Release
+inspection evidence is under `target/post-036-review`; its `previous-current.md`
+preserves the pre-release handoff. The new batch retains its initial handoff and
+qualification evidence under `target/snapshot-upload-review`.
 
-## Current 0.3.6 batch
+The requested issue/tooling refresh on 2026-10-06 inspected the completed
+[main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37442582446) and
+[tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37442582576) for that
+exact released source. Both Linux jobs passed; both macOS architectures failed in
+`non_utf8_tree_names_reject_instead_of_collapsing_path_identity` while creating
+the raw `0xff` fixture basename, with `Illegal byte sequence`, before production
+checksum admission. Release/tooling/hook/snapshot targets passed on all hosts;
+the complete gate is not green. Pending 0.3.7 source remains uncommitted and has
+no remote CI result. Raw current job summaries, failed logs, issue discussions and
+read-only committed-tooling inspection are retained in
+`target/maintenance-037-review.B63Hd3`.
+
+The maintainer then authorized fixes and issue maintenance after Shared Tooling
+0.1.6 was committed. The refreshed 44-file snapshot binds exact clean committed
+`a37771f1b6b5fc9a88ed6ab3b705bdda35cd8fa3`, matching remote main at inspection.
+It includes pinning rules/checker, complete audit methods and host/IC tool setup.
+Actual Linux installation and offline checksum/version checks pass. Scoped reasons
+retain the three existing exact Cargo constraints; locked selections are unchanged.
+CI explicitly provisions local tools; Make/CI/release checks select their bin paths
+and never install during ordinary validation. Native macOS setup remains pending.
+See [the adoption review](../shared-tooling.md) and
+[the tooling owner](https://github.com/dragginzgame/ic-backup/issues/3).
+
+The [macOS fixture repair](https://github.com/dragginzgame/ic-backup/issues/4)
+reuses one production tree-name admission owner for checksum/copy traversal.
+Direct exact non-UTF-8 rejection is exercised on every Unix host; the filesystem
+fixture remains real. Only macOS `EILSEQ` during raw-name creation is admitted;
+other hosts/errors fail. Focused Linux artifact cases, Clippy and Rust 1.91 checks
+pass. Native macOS confirmation for this source remains pending.
+Evidence, previous snapshots/review/handoff and initial tooling-fixture dependency
+failure remain under `target/shared-tooling-037-adoption`. The consumer fixture
+entry point reuses existing metadata/receipt/real-index/failed-log tests for the
+unchanged shared nested-logger regression; all tooling/pinning/installer cases pass.
+The final isolated release adapters, runner and hooks also pass
+(`release-hooks.log`), along with shell/format/snapshot and installed-tool checks
+(`consumer-final.log`). Repeated setup with curl deliberately blocked passes
+(`idempotent-offline.log`). CI YAML admission retains the three-host matrix and
+places explicit local setup before macOS Bash 3.2 checks and the full gate.
+Upstream [0.1.6 CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37450707625)
+subsequently completed successfully; it supplies no changed-source consumer result.
+`qualification.log` derives artifact test membership from the actual registered
+binary, checks final passes and unchanged lock selection, and retains current
+source identities in `qualified-source.sha256`. Historical upload/metrics evidence
+keeps its original pre-adoption scope.
+No maintained function, method or type was removed in this adoption/fixture repair.
+No full gate, product audit, provider, live IC effect, commit, version/release
+transaction, push or publication was performed.
+
+## Pending 0.3.7 source-bound upload contract
+
+The subsequent maintainer-requested `ic-metrics` integration uses the published
+0.1.7 dependency with default features disabled, inherited from the root catalog
+for the Unix host implementation. The archive checksum matches the lock/index
+identity; resolved features/runtime dependencies are empty. No previously selected
+package changed, no sibling path/patch was introduced and no IC instruction reader
+was enabled. [Dependency review](../ic-metrics-adoption.json) records the exact source.
+
+`DownloadJournalGuard::ic_snapshot_metrics` exposes a copied per-guard
+`IcSnapshotLocalMetrics` view. Existing explicit IC-tree verification and upload
+metadata/data preparation record successful/rejected local monotonic durations in
+nanoseconds through shared `MeasurementSummary` arithmetic. Successfully returned
+data contributes actual chunk bytes, including measured zero for empty chunks and
+repeated samples for repeated work. Preparation includes its nested verification;
+these timings overlap and are not exclusive totals. Guard-local synchronization
+preserves Send + Sync, with no lock across filesystem work. Metrics hold no IDs,
+serialized history, reset API, global registry or effect/completion authority.
+Ordinary create/open starts empty; record reads/replay and metric reads supply no
+fresh byte checks or samples. Journals, hashes, returned errors, spending, obligations
+and references keep their original owners.
+
+Fresh native sampling/dependency evidence is under `target/ic-metrics-review`:
+all registered download-journal cases, including real publication/interruption
+recovery and the added diagnostic cases, pass in `journal-final.log`. Tests check
+unit separation, success/rejection membership, zero/repeated chunks, duration
+clamping, copied views and empty artifact-free reopen. Public artifact/upload
+journeys pass (`public-final.log`) while retaining original source/reference bytes
+and exhausted pending mutation/observation allowances. Warning-denied all-target/
+all-feature Clippy and docs, Rust 1.91 checks, formatting, exact generator checks,
+dependency feature admission and the unchanged 23-file shared snapshot pass.
+`qualification-check.pl` binds registered passing cases and that integration's source identities.
+Earlier upload evidence below retains its pre-metrics scope. The combined 0.3.7
+batch is ready for review/configured CI; no full gate, IC effect, transport
+measurement or performance-saving claim was introduced. Native macOS remains
+unqualified for the new work. That integration removed no maintained symbols.
+
+The subsequent requested metrics review retains shared arithmetic, seven distinct
+unit/outcome summaries and the required before/after source custody checks. It removes
+unneeded result-type generics, the mutable chunk-size side channel and an unused
+checksum return value from private adapters. Successful chunk sizes now come directly
+from the fully admitted result. Public APIs, returned errors and check ordering are
+unchanged. Two duplicate private tests in `download_journal::metrics::tests` were
+removed: `units_outcomes_empty_chunks_and_copied_summaries_stay_distinct` is covered
+by the actual guarded filesystem sampling journey;
+`duration_exceeds_nat64_is_saturated_without_changing_other_units` is replaced by
+`duration_conversion_preserves_nanoseconds_and_clamps_overflow`, which checks zero,
+exact nanoseconds and overflow without retesting upstream aggregation. The filesystem
+journey also rejects a genuinely missing source tree without adding prepared bytes
+or changing retained journal evidence. Fresh cleanup qualification is retained under
+`target/ic-metrics-cleanup-review`; earlier integration evidence keeps its original
+scope. All currently registered download-journal cases and both public artifact/
+upload journeys pass against the final source (`journal-final.log`,
+`public-final.log`). Warning-denied all-target/all-feature Clippy and API docs,
+Rust 1.91 checks, formatting, unchanged generators and the 23-file shared snapshot
+pass. `qualification-check.pl` binds the actual registered passing cases and source
+identities; the earlier test-length lint failure remains retained in `clippy.log`.
+No full validation gate, native macOS run or IC effect was performed.
+
+`IcSnapshotUploadRequest` encodes same-target official SDK metadata/data arguments
+from original source evidence. Metadata retains exact available global bits and
+optional timer/hook absence; unavailable globals reject and replacement is always
+absent. Data needs a distinct new raw ID and an exact bounded original region or
+known chunk, including empty known chunks. Independent Candid/wire/source-binding/
+reply-hash fixtures cover every registered case. The source-plan, metadata and tree
+checksum binding precedes each new original upload plan and pending reservation;
+metadata spending never supplies data spending or permits redispatch.
+
+Explicit guarded metadata/data preparation reuses full retained source plan/journal,
+complete Durable selection and exact opt-in IC-tree verification. Data verifies
+before/after one bounded no-follow descriptor read, without aggregate buffering or
+record/reference changes. File reads retain their original pre-read bounded size;
+sequential checks still require integration-owned stable noncooperating custody.
+Passive `IcSnapshotUploadAttempt`/reply association rechecks current original
+authority, reservation and actual claimed context/target. It authenticates no effect,
+writes no receipt, replenishes no spending and leaves lost replies pending. No
+upload provider, transport, complete-upload view or release permit was installed.
+
+Native evidence: all registered upload cases pass (`upload-unit-final-2.log`);
+the later full binding/reply golden and authority checks pass in
+`upload-model-policy-final.log`. Unchanged snapshot owners and real artifact
+publication/interruption cases pass (`snapshot-owners-final.log`), as does the
+canonical lifecycle empty-tuple owner (`lifecycle-owner-final.log`). Public upload,
+artifact, metadata and data journeys pass (`public-owners-final.log`). The new
+public upload reopen preserves exact source plan/journal/reference bytes and
+independently pending metadata/data spending, including exhausted lost observations.
+Tests cover all region/chunk kinds, maximum chunk/ID/globals, exact float bits,
+source declaration/evidence drift, invalid/extended wire, and changed/missing/unsafe
+source files including real FIFOs. Registry membership is derived from listed and
+passing cases in `qualification-check.pl`, rather than an aggregate count.
+
+Warning-denied all-target/all-feature Clippy and API docs, Rust 1.91 checks,
+manifest/Rust formatting and all three metadata/data/upload generator checks pass
+(`*-final.log`, `generated-final.log`). All previous metadata fixture rows remain
+unchanged. Initial test-compilation/lint failures and review evidence are retained.
+No full CI/release gate was run. The coherent local contract batch is ready for
+maintainer review/configured CI; native tests establish no IC effect or authenticated
+complete transfer. No maintained function, method or type was removed.
+
+See [the upload boundary](../extraction-boundary.md#original-source-bound-ic-snapshot-upload),
+[generated contract](../contracts/ic-snapshot-upload.json) and
+[fresh source review](../ic-snapshot-upload-source.json). Shared Tooling's adopted
+23-file snapshot was unchanged during upload qualification; the later 44-file
+adoption is described above. Canic review uses committed source
+only, with unrelated dirty sibling paths retained and untouched. Next work is narrow
+single-call upload provider/accounting and method-specific lost-effect recovery,
+then real backend qualification; source/destination attribution, fresh controllers,
+application/fence/load/start safety and terminal/reference release remain pending.
+
+## Released 0.3.6 local artifact and tooling batch
 
 - `DownloadJournalGuard::stage_ic_snapshot_artifact` binds the original Created
   artifact to exact metadata target/timestamp and raw wire evidence. Generic tokens
@@ -118,23 +281,36 @@ unchanged vendored runner's command substitutes. Evidence and previous snapshot/
 copies are under `target/shared-tooling-036-review`. The exact original missing-tag
 substitute falsely accepted conditional sourcing; that reproduction remains in
 `target/snapshot-artifact-review/conditional-tag-reproduction`. Read-only planning
-selects 0.3.5 to 0.3.6. No full CI or release gate ran locally.
+selected 0.3.5 to 0.3.6 during preparation. Those agent checks ran no full CI or
+release gate; the maintainer's later release has its own receipt.
 
-Both [main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37431702050)
+Current [main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37442582446)
+and [tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37442582576) for
+the exact 0.3.6 release commit were in progress at the upload batch's read-only
+inspection, with no completed workflow result or inspected native macOS qualification.
+The sole configured workflow is CI; latest exact-commit results are retained in
+`target/snapshot-upload-review/release-036-ci.jsonl`; the earlier queued inspection
+remains in `target/post-036-review/ci-runs.jsonl`.
+No workflow rerun, cancellation or GitHub write occurred.
+
+Earlier [main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37431702050)
 and [tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37431702209) for
 0.3.5 failed: Linux passed, while both macOS jobs stopped at the Bash 3.2 completed-tag
 fixture and skipped library validation. The shell condition is reproduced and fixed
 locally; fresh macOS/remote confirmation remains pending. Existing
 [issue #2](https://github.com/dragginzgame/ic-backup/issues/2) owns shared adoption.
-No GitHub writes or workflow reruns were performed. Current dirty changes have no
-remote CI result.
+The pending 0.3.7 batch has no remote CI result of its own. Read-only issue/PR
+review found no open PRs. Existing [issue #2](https://github.com/dragginzgame/ic-backup/issues/2)
+still requests native macOS qualification of the adopted release recovery.
+The API confirms [issue #1's](https://github.com/dragginzgame/ic-backup/issues/1)
+description correction is present and accurate; the issue remains open. No issue
+status was changed and no new tracker was created.
 
 ## Remaining product boundary
 
-The next product work is original snapshot upload metadata/range/chunk argument and
-input binding, followed by explicitly bounded providers and their original per-call
-accounting/recovery contracts. The fresh local tree check installs no upload reader,
-runner or default association.
+The next product work is explicitly bounded upload providers and their original
+per-call accounting/recovery contracts. Local upload payload/byte preparation and
+passive replies install no remote reader, runner or default allocation association.
 Authenticated snapshot identity/complete backend transfer, fresh permissions and
 spending, application/byte/command custody, concrete capture/upload/load reconciliation,
 terminal proof and controlled fence/reference release remain independently qualified.

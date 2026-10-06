@@ -241,6 +241,7 @@ dependencies = [
  "candid",
  "command-fds",
  "ic-management-canister-types",
+ "ic-metrics",
  "ic_principal",
  "rustix",
  "serde",
@@ -259,6 +260,12 @@ dependencies = [
  "serde",
  "serde_bytes",
 ]
+
+[[package]]
+name = "ic-metrics"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e8632a16ca69a8a9ab1fd4daa276f7739d9996bd970373992e6c97087a04378"
 
 [[package]]
 name = "ic_principal"

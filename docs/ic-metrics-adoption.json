@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "inspection_date": "2026-10-06",
+  "kind": "explicit maintainer-authorized host arithmetic integration",
+  "registry_package": "ic-metrics",
+  "selected_version": "0.1.7",
+  "archive_sha256": "9e8632a16ca69a8a9ab1fd4daa276f7739d9996bd970373992e6c97087a04378",
+  "source": "registry+https://github.com/rust-lang/crates.io-index",
+  "repository": "https://github.com/dragginzgame/ic-metrics",
+  "source_review": "Cached published Cargo manifest and library/summary source; read-only sibling inspection supplied context but is not a path dependency or copied implementation.",
+  "api": "ic_metrics::MeasurementSummary: allocation-free, dependency-free default arithmetic; consumer owns sampling, units, attribution and reporting",
+  "catalog": "root Cargo.toml, inherited by the Unix-host crate; default-features=false and no ic feature",
+  "lock_change": "Only ic-metrics 0.1.7 added and the ic-backup dependency edge; every previously selected package retained.",
+  "msrv": "Published dependency requires Rust 1.88; consumer remains Rust 1.91.",
+  "production_owner": "crates/ic-backup/src/ops/persistence/download_journal/metrics/",
+  "consumers": ["verify_ic_snapshot_artifact", "prepare_ic_snapshot_upload_metadata", "prepare_ic_snapshot_upload_data"],
+  "units": "Monotonic inclusive local durations in nanoseconds, successful local chunk sizes in bytes. Returned successes/rejections separate; internal verification overlaps preparation.",
+  "lifetime": "Bounded guard-local in-memory summaries, empty on create/open; no global registry, identifiers, persistence, reset or serialization.",
+  "compatibility": "Additive read-only public view and getter; existing Send+Sync, v1 records, hashes, method signatures, errors, spending, obligations, references and root package/receipt identities retained. Extend pending 0.3.7.",
+  "qualification": {"evidence": "target/ic-metrics-review", "unit_filters": ["metrics", "ops::persistence::download_journal"], "public_target": "ic_snapshot_upload", "scope": "Actual native local sampling/arithmetic, records and reopen; no IC effects, performance saving claim or transport measurement."},
+  "cleanup_review": {"evidence": "target/ic-metrics-cleanup-review", "owners": "Shared crate retains aggregation; local adapter owns operation/outcome routing and duration conversion. Seven unit/outcome summaries and both source checks remain necessary.", "simplification": "Remove result-type generics, mutable chunk-size side channel and unused private checksum return. Derive prepared bytes only from the fully admitted successful result. Replace duplicate manual aggregation tests with focused duration conversion and actual filesystem success/admission/missing-source sampling.", "compatibility": "No public API, record, hash, error, custody-order or dependency selection changes."},
+  "remaining": "Transport/workflow providers and authenticated IC qualification remain separate work. Diagnostics establish no complete transfer, spending, receipt, freshness, effect settlement or terminal/reference release."
+}

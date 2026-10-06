@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Fixtures below supply their own Make selections and logger identities.
+unset MAKEFLAGS MFLAGS MAKEOVERRIDES
+unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/validation-runner-test.XXXXXX")"
 trap 'rm -rf "$FIXTURE"' EXIT
@@ -164,6 +168,51 @@ for failure in mkdir copy; do
     [[ "${#fallback_logs[@]}" == 1 && -f "${fallback_logs[0]}" ]]
     rg -F first-failure-marker "${fallback_logs[0]}" >/dev/null
     rg -F "${fallback_logs[0]}" "$FIXTURE/fallback-$failure.log" >/dev/null
+done
+
+# Exercise real Make overrides and logger dispatch across checkout boundaries.
+parent="$FIXTURE/parent"
+mkdir -p "$parent/scripts/ci" "$parent/child/scripts/ci"
+cp "$ROOT/scripts/ci/run-validation-targets.sh" "$parent/scripts/ci/"
+cp "$ROOT/scripts/ci/run-validation-targets.sh" "$parent/child/scripts/ci/"
+cat > "$parent/Makefile" <<'MAKE'
+.PHONY: validate adoption same-checkout selection child-gate ci
+validate:
+	+bash scripts/ci/run-validation-targets.sh adoption same-checkout
+adoption:
+	@bash "$(METADATA_FIXTURE)"
+	+bash child/scripts/ci/run-validation-targets.sh child-gate
+same-checkout:
+	+bash scripts/ci/run-validation-targets.sh selection
+selection:
+	@test "$(RELEASE_VERSION)" = 9.8.7
+	@test "$(RELEASE_COMMIT)" = parent-selected-commit
+	@test "$$VALIDATION_RUNNER_DEPTH" = 2
+	@echo nested-selection-marker
+child-gate ci:
+	@echo incorrect-parent-gate >> incorrect-route
+	@exit 9
+MAKE
+cat > "$parent/child/Makefile" <<'MAKE'
+child-gate:
+	@echo child-gate-marker
+MAKE
+if ! VALIDATION_RUNNER_DEPTH=0 VALIDATION_FAILURE_LOG_DIR="$parent/failure-logs" \
+    make --no-print-directory -C "$parent" validate \
+    RELEASE_VERSION=9.8.7 RELEASE_COMMIT=parent-selected-commit \
+    METADATA_FIXTURE="$ROOT/scripts/ci/test-release-metadata.sh" \
+    > "$FIXTURE/nested-context.log" 2>&1; then
+    cat "$FIXTURE/nested-context.log" >&2
+    echo 'validation target runner test failed: nested release context' >&2
+    exit 1
+fi
+[[ ! -e "$parent/incorrect-route" ]] || {
+    echo 'validation target runner test failed: executed the parent gate' >&2
+    exit 1
+}
+for marker in child-gate-marker nested-selection-marker \
+    'release metadata real-Git and validation-retention tests passed'; do
+    rg -F "$marker" "$FIXTURE/nested-context.log" >/dev/null
 done
 
 echo "validation target runner test passed"

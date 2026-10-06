@@ -34,10 +34,35 @@ guide for performing a canister backup or restore.
 From the repository root:
 
 ```bash
+make install-tools
+make tools-check
 make deps
 make check
 make test
 ```
+
+Explicit local setup uses the reviewed [host parser pins](../ci/tool-versions.env)
+and [IC tool matrix](../ci/ic-tools.tsv). It downloads and verifies jq/yq and the
+six IC executables, then activates each complete set under `.tools/`; previous
+sets and failed candidates are retained. Make selects `.tools/host/bin` and
+`.tools/ic/bin`. Interactive shells can use:
+
+```bash
+export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PATH"
+```
+
+See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
+[IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck, ripgrep and
+macOS GNU Make/flock remain separate product prerequisites. No PocketIC client
+or live backup/restore provider is implemented; installing executables and checking
+versions establishes no backend or application qualification.
+
+`make dependency-pins-check` checks declarations and tracked lockfiles without
+downloads. The three qualified exact constraints and their required review are
+recorded in [the local overlay](../AGENTS.md#qualified-dependency-constraints)
+and the scoped exception file. CI explicitly runs setup before the full gate;
+CI and releases include offline `tools-check` and the declaration check. Ordinary
+validation never installs missing tools implicitly.
 
 `make deps` fetches the committed lockfile dependencies. The validation commands
 use this repository's own `target/` directory. Check for an active build before
@@ -465,6 +490,51 @@ See the [schema and goldens](contracts/execution-settlement.schema.json),
 Focused checks are `cargo test --offline --locked -p ic-backup --lib execution_settlement`
 and `cargo test --offline --locked -p ic-backup --test execution_settlement`.
 
+## Snapshot upload payloads
+
+`model::ic_snapshot_upload` owns same-target metadata/data arguments and bounded
+passive replies. Metadata preserves every available global and absent timer/hook
+values; an unavailable global rejects. No replacement is encoded. Data binds exact
+original extents or known chunk hashes, actual bytes and a distinct new raw ID.
+Keep `binding_digest()` in the new original operation plan; `digest()` hashes wire
+bytes only. Each later data intent includes the allocated ID before its own
+reservation. A metadata reservation cannot supply data spending.
+
+`DownloadJournalGuard::prepare_ic_snapshot_upload_metadata` freshly verifies the
+original published IC tree. `prepare_ic_snapshot_upload_data` verifies before/after
+one bounded no-follow source read. These operations change no records or references
+and hold no future byte custody. `IcSnapshotUploadAttempt` and pure
+`policy::ic_snapshot_upload::validate_acknowledgement` recheck current original
+pending evidence, without receipt, retry, remote call or complete-upload proof.
+Lost replies remain pending, including lost recovery observations.
+
+Focused checks are `cargo test --offline --locked -p ic-backup --lib upload` and
+`cargo test --offline --locked -p ic-backup --test ic_snapshot_upload`. Regenerate
+metadata fixtures first, then `perl scripts/dev/generate-snapshot-upload.pl`;
+`--check` independently compares all registered wire/hash fixtures and the
+[machine contract](contracts/ic-snapshot-upload.json). Native fixtures qualify local
+bytes and declarations only; real IC upload and lost-effect reconciliation remain
+unimplemented. See [the boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
+
+## Local IC artifact diagnostics
+
+Local IC artifact diagnostics are available through
+`DownloadJournalGuard::ic_snapshot_metrics()`. Its duration summaries use nanoseconds;
+`prepared_chunk_bytes()` summarizes successfully returned local data payload sizes.
+Counts, totals, latest and maximum reuse `ic-metrics::MeasurementSummary`. Successful
+and rejected calls stay separate. Empty chunks are valid zero samples; repeated
+preparation is repeated work. Preparation timings include nested verification and
+must not be added to verification timings as exclusive work. Measurements are empty
+on reopen and never persist into journals or grant progress/spending authority.
+
+The workspace catalog declares registry `ic-metrics` with default features disabled;
+the Unix member inherits it without feature `ic`. It installs no host IC instruction
+counter, network telemetry or transport measurement. Focused sampling tests are
+`cargo test --offline --locked -p ic-backup --lib metrics`, followed by the existing
+download-journal and public upload journeys when those operations change. See
+[diagnostic semantics](extraction-boundary.md#local-ic-snapshot-diagnostics) and
+[dependency review](ic-metrics-adoption.json).
+
 ## Supported host scope
 
 IC Backup runs on the operator host. The [vendored host matrix](supported-hosts.md)
@@ -558,7 +628,8 @@ would violate the shared index-snapshot formatting contract.
 Run checks targeted to changed packages and behavior while developing. Full
 validation requires a maintainer request or CI. `make ci`, `make validate` and
 `make release-verify` run the full configured gate: snapshot verification,
-dependency fetch, tooling, formatting, native compilation, Clippy, tests, docs,
+offline local-tool and pin checks, dependency fetch, tooling, formatting,
+native compilation, Clippy, tests, docs,
 MSRV and package verification.
 CI runs this gate on the Linux and macOS hosts above. The shared runner preserves target order, stops at
 the first failure and prints target-labelled diagnostics and a result/timing

@@ -19,6 +19,7 @@ pub mod ic_snapshot_coverage;
 pub mod ic_snapshot_data;
 pub mod ic_snapshot_metadata;
 pub mod ic_snapshot_reply;
+pub mod ic_snapshot_upload;
 pub mod inventory;
 mod journal_path;
 pub mod membership;

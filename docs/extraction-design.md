@@ -574,8 +574,24 @@ retained original plan and unchanged journal. It reuses complete Durable selecte
 admission, then verifies exact format/metadata/request, region lengths, bounded chunk
 hashes and the existing retained checksum. Only that target's bytes are checked;
 ordinary resume stays artifact-free. Passive sequential checks retain no fresh byte
-custody and authorize no upload. Upload input/argument binding and actual transfer
-permissions, accounting and recovery remain integration work.
+custody and authorize no upload.
+
+`model::ic_snapshot_upload` now binds representable original metadata and bounded
+source slices/chunks to the same target and a distinct new destination ID. Explicit
+guarded preparation verifies retained source bytes; each upload payload's source/wire
+binding precedes its own immutable plan and original mutation reservation. Passive
+reply admission retains pending spending and proves no destination attribution or
+complete upload. Live transfer permissions, providers, original dispatch custody and
+lost-effect reconciliation remain integration work. See
+[the upload boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
+
+Explicit local IC-tree verification and upload preparation now expose per-guard
+`ic-metrics` summaries. Host durations use nanoseconds, successful prepared data uses
+bytes, and returned successes/rejections stay separate. Internal verification and
+enclosing preparation overlap; repeated preparation is another sample rather than
+unique transfer progress. These in-memory diagnostics start empty on reopen and
+never enter records, hashes, policy admission, spending or terminal evidence.
+See [the diagnostic boundary](extraction-boundary.md#local-ic-snapshot-diagnostics).
 
 ## 9. Backup workflow
 

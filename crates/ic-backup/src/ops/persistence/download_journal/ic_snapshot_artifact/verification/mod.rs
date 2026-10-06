@@ -1,5 +1,6 @@
 //! Explicit fresh local checks of retained opt-in IC trees; no upload permission.
 
+use super::super::metrics::LocalOperation;
 use super::{
     ArtifactChecksumRecord, DownloadJournalGuard, FORMAT, File, IcSnapshotArtifactError,
     IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES, Mode, OFlags, REGIONS,
@@ -16,6 +17,7 @@ use crate::{
     },
     policy::download_integrity::validate,
 };
+use std::time::Instant;
 use std::{io::Read, os::unix::fs::MetadataExt};
 
 impl DownloadJournalGuard<'_> {
@@ -44,36 +46,46 @@ impl DownloadJournalGuard<'_> {
         snapshot: &str,
         metadata: &IcSnapshotMetadataReply<'_>,
     ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
-        self.admit_ic_artifact_original(plan)?;
-        let entry = self
-            .record
-            .artifact(metadata.request().target(), snapshot)
-            .map_err(super::DownloadJournalError::from)?;
-        if entry.snapshot_taken_at_timestamp() != metadata.metadata().taken_at_timestamp {
-            return Err(IcSnapshotArtifactError::OriginalMismatch);
-        }
-        let expected = entry
-            .checksum()
-            .ok_or(IcSnapshotArtifactError::OriginalMismatch)?;
-        self.check_artifact_parent()?;
-        let parent_path = self.layout.root().join("artifacts");
-        let parent = open_directory(&parent_path)?;
-        let path = self.layout.root().join(entry.artifact_path());
-        let directory = File::from(
-            unix_fs::openat(
-                &parent,
-                path.file_name()
-                    .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
-                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-                Mode::empty(),
-            )
-            .map_err(errno_to_io)?,
+        let started = Instant::now();
+        let result = (|| {
+            self.admit_ic_artifact_original(plan)?;
+            let entry = self
+                .record
+                .artifact(metadata.request().target(), snapshot)
+                .map_err(super::DownloadJournalError::from)?;
+            if entry.snapshot_taken_at_timestamp() != metadata.metadata().taken_at_timestamp {
+                return Err(IcSnapshotArtifactError::OriginalMismatch);
+            }
+            let expected = entry
+                .checksum()
+                .ok_or(IcSnapshotArtifactError::OriginalMismatch)?;
+            self.check_artifact_parent()?;
+            let parent_path = self.layout.root().join("artifacts");
+            let parent = open_directory(&parent_path)?;
+            let path = self.layout.root().join(entry.artifact_path());
+            let directory = File::from(
+                unix_fs::openat(
+                    &parent,
+                    path.file_name()
+                        .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
+                    OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                    Mode::empty(),
+                )
+                .map_err(errno_to_io)?,
+            );
+            checksum_ic_tree(&directory, metadata)?.verify(expected.hash())?;
+            check_directory_identity(&parent_path, &parent)?;
+            check_directory_identity(&path, &directory)?;
+            self.admit_ic_artifact_original(plan)?;
+            Ok(expected.clone())
+        })();
+        self.record_ic_snapshot_metrics(
+            LocalOperation::Verification,
+            started,
+            result.is_ok(),
+            None,
         );
-        checksum_ic_tree(&directory, metadata)?.verify(expected.hash())?;
-        check_directory_identity(&parent_path, &parent)?;
-        check_directory_identity(&path, &directory)?;
-        self.admit_ic_artifact_original(plan)?;
-        Ok(expected.clone())
+        result
     }
 
     fn admit_ic_artifact_original(
@@ -160,15 +172,7 @@ fn checksum_child(
     maximum: u64,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
     let flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
-    let mut file =
-        File::from(unix_fs::openat(directory, name, flags, Mode::empty()).map_err(errno_to_io)?);
-    let original = file.metadata()?;
-    if !original.is_file()
-        || original.len() > maximum
-        || length.is_some_and(|length| length != original.len())
-    {
-        return Err(IcSnapshotArtifactError::FileShape);
-    }
+    let (mut file, original) = open_regular_child(directory, name, length, maximum)?;
     // Read at most the observed length plus one, detecting shrinking/growing files
     // without an unbounded read even if a noncooperating writer changes the file.
     let limit = original
@@ -193,4 +197,29 @@ fn checksum_child(
         return Err(IcSnapshotArtifactError::CustodyChanged);
     }
     Ok(checksum)
+}
+
+pub(super) fn open_regular_child(
+    directory: &File,
+    name: &str,
+    length: Option<u64>,
+    maximum: u64,
+) -> Result<(File, std::fs::Metadata), IcSnapshotArtifactError> {
+    let file = File::from(
+        unix_fs::openat(
+            directory,
+            name,
+            OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
+            Mode::empty(),
+        )
+        .map_err(errno_to_io)?,
+    );
+    let metadata = file.metadata()?;
+    if !metadata.is_file()
+        || metadata.len() > maximum
+        || length.is_some_and(|length| length != metadata.len())
+    {
+        return Err(IcSnapshotArtifactError::FileShape);
+    }
+    Ok((file, metadata))
 }

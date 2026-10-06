@@ -1,6 +1,8 @@
 //! Bounded local snapshot streaming joined to the existing durable download owner.
 
+mod upload;
 mod verification;
+pub use upload::IcSnapshotUploadArtifactError;
 
 use super::{DownloadJournalError, DownloadJournalGuard};
 use crate::{

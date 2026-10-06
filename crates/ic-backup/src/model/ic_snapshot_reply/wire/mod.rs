@@ -76,7 +76,7 @@ impl<'de> Deserialize<'de> for WireInventory {
     }
 }
 
-fn snapshot_id<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+pub(crate) fn snapshot_id<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
     struct IdVisitor;
     impl<'de> de::Visitor<'de> for IdVisitor {
         type Value = Vec<u8>;

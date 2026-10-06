@@ -90,6 +90,19 @@ pub(crate) fn checksum_relative_files(
     ArtifactChecksumRecord::from_digest(hasher.finalize().into())
 }
 
+#[cfg(unix)]
+fn require_utf8_tree_name(
+    name: &std::ffi::OsStr,
+    display_root: &Path,
+) -> Result<(), ArtifactError> {
+    if name.to_str().is_none() {
+        return Err(ArtifactError::NonUtf8Path {
+            path: display_root.join(name),
+        });
+    }
+    Ok(())
+}
+
 /// Checksum a normal relative path beneath an operator-selected root.
 ///
 /// # Errors

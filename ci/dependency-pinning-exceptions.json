@@ -1,0 +1,26 @@
+[
+  {
+    "rule": "cargo-exact",
+    "file": "Cargo.toml",
+    "subject": "command-fds",
+    "value": "=0.3.3",
+    "reason": "Qualified safe owned-descriptor inheritance for command custody; changes require native process and descriptor qualification.",
+    "evidence": "AGENTS.md#qualified-dependency-constraints"
+  },
+  {
+    "rule": "cargo-exact",
+    "file": "Cargo.toml",
+    "subject": "ic-management-canister-types",
+    "value": "=0.11.0",
+    "reason": "Qualified management wire DTOs, decoder bounds and exposed upstream Rust type identity require coupled codec and compatibility review.",
+    "evidence": "AGENTS.md#qualified-dependency-constraints"
+  },
+  {
+    "rule": "cargo-exact",
+    "file": "Cargo.toml",
+    "subject": "ic_principal",
+    "value": "=0.1.5",
+    "reason": "Qualified normalized principal, persisted hash and exposed Rust identity boundary requires coupled compatibility review.",
+    "evidence": "AGENTS.md#qualified-dependency-constraints"
+  }
+]

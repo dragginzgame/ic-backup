@@ -11,6 +11,7 @@ readme = "../../README.md"
 
 [target.'cfg(unix)'.dependencies]
 command-fds.workspace = true
+ic-metrics.workspace = true
 rustix.workspace = true
 
 [dependencies]
