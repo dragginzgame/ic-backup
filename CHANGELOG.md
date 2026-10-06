@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.5]
+## [0.3.5] - 2026-10-06
 
 - Bind snapshot data reads to retained metadata with checked memory ranges and
   exact chunk identities. Decode bounded replies with exact lengths and chunk
