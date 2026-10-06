@@ -154,6 +154,8 @@ implemented foundation includes:
 - local progress derived from the original plan and retained journals;
 - typed Internet Computer request and reply encoding for selected snapshot and
   lifecycle operations;
+- bounded snapshot metadata decoding that retains exact global values, optional
+  timer/hook values and chunk identities without claiming complete transfer;
 - contracts for exact originally reserved IC updates and bounded passive reply
   association, preserving pending spending without automatic settlement;
 - exact reserved status/snapshot-list observation contracts that retain both attempt

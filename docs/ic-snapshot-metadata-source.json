@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "kind": "snapshot_metadata_codec_review",
+  "inspection_date": "2026-10-05",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "9c6460cbe7c6f375eca1c9b607aefd818deec223",
+  "source_has_uncommitted_changes_at_inspection": false,
+  "source_evidence_directory": "target/snapshot-metadata-review/source",
+  "reviewed_sources": [
+    {
+      "path": "crates/canic-host/src/icp/snapshot.rs",
+      "sha256": "402f339b5b7753882b06cd5180583c90f1e6deec9acd09ae17d380910c2e9571",
+      "reviewed_lines": [30, 43],
+      "disposition": "Inspect whole-command snapshot download. No typed metadata/data decoding or individual call accounting is exposed; no command or backend implementation is imported."
+    },
+    {
+      "path": "crates/canic-backup/src/runner/types.rs",
+      "sha256": "2f0cd20e921addb0099d9477c5dee4a37c919b2404d94702985fc945a847b136",
+      "reviewed_lines": [76, 84],
+      "disposition": "Inspect download executor result boundary; unit success is not adopted as independently qualified complete IC transfer."
+    },
+    {
+      "path": "crates/canic-backup/src/runner/operations/artifacts.rs",
+      "sha256": "9d6e04ccfb5643cb93a49217aadaef81e0d644d24fdd1ce6b4c8f82197cf9573",
+      "reviewed_lines": [141, 192],
+      "disposition": "Trace download transition, receipt and local interruption reconciliation. These consumers and directory-to-completion assumptions remain unchanged and are not imported."
+    }
+  ],
+  "pinned_upstream": {
+    "package": "ic-management-canister-types",
+    "version": "0.11.0",
+    "vcs_revision": "e74ddee846a8bd664fa0f684ba31dc37e9ebddea",
+    "vcs_path": "packages/ic-management-canister-types",
+    "source_path": "src/lib.rs",
+    "source_sha256": "11f1c93fc9034e3dbcc35ff377e2356a07439382bbcfad8ad213327d83c1c554",
+    "reviewed_lines": [1803, 1915],
+    "interface": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/#ic-method-read_canister_snapshot_metadata",
+    "interface_inspected": "2026-10-05",
+    "shape": "Preserve pinned optional source/global slots and optional timer/hook values; required source/global wire forms also admit. No absent value becomes an upload default.",
+    "license": "Registry dependency; no upstream or Canic source copied. Existing source provenance and licenses retained."
+  },
+  "adaptation": {
+    "destination": "crates/ic-backup/src/model/ic_snapshot_metadata/",
+    "existing_owner": "model::ic_request::management_request_digest shares unchanged v1 receiver/routing/update-mode/method/argument hashing",
+    "implemented": "Ephemeral exact metadata request and bounded read-only metadata reply; safe bounded sequence visitors, actual reserved source marker, ordered values/absence, exact raw evidence.",
+    "not_adopted": "Provider, signing, runtime/ICP imports, fresh read-permission port, persisted transfer records, extents, upload/load/start, automatic outcomes or runner completion.",
+    "compatibility": "Additive public module; existing exhaustive method/error enums, six-method v1 request schema, arguments, hashes, journals and package versions unchanged."
+  },
+  "qualification": {
+    "new_unit_filter": "model::ic_snapshot_metadata",
+    "public_test": "ic_snapshot_metadata",
+    "existing_owner_filter": "model::ic_request",
+    "independent_generator": "scripts/dev/generate-snapshot-metadata.pl",
+    "membership": "Registered case lists are compared with actual passing names; golden fixture membership is read from the JSON registry, not a remembered count.",
+    "native": "Local wire/identity/bounds/persistence tests only. No fake or actual IC backend effects.",
+    "remaining": "Authenticated snapshot association, fresh reads and per-call authority, data/extent/transfer/upload completeness, application/byte/command custody and terminal/release admission."
+  }
+}

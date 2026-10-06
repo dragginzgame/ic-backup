@@ -25,17 +25,71 @@
 
 # Current handoff — 2026-10-05
 
-The maintainer reports `0.3.2` pushed. The clean starting baseline is release commit
-`a9f9fb9`, with annotated local `v0.3.2`, manifest `0.3.2`, dated changelog and receipt
-source `354035e11d2b86baa6529fc810831e0dcc146dbf` under `release-verify`.
+The maintainer reports `0.3.3` pushed. The clean starting baseline is release commit
+`0be3e41`, with annotated local `v0.3.3`, manifest `0.3.3`, dated changelog and receipt
+source `a443f80e804ea396b35147f5f39223975983cd39` under `release-verify`.
 Read-only exact receipt/tag/parent verification passed before continuing:
-`target/restore-artifact-publication-review/release-tag-check.log`. Registry publication
-was not independently observed. Compatible durable original-copy publication additions
-automatically open one undated `0.3.3` pending entry. Package
+`target/snapshot-metadata-review/release-tag-check.log`. Registry publication
+was not independently observed. Compatible snapshot metadata codec additions
+automatically open one undated `0.3.4` pending entry. Package
 metadata, lock selection, receipt and reviewed Shared Tooling snapshot are unchanged.
 This continuation creates no commits, tags, pushes, uploads or live IC effects.
 
-## Durable original-operation restore artifacts
+## Bounded snapshot metadata reads
+
+The new `model::ic_snapshot_metadata` boundary encodes exact canonical target/raw-ID
+metadata reads and admits bounded pinned SDK metadata. It reuses the existing
+management wire digest without changing the six-method lifecycle/recovery record.
+Ordered globals (including unavailable slots), exact floating bits, full nat64
+fields, unsigned v128 values, ordered unique chunk identities and optional
+source/timer/hook values remain retained. Missing information supplies no upload
+default. An actual reserved-marker adapter preserves zero skipped decoder work
+without the SDK's arbitrary-value skipping. Read-only views and request/raw-byte
+evidence hashes authenticate no origin or freshness and grant no transfer completeness,
+spending, outcome, terminal or release. See
+[the boundary](../extraction-boundary.md#bounded-ic-snapshot-metadata),
+[generated contract](../contracts/ic-snapshot-metadata.json) and
+[fresh review](../ic-snapshot-metadata-source.json).
+
+Preserve 1 MiB raw input, 2 MiB decoder work, zero skipped work, 64 type-table entries,
+16 KiB headers, 4,096 global slots, 1,024 unique exact 32-byte chunk hashes, 32
+certified-data bytes and existing 256-ID-byte/4 KiB arguments. The new ephemeral
+request/reply types have no persisted schema, provider, Serde or non-neutral Default.
+No existing public/private function, method or type is removed. Full data extents,
+authentic capture/transport association, current read access and original per-call
+accounting, application/byte/command custody, upload/load/start and controlled
+terminal/fence/reference release remain integration-owned.
+
+Fresh native Linux evidence is retained under `target/snapshot-metadata-review`.
+Focused unit and public replay cases check independent generated DIDL/SHA-256
+fixtures through production and SDK decoders, exact bytes/hashes/optional states,
+numeric/float values, limits and malformed/unknown/truncated wire. Local reopen
+preserves original plan and journal bytes, pending spent attempts and source
+references without observations or settlement (`unit-final.log`, `public-final.log`).
+Existing request-owner fixtures qualify unchanged six-method wire identities
+(`request-owner.log`, `request-public.log`). Exact registered/passing membership is
+retained in the corresponding registry logs and checked in `evidence-check.log`.
+Warning-denied package all-target/all-feature Clippy (`clippy-third.log`) and API
+docs (`docs.log`), Rust 1.91 all-target/all-feature checks (`msrv.log`), formatting
+(`format.log`), all 22 Shared Tooling files (`snapshot.log`) and read-only release
+planning (`release-plan.log`, 0.3.3 to 0.3.4) pass. Initial compile/fixture/Clippy
+failures are retained alongside corrected validation logs. No actual IC effect is
+simulated or performed. Independent fixtures and machine contract regenerate with
+`perl scripts/dev/generate-snapshot-metadata.pl`; `--check` verifies exact bytes.
+
+The read-only Canic review pins `9c6460cbe7c6f375eca1c9b607aefd818deec223`,
+retaining its clean-at-inspection status and exact committed source copies. It
+traces whole-command download/executor/runner completion boundaries; they remain
+unchanged. The registry SDK stays pinned at 0.11.0; source SHA-256 and VCS identity
+are recorded independently of current interface-document inspection. No source,
+dependency, version or lock selection is imported from Canic.
+
+The compatible `0.3.4` batch remains uncommitted; package stays `0.3.3`. Native
+macOS and real backend qualification, concrete capture/upload/load reconciliation
+and runners/transport remain pending. No full CI/release gate or release transaction
+ran. Earlier sections retain historical pre-release batch evidence.
+
+## Released 0.3.3 durable original-operation restore artifacts
 
 `publish_staged_local_restore_artifact` joins exact original source/operation/artifact
 admission with the existing checksum and descriptor-based durable artifact publisher.
@@ -100,7 +154,8 @@ upload integration and every Canic consumer remain unchanged and are not importe
 Existing publisher/source provenance and licenses remain retained. No existing
 public/private function, method or type is removed; all prior schemas and APIs remain.
 
-The complete compatible batch remains uncommitted under `0.3.3`; package stays
+Historical pre-release assessment: the complete compatible batch remained
+uncommitted under `0.3.3`; package stayed
 `0.3.2`. Native macOS and authenticated IC providers, concrete capture/upload/load
 reconciliation, complete terminal/application/command-custody admission and controlled
 fence/reference release remain pending. No full CI/release gate, release transaction

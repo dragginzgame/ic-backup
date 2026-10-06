@@ -762,7 +762,7 @@ This proves local wire/persistence behavior, not authenticated IC snapshot effec
 See [the machine contract](contracts/ic-snapshot-reply.json) and
 [fresh source and consumer provenance](ic-snapshot-reply-source.json).
 
-Snapshot metadata/data transfer codecs, full status metadata, live transport,
+Snapshot data transfer codecs, full status metadata, live transport,
 fresh effect admission, safe capture/load reconciliation and runner wiring remain pending.
 
 ### Pure snapshot inventory comparison
@@ -1009,8 +1009,9 @@ application fence or terminal proof. Root-configured/Proven declarations, parent
 and other viewers/controllers do not substitute for the original caller.
 The visibility semantics and viewer bound follow the
 [primary management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
-Only the existing list codec is admitted; metadata/data request and response codecs,
-actual providers and complete read preflight remain unimplemented. See
+This permission port admits only the existing list codec. The separate metadata
+codec grants no fresh read permission; data codecs, actual providers and complete
+read preflight remain unimplemented. See
 [the typed Rust contract](contracts/snapshot-read-port.json).
 
 Fresh native tests cover independent binary request goldens, original mutation vs
@@ -1610,6 +1611,50 @@ fixtures simulate no IC effects or application fence. See
 inventory-to-completion conversions remain unchanged and are not imported. Actual
 providers, authenticated reconciliation, upload/load and transport/runners remain
 independently qualified.
+
+### Bounded IC snapshot metadata
+
+`model::ic_snapshot_metadata::IcSnapshotMetadataRequest` owns a separate ephemeral
+transfer read for a canonical target and exact raw snapshot ID. It encodes the
+pinned SDK `ReadCanisterSnapshotMetadataArgs`, names the management receiver and
+`read_canister_snapshot_metadata` replicated host update method, and reuses the
+existing management payload digest. The six-method v1 lifecycle/recovery record,
+its schema, bytes and existing digests remain unchanged. No new persisted record,
+provider, observation port or spending owner is introduced.
+
+`IcSnapshotMetadataReply::decode` retains one pinned metadata argument under 1 MiB
+raw input, 2 MiB decoder work, zero skipped work, 64 type-table entries and a
+16 KiB header limit. Required nat64 fields retain their full range without summing
+sizes or equating them with local artifact lengths. Bounded visitors admit at most
+4,096 ordered globals, 1,024 distinct ordered SHA-256 chunk identities and 32
+certified-data bytes, without allocating from untrusted length hints. The v128
+global must fit unsigned 128 bits; floating globals retain exact bits. The source
+adapter reads the actual Candid reserved marker rather than using the SDK's
+arbitrary-value skipping deserializer. Malformed/unknown optional values, skipped
+extensions, extra arguments and trailing bytes reject.
+
+The pinned SDK's optional source/global slots and timer/hook values preserve actual
+absence; required source/global wire values also admit losslessly into those slots.
+Absent optional fields/slots grant no upload default or reconstruction completeness.
+Chunk order and global order remain unchanged. Read-only access exposes the pinned
+DTO while the evidence digest binds the exact request hash and raw byte checksum
+in `ic-backup/ic-snapshot-metadata-reply/v1` followed by NUL and two 64-byte lowercase
+ASCII hashes. Equivalent decoded views can retain different wire evidence.
+Debug and typed errors omit snapshot bytes, globals, certified data and raw decoder
+diagnostics. Requests/replies have no Serde admission or non-neutral Default.
+
+Independent DIDL/field-hash/LEB128/numeric/SHA-256 fixtures qualify every registered
+case against production and official SDK decoding. Native regressions cover exact
+request/reply hashes, full numeric values, float bits, optional states, ordered
+chunks, bounds, malformed/unknown fields, truncation and finite headers. The public
+journey reopens exact retained metadata with original plan, pending consumed attempts
+and source references unchanged. These tests call no IC backend and authenticate
+no origin. Fresh read access/accounting, snapshot association, all data extents,
+application/byte/command custody and upload/load/start/terminal/release admission
+remain integration-owned. See [the generated contract](contracts/ic-snapshot-metadata.json)
+and [fresh review](ic-snapshot-metadata-source.json). Canic's whole-command download
+and its completed-transfer/receipt assumptions are not imported; consumers remain
+unchanged. No existing public/private function, method or type is removed.
 
 ### Original execution settlement checkpoints
 

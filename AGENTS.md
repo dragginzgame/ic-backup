@@ -131,7 +131,8 @@ into an issue tracker or release authority.
   Known public or exact viewer access needs no controller projection; unobserved
   controllers cannot establish the controller path. Read evidence grants no control,
   spending or lost-reply settlement. Status/log/Root-configured flags never substitute.
-  Metadata/data codecs and actual authenticated providers remain unimplemented.
+  Data codecs and actual authenticated providers remain unimplemented; the separate
+  metadata codec grants no fresh read permission.
 - Consistency requirements now retain a strict v1 original-plan-bound guarantee
   under 1 KiB IO and immutable layout publication. Current consistency requests bind
   original operation, challenge, capture boundary and retained exact fence/revision.
@@ -288,6 +289,16 @@ into an issue tracker or release authority.
   obligation, reference or fence changes. Stable noncooperating custody, backend
   completeness, application safety and upload/load/start/terminal/release admission
   remain integration-owned.
+
+- The snapshot metadata codec now retains exact ephemeral raw-ID requests and pinned
+  SDK metadata under 1 MiB raw, 2 MiB decoder work, zero skipped work, 64 type-table
+  and 16 KiB header bounds. Preserve 4,096 ordered global slots, exact float bits,
+  unsigned 128-bit globals, 1,024 distinct ordered 32-byte chunk hashes and 32
+  certified-data bytes. Optional source/global/timer/hook absence supplies no upload
+  default. Reuse existing payload hashing without changing lifecycle/recovery v1
+  records. Metadata/request association authenticates no target, grants no fresh
+  permission/spending, settles no attempt and proves no data extent/transfer completion.
+  No provider, transport, upload/load/start or terminal/release admission is installed.
 
 ## Tracking
 

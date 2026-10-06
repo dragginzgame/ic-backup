@@ -164,17 +164,7 @@ impl IcManagementRequestRecord {
     /// digest and are bound by the existing operation plan/attempt authority.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/ic-management-request/v1\0".to_vec();
-        bytes.push(0); // Management receiver principal has zero raw bytes.
-        bytes.push(self.target_bytes.len().to_le_bytes()[0]); // Principal <=29 raw bytes.
-        bytes.extend_from_slice(&self.target_bytes);
-        bytes.push(1); // Replicated update ingress; queries are not admitted.
-        let method = self.method.name().as_bytes();
-        bytes.push(method.len().to_le_bytes()[0]); // Closed method names <=32 ASCII bytes.
-        bytes.extend_from_slice(method);
-        append_argument_length(&mut bytes, self.arguments.len());
-        bytes.extend_from_slice(&self.arguments);
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        management_request_digest(&self.target_bytes, self.method.name(), &self.arguments)
     }
     /// Check exact payload target/digest and mutation class against original declared binding.
     ///
@@ -221,6 +211,24 @@ impl IcManagementRequestRecord {
         }
         Ok(())
     }
+}
+
+// Callers own canonical principal bytes, a fixed ASCII method and bounded arguments.
+pub(super) fn management_request_digest(
+    target_bytes: &[u8],
+    method: &str,
+    arguments: &[u8],
+) -> ArtifactChecksumRecord {
+    let mut bytes = b"ic-backup/ic-management-request/v1\0".to_vec();
+    bytes.push(0); // Management receiver principal has zero raw bytes.
+    bytes.push(target_bytes.len().to_le_bytes()[0]); // Principal <=29 raw bytes.
+    bytes.extend_from_slice(target_bytes);
+    bytes.push(1); // Replicated update ingress.
+    bytes.push(method.len().to_le_bytes()[0]); // Fixed names fit one byte.
+    bytes.extend_from_slice(method.as_bytes());
+    append_argument_length(&mut bytes, arguments.len());
+    bytes.extend_from_slice(arguments);
+    ArtifactChecksumRecord::from_bytes(&bytes)
 }
 
 #[expect(

@@ -303,7 +303,8 @@ or exact allowed viewers can establish a read-only matching view. Unknown contro
 evidence cannot establish a controller path; independent public/viewer access needs
 no controller projection. No Root-configured/Proven declaration, read success or
 matching digest supplies mutation control, fresh spending or settlement of a lost
-observation. Metadata/data request codecs and actual provider qualification remain pending.
+observation. The separate metadata codec grants no current read permission;
+data request codecs and actual provider qualification remain pending.
 Prefer separate ports over a single all-powerful executor. Requests and results
 use named passive structs/enums. Integration implementations convert their framework evidence into
 generic inputs; they do not give the engine raw application journals or code.
@@ -528,6 +529,16 @@ integrity. Validate the pinned upstream metadata shape, declared lengths, expect
 files, globals, certified data, chunk-store identities and applicable timer/hook
 fields. Preserve exact backend artifacts across retries. A verified code hash
 alone does not verify heap, stable memory, globals or snapshot-load success.
+
+The local `model::ic_snapshot_metadata` codec now encodes exact metadata-read
+arguments and admits bounded pinned SDK metadata without installing a provider.
+It preserves required nat64 fields, ordered global values (including unavailable
+slots and floating bits), chunk identities and optional source/timer/hook values.
+Absence is retained and cannot supply an upload default. Exact raw evidence remains
+distinct from canonical values. Data-read/extent coverage, authentic association,
+fresh read permissions, original per-call accounting and complete transfer/upload
+qualification remain integration work. See
+[the implemented boundary](extraction-boundary.md#bounded-ic-snapshot-metadata).
 
 ## 9. Backup workflow
 

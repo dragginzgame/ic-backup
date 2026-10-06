@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4]
+
+- Encode exact snapshot metadata reads and decode bounded replies while preserving
+  global values, optional fields and chunk identities. Retain request/raw-byte
+  evidence without changing journals or treating metadata as complete transfer,
+  fresh permission or mutation settlement.
+
 ## [0.3.3] - 2026-10-05
 
 - Durably publish exact staged restore artifacts and recover canonical copies after

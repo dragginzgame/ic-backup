@@ -1,0 +1,64 @@
+{
+   "bounds" : {
+      "argument_bytes" : 4096,
+      "certified_data_bytes" : 32,
+      "chunks" : 1024,
+      "decoder_work" : 2097152,
+      "globals" : 4096,
+      "header_bytes" : 16384,
+      "raw_bytes" : 1048576,
+      "skipped_work" : 0,
+      "snapshot_id_bytes" : 256,
+      "type_table_entries" : 64
+   },
+   "decoding" : "one argument, bounded visitors without untrusted preallocation, no skipped values/extensions/unknown optional coercion or trailing bytes; actual reserved source marker adapter",
+   "evidence" : {
+      "body" : "64 lowercase ASCII request hash then 64 lowercase ASCII raw reply hash",
+      "domain_utf8_with_nul" : "ic-backup/ic-snapshot-metadata-reply/v1\u0000",
+      "raw" : "SHA-256 of exact raw bytes including order and absence"
+   },
+   "fields" : {
+      "absence" : "absent optional values remain absent, not defaults, upload inputs or qualification",
+      "chunks" : "ordered distinct exact 32-byte SHA-256 identities",
+      "globals" : "ordered optional SDK globals; preserve absent slots and f32/f64 bits, reject v128 above 128 bits",
+      "integers" : "required nat64 fields retain full range; no size sum or total-transfer inference",
+      "optional" : [
+         "source",
+         "global_timer",
+         "on_low_wasm_memory_hook_status"
+      ],
+      "required" : [
+         "taken_at_timestamp",
+         "wasm_module_size",
+         "globals",
+         "wasm_memory_size",
+         "stable_memory_size",
+         "wasm_chunk_store",
+         "canister_version",
+         "certified_data"
+      ]
+   },
+   "golden_registry" : {
+      "construction" : "independent DIDL, field hashes, LEB128, numeric/float bytes and SHA-256; all registered cases tested",
+      "generator" : "scripts/dev/generate-snapshot-metadata.pl",
+      "path" : "crates/ic-backup/src/model/ic_snapshot_metadata/tests/golden.json"
+   },
+   "grants" : "no fresh read permission, signing, dispatch, spending, complete transfer/upload, receipt, reconciliation, terminal or release",
+   "integration_owned" : [
+      "authenticated network/caller/target/snapshot association",
+      "fresh snapshot-read access and original per-call accounting",
+      "data extents, authentic capture and stable bytes",
+      "upload/load/start safety and application/command custody"
+   ],
+   "kind" : "ephemeral metadata request/reply codec; no persisted product record or provider",
+   "owner" : "model::ic_snapshot_metadata",
+   "request" : {
+      "arguments" : "exact canonical canister_id and 1..256 raw snapshot_id bytes",
+      "hash_owner" : "existing ic-management-request/v1 digest; six-method v1 record unchanged",
+      "method" : "read_canister_snapshot_metadata",
+      "mode" : "replicated host update ingress",
+      "receiver" : "aaaaa-aa"
+   },
+   "schema" : 1,
+   "sdk" : "ic-management-canister-types =0.11.0"
+}
