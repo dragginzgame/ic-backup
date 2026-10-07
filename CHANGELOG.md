@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.4]
+## [0.5.4] - 2026-10-07
 
 - Require the macOS filesystem compile repair and qualify published ic-host 0.4.6, including its native filename checks. Preserve artifact, journal and spending contracts ([host #18](https://github.com/dragginzgame/ic-host-tooling/issues/18), [host #19](https://github.com/dragginzgame/ic-host-tooling/issues/19)).
 
