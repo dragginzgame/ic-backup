@@ -40,6 +40,7 @@ below to find the document that matches your task.
 
 | Document | Use it for |
 | --- | --- |
+| [Real snapshot qualification](pocketic-qualification.md) | Reproduce the real PocketIC journey and understand its fixture-specific limits |
 | [Development](development.md) | Quick start, code ownership, validation commands and build-directory rules |
 | [IC Backup host scope](development.md#supported-host-scope) | Local native development and CI scope, distinct from upstream tooling claims |
 | [Releasing](releasing.md) | Preview, preparation, maintainer release and registry publication workflows |

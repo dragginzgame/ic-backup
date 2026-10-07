@@ -5,15 +5,26 @@ mod support;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        ic_observation::{IcObservationRequest, IcObservationResponse, IcObservationResponseInput},
+        attempt_journal::{
+            AttemptJournalRecord, ObservationOutcomeRecord, ObservationReceiptRequest,
+        },
+        ic_lifecycle_reply::IcLifecycleReply,
+        ic_observation::{
+            IcCaptureAttribution, IcCaptureSettlement, IcLifecycleAttribution,
+            IcLifecycleSettlement, IcObservationRequest, IcObservationResponse,
+            IcObservationResponseInput,
+        },
         ic_request::{
             IcManagementMethodRecord as Method, IcManagementRequest, IcManagementRequestRecord,
         },
+        ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
         operation_plan::OperationPlanRecord,
         restore_references::RestoreReferencesRecord,
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_operation_plan},
-    policy::ic_observation::validate_response,
+    policy::ic_observation::{
+        validate_capture_settlement, validate_lifecycle_settlement, validate_response,
+    },
     ports::ic_observation::{IcObservationProvider, IcObservationProviderError},
 };
 use serde_json::json;
@@ -105,7 +116,7 @@ fn reserved_observations_and_lost_replies_reopen_without_reissue_or_settlement()
                 Some(IcObservationProviderError::Unsupported),
                 Some(IcObservationProviderError::Indeterminate),
             ] {
-                retained_case(mutation, method, failure);
+                retained_case(mutation, method, failure, None);
             }
         }
     }
@@ -114,6 +125,7 @@ fn retained_case(
     mutation_method: Method,
     method: Method,
     failure: Option<IcObservationProviderError>,
+    settlement_outcome: Option<ObservationOutcomeRecord>,
 ) {
     let mutation = payload(mutation_method);
     let observation = payload(method);
@@ -138,6 +150,13 @@ fn retained_case(
         .retain_restore(&root.join("restore-reference.json"), plan.digest().hash())
         .unwrap();
     let references = layout.restore_references().unwrap();
+    if mutation_method == Method::TakeCanisterSnapshot && settlement_outcome.is_some() {
+        // Retain the synthetic original list before reserving any mutation. This
+        // proves local retention order only, never authenticated IC chronology.
+        let baseline =
+            candid::encode_one(Vec::<ic_management_canister_types::Snapshot>::new()).unwrap();
+        fs::write(root.join("baseline.candid"), baseline).unwrap();
+    }
     let authority = plan.attempt_authority(42).unwrap();
     let mut journal = AttemptJournalGuard::create(&layout, authority.clone()).unwrap();
     let mutation_attempt = journal.reserve_mutation().unwrap();
@@ -190,6 +209,14 @@ fn retained_case(
     drop(layout);
     assert_reopened(&root, &request, &evidence, response.as_ref());
     assert_eq!(provider.calls.len(), 1);
+    if let Some(outcome) = settlement_outcome {
+        if mutation_method == Method::TakeCanisterSnapshot {
+            record_qualified_capture_claim(&root, &request, response.as_ref().unwrap(), outcome);
+        } else {
+            record_qualified_lifecycle_claim(&root, &request, response.as_ref().unwrap(), outcome);
+        }
+        assert_eq!(provider.calls.len(), 1);
+    }
     fs::remove_dir_all(root).unwrap();
 }
 fn assert_reopened(
@@ -263,4 +290,248 @@ fn assert_reopened(
     assert_eq!(layout.restore_references().unwrap(), evidence.references);
     drop(journal);
     drop(layout);
+}
+
+#[test]
+fn qualified_lifecycle_claims_require_explicit_receipts_and_keep_original_spending() {
+    for method in [
+        Method::StopCanister,
+        Method::StartCanister,
+        Method::LoadCanisterSnapshot,
+    ] {
+        for outcome in [
+            ObservationOutcomeRecord::Applied,
+            ObservationOutcomeRecord::NotApplied,
+            ObservationOutcomeRecord::Uncertain,
+        ] {
+            retained_case(method, Method::CanisterStatus, None, Some(outcome));
+        }
+    }
+}
+
+fn record_qualified_lifecycle_claim(
+    root: &Path,
+    request: &IcObservationRequest<'_>,
+    response: &IcObservationResponse,
+    outcome: ObservationOutcomeRecord,
+) {
+    let claim = lifecycle_claim(request, response, outcome);
+    let layout = BackupLayoutGuard::acquire(root).unwrap();
+    let journal = AttemptJournalGuard::open(&layout, request.authority()).unwrap();
+    let before = fs::read(journal.path()).unwrap();
+    let view = validate_lifecycle_settlement(
+        request,
+        journal.record().unwrap(),
+        response,
+        &claim.challenge,
+        &claim,
+    )
+    .unwrap();
+    assert_eq!(fs::read(journal.path()).unwrap(), before);
+    assert_eq!(view.outcome(), outcome);
+    drop(journal);
+    drop(layout);
+    let recorded = record_receipt_and_reopen(root, request, outcome, &view.settlement().evidence);
+    assert!(
+        validate_lifecycle_settlement(request, &recorded, response, &claim.challenge, &claim)
+            .is_err()
+    );
+}
+
+fn record_receipt_and_reopen(
+    root: &Path,
+    request: &IcObservationRequest<'_>,
+    outcome: ObservationOutcomeRecord,
+    evidence: &ArtifactChecksumRecord,
+) -> AttemptJournalRecord {
+    let layout = BackupLayoutGuard::acquire(root).unwrap();
+    let references = layout.restore_references().unwrap();
+    let mut journal = AttemptJournalGuard::open(&layout, request.authority()).unwrap();
+    let before = fs::read(journal.path()).unwrap();
+    let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();
+    // Pure admission cannot write this receipt. The integration explicitly invokes
+    // the sole journal transition after independently qualifying its evidence.
+    journal
+        .record_observation(ObservationReceiptRequest {
+            attempt: request.observation_attempt(),
+            request: request.payload().digest().hash().into(),
+            outcome,
+            evidence: evidence.hash().into(),
+        })
+        .unwrap();
+    let recorded = fs::read(journal.path()).unwrap();
+    assert_ne!(recorded, before);
+    let progress = journal.record().unwrap().view();
+    assert_eq!(
+        (progress.mutations_used, progress.observations_used),
+        (1, 1)
+    );
+    assert_eq!(
+        (
+            progress.mutations_remaining,
+            progress.observations_remaining
+        ),
+        (0, 0)
+    );
+    assert_eq!(progress.pending_observation, None);
+    assert_eq!(
+        progress.pending_mutation,
+        (outcome == ObservationOutcomeRecord::Uncertain).then_some(request.mutation_attempt())
+    );
+    assert_eq!(
+        progress.applied,
+        outcome == ObservationOutcomeRecord::Applied
+    );
+    assert!(journal.reserve_mutation().is_err());
+    assert!(
+        journal
+            .reserve_observation(
+                request.mutation_attempt(),
+                request.payload().digest().hash()
+            )
+            .is_err()
+    );
+    assert_eq!(layout.restore_references().unwrap(), references);
+    drop(journal);
+    drop(layout);
+    let layout = BackupLayoutGuard::acquire(root).unwrap();
+    let journal = AttemptJournalGuard::open(&layout, request.authority()).unwrap();
+    assert_eq!(fs::read(journal.path()).unwrap(), recorded);
+    assert_eq!(journal.record().unwrap().view(), progress);
+    assert_eq!(layout.restore_references().unwrap(), references);
+    assert_eq!(
+        fs::read(root.join("operation-plan.json")).unwrap(),
+        plan_bytes
+    );
+    assert_eq!(
+        fs::read(root.join("mutation.arguments")).unwrap(),
+        request.mutation().arguments()
+    );
+    assert_eq!(
+        fs::read(root.join("observation.arguments")).unwrap(),
+        request.payload().arguments()
+    );
+    assert_eq!(
+        fs::read(root.join("obligation.evidence")).unwrap(),
+        b"native retained obligation"
+    );
+    journal.record().unwrap().clone()
+}
+
+fn lifecycle_claim(
+    request: &IcObservationRequest<'_>,
+    response: &IcObservationResponse,
+    outcome: ObservationOutcomeRecord,
+) -> IcLifecycleSettlement {
+    let hash = |bytes: &[u8]| ArtifactChecksumRecord::from_bytes(bytes);
+    // Synthetic passive proof qualifies local record/accounting only, never IC effects.
+    let attribution = match outcome {
+        ObservationOutcomeRecord::Applied => IcLifecycleAttribution::Applied {
+            attribution: hash(b"native original attribution"),
+        },
+        ObservationOutcomeRecord::NotApplied => IcLifecycleAttribution::NotApplied {
+            exclusion: hash(b"native original exclusion"),
+        },
+        ObservationOutcomeRecord::Uncertain => IcLifecycleAttribution::Unresolved {
+            uncertainty: hash(b"native settled uncertainty"),
+        },
+    };
+    let challenge = hash(b"native current qualification");
+    IcLifecycleSettlement {
+        authority: request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        observation_attempt: request.observation_attempt(),
+        challenge,
+        status: IcLifecycleReply::decode(request.payload(), &response.input().reply)
+            .unwrap()
+            .digest(),
+        observation_evidence: response.input().evidence.clone(),
+        attribution,
+        evidence: hash(b"native complete qualification"),
+    }
+}
+
+#[test]
+fn qualified_capture_claims_keep_baseline_spending_and_references_through_reopen() {
+    for outcome in [
+        ObservationOutcomeRecord::Applied,
+        ObservationOutcomeRecord::NotApplied,
+        ObservationOutcomeRecord::Uncertain,
+    ] {
+        retained_case(
+            Method::TakeCanisterSnapshot,
+            Method::ListCanisterSnapshots,
+            None,
+            Some(outcome),
+        );
+    }
+}
+
+fn record_qualified_capture_claim(
+    root: &Path,
+    request: &IcObservationRequest<'_>,
+    response: &IcObservationResponse,
+    outcome: ObservationOutcomeRecord,
+) {
+    let bytes = fs::read(root.join("baseline.candid")).unwrap();
+    let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
+    let proof = ArtifactChecksumRecord::from_bytes(b"synthetic native capture qualification");
+    let attribution = match outcome {
+        ObservationOutcomeRecord::Applied => IcCaptureAttribution::Applied {
+            snapshot_id: vec![255],
+            attribution: proof.clone(),
+        },
+        ObservationOutcomeRecord::NotApplied => IcCaptureAttribution::NotApplied {
+            exclusion: proof.clone(),
+        },
+        ObservationOutcomeRecord::Uncertain => IcCaptureAttribution::Unresolved {
+            uncertainty: proof.clone(),
+        },
+    };
+    let claim = IcCaptureSettlement {
+        authority: request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        observation_attempt: request.observation_attempt(),
+        challenge: ArtifactChecksumRecord::from_bytes(b"native capture challenge"),
+        baseline: baseline.digest(),
+        inventory: IcSnapshotReply::decode(request.payload(), &response.input().reply)
+            .unwrap()
+            .digest(),
+        observation_evidence: response.input().evidence.clone(),
+        attribution,
+        evidence: proof,
+    };
+    let layout = BackupLayoutGuard::acquire(root).unwrap();
+    let journal = AttemptJournalGuard::open(&layout, request.authority()).unwrap();
+    let before = fs::read(journal.path()).unwrap();
+    let view = validate_capture_settlement(
+        request,
+        journal.record().unwrap(),
+        &baseline,
+        response,
+        &claim.challenge,
+        &claim,
+    )
+    .unwrap();
+    assert_eq!(fs::read(journal.path()).unwrap(), before);
+    assert_eq!(view.outcome(), outcome);
+    assert_eq!(
+        view.captured_snapshot().map(IcSnapshotInfo::id),
+        (outcome == ObservationOutcomeRecord::Applied).then_some([255_u8].as_slice())
+    );
+    drop(journal);
+    drop(layout);
+    let recorded = record_receipt_and_reopen(root, request, outcome, &view.settlement().evidence);
+    assert!(
+        validate_capture_settlement(
+            request,
+            &recorded,
+            &baseline,
+            response,
+            &claim.challenge,
+            &claim
+        )
+        .is_err()
+    );
+    assert_eq!(fs::read(root.join("baseline.candid")).unwrap(), bytes);
 }

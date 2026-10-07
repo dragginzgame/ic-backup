@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "kind": "local original lifecycle settlement contract review",
+  "inspection_date": "2026-10-07",
+  "consumer_base": "eece44dac79da1bfb36f82ce2cd30d51edd3a9c1",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "d7698e1f0541cb52ad8d762bc1549a700b412e88",
+  "source_worktree_dirty": true,
+  "read_scope": "Exact committed blobs only; dirty sibling preserved and read-only.",
+  "reviewed_sources": [
+    {
+      "path": "crates/canic-backup/src/runner/mod.rs",
+      "sha256": "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1"
+    },
+    {
+      "path": "crates/canic-backup/src/restore/runner/execute.rs",
+      "sha256": "51103684afb781d8c227e5cc635a2328bd75545c0e44f619682034704a21b079"
+    }
+  ],
+  "disposition": "Desired-status completed-receipt inference is not copied. Restore load has no generic lost-load settlement. New passive claims require independent original attribution/exact state qualification; no Canic production source copied.",
+  "upstream_interface": {
+    "url": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+    "sections": [
+      "canister_status",
+      "stop_canister",
+      "start_canister",
+      "load_canister_snapshot"
+    ],
+    "inspection_date": "2026-10-07",
+    "disposition": "Management status/snapshot-loading shapes establish no local original operation receipt. Actual authenticated effects remain integration-qualified."
+  },
+  "production_destinations": [
+    "crates/ic-backup/src/model/ic_observation/settlement/",
+    "crates/ic-backup/src/policy/ic_observation/settlement/"
+  ],
+  "reuse": "Existing original observation association, current reservation checks, bounded lifecycle decoder/status digest and journal outcome/receipt owner. No new provider/schema/hash recipe/spending owner.",
+  "compatibility": "Compatible passive DTO/view/policy additions extend existing 0.5.1 draft. Existing public signatures/exhaustive enums/v1 records and package/lock/dependencies/released receipt remain 0.5.0.",
+  "license": "No Canic production source copied; existing licenses and source attribution retained.",
+  "qualification": {
+    "unit_filter": "ic_observation",
+    "public_target": "ic_observation",
+    "evidence": "target/lifecycle-settlement-051-review",
+    "scope": "Pure claim/decoder association and actual native local journal persistence/reopen. Synthetic passive proof authenticates no IC effect."
+  },
+  "issue": "https://github.com/dragginzgame/ic-backup/issues/14",
+  "removed_symbols": [],
+  "remaining": "Actual authenticated original effect attribution and read custody/permission/chronology, providers/backend qualification, application load/start/fence safety, executable runners and terminal/reference release."
+}

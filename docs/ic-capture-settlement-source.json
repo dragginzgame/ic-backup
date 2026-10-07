@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "kind": "Local original capture settlement contract review",
+  "inspection_date": "2026-10-07",
+  "consumer_base": "eece44dac79da1bfb36f82ce2cd30d51edd3a9c1",
+  "source_repository": "https://github.com/dragginzgame/canic",
+  "source_head": "d7698e1f0541cb52ad8d762bc1549a700b412e88",
+  "source_worktree_dirty": true,
+  "read_scope": "Exact committed blob only; dirty sibling remains read-only.",
+  "reviewed_sources": [
+    {
+      "path": "crates/canic-backup/src/runner/mod.rs",
+      "sha256": "703ede8da5e03eb9f9ee93748a46d7b9c401eebfaa6fe8b0494bc550bdc7f6b1",
+      "sections": [
+        "prepare_snapshot_create_attempt (556-599)",
+        "reconcile_pending_snapshot_create (601-652)"
+      ],
+      "disposition": "Original baseline precedes mutation; source ID-only baseline and singleton-to-receipt inference are not copied. Reuse bounded full metadata baseline owner and require independent explicit attribution. Exact committed blob only; dirty sibling remains read-only."
+    }
+  ],
+  "upstream_interface": {
+    "url": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+    "sections": [
+      "take_canister_snapshot",
+      "list_canister_snapshots"
+    ],
+    "inspection_date": "2026-10-07",
+    "disposition": "Management capture/list response shapes do not supply a local original request receipt. Actual authenticated attribution, custody and effect semantics remain independently integration-qualified."
+  },
+  "production_destinations": [
+    "crates/ic-backup/src/model/ic_observation/capture_settlement/",
+    "crates/ic-backup/src/policy/ic_observation/capture_settlement/"
+  ],
+  "reuse": "Existing original observation association/reservation checks, bounded inventory codec/digest, shared closed-baseline comparison and journal outcome/receipt owner. Metadata-upload claim types remain source/upload-bound and cannot supply capture authority. No new provider/schema/hash recipe/accounting owner.",
+  "compatibility": "Additive DTO/view/policy API extends existing 0.5.1 draft. Existing public signatures/exhaustive enums/v1 records, bounds, dependencies, package/lock and released receipt remain unchanged at 0.5.0.",
+  "license": "No Canic production source copied; source attribution and existing licenses retained.",
+  "qualification": {
+    "unit_filters": [
+      "ic_observation",
+      "snapshot_inventory_delta"
+    ],
+    "public_target": "ic_observation",
+    "evidence": "target/capture-settlement-051-review",
+    "scope": "Pure exact association and actual native local journal/baseline retention/reopen. Synthetic claims authenticate no IC effect."
+  },
+  "issue": "https://github.com/dragginzgame/ic-backup/issues/16",
+  "removed_symbols": [],
+  "remaining": "Actual authenticated capture attribution and original baseline chronology/custody, providers/backend, capture consistency/complete transfer, application safety, executable runners and terminal/reference release."
+}

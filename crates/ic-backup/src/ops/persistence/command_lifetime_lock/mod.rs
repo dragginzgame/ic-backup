@@ -131,10 +131,12 @@ impl CommandLifetimeLock {
 /// Fresh exclusive local quiescence for retained exact custody evidence.
 ///
 /// This guard cannot spawn commands. It excludes cooperating holders of the same
-/// sidecar until dropped; terminal completion still requires its own journal proof.
+/// sidecar until dropped. Drop explicitly releases this non-spawning exclusion,
+/// even if an unrelated fork temporarily retained a descriptor copy. Terminal
+/// completion still requires its own journal proof.
 #[derive(Debug)]
 pub struct CommandQuiescenceGuard {
-    _file: File,
+    file: File,
     record: CommandCustodyRecord,
 }
 
@@ -149,7 +151,7 @@ impl CommandQuiescenceGuard {
             file_lock::acquire_existing(&path).map_err(|error| project_error(&path, error))?;
         require_identity(expected, &file.metadata()?, &path)?;
         Ok(Self {
-            _file: file,
+            file,
             record: expected.clone(),
         })
     }
@@ -158,6 +160,16 @@ impl CommandQuiescenceGuard {
     #[must_use]
     pub fn record(&self) -> &CommandCustodyRecord {
         &self.record
+    }
+}
+
+impl Drop for CommandQuiescenceGuard {
+    fn drop(&mut self) {
+        // Unlike dispatched command custody, this guard cannot intentionally
+        // transfer its lock to a descendant. Closing alone would keep exclusion
+        // alive until all transient fork/dup references also close.
+        #[cfg(unix)]
+        file_lock::unlock(&self.file);
     }
 }
 

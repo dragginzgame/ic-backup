@@ -81,6 +81,49 @@ print(json.dumps({'device':stat.st_dev,'inode':stat.st_ino,'cloexec':bool(fcntl.
 }
 
 #[test]
+fn quiescence_drop_releases_exclusion_with_a_retained_descriptor_copy() {
+    let root = temp_dir("ic-backup-command-quiescence-copy");
+    fs::create_dir_all(&root).expect("create fixture");
+    let lock = CommandLifetimeLock::acquire(&root.join("journal.json"), 7)
+        .expect("acquire original custody");
+    let record = lock.record().clone();
+    let path = lock.path().to_path_buf();
+    let guard = lock.finish().expect("original owner has no descendants");
+    // dup and fork retain the same open file description. A non-spawning guard
+    // owns exclusion only until drop, even if an unrelated fork retained a copy.
+    let retained = guard.file.try_clone().expect("retain descriptor copy");
+    assert!(
+        fcntl_getfd(&retained)
+            .expect("copied descriptor flags")
+            .contains(FdFlags::CLOEXEC)
+    );
+    assert!(matches!(
+        CommandQuiescenceGuard::acquire(&record),
+        Err(CommandLifetimeLockError::InFlight { .. })
+    ));
+    drop(guard);
+    let fresh = CommandQuiescenceGuard::acquire(&record)
+        .expect("guard drop releases exclusion while descriptor copy remains open");
+    assert_eq!(fresh.record(), &record);
+    assert_eq!(
+        file_identity(&retained.metadata().expect("copy remains open")).expect("retained identity"),
+        (record.device(), record.inode())
+    );
+    assert_eq!(
+        file_identity(&fs::symlink_metadata(&path).expect("retained sidecar"))
+            .expect("path identity"),
+        (record.device(), record.inode())
+    );
+    drop(retained);
+    assert!(matches!(
+        CommandLifetimeLock::acquire(record.journal(), 7),
+        Err(CommandLifetimeLockError::InFlight { .. })
+    ));
+    drop(fresh);
+    fs::remove_dir_all(root).expect("clean successful fixture");
+}
+
+#[test]
 fn failed_spawn_consumes_the_allowance_without_leaking_custody() {
     let root = temp_dir("ic-backup-command-custody-failed-spawn");
     fs::create_dir_all(&root).expect("create fixture");

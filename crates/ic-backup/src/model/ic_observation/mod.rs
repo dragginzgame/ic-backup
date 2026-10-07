@@ -269,5 +269,11 @@ pub enum IcObservationResponseError {
     InvalidTarget,
 }
 
+mod capture_settlement;
+pub use capture_settlement::{IcCaptureAttribution, IcCaptureSettlement};
+
+mod settlement;
+pub use settlement::{IcLifecycleAttribution, IcLifecycleSettlement};
+
 #[cfg(test)]
 mod tests;

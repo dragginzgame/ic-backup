@@ -811,6 +811,14 @@ consumption and source obligations. Actual authenticated attribution/backend
 qualification remain integration work. See
 [the maintained boundary](extraction-boundary.md#exact-metadata-upload-settlement-claims).
 
+Original capture settlement now binds independent claims to exact full baseline
+and already spent list evidence. Applied names an explicitly attributed new raw ID;
+candidate cardinality never implies a receipt. The existing closed-baseline and
+journal owners retain all metadata, consumed allowances and original obligations.
+Actual original baseline chronology, authenticated attribution/custody, capture
+consistency and backend qualification remain integration-owned. See
+[the maintained boundary](extraction-boundary.md#exact-independently-qualified-capture-settlement).
+
 ## 12. Filesystem custody, durability and retention
 
 Layout lifetime exclusion and durable reference retention are implemented with
@@ -1121,7 +1129,7 @@ The closed IC host-ingress codec now has independent Candid/hash goldens, offici
 argument-shape decoding, bounded strict records and native byte-bound journal
 recovery qualification. This does not qualify an authenticated backend or actual
 snapshot/lifecycle effects. Transfer/response codecs and live admission remain pending.
-Remaining B1 work specifies lost create/upload/load reconciliation and freezes
+Remaining B1 work qualifies actual lost capture/upload/load reconciliation and freezes
 application fence acquisition/release and actual restore safety, journal and executor
 contracts before importing
 runners. This local machinery batch does not establish full B1/B2 completion.
@@ -1148,6 +1156,15 @@ fence-revision/lifecycle/acceptance denial and retained-spending/obligation/refe
 recovery evidence. These are local contracts; actual source/upload qualification,
 outside-snapshot application safety, providers and lost-load settlement remain pending.
 
+Original lifecycle recovery now has passive stop/start/load settlement claims bound
+to exact already spent status observations, challenges and original journal identity.
+The integration independently qualifies original attribution, exact restored state,
+nonapplication or actual settled uncertainty. Status/code equality alone does not
+create an outcome. Pure admission reuses the existing journal receipt owner; lost
+replies retain pending spending, and local recording/reopen replenishes nothing.
+Actual backend/authentication, custody, application safety and terminal/release
+qualification remain prerequisites for executable runners.
+
 ## 20. Completion criteria
 
 The extraction is complete only when all promised boundaries are executable:
@@ -1169,3 +1186,15 @@ The extraction is complete only when all promised boundaries are executable:
 
 Moving files or passing copied unit tests is not completion. The product's value
 is independent usability with preserved recovery and custody guarantees.
+
+The first executable qualification now uses a private real PocketIC driver for
+single-canister capture, complete production artifact transfer, upload and same-ID
+load/start, including reserved recovery of deliberately lost capture/allocation/data
+and stop/load/start replies. Complete separately accounted fresh snapshot checks
+qualify stopped post-load state before restart. A lost load-status observation
+retains both reservations and stops without a receipt, retry or restart.
+It supplies fixture-specific platform evidence while B3's production ICP
+transport and full executable workflows remain proposed. Canic adoption and B5
+remain independent. See [the exact scope](pocketic-qualification.md); this does not
+complete the multi-canister, process/network-loss, application-fence, installed
+consumer or terminal/reference-release qualification families above.

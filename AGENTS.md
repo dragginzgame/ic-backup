@@ -416,6 +416,46 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   authentication, freshness, custody and exclusive attribution. Passive views change
   no journal, spending, obligations or references and grant no release permit.
 
+- Lifecycle settlement now matches independently qualified original stop/start/load
+  claims to the existing reserved status observation, complete original authority,
+  exact attempts, fresh qualification challenge and status/evidence digests. Preserve
+  the existing 1,024 attempts, 4 KiB arguments and 1 MiB status reply/decoder owners.
+  Current status/controllers/code hashes alone establish no outcome; load attribution
+  must independently qualify exact original restored state. Negative evidence excludes
+  transient application. Unresolved requires a settled authenticated successful read;
+  lost/absent/malformed replies remain pending. Pure matching writes no receipt or
+  spending transition and grants no retry, restart, terminal or fence/reference release.
+  Integrations authenticate, qualify custody/chronology/read permission and explicitly
+  use the existing journal transition; no provider, schema or new accounting owner exists.
+
+- Capture settlement now matches independent original capture claims to the full
+  original plan, pending capture/list reservations, exact retained baseline/current
+  inventory digests, caller challenge and unchanged observation evidence. Reuse the
+  closed baseline owner: every original ID/timestamp/size stays unchanged. Applied
+  explicitly names a new bounded raw ID; zero/one/many candidates never infer an
+  outcome. Negative evidence excludes transient capture/deletion; actual settled
+  uncertainty differs from lost replies. Preserve existing 1,024 attempt/inventory,
+  256 ID-byte, 4 KiB argument, 1 MiB reply and finite decoder bounds. Pure borrowed
+  views write no receipt or allowance and release no reference/fence. Actual original
+  baseline chronology, authenticated attribution, fresh permissions/custody,
+  consistency/transfer and terminal/release qualification remain integration-owned.
+
+- A test-only PocketIC driver now qualifies actual single-canister capture, durable
+  streamed artifact transfer and same-ID upload/load/start with deliberately discarded
+  capture/allocation/data and stop/load/start replies. Complete stopped post-load
+  state checks use a distinct freshly captured snapshot under separately retained
+  original authority. A lost load-status reply retains both pending reservations
+  and stops before verification or restart without writing a receipt. Preserve
+  explicit original per-ingress plans, unique operation sequences, prior bounded reservations, independent original attribution,
+  complete byte/metadata checks and local replay with retained references. The selected
+  server is explicitly prepared and checksum/version checked; missing tools reject.
+  Fixture setup, pre-load chunk-store changes/assertions and application calls are
+  separate from backup accounting. Its inspected no-external-effects/stopped-drain
+  admission is fixture-specific, never a generic
+  default. No production transport, runner/CLI, Canic adapter, active fence or full
+  terminal/reference-release qualification is installed. See
+  [the exact qualification scope](docs/pocketic-qualification.md).
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.

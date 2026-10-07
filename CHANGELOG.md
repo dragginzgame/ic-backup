@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.5.1]
+
+- Release non-spawning command-quiescence exclusion when its guard drops, even
+  while a descriptor copy remains open. Preserve dispatched child and descendant
+  custody and retained lock evidence
+  ([#13](https://github.com/dragginzgame/ic-backup/issues/13)).
+
+- Bind independently qualified stop/start/load settlement to the original spent
+  status observation and exact retained evidence. Keep lost replies pending and
+  preserve consumed allowances through explicit receipt recording and reopen
+  ([#14](https://github.com/dragginzgame/ic-backup/issues/14)).
+
+- Bind independently qualified snapshot-capture settlement to the exact original
+  baseline and spent inventory observation. Require an explicitly attributed new
+  ID; candidate counts never imply success, retry or refunded spending
+  ([#16](https://github.com/dragginzgame/ic-backup/issues/16)).
+
+- Qualify real single-canister capture, durable streamed download and same-ID
+  upload/load recovery on PocketIC. Reconcile deliberately lost capture,
+  allocation, data and stop/load/start replies using original reserved observations.
+  Verify complete restored state while stopped before starting; retain pending
+  load/status reservations without retry when the recovery reply is also lost.
+  Preserve consumed allowances and source references
+  ([#17](https://github.com/dragginzgame/ic-backup/issues/17)).
+
 ## [0.5.0] - 2026-10-07
 
 - **Breaking:** `checksum_reader` now retries interrupted reads internally.

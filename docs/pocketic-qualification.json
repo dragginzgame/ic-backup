@@ -1,0 +1,171 @@
+{
+  "kind": "Real single-canister PocketIC qualification review",
+  "inspection_date": "2026-10-07",
+  "consumer_base": "eece44dac79da1bfb36f82ce2cd30d51edd3a9c1",
+  "server": {
+    "version": "16.0.0",
+    "selection": ".tools/ic/bin/pocket-ic; explicit local path, installed checksum/version checked; no implicit download",
+    "linux_x86_64_archive_sha256": "268ba79ec7fe9a563a575adf4983c69627093cce2711d142e476cdc7ad04249e",
+    "linux_x86_64_binary_sha256": "69e324bdb68d32d878b7a9504b1379f08f8d1921272bacb065b0fabb3d0f3792",
+    "source": "https://github.com/dfinity/pocketic/releases/tag/16.0.0"
+  },
+  "client": {
+    "package": "pocket-ic",
+    "version": "16.0.0",
+    "source": "https://docs.rs/pocket-ic/16.0.0/",
+    "scope": "Test-only dev dependency. Explicit 60-second simulator request limit; one original ingress submit/await; simulator busy/result HTTP handling is not production IC retry qualification."
+  },
+  "fixture": {
+    "path": "crates/ic-backup/tests/pic_journey/state.wat",
+    "sha256": "3d4e947eb4b44571ac1a6c162e1cc85548a4dae57ea7520a2918b1935892aec7",
+    "wasm_sha256": "b8f0a9c3927d6e12452978596eff193780c3ff46ac6ec9b5757f3dff86e9c882",
+    "wat_version": "1.227.1",
+    "scope": "Framework-neutral isolated application subnet; one same-ID canister; heap/global/stable/certified state and nonempty chunk store; inactive timer/hook; no external calls or obligations. Setup and application writes/queries are separate from backup ingress accounting."
+  },
+  "dependencies": {
+    "lock_sha256": "b223b0bbad774633365766f52492e3ac7cac74813885aae53e3b48fdfb110558",
+    "added_locked_selections": 207,
+    "changed_original_selections": [
+      {
+        "package": "thiserror and thiserror-impl",
+        "from": "2.0.21",
+        "to": "2.0.18",
+        "reason": "PocketIC 16 requires exact thiserror 2.0.18; internal derive dependency, unchanged public product type identity. All other original package selections retained."
+      }
+    ],
+    "public_management_types": "0.11.0 unchanged; simulator client internal 0.8.0 types do not cross product boundary",
+    "versions": "Workspace/package and released receipt remain 0.5.0; compatible additions in 0.5.1 draft."
+  },
+  "qualification": {
+    "host": "Linux x86_64",
+    "target": "pocketic_snapshot",
+    "registered_cases": [
+      "lost_capture_reply_requires_reserved_reconciliation_and_never_reissues",
+      "lost_data_reply_reconciles_original_extent_without_reupload",
+      "lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restart",
+      "lost_load_reply_requires_complete_stopped_state_verification_before_start",
+      "lost_metadata_reply_reconciles_original_allocation_before_data_upload",
+      "lost_start_reply_reconciles_original_ingress_without_restart",
+      "lost_stop_reply_reconciles_original_ingress_without_restop",
+      "real_capture_download_upload_and_same_id_restore_preserve_complete_state"
+    ],
+    "evidence": "target/pocketic-lifecycle-051-review",
+    "results": [
+      {
+        "case": "capture-reply-discarded",
+        "management_calls": 54,
+        "elapsed_ms": 5128,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      },
+      {
+        "case": "data-reply-discarded",
+        "management_calls": 54,
+        "elapsed_ms": 5133,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      },
+      {
+        "case": "load-and-status-replies-discarded",
+        "management_calls": 41,
+        "elapsed_ms": 3751,
+        "journey_restored": false,
+        "pending_lifecycle": true
+      },
+      {
+        "case": "load-reply-discarded",
+        "management_calls": 54,
+        "elapsed_ms": 5153,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      },
+      {
+        "case": "metadata-reply-discarded",
+        "management_calls": 54,
+        "elapsed_ms": 5132,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      },
+      {
+        "case": "normal",
+        "management_calls": 53,
+        "elapsed_ms": 5135,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      },
+      {
+        "case": "start-reply-discarded",
+        "management_calls": 54,
+        "elapsed_ms": 5150,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      },
+      {
+        "case": "stop-reply-discarded",
+        "management_calls": 54,
+        "elapsed_ms": 5134,
+        "journey_restored": true,
+        "pending_lifecycle": false
+      }
+    ],
+    "bounds": {
+      "management_ingresses": 64,
+      "region_extent_bytes": 32768,
+      "original_mutations_per_operation": 1,
+      "original_observations_per_operation": 1
+    },
+    "scope": "Real capture, complete bounded production artifact transfer/durable reopen, original-source-bound allocation/data upload and complete destination readback. After deliberately changing heap/global/stable/certified state and clearing current chunk store, separately accounted fresh snapshot verifies complete stopped loaded state before restart. Lost original capture/allocation/data/stop/load/start replies reconcile only through original reserved observations and exclusive-instance attribution, with extra stopped full-state qualification for load. Lost reserved load-status reply stops before verification/restart, writes no receipt and retains both pending reservations with exact typed denials/reopen. All original journals, source manifest and reference bytes replay without calls.",
+    "evidence_results": "target/pocketic-lifecycle-051-review/results",
+    "checks": [
+      "All registered real PocketIC journeys",
+      "Selected ic_observation production units",
+      "Selected attempt_journal production units",
+      "Selected ic_lifecycle_reply production units",
+      "Public ic_observation/ic_lifecycle_reply/attempt_recovery regressions",
+      "Selected Clippy with warnings denied",
+      "Rust 1.91 selected backend target",
+      "Manifest/Rust formatting",
+      "Dependency pins and workspace inheritance",
+      "Local Markdown references",
+      "Unchanged 58-file shared snapshot"
+    ],
+    "recovery_evidence": "Exact original plan, actual caller/target/context and exclusive completed ingress history are retained/hash-bound. Lifecycle settlement additionally binds current status/challenge; load binds separately checked complete stopped restored state. Discarded mutation replies are never read for settlement. Lost status bytes are decoded only by the fixture oracle to assert actual stopped state, never admitted as a response/receipt.",
+    "previous_evidence": "target/pocketic-journey-051-review (retained first four-case source/graph review)",
+    "management_count_scope": "Accounted backup/restore/recovery/verification ingresses only. Explicit simulator creation/install/funding, chunk seeding/clearing/listing and application operations are separate fixture setup/assertions, not claims of original plan spending."
+  },
+  "reused_owners": [
+    "Existing management request/reply codecs",
+    "Original operation plans and durable attempt journals",
+    "Canonical bounded snapshot metadata/data/coverage",
+    "Descriptor-relative streamed durable artifact publication/verification",
+    "Immutable local download manifest",
+    "Exact retained source-bound upload preparation",
+    "Original capture/allocation/data settlement policies"
+  ],
+  "production_changes": [],
+  "removed_symbols": [],
+  "remaining": "Production ICP transport/workflows/CLI, Canic adapter, multi-canister membership/fencing, active timer/hook/other metadata configurations, process/network interruption, application-specific lifecycle recovery, installed consumer and full product terminal/fence/reference release. Native macOS delivery qualification remains pending.",
+  "issue": "https://github.com/dragginzgame/ic-backup/issues/17",
+  "source_sha256": {
+    "Cargo.lock": "b223b0bbad774633365766f52492e3ac7cac74813885aae53e3b48fdfb110558",
+    "Cargo.toml": "809f7bbd09d5915bce0e2d32260c0b2e8a79d7d36fad09e6ba0f67046c9518db",
+    "crates/ic-backup/Cargo.toml": "f4f7d7a45f4f22743c5cd41f9ba80ee5f9c39a289879efde0a4502f379c0eb79",
+    "crates/ic-backup/tests/pic_journey/backend/mod.rs": "e07909a6ec9855d72801cd0abc3cdc2bcdbba5cf88a8a675b9857cac82727401",
+    "crates/ic-backup/tests/pic_journey/mod.rs": "883dded0c9ecbd4e2a2c102c075a48eeb757a59f4b44bfbe6692cd15fdc3d9ce",
+    "crates/ic-backup/tests/pic_journey/recovery/lifecycle/mod.rs": "f4189278a22dd8ee8b49b933e0f9b9db4ab5d8e330d0e9bb32922a28b1651b0e",
+    "crates/ic-backup/tests/pic_journey/recovery/mod.rs": "bb6969e6b75c078251779ba5d9668e58af9d1e2f844a1e3e46b770645eab6907",
+    "crates/ic-backup/tests/pic_journey/state.wat": "3d4e947eb4b44571ac1a6c162e1cc85548a4dae57ea7520a2918b1935892aec7",
+    "crates/ic-backup/tests/pocketic_snapshot.rs": "28dfda0eeaa9c79b2184af05ff4b4e6c4d6347858cfcbca16b2698edadbbd00f"
+  },
+  "upstream_interface_review": {
+    "inspection_date": "2026-10-07",
+    "url": "https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/",
+    "sections": [
+      "take_canister_snapshot",
+      "load_canister_snapshot",
+      "read_canister_snapshot_metadata",
+      "read_canister_snapshot_data"
+    ],
+    "disposition": "A separately retained non-replacing verification capture observes full stopped loaded state. Status/module hash/byte equality alone cannot supply original load attribution, fresh permission or spending."
+  }
+}

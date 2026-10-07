@@ -25,7 +25,174 @@
 
 # Current handoff — 2026-10-07
 
-## Pending 0.5.0 Shared Tooling 0.1.13 workspace-rule adoption
+## Pending 0.5.1 real single-canister qualification
+
+The accepted integration direction now has an executable test-only PocketIC 16
+journey through production codecs, original journals, streamed durable artifact
+publication, manifest replay and exact source-bound upload preparers. It checks
+complete uploaded bytes/metadata and restores the same canister's heap/global/stable/
+certified state and nonempty chunk store after deliberate pre-load changes. A
+separately accounted fresh snapshot verifies every byte and restorable metadata
+while stopped before restart. Current controller/status checks precede lifecycle
+mutations; metadata/status equality never supplies original attribution.
+
+All registered normal and deliberately discarded capture/allocation/data/stop/load/
+start reply cases pass on Linux. Qualified load settlement additionally requires
+that complete stopped-state check before the explicit existing receipt. Losing the
+reserved load-status reply stops safely with both attempts pending: no receipt,
+fresh verification capture, retry or restart. Exact pending denials/reopen retain
+journal bytes and exhausted allowances. Every other original journal and source
+manifest/reference is replayed unchanged without remote calls. Normal uses 53
+accounted management ingresses; each settled discard case uses 54 and the pending
+load/status case stops at 41, all below the 64-call ceiling. Fixture setup,
+chunk-store changes/assertions and application operations are explicit fixture
+setup/assertions outside those backup/restore journals.
+
+This is real platform evidence for one inspected no-external-effects fixture,
+not a production transport, runner/CLI or Canic adapter. Exclusive simulator custody
+qualifies original-request attribution; cardinality/byte equality alone cannot.
+Active timer/hook execution, arbitrary metadata configurations, multiple canisters,
+process/network failures, application-specific lifecycle recovery/fencing, installed
+consumer and full product terminal/reference release remain separate. See
+[the exact scope](../pocketic-qualification.md),
+[machine review](../pocketic-qualification.json) and
+[issue #17](https://github.com/dragginzgame/ic-backup/issues/17).
+
+Fresh real journeys, selected observation/lifecycle/attempt unit and public
+recovery regressions, warning-denied Clippy and Rust 1.91 checks pass. Final
+formatting, inheritance/pins, local links and the unchanged 58-file shared snapshot
+also pass. Original/final sources, registered
+cases, tool/dependency identities, actual per-call results and retained initial
+private-import/fixture-binding and lint findings are under
+`target/pocketic-lifecycle-051-review`. The receipt/reopen assertions have a separate
+fixture owner after the initial function-length finding. Prior backend evidence
+remains under `target/pocketic-journey-051-review`, with its original source/graph;
+all fixture roots stay retained. Native macOS qualification awaits delivered CI.
+Production Rust bytes, dependencies, release receipt and package versions remain
+exact from the preceding batch. The test-only client still requires internal
+`thiserror` 2.0.18; public management 0.11.0 identity is unchanged. The compatible
+0.5.1 draft remains uncommitted, with no release or sibling edits. The older
+contract-only sections below retain their separately qualified evidence.
+
+## Pending 0.5.1 original capture settlement contract
+
+The accepted follow-up adds passive original capture outcome claims under an
+already reserved successful exact list observation. Pure admission reuses the
+original full plan/authority/capture bytes, current reservations, existing finite
+inventory decoder/digest and canonical full-baseline comparison. Every retained
+ID/timestamp/size stays unchanged. Applied explicitly names an independently
+attributed new bounded raw ID; zero/one/many candidates infer no outcome. Negative
+evidence excludes transient capture/deletion, and actual settled uncertainty is
+distinct from a lost observation reply. Lifecycle/status lanes reject.
+
+The borrowed view authenticates no evidence and writes no receipt. A qualified
+integration explicitly invokes the existing journal owner; all original consumption,
+obligations and references remain retained. Baseline chronology, actual attribution,
+fresh permissions/custody, consistency/transfer/backend qualification and terminal
+or release admission remain integration-owned. No new provider, schema, hash recipe
+or accounting owner is installed. See
+[the contract](../contracts/ic-capture-settlement.json),
+[committed source review](../ic-capture-settlement-source.json) and
+[issue #16](https://github.com/dragginzgame/ic-backup/issues/16).
+
+Fresh focused Linux observation/capture/lifecycle and closed-baseline unit cases
+and the public local recovery journey pass, including all claimed capture outcomes,
+exact typed denials, changed raw ordering/evidence, baseline drift and spent
+allowances through explicit receipt recording/reopen. Selected Clippy, warning-free
+API docs and Rust 1.91 checks pass. Final formatting, dependency inheritance,
+documentation links and snapshot checks also pass. Original/final hashes, exact registered cases,
+commands and retained initial Clippy fixture finding are under
+`target/capture-settlement-051-review`. A method reference replaces the initial
+redundant test closure without production changes or suppression.
+
+This compatible addition extends the existing 0.5.1 draft and preserves the prior
+custody/lifecycle production bytes. The public fixture reuses one explicit journal
+receipt/reopen assertion owner for both claims. Dependencies, package versions,
+lockfile and released receipt remain 0.5.0. Work is uncommitted, with no current
+native macOS result, executable backend, release or live effects.
+
+## Pending 0.5.1 original lifecycle settlement contract
+
+The accepted follow-up adds passive original stop/start/load outcome claims under
+an already reserved successful exact status observation. Pure admission reuses
+full original authority/mutation bytes, current journal reservation association,
+existing finite status decoder/digest, caller challenge and opaque observation
+evidence. Capture and inventory lanes reject. Status/controller/code equality
+supplies no attribution or outcome; a load claim independently qualifies exact
+original restored state. Negative proof excludes transient application; settled
+uncertainty cannot be substituted for a lost/unavailable/malformed read reply.
+
+The read-only view performs no IO, provider call, serialization, journal transition,
+retry or refund. Only qualified integration code explicitly records the existing
+receipt; uncertainty clears only the observation, keeping mutation and all consumed
+allowances. Current execution/lifecycle/application safety and permission admission
+remain independent. No provider, schema, hash recipe or spending owner is added.
+See [the contract](../contracts/ic-lifecycle-settlement.json),
+[committed source review](../ic-lifecycle-settlement-source.json) and
+[issue #14](https://github.com/dragginzgame/ic-backup/issues/14).
+
+Fresh Linux exact registered observation/settlement cases and public local recovery
+pass, including all method/status/claimed outcome lanes, typed identity/evidence
+rejection, changed skipped raw metadata, stale attempts, explicit receipts and
+exhausted spending/references/obligations through reopen. Selected Clippy, API docs
+with warnings denied and Rust 1.91 checks pass. Final formatting, dependency
+inheritance, local documentation links and snapshot verification also pass.
+Original/final inputs, registered
+cases, exact commands and logs remain under `target/lifecycle-settlement-051-review`.
+The initial Clippy length finding split passive fixture construction from actual
+journal/reopen assertions; no production behavior changed for that correction.
+
+This compatible addition extends the existing 0.5.1 draft and preserves all prior
+custody repair bytes. Package versions, dependencies, lockfile and released receipt
+remain 0.5.0. New claims/views authenticate no evidence and qualify no actual IC
+backend, full restoration, terminal proof or release authority. Current native CI
+and delivery remain pending; work is uncommitted, with no release or live effects.
+
+## Pending 0.5.1 command-quiescence release repair
+
+The maintainer released 0.5.0 at `eece44dac79da1bfb36f82ce2cd30d51edd3a9c1`.
+The workspace, lockfile, finalized changelog and receipt now select 0.5.0.
+Its [main CI](https://github.com/dragginzgame/ic-backup/actions/runs/37583420007) and
+[tag CI](https://github.com/dragginzgame/ic-backup/actions/runs/37583420151) now pass
+all full Linux, ARM macOS and Intel macOS gates at that exact source. The delivered
+fixture ownership and split artifact/digest-ingress changes now have native
+qualification in [issue #10](https://github.com/dragginzgame/ic-backup/issues/10) and
+[issue #11](https://github.com/dragginzgame/ic-backup/issues/11).
+The explicit system Bash 3.2 tooling suites also pass on both native macOS hosts,
+qualifying delivered Shared Tooling adoption in
+[issue #12](https://github.com/dragginzgame/ic-backup/issues/12).
+These released-source results do not qualify the uncommitted 0.5.1 changes or
+establish the historical custody failure's precise cause.
+Shared Tooling is current
+at committed 0.1.13, `e378671d90afa237ff63a4b0e3b9551eb2c222b6`.
+
+The next accepted batch addresses [issue #13](https://github.com/dragginzgame/ic-backup/issues/13).
+A deterministic Linux regression retains a duplicate of a non-spawning quiescence
+guard's descriptor. Before the change, dropping the guard leaves fresh acquisition
+`InFlight` until that copy closes. Explicit unlock on quiescence guard drop now
+releases its exclusion while preserving the exact retained sidecar/record. Closing
+the old copy after reacquisition cannot release the fresh guard's lock. Dispatched
+owner custody continues to close without unlocking, keeping child/descendant
+holders authoritative. No retries, grace changes or evidence cleanup hide contention.
+
+[Apple's flock documentation](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/flock.2.html)
+supports the shared descriptor-copy mechanism; an unrelated parallel pre-exec fork in the historical macOS failure
+remains an inference, not an observed descriptor trace. The new red/green regression
+qualifies the demonstrated release defect on Linux. All registered custody cases
+(including real owner death/descendants and bounded finish) and public local recovery
+pass, with selected Clippy warnings denied, warning-free API docs and Rust 1.91
+checks. Final formatting, dependency inheritance, documentation and snapshot
+checks also pass. Initial failing evidence and final commands/case registry/inputs remain in
+`target/command-quiescence-051-review`. The initial Clippy finding required naming
+the now-active private descriptor field without its former underscore prefix.
+
+The compatible fix selects one undated 0.5.1 draft. Package versions, dependencies,
+lockfile, receipt, APIs and v1 schemas remain released 0.5.0. This uncommitted repair
+has no native macOS CI result; #13 stays open until exact-source qualification.
+No commits, tags, pushes, releases, publication, sibling edits or live IC effects.
+Full product/backend/application qualification remains independent.
+
+## Retained pre-release 0.5.0 Shared Tooling 0.1.13 workspace-rule adoption
 
 The 58-file snapshot now binds committed Shared Tooling 0.1.13 at
 `e378671d90afa237ff63a4b0e3b9551eb2c222b6`, matching remote main.
@@ -88,7 +255,7 @@ owns diagnosis; this tooling update does not repair or qualify that behavior.
 No native CI exists for the uncommitted 0.5.0 batch. No commits, tags, push,
 release/publication, live IC effects, sibling writes or recovery-evidence cleanup.
 
-## Pending 0.5.0 split Host Tooling adoption
+## Retained pre-release 0.5.0 split Host Tooling adoption
 
 Accepted #11 now replaces the monolithic registry dependency with
 `ic-host-artifacts` and `ic-host-fs` 0.3.0, with optional archive/compression/Wasm

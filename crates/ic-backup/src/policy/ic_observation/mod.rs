@@ -1,4 +1,4 @@
-//! Pure exact reserved IC observation association; no mutation settlement.
+//! Pure reserved IC observation association and passive qualified original effect claims.
 
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -166,6 +166,16 @@ pub enum IcObservationAssociationError {
     #[error(transparent)]
     Status(#[from] IcLifecycleReplyError),
 }
+
+mod capture_settlement;
+pub use capture_settlement::{
+    IcCaptureSettlementError, IcCaptureSettlementView, validate_capture_settlement,
+};
+
+mod settlement;
+pub use settlement::{
+    IcLifecycleSettlementError, IcLifecycleSettlementView, validate_lifecycle_settlement,
+};
 
 #[cfg(test)]
 mod tests;

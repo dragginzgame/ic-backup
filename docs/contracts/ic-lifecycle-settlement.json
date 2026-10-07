@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "kind": "passive original stop/start/load settlement over an already reserved successful status reply; no persisted schema",
+  "claim_owners": [
+    "model::ic_observation::IcLifecycleSettlement",
+    "model::ic_observation::IcLifecycleAttribution"
+  ],
+  "admission_owner": "policy::ic_observation::validate_lifecycle_settlement",
+  "view_owner": "policy::ic_observation::IcLifecycleSettlementView",
+  "canonical_owners": [
+    "IcObservationRequest",
+    "validate_response",
+    "IcLifecycleReply::digest",
+    "AttemptJournalRecord",
+    "AttemptJournalGuard",
+    "ObservationOutcomeRecord",
+    "ObservationReceiptRequest"
+  ],
+  "supported_mutations": [
+    "stop_canister",
+    "start_canister",
+    "load_canister_snapshot"
+  ],
+  "observation": "canister_status; capture and inventory lanes reject",
+  "binds": [
+    "full original plan/operation/exact mutation/immutable allowances through authority",
+    "both exact original pending mutation and status observation IDs",
+    "current caller-owned qualification challenge",
+    "existing digest of exact status request and raw bytes, including skipped metadata",
+    "unchanged opaque retained observation evidence",
+    "independently qualified original attribution and complete retained evidence"
+  ],
+  "outcomes": {
+    "Applied": "exclusive exact original-request attribution; load independently qualifies exact original snapshot state, not merely status/code hash",
+    "NotApplied": "qualified original nonapplication, excluding transient application followed by reversal/overwrite",
+    "Uncertain": "actually settled authenticated successful status observation cannot resolve original effect; lost/unavailable/absent/malformed replies remain pending"
+  },
+  "status_semantics": "Current Running/Stopping/Stopped values do not determine any original historical outcome. Fresh subsequent effect-boundary lifecycle, permission, source and application requirements remain independent.",
+  "effects": "pure borrowed view; no IO, remote calls, serialization, automatic receipt/transition, retry, refund, provider or dispatch permit",
+  "spending": "Existing journal sole owner. Qualified integration explicitly records its exact existing receipt. Uncertain clears only observation and retains original mutation pending. All allowances remain consumed; extra remote evidence needs independent prior accounting.",
+  "bounds": {
+    "total_attempts": 1024,
+    "snapshot_id_bytes": 256,
+    "arguments_bytes": 4096,
+    "raw_status_reply_bytes": 1048576,
+    "decoding_work_bytes": 2097152,
+    "skipping_work_bytes": 65536,
+    "type_table_entries": 64,
+    "controllers": 10
+  },
+  "integration_qualification": [
+    "actual authenticated context/target/response",
+    "fresh unique challenge and chronology",
+    "original request attribution and exact loaded-state/nonapplication/settled uncertainty",
+    "fresh read permission, command custody and original per-call accounting",
+    "complete retained evidence; constructing DTOs authenticates none"
+  ],
+  "not_established": [
+    "authenticated provider/backend",
+    "actual IC lifecycle or snapshot effect",
+    "complete transfer",
+    "fresh load/start/application safety",
+    "terminal proof or fence/source-reference release"
+  ]
+}

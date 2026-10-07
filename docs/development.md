@@ -53,9 +53,10 @@ export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PATH"
 
 See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
 [IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck, ripgrep and
-macOS GNU Make/flock remain separate product prerequisites. No PocketIC client
-or live backup/restore provider is implemented; installing executables and checking
-versions establishes no backend or application qualification.
+macOS GNU Make/flock remain separate product prerequisites. The test-only PocketIC client
+uses the explicitly prepared server for [real single-canister qualification](pocketic-qualification.md).
+Production transport/runners remain unimplemented; installing tools alone establishes
+no backend or application qualification.
 
 `make dependency-pins-check` checks declarations and tracked lockfiles without
 downloads. The three qualified exact constraints and their required review are

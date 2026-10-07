@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "kind": "Passive independently qualified original capture settlement over an already reserved successful list; no persisted schema",
+  "claim_owners": [
+    "model::ic_observation::IcCaptureSettlement",
+    "model::ic_observation::IcCaptureAttribution"
+  ],
+  "admission_owner": "policy::ic_observation::validate_capture_settlement",
+  "view_owner": "policy::ic_observation::IcCaptureSettlementView",
+  "canonical_owners": [
+    "IcObservationRequest",
+    "validate_response",
+    "IcSnapshotReply::decode/digest",
+    "snapshot_inventory_delta::compare_inventories",
+    "AttemptJournalRecord",
+    "AttemptJournalGuard",
+    "ObservationOutcomeRecord",
+    "ObservationReceiptRequest"
+  ],
+  "methods": {
+    "mutation": "take_canister_snapshot, new non-replacing snapshot with code retained",
+    "observation": "list_canister_snapshots; lifecycle mutations and status observations reject"
+  },
+  "binds": [
+    "full original plan/operation/exact capture payload/immutable allowances through authority",
+    "both exact pending capture and already reserved list attempt IDs",
+    "current caller-owned qualification challenge",
+    "exact original baseline list request/raw-reply digest",
+    "exact current list request/raw-reply digest including raw ordering",
+    "unchanged retained opaque observation evidence",
+    "independent original attribution and complete retained integration qualification evidence"
+  ],
+  "baseline": "Both exact targets match original capture. Every baseline ID/timestamp/size remains unchanged in the canonical current inventory; wrong methods, foreign targets, lost IDs and changed metadata reject for every claim.",
+  "outcomes": {
+    "Applied": "Explicitly attributed new bounded raw ID in the exact current candidate set; no original baseline ID or cardinality inference. Borrowed descriptor retains original timestamp/size.",
+    "NotApplied": "Qualified exclusion of original capture including transient capture then deletion; absence alone is insufficient.",
+    "Uncertain": "Actually settled authenticated successful list cannot resolve original capture. Lost/unavailable/malformed replies remain pending."
+  },
+  "effects": "Pure borrowed local view: no IO, calls, serialization, automatic receipt, dispatch/retry/refund, consistency/transfer proof or terminal/fence/reference release.",
+  "spending": "Only qualified integration explicitly records the existing exact observation receipt. Settled uncertainty clears observation only, retaining pending mutation. All consumed allowances, original plans/payloads/obligations/references remain retained; extra remote evidence needs separately accounted calls.",
+  "bounds": {
+    "total_attempts": 1024,
+    "inventory_entries": 1024,
+    "snapshot_id_bytes": 256,
+    "argument_bytes": 4096,
+    "raw_inventory_bytes": 1048576,
+    "decoding_work_bytes": 2097152,
+    "skipping_work_bytes": 0,
+    "type_table_entries": 16
+  },
+  "integration_qualification": [
+    "complete original baseline custody before original capture",
+    "actual authenticated network/caller/target/observation",
+    "fresh unique challenge, chronology and read permission",
+    "exclusive original capture attribution, nonapplication excluding transient creation or settled uncertainty",
+    "command custody and original prior per-call accounting",
+    "capture consistency, authentic snapshot and complete transfer independently"
+  ],
+  "local_qualification": "Exact typed denials/raw identity/candidate bounds and real local journal recording/reopen with synthetic claims; no authenticated IC effect or installed provider."
+}

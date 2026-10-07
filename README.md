@@ -195,7 +195,7 @@ The following product components are still missing:
 - an authenticated Internet Computer transport;
 - the standalone command-line application;
 - application-specific membership, authority and consistency adapters; and
-- PocketIC and real-IC qualification of complete backup and recovery journeys.
+- complete product and application recovery qualification on real IC backends.
 
 ## Project boundaries
 
@@ -230,8 +230,10 @@ make test
 ```
 
 `make help` lists the available development and release commands. CI runs the
-native library and repository-tooling gate. PocketIC qualification will accompany
-platform effects when they are implemented.
+native library and repository-tooling gate. A real PocketIC integration target
+qualifies single-canister capture, complete streamed transfer and same-ID restore,
+including deliberately lost replies. See [its exact scope](docs/pocketic-qualification.md).
+Production transport, workflows and application qualification remain unfinished.
 
 ## Documentation
 

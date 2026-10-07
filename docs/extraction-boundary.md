@@ -245,7 +245,12 @@ file description and probes for at most the 250 ms grace period.
 `CommandQuiescenceGuard::acquire` makes a fresh nonblocking probe using retained
 evidence. Both open an existing regular no-follow sidecar and require its exact
 device/inode identity; missing paths are never recreated for reconciliation.
-Success keeps an exclusive non-spawning guard until dropped. A replaced sidecar,
+Success keeps an exclusive non-spawning guard until dropped. Dropping that guard
+explicitly unlocks its file description, so a transient unrelated fork/descriptor
+copy cannot extend exclusion. Dispatched owner custody still closes without
+unlocking, preserving real inherited child/descendant custody. See
+[the native release finding](https://github.com/dragginzgame/ic-backup/issues/13).
+A replaced sidecar,
 contention or an unsafe/missing entry rejects without removing local evidence.
 Lock admission excludes cooperating holders of that exact sidecar.
 
@@ -2073,6 +2078,102 @@ it simulates no IC behavior. See
 [the contract](contracts/ic-snapshot-upload-data-settlement.json) and
 [fresh source review](ic-snapshot-upload-data-settlement-source.json).
 
+### Exact independently qualified lifecycle settlement
+
+`IcLifecycleSettlement` and `IcLifecycleAttribution` are passive integration
+claims for original stop/start/load operations under an already reserved successful
+status read. `policy::ic_observation::validate_lifecycle_settlement` reuses the exact
+original plan/authority/payload and current journal association, bounded lifecycle
+decoder and existing status request/raw-reply digest. Capture mutations and inventory
+reads reject. Authority, both attempt IDs, caller-owned current challenge, exact
+status digest and unchanged opaque observation evidence must match.
+
+Applied claims independently attribute the original request, excluding preexisting
+state and independent effects. For load, the integration qualifies exact original
+snapshot state; code hash or Stopped projection cannot substitute. NotApplied claims
+exclude transient application followed by reversal or overwrite. Unresolved claims
+require an actually settled authenticated successful observation. Lost, absent,
+unavailable or malformed replies never enter this boundary as uncertainty.
+
+Status describes current lifecycle, while the claim concerns the original effect.
+All current status variants remain compatible with independently qualified historical
+outcomes; the library infers none from a status value. Current execution prerequisites,
+application drain/fence, restored-state acceptance and permission checks remain
+independently required at subsequent effect boundaries. Canic's desired-status-to-
+completed-receipt inference is not imported. The
+[IC management specification](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
+describes status and snapshot loading; this local admission qualifies no actual backend.
+
+The read-only view projects the existing `ObservationOutcomeRecord`, retains exact
+original observation and complete qualification evidence, and performs no IO,
+provider call, serialization, automatic receipt, retry or refund. Only a qualified
+integration explicitly invokes the existing journal transition. Settled uncertainty
+clears its observation but keeps the original mutation pending. Every original
+allowance, obligation and source reference remains retained; extra remote evidence
+needs separately accounted calls. Existing 1,024 attempt, 4 KiB argument, 1 MiB raw
+reply and finite status decoder bounds remain with their original owners.
+
+Native unit cases cover all methods/statuses/claimed outcomes, exact typed denials,
+capture/inventory rejection, changed raw skipped metadata/evidence and stale journals.
+The public local journey proves unchanged admission bytes, explicit receipt recording,
+exhausted allowances and original references/obligations through reopen; its synthetic
+claims simulate no IC effect. No provider, transport, schema, hash recipe, accounting
+owner, load/start safety, terminal or fence/reference-release permit is introduced.
+See [the contract](contracts/ic-lifecycle-settlement.json),
+[fresh source review](ic-lifecycle-settlement-source.json) and
+[issue #14](https://github.com/dragginzgame/ic-backup/issues/14).
+
+### Exact independently qualified capture settlement
+
+`IcCaptureSettlement` and `IcCaptureAttribution` are passive original capture
+claims over an already reserved successful exact list observation.
+`policy::ic_observation::validate_capture_settlement` reuses full original
+plan/authority/capture bytes, current reservations, actual response association,
+bounded inventory decoding and the canonical closed-baseline comparison. Lifecycle
+mutations and status observations reject. Both attempt IDs, current caller-owned
+challenge, exact baseline/current request/raw digests and opaque observation
+evidence must match. Every original baseline ID, timestamp and size stays unchanged;
+missing or changed rows reject for all outcomes.
+
+Applied names an explicitly independently attributed new raw ID from the exact
+candidate set, retaining its timestamp/size. Several candidates can coexist;
+singleton cardinality never supplies attribution. An ID outside that set, including
+an original baseline ID or one outside existing codec bounds, rejects. NotApplied
+requires qualified original nonapplication excluding transient capture then deletion.
+Unresolved requires an actually settled authenticated successful list. Lost, absent,
+unavailable or malformed replies stay pending. Opaque evidence is a declaration,
+not self-authenticating proof.
+
+The integration retains the complete original baseline before capture and qualifies
+actual network/caller/target, original chronology, fresh read permissions, exclusive
+attribution, challenge freshness and command custody. Canonical equality proves none
+of those. Capture consistency, snapshot authenticity, full transfer and subsequent
+application/restore safety remain independent. Canic's singleton-to-receipt inference
+is not copied. The
+[IC management specification](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
+describes capture/list methods; no backend or actual effect is qualified here.
+
+The borrowed view reads exact original evidence and projects the existing journal
+outcome without IO, calls, serialization, automatic receipt, retry or refund. Only
+qualified integration code explicitly invokes the existing receipt owner. Settled
+uncertainty clears only its observation and retains the original pending mutation;
+all consumption, obligations and source references survive reopen. Extra remote
+evidence requires independently accounted calls. No provider, transport, schema,
+hash recipe, spending owner, terminal or fence/reference-release permit is added.
+
+Existing owners retain the 1,024 total-attempt/inventory-entry, 256 raw-ID-byte,
+4 KiB argument, 1 MiB raw-reply, 2 MiB decoding-work, zero skipped-work and
+16-type-table bounds. Fresh native cases cover explicit attribution among several
+candidates, zero/one/many descriptive deltas, ID bounds, exact raw ordering/evidence,
+typed identity/baseline/method/association denials and stale journals. Public local
+recovery retains the original baseline before reservation, leaves admission bytes
+unchanged, explicitly records all claimed outcomes and preserves exhausted spending,
+plans, payloads, obligations and references through reopen. Synthetic native claims
+qualify local binding/persistence only, with no simulated IC behavior. See
+[the contract](contracts/ic-capture-settlement.json),
+[fresh committed source review](ic-capture-settlement-source.json) and
+[issue #16](https://github.com/dragginzgame/ic-backup/issues/16).
+
 ### Local IC snapshot diagnostics
 
 `DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
@@ -2242,3 +2343,32 @@ baseline/list originals before mutation, records synthetic settled uncertainty a
 reopens exhausted accounting without a new provider call. This qualifies local
 persistence, not IC behavior. See [the contract](contracts/ic-snapshot-upload-settlement.json)
 and [fresh source review](ic-snapshot-upload-settlement-source.json).
+
+## Real single-canister platform qualification
+
+The test-only driver now exercises actual PocketIC 16 capture, complete bounded
+metadata/data reads, canonical durable artifact publication and retained original
+manifest replay through the production library. Exact source-bound upload preparation
+feeds real metadata/data calls, complete destination metadata/byte verification and
+same-release load/start into the same existing ID. A separately accounted fresh
+snapshot verifies the complete loaded state while stopped before restart. The
+inspected fixture proves restored heap/global/stable/certified state and chunk-store
+contents after deliberate pre-load changes, with exact timer/hook metadata.
+Original intent and immutable spending precede
+every tested management ingress. Deliberately discarded capture/allocation/data
+and stop/load/start replies require reserved observations and independently controlled
+original-request attribution before explicit existing receipts. Load attribution
+includes full stopped-state verification. Losing its status reply retains both pending
+reservations and stops before further verification or restart; no receipts, retries
+or refunds occur.
+Local replay preserves originals and source-reference bytes without remote calls.
+
+This is an integration qualification driver, not an installed product provider,
+transport, runner or CLI. The fixture owns exclusive simulator membership, caller,
+permissions and no-external-effects/drain admission. It qualifies no Canic adapter,
+application fence, arbitrary metadata configuration, process/network interruption,
+application-specific lifecycle recovery or full product terminal/reference release.
+Public APIs, v1 records, bounds and release identity are unchanged. See
+[the qualification guide](pocketic-qualification.md),
+[machine review](pocketic-qualification.json) and
+[issue #17](https://github.com/dragginzgame/ic-backup/issues/17).
