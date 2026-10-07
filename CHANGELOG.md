@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.2]
+## [0.5.2] - 2026-10-07
 
 - Reuse published ic-host 0.4 error conversion for artifact and record IO.
   Preserve native failures, exact byte limits, private publication and command
