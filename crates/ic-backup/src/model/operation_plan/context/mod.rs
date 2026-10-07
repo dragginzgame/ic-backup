@@ -1,6 +1,7 @@
 //! Canonical declared network, caller and release context; no fresh permission.
 
-use super::{OperationPlanError, canonical_hash};
+use super::OperationPlanError;
+use crate::model::artifacts::canonical_hash;
 use serde::{Deserialize, Serialize};
 
 /// Passive integration-owned exact execution context declarations.

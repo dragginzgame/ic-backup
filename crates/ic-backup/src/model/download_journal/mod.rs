@@ -3,7 +3,7 @@
 mod view;
 pub use view::{DownloadArtifactView, DownloadJournalView, ResumeAction};
 
-use super::artifacts::{ArtifactChecksumRecord, ChecksumError};
+use super::artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash};
 use serde::{Deserialize, Deserializer, Serialize, de};
 use std::{collections::BTreeSet, fmt};
 use thiserror::Error;
@@ -218,9 +218,7 @@ impl TryFrom<JournalFields> for DownloadJournalRecord {
             .sort_by(|left, right| left.canister_id.cmp(&right.canister_id));
         Ok(Self {
             version: 1,
-            intent: ArtifactChecksumRecord::from_hash(&fields.intent)?
-                .hash()
-                .to_owned(),
+            intent: canonical_hash(&fields.intent)?,
             artifacts: fields.artifacts,
         })
     }

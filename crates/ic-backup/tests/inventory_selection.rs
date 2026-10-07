@@ -1,29 +1,17 @@
 //! External application journey over explicit declarations, with no live discovery or IC effects.
 
+mod support;
+
 use ic_backup::{
     model::inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
     ops::persistence::{BackupLayoutGuard, InventoryError, create_inventory, read_inventory},
     policy::selection::{SelectionExpansion, SelectionRequest, select},
 };
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[test]
 fn explicit_inventory_reopens_and_selects_exact_physical_targets_without_frameworks() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-inventory-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("layout");
+    let root = support::temp_root("ic-backup-public-inventory");
     let record = InventoryRecord::new(
         [
             ("aaaaa-aa", None),

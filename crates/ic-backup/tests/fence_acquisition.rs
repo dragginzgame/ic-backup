@@ -1,5 +1,7 @@
 //! Native exact update acknowledgement/failure recovery; no application or IC effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -22,25 +24,11 @@ use ic_backup::{
     ports::fence_acquisition::{FenceAcquisitionProvider, FenceAcquisitionProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::Path};
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
-}
-fn temp_root() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-native-acquisition-{}-{nonce}",
-        std::process::id()
-    ))
 }
 struct Originals {
     payload: FenceAcquisitionPayload,
@@ -140,7 +128,7 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
         Some(FenceAcquisitionProviderError::Indeterminate),
     ] {
         let originals = Originals::new();
-        let root = temp_root();
+        let root = support::temp_root("ic-backup-native-acquisition");
         fs::create_dir_all(root.join("source")).unwrap();
         fs::create_dir(root.join("restore")).unwrap();
         // Native fixture custody only; real integrations qualify durable original byte retention.

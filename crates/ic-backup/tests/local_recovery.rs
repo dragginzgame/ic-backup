@@ -1,5 +1,7 @@
 //! Public local persistence journey; this test performs no IC effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
@@ -15,25 +17,11 @@ use ic_backup::{
         },
     },
 };
-use std::{
-    fs,
-    path::Path,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::Path};
 
 #[test]
 fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock after epoch")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("resolve test parent")
-        .join(format!(
-            "ic-backup-public-recovery-{}-{nonce}",
-            std::process::id()
-        ));
+    let root = support::temp_root("ic-backup-public-recovery");
     fs::create_dir_all(root.join("source")).expect("create source");
     fs::write(root.join("source/state.bin"), b"exact snapshot bytes").expect("write source");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclude other layout users");
@@ -118,17 +106,7 @@ fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
 
 #[test]
 fn public_download_journal_adopts_publication_before_retained_progress() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("resolved parent")
-        .join(format!(
-            "ic-backup-public-download-{}-{nonce}",
-            std::process::id()
-        ));
+    let root = support::temp_root("ic-backup-public-download");
     fs::create_dir_all(root.join("source")).expect("source");
     fs::create_dir(root.join("artifacts")).expect("artifact parent");
     fs::write(

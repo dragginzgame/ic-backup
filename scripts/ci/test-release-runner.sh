@@ -25,6 +25,9 @@ if [[ "$target" == release-verify ]]; then
     printf 'build source: %s\n' "$RELEASE_SOURCE" > "build.$attempt.evidence"
 fi
 [[ "${FIXTURE_FAIL_TARGET:-}" != "$target" ]] || exit 7
+if [[ "${FIXTURE_DRIFT_TARGET:-}" == "$target" ]]; then
+    printf '%s\n' "$FIXTURE_DRIFT_URL" > destination
+fi
 case "$target" in
     release-preflight) [[ "$(cat version)" == "$RELEASE_PREVIOUS" ]] ;;
     release-verify) ;;
@@ -63,7 +66,10 @@ ancestor() {
 case "$1" in
     check-ref-format) [[ "$2" == refs/heads/main ]] ;;
     symbolic-ref) echo main ;;
-    remote) printf '%s\n' "${FIXTURE_DESTINATION:-https://example.invalid/release-fixture}" ;;
+    remote)
+        if [[ -f destination ]]; then cat destination
+        else printf '%s\n' "${FIXTURE_DESTINATION:-https://example.invalid/release-fixture}"; fi
+        ;;
     hash-object) exec "$REAL_GIT" hash-object --stdin ;;
     rev-parse)
         case "${*: -1}" in
@@ -127,6 +133,9 @@ case "$1" in
     cat-file) [[ -f tag ]]; echo "${FIXTURE_TAG_TYPE:-tag}" ;;
     ls-remote)
         [[ "${FIXTURE_REMOTE_FAIL:-}" != yes ]] || exit 9
+        if [[ "${FIXTURE_DRIFT_TARGET:-}" == remote-observation && -f tag ]]; then
+            printf '%s\n' "$FIXTURE_DRIFT_URL" > destination
+        fi
         for ref in "$@"; do
             case "$ref" in
                 refs/heads/main) if [[ -f remote-head ]]; then printf '%s\t%s\n' "$(cat remote-head)" "$ref"; fi ;;
@@ -152,8 +161,8 @@ case "$1" in
         if [[ "${FIXTURE_FAIL_EFFECT:-}" == commit && ! -f lost-commit ]]; then touch lost-commit; exit 9; fi
         ;;
     push)
-        [[ "$#" == 6 && "$2" == --no-follow-tags && "$3" == --atomic && "$4" == origin && "$5" == *:refs/heads/main && "$6" == "refs/tags/v$(cat tag):refs/tags/v$(cat tag)" ]]
-        push_head="$(resolve "${5%:refs/heads/main}")"
+        [[ "$#" == 7 && "$2" == --no-follow-tags && "$3" == --atomic && "$4" == -- && "$5" == https://example.invalid/release-fixture && "$6" == *:refs/heads/main && "$7" == "refs/tags/v$(cat tag):refs/tags/v$(cat tag)" ]]
+        push_head="$(resolve "${6%:refs/heads/main}")"
         if [[ -f remote-head ]]; then ancestor "$(cat remote-head)" "$push_head"; fi
         printf '%s %s\n' "$push_head" "$(cat tag)" >> pushes
         echo push >> events
@@ -552,6 +561,33 @@ for conflict in source metadata index commit-tree tag-type tag-commit remote-tag
     [[ "$(count_event commit)" == "$(cat saved-commits)" && "$(count_event tag)" == "$(cat saved-tags)" && "$(count_event push)" == 0 ]]
     [[ ! -e .release-state/0.1.2.plan && ! -e .release-state/lock ]]
     unset FIXTURE_INDEX_TREE FIXTURE_COMMIT_TREE FIXTURE_TAG_TYPE FIXTURE_TAG_COMMIT FIXTURE_REMOTE_FAIL FIXTURE_DESTINATION FIXTURE_DIRTY FIXTURE_UNTRACKED
+done
+
+# Destination changes within one attempt must stop before dispatch, including
+# adding a second URL and changes during the final remote observation.
+for drift_target in release-verify release-push-check remote-observation; do
+    for drift in replaced additional; do
+        new_fixture "destination-$drift_target-$drift"
+        export FIXTURE_DRIFT_TARGET="$drift_target"
+        export FIXTURE_DRIFT_URL=https://example.invalid/other
+        if [[ "$drift" == additional ]]; then
+            FIXTURE_DRIFT_URL=$'https://example.invalid/release-fixture\nhttps://example.invalid/other'
+        fi
+        expect_failure patch origin main
+        [[ "$(count_event push)" == 0 && ! -e .release-state/lock ]]
+        if [[ "$drift_target" == release-verify ]]; then
+            [[ ! -e .release-state/0.1.1.plan && "$(cat version)" == 0.1.0 ]]
+        else
+            [[ "$(tail -n 1 .release-state/0.1.1.plan)" == push ]]
+            [[ "$(count_event commit)" == 1 && "$(count_event tag)" == 1 ]]
+        fi
+        # Restore the exact destination; normal retry preserves recovery rules.
+        unset FIXTURE_DRIFT_TARGET FIXTURE_DRIFT_URL
+        rm destination
+        bash "$ROOT/scripts/ci/run-release.sh" patch origin main > recovered-output
+        [[ "$(count_event commit)" == 1 && "$(count_event tag)" == 1 && "$(count_event push)" == 1 ]]
+        [[ -f validation.1.log && -f build.1.evidence ]]
+    done
 done
 
 for second_phase in prepare validate; do

@@ -1,5 +1,7 @@
 //! Public direct-controller contract and spent local recovery; no IC backend is modeled.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -16,10 +18,7 @@ use ic_backup::{
     ports::control_authority::{ControlAuthorityProvider, ControlProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
@@ -73,15 +72,7 @@ fn reopens_spent_original_intent_and_denies_replay_and_revoked_controller_withou
     })
     .unwrap();
     let plan = plan(&wire);
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-control-{}-{nonce}",
-        std::process::id()
-    ));
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-backup-public-control");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_operation_plan(&layout, &plan).unwrap();
     let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();

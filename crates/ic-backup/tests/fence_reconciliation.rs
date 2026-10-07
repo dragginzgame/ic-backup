@@ -1,5 +1,7 @@
 //! Public reserved acquisition reconciliation and late-reply recovery; no IC/fence backend.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -21,11 +23,7 @@ use ic_backup::{
     ports::fence_reconciliation::{FenceReconciliationProvider, FenceReconciliationProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::Path};
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
@@ -38,16 +36,6 @@ fn plan() -> OperationPlanRecord {
         "selected_targets":["renrk-eyaaa-aaaaa-aaada-cai"],"graph":{"version":1,"nodes":[{"operation_sequence":0,"depends_on":[]}]},
         "operations":[{"operation_sequence":0,"target":"renrk-eyaaa-aaaaa-aaada-cai","request":request.hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
     })).unwrap()
-}
-fn temp_root() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-fence-reconciliation-{}-{nonce}",
-        std::process::id()
-    ))
 }
 struct Originals {
     plan: OperationPlanRecord,
@@ -223,7 +211,7 @@ fn provider_failures_preserve_exact_pending_spending_and_accept_late_reply_witho
         FenceReconciliationProviderError::Unsupported,
         FenceReconciliationProviderError::Indeterminate,
     ] {
-        let root = temp_root();
+        let root = support::temp_root("ic-backup-public-fence-reconciliation");
         let mut provider = fixture_provider(Some(failure));
         prepare(&root, &provider.original);
         let obligation = fs::read(root.join("restore/fence-obligation.json")).unwrap();
@@ -361,7 +349,7 @@ fn every_settled_native_claim_persists_exact_receipt_without_fence_or_source_rel
         ObservationOutcomeRecord::NotApplied,
         ObservationOutcomeRecord::Uncertain,
     ] {
-        let root = temp_root();
+        let root = support::temp_root("ic-backup-public-fence-reconciliation");
         let mut provider = fixture_provider(None);
         provider.reply = native_claim(outcome);
         let original = Originals::new();

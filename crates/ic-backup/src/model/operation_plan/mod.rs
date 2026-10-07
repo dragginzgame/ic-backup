@@ -305,10 +305,6 @@ fn append_principal(bytes: &mut Vec<u8>, text: &str) {
 fn append_count(bytes: &mut Vec<u8>, count: usize) {
     bytes.extend_from_slice(&(count as u32).to_be_bytes());
 }
-fn canonical_hash(text: &str) -> Result<String, OperationPlanError> {
-    Ok(ArtifactChecksumRecord::from_hash(text)?.hash().into())
-}
-
 fn bounded_selected<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<String>, D::Error> {
     bounded::<D, String, MAX_INVENTORY_TARGETS>(deserializer)
 }

@@ -1,5 +1,7 @@
 //! Public immutable plan-to-journal binding, with local evidence and no management backend.
 
+mod support;
+
 use ic_backup::{
     model::{
         attempt_journal::{AttemptBudgetRecord, AttemptJournalRecordError},
@@ -15,25 +17,11 @@ use ic_backup::{
         read_operation_plan,
     },
 };
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[test]
 fn original_plan_authority_reopens_consumed_attempts_without_rebinding_or_replenishment() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-plan-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("layout");
+    let root = support::temp_root("ic-backup-public-plan");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclusion");
     let plan = OperationPlanRecord::new(OperationPlanRequest {
         context: PlanContextRecord::new(&PlanContextRequest {

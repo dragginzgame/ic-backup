@@ -1,5 +1,7 @@
 //! Native retained load/status reply replay; no transport or effect settlement.
 
+mod support;
+
 use candid::{CandidType, Principal};
 use ic_backup::{
     model::{
@@ -16,10 +18,7 @@ use ic_backup::{
 };
 use ic_management_canister_types::CanisterStatusType;
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[derive(CandidType)]
 struct Settings {
@@ -49,18 +48,7 @@ fn request(
     reason = "one public recovery journey retains original load identity, status wire evidence and spent attempts together"
 )]
 fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-lifecycle-reply-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("private fixture layout");
+    let root = support::temp_root("ic-backup-public-lifecycle-reply");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     let load = request(
         IcManagementMethodRecord::LoadCanisterSnapshot,

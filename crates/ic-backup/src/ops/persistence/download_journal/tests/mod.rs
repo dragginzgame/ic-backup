@@ -38,6 +38,30 @@ fn fixture() -> PathBuf {
 }
 
 #[test]
+fn reopen_validates_exact_digest_text_before_locking_without_changing_evidence() {
+    let root = fixture();
+    let layout = BackupLayoutGuard::acquire(&root).unwrap();
+    let guard = DownloadJournalGuard::create(&layout, INTENT, vec![request()]).unwrap();
+    let bytes = fs::read(guard.path()).unwrap();
+    let malformed = "Bad SHA-256 input";
+    assert!(
+        matches!(DownloadJournalGuard::open(&layout, malformed), Err(DownloadJournalError::Record(DownloadJournalRecordError::Checksum(ChecksumError::InvalidHash(original)))) if original == malformed)
+    );
+    assert!(matches!(
+        DownloadJournalGuard::open(&layout, &INTENT.to_ascii_uppercase()),
+        Err(DownloadJournalError::Lock(JournalLockError::Locked { .. }))
+    ));
+    assert_eq!(fs::read(guard.path()).unwrap(), bytes);
+    drop(guard);
+    let guard = DownloadJournalGuard::open(&layout, &INTENT.to_ascii_uppercase()).unwrap();
+    assert_eq!(guard.record().unwrap().intent(), INTENT);
+    assert_eq!(fs::read(guard.path()).unwrap(), bytes);
+    drop(guard);
+    drop(layout);
+    fs::remove_dir_all(root).expect("clean successful fixture");
+}
+
+#[test]
 fn exact_guarded_lifecycle_and_local_terminal_replay_preserve_bytes() {
     let root = fixture();
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");

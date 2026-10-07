@@ -164,14 +164,15 @@ fn read_chunk(
         .ok()
         .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
         .ok_or(IcSnapshotArtifactError::FileShape)?;
-    let bytes = ic_host_tools::artifact::read_reader(file.take(size), limit).map_err(|error| {
-        use ic_host_tools::artifact::ArtifactError;
-        match error {
-            ArtifactError::Io(error) => IcSnapshotArtifactError::Io(error),
-            ArtifactError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
-            error => IcSnapshotArtifactError::Io(io::Error::other(error)),
-        }
-    })?;
+    let bytes =
+        ic_host_artifacts::artifact::read_reader(file.take(size), limit).map_err(|error| {
+            use ic_host_artifacts::artifact::ArtifactError;
+            match error {
+                ArtifactError::Io(error) => IcSnapshotArtifactError::Io(error),
+                ArtifactError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
+                error => IcSnapshotArtifactError::Io(io::Error::other(error)),
+            }
+        })?;
     if u64::try_from(bytes.len()).ok() != Some(size) {
         return Err(IcSnapshotArtifactError::FileShape);
     }

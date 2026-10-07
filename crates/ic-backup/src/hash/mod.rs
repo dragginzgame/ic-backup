@@ -1,16 +1,8 @@
 //! Module: `hash`
 //!
-//! Responsibility: provide shared backup hash formatting helpers.
+//! Responsibility: encode arbitrary IC wire bytes as lowercase hexadecimal.
 //! Does not own: artifact traversal, topology canonicalization, or validation.
-//! Boundary: converts bytes and digests into lowercase SHA-256 hex strings.
-
-use sha2::{Digest, Sha256};
-
-/// Compute the lowercase SHA-256 hex digest for one byte slice.
-#[must_use]
-pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
-    hex_bytes(Sha256::digest(bytes))
-}
+//! Boundary: formats byte fields; raw SHA-256 identity belongs to Host Artifacts.
 
 /// Encode bytes as lowercase hexadecimal without allocation beyond output.
 #[must_use]

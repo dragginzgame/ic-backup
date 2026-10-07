@@ -6,7 +6,7 @@ use crate::{
         JournalLock, JournalLockError, PersistenceError, read_json, write_json_durable,
     },
 };
-use sha2::{Digest, Sha256};
+use ic_host_artifacts::artifact::Sha256Digest;
 use std::{
     fs::{self, File},
     io,
@@ -44,7 +44,7 @@ impl BackupLayoutGuard {
         let name = root
             .file_name()
             .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidInput))?;
-        let key = format!("{:x}", Sha256::digest(name.as_encoded_bytes()));
+        let key = Sha256Digest::compute(name.as_encoded_bytes()).to_string();
         let lock = JournalLock::acquire(&parent.join(format!(".ic-backup-layout-{key}")))?;
         let directory = open_directory(&root)?;
         Ok(Self {

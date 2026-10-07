@@ -1,6 +1,8 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
 
+mod support;
+
 mod upload_data_observation;
 mod upload_observation;
 mod upload_provider;
@@ -27,25 +29,14 @@ use ic_management_canister_types::{
     UploadCanisterSnapshotDataArgs, UploadCanisterSnapshotMetadataResult,
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::PathBuf};
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 const TOKEN: &str = "original-source-token";
 const DESTINATION: &[u8] = &[21, 0, 255];
 
 fn root(lane: &str) -> PathBuf {
-    let root = std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-upload-{lane}-{}-{}",
-        std::process::id(),
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let root = support::temp_root(&format!("ic-backup-public-upload-{lane}"));
     fs::create_dir_all(root.join("artifacts")).unwrap();
     root
 }

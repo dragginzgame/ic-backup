@@ -1,5 +1,7 @@
 //! Public snapshot-read binding and lost-observation recovery; no IC backend.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -18,10 +20,7 @@ use ic_backup::{
     ports::snapshot_read::{SnapshotReadProvider, SnapshotReadProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
@@ -74,24 +73,12 @@ impl SnapshotReadProvider for LocalFixtureProvider {
     }
 }
 
-fn temp_root() -> std::path::PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-snapshot-read-{}-{nonce}",
-        std::process::id()
-    ))
-}
-
 #[test]
 fn reopens_spent_mutation_and_lost_observation_denies_stale_and_revoked_read_without_retry() {
     let mutation_wire = wire(IcManagementMethodRecord::TakeCanisterSnapshot);
     let read_wire = wire(IcManagementMethodRecord::ListCanisterSnapshots);
     let plan = plan(&mutation_wire);
-    let root = temp_root();
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-backup-public-snapshot-read");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_operation_plan(&layout, &plan).unwrap();
     let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();

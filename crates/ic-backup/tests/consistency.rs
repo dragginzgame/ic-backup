@@ -1,5 +1,7 @@
 //! Public original-guarantee and retained-obligation recovery; no application/IC backend.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord, consistency::*, operation_plan::OperationPlanRecord,
@@ -13,11 +15,7 @@ use ic_backup::{
     ports::consistency::{ConsistencyProvider, ConsistencyProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
@@ -53,16 +51,6 @@ fn fence() -> ApplicationFenceEvidence {
         external_work: hash("cd"),
         drained_work: hash("de"),
     }
-}
-fn temp_root() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-consistency-{}-{nonce}",
-        std::process::id()
-    ))
 }
 // Independent native input exercises the port; it does not implement management/fencing.
 struct LocalFixtureProvider {
@@ -110,8 +98,7 @@ fn assert_spent(journal: &AttemptJournalGuard<'_>, mutation: u32, observation: u
 #[test]
 fn retains_original_guarantee_and_fence_obligation_across_stale_results_failures_and_reopen() {
     let plan = plan();
-    let root = temp_root();
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-backup-public-consistency");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_operation_plan(&layout, &plan).unwrap();
     let requirement = ConsistencyRequirementRecord::new(

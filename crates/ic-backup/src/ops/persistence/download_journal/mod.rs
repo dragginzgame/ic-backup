@@ -27,7 +27,7 @@ use super::{
 };
 use crate::{
     model::{
-        artifacts::ArtifactChecksumRecord,
+        artifacts::{ArtifactChecksumRecord, canonical_hash},
         download_journal::{
             ArtifactStateRecord, DownloadArtifactRequest, DownloadJournalRecord,
             DownloadJournalRecordError, MAX_DOWNLOAD_JOURNAL_BYTES,
@@ -90,13 +90,12 @@ impl<'a> DownloadJournalGuard<'a> {
         expected_intent: &str,
     ) -> Result<Self, DownloadJournalError> {
         layout.check_root()?;
-        let expected = ArtifactChecksumRecord::from_hash(expected_intent)
-            .map_err(DownloadJournalRecordError::from)?;
+        let expected = canonical_hash(expected_intent).map_err(DownloadJournalRecordError::from)?;
         let path = layout.root().join(JOURNAL_FILE);
         let lock = JournalLock::acquire(&path)?;
         let record: DownloadJournalRecord = read_json(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         check_size(&record)?;
-        if record.intent() != expected.hash() {
+        if record.intent() != expected {
             return Err(DownloadJournalError::IntentMismatch);
         }
         Ok(Self {

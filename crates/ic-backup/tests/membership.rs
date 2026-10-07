@@ -1,5 +1,7 @@
 //! Public integration binding and local recovery; no current IC membership is certified.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -13,10 +15,7 @@ use ic_backup::{
     ports::membership::{MembershipProvider, MembershipProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).expect("bounded exact digest")
@@ -61,15 +60,7 @@ impl MembershipProvider for LocalFixtureProvider {
 
 #[test]
 fn binds_external_provider_to_reopened_original_plan_without_resetting_spent_allowance() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-membership-{}-{nonce}",
-        std::process::id()
-    ));
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-backup-public-membership");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let original = plan();
     let intent = original.digest();

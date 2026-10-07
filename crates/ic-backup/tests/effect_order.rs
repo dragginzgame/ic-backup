@@ -1,29 +1,17 @@
 //! Public local graph/progress journey; no IC effects, receipt qualification or dispatch.
 
+mod support;
+
 use ic_backup::{
     model::effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
     ops::persistence::{BackupLayoutGuard, create_effect_graph, read_effect_graph},
     policy::effect_order::{EffectOrderError, EffectProgressRequest, readiness},
 };
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[test]
 fn retained_graph_projects_causal_progress_without_rewriting_original_dependencies() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-effect-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("layout");
+    let root = support::temp_root("ic-backup-public-effect");
     let record = EffectGraphRecord::new(
         [(10, vec![]), (20, vec![10]), (30, vec![20])]
             .into_iter()

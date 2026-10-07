@@ -110,6 +110,32 @@ mkdir -p "$CONSUMER/target"
 printf 'retained evidence\n' >"$CONSUMER/target/evidence"
 verify >"$FIXTURE/valid.log" 2>&1
 
+# Qualify the bootstrap against this consumer's exact file set. The inspected
+# helper must never execute, even when it would falsely approve every payload.
+for changed in helper-only helper-and-payload; do
+    printf '#!/usr/bin/env bash\nprintf "executed\\n" > %q\nexit 0\n' \
+        "$CONSUMER/target/helper-executed" > "$CONSUMER/scripts/ci/verify-file-checksum.sh"
+    chmod +x "$CONSUMER/scripts/ci/verify-file-checksum.sh"
+    if [[ "$changed" == helper-and-payload ]]; then
+        printf '\nchanged payload\n' >> "$CONSUMER/docs/principles/README.md"
+    fi
+    expect_rejection "$changed"
+    [[ ! -e "$CONSUMER/target/helper-executed" ]]
+    reset_consumer
+done
+
+# The reviewed governance roster must be closed inside the exported consumer,
+# without borrowing linked documents from the upstream checkout.
+governance_documents=()
+while IFS= read -r path || [[ -n "$path" ]]; do
+    [[ -f "$CONSUMER/$path" && ! -L "$CONSUMER/$path" ]]
+    case "$path" in
+        *.md) governance_documents[${#governance_documents[@]}]="$path" ;;
+    esac
+done < "$CONSUMER/scripts/distribution/governance-files.txt"
+perl "$ROOT/scripts/ci/check-documentation-links.pl" --root "$CONSUMER" \
+    "${governance_documents[@]}" > "$FIXTURE/governance-links.log" 2>&1
+
 printf '\nchanged bytes\n' >>"$CONSUMER/docs/principles/README.md"
 expect_rejection changed-bytes
 reset_consumer

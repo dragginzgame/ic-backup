@@ -23,7 +23,7 @@ pub(super) fn check_json_size(
     value: &impl Serialize,
     max_bytes: u64,
 ) -> Result<(), PersistenceError> {
-    let mut writer = ic_host_tools::artifact::BoundedWriter::new(io::sink(), max_bytes);
+    let mut writer = ic_host_artifacts::artifact::BoundedWriter::new(io::sink(), max_bytes);
     let result = serde_json::to_writer_pretty(&mut writer, value);
     if writer.limit_exceeded() {
         return Err(PersistenceError::RecordTooLarge { limit: max_bytes });
@@ -69,7 +69,7 @@ where
 {
     #[cfg(unix)]
     {
-        let bytes = ic_host_tools::artifact::read_file_no_follow(
+        let bytes = ic_host_fs::read::read_file_no_follow(
             path,
             usize::try_from(max_bytes).unwrap_or(usize::MAX),
         )
@@ -85,10 +85,10 @@ where
 
 #[cfg(unix)]
 fn record_read_error(
-    error: ic_host_tools::artifact::ArtifactError,
+    error: ic_host_artifacts::artifact::ArtifactError,
     max_bytes: u64,
 ) -> PersistenceError {
-    use ic_host_tools::artifact::ArtifactError;
+    use ic_host_artifacts::artifact::ArtifactError;
     match error {
         ArtifactError::Io(error) => PersistenceError::Io(error),
         ArtifactError::NotRegularFile => PersistenceError::Io(io::Error::new(

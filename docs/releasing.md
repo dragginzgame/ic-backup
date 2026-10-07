@@ -117,11 +117,14 @@ The shared runner alone stages the four explicit release files, records the exac
 index tree, creates `Release X.Y.Z` and annotated `vX.Y.Z`, and pushes exactly:
 
 ```bash
-git push --no-follow-tags --atomic "$remote" \
+git push --no-follow-tags --atomic -- "$destination" \
   "$push_source:refs/heads/$branch" "refs/tags/v$candidate:refs/tags/v$candidate"
 ```
 
-For a new release, `push_source` is HEAD. Recovery of an older release selects its
+The runner captures exactly one push URL and checks it again after validation and
+before dispatch. A changed or additional URL rejects; dispatch uses the captured
+URL rather than resolving the remote name again. For a new release, `push_source`
+is HEAD. Recovery of an older release selects its
 exact commit, preserving a verified remote descendant tip when publishing a missing
 tag. Newer fixes receive their own fresh validation before the next release push.
 Unknown/diverged history stops; no branch is rewound. This disables implicit tag

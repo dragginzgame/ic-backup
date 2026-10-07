@@ -1,5 +1,7 @@
 //! Public byte-reply recovery without remote observations or automatic settlement.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ChecksumError,
@@ -15,10 +17,7 @@ use ic_backup::{
 };
 use ic_management_canister_types::Snapshot;
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn request(method: IcManagementMethodRecord, target: &str) -> IcManagementRequestRecord {
     IcManagementRequestRecord::new(IcManagementRequest {
@@ -35,18 +34,7 @@ fn request(method: IcManagementMethodRecord, target: &str) -> IcManagementReques
     reason = "one linear public recovery journey keeps original bytes, spending and replay assertions together"
 )]
 fn retains_original_spending_and_reply_bytes_across_reopen_and_decode_failures() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-reply-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("private fixture layout");
+    let root = support::temp_root("ic-backup-public-reply");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     let capture = request(
         IcManagementMethodRecord::TakeCanisterSnapshot,

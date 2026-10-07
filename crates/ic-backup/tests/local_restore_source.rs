@@ -1,5 +1,7 @@
 //! Public exact local source recovery preserves spent attempts, fence and source references.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -18,23 +20,9 @@ use ic_backup::{
     },
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
-fn root() -> PathBuf {
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-local-source-{}-{}",
-        std::process::id(),
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ))
-}
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
 }
@@ -118,7 +106,7 @@ fn retain_durable_source<'a>(
 
 #[test]
 fn fresh_local_source_verification_reopens_without_new_spending_or_releasing_obligations() {
-    let root = root();
+    let root = support::temp_root("ic-backup-public-local-source");
     let staging = root.join(format!("source/artifacts/{TARGET}.tmp"));
     fs::create_dir_all(&staging).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
@@ -196,7 +184,7 @@ fn fresh_local_source_verification_reopens_without_new_spending_or_releasing_obl
 
 #[test]
 fn private_restore_copy_recovers_with_source_trees_absent_and_original_obligations_retained() {
-    let root = root();
+    let root = support::temp_root("ic-backup-public-local-source");
     let staging = root.join(format!("source/artifacts/{TARGET}.tmp"));
     fs::create_dir_all(&staging).unwrap();
     fs::create_dir(root.join("restore")).unwrap();

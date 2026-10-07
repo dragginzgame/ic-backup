@@ -1,7 +1,7 @@
 //! Immutable original restore/source declarations; no current safety or fence authority.
 
 use crate::model::{
-    artifacts::{ArtifactChecksumRecord, ChecksumError},
+    artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
     operation_plan::OperationPlanRecord,
 };
 use serde::{Deserialize, Serialize};
@@ -81,12 +81,8 @@ impl TryFrom<RequirementFields> for RestoreSafetyRequirementRecord {
         validate_lane(fields.safety, fields.expected_fence.as_ref())?;
         Ok(Self {
             version: 1,
-            plan_intent: ArtifactChecksumRecord::from_hash(&fields.plan_intent)?
-                .hash()
-                .into(),
-            source_plan_intent: ArtifactChecksumRecord::from_hash(&fields.source_plan_intent)?
-                .hash()
-                .into(),
+            plan_intent: canonical_hash(&fields.plan_intent)?,
+            source_plan_intent: canonical_hash(&fields.source_plan_intent)?,
             source_artifacts: fields.source_artifacts,
             safety: fields.safety,
             expected_fence: fields.expected_fence,

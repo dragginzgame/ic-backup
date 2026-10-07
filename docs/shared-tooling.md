@@ -49,20 +49,97 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 56-file snapshot selects committed Shared Tooling 0.1.11 at
+The current 58-file snapshot selects committed Shared Tooling 0.1.13 at
+`e378671d90afa237ff63a4b0e3b9551eb2c222b6`, matching inspected remote main.
+It adds [the Rust workspace rule](../rules/rust-workspaces.md) and refreshes its
+baseline, dependency, hook and governance-roster links together. The sole new
+selected path is `rules/rust-workspaces.md`. Every roster document and local link
+resolves inside the exported consumer.
+
+IC Backup already conforms: the root is virtual with explicit resolver 3, the
+sole maintained member is `crates/ic-backup`, metadata and dependencies inherit
+from the workspace, and `Cargo.lock` remains at the root. Locked offline Cargo
+metadata and a source manifest inventory independently establish these facts.
+The inventory excludes Cargo's actual selected build-output directory; retained
+scratch projects and historical fixtures remain evidence. No package relocation,
+independent workspace or layout exception is needed.
+
+The exporter refused to overwrite the uncommitted 0.1.12 adoption. Its originals
+were retained, and a clean isolated checkout exported the reviewed file set into
+a disposable consumer. Reconciliation checked every existing destination against
+its preserved original, then copied only exact committed bytes and modes. No
+vendored patches or sibling edits were made.
+
+Fresh Linux exported-governance/snapshot regressions pass. Locked offline metadata,
+formatting, dependency inheritance, document links and exact snapshot checks are
+recorded in [the current review](shared-tooling-review.json) under
+`target/shared-tooling-050-0113-review`. Upstream's
+[exact-source CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37581058940)
+passes Linux, both native macOS portable-regression jobs and lint checks. Native
+consumer execution remains separate; the earlier released command-custody finding
+in [issue #13](https://github.com/dragginzgame/ic-backup/issues/13) is unaffected.
+
+This governance refresh joins the existing 0.5.0 draft without changing package
+versions, dependencies, product Rust bytes or the released receipt. The public
+repository description remains accurate. Work is uncommitted; no release or live
+effect is performed.
+
+### Retained 57-file adoption
+
+The earlier 57-file snapshot selected committed Shared Tooling 0.1.12 at
+`33c2a6f0018a94915f819ff219e270500ed5b73b`, matching inspected remote main.
+It is part of the existing 0.5.0 draft; package metadata, lockfile and the released
+receipt remain 0.4.2. See [the adoption review](shared-tooling-review.json) and
+[the current handoff](status/current.md) for exact source and qualification.
+
+The committed exporter ran from a clean isolated checkout of that revision. The
+reviewed file set adds only `scripts/distribution/governance-files.txt`; every
+listed governance document, including the already selected tag-maintenance guide,
+is present and its local links resolve inside a disposable exported consumer.
+At that inspection, uncommitted sibling changes, including the proposed Rust
+workspace rule, were excluded. The rule is now adopted from committed 0.1.13
+above, with the existing package placement preserved.
+
+Snapshot verification hashes inspected bytes without executing the inspected
+checksum helper. Consumer fixtures reject helper-only and helper-plus-payload
+corruption and prove that the substituted helper never ran. Release dispatch uses
+the single captured destination URL, rechecked after validation and before push.
+The updated consumer substitute admits the exact URL and branch/tag refspecs;
+canonical shared cases cover within-attempt replacement/addition and exact retry.
+Existing source, receipt, lost-reply recovery and publication boundaries remain.
+
+The baseline and maintenance rule are refreshed together. Relevant issue creation,
+comments, updates, assignment, closure and reopening are authorized across
+repositories when justified by evidence. Sibling file edits and release effects
+retain their separate authority requirements. Local product, validation and
+release restrictions remain in `AGENTS.md`.
+
+Fresh Linux snapshot, release-adapter, shared-runner, hook and shell checks pass.
+Upstream's [exact-source CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37511845192)
+passes Linux, both native macOS portable-regression jobs and lint checks. This
+uncommitted consumer has no native CI result. Released 0.4.2 main CI passes, but
+its separate tag CI fails the command-custody test on both macOS hosts; that
+finding remains independently owned by
+[issue #13](https://github.com/dragginzgame/ic-backup/issues/13).
+Source inputs, prior snapshot, export and focused logs remain under
+`target/shared-tooling-050-0112-review`. Product Rust source, manifests and lockfile
+are unchanged by this tooling batch. No versions, commits, releases or live effects
+are performed.
+
+### Retained 56-file adoption
+
+The earlier 56-file snapshot selected committed Shared Tooling 0.1.11 at
 `46c02774a8335cb3949d6f04284c4f53375353c1`, matching inspected remote main.
-The compatible pending batch selects 0.4.2; package metadata, lockfile and receipt
-remain at released 0.4.1. See
+At that inspection, the compatible pending batch selected 0.4.2; package
+metadata, lockfile and receipt remained at released 0.4.1. See
 [the adoption review](shared-tooling-review.json) and
 [the current handoff](status/current.md) for exact local and native evidence.
 Uncommitted sibling work is inspected separately and never becomes inherited
 policy or a vendored patch.
 
-The baseline and maintenance rule are refreshed together. Authorized local fixes
-are applied in the working tree and receive focused checks. Findings are reported
-to their owning repository after searching its issues; that reporting authority
-does not authorize sibling source edits, issue closure or release effects. The
-local product, validation and release restrictions remain in `AGENTS.md`.
+That review adopted the earlier baseline and maintenance rule together and
+retained local product, validation and release restrictions. The current baseline
+above supersedes its narrower standing issue-reporting authority.
 
 The shared logger now distinguishes Rust `error::` names and ordinary failure
 context from actual diagnostics. The finalizer compares large version components
@@ -75,8 +152,8 @@ Bash 3.2 tooling steps. Its overlapping local refresh, partial-stage and install
 fixtures are removed; the distinct formatter exit-status case remains local.
 ARM's subsequent full gate fails in an independent fence-reconciliation fixture,
 so passing tooling milestones are not described as complete native CI success.
-Current 0.1.11 upstream CI and this uncommitted consumer's native checks remain
-unqualified. Original inputs and fresh focused evidence are retained under
+At that inspection, 0.1.11 upstream CI and the uncommitted consumer's native
+checks remained unqualified. Original inputs and fresh focused evidence are retained under
 `target/shared-tooling-042-0111-review`.
 
 ### Retained 52-file adoption
@@ -465,9 +542,9 @@ Source adoption does not establish that the earlier native failure is resolved.
 The complete compatible batch keeps the single 0.4.1 draft and leaves package
 versions, dependency selections and the released receipt unchanged.
 
-## Shared Tooling 0.1.10 adoption
+## Retained Shared Tooling 0.1.10 adoption
 
-The current 56-file snapshot binds exact committed
+The earlier 56-file snapshot bound exact committed
 `21f3ec3dd97f2968c9f0b08924451bb2f71770d1` (0.1.10), matching reviewed clean
 source and remote main. Earlier dirty work, snapshot/review inputs and source
 qualifications remain retained. Export used clean private committed checkouts;

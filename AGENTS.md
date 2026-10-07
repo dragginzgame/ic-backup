@@ -49,7 +49,8 @@ into an issue tracker or release authority.
 ## Current implementation scope
 
 - The maintainer authorized Rust repository setup following `ic-delegated-auth`
-  and `ic-blob-storage`. The root is workspace-only; the initial library lives
+  and `ic-blob-storage`. The root is workspace-only under the
+  [shared workspace layout](rules/rust-workspaces.md); the initial library lives
   in `crates/ic-backup/`. Add transport and CLI packages when their behavior is
   implemented, rather than creating placeholder packages.
 - The repository foundation does not qualify backup/restore or complete B1.
@@ -355,13 +356,17 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   Never feed saturated summaries or diagnostic samples into exact spending,
   completion, receipt, retry, fresh-authority or terminal/release admission. Keep
   the IC instruction-reader feature absent from the host implementation.
-- Bounded Unix JSON record reads reuse registry `ic-host-tools` regular-file
+- Bounded Unix JSON record reads reuse registry `ic-host-fs` regular-file
   admission. Preserve existing record limits, JSON decoding and typed persistence
   errors, including nonblocking FIFO rejection and final-component no-follow.
   Caller-selected parents, confinement, stable byte custody, durable publication,
   locks/journals and command descriptor inheritance keep their local owners.
-  This dependency provides no IC effect, retry or fresh authority. Qualify the
+  This dependency provides no IC effect, paid retry or fresh authority. Qualify the
   actual locked graph and reader on supported hosts; no sibling path patch exists.
+  Raw identities, hashing/copying and record output limits use `ic-host-artifacts`.
+  Public `checksum_reader` retries Interrupted locally; callers own blocking and
+  timeouts. Preserve other original IO errors, invalid-count refusal, canonical
+  checksum records and local directory digest framing/private publication owners.
 
 - Metadata-upload inventory observations bind the full original source/upload plan,
   exact list bytes and both already pending attempt IDs. Reuse canonical observation

@@ -1,5 +1,7 @@
 //! External public-API accounting journey using local receipts; no IC backend.
 
+mod support;
+
 use ic_backup::{
     model::attempt_journal::{
         AttemptAuthorityRecord, AttemptBudgetRecord, AttemptJournalRecordError,
@@ -8,25 +10,11 @@ use ic_backup::{
     },
     ops::persistence::{AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard},
 };
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[test]
 fn exhausted_pending_attempt_reconciles_under_the_original_public_authority() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-attempt-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("layout");
+    let root = support::temp_root("ic-backup-public-attempt");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclude other layout users");
     let authority = AttemptAuthorityRecord::new(
         OperationBindingRecord::new(&OperationBindingRequest {

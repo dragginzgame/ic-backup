@@ -1,5 +1,7 @@
 //! Public retained-baseline comparison without capture attribution or settlement.
 
+mod support;
+
 use ic_backup::{
     model::{
         attempt_journal::AttemptJournalRecordError,
@@ -15,10 +17,7 @@ use ic_backup::{
 };
 use ic_management_canister_types::Snapshot;
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn request(method: IcManagementMethodRecord, target: &str) -> IcManagementRequestRecord {
     IcManagementRequestRecord::new(IcManagementRequest {
@@ -48,18 +47,7 @@ fn wire(ids: &[u8]) -> Vec<u8> {
     reason = "one public recovery journey retains baseline, observation bytes and original spent authority together"
 )]
 fn singleton_and_ambiguous_deltas_preserve_pending_capture_and_original_evidence() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-delta-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("owned fixture");
+    let root = support::temp_root("ic-backup-public-delta");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     let capture = request(
         IcManagementMethodRecord::TakeCanisterSnapshot,

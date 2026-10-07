@@ -1,5 +1,7 @@
 //! Public local settlement replay retains fence/source obligations; no provider or IC effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -20,24 +22,10 @@ use ic_backup::{
     },
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
-}
-fn temp_root() -> PathBuf {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-settlement-{}-{nanos}",
-        std::process::id()
-    ))
 }
 fn plan() -> OperationPlanRecord {
     serde_json::from_value(json!({"version":1,
@@ -52,7 +40,7 @@ fn plan() -> OperationPlanRecord {
 }
 #[test]
 fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fresh_calls() {
-    let root = temp_root();
+    let root = support::temp_root("ic-backup-public-settlement");
     fs::create_dir_all(root.join("source")).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
     let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
@@ -175,7 +163,7 @@ fn retain_originals(
 
 #[test]
 fn immutable_download_manifest_replay_retains_unfinished_restore_references() {
-    let root = temp_root();
+    let root = support::temp_root("ic-backup-public-settlement");
     fs::create_dir_all(root.join("source")).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
     let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();

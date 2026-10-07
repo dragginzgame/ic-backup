@@ -1,5 +1,7 @@
 //! Local metadata evidence replay retains consumed authority; no IC effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
@@ -13,10 +15,7 @@ use ic_backup::{
     },
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[test]
 #[expect(
@@ -24,15 +23,7 @@ use std::{
     reason = "one original byte/spending/reopen journey retains all custody assertions together"
 )]
 fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_release() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .unwrap()
-        .join(format!("ic-backup-metadata-{}-{nonce}", std::process::id()));
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-backup-metadata");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let capture = IcManagementRequestRecord::new(IcManagementRequest {
         method: IcManagementMethodRecord::TakeCanisterSnapshot,

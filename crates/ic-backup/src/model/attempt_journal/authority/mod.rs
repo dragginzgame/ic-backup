@@ -1,7 +1,7 @@
 //! Immutable operation identity and finite attempt allowance; no fresh authority.
 
 use super::AttemptJournalRecordError;
-use crate::model::artifacts::ArtifactChecksumRecord;
+use crate::model::artifacts::{ArtifactChecksumRecord, canonical_hash};
 use serde::{Deserialize, Serialize};
 
 /// Maximum total mutation and reconciliation-observation attempts per journal.
@@ -73,15 +73,15 @@ impl OperationBindingRecord {
     /// Rejects malformed principal text or SHA-256 digest fields.
     pub fn new(request: &OperationBindingRequest) -> Result<Self, AttemptJournalRecordError> {
         Ok(Self {
-            intent: super::canonical_hash(&request.intent)?,
+            intent: canonical_hash(&request.intent)?,
             operation_sequence: request.operation_sequence,
-            network: super::canonical_hash(&request.network)?,
+            network: canonical_hash(&request.network)?,
             caller: crate::model::principal::canonical_text(&request.caller)
                 .ok_or(AttemptJournalRecordError::InvalidPrincipal)?,
             target: crate::model::principal::canonical_text(&request.target)
                 .ok_or(AttemptJournalRecordError::InvalidPrincipal)?,
-            release: super::canonical_hash(&request.release)?,
-            request: super::canonical_hash(&request.request)?,
+            release: canonical_hash(&request.release)?,
+            request: canonical_hash(&request.request)?,
         })
     }
     /// Read immutable intent identity.

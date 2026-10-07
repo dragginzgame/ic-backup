@@ -1,5 +1,7 @@
 //! Native metadata/data replay preserves exact original spending and retention.
 
+mod support;
+
 use ic_backup::{
     model::{
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
@@ -15,10 +17,7 @@ use ic_backup::{
 use ic_management_canister_types::SnapshotDataKind;
 use serde::Deserialize;
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[derive(Deserialize)]
 struct Case {
@@ -62,16 +61,7 @@ fn every_registered_data_kind_reopens_exact_evidence_without_settlement_or_new_s
     reason = "one original evidence/reopen journey keeps all spending and retention assertions together"
 )]
 fn retained_case(case: Case, raw_metadata: &[u8]) {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-data-{}-{}-{nonce}",
-        std::process::id(),
-        case.name
-    ));
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root(&format!("ic-backup-data-{}", case.name));
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let capture = IcManagementRequestRecord::new(IcManagementRequest {
         method: IcManagementMethodRecord::TakeCanisterSnapshot,

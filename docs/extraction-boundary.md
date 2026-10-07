@@ -104,12 +104,23 @@ terminal/custody behavior from unimplemented generic acquisition/release.
 Its JSON fields are exactly `algorithm` and `hash`; missing/unknown fields reject.
 The algorithm is exactly `sha256`. Digests have 64 hexadecimal digits and are
 normalized to lowercase during construction/deserialization. Record equality
-uses canonical values. Validation returns typed errors. No predecessor readers
+uses canonical values. ASCII case normalization precedes shared raw digest parsing;
+typed malformed-hash errors retain the original input. No predecessor readers
 or alternative schema generation is maintained.
 
-`ops::artifacts` streams checksums through a 64 KiB buffer. Private staging copies
-delegate constant-memory byte copying and SHA-256 capture to `ic-host-tools`,
-retry interrupted reads and retain partial output on input or sink failure.
+Raw digest-text fields share the same crate-internal normalizer without constructing
+a checksum record solely for string projection. Plan, attempt identity/history,
+inventory, requirement, download and restore-reference boundaries retain their
+original typed errors, validation order and canonical bytes. Journal reopen still
+admits caller-supplied intent before locking/reading retained evidence.
+
+`ops::artifacts` delegates raw stream checksums and private staging copies to
+`ic-host-artifacts` using constant working memory. Both helpers retry interrupted
+reads. Copying retains partial output on input or sink failure; neither helper
+returns a complete checksum on failure.
+The IC artifact verifier supplies its admitted descriptor length to the shared
+bounded hash owner and checks the returned byte count; short and excess streams
+reject as `FileShape`. Descriptor/path identity checks remain independent.
 The copy has no new total artifact-size ceiling. Unix traversal opens
 descriptors without following artifact symlinks, checks actual entry types and
 rejects traversal components and special entries. Directory digests preserve
@@ -150,7 +161,7 @@ remains separate. See [the shared-tool adoption review](ic-host-tools-adoption.j
 
 `read_json` requires an explicit byte limit, reads at most that limit plus one,
 and rejects excess bytes before decoding. Unix reads delegate to registry
-`ic-host-tools::artifact::read_file_no_follow`, using final-component no-follow,
+`ic-host-fs::read::read_file_no_follow`, using final-component no-follow,
 nonblocking descriptor admission and bounded, fallibly allocated regular-file
 reads. Local projection retains exact `RecordTooLarge` limits, original IO errors
 and `InvalidInput` for nonregular entries; empty bytes still fail JSON decoding.

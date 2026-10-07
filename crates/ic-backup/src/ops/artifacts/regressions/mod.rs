@@ -2,6 +2,72 @@ use super::*;
 use crate::test_support::temp_path;
 use std::fs;
 
+#[test]
+fn reader_hash_retries_interruption_and_preserves_exact_empty_and_multibuffer_bytes() {
+    use std::io::{Cursor, Read};
+
+    struct InterruptedSource {
+        bytes: Cursor<Vec<u8>>,
+        reads: usize,
+    }
+    impl Read for InterruptedSource {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            self.reads += 1;
+            if self.reads == 1 || self.reads == 3 {
+                return Err(io::ErrorKind::Interrupted.into());
+            }
+            self.bytes.read(output)
+        }
+    }
+    for bytes in [Vec::new(), b"abc".to_vec(), vec![0x9a; 200_001]] {
+        let mut source = InterruptedSource {
+            bytes: Cursor::new(bytes.clone()),
+            reads: 0,
+        };
+        let checksum = checksum_reader(&mut source).unwrap();
+        assert_eq!(checksum, ArtifactChecksumRecord::from_bytes(&bytes));
+        assert_eq!(source.bytes.position(), u64::try_from(bytes.len()).unwrap());
+        if bytes == b"abc" {
+            assert_eq!(
+                checksum.hash(),
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+            );
+            assert_eq!(source.reads, 4); // Interruption, bytes, interruption, EOF.
+        }
+    }
+}
+
+#[test]
+fn reader_hash_preserves_io_errors_and_rejects_invalid_counts_without_a_checksum() {
+    use std::io::{Cursor, Read};
+
+    struct FailingSource(Cursor<Vec<u8>>);
+    impl Read for FailingSource {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            if self.0.position() == self.0.get_ref().len() as u64 {
+                return Err(io::Error::from_raw_os_error(13));
+            }
+            self.0.read(output)
+        }
+    }
+    struct InvalidSource;
+    impl Read for InvalidSource {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            Ok(output.len() + 1)
+        }
+    }
+    for bytes in [Vec::new(), b"retained prefix".to_vec()] {
+        let mut source = FailingSource(Cursor::new(bytes.clone()));
+        assert!(
+            matches!(checksum_reader(&mut source), Err(ArtifactError::Io(error)) if error.raw_os_error() == Some(13))
+        );
+        assert_eq!(source.0.position(), u64::try_from(bytes.len()).unwrap());
+    }
+    assert!(
+        matches!(checksum_reader(&mut InvalidSource), Err(ArtifactError::Io(error)) if error.kind() == io::ErrorKind::InvalidData)
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn staging_copy_retries_interruption_and_preserves_multichunk_identity() {
@@ -93,7 +159,7 @@ fn staging_copy_preserves_partial_output_and_original_source_or_sink_error() {
 #[cfg(unix)]
 #[test]
 fn staging_copy_rejects_impossible_stream_counts_without_panicking_or_discarding_prefix() {
-    use ic_host_tools::artifact::WriterError;
+    use ic_host_artifacts::artifact::WriterError;
     use std::io::{Read, Write};
 
     struct InvalidSource;

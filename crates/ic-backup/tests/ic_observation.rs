@@ -1,5 +1,7 @@
 //! Native reserved-observation recovery evidence; no simulated or live IC effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -15,11 +17,7 @@ use ic_backup::{
     ports::ic_observation::{IcObservationProvider, IcObservationProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::Path,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::Path};
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 fn payload(method: Method) -> IcManagementRequestRecord {
@@ -125,15 +123,7 @@ fn retained_case(
         "selected_targets":[TARGET],"graph":{"version":1,"nodes":[{"operation_sequence":42,"depends_on":[]}]},
         "operations":[{"operation_sequence":42,"target":TARGET,"request":mutation.digest().hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
     })).unwrap();
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .unwrap()
-        .join(format!("ic-observation-{}-{nonce}", std::process::id()));
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-observation");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_operation_plan(&layout, &plan).unwrap();
     fs::write(root.join("mutation.arguments"), mutation.arguments()).unwrap();

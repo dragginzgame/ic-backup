@@ -1,7 +1,7 @@
 //! Immutable declared consistency choice; never current fence evidence.
 
 use crate::model::{
-    artifacts::{ArtifactChecksumRecord, ChecksumError},
+    artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
     operation_plan::OperationPlanRecord,
 };
 use serde::{Deserialize, Serialize};
@@ -51,9 +51,7 @@ impl TryFrom<RequirementFields> for ConsistencyRequirementRecord {
         }
         Ok(Self {
             version: 1,
-            plan_intent: ArtifactChecksumRecord::from_hash(&fields.plan_intent)?
-                .hash()
-                .into(),
+            plan_intent: canonical_hash(&fields.plan_intent)?,
             guarantee: fields.guarantee,
         })
     }

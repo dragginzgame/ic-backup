@@ -1,147 +1,94 @@
 {
-   "compatibility": "Compatible internal tooling/test cleanup selects one undated 0.4.2 draft. Package/lock/receipt and dependency selections remain released 0.4.1; no public API, CLI or schema change.",
-   "consumer_adjustment": "Failure-retention injection follows the new initial passing-tests logger case: exact child status 31, retained original Makefile, executed-child witness and passing-tests.log. Initial expected-status mismatch and its retained fixture remain evidence.",
-   "consumer_base": "04da09a5a919bbf9aa56e71eaacaf245107021d4",
+   "compatibility": "Governance-only refresh keeps the existing 0.5.0 draft and unchanged product contracts, dependencies and 0.4.2 package/lock/receipt. Root changelog content is unchanged under governance-only omission rules.",
+   "consumer_base": "654790f374f9923df9020f4812cec65e47cbe3af",
    "consumer_native": {
+      "current_uncommitted_batch": "No remote/native qualification exists",
       "evidence": [
-         "consumer-release-ci-run.json",
-         "consumer-release-ci-jobs.json",
-         "consumer-release-ci-jobs-final.json",
-         "consumer-main-ci-jobs-final.json",
-         "consumer-arm-failure.log"
+         "target/shared-tooling-050-0112-review/consumer-ci-runs.json",
+         "target/shared-tooling-050-0112-review/consumer-tag-ci-jobs.json"
       ],
-      "finding": "https://github.com/dragginzgame/ic-backup/issues/10",
-      "full_gate": "Linux passes. ARM fails separate fence-reconciliation fixture AlreadyExists at line 97; Intel full gate remains running at final inspection.",
-      "source": "04da09a5a919bbf9aa56e71eaacaf245107021d4",
-      "tooling": "Both explicit macOS system Bash 3.2 tooling steps pass; shared formatting checker, hook/formatter inputs and owners are unchanged by this refresh. This qualifies replacement coverage before duplicate retirement.",
-      "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37498363329"
+      "finding": "https://github.com/dragginzgame/ic-backup/issues/13",
+      "inspection_scope": "Released consumer evidence retained from previous inspection; not rerun or claimed as new-current-source qualification.",
+      "main": "https://github.com/dragginzgame/ic-backup/actions/runs/37501973677",
+      "main_result": "success",
+      "source": "654790f374f9923df9020f4812cec65e47cbe3af",
+      "tag": "https://github.com/dragginzgame/ic-backup/actions/runs/37501973053",
+      "tag_result": "Linux success; both native macOS fail command custody reacquisition with InFlight after child reap, lock.finish and guard drop. Independent finding, not repaired by tooling adoption."
    },
-   "evidence": "target/shared-tooling-042-0111-review",
-   "exporter": "Reviewed unchanged committed refresh-consumer.sh from the clean read-only Shared Tooling checkout; exact Git blobs/modes exported into declared consumer paths. Unrelated dirty documentation was preserved.",
-   "initial_failure": {
-      "cause": "New first logger regression propagates injected status 31; previous consumer expectation was status 1 from the later fail-fast case.",
-      "fixture": "target/shared-tooling-tests.KbHqZO",
-      "log": "tooling-check.log"
+   "description_review": {
+      "evidence": "target/shared-tooling-050-0112-review/consumer-description.json",
+      "result": "Current public description accurately scopes host-side local foundations and states transport/runners are not yet implemented; no update needed."
    },
-   "inspection_date": "2026-10-06",
-   "material_limits": "Uncommitted current consumer changes have no remote CI result. Actual provider/backend/authenticated attribution, complete transfer and full backup/restore remain unqualified. No versions, commits, releases, publication, sibling edits or retained-evidence cleanup.",
-   "policy_review": "Common baseline and maintenance rule adopted together. Local tracking/product/release restrictions add product obligations and are retained. Prior explicit session issue-closure authority applies to own released adoption issues; the new standing report permission alone does not authorize closures or sibling edits.",
-   "previous_review": "target/shared-tooling-042-0111-review/previous/docs/shared-tooling-review.json",
-   "previous_snapshot": "target/shared-tooling-042-0111-review/previous/.shared-tooling.snapshot",
+   "evidence": "target/shared-tooling-050-0113-review",
+   "excluded_dirty_upstream": [],
+   "exporter": "Committed exporter from a clean isolated checkout refused direct refresh of uncommitted prior adoption. Retained initial refusal; exported to a disposable Git consumer, checked all original destination bytes/modes, then reconciled exact committed snapshot blobs/modes only.",
+   "file_set_review": {
+      "addition": [
+         "rules/rust-workspaces.md"
+      ],
+      "governance_closure": "All committed roster documents and their local links resolve in disposable exported consumer, checked by actual consumer tooling regression.",
+      "previous_count": 57,
+      "removals": []
+   },
+   "initial_refusal": "target/shared-tooling-050-0113-review/initial-refresh-refusal.log",
+   "inspection_date": "2026-10-07",
+   "layout_inspection": {
+      "exception_needed": false,
+      "maintained_manifests": [
+         "Cargo.toml",
+         "crates/ic-backup/Cargo.toml"
+      ],
+      "maintained_members": [
+         "crates/ic-backup/Cargo.toml"
+      ],
+      "metadata": "/home/adam/projects/ic-backup/target/shared-tooling-050-0113-review/metadata.json",
+      "path_move_needed": false,
+      "selected_lockfile": "Cargo.lock",
+      "target_directory": "/home/adam/projects/ic-backup/target",
+      "virtual_root": "Cargo.toml"
+   },
+   "material_limits": "Uncommitted consumer delivery/native qualification is pending on issue #12. The workspace-rule source condition is now satisfied; released macOS command-custody finding #13 remains independent. No commits/tags/pushes, version changes, publication, sibling writes, live IC effects or recovery-evidence cleanup.",
+   "policy_review": "Shared baseline and linked workspace/dependency/hook rules adopted together; local instruction links the common rule. No maintained independent workspace, layout exception or package relocation is indicated. Prior product/validation/release authority remains.",
+   "previous_review": "target/shared-tooling-050-0113-review/previous/docs/shared-tooling-review.json",
+   "previous_snapshot": "target/shared-tooling-050-0113-review/previous/.shared-tooling.snapshot",
+   "product_inputs": {
+      "checked": "target/shared-tooling-050-0113-review/checked-product-inputs.json",
+      "original": "target/shared-tooling-050-0113-review/original-product-inputs.json",
+      "result": "All product Rust files, manifests, lockfile and released receipt unchanged during this adoption."
+   },
    "qualification": {
-      "consumer_release_evidence": "target/shared-release-tests.OfHU9w",
-      "consumer_release_registry": [
-         "dependency-success",
-         "nested-dependency-success",
-         "dependency-failure",
-         "nested-dependency-failure",
-         "validation-source-identity",
-         "versions",
-         "version-reader-comments",
-         "version-reader-selected",
-         "version-reader-duplicate",
-         "version-reader-failed-output",
-         "version-reader-empty",
-         "version-reader-failed-parser",
-         "notes-conflict",
-         "notes-duplicate",
-         "notes-dated",
-         "notes-historical-duplicate",
-         "notes-competing",
-         "notes-same-date",
-         "notes-unnumbered",
-         "shared-notes-empty",
-         "shared-notes-missing",
-         "shared-notes-imported",
-         "shared-notes-bumped",
-         "shared-notes-failed-output",
-         "shared-notes-empty-output",
-         "preparation",
-         "lockfile-mismatch",
-         "lockfile-duplicate",
-         "lockfile-missing",
-         "lockfile-failed-output",
-         "reject-TEST_FETCH_FAIL",
-         "reject-TEST_GATE_FAIL",
-         "reject-TEST_METADATA_FAIL",
-         "reject-TEST_DIRTY",
-         "reject-TEST_TAG_EXISTS",
-         "reject-TEST_GATE_DIRTY",
-         "reject-TEST_GATE_HEAD",
-         "reject-TEST_PREPARED_FORMAT_FAIL",
-         "staging",
-         "initial-version",
-         "release-patch",
-         "release-minor",
-         "release-major",
-         "publish-no-release",
-         "publish-tagged",
-         "publish-failure",
-         "completed-notes",
-         "completed-tag",
-         "completed-head",
-         "validation-missing",
-         "validation-member",
-         "destination-custody",
-         "lost-commit",
-         "lost-tag",
-         "lost-push",
-         "gate-retry-current-source",
-         "early-plan-retry-retention",
-         "prepared-normal-retry",
-         "older-release-explicit",
-         "older-release-patch",
-         "older-release-minor",
-         "older-release-gate-failure",
-         "selected-proof-missing",
-         "selected-proof-identity",
-         "selected-proof-remote",
-         "completed-evidence-replay",
-         "dependency-failure-conditional-status",
-         "conditional-substitute-rejections",
-         "real-index-boundaries"
+      "metadata_command": [
+         "cargo",
+         "metadata",
+         "--offline",
+         "--locked",
+         "--no-deps",
+         "--format-version",
+         "1"
       ],
-      "hook_evidence": "target/hook-tests.uXkyyn",
-      "hook_registry": [
-         "shared-formatting",
-         "formatter-failure"
+      "quality": {
+         "command": [
+            "make",
+            "fmt-check",
+            "dependency-pins-check",
+            "check-doc-links",
+            "shared-tooling-check"
+         ],
+         "log": "target/shared-tooling-050-0113-review/quality.log",
+         "status": 0
+      },
+      "retained_prior_review": "target/shared-tooling-050-0113-review/previous/docs/shared-tooling-review.json",
+      "scope": "Focused Linux metadata, source-layout inventory and actual consumer tooling/governance regressions; no compilation or broad gate. Prior release/hook/shell regressions retain their original 0.1.12 inputs.",
+      "status": "passed",
+      "tooling_command": [
+         "bash",
+         "scripts/ci/test-tooling.sh"
       ],
-      "logs": [
-         "refresh.log",
-         "tooling-check-final.log",
-         "shared-release-runner.log",
-         "consumer-release.log",
-         "focused-checks.log",
-         "documentation-final.log"
-      ],
-      "scope": "Focused Linux actual consumer checks; no broad Rust/product/release gate or IC effect",
-      "status": "passed"
+      "tooling_log": "target/shared-tooling-050-0113-review/tooling.log"
    },
-   "removed_functions": [
-      {
-         "former_file": "scripts/hooks/test-hooks.sh",
-         "local_function": "test_format_and_retry",
-         "replacement": "check-formatting-hooks.sh refresh case; exact manifest sorting, stage refresh/idempotence, locks, unrelated tracked/untracked content"
-      },
-      {
-         "former_file": "scripts/hooks/test-hooks.sh",
-         "local_function": "test_unstaged_protection",
-         "replacement": "check-formatting-hooks.sh partial Rust/manifest cases; failed hook, unchanged index/tree/file and locks"
-      },
-      {
-         "former_file": "scripts/hooks/test-hooks.sh",
-         "local_function": "test_existing_hooks",
-         "replacement": "check-formatting-hooks.sh installer conflict case"
-      },
-      {
-         "former_file": "scripts/hooks/test-hooks.sh",
-         "local_function": "test_symlink_checkout",
-         "replacement": "check-formatting-hooks.sh installer alias case"
-      }
-   ],
-   "retained_boundary": "test_formatter_failure qualifies successful prerequisites followed by exact fmt status 13 and unchanged source/index; its trigger differs from shared malformed Rust.",
-   "reviewed_diff": "0.1.10..0.1.11: baseline/maintenance standing issue reporting and working-tree repair obligations adopted together; exact string inequality in finalizer; live and summary logger classification fixes plus canonical regressions. Excluded upstream portable-retention test now writes its Bash shebang with printf; it is not a consumer dependency.",
-   "shared_revision": "46c02774a8335cb3949d6f04284c4f53375353c1",
+   "removed_functions": [],
+   "reviewed_diff": "0.1.12..0.1.13: standard virtual Rust root and crates/<existing-package-name> member layout; linked baseline, Cargo dependency, hook and governance-roster updates. No selected scripts change.",
+   "shared_revision": "e378671d90afa237ff63a4b0e3b9551eb2c222b6",
    "snapshot": ".shared-tooling.snapshot",
    "snapshot_files": [
       {
@@ -172,7 +119,7 @@
       {
          "executable": false,
          "path": "audits/README.md",
-         "sha256": "926d5a39ea62a3becd19ff0326c63987b2929d3a1a728e2a0ef8a7180824d231"
+         "sha256": "b4c691ed78e3122b548566c148f8b8bb74b06ad6ca55092516f8ce271d8b1460"
       },
       {
          "executable": false,
@@ -197,7 +144,7 @@
       {
          "executable": false,
          "path": "audits/module-cleanup.md",
-         "sha256": "d229519014823ad804070e55f7bb5316d7612e1d77a9dc8bf962d564e7b2a5e7"
+         "sha256": "ad0c56d074fb54455932bab7fcff0908dac34f000d2961caeca12616b79b778b"
       },
       {
          "executable": false,
@@ -212,7 +159,7 @@
       {
          "executable": false,
          "path": "docs/local-setup.md",
-         "sha256": "e1bf529c4610d7a26b86506a831c4c2e09d75c1e6076f527bdd2ad09027501d1"
+         "sha256": "a3f15423ea56de2e414b355533712f74bbe664ee29fcf8b8c7b1e2d91d58b79a"
       },
       {
          "executable": false,
@@ -297,12 +244,12 @@
       {
          "executable": false,
          "path": "docs/consuming-snapshots.md",
-         "sha256": "f9cc36fe8a4915d64af97f60bc0c2c7b0f7bf2e05c6862b43b543012b5830254"
+         "sha256": "dbc331c437c41f1f12a29488aecf4efa933c5b3102ebf5fc99586d7095af3008"
       },
       {
          "executable": false,
          "path": "docs/supported-hosts.md",
-         "sha256": "9573ed9ed4383b72a2b568118433454917697e346dac714452ed2074c23e731a"
+         "sha256": "d68c94daa9ea537dcd51cfff81ca888900a14098c09bc287f179b0f9d905a399"
       },
       {
          "executable": true,
@@ -312,7 +259,7 @@
       {
          "executable": true,
          "path": "scripts/ci/verify-shared-tooling-snapshot.sh",
-         "sha256": "4024efa6850788102bbfa97c471ea3b45d760e547a31b11e7c6a91a79e3eaca8"
+         "sha256": "b6764190803118331d7441233bcd6a3031c99c0c5219cc4a5c29dfb1a1040e41"
       },
       {
          "executable": true,
@@ -327,7 +274,7 @@
       {
          "executable": false,
          "path": "DRAGGINZGAME.md",
-         "sha256": "8bdc1b56702aecafe1d761e46ba68b7b695dc9ce435711288f4455a096c1e0a2"
+         "sha256": "54d5f831720a559c8afec83cd8f2f39ac3c82bf4a95d3ba336b3d82229d12800"
       },
       {
          "executable": false,
@@ -337,12 +284,12 @@
       {
          "executable": false,
          "path": "docs/releases.md",
-         "sha256": "681b830cf44aa1842ab68aeafc6e4ae8d2867fe189bbf405cbd74a6f4720d91a"
+         "sha256": "cf7aa8f7bcb7c50963e280580710468b3e9de6e8406e91c8dafb3796d8da8163"
       },
       {
          "executable": true,
          "path": "scripts/ci/run-release.sh",
-         "sha256": "cffa84575afcd74836f59f9d8db4be083010048de03c338ec2448857d85dab5e"
+         "sha256": "d7a54afb921ba7fee4a6ac1e1a4e19b94bc12b8341efdc0eb1af6e2cd3d9dbeb"
       },
       {
          "executable": true,
@@ -357,17 +304,17 @@
       {
          "executable": true,
          "path": "scripts/ci/test-release-runner.sh",
-         "sha256": "9dc85529910cc48c1a7d72ff7721b3bd772398bc34977a7511955d05b9fba786"
+         "sha256": "deac9dded8a22238e96840de7320b4d3dc0dda01302ade014d2449ce11819dad"
       },
       {
          "executable": false,
          "path": "rules/cargo-dependencies.md",
-         "sha256": "b0dfb6f6a1caf0f47f166523a3703bdd88a7667f8b0901e549620eb31adb7a7a"
+         "sha256": "f5aca44f12d4f35fa2e5beea63c202eb5d7d8e613f1ded8ecd5de4b650609e01"
       },
       {
          "executable": false,
          "path": "rules/git-hooks.md",
-         "sha256": "fcaa0fef984f57853c2672a787fc2ac3c690dcb912ed475c1c4e95453cfdf00f"
+         "sha256": "c4f38cfef8c601b390b5520a2130f09c2b58be4110f98d424ac1b8b0badc89b5"
       },
       {
          "executable": true,
@@ -382,7 +329,7 @@
       {
          "executable": false,
          "path": "rules/agent-maintenance.md",
-         "sha256": "2f87b43f236ef589bfb4b4b9115b2e6fa7d0d04d3e23af87a645735befe9094e"
+         "sha256": "89d2e3bb88e102e0b78eff6c82523079c60186b637a5f7104116bc28739769ec"
       },
       {
          "executable": true,
@@ -423,17 +370,48 @@
          "executable": true,
          "path": "scripts/ci/test-format-tools.sh",
          "sha256": "bf3ac5d22e63798ffe67539b138d277cc3364a4665babff5b494b210b1e140ce"
+      },
+      {
+         "executable": false,
+         "path": "scripts/distribution/governance-files.txt",
+         "sha256": "ae7002d8beaa7fa1de84c89b648120e5595b72e516ccf0dff01961aad5dcda5d"
+      },
+      {
+         "executable": false,
+         "path": "rules/rust-workspaces.md",
+         "sha256": "b196dba98955516d3cce300cd31dd9e4767da0188aa5da16d0f4b323e43061f5"
       }
    ],
    "upstream_ci": {
       "evidence": [
-         "upstream-ci-run.json",
-         "upstream-ci-jobs.json",
-         "upstream-ci-run-final.json"
+         "target/shared-tooling-050-0113-review/upstream-ci-runs.json",
+         "target/shared-tooling-050-0113-review/upstream-ci-jobs.json"
       ],
-      "source": "46c02774a8335cb3949d6f04284c4f53375353c1",
-      "status": "in_progress; no native or complete-gate success claimed",
-      "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37500153922"
+      "jobs": [
+         {
+            "conclusion": "success",
+            "name": "lint-and-security",
+            "status": "completed"
+         },
+         {
+            "conclusion": "success",
+            "name": "portable-regression (macos-15-intel)",
+            "status": "completed"
+         },
+         {
+            "conclusion": "success",
+            "name": "portable-regression (macos-15)",
+            "status": "completed"
+         },
+         {
+            "conclusion": "success",
+            "name": "portable-regression (ubuntu-24.04)",
+            "status": "completed"
+         }
+      ],
+      "source": "e378671d90afa237ff63a4b0e3b9551eb2c222b6",
+      "status": "completed success",
+      "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37581058940"
    },
-   "upstream_version": "0.1.11 committed source declaration; remote main matches"
+   "upstream_version": "0.1.13 committed VERSION; inspected remote main matches"
 }

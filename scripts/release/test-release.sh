@@ -208,8 +208,8 @@ case "$1" in
         echo commit >> "$TEST_EFFECTS"
         if [[ "${TEST_LOST_EFFECT:-}" == commit && ! -e target/lost-commit ]]; then touch target/lost-commit; exit 9; fi ;;
     push)
-        [[ "$#" == 6 && "$2" == --no-follow-tags && "$3" == --atomic && "$4" == origin && "$5" == *:refs/heads/main && "$6" == refs/tags/v*:refs/tags/v* ]] || exit 97
-        sha="$(resolve "${5%:refs/heads/main}")"; tag="${6%%:*}"; tag="${tag#refs/tags/}"
+        [[ "$#" == 7 && "$2" == --no-follow-tags && "$3" == --atomic && "$4" == -- && "$5" == "${TEST_DESTINATION:-https://example.invalid/no-network-release}" && "$6" == *:refs/heads/main && "$7" == refs/tags/v*:refs/tags/v* ]] || exit 97
+        sha="$(resolve "${6%:refs/heads/main}")"; tag="${7%%:*}"; tag="${tag#refs/tags/}"
         if [[ -f target/remote-head ]]; then ancestor "$(cat target/remote-head)" "$sha" || exit 1; fi
         printf '%s %s\n' "$sha" "$tag" >> target/pushes.log
         echo push >> "$TEST_EFFECTS"

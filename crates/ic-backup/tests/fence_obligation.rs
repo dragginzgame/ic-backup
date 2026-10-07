@@ -1,5 +1,7 @@
 //! Native exact obligation and acquisition recovery; no application fence or IC backend.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -19,11 +21,7 @@ use ic_backup::{
     policy::fence_obligation::acquisition_progress,
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
@@ -37,16 +35,6 @@ fn plan() -> OperationPlanRecord {
         "selected_targets":["renrk-eyaaa-aaaaa-aaada-cai"],"graph":{"version":1,"nodes":[{"operation_sequence":0,"depends_on":[]}]},
         "operations":[{"operation_sequence":0,"target":"renrk-eyaaa-aaaaa-aaada-cai","request":request.hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
     })).unwrap()
-}
-fn temp_root() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-fence-{}-{nonce}",
-        std::process::id()
-    ))
 }
 struct Originals {
     plan: OperationPlanRecord,
@@ -137,7 +125,7 @@ fn interrupted_acquisition_and_every_settled_outcome_retain_original_obligation_
         ObservationOutcomeRecord::NotApplied,
         ObservationOutcomeRecord::Uncertain,
     ] {
-        let root = temp_root();
+        let root = support::temp_root("ic-backup-public-fence");
         prepare(&root, &original);
         let path = root.join("restore/fence-obligation.json");
         let bytes = fs::read(&path).unwrap();

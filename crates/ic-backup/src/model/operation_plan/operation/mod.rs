@@ -1,6 +1,7 @@
 //! Exact declared target/request and original per-operation finite allowance.
 
-use super::{OperationPlanError, canonical_hash};
+use super::OperationPlanError;
+use crate::model::artifacts::canonical_hash;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use serde::{Deserialize, Serialize};
 

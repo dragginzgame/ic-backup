@@ -2,6 +2,8 @@
 
 #![cfg(unix)]
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ChecksumError, download_journal::DownloadArtifactRequest,
@@ -13,10 +15,7 @@ use ic_backup::{
     },
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 const ROOT: &str = "aaaaa-aa";
 const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";
@@ -41,18 +40,7 @@ fn plan() -> OperationPlanRecord {
     reason = "one public recovery journey keeps artifact verification, spending and restore retention together"
 )]
 fn fresh_verification_preserves_pending_spending_and_restore_references() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-download-integrity-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("private fixture");
+    let root = support::temp_root("ic-backup-public-download-integrity");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout custody");
     let original = plan();
     create_operation_plan(&layout, &original).expect("retain original plan");

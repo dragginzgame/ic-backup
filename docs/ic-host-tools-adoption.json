@@ -1,122 +1,286 @@
 {
   "version": 1,
   "inspection_date": "2026-10-06",
-  "kind": "maintainer-authorized shared record reads, output budgets and private staging copies",
-  "registry_package": "ic-host-tools",
-  "selected_version": "0.2.0",
-  "archive_sha256": "6491f3e87d4d7b72c7ffddae3360170c65fe0dbd26eaf1a1f0a3d2a04a029dc6",
+  "kind": "Published split Host Tooling adoption for existing local artifact and record owners",
+  "repository": "https://github.com/dragginzgame/ic-host-tooling",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
-  "repository": "https://github.com/dragginzgame/ic-host-tools",
-  "published_source_revision": "be7d73908225e73ab5babf8fbb9fe959f40d439b",
-  "reviewed_sources": [
-    {
-      "path": "src/artifact/mod.rs",
-      "sha256": "7ad27e339c9139a5d74f832831de6ec721e590835f442239d8c85d219fe9c252",
-      "scope": "Published regular-file metadata admission, shared constant-memory read traversal, independent byte limits, fallible collection and error variants."
+  "published_source_revision": "efd402e0063ccbbf8a143cc970be52ab41b1766d",
+  "packages": {
+    "ic-host-artifacts": {
+      "archive_sha256": "9fd740d1196719e49d1e73e8553fb141d0ad4766550bd9d21ce9a17382c69a4f",
+      "path_in_vcs": "crates/ic-host-artifacts",
+      "revision": "efd402e0063ccbbf8a143cc970be52ab41b1766d",
+      "sources": {
+        "src/archive/mod.rs": "0aa25f26c92962cb8d7c937a45520d70ab08cbeffcb19346b43e0c76560bd1d1",
+        "src/archive/tests.rs": "f421faa806b90ad5ae9190b31cd8be4254b0e762b5f7dfd4b673251747d5f87c",
+        "src/artifact/copy/mod.rs": "f19f7cd091b07071243aba912e39b540efc6b255dd6ab95eeec5009dacc79891",
+        "src/artifact/copy/tests.rs": "937b40f6b9a5d1095158006565409091156f2e2f247a8596b33b23255180fe3c",
+        "src/artifact/gzip/mod.rs": "19e1dbea20a1762d7b32e5e10186264703503934c6a2ac39edb670f5a4555e22",
+        "src/artifact/gzip/tests.rs": "9c8fc4e8f0eb746f340f47c8b2a9ab11fd8e091459a229587e864375f1239974",
+        "src/artifact/mod.rs": "2654ab26856127f45cc03e3f724363027fb96461443cfa88a7e2e52915cd3742",
+        "src/artifact/tests.rs": "63d48e04f56ef6208a3eab2c1fb4b2221ec3a3aea6a866aaf68631af7fd707e4",
+        "src/artifact/writer/mod.rs": "e68f3cd9081699ec327e6ce39c6d6477846815321eca3730ccfc5367de7392bf",
+        "src/artifact/writer/tests.rs": "1deed1e755d459b275cfdb0b2553d930f56980e2381b7b14325c405a54b649af",
+        "src/lib.rs": "eb2fbc7e97d2c03a714c08ce8abcb54ab302370a9bab34828ac05f7c70579af2",
+        "src/wasm/mod.rs": "a87a8b5a8d6dd1e4920cce4389822b16ee64148d871ca18835fe05794208f295",
+        "src/wasm/tests.rs": "2c6c24dab2e53e5a6f797c638c95725e9af8ab808d7490c86c655c39457c0039"
+      },
+      "version": "0.3.0"
     },
-    {
-      "path": "src/artifact/no_follow/mod.rs",
-      "sha256": "a694e905f2b1bf14554bda2d29884d35eb48fdb0a919b5aaf3eb132df9d21813",
-      "scope": "Published final-component NOFOLLOW/NONBLOCK/CLOEXEC opening and read_opened_file delegation; no ancestor confinement."
-    },
-    {
-      "path": "src/artifact/copy/mod.rs",
-      "sha256": "f19f7cd091b07071243aba912e39b540efc6b255dd6ab95eeec5009dacc79891",
-      "scope": "Copy through write_all, hash only completely accepted chunks, return no complete identity on failure and preserve partial output. Source and sink failures are distinct; no file opening, synchronization or publication."
-    },
-    {
-      "path": "src/artifact/writer/mod.rs",
-      "sha256": "e68f3cd9081699ec327e6ce39c6d6477846815321eca3730ccfc5367de7392bf",
-      "scope": "Reject entire offered buffers above remaining allowance, count successful accepted bytes and retain limit_exceeded independently of serializer IO error wrapping."
+    "ic-host-fs": {
+      "archive_sha256": "0e75921fb762e011d5cc42ed34fb3303c1a9567ebdeac069bcbfa5f0059ed44a",
+      "path_in_vcs": "crates/ic-host-fs",
+      "revision": "efd402e0063ccbbf8a143cc970be52ab41b1766d",
+      "sources": {
+        "src/durable/mod.rs": "afb3aff19d0e78c797ae005a903b82e85ac9365ffdd3059b954fe362a0063788",
+        "src/durable/tests.rs": "a20635e787e0123aff3ac080a4578699fb16e11ca176085eb295b9d5798774b6",
+        "src/lib.rs": "6e54e6dec42546e414a59a44e3f6ab2981364636803d268fff5fd5864c5207d2",
+        "src/read/mod.rs": "f82a03e12524e88059fae4e3b893a374f4eb890eaa7d8e7192bb5c729383386b",
+        "src/read/no_follow/mod.rs": "a694e905f2b1bf14554bda2d29884d35eb48fdb0a919b5aaf3eb132df9d21813",
+        "src/read/no_follow/tests.rs": "90381736d1d6e65d64066b1aaec08d5f02b07b6c42662ae1b5841605a90cd7a5",
+        "src/read/tests.rs": "b759c8db2c123d4eccbde43847866d8dd867990684f5e0cc9fac65064895a74d",
+        "src/test_support/mod.rs": "9f6fe53974cacc49439f776abd6148a21fce7812a36d3b0fac800b585ab8e0c5"
+      },
+      "version": "0.3.0"
     }
+  },
+  "published_review": "Archive digests match Cargo.lock; every published Rust source was byte-compared with the exact committed VCS revision. Newer dirty sibling streaming, matching, gzip, locking, path, documentation and licensing changes are excluded. No copied implementation or local dependency patch.",
+  "catalog": "Compatible 0.3.0 manifest requirements; both registry resolutions locked to 0.3.0 with default-features=false. Optional archive, gzip and wasm features are not selected.",
+  "apis": [
+    "ic_host_artifacts::artifact::Sha256Digest::compute",
+    "ic_host_artifacts::artifact::Sha256Digest::from_bytes",
+    "ic_host_artifacts::artifact::hash_reader",
+    "ic_host_artifacts::artifact::copy_reader",
+    "ic_host_artifacts::artifact::BoundedWriter",
+    "ic_host_artifacts::artifact::read_reader",
+    "ic_host_fs::read::read_file_no_follow",
+    "ic_host_artifacts::artifact::Sha256Digest::from_str"
   ],
   "production_owners": [
-    "crates/ic-backup/src/ops/persistence/json/mod.rs",
+    "crates/ic-backup/src/model/artifacts/mod.rs",
     "crates/ic-backup/src/ops/artifacts/mod.rs",
-    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs"
+    "crates/ic-backup/src/ops/persistence/json/mod.rs",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs",
+    "crates/ic-backup/src/ops/persistence/layout_lifetime/mod.rs",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs"
   ],
-  "apis": [
-    "ic_host_tools::artifact::read_file_no_follow",
-    "ic_host_tools::artifact::BoundedWriter",
-    "ic_host_tools::artifact::copy_reader",
-    "ic_host_tools::artifact::read_reader"
-  ],
-  "catalog": "Root manifest compatible 0.2 range, locked registry 0.2.0; no local patches or sibling dependency.",
-  "limits": "Preserve public u64 limit and original RecordTooLarge limit. Convert to representable usize with saturation as before; supported hosts are 64-bit. Shared metadata is an early rejection; actual stream reads remain independently bounded.",
-  "errors": "Reads pass IO errors through; map NotRegularFile to original IO InvalidInput and LimitExceeded to original RecordTooLarge. JSON decoding remains unchanged. Output budgets preserve RecordTooLarge with the exact original u64 limit and unrelated JSON errors. Copies pass source/sink IO errors through the existing ArtifactError::Io and return no checksum on failure; interrupted reads retry.",
-  "custody": "Reject final symlinks and opened nonregular files without waiting for FIFO writers. Trusted parents and concurrent byte custody remain local; ancestor aliases remain allowed.",
-  "lock_change": "Maintainer worktree dependency selection is ic-host-tools 0.2.0, ic-metrics 0.2.0 and wasmparser 0.261.0; every other package entry remains unchanged from released 0.3.9.",
-  "transitive_scope": "Published archive/compression/Wasm modules are nonoptional; this consumer invokes bounded regular-file/stream reads, private copies and portable output-budget counting.",
-  "tar": {
-    "resolved_version": "0.4.46",
-    "published_requirement": "^0.4.46",
-    "floor_followup": "https://github.com/dragginzgame/ic-host-tools/issues/3",
-    "scope": "Corrected floor is published in 0.1.11; the actual locked consumer retains tar 0.4.46. No local override or suppression was added."
+  "lock_change": {
+    "added": [
+      [
+        "ic-host-artifacts",
+        "0.3.0",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "ic-host-fs",
+        "0.3.0",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ]
+    ],
+    "removed": [
+      [
+        "adler2",
+        "2.0.1",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "equivalent",
+        "1.0.2",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "filetime",
+        "0.2.29",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "flate2",
+        "1.1.10",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "hashbrown",
+        "0.17.1",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "ic-host-tools",
+        "0.2.0",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "indexmap",
+        "2.14.2",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "miniz_oxide",
+        "0.9.1",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "simd-adler32",
+        "0.3.10",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "tar",
+        "0.4.46",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ],
+      [
+        "wasmparser",
+        "0.261.0",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ]
+    ],
+    "retained_external_entries": "exactly unchanged"
   },
-  "msrv": "Dependency declares Rust 1.88; ic-backup remains Rust 1.91 and edition 2024.",
-  "license": "Published MIT dependency used without copying its implementation; existing Canic/source attribution remains retained.",
+  "compatibility": {
+    "draft": "0.5.0",
+    "released_base": "0.4.2",
+    "reason": "Public checksum_reader now retries Interrupted internally instead of returning the first interruption; callers must own blocking and timeouts. Impossible read byte counts reject as typed InvalidData instead of allowing an out-of-range slice panic.",
+    "preserved": "Public signatures, Backup-owned ArtifactError/PersistenceError/checksum records, v1 bytes, normalized digest values, descriptor custody and private durable publication stay intact. No upstream types are newly re-exported.",
+    "metadata": "Package/lock workspace version and released receipt stay 0.4.2; the existing fixture allocation batch is carried into the single 0.5.0 draft.",
+    "retained_data": "No record, artifact or journal reset/regeneration required; paid attempt ownership and recovery allowances are unchanged."
+  },
+  "limits": "hash_reader and copy_reader use u64::MAX, preserving the absence of a new artifact-size ceiling and using bounded working buffers. Record stream budgets retain their exact original u64 limit; conversion to representable usize saturates as before on supported 64-bit hosts. Upload chunk collection retains its original exact descriptor/seek/take extent and at most 1 MiB.",
+  "errors": "Raw hashing retains original IO errors and rejects impossible counts as InvalidData; shared copying retains original source/sink IO failures and partial bytes with no complete identity on failure. No-follow reads retain NotRegularFile -> IO InvalidInput and LimitExceeded -> RecordTooLarge with original limit. Output budgets reject the whole excess buffer and preserve existing typed errors. JSON decoding is unchanged.",
+  "custody": "No-follow reads reject final links and opened nonregular files; trusted ancestors and concurrent byte custody remain local. Descriptor-relative artifact traversal, UTF-8 tree framing, private 0700/0600 creation, no-replace publication, parent synchronization and original crash barriers remain local. Generic durable::write_with is not adopted because it does not preserve these private permissions and crash contracts.",
+  "msrv": "Both dependencies declare Rust 1.88; Backup retains edition 2024 and Rust 1.91.",
+  "license": "Published MIT dependencies used through registry APIs; no implementation copied. Existing Canic/source attribution retained.",
+  "removed_symbols": [
+    {
+      "name": "hash::sha256_hex",
+      "former_file": "crates/ic-backup/src/hash/mod.rs",
+      "reason": "Redundant raw digest computation/formatting owner; replaced by canonical Sha256Digest::compute. Generic hex_bytes/hex_char remain for arbitrary IC wire bytes."
+    },
+    {
+      "name": "model::artifacts::validate_hash",
+      "former_file": "crates/ic-backup/src/model/artifacts/mod.rs",
+      "reason": "Duplicate raw SHA-256 syntax validation is replaced by canonical_hash ASCII normalization and the shared Sha256Digest parser; accepted case variants and original typed malformed-input errors are preserved."
+    },
+    {
+      "name": "model::attempt_journal::canonical_hash",
+      "former_file": "crates/ic-backup/src/model/attempt_journal/mod.rs",
+      "reason": "Temporary checksum-record/string projection wrapper is replaced by direct use of model::artifacts::canonical_hash; owning error conversion is retained."
+    },
+    {
+      "name": "model::operation_plan::canonical_hash",
+      "former_file": "crates/ic-backup/src/model/operation_plan/mod.rs",
+      "reason": "Temporary checksum-record/string projection wrapper is replaced by direct use of model::artifacts::canonical_hash; owning error conversion is retained."
+    }
+  ],
   "qualification": {
-    "evidence": "target/upload-metadata-settlement-0310-review",
-    "registered_cases": "selected-unit-cases.json",
-    "passing_logs": [
-      "focused-tests.log",
-      "selected-02-public-tests.log",
+    "evidence": "target/host-tooling-split-050-review",
+    "registered_cases": "registered-cases.json",
+    "commands": "test-commands.json and final-quality-commands.json",
+    "passing_tests": [
+      "tests-00.log",
+      "tests-01-final.log",
+      "tests-02.log",
+      "tests-03.log",
+      "tests-04.log",
+      "tests-05.log",
+      "tests-06.log",
+      "tests-07.log",
+      "tests-08.log",
+      "tests-09.log"
+    ],
+    "public_targets": [
+      "local_recovery",
+      "local_restore_source",
+      "ic_snapshot_artifact",
+      "ic_snapshot_upload"
+    ],
+    "passing_quality": [
       "clippy.log",
-      "msrv.log",
-      "docs.log"
+      "docs.log",
+      "msrv.log"
     ],
-    "public_targets": [
-      "local_recovery",
-      "local_restore_source",
-      "ic_snapshot_upload"
+    "scope": "Fresh selected production checksum/record/copy/JSON/crash/publication/restore-source/upload/codecs and public local byte/journal/reopen tests on the actual split dependency graph. Selected-package all-target/all-feature Clippy and Rust 1.91 checks; API docs deny warnings. No full workspace gate, native macOS or actual IC effect qualification inferred.",
+    "initial_failure": "clippy-initial-failure.log retains the new regression item-order finding; declarations were moved before statements and the affected tests plus lint were rerun.",
+    "passing_tooling": [
+      "final-contract-checks.log",
+      "hooks.log",
+      "hook-syntax.log",
+      "hook-shellcheck.log"
     ],
-    "scope": "Fresh affected production owners and local byte/persistence/settlement/reopen/diagnostic behavior on published 0.2.0; native Linux only. Prior qualification remains tied to its actual old dependency inputs."
+    "tooling_commands": "final-contract-commands.json",
+    "checked_inputs": "checked-inputs.json retains initial tests; final-checked-inputs.json binds final source, manifests, lock and hook fixture. Only test declaration ordering and API documentation changed after the first unit pass; the affected unit tests and API docs were rerun.",
+    "upstream_ci": "No GitHub run was returned for exact published revision efd402e0063ccbbf8a143cc970be52ab41b1766d at inspection; upstream-published-source-ci.json retains the empty result. Local consumer qualification is not upstream CI or native macOS proof."
   },
-  "compatibility": "Used artifact/read/copy/writer APIs and their entire Rust sources remain byte-identical to published 0.1.14. Changed tool-operation and Wasm-error APIs are not used or exposed by this consumer. Metrics type identity independently selects the full 0.4.0 draft; package and receipt remain 0.3.9.",
-  "output_budgets": "Nine typed record check_size owners and restore-reference admission serialize pretty JSON through BoundedWriter over io::sink without collecting an encoded buffer. Durable encoding/publication still uses its original owner after admission; no paths or retained bytes change.",
-  "copy_budget": "Use u64::MAX to preserve the existing absence of a total artifact-size ceiling. Shared copy chooses no artifact confinement or publication policy; local 0700/0600 creation, descriptor admission and retained checksum comparison remain required.",
-  "chunk_read_review": {
-    "evidence": "target/shared-chunk-read-039-review",
-    "unit_filter": "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::",
-    "public_target": "ic_snapshot_upload",
-    "scope": "Existing exact descriptor/seek/take extent now collects with shared read_reader and fallible allocation. The exact requested size remains at most 1 MiB; short reads or excess shape reject, original IO errors pass through and allocation failures become existing typed IO errors. Pure kind/range admission and complete original-source/metadata/checksum/custody checks before and after collection are retained. Native Linux byte, empty/chunk/maximum, unsafe/changed source and journal/reference/reopen cases; no live IC or native macOS proof.",
-    "prior_review": "target/shared-chunk-read-039-review/previous-adoption.json preserves the exact earlier 0.1.12 adoption and its evidence scope."
-  },
-  "unchanged_owners": [
-    "record schema admission and JSON decoding",
-    "durable record publication",
-    "descriptor-relative confinement",
-    "tree digest recipe and descriptor-based staging/publication policy",
-    "layout/journal locks and transitions",
-    "command descriptor inheritance",
-    "spending/reconciliation",
-    "source references and fence obligations"
-  ],
-  "removed_symbols": [],
-  "remaining": "Native macOS qualification and future transport/other shared-tool adoption remain independent work. Shared helpers grant no fresh authority, effect proof, paid retry, terminal or reference-release admission.",
-  "previous_adoption": "target/host-tools-012-review/previous-adoption.json retains the exact 0.1.11 review and its original qualification scope; earlier read evidence remains under target/ic-host-tools-read-review and target/maintenance-038-review.",
-  "prior_patch_review": {
-    "evidence": "target/maintenance-038-review",
-    "scope": "All published Rust source files are byte-identical between 0.1.10 and 0.1.11. Only ic-host-tools version/checksum changed in this consumer lock; all other entries retained.",
-    "upstream_ci": "https://github.com/dragginzgame/ic-host-tools/actions/runs/37455045709",
-    "upstream_ci_limitation": "Native CI fails in the repository tool-installer fixture because rg is not provisioned; MSRV passes. This is not consumer reader or native macOS qualification."
-  },
-  "stream_count_fix": {
-    "upstream_issue": "https://github.com/dragginzgame/ic-host-tools/issues/5",
-    "scope": "Shared reads reject counts beyond offered buffers before slicing. Shared copies reuse BoundedWriter validation, retaining original source/sink IO mappings and partial output with no complete checksum on failure. The consumer public checksum_reader owner remains unchanged."
-  },
-  "prior_primitive_review": "target/host-tools-013-review/previous-adoption.json retains the exact 0.1.12 adoption, chunk-read review and original qualification scope.",
-  "prior_qualification": {
-    "evidence": "target/host-tools-013-review",
-    "registered_cases": "selected-unit-cases.json, ../upload-observation-039-review/registered-unit.log and public-registered.log",
-    "passing_logs": "focused-tests.log and public-tests.log",
-    "public_targets": [
-      "local_recovery",
-      "local_restore_source",
-      "ic_snapshot_upload"
+  "previous_adoption_review": "target/host-tooling-split-050-review/previous/docs/ic-host-tools-adoption.json",
+  "prior_fixture_qualification": "target/fixture-roots-043-review remains tied to its original ic-host-tools 0.2.0 inputs; it is not relabelled as split-crate qualification.",
+  "remaining": "Native macOS exact-source qualification remains required. Providers, complete backend transfers, authenticated effects/application safety and terminal/reference/fence release remain independently unqualified. These local helpers grant no paid retry or fresh authority.",
+  "follow_up_qualification": {
+    "evidence": "target/host-tooling-consolidation-050-review",
+    "registered_cases": "registered-cases.json",
+    "commands": "test-commands.json and quality-commands.json",
+    "checked_inputs": "checked-inputs.json",
+    "passing_tests": [
+      "tests-00.log",
+      "tests-01.log",
+      "tests-02.log",
+      "tests-03.log",
+      "tests-04.log",
+      "tests-05.log",
+      "tests-06.log",
+      "tests-07.log"
     ],
-    "scope": "Fresh actual production primitive/recovery-owner tests on published 0.1.13, including invalid reader/writer counts through the private consumer copy owner with exact InvalidData errors and preserved partial output. Native Linux only, no live IC or native macOS qualification."
+    "passing_quality": [
+      "clippy.log",
+      "docs.log",
+      "msrv.log"
+    ],
+    "scope": "Fresh same split-graph digest record/plan/journal/reference, exact literal layout-lock contention, IC artifact exact-length/error/custody, restore-copy and four public recovery/upload targets on Linux. Selected-package all-target/all-feature Clippy and Rust 1.91; API docs warnings denied. No native macOS or IC effect qualification inferred.",
+    "contracts": "Shared parsing follows ASCII case normalization; malformed errors retain original input and checksum mismatch fields stay canonical. Lock digests preserve exact original raw name bytes and paths. IC checksum_child uses shared bounded hash_reader with original descriptor length; exact bytes count is required, oversize/premature EOF return FileShape, original IO errors retain Artifact(Io), and independent held/path inode/type/length checks remain.",
+    "initial_failure": "tests-04-initial-failure.log retains a missing-parent setup error in the new exact lock regression; temp_dir returns an uncreated path, so the test now explicitly creates its parent. All affected cases pass after correction.",
+    "compatibility": "No new public API, record schema, lock name, dependency or allowance change. Continue the existing 0.5.0 draft; package/receipt stay 0.4.2."
   },
-  "published_review": "All published Rust source blobs match archive and exact committed source. Changes from 0.1.14 occur only in tool/process/tests and wasm modules; consumer does not invoke these. Reviewed artifact source hashes below remain exact.",
-  "previous_adoption_review": "target/upload-metadata-settlement-0310-review/previous-ic-host-tools-adoption.json"
+  "upstream_provenance": {
+    "issue": "https://github.com/dragginzgame/ic-host-tooling/issues/7",
+    "reviewed_revision": "efd402e0063ccbbf8a143cc970be52ab41b1766d",
+    "observation": "Both published archives record the reviewed commit. GitHub commits API returns HTTP 422 for it; declared repository main is 0456b40e116c7d070428b070d1c3befc36a9345d. Cached archive/source verification remains intact; exact public-source CI is not established.",
+    "evidence": "target/host-tooling-consolidation-050-review/upstream-published-commit.json, upstream-main.json and upstream-provenance-report.md",
+    "api_feedback": "No reusable shared API gap found; existing shared digest parser, bounded hashing/counts and IO projections satisfy all three cleanup requirements."
+  },
+  "digest_ingress_qualification": {
+    "evidence": "target/digest-ingress-050-review",
+    "registered_cases": "registered-cases.json",
+    "checked_inputs": "checked-inputs.json",
+    "commands": "test-commands.json and quality-commands.json",
+    "passing_tests": [
+      "tests-00.log",
+      "tests-01.log",
+      "tests-02.log",
+      "tests-03.log",
+      "tests-04.log",
+      "tests-05.log",
+      "tests-06.log",
+      "tests-07.log",
+      "tests-08.log",
+      "tests-09.log"
+    ],
+    "passing_quality": [
+      "clippy.log",
+      "docs.log",
+      "msrv.log"
+    ],
+    "canonical_owner": "model::artifacts::canonical_hash is crate-internal; uses existing ASCII lowercase normalization plus shared Sha256Digest parser. No public re-export.",
+    "converted_consumers": [
+      "plan context and operation request",
+      "attempt binding, receipt comparison and retained chronological events",
+      "inventory module hashes",
+      "consistency plan requirement",
+      "restore/source plan requirements",
+      "download journal intent",
+      "restore-reference authority",
+      "independent download journal reopen intent admission"
+    ],
+    "preserved": "Original validation order, model error conversions, malformed input, canonical v1 record/digest bytes and independent retained-source reopen admission; no spending, recovery, obligation or reference owner is removed.",
+    "new_regression": "reopen_validates_exact_digest_text_before_locking_without_changing_evidence: malformed input precedes existing contention, uppercase valid input retains lock refusal and subsequent reopen preserves exact record bytes.",
+    "scope": "Fresh affected model and local persistence owners plus seven public plan/selection/attempt/consistency/restore/recovery targets on Linux. No native macOS, complete product or actual IC effect qualification. Existing source-level normalization goldens retained; no benchmark or measured performance improvement claimed.",
+    "compatibility": "Same 0.5.0 pending batch. No public signature, protocol/schema, package/dependency/lock selection or retained-data reset change."
+  }
 }

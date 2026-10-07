@@ -1,5 +1,7 @@
 //! Public local progress recovery; fixture receipts qualify no remote effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -18,11 +20,7 @@ use ic_backup::{
     },
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::PathBuf};
 
 struct RetainedFixture {
     root: PathBuf,
@@ -36,18 +34,7 @@ struct RetainedFixture {
 }
 
 fn retain_pending_fixture() -> RetainedFixture {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-progress-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("layout");
+    let root = support::temp_root("ic-backup-public-progress");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     let plan: OperationPlanRecord = serde_json::from_value(json!({
         "version": 1,

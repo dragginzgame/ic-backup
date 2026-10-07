@@ -1,7 +1,7 @@
 //! Passive physical target admission; role and module claims are integration declarations.
 
 use super::InventoryRecordError;
-use crate::model::artifacts::ArtifactChecksumRecord;
+use crate::model::artifacts::canonical_hash;
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// Maximum optional role size in UTF-8 bytes, without role-based authority semantics.
@@ -83,9 +83,7 @@ impl InventoryTargetRecord {
             module_hash: request
                 .module_hash
                 .as_deref()
-                .map(|value| {
-                    ArtifactChecksumRecord::from_hash(value).map(|hash| hash.hash().to_owned())
-                })
+                .map(canonical_hash)
                 .transpose()?,
         })
     }

@@ -1,5 +1,7 @@
 //! Public typed byte binding and local recovery; no remote snapshot effect is claimed.
 
+mod support;
+
 use ic_backup::{
     model::{
         attempt_journal::{
@@ -17,10 +19,7 @@ use ic_backup::{
     },
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 fn request(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
     IcManagementRequestRecord::new(IcManagementRequest {
@@ -44,18 +43,7 @@ fn plan(request: &IcManagementRequestRecord) -> OperationPlanRecord {
 
 #[test]
 fn preserves_typed_payload_and_independent_observation_allowance_through_reopen() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock")
-        .as_nanos();
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .expect("parent")
-        .join(format!(
-            "ic-backup-public-wire-{}-{nonce}",
-            std::process::id()
-        ));
-    fs::create_dir(&root).expect("layout");
+    let root = support::temp_root("ic-backup-public-wire");
     let layout = BackupLayoutGuard::acquire(&root).expect("local exclusion");
     let wire = request(IcManagementMethodRecord::TakeCanisterSnapshot);
     let plan = plan(&wire);

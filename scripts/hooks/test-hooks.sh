@@ -118,7 +118,7 @@ run_case() {
 CASE_NAME=shared-formatting
 CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
-perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-tools\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
+perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-artifacts\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
 formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh)
 while IFS= read -r -d '' path; do

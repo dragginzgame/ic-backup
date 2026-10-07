@@ -1,5 +1,7 @@
 //! Native original reservation/reply recovery qualification; no live IC management effects.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -17,25 +19,11 @@ use ic_backup::{
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fs, path::Path};
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
-}
-fn root() -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    std::env::temp_dir()
-        .canonicalize()
-        .unwrap()
-        .join(format!("ic-mutation-{}-{nonce}", std::process::id()))
 }
 struct Originals {
     payload: IcManagementRequestRecord,
@@ -127,8 +115,7 @@ fn all_original_updates_and_provider_failures_preserve_exact_spent_evidence_thro
 }
 fn retained_case(method: Method, failure: Option<IcMutationProviderError>) {
     let originals = Originals::new(method);
-    let root = root();
-    fs::create_dir(&root).unwrap();
+    let root = support::temp_root("ic-mutation");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_operation_plan(&layout, &originals.plan).unwrap();
     fs::write(

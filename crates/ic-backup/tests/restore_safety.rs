@@ -1,5 +1,7 @@
 //! Public local obligation, source-reference and spent-attempt recovery; no IC/fence backend.
 
+mod support;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -18,10 +20,7 @@ use ic_backup::{
 };
 use ic_management_canister_types::CanisterStatusType;
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
@@ -105,7 +104,6 @@ fn prepare_original_evidence(
     requirement: &RestoreSafetyRequirementRecord,
     load: &IcManagementRequestRecord,
 ) -> OriginalEvidence {
-    fs::create_dir(root).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
     fs::create_dir(root.join("source")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root.join("restore")).unwrap();
@@ -187,14 +185,7 @@ fn reject_weaker_requirement(
 }
 #[test]
 fn reopens_original_source_safety_spending_and_obligations_without_effects_or_reference_release() {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-restore-safety-{}-{nonce}",
-        std::process::id()
-    ));
+    let root = support::temp_root("ic-backup-public-restore-safety");
     let load = wire(IcManagementMethodRecord::LoadCanisterSnapshot);
     let original = plan(&load);
     let source = plan(&wire(IcManagementMethodRecord::TakeCanisterSnapshot));

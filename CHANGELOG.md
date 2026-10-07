@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0]
+
+- **Breaking:** `checksum_reader` now retries interrupted reads internally.
+  Callers must own blocking/timeouts and cannot use the first `Interrupted` error
+  as a termination signal. Invalid reader byte counts return `InvalidData`.
+  Delegate raw hashing, digest parsing, copies and output limits to
+  `ic-host-artifacts`, and no-follow record reads to `ic-host-fs`. Preserve checksum
+  records, exact layout lock names, bounded source verification and secure publication
+  ([#11](https://github.com/dragginzgame/ic-backup/issues/11)).
+
+- Reserve exclusive integration fixture directories without relying on the host
+  clock. Skip occupied paths without changing retained evidence, with bounded
+  collision handling and fixture-path diagnostics
+  ([#10](https://github.com/dragginzgame/ic-backup/issues/10)).
+
+- Verify shared snapshots without executing the inspected checksum helper. Bind
+  release pushes to the captured destination URL through validation and recovery
+  ([#12](https://github.com/dragginzgame/ic-backup/issues/12)).
+
 ## [0.4.2] - 2026-10-06
 
 - Refresh shared validation and release checks. Keep successful Rust test names

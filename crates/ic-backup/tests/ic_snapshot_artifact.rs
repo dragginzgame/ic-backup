@@ -2,6 +2,8 @@
 
 #![cfg(unix)]
 
+mod support;
+
 use ic_backup::{
     model::{
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
@@ -22,10 +24,7 @@ use ic_management_canister_types::{
     ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
 use serde_json::json;
-use std::{
-    fs,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
 #[test]
 #[expect(
@@ -35,14 +34,7 @@ use std::{
 fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
     const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
     const TOKEN: &str = "integration-owned-token";
-    let root = std::env::temp_dir().canonicalize().unwrap().join(format!(
-        "ic-backup-public-artifact-{}-{}",
-        std::process::id(),
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let root = support::temp_root("ic-backup-public-artifact");
     fs::create_dir_all(root.join("artifacts")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let capture = IcManagementRequestRecord::new(IcManagementRequest {

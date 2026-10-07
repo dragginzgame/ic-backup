@@ -1,6 +1,6 @@
 //! Maintained v1 restore dependencies and model-owned retention transitions.
 
-use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError};
+use crate::model::artifacts::{ChecksumError, canonical_hash};
 use serde::{Deserialize, Deserializer, Serialize, de};
 use std::{
     collections::BTreeSet,
@@ -45,9 +45,7 @@ impl RestoreReferenceRecord {
         if !super::journal_path::is_canonical(&journal, MAX_JOURNAL_PATH_BYTES) {
             return Err(RestoreReferenceError::InvalidJournal { journal });
         }
-        let authority = ArtifactChecksumRecord::from_hash(authority)?
-            .hash()
-            .to_owned();
+        let authority = canonical_hash(authority)?;
         Ok(Self { journal, authority })
     }
 

@@ -23,11 +23,189 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-06
+# Current handoff — 2026-10-07
 
-## Pending 0.4.2 Shared Tooling 0.1.11 adoption
+## Pending 0.5.0 Shared Tooling 0.1.13 workspace-rule adoption
 
-The 56-file snapshot now binds committed Shared Tooling 0.1.11 at
+The 58-file snapshot now binds committed Shared Tooling 0.1.13 at
+`e378671d90afa237ff63a4b0e3b9551eb2c222b6`, matching remote main.
+The previously pending workspace rule is committed and adopted with all linked
+baseline/dependency/hook/roster changes. Its exact file is the only selected
+addition. IC Backup already conforms: a virtual root with explicit resolver 3,
+`crates/ic-backup` as its sole maintained package, inherited metadata/dependencies
+and one root lockfile. No paths, identities, dependency graphs or exceptions change.
+
+Original uncommitted 0.1.12 snapshot bytes are retained. The canonical exporter
+refused overwriting them, so a clean isolated checkout exported into a disposable
+consumer. Reconciliation first checked unchanged originals, then copied only exact
+reviewed blobs/modes. Locked offline metadata and the maintained-manifest inventory
+exclude the actual Cargo target directory and qualify existing layout independently
+of the inheritance checker. Exported governance links and integrity regressions,
+formatting, dependency inheritance and final local documentation/snapshot checks pass.
+See [the current review](../shared-tooling-review.json) and
+`target/shared-tooling-050-0113-review` for source and focused evidence.
+
+Upstream exact-source CI passes Linux and both native macOS portable-regression
+jobs. This uncommitted consumer remains locally qualified only; the separate
+released macOS custody failure below is unaffected. Prior 0.1.12 release/hook/shell
+qualification keeps its original inputs. This policy-only refresh leaves the
+existing 0.5.0 draft, product Rust bytes, manifests, lockfile and 0.4.2 receipt
+unchanged. No commits, versions, releases, sibling writes or live effects.
+
+## Retained 0.5.0 Shared Tooling 0.1.12 adoption
+
+That reviewed 57-file snapshot bound committed Shared Tooling 0.1.12 at
+`33c2a6f0018a94915f819ff219e270500ed5b73b`, matching remote main. Export uses a
+clean isolated committed checkout; dirty sibling Rust-workspace rules and other
+uncommitted bytes are excluded. The only reviewed file-set addition is the common
+governance roster; all its documents and local links resolve in the exported
+consumer. No package relocation is indicated by the current virtual workspace
+and `crates/ic-backup` placement.
+
+The snapshot verifier now bootstraps hashing without executing inspected helpers.
+Local helper-only and helper-plus-payload rejection checks prove the substituted
+helper never executes. The release push substitute follows the shared captured-URL
+contract with exact branch/tag refs. Actual shared regression cases cover URL
+replacement/addition after validation and before push plus exact retry. Consumer
+recovery/source/receipt and separate publication admission remain unchanged.
+The new baseline permits relevant cross-repository issue actions; sibling file
+edits and release effects retain separate authority.
+
+Fresh Linux tooling, release-adapter, shared-runner, hook and shell checks pass.
+Final formatting, dependency inheritance, documentation links and exact committed
+snapshot byte/mode checks also pass. Upstream exact-source CI passes Linux and both native macOS portable-regression
+jobs. Evidence and prior inputs remain under `target/shared-tooling-050-0112-review`;
+see [the reviewed adoption](../shared-tooling-review.json). This batch preserves
+all pending product Rust bytes, manifests, lockfile and released 0.4.2 receipt.
+It stays within the existing 0.5.0 draft and remains uncommitted.
+
+Released 0.4.2 at `654790f374f9923df9020f4812cec65e47cbe3af` has a successful
+[main run](https://github.com/dragginzgame/ic-backup/actions/runs/37501973677) and a
+separate failed [tag run](https://github.com/dragginzgame/ic-backup/actions/runs/37501973053).
+Both tag macOS jobs fail command-custody reacquisition with `InFlight` after child
+reap, `lock.finish()` and guard drop. [Issue #13](https://github.com/dragginzgame/ic-backup/issues/13)
+owns diagnosis; this tooling update does not repair or qualify that behavior.
+No native CI exists for the uncommitted 0.5.0 batch. No commits, tags, push,
+release/publication, live IC effects, sibling writes or recovery-evidence cleanup.
+
+## Pending 0.5.0 split Host Tooling adoption
+
+Accepted #11 now replaces the monolithic registry dependency with
+`ic-host-artifacts` and `ic-host-fs` 0.3.0, with optional archive/compression/Wasm
+features disabled. Both archives' hashes and every published Rust source match
+committed provenance `efd402e0063ccbbf8a143cc970be52ab41b1766d`. Newer
+sibling streaming/matching/gzip work is not imported. Every retained external
+lockfile entry remains exact; two split packages are added and the retired
+monolith/unused dependency branches are removed. No sibling path patch exists.
+
+Raw byte/digest construction delegates to shared `Sha256Digest`. The redundant
+private `hash::sha256_hex` is removed; generic IC wire-byte hex formatting remains.
+The accepted follow-up removes `model::artifacts::validate_hash` in favor of ASCII
+case normalization plus shared digest parsing, preserving exact v1 fields and
+original typed malformed/mismatch errors. Layout locking uses canonical raw digest
+formatting and retains exact names/contention. IC child verification replaces
+manual `Take` accounting with shared bounded hashing and returned byte-count
+admission; short/excess input retains `FileShape`, original IO errors pass through
+the same Backup error variant and descriptor/path custody checks remain local.
+`checksum_reader` retains its public signature and Backup-owned error/record
+types, while delegating to canonical `hash_reader(reader, u64::MAX)`. Its behavior
+now retries Interrupted reads internally and rejects impossible counts as typed
+InvalidData. Because callers could previously use the first interruption as a
+termination signal, the complete pending draft becomes 0.5.0 from released 0.4.2.
+Callers must own blocking/timeouts. The existing #10 fixture fix is carried into
+that one draft; package versions and released receipt remain 0.4.2.
+
+Existing copy/count/collection calls use Host Artifacts and no-follow record reads
+use Host FS. Other original IO errors, JSON limits/decoding, normalized v1 checksum
+records, local tree framing, 0700/0600 private staging and crash/publication owners
+remain intact. No new provider, transport, runner, schema or release API is added.
+Fresh Linux selected checksum/copy/JSON/crash/source tests and public recovery/upload
+journeys pass. Exact registered case sets match successful executions; selected-package
+Clippy warnings denied, API docs warnings denied and Rust 1.91 checks pass.
+The manifest-sorting hook fixture uses the new artifact dependency; its actual
+regression, Bash/ShellCheck, formatting, dependency inheritance, document links
+and exact 56-path shared snapshot checks pass.
+Original inputs/archives/source review, lock delta and exact commands
+remain under `target/host-tooling-split-050-review`; earlier fixture qualification
+retains its original 0.2 dependency graph below rather than being relabelled.
+See [the current dependency review](../ic-host-tools-adoption.json).
+
+Fresh follow-up digest/plan/journal/reference, layout exclusion, IC artifact,
+restore-copy and four public recovery/upload targets pass, along with selected-package
+Clippy, API docs and Rust 1.91 checks. Exact registered cases, original/final inputs,
+commands and logs remain under `target/host-tooling-consolidation-050-review`.
+The new lock regression initially omitted creation of its parent (the library
+fixture helper intentionally returns an uncreated path); corrected setup and its
+retained failure/re-run distinguish fixture correction from product behavior.
+No dependencies, package versions, public signatures or retained formats change
+in this follow-up; the same 0.5.0 draft remains selected.
+
+The further accepted digest-ingress cleanup gives `model::artifacts::canonical_hash`
+crate-internal visibility and routes raw plan/attempt identity and history, inventory,
+requirement, download and restore-reference fields to that owner. The two private
+`canonical_hash` wrappers in attempt journals and operation plans are removed.
+Checksum records remain real record boundaries; no new public API, dependency,
+format, validation-order or error-conversion change is introduced. Journal reopen
+uses the same normalizer before its existing lock/read admission. Its regression
+preserves malformed input, contention, uppercase normalization and exact retained
+bytes; focused affected model/persistence and seven public recovery targets pass.
+Clippy warnings denied, warning-free API docs and Rust 1.91 checks also pass.
+Original/current source, registered cases, commands and logs remain under
+`target/digest-ingress-050-review`. Earlier qualification retains its original inputs.
+
+Upstream [provenance feedback](https://github.com/dragginzgame/ic-host-tooling/issues/7)
+records that both published archives name the locally inspected commit above,
+but GitHub returns HTTP 422 for that revision in their declared repository while
+remote main remains `0456b40e116c7d070428b070d1c3befc36a9345d`. Archive hashes and local
+source comparison remain verified; no public exact-source CI or native proof is
+inferred. No shared API gap was found during this consolidation.
+
+Work stays uncommitted; #10/#11 remain open pending delivery and exact-source native
+macOS qualification. No commits, tags, push, release/publication, sibling write,
+live IC effect or retained-evidence cleanup. Complete backup/restore and actual
+authenticated backend/application qualification remain independent work.
+
+## Retained initial 0.4.3 exclusive public fixture roots
+
+The maintainer has released 0.4.2 at clean session HEAD/tag
+`654790f374f9923df9020f4812cec65e47cbe3af`; finalized notes and package/lock/receipt
+agree. At the initial fixture inspection, the
+[main run](https://github.com/dragginzgame/ic-backup/actions/runs/37501973677)
+had passed Linux and ARM macOS while Intel still ran. It has since passed; the
+separate tag failure is recorded above. Released 0.4.1's
+Linux/Intel full gates pass, while ARM fails the fence-reconciliation fixture
+AlreadyExists recorded in [issue #10](https://github.com/dragginzgame/ic-backup/issues/10).
+The original colliding path/clock value was not observed; do not claim that its
+precise cause was reproduced locally.
+
+Every public integration fixture now reserves a fresh directory before writing
+children through one test-only owner in `tests/support/mod.rs`. Atomic directory
+creation, a process-local sequence and at most 128 candidates admit exclusive
+ownership without a clock. Occupied files/directories/links are retained unchanged;
+other errors stop with the attempted path, and successful allocation reports its
+path. Existing explicit success cleanup remains; no Drop cleanup is introduced.
+Eight path-only wrappers are deleted in favor of this owner. The upload fixture's
+root helper remains responsible for its artifact child. Library unit-test path
+helpers retain their distinct uncreated-path contract and existing sequence owner.
+
+All affected public integration journeys and new occupied-path, concurrent
+allocation and bounded/error cases pass on Linux, with selected-target Clippy
+warnings denied and Rust 1.91 checks. Registered membership is derived from Cargo's actual cases, not
+a fixed aggregate. Prior source, initial compile/caller migration failures, exact
+inputs/commands/registry and final logs remain under `target/fixture-roots-043-review`.
+These are local filesystem/accounting tests, not IC effects or proof of native
+macOS behavior. Fresh native qualification remains required before #10 closes.
+
+At that batch's inspection, the undated 0.4.3 draft was compatible test tooling;
+production source, public APIs/schemas, package/lock versions, dependencies and receipt
+remained 0.4.2. Its unchanged fixture work is now carried into the single pending
+0.5.0 entry above. The original qualification remains tied to its old dependency
+graph. Work stays uncommitted; full backup/restore and provider/backend qualification
+remain independent work.
+
+## Retained 0.4.2 Shared Tooling 0.1.11 adoption
+
+That 56-file snapshot bound committed Shared Tooling 0.1.11 at
 `46c02774a8335cb3949d6f04284c4f53375353c1`, matching inspected remote main.
 The baseline and agent maintenance rule are refreshed together; product and
 release authority remain local. Canonical logger/finalizer regressions cover

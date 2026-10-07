@@ -1,6 +1,6 @@
 //! Canonical SHA-256 artifact metadata; filesystem effects belong to ops.
 
-use crate::hash::{hex_bytes, sha256_hex};
+use ic_host_artifacts::artifact::Sha256Digest;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -36,7 +36,7 @@ impl ArtifactChecksumRecord {
     pub fn from_bytes(bytes: &[u8]) -> Self {
         Self {
             algorithm: "sha256".to_owned(),
-            hash: sha256_hex(bytes),
+            hash: Sha256Digest::compute(bytes).to_string(),
         }
     }
 
@@ -45,17 +45,16 @@ impl ArtifactChecksumRecord {
     /// # Errors
     /// Returns [`ChecksumError::InvalidHash`] unless the input has 64 hex digits.
     pub fn from_hash(hash: &str) -> Result<Self, ChecksumError> {
-        validate_hash(hash)?;
         Ok(Self {
             algorithm: "sha256".to_owned(),
-            hash: hash.to_ascii_lowercase(),
+            hash: canonical_hash(hash)?,
         })
     }
 
     pub(crate) fn from_digest(digest: [u8; 32]) -> Self {
         Self {
             algorithm: "sha256".to_owned(),
-            hash: hex_bytes(digest),
+            hash: Sha256Digest::from_bytes(digest).to_string(),
         }
     }
 
@@ -76,23 +75,24 @@ impl ArtifactChecksumRecord {
     /// # Errors
     /// Returns a typed malformed-hash or checksum-mismatch error.
     pub fn verify(&self, expected_hash: &str) -> Result<(), ChecksumError> {
-        validate_hash(expected_hash)?;
-        if self.hash.eq_ignore_ascii_case(expected_hash) {
+        let expected = canonical_hash(expected_hash)?;
+        if self.hash == expected {
             Ok(())
         } else {
             Err(ChecksumError::ChecksumMismatch {
-                expected: expected_hash.to_ascii_lowercase(),
+                expected,
                 actual: self.hash.clone(),
             })
         }
     }
 }
 
-fn validate_hash(hash: &str) -> Result<(), ChecksumError> {
-    if hash.len() != 64 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err(ChecksumError::InvalidHash(hash.to_owned()));
-    }
-    Ok(())
+pub(crate) fn canonical_hash(hash: &str) -> Result<String, ChecksumError> {
+    let normalized = hash.to_ascii_lowercase();
+    normalized
+        .parse::<Sha256Digest>()
+        .map_err(|_| ChecksumError::InvalidHash(hash.to_owned()))?;
+    Ok(normalized)
 }
 
 /// Typed checksum-record validation failure.

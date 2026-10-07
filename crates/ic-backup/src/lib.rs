@@ -88,7 +88,7 @@
 //! and external-effect settlement. Capture/restore runners and an IC transport
 //! have not been extracted yet. Filesystem access and credentials remain on the
 //! operator host.
-//! Bounded Unix record reads reuse ic-host-tools regular-file admission while
+//! Bounded Unix record reads reuse ic-host-fs regular-file admission while
 //! publication, record validation, confinement and command custody remain local.
 
 mod hash;

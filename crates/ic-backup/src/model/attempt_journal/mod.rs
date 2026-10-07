@@ -7,7 +7,7 @@ pub use authority::{
     OperationBindingRequest,
 };
 
-use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError};
+use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash};
 use history::{AttemptEventRecord, Projection};
 use serde::{Deserialize, Deserializer, Serialize, de};
 use std::fmt;
@@ -253,10 +253,6 @@ impl AttemptJournalRecord {
         self.projection = projection;
         Ok(())
     }
-}
-
-fn canonical_hash(hash: &str) -> Result<String, AttemptJournalRecordError> {
-    Ok(ArtifactChecksumRecord::from_hash(hash)?.hash().to_owned())
 }
 
 fn bounded_events<'de, D: Deserializer<'de>>(

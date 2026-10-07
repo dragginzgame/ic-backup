@@ -14,6 +14,41 @@ use std::{
 };
 
 #[test]
+fn canonical_digest_retains_exact_layout_lock_names_and_existing_contention() {
+    let parent = temp_dir("ic-backup-layout-lock-golden");
+    fs::create_dir(&parent).unwrap();
+    let parent = parent.canonicalize().unwrap();
+    for (name, hash) in [
+        (
+            "backup",
+            "54d00d867758cef816bc4685f58e327b949712b07ebd17c3485f3ffc9e9f5133",
+        ),
+        (
+            "back up",
+            "1cd0a91b4f077ba4450600b4e0e179da864c49c84f62a0e0114db0d5c246bebc",
+        ),
+    ] {
+        let root = parent.join(name);
+        fs::create_dir(&root).unwrap();
+        let journal = parent.join(format!(".ic-backup-layout-{hash}"));
+        let expected_lock = parent.join(format!(".ic-backup-layout-{hash}.lock"));
+        let existing = JournalLock::acquire(&journal).unwrap();
+        assert!(
+            matches!(BackupLayoutGuard::acquire(&root), Err(JournalLockError::Locked { lock_path }) if Path::new(&lock_path) == expected_lock)
+        );
+        drop(existing);
+        let guard = BackupLayoutGuard::acquire(&root).unwrap();
+        assert!(fs::metadata(&expected_lock).unwrap().is_file());
+        assert!(
+            matches!(JournalLock::acquire(&journal), Err(JournalLockError::Locked { lock_path }) if Path::new(&lock_path) == expected_lock)
+        );
+        drop(guard);
+        drop(JournalLock::acquire(&journal).unwrap());
+    }
+    fs::remove_dir_all(parent).expect("clean successful fixture");
+}
+
+#[test]
 fn removed_and_recreated_layout_keeps_the_same_lock_identity() {
     let parent = temp_dir("ic-backup-layout-recreate");
     let root = parent.join("backup");

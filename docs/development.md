@@ -297,6 +297,15 @@ Unix FIFO fixtures use the host's `mkfifo -m 600` utility and verify the created
 file type and permissions. This works with the standard Linux/macOS utility;
 Rustix's descriptor-relative FIFO creation API is unavailable on Apple targets.
 
+Public integration journeys reserve their fixture directories through
+`crates/ic-backup/tests/support/mod.rs` before creating children. Atomic directory
+creation and a process-local sequence replace clock-derived ownership; occupied
+files, directories and links are skipped without replacement, with a 128-candidate
+ceiling. Each allocated path is printed for failure diagnosis. The helper performs
+no automatic cleanup: journeys retain failed evidence and explicitly remove only
+their successful owned fixtures. Focused allocation/recovery checks are
+`cargo test --offline --locked -p ic-backup --all-features --test fixture_roots --test fence_reconciliation`.
+
 `policy::snapshot_inventory_delta::compare` borrows the existing capture declaration
 and bounded inventory replies. It rejects method/target mismatch, lost baseline IDs
 and changed baseline metadata, then exposes canonical new descriptors without IO,
@@ -705,12 +714,51 @@ The public local-metrics getters now return the shared Metrics 0.2 type. Import
 library. An application that also uses Metrics directly must update its own
 `ic-metrics` dependency to the 0.2 line; arithmetic, units and empty/saturated sample
 semantics are unchanged. There is no Metrics 0.1 adapter, local arithmetic wrapper
-or dual API. Host Tools 0.2 remains private to the existing filesystem adapters.
+or dual API. Host Artifacts and Host FS 0.3 remain private to the existing adapters.
 
 The maintained v1 records, digests, retained source artifacts, spending reservations,
 fence obligations and restore references retain their exact formats and owners.
 Do not reset or discard unfinished evidence as part of this dependency hard cut.
 Package version changes, release execution and publication remain maintainer-owned.
+
+## The 0.5 stream hashing contract
+
+`ops::artifacts::checksum_reader` delegates raw hashing to `ic-host-artifacts` and
+retries `Interrupted` reads internally. Callers must own blocking/timeouts instead
+of treating the first interruption as termination. Other reader IO errors retain
+their kind and source; impossible byte counts reject as `InvalidData` without a
+checksum. This observable change selects a 0.5.0 draft from released 0.4.2; package
+versions remain maintainer-owned. The earlier fixture allocation fix shares that
+draft.
+
+Raw checksum construction and digest formatting use the shared `Sha256Digest`,
+while Backup owns its normalized v1 record and permissive equivalent hex casing.
+ASCII case normalization precedes shared digest parsing; malformed-hash errors
+retain the original input. Layout lock keys use the same canonical raw digest
+formatter. Raw digest-text fields in plans, attempt identity/history, inventories,
+requirements, downloads and references call the one internal normalizer directly;
+they do not construct checksum records merely to extract a normalized string.
+Independent persistence reopen admission uses that same owner and keeps its
+original error conversion/order. Layout lock keys retain their exact prior names.
+IC artifact verification supplies
+the opened file's admitted length to shared bounded hashing, checks the returned
+byte count and rejects short/excess input as `FileShape`. Original IO errors and
+independent descriptor/path identity checks remain intact. These consolidate
+existing contracts without another public checksum API or retained-data reset.
+The generic hex helper remains for IC wire byte fields. Bounded copies/collection
+and output counting use Host Artifacts; no-follow record reads use Host FS. Unused
+archive/compression/Wasm features are disabled and their lockfile entries removed.
+Directory digest framing, 0700/0600 staging, synchronization/crash barriers,
+no-replace multi-file publication, journals and spending stay local. Existing
+records/artifacts need no reset. See [the adoption review](ic-host-tools-adoption.json).
+The published 0.3.0 archives' recorded source commit is available locally but was
+not retrievable from their declared GitHub repository at inspection; the upstream
+[provenance report](https://github.com/dragginzgame/ic-host-tooling/issues/7)
+records that separate limitation. Cached archive/source verification does not
+establish upstream CI or native qualification.
+Focused unit filters are `ops::artifacts`, `model::artifacts` and
+`ops::persistence::json`; artifact commit and IC source preparation retain their
+existing checks above. Native filesystem qualification is distinct from IC effects.
 
 ## Workspace inheritance and version inspection
 

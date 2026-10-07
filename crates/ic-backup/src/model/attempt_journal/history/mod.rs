@@ -3,6 +3,7 @@
 use super::{
     AttemptBudgetRecord, AttemptJournalRecordError, MutationOutcomeRecord, ObservationOutcomeRecord,
 };
+use crate::model::artifacts::canonical_hash;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -80,13 +81,13 @@ impl AttemptEventRecord {
     pub(super) fn normalize(&mut self) -> Result<(), AttemptJournalRecordError> {
         match self {
             Self::MutationReserved { .. } => {}
-            Self::ObservationReserved { request, .. } => *request = super::canonical_hash(request)?,
-            Self::MutationResolved { evidence, .. } => *evidence = super::canonical_hash(evidence)?,
+            Self::ObservationReserved { request, .. } => *request = canonical_hash(request)?,
+            Self::MutationResolved { evidence, .. } => *evidence = canonical_hash(evidence)?,
             Self::ObservationRecorded {
                 request, evidence, ..
             } => {
-                *request = super::canonical_hash(request)?;
-                *evidence = super::canonical_hash(evidence)?;
+                *request = canonical_hash(request)?;
+                *evidence = canonical_hash(evidence)?;
             }
         }
         Ok(())

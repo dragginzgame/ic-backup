@@ -12,13 +12,14 @@ use crate::{
         ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, operation_plan::OperationPlanRecord,
     },
     ops::{
-        artifacts::checksum_reader,
+        artifacts::ArtifactError,
         persistence::{DownloadIntegrityError, read_operation_plan},
     },
     policy::download_integrity::validate,
 };
+use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_reader};
 use std::time::Instant;
-use std::{io::Read, os::unix::fs::MetadataExt};
+use std::{io, io::Read, os::unix::fs::MetadataExt};
 
 impl DownloadJournalGuard<'_> {
     /// Explicitly verify one published IC tree against exact original metadata and intent.
@@ -173,17 +174,7 @@ fn checksum_child(
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
     let flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
     let (mut file, original) = open_regular_child(directory, name, length, maximum)?;
-    // Read at most the observed length plus one, detecting shrinking/growing files
-    // without an unbounded read even if a noncooperating writer changes the file.
-    let limit = original
-        .len()
-        .checked_add(1)
-        .ok_or(IcSnapshotArtifactError::FileShape)?;
-    let mut bounded = (&mut file).take(limit);
-    let checksum = checksum_reader(&mut bounded)?;
-    if bounded.limit() != 1 {
-        return Err(IcSnapshotArtifactError::FileShape);
-    }
+    let checksum = checksum_exact_reader(&mut file, original.len())?;
     let held = file.metadata()?;
     let current =
         File::from(unix_fs::openat(directory, name, flags, Mode::empty()).map_err(errno_to_io)?)
@@ -197,6 +188,25 @@ fn checksum_child(
         return Err(IcSnapshotArtifactError::CustodyChanged);
     }
     Ok(checksum)
+}
+
+fn checksum_exact_reader(
+    reader: impl Read,
+    length: u64,
+) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
+    // The shared stream owner probes at most one excess byte. Exact length remains
+    // a local artifact requirement, including rejection of premature EOF.
+    let identity = hash_reader(reader, length).map_err(|error| match error {
+        InputError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
+        InputError::Io(error) => ArtifactError::Io(error).into(),
+        error => ArtifactError::Io(io::Error::other(error)).into(),
+    })?;
+    if identity.bytes != length {
+        return Err(IcSnapshotArtifactError::FileShape);
+    }
+    Ok(ArtifactChecksumRecord::from_digest(
+        *identity.sha256.as_bytes(),
+    ))
 }
 
 pub(super) fn open_regular_child(
@@ -223,3 +233,6 @@ pub(super) fn open_regular_child(
     }
     Ok((file, metadata))
 }
+
+#[cfg(test)]
+mod tests;
