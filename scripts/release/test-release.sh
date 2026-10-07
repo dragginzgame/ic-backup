@@ -6,6 +6,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # exports both environment values and command-line overrides through GNU Make;
 # neither may reach the fixture's standalone gates or select a parent helper.
 # This child-only reset leaves the enclosing release and its evidence intact.
+# Consumer assertions are mapped in docs/release-fixture-ownership.json. The
+# canonical shared suite owns increment/phase and generic lost-reply matrices.
 unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND RELEASE_COMMIT \
     RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE VERSION \
     MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL
@@ -47,6 +49,9 @@ run_case() {
 }
 create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
+    mkdir -p "$FIXTURE/make"
+    cp "$ROOT/make/tools.mk" "$FIXTURE/make/"
+    cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
@@ -172,7 +177,7 @@ case "$1" in
                 printf '%s\n' "$3" | "$TEST_REAL_GIT" hash-object --stdin > "target/tags/$3.object"
                 cp "target/tags/$3.object" target/mock-tag
                 echo tag >> "$TEST_EFFECTS"
-                if [[ "${TEST_LOST_EFFECT:-}" == tag && ! -e target/lost-tag ]]; then touch target/lost-tag; exit 9; fi ;;
+                ;;
             *) exit 97 ;;
         esac ;;
     cat-file) [[ -f target/mock-tag && -f "target/tags/${3#refs/tags/}.object" ]] || exit 1; echo tag ;;
@@ -218,7 +223,7 @@ case "$1" in
         mkdir -p target/remote-tags
         cp "target/tags/$tag.object" "target/remote-tags/$tag"
         cp "target/tags/$tag.object" target/remote-tag
-        if [[ "${TEST_LOST_EFFECT:-}" == push && ! -e target/lost-push ]]; then touch target/lost-push; exit 9; fi ;;
+        ;;
     *) echo "unsupported Git substitute: $*" >&2; exit 97 ;;
 esac
 
@@ -451,27 +456,9 @@ test_staging() {
     [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-stage
 }
-test_initial_version() {
-    "$TEST_REAL_MAKE" --no-print-directory release-patch
-    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]]
-}
 prepare_tagged_release() {
     sed 's/\[0.1.1\]/[0.2.0]/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md
     "$TEST_REAL_MAKE" --no-print-directory release-minor
-}
-test_release() {
-    local kind="$1" candidate
-    case "$kind" in patch) candidate=0.1.1 ;; minor) candidate=0.2.0 ;; major) candidate=1.0.0 ;; esac
-    sed "s/\[0.1.1\]/[$candidate]/" CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md
-    "$TEST_REAL_MAKE" --no-print-directory "release-$kind"
-    [[ "$(perl scripts/release/release-data.pl version)" == "$candidate" ]]
-    perl scripts/release/release-data.pl verify
-    awk '/^(validate|stage|commit|tag|push)$/ {print}' "$TEST_EFFECTS" > target/actual
-    printf '%s\n' validate stage commit tag push > target/expected
-    cmp target/expected target/actual
-    [[ "$(tail -n 1 "target/release-state/$candidate.plan")" == complete ]]
-    cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
-    assert_cache_retained
 }
 test_publish() {
     before="$(fingerprint)"
@@ -512,45 +499,6 @@ test_validation_custody() {
     [[ ! -s "$TEST_EFFECTS" && ! -f target/mock-tag ]]
     assert_cache_retained
 }
-test_destination_custody() {
-    export TEST_PUSH_FAIL=1
-    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-    unset TEST_PUSH_FAIL
-    : > "$TEST_EFFECTS"
-    export TEST_DESTINATION=https://example.invalid/changed-destination
-    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
-    [[ ! -s "$TEST_EFFECTS" && ! -f target/remote-head ]]
-    assert_cache_retained
-}
-test_push_retry() {
-    export TEST_LOST_EFFECT="$1"
-    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-    before="$(fingerprint)"
-    unset TEST_LOST_EFFECT
-    "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
-    [[ "$(fingerprint)" == "$before" ]]
-    for event in validate stage commit tag push; do
-        [[ "$(awk -v event="$event" '$0==event {n++} END {print n+0}' "$TEST_EFFECTS")" == 1 ]]
-    done
-    assert_cache_retained
-}
-test_gate_retry() {
-    before="$(fingerprint)"
-    export TEST_GATE_FAIL=1
-    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-    assert_unchanged
-    [[ ! -e target/release-state/0.1.1.plan ]]
-    printf 'Earlier validation failure evidence.\n' > target/failed-gate-evidence
-    unset TEST_GATE_FAIL
-    export TEST_SOURCE=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-    printf '\n- Reviewed source fix.\n' >> CHANGELOG.md
-    "$TEST_REAL_MAKE" --no-print-directory release-patch
-    perl scripts/release/release-data.pl verify
-    [[ "$(perl scripts/release/release-data.pl source)" == "$TEST_SOURCE" ]]
-    [[ "$(awk '$0=="validate" {n++} END {print n+0}' "$TEST_EFFECTS")" == 2 ]]
-    [[ "$(cat target/failed-gate-evidence)" == 'Earlier validation failure evidence.' ]]
-    assert_cache_retained
-}
 test_early_plan_retry() {
     # Prior runner plans exist only as genuine retained interruption evidence.
     local destination
@@ -574,9 +522,18 @@ test_prepared_normal_retry() {
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     unset TEST_LOST_EFFECT
     before="$(fingerprint)"
+    cp docs/release.json target/original-receipt.json
+    cp target/release-state/0.1.1.validation.json target/original-validation.json
+    perl scripts/release/release-data.pl verify
     : > "$TEST_EFFECTS"
     "$TEST_REAL_MAKE" --no-print-directory release-patch
     [[ "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'tag\npush' ]]
+    cmp docs/release.json target/original-receipt.json
+    cmp target/release-state/0.1.1.validation.json target/original-validation.json
+    perl scripts/release/release-data.pl verify
+    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]]
+    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]]
+    cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
     [[ ! -e target/release-state/0.1.2.plan ]]
     "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
     assert_cache_retained
@@ -774,15 +731,10 @@ run_case preparation test_preparation
 for failure in mismatch duplicate missing failed-output; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done
 run_case staging test_staging
-run_case initial-version test_initial_version
-for kind in patch minor major; do run_case "release-$kind" test_release "$kind"; done
 for state in no-release tagged; do run_case "publish-$state" test_publish "$state"; done
 run_case publish-failure test_publish_failure
 for drift in notes tag head; do run_case "completed-$drift" test_invalid_release "$drift"; done
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
-run_case destination-custody test_destination_custody
-for effect in commit tag push; do run_case "lost-$effect" test_push_retry "$effect"; done
-run_case gate-retry-current-source test_gate_retry
 run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-normal-retry test_prepared_normal_retry
 for mode in explicit patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done

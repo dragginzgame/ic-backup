@@ -1,15 +1,21 @@
 //! Caller-owned host diagnostics using shared arithmetic; no retained authority.
 
 use super::DownloadJournalGuard;
-/// Canonical shared arithmetic for local diagnostic summaries.
+/// Canonical shared arithmetic for local diagnostic summaries and distributions.
 ///
 /// Re-exported so callers can name returned summaries without selecting a separate
 /// Metrics dependency. This is the shared type, with no local wrapper or arithmetic.
-pub use ic_metrics::MeasurementSummary;
+pub use ic_metrics::{MeasurementHistogram, MeasurementSummary};
 use std::{
     sync::PoisonError,
     time::{Duration, Instant},
 };
+
+const EMPTY_CHUNK_HISTOGRAM: MeasurementHistogram<4> =
+    match MeasurementHistogram::new([0, 32 * 1024, 256 * 1024, 1024 * 1024]) {
+        Ok(histogram) => histogram,
+        Err(_) => panic!("prepared chunk bounds must be strictly increasing"),
+    };
 
 /// Read-only diagnostic snapshot for one opened download-journal guard.
 ///
@@ -23,7 +29,7 @@ use std::{
 /// or reconstructed from journal evidence. Counts/totals saturate independently;
 /// `u64::MAX` is unavailable for exact interval arithmetic. These values establish
 /// no IC cost, complete transfer, spending, receipt, freshness or outcome authority.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct IcSnapshotLocalMetrics {
     verification_success_ns: MeasurementSummary,
     verification_failure_ns: MeasurementSummary,
@@ -31,7 +37,21 @@ pub struct IcSnapshotLocalMetrics {
     upload_metadata_failure_ns: MeasurementSummary,
     upload_data_success_ns: MeasurementSummary,
     upload_data_failure_ns: MeasurementSummary,
-    prepared_chunk_bytes: MeasurementSummary,
+    prepared_chunk_bytes: MeasurementHistogram<4>,
+}
+
+impl Default for IcSnapshotLocalMetrics {
+    fn default() -> Self {
+        Self {
+            verification_success_ns: MeasurementSummary::EMPTY,
+            verification_failure_ns: MeasurementSummary::EMPTY,
+            upload_metadata_success_ns: MeasurementSummary::EMPTY,
+            upload_metadata_failure_ns: MeasurementSummary::EMPTY,
+            upload_data_success_ns: MeasurementSummary::EMPTY,
+            upload_data_failure_ns: MeasurementSummary::EMPTY,
+            prepared_chunk_bytes: EMPTY_CHUNK_HISTOGRAM,
+        }
+    }
 }
 
 impl IcSnapshotLocalMetrics {
@@ -68,6 +88,18 @@ impl IcSnapshotLocalMetrics {
     /// Read successful prepared chunk sizes in bytes, including zero and repeated work.
     #[must_use]
     pub const fn prepared_chunk_bytes(self) -> MeasurementSummary {
+        self.prepared_chunk_bytes.summary()
+    }
+    /// Read the distribution of successful prepared chunk sizes in bytes.
+    ///
+    /// Inclusive upper bounds are zero, 32 KiB, 256 KiB and 1 MiB. Disjoint
+    /// buckets distinguish empty chunks, small extents, larger extents and the
+    /// supported maximum. Overflow is separate; admitted payloads cannot exceed
+    /// 1 MiB. Repeated preparation is another sample, not unique progress.
+    /// Counts saturate independently; ranges are not exact percentiles.
+    /// The histogram owns the summary returned by [`Self::prepared_chunk_bytes`].
+    #[must_use]
+    pub const fn prepared_chunk_bytes_histogram(self) -> MeasurementHistogram<4> {
         self.prepared_chunk_bytes
     }
 

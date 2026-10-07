@@ -22,8 +22,9 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 
 create_fixture() {
-    mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks"
-    cp "$ROOT/scripts/ci/check-format-tools.sh" "$FIXTURE/scripts/ci/"
+    mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks" "$FIXTURE/make"
+    cp "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/make/tools.mk" "$FIXTURE/make/"
     cp "$ROOT/ci/tool-versions.env" "$FIXTURE/ci/"
     cp "$ROOT/.githooks/pre-commit" "$FIXTURE/.githooks/"
     cp "$ROOT/scripts/dev/install-git-hooks.sh" "$FIXTURE/scripts/dev/"
@@ -55,7 +56,7 @@ TOML
     # The current source retires the old symlink, which may remain in HEAD
     # before maintainer commit. Qualify the maintained regular license bytes.
     cp "$ROOT/crates/ic-backup/LICENSE" crates/ic-backup/LICENSE
-    git add -- Makefile rust-toolchain.toml Cargo.toml crates scripts .githooks README.md
+    git add -- Makefile rust-toolchain.toml Cargo.toml crates scripts make .githooks README.md
     make --no-print-directory install-hooks
     [[ "$(git config --local --get core.hooksPath)" == .githooks ]]
 }
@@ -120,7 +121,7 @@ CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
 perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-artifacts\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
-formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh)
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh make/tools.mk)
 while IFS= read -r -d '' path; do
     formatter_inputs[${#formatter_inputs[@]}]="$path"
 done < <(git -C "$ROOT" ls-files -z --cached --others --exclude-standard -- '*.rs')

@@ -34,11 +34,11 @@ jobs:
           cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked
       - name: Install Linux shell tooling
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install --yes shellcheck ripgrep
+        run: sudo apt-get update && sudo apt-get install --yes shellcheck
       - name: Install macOS shell tooling
         if: runner.os == 'macOS'
         run: |
-          brew install flock make ripgrep shellcheck
+          brew install flock make shellcheck
           echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
       - name: Prepare reviewed local host and IC executables
         run: |
@@ -58,6 +58,10 @@ jobs:
           /bin/bash scripts/ci/test-format-tools.sh
           /bin/bash scripts/ci/test-evidence-checksums.sh
           /bin/bash scripts/ci/test-host-tools.sh
+          /bin/bash scripts/ci/test-tool-commands.sh
+          /bin/bash scripts/ci/test-cloc.sh
+          /bin/bash scripts/ci/test-cloc-tooling.sh
+          /bin/bash scripts/ci/test-rust-tools.sh
           /bin/bash scripts/ci/test-ic-tools.sh
           /bin/bash scripts/release/test-release.sh
           RELEASE_MAKE=make /bin/bash scripts/ci/test-release-runner.sh

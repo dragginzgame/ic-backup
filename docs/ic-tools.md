@@ -79,6 +79,23 @@ with their consumers.
 
 ## Consumer adoption
 
+### Identity storage and local resets
+
+Keep identity/key stores outside every directory removed by a consumer's reset
+or fresh-deploy commands. If a consumer selects `ICP_HOME`, it must not sit
+under disposable network or build state such as `.icp`, `.canic` or `target`.
+The consumer owns its cleanup path inventory and backup/recovery procedure;
+verify preservation with non-secret sentinel files when testing reset helpers.
+
+A dedicated repository-local home such as `.icp-local-home` is one option,
+provided it is ignored by Git, backed up appropriately and excluded from all
+cleanup paths. An existing persistent home can also satisfy the rule. Scope
+custom home selection to the consumer's CLI wrapper rather than a global shell
+export that changes identity selection in sibling repositories. Common tool
+installation does not move identity stores, create keys or change that selection.
+
+### Snapshot and pin selection
+
 Follow [snapshot adoption](consuming-snapshots.md#local-ic-tool-adoption). Use one
 authoritative pin matrix for this set; remove duplicate version/checksum selections
 from old setup files after their callers move. Product adapters may read that
@@ -94,7 +111,10 @@ versions before switching. Keep overrides outside the immutable shared snapshot.
 Do not copy version constants into a second catalog or upgrade tools implicitly
 as part of baseline adoption.
 
-This script owns provisioning only. Host artifact inspection and runtime/tool
-execution contracts supplied by `ic-host-tools` remain with that library;
-consumer orchestration, credentials, destinations and measurement policy remain
-local.
+This script owns provisioning only. The four packages in
+[IC Host Tooling](https://github.com/dragginzgame/ic-host-tooling) own their library
+contracts: `ic-host-artifacts` owns artifact streams and inspection; `ic-host-fs`
+owns bounded filesystem reads, publication and locks; `ic-host-process` owns
+admitted executable execution; and `ic-host-tools` owns Candid extraction and IC
+response decoding. Consumer orchestration, credentials, destinations and
+measurement policy remain local.

@@ -49,15 +49,8 @@ pub fn checksum_directory(path: &Path) -> Result<ArtifactChecksumRecord, Artifac
 /// Returns other reader IO failures unchanged; impossible byte counts reject as
 /// [`io::ErrorKind::InvalidData`] rather than indexing outside the transfer buffer.
 pub fn checksum_reader(reader: &mut impl Read) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    use ic_host_artifacts::artifact::ArtifactError as InputError;
-
     let identity =
-        ic_host_artifacts::artifact::hash_reader(reader, u64::MAX).map_err(
-            |error| match error {
-                InputError::Io(error) => ArtifactError::Io(error),
-                error => ArtifactError::Io(io::Error::other(error)),
-            },
-        )?;
+        ic_host_artifacts::artifact::hash_reader(reader, u64::MAX).map_err(io::Error::from)?;
     Ok(ArtifactChecksumRecord::from_digest(
         *identity.sha256.as_bytes(),
     ))
@@ -68,17 +61,15 @@ pub(crate) fn copy_from_reader(
     reader: &mut impl Read,
     writer: &mut impl Write,
 ) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    use ic_host_artifacts::artifact::{ArtifactError as InputError, CopyError};
+    use ic_host_artifacts::artifact::CopyError;
 
     // Artifacts have no total-size ceiling here. Descriptor admission, private
     // staging, retained checksum comparison and publication remain local.
     let identity =
         ic_host_artifacts::artifact::copy_reader(reader, writer, u64::MAX).map_err(|error| {
             match error {
-                CopyError::Input(InputError::Io(error)) | CopyError::Output(error) => {
-                    ArtifactError::Io(error)
-                }
-                CopyError::Input(error) => ArtifactError::Io(io::Error::other(error)),
+                CopyError::Input(error) => ArtifactError::Io(error.into()),
+                CopyError::Output(error) => ArtifactError::Io(error),
             }
         })?;
     Ok(ArtifactChecksumRecord::from_digest(

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "inspection_date": "2026-10-07",
+  "issue": "https://github.com/dragginzgame/ic-backup/issues/18",
+  "consumer_fixture": "scripts/release/test-release.sh",
+  "original_fixture_sha256": "ade433be8349efe2f3431904e5d918af864968b6e28e7373f3d5cace6d9d8443",
+  "shared_fixture": "scripts/ci/test-release-runner.sh",
+  "shared_fixture_sha256": "4bff935440b91b5ae1b89c03cfa3f8ec29b975c422cdbed0a851d0a7525defb7",
+  "shared_revision": "a3430b34b32a60f3b245a2b4f7e2f5321556fe56",
+  "reviewed_ownership_guide": "https://github.com/dragginzgame/shared-tooling/blob/a3430b34b32a60f3b245a2b4f7e2f5321556fe56/docs/releases.md#fixture-ownership",
+  "removed_runner_only_functions": {
+    "test_initial_version": {
+      "cases": [
+        "initial-version"
+      ],
+      "canonical_cases": "patch/minor/major matrix",
+      "assertions": "Successful initial patch version selection; version/receipt additionally retained in prepared-normal-retry."
+    },
+    "test_release": {
+      "cases": [
+        "release-patch",
+        "release-minor",
+        "release-major"
+      ],
+      "canonical_cases": "patch/minor/major matrix; retry increment matrices",
+      "assertions": "All increments and validate/stage/commit/tag/push order. Receipt/history/retained cache assertions move to the local prepared-normal-retry integration."
+    },
+    "test_destination_custody": {
+      "cases": [
+        "destination-custody"
+      ],
+      "canonical_cases": "destination-{release-verify,release-push-check,remote-observation}-{replaced,additional}; committed push conflict destination",
+      "assertions": "Changed destination refusal before push. Exact receipt/selected proof remote failure remains local."
+    },
+    "test_push_retry": {
+      "cases": [
+        "lost-commit",
+        "lost-tag",
+        "lost-push"
+      ],
+      "canonical_cases": "lost-{patch,minor,major}-{stage,commit,tag,push,before-push}; late-exact-resume",
+      "assertions": "Single effect after lost replies, frozen prepared metadata. One actual local Make/adapter lost-commit recovery and exact sidecar/receipt retained."
+    },
+    "test_gate_retry": {
+      "cases": [
+        "gate-retry-current-source"
+      ],
+      "canonical_cases": "restart-{patch,minor,major}-{release-preflight,release-verify}; retained-retry-fails-validation",
+      "assertions": "Failed validation retries fresh source without release mutation and keeps old failure evidence. Local source-identity and exact validation-sidecar archive checks remain."
+    }
+  },
+  "retained_consumer_assertion_owners": {
+    "test_dependency_bootstrap": "Actual Make dependency gate/cache and failure-log admission",
+    "test_nested_dependency_bootstrap": "Actual nested consumer logger checkout/evidence routing",
+    "test_validation_source_identity": "Consumer v1 validation sidecar binds original source/selection; false identity rejected",
+    "test_versions": "Consumer version admission rejects noncanonical/beta/historical regressions; shared helper dispatch retained",
+    "test_invalid_changelog": "Consumer candidate/history conflict refusal with exact original bytes",
+    "test_shared_changelog": "Consumer delegate finalizer failure/empty output custody and metadata transaction",
+    "test_version_reader": "Passive metadata parsing and selected historical package/member input; no partial helper outputs",
+    "test_preparation": "Actual preparation receipt, original validation sidecar, unchanged foreign lock entries/history and retained backups/cache",
+    "test_lockfile_rejection": "Consumer package lock selection/missing/duplicate/failing helper refuses before replacement",
+    "test_rejected_preparation": "Actual product metadata/gate/original-source/fmt refusal and retained inputs/cache",
+    "test_staging": "Actual public Make selection refusal and retired local command boundary; no fixture effects",
+    "test_publish": "Separate current registry admission with/without tag and unchanged local metadata",
+    "test_publish_failure": "Separate registry dry-run failure preserves local metadata",
+    "test_invalid_release": "Actual tag-check adapter admits exact receipt/notes/current source and refuses drift",
+    "test_validation_custody": "Missing original validation or changed member metadata prevents adapter recovery",
+    "test_early_plan_retry": "Local exact validation-sidecar and plan archiving after original source changes",
+    "test_prepared_normal_retry": "One actual Make-to-adapter lost-commit recovery: exact receipt/validation, frozen metadata/history, completed original candidate and cache custody",
+    "test_older_release_recovery": "All modes keep exact original sidecar and selected old --commit proof; updated member metadata/new receipt/source is independently admitted",
+    "test_selected_proof_rejection": "Missing/wrong original receipt identity or remote proof cannot dispatch either old/new work",
+    "test_completed_evidence_replay": "Local completed replay requires retained validation; malformed selected-commit/read/write arguments refuse without effects",
+    "test_dependency_failure_conditional_status": "Cargo substitute cannot produce false-success/cache under conditional errexit semantics",
+    "test_conditional_substitute_rejections": "Fixture Git/formatter missing proofs cannot become false-success under supported shell semantics",
+    "test_real_index_boundaries": "Real private Git indexes distinguish staged/working unrelated and original metadata edits without creating commits"
+  },
+  "retained_git_substitute": "Still required by actual selected historical receipts: immutable full product file trees, source/member/lock/notes/receipt reads, descendant proofs and remote tag association. Canonical runner fixture models generic version/evidence files, so no new generic fake-Git framework or callback contract is introduced. Unused lost-tag/push injection branches are retired.",
+  "evidence": "target/release-fixture-052-review",
+  "qualification": {
+    "result": "Focused Linux consumer and canonical runner fixtures pass; current draft native macOS/system Bash 3.2 delivery remains pending.",
+    "passing_logs": [
+      "target/release-fixture-052-review/release-check.log",
+      "target/release-fixture-052-review/quality.log"
+    ],
+    "original_passing_registry": "target/shared-release-tests.gZ6VjS/cases.txt",
+    "current_passing_registry": "target/shared-release-tests.fvr4FX/cases.txt",
+    "commands": "make release-check; targeted syntax/lint and documentation/snapshot checks. No Rust build or full CI gate.",
+    "effects": "Actual consumer Make/adapters/private indexes plus command substitutes; no real commit/tag/push or registry effect."
+  },
+  "current_fixture_sha256": "854f75ce4d7b606a6ef3a190f2a6dcc7b69bab5ad66c0f177733290a3375f98e",
+  "registered_case_evidence": "target/release-fixture-052-review/registered-case-delta.json",
+  "source_loc": {
+    "tool": "cloc 2.10; whole shell fixture including generated mock/data here-documents",
+    "before": 770,
+    "after": 717,
+    "evidence": "target/release-fixture-052-review/source-loc.json",
+    "meaning": "Maintenance source measurement, not runtime, performance or production artifact cost."
+  },
+  "previous_snapshot_review": "target/shared-tooling-052-0118-review/previous/docs/release-fixture-ownership.json",
+  "current_snapshot_qualification": "target/shared-tooling-052-0118-review/release.log reruns canonical and actual Backup adapter suites; earlier fixture-convergence evidence retains the original 0.1.15 snapshot."
+}

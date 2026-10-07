@@ -49,7 +49,96 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 58-file snapshot selects committed Shared Tooling 0.1.13 at
+The current 68-file snapshot selects committed Shared Tooling 0.1.18 at
+`a3430b34b32a60f3b245a2b4f7e2f5321556fe56`, verified against remote main.
+A clean isolated source exports exact blobs and executable modes; sibling files
+are read-only. All 65 previous paths remain, with the linked canister audit
+addendum, optional Cargo tool installer and its canonical fixture added.
+
+[The shared Make include](../make/tools.mk) owns common setup/check commands and
+LOC reporting. The selected logger rejects options/assignments as validation goals,
+retains complete success/failure logs and timing tables when requested, and preserves
+Make failures. Shared changelog finalization keeps trailing-whitespace draft notes
+attached to their heading. The hook retains exact staged Rust formatting and
+conservative symlink handling; its frontend reference adds no frontend to this library.
+
+Canonical LOC fixtures now isolate enclosing Cargo configuration and inherited
+target settings. Tooling-LOC consumer tests use adopted working bytes; actual
+committed exporter integration stays upstream. This addresses
+[Shared Tooling #50](https://github.com/dragginzgame/shared-tooling/issues/50)
+and removes our `env -u CARGO_TARGET_DIR` caller workaround. Both consumer LOC
+fixtures pass before a commit, with a temporary directory inside the checkout.
+
+The optional `make install-rust-tools` / `make rust-tools-check` commands use the
+shared Cargo-sort, derive-sort and Candid-extractor pins. The library's maintained
+formatter still needs only Cargo-sort; the extra set is not attached to aggregate
+setup/CI, installed implicitly or used to add another formatter. The canonical
+installer fixture qualifies locked commands, offline checks and retained failures
+using substitute Cargo; it does not prove actual installation/native qualification.
+
+Actual consumer logger/snapshot checks pass on Linux. Release/hook and shell checks
+are recorded in [the review](shared-tooling-review.json) under
+`target/shared-tooling-052-0118-review`. The exact upstream
+[CI run](https://github.com/dragginzgame/shared-tooling/actions/runs/37604299590)
+now passes Linux, native Apple Silicon/Intel macOS and lint/security. That exact
+upstream qualification does not cover the uncommitted consumer draft, which has no
+remote/native delivery result. See
+[issue #19](https://github.com/dragginzgame/ic-backup/issues/19).
+
+The compatible 0.5.2 draft retains its product diagnostics and host dependency
+batch. This tooling refresh changes no Rust, Cargo manifests/lock or released
+receipt. Package version remains 0.5.1. Earlier failed candidate evidence stays
+intact; no sibling write, commit, release transaction or publication occurs.
+
+### Retained 0.1.17 review
+
+Committed 0.1.17 at `88f1d70cdf671aefb9507d7a81411ed5daa358b3` matches inspected
+remote main. Its only script change from 0.1.16 is the independent LOC fixture:
+it now clears inherited target-directory settings and selects exact fixture
+manifests even when `TMPDIR` is inside a consumer Git checkout. Both corrections
+pass a fresh Linux run with those inherited conditions, without the local caller's
+`env -u` workaround. At that inspection the caller kept the workaround for the selected 0.1.15
+script; current 0.1.18 adoption removes it.
+
+The fresh exact 66-file candidate verifies all checksums/modes, but the unchanged
+tooling-LOC cross-owner fixture still fails on the uncommitted consumer guard path.
+The exporter dependency gap from 0.1.16 remains as well. A maintainer reproduction
+in [Shared Tooling #50](https://github.com/dragginzgame/shared-tooling/issues/50)
+confirms the committed-tree problem even with the exporter explicitly supplied.
+That review retained tested 0.1.15 rather than patching shared bytes or committing
+a draft to run its tests. The current 0.1.18 consumer fixture resolves the gap.
+
+Candidate/source identities, fresh outputs, failed fixture and the initial
+no-checkout destination refusal remain under `target/shared-tooling-052-0117-review`.
+Product Rust, Cargo inputs, released receipt and current vendored bytes are unchanged
+by this audit. [Exact-source upstream CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37601115116)
+was queued at inspection; no new native qualification is claimed. The retained
+0.1.16 review below keeps its own original evidence.
+
+### Retained 0.1.16 review
+
+Committed 0.1.16 at `b69507367d45e3db9543359e689e1fcba0467ff4` was reviewed and
+exported as an exact 66-file candidate, including its new linked canister audit
+addendum. Its logger, changelog whitespace handling, independent-workspace LOC
+and optional frontend selection changes are retained under
+`target/shared-tooling-052-0116-review`. Rust-only scope needs no npm/Prettier tool.
+
+The new canonical tooling-LOC cross-owner fixture clones the consumer HEAD and
+requires committed exporter inputs plus `scripts/distribution/refresh-consumer.sh`.
+That exporter is outside the consumer snapshot; an uncommitted guard addition
+also fails its Git path selection. The candidate's checksum/governance and prior
+fixture stages pass, but the full consumer tooling gate does not. Preserve the
+failed fixture and exact candidate without patching shared bytes or committing
+source merely to pass a test. That review retained the tested 0.1.15 adoption;
+current 0.1.18 resolves the reusable fixture boundary. See
+[Shared Tooling #50](https://github.com/dragginzgame/shared-tooling/issues/50).
+This is a consumer test-admission gap, not evidence
+that the production LOC reporter fails. Current 0.1.16 native upstream CI was
+still queued at inspection.
+
+### Retained 58-file adoption
+
+The earlier 58-file snapshot selected committed Shared Tooling 0.1.13 at
 `e378671d90afa237ff63a4b0e3b9551eb2c222b6`, matching inspected remote main.
 It adds [the Rust workspace rule](../rules/rust-workspaces.md) and refreshes its
 baseline, dependency, hook and governance-roster links together. The sole new

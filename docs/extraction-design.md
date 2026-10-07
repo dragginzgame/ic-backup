@@ -589,7 +589,7 @@ lost-effect reconciliation remain integration work. See
 [the upload boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
 
 Explicit local IC-tree verification and upload preparation now expose per-guard
-`ic-metrics` summaries. Host durations use nanoseconds, successful prepared data uses
+`ic-metrics` summaries and a bounded prepared-size histogram. Host durations use nanoseconds, successful prepared data uses
 bytes, and returned successes/rejections stay separate. Internal verification and
 enclosing preparation overlap; repeated preparation is another sample rather than
 unique transfer progress. These in-memory diagnostics start empty on reopen and

@@ -19,7 +19,7 @@ use crate::{
 };
 use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_reader};
 use std::time::Instant;
-use std::{io, io::Read, os::unix::fs::MetadataExt};
+use std::{io::Read, os::unix::fs::MetadataExt};
 
 impl DownloadJournalGuard<'_> {
     /// Explicitly verify one published IC tree against exact original metadata and intent.
@@ -198,8 +198,7 @@ fn checksum_exact_reader(
     // a local artifact requirement, including rejection of premature EOF.
     let identity = hash_reader(reader, length).map_err(|error| match error {
         InputError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
-        InputError::Io(error) => ArtifactError::Io(error).into(),
-        error => ArtifactError::Io(io::Error::other(error)).into(),
+        error => ArtifactError::Io(error.into()).into(),
     })?;
     if identity.bytes != length {
         return Err(IcSnapshotArtifactError::FileShape);

@@ -33,6 +33,20 @@ mkdir -p "$retention/bin"
     printf '#!%s\n' "$BASH"
     cat <<'BASH'
 if [[ "${1:-}" == */scripts/ci/"$RETENTION_FAILED_HELPER" ]]; then
+    # Admission fixtures must reach the real guard and their failing control
+    # gate before the original retained patch fixture receives our injection.
+    if [[ "$RETENTION_FAILED_HELPER" == run-release.sh && "${PWD##*/}" != patch ]]; then
+        exec "$RETENTION_REAL_BASH" "$@"
+    fi
+    # The new goal-admission cases must reach the actual logger. Inject only
+    # at the original passing-output case whose fixture retention we qualify.
+    if [[ "$RETENTION_FAILED_HELPER" == run-validation-targets.sh && "${2:-}" != passing-tests ]]; then
+        exec "$RETENTION_REAL_BASH" "$@"
+    fi
+    if [[ "$RETENTION_FAILED_HELPER" != check-dependency-pins.sh ]] &&
+        ! "$RETENTION_REAL_BASH" "$RETENTION_EXECUTION_CHECK" "${RELEASE_MAKE:-make}" >/dev/null 2>&1; then
+        exec "$RETENTION_REAL_BASH" "$@"
+    fi
     printf 'injected child-helper status: %s\n' "$RETENTION_CHILD_STATUS" >&2
     exit "$RETENTION_CHILD_STATUS"
 fi
@@ -55,7 +69,8 @@ for owner in dependency-pins validation-target-runner release-runner; do
     mkdir "$retention/$owner"
     status=0
     TMPDIR="$retention/$owner" PATH="$retention/bin:$PATH" \
-        RETENTION_REAL_BASH="$BASH" RETENTION_FAILED_HELPER="$helper" \
+        RETENTION_REAL_BASH="$BASH" RETENTION_EXECUTION_CHECK="$ROOT/scripts/ci/check-make-execution.sh" \
+        RETENTION_FAILED_HELPER="$helper" \
         RETENTION_CHILD_STATUS="$child_status" \
         "$BASH" "$ROOT/scripts/ci/test-$owner.sh" > "$retention/$owner.log" 2>&1 || status=$?
     [[ "$status" == "$expected_status" ]] || {

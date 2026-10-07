@@ -353,6 +353,10 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   returned success/rejection samples, valid zero and repeated preparation semantics.
   Preparation timings include nested verification and are not exclusive totals.
   Metrics start empty on create/open, retain no IDs/history and write no records.
+  Successful prepared sizes have one shared four-bound histogram; derive the
+  existing summary from it. Preserve zero/32 KiB/256 KiB/1 MiB inclusive bounds,
+  disjoint independently saturating counts and failure exclusion. Six duration
+  summaries remain separate; distributions grant no payload admission.
   Never feed saturated summaries or diagnostic samples into exact spending,
   completion, receipt, retry, fresh-authority or terminal/release admission. Keep
   the IC instruction-reader feature absent from the host implementation.

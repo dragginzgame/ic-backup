@@ -18,8 +18,8 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, MeasurementSummary,
-        create_operation_plan, read_operation_plan,
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, MeasurementHistogram,
+        MeasurementSummary, create_operation_plan, read_operation_plan,
     },
     policy::ic_snapshot_upload::validate_acknowledgement,
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
@@ -271,6 +271,11 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let prepared: MeasurementSummary = measurements.prepared_chunk_bytes();
     let canonical: ic_metrics::MeasurementSummary = prepared;
     assert_eq!(canonical, measurements.prepared_chunk_bytes());
+    let histogram: MeasurementHistogram<4> = measurements.prepared_chunk_bytes_histogram();
+    let canonical_histogram: ic_metrics::MeasurementHistogram<4> = histogram;
+    assert_eq!(canonical_histogram.summary(), canonical);
+    assert_eq!(histogram.bucket_counts(), &[0, 1, 0, 0]);
+    assert_eq!(histogram.overflow(), 0);
     assert_eq!(measurements.upload_metadata_success_ns().samples(), 1);
     assert_eq!(measurements.upload_data_success_ns().samples(), 1);
     assert_eq!(measurements.verification_success_ns().samples(), 3);

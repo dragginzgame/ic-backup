@@ -25,6 +25,117 @@
 
 # Current handoff — 2026-10-07
 
+## Pending 0.5.2 diagnostics and Shared Tooling adoption
+
+Release 0.5.1 is pushed at `0441940772d142400bae17ce60f675a1ef79b739`.
+Both exact-source [branch](https://github.com/dragginzgame/ic-backup/actions/runs/37597006011)
+and [tag](https://github.com/dragginzgame/ic-backup/actions/runs/37597005993) workflows
+now pass Linux, Apple Silicon and Intel macOS. Delivered #13/#14/#16/#17 are
+closed under their original scopes; those results do not qualify this draft.
+Earlier qualification below retains its original source/dependency identities.
+
+The compatible 0.5.2 draft adds one shared prepared-chunk size histogram to
+per-guard diagnostics. Inclusive bounds are zero, 32 KiB, 256 KiB and the 1 MiB
+payload ceiling; failure exclusion, zero/repeated samples and empty reopen remain.
+The existing summary getter derives from the histogram rather than maintaining
+another byte aggregate. Six duration summaries and all v1 accounting/recovery
+owners remain intact. Fixed storage grows by 72 bytes, with at most four bound
+comparisons and no new clock/allocation/remote call. See
+[the package review](../ic-metrics-adoption.json) and
+[issue #15](https://github.com/dragginzgame/ic-backup/issues/15).
+
+The incoming published ic-metrics 0.2.7 and host artifacts/fs 0.4.0 selections
+are preserved. Each archive checksum matches the incoming lock and every Rust
+source matches its clean exact release; Metrics Rust is unchanged from 0.2.6.
+The Metrics minimum remains 0.2.4, the first released histogram API.
+
+The host review replaces duplicate IO error mapping with the shared conversion
+in raw checksum/copy, bounded JSON reads and exact IC checksum/upload readers.
+Native IO identity, typed record size/file-shape errors and original wrapper
+identity remain intact. New upstream readers do not change our maintained required
+no-follow record read. Shared path locks wait and create parents; our nonblocking
+locks, existing-file acquisition and descendant custody stay local. Generic shared
+publication and process capture do not replace private crash barriers or owned
+command-descriptor inheritance. No function, method or type was removed.
+See [the current host review](../ic-host-tools-adoption.json) and
+[issue #20](https://github.com/dragginzgame/ic-backup/issues/20). All registered
+focused artifact/JSON/IC artifact/metrics cases and four public recovery/source/
+upload journeys pass on Linux. Configured Clippy, MSRV and locked package checks
+qualify the current graph; native delivery of this draft remains pending.
+Evidence is under `target/ic-host-052-review`; the initial missing test import
+failure is retained and tests now import their own IO module explicitly.
+
+The draft now adopts the exact 68-file Shared Tooling 0.1.18 snapshot at
+`a3430b34b32a60f3b245a2b4f7e2f5321556fe56`. Remote main matches; isolated
+committed export and every file/mode verify. The reusable tooling-LOC test now
+uses adopted working bytes while committed exporter proof stays upstream,
+addressing [Shared Tooling #50](https://github.com/dragginzgame/shared-tooling/issues/50).
+Both LOC fixtures pass before commit with enclosing Git/Cargo context and inherited
+target selection; the obsolete local `env -u` workaround is removed. Earlier
+0.1.16/0.1.17 failures retain their real inputs and results.
+
+The current logger rejects Make options/assignments before gate dispatch, preserves
+Make failure status and supports complete retained logs/timings. Changelog finalization
+keeps notes with whitespace-bearing draft headings. The current hook/reference and
+LOC symlink-output fixes are selected together. Added Cargo tool commands are optional;
+only the existing Cargo-sort formatter is required by this library. A substitute-Cargo
+installer fixture qualifies command wiring and retained failures, not actual tool/native
+installation. The new linked audit addendum closes the governance snapshot.
+
+Actual consumer tooling, release/runner, hook and shell checks pass on Linux.
+Formatting, pins, documentation links, workflow lint and exact 68-file snapshot
+verification pass. Both LOC cases also pass under this actual enclosing Cargo
+workspace with inherited target selection and checkout-contained TMPDIR. Results and exact
+unchanged product hashes are under `target/shared-tooling-052-0118-review`;
+[the maintained review](../shared-tooling-review.json) records their scope. GitHub
+issue review verifies upstream 0.1.18 Linux, native Intel/ARM macOS and lint/security
+CI now passes; exact job evidence is under `target/gh-issues-052-review`.
+Native delivery of this complete draft
+remains independent; see [issue #19](https://github.com/dragginzgame/ic-backup/issues/19).
+No shared helper is patched in place and no product Rust, Cargo selection or receipt
+is changed by the refresh.
+
+The same 0.5.2 draft now converges release-fixture assertion ownership. Five
+runner-only helper functions and their nine generic cases are removed after a
+complete function/coverage map. The unchanged canonical suite still owns all
+increments, phase order, lost replies, destination custody and fresh-source retry.
+One actual Make-to-adapter recovery now checks exact receipt/validation bytes,
+original completed version and preserved history/cache. Local lock/metadata failures,
+selected older-commit proofs, real index boundaries and publication cases remain.
+The retained Git substitute is required by immutable product file-tree evidence;
+unused lost-tag/push injection branches are removed without a new mock framework.
+See [the ownership map](../release-fixture-ownership.json) and
+[issue #18](https://github.com/dragginzgame/ic-backup/issues/18). Focused release,
+shell and documentation checks pass on Linux; actual registered local cases
+are 69 before and 60 after, with exactly the mapped nine cases removed. The
+unchanged canonical suite passes. Source cloc is 770 to 717 shell code lines,
+not a performance or production-size claim. Product Rust/manifests/lock/released
+receipt and selected snapshot remain unchanged by this cleanup. Native delivery
+of the uncommitted batch is pending; evidence is under
+`target/release-fixture-052-review`.
+
+Focused native Linux metrics and public guarded upload cases pass, including
+deliberate diagnostic-mutex poison through returned successes/failures and empty
+reopen. Duration clamping, exact inclusive bounds, overflow routing and independently
+saturated total/distribution remain descriptive. All-target/all-feature Clippy and
+Rust 1.91 compilation plus the registered unit cases pass. Locked offline packaging,
+formatting, dependency inheritance, links and exact snapshot checks pass. Canonical
+tooling, actual consumer release/recovery, shared runner, hooks and shell checks pass
+on their selected snapshots. Initial oversized-value Clippy and 0.1.16 fixture failures remain
+retained; the helper borrows the view and no shared script is patched.
+
+Evidence is under `target/metrics-histogram-052-review` and
+`target/shared-tooling-052-0116-review`; prior 0.1.15 evidence remains intact.
+The earlier metrics review inspected Metrics 0.2.6 and host artifacts/fs 0.3.3;
+its evidence retains those historical selections. Current host and Metrics review
+above qualifies the incoming 0.4.0/0.2.7 graph without adding host-process. Native
+delivery of this uncommitted draft remains pending. Workspace version and released
+receipt remain 0.5.1, and the maintainer's incoming lock is unchanged.
+No commits, release effects, broad gate, sibling writes or cleanup ran.
+Native delivery of the fixture convergence and installed transport/Canic/application/terminal
+qualification remain independent. Review and commit the complete draft, including
+this handoff, before release.
+
 ## Pending 0.5.1 Clippy correction
 
 The maintainer's configured all-target/all-feature Clippy check exposed five

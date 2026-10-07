@@ -164,7 +164,7 @@ implemented foundation includes:
   and explicit retained metadata/extent/chunk verification;
 - source-bound snapshot upload metadata and bounded byte preparation, with a single-update
   provider contract and passive replies under separate pending attempts; live upload is pending;
-- per-guard host timing and prepared chunk-size summaries using `ic-metrics`, with
+- per-guard host timing summaries and bounded prepared chunk-size distributions using `ic-metrics`, with
   diagnostics kept separate from retained progress, spending and completion evidence;
 - contracts for exact originally reserved IC updates and bounded passive reply
   association, preserving pending spending without automatic settlement;

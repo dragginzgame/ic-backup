@@ -13,7 +13,7 @@ use crate::model::{
     operation_plan::OperationPlanRecord,
 };
 use ic_management_canister_types::SnapshotDataKind;
-use std::io::{self, Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom};
 use std::time::Instant;
 use thiserror::Error;
 
@@ -168,9 +168,8 @@ fn read_chunk(
         ic_host_artifacts::artifact::read_reader(file.take(size), limit).map_err(|error| {
             use ic_host_artifacts::artifact::ArtifactError;
             match error {
-                ArtifactError::Io(error) => IcSnapshotArtifactError::Io(error),
                 ArtifactError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
-                error => IcSnapshotArtifactError::Io(io::Error::other(error)),
+                error => IcSnapshotArtifactError::Io(error.into()),
             }
         })?;
     if u64::try_from(bytes.len()).ok() != Some(size) {

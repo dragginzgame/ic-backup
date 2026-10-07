@@ -43,6 +43,28 @@ separate explicit action. Build, validation and recovery artifacts remain retain
 | `make publish-dry-run` | Run Cargo registry admission without uploading | Maintainer |
 | `make publish` | Upload the current package to crates.io | Maintainer |
 
+## Release fixture ownership
+
+`make release-check` runs both the consumer adapter fixture and the unchanged
+canonical shared runner suite. [The assertion map](release-fixture-ownership.json)
+binds the owners to exact reviewed scripts. The shared suite owns all increment
+and generic phase/restart/lost-reply/destination matrices. The local fixture
+retains actual metadata/lock/changelog transaction failures, receipt and validation
+custody, selected older `RELEASE_COMMIT` verification, real staged-index admission,
+publication separation and one normal Make-to-adapter lost-commit recovery.
+
+That local recovery compares exact original receipt and validation bytes, admits
+the completed original version/history and preserves the prepared input/cache.
+Retained historical proof tests still exercise all their original modes. Their
+Git substitute needs immutable full product file trees; the generic runner fixture
+models different evidence. No new shared mock framework is needed to remove the
+runner-only cases. Fixture substitutes reject unsupported calls; their behavior
+under conditional shell evaluation remains locally checked.
+
+The fixtures create no real Git commit/tag/push or registry upload. Native shell
+delivery remains distinct from local Linux checks; see
+[issue #18](https://github.com/dragginzgame/ic-backup/issues/18).
+
 ## Pending notes and compatibility
 
 Read [the changelog rules](../rules/changelogs.md) before maintaining notes. Keep

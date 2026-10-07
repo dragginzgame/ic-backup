@@ -90,7 +90,6 @@ fn record_read_error(
 ) -> PersistenceError {
     use ic_host_artifacts::artifact::ArtifactError;
     match error {
-        ArtifactError::Io(error) => PersistenceError::Io(error),
         ArtifactError::NotRegularFile => PersistenceError::Io(io::Error::new(
             io::ErrorKind::InvalidInput,
             "record must be a regular file",
@@ -98,7 +97,7 @@ fn record_read_error(
         ArtifactError::LimitExceeded { .. } => {
             PersistenceError::RecordTooLarge { limit: max_bytes }
         }
-        error => PersistenceError::Io(io::Error::other(error)),
+        error => PersistenceError::Io(error.into()),
     }
 }
 

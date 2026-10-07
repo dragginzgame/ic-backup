@@ -30,6 +30,7 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     let raw = candid::encode_one(upload_values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = retained(&layout, &plan, &metadata, &raw);
+    poison_diagnostics(&guard);
     let before = fs::read(guard.path()).unwrap();
     let empty = guard.ic_snapshot_metrics();
     assert_eq!(empty.verification_success_ns().samples(), 0);
@@ -71,6 +72,11 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     assert_eq!(successful.prepared_chunk_bytes().total(), 6);
     assert_eq!(successful.prepared_chunk_bytes().latest(), Some(0));
     assert_eq!(successful.prepared_chunk_bytes().maximum(), Some(3));
+    assert_eq!(
+        successful.prepared_chunk_bytes_histogram().bucket_counts(),
+        &[1, 2, 0, 0]
+    );
+    assert_eq!(successful.prepared_chunk_bytes_histogram().overflow(), 0);
     assert!(successful.upload_data_success_ns().latest().is_some());
     assert!(matches!(
         guard.prepare_ic_snapshot_upload_data(
@@ -97,8 +103,8 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     assert_eq!(rejected.upload_metadata_failure_ns().samples(), 1);
     assert_eq!(rejected.upload_data_failure_ns().samples(), 1);
     assert_eq!(
-        rejected.prepared_chunk_bytes(),
-        successful.prepared_chunk_bytes()
+        rejected.prepared_chunk_bytes_histogram(),
+        successful.prepared_chunk_bytes_histogram()
     );
     assert_eq!(successful.upload_data_failure_ns().samples(), 0);
     assert_eq!(guard.ic_snapshot_metrics(), rejected);
@@ -108,7 +114,7 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
         root.join("retained-original"),
     )
     .unwrap();
-    assert_missing_source_records_failure_only(&guard, &plan, &upload, rejected);
+    assert_missing_source_records_failure_only(&guard, &plan, &upload, &rejected);
     assert_eq!(fs::read(guard.path()).unwrap(), before);
     drop(guard);
     let reopened = DownloadJournalGuard::open(&layout, plan.digest().hash()).unwrap();
@@ -117,11 +123,22 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     assert_eq!(fs::read(reopened.path()).unwrap(), before);
 }
 
+fn poison_diagnostics(guard: &DownloadJournalGuard<'_>) {
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _metrics = guard.ic_snapshot_metrics.lock().unwrap();
+            panic!("diagnostic lock poison fixture");
+        }))
+        .is_err()
+    );
+    assert!(guard.ic_snapshot_metrics.is_poisoned());
+}
+
 fn assert_missing_source_records_failure_only(
     guard: &DownloadJournalGuard<'_>,
     plan: &crate::model::operation_plan::OperationPlanRecord,
     upload: &IcSnapshotUploadRequest<'_>,
-    rejected: crate::ops::persistence::IcSnapshotLocalMetrics,
+    rejected: &crate::ops::persistence::IcSnapshotLocalMetrics,
 ) {
     assert!(matches!(
         guard.prepare_ic_snapshot_upload_data(
@@ -145,8 +162,8 @@ fn assert_missing_source_records_failure_only(
         rejected.upload_data_success_ns()
     );
     assert_eq!(
-        missing.prepared_chunk_bytes(),
-        rejected.prepared_chunk_bytes()
+        missing.prepared_chunk_bytes_histogram(),
+        rejected.prepared_chunk_bytes_histogram()
     );
 }
 

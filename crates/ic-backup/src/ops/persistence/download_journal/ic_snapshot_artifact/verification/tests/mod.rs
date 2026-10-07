@@ -1,6 +1,7 @@
 //! Exact local stream length/error admission; these readers perform no IC effects.
 
 use super::*;
+use std::io;
 use std::io::Cursor;
 
 #[test]

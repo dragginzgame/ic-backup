@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.2]
+
+- Reuse published ic-host 0.4 error conversion for artifact and record IO.
+  Preserve native failures, exact byte limits, private publication and command
+  custody; qualify the maintainer-selected dependency graph
+  ([#20](https://github.com/dragginzgame/ic-backup/issues/20)).
+
+- Expose bounded prepared chunk-size distributions through shared `ic-metrics`
+  histograms. Keep the existing summary getter derived from the same samples;
+  failures do not contribute bytes, and reopening starts empty
+  ([#15](https://github.com/dragginzgame/ic-backup/issues/15)).
+
+- Use the reviewed shared setup and LOC commands with pinned ripgrep/cloc.
+  Reject Make modes that skip execution or hide failures before release,
+  validation and formatting-hook dispatch. Adopt the corrected consumer LOC
+  fixtures, retain complete validation logs when requested, and keep draft notes
+  attached to headings with trailing whitespace
+  ([#19](https://github.com/dragginzgame/ic-backup/issues/19)).
+
+- Run generic release increment and retry coverage once through the shared
+  suite. Retain consumer receipt, selected-commit, index and publication checks,
+  with exact receipt and validation evidence across Make recovery
+  ([#18](https://github.com/dragginzgame/ic-backup/issues/18)).
+
 ## [0.5.1] - 2026-10-07
 
 - Release non-spawning command-quiescence exclusion when its guard drops, even

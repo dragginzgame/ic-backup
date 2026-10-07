@@ -2198,6 +2198,18 @@ verification samples are included, so enclosing preparation durations overlap th
 checks and must not be added as exclusive work. Calls that do not return supply no
 sample. No wall-clock threshold, IC instruction/cycle cost or receipt is inferred.
 
+Successful prepared sizes have one `ic_metrics::MeasurementHistogram<4>` owner,
+re-exported through the persistence facade. `prepared_chunk_bytes_histogram()`
+returns its copied distribution; the existing `prepared_chunk_bytes()` reads its
+summary. Inclusive bounds of zero, 32 KiB, 256 KiB and the 1 MiB payload ceiling
+separate empty, small, larger and maximum-sized local preparation work. Disjoint
+counts and separate overflow are descriptive, not exact percentiles or payload
+admission. The production payload owner rejects oversized chunks; overflow routing
+is tested without granting an oversized upload. Fixed arrays and overflow add
+72 bytes per guard, with at most four comparisons per successful chunk and no
+extra timing sample. The six duration owners remain summaries. No second byte
+aggregate, local histogram arithmetic or duration distribution is introduced.
+
 Sampling is empty on create/open. Ordinary retained record access and metric reads
 perform no fresh artifact IO or sampling, even when artifact trees are missing.
 Guard-local synchronization preserves `Send + Sync`; no metric lock spans filesystem

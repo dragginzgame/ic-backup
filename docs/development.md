@@ -41,22 +41,33 @@ make check
 make test
 ```
 
-Explicit local setup uses the reviewed [host parser pins](../ci/tool-versions.env)
-and [IC tool matrix](../ci/ic-tools.tsv). It downloads and verifies jq/yq and the
-six IC executables, then activates each complete set under `.tools/`; previous
-sets and failed candidates are retained. Make selects `.tools/host/bin` and
-`.tools/ic/bin`. Interactive shells can use:
+Explicit local setup uses the reviewed [host pins](../ci/tool-versions.env)
+and [IC tool matrix](../ci/ic-tools.tsv), through the shared
+[Make commands](../make/tools.mk). It downloads and verifies jq/yq, ripgrep with
+PCRE2, cloc and the six IC executables, then activates each complete set under `.tools/`; previous
+sets and failed candidates are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and the optional `.tools/rust/bin`.
+Interactive shells can use:
 
 ```bash
-export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PATH"
+export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/bin:$PATH"
 ```
 
 See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
-[IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck, ripgrep and
+[IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck and
 macOS GNU Make/flock remain separate product prerequisites. The test-only PocketIC client
 uses the explicitly prepared server for [real single-canister qualification](pocketic-qualification.md).
 Production transport/runners remain unimplemented; installing tools alone establishes
 no backend or application qualification.
+
+The optional shared `make install-rust-tools` and `make rust-tools-check` prepare
+and check Cargo-sort, derive-sort and Candid-extractor under `.tools/rust/`.
+This library requires only the existing Cargo-sort formatter; the extra set is
+not part of aggregate setup or CI. Both commands use the reviewed shared pins.
+
+`make cloc` reports source/test LOC from this root workspace and excludes Cargo's
+selected build outputs. `make cloc-tooling` inventories sibling CI/tooling using
+Git and cloc without executing sibling commands; `CLOC_PARENT` selects the parent.
+Both commands use the prepared checkout-local tools and perform no installation.
 
 `make dependency-pins-check` checks declarations and tracked lockfiles without
 downloads. The three qualified exact constraints and their required review are
@@ -548,6 +559,13 @@ This qualifies persistence only. See
 Local IC artifact diagnostics are available through
 `DownloadJournalGuard::ic_snapshot_metrics()`. Its duration summaries use nanoseconds;
 `prepared_chunk_bytes()` summarizes successfully returned local data payload sizes.
+`prepared_chunk_bytes_histogram()` returns the canonical shared
+`MeasurementHistogram<4>`, re-exported through the same persistence facade. Its
+inclusive byte bounds are zero, 32 KiB, 256 KiB and 1 MiB, with separate overflow.
+Counts are disjoint and saturate independently. The histogram owns the summary;
+there is no separately updated byte aggregate. Empty chunks and repeated work
+remain samples, while rejected calls contribute no bytes. Six duration summaries
+retain their existing owners and inclusive timing.
 Counts, totals, latest and maximum reuse `ic-metrics::MeasurementSummary`, exposed
 as `ic_backup::ops::persistence::MeasurementSummary`. This re-exports the shared type;
 no local summary model or aggregation is maintained. Callers can name returned
@@ -556,6 +574,9 @@ and rejected calls stay separate. Empty chunks are valid zero samples; repeated
 preparation is repeated work. Preparation timings include nested verification and
 must not be added to verification timings as exclusive work. Measurements are empty
 on reopen and never persist into journals or grant progress/spending authority.
+Four bounds add 72 bytes of fixed storage per guard and at most four bound
+comparisons per admitted chunk. No allocation, clock or reporting task is added.
+This describes storage/work, not a measured speed-up or IC cycle cost.
 
 The workspace catalog declares registry `ic-metrics` with default features disabled;
 the Unix member inherits it without feature `ic`. It installs no host IC instruction
@@ -782,6 +803,19 @@ files include private Git index evidence. These test artifacts have seven-day
 retention; they do not replace durable operator journals or source references.
 Linux and native macOS evidence remain distinct. See
 [the current adoption review](shared-tooling-review.json).
+
+Set `VALIDATION_LOG_DIR` to retain complete successful and failed target logs
+and a timing table, including nested validation. Each invocation gets its own
+directory; the logger never replaces a prior run. For a focused formatting check:
+
+```bash
+VALIDATION_LOG_DIR="$PWD/target/validation-runs" bash scripts/ci/run-validation-targets.sh fmt-check
+```
+
+Gate arguments must be named Make targets; options and assignments reject before
+logging or dispatch. Export ordinary settings through the environment. The logger
+preserves Make failure status. This evidence remains distinct from source-bound
+release validation receipts.
 
 Shared dependency, validation-runner and release-runner regressions retain their
 original fixture inputs on unexpected failure. Successful temporary fixtures are
