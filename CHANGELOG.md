@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.1]
+## [0.5.1] - 2026-10-07
 
 - Release non-spawning command-quiescence exclusion when its guard drops, even
   while a descriptor copy remains open. Preserve dispatched child and descendant
