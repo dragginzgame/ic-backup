@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.0]
+## [0.5.0] - 2026-10-07
 
 - **Breaking:** `checksum_reader` now retries interrupted reads internally.
   Callers must own blocking/timeouts and cannot use the first `Interrupted` error
