@@ -25,7 +25,26 @@
 
 # Current handoff — 2026-10-07
 
-## Pending 0.5.2 diagnostics and Shared Tooling adoption
+## Released 0.5.2 native delivery review
+
+Release 0.5.2 is pushed at `e1300abfbaba47d5776a71b5bc1fa005d9079e1c` with tag `v0.5.2`.
+Its [main](https://github.com/dragginzgame/ic-backup/actions/runs/37607137734) and [tag](https://github.com/dragginzgame/ic-backup/actions/runs/37607138196) CI runs pass the full configured gate on Linux.
+Both Intel and Apple Silicon macOS jobs are queued at inspection; no failure
+is reported. The selected metrics, release-fixture, shared snapshot and host
+dependency fixes are included in that release. The four owning issues remain
+open for native acceptance, not another implementation batch.
+
+The release's parent is `4a1a88bcb2551f821d41ff0b05425a82a327537c`.
+Finalization changes only the root Cargo version/lock, changelog date and receipt;
+all product Rust, tests, shared snapshot, local tooling and CI are identical to
+that committed prepared source. Fresh job/source evidence is retained under
+`target/issue-fixes-052-review`. Earlier local target review directories are no
+longer present in this checkout; the previous prose below retains their historical
+qualification and is not fresh native proof. No new failure, open PR or code repair
+is identified. This review creates no commit, version transaction, push, workflow
+dispatch, publication or cleanup.
+
+## Retained 0.5.2 local diagnostics and Shared Tooling qualification
 
 Release 0.5.1 is pushed at `0441940772d142400bae17ce60f675a1ef79b739`.
 Both exact-source [branch](https://github.com/dragginzgame/ic-backup/actions/runs/37597006011)
