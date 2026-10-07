@@ -25,6 +25,19 @@
 
 # Current handoff — 2026-10-07
 
+## Pending 0.5.1 Clippy correction
+
+The maintainer's configured all-target/all-feature Clippy check exposed five
+implicit-reference-to-raw-pointer conversions in lifecycle/capture settlement
+unit assertions. The prior PocketIC-target Clippy pass did not cover library
+unit tests. Use explicit `&raw const` addresses while preserving exact borrowed
+identity checks; no lint suppression or runtime behavior change is introduced.
+Fresh `make clippy` now passes all configured targets/features, and all registered
+`policy::ic_observation` unit cases pass. Original failure logs, original/corrected
+test hashes and fresh check output are retained under
+`target/clippy-settlement-051-review`. Other 0.5.1 work remains intact; no version,
+release, dependency or sibling edits were made.
+
 ## Pending 0.5.1 real single-canister qualification
 
 The accepted integration direction now has an executable test-only PocketIC 16

@@ -132,8 +132,11 @@ fn statuses_never_infer_original_outcomes_or_change_spending() {
                 )
                 .unwrap();
                 assert_eq!(view.outcome(), outcome);
-                assert!(std::ptr::eq(view.settlement(), &claim));
-                assert!(std::ptr::eq(view.observation().response(), &response));
+                assert!(std::ptr::eq(view.settlement(), &raw const claim));
+                assert!(std::ptr::eq(
+                    view.observation().response(),
+                    &raw const response
+                ));
                 assert_eq!(original.journal, before);
             }
         }

@@ -110,9 +110,12 @@ fn explicit_new_id_attribution_preserves_exact_originals_and_spending() {
     assert_eq!(view.captured_snapshot().unwrap().id(), &[3]);
     assert_eq!(view.captured_snapshot().unwrap().taken_at_timestamp(), 42);
     assert_eq!(view.captured_snapshot().unwrap().total_size(), 123);
-    assert!(std::ptr::eq(view.baseline(), &baseline));
-    assert!(std::ptr::eq(view.observation().response(), &response));
-    assert!(std::ptr::eq(view.settlement(), &claim));
+    assert!(std::ptr::eq(view.baseline(), &raw const baseline));
+    assert!(std::ptr::eq(
+        view.observation().response(),
+        &raw const response
+    ));
+    assert!(std::ptr::eq(view.settlement(), &raw const claim));
     assert_eq!(original.journal, before);
     assert_eq!(original.journal.view().pending_mutation, Some(1));
     assert_eq!(original.journal.view().pending_observation, Some(2));

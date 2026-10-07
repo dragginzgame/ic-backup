@@ -127,11 +127,22 @@
       "Manifest/Rust formatting",
       "Dependency pins and workspace inheritance",
       "Local Markdown references",
-      "Unchanged 58-file shared snapshot"
+      "Unchanged 58-file shared snapshot",
+      "Configured make clippy: all package targets/features, after five explicit raw-pointer test assertion corrections"
     ],
     "recovery_evidence": "Exact original plan, actual caller/target/context and exclusive completed ingress history are retained/hash-bound. Lifecycle settlement additionally binds current status/challenge; load binds separately checked complete stopped restored state. Discarded mutation replies are never read for settlement. Lost status bytes are decoded only by the fixture oracle to assert actual stopped state, never admitted as a response/receipt.",
     "previous_evidence": "target/pocketic-journey-051-review (retained first four-case source/graph review)",
-    "management_count_scope": "Accounted backup/restore/recovery/verification ingresses only. Explicit simulator creation/install/funding, chunk seeding/clearing/listing and application operations are separate fixture setup/assertions, not claims of original plan spending."
+    "management_count_scope": "Accounted backup/restore/recovery/verification ingresses only. Explicit simulator creation/install/funding, chunk seeding/clearing/listing and application operations are separate fixture setup/assertions, not claims of original plan spending.",
+    "clippy_follow_up": {
+      "evidence": "target/clippy-settlement-051-review",
+      "previous_gap": "PocketIC-target Clippy did not lint library unit tests.",
+      "correction": "Five lifecycle/capture settlement test identity assertions use explicit &raw const addresses; no lint suppression or runtime changes.",
+      "checks": [
+        "make clippy",
+        "cargo test --offline --locked -p ic-backup --lib policy::ic_observation"
+      ],
+      "status": "passed"
+    }
   },
   "reused_owners": [
     "Existing management request/reply codecs",
