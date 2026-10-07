@@ -113,6 +113,9 @@ if rg -F 'second-failure-marker' "$FIXTURE/fail-fast.log" >/dev/null; then
     echo "validation target runner test failed: fail-fast ran the second target" >&2
     exit 1
 fi
+fast_combined="$(sed -n 's/^Combined failure log retained at: //p' "$FIXTURE/fail-fast.log")"
+fast_raw=("$FIXTURE/failure-logs/"*-0-fail-one.log)
+cmp "${fast_raw[${#fast_raw[@]}-1]}" "$fast_combined"
 
 status=0
 VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
@@ -182,6 +185,13 @@ fi
     echo "validation target runner test failed: highlighted failure log was not retained" >&2
     exit 1
 }
+combined="$(sed -n 's/^Combined failure log retained at: //p' "$FIXTURE/output.log")"
+cat "$FIXTURE/failure-logs/"*-2-fail-one.log "$FIXTURE/failure-logs/"*-3-fail-two.log \
+    "$FIXTURE/failure-logs/"*-4-fail-after-caught-panic.log "$FIXTURE/failure-logs/"*-5-fail-with-test-context.log \
+    > "$FIXTURE/combined.expected"
+cmp "$FIXTURE/combined.expected" "$combined"
+cmp "$combined" "$FIXTURE/failure-logs/latest-combined.log"
+[[ -f "$fast_combined" ]]
 for expected in \
     '[fail-one] first-failure-marker' \
     '[fail-two] second-failure-marker' \
@@ -297,6 +307,8 @@ structured:
 	@printf 'test error::tests::passing ... ok\n'
 	@printf '\033[32mcolored raw bytes\033[0m\n'
 	@exit 7
+nested-failure:
+	+bash scripts/ci/run-validation-targets.sh fail-one
 MAKE
 status=0
 VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
@@ -320,12 +332,51 @@ rg -F '[ERR:structured] [CONSUMER:E001] structured-marker' "$FIXTURE/failure-log
 rg -F $'\033[32mcolored raw bytes\033[0m' "$run/1.log" >/dev/null
 if rg -F '[ERR:' "$run/1.log" >/dev/null; then exit 1; fi
 [[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]]
+cp "$FIXTURE/failure-logs/latest-combined.log" "$FIXTURE/combined-before-pass"
 VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
+    VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     GITHUB_STEP_SUMMARY="$FIXTURE/summary.md" VALIDATION_RUNNER_DEPTH=1 \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" pass > "$FIXTURE/retained-pass.log" 2>&1
 pass_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/retained-pass.log")"
 [[ "$pass_run" != "$run" && -f "$pass_run/0.log" && -f "$run/1.log" ]]
 [[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]]
+cmp "$FIXTURE/combined-before-pass" "$FIXTURE/failure-logs/latest-combined.log"
+
+# Each nesting level combines its own raw target streams, without rediscovering
+# child files and duplicating them in the outer batch.
+status=0
+VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
+    VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
+    bash "$FIXTURE/scripts/ci/run-validation-targets.sh" nested-failure fail-two \
+    > "$FIXTURE/nested-failures.log" 2>&1 || status=$?
+[[ "$status" == 2 ]]
+outer_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/nested-failures.log" | head -n 1)"
+cat "$outer_run/0.log" "$outer_run/1.log" > "$FIXTURE/nested-combined.expected"
+cmp "$FIXTURE/nested-combined.expected" "$FIXTURE/failure-logs/latest-combined.log"
+
+# A failed aggregate write must preserve raw inputs and the prior complete
+# latest batch, while returning the original target failure status.
+mkdir "$FIXTURE/cat-bin" "$FIXTURE/aggregate-tmp"
+REAL_CAT="$(command -v cat)"
+export REAL_CAT
+cat > "$FIXTURE/cat-bin/cat" <<'SCRIPT'
+#!/usr/bin/env bash
+case "${1:-}" in */0.log) printf 'partial aggregate\n'; exit 23 ;; esac
+exec "$REAL_CAT" "$@"
+SCRIPT
+chmod +x "$FIXTURE/cat-bin/cat"
+cp "$FIXTURE/failure-logs/latest-combined.log" "$FIXTURE/combined-before-failure"
+status=0
+PATH="$FIXTURE/cat-bin:$PATH" TMPDIR="$FIXTURE/aggregate-tmp" \
+    VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
+    bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
+    > "$FIXTURE/aggregate-failure.log" 2>&1 || status=$?
+[[ "$status" == 2 ]]
+cmp "$FIXTURE/combined-before-failure" "$FIXTURE/failure-logs/latest-combined.log"
+aggregate_raw=("$FIXTURE/aggregate-tmp/"validation.*/0.log)
+rg -F first-failure-marker "${aggregate_raw[0]}" >/dev/null
+partial="$(sed -n 's/^Incomplete combined failure log retained at: //p' "$FIXTURE/aggregate-failure.log")"
+rg -Fx 'partial aggregate' "$partial" >/dev/null
 
 # Simulate a signal to the executing logger after output, without signaling the
 # test process group. Make's admission probe still uses the real executable.
@@ -341,6 +392,7 @@ SCRIPT
 chmod +x "$FIXTURE/signal-bin/make"
 status=0
 REAL_MAKE="$real_make" PATH="$FIXTURE/signal-bin:$PATH" \
+    VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" interrupt-fixture \
     > "$FIXTURE/interrupted.log" 2>&1 || status=$?
@@ -348,4 +400,5 @@ REAL_MAKE="$real_make" PATH="$FIXTURE/signal-bin:$PATH" \
 interrupted_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/interrupted.log")"
 rg -Fx 'partial raw output' "$interrupted_run/0.log" >/dev/null
 [[ "$(wc -l < "$interrupted_run/timings.tsv" | tr -d ' ')" == 1 ]]
+cmp "$FIXTURE/combined-before-failure" "$FIXTURE/failure-logs/latest-combined.log"
 echo "validation target runner test passed"

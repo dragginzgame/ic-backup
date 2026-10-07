@@ -154,6 +154,8 @@ implemented foundation includes:
 - local progress derived from the original plan and retained journals;
 - typed Internet Computer request and reply encoding for selected snapshot and
   lifecycle operations;
+- original-attempt-bound snapshot metadata/data read requests, a single-call provider
+  contract and bounded passive response checks, without automatic receipts or retries;
 - bounded snapshot metadata decoding that retains exact global values, optional
   timer/hook values and chunk identities without claiming complete transfer;
 - metadata-bound snapshot data reads with checked ranges, exact lengths and chunk
@@ -234,6 +236,9 @@ native library and repository-tooling gate. A real PocketIC integration target
 qualifies single-canister capture, complete streamed transfer and same-ID restore,
 including deliberately lost replies. See [its exact scope](docs/pocketic-qualification.md).
 Production transport, workflows and application qualification remain unfinished.
+
+See [contribution guidance](CONTRIBUTING.md) for topic branches, PR delivery and
+the separately authorized release workflow.
 
 ## Documentation
 

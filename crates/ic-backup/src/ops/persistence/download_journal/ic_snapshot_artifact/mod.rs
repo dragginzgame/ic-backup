@@ -20,7 +20,7 @@ use crate::{
     },
 };
 use ic_management_canister_types::SnapshotDataKind;
-use rustix::fs::{self as unix_fs, Dir, Mode, OFlags};
+use rustix::fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags};
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
@@ -161,6 +161,8 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
     /// Regions may interleave; each region must remain contiguous from zero. Chunk files
     /// use exact metadata hash names and exclusive creation. No fsync or journal transition
     /// occurs until explicit finish. Any error consumes this owner and retains all bytes.
+    /// Before writing, all region names must still select the held regular files at
+    /// their exact already-covered lengths. This sequential check is not a byte fence.
     /// # Errors
     /// Rejects changed custody, coverage conflicts and filesystem failures.
     pub fn append(
@@ -168,6 +170,7 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
         reply: &IcSnapshotDataReply<'_, '_>,
     ) -> Result<Self, IcSnapshotArtifactError> {
         self.check_custody()?;
+        self.check_region_custody()?;
         self.coverage.admit(reply)?;
         let index = match reply.request().kind() {
             SnapshotDataKind::WasmModule { .. } => 0,
@@ -285,6 +288,25 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
     fn check_closed_tree(&self) -> Result<(), IcSnapshotArtifactError> {
         check_closed_tree(&self.directory, &self.checksums)
     }
+
+    fn check_region_custody(&self) -> Result<(), IcSnapshotArtifactError> {
+        for ((name, file), expected) in REGIONS
+            .iter()
+            .zip(&self.regions)
+            .zip(self.coverage.covered_region_bytes())
+        {
+            let held = unix_fs::fstat(file).map_err(errno_to_io)?;
+            let current = unix_fs::statat(&self.directory, *name, AtFlags::SYMLINK_NOFOLLOW)
+                .map_err(errno_to_io)?;
+            let same_file = (current.st_dev, current.st_ino) == (held.st_dev, held.st_ino);
+            let exact_extent = current.st_size == held.st_size
+                && u64::try_from(held.st_size).ok() == Some(expected);
+            if !FileType::from_raw_mode(current.st_mode).is_file() || !same_file || !exact_extent {
+                return Err(IcSnapshotArtifactError::FileShape);
+            }
+        }
+        Ok(())
+    }
 }
 
 fn check_closed_tree(
@@ -369,7 +391,7 @@ pub enum IcSnapshotArtifactError {
     /// The fixed closed artifact tree contains missing or additional entries.
     #[error("IC snapshot artifact tree entries differ")]
     UnexpectedEntry,
-    /// A retained direct child is not a regular file of the declared bounded size.
+    /// A retained direct child differs in regular-file identity or bounded length.
     #[error("IC snapshot artifact file type or length differs")]
     FileShape,
     /// Retained original plan, complete durable selection or journal admission failed.

@@ -44,3 +44,18 @@ fn lost_start_reply_reconciles_original_ingress_without_restart() {
 fn lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restart() {
     pic_journey::run(pic_journey::Fault::LoadObservation);
 }
+
+#[test]
+fn lost_metadata_read_reply_keeps_original_spending_and_stops_before_download() {
+    pic_journey::lost_transfer_read(false);
+}
+
+#[test]
+fn lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload() {
+    pic_journey::lost_transfer_read(true);
+}
+
+#[test]
+fn pinned_icp_generic_management_route_failure_retains_pending_original_spending() {
+    pic_journey::generic_management_route();
+}

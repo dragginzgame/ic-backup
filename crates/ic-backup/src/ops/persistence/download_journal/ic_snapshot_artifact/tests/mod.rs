@@ -1,5 +1,6 @@
 //! Actual private filesystem streaming and durable interruption recovery; no IC backend.
 
+mod custody;
 mod upload;
 mod verification;
 

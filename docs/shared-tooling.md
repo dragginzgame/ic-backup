@@ -49,7 +49,48 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 68-file snapshot selects committed Shared Tooling 0.1.18 at
+The current 73-file snapshot selects committed Shared Tooling 0.1.20 at
+`3ecc48e579f6cf6e6ab01a6645d8a250fc8c6934`, matching inspected remote main.
+A clean isolated checkout exports exact committed bytes and modes; all 68 prior
+paths remain. Explicit additions are the contribution rules, shared IC pin parser,
+PocketIC alignment/binary checkers and their canonical fixture. The complete
+shared governance payload remains readable in the consumer. No shared file is
+patched in place and the IC executable matrix stays unchanged.
+
+The reviewed contribution rules now permit scoped commits and branch pushes for
+an explicitly requested PR. Ordinary repairs remain local; merging, integration
+branch pushes, releases and publication retain separate authority. Local active
+prohibitions are reconciled in AGENTS.md and the development/release guides;
+[CONTRIBUTING.md](../CONTRIBUTING.md) directs people and agents to the same rules.
+This adoption requests no Git or release effects. [The policy review](shared-tooling-review.json)
+records the local-fix, PR and selected-release interpretations.
+
+The normal configured gate checks the actual locked PocketIC client against the
+reviewed server pin after dependency preparation. This is offline, read-only Cargo
+metadata admission through the shared parser; runtime permission, lifecycle and
+backend capability qualification remain local. Both existing versions are 16.0.0.
+No default endpoint, provider, binary override or implicit installer is added.
+
+Actual consumer tooling, release, hook and shell regressions pass on Linux.
+Temporary-path fixtures also pass with trailing-slash and directory-symlink
+TMPDIR values. The shared logger retains combined raw failed-target evidence;
+Rust setup rejects redirected paths and the canonical selector preserves
+historical EOF bytes. Expanded installer/checker fixtures retain their substitute
+scope. Exact source [CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37641211708)
+passes Linux, both native macOS architectures and lint/security. Consumer native
+delivery remains separate, with the published host 0.4.3 Darwin compile blocker
+tracked in [Host #18](https://github.com/dragginzgame/ic-host-tooling/issues/18).
+
+Evidence is under `target/upstream-054-refresh`, including exact prior/current
+snapshots, exporter proof, source/mode admission and focused results. The same
+compatible 0.5.4 draft is maintained; package/receipt stay 0.5.3. Product Rust and
+the maintainer's incoming dependency selections are preserved. No sibling write,
+commit, release, publication or evidence cleanup runs. [Consumer #23](https://github.com/dragginzgame/ic-backup/issues/23)
+owns contribution-policy delivery independently of upstream acceptance.
+
+### Retained 0.1.18 review
+
+The earlier 68-file snapshot selects committed Shared Tooling 0.1.18 at
 `a3430b34b32a60f3b245a2b4f7e2f5321556fe56`, verified against remote main.
 A clean isolated source exports exact blobs and executable modes; sibling files
 are read-only. All 65 previous paths remain, with the linked canister audit

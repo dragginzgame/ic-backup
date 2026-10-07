@@ -86,6 +86,11 @@ this offline check. See [the shared helper contract](verification-helpers.md).
 use this repository's own `target/` directory. Check for an active build before
 editing source or lockfiles or starting another compilation.
 
+With the locked cache prepared, `make pocketic-alignment-check` verifies the
+qualified client/server version pairing through read-only offline Cargo metadata.
+The normal gate runs it after `deps`; it neither installs a tool nor qualifies
+runtime behavior or permissions.
+
 `make shell-check` also requires ShellCheck and Perl. It uses ShellCheck from
 `PATH` first, then an executable `~/.local/bin/shellcheck` if PATH lookup fails.
 It reports the selected command and fails if neither location provides the tool;
@@ -646,8 +651,9 @@ preparation/stage/commit/push commands are removed. Consumer adapters own origin
 validation evidence and bounded package metadata, and preserve dependency selection,
 build artifacts and source backups. `release-check` runs actual Make entry points
 with Git/Cargo substitutes plus the common runner's isolated regressions. Read
-[the release guide](releasing.md) before using maintainer-owned commands; agents
-never execute a real one-shot release or resume. `make -n` remains read-only.
+[the release guide](releasing.md) before an explicitly requested one-shot release
+or resume. Ordinary development and PR delivery grant no release authority.
+`make -n` remains read-only.
 
 `publish-dry-run` and `publish` delegate to Cargo for the current library version.
 They use locked dependencies and crates.io. Cargo checks package cleanliness and
@@ -701,7 +707,8 @@ tracked/untracked edits remain untouched. A failed formatter leaves the working
 files and index unchanged. Review concurrent copy/staging failures before retrying.
 The installer preserves different, inherited or disabled hook paths and executable
 private hooks. `hooks-install` is retired; update setup automation to the standard
-command. Agents still leave source uncommitted for the maintainer.
+command. Ordinary development leaves source uncommitted; explicit commit or PR
+delivery follows the [contribution rules](../rules/contributions.md).
 
 Release-helper regressions use isolated Git/Cargo/Make substitutes, with no real
 commits, tags, pushes or uploads. Hook regressions use temporary Git indexes and

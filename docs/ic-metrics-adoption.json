@@ -2,19 +2,19 @@
   "version": 1,
   "inspection_date": "2026-10-07",
   "registry_package": "ic-metrics",
-  "selected_version": "0.2.7",
-  "archive_sha256": "9b54584cd8658046ca874ec9d67ba7fb7a5028e11467da1cce1a0bf62e6495cd",
+  "selected_version": "0.2.8",
+  "archive_sha256": "2ff922721253a9e6d921203809d99e871128edfc5b0613661c64d094d58343d6",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
   "repository": "https://github.com/dragginzgame/ic-metrics",
-  "published_source_revision": "09c6786c3b68759ea0ead4d1b987b5a9b472bdbb",
+  "published_source_revision": "0eac2b0baa9d03b8f2430a24dfe596d93f5bfc16",
   "source_review": "Every published Rust source matches the locked archive checksum and exact committed release. Histogram is allocation-free shared arithmetic; local code owns bounds, sample admission, lifetime and reporting.",
-  "catalog": "Compatible 0.2.4 minimum is the first published histogram owner; incoming published 0.2.7 lock selection is retained. Default features disabled; no sibling patch or counter adapter.",
+  "catalog": "Compatible 0.2.4 minimum remains the first published histogram owner. Incoming registry 0.2.8 selection is preserved; default features disabled and instruction-reader absent. No sibling patch.",
   "production_owner": "crates/ic-backup/src/ops/persistence/download_journal/metrics/",
   "public_types": [
     "ic_backup::ops::persistence::MeasurementSummary",
     "ic_backup::ops::persistence::MeasurementHistogram"
   ],
-  "compatibility": "Additive copied histogram getter. Existing seven summary getter identities and semantics remain; prepared bytes derive from the histogram summary. One compatible 0.5.2 draft; package and released receipt remain 0.5.1.",
+  "compatibility": "Existing histogram/summary APIs remain unchanged in this compatible 0.5.4 graph qualification. Original 0.5.2 implementation/evidence remains historical; current package/released receipt stay 0.5.3.",
   "histogram": {
     "owner": "One successful prepared-chunk histogram; no second byte aggregate",
     "upper_bounds_bytes": [
@@ -41,7 +41,7 @@
   "qualification": {
     "status": "passed focused native Linux checks; uncommitted native macOS delivery pending",
     "evidence": "target/metrics-histogram-052-review",
-    "scope": "Original 0.2.6 graph: native Linux arithmetic/routing and actual guarded filesystem/public upload journeys; no live IC or native macOS qualification. Current 0.2.7 graph qualification is recorded in follow_up_selection_review.",
+    "scope": "Original 0.2.6 graph: native Linux arithmetic/routing and guarded filesystem/public upload journeys; no live IC or native macOS qualification. Previous 0.2.7 review is preserved under follow_up_selection_review.previous_review; current 0.2.8 graph is qualified in that follow-up.",
     "registered_cases": "target/metrics-histogram-052-review/registered-cases.json",
     "passed_logs": [
       "metrics-tests-poison.log",
@@ -63,9 +63,25 @@
   "removed_types": [],
   "related_package_review": "target/metrics-histogram-052-review/registry-latest.json",
   "follow_up_selection_review": {
-    "evidence": "target/ic-host-052-review",
-    "previous_review": "target/ic-host-052-review/incoming/docs/ic-metrics-adoption.json",
-    "source": "Published 0.2.7 Rust matches the exact clean release and is unchanged from reviewed 0.2.6 Rust source. Earlier histogram qualification remains tied to its original 0.2.6 inputs.",
-    "qualification": "Current metrics unit cases, real guarded IC artifact/upload tests, public upload, configured Clippy, MSRV and package checks rerun with 0.2.7 and host 0.4.0; logs and registered cases retained alongside the host review."
+    "evidence": "target/icp-backend-054-review",
+    "previous_review": "target/icp-backend-054-review/incoming/docs/ic-metrics-adoption.json",
+    "source": "Locked 0.2.8 archive matches its checksum and exact committed release 0eac2b0baa9d03b8f2430a24dfe596d93f5bfc16. Every published Rust file is unchanged from 0.2.7; prior arithmetic evidence remains bound to original selections.",
+    "qualification": "Fresh metrics units, guarded IC artifact/upload/public source/recovery consumers, configured Clippy, MSRV and locked package with host 0.4.2 and Metrics 0.2.8. Logs and registered identities remain under the current evidence owner.",
+    "upstream_ci": "https://github.com/dragginzgame/ic-metrics/actions/runs/37617053341",
+    "upstream_ci_scope": "Exact release passes Linux/MSRV and both native macOS hosts. This is upstream arithmetic evidence, not native delivery of this uncommitted consumer draft."
+  },
+  "host_043_review": {
+    "evidence": "target/upstream-054-refresh",
+    "scope": "Metrics 0.2.8 selection/source/features stay unchanged. Current guarded IC artifact/public upload journeys exercise it under incoming host 0.4.3; prior arithmetic qualification retains its original source/graph. Host Darwin compile blocker #18 prevents current native consumer qualification. No diagnostic/accounting behavior changes.",
+    "status": "Retained historical graph/source qualification; superseded only by the explicit current 0.4.5 review."
+  },
+  "host_045_review": {
+    "evidence": "target/upstream-054-refresh/host-045",
+    "scope": "Metrics 0.2.8 selection/source/features and arithmetic are unchanged. Fresh guarded IC artifact/public upload checks and real PocketIC journeys exercise it under reviewed host 0.4.5. Prior arithmetic proof retains its actual inputs; no diagnostic/accounting behavior changes. The Darwin compile defect is repaired, while native filesystem fixture #19 and consumer macOS qualification remain outstanding.",
+    "status": "Historical 0.4.5 graph/proof; host #19 is resolved by the independently qualified 0.4.6 owner release."
+  },
+  "host_046_review": {
+    "evidence": "target/host-054-followup",
+    "scope": "Metrics 0.2.8 selection/source/features/arithmetic are unchanged. Fresh IC artifact/public upload checks exercise the exact incoming host 0.4.6 graph. Prior arithmetic and PocketIC proof retains original inputs. Host owner native CI passes; current Backup native qualification remains pending."
   }
 }

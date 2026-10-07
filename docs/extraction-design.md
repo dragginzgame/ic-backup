@@ -262,6 +262,7 @@ status/read visibility must never be mistaken for write authority.
 | --- | --- |
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
 | `IcMutationProvider` | Implemented exact original IC update/reserved-mutation envelope and bounded passive acknowledgement association; no installed provider or automatic settlement |
+| `IcSnapshotTransferReadProvider` | Implemented exact original metadata/data payload and pending-update request, bounded passive actual-context response and existing decoder association; no installed provider, automatic receipt or read reissue |
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented single reserved source-bound metadata/data update signature, reusing exact upload attempts, passive acknowledgements and IC update failures; no installed provider, automatic settlement or retry |
 | `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; no installed provider, allocation outcome, data reconciliation or reissue |
@@ -562,9 +563,22 @@ starts empty when reconstructed. Complete declared coverage therefore supplies
 no byte custody, durable artifact, authentic association or backend completeness.
 Integration qualification of durable exact full-state transfer remains separate.
 
+Ordinary metadata/data reads now have an original-plan-bound
+`IcSnapshotTransferReadRequest` and single-call provider contract. Exact wire/target
+identity and pending update reservations remain with the original plan/journal;
+pure passive response association rechecks actual claimed context and delegates to
+the existing bounded decoders. Replicated reads use the existing mutation lane.
+Lost replies retain spending and cannot be reissued from pending state. No installed
+provider or automatic receipt/aggregate transfer proof is introduced. The real
+PocketIC driver uses this public boundary before explicit success recording; see
+[the contract](contracts/ic-snapshot-transfer-read-port.json).
+
 The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
 private exact region/chunk bytes, original raw metadata/request and incremental
-checksums. Complete fresh tree checks persist the expected checksum in the existing
+checksums. Before another append, every region name must still select its held
+regular file at the original coverage length. Detectable drift rejects before
+coverage admission or further writes; sequential checks establish no byte fence.
+Complete fresh tree checks persist the expected checksum in the existing
 download journal before its canonical durable publisher runs. Publication recovery
 uses the retained journal; partial Created transfers are preserved without automatic
 coverage reconstruction or repeated reads. Generic token/raw-ID mapping, authentic
@@ -895,6 +909,17 @@ claim follows from local bundle integrity. Canic's controller/reset/conservation
 proof remains Canic-owned, and snapshots cannot stand in for that authority.
 
 ## 14. ICP transport and subprocess contract
+
+The pinned 1.6.0 generic-call path has now been probed against a real isolated
+PocketIC gateway: its management receiver cannot carry the separate effective
+target and returns a replica routing refusal. A successful dedicated status
+control on the same endpoint/root/controller and unchanged pending original
+journal distinguish that refusal from setup or settled-effect proof. See
+[the qualification scope](pocketic-qualification.md#pinned-cli-capability-probe)
+and [consumer acceptance](https://github.com/dragginzgame/ic-backup/issues/25).
+No production adapter is installed; routing, authenticated granular calls,
+internal retries and original command/descendant custody need qualification
+before B3 can accept a backend.
 
 Extract only relevant status, inventory, stop/start, snapshot capture/download/
 upload/load and capability qualification. Do not import Canic Host's deploy,

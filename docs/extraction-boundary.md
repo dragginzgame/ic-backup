@@ -1788,8 +1788,17 @@ known chunks require their actual admitted reply. New directories/files use
 each admitted reply's exact bytes with three incremental region hash states and
 at most 1,024 chunk checksum rows. Each chunk is bounded to 1 MiB; no aggregate
 buffer, total-size sum, new progress record or spending owner appears. Root,
-artifact-parent and staging identities are rechecked. An error consumes the
-writer, closes descriptors and retains partial evidence with no journal transition.
+artifact-parent and staging identities are rechecked. Before admitting another
+reply or writing, all three region names must still select their held regular-file
+descriptors at the exact already-covered lengths. Replacement, symlink/directory
+substitution and truncation/extension reject with `FileShape`; a missing name
+retains the native IO error. The check performs at most six metadata syscalls,
+without new opens, allocations or retained counters. Sequential identity/extent
+checks do not fence noncooperating writers or detect same-length byte changes;
+final fresh checksum verification remains required. See
+[issue #21](https://github.com/dragginzgame/ic-backup/issues/21).
+An error consumes the writer, closes descriptors and retains partial evidence
+with no journal transition.
 Drop does not delete files. Occupied staging/canonical paths reject recreation.
 
 Explicit `finish` requires complete coverage and a closed fixed tree. Fresh
@@ -2384,3 +2393,44 @@ Public APIs, v1 records, bounds and release identity are unchanged. See
 [the qualification guide](pocketic-qualification.md),
 [machine review](pocketic-qualification.json) and
 [issue #17](https://github.com/dragginzgame/ic-backup/issues/17).
+
+## Originally reserved snapshot transfer reads
+
+`model::ic_snapshot_transfer_read` borrows the existing exact metadata or data
+request under the full original plan and operation sequence. Its wire digest and
+canonical target must match the original operation authority. The existing journal
+must retain that authority, an exact pending update and no pending recovery
+observation. Semantic reads still use replicated-update ingress, so the current
+mutation reservation lane accounts for them. Reconstruction creates no journal,
+spending, read permission or proof that the request was never dispatched.
+
+`IcSnapshotTransferReadResponse` admits original attempt numbers 1..=1,024,
+canonical actual claimed targets and at most 2 MiB raw wire. Pure
+`policy::ic_snapshot_transfer_read::validate_response` rechecks the current journal
+and exact authority/attempt/context/target claims, then delegates to the existing
+metadata or data decoder. Metadata retains its tighter 1 MiB raw ceiling; data
+retains exact range lengths, known chunk hashes and its 1 MiB actual-byte ceiling.
+Existing 256 raw-ID bytes, 4 KiB arguments and decoder work/table/header quotas
+remain. Data evidence retains the supplied metadata evidence separately from the
+unchanged nonrecursive wire hash. Integrations durably retain and qualify that
+original metadata; byte association alone authenticates none of it.
+
+`IcSnapshotTransferReadProvider::read_snapshot` permits one originally accounted
+exact host update. It reuses `IcObservationProviderError` and performs no hidden
+retries, queries/proxies, status/list follow-ups, funding or extra calls. Actual
+network/caller/target authentication, fresh method-specific snapshot access, stable
+snapshot custody and proof of never-dispatched command custody remain integration
+responsibilities. Lost replies stay pending. Passive success changes no journal;
+integrations explicitly qualify and record any receipt through the existing owner.
+No full transfer, durability, restart/load safety, terminal or fence/reference release
+follows. There is no persisted schema, new evidence encoder or installed transport.
+
+The private real PocketIC driver now uses this public boundary for every ordinary
+metadata/data read before its explicit success receipt. Separate actual-ingress
+reply-discard cases stop before download or retain Created partial artifact staging
+and source references. Reopen changes no journal/reference bytes or spending and
+invokes no provider. These are isolated single-canister simulator observations,
+not process/network loss or arbitrary application qualification. See
+[the port contract](contracts/ic-snapshot-transfer-read-port.json),
+[the real backend scope](pocketic-qualification.md) and
+[issue #22](https://github.com/dragginzgame/ic-backup/issues/22).

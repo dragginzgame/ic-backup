@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "kind": "Ephemeral originally reserved snapshot transfer read port; no persisted schema",
+  "provider": "ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider::read_snapshot",
+  "request": "model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest",
+  "response": "model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse",
+  "association": "policy::ic_snapshot_transfer_read::validate_response",
+  "failure_owner": "ports::ic_observation::IcObservationProviderError",
+  "methods": [
+    "read_canister_snapshot_metadata",
+    "read_canister_snapshot_data"
+  ],
+  "identity": "Full original plan/context/operation/immutable allowances, exact original target and existing nonrecursive request digest. Data retains supplied original metadata via its existing borrowed request/reply evidence owner.",
+  "accounting": "Already pending exact mutation-lane replicated update; no pending recovery observation. Recheck current journal during response association. No journal creation, reservation/reset, inferred never-dispatched proof or automatic receipt.",
+  "response_claims": [
+    "authority",
+    "mutation_attempt",
+    "context",
+    "target",
+    "reply",
+    "evidence"
+  ],
+  "bounds": {
+    "attempts": 1024,
+    "raw_snapshot_id_bytes": 256,
+    "argument_bytes": 4096,
+    "response_raw_bytes": 2097152,
+    "metadata_raw_bytes": 1048576,
+    "data_chunk_bytes": 1048576,
+    "decoding": "Original metadata/data work/table/header quotas unchanged; exact requested range length or known hash-checked chunk, including empty known chunks."
+  },
+  "provider_admission": "Retain original plans/bytes/metadata before prior accounting. Qualify actual network/caller/target, authentic snapshot association, fresh method-specific read permission, stable byte/command custody and proof of no prior dispatch.",
+  "invocation": "Exactly one original management receiver/effective target/method/arguments host replicated update. No proxy/query substitution, hidden retries, follow-up reads, funding or extra calls.",
+  "loss": "Failure, drop, death or lost reply retain pending consumed update, references/fences and original evidence. No settled uncertainty, reissue or refund is inferred.",
+  "qualification": "Real isolated PocketIC driver uses the public boundary for ordinary reads and explicitly records independently qualified successful reads. Real reply-discard cases retain pending accounting and stop before download or leave Created partial staging/source references; no upload/load/start follows. Not a production transport or process/network-loss qualification.",
+  "grants": "No fresh permission, signing, authenticated response, automatic outcome, aggregate transfer, durability, restoration safety, terminal completion or reference/fence release.",
+  "issue": "https://github.com/dragginzgame/ic-backup/issues/22"
+}

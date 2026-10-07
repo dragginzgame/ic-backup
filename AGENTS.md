@@ -36,8 +36,11 @@ into an issue tracker or release authority.
 - The initial request authorizes creating this named repository and writing its
   design/instructions. It does not authorize extracting source, changing Canic,
   performing live backup/restore, publishing packages or creating a remote.
-- Never create or amend Git commits, including indirectly through scripts or
-  release tools. Leave work uncommitted for maintainer review.
+- Ordinary implementation and continuation leave work uncommitted for review.
+  Explicit commit, contribution-PR and release requests follow the reviewed
+  [contribution rules](rules/contributions.md); PR delivery does not authorize
+  merging, direct integration-branch pushes or a release. This 0.5.4 refresh
+  requests no Git writes or release effects.
 - Continue accepted implementation batches autonomously when requested. Generic
   continuation does not authorize live effects, release/version transactions,
   pushes, package publication or destructive cleanup.
@@ -318,6 +321,17 @@ into an issue tracker or release authority.
   views retain no bytes, durability, authentic transfer or effects. Reconstructed
   coverage starts empty and supplies no journal, allowance, resume or release permit.
 
+- Ordinary snapshot transfer reads now bind the full original plan, exact existing
+  metadata/data payload and pending mutation-lane replicated update. Preserve
+  current reservations, 1,024 attempts, 256 raw-ID bytes, 4 KiB arguments, metadata
+  1 MiB raw and data 1 MiB chunk/2 MiB raw plus original decoder quotas. Passive
+  response checks match actual claimed authority/attempt/context/target and reuse
+  existing decoders. Original metadata custody, authentication, fresh read permission
+  and never-dispatched command custody remain integration-owned. Lost replies stay
+  pending; no hidden reissue, receipt, allowance reset, complete transfer, installed
+  provider or terminal/fence/reference release follows. Real PocketIC read-discard
+  cases qualify the isolated fixture's safe stop only.
+
 The IC local artifact writer now joins exact original metadata/data coverage to the
 existing download journal and durable publisher. Preserve 1 MiB per data chunk,
 three incremental region hashes, 1,024 chunk rows and existing metadata/journal bounds.
@@ -460,6 +474,16 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   terminal/reference-release qualification is installed. See
   [the exact qualification scope](docs/pocketic-qualification.md).
 
+- A test-only pinned ICP CLI probe now retains a real local management routing
+  refusal under the original plan/pending reservation. Reuse published
+  `ic-host-process` for executable admission, bounded direct argv and typed exit
+  evidence; isolate settings with the pinned CLI's portable `ICP_HOME` override.
+  A successful dedicated status control and independent Running oracle do not
+  settle/refund the original update. Generic management routing is unsupported;
+  process count grants no internal HTTP retry bound or descendant custody.
+  No production provider, transport, executable workflow or release authority
+  follows. Preserve original journals and raw simulator/process evidence.
+
 ## Tracking
 
 GitHub issues are the sole tracker for bugs, review findings and follow-up work.
@@ -574,8 +598,9 @@ Product transport/runtime qualification stays separate from executable version c
   versions without authority. Changelog presentation never gates registry publication.
 - Read [the release guide](docs/releasing.md) before release/version work.
   Preparing commands does not authorize running them. Agents may inspect
-  `release-plan` and test isolated helpers; maintainers own `release-patch`,
-  `release-minor`, `release-major` and `release-resume`. All delegate to the shared
+  `release-plan` and test isolated helpers. Running `release-patch`,
+  `release-minor`, `release-major` or `release-resume` requires an explicit request
+  for its selected repository and destination. All delegate to the shared
   runner; consumer adapters own metadata and validation, never Git effects.
 - Use `make install-hooks` once per clone for the exact shared pre-commit formatter.
   Install cargo-sort 2.1.4 explicitly with `--locked`; `fmt` sorts Cargo manifests

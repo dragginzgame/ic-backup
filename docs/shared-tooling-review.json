@@ -1,16 +1,16 @@
 {
   "inspection_date": "2026-10-07",
-  "consumer_base": "0441940772d142400bae17ce60f675a1ef79b739",
+  "consumer_base": "7660b56c196d2af3d084524bc74bb9dd4982d1ad",
   "source": {
-    "revision": "a3430b34b32a60f3b245a2b4f7e2f5321556fe56",
-    "version": "0.1.18",
+    "revision": "3ecc48e579f6cf6e6ab01a6645d8a250fc8c6934",
+    "version": "0.1.20",
     "remote": "https://github.com/dragginzgame/shared-tooling",
-    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37604299590",
-    "ci_status": "success; exact 0.1.18 Linux, native Apple Silicon/Intel macOS and lint/security verified during GitHub issue review"
+    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37641211708",
+    "ci_status": "success; exact-source Linux, both native macOS architectures and lint/security jobs verified"
   },
-  "evidence": "target/shared-tooling-052-0118-review",
+  "evidence": "target/upstream-054-refresh",
   "snapshot": {
-    "previous_revision": "bfb50bd0884b5e6c5ee9592056531c6108f96d73",
+    "previous_revision": "a3430b34b32a60f3b245a2b4f7e2f5321556fe56",
     "declared_paths": [
       "docs/verification-helpers.md",
       "scripts/ci/check-documentation-links.pl",
@@ -79,119 +79,66 @@
       "scripts/ci/test-cloc-tooling.sh",
       "audits/ic-canister-applications.md",
       "scripts/dev/install-rust-tools.sh",
-      "scripts/ci/test-rust-tools.sh"
+      "scripts/ci/test-rust-tools.sh",
+      "rules/contributions.md",
+      "scripts/ci/ic-tool-pins.awk",
+      "scripts/ci/check-pocketic-alignment.sh",
+      "scripts/ci/check-pocketic-binary.sh",
+      "scripts/ci/test-pocketic-checks.sh"
+    ],
+    "added_paths": [
+      "rules/contributions.md",
+      "scripts/ci/ic-tool-pins.awk",
+      "scripts/ci/check-pocketic-alignment.sh",
+      "scripts/ci/check-pocketic-binary.sh",
+      "scripts/ci/test-pocketic-checks.sh"
     ],
     "changed_paths": [
       "docs/verification-helpers.md",
-      "docs/provenance.md",
       "docs/ic-tools.md",
       "docs/local-setup.md",
-      "ci/tool-versions.env",
-      "scripts/dev/install-host-tools.sh",
-      "scripts/ci/test-host-tools.sh",
+      "scripts/dev/install-ic-tools.sh",
+      "docs/principles/reviewable-changes.md",
       "docs/consuming-snapshots.md",
       "docs/supported-hosts.md",
       "scripts/ci/run-validation-targets.sh",
       "scripts/ci/test-validation-target-runner.sh",
       "DRAGGINZGAME.md",
+      "rules/changelogs.md",
       "docs/releases.md",
-      "scripts/ci/run-release.sh",
+      "scripts/ci/finalize-release-changelog.awk",
       "scripts/ci/test-release-runner.sh",
-      "rules/cargo-dependencies.md",
       "rules/git-hooks.md",
-      ".githooks/pre-commit",
-      "scripts/dev/install-git-hooks.sh",
-      "scripts/ci/check-formatting-hooks.sh",
+      "rules/agent-maintenance.md",
       "scripts/distribution/governance-files.txt",
-      "rules/rust-workspaces.md",
-      "make/tools.mk",
-      "scripts/dev/cloc.sh",
-      "scripts/dev/cloc-tooling.pl",
-      "scripts/ci/check-make-execution.sh",
       "scripts/ci/test-tool-commands.sh",
-      "scripts/ci/test-cloc.sh",
-      "scripts/ci/test-cloc-tooling.sh"
-    ],
-    "added_paths": [
-      "audits/ic-canister-applications.md",
       "scripts/dev/install-rust-tools.sh",
       "scripts/ci/test-rust-tools.sh"
     ],
-    "removals": [],
-    "export": "Exact committed exporter from clean isolated source; candidate checksum/modes and precommit consumer LOC fixtures pass. Previous dirty selected snapshot preserved before complete export adoption."
+    "removed_paths": [],
+    "method": "Clean isolated clone of exact remotely verified commit; canonical committed exporter; exact bytes/modes checked independently. Original 68 selected paths retained; five dependencies/helpers explicitly added."
   },
-  "consumer_adapters": {
-    "common_commands": "Existing aggregate host/IC setup unchanged. Shared optional install-rust-tools/rust-tools-check targets exposed in help; three pinned Cargo tools are not installed or attached to this library aggregate.",
-    "ci": "Same shared targets and native system-Bash cases; duplicate system ripgrep installation removed",
-    "fixture_admission": "Retention injector leaves new goal-admission cases with the actual runner and injects only into the original passing-output fixture.",
-    "fixture_scope": "Canonical fixtures own Cargo config/manifest/target selection; local env-u workaround removed. Canonical Rust installer fixture added to tooling-check and native system-Bash CI.",
-    "release_contract": "No release effects, source/index/receipt rule change; current canonical release suite and actual adapter qualification retained."
-  },
-  "qualification": {
-    "scope": "Focused Linux consumer tooling only; no product Rust compilation, full CI/release gate or native macOS qualification. Canonical installer uses substitute Cargo, not actual tool installation.",
-    "candidate_logs": [
-      "export.log",
-      "candidate-snapshot.log",
-      "candidate-cloc.log",
-      "candidate-cloc-tooling.log",
-      "candidate-rust-tools.log"
-    ],
-    "consumer_commands": "consumer-commands.json",
-    "consumer_logs": [
-      "tooling.log",
-      "release.log",
-      "hooks.log",
-      "quality.log"
-    ],
-    "status": "passed actual tooling, release, hooks and quality commands on Linux; complete native draft delivery pending",
-    "enclosing_fixture_logs": [
-      "enclosing-cloc.log",
-      "enclosing-cloc-tooling.log"
-    ],
-    "workflow_lint": "actionlint -shellcheck= .github/workflows/ci.yml passed",
-    "upstream_ci_evidence": "target/gh-issues-052-review/shared-ci-run.json and shared-ci-jobs.json"
-  },
-  "product_inputs": {
-    "original": "target/shared-tooling-052-0118-review/incoming-product-inputs.json",
-    "checked": "target/shared-tooling-052-0118-review/checked-product-inputs.json",
-    "result": "Rust, Cargo manifests/lock and released receipt are unchanged by this refresh; incoming host 0.4.0 and Metrics 0.2.7 selection remains."
-  },
-  "compatibility": "Compatible maintained tooling additions/failure-propagation fixes select one 0.5.2 draft; valid release commands and product public contracts unchanged. Package versions remain 0.5.1.",
-  "consumer_native": {
-    "released_source": "0441940772d142400bae17ce60f675a1ef79b739",
-    "main": "https://github.com/dragginzgame/ic-backup/actions/runs/37597006011",
-    "tag": "https://github.com/dragginzgame/ic-backup/actions/runs/37597005993",
-    "result": "Exact released 0.5.1 branch/tag pass Linux, Apple Silicon and Intel macOS. The uncommitted 0.5.2 batch has no native delivery result."
-  },
-  "issue": "https://github.com/dragginzgame/ic-backup/issues/19",
-  "separate_work": "Release-fixture assertion convergence #18; production ICP transport/workflows, Canic adoption, application safety and terminal/release admission.",
-  "previous_review": "target/shared-tooling-052-0118-review/previous/docs/shared-tooling-review.json",
-  "removed_functions": [],
-  "removed_methods": [],
-  "removed_types": [],
-  "replaced_local_make_recipes": [
-    "install-tools",
-    "tools-check",
-    "install-host-tools",
-    "host-tools-check",
-    "install-ic-tools",
-    "ic-tools-check"
+  "consumer_changes": [
+    "Replace blanket active commit/release prohibitions with reviewed scoped contribution authority; ordinary work remains uncommitted",
+    "Add CONTRIBUTING.md and propagate authority into local development/release guidance",
+    "Check the already qualified PocketIC 16 client/server pairing after dependency preparation in the normal configured gate",
+    "Reuse shared matrix admission in the IC installer; no binary/tool pin changes",
+    "Select combined raw failure logging, guarded Rust-tool setup, normalized scratch paths and historical-byte-preserving release selector"
   ],
-  "material_limits": "Native delivery of this uncommitted adoption remains pending; no commits, tags, pushes, versions, publication, sibling writes or cleanup.",
-  "upstream_feedback": {
-    "issue": "https://github.com/dragginzgame/shared-tooling/issues/50",
-    "disposition": "Current 0.1.18 reusable consumer LOC fixture resolves the observed precommit exporter/HEAD gap; actual committed exporter integration remains upstream. Fresh consumer cases pass in enclosing Git/Cargo context."
+  "checks": {
+    "tooling": "tooling.log",
+    "release_hooks_shell": "shell-release.log",
+    "temporary_contexts": [
+      "tool-trailing.log",
+      "tool-alias.log"
+    ],
+    "PocketIC_helpers": "pocketic-checks.log",
+    "actual_locked_pair": "alignment.log",
+    "policy": "policy-review.json",
+    "quality": "quality.log"
   },
-  "latest_review": {
-    "inspection_date": "2026-10-07",
-    "revision": "a3430b34b32a60f3b245a2b4f7e2f5321556fe56",
-    "version": "0.1.18",
-    "evidence": "target/shared-tooling-052-0118-review",
-    "candidate_files": 68,
-    "selected_version": "0.1.18",
-    "selected_revision": "a3430b34b32a60f3b245a2b4f7e2f5321556fe56",
-    "result": "Complete exact adoption; canonical precommit LOC fixtures pass without caller env-u workaround. Upstream-only distribution fixture is not copied.",
-    "prior_review": "target/shared-tooling-052-0118-review/previous/docs/shared-tooling-review.json",
-    "upstream_ci_result": "Exact-source upstream Linux, native Intel/ARM macOS and lint/security pass; current consumer draft native delivery remains pending."
-  }
+  "limits": "Command/installer fixtures use documented substitutes. Actual locked pair check is read-only metadata. No actual installer download, Git write, release, workflow dispatch or native consumer delivery is supplied by these tests. Product Rust and the incoming lock are unchanged by this refresh. Native package blocker remains independent.",
+  "previous_review": "target/upstream-054-refresh/incoming/docs/shared-tooling-review.json",
+  "issue": "https://github.com/dragginzgame/ic-backup/issues/23",
+  "removed_symbols": []
 }

@@ -7,16 +7,30 @@ use ic_backup::{
         attempt_journal::{
             AttemptJournalRecordError, MutationOutcomeRecord, MutationReceiptRequest,
         },
+        ic_snapshot_transfer_read::{
+            IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
+            IcSnapshotTransferReadResponse, IcSnapshotTransferReadResponseInput,
+        },
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
         AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, create_operation_plan,
         read_operation_plan,
     },
+    policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, validate_response},
+    ports::{
+        ic_observation::IcObservationProviderError,
+        ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
+    },
 };
 use pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal};
 use serde_json::json;
-use std::{collections::BTreeMap, fs, path::PathBuf, time::Instant};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    path::PathBuf,
+    time::Instant,
+};
 
 pub(super) struct Backend {
     pub pic: PocketIc,
@@ -25,12 +39,21 @@ pub(super) struct Backend {
     pub release: ArtifactChecksumRecord,
     pub calls: u64,
     plans: BTreeMap<u64, ArtifactChecksumRecord>,
+    submitted_reads: BTreeSet<(String, u32)>,
     started: Instant,
     trace: Vec<serde_json::Value>,
 }
 
 impl Backend {
     pub fn new() -> Self {
+        Self::new_with_network(false)
+    }
+
+    pub fn new_with_nns() -> Self {
+        Self::new_with_network(true)
+    }
+
+    fn new_with_network(nns: bool) -> Self {
         let root = crate::support::temp_root("ic-backup-pocketic");
         let binary = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.tools/ic/bin/pocket-ic")
@@ -56,12 +79,15 @@ impl Backend {
             .expect("installed PocketIC checksum");
         assert_eq!(server_digest.hash(), expected);
         fs::write(root.join("server.sha256"), server_digest.hash()).unwrap();
-        let pic = PocketIcBuilder::new()
+        let mut builder = PocketIcBuilder::new()
             .with_server_binary(binary)
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
-            .with_application_subnet()
-            .build();
+            .with_application_subnet();
+        if nns {
+            builder = builder.with_nns_subnet();
+        }
+        let pic = builder.build();
         let wasm = wat::parse_str(include_str!("../state.wat")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
@@ -79,6 +105,7 @@ impl Backend {
             release,
             calls: 0,
             plans: BTreeMap::new(),
+            submitted_reads: BTreeSet::new(),
             started: Instant::now(),
             trace: Vec::new(),
         };
@@ -177,6 +204,109 @@ impl Backend {
             .unwrap();
         assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
         (index, Some(raw))
+    }
+
+    pub fn read(
+        &mut self,
+        payload: IcSnapshotTransferReadPayload<'_, '_>,
+        lose_reply: bool,
+    ) -> (u64, Option<Vec<u8>>) {
+        let index = self.calls + 1;
+        let path = self.root.join("calls").join(index.to_string());
+        fs::create_dir(&path).unwrap();
+        let layout = BackupLayoutGuard::acquire(&path).unwrap();
+        let plan = self.plan(&payload.digest(), index);
+        create_operation_plan(&layout, &plan).unwrap();
+        assert!(self.plans.insert(index, plan.digest()).is_none());
+        fs::write(path.join("arguments.candid"), payload.arguments()).unwrap();
+        fs::write(path.join("method.txt"), payload.method()).unwrap();
+        let mut journal =
+            AttemptJournalGuard::create(&layout, plan.attempt_authority(index).unwrap()).unwrap();
+        let attempt = journal.reserve_mutation().unwrap();
+        let request =
+            IcSnapshotTransferReadRequest::new(&plan, index, journal.record().unwrap(), payload)
+                .unwrap();
+        let response = self.read_snapshot(&request).unwrap();
+        if lose_reply {
+            // Oracle bytes never enter passive association or a success receipt.
+            fs::write(
+                path.join("discarded-oracle-reply.candid"),
+                &response.input().reply,
+            )
+            .unwrap();
+            assert_eq!(
+                journal.record().unwrap().view().pending_mutation,
+                Some(attempt)
+            );
+            return (index, None);
+        }
+        let view = validate_response(&request, journal.record().unwrap(), &response).unwrap();
+        let evidence = match view.reply() {
+            IcSnapshotTransferReadReply::Metadata(reply) => reply.digest(),
+            IcSnapshotTransferReadReply::Data(reply) => reply.digest(),
+        };
+        let raw = response.input().reply.clone();
+        fs::write(path.join("reply.candid"), &raw).unwrap();
+        // Explicit isolated-instance qualification, not an automatic policy receipt.
+        journal
+            .record_mutation(MutationReceiptRequest {
+                attempt,
+                request: payload.digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: evidence.hash().into(),
+            })
+            .unwrap();
+        assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
+        (index, Some(raw))
+    }
+
+    pub fn assert_pending_read_replay(&self, sequence: u64) {
+        let before = self.calls;
+        for (index, expected) in &self.plans {
+            let layout = self.layout(*index);
+            let plan = read_operation_plan(&layout, expected).unwrap();
+            let authority = plan.attempt_authority(*index).unwrap();
+            let mut journal = AttemptJournalGuard::open(&layout, &authority).unwrap();
+            let original = fs::read(journal.path()).unwrap();
+            let view = journal.record().unwrap().view();
+            assert_eq!((view.mutations_used, view.mutations_remaining), (1, 0));
+            if *index == sequence {
+                assert_eq!(
+                    (view.pending_mutation, view.pending_observation),
+                    (Some(1), None)
+                );
+                assert!(!view.applied);
+                assert!(matches!(
+                    journal.reserve_mutation(),
+                    Err(AttemptJournalError::Record(
+                        AttemptJournalRecordError::MutationPending { attempt: 1 }
+                    ))
+                ));
+                assert_eq!(fs::read(journal.path()).unwrap(), original);
+            } else {
+                assert!(view.applied);
+            }
+            drop(journal);
+            let reopened = AttemptJournalGuard::open(&layout, &authority).unwrap();
+            assert_eq!(fs::read(reopened.path()).unwrap(), original);
+        }
+        assert_eq!(self.calls, before);
+        assert_eq!(
+            self.trace
+                .iter()
+                .filter(|row| row["method"] == "take_canister_snapshot")
+                .count(),
+            1
+        );
+        assert!(!self.trace.iter().any(|row| matches!(
+            row["method"].as_str(),
+            Some("upload_canister_snapshot_metadata" | "load_canister_snapshot" | "start_canister")
+        )));
+        fs::write(self.root.join("pending-transfer-read.json"),serde_json::to_vec_pretty(&json!({"operation_sequence":sequence,"calls":self.calls,"elapsed_ms":self.started.elapsed().as_millis(),"restored":false,"pending_update":1,"pending_observation":null,"reissued":false})).unwrap()).unwrap();
+        eprintln!(
+            "PocketIC pending transfer read retained at {}",
+            self.root.display()
+        );
     }
 
     pub fn write_state(&self, value: u64) {
@@ -375,5 +505,37 @@ impl Backend {
             serde_json::to_vec_pretty(&result).unwrap(),
         )
         .unwrap();
+    }
+}
+
+impl IcSnapshotTransferReadProvider for Backend {
+    fn read_snapshot(
+        &mut self,
+        request: &IcSnapshotTransferReadRequest<'_, '_>,
+    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        // This private fixture owns the isolated instance and original ingress history.
+        // It never reconstructs this memory as a production never-dispatched proof.
+        let payload = request.payload();
+        let actual = self.plan(
+            &payload.digest(),
+            request.authority().binding().operation_sequence(),
+        );
+        assert_eq!(request.plan().context(), actual.context());
+        assert_eq!(payload.receiver(), "aaaaa-aa");
+        assert_eq!(payload.target(), self.target.to_text());
+        assert!(self.submitted_reads.insert((
+            request.authority().digest().hash().into(),
+            request.mutation_attempt()
+        )));
+        let raw = self.management(payload.method(), payload.arguments());
+        IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+            authority: request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: actual.context().clone(),
+            target: self.target.to_text(),
+            evidence: ArtifactChecksumRecord::from_bytes(&raw),
+            reply: raw,
+        })
+        .map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }

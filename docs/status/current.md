@@ -25,14 +25,240 @@
 
 # Current handoff — 2026-10-07
 
+## Pending 0.5.4 published host 0.4.6 qualification
+
+Published host 0.4.6 (`0fb05f9e18f032425188d68e1d69317a0f0127d5`) now has
+successful exact-source Linux, Intel macOS, Apple Silicon macOS and MSRV owner CI.
+Both upstream #18/#19 are closed. The filename fixture observes native rename/
+hard-link admission, preserves exact names and typed EILSEQ/cleanup outcomes,
+and correctly expects the producer before filesystem-specific publication refusal.
+The earlier upstream blockers below are resolved by this release. See
+[the host review](../ic-host-tools-adoption.json).
+
+The incoming lock already selected artifacts/fs/process 0.4.6 and is preserved
+byte-for-byte, along with both manifests. All three archives/official non-yanked
+index checksums and every Rust file match the exact publisher. Production behavior
+is unchanged from 0.4.5: artifacts/process Rust is identical, and fs changes only
+stream documentation/native tests. Fs's existing compatible minimum 0.4.5 continues
+to require its compile repair; all host features remain empty. Shared Tooling
+stays the reviewed 0.1.20 snapshot. Metrics stays 0.2.8.
+
+Fresh affected Linux artifact/JSON/IC artifact units, four public recovery/source/
+upload targets, configured Clippy, Rust 1.91 and offline locked standalone package
+verification pass. Exact source, case/log hashes, source/index/CI responses and
+archive evidence stay at `target/host-054-followup`. Product/test Rust and WAT are
+unchanged. Earlier 11-case real PocketIC proof retains its actual 0.4.5 graph;
+it is not relabelled or rerun for a dependency tests/documentation-only patch.
+
+Current Backup native delivery still requires its own exact-source qualification;
+upstream owner CI supplies no consumer execution proof. Publication adoption #24
+now records successful host native admission and retains its serializer/private-
+parent/crash-barrier migration scope. Checked directory framing #26 and production
+transport remain separate work. Package/receipt stay 0.5.3 with one 0.5.4 draft.
+No sibling edit, commit, release/version transaction, push, publication, public IC
+call, CI rerun or evidence cleanup runs.
+
+## Earlier 0.5.4 Shared Tooling 0.1.20 and host 0.4.5 refresh
+
+The latest remotely verified committed Shared Tooling 0.1.20 snapshot is adopted
+at `3ecc48e579f6cf6e6ab01a6645d8a250fc8c6934`. All 68 prior paths remain; five
+explicit additions supply contribution rules, the shared IC pin parser and
+PocketIC alignment/binary helpers plus their fixture. Exact blobs/modes verify.
+Contribution guidance uses scoped explicit PR/commit/release authority; ordinary
+work stays uncommitted. No commit, PR, push, version or release is requested or
+performed here. CONTRIBUTING and local guides use the same reviewed rules.
+
+The configured gate checks the actual locked PocketIC 16.0.0 client/server pair
+after dependency preparation through read-only offline metadata. Canonical tooling,
+release/hook/shell and optional checker fixtures pass on Linux, including actual
+trailing-slash and symlinked temporary-path contexts. Expanded installer fixtures
+retain their substitute scope. Exact 0.1.20 upstream CI passes Linux, both native
+macOS architectures and lint/security. Shared #54/#55/#56 are resolved upstream;
+consumer delivery remains independent. See [the tooling review](../shared-tooling-review.json).
+
+A final registry/upstream review found published host 0.4.5 at
+`93a905b048bcaa2a0aed4214ac2f13f065dc2905`. All three selected registry archives
+and every published Rust source match that exact committed publisher. The lock
+selects artifacts/fs/process 0.4.5; fs's compatible minimum requires the fixed
+release. All other incoming lock entries remain exact, including Metrics 0.2.8.
+An incidental Cargo update re-resolution of Windows edges is retained separately
+rather than adopted. Explicit offline cache preparation and locked metadata pass.
+
+**The Darwin compile defect is fixed; native delivery is still unqualified.**
+Published 0.4.5 uses checked u16 permission admission on Apple, retaining original
+bounds and typed before-publication failures. Exact upstream CI compiles and runs
+fs tests on both macOS architectures, resolving [host #18](https://github.com/dragginzgame/ic-host-tooling/issues/18).
+Both native jobs then pass 57 fs tests and fail the unconditional non-UTF-8 filename
+success fixture with EILSEQ. [Host #19](https://github.com/dragginzgame/ic-host-tooling/issues/19)
+already owns filesystem-specific fixture qualification; no duplicate issue or
+sibling patch is created. Linux/MSRV pass upstream. These results do not establish
+native macOS acceptance of this uncommitted consumer draft.
+
+Fresh affected Linux artifact/JSON/IC artifact units, four public source/recovery/
+upload targets, all 11 registered real PocketIC journeys, configured Clippy and
+Rust 1.91, offline locked standalone packaging and final formatting/declaration/
+link/snapshot/alignment checks pass on the reviewed 0.4.5 graph. Evidence stays under
+`target/upstream-054-refresh/host-045`; earlier 0.4.3 checks and their original source
+hashes remain retained under the parent owner. The new gzip helpers are disabled
+and have no current caller. Metrics arithmetic and all product Rust bytes remain
+unchanged by this refresh. See [host adoption](../ic-host-tools-adoption.json) and
+[exact PocketIC scope](../pocketic-qualification.json).
+
+Typed streamed publication is committed and published, but [consumer #24](https://github.com/dragginzgame/ic-backup/issues/24)
+still requires a plan preserving one-pass generic serialization before filesystem
+effects, private parent policy and deterministic journal crash barriers, plus native
+qualification. The existing publisher stays its sole owner. [Consumer #23](https://github.com/dragginzgame/ic-backup/issues/23)
+tracks delivery of locally implemented contribution rules. #21/#22 retain original
+native-delivery scopes; #25 and ICP CLI #811 own the production routing/transport gap.
+No open Backup PR duplicates this work. New [consumer #26](https://github.com/dragginzgame/ic-backup/issues/26)
+requests a checked pure directory-checksum composition API for Canic-owned descriptor
+publication; its ownership/compatibility review is recorded, implementation pending.
+Matching issues receive evidence rather than duplicate reports or premature closure.
+
+Original incoming files, failed/inconclusive attempts, official index responses,
+source/archive proofs and native logs remain retained. The initial crates.io API
+refusal is resolved through the official index. Released 0.5.3 main/tag CI passes
+all three configured hosts on its original graph; it does not qualify this draft.
+Package/receipt remain 0.5.3 and the single draft is 0.5.4. No sibling edit, commit,
+release, public IC call, publication, workflow dispatch or evidence cleanup runs.
+Full application/Canic/terminal qualification is unchanged.
+
+## Earlier 0.5.4 pinned transport capability review
+
+The compatible draft now has a real pinned ICP CLI capability probe in the
+PocketIC target. Published `ic-host-process` 0.4.2 is added only for Unix tests:
+it owns executable checksum/version admission, direct argv execution, typed exit
+failures, 64 KiB captures and a 60-second deadline. The CLI's portable `ICP_HOME`
+override isolates config/data/cache under one retained private directory with a
+cleared environment. No production process implementation or transport package
+is installed.
+
+Actual ICP 1.6.0 (`18435e1747162447fca231548b74d97e4cf48888`) fails an exact original
+binary management stop call on a real owned PocketIC 16 HTTP gateway with HTTP 400
+`canister_not_found`. Its generic path cannot retain the effective target distinct
+from receiver `aaaaa-aa`. A dedicated status control succeeds on the same endpoint,
+trusted root and actual anonymous controller; independent post-call status stays
+Running. Original plan/arguments and the reservation precede dispatch. Typed exit
+failure leaves unchanged pending/exhausted spending across new-reservation denial
+and reopen, with no receipt or reissue. [ICP CLI #811](https://github.com/dfinity/icp-cli/issues/811)
+owns the routing fix; [consumer #25](https://github.com/dragginzgame/ic-backup/issues/25)
+owns separate backend acceptance. See [the exact scope](../pocketic-qualification.md#pinned-cli-capability-probe).
+
+The incoming graph now selects published host artifacts/fs 0.4.2 and Metrics
+0.2.8. Those selections are preserved; only the test-only process entry/edge is
+added. Every selected archive checksum and Rust file matches its exact committed
+release. New host chunk hashing has no incremental IC coverage caller; retain the
+existing copy conversion's original non-IO cause identity. Metrics Rust is unchanged
+from 0.2.7. Earlier reviews below retain their actual older source/graphs and are
+not current qualification. Current package reviews are
+[host](../ic-host-tools-adoption.json) and [Metrics](../ic-metrics-adoption.json).
+
+All registered PocketIC cases, affected artifact/JSON/IC artifact/metrics units and
+four public local recovery/source/artifact/upload journeys pass on Linux. Configured
+all-target/all-feature Clippy, Rust 1.91 compilation, offline locked packaging,
+formatting, dependency declarations, documentation and exact snapshot checks are
+retained under `target/icp-backend-054-review`. Initial compile/style failures and
+pre-portable-directory probe evidence remain retained. Prior successful checks
+are not relabelled as the final source. Host 0.4.2 upstream Linux/MSRV pass; both
+macOS jobs still stop at the shared command/TMPDIR fixture before Rust tests.
+Metrics 0.2.8 upstream passes all configured hosts. Neither result supplies native
+macOS delivery of this uncommitted draft.
+
+Shared Tooling remains the exact reviewed 0.1.18 snapshot. Workspace/package and
+receipt remain 0.5.3. No commit, release/version transaction, public IC call, push,
+publication, sibling edit or evidence cleanup ran. Production transport still needs
+explicit routing, authenticated per-call association, internal retry/polling bounds,
+never-dispatched command/descendant custody and interrupted-request qualification.
+Application/Canic adapters, executable workflows and terminal/fence/reference release
+remain independent requirements before Canic engine replacement.
+
+## Earlier 0.5.4 original snapshot transfer-read qualification
+
+The same compatible 0.5.4 draft now adds the missing ordinary metadata/data read
+execution boundary. It borrows existing payloads under the full original plan and
+already pending replicated-update reservation. Passive response matching rechecks
+exact current authority/attempt/context/target, then delegates to existing codecs.
+The existing mutation lane accounts for semantic reads; recovery observations
+retain their separate owner. No new counter, persisted schema, hash encoder or
+automatic receipt is added. Metadata/data/ID/argument/decoder bounds remain exact.
+See [the implemented boundary](../extraction-boundary.md#originally-reserved-snapshot-transfer-reads)
+and [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).
+
+The real PocketIC driver now uses this public boundary for all ordinary reads
+before explicit isolated-instance success qualification and journal recording.
+Actual metadata/data reply-discard cases stop before download or preserve Created
+staging and source references, with pending exhausted update accounting, typed
+new-reservation refusal and no calls during reopen. Original complete-state and
+lost-effect journeys pass on Linux. This is post-effect reply discard, not a
+network/process fault or production transport. Fresh permissions, authenticated
+snapshot/metadata custody and never-dispatched command proof remain integration-owned.
+Production transport/runners, full workflow/terminal admission and Canic adaptation
+remain necessary before engine replacement.
+
+Focused read association cases, configured all-target/all-feature Clippy and Rust
+1.91 compilation pass. Evidence is under `target/transfer-read-054-review`, including
+actual retained simulator originals, traces, raw bytes and safe-stop results.
+The initial wrong fixture sequence, sandbox loopback refusal and two Clippy style
+failures remain retained. Locked package, documentation, formatting, pins and exact
+snapshot checks are recorded there. Native 0.5.4 delivery remains independent;
+no old native proof is relabelled. Workspace/package version and receipt remain
+0.5.3, incoming lock bytes are preserved, and no commits, release transactions,
+sibling writes or evidence cleanup run.
+
+## Earlier 0.5.4 retained region-custody qualification
+
+The maintainer reports that 0.5.3 was pushed accidentally. Its release at
+`7660b56c196d2af3d084524bc74bb9dd4982d1ad` contains metadata and handoff changes,
+with no product Rust/tooling changes from 0.5.2. Its historical version/date remain;
+the changelog now explains the accident under explicit maintainer authorization.
+The single next draft is 0.5.4. Workspace/package version and released receipt
+remain 0.5.3; no release transaction or commit ran.
+
+The compatible draft stops snapshot artifact appends after detectable original
+region-file drift. Before coverage admission or another write, descriptor-relative
+no-follow metadata must match all three held regular files and their exact original
+covered lengths. No new coverage counter, buffer, open or v1 record appears;
+at most six metadata syscalls are added per append. An error consumes the writer
+and preserves partial bytes, occupied staging and unchanged Created journal state.
+Sequential checks do not fence noncooperating writes or detect same-length byte
+changes; final fresh checksum verification remains required. See
+[the boundary](../extraction-boundary.md#durable-metadata-bound-ic-snapshot-artifacts)
+and [issue #21](https://github.com/dragginzgame/ic-backup/issues/21).
+
+A real filesystem regression reproduces the accepted unrelated write before the
+fix and checks replacement, symlink, directory, missing path, truncation and extension
+afterward. Affected artifact/JSON/IC artifact cases and the four public local recovery,
+source, artifact and upload journeys pass on Linux, alongside configured Clippy and
+Rust 1.91 compilation. Evidence and registered case identities are under
+`target/continuation-054-review`; the original regression and initial path-argument
+compile failure remain retained. Locked package and focused repository checks are
+recorded there. Native delivery of this uncommitted draft remains separate.
+
+The incoming lock selecting published host artifacts/fs 0.4.1 is byte-preserved.
+Archive checksums and every Rust source match committed release
+`ce2dd57cedc5000b44bb6a9ff5194f7d65a42c38`; separate dirty sibling 0.4.2 work is
+excluded. Host named external-tool staging does not replace our retained directory
+publication, and its consuming HashingWriter API does not simplify these held
+descriptors/hash lifetimes. The current [host review](../ic-host-tools-adoption.json)
+retains this scope and consumer evidence. Metrics remains the incoming 0.2.7 selection.
+
+Host 0.4.1 upstream Linux/MSRV pass, but both macOS gates stop at a shared command
+fixture before Rust tests. [Shared Tooling #56](https://github.com/dragginzgame/shared-tooling/issues/56)
+already owns the exact failure and proposed physical TMPDIR normalization. This is
+not a Rust failure or native qualification. The adopted Shared Tooling snapshot
+remains exact 0.1.18, `a3430b34b32a60f3b245a2b4f7e2f5321556fe56`; no dirty shared
+source or vendored patch is adopted.
+
+
 ## Released 0.5.2 native delivery review
 
 Release 0.5.2 is pushed at `e1300abfbaba47d5776a71b5bc1fa005d9079e1c` with tag `v0.5.2`.
 Its [main](https://github.com/dragginzgame/ic-backup/actions/runs/37607137734) and [tag](https://github.com/dragginzgame/ic-backup/actions/runs/37607138196) CI runs pass the full configured gate on Linux.
-Both Intel and Apple Silicon macOS jobs are queued at inspection; no failure
-is reported. The selected metrics, release-fixture, shared snapshot and host
-dependency fixes are included in that release. The four owning issues remain
-open for native acceptance, not another implementation batch.
+Both Intel and Apple Silicon macOS jobs now pass. Exact completed run/job
+responses are retained in `target/continuation-054-review/released-052-ci*.json`.
+The selected metrics, release-fixture, shared snapshot and host dependency fixes
+are included in that release and their original delivery acceptance is complete.
+That source/graph proof does not qualify the 0.5.4 draft above.
 
 The release's parent is `4a1a88bcb2551f821d41ff0b05425a82a327537c`.
 Finalization changes only the root Cargo version/lock, changelog date and receipt;

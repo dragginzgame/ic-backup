@@ -1,6 +1,20 @@
 # Changelog
 
+## [0.5.4]
+
+- Require the macOS filesystem compile repair and qualify published ic-host 0.4.6, including its native filename checks. Preserve artifact, journal and spending contracts ([host #18](https://github.com/dragginzgame/ic-host-tooling/issues/18), [host #19](https://github.com/dragginzgame/ic-host-tooling/issues/19)).
+
+- Adopt Shared Tooling 0.1.20, including scoped contribution authority, temporary-path and changelog fixes, guarded Rust setup and a locked PocketIC alignment check ([#23](https://github.com/dragginzgame/ic-backup/issues/23)).
+
+- Qualify the pinned ICP CLI against a real local gateway. Retain pending spending after its management routing refusal; reuse published `ic-host-process` for bounded test execution ([#25](https://github.com/dragginzgame/ic-backup/issues/25)).
+
+- Bind snapshot metadata/data reads to original reserved attempts through a provider contract and bounded passive response checks. Real PocketIC loss cases retain pending spending and stop safely ([#22](https://github.com/dragginzgame/ic-backup/issues/22)).
+
+- Stop snapshot artifact appends when an original region file is replaced or changes length, retaining partial bytes and unchanged journal state ([#21](https://github.com/dragginzgame/ic-backup/issues/21)).
+
 ## [0.5.3] - 2026-10-07
+
+- Accidental release containing release metadata and handoff updates; no product implementation changes from 0.5.2.
 
 ## [0.5.2] - 2026-10-07
 

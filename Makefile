@@ -6,7 +6,7 @@ VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
 RELEASE := bash scripts/release/release.sh
-CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps pocketic-alignment-check shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 ifneq ($(word 2,$(filter release-patch release-minor release-major release-resume,$(MAKECMDGOALS))),)
 $(error Select exactly one release target)
@@ -19,7 +19,7 @@ endif
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
         tags test tooling-check validate version
-.PHONY: dependency-pins-check format-tools-check
+.PHONY: dependency-pins-check format-tools-check pocketic-alignment-check
 
 help:
 	@echo "check                       Compile this library's native targets"
@@ -47,6 +47,7 @@ help:
 	@echo "install-rust-tools          Prepare the optional shared Cargo tool set"
 	@echo "install-tools               Prepare host tools followed by IC tools"
 	@echo "package                     Verify the standalone package locally"
+	@echo "pocketic-alignment-check     Check the locked client against the reviewed server pin"
 	@echo "publish                     Publish the current library to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
 	@echo "release-check               Test release helpers with isolated substitutes"
@@ -113,6 +114,9 @@ install-hooks:
 
 dependency-pins-check:
 	bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
+
+pocketic-alignment-check:
+	bash scripts/ci/check-pocketic-alignment.sh --manifest crates/ic-backup/Cargo.toml --pins ci/ic-tools.tsv
 
 package:
 	cargo package --offline --locked --allow-dirty -p ic-backup

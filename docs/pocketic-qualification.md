@@ -1,5 +1,38 @@
 # Real single-canister snapshot qualification
 
+## Pinned CLI capability probe
+
+The same integration target also probes the installed ICP CLI 1.6.0 against a
+real HTTP gateway on a separate owned application + NNS instance. It verifies
+the installed executable checksum/version through published `ic-host-process`
+0.4.2, then passes direct argv, a trusted owned root key, anonymous controller
+identity and exact binary management arguments. The CLI's portable `ICP_HOME`
+override keeps settings/data/cache in one private retained fixture directory;
+the environment is cleared. Each stream is bounded to 64 KiB with a 60-second
+deadline. The process dependency is Unix test-only.
+
+A dedicated status command succeeds with the exact Running target and controller
+set. The generic `stop_canister` update then exits unsuccessfully with an actual
+HTTP 400 `canister_not_found`: the pinned generic path has no explicit effective
+target distinct from receiver `aaaaa-aa`. Independent post-call status stays
+Running. The original plan/arguments and reservation precede dispatch; pending
+spending, typed fresh-reservation denial and exact journal bytes survive reopen.
+Neither the error nor the status control becomes a NotApplied receipt or refund.
+The test asserts structured status, typed exit failure and retained accounting;
+it does not freeze diagnostic prose.
+
+Exact upstream 1.6.0 source and real probe evidence are retained under
+`target/icp-backend-054-review`; [ICP CLI #811](https://github.com/dfinity/icp-cli/issues/811)
+owns explicit online/offline effective routing. [Consumer #25](https://github.com/dragginzgame/ic-backup/issues/25)
+owns independent transport acceptance. A future production adapter must refuse
+unsupported modes before effects. This test deliberately probes the incapable
+mode in an isolated simulator. One subprocess is not one HTTP ingress: internal
+retries/polling, descriptor/descendant custody, authenticated production replies
+and interrupted calls remain unqualified. No provider or transport package is
+created, and no public IC call runs.
+
+## Original snapshot and recovery journeys
+
 The `pocketic_snapshot` integration target exercises real management ingress on
 an isolated PocketIC 16 application subnet through the public extracted library.
 It qualifies this small fixture's same-release, same-ID recovery path. The driver
@@ -34,6 +67,26 @@ separately accounted verification retains the additional remote snapshot; it nev
 replaces a source or repeats load. Only afterward does explicit start proceed, and
 all three application values must return 42. Active timer/hook execution, SIMD or floating globals, multiple
 canisters, external-effect fencing and other subnet configurations are unqualified.
+
+## Original snapshot transfer reads
+
+All ordinary metadata/data reads now use the public original-plan/reservation
+request and passive response association boundary. The test-only provider owns
+actual isolated instance/caller/target context and retains original ingress history.
+It submits one exact update, then the driver validates the current pending journal
+and bounded original codec reply before explicitly recording its qualified success.
+A private submitted-original set rejects repeated provider invocation; it is not a
+persisted production never-dispatched proof.
+
+Two additional real-ingress cases discard a metadata-read or first data-read reply.
+Metadata loss stops before creating download staging. Data loss retains Created
+partial staging and its source reference without a manifest or canonical artifact.
+Both retain the original pending update and exhausted update allowance across
+reopen, refuse another mutation reservation, invoke no provider during replay and
+stop before upload/load/start. Oracle reply bytes never enter association or a
+success receipt. These cases qualify safe stopping, not a completed backup or
+permission to repeat a read. See [issue #22](https://github.com/dragginzgame/ic-backup/issues/22)
+and [the port contract](contracts/ic-snapshot-transfer-read-port.json).
 
 ## Original spending and deliberately lost replies
 
@@ -103,15 +156,17 @@ original plans, reserved journals, arguments/replies, management trace, durable
 source artifacts/manifest/references, stopped post-load verification or retained
 pending-lifecycle evidence, and a successful qualification result with instance,
 target, raw source/destination IDs, elapsed time and accounted ingress count.
-The negative case's successful test result qualifies safe stopping with pending
-evidence, not a completed restore.
+Transfer-read loss retains a separate pending-transfer-read result and original
+management trace. Successful tests with pending evidence qualify safe stopping,
+not a completed backup or restore.
 Simulator instance disposal does not remove those host-side records.
 
 [The machine review](pocketic-qualification.json) records source/dependency identity,
 registered case names, the reviewed backend and exact scope. Linux results do not
-supply native macOS qualification. Follow-up delivery and backend work belongs to
-[issue #17](https://github.com/dragginzgame/ic-backup/issues/17); production ICP
-transport, executable workflows/CLI, Canic adaptation, application-specific
+supply native macOS qualification. The original journey was delivered under
+[issue #17](https://github.com/dragginzgame/ic-backup/issues/17); current transfer-read
+adoption is tracked in [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).
+Production ICP transport, executable workflows/CLI, Canic adaptation, application-specific
 lifecycle recovery, fencing and terminal/reference-release qualification remain
 separate. The inspected
 [management snapshot contract](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)

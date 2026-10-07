@@ -27,9 +27,12 @@
 
 Patch, minor and major use the [common release contract](releases.md) and the exact
 vendored Shared Tooling runner. Consumer adapters own Cargo metadata, original-input
-validation and the v1 release receipt. The maintainer owns commits, tags and pushes;
-agents must never execute these one-shot commands or resume them. Publication is a
-separate explicit action. Build, validation and recovery artifacts remain retained.
+validation and the v1 release receipt. Running a selected one-shot command or
+resuming its exact saved release requires an explicit request for this repository
+and destination. That request includes its documented Git effects under the
+[contribution rules](../rules/contributions.md). Ordinary fixes and PR delivery
+do not authorize a release; publication remains a separate explicit action.
+Build, validation and recovery artifacts remain retained.
 
 | Command | Effect | Owner |
 | --- | --- | --- |
