@@ -43,7 +43,7 @@ fn original_guarantee_reconciles_exact_create_and_cannot_be_downgraded_or_replac
     );
     let weaker = ConsistencyRequirementRecord::new(&plan, ConsistencyGuaranteeRecord::PerCanister);
     assert!(
-        matches!(create_consistency_requirement(&layout,&plan,&weaker),Err(ConsistencyPersistenceError::Persistence(PersistenceError::Io(ref e))) if e.kind()==io::ErrorKind::AlreadyExists)
+        matches!(create_consistency_requirement(&layout,&plan,&weaker),Err(ConsistencyPersistenceError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref e, .. }))) if e.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_consistency_requirement(&layout, &plan, &weaker.digest()),

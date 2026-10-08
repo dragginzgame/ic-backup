@@ -97,5 +97,13 @@
     "meaning": "Maintenance source measurement, not runtime, performance or production artifact cost."
   },
   "previous_snapshot_review": "target/shared-tooling-052-0118-review/previous/docs/release-fixture-ownership.json",
-  "current_snapshot_qualification": "target/shared-tooling-052-0118-review/release.log reruns canonical and actual Backup adapter suites; earlier fixture-convergence evidence retains the original 0.1.15 snapshot."
+  "current_snapshot_qualification": "target/continuation-055/release-shell.log reruns the actual direct consumer adapter and exact 0.1.21 canonical direct runner. Original convergence evidence below retains its actual older source.",
+  "current_delivery_policy": {
+    "mode": "direct",
+    "shared_revision": "45e34e92b43edb9543d5b7212774f87f8334079f",
+    "shared_fixture_sha256": "71308ad28237a6cd1239bf036c06b69ef8938e4d67d3d52ba56d5f7f2dc87cce",
+    "consumer_fixture_sha256": "d037db833152e041b1f02bf92f8762cd788b28493c6cd71b671f557144ba9394",
+    "owner": "test_staging now refuses pr/invalid selections through patch and exact resume before state/Git effects.",
+    "PR_scope": "Optional upstream fixture is vendored, but consumer merged-source adapter is unimplemented and mode refuses; no local PR fixture execution or release delivery."
+  }
 }

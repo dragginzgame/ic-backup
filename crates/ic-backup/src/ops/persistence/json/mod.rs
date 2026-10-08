@@ -7,16 +7,14 @@
 use crate::ops::persistence::PersistenceError;
 
 use std::{
-    ffi::OsString,
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io::{self, Write},
-    path::{Path, PathBuf},
-    sync::atomic::{AtomicU64, Ordering},
+    path::Path,
 };
 
 use serde::{Serialize, de::DeserializeOwned};
 
-static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+use ic_host_fs::durable::{PublicationMode, WriteOptions};
 
 /// Check the maintained pretty-JSON budget without allocating an encoded record.
 pub(super) fn check_json_size(
@@ -35,25 +33,27 @@ pub(super) fn check_json_size(
 /// Durably replace a machine record using a sibling temporary and rename.
 ///
 /// # Errors
-/// Returns encoding or IO failures; a lost post-rename response requires reconciliation.
+/// Returns encoding/parent IO failures or structured shared publication failures.
+/// An after-publication failure or lost response requires reconciliation.
 pub fn write_json_durable<T>(path: &Path, value: &T) -> Result<(), PersistenceError>
 where
     T: Serialize,
 {
     let bytes = serde_json::to_vec_pretty(value)?;
-    replace_bytes_at_barriers(path, &bytes, |_| {}).map_err(PersistenceError::from)
+    publish_bytes_at_barriers(path, &bytes, PublicationMode::Replace, |_| {})
 }
 
 /// Publish a new machine record without replacing an existing entry.
 ///
 /// # Errors
-/// Returns encoding, existing-destination or IO failures.
+/// Returns encoding/parent IO failures or structured shared publication failures,
+/// including create-only conflicts and visible output after failed completion.
 pub fn create_json_durable<T>(path: &Path, value: &T) -> Result<(), PersistenceError>
 where
     T: Serialize,
 {
     let bytes = serde_json::to_vec_pretty(value)?;
-    create_bytes_at_barriers(path, &bytes, || {}, || {}).map_err(PersistenceError::from)
+    publish_bytes_at_barriers(path, &bytes, PublicationMode::CreateNew, |_| {})
 }
 
 /// Read one regular no-follow JSON file within an explicit byte limit.
@@ -101,75 +101,52 @@ fn record_read_error(
     }
 }
 
-fn create_bytes_at_barriers(
-    path: &Path,
-    bytes: &[u8],
-    mut before_publication: impl FnMut(),
-    mut after_directory_sync: impl FnMut(),
-) -> io::Result<()> {
-    let parent = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-    create_private_parents(parent)?;
-
-    let (temp_path, mut temp_file) = create_sibling_temp(path, parent)?;
-    if let Err(error) = temp_file
-        .write_all(bytes)
-        .and_then(|()| temp_file.sync_all())
-    {
-        drop(temp_file);
-        let _ = fs::remove_file(&temp_path);
-        return Err(error);
-    }
-    drop(temp_file);
-    before_publication();
-
-    if let Err(error) = fs::hard_link(&temp_path, path) {
-        let _ = fs::remove_file(&temp_path);
-        return Err(error);
-    }
-    fs::remove_file(&temp_path)?;
-    File::open(parent)?.sync_all()?;
-    after_directory_sync();
-    Ok(())
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum DurableWriteBarrier {
     BeforeRename,
     AfterDirectorySync,
 }
 
-fn replace_bytes_at_barriers(
+// Keep one shared publication engine for ordinary writes and crash qualification.
+fn publish_bytes_at_barriers(
     path: &Path,
     bytes: &[u8],
+    mode: PublicationMode,
     mut barrier: impl FnMut(DurableWriteBarrier),
-) -> io::Result<()> {
+) -> Result<(), PersistenceError> {
     let parent = path
         .parent()
         .filter(|parent| !parent.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
     create_private_parents(parent)?;
-
-    let (temp_path, mut temp_file) = create_sibling_temp(path, parent)?;
-    if let Err(error) = temp_file
-        .write_all(bytes)
-        .and_then(|()| temp_file.sync_all())
-    {
-        drop(temp_file);
-        let _ = fs::remove_file(&temp_path);
-        return Err(error);
-    }
-    drop(temp_file);
-    barrier(DurableWriteBarrier::BeforeRename);
-
-    if let Err(error) = fs::rename(&temp_path, path) {
-        let _ = fs::remove_file(&temp_path);
-        return Err(error);
-    }
-
-    File::open(parent)?.sync_all()?;
+    let options = WriteOptions {
+        mode,
+        permissions: 0o600,
+    };
+    let produce = |file: &mut File| -> io::Result<()> {
+        file.write_all(bytes)?;
+        // Acknowledged pre-publication death must leave synchronized staging.
+        // Host repeats this sync as part of its own identity/publication admission.
+        file.sync_all()?;
+        barrier(DurableWriteBarrier::BeforeRename);
+        Ok(())
+    };
+    #[cfg(unix)]
+    let result = {
+        use std::os::fd::AsFd;
+        let name = path.file_name().ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "durable write target has no filename",
+            )
+        })?;
+        let directory = File::open(parent)?;
+        ic_host_fs::durable::write_at_with(directory.as_fd(), name, options, produce)
+    };
+    #[cfg(not(unix))]
+    let result = ic_host_fs::durable::write_typed_with(path, options, produce);
+    result.map_err(PersistenceError::Publication)?;
+    // Successful Host completion includes publication and the held-parent sync.
     barrier(DurableWriteBarrier::AfterDirectorySync);
     Ok(())
 }
@@ -184,59 +161,29 @@ where
     T: Serialize,
 {
     let bytes = serde_json::to_vec_pretty(value)?;
-    replace_bytes_at_barriers(path, &bytes, barrier).map_err(PersistenceError::from)
+    publish_bytes_at_barriers(path, &bytes, PublicationMode::Replace, barrier)
 }
 
 #[cfg(test)]
 pub(crate) fn create_json_durable_at_barriers<T>(
     path: &Path,
     value: &T,
-    before_publication: impl FnMut(),
-    after_directory_sync: impl FnMut(),
+    mut before_publication: impl FnMut(),
+    mut after_directory_sync: impl FnMut(),
 ) -> Result<(), PersistenceError>
 where
     T: Serialize,
 {
     let bytes = serde_json::to_vec_pretty(value)?;
-    create_bytes_at_barriers(path, &bytes, before_publication, after_directory_sync)
-        .map_err(PersistenceError::from)
-}
-
-fn create_sibling_temp(path: &Path, parent: &Path) -> io::Result<(PathBuf, File)> {
-    let file_name = path.file_name().ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::InvalidInput,
-            format!("durable write target has no file name: {}", path.display()),
-        )
-    })?;
-
-    for _ in 0..64 {
-        let sequence = TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-        let mut temp_name = OsString::from(".");
-        temp_name.push(file_name);
-        temp_name.push(format!(".ic-backup-tmp-{}-{sequence}", std::process::id()));
-        let temp_path = parent.join(temp_name);
-        let mut options = OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        match options.open(&temp_path) {
-            Ok(file) => return Ok((temp_path, file)),
-            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
-            Err(error) => return Err(error),
-        }
-    }
-
-    Err(io::Error::new(
-        io::ErrorKind::AlreadyExists,
-        format!(
-            "could not allocate a unique sibling temporary file for {}",
-            path.display()
-        ),
-    ))
+    publish_bytes_at_barriers(
+        path,
+        &bytes,
+        PublicationMode::CreateNew,
+        |barrier| match barrier {
+            DurableWriteBarrier::BeforeRename => before_publication(),
+            DurableWriteBarrier::AfterDirectorySync => after_directory_sync(),
+        },
+    )
 }
 
 // -----------------------------------------------------------------------------

@@ -124,6 +124,19 @@ artifact and persistence mechanisms described in
 [the implemented extraction boundary](extraction-boundary.md). Capture/restore
 runners and transport remain unimplemented. Pure checksum records belong to
 model; filesystem operations belong to ops.
+`ops::artifacts::checksum_relative_files` also composes a directory checksum from
+owned `(PathBuf, ArtifactChecksumRecord)` entries without filesystem IO. It accepts
+exact canonical relative UTF-8 names, rejects duplicates and malformed identities
+through `DirectoryChecksumError`, and retains the existing path ordering/framing.
+Traversal, staging, synchronized publication and IC-tree verification use this same
+owner. Consumer descriptor sync, byte custody and publication remain independent.
+The focused public check is
+`cargo test --offline --locked -p ic-backup --test directory_checksum`.
+JSON serializers run once before parent/staging effects; their byte buffer retains
+that contract. Host's typed descriptor publisher owns staging/atomic publication,
+with private parent policy and acknowledged crash barriers in Backup. In the
+0.6.0 draft, match `PersistenceError::Publication` for its original typed producer,
+cleanup and before/after-publication failures; visible output requires recovery.
 Restore dependency records and immutable retention transitions belong to model;
 layout exclusion, canonical journal-parent resolution and durable publication
 belong to persistence ops. No reference release or prune API is exposed.

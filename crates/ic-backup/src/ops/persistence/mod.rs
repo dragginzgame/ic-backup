@@ -77,9 +77,14 @@ pub enum PersistenceError {
     /// Restore dependency validation or an immutable retention transition failed.
     #[error(transparent)]
     RestoreReference(#[from] crate::model::restore_references::RestoreReferenceError),
-    /// Filesystem IO failed; publication may require local reconciliation.
+    /// Parent preparation, record reads or other local filesystem IO failed.
+    /// Shared JSON publication failures retain their separate structured boundary.
     #[error(transparent)]
     Io(#[from] io::Error),
+    /// Shared file publication failed, retaining producer/cleanup causes and visibility.
+    /// An after-publication failure leaves output visible and requires reconciliation.
+    #[error(transparent)]
+    Publication(#[from] ic_host_fs::durable::NamedWriteError<io::Error>),
     /// JSON encoding or decoding failed.
     #[error(transparent)]
     Json(#[from] serde_json::Error),

@@ -5,6 +5,8 @@ include make/tools.mk
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
+RELEASE_DELIVERY ?= direct
+export RELEASE_DELIVERY
 RELEASE := bash scripts/release/release.sh
 CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps pocketic-alignment-check shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
@@ -19,9 +21,10 @@ endif
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
         tags test tooling-check validate version
-.PHONY: dependency-pins-check format-tools-check pocketic-alignment-check
+.PHONY: dependency-pins-check format-tools-check pocketic-alignment-check release-delivery-check
 
 help:
+	@echo "release-delivery-check      Verify the supported direct release policy without effects"
 	@echo "check                       Compile this library's native targets"
 	@echo "check-doc-links             Check maintained local Markdown targets"
 	@echo "check-msrv                  Check Rust 1.91.0"
@@ -131,10 +134,13 @@ release-check:
 	bash scripts/release/test-release.sh
 	RELEASE_MAKE=make bash scripts/ci/test-release-runner.sh
 
-release-patch release-minor release-major:
+release-delivery-check:
+	@[[ "$${RELEASE_DELIVERY:-direct}" == direct ]] || { echo 'This repository supports direct release delivery; PR delivery needs a qualified consumer adapter.' >&2; exit 2; }
+
+release-patch release-minor release-major: release-delivery-check
 	@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
 
-release-resume:
+release-resume: release-delivery-check
 	@bash scripts/ci/run-release.sh resume "$(VERSION)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
 	@$(RELEASE) resume-check "$(VERSION)"
 

@@ -94,7 +94,7 @@ fn retained_limits_exact_identity_and_receipts_survive_reopen() {
     assert!(guard.record().expect("retained view").view().applied);
     drop(guard);
     assert!(
-        matches!(AttemptJournalGuard::create(&layout,larger),Err(AttemptJournalError::Persistence(PersistenceError::Io(ref error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(AttemptJournalGuard::create(&layout,larger),Err(AttemptJournalError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     drop(layout);
     fs::remove_dir_all(root).expect("clean successful fixture");

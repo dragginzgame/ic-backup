@@ -231,7 +231,8 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
             ));
         }
         self.check_closed_tree()?;
-        let expected = checksum_relative_files(std::mem::take(&mut self.checksums));
+        let expected = checksum_relative_files(std::mem::take(&mut self.checksums))
+            .map_err(ArtifactError::from)?;
         checksum_directory(&self.path)?.verify(expected.hash())?;
         self.check_custody()?;
         let target = self.coverage.metadata().request().target();

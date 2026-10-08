@@ -34,6 +34,14 @@ and destination. That request includes its documented Git effects under the
 do not authorize a release; publication remains a separate explicit action.
 Build, validation and recovery artifacts remain retained.
 
+This repository explicitly supports `RELEASE_DELIVERY=direct`. The reviewed common
+0.1.21 runner also offers PR delivery, but this consumer's original-source receipts
+and recovery adapter do not yet qualify merged-source validation. Patch/minor/major
+and resume reject `pr` or invalid selections through `release-delivery-check` before
+the runner creates state or calls Git. Changing delivery requires a qualified
+consumer adapter and explicit policy adoption; a failed direct push never selects
+another lane. Ordinary contributions continue through authorized PRs.
+
 | Command | Effect | Owner |
 | --- | --- | --- |
 | `make release-plan VERSION=minor` | Preview the proposed version without effects | Contributor |

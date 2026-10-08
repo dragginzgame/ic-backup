@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # Consumer assertions are mapped in docs/release-fixture-ownership.json. The
 # canonical shared suite owns increment/phase and generic lost-reply matrices.
 unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND RELEASE_COMMIT \
-    RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE VERSION \
+    RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE RELEASE_DELIVERY VERSION \
     MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 metadata_only=false
@@ -455,6 +455,12 @@ test_staging() {
     "$TEST_REAL_MAKE" --no-print-directory -n release-patch
     [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-stage
+    for delivery in pr invalid; do
+        expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch "RELEASE_DELIVERY=$delivery"
+        expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1 "RELEASE_DELIVERY=$delivery"
+        assert_unchanged
+        [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
+    done
 }
 prepare_tagged_release() {
     sed 's/\[0.1.1\]/[0.2.0]/' CHANGELOG.md > target/notes; cp target/notes CHANGELOG.md

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0]
+
+- **Breaking:** JSON publication now returns `PersistenceError::Publication` with shared typed producer, cleanup and before/after-publication evidence. Update exhaustive error matches; reconcile visible output after completion failures. Delegate allocation and atomic publication to `ic-host-fs`, retaining private parents, serialize-once preflight and crash recovery ([#24](https://github.com/dragginzgame/ic-backup/issues/24)).
+
+- Expose checked directory-checksum composition for already-admitted file identities, preserving canonical framing without filesystem IO. Verify composed identities through durable publication/recovery and reject changed bytes ([#26](https://github.com/dragginzgame/ic-backup/issues/26)).
+- Adopt Shared Tooling 0.1.21; retain the qualified direct release policy and reject unsupported delivery selections before effects.
+
 ## [0.5.4] - 2026-10-07
 
 - Require the macOS filesystem compile repair and qualify published ic-host 0.4.6, including its native filename checks. Preserve artifact, journal and spending contracts ([host #18](https://github.com/dragginzgame/ic-host-tooling/issues/18), [host #19](https://github.com/dragginzgame/ic-host-tooling/issues/19)).

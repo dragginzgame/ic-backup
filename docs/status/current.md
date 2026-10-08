@@ -25,7 +25,113 @@
 
 # Current handoff — 2026-10-07
 
-## Pending 0.5.4 published host 0.4.6 qualification
+## Pending 0.6.0 typed JSON publication and checked directory framing
+
+The complete pending batch now selects 0.6.0: adding the exhaustive public
+`PersistenceError::Publication` variant changes JSON writer error matching. The
+root/member manifests, lock and release receipt remain 0.5.4; no version or Git
+transaction runs. Update exhaustive matches and handle Host's typed producer,
+cleanup and before/after-publication evidence without inferring a paid retry.
+All maintained v1 bytes, budgets, reservations, obligations and references remain
+unchanged. The additive checksum API and reviewed Shared Tooling 0.1.21 adoption
+below carry into this same minor draft.
+
+JSON create/replace now use the published Host 0.4.6 descriptor publisher beneath
+one held syncable parent. The local temporary allocator and hard-link/rename/
+cleanup engine are removed. Backup retains 0700 parent creation/link syncs,
+0600 files, serializer preflight and crash acknowledgment policy. One encoded
+buffer remains required for generic Serialize to run once before filesystem
+effects; direct JSON streaming cannot preserve that contract. Production and
+crash fixtures use the same adapter/Host engine. A synchronized producer barrier
+precedes publication; successful Host completion precedes the durable barrier.
+
+Fresh Linux checks pass: all 129 affected persistence cases, including actual
+child death for attempts/downloads/references/manifests/settlement, original
+size bounds, private modes, typed native conflicts and changed staging cleanup.
+New cases prove serialization once before parents even on failure, retained
+original/foreign staging with cleanup evidence, and held-parent publication
+after its path moves. The six public framing cases, four public recovery/source/
+artifact/upload targets, all 11 real PocketIC journeys, Clippy, Rust 1.91 and
+offline locked standalone packaging also pass. Exact source/log/archive and
+simulator proof is retained at `target/publication-060`; the local archive remains
+version 0.5.4 and is not a published registry artifact. Earlier runs keep their
+original identities. No current native macOS result exists for this dirty source.
+
+ICP's latest release remains 1.6.0. Remotely inspected main
+`08201a6382559d8eac851509f7984cfe55d0620d` still omits effective routing from generic
+calls and signed destinations. Its existing Call/RouteTo owner already supports
+the route: [upstream feedback](https://github.com/dfinity/icp-cli/issues/811#issuecomment-6044188605)
+proposes an explicit option carried consistently through online/signing/request
+status. Fresh actual probe refusal retains pending exhausted original spending.
+Routing, bounded internal retry/polling, authenticated association and command
+custody remain separate production-transport prerequisites; no unqualified
+provider or sibling file edit is introduced. Publication/native delivery and
+downstream Canic adoption also remain separate from local implementation.
+
+Current implementation handoffs are posted on
+[#24](https://github.com/dragginzgame/ic-backup/issues/24#issuecomment-6044506701),
+[#25](https://github.com/dragginzgame/ic-backup/issues/25#issuecomment-6044507064)
+and [#26](https://github.com/dragginzgame/ic-backup/issues/26#issuecomment-6044507408).
+The [Canic API handoff](https://github.com/dragginzgame/canic/issues/490#issuecomment-6044312449)
+requires published/native evidence before separately qualifying downstream custody.
+Final inspection confirms both released 0.5.4 main and tag CI succeeded on Linux,
+Intel macOS and ARM macOS at the exact incoming commit. These runs do not qualify
+the current dirty 0.6.0 draft. All three Backup issues remain open for their stated
+delivery, retained-buffer or production-transport requirements; no PR is open.
+
+## Earlier 0.5.5 local framing/tooling qualification, carried into 0.6.0
+
+Released 0.5.4 is the incoming base, `bebd3b5185c8144b5be97e9a9763fee9f0621c6c`;
+the official registry index confirms its non-yanked publication. Package/receipt
+remain 0.5.4, with one additive 0.5.5 draft. Both manifests and the incoming lock
+are byte-preserved: host artifacts/fs/process remain 0.4.6 and Metrics 0.2.8.
+
+The existing `ops::artifacts::checksum_relative_files` is now public and checked.
+One I/O-free owner admits exact canonical relative UTF-8 file identities, rejects
+malformed/duplicate rows through `DirectoryChecksumError`, and preserves original
+PathBuf component ordering and path/NUL/lowercase-digest/newline framing. All
+local traversal, durable publication and IC-tree callers use this same owner.
+Existing exhaustive `ArtifactError` variants remain unchanged; filesystem callers
+retain the non-UTF-8 variant or an InvalidData IO error with the typed cause. No
+existing function, method or type is removed. Declared hashes prove no custody,
+completeness, synchronization or publication. See [the boundary](../extraction-boundary.md).
+
+The 75-file Shared Tooling 0.1.21 snapshot selects remotely verified committed
+main `45e34e92b43edb9543d5b7212774f87f8334079f`. A clean exact-source canonical
+export retains all 73 previous paths and adds the optional PR helper/fixture;
+all bytes/modes are checked. Consumer release delivery remains explicitly direct.
+Patch/minor/major/resume reject unsupported selections before runner state or Git;
+fresh merged-source receipt qualification for PR releases is not implemented.
+Ordinary contribution PR authority remains distinct. See [the review](../shared-tooling-review.json).
+
+Fresh Linux checks pass: six public framing cases with independent golden bytes,
+affected artifact/publication/IC-tree units, four public recovery/source/upload
+targets, all 11 real PocketIC journeys, configured Clippy, Rust 1.91, offline
+locked standalone packaging, tooling/release/hook/shell and final quality checks.
+Exact source, logs, simulator results and local archive proof remain under
+`target/continuation-055`. The locally verified archive retains package version
+0.5.4 and contains this unpublished draft; it is not the published 0.5.4 archive.
+The #26 follow-up adds public composition-through-publication/recovery proof,
+including changed staging/canonical byte refusal, and a compiled usage example.
+Fresh focused checks and the updated local archive are bound separately under
+`target/issue26-followup`; only tests and rustdoc changed, so earlier runtime
+journeys retain their original source evidence without an unnecessary rerun.
+[PocketIC evidence](../pocketic-qualification.json) keeps older runs under their
+original inputs and records this fresh run separately.
+
+Released 0.5.4 exact-source main CI now passes Linux, Intel macOS and Apple Silicon
+macOS, completing the previously pending product native delivery. The tag run
+passes Linux/Intel with Apple Silicon still queued at this inspection. This
+uncommitted batch has no remote CI result. Shared 0.1.21
+owner CI passes Linux, Apple Silicon macOS and lint/security; Intel macOS was
+cancelled before complete portable qualification. No all-host green gate is
+claimed. Contribution-policy and original region-custody/transfer-read adoption
+are delivered; streamed JSON publication migration and production transport retain
+their own acceptance. Canic framing adoption awaits the actual published API and downstream
+qualification. No sibling edit, commit, release/version transaction, push,
+publication, public IC call, CI rerun or retained-evidence cleanup occurs.
+
+## Earlier 0.5.4 published host 0.4.6 qualification
 
 Published host 0.4.6 (`0fb05f9e18f032425188d68e1d69317a0f0127d5`) now has
 successful exact-source Linux, Intel macOS, Apple Silicon macOS and MSRV owner CI.

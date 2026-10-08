@@ -4,7 +4,7 @@ use super::ArtifactCommitOutcome;
 use crate::{
     model::artifacts::ArtifactChecksumRecord,
     ops::{
-        artifacts::{checksum_reader, checksum_relative_files},
+        artifacts::{ArtifactError, checksum_reader, checksum_relative_files},
         persistence::PersistenceError,
     },
 };
@@ -137,7 +137,9 @@ fn sync_tree(
         &mut checksums,
         at_step,
     )?;
-    Ok(checksum_relative_files(checksums))
+    checksum_relative_files(checksums)
+        .map_err(ArtifactError::from)
+        .map_err(PersistenceError::from)
 }
 
 fn sync_directory(

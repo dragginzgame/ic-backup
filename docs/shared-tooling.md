@@ -49,7 +49,32 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 73-file snapshot selects committed Shared Tooling 0.1.20 at
+The current 75-file snapshot selects committed Shared Tooling 0.1.21 at
+`45e34e92b43edb9543d5b7212774f87f8334079f`, matching remotely verified main.
+All 73 prior paths remain; canonical `release-pr.sh` and its fixture are explicitly
+added before committed export. Exact blobs and executable modes are independently
+checked. The common runner preserves direct recovery and provides an optional
+PR release protocol with fresh merged-source qualification; local consumer policy
+stays direct. Public release/resume commands reject unsupported delivery before
+runner state or Git effects. Ordinary contributions retain their authorized PR
+workflow; no actual commit/PR/release action is part of this adoption.
+
+Local direct-runner, adapter/private-index and hook/shell checks pass. Canonical
+consumer tooling checks and exact upstream/native results retain actual scope in
+[the review](shared-tooling-review.json) under `target/continuation-055`. The PR
+fixture ships unchanged, but this direct consumer does not claim its own PR release
+qualification. Package/receipt remain 0.5.4 and the current draft is 0.6.0,
+selected by the separately reviewed public JSON publication error change.
+No sibling edit, package version change or Git/release/publication effect occurs.
+
+Exact upstream 0.1.21 CI passes Linux, Apple Silicon macOS and lint/security.
+Intel macOS is cancelled during portable regression, so the owner run does not
+establish complete native qualification. No consumer CI result is attributed to
+these uncommitted changes.
+
+### Retained 0.1.20 review
+
+The earlier 73-file snapshot selects committed Shared Tooling 0.1.20 at
 `3ecc48e579f6cf6e6ab01a6645d8a250fc8c6934`, matching inspected remote main.
 A clean isolated checkout exports exact committed bytes and modes; all 68 prior
 paths remain. Explicit additions are the contribution rules, shared IC pin parser,

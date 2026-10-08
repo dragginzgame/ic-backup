@@ -42,7 +42,7 @@ fn exact_immutable_graph_reconciles_lost_creation_and_rejects_replacement() {
         record
     );
     assert!(
-        matches!(create_effect_graph(&layout,&record),Err(EffectGraphPersistenceError::Persistence(PersistenceError::Io(ref error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(create_effect_graph(&layout,&record),Err(EffectGraphPersistenceError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_effect_graph(

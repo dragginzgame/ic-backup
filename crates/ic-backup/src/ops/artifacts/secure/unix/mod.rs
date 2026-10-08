@@ -129,7 +129,7 @@ fn checksum_directory(
         display_root,
         &mut checksums,
     )?;
-    Ok(checksum_relative_files(checksums))
+    checksum_relative_files(checksums).map_err(ArtifactError::from)
 }
 
 fn collect_directory_checksums(
@@ -182,7 +182,7 @@ fn copy_directory(
         destination_root,
         &mut checksums,
     )?;
-    Ok(checksum_relative_files(checksums))
+    checksum_relative_files(checksums).map_err(ArtifactError::from)
 }
 
 fn copy_directory_entries(

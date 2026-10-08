@@ -361,15 +361,23 @@ fn process_death_before_or_after_reference_publication_retains_exact_evidence() 
         assert!(!parent.join("external.json").exists());
         if side == "before" {
             assert!(!root.join(REFERENCES_FILE).exists());
-            assert!(
-                fs::read_dir(&root)
-                    .expect("retained directory")
-                    .any(|entry| entry
-                        .expect("entry")
-                        .file_name()
-                        .to_string_lossy()
-                        .contains(".ic-backup-tmp-"))
-            );
+            let retained = fs::read_dir(&root)
+                .expect("retained directory")
+                .filter_map(|entry| {
+                    read_json::<RestoreReferencesRecord>(
+                        &entry.expect("entry").path(),
+                        MAX_RESTORE_REFERENCE_BYTES,
+                    )
+                    .ok()
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(retained.len(), 1);
+            let expected = RestoreReferenceRecord::new(
+                parent.canonicalize().unwrap().join("external.json"),
+                &hash,
+            )
+            .unwrap();
+            assert_eq!(retained[0].entries(), &[expected]);
         }
         let reference = guard
             .retain_restore(&parent.join("external.json"), &hash)

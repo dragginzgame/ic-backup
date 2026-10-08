@@ -58,7 +58,7 @@ fn immutable_original_obligation_requires_retained_plan_and_requirement() {
         record
     );
     assert!(
-        matches!(create_fence_obligation(&layout, &plan, input, &record), Err(FenceObligationPersistenceError::Persistence(PersistenceError::Io(ref error))) if error.kind() == io::ErrorKind::AlreadyExists)
+        matches!(create_fence_obligation(&layout, &plan, input, &record), Err(FenceObligationPersistenceError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind() == io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_fence_obligation(&layout, &plan, input, &hash("90")),

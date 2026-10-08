@@ -130,6 +130,30 @@ not participate. Non-UTF-8 entry names reject rather than collapse into the
 same lossy path representation. The list of file digests is collected in memory;
 this primitive does not implement an operation-wide resource budget.
 
+The public I/O-free `ops::artifacts::checksum_relative_files` consumes owned
+`(PathBuf, ArtifactChecksumRecord)` rows under the same framing owner used by
+traversal, staging, durable directory sync and exact IC-tree verification. It
+sorts by the original path-component order, which differs from complete-string
+ordering. Exact UTF-8 relative names must have nonempty normal components, no
+NUL, dot/parent/trailing/repeated separators or duplicate identity. Newline and
+literal Unix backslash filename bytes remain exact; Unicode is not normalized.
+Empty file sets retain the empty SHA-256. Declared rows do not prove a materialized
+tree, byte custody, completeness, synchronization or publication.
+
+`DirectoryChecksumError` owns non-UTF-8, malformed and duplicate input refusals.
+The existing exhaustive `ArtifactError` keeps its variants: internal non-UTF-8
+conversion retains `NonUtf8Path`, while other impossible internal row refusals
+retain their typed cause under `Io(InvalidData)`. Valid records and digest bytes
+do not change. Public goldens distinguish path ordering from string ordering,
+retain nested/Unicode/control-byte identities and reject aliases/duplicate rows.
+A real file tree matches composition; retained declared rows still compose after
+the original tree is removed, without granting fresh integrity or custody.
+The public composed identity also passes through durable publication and canonical
+recovery with component-order-sensitive filenames. Changed staging or canonical
+bytes reject under the declaration, retaining their actual paths and bytes without
+publishing or recopying. This is Backup's public integration proof; downstream
+Canic descriptor custody and crash barriers still need their own qualification.
+
 Staging copies exact descriptor-read bytes into a new destination, using 0700
 directories and 0600 files. The caller owns the trusted destination parent.
 It does not overwrite occupied destinations. A failure may leave partial staging
@@ -144,13 +168,29 @@ unsafe-entry cases reject without overwriting evidence. Publication uses the
 source's Linux/Android/Apple implementation; the fresh evidence here is Linux.
 The caller excludes other writers and owns the sibling parent.
 
-`create_json_durable` publishes a new record using a synchronized private sibling
-temporary and a create-only hard link. `write_json_durable` replaces a record
-using a synchronized temporary and rename. Both synchronize the parent; newly
-created private parent directories and their links are also synchronized.
-Serialization failure leaves the previous document intact. A failure after
-publication may leave the canonical record present and requires reconciliation.
-Neither helper supplies schema admission or operation transitions.
+`create_json_durable` and `write_json_durable` delegate sibling allocation, identity
+checks, cleanup, atomic create-only/replacement and final parent synchronization
+to published `ic-host-fs::durable::write_at_with` beneath a held syncable directory.
+Backup retains explicit 0600 files, private 0700 parent creation/link syncs and
+one-pass pretty-JSON serialization before filesystem effects. The resulting byte
+buffer is intentional: streaming a generic serializer into staging cannot preserve
+that ordering, and preflight followed by streaming would invoke it twice.
+
+`PersistenceError::Publication` retains Host's original typed producer, cleanup
+and before/after-publication errors. Parent-preparation IO and serialization JSON
+errors keep their own boundaries. This public exhaustive enum change selects a
+0.6.0 draft; callers must update matches and reconcile visible output after failed
+completion. All v1 bytes, original limits, spending and journal transitions remain
+unchanged. Neither helper grants operation or retry authority.
+
+Ordinary calls and crash fixtures use one adapter and the same Host engine. The
+producer writes and synchronizes bytes before acknowledging the pre-publication
+barrier; Host then independently verifies/synchronizes staging before publishing.
+Successful Host return includes the held-parent sync and precedes the second
+acknowledged barrier. Real child-death cases retain attempt/download/reference/
+manifest/settlement evidence. Foreign staging replacements preserve both original
+and foreign bytes with typed cleanup errors; moved-parent publication stays beneath
+the held descriptor. This is sequential local evidence, not a namespace fence.
 
 Typed record output admission and restore-reference retention use the shared
 `BoundedWriter` over a counting sink to check the exact pretty-JSON budget without

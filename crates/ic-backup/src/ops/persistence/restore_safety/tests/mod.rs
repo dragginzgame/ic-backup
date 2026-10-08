@@ -68,7 +68,7 @@ fn requires_both_retained_original_plans_and_reconciles_creation_without_replace
         RestoreSafetyLaneRecord::NoIrreversibleEffects,
     );
     assert!(
-        matches!(create_restore_safety_requirement(&layout,&source_layout,&plan,&source,&weaker),Err(RestoreSafetyPersistenceError::Persistence(PersistenceError::Io(ref e))) if e.kind()==io::ErrorKind::AlreadyExists)
+        matches!(create_restore_safety_requirement(&layout,&source_layout,&plan,&source,&weaker),Err(RestoreSafetyPersistenceError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref e, .. }))) if e.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_restore_safety_requirement(&layout, &source_layout, &plan, &source, &weaker.digest()),

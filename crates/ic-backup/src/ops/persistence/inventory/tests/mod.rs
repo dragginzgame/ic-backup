@@ -45,7 +45,7 @@ fn immutable_publication_reconciles_exact_digest_and_preserves_prior_evidence() 
         record
     );
     assert!(
-        matches!(create_inventory(&layout,&record),Err(InventoryError::Persistence(PersistenceError::Io(ref error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(create_inventory(&layout,&record),Err(InventoryError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_inventory(

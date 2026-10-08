@@ -2308,5 +2308,102 @@
     "selection": "Incoming host artifacts/fs/process 0.4.6 lock preserved byte-for-byte; source matches official archives/committed release. No production Rust behavior differs from 0.4.5.",
     "checks": "Focused artifact/JSON/IC artifact/public recovery-source-upload, Clippy/MSRV and standalone package checks.",
     "runtime_scope": "The earlier 11 real PocketIC cases remain on the original 0.4.5 graph; not relabelled as current dependency execution."
+  },
+  "continuation_055": {
+    "consumer_base": "bebd3b5185c8144b5be97e9a9763fee9f0621c6c",
+    "scope": "Fresh Linux execution of all registered journeys after checked directory framing; no installed production provider or broader application qualification. Earlier qualification/results retain original source and graph.",
+    "lock_sha256": "9b329101a859a437afcfd0ca8b74c644e2a3b447211cabf4ce97f5bd25ae9388",
+    "host_versions": "artifacts/fs/process 0.4.6; Metrics 0.2.8; no manifest/lock changes",
+    "versions": "Package/receipt 0.5.4; unpublished additive 0.5.5 draft",
+    "evidence": "target/continuation-055",
+    "source_review": "target/continuation-055/directory-framing-review.json",
+    "command": "TMPDIR=\"$PWD/target/continuation-055\" cargo test --offline --locked -p ic-backup --test pocketic_snapshot -- --nocapture",
+    "registered_cases": [
+      "lost_metadata_read_reply_keeps_original_spending_and_stops_before_download",
+      "lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload",
+      "lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restart",
+      "lost_metadata_reply_reconciles_original_allocation_before_data_upload",
+      "lost_load_reply_requires_complete_stopped_state_verification_before_start",
+      "real_capture_download_upload_and_same_id_restore_preserve_complete_state",
+      "lost_start_reply_reconciles_original_ingress_without_restart",
+      "lost_capture_reply_requires_reserved_reconciliation_and_never_reissues",
+      "lost_data_reply_reconciles_original_extent_without_reupload",
+      "lost_stop_reply_reconciles_original_ingress_without_restop",
+      "pinned_icp_generic_management_route_failure_retains_pending_original_spending"
+    ],
+    "log_sha256": "94cca4a4eb7eef70601db373da5f168e2a21ae490b6f3476c077bad1923c124b",
+    "result_artifacts": [
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-4/qualification-result.json",
+        "sha256": "2ff2abc67adacfa7ef5ac56d778d44452482ea3a11819b21689bb480ae0df623"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-3/qualification-result.json",
+        "sha256": "f577c0938438e1238645b1d829ebd1dade3c8a64e3dc8d211101d56cade3266e"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-1/qualification-result.json",
+        "sha256": "4fdb58460555ae67e2fc4c3b21d96408d54b8cfbe6a4b1d66fda95de1ed484c8"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-7/qualification-result.json",
+        "sha256": "fb59e9422b9cb8fc71752bb8d13f5e2112d3184dee6b30ab016186faebc65a21"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-8/qualification-result.json",
+        "sha256": "1df6a23267690d7691498ff8ede02fcd7501699d8f9ee0a3caa9fc58ac7c48b4"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-2/qualification-result.json",
+        "sha256": "bda22513c1e49a0c8f96b15fc31db460168a29f49149bba53f6ad618d21603ad"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-6/qualification-result.json",
+        "sha256": "7013c18ba37f4f004448c63531de826a5f0d1238d2fcc865ebe6cf5c613d3ae1"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-10/qualification-result.json",
+        "sha256": "816f11ab93c7c81ee9671d454ea4b16bcd7fd513283349e18e2e34fc4e786861"
+      },
+      {
+        "path": "target/continuation-055/ic-backup-pocketic-2025249-9/icp probe with spaces/qualification-result.json",
+        "sha256": "af91b88bdf71cdaff7ead43e5e183e0c63be3c4f7dcd1d66d56d9723e2a44d47"
+      }
+    ],
+    "native": "No current uncommitted native macOS or production transport qualification; isolated local PocketIC only."
+  },
+  "publication_060": {
+    "consumer_base": "bebd3b5185c8144b5be97e9a9763fee9f0621c6c",
+    "evidence": "target/publication-060",
+    "source_review": "target/publication-060/qualification.json",
+    "versions": "Package/receipt 0.5.4; uncommitted breaking 0.6.0 draft",
+    "lock_sha256": "9b329101a859a437afcfd0ca8b74c644e2a3b447211cabf4ce97f5bd25ae9388",
+    "host_versions": "artifacts/fs/process 0.4.6; Metrics 0.2.8; unchanged incoming graph",
+    "registered_cases": [
+      "lost_metadata_read_reply_keeps_original_spending_and_stops_before_download",
+      "lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload",
+      "lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restart",
+      "lost_start_reply_reconciles_original_ingress_without_restart",
+      "lost_data_reply_reconciles_original_extent_without_reupload",
+      "lost_load_reply_requires_complete_stopped_state_verification_before_start",
+      "lost_stop_reply_reconciles_original_ingress_without_restop",
+      "lost_metadata_reply_reconciles_original_allocation_before_data_upload",
+      "lost_capture_reply_requires_reserved_reconciliation_and_never_reissues",
+      "real_capture_download_upload_and_same_id_restore_preserve_complete_state",
+      "pinned_icp_generic_management_route_failure_retains_pending_original_spending"
+    ],
+    "log_sha256": "c64db6e73cda622ece6c0d632118cc20bbca692d3e3633f37f2ac8ce07087613",
+    "result_artifacts_sha256": {
+      "target/publication-060/ic-backup-pocketic-3157636-1/qualification-result.json": "fff48a58aec2892577d406c375ca378b25429cad2ab8d8d2770164a03e583d67",
+      "target/publication-060/ic-backup-pocketic-3157636-2/qualification-result.json": "5861d69315b2f894614443d58d3745661d5f8aaf2e5f8de8ff2f7644f921648c",
+      "target/publication-060/ic-backup-pocketic-3157636-5/qualification-result.json": "bff691e8e5fbd9fda6c4356e179ae4297e28d7083c993b4ccda245d316f78830",
+      "target/publication-060/ic-backup-pocketic-3157636-3/qualification-result.json": "41bc653719146383bb295c4b8dd6f4cbcf967c58c23f0a65785213e17f6b833b",
+      "target/publication-060/ic-backup-pocketic-3157636-8/qualification-result.json": "e8cb43987e66e8d83eb76ceaf4f0d161af58bff4ce88651f023a740d553e3245",
+      "target/publication-060/ic-backup-pocketic-3157636-7/qualification-result.json": "ce84c9bd5a39191cc3b61bfd27cd28363f30b80eef690470cfa6eabbfdafed38",
+      "target/publication-060/ic-backup-pocketic-3157636-10/qualification-result.json": "020d7d8b7dac08ea2a5422e125b9c04201d6a466d1c7b002fe95d5461b0379ef",
+      "target/publication-060/ic-backup-pocketic-3157636-6/qualification-result.json": "d7dd30854b332f056c78ab619eb42970bb1f2e5f63a0d768e4ef27a5b22e67e8",
+      "target/publication-060/ic-backup-pocketic-3157636-9/icp probe with spaces/qualification-result.json": "bb6ff77bacbd6d6440f54f61767b44bd78e87eb08b11d0c53f3b0e39aa8ffd05"
+    },
+    "scope": "Fresh actual 11-case Linux PocketIC execution after JSON publisher adoption; no current native/production transport or broader application qualification. Earlier proof retains original source and graph."
   }
 }

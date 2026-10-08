@@ -124,15 +124,14 @@
     "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs"
   ],
   "compatibility": {
-    "draft": "0.5.4",
-    "released_base": "0.5.3",
-    "reason": "Public Backup signatures, typed IO, exact limits and v1 records retain existing owners. Host 0.4.6 corrects native filename qualification/docs without changing production publication behavior; streaming still needs an original serialization/crash-barrier migration.",
-    "metadata": "Package/released receipt remain 0.5.3; one compatible 0.5.4 draft. Incoming root/member manifests and complete 0.4.6 lock bytes stay exact. Earlier 0.4.5 runtime/source proof remains under its original owner.",
-    "retained_data": "No migration, journal reset or artifact regeneration."
+    "draft": "0.6.0",
+    "released_base": "0.5.4",
+    "reason": "Breaking exhaustive PersistenceError::Publication addition; update JSON publication matches. All schemas/digests/accounting and private permissions/preflight remain current v1.",
+    "metadata": "Root/member manifests, receipt and lock remain incoming 0.5.4 with all host packages 0.4.6; no version/release effect."
   },
-  "errors": "Shared From<ArtifactError> preserves native io::Error identity and retains non-native typed causes. Product-specific NotRegularFile -> InvalidInput, LimitExceeded -> original RecordTooLarge or FileShape, and IcSnapshotArtifactError::Artifact wrapping remain at their original boundaries. CopyError still distinguishes input and output; partial output survives.",
+  "errors": "Shared From<ArtifactError> preserves native io::Error identity and retains non-native typed causes. Product-specific NotRegularFile -> InvalidInput, LimitExceeded -> original RecordTooLarge or FileShape, and IcSnapshotArtifactError::Artifact wrapping remain at their original boundaries. CopyError still distinguishes input and output; partial output survives. JSON shared publication now retains NamedWriteError directly under public Publication.",
   "limits": "Existing u64::MAX raw artifact stream budgets, exact IC extent/checksum counts, 1 MiB chunk limit and caller-selected JSON u64 byte limits are unchanged. Required record reads retain final NOFOLLOW/NONBLOCK descriptor admission; missing files remain errors, not optional regeneration.",
-  "custody": "Shared path locks block and durably create parent paths, unlike Backup nonblocking contention refusal, existing-file acquisition and owned descendant descriptor custody. Shared generic publication does not preserve all private permissions and retained crash barriers. Local descriptor-relative traversal, original identity checks, staging, synchronization and publication stay with their existing owners. Optional/private readers are not needed by these callers; process capture is not command-custody replacement. Shared named external-tool file staging does not replace the private retained directory/tree publication. HashingWriter consumes its sink/hash at into_parts and exposes no borrowed descriptor/digest; adapting it here would add descriptor/state wrappers rather than simplify custody. Existing local region descriptors and hashes remain, with no copied upstream implementation.",
+  "custody": "Existing artifact/directory/command/lock custody owners remain. Only JSON sibling allocation, identity/cleanup, atomic publication and parent sync delegate to the typed descriptor engine; private parent/preflight/barrier policy remains local.",
   "msrv": "All three host packages declare Rust 1.88.0; Backup remains Rust 1.91.0, edition 2024.",
   "license": "MIT registry dependencies; no source copied. Existing extraction attribution retained.",
   "issue": "https://github.com/dragginzgame/ic-backup/issues/20",
@@ -148,40 +147,17 @@
     ]
   },
   "qualification": {
-    "evidence": "target/host-054-followup",
-    "published_sources": "published-sources.json",
-    "registered_cases": "registered-cases.json",
-    "passed_unit_logs": [
-      "artifacts.log",
-      "json.log",
-      "ic-artifact.log"
-    ],
-    "passed_public_log": "public.log",
-    "public_targets": [
-      "local_recovery",
-      "local_restore_source",
-      "ic_snapshot_artifact",
-      "ic_snapshot_upload"
-    ],
-    "quality_logs": [
-      "clippy.log",
-      "msrv.log",
-      "package.log",
-      "quality.log"
-    ],
-    "scope": "Fresh focused Linux checks on exact incoming host 0.4.6 lock. Product/test Rust and WAT remain byte-identical to earlier 0.4.5 proof. Real PocketIC journeys are retained under that original graph and not relabelled or rerun for a host tests/documentation-only patch. No new native consumer execution.",
-    "package_archive": {
-      "path": "target/host-054-followup/ic-backup-0.5.3.crate",
-      "sha256": "f8c09ea223d6dcfbdcb1725552e8b621196331477e1c92a21ceed03d2da277da",
-      "scope": "Offline locked standalone Cargo package verification; archived lock selects all three official host 0.4.6 checksums. No publication."
-    }
+    "evidence": "target/publication-060",
+    "source_and_log_review": "qualification.json",
+    "scope": "Uncommitted Host typed JSON descriptor publication under existing private-parent/preflight/crash contracts; previous checksum and shared snapshot work retained. Package/receipt 0.5.4; no release/publication or sibling edit.",
+    "native": "Fresh Linux only; released 0.5.4/upstream owner CI is not current dirty consumer native proof."
   },
   "previous_adoption_review": "target/host-054-followup/incoming/docs/ic-host-tools-adoption.json",
   "prior_qualification": "Released 0.5.2 Linux and both native macOS workflows pass on original host 0.4.0; that evidence never qualifies later graphs or uncommitted product changes.",
   "removed_functions": [],
   "removed_methods": [],
   "removed_types": [],
-  "remaining": "Exact native consumer qualification remains pending independently of successful host owner CI. Typed stream adoption, checked public directory framing, production transport and terminal release remain separate.",
+  "remaining": "Current native consumer delivery and separately authorized publication; production transport still blocked by effective routing/retry/polling/custody qualification, with no sibling edits. Full preflight buffer removal requires a separately accepted ordering change; downstream Canic adoption remains independent.",
   "ownership": "Existing native record IO, artifact checksum/copy and typed error conversion owners remain. New tool probe reuses shared checksum/version admission, bounded direct argv capture and typed execution evidence. The shared process owner does not replace original command descriptor inheritance, descendant custody or journal spending.",
   "reuse_review": "The new CopyError-to-IO conversion preserves native IO but wraps a non-IO input cause in CopyError rather than the original ArtifactError. Keep the existing two-arm consumer conversion to preserve its prior typed cause identity. Ordered fixed chunk hashing has no current caller: IC regions retain independent incremental coverage/hashes, and known chunk-store replies retain supplied hashes. Do not add a second vector or replace local directory framing, durable publication and region custody. No upstream source is copied.",
   "test_apis": [
@@ -192,11 +168,34 @@
     "ic_host_process::tool::ExecutionEvidence"
   ],
   "streamed_publication_review": {
-    "API": "write_typed_with/write_at_with with explicit CreateNew/Replace and caller permissions; typed producer/cleanup/already-published errors",
-    "consumer": "crates/ic-backup/src/ops/persistence/json/mod.rs remains the actual publisher for current generic Serialize APIs",
-    "obligations": "A failing generic serializer currently runs once before parent/staging creation. Existing deterministic before-publication/after-directory-sync barriers qualify real attempt/download/restore journals. Do not add a second publisher solely for tests or remove those guarantees to adopt streaming. Private parent policy, bounds and retained recovery stay local.",
-    "disposition": "Host 0.4.6 now has successful complete owner native qualification. Consumer migration still requires preservation of one-pass serialization before filesystem effects, private parents, deterministic crash barriers and consumer native evidence. No second/new local publisher.",
-    "issue": "https://github.com/dragginzgame/ic-backup/issues/24"
+    "API": "ic_host_fs::durable::write_at_with with explicit CreateNew/Replace, 0600, held syncable parent and NamedWriteError<io::Error>",
+    "consumer": "One publish_bytes_at_barriers adapter for ordinary and acknowledged crash paths; no local allocator or atomic publication engine.",
+    "obligations": "Backup retains private 0700 parents/link synchronization and generic serialization exactly once before effects. Producer sync establishes acknowledged staging; Host independently rechecks/syncs before atomic publication. Successful Host return establishes final held-parent sync before durable acknowledgment.",
+    "retained_buffer": "Full encoded JSON bytes remain intentional under the original serialize-once-before-effects contract. Direct stream would change effect order; preflight plus stream would invoke generic Serialize twice. No allocation saving is claimed.",
+    "errors": "PersistenceError::Publication retains original typed producer/cleanup/before/after evidence, without text conversion or IO flattening. Parent IO/JSON/read errors retain separate original owners. No paid retry authority.",
+    "issue": "https://github.com/dragginzgame/ic-backup/issues/24",
+    "qualification": "129 affected real persistence cases, public recovery/source/artifact/upload/framing targets, 11 real PocketIC journeys, Clippy/MSRV and standalone packaging pass on Linux. Current uncommitted native macOS proof remains absent.",
+    "evidence": "target/publication-060",
+    "removed_symbols": [
+      {
+        "name": "create_bytes_at_barriers",
+        "former_module": "ops::persistence::json",
+        "replacement": "publish_bytes_at_barriers adapter + published ic_host_fs::durable::write_at_with",
+        "reason": "Remove local allocation/atomic publication/cleanup implementation while retaining private parent/preflight/crash policy."
+      },
+      {
+        "name": "replace_bytes_at_barriers",
+        "former_module": "ops::persistence::json",
+        "replacement": "publish_bytes_at_barriers adapter + published ic_host_fs::durable::write_at_with",
+        "reason": "Remove local allocation/atomic publication/cleanup implementation while retaining private parent/preflight/crash policy."
+      },
+      {
+        "name": "create_sibling_temp",
+        "former_module": "ops::persistence::json",
+        "replacement": "publish_bytes_at_barriers adapter + published ic_host_fs::durable::write_at_with",
+        "reason": "Remove local allocation/atomic publication/cleanup implementation while retaining private parent/preflight/crash policy."
+      }
+    ]
   },
   "new_optional_api_review": {
     "apis": [
@@ -236,6 +235,54 @@
       "path": "target/upstream-054-refresh/host-045/ic-backup-0.5.3.crate",
       "sha256": "b6990f45c0ce0210f35bb262ed58922c61a24db93efd670fbb8c84fe8a7833fe",
       "scope": "Offline locked standalone Cargo package verification; no publication."
+    }
+  },
+  "before_json_publication_adoption": {
+    "compatibility": {
+      "draft": "0.5.4",
+      "released_base": "0.5.3",
+      "reason": "Public Backup signatures, typed IO, exact limits and v1 records retain existing owners. Host 0.4.6 corrects native filename qualification/docs without changing production publication behavior; streaming still needs an original serialization/crash-barrier migration.",
+      "metadata": "Package/released receipt remain 0.5.3; one compatible 0.5.4 draft. Incoming root/member manifests and complete 0.4.6 lock bytes stay exact. Earlier 0.4.5 runtime/source proof remains under its original owner.",
+      "retained_data": "No migration, journal reset or artifact regeneration."
+    },
+    "errors": "Shared From<ArtifactError> preserves native io::Error identity and retains non-native typed causes. Product-specific NotRegularFile -> InvalidInput, LimitExceeded -> original RecordTooLarge or FileShape, and IcSnapshotArtifactError::Artifact wrapping remain at their original boundaries. CopyError still distinguishes input and output; partial output survives.",
+    "custody": "Shared path locks block and durably create parent paths, unlike Backup nonblocking contention refusal, existing-file acquisition and owned descendant descriptor custody. Shared generic publication does not preserve all private permissions and retained crash barriers. Local descriptor-relative traversal, original identity checks, staging, synchronization and publication stay with their existing owners. Optional/private readers are not needed by these callers; process capture is not command-custody replacement. Shared named external-tool file staging does not replace the private retained directory/tree publication. HashingWriter consumes its sink/hash at into_parts and exposes no borrowed descriptor/digest; adapting it here would add descriptor/state wrappers rather than simplify custody. Existing local region descriptors and hashes remain, with no copied upstream implementation.",
+    "qualification": {
+      "evidence": "target/host-054-followup",
+      "published_sources": "published-sources.json",
+      "registered_cases": "registered-cases.json",
+      "passed_unit_logs": [
+        "artifacts.log",
+        "json.log",
+        "ic-artifact.log"
+      ],
+      "passed_public_log": "public.log",
+      "public_targets": [
+        "local_recovery",
+        "local_restore_source",
+        "ic_snapshot_artifact",
+        "ic_snapshot_upload"
+      ],
+      "quality_logs": [
+        "clippy.log",
+        "msrv.log",
+        "package.log",
+        "quality.log"
+      ],
+      "scope": "Fresh focused Linux checks on exact incoming host 0.4.6 lock. Product/test Rust and WAT remain byte-identical to earlier 0.4.5 proof. Real PocketIC journeys are retained under that original graph and not relabelled or rerun for a host tests/documentation-only patch. No new native consumer execution.",
+      "package_archive": {
+        "path": "target/host-054-followup/ic-backup-0.5.3.crate",
+        "sha256": "f8c09ea223d6dcfbdcb1725552e8b621196331477e1c92a21ceed03d2da277da",
+        "scope": "Offline locked standalone Cargo package verification; archived lock selects all three official host 0.4.6 checksums. No publication."
+      }
+    },
+    "remaining": "Exact native consumer qualification remains pending independently of successful host owner CI. Typed stream adoption, checked public directory framing, production transport and terminal release remain separate.",
+    "streamed_publication_review": {
+      "API": "write_typed_with/write_at_with with explicit CreateNew/Replace and caller permissions; typed producer/cleanup/already-published errors",
+      "consumer": "crates/ic-backup/src/ops/persistence/json/mod.rs remains the actual publisher for current generic Serialize APIs",
+      "obligations": "A failing generic serializer currently runs once before parent/staging creation. Existing deterministic before-publication/after-directory-sync barriers qualify real attempt/download/restore journals. Do not add a second publisher solely for tests or remove those guarantees to adopt streaming. Private parent policy, bounds and retained recovery stay local.",
+      "disposition": "Host 0.4.6 now has successful complete owner native qualification. Consumer migration still requires preservation of one-pass serialization before filesystem effects, private parents, deterministic crash barriers and consumer native evidence. No second/new local publisher.",
+      "issue": "https://github.com/dragginzgame/ic-backup/issues/24"
     }
   }
 }

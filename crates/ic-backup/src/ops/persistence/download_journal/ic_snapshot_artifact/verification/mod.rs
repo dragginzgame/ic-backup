@@ -163,7 +163,9 @@ fn checksum_ic_tree(
         *checksum = actual;
     }
     check_closed_tree(directory, &checksums)?;
-    Ok(checksum_relative_files(checksums))
+    checksum_relative_files(checksums)
+        .map_err(ArtifactError::from)
+        .map_err(IcSnapshotArtifactError::from)
 }
 
 fn checksum_child(

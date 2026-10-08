@@ -66,7 +66,7 @@ fn immutable_private_publication_reopens_exact_originals_and_rejects_contention(
         record
     );
     assert!(
-        matches!(create_execution_settlement(&layout,&record),Err(ExecutionSettlementPersistenceError::Persistence(PersistenceError::Io(ref error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(create_execution_settlement(&layout,&record),Err(ExecutionSettlementPersistenceError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert_eq!(fs::read(&path).unwrap(), bytes);
     drop(layout);

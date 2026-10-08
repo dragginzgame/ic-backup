@@ -39,7 +39,7 @@ into an issue tracker or release authority.
 - Ordinary implementation and continuation leave work uncommitted for review.
   Explicit commit, contribution-PR and release requests follow the reviewed
   [contribution rules](rules/contributions.md); PR delivery does not authorize
-  merging, direct integration-branch pushes or a release. This 0.5.4 refresh
+  merging, direct integration-branch pushes or a release. Ordinary continuation
   requests no Git writes or release effects.
 - Continue accepted implementation batches autonomously when requested. Generic
   continuation does not authorize live effects, release/version transactions,
@@ -51,6 +51,20 @@ into an issue tracker or release authority.
 
 ## Current implementation scope
 
+- JSON publication delegates allocation, atomic create-only/replace, staging
+  identity/cleanup and final parent sync to the published typed Host descriptor
+  engine. Retain Backup's 0700 parents, 0600 files, serialize-once-before-effects
+  byte buffer, original record bounds and one adapter for production/crash tests.
+  Preserve synchronized pre-publication and durable-completion barriers. The
+  public `PersistenceError::Publication` retains original producer, cleanup and
+  visibility evidence; no local-write error grants paid retry or resets spending.
+
+- Pure directory checksum composition accepts exact canonical relative UTF-8 file
+  identities and validated checksums through the same owner as local artifact
+  traversal/publication. Preserve original path-component ordering and path/NUL/
+  lowercase-digest/newline framing. Reject malformed and duplicate rows through
+  `DirectoryChecksumError` without expanding `ArtifactError` or reopening paths.
+  Declaration hashing proves no byte custody, sync, completeness or publication.
 - The maintainer authorized Rust repository setup following `ic-delegated-auth`
   and `ic-blob-storage`. The root is workspace-only under the
   [shared workspace layout](rules/rust-workspaces.md); the initial library lives

@@ -1,5 +1,12 @@
 # Real single-canister snapshot qualification
 
+A fresh Linux run after typed JSON publication adoption passes all 11 registered
+journeys on the unchanged host 0.4.6 / Metrics 0.2.8 lock. The 0.6.0 draft's exact
+source, simulator results and local archive proof are under `target/publication-060`.
+Earlier results below retain their actual source/dependency identities. This
+qualifies the isolated fixture and safe pending refusal, not an installed
+production transport, arbitrary application or downstream Canic integration.
+
 ## Pinned CLI capability probe
 
 The same integration target also probes the installed ICP CLI 1.6.0 against a
@@ -32,6 +39,13 @@ and interrupted calls remain unqualified. No provider or transport package is
 created, and no public IC call runs.
 
 ## Original snapshot and recovery journeys
+
+A fresh Linux run after the checked directory-framing change passes all 11
+registered cases on the unchanged host 0.4.6 / Metrics 0.2.8 lock. Its exact
+uncommitted source, logs and retained simulator results are under
+`target/continuation-055`; the machine review records this 0.5.5 draft separately
+from earlier runs. Package/receipt remain 0.5.4. This supplies neither native
+macOS execution nor production transport or Canic qualification.
 
 The `pocketic_snapshot` integration target exercises real management ingress on
 an isolated PocketIC 16 application subnet through the public extracted library.

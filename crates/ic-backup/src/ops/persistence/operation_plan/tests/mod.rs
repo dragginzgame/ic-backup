@@ -54,7 +54,7 @@ fn immutable_plan_admits_original_intent_and_rejects_different_ceilings_without_
         Err(OperationPlanPersistenceError::DigestMismatch)
     ));
     assert!(
-        matches!(create_operation_plan(&layout,&changed),Err(OperationPlanPersistenceError::Persistence(PersistenceError::Io(ref error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(create_operation_plan(&layout,&changed),Err(OperationPlanPersistenceError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert_eq!(fs::read(&path).expect("unchanged"), bytes);
     let lock = JournalLock::acquire(&path).expect("other cooperating plan owner");

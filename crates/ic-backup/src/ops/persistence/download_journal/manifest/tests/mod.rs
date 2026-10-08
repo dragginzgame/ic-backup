@@ -69,7 +69,7 @@ fn download_manifest_publishes_private_exact_records_and_replays_without_artifac
         0o600
     );
     assert!(
-        matches!(journal.publish_download_manifest(&plan),Err(DownloadManifestError::Persistence(PersistenceError::Io(error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(journal.publish_download_manifest(&plan),Err(DownloadManifestError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_download_manifest(&layout, &plan, &digest),

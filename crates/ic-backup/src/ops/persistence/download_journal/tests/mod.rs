@@ -120,7 +120,7 @@ fn exact_guarded_lifecycle_and_local_terminal_replay_preserve_bytes() {
     ));
     drop(guard);
     assert!(
-        matches!(DownloadJournalGuard::create(&layout,INTENT,vec![request()]),Err(DownloadJournalError::Persistence(PersistenceError::Io(ref error))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(DownloadJournalGuard::create(&layout,INTENT,vec![request()]),Err(DownloadJournalError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         DownloadJournalGuard::open(&layout, &"cd".repeat(32)),

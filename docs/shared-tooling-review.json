@@ -1,17 +1,23 @@
 {
   "inspection_date": "2026-10-07",
-  "consumer_base": "7660b56c196d2af3d084524bc74bb9dd4982d1ad",
+  "consumer_base": "bebd3b5185c8144b5be97e9a9763fee9f0621c6c",
   "source": {
-    "revision": "3ecc48e579f6cf6e6ab01a6645d8a250fc8c6934",
-    "version": "0.1.20",
+    "revision": "45e34e92b43edb9543d5b7212774f87f8334079f",
+    "version": "0.1.21",
     "remote": "https://github.com/dragginzgame/shared-tooling",
-    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37641211708",
-    "ci_status": "success; exact-source Linux, both native macOS architectures and lint/security jobs verified"
+    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37652236506",
+    "ci_status": "Completed cancelled: Linux, Apple Silicon macOS and lint/security pass; Intel macOS portable regression cancelled after direct runner substitutes, before complete PR fixture proof. No all-host green gate is claimed."
   },
-  "evidence": "target/upstream-054-refresh",
+  "evidence": "target/continuation-055",
   "snapshot": {
-    "previous_revision": "a3430b34b32a60f3b245a2b4f7e2f5321556fe56",
-    "declared_paths": [
+    "previous_revision": "3ecc48e579f6cf6e6ab01a6645d8a250fc8c6934",
+    "added_paths": [
+      "scripts/ci/release-pr.sh",
+      "scripts/ci/test-release-pr.sh"
+    ],
+    "removed_paths": [],
+    "method": "Canonical committed exporter from a clean isolated clone of the exact remotely verified source. All 73 prior paths retained; two explicit runner/fixture dependencies added. No vendored in-place edits.",
+    "paths": [
       "docs/verification-helpers.md",
       "scripts/ci/check-documentation-links.pl",
       "scripts/ci/test-documentation-links.pl",
@@ -84,61 +90,26 @@
       "scripts/ci/ic-tool-pins.awk",
       "scripts/ci/check-pocketic-alignment.sh",
       "scripts/ci/check-pocketic-binary.sh",
-      "scripts/ci/test-pocketic-checks.sh"
-    ],
-    "added_paths": [
-      "rules/contributions.md",
-      "scripts/ci/ic-tool-pins.awk",
-      "scripts/ci/check-pocketic-alignment.sh",
-      "scripts/ci/check-pocketic-binary.sh",
-      "scripts/ci/test-pocketic-checks.sh"
-    ],
-    "changed_paths": [
-      "docs/verification-helpers.md",
-      "docs/ic-tools.md",
-      "docs/local-setup.md",
-      "scripts/dev/install-ic-tools.sh",
-      "docs/principles/reviewable-changes.md",
-      "docs/consuming-snapshots.md",
-      "docs/supported-hosts.md",
-      "scripts/ci/run-validation-targets.sh",
-      "scripts/ci/test-validation-target-runner.sh",
-      "DRAGGINZGAME.md",
-      "rules/changelogs.md",
-      "docs/releases.md",
-      "scripts/ci/finalize-release-changelog.awk",
-      "scripts/ci/test-release-runner.sh",
-      "rules/git-hooks.md",
-      "rules/agent-maintenance.md",
-      "scripts/distribution/governance-files.txt",
-      "scripts/ci/test-tool-commands.sh",
-      "scripts/dev/install-rust-tools.sh",
-      "scripts/ci/test-rust-tools.sh"
-    ],
-    "removed_paths": [],
-    "method": "Clean isolated clone of exact remotely verified commit; canonical committed exporter; exact bytes/modes checked independently. Original 68 selected paths retained; five dependencies/helpers explicitly added."
+      "scripts/ci/test-pocketic-checks.sh",
+      "scripts/ci/release-pr.sh",
+      "scripts/ci/test-release-pr.sh"
+    ]
   },
-  "consumer_changes": [
-    "Replace blanket active commit/release prohibitions with reviewed scoped contribution authority; ordinary work remains uncommitted",
-    "Add CONTRIBUTING.md and propagate authority into local development/release guidance",
-    "Check the already qualified PocketIC 16 client/server pairing after dependency preparation in the normal configured gate",
-    "Reuse shared matrix admission in the IC installer; no binary/tool pin changes",
-    "Select combined raw failure logging, guarded Rust-tool setup, normalized scratch paths and historical-byte-preserving release selector"
-  ],
-  "checks": {
-    "tooling": "tooling.log",
-    "release_hooks_shell": "shell-release.log",
-    "temporary_contexts": [
-      "tool-trailing.log",
-      "tool-alias.log"
-    ],
-    "PocketIC_helpers": "pocketic-checks.log",
-    "actual_locked_pair": "alignment.log",
-    "policy": "policy-review.json",
-    "quality": "quality.log"
+  "consumer_policy": {
+    "delivery": "direct",
+    "selection": "Explicit default in existing Make owner; the same read-only guard protects patch/minor/major/resume. Unsupported pr/invalid selections reject before runner state or Git.",
+    "reason": "Current v1 source/version/receipt/recovery adapter qualifies original direct release commits; fresh exact merged-source validation and receipt admission are not implemented. PR delivery is optional upstream, not silently enabled by snapshot adoption.",
+    "ordinary_work": "Uncommitted local edits and focused checks. Explicit PR/merge/release/publication scope remains separate; no Git writes requested."
   },
-  "limits": "Command/installer fixtures use documented substitutes. Actual locked pair check is read-only metadata. No actual installer download, Git write, release, workflow dispatch or native consumer delivery is supplied by these tests. Product Rust and the incoming lock are unchanged by this refresh. Native package blocker remains independent.",
-  "previous_review": "target/upstream-054-refresh/incoming/docs/shared-tooling-review.json",
-  "issue": "https://github.com/dragginzgame/ic-backup/issues/23",
+  "qualification": {
+    "logs": [
+      "tooling.log",
+      "release-shell.log",
+      "quality.log"
+    ],
+    "scope": "Focused actual consumer snapshot/logger/tooling, direct shared runner command substitutes, Backup adapter/private-index boundaries and hook/shell checks. The optional upstream PR fixture and real release/PR effects are not run locally.",
+    "native": "Current uncommitted 0.6.0 consumer source has no remote native execution. Released 0.5.4 exact-source main CI passes Linux and both macOS architectures; its results do not qualify this new draft."
+  },
+  "previous_review": "target/continuation-055/incoming/docs/shared-tooling-review.json",
   "removed_symbols": []
 }
