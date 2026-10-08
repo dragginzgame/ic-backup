@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/verify-file-checksum.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
 [[ $# == 3 ]] || { echo 'usage: check-pocketic-binary.sh VERSION SHA256 EXECUTABLE' >&2; exit 2; }

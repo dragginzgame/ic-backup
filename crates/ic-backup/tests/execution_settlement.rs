@@ -18,7 +18,8 @@ use ic_backup::{
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, FenceObligationRequirement,
         create_execution_settlement, create_fence_obligation, create_operation_plan,
-        create_restore_safety_requirement, read_download_manifest, read_execution_settlement,
+        create_restore_safety_requirement, read_download_manifest, read_execution_progress,
+        read_execution_settlement,
     },
 };
 use serde_json::json;
@@ -56,8 +57,11 @@ fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fres
     let mut rows = Vec::new();
     let mut journal_bytes = Vec::new();
     for authority in plan.attempt_authorities().unwrap() {
-        let mut journal = AttemptJournalGuard::create(&layout, authority).unwrap();
-        let attempt = journal.reserve_mutation().unwrap();
+        drop(AttemptJournalGuard::create(&layout, authority).unwrap());
+    }
+    for authority in plan.attempt_authorities().unwrap() {
+        let mut journal = AttemptJournalGuard::open(&layout, &authority).unwrap();
+        let attempt = journal.reserve_planned_mutation(&plan.digest()).unwrap();
         let request = journal
             .record()
             .unwrap()
@@ -78,6 +82,10 @@ fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fres
         ));
         journal_bytes.push((journal.path(), fs::read(journal.path()).unwrap()));
     }
+    let progress = read_execution_progress(&layout, &plan.digest()).unwrap();
+    assert_eq!(progress.applied_operations, 2);
+    assert_eq!(progress.attempts.mutations_used, 2);
+    assert_eq!(progress.attempts.mutations_remaining, 1);
     let record = ExecutionSettlementRecord::new(plan.digest(), rows).unwrap();
     create_execution_settlement(&layout, &record).unwrap();
     let bytes = fs::read(root.join("restore/execution-settlement.json")).unwrap();

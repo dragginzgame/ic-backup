@@ -25,6 +25,147 @@
 
 # Current handoff — 2026-10-08
 
+## Current 0.8.0 direct Agent hard cut
+
+The maintainer selected direct Rust `ic-agent` as the sole product transport.
+`crates/ic-backup-agent` implements bounded async preparation and single-update
+submission through exact original reserved request owners. It checks current
+journals, actual signer and declared context, retains signed ingress identity
+before dispatch, and disables retries, redirects, proxies, root fetching and
+automatic polling. Pending/error/cancelled/lost replies retain original accounting,
+obligations and references. ICP-specific source/probe is retired; historical logs
+and independent command-custody contracts remain. No backend fallback is added.
+
+An external update selected Host 0.6.0, crypto-common 0.1.6 and generic-array
+0.14.9 after the initial agent graph. It is preserved and independently qualified;
+earlier 0.5.2 results retain their exact inputs. Official archives/source match.
+Artifacts/FS bytes are unchanged; process adds opt-in group capture and group_error,
+which Backup does not select. Exact owner Linux/Intel macOS/Apple Silicon macOS and MSRV CI now pass;
+current consumer native macOS still requires its own committed source.
+
+The pending draft is 0.8.0 because the selected transport/command contract is a
+hard cut; all prior 0.7.1 notes carry forward. Package/receipt remain 0.7.0. Both
+libraries join configured native validation, packaging and explicit publication.
+Release preparation derives member manifests/names from selected TOML and binds
+both exact manifests, local lock entries and internal registry requirement. The
+focused private release fixtures pass; no actual release/Git effects run.
+
+Real local HTTP tests cover exact signed bytes/routing, accepted responses, 429/503,
+redirects, malformed/oversized bodies, disconnect and timeout with one request and
+unchanged pending journals. Real isolated PocketIC Agent gateway tests cover
+capture, exact metadata, complete 1 MiB heap/stable reads, upload/load/start and
+same-ID heap/stable/global restoration through an actual Ed25519 controller. Discarded stop replies halt with retained
+pending spending; wrong-root authentication fails even though the actual stop
+applied. This is transport/fixture evidence, not full runners, generic application
+safety, Canic adoption, native macOS acceptance or terminal/reference release.
+A subsequent external update selected Host 0.7.0 and Metrics 0.2.12. The final
+frozen graph passes fresh consumer qualification with empty selected features.
+Remove `ic-host-process`: its sole caller was the retired ICP probe. Host
+artifacts/FS and existing descriptor custody retain their separate owners.
+All 158 focused Rust cases and 61 release-adapter fixtures pass, along with
+Clippy, Rust 1.91, strict Agent rustdoc, both package archives, formatting,
+documentation, dependency/snapshot and shell checks. Original metadata, source
+hashes, commands and failed/corrected attempts bind the
+[final qualification](../reports/audits/2026/10/08/agent-transport/01/qualification.json).
+Official source/archive proof matches. Host owner CI passes; Metrics exact-source
+owner CI remains queued, while local diagnostic/histogram cases pass. Earlier
+0.6.0 results remain bound to their original graph. Full CI/release gates were not run.
+[The transport scope](../agent-transport.md) owns current qualification and limits.
+All changes remain uncommitted. Prior source/graph evidence below stays historical.
+
+## Earlier 0.7.1 execution admission for downstream integration
+
+Continue the compatible 0.7.1 draft with `read_execution_progress` and guarded
+planned mutation/observation reservations. Both use the exact persisted original
+plan and complete journal set; missing evidence cannot become zero consumption.
+The selected journal remains locked while other journals are admitted sequentially.
+Retained Applied prerequisites gate mutation reservations. The existing attempt
+owner alone consumes allowance; failures and lost replies preserve spending.
+Settlement replay shares the same original-journal reader. No new schema, provider,
+terminal/reference release or fresh-authority flag is added.
+
+All 134 affected persistence cases (including five new admission cases), eight pure
+progress cases and six public recovery/source/settlement cases pass. Clippy, Rust
+1.91, strict rustdoc, formatting, documentation and dependency checks pass.
+The existing real ICP/PocketIC routing-refusal case also passes with original pending
+spending retained. No direct-agent runtime is installed or qualified. Inputs and
+failed/corrected initial results are retained under `target/canic-readiness-071`;
+the first failure was a fixture expecting MutationPending where the existing owner
+returns ObservationPending.
+
+An external lock update selected Host artifacts/fs/process 0.5.2 during this batch.
+It is preserved. All 57 published Rust/manifest blobs match official non-yanked
+archives and exact `c7014995bf0890c1df9cd9b9a6ec14ea70f98c6f`. Artifacts/fs and
+all original manifests are unchanged; process adds opt-in background handoff,
+which Backup does not select. Exact owner native/MSRV CI passes. Fresh source-bound
+execution/recovery tests, offline locked metadata and the actual pinned ICP probe
+qualify this graph rather than relabelling prior 0.5.1 evidence. Metrics remains
+0.2.11 and selected Host/Metrics features remain empty. See the
+[review](../reports/audits/2026/10/08/execution-admission/01/report.md).
+
+Shared Tooling 0.1.25 now passes exact all-native/hosted owner CI. Refresh to all
+77 canonical paths with explicit archive-helper/regression additions. Consumer CI
+archives its original evidence roots before the unchanged pinned v4 uploader,
+artifact name and seven-day retention. Real Linux round trips of the actual inline
+collector pass for absent roots and early/late failure evidence; names/modes/hidden
+files/links survive and Git metadata stays excluded. Actionlint and ShellCheck pass.
+Current consumer hosted/native acceptance remains #28; source ownership/qualification
+are in the [archive review](../reports/audits/2026/10/08/shared-archive/01/report.md).
+Generic orchestration and learned snapshot/extent stage binding now have a concrete
+owner in [#29](https://github.com/dragginzgame/ic-backup/issues/29), distinct from
+transport #25 and Canic's fresh Fleet/application adapter requirements.
+
+Read-only Canic inspection finds its active worktree already consumes registry
+Backup 0.7 artifact/checksum APIs; downstream adoption/qualification remains owned
+there and no Canic source is edited. Full executable capture/restore still requires
+transport, generic orchestration and fresh Fleet/application preflight. ICP CLI
+remains the selected planned backend. Direct Rust `ic-agent` is a long-term
+recommendation under review, not an adopted backend. Its official published API
+supports exact receiver/effective-target updates without implicit wait, but defaults
+include retry behavior that needs explicit bounded qualification. An isolated
+exploratory build compiled; the local simulator failed socket admission in the
+restricted sandbox and the session was interrupted. That is no transport result,
+no root dependency change and no reason to claim a live backend.
+
+## Earlier 0.7.1 upstream adoption qualification
+
+0.7.0 is released. Its exact committed source `f836d5e58170c6b16dba2552c10391666f86ce7e`
+passes Linux, Intel macOS and Apple Silicon macOS in
+[CI 37753291659](https://github.com/dragginzgame/ic-backup/actions/runs/37753291659),
+qualifying the delivered Shared Tooling 0.1.23 selection separately from new work.
+Earlier sections below are historical batch handoffs, including their old draft
+and package statements.
+
+The compatible next draft is 0.7.1; package/receipt stay 0.7.0. Preserve the incoming
+registry Host artifacts/fs/process 0.5.1 lock selection and Metrics 0.2.11. All 54
+Host Rust files and three original manifests match official non-yanked archives,
+exact source `81f9809861159def2fd0987fcb7961cda4afd969`, and prior 0.5.0 bytes.
+Actual selected features remain empty. The owner passes all supported native hosts
+and MSRV. There is no new published runtime owner to replace additional Backup
+code; retained serialization, descriptor custody, spending and recovery owners stay.
+
+Shared Tooling 0.1.24 at `e9bfdc54c0daefc3dbbdfe091e5665dca5468eb3` is exported
+canonically from a clean committed source with all existing 75 paths. Sixteen
+paths change and every blob/mode matches. Companion admission and LOC fixes join
+the ordinary release-tracking refresh. Static symbolic refs and changed OIDs are
+preserved; the same-OID ref-type race remains upstream #62. The new archiver is
+unselected while upstream #59's admission correction remains uncommitted.
+The upstream hosted Apple Silicon artifact download failed after portable/tool
+checks passed; complete owner native/hosted acceptance is not claimed.
+
+All 142 operations and eight public artifact/recovery cases pass on the selected
+graph, with Clippy and Rust 1.91. Focused release-adapter/runner, logger/retention,
+LOC, exporter/companion, snapshot, shell, dependency, formatting and document checks
+pass. Inputs, logs and source/registry/CI proof are in `target/upstream-071-review`
+and the linked adoption reviews. No new simulator run relabels earlier graph evidence.
+Backup #27 is closed on committed 0.7.0 acceptance. Shared #60/#61 close after the
+Intel portable job completes successfully; #59/#62/#63 retain their distinct gaps.
+Current dirty consumer
+native macOS proof requires its own committed CI. Production transport #25 remains
+blocked on pinned ICP 1.6.0 granular routing and independent internal-call/custody
+qualification; no new upstream response or release removes those prerequisites.
+No product source/API/record changes, Git writes, release or publication effects run.
+
 ## Current 0.7.0 canonical IO cleanup and Metrics qualification
 
 The preserved incoming lock now selects registry Metrics 0.2.11, with Host

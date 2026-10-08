@@ -1,16 +1,18 @@
 {
   "inspection_date": "2026-10-08",
-  "consumer_base": "8a1152d0a510f34f8daed59f06632306f7cf134e",
+  "consumer_base": "f836d5e58170c6b16dba2552c10391666f86ce7e",
   "source": {
-    "revision": "0ba0ad00ed94848e54ecc82629b6b7873b7284c0",
-    "version": "0.1.23",
+    "revision": "eeb72e741199bd8574280eacb3542d8379b912f6",
+    "version": "0.1.25",
     "remote": "https://github.com/dragginzgame/shared-tooling",
-    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37746567888",
-    "ci_status": "Exact-source completed success: Linux, Intel macOS, Apple Silicon macOS and lint/security all pass. This is upstream owner qualification, not current dirty consumer native execution."
+    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37762726615",
+    "ci_status": "Exact source complete success: Linux, Intel macOS, Apple Silicon macOS and lint/security, including hosted evidence retention round trips."
   },
-  "evidence": "target/shared-tooling-0123-inspection",
+  "evidence": "target/shared-tooling-0125-review",
   "snapshot": {
-    "previous_revision": "45e34e92b43edb9543d5b7212774f87f8334079f",
+    "revision": "eeb72e741199bd8574280eacb3542d8379b912f6",
+    "version": "0.1.25",
+    "count": 77,
     "paths": [
       "docs/verification-helpers.md",
       "scripts/ci/check-documentation-links.pl",
@@ -86,43 +88,33 @@
       "scripts/ci/check-pocketic-binary.sh",
       "scripts/ci/test-pocketic-checks.sh",
       "scripts/ci/release-pr.sh",
-      "scripts/ci/test-release-pr.sh"
+      "scripts/ci/test-release-pr.sh",
+      "scripts/ci/archive-evidence.sh",
+      "scripts/ci/test-evidence-archive.sh"
     ],
     "changed_paths": [
-      "docs/consuming-snapshots.md",
-      "docs/supported-hosts.md",
-      "docs/releases.md",
-      "scripts/ci/run-release.sh",
-      "scripts/ci/test-release-runner.sh",
-      "scripts/ci/release-pr.sh",
-      "scripts/ci/test-release-pr.sh"
+      "docs/verification-helpers.md",
+      "scripts/ci/archive-evidence.sh",
+      "scripts/ci/test-evidence-archive.sh"
     ],
-    "added_paths": [],
-    "removed_paths": [],
-    "method": "Canonical committed exporter from clean isolated exact-source clone. All 75 paths retain bytes/modes matching remote Git blobs; no vendored in-place edits."
+    "all_committed_blobs_and_modes_match": true,
+    "propagation": "Canonical export into a clean isolated consumer, then exact prior manifest byte/mode admission before propagating output. Existing root adoption is uncommitted; no root Git/index changes or dirty-file guard bypass."
   },
   "consumer_policy": {
-    "delivery": "direct",
-    "selection": "Explicit default in existing Make owner; the same read-only guard protects patch/minor/major/resume. Unsupported pr/invalid selections reject before runner state or Git.",
-    "reason": "Current v1 source/version/receipt/recovery adapter qualifies original direct release commits; fresh exact merged-source validation and receipt admission are not implemented. PR delivery is optional upstream, not silently enabled by snapshot adoption.",
-    "ordinary_work": "Uncommitted local edits and focused checks. Explicit PR/merge/release/publication scope remains separate; no Git writes requested."
+    "release_delivery": "direct",
+    "archive_adoption": "Adopted canonical archive helper and regression. The existing explicit consumer roots feed one tar.gz upload; uploader pin, name and seven-day retention remain unchanged. Consumer hosted/native acceptance remains issue #28.",
+    "tracking_limit": "Static symbolic refs and concurrent changed OIDs are preserved. Same-OID direct-to-symbolic race remains upstream #62; no claim of atomic ref-type preservation."
   },
   "qualification": {
-    "logs": [
-      "export.log",
-      "release-shell.log",
-      "tooling.log",
-      "pr-fixture.log"
-    ],
-    "scope": "Fresh actual consumer adapter/private-index, canonical direct-runner command substitutes, snapshot/logger/retention and shell checks. Optional PR fixture uses synthetic real Git histories/bare destinations and strict GitHub substitute; no actual GitHub/consumer merged-source delivery is qualified. No Rust tests rerun or relabelled.",
-    "native": "Released 0.6.0 main/tag exact-source CI passes Linux/Intel macOS/ARM macOS. New Host 0.5/shared 0.1.23 consumer graph has no remote native result of its own."
+    "status": "Local Linux archive regression and actual inline collector round trips pass, with actionlint, ShellCheck, final formatting/documentation/dependency checks and exact 77-file snapshot admission. Prior runner/logger/LOC tests retain the unchanged actual 0.1.24 script bytes. Changed consumer hosted/native acceptance remains separate.",
+    "record": "docs/reports/audits/2026/10/08/shared-archive/01/qualification.json",
+    "native_consumer_limit": "Changed workflow has no hosted consumer upload/download or native macOS acceptance; #28 stays open."
   },
-  "release_behavior": "Payload/index/tag are rechecked after final push hook; completed direct resume verifies exact published tag and branch ancestry without replaying effects. Consumer guide corrected to acknowledge remote observations.",
-  "subsequent_lock_edit": {
-    "incoming_lock_sha256": "7fc66d275e62225a30cd4f7fa632412dc8fb309e7073fc65358daecbd870d29f",
-    "current_lock_sha256": "9ca849f03d88bd16911b77d2bd0f167d831cce9c8d389a1ae01f0b9f17c335d4",
-    "observed_selection": "Metrics 0.2.9 -> 0.2.10 during adoption; preserved without issuing a dependency update. Existing Host runtime proof remains original; new selection needs focused runtime/native qualification."
-  },
-  "previous_review": "target/shared-tooling-0123-inspection/incoming/docs/shared-tooling-review.json",
-  "removed_symbols": []
+  "previous_review": "docs/reports/audits/2026/10/08/shared-archive/01/previous-shared-0124-review.json",
+  "removed_symbols": [],
+  "issues_closed": {
+    "backup_27": "https://github.com/dragginzgame/ic-backup/issues/27#issuecomment-6057228995",
+    "shared_60": "https://github.com/dragginzgame/shared-tooling/issues/60#issuecomment-6057255809",
+    "shared_61": "https://github.com/dragginzgame/shared-tooling/issues/61#issuecomment-6057256456"
+  }
 }

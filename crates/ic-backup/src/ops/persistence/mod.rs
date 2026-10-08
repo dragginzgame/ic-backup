@@ -6,6 +6,7 @@ mod command_lifetime_lock;
 mod consistency;
 mod download_journal;
 mod effect_graph;
+mod execution_progress;
 mod execution_settlement;
 mod fence_obligation;
 mod file_lock;
@@ -36,6 +37,7 @@ pub use download_journal::{
     IcSnapshotUploadArtifactError, MeasurementHistogram, MeasurementSummary,
 };
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
+pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};
 pub use execution_settlement::{
     ExecutionSettlementPersistenceError, create_execution_settlement, read_execution_settlement,
 };

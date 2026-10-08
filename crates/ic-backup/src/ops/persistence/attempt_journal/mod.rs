@@ -1,9 +1,10 @@
 //! Exclusive durable attempt reservations and exact receipt retention; no transport.
 
 use super::{
-    BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
-    read_json, write_json_durable,
+    BackupLayoutGuard, ExecutionProgressPersistenceError, JournalLock, JournalLockError,
+    PersistenceError, create_json_durable, read_json, write_json_durable,
 };
+use crate::model::artifacts::ArtifactChecksumRecord;
 use crate::model::attempt_journal::{
     AttemptAuthorityRecord, AttemptJournalRecord, AttemptJournalRecordError,
     MAX_ATTEMPT_JOURNAL_BYTES, MutationReceiptRequest, ObservationReceiptRequest,
@@ -88,6 +89,35 @@ impl<'a> AttemptJournalGuard<'a> {
     pub fn reserve_mutation(&mut self) -> Result<u32, AttemptJournalError> {
         self.reserve_with(AttemptJournalRecord::reserve_mutation, write_json_durable)
     }
+    /// Reserve only after admitting the exact persisted plan and all original journals.
+    ///
+    /// Every declared prerequisite must retain Applied evidence. Hold no other attempt
+    /// guard; original journals are admitted with sequential locks while this guard
+    /// retains its own lock. No missing journal is created or treated as unused.
+    /// Fresh permissions, authenticated prerequisites, never-dispatched custody and
+    /// backend/application safety remain caller-owned. Success is accounting only.
+    /// # Errors
+    /// Rejects wrong/missing originals, contention, unmet dependencies and ordinary
+    /// pending/exhausted/Applied or indeterminate-write conditions without refunds.
+    pub fn reserve_planned_mutation(
+        &mut self,
+        expected_plan: &ArtifactChecksumRecord,
+    ) -> Result<u32, ExecutionProgressPersistenceError> {
+        let view = super::execution_progress::read_with_current(
+            self.layout,
+            expected_plan,
+            Some(self.record()?),
+        )?;
+        let sequence = self.record.authority().binding().operation_sequence();
+        if view.operations.iter().any(|operation| {
+            operation.operation_sequence == sequence
+                && operation.state
+                    == crate::policy::execution_progress::OperationProgressState::AwaitingDependencies
+        }) {
+            return Err(ExecutionProgressPersistenceError::DependenciesUnapplied(sequence));
+        }
+        Ok(self.reserve_mutation()?)
+    }
     /// Durably consume one observation bound to an exact unresolved mutation and request.
     ///
     /// Fresh authority, paid-effect settlement and ended command custody remain caller-owned.
@@ -102,6 +132,28 @@ impl<'a> AttemptJournalGuard<'a> {
             |record| record.reserve_observation(mutation, request),
             write_json_durable,
         )
+    }
+    /// Reserve one original reconciliation observation after complete retained-plan admission.
+    ///
+    /// Reuses the same mutation/observation accounting owner; complete original evidence
+    /// is required even after exhaustion or reopening. Hold no other attempt guard.
+    /// Fresh read permission, observation dispatch custody and settled authenticated
+    /// outcome qualification remain integration-owned. Lost replies stay pending.
+    /// # Errors
+    /// Rejects missing/changed/held originals, invalid causality and the existing
+    /// reservation/persistence failures. No journal or allowance is recreated.
+    pub fn reserve_planned_observation(
+        &mut self,
+        expected_plan: &ArtifactChecksumRecord,
+        mutation: u32,
+        request: &str,
+    ) -> Result<u32, ExecutionProgressPersistenceError> {
+        super::execution_progress::read_with_current(
+            self.layout,
+            expected_plan,
+            Some(self.record()?),
+        )?;
+        Ok(self.reserve_observation(mutation, request)?)
     }
     /// Retain an exact integration-qualified direct mutation reply.
     ///
@@ -152,6 +204,32 @@ impl<'a> AttemptJournalGuard<'a> {
         self.layout.check_root()?;
         Ok(())
     }
+}
+
+pub(super) fn read_original_journals(
+    layout: &BackupLayoutGuard,
+    authorities: &[AttemptAuthorityRecord],
+    current: Option<&AttemptJournalRecord>,
+) -> Result<Vec<AttemptJournalRecord>, AttemptJournalError> {
+    layout.check_root()?;
+    if let Some(current) = current
+        && !authorities.contains(current.authority())
+    {
+        return Err(AttemptJournalError::AuthorityMismatch);
+    }
+    let mut journals = Vec::with_capacity(authorities.len());
+    for authority in authorities {
+        if let Some(current) = current
+            && current.authority() == authority
+        {
+            journals.push(current.clone());
+        } else {
+            let guard = AttemptJournalGuard::open(layout, authority)?;
+            journals.push(guard.record()?.clone());
+        }
+    }
+    layout.check_root()?;
+    Ok(journals)
 }
 
 fn journal_path(layout: &BackupLayoutGuard, authority: &AttemptAuthorityRecord) -> PathBuf {

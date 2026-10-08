@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/ic-tool-pins.awk
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
 usage() {

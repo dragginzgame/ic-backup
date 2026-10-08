@@ -57,6 +57,7 @@ jobs:
           /bin/bash scripts/ci/test-cargo-metadata.sh
           /bin/bash scripts/ci/test-format-tools.sh
           /bin/bash scripts/ci/test-evidence-checksums.sh
+          /bin/bash scripts/ci/test-evidence-archive.sh
           /bin/bash scripts/ci/test-host-tools.sh
           /bin/bash scripts/ci/test-tool-commands.sh
           /bin/bash scripts/ci/test-cloc.sh
@@ -68,14 +69,26 @@ jobs:
           /bin/bash scripts/hooks/test-hooks.sh
       - name: Validate the native library and repository tooling
         run: make ci
-      - name: Retain failed validation evidence
+      - name: Archive failed validation evidence
+        id: validation-archive
         if: failure()
+        run: |
+          inputs=()
+          for path in target/ci-fixtures target/validation-failures target/*-tests.*; do
+            if [[ -e "$path" || -L "$path" ]]; then
+              inputs+=("$GITHUB_WORKSPACE" "$path")
+            fi
+          done
+          if [[ ${#inputs[@]} != 0 ]]; then
+            archive="$(mktemp -d "$RUNNER_TEMP/ic-backup-evidence.XXXXXX")/evidence.tar.gz"
+            bash scripts/ci/archive-evidence.sh "$archive" "${inputs[@]}"
+            printf 'path=%s\n' "$archive" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Retain failed validation evidence
+        if: failure() && steps.validation-archive.outputs.path != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: validation-${{ matrix.os }}-${{ github.run_attempt }}
-          include-hidden-files: true
           retention-days: 7
-          path: |
-            target/ci-fixtures/
-            target/validation-failures/
-            target/*-tests.*/
+          if-no-files-found: error
+          path: ${{ steps.validation-archive.outputs.path }}

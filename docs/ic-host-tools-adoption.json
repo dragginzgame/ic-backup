@@ -1,17 +1,19 @@
 {
   "version": 1,
   "inspection_date": "2026-10-08",
-  "kind": "Published Host 0.5.0 source and selected consumer graph qualification",
+  "kind": "Preserved external Host 0.7.0 and Metrics 0.2.12 graph under Agent hard cut",
   "repository": "https://github.com/dragginzgame/ic-host-tooling",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
-  "published_source_revision": "db637fac8b7a9ef62301e1d9009ffeb5ffcd0be7",
+  "published_source_revision": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
   "packages": {
     "ic-host-artifacts": {
-      "version": "0.5.0",
-      "revision": "db637fac8b7a9ef62301e1d9009ffeb5ffcd0be7",
-      "path_in_vcs": "crates/ic-host-artifacts",
-      "archive_sha256": "872fa46c90cf915d7414be4ac7bbe0955b0934ffa1e8ac883fad122637dbc981",
+      "version": "0.7.0",
+      "revision": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
+      "archive_sha256": "71dca731ceb4bdfe482ac746f68372333381824c7112b53aa5344c6378b65260",
+      "matches_official_source": true,
+      "yanked": false,
       "sources": {
+        "Cargo.toml.orig": "7759140547f4daca7dc1a1a4a960ce9da3e627b8120a762a05b4bd55baae35a4",
         "src/archive/mod.rs": "0aa25f26c92962cb8d7c937a45520d70ab08cbeffcb19346b43e0c76560bd1d1",
         "src/archive/tests.rs": "f421faa806b90ad5ae9190b31cd8be4254b0e762b5f7dfd4b673251747d5f87c",
         "src/artifact/chunks/mod.rs": "b63941eae381501ec7c05dd729e728890ae0ccf1f5feb8522b7642bde9be7286",
@@ -33,20 +35,16 @@
         "src/wasm/tests.rs": "6c602d58024a539c02b524489fc0adfed75e73a911d4cb69f224fa7d726cf0bc",
         "tests/consumer_contracts.rs": "73284325f81c682b42409e66d7560ee06ee2a303c1a9e635776bf93eba04b1a9"
       },
-      "matches_archive_and_committed_release": true,
-      "changed_rust_from_046": [
-        "src/artifact/gzip/mod.rs",
-        "src/artifact/gzip/tests.rs",
-        "src/wasm/mod.rs",
-        "src/wasm/tests.rs"
-      ]
+      "changed_rust": []
     },
     "ic-host-fs": {
-      "version": "0.5.0",
-      "revision": "db637fac8b7a9ef62301e1d9009ffeb5ffcd0be7",
-      "path_in_vcs": "crates/ic-host-fs",
-      "archive_sha256": "96578ba90b978f0bafc48454f87f2869f74f3b6d6b3d06790cff47f9c95c7f98",
+      "version": "0.7.0",
+      "revision": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
+      "archive_sha256": "9ffac1c91c2cee4fb602533222f07750d2e9a196370618f5a0a1b9a87d34a28d",
+      "matches_official_source": true,
+      "yanked": false,
       "sources": {
+        "Cargo.toml.orig": "a256d57ab6eced69da52f48871b47e406091e62a15ac64f7b8388352b54825c4",
         "src/durable/lock_wait/mod.rs": "b2f7abd572a2721949e6bfe4225802719fa8dc39f0846000e2ff834d26c6f6a3",
         "src/durable/lock_wait/tests.rs": "465a873327fc5f3bd5872eaa9f98d9fdc36db7dd005c5836aa37ea55dd88d73b",
         "src/durable/mod.rs": "b3176675df7ba3363cc12fa553af5336e4284b660bffb70977b53ec4f25f6c3c",
@@ -66,388 +64,20 @@
         "src/read/tests.rs": "b759c8db2c123d4eccbde43847866d8dd867990684f5e0cc9fac65064895a74d",
         "src/test_support/mod.rs": "9f6fe53974cacc49439f776abd6148a21fce7812a36d3b0fac800b585ab8e0c5"
       },
-      "matches_archive_and_committed_release": true,
-      "changed_rust_from_046": [
-        "src/durable/mod.rs",
-        "src/durable/stream/mod.rs",
-        "src/durable/stream/tests.rs"
-      ]
-    },
-    "ic-host-process": {
-      "version": "0.5.0",
-      "revision": "db637fac8b7a9ef62301e1d9009ffeb5ffcd0be7",
-      "path_in_vcs": "crates/ic-host-process",
-      "archive_sha256": "e2f5e3c91209113ed960a0291f2feef8b21afc0a8769ac1419384d0d74f956fa",
-      "sources": {
-        "src/child/macos.rs": "405ebfb304d81abdf37a9d606c684ddc0dc9fadd507c1b7ae0e100b2add49bb1",
-        "src/child/mod.rs": "537660554af147dbd4fe9ed18fb65975f1e132fffc7d62cd8bb70abf94250521",
-        "src/child/tests.rs": "230d552dccd46ca0acbfe7c30d310e6b9a27b6d1be9ccbc48322644442aa4b74",
-        "src/lib.rs": "a8c48718a2fdf45c7f5c0c55e00ee456008557a28518c95e75ce57b03ba056dd",
-        "src/provenance/mod.rs": "a2b6e39bf61556d23ea85f7ad891d10cdc066bb0c0dc7563f3d9184242fa9e1e",
-        "src/provenance/tests.rs": "66ab228d60f8c34c95161739451aca29737525bec08adaf0f99dc9e79fddcb5d",
-        "src/test_support/mod.rs": "bca4f83cb1658068c138073dafe5c1529146674e84b84e76592b18443f9e10cd",
-        "src/tool/mod.rs": "8299e578ac601067923d041db5051e5c9ef33e1e93f4d7ad8799350d7b8abb91",
-        "src/tool/process.rs": "3bfd3292773ef93c0d723204fe41c0e8aa9d68902c43ad90a96372b7be95796a",
-        "src/tool/resolution/mod.rs": "46014bab71680c81fc6640960d31f88ae459004a3dba230e852e4c0ba42c9e1a",
-        "src/tool/resolution/tests.rs": "11323ff9bb0d7cc74973aa7ac506320c4801049f7d5f7cc97b655a24048c7cf0",
-        "src/tool/tests/capture/mod.rs": "2279f16f130a32a86654b47bde58a350ec6ba2be3a285664971b320586c21eba",
-        "src/tool/tests/evidence/mod.rs": "5c5fe8bed9fd44d978ff2d182dad1b45e46d5872140d8f4ec17c32501fa5b7da",
-        "src/tool/tests/named/mod.rs": "192cdf4fa00e335014a44b854aaca52dffa82849fab9c0d4e8f765e6d5865792",
-        "src/tool/tests/version/mod.rs": "001e0d6f84388f5237f4ba9e16ff7174ce5d392ba95213eaeb90a0425765b813",
-        "src/tool/tests.rs": "61d42ba09e6b614be0fc57c8d77db570858e2f05557a4b9c2a26f5aecf71ab6e"
-      },
-      "matches_archive_and_committed_release": true,
-      "changed_rust_from_046": [
-        "src/child/macos.rs",
-        "src/child/mod.rs",
-        "src/child/tests.rs",
-        "src/lib.rs",
-        "src/tool/process.rs"
-      ]
+      "changed_rust": []
     }
   },
-  "catalog": "Maintainer-selected incoming compatible 0.5 requirements and lock select artifacts/fs/process 0.5.0. All incoming manifest/lock bytes preserved; Host features empty; process Unix test-only. Only the selected Host version/checksum rows and process libc edge differ from released 0.6.0. No sibling patch/shared target or toolchain change.",
   "public_compatibility": {
-    "draft": "0.7.0",
-    "reason": "Public PersistenceError::Publication carries ic_host_fs 0.5 NamedWriteError<io::Error>; align direct Host dependency identity. No record/digest/allowance change.",
-    "metadata": "Package/receipt remain 0.6.0; changelog selection executes no version/release transaction."
+    "released_base": "0.7.0",
+    "next_draft": "0.8.0",
+    "reason": "Host 0.7 exposed publication-error Rust identity changes again; full pending transport/command hard cut uses minor 0.8.0. Core v1 bytes/budgets remain unchanged."
   },
   "qualification": {
-    "consumer_base": "8a1152d0a510f34f8daed59f06632306f7cf134e",
-    "evidence": "/home/adam/projects/ic-backup/target/host-050-review-3",
-    "scope": "Maintainer-selected registry Host 0.5.0 dependency qualification; no Backup Rust implementation change, sibling file edit, Git write or release/publication effect.",
-    "checks": "142 existing operations cases, four checksum-model cases, six public checksum cases and four public recovery/source/artifact/upload targets pass. All 11 actual PocketIC journeys, configured Clippy and Rust 1.91 pass. No broad CI/release gate run. Compiled public example, formatting, dependency pins, links, exact shared snapshot and PocketIC alignment pass.",
-    "native": "Fresh actual consumer Linux only; Host owner or released 0.6.0 CI is not native proof of the selected 0.5 consumer graph.",
-    "package": {
-      "path": "/home/adam/projects/ic-backup/target/host-050-review-3/local-ic-backup-0.6.0.crate",
-      "sha256": "50c66b01afce1e4eecb2ecf1f7e3e4ef54bf35ce462d29ce0cb746c7c211eb65",
-      "scope": "Offline locked standalone verification with exact current Rust and Host 0.5 graph. Local 0.6.0 label contains pending 0.7.0 dependencies; not the published 0.6.0 registry artifact."
-    }
+    "source_proof": "docs/reports/audits/2026/10/08/agent-transport/01/host-070-metrics-source-proof.json",
+    "consumer_record": "docs/reports/audits/2026/10/08/agent-transport/01/qualification.json",
+    "status": "Final frozen Linux graph passes 158 focused Rust cases, both-library Clippy/MSRV/package checks, strict Agent rustdoc and declarations. Source and logs bind the separate consumer record. Process is absent.",
+    "limits": "Host exact-source CI passes; Metrics owner CI queued at review; current consumer native macOS remains separate."
   },
-  "reuse_review": {
-    "artifacts": "Changed gzip numeric arguments and Wasm facts/errors are behind disabled features. Core hashing/copy/bounds Rust is unchanged. Retain canonical directory framing and product error mapping.",
-    "filesystem": "Existing write_at_with still selects the same commit engine without the new optional admission callback. Full held-parent/private mode/crash/foreign-stage tests pass. Closed-writer executable admission has no JSON record caller; no new publication wrapper is needed.",
-    "process": "Bounded test capture delegates direct-child ownership/cleanup to the new internal owner and preserves stdout/stderr caps, timeout, typed original failure and separate cleanup errors. The additive group API has no current Backup caller. Signal success is not descendant exit, confinement or command quiescence; retain local single-spawn command-fds inheritance and fresh exact-sidecar guards.",
-    "protocol": "No producer/consumer codec, schema, digest, authority, spending, retry or release admission changes. No new production provider or transport is installed.",
-    "removed_symbols": []
-  },
-  "previous_046_review": {
-    "version": 1,
-    "inspection_date": "2026-10-07",
-    "kind": "Published ic-host 0.4.6 source and focused current-graph qualification",
-    "repository": "https://github.com/dragginzgame/ic-host-tooling",
-    "source": "registry+https://github.com/rust-lang/crates.io-index",
-    "published_source_revision": "0fb05f9e18f032425188d68e1d69317a0f0127d5",
-    "packages": {
-      "ic-host-artifacts": {
-        "version": "0.4.6",
-        "archive_sha256": "7578ed93643474eeaf7b2ae40ae32bfd014f67551c8d58d36d208e9767e6de0b",
-        "revision": "0fb05f9e18f032425188d68e1d69317a0f0127d5",
-        "path_in_vcs": "crates/ic-host-artifacts",
-        "sources": {
-          "src/archive/mod.rs": "0aa25f26c92962cb8d7c937a45520d70ab08cbeffcb19346b43e0c76560bd1d1",
-          "src/archive/tests.rs": "f421faa806b90ad5ae9190b31cd8be4254b0e762b5f7dfd4b673251747d5f87c",
-          "src/artifact/chunks/mod.rs": "b63941eae381501ec7c05dd729e728890ae0ccf1f5feb8522b7642bde9be7286",
-          "src/artifact/chunks/tests.rs": "758e62b7ef14f586cc9c3bf2068f48b8f3c9543a9749b6204314e8c02fb81c29",
-          "src/artifact/copy/mod.rs": "949f65bffe44df87ac60cf85661c913bd22901d116d7331d1d00c08ebaf07e63",
-          "src/artifact/copy/tests.rs": "3be798ab7429699fd45ade714929cbe74d7cd2ec586990ed520af7162b650c54",
-          "src/artifact/gzip/mod.rs": "ff35967909d0aebafcef2ce5f41115687d495d18c5671379ad084356e60aa2d0",
-          "src/artifact/gzip/tests.rs": "25b0ad597b502e56514d7cc57cf811cb18bdf4164aa2ffef944e89534ee7674f",
-          "src/artifact/hashing/mod.rs": "8d0e8e036a889ec69c08d81a6bb985d98747c648fd4776ae2083d338d62ccf90",
-          "src/artifact/hashing/tests.rs": "415c017525da0a4239caa95847538dd7e434bb5d2ac54b8ee630e92370030297",
-          "src/artifact/matching/mod.rs": "41caec22e1ca9ed06a585f81e3cfb722d5dae913588d718f644bacb3ba7c8d5a",
-          "src/artifact/matching/tests.rs": "a279485feaa927afab1784420ddd175906aebe09ec8f34d632af9ae21723f3bb",
-          "src/artifact/mod.rs": "d822eacb91759397dcd451700ec620a5f165cf62e08975ba5ebb7d0c89cbd5ac",
-          "src/artifact/tests.rs": "4a08b2b36cacfc034c0842204f64d75788bbb81a19715347bb037485e2c7650f",
-          "src/artifact/writer/mod.rs": "e68f3cd9081699ec327e6ce39c6d6477846815321eca3730ccfc5367de7392bf",
-          "src/artifact/writer/tests.rs": "1deed1e755d459b275cfdb0b2553d930f56980e2381b7b14325c405a54b649af",
-          "src/lib.rs": "eb2fbc7e97d2c03a714c08ce8abcb54ab302370a9bab34828ac05f7c70579af2",
-          "src/wasm/mod.rs": "a87a8b5a8d6dd1e4920cce4389822b16ee64148d871ca18835fe05794208f295",
-          "src/wasm/tests.rs": "2c6c24dab2e53e5a6f797c638c95725e9af8ab808d7490c86c655c39457c0039",
-          "tests/consumer_contracts.rs": "73284325f81c682b42409e66d7560ee06ee2a303c1a9e635776bf93eba04b1a9"
-        },
-        "matches_archive_and_committed_release": true,
-        "dependency_scope": "production",
-        "rust_version": "1.88.0",
-        "features": {
-          "archive": [
-            "gzip",
-            "dep:tar"
-          ],
-          "default": [],
-          "gzip": [
-            "dep:flate2"
-          ],
-          "wasm": [
-            "dep:wasmparser"
-          ]
-        }
-      },
-      "ic-host-fs": {
-        "version": "0.4.6",
-        "archive_sha256": "5f920e1a667af1cdaa9a9fd9322347bdbc163714d74fef2700e223a5f036f7a9",
-        "revision": "0fb05f9e18f032425188d68e1d69317a0f0127d5",
-        "path_in_vcs": "crates/ic-host-fs",
-        "sources": {
-          "src/durable/lock_wait/mod.rs": "b2f7abd572a2721949e6bfe4225802719fa8dc39f0846000e2ff834d26c6f6a3",
-          "src/durable/lock_wait/tests.rs": "465a873327fc5f3bd5872eaa9f98d9fdc36db7dd005c5836aa37ea55dd88d73b",
-          "src/durable/mod.rs": "1adb9c62a72fccea6f9634d95f38db1495bb8e5372be7a6625460a2ab0c98029",
-          "src/durable/named/mod.rs": "9ba1af898192ac79bd706f4e830318359ca581b1c1acf3b1c12db4df0aa1c717",
-          "src/durable/named/tests.rs": "e82b1f2a9d746a50b94149b97568eb55a22f4a4af64ab0f4abcefcfc0d561d08",
-          "src/durable/stream/mod.rs": "478afd4e6fd863ef4a1fa2ee4f187eb91256e6ab00c55fec05da3193d031229e",
-          "src/durable/stream/tests.rs": "60347832a061e3e0848ad31aa947fc17d5a1bb5f335529daf0a5b446164b8496",
-          "src/durable/tests.rs": "ffa877751e526e97b4cd5646070d1cbfcb2c7d64be6450f2281214f0ee4f7c70",
-          "src/lib.rs": "7fafcfc1bd549b83c75f89601aa26a65ee1f628becff128c65faf965391b890d",
-          "src/path/mod.rs": "f03b059ba11cb1320ed86abb1e06893efa98e3bbf27d5eedea332ac173b7a341",
-          "src/path/tests.rs": "c0b7f8139e858d0417c6b07ca196cbcde4274cc887385a08e4165a017f87dcc5",
-          "src/read/mod.rs": "e7ff6cfc4eff2e9080b8af398059edf08e7ba01092d6bb4c0151ea18ccf4c8d6",
-          "src/read/no_follow/mod.rs": "4e600f008cae4f57ac2511a681ebfd068fff5e67bd8b1d20cb69cb8cb9b07802",
-          "src/read/no_follow/tests.rs": "cd83d9417d00980ede54e8b1e65f6f063165d6cd6b088a3db231f3fd34b113de",
-          "src/read/private/mod.rs": "00475adc31940f82b236aa1a1f2c2abdaa64861b6862259b71fd2feff67fbda9",
-          "src/read/private/tests/mod.rs": "d764c5e5dc03a602347d73df60dcc042999ebe141f3f6de2498514804c348af8",
-          "src/read/tests.rs": "b759c8db2c123d4eccbde43847866d8dd867990684f5e0cc9fac65064895a74d",
-          "src/test_support/mod.rs": "9f6fe53974cacc49439f776abd6148a21fce7812a36d3b0fac800b585ab8e0c5"
-        },
-        "matches_archive_and_committed_release": true,
-        "dependency_scope": "production",
-        "rust_version": "1.88.0",
-        "features": {}
-      },
-      "ic-host-process": {
-        "version": "0.4.6",
-        "archive_sha256": "a669b7a44b156612fa1ad26d0f3eee1df28982bbc79dfa2ab612cf8ced8b3479",
-        "revision": "0fb05f9e18f032425188d68e1d69317a0f0127d5",
-        "path_in_vcs": "crates/ic-host-process",
-        "sources": {
-          "src/lib.rs": "60dbf830b1b38a2cef3e924d196897ff9393c0652aa8a41b0ec82447d4a14fe0",
-          "src/provenance/mod.rs": "a2b6e39bf61556d23ea85f7ad891d10cdc066bb0c0dc7563f3d9184242fa9e1e",
-          "src/provenance/tests.rs": "66ab228d60f8c34c95161739451aca29737525bec08adaf0f99dc9e79fddcb5d",
-          "src/test_support/mod.rs": "bca4f83cb1658068c138073dafe5c1529146674e84b84e76592b18443f9e10cd",
-          "src/tool/mod.rs": "8299e578ac601067923d041db5051e5c9ef33e1e93f4d7ad8799350d7b8abb91",
-          "src/tool/process.rs": "ad3353162db08586c47ffadb12dcd970e88f5a1b22c836ed580492af9b88015a",
-          "src/tool/resolution/mod.rs": "46014bab71680c81fc6640960d31f88ae459004a3dba230e852e4c0ba42c9e1a",
-          "src/tool/resolution/tests.rs": "11323ff9bb0d7cc74973aa7ac506320c4801049f7d5f7cc97b655a24048c7cf0",
-          "src/tool/tests/capture/mod.rs": "2279f16f130a32a86654b47bde58a350ec6ba2be3a285664971b320586c21eba",
-          "src/tool/tests/evidence/mod.rs": "5c5fe8bed9fd44d978ff2d182dad1b45e46d5872140d8f4ec17c32501fa5b7da",
-          "src/tool/tests/named/mod.rs": "192cdf4fa00e335014a44b854aaca52dffa82849fab9c0d4e8f765e6d5865792",
-          "src/tool/tests/version/mod.rs": "001e0d6f84388f5237f4ba9e16ff7174ce5d392ba95213eaeb90a0425765b813",
-          "src/tool/tests.rs": "61d42ba09e6b614be0fc57c8d77db570858e2f05557a4b9c2a26f5aecf71ab6e"
-        },
-        "matches_archive_and_committed_release": true,
-        "dependency_scope": "Unix test only",
-        "rust_version": "1.88.0",
-        "features": {}
-      }
-    },
-    "published_review": "All three non-yanked official registry rows/archives and every Rust file match exact committed release 0fb05f9. Artifacts/process Rust is identical to 0.4.5; fs only changes stream documentation and native filename tests. No sibling edits or source patch.",
-    "catalog": "Existing root compatible minima remain: production artifacts 0.4, fs 0.4.5 requiring Darwin compile repair, Unix test-only process 0.4.2. Incoming lock already selects all three registry 0.4.6 packages and is preserved byte-for-byte. Host features remain empty; no sibling patch/shared target.",
-    "apis": [
-      "ic_host_artifacts::artifact::Sha256Digest",
-      "ic_host_artifacts::artifact::hash_reader",
-      "ic_host_artifacts::artifact::copy_reader",
-      "ic_host_artifacts::artifact::BoundedWriter",
-      "ic_host_artifacts::artifact::read_reader",
-      "ic_host_artifacts::artifact::ArtifactError -> std::io::Error",
-      "ic_host_fs::read::read_file_no_follow"
-    ],
-    "production_owners": [
-      "crates/ic-backup/src/ops/artifacts/mod.rs",
-      "crates/ic-backup/src/ops/persistence/json/mod.rs",
-      "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs",
-      "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs"
-    ],
-    "compatibility": {
-      "draft": "0.6.0",
-      "released_base": "0.5.4",
-      "reason": "Breaking exhaustive PersistenceError::Publication addition; update JSON publication matches. All schemas/digests/accounting and private permissions/preflight remain current v1.",
-      "metadata": "Root/member manifests, receipt and lock remain incoming 0.5.4 with all host packages 0.4.6; no version/release effect."
-    },
-    "errors": "Shared From<ArtifactError> preserves native io::Error identity and retains non-native typed causes. Product-specific NotRegularFile -> InvalidInput, LimitExceeded -> original RecordTooLarge or FileShape, and IcSnapshotArtifactError::Artifact wrapping remain at their original boundaries. CopyError still distinguishes input and output; partial output survives. JSON shared publication now retains NamedWriteError directly under public Publication.",
-    "limits": "Existing u64::MAX raw artifact stream budgets, exact IC extent/checksum counts, 1 MiB chunk limit and caller-selected JSON u64 byte limits are unchanged. Required record reads retain final NOFOLLOW/NONBLOCK descriptor admission; missing files remain errors, not optional regeneration.",
-    "custody": "Existing artifact/directory/command/lock custody owners remain. Only JSON sibling allocation, identity/cleanup, atomic publication and parent sync delegate to the typed descriptor engine; private parent/preflight/barrier policy remains local.",
-    "msrv": "All three host packages declare Rust 1.88.0; Backup remains Rust 1.91.0, edition 2024.",
-    "license": "MIT registry dependencies; no source copied. Existing extraction attribution retained.",
-    "issue": "https://github.com/dragginzgame/ic-backup/issues/20",
-    "upstream_ci": {
-      "revision": "0fb05f9e18f032425188d68e1d69317a0f0127d5",
-      "url": "https://github.com/dragginzgame/ic-host-tooling/actions/runs/37648086908",
-      "result": "success",
-      "evidence": "target/host-054-followup/native-jobs.json",
-      "scope": "Exact 0.4.6 CI passes Linux, Intel macOS, Apple Silicon macOS and MSRV. Fixture observes native rename/hard-link admission before comparing exact-name success or typed EILSEQ refusal/cleanup. Producer runs before filesystem publication admission; documentation now makes that boundary explicit. This owner result does not qualify uncommitted Backup native delivery.",
-      "resolved_issues": [
-        "https://github.com/dragginzgame/ic-host-tooling/issues/18",
-        "https://github.com/dragginzgame/ic-host-tooling/issues/19"
-      ]
-    },
-    "qualification": {
-      "evidence": "target/publication-060",
-      "source_and_log_review": "qualification.json",
-      "scope": "Uncommitted Host typed JSON descriptor publication under existing private-parent/preflight/crash contracts; previous checksum and shared snapshot work retained. Package/receipt 0.5.4; no release/publication or sibling edit.",
-      "native": "Fresh Linux only; released 0.5.4/upstream owner CI is not current dirty consumer native proof."
-    },
-    "previous_adoption_review": "target/host-054-followup/incoming/docs/ic-host-tools-adoption.json",
-    "prior_qualification": "Released 0.5.2 Linux and both native macOS workflows pass on original host 0.4.0; that evidence never qualifies later graphs or uncommitted product changes.",
-    "removed_functions": [],
-    "removed_methods": [],
-    "removed_types": [],
-    "remaining": "Current native consumer delivery and separately authorized publication; production transport still blocked by effective routing/retry/polling/custody qualification, with no sibling edits. Full preflight buffer removal requires a separately accepted ordering change; downstream Canic adoption remains independent.",
-    "ownership": "Existing native record IO, artifact checksum/copy and typed error conversion owners remain. New tool probe reuses shared checksum/version admission, bounded direct argv capture and typed execution evidence. The shared process owner does not replace original command descriptor inheritance, descendant custody or journal spending.",
-    "reuse_review": "The new CopyError-to-IO conversion preserves native IO but wraps a non-IO input cause in CopyError rather than the original ArtifactError. Keep the existing two-arm consumer conversion to preserve its prior typed cause identity. Ordered fixed chunk hashing has no current caller: IC regions retain independent incremental coverage/hashes, and known chunk-store replies retain supplied hashes. Do not add a second vector or replace local directory framing, durable publication and region custody. No upstream source is copied.",
-    "test_apis": [
-      "ic_host_process::tool::AdmittedTool",
-      "ic_host_process::tool::ExecutionContext",
-      "ic_host_process::tool::OutputLimits",
-      "ic_host_process::tool::ExecutionFailure",
-      "ic_host_process::tool::ExecutionEvidence"
-    ],
-    "streamed_publication_review": {
-      "API": "ic_host_fs::durable::write_at_with with explicit CreateNew/Replace, 0600, held syncable parent and NamedWriteError<io::Error>",
-      "consumer": "One publish_bytes_at_barriers adapter for ordinary and acknowledged crash paths; no local allocator or atomic publication engine.",
-      "obligations": "Backup retains private 0700 parents/link synchronization and generic serialization exactly once before effects. Producer sync establishes acknowledged staging; Host independently rechecks/syncs before atomic publication. Successful Host return establishes final held-parent sync before durable acknowledgment.",
-      "retained_buffer": "Full encoded JSON bytes remain intentional under the original serialize-once-before-effects contract. Direct stream would change effect order; preflight plus stream would invoke generic Serialize twice. No allocation saving is claimed.",
-      "errors": "PersistenceError::Publication retains original typed producer/cleanup/before/after evidence, without text conversion or IO flattening. Parent IO/JSON/read errors retain separate original owners. No paid retry authority.",
-      "issue": "https://github.com/dragginzgame/ic-backup/issues/24",
-      "qualification": "129 affected real persistence cases, public recovery/source/artifact/upload/framing targets, 11 real PocketIC journeys, Clippy/MSRV and standalone packaging pass on Linux. Current uncommitted native macOS proof remains absent.",
-      "evidence": "target/publication-060",
-      "removed_symbols": [
-        {
-          "name": "create_bytes_at_barriers",
-          "former_module": "ops::persistence::json",
-          "replacement": "publish_bytes_at_barriers adapter + published ic_host_fs::durable::write_at_with",
-          "reason": "Remove local allocation/atomic publication/cleanup implementation while retaining private parent/preflight/crash policy."
-        },
-        {
-          "name": "replace_bytes_at_barriers",
-          "former_module": "ops::persistence::json",
-          "replacement": "publish_bytes_at_barriers adapter + published ic_host_fs::durable::write_at_with",
-          "reason": "Remove local allocation/atomic publication/cleanup implementation while retaining private parent/preflight/crash policy."
-        },
-        {
-          "name": "create_sibling_temp",
-          "former_module": "ops::persistence::json",
-          "replacement": "publish_bytes_at_barriers adapter + published ic_host_fs::durable::write_at_with",
-          "reason": "Remove local allocation/atomic publication/cleanup implementation while retaining private parent/preflight/crash policy."
-        }
-      ]
-    },
-    "new_optional_api_review": {
-      "apis": [
-        "hash_gzip",
-        "hash_gzip_or_raw",
-        "gzip_matches"
-      ],
-      "disposition": "Existing additive gzip helpers remain feature-gated and have no Backup caller. All host feature sets stay empty; current incremental IC region hashes, known-chunk checks and local directory framing remain their sole owners."
-    },
-    "previous_qualification": {
-      "evidence": "target/upstream-054-refresh/host-045",
-      "published_sources": "target/upstream-054-refresh/published-host-045-sources.json",
-      "registered_cases": "registered-cases.json",
-      "passed_unit_logs": [
-        "artifacts.log",
-        "json.log",
-        "ic-artifact.log"
-      ],
-      "passed_public_log": "public.log",
-      "public_targets": [
-        "local_recovery",
-        "local_restore_source",
-        "ic_snapshot_artifact",
-        "ic_snapshot_upload"
-      ],
-      "pocketic_logs": [
-        "pocketic.log"
-      ],
-      "quality_logs": [
-        "clippy.log",
-        "msrv.log",
-        "package.log",
-        "quality.log"
-      ],
-      "scope": "Fresh affected Linux consumer checks on the reviewed 0.4.5 graph; no local native macOS qualification. Real PocketIC results preserve original spending/custody and do not install a provider.",
-      "package_archive": {
-        "path": "target/upstream-054-refresh/host-045/ic-backup-0.5.3.crate",
-        "sha256": "b6990f45c0ce0210f35bb262ed58922c61a24db93efd670fbb8c84fe8a7833fe",
-        "scope": "Offline locked standalone Cargo package verification; no publication."
-      }
-    },
-    "before_json_publication_adoption": {
-      "compatibility": {
-        "draft": "0.5.4",
-        "released_base": "0.5.3",
-        "reason": "Public Backup signatures, typed IO, exact limits and v1 records retain existing owners. Host 0.4.6 corrects native filename qualification/docs without changing production publication behavior; streaming still needs an original serialization/crash-barrier migration.",
-        "metadata": "Package/released receipt remain 0.5.3; one compatible 0.5.4 draft. Incoming root/member manifests and complete 0.4.6 lock bytes stay exact. Earlier 0.4.5 runtime/source proof remains under its original owner.",
-        "retained_data": "No migration, journal reset or artifact regeneration."
-      },
-      "errors": "Shared From<ArtifactError> preserves native io::Error identity and retains non-native typed causes. Product-specific NotRegularFile -> InvalidInput, LimitExceeded -> original RecordTooLarge or FileShape, and IcSnapshotArtifactError::Artifact wrapping remain at their original boundaries. CopyError still distinguishes input and output; partial output survives.",
-      "custody": "Shared path locks block and durably create parent paths, unlike Backup nonblocking contention refusal, existing-file acquisition and owned descendant descriptor custody. Shared generic publication does not preserve all private permissions and retained crash barriers. Local descriptor-relative traversal, original identity checks, staging, synchronization and publication stay with their existing owners. Optional/private readers are not needed by these callers; process capture is not command-custody replacement. Shared named external-tool file staging does not replace the private retained directory/tree publication. HashingWriter consumes its sink/hash at into_parts and exposes no borrowed descriptor/digest; adapting it here would add descriptor/state wrappers rather than simplify custody. Existing local region descriptors and hashes remain, with no copied upstream implementation.",
-      "qualification": {
-        "evidence": "target/host-054-followup",
-        "published_sources": "published-sources.json",
-        "registered_cases": "registered-cases.json",
-        "passed_unit_logs": [
-          "artifacts.log",
-          "json.log",
-          "ic-artifact.log"
-        ],
-        "passed_public_log": "public.log",
-        "public_targets": [
-          "local_recovery",
-          "local_restore_source",
-          "ic_snapshot_artifact",
-          "ic_snapshot_upload"
-        ],
-        "quality_logs": [
-          "clippy.log",
-          "msrv.log",
-          "package.log",
-          "quality.log"
-        ],
-        "scope": "Fresh focused Linux checks on exact incoming host 0.4.6 lock. Product/test Rust and WAT remain byte-identical to earlier 0.4.5 proof. Real PocketIC journeys are retained under that original graph and not relabelled or rerun for a host tests/documentation-only patch. No new native consumer execution.",
-        "package_archive": {
-          "path": "target/host-054-followup/ic-backup-0.5.3.crate",
-          "sha256": "f8c09ea223d6dcfbdcb1725552e8b621196331477e1c92a21ceed03d2da277da",
-          "scope": "Offline locked standalone Cargo package verification; archived lock selects all three official host 0.4.6 checksums. No publication."
-        }
-      },
-      "remaining": "Exact native consumer qualification remains pending independently of successful host owner CI. Typed stream adoption, checked public directory framing, production transport and terminal release remain separate.",
-      "streamed_publication_review": {
-        "API": "write_typed_with/write_at_with with explicit CreateNew/Replace and caller permissions; typed producer/cleanup/already-published errors",
-        "consumer": "crates/ic-backup/src/ops/persistence/json/mod.rs remains the actual publisher for current generic Serialize APIs",
-        "obligations": "A failing generic serializer currently runs once before parent/staging creation. Existing deterministic before-publication/after-directory-sync barriers qualify real attempt/download/restore journals. Do not add a second publisher solely for tests or remove those guarantees to adopt streaming. Private parent policy, bounds and retained recovery stay local.",
-        "disposition": "Host 0.4.6 now has successful complete owner native qualification. Consumer migration still requires preservation of one-pass serialization before filesystem effects, private parents, deterministic crash barriers and consumer native evidence. No second/new local publisher.",
-        "issue": "https://github.com/dragginzgame/ic-backup/issues/24"
-      }
-    }
-  },
-  "upstream_native_qualification": {
-    "url": "https://github.com/dragginzgame/ic-host-tooling/actions/runs/37744999108",
-    "source": "db637fac8b7a9ef62301e1d9009ffeb5ffcd0be7",
-    "status": "completed",
-    "conclusion": "success",
-    "jobs": [
-      {
-        "name": "msrv",
-        "conclusion": "success"
-      },
-      {
-        "name": "native (ubuntu-24.04, Linux, x86_64)",
-        "conclusion": "success"
-      },
-      {
-        "name": "native (macos-15-intel, Darwin, x86_64)",
-        "conclusion": "success"
-      },
-      {
-        "name": "native (macos-15, Darwin, arm64)",
-        "conclusion": "success"
-      }
-    ],
-    "scope": "Exact published Host 0.5.0 owner source passes all required native hosts and MSRV. This is not native consumer proof for the dirty Host 0.5 Backup graph."
-  },
-  "published_backup_060": {
-    "proof": "/home/adam/projects/ic-backup/target/host-050-review-3/published-backup-060-proof.json",
-    "source": "8a1152d0a510f34f8daed59f06632306f7cf134e",
-    "archive_sha256": "1789f9b405364f5819e7d7ae9c7d0cfd2cf55cd8e79e47b765a19cd0513350e7",
-    "scope": "Actual published checksum/JSON source matches current Backup Rust; dependencies remain original 0.4.6. Released main/tag Linux/ARM macOS pass, Intel macOS still in progress at final read; not current graph qualification."
-  }
+  "previous_review": "docs/reports/audits/2026/10/08/agent-transport/01/previous-host-060-review.json",
+  "removed_dependency": "ic-host-process: sole ICP probe caller retired; ordinary descriptor custody/local test capture retain their separate owners."
 }

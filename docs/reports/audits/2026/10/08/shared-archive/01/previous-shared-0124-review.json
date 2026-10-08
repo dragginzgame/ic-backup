@@ -1,0 +1,177 @@
+{
+  "inspection_date": "2026-10-08",
+  "consumer_base": "f836d5e58170c6b16dba2552c10391666f86ce7e",
+  "source": {
+    "revision": "e9bfdc54c0daefc3dbbdfe091e5665dca5468eb3",
+    "version": "0.1.24",
+    "remote": "https://github.com/dragginzgame/shared-tooling",
+    "ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37756978585",
+    "ci_status": "Exact-source portable regressions pass on Linux, Intel macOS and Apple Silicon macOS; Intel/Linux complete jobs and lint/security pass. Apple Silicon job fails only later hosted artifact download/verification, tracked by #63. No green overall workflow claimed."
+  },
+  "evidence": "target/upstream-071-review",
+  "snapshot": {
+    "revision": "e9bfdc54c0daefc3dbbdfe091e5665dca5468eb3",
+    "version": "0.1.24",
+    "paths": [
+      "docs/verification-helpers.md",
+      "scripts/ci/check-documentation-links.pl",
+      "scripts/ci/test-documentation-links.pl",
+      "scripts/ci/test-file-digests.sh",
+      "rules/dependency-pinning.md",
+      "audits/README.md",
+      "audits/code-hygiene.md",
+      "audits/flow-convergence-and-duplication.md",
+      "audits/complexity-and-technical-debt.md",
+      "audits/module-surface-hardening.md",
+      "audits/module-cleanup.md",
+      "docs/provenance.md",
+      "docs/ic-tools.md",
+      "docs/local-setup.md",
+      "ci/ic-tools.tsv",
+      "ci/tool-versions.env",
+      "scripts/ci/check-dependency-pins.sh",
+      "scripts/ci/dependency-pins.jq",
+      "scripts/ci/verify-evidence-checksums.sh",
+      "scripts/dev/install-host-tools.sh",
+      "scripts/dev/install-ic-tools.sh",
+      "scripts/ci/test-dependency-pins.sh",
+      "scripts/ci/test-host-tools.sh",
+      "scripts/ci/test-ic-tools.sh",
+      "scripts/ci/test-evidence-checksums.sh",
+      "docs/principles/README.md",
+      "docs/principles/decision-artifact-discipline.md",
+      "docs/principles/reviewable-changes.md",
+      "docs/principles/rust-code-hygiene.md",
+      "docs/principles/simplicity-and-maintainability.md",
+      "docs/consuming-snapshots.md",
+      "docs/supported-hosts.md",
+      "scripts/ci/verify-file-checksum.sh",
+      "scripts/ci/verify-shared-tooling-snapshot.sh",
+      "scripts/ci/run-validation-targets.sh",
+      "scripts/ci/test-validation-target-runner.sh",
+      "DRAGGINZGAME.md",
+      "rules/changelogs.md",
+      "docs/releases.md",
+      "scripts/ci/run-release.sh",
+      "scripts/ci/next-release-version.sh",
+      "scripts/ci/finalize-release-changelog.awk",
+      "scripts/ci/test-release-runner.sh",
+      "rules/cargo-dependencies.md",
+      "rules/git-hooks.md",
+      ".githooks/pre-commit",
+      "scripts/dev/install-git-hooks.sh",
+      "rules/agent-maintenance.md",
+      "scripts/ci/rewrite-local-lock-versions.pl",
+      "scripts/ci/test-local-lock-versions.pl",
+      "scripts/ci/check-formatting-hooks.sh",
+      "docs/tag-maintenance.md",
+      "scripts/ci/read-cargo-workspace-version.sh",
+      "scripts/ci/test-cargo-metadata.sh",
+      "scripts/ci/check-format-tools.sh",
+      "scripts/ci/test-format-tools.sh",
+      "scripts/distribution/governance-files.txt",
+      "rules/rust-workspaces.md",
+      "make/tools.mk",
+      "scripts/dev/cloc.sh",
+      "scripts/dev/cloc-tooling.pl",
+      "scripts/ci/check-make-execution.sh",
+      "scripts/ci/test-tool-commands.sh",
+      "scripts/ci/test-cloc.sh",
+      "scripts/ci/test-cloc-tooling.sh",
+      "audits/ic-canister-applications.md",
+      "scripts/dev/install-rust-tools.sh",
+      "scripts/ci/test-rust-tools.sh",
+      "rules/contributions.md",
+      "scripts/ci/ic-tool-pins.awk",
+      "scripts/ci/check-pocketic-alignment.sh",
+      "scripts/ci/check-pocketic-binary.sh",
+      "scripts/ci/test-pocketic-checks.sh",
+      "scripts/ci/release-pr.sh",
+      "scripts/ci/test-release-pr.sh"
+    ],
+    "changed_paths": [
+      "docs/verification-helpers.md",
+      "scripts/ci/check-dependency-pins.sh",
+      "scripts/ci/verify-evidence-checksums.sh",
+      "scripts/dev/install-host-tools.sh",
+      "scripts/dev/install-ic-tools.sh",
+      "docs/consuming-snapshots.md",
+      "docs/supported-hosts.md",
+      "scripts/ci/run-validation-targets.sh",
+      "docs/releases.md",
+      "scripts/ci/run-release.sh",
+      "scripts/ci/test-release-runner.sh",
+      ".githooks/pre-commit",
+      "scripts/dev/cloc-tooling.pl",
+      "scripts/ci/test-cloc-tooling.sh",
+      "scripts/ci/check-pocketic-alignment.sh",
+      "scripts/ci/check-pocketic-binary.sh"
+    ],
+    "count": 75,
+    "all_committed_blobs_and_modes_match": true
+  },
+  "consumer_policy": {
+    "release_delivery": "direct",
+    "archive_adoption": "Deferred: committed helper has known path/output admission defects in upstream #59; uncommitted 0.1.25 correction is not adopted. Existing 75-file selection unchanged.",
+    "tracking_limit": "Static symbolic refs and concurrent changed OIDs are preserved. Same-OID direct-to-symbolic race remains upstream #62; no claim of atomic ref-type preservation."
+  },
+  "qualification": {
+    "status": "All focused checks passed on Linux",
+    "consumer_native_hosts": "Current dirty adoption is locally qualified on Linux only; native macOS requires its own committed consumer CI.",
+    "record": "docs/reports/audits/2026/10/08/upstream-adoption/01/qualification.json",
+    "logs": {
+      "ops.log": {
+        "command": "cargo test --offline --locked -p ic-backup --lib ops::",
+        "status": "passed",
+        "sha256": "bec3076b8e3d9307ba40d5e8f702687ac75ba2fe8b5f944fcfe9f6ed4f5acbf7"
+      },
+      "public-contracts.log": {
+        "command": "cargo test --offline --locked -p ic-backup --test execution_settlement --test ic_snapshot_artifact --test ic_snapshot_upload --test local_recovery --test local_restore_source",
+        "status": "passed",
+        "sha256": "bd5cb040be0d62b5fae1603df511738aa05500c49cfac984b12cdd7f2c5fef78"
+      },
+      "clippy.log": {
+        "command": "cargo clippy --offline --locked -p ic-backup --all-targets --all-features -- -D warnings",
+        "status": "passed",
+        "sha256": "772a91406327089d9cd02fbdd8d1dfb24ba9ae5197bb363cea82991bd412c7a8"
+      },
+      "msrv.log": {
+        "command": "cargo +1.91.0 check --offline --locked -p ic-backup --all-targets --all-features",
+        "status": "passed",
+        "sha256": "d09c75fd7870678ce60be85339ef9baafff3a79199037c550c92ab92294ac37b"
+      },
+      "release-shell-snapshot.log": {
+        "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" make release-check shell-check shared-tooling-check",
+        "status": "passed",
+        "sha256": "ec0477ff645b3ba05846399c7e63d9517fa12821d731756311fc1cf16909cb28"
+      },
+      "logger-retention.log": {
+        "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" bash scripts/ci/test-tooling.sh",
+        "status": "passed",
+        "sha256": "c42ecea3be4c310afe85f638b82c2dea1ec54ad256dc8c11bbd486d801752606"
+      },
+      "cloc-tooling.log": {
+        "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" bash scripts/ci/test-cloc-tooling.sh",
+        "status": "passed",
+        "sha256": "547baeda28568dd9cf3e4632e04262b310689d839309ac5fd5515fd04c413883"
+      },
+      "declarations-fmt-docs.log": {
+        "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" make dependency-pins-check fmt-check check-doc-links",
+        "status": "passed",
+        "sha256": "01a036c96febb26d2b76063ccf53228a4ea7ecf6536e05da7a67c787905ac465"
+      },
+      "exporter-companions.log": {
+        "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" bash /tmp/ic-backup-shared-0124-review/scripts/ci/test-snapshot-distribution.sh",
+        "status": "passed",
+        "sha256": "6096b5b3b9106854d47e5526f86872d32d377d2b8f167340e54d5d5c0ae5529f"
+      }
+    }
+  },
+  "previous_review": "docs/reports/audits/2026/10/08/upstream-adoption/01/previous-shared-review.json",
+  "removed_symbols": [],
+  "issues_closed": {
+    "backup_27": "https://github.com/dragginzgame/ic-backup/issues/27#issuecomment-6057228995",
+    "shared_60": "https://github.com/dragginzgame/shared-tooling/issues/60#issuecomment-6057255809",
+    "shared_61": "https://github.com/dragginzgame/shared-tooling/issues/61#issuecomment-6057256456"
+  }
+}

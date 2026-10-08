@@ -49,9 +49,9 @@ help:
 	@echo "install-ic-tools            Prepare the pinned local IC executables"
 	@echo "install-rust-tools          Prepare the optional shared Cargo tool set"
 	@echo "install-tools               Prepare host tools followed by IC tools"
-	@echo "package                     Verify the standalone package locally"
+	@echo "package                     Verify both library packages locally"
 	@echo "pocketic-alignment-check     Check the locked client against the reviewed server pin"
-	@echo "publish                     Publish the current library to crates.io"
+	@echo "publish                     Publish both libraries to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
 	@echo "release-check               Test release helpers with isolated substitutes"
 	@echo "release-major               Maintainer: prepare, commit, tag and push a major"
@@ -72,13 +72,13 @@ help:
 	@echo "version                     Print the workspace package version"
 
 check:
-	cargo check --offline --locked -p ic-backup --all-targets --all-features
+	cargo check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
 
 check-doc-links:
 	bash scripts/ci/check-doc-links.sh
 
 check-msrv:
-	cargo +1.91.0 check --offline --locked -p ic-backup --all-targets --all-features
+	cargo +1.91.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
 
 ci:
 	+@bash scripts/ci/run-validation-targets.sh --fail-fast $(CI_TARGETS)
@@ -87,13 +87,13 @@ clean:
 	cargo clean
 
 clippy:
-	cargo clippy --offline --locked -p ic-backup --all-targets --all-features -- -D warnings
+	cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings
 
 deps:
 	cargo fetch --locked
 
 doc:
-	RUSTDOCFLAGS="-D warnings" cargo doc --offline --locked -p ic-backup --no-deps --all-features
+	RUSTDOCFLAGS="-D warnings" cargo doc --offline --locked -p ic-backup -p ic-backup-agent --no-deps --all-features
 
 ensure-clean:
 	@$(RELEASE) ensure-clean
@@ -122,7 +122,7 @@ pocketic-alignment-check:
 	bash scripts/ci/check-pocketic-alignment.sh --manifest crates/ic-backup/Cargo.toml --pins ci/ic-tools.tsv
 
 package:
-	cargo package --offline --locked --allow-dirty -p ic-backup
+	cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent
 
 publish:
 	$(RELEASE) publish
@@ -210,7 +210,7 @@ tags:
 	@git tag --sort=-version:refname
 
 test:
-	cargo test --offline --locked -p ic-backup --all-features
+	cargo test --offline --locked -p ic-backup -p ic-backup-agent --all-features
 
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
@@ -221,6 +221,7 @@ tooling-check: shared-tooling-check
 	bash scripts/ci/test-cargo-metadata.sh
 	bash scripts/ci/test-format-tools.sh
 	bash scripts/ci/test-evidence-checksums.sh
+	bash scripts/ci/test-evidence-archive.sh
 	bash scripts/ci/test-host-tools.sh
 	bash scripts/ci/test-tool-commands.sh
 	bash scripts/ci/test-cloc.sh

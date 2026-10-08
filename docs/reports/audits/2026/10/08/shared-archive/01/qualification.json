@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-08",
+  "platform": "Linux x86_64",
+  "draft": "0.7.1",
+  "consumer_head": "f836d5e58170c6b16dba2552c10391666f86ce7e",
+  "shared_source": {
+    "version": "0.1.25",
+    "revision": "eeb72e741199bd8574280eacb3542d8379b912f6",
+    "paths": 77,
+    "owner_ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/37762726615"
+  },
+  "source_inputs": {
+    ".github/workflows/ci.yml": "ad55f32f0a8911b71e6121a51a9044f93046d5def980cc2cbe925259248183fd",
+    "Makefile": "78c10f96ef60872b9caa05cb16bc8b9af89841977754896d27ecee4bbec96204",
+    ".shared-tooling.snapshot": "9e7b5e6380ddb4eaeac54874062886a039329c6e664dff14a4b38783533324f0",
+    "scripts/ci/archive-evidence.sh": "5be336cb3e8045b2d2d536542a94944b376ee812b03f786a90b9d962ab697f13",
+    "scripts/ci/test-evidence-archive.sh": "a3a654d1b16ff28463bc6379b210af3771016defa25e27fe4ff943e78a64ba02"
+  },
+  "evidence": {
+    "target/shared-tooling-0125-review/archive-regression.log": "2239e454efd24bbe459529142d48e500ee4983d67a3e182f74b42955e0ee27d1",
+    "target/shared-tooling-0125-review/actionlint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "target/shared-tooling-0125-review/shell-snapshot.log": "0ff2480fe76c1a6027e39ab2a45c9e41719c209183929358381cebd1d7c7fec3",
+    "target/shared-tooling-0125-review/consumer-archive-proof.json": "5f8ff6bed97f34edc316336fac8333e09c12639059d0c480ebd9f99b4d845e70",
+    "target/shared-tooling-0125-review/snapshot-proof.json": "6e2e28914a5f7f8d2258eb8f08ff6d0b07a4e30144dff9df2bfce5f991d04c4f",
+    "target/shared-tooling-0125-review/final-docs-declarations-corrected.log": "cc056c7e7cc06d5623957e377b3bbf7ad4c206fb60abcede2a197d79792553c4"
+  },
+  "passed": [
+    "Canonical archive regression",
+    "Actionlint with ShellCheck",
+    "Consumer shell and exact snapshot checks",
+    "Actual parsed collector: absent roots, early failure, late failure; real archive extraction verifies bytes, Unix filenames, modes, hidden files, symlinks and Git exclusion",
+    "Final cargo sort/fmt, documentation references, dependency declarations, exact 77-file snapshot and git diff --check"
+  ],
+  "retained_failure": {
+    "path": "target/shared-tooling-0125-review/final-docs-declarations.log",
+    "sha256": "45e099739ec411b809cf4419186def0780832cba8315f7767781650f4fc2ce7a",
+    "reason": "Documentation check preceded creation of this qualification record; missing local link target. Corrected checks recorded separately."
+  },
+  "limits": [
+    "Local archive and workflow wiring qualification; no changed-consumer hosted upload/download or native macOS acceptance. Issue #28 remains open.",
+    "No root Git writes, release, publication, sibling edits or evidence cleanup."
+  ]
+}

@@ -11,7 +11,7 @@ my $read_commit;
 
 sub read_file {
     my ($path) = @_;
-    if (defined $read_commit && $path =~ /\A(?:Cargo\.toml|Cargo\.lock|CHANGELOG\.md|docs\/release\.json|crates\/ic-backup\/(?:Cargo\.toml|src\/lib\.rs))\z/) {
+    if (defined $read_commit && $path =~ /\A(?:Cargo\.toml|Cargo\.lock|CHANGELOG\.md|docs\/release\.json|crates\/[A-Za-z0-9_-]+\/(?:Cargo\.toml|src\/lib\.rs))\z/) {
         open my $object, '-|', 'git', 'show', "$read_commit:$path"
             or die "cannot read selected release file: $path\n";
         my $text = do { local $/; <$object> };
@@ -30,6 +30,30 @@ sub write_file {
     close $fh or die "$path: $!\n";
 }
 
+# The same reviewed TOML projector selects members and names; Cargo owns validity.
+sub toml_projection {
+    my ($path, $expression) = @_;
+    my $temporary = tempdir('ic-backup-members.XXXXXX', TMPDIR => 1, CLEANUP => 0);
+    write_file("$temporary/input.toml", read_file($path));
+    open my $parser, '-|', ($ENV{YQ} // 'yq'), '-p', 'toml', '-o', 'json', $expression, "$temporary/input.toml"
+        or die "cannot project selected manifest; retained: $temporary\n";
+    my $json = do { local $/; <$parser> };
+    close $parser or die "selected manifest projection failed; retained: $temporary\n";
+    my $value = JSON::PP->new->allow_nonref->decode($json);
+    remove_tree($temporary);
+    return $value;
+}
+sub member_manifests {
+    my $members = toml_projection('Cargo.toml', '.workspace.members');
+    ref($members) eq 'ARRAY' && @$members or die "expected explicit workspace members\n";
+    my %seen;
+    for (@$members) {
+        /\Acrates\/[A-Za-z0-9_-]+\z/ && !$seen{$_}++ or die "invalid library workspace member\n";
+    }
+    return map { "$_/Cargo.toml" } @$members;
+}
+sub receipt_files { return sort ('Cargo.toml', 'Cargo.lock', 'CHANGELOG.md', member_manifests()); }
+
 sub version {
     my $manifest = 'Cargo.toml';
     my ($export, $value);
@@ -39,9 +63,12 @@ sub version {
             # exact selected manifests with their real library target for Cargo's
             # offline structural validation; never borrow working metadata.
             $export = tempdir('ic-backup-version.XXXXXX', TMPDIR => 1, CLEANUP => 0);
-            make_path("$export/crates/ic-backup/src");
-            for my $path ('Cargo.toml', 'crates/ic-backup/Cargo.toml', 'crates/ic-backup/src/lib.rs') {
-                write_file("$export/$path", read_file($path));
+            write_file("$export/Cargo.toml", read_file('Cargo.toml'));
+            for my $member (member_manifests()) {
+                (my $directory = $member) =~ s{/Cargo\.toml$}{};
+                make_path("$export/$directory/src");
+                write_file("$export/$member", read_file($member));
+                write_file("$export/$directory/src/lib.rs", read_file("$directory/src/lib.rs"));
             }
             $manifest = "$export/Cargo.toml";
         }
@@ -157,7 +184,7 @@ if ($command eq 'version') {
     parts($target);
     my $previous = version();
     open my $rewrite, '-|', $^X, 'scripts/ci/rewrite-local-lock-versions.pl',
-        'Cargo.lock', $previous, $target, 'ic-backup'
+        'Cargo.lock', $previous, $target, map { toml_projection($_, '.package.name') } member_manifests()
         or die "cannot invoke shared lockfile transformer: $!\n";
     my $lock = do { local $/; <$rewrite> };
     close $rewrite or die "shared lockfile transformer failed\n";
@@ -165,6 +192,15 @@ if ($command eq 'version') {
     my $manifest = read_file('Cargo.toml');
     $manifest =~ s/(^\[workspace\.package\]\n(?:(?!^\[).)*?^version = ")[^"]+("$)/$1$target$2/ms
         or die "cannot update workspace package version\n";
+    my $dependencies = toml_projection('Cargo.toml', '.workspace.dependencies') // {};
+    my %members = map { (my $path = $_) =~ s{/Cargo\.toml$}{}; $path => 1 } member_manifests();
+    for my $name (keys %$dependencies) {
+        my $dependency = $dependencies->{$name};
+        next unless ref($dependency) eq 'HASH' && defined($dependency->{path}) && $members{$dependency->{path}};
+        my $old = $dependency->{version} // die "internal dependency needs registry version\n";
+        $manifest =~ s/(^\Q$name\E = \{ version = ")\Q$old\E("[^\n]*$)/$1$target$2/m
+            or die "cannot update reviewed internal dependency: $name\n";
+    }
     write_file('Cargo.toml', $manifest);
     write_file('Cargo.lock', $lock);
 } elsif ($command eq 'validation-receipt' || $command eq 'validation-check') {
@@ -175,7 +211,7 @@ if ($command eq 'version') {
     if ($command eq 'validation-receipt') {
         die "validation version changed\n" unless version() eq $previous;
         my %files = map { $_ => sha256_hex(read_file($_)) }
-            qw(Cargo.toml Cargo.lock crates/ic-backup/Cargo.toml CHANGELOG.md);
+            receipt_files();
         write_file($path, JSON::PP->new->canonical->pretty->encode({
             schema=>1,source=>$source,date=>$date,previous=>$previous,candidate=>$candidate,
             gate=>'release-verify',files=>\%files,
@@ -187,10 +223,10 @@ if ($command eq 'version') {
             && $record->{previous} eq $previous && $record->{candidate} eq $candidate
             && $record->{gate} eq 'release-verify';
         die "validation files mismatch\n" unless join(',',sort keys %{$record->{files}})
-            eq 'CHANGELOG.md,Cargo.lock,Cargo.toml,crates/ic-backup/Cargo.toml';
+            eq join(',', receipt_files());
         die "invalid validation check mode\n" unless $mode eq 'original' || $mode eq 'prepared';
         for my $file (keys %{$record->{files}}) {
-            next if $mode eq 'prepared' && $file ne 'crates/ic-backup/Cargo.toml';
+            next if $mode eq 'prepared' && $file !~ m{\Acrates/[^/]+/Cargo\.toml\z};
             die "validated input changed: $file\n" unless sha256_hex(read_file($file)) eq $record->{files}{$file};
         }
     }
@@ -209,7 +245,7 @@ if ($command eq 'version') {
 } elsif ($command eq 'receipt') {
     my ($source, $date) = @args;
     my %hashes = map { $_ => sha256_hex(read_file($_)) }
-        qw(Cargo.toml Cargo.lock crates/ic-backup/Cargo.toml CHANGELOG.md);
+        receipt_files();
     my $receipt = {
         schema => 1, version => version(), source => $source, date => $date,
         gate => 'release-verify', files => \%hashes,
@@ -227,7 +263,7 @@ if ($command eq 'version') {
     die "invalid release date\n" unless $receipt->{date} =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/;
     my @files = sort keys %{$receipt->{files}};
     die "unexpected receipt files\n"
-        unless join(',', @files) eq 'CHANGELOG.md,Cargo.lock,Cargo.toml,crates/ic-backup/Cargo.toml';
+        unless join(',', @files) eq join(',', receipt_files());
     for my $path (@files) {
         die "release file changed after validation: $path\n"
             unless sha256_hex(read_file($path)) eq $receipt->{files}{$path};

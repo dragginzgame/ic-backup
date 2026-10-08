@@ -29,6 +29,9 @@
 //! and original attempt allowances, deriving journal authority under the full plan digest.
 //! Pure execution progress joins exact retained journals to the original plan and
 //! projects causal Applied evidence, pending attempts and exhaustion without dispatch.
+//! Original-plan-bound local progress reopens every retained journal. Planned
+//! reservations require complete original evidence and Applied mutation prerequisites,
+//! retaining the existing spending owner without dispatching or resetting allowance.
 //! The IC request boundary encodes closed host-ingress management operations and
 //! binds exact method/routing/Candid bytes to original mutation or observation digests.
 //! Codec qualification does not establish IC effects or fresh execution authority.

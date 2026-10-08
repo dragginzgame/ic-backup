@@ -1,0 +1,7 @@
+{
+  "revision": "5053d3585eb829eb8e75ad1099ad8a4a19721099",
+  "path": "ic-agent/src/agent/mod.rs",
+  "sha256": "ef5dcac4ad583db0148efbca1984708d1ac9a87e6d1ca0f44206a3c8b6f6bf3f",
+  "official_blob_matches_published_source": true,
+  "live_probe": "Not qualified: local simulator failed socket admission in restricted sandbox; isolated session interrupted and evidence retained. No root dependency or backend selection changed."
+}

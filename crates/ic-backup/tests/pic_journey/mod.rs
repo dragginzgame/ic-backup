@@ -1,10 +1,7 @@
 //! First real management-service journey; product terminal/release remains separate.
 
 mod backend;
-mod icp;
 mod recovery;
-
-pub(super) use icp::generic_management_route;
 
 use backend::Backend;
 use ic_backup::{

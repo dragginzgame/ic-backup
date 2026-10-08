@@ -194,7 +194,7 @@ or restore behavior.
 The following product components are still missing:
 
 - capture and restore runners;
-- an authenticated Internet Computer transport;
+- application-qualified transport/provider integration;
 - the standalone command-line application;
 - application-specific membership, authority and consistency adapters; and
 - complete product and application recovery qualification on real IC backends.
@@ -207,12 +207,12 @@ belongs here. Canic continues to own its Fleet discovery, authorization and
 application-consistency integration. Other applications can provide their own
 adapters without depending on Canic.
 
-The proposed package layout is:
+The package layout is:
 
 | Package | Intended responsibility | Status |
 | --- | --- | --- |
 | `ic-backup` | Generic planning, records, policy and local backup mechanisms | Implemented in part |
-| `ic-backup-icp` | Internet Computer transport | Design name; not yet created |
+| `ic-backup-agent` | Direct single-update Rust IC transport | Implemented; isolated local qualification |
 | `ic-backup-cli` | Standalone `ic-backup` command | Design name; not yet created |
 
 Package names and availability must be checked before publication. New packages
@@ -235,7 +235,8 @@ make test
 native library and repository-tooling gate. A real PocketIC integration target
 qualifies single-canister capture, complete streamed transfer and same-ID restore,
 including deliberately lost replies. See [its exact scope](docs/pocketic-qualification.md).
-Production transport, workflows and application qualification remain unfinished.
+Direct Agent transport has separate [HTTP/gateway qualification](docs/agent-transport.md).
+Complete workflows and application qualification remain unfinished.
 
 See [contribution guidance](CONTRIBUTING.md) for topic branches, PR delivery and
 the separately authorized release workflow.

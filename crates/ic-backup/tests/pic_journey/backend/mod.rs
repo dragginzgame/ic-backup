@@ -46,14 +46,6 @@ pub(super) struct Backend {
 
 impl Backend {
     pub fn new() -> Self {
-        Self::new_with_network(false)
-    }
-
-    pub fn new_with_nns() -> Self {
-        Self::new_with_network(true)
-    }
-
-    fn new_with_network(nns: bool) -> Self {
         let root = crate::support::temp_root("ic-backup-pocketic");
         let binary = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.tools/ic/bin/pocket-ic")
@@ -79,14 +71,11 @@ impl Backend {
             .expect("installed PocketIC checksum");
         assert_eq!(server_digest.hash(), expected);
         fs::write(root.join("server.sha256"), server_digest.hash()).unwrap();
-        let mut builder = PocketIcBuilder::new()
+        let builder = PocketIcBuilder::new()
             .with_server_binary(binary)
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
-        if nns {
-            builder = builder.with_nns_subnet();
-        }
         let pic = builder.build();
         let wasm = wat::parse_str(include_str!("../state.wat")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);

@@ -24,17 +24,17 @@ flowchart TD
     GenericCLI[ic-backup standalone command] --> Engine[ic-backup library]
     CanicCLI[Canic CLI and Fleet integration] --> Engine
     Other[Other application integrations] --> Engine
-    GenericCLI --> ICP[ic-backup-icp transport]
+    GenericCLI --> Agent[ic-backup-agent transport]
     CanicCLI --> CanicAdapter[Canic-owned authority and consistency adapter]
-    ICP --> Management[IC management APIs through selected ICP CLI]
+    Agent --> Management[IC management APIs through direct Rust ic-agent]
     Engine --> Ports[Typed executor and application ports]
     CanicAdapter --> Ports
-    ICP --> Ports
+    Agent --> Ports
 ```
 
 The arrows describe dependency ownership, not Rust trait syntax. The library
 defines ports; implementations depend on those ports. The engine must not depend
-on the ICP package, Canic adapter or downstream application libraries.
+on the Agent transport package, Canic adapter or downstream application libraries.
 
 ## 2. Evidence and starting conditions
 
@@ -92,16 +92,16 @@ Local primary references, read-only outside this repository:
 Verify the selected backend against the current [IC snapshot
 guide](https://docs.internetcomputer.org/guides/canister-management/snapshots/),
 [management interface specification](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
-and [ICP CLI reference](https://cli.internetcomputer.org/1.5/reference/cli/).
-These were inspected on 2026-10-04; the CLI link names the inspected documentation
-lane, not this repository's selected binary pin.
+and the selected [Agent API](https://docs.rs/ic-agent/0.49.2/ic_agent/).
+The platform references were inspected on 2026-10-04; the Agent API/source and
+locked transport are separately reviewed in the current [qualification](agent-transport.md).
 
 The snapshot guide describes capture of code and application memory, controller
 authority for creation/restoration, visibility-controlled reads and local
 download/upload. The interface additionally describes optional timer/hook
 metadata and warns that metadata upload replacement removes the predecessor
 snapshot before all data is uploaded. Stop targets and qualify the actual
-backend's capabilities; do not treat CLI help or illustrative examples as proof
+backend's capabilities; do not treat API availability or illustrative examples as proof
 of complete, durable transfer. These are upstream facts, separate from our
 stronger operation-safety requirements below.
 
@@ -160,7 +160,7 @@ own qualified same-release procedure before changing the executable contract.
 | Backup/restore plans and runners | `ic-backup`; pure policy plus workflow over injected effects |
 | Backup discovery helpers | Explicit-set and graph validation here; live Fleet membership stays Canic-owned |
 | Local prune and layout inspection | Move generic behavior from Canic CLI into the library |
-| ICP snapshot/status/lifecycle subprocess calls | `ic-backup-icp`; extract narrowly without importing the Host crate |
+| ICP snapshot/status/lifecycle subprocess calls | Retired destination; direct `ic-backup-agent` consumes the existing exact wire codecs without importing Canic Host |
 | Generic standalone CLI | `ic-backup-cli`; design around explicit inventory and plan digests |
 | Fleet resolution and terminal Ensure state | Remain in Canic Host |
 | Coordinator registry and Root authority | Remain in Canic control plane/adapter |
@@ -189,14 +189,15 @@ immutable declared operation plans with pure retained-journal progress and a clo
 IC host-ingress request codec and typed membership/control ports with pure result admission
 are implemented; see
 [its maintained boundary](extraction-boundary.md) and
-[fresh source provenance](extraction-source.json). Capture/restore runners and
-transport are not implemented. Create the remaining proposed layout with its
+[fresh source provenance](extraction-source.json). Capture/restore runners are not implemented. Direct single-update
+transport is implemented in `ic-backup-agent`; full workflow/application qualification
+remains separate. Create the remaining proposed layout with its
 implementation rather than as empty stubs:
 
 ```text
 crates/
   ic-backup/         # generic host library
-  ic-backup-icp/     # pinned ICP subprocess adapter
+  ic-backup-agent/   # direct signed single-update Rust transport
   ic-backup-cli/     # standalone binary named ic-backup
 tests/              # cross-package installed-product and PocketIC journeys
 fixtures/           # framework-neutral canisters; no consumer database
@@ -610,6 +611,16 @@ unique transfer progress. These in-memory diagnostics start empty on reopen and
 never enter records, hashes, policy admission, spending or terminal evidence.
 See [the diagnostic boundary](extraction-boundary.md#local-ic-snapshot-diagnostics).
 
+Original-plan-bound local execution admission now joins persisted plans and every
+retained attempt journal through a sequential-lock reader shared with settlement.
+The opt-in planned mutation/observation reservations preserve the existing spending
+owner and reject missing evidence; mutations require retained Applied prerequisites.
+Local progress/reopen changes no accounting or references. Fresh permissions,
+backend dispatch custody, receipt authenticity and application safety remain
+integration-owned. This boundary reduces runner-side reconstruction without
+installing a scheduler or choosing another transport.
+See [the implemented admission](extraction-boundary.md#original-plan-bound-retained-execution-admission).
+
 ## 9. Backup workflow
 
 1. Resolve the explicit network, caller, inventory and release inputs. Compile
@@ -895,54 +906,60 @@ inventory cannot replenish authority. A resumed operation uses the same limits;
 a changed plan is a separately reviewed successor after unresolved effects are
 classified.
 
-For an opaque ICP subprocess, a process-count limit does not bound its internal
-upload calls or retries. Qualify resumability, retry controls and transfer bounds
-of the exact backend. If it cannot enforce a requested limit, reject that mode
-before effects or implement the necessary granular transport; do not advertise a
-hard cycle cap from a best-effort estimate. Report conservative reservations,
-observed debit and unavailable accounting separately. Background/idle burn and
-external deposits are not evidence of a snapshot-specific payment.
+The selected direct transport submits one already reserved exact update with no
+automatic retry or request-status polling. A signed request ID and exact envelope
+must be retained before dispatch. Accepted/processing responses and failures keep
+the journal pending; any independent recovery observation needs its own original
+reservation. A per-HTTP timeout is not a total workflow deadline or a hard cycle cap.
+Report conservative reservations, observed debit and unavailable accounting
+separately. Background/idle burn and external deposits are not evidence of a
+snapshot-specific payment.
 
 Do not top up automatically when capacity or cycle runway is inadequate. Retain
 evidence and return an actionable typed failure. No whole-estate cycle conservation
 claim follows from local bundle integrity. Canic's controller/reset/conservation
 proof remains Canic-owned, and snapshots cannot stand in for that authority.
 
-## 14. ICP transport and subprocess contract
+## 14. Direct Agent transport contract
 
-The pinned 1.6.0 generic-call path has now been probed against a real isolated
-PocketIC gateway: its management receiver cannot carry the separate effective
-target and returns a replica routing refusal. A successful dedicated status
-control on the same endpoint/root/controller and unchanged pending original
-journal distinguish that refusal from setup or settled-effect proof. See
-[the qualification scope](pocketic-qualification.md#pinned-cli-capability-probe)
-and [consumer acceptance](https://github.com/dragginzgame/ic-backup/issues/25).
-No production adapter is installed; routing, authenticated granular calls,
-internal retries and original command/descendant custody need qualification
-before B3 can accept a backend.
+The maintainer selected `ic-backup-agent` as the sole product transport and retired
+ICP subprocess extraction/probing. Historical routing evidence remains in
+[the qualification history](pocketic-qualification.md#pinned-cli-capability-probe).
+No compatibility backend or fallback is retained. The common shared IC tool
+inventory remains canonical; installation does not select a product backend.
 
-Extract only relevant status, inventory, stop/start, snapshot capture/download/
-upload/load and capability qualification. Do not import Canic Host's deploy,
-Fleet Ensure, build, funding, enrollment or frontend machinery.
+The implemented async package accepts only existing original reserved mutation,
+recovery observation, transfer read, upload, upload observation/readback and
+application fence-acquisition requests. It reuses their exact receiver, effective
+target, method, replicated-update argument bytes and reply bounds. The transport
+checks exact plan context and actual signer without inferring network/release
+identity from an endpoint. Integrations provision the trusted root externally and
+qualify current permissions, prerequisites, stable bytes and never-dispatched custody.
 
-Pin the selected binary version and verified installation artifacts. Record its
-capability profile with validation evidence. Build argv arrays directly; never
-execute a shell assembled from labels, paths, principals or user-provided strings.
-No arbitrary command/program hook in a plan. Human configuration may choose an
-explicit verified binary path; the resolved identity is retained for the run.
+Configure one HTTPS origin or literal loopback HTTP origin, no URL credentials,
+path/query/fragment, explicit trusted root and finite 1..300s HTTP timeout/ingress
+expiry. The fixed client uses HTTP/1, disables proxies, redirects, HTTP/TCP retries
+and bypasses Agent's default 429/503 retry middleware. HTTP bodies are bounded at
+4 MiB, signed envelopes at 3 MiB and replies at their existing method-specific limits.
+No root fetch, query substitution, background polling or additional management call
+is performed. Transport timeout alone does not bound a complete workflow.
 
-Structured output is the machine boundary. Tolerate documented additive upstream
-informational fields without treating unknown identity/outcome fields as proof.
-Validate exact response target and closed outcome types. Bound stdout/stderr,
-arguments, scratch files and process deadlines, and keep parser errors distinct
-from invocation failure. Temporary argument cleanup is secondary: a cleanup
-warning cannot replace a valid reply or the original transport failure.
+Preparation signs without network traffic. Retain the exact signed bytes and
+request ID with original plan/reservation before consuming preparation in one
+submission. There is no envelope re-import/reissue API. A successful certificate
+reply is passive evidence for canonical decoding/association, not an automatic
+Applied/NotApplied receipt. Accepted/processing returns Pending without waiting;
+errors, cancellation and lost replies keep original spending and obligations.
+Recovery is independently admitted and accounted, never a blind repeat call.
 
-Propagate a custody descriptor/handle to the process as needed. Timeout, kill or
-lost stdout is not evidence that a remote effect failed. Retain dispatch identity,
-request evidence and uncertainty until it can be reconciled. A subprocess exit
-must not silently clear the source-artifact reference while another inherited
-child still holds command custody.
+Actual Linux local HTTP checks cover one-request admission, errors, disconnect,
+timeout, body bounds, redirects and no implicit follow-up. Real PocketIC gateway
+checks cover capture, metadata, full 1 MiB heap/stable reads, upload/load/start,
+same-ID state restoration, discarded replies and wrong trusted-root failure.
+This qualifies the isolated fixture and transport boundary, not arbitrary application
+fencing, installed Canic adapters, complete runners or terminal/reference release.
+Native consumer macOS evidence remains separate. See [the current scope](agent-transport.md)
+and [transport acceptance](https://github.com/dragginzgame/ic-backup/issues/25).
 
 ## 15. Standalone CLI and configuration
 
@@ -1106,7 +1123,7 @@ the remote exists; this table is the design sequence.
 | --- | --- | --- |
 | B1 — inventory and contract freeze | Refresh exact source/provenance; trace consumers and unfinished recovery ownership; freeze v1 records, ports, hash/authority/consistency/budget rules and lost-response methods | Reviewed machine contracts and backend capability evidence; every old surface has an owner/disposition; no unresolved claim hidden behind a flag |
 | B2 — generic library | Import and reshape artifact, journal, persistence, policy and runner mechanisms with same-ID scope; move generic local retention into library | Targeted native interruption/custody/retention tests; no Canic imports or framework-required schema; external library consumer compiles |
-| B3 — real transport | Narrow pinned ICP adapter with typed effects, complete metadata transfer, process custody, bounded retries and uncertainty handling | Process tests plus real PocketIC capture/upload/load/interruption evidence; incapable backend modes reject before effects |
+| B3 — real transport | Direct Rust Agent adapter with exact signed ingress, complete metadata transfer, exclusive dispatch custody, no hidden retries/polling and uncertainty handling | HTTP boundary tests plus real PocketIC capture/upload/load/interruption evidence; incapable backend modes reject before effects |
 | B4 — standalone product | TOML selection, review/apply CLI, status/verify/resume/prune UX and operational docs | Installed external-workspace single-canister journey and weaker multi-canister capture; same-operation effect-free replay; stdout contract |
 | B5 — Canic integration | Separately authorized Canic adapter, fresh topology preflight and hard cut to published library; retain framework qualification | Actual fresh Canic backup and same-release restore through public commands; dependency/source removal inventory closed; no regressions in recovery |
 | B6 — release closeout | Exact-source package/artifact qualification, full owner-selected release gate, final scope/docs/license/provenance review | Independent usability and complete promised scope demonstrated; limitations explicit; maintainer chooses publication |
@@ -1218,8 +1235,7 @@ load/start, including reserved recovery of deliberately lost capture/allocation/
 and stop/load/start replies. Complete separately accounted fresh snapshot checks
 qualify stopped post-load state before restart. A lost load-status observation
 retains both reservations and stops without a receipt, retry or restart.
-It supplies fixture-specific platform evidence while B3's production ICP
-transport and full executable workflows remain proposed. Canic adoption and B5
+It supplies fixture-specific platform evidence while full executable workflows and application-qualified transport adoption remain separate. Canic adoption and B5
 remain independent. See [the exact scope](pocketic-qualification.md); this does not
 complete the multi-canister, process/network-loss, application-fence, installed
 consumer or terminal/reference-release qualification families above.

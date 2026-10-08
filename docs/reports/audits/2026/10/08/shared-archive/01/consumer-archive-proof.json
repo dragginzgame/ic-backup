@@ -1,0 +1,32 @@
+{
+  "workflow_sha256": "ad55f32f0a8911b71e6121a51a9044f93046d5def980cc2cbe925259248183fd",
+  "helper_sha256": "5be336cb3e8045b2d2d536542a94944b376ee812b03f786a90b9d962ab697f13",
+  "actual_inline_collector": true,
+  "unchanged_uploader_and_retention": true,
+  "cases": [
+    {
+      "case": "no-roots",
+      "status": "passed",
+      "archive_created": false
+    },
+    {
+      "case": "early",
+      "status": "passed",
+      "archive_sha256": "b7f679be9770ded4220f7a4b8a6e6cd2114d95b63ce06a55e103693c7c64dd23",
+      "explicit_roots": [
+        "target/ci-fixtures"
+      ]
+    },
+    {
+      "case": "late",
+      "status": "passed",
+      "archive_sha256": "ea8c0714ed552f2920c5f8a55e9009f64cfdfb6f10d653f14a3431a1856afbbd",
+      "explicit_roots": [
+        "target/ci-fixtures",
+        "target/validation-failures",
+        "target/shared-tooling-tests.retained"
+      ]
+    }
+  ],
+  "qualification": "Local Linux real tar round trips and parsed workflow wiring only. No hosted consumer upload/download or native macOS execution; issue #28 stays open."
+}

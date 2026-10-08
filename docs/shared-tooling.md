@@ -49,7 +49,56 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 75-file snapshot selects committed Shared Tooling 0.1.23 at
+The current 77-file snapshot selects committed Shared Tooling 0.1.25 at
+`eeb72e741199bd8574280eacb3542d8379b912f6`. Exact owner
+[CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37762726615) passes
+Linux and both native macOS hosts, including hosted evidence round trips.
+The canonical exporter explicitly adds the evidence archive helper and regression;
+all previous paths remain. With the prior adoption still uncommitted, export ran
+in a clean isolated consumer, then exact prior manifest bytes/modes were admitted
+before propagating canonical output. No root Git/index or vendored-source patch
+was used. Every resulting committed blob/mode matches its 77-file source.
+
+Consumer CI archives its existing explicit fixture/failure roots before the pinned
+v4 upload, preserving legal Unix filenames, modes, hidden files and symlinks while
+excluding Git metadata. The uploader, artifact name and seven-day retention stay
+selected. The canonical archive regression runs in normal tooling and macOS system
+Bash checks. Real Linux tar round trips of the actual inline collector cover no
+roots, early and late retained failures; actionlint and ShellCheck pass.
+[The review](shared-tooling-review.json) binds these inputs. Consumer hosted/native
+acceptance remains [#28](https://github.com/dragginzgame/ic-backup/issues/28),
+separate from upstream's green run. The same-OID ref-type race remains upstream
+#62; no new release/ref authority follows from archiving.
+
+The earlier 75-file snapshot selected committed Shared Tooling 0.1.24 at
+`e9bfdc54c0daefc3dbbdfe091e5665dca5468eb3`. The canonical exporter runs from a
+clean isolated checkout and preserves the existing selection. Every blob and
+executable mode matches source; sixteen paths change. Common baseline/rules are
+unchanged. Refresh now checks declared companions before writing any destination,
+and the tooling LOC owner includes `bin/` and unborn repositories.
+
+Confirmed direct releases and completed resume refresh the matching configured
+upstream when fetch/push destinations agree. The update preserves static symbolic
+refs and concurrent changed OIDs; a same-OID ref-type race remains under
+[shared #62](https://github.com/dragginzgame/shared-tooling/issues/62). The new
+archive helper is deliberately unselected while its path/output admission repair
+remains uncommitted under [shared #59](https://github.com/dragginzgame/shared-tooling/issues/59).
+Existing direct delivery and consumer failure-collection roots remain selected.
+
+[The adoption review](shared-tooling-review.json) binds focused consumer checks
+and exact source evidence under `target/upstream-071-review`. Focused consumer
+release-adapter/runner, logger/retention, LOC, exporter/companion, snapshot, shell,
+dependency declarations, formatting and documentation checks pass on Linux.
+Upstream portable regressions pass on all three native hosts; Intel/Linux complete
+jobs and lint/security pass. Apple Silicon's later hosted artifact download fails
+under [shared #63](https://github.com/dragginzgame/shared-tooling/issues/63).
+Current consumer macOS acceptance remains separate. Published consumer 0.7.0
+[CI](https://github.com/dragginzgame/ic-backup/actions/runs/37753291659) passes all
+three native hosts for the prior 0.1.23 snapshot. Historical reviews below retain
+their original inputs and limitations. This compatible refresh joins the pending 0.8.0 transport hard cut;
+package/receipt remain 0.7.0.
+
+The earlier 75-file snapshot selected committed Shared Tooling 0.1.23 at
 `0ba0ad00ed94848e54ecc82629b6b7873b7284c0`, matching the remotely reviewed main.
 The canonical committed exporter runs from a clean isolated checkout; all prior
 paths remain and every exported blob/mode matches the exact remote source.

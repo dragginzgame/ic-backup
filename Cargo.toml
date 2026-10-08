@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/ic-backup"]
+members = ["crates/ic-backup", "crates/ic-backup-agent"]
 resolver = "3"
 
 [workspace.package]
@@ -13,9 +13,10 @@ publish = ["crates-io"]
 [workspace.dependencies]
 candid = "0.10"
 command-fds = "=0.3.3"
-ic-host-artifacts = { version = "0.5", default-features = false }
-ic-host-fs = { version = "0.5", default-features = false }
-ic-host-process = { version = "0.5", default-features = false }
+ic-agent = { version = "0.49.2", default-features = false }
+ic-backup = { version = "0.7", path = "crates/ic-backup" }
+ic-host-artifacts = { version = "0.7", default-features = false }
+ic-host-fs = { version = "0.7", default-features = false }
 ic-management-canister-types = "=0.11.0"
 ic-metrics = { version = "0.2.4", default-features = false }
 ic_principal = { version = "=0.1.5", default-features = false, features = [
@@ -27,6 +28,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10.9"
 thiserror = "2.0"
+tokio = { version = "1.50", features = ["rt-multi-thread", "macros"] }
 wat = "1.227"
 
 [workspace.lints.rust]

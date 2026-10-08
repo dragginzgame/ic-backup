@@ -56,7 +56,8 @@ See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
 [IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck and
 macOS GNU Make/flock remain separate product prerequisites. The test-only PocketIC client
 uses the explicitly prepared server for [real single-canister qualification](pocketic-qualification.md).
-Production transport/runners remain unimplemented; installing tools alone establishes
+Direct Agent transport is implemented separately; runners remain unimplemented.
+Installing tools alone establishes
 no backend or application qualification.
 
 The optional shared `make install-rust-tools` and `make rust-tools-check` prepare
@@ -119,10 +120,11 @@ prove application safety or establish that a remote operation succeeded.
 ## Detailed component ownership
 
 The root `Cargo.toml` owns the workspace, package metadata, dependency versions
-and shared lints. The sole member is `crates/ic-backup`. It provides the local
+and shared lints. The members are `crates/ic-backup` and `crates/ic-backup-agent`. It provides the local
 artifact and persistence mechanisms described in
 [the implemented extraction boundary](extraction-boundary.md). Capture/restore
-runners and transport remain unimplemented. Pure checksum records belong to
+runners remain unimplemented; [Agent transport](agent-transport.md) owns bounded
+async submission. Pure checksum records belong to
 model; filesystem operations belong to ops.
 `ops::artifacts::checksum_relative_files` also composes a directory checksum from
 owned `(PathBuf, ArtifactChecksumRecord)` entries without filesystem IO. It accepts
@@ -653,7 +655,7 @@ and configured jobs are not evidence that the pending native macOS runs passed.
 ## Commands and build ownership
 
 `make help` lists the command family. `check`, `clippy`, `test`, `doc`,
-`check-msrv` and `package` select `ic-backup` explicitly. `fmt` formats the
+`check-msrv` and `package` select both libraries explicitly. `fmt` formats the
 workspace after `cargo sort --workspace`; `fmt-check` independently checks both
 manifest ordering and Rust formatting with the same pinned cargo-sort version.
 `shell-check`, `release-check` and `hooks-check`

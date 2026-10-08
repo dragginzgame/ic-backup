@@ -258,9 +258,9 @@ printf 'cargo %s\n' "$*" >> "$TEST_LOG"
 case "$*" in
     'locate-project --workspace --message-format plain --manifest-path '*) exec "$TEST_REAL_CARGO" "$@" ;;
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
-    'check --offline --locked -p ic-backup --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
+    'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
-    'publish --locked --registry crates-io -p ic-backup'|'publish --locked --registry crates-io -p ic-backup --dry-run')
+    'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent'|'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent --dry-run')
         if [[ "${TEST_PUBLISH_FAIL:-0}" == 1 ]]; then exit 101; fi
         echo publish >> "$TEST_EFFECTS" ;;
     *) echo "unsupported Cargo substitute: $*" >&2; exit 97 ;;
@@ -422,6 +422,31 @@ test_preparation() {
     cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
     local backups=(target/release-backup.*)
     [[ -d "${backups[0]}" ]]
+    assert_cache_retained
+}
+test_multi_package_preparation() {
+    perl -pi -e 's/members = \["crates\/ic-backup"\]/members = ["crates\/ic-backup", "crates\/ic-backup-agent"]/' Cargo.toml
+    printf '\n[workspace.dependencies]\nic-backup = { version = "0.1", path = "crates/ic-backup" }\n' >> Cargo.toml
+    mkdir -p crates/ic-backup-agent/src
+    printf '[package]\nname = "ic-backup-agent"\nversion.workspace = true\nedition.workspace = true\n[dependencies]\nic-backup.workspace = true\n' > crates/ic-backup-agent/Cargo.toml
+    printf '// Selected transport library fixture.\n' > crates/ic-backup-agent/src/lib.rs
+    printf '\n[[package]]\nname = "ic-backup-agent"\nversion = "0.1.0"\ndependencies = ["ic-backup"]\n' >> Cargo.lock
+    perl scripts/release/release-data.pl validation-receipt target/multi.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.2.0
+    perl scripts/release/release-data.pl prepare-version 0.2.0
+    perl -pi -e 's/0\.1\.1/0.2.0/' CHANGELOG.md
+    perl scripts/release/release-data.pl finalize 0.2.0 2026-10-05 0.1.0
+    perl scripts/release/release-data.pl receipt "$TEST_SOURCE" 2026-10-05
+    perl scripts/release/release-data.pl validation-check target/multi.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.2.0 prepared
+    perl scripts/release/release-data.pl verify
+    jq -e '.files | has("crates/ic-backup-agent/Cargo.toml")' docs/release.json
+    rg -F 'ic-backup = { version = "0.2.0", path = "crates/ic-backup" }' Cargo.toml
+    [[ "$(rg -c 'version = "0.2.0"' Cargo.lock)" == 2 ]]
+    mkdir -p "target/commits/$TEST_SOURCE/files"
+    cp Cargo.toml Cargo.lock CHANGELOG.md "target/commits/$TEST_SOURCE/files/"
+    cp -R crates docs "target/commits/$TEST_SOURCE/files/"
+    printf 'invalid working member TOML\n' >> crates/ic-backup-agent/Cargo.toml
+    perl scripts/release/release-data.pl verify --commit "$TEST_SOURCE"
+    expect_failure perl scripts/release/release-data.pl validation-check target/multi.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.2.0 prepared
     assert_cache_retained
 }
 test_lockfile_rejection() {
@@ -734,6 +759,7 @@ for mode in comments selected duplicate failed-output empty failed-parser; do ru
 for invalid in conflict duplicate dated historical-duplicate competing same-date unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
 for mode in empty missing imported bumped failed-output empty-output; do run_case "shared-notes-$mode" test_shared_changelog "$mode"; done
 run_case preparation test_preparation
+run_case multi-package-preparation test_multi_package_preparation
 for failure in mismatch duplicate missing failed-output; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done
 run_case staging test_staging

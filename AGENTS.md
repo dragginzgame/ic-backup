@@ -58,8 +58,11 @@ into an issue tracker or release authority.
   Preserve synchronized pre-publication and durable-completion barriers. The
   public `PersistenceError::Publication` retains original producer, cleanup and
   visibility evidence; no local-write error grants paid retry or resets spending.
-  The selected Host 0.5 registry graph changes the exposed publication-error Rust
-  identity, requiring the 0.7.0 minor draft. Host's child-group cleanup does not
+  The Host 0.5 error identity was delivered in 0.7.0. The externally selected
+  Host 0.7 graph changes that exposed Rust identity again; the pending 0.8.0
+  transport hard cut covers it. Artifacts/fs source is unchanged from 0.5.2;
+  the now-unused process dependency is retired with its sole ICP probe caller.
+  Local bounded capture retains its direct-child semantics. Group cleanup does not
   replace inherited descriptor custody or prove descendant quiescence; bounded
   test capture retains its separate direct-child semantics.
 
@@ -90,7 +93,7 @@ into an issue tracker or release authority.
   release admission before that API is added.
 - Command custody now uses owned descriptor inheritance, exact v1 filesystem
   identity records and fresh non-spawning quiescence guards. Preserve the
-  unsafe-code prohibition. These local contracts do not qualify an ICP backend
+  unsafe-code prohibition. These local contracts do not qualify an authenticated IC backend
   or grant terminal/reference-release or paid-call authority.
 - Local download journals now retain immutable snapshot identity, model-owned
   four-state transitions and derived resume views. Persistence guards borrow
@@ -127,6 +130,14 @@ into an issue tracker or release authority.
   prerequisites; projections cannot prove cross-journal dispatch chronology,
   authenticate receipts, grant fresh authority or establish terminal/reference release.
   Keep unused aggregate headroom out of assigned allowance totals.
+- Local execution progress now reopens the exact persisted plan and complete original
+  journals through one sequential-lock reader shared with settlement replay.
+  Plan-bound mutation/observation reservations retain the selected journal lock and
+  delegate spending to the existing attempt owner. Missing evidence never supplies
+  zero consumption; mutation prerequisites need retained Applied outcomes. Preserve
+  unchanged original limits, pending replies, source references and obligations.
+  No new schema, provider, fresh authority, cross-journal chronology, terminal proof
+  or dispatch/release permit follows. Hold no other attempt guards at admission.
 - The IC request boundary now owns closed host-ingress management argument encoding
   and exact receiver/routing/method/update-mode/byte digests. Preserve 256 raw snapshot
   bytes, 4 KiB derived arguments and 8 KiB JSON IO bounds. Capture creates a new
@@ -492,15 +503,21 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   terminal/reference-release qualification is installed. See
   [the exact qualification scope](docs/pocketic-qualification.md).
 
-- A test-only pinned ICP CLI probe now retains a real local management routing
-  refusal under the original plan/pending reservation. Reuse published
-  `ic-host-process` for executable admission, bounded direct argv and typed exit
-  evidence; isolate settings with the pinned CLI's portable `ICP_HOME` override.
-  A successful dedicated status control and independent Running oracle do not
-  settle/refund the original update. Generic management routing is unsupported;
-  process count grants no internal HTTP retry bound or descendant custody.
-  No production provider, transport, executable workflow or release authority
-  follows. Preserve original journals and raw simulator/process evidence.
+- The maintainer selected direct Rust `ic-agent` transport and retired the ICP
+  backend/probe as a hard cut. `crates/ic-backup-agent` owns actual bounded async
+  single-update submission, depending only on the generic core and registry Agent.
+  Use exact existing reserved request/payload owners and recheck the current journal.
+  Configure explicit exact context/caller, fixed HTTPS or literal loopback HTTP
+  origin, externally trusted root and finite 1..300s timeout/expiry. Disable proxies,
+  redirects, HTTP/TCP retries and implicit waits/polling/root fetching. Preserve
+  4 MiB HTTP, 3 MiB signed-envelope and smaller original method reply bounds.
+  Retain original plan/reservation plus exact signed envelope/request ID before
+  consuming preparation. No envelope re-import/reissue or arbitrary call hook exists.
+  Certificate-verified replies are passive, not automatic receipts; pending/error/
+  cancellation/lost replies retain spending and all original obligations/references.
+  Real local HTTP and PocketIC fixtures qualify transport, not fresh permissions,
+  never-dispatched custody, application safety, full runners or terminal release.
+  Old ICP logs/journals remain historical evidence; no ICP backend fallback remains.
 
 ## Tracking
 
@@ -585,7 +602,6 @@ Product transport/runtime qualification stays separate from executable version c
   authority structs and predicates instead of long mixed boolean expressions.
 - Prefer `#[expect(...)]` for justified lint suppression.
 - Human-authored configuration is TOML. JSON is for machine records and output.
-  Upstream ICP YAML stays inside the ICP integration boundary.
 - CLI commands and help are ASCII lexicographically ordered. Help pages have
   at most three representative examples. JSON stdout contains one structured
   result; progress and redacted diagnostics go to stderr.

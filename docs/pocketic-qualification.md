@@ -1,5 +1,9 @@
 # Real single-canister snapshot qualification
 
+Current direct Agent gateway qualification is documented in [agent-transport.md](agent-transport.md).
+The earlier 11-case results below retain their original source/graph; the maintained
+core target now has ten cases after retiring the ICP probe.
+
 A fresh Linux run on the maintainer-selected published Host 0.5.0 graph passes
 all 11 registered journeys, including the actual bounded ICP capture/refusal path.
 The pending 0.7.0 draft changes the exposed Host publication-error Rust identity;
@@ -18,6 +22,10 @@ qualifies the isolated fixture and safe pending refusal, not an installed
 production transport, arbitrary application or downstream Canic integration.
 
 ## Pinned CLI capability probe
+
+Historical qualification: the executable probe is retired by the Agent hard cut.
+Its source-bound logs and original journals remain retained; this section records
+the earlier result. Current transport evidence is in [the Agent scope](agent-transport.md).
 
 The same integration target also probes the installed ICP CLI 1.6.0 against a
 real HTTP gateway on a separate owned application + NNS instance. It verifies
@@ -190,7 +198,7 @@ registered case names, the reviewed backend and exact scope. Linux results do no
 supply native macOS qualification. The original journey was delivered under
 [issue #17](https://github.com/dragginzgame/ic-backup/issues/17); current transfer-read
 adoption is tracked in [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).
-Production ICP transport, executable workflows/CLI, Canic adaptation, application-specific
+Application-qualified Agent integration, executable workflows/CLI, Canic adaptation, application-specific
 lifecycle recovery, fencing and terminal/reference-release qualification remain
 separate. The inspected
 [management snapshot contract](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)

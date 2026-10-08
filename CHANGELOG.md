@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0]
+
+- **Breaking:** Select direct Rust `ic-backup-agent` transport and retire the ICP backend/probe and its unused process dependency. Submit exact original reserved updates with explicit endpoint/caller/root trust, no retries or automatic polling, and retained signed ingress identity. Pending/lost replies preserve original spending; integrations still own fresh permissions and application safety ([#25](https://github.com/dragginzgame/ic-backup/issues/25)).
+- Include both libraries in native CI, packaging and explicit publication; release preparation binds both member manifests and advances internal requirements together.
+
+- Add original-plan-bound execution progress and durable attempt reservations. Require every retained journal and Applied prerequisites before consuming allowance; preserve pending recovery after lost replies ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.1.25 to refresh matching local tracking refs after confirmed direct release or completed resume, reducing stale ahead-of-origin reports ([shared #62](https://github.com/dragginzgame/shared-tooling/issues/62)).
+- Archive retained CI fixtures before upload, preserving legal Unix filenames, modes and links with the existing evidence roots and retention policy ([#28](https://github.com/dragginzgame/ic-backup/issues/28)).
+- Select Metrics 0.2.12 within the current compatible requirement; retain empty host features and exact diagnostic/accounting separation.
+- **Breaking:** Preserve the externally selected Host 0.7 libraries; the exposed publication-error Rust identity changes. Artifact/FS source retains its contracts; qualify the exact graph. The process package retires with its sole ICP caller.
+
 ## [0.7.0] - 2026-10-08
 
 - **Breaking:** Adopt published Host 0.5 libraries. `PersistenceError::Publication` now carries the 0.5 `NamedWriteError` Rust type; align direct Host dependencies when matching or exchanging that value. Preserve JSON publication, checksum framing, record formats and original spending contracts.

@@ -1,4 +1,5 @@
 use super::*;
+use crate::ops::persistence::AttemptJournalGuard;
 use crate::{
     model::attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
     test_support::{

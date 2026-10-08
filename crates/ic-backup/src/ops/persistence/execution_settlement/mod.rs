@@ -1,7 +1,7 @@
 //! Immutable original all-Applied journal checkpoint publication and local replay.
 
 use super::{
-    AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, JournalLock, JournalLockError,
+    AttemptJournalError, BackupLayoutGuard, JournalLock, JournalLockError,
     OperationPlanPersistenceError, PersistenceError, create_json_durable, read_json,
     read_operation_plan,
 };
@@ -71,11 +71,8 @@ fn validate_retained(
     record: &ExecutionSettlementRecord,
 ) -> Result<(), ExecutionSettlementPersistenceError> {
     let plan = read_operation_plan(layout, record.plan_intent())?;
-    let mut journals = Vec::with_capacity(plan.operations().len());
-    for authority in plan.attempt_authorities()? {
-        let guard = AttemptJournalGuard::open(layout, &authority)?;
-        journals.push(guard.record()?.clone());
-    }
+    let authorities = plan.attempt_authorities()?;
+    let journals = super::attempt_journal::read_original_journals(layout, &authorities, None)?;
     let references: Vec<_> = journals.iter().collect();
     validate(&plan, &references, record)?;
     layout.check_root()?;

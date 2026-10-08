@@ -2285,6 +2285,33 @@ pending spending while diagnostic samples grow. This qualifies local arithmetic
 and sampling only. [Dependency review](ic-metrics-adoption.json) binds the verified
 registry archive; real IC effects and transport measurements remain unimplemented.
 
+### Original-plan-bound retained execution admission
+
+`read_execution_progress` reopens the exact persisted plan and every original
+attempt journal under layout exclusion, then delegates complete identity,
+coverage, accounting and causal projections to the existing policy owner.
+Missing originals reject; no journal is created and no consumption defaults to
+zero. Journal locks are acquired sequentially rather than held as an unbounded
+set. The same internal reader serves execution-settlement admission/replay.
+
+`AttemptJournalGuard::reserve_planned_mutation` and
+`reserve_planned_observation` retain the selected journal lock while admitting
+all original evidence. Mutations require every declared prerequisite's retained
+Applied outcome; observations retain the existing exact pending mutation and
+request binding. Ordinary attempt reservation/persistence remains the sole
+spending owner. Wrong plans/authority, contention, missing evidence, premature
+history, pending or exhausted attempts fail without a refund or reset.
+
+Callers hold no other attempt guard. Reads and failures perform no provider call,
+artifact traversal, terminal transition, source-reference/fence release or cleanup.
+Local record locks and IO remain observable. Fresh authority, authenticated
+receipts/prerequisites, never-dispatched command custody, actual backend capability
+and application safety remain integration-qualified. Native tests cover blocked
+and then Applied prerequisites, exact consumption, missing/wrong/held originals,
+premature histories and lost-observation reopen. The public settlement journey
+uses the new reservation boundary while retaining its fence/source obligations.
+This is reusable execution admission, not an installed scheduler or IC transport.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local
@@ -2361,7 +2388,7 @@ qualification and full product terminal evidence remain pending.
 | Quiescence declarations, receipt admission and consistency-unit projection | Adapted immutable original requested guarantee plus ephemeral exact stopped/drained/fence evidence matching; accepted/expiry/RootCoordinated flags and parent-derived application consistency are not copied; real fencing/custody and acquisition/release remain integration-owned |
 | Restore source identities, stopped-load checks and verification consumers | Adapted immutable same-network/release selected-source declarations and fresh exact load/start safety matching; remapping, Root fields, rendered commands and module-hash-only safety/settlement are not copied |
 | Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
-| ICP subprocess transport | Narrow extraction into the transport package after executor contracts and selected backend capabilities are qualified |
+| ICP subprocess transport | Retired destination; direct `ic-backup-agent` reuses exact original wire/reservation owners; historical CLI evidence is preserved |
 | Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |
 | Operational-readiness/IC fixtures | Port against the actual extracted behavior as its owners move; current native evidence does not qualify IC effects |
 | Timestamp and strict-field serialization helpers | Introduce with the records that need them; no unused helpers or compatibility wrappers copied |
@@ -2484,3 +2511,16 @@ not process/network loss or arbitrary application qualification. See
 [the port contract](contracts/ic-snapshot-transfer-read-port.json),
 [the real backend scope](pocketic-qualification.md) and
 [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).
+
+
+## Direct Agent transport hard cut
+
+The maintainer selected `ic-backup-agent` as the sole product transport. Its async
+preparation/submission binds existing reserved requests to exact current journals,
+actual signer and declared original context. It sends exact receiver/effective-target/
+method/update bytes without retries, polling, root fetching or receipt transitions.
+Signed ingress evidence precedes dispatch; pending/lost/error replies retain original
+spending, obligations and references. The ICP-specific executable probe is removed;
+retained historical evidence and independent descriptor custody contracts remain.
+[Transport scope and qualification](agent-transport.md) own current bounds and
+host limits. Core model/policy contracts still install no provider or generic runner.

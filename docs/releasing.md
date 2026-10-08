@@ -214,8 +214,8 @@ metadata, overwrite a tag, force-push or fall back to separate branch/tag pushes
 
 ## Registry publication
 
-`make publish` delegates the current library package's admission to Cargo with
-`--locked --registry crates-io`; the package inherits publication policy from the
+`make publish` delegates both current libraries, in dependency order, to Cargo with
+`--locked --registry crates-io`; the packages inherit publication policy from the
 workspace. `make publish-dry-run` performs that admission without uploading. Neither
 command uses changelog presentation, release receipt or local tag as a registry gate.
 Both share release exclusion and perform no repository version or Git transaction.
@@ -226,6 +226,7 @@ adoption. Follow-up publication is an explicit maintainer action.
 
 `make release-check` exercises actual consumer Make entry points with Git/Cargo
 substitutes, plus the exact vendored runner's command-stub regressions. It covers
+both member manifests/local lock entries and their internal registry requirement,
 all three increments, identical phase order, exact staging/push, failure before
 mutation, dependency bootstrap, original-input validation, retained metadata/history,
 rollback, lost commit/tag/push replies and completed replay. Recovery cases cover
