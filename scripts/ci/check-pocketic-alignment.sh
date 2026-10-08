@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Shared companions: scripts/ci/ic-tool-pins.awk
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
+ROOT="$0"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 usage() {
     echo 'usage: check-pocketic-alignment.sh --manifest Cargo.toml --pins ic-tools.tsv [--bin EXECUTABLE --sha256 DIGEST]' >&2
 }

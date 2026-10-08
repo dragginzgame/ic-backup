@@ -53,7 +53,7 @@
     "test_dependency_bootstrap": "Actual Make dependency gate/cache and failure-log admission",
     "test_nested_dependency_bootstrap": "Actual nested consumer logger checkout/evidence routing",
     "test_validation_source_identity": "Consumer v1 validation sidecar binds original source/selection; false identity rejected",
-    "test_versions": "Consumer version admission rejects noncanonical/beta/historical regressions; shared helper dispatch retained",
+    "test_versions": "Actual relative consumer entry point resolves under inherited CDPATH; version admission rejects noncanonical/beta/historical regressions; shared helper dispatch retained",
     "test_invalid_changelog": "Consumer candidate/history conflict refusal with exact original bytes",
     "test_shared_changelog": "Consumer delegate finalizer failure/empty output custody and metadata transaction",
     "test_version_reader": "Passive metadata parsing and selected historical package/member input; no partial helper outputs",

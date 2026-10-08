@@ -5,7 +5,10 @@ set -euo pipefail
 unset MAKEFLAGS MFLAGS MAKEOVERRIDES GNUMAKEFLAGS MAKEFILES
 export RELEASE_DELIVERY=direct
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="${BASH_SOURCE[0]}"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 FIXTURE_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/release-runner-test.XXXXXX")"
 trap 'if [[ $? == 0 ]]; then rm -rf "$FIXTURE_ROOT"; else printf "Failed release-runner fixture retained: %s\n" "$FIXTURE_ROOT" >&2; fi' EXIT
 export REAL_GIT REAL_MAKE
@@ -903,19 +906,36 @@ case "$1" in
         echo tracking >> "$TRACKING_EVENTS"
         [[ "${TRACKING_UPDATE_FAIL:-}" != yes ]] || exit 9
         if [[ -n "${TRACKING_RACE_OID:-}" && ! -e "$TRACKING_EVENTS.raced" ]]; then
-            [[ "$2" == --no-deref && "$3" == -m ]]
-            "$REAL_GIT" update-ref "$5" "$TRACKING_RACE_OID"
+            "$REAL_GIT" update-ref "$TRACKING_SELECTED_REF" "$TRACKING_RACE_OID"
             touch "$TRACKING_EVENTS.raced"
+        fi
+        if [[ "${TRACKING_SYMBOLIC_RACE:-}" == yes && ! -e "$TRACKING_EVENTS.raced" ]]; then
+            "$REAL_GIT" symbolic-ref "$TRACKING_SELECTED_REF" refs/heads/preserved
+            touch "$TRACKING_EVENTS.raced"
+        fi
+        ;;
+    symbolic-ref)
+        if [[ "${3:-}" == "${TRACKING_SELECTED_REF:-}" &&
+            -e "$("$REAL_GIT" rev-parse --git-path "$TRACKING_SELECTED_REF.lock")" ]]; then
+            [[ "${TRACKING_INSPECTION_FAIL:-}" != yes ]] || exit 128
+            if [[ "${TRACKING_PREPARED_RACE:-}" == yes ]]; then
+                if "$REAL_GIT" -c core.filesRefLockTimeout=0 symbolic-ref "$TRACKING_SELECTED_REF" refs/heads/preserved; then
+                    echo symbolic-writer-accepted >> "$TRACKING_EVENTS"
+                else
+                    echo symbolic-writer-refused >> "$TRACKING_EVENTS"
+                fi
+            fi
         fi
         ;;
 esac
 exec "$REAL_GIT" "$@"
 GIT
 chmod +x "$TRACKING_ROOT/bin/git"
-for tracking_case in normal completed-resume custom-map missing-ref no-upstream other-remote other-branch fetch-destination symbolic newer divergent rejected-push lost-push update-failure update-race; do
+for tracking_case in normal completed-resume custom-map missing-ref no-upstream other-remote other-branch fetch-destination symbolic newer divergent rejected-push lost-push update-failure update-race symbolic-race missing-symbolic-race prepared-symbolic-race inspection-failure; do
     (
         unset FIXTURE_DESTINATION FIXTURE_REMOTE_FAIL FIXTURE_PUSH_MUTATION
         unset TRACKING_PUSH_FAIL TRACKING_PUSH_LOST TRACKING_UPDATE_FAIL TRACKING_RACE_OID
+        unset TRACKING_SYMBOLIC_RACE TRACKING_PREPARED_RACE TRACKING_INSPECTION_FAIL TRACKING_SELECTED_REF
         selected="$TRACKING_ROOT/$tracking_case"
         mkdir -p "$selected"
         "$REAL_GIT" init --quiet --bare "$selected/destination.git"
@@ -947,7 +967,7 @@ MAKE
                 tracking_ref=refs/remotes/custom/main
                 "$REAL_GIT" update-ref "$tracking_ref" "$source_head"
                 ;;
-            missing-ref) "$REAL_GIT" update-ref -d "$tracking_ref" ;;
+            missing-ref|missing-symbolic-race) "$REAL_GIT" update-ref -d "$tracking_ref" ;;
             no-upstream) "$REAL_GIT" config --unset branch.main.remote; "$REAL_GIT" config --unset branch.main.merge ;;
             other-remote)
                 "$REAL_GIT" remote add other "$selected/destination.git"
@@ -969,12 +989,21 @@ MAKE
                 ;;
         esac
         export TRACKING_EVENTS="$selected/events"
+        export TRACKING_SELECTED_REF="$tracking_ref"
         : > "$TRACKING_EVENTS"
         export PATH="$TRACKING_ROOT/bin:${PATH#"$FIXTURE_ROOT/bin:"}"
         export RELEASE_MAKE="$REAL_MAKE"
         if [[ "$tracking_case" == rejected-push ]]; then export TRACKING_PUSH_FAIL=yes; fi
         if [[ "$tracking_case" == lost-push ]]; then export TRACKING_PUSH_LOST=yes; fi
         if [[ "$tracking_case" == update-failure ]]; then export TRACKING_UPDATE_FAIL=yes; fi
+        if [[ "$tracking_case" == inspection-failure ]]; then export TRACKING_INSPECTION_FAIL=yes; fi
+        if [[ "$tracking_case" == symbolic-race || "$tracking_case" == prepared-symbolic-race ]]; then
+            "$REAL_GIT" branch preserved "$source_head"
+        fi
+        if [[ "$tracking_case" == symbolic-race || "$tracking_case" == missing-symbolic-race ]]; then
+            export TRACKING_SYMBOLIC_RACE=yes
+        fi
+        if [[ "$tracking_case" == prepared-symbolic-race ]]; then export TRACKING_PREPARED_RACE=yes; fi
         if [[ "$tracking_case" == update-race ]]; then
             TRACKING_RACE_OID="$(printf 'concurrent observation\n' | "$REAL_GIT" commit-tree "$("$REAL_GIT" rev-parse "HEAD^{tree}")" -p "$source_head")"
             export TRACKING_RACE_OID
@@ -1008,9 +1037,22 @@ MAKE
                 [[ "$("$REAL_GIT" rev-parse "$tracking_ref")" == "$TRACKING_RACE_OID" ]]
                 [[ "$(awk '$0 == "push" { count++ } END { print count+0 }' "$TRACKING_EVENTS")" == 1 ]]
                 ;;
-            update-failure)
+            symbolic-race|missing-symbolic-race)
+                [[ "$("$REAL_GIT" symbolic-ref "$tracking_ref")" == refs/heads/preserved ]]
+                if [[ "$tracking_case" == symbolic-race ]]; then
+                    [[ "$("$REAL_GIT" rev-parse preserved)" == "$source_head" ]]
+                else
+                    if "$REAL_GIT" show-ref --verify --quiet refs/heads/preserved; then exit 1; fi
+                fi
+                [[ ! -e "$("$REAL_GIT" rev-parse --git-path "$tracking_ref.lock")" ]]
+                bash "$ROOT/scripts/ci/run-release.sh" resume 0.1.1 origin main > "$selected/resume.log" 2>&1
+                [[ "$("$REAL_GIT" symbolic-ref "$tracking_ref")" == refs/heads/preserved ]]
+                [[ "$(awk '$0 == "push" { count++ } END { print count+0 }' "$TRACKING_EVENTS")" == 1 ]]
+                ;;
+            update-failure|inspection-failure)
                 [[ "$("$REAL_GIT" rev-parse "$tracking_ref")" == "$source_head" ]]
-                unset TRACKING_UPDATE_FAIL
+                [[ ! -e "$("$REAL_GIT" rev-parse --git-path "$tracking_ref.lock")" ]]
+                unset TRACKING_UPDATE_FAIL TRACKING_INSPECTION_FAIL
                 bash "$ROOT/scripts/ci/run-release.sh" resume 0.1.1 origin main > "$selected/resume.log" 2>&1
                 [[ "$("$REAL_GIT" rev-parse "$tracking_ref")" == "$release_head" ]]
                 [[ "$(awk '$0 == "push" { count++ } END { print count+0 }' "$TRACKING_EVENTS")" == 1 ]]
@@ -1033,6 +1075,11 @@ MAKE
             *)
                 [[ "$("$REAL_GIT" rev-parse "$tracking_ref")" == "$release_head" ]]
                 [[ "$("$REAL_GIT" rev-list --count "@{upstream}..HEAD")" == 0 ]]
+                if [[ "$tracking_case" == prepared-symbolic-race ]]; then
+                    [[ "$("$REAL_GIT" rev-parse preserved)" == "$source_head" ]]
+                    [[ "$(awk '$0 == "symbolic-writer-refused" { count++ } END { print count+0 }' "$TRACKING_EVENTS")" == 1 ]]
+                    if grep -q '^symbolic-writer-accepted$' "$TRACKING_EVENTS"; then exit 1; fi
+                fi
                 if [[ "$tracking_case" == custom-map ]]; then
                     [[ "$("$REAL_GIT" rev-parse refs/remotes/origin/main)" == "$source_head" ]]
                 fi

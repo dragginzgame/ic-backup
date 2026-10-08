@@ -1189,18 +1189,18 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71dca731ceb4bdfe482ac746f68372333381824c7112b53aa5344c6378b65260"
+checksum = "583dce23ad5266462397a777b927050a7884c9e87a23cad29a1fa8b80af0c0ca"
 dependencies = [
  "sha2 0.10.9",
 ]
 
 [[package]]
 name = "ic-host-fs"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ffac1c91c2cee4fb602533222f07750d2e9a196370618f5a0a1b9a87d34a28d"
+checksum = "16e31ff78c4411397e95ea9c35978f42084e4fb7d949b78a8ea52c6139482b28"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1230,9 +1230,9 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.2.12"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bab1fc806066a00dfd5984bbe6dcb74e836a51e8e4fb2f29026739216c5fa56"
+checksum = "cf9bf6109539e8b956857f444a1d365b0205250405980c10bfdd905831f66fe3"
 
 [[package]]
 name = "ic-transport-types"

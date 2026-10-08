@@ -2,8 +2,8 @@
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
-pending draft is 0.8.0. Package versions remain 0.7.0 until separately authorized
-release. The ICP transport destination and executable routing probe are retired.
+transport was released in 0.8.0. The current compatible draft is 0.8.1; package
+versions remain 0.8.0 until separately authorized release. The ICP transport destination and executable routing probe are retired.
 Historical evidence and original journals remain retained. The canonical shared
 IC executable inventory is unchanged and does not select a backup backend.
 

@@ -139,12 +139,14 @@ that contract. Host's typed descriptor publisher owns staging/atomic publication
 with private parent policy and acknowledged crash barriers in Backup. In the
 0.6.0 release, match `PersistenceError::Publication` for its original typed producer,
 cleanup and before/after-publication failures; visible output requires recovery.
-The pending 0.7.0 draft selects published Host 0.5. Its publication-error Rust
-identity changes even though its variant shapes and persisted records do not.
+Released 0.8.0 selects the Host 0.7 publication-error Rust identity; the current
+0.8.1 draft qualifies its compatible 0.7.1 patch without changing variant shapes
+or persisted records.
 Consumers sharing `NamedWriteError` values or matching through a direct Host
 dependency must select that same compatible line. Host features remain empty;
-no gzip, Wasm inspection or IC installation-limit policy is enabled. The test-only
-bounded process API still cleans only its direct child; process-group signalling
+no gzip, Wasm inspection or IC installation-limit policy is enabled. The unused
+process dependency retired with the ICP probe. Local bounded test capture still
+cleans only its direct child; process-group signalling
 does not replace Backup's inherited lock-descriptor quiescence checks.
 Unix artifact and lock operations use Rustix's `io::Error::from` conversion
 directly. Native codes and existing typed error projections stay intact; no local

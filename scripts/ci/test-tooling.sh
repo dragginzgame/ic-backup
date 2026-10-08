@@ -2,7 +2,10 @@
 set -euo pipefail
 
 # Consumer integration checks; no Git mutations, network calls or Rust builds.
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+ROOT="${BASH_SOURCE[0]}"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 mkdir -p "$ROOT/target"
 FIXTURE="$(mktemp -d "$ROOT/target/shared-tooling-tests.XXXXXX")"
 CONSUMER="$FIXTURE/consumer"

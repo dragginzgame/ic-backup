@@ -5,7 +5,10 @@ set -euo pipefail
 unset MAKEFLAGS MFLAGS MAKEOVERRIDES GNUMAKEFLAGS MAKEFILES
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$0"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/validation-runner-test.XXXXXX")"
 trap 'if [[ $? == 0 ]]; then rm -rf "$FIXTURE"; else printf "Failed validation-target-runner fixture retained: %s\n" "$FIXTURE" >&2; fi' EXIT
 
@@ -257,7 +260,7 @@ cat > "$parent/Makefile" <<'MAKE'
 validate:
 	+bash scripts/ci/run-validation-targets.sh adoption same-checkout
 adoption:
-	@bash "$(METADATA_FIXTURE)"
+	@GNUMAKEFLAGS="$(FIXTURE_MAKE_FLAGS)" MAKEFILES="$(FIXTURE_MAKE_FILES)" bash "$(METADATA_FIXTURE)"
 	+bash child/scripts/ci/run-validation-targets.sh child-gate
 same-checkout:
 	+bash scripts/ci/run-validation-targets.sh selection
@@ -275,27 +278,39 @@ cat > "$parent/child/Makefile" <<'MAKE'
 child-gate:
 	@echo child-gate-marker
 MAKE
-if ! VALIDATION_RUNNER_DEPTH=0 VALIDATION_FAILURE_LOG_DIR="$parent/failure-logs" \
-    make --no-print-directory -j2 -k -s -C "$parent" validate \
-    RELEASE_VERSION=9.8.7 RELEASE_COMMIT=parent-selected-commit \
-    'LABEL=night time' \
-    METADATA_FIXTURE="$ROOT/scripts/ci/test-release-metadata.sh" \
-    > "$FIXTURE/nested-context.log" 2>&1; then
-    cat "$FIXTURE/nested-context.log" >&2
-    echo 'validation target runner test failed: nested release context' >&2
-    exit 1
-fi
-[[ ! -e "$parent/incorrect-route" ]] || {
-    echo 'validation target runner test failed: executed the parent gate' >&2
-    exit 1
-}
-if rg -i 'jobserver unavailable|jobserver.*forced' "$FIXTURE/nested-context.log" >/dev/null; then
-    echo 'validation target runner lost the inherited Make jobserver' >&2
-    exit 1
-fi
-for marker in child-gate-marker nested-selection-marker \
-    'release metadata real-Git and validation-retention tests passed'; do
-    rg -F "$marker" "$FIXTURE/nested-context.log" >/dev/null
+# Only the independently configured adoption fixture receives these controls.
+# Same-checkout nested validation must retain the parent's legitimate selections.
+printf 'RELEASE_VERSION := 99.99.99\n' > "$parent/fixture-includes.mk"
+for context in baseline includes gnu-flags; do
+    fixture_flags=''; fixture_includes=''
+    case "$context" in
+        includes) fixture_includes="$parent/fixture-includes.mk" ;;
+        gnu-flags) fixture_flags=--dry-run ;;
+    esac
+    context_log="$FIXTURE/nested-context-$context.log"
+    if ! VALIDATION_RUNNER_DEPTH=0 VALIDATION_FAILURE_LOG_DIR="$parent/failure-logs" \
+        make --no-print-directory -j2 -k -s -C "$parent" validate \
+        RELEASE_VERSION=9.8.7 RELEASE_COMMIT=parent-selected-commit \
+        'LABEL=night time' \
+        "FIXTURE_MAKE_FLAGS=$fixture_flags" "FIXTURE_MAKE_FILES=$fixture_includes" \
+        METADATA_FIXTURE="$ROOT/scripts/ci/test-release-metadata.sh" \
+        > "$context_log" 2>&1; then
+        cat "$context_log" >&2
+        echo "validation target runner test failed: nested release context ($context)" >&2
+        exit 1
+    fi
+    [[ ! -e "$parent/incorrect-route" ]] || {
+        echo 'validation target runner test failed: executed the parent gate' >&2
+        exit 1
+    }
+    if rg -i 'jobserver unavailable|jobserver.*forced' "$context_log" >/dev/null; then
+        echo 'validation target runner lost the inherited Make jobserver' >&2
+        exit 1
+    fi
+    for marker in child-gate-marker nested-selection-marker \
+        'release metadata real-Git and validation-retention tests passed'; do
+        rg -F "$marker" "$context_log" >/dev/null
+    done
 done
 
 # A retained run includes successes, raw bytes and a timing row per completed

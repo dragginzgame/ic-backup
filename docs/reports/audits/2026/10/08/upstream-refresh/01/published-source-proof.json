@@ -1,9 +1,5 @@
 {
-  "version": 1,
-  "inspection_date": "2026-10-08",
-  "repository": "https://github.com/dragginzgame/ic-host-tooling",
-  "source": "registry+https://github.com/rust-lang/crates.io-index",
-  "published_source_revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
+  "date": "2026-10-08",
   "packages": {
     "ic-host-artifacts": {
       "version": "0.7.1",
@@ -64,25 +60,27 @@
         "src/test_support/mod.rs": "9f6fe53974cacc49439f776abd6148a21fce7812a36d3b0fac800b585ab8e0c5"
       },
       "changed_rust_from_previous_selection": []
+    },
+    "ic-metrics": {
+      "version": "0.2.13",
+      "revision": "4091366bcd97ddf4f31d5993c954f6f4a269bc63",
+      "archive_sha256": "cf9bf6109539e8b956857f444a1d365b0205250405980c10bfdd905831f66fe3",
+      "yanked": false,
+      "all_published_rust_and_original_manifest_match_committed_source": true,
+      "sources": {
+        "Cargo.toml.orig": "1b33da2564b97bf34bbae8c5d22bfda4dda792bbd4d049194442f1495508e662",
+        "src/histogram/mod.rs": "0a699655fc2d5e38298bb405dbbdc8a034ed73afe86c7d1d5ca8511be1df90aa",
+        "src/histogram/tests.rs": "4dd28a91687330ddb740f99720bf57e72a438f332317f96ef63597f8c8ef4429",
+        "src/lib.rs": "722ce8a28f183de1bba2adeb1add51ecbbb93e0dfaa8e19ae485e4cd041290e8",
+        "src/summary/mod.rs": "c5c275c84cc724939bd48f6a74ae9cdbb390e78a92800fb5167917d6d0aa8446",
+        "src/summary/tests.rs": "0e3990adc7bb65da7544d5bc206c257398ddb2e665d1fe0b9a6a2671517019c4"
+      },
+      "changed_rust_from_previous_selection": []
     }
   },
   "features": {
     "ic-host-artifacts": [],
-    "ic-host-fs": []
-  },
-  "public_compatibility": {
-    "released_base": "0.8.0",
-    "next_draft": "0.8.1",
-    "reason": "Same Host 0.7 Rust type identity and unchanged source; compatible patch graph, no record/accounting changes."
-  },
-  "qualification": "docs/reports/audits/2026/10/08/upstream-refresh/01/qualification.json",
-  "source_proof": "docs/reports/audits/2026/10/08/upstream-refresh/01/published-source-proof.json",
-  "previous_review": "docs/reports/audits/2026/10/08/upstream-refresh/01/previous-host-review.json",
-  "limits": [
-    "Current upstream and released consumer native CI is not complete; Linux local results do not qualify macOS.",
-    "Prior Shared 0.1.26 Intel timed out under upstream #71.",
-    "Full CI/release gates were not requested or run.",
-    "Generic orchestration/stage binding and fresh Canic adoption remain separate."
-  ],
-  "process": "Not selected after the released ICP hard cut; existing descriptor custody/local capture remain separate."
+    "ic-host-fs": [],
+    "ic-metrics": []
+  }
 }

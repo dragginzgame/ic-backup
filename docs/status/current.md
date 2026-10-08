@@ -25,7 +25,40 @@
 
 # Current handoff — 2026-10-08
 
-## Current 0.8.0 direct Agent hard cut
+## Current 0.8.1 upstream refresh
+
+0.8.0 is released at `04f65896060b1f1cd47fd36906a6d88dbe6c8501`.
+The incoming lockfile selected Host artifacts/FS 0.7.1 and Metrics 0.2.13;
+preserve it exactly. All 46 published Rust/original-manifest blobs match official
+committed source and non-yanked archive checksums. Rust implementation bytes are
+unchanged from the prior selected patches; features remain empty. No process
+dependency, record, spending, publication or diagnostics owner is added.
+
+Adopt committed Shared Tooling 0.1.27 at
+`b866d41041a1986eeec95bde9af4c6ba0853d2e3` through its canonical exporter.
+All 77 source bytes/modes match; 32 selected paths change and common rules stay
+unchanged. Consecutive uncommitted refresh and edited-input refusal pass in a
+retained isolated consumer. The local release bootstrap originally failed under
+`CDPATH`; metadata fixtures originally failed with inherited `MAKEFILES`/GNU
+flags. Fix local physical root resolution and fixture-only context isolation;
+retain both failures and demonstrate the corrected actual commands.
+
+All 158 focused Rust cases, both-library Clippy/Rust 1.91/package checks, release
+adapters/runners, validation/snapshot retention, tooling LOC, hooks, formatting,
+dependency declarations, snapshot, shell and documentation checks pass on Linux.
+Exact-source Shared/Host/consumer native CI remains pending; Metrics CI is in
+progress at the last read. Prior Shared 0.1.26 Intel CI timed out under upstream
+#71. Those states do not negate local results or qualify native macOS.
+The [review](../reports/audits/2026/10/08/upstream-refresh/01/report.md)
+owns source-bound inputs, commands, failures and limits.
+
+Correct the public description now that Agent transport is released. Full
+orchestration/stage binding remains #29; fresh Canic adoption and terminal/fence/
+reference release remain separate. The compatible draft is 0.8.1; package/receipt
+stay 0.8.0. Work remains uncommitted; no sibling edit, root Git write, live IC,
+release or publication runs. Earlier handoffs below retain their original scope.
+
+## Earlier 0.8.0 direct Agent hard cut
 
 The maintainer selected direct Rust `ic-agent` as the sole product transport.
 `crates/ic-backup-agent` implements bounded async preparation and single-update

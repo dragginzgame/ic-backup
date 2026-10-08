@@ -5,7 +5,10 @@ set -euo pipefail
 # GitHub is a strict command substitute. No repository commit or network effect.
 unset MAKEFLAGS MFLAGS MAKEOVERRIDES GNUMAKEFLAGS MAKEFILES
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
-ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
+ROOT="$0"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/release-pr-test.XXXXXX")"
 fixture="$(cd "$fixture" && pwd -P)"
 trap 'if [[ $? == 0 ]]; then rm -rf -- "$fixture"; else echo "PR release fixtures retained: $fixture" >&2; fi' EXIT

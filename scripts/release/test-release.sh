@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+ROOT="${BASH_SOURCE[0]}"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 # Fixtures own their release identities and Make invocations. A real release
 # exports both environment values and command-line overrides through GNU Make;
 # neither may reach the fixture's standalone gates or select a parent helper.
@@ -10,7 +13,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # canonical shared suite owns increment/phase and generic lost-reply matrices.
 unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND RELEASE_COMMIT \
     RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE RELEASE_DELIVERY VERSION \
-    MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL
+    MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL GNUMAKEFLAGS MAKEFILES
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 metadata_only=false
 if [[ "$#" == 1 && "$1" == --metadata-only ]]; then
@@ -309,6 +312,8 @@ test_validation_source_identity() {
     assert_cache_retained
 }
 test_versions() {
+    # Invoke the actual consumer entry point under a noisy directory-search environment.
+    [[ "$(CDPATH="$PWD" bash scripts/release/release.sh version)" == 0.1.0 ]]
     [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 patch)" == 0.1.1 ]]
     [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 minor)" == 0.2.0 ]]
     [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 major)" == 1.0.0 ]]

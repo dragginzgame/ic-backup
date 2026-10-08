@@ -3,7 +3,10 @@ set -euo pipefail
 
 # Consumer metadata, validation evidence and read-only inspection. All Git
 # staging/commit/tag/push and release recovery belong to the vendored runner.
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+ROOT="${BASH_SOURCE[0]}"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 cd "$ROOT"
 export CARGO_TARGET_DIR="$ROOT/target"
 DATA="$ROOT/scripts/release/release-data.pl"

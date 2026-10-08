@@ -1,0 +1,1624 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "base_commit": "04f65896060b1f1cd47fd36906a6d88dbe6c8501",
+  "draft": "0.8.1",
+  "package_and_receipt": "0.8.0",
+  "host": "Linux",
+  "incoming_lock_preserved": true,
+  "source_inputs": [
+    {
+      "path": ".shared-tooling.snapshot",
+      "sha256": "e83f2180bf0c50b0db7ac59186211500819d049077d0a1a47ac3121c15abf374"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "d2028c3a86e3f6a754de59c8d1bcd722d640927572ea3e1dea3f6a7937fa7c99"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "1aa663e9be40158be16cd8fb8086020b2eafcba10effb342fb9278a314c59343"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "cc9b6af6f13f48f9d09e4eeb827fa56a759d5b8c3cbed5e51f7655ff74cf15c1"
+    },
+    {
+      "path": "crates/ic-backup/Cargo.toml",
+      "sha256": "f4f7d7a45f4f22743c5cd41f9ba80ee5f9c39a289879efde0a4502f379c0eb79"
+    },
+    {
+      "path": "crates/ic-backup/src/hash/mod.rs",
+      "sha256": "dafa8117d785da3fb3df1a9e3e073c5caee813412dd27bc6d4d2b8c1b6d03d2a"
+    },
+    {
+      "path": "crates/ic-backup/src/lib.rs",
+      "sha256": "d01f882941f1397f1d41d87772d0ff4abf26ca98d58536376d5cfd9359f480b1"
+    },
+    {
+      "path": "crates/ic-backup/src/model/artifacts/mod.rs",
+      "sha256": "c6115fe9b2dfa2481e790504743376bec7112cf4b3a1f4f78787b54756d97a90"
+    },
+    {
+      "path": "crates/ic-backup/src/model/artifacts/tests/mod.rs",
+      "sha256": "bd4cd12a84238c88cbb901b3de6b63eb60857163d13eb464c99cb99756763652"
+    },
+    {
+      "path": "crates/ic-backup/src/model/attempt_journal/authority/mod.rs",
+      "sha256": "406a3fb54f0c43c4bf8c7738c3109e76e29d94867b28482f6219fa15f24a1ec3"
+    },
+    {
+      "path": "crates/ic-backup/src/model/attempt_journal/history/mod.rs",
+      "sha256": "2b839b6b0e12781f96965643229c1824ede05d9fced5c799b7021a09bac0e2be"
+    },
+    {
+      "path": "crates/ic-backup/src/model/attempt_journal/mod.rs",
+      "sha256": "eff0876c538df5c9ad3831056f910e1a83869d59ce7d8cd24a27152051913007"
+    },
+    {
+      "path": "crates/ic-backup/src/model/attempt_journal/tests/mod.rs",
+      "sha256": "bb471f75a0df2cb2197c4c9519e6acce8caf5fea996fcc5ea34edb93485f60a5"
+    },
+    {
+      "path": "crates/ic-backup/src/model/command_custody/mod.rs",
+      "sha256": "8196d0f0d4e15d3ce503b5c744ec971a55f148b1cca1b4a0522eb2996484f9ed"
+    },
+    {
+      "path": "crates/ic-backup/src/model/command_custody/tests/mod.rs",
+      "sha256": "ec35e89fd429982d006b45d944edf9168dfd1705afe04a4fdbdd9565dc004110"
+    },
+    {
+      "path": "crates/ic-backup/src/model/consistency/mod.rs",
+      "sha256": "fe6a4b725259dc3da7175bd5cc2f2f58ddd6ddc0876a4451b715bed8cab4f549"
+    },
+    {
+      "path": "crates/ic-backup/src/model/consistency/requirement/mod.rs",
+      "sha256": "5b55b400eb410a0ff9ef007a65dc646d562059bfb541d3dccf9c271aa75a329c"
+    },
+    {
+      "path": "crates/ic-backup/src/model/consistency/tests/mod.rs",
+      "sha256": "9bcff30d1dfdb4f21695fd7a7161dbe9e554c444e26b55c2b44e1a658aae3b25"
+    },
+    {
+      "path": "crates/ic-backup/src/model/control_authority/mod.rs",
+      "sha256": "c6d1466b49a98248893bc804121e5bc14b549d750091de81da5389cf25d9cfb1"
+    },
+    {
+      "path": "crates/ic-backup/src/model/control_authority/tests/mod.rs",
+      "sha256": "46e84c719bef3b8f7d98529f53b54f2d83dd0c062aa336dae045773af7684809"
+    },
+    {
+      "path": "crates/ic-backup/src/model/download_journal/mod.rs",
+      "sha256": "09870f3d240a9c501a66d7a33cf31d8833706f4ffbb641d68f0fd206be3c70de"
+    },
+    {
+      "path": "crates/ic-backup/src/model/download_journal/tests/mod.rs",
+      "sha256": "cddc418e4a02e7420537085de97886ddd75d930c3db421aaf736f78a00779aa8"
+    },
+    {
+      "path": "crates/ic-backup/src/model/download_journal/view/mod.rs",
+      "sha256": "da85de85f4c1c940bfb8eff8e5c28eea086b171a8fd36c238d62a155734a9b18"
+    },
+    {
+      "path": "crates/ic-backup/src/model/effect_graph/mod.rs",
+      "sha256": "4cb925f263b8ce63a6d68cd9112f40d52786ab41d582852fe4b73cc082df89d6"
+    },
+    {
+      "path": "crates/ic-backup/src/model/effect_graph/node/mod.rs",
+      "sha256": "fdc5efbf2f2245b25722c557e08cb72765430b461245899151ba64c7371e9f57"
+    },
+    {
+      "path": "crates/ic-backup/src/model/effect_graph/tests/mod.rs",
+      "sha256": "bad32be647d6866edfd5ce02fe67206cd66d16f81c06c73617b820f309a18457"
+    },
+    {
+      "path": "crates/ic-backup/src/model/execution_settlement/mod.rs",
+      "sha256": "85c6dae977ed18b79f53600d7f9a237377adbda051471434a5dd49b8c423e191"
+    },
+    {
+      "path": "crates/ic-backup/src/model/execution_settlement/tests/mod.rs",
+      "sha256": "bf300997903d9907c8d611dadf4b51393f7cc6a7ad13d5117e094edddca24f64"
+    },
+    {
+      "path": "crates/ic-backup/src/model/fence_acquisition/mod.rs",
+      "sha256": "5a5354cd0115773c7fc20dacdcc70042e5aa3ecb2a938e3457acb4d75fa48ea4"
+    },
+    {
+      "path": "crates/ic-backup/src/model/fence_acquisition/tests/mod.rs",
+      "sha256": "feebc552e1fb322b26628214929a5118af37a173416321ae0baf515379a787c8"
+    },
+    {
+      "path": "crates/ic-backup/src/model/fence_obligation/mod.rs",
+      "sha256": "526eda4c0ad83963bdb690cbdcdb76a48e9feb29cd3db533304412a7c30685af"
+    },
+    {
+      "path": "crates/ic-backup/src/model/fence_obligation/tests/mod.rs",
+      "sha256": "f0ae57ef42e8809eccd7f59824606e38c5803237562f6aaa8968f193b15559bd"
+    },
+    {
+      "path": "crates/ic-backup/src/model/fence_reconciliation/mod.rs",
+      "sha256": "72aba150e1887cf8258068ac049cb95f237a16feac72dbf17f5dc24e010e6e4e"
+    },
+    {
+      "path": "crates/ic-backup/src/model/fence_reconciliation/tests/mod.rs",
+      "sha256": "e5a151af2fd121bfbc5993d4bda37bd090769c322fef82f28fbf11a496c23941"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/mod.rs",
+      "sha256": "eb3aad10622d37847dcdd2afbf781d353c417d8cc32f88dcb1522e6d9634b39d"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "sha256": "66167fdc0de99cea81afd6a77fc2869c46f803b4473f8d2bbc53c33016b8483a"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/wire/mod.rs",
+      "sha256": "fd70f71e1e768ec5c847ff2b4b69cbc9ddae28e02aa22790906fced2887af56c"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_mutation/mod.rs",
+      "sha256": "e0b07b4c2a79f109e7c1b97268e6f508b9880aaaf0e92c028b8420cb28819cc4"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_mutation/tests/mod.rs",
+      "sha256": "1002907295c70f0bf04296c5bc5b3377ae15a2f97e05feb9ce848fc297637e5a"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_observation/capture_settlement/mod.rs",
+      "sha256": "20ba4eb28135c7dc473b2fa8191fd114da90c74577d5715e36ba84f16032ef61"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_observation/mod.rs",
+      "sha256": "1a3e6b8ac9ebb43c9fe3b682c2ab14cafaa930f00f4351f484b19abce0414126"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_observation/settlement/mod.rs",
+      "sha256": "f06d7da941a79fea1b4773a8ed57311b7a41143a55802f20efc0838cda644c60"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_observation/tests/mod.rs",
+      "sha256": "747bb5cc489f289cbc404b5b1f9e130f0cc29ace47344c54379e6d07d61b22bc"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_request/method/mod.rs",
+      "sha256": "7ae0ff57bd5779e842549bbba4d6289501141c65b495f8211b1032dde4b8c98d"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_request/mod.rs",
+      "sha256": "62d788cde7349f014167337a0fb80d129d544134a90f36801b3777a12c2d3ff9"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_request/tests/mod.rs",
+      "sha256": "a3c095ab2d111beef3b9fb7de164f7135408b79e18df1415d9e2ed21ce043bc7"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_coverage/mod.rs",
+      "sha256": "06396eebca6f710c9cd177b6e3fbc0b77e5eb20ead05b0ce18d14b0ddefeef0c"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_coverage/tests/mod.rs",
+      "sha256": "16cc1142521dcaa01956c496f06b4fff821799d2bfe963dcdfb2ae58539813cd"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_data/mod.rs",
+      "sha256": "5ac1c03146e89ec5a65d0236446149db6d4803fe5c566ad1fe65fe673b030200"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_data/tests/mod.rs",
+      "sha256": "f0c02a63a5559b690a3a3203fed97c759a02a9ead22470910a8fb2d3ea659c90"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_data/wire/mod.rs",
+      "sha256": "3d8f5c55c7e3d78017db57344b381f87267aa226f7dc8a62f0dfc17c31883b33"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/mod.rs",
+      "sha256": "cbc803dc4094985a86f57aeb582597f35d48c4d674f4c16ecf45b4d286e6292f"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs",
+      "sha256": "ba8f72d11410ab9b81b370333bb889382668e561c9653f7b132c729d0618a34b"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/wire/mod.rs",
+      "sha256": "2e1502f3cba4e62023b31155f853a5a7725fee4d0ee5873ad24aa8fb0060c88e"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/mod.rs",
+      "sha256": "1ef037e87cc9620870c8bcbb4762e75b30d730c98f33f5e00287a562ba721759"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/tests/mod.rs",
+      "sha256": "f43481e3a50736ca7bb113f0850a6d7149583414f0326b338d76cbc6e97f01a2"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/wire/mod.rs",
+      "sha256": "c1c49bf09094a84494e2112468de35ba78b6a75c3c699e5f7731efe0c32647f6"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_transfer_read/mod.rs",
+      "sha256": "015468f97226c9048a6f90c73ac31cc2c10c8dadfd4b529fabb2dd8baddf4116"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload/attempt/mod.rs",
+      "sha256": "af4d961723e1f5bef5e5fef3fc966ee6e9834feaed08aea7ffe5e061e8ca0ab2"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload/mod.rs",
+      "sha256": "d90985829db649fba40eaf318235a2ec230b55cbcefc8044f447dc23a6e2eb0d"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload/reply/mod.rs",
+      "sha256": "821f797c7442003eabf1e68cc985e3c102746db192d4b262a6723cd7d6311637"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload/tests/mod.rs",
+      "sha256": "a7c96352b4cbae77c48c67a149faeb56bf7d88814aea4670514037c3f3290604"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload_data_observation/mod.rs",
+      "sha256": "ec11e46f571b88872ed5660c5c59812ccbcc3661e697b7e0b02f9a2ca4d38fc0"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload_data_observation/settlement/mod.rs",
+      "sha256": "558bbb7e8184d3fa00505fae068556cdc445db745868204a99a69cbafe306c0f"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload_data_observation/tests/mod.rs",
+      "sha256": "c5a1fed96e83edbdf9da0836af6cb7b3cf57d2cc475d6aed20f485992dc88e96"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload_observation/mod.rs",
+      "sha256": "00ecac1029a1e9b414b3eeea47a4feb297bf2628f8ad2df94a9a7b9759b86de5"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload_observation/settlement/mod.rs",
+      "sha256": "043410393c22456962ec746d8dfff2f021347a63198a08608f85867d290f6c96"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload_observation/tests/mod.rs",
+      "sha256": "40cd6b2fa6f9661b933d5b446d5d1122e0dc0f46657046edb9fda83a874bc8e3"
+    },
+    {
+      "path": "crates/ic-backup/src/model/inventory/mod.rs",
+      "sha256": "254dcc489b20d2bd29ae4d2875708438982114f1da45286bb73d243133494c10"
+    },
+    {
+      "path": "crates/ic-backup/src/model/inventory/target/mod.rs",
+      "sha256": "9e874d3b4d5462fac5d3dd6231f44dd428be8912cf41b63ac760614677200223"
+    },
+    {
+      "path": "crates/ic-backup/src/model/inventory/tests/mod.rs",
+      "sha256": "e886dbd3859b19c24e6f901115fc23591ac209d6860f3da5416263954f130f8e"
+    },
+    {
+      "path": "crates/ic-backup/src/model/journal_path/mod.rs",
+      "sha256": "4a8fd25559735735caeb06af04933c949fa215093da743425cfb444dcadf036a"
+    },
+    {
+      "path": "crates/ic-backup/src/model/membership/mod.rs",
+      "sha256": "57c3502b4add3a9e930bd0375ded7748ffaa8c20a10265269c2204a7625e1c9f"
+    },
+    {
+      "path": "crates/ic-backup/src/model/membership/tests/mod.rs",
+      "sha256": "960b458a7218173318651c6966954a77f85694d1c6539976ee9f5306f9dc1797"
+    },
+    {
+      "path": "crates/ic-backup/src/model/mod.rs",
+      "sha256": "ea25ba978268ce19c07535217f8327857203a1c7071100dee83429d2b035d248"
+    },
+    {
+      "path": "crates/ic-backup/src/model/operation_plan/budget/mod.rs",
+      "sha256": "324d3f4d321bbe1e76e5e6136b81a827f4145740aa8dde8ebacc0c6105c49769"
+    },
+    {
+      "path": "crates/ic-backup/src/model/operation_plan/context/mod.rs",
+      "sha256": "007e75b9ff5ac8c90adca48a6fad1a9ebfbca842dcebef21342eaa392c12ab78"
+    },
+    {
+      "path": "crates/ic-backup/src/model/operation_plan/mod.rs",
+      "sha256": "6a4261f969b687ca2943ce22870be83f74c083a2f6ee0914e778981cea01639f"
+    },
+    {
+      "path": "crates/ic-backup/src/model/operation_plan/operation/mod.rs",
+      "sha256": "ae55f55eb99c264daa8aeb836530f2f6afec61241b82e94ce7975108a536d967"
+    },
+    {
+      "path": "crates/ic-backup/src/model/operation_plan/tests/mod.rs",
+      "sha256": "3803420fce5f8b2991f3998cf0ca81702e648fae2d9915186082a34a939d0d80"
+    },
+    {
+      "path": "crates/ic-backup/src/model/principal/mod.rs",
+      "sha256": "a8d33590d0be2fe315d320a9952dbf4bc82581f74729866e3363be59d73e5eab"
+    },
+    {
+      "path": "crates/ic-backup/src/model/restore_references/mod.rs",
+      "sha256": "fb0ea64fd75b36b5b1b9fc96be3f0fa7f67a0a7aa7404b2718000910827bc3a0"
+    },
+    {
+      "path": "crates/ic-backup/src/model/restore_references/tests/mod.rs",
+      "sha256": "02606e82b14b178b5e177c3e6d775c77286c8044d1e77d21d95dcbb2aa6c8e7d"
+    },
+    {
+      "path": "crates/ic-backup/src/model/restore_safety/mod.rs",
+      "sha256": "94e34711d3cd240796fc4941fed9298c96d17f0f1fccc53ffdeede31d1336728"
+    },
+    {
+      "path": "crates/ic-backup/src/model/restore_safety/requirement/mod.rs",
+      "sha256": "d92bc4caee5fd3809c0146c4e2b8e1b06d3d012174d3bd9bd492618261973d62"
+    },
+    {
+      "path": "crates/ic-backup/src/model/restore_safety/tests/mod.rs",
+      "sha256": "957dbdffd7870bf7b5045f378a0715e10d6b178d2d268920359c85f3a4ea6fce"
+    },
+    {
+      "path": "crates/ic-backup/src/model/snapshot_read/mod.rs",
+      "sha256": "d7e8a186e421c9e06e9f12d2cc9d07abe93dc840f4fe979819a10d1644f19896"
+    },
+    {
+      "path": "crates/ic-backup/src/model/snapshot_read/tests/mod.rs",
+      "sha256": "3f7c0c2344f41df90da0a685608b89a064fe9528f8f8ba75283d135d6f1dcd5e"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/artifacts/mod.rs",
+      "sha256": "6011fbc412cd7ab6ff438adecb33dc04a48cbcb0a8de78e6d706efe24306680a"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/artifacts/regressions/mod.rs",
+      "sha256": "89abf7b77574ba95cef8c140673dd364dccc39b7d24a4d5568de9d14e2f77c7b"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/artifacts/secure/mod.rs",
+      "sha256": "b0193ba5502529d8770f44f9049f0053ea3a6617223550d97ff2ba4bdc1d9f86"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/artifacts/secure/unix/mod.rs",
+      "sha256": "50606bb90d6f73945f541cb827e947617385ee302e247d4cfe328f302b83829c"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/artifacts/tests/mod.rs",
+      "sha256": "6fa69d5ab0c8ccb667a41424d5e36da3b842026e9fbac0dd43168fd58afa020d"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/mod.rs",
+      "sha256": "6f2992e62472b3ce25e658e0701413cb461f13b92530d42691da92593da6b7d1"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/artifact_commit/mod.rs",
+      "sha256": "cea0005ffa9f164b08ff8a4ff92dc6840533cf476b83800edb2b55cae04a2565"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/artifact_commit/regressions/mod.rs",
+      "sha256": "219d3d599277aadfb222a2d3113b1b4108191a0b731c3958ea556a390fd1d708"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/artifact_commit/supported/mod.rs",
+      "sha256": "daeb5754adbd8f3d6a8091443e06afc8c1487848d162b2c6472159beb240d435"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/artifact_commit/tests/mod.rs",
+      "sha256": "c76e1789210be614c1caede2c11f96d5ae9830397ccb3547aab8a1c4dad81108"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs",
+      "sha256": "a342173719c30fefee6b928c2e3e1ac2f3c24462e603b9d35671d657aa8173bd"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/attempt_journal/tests/mod.rs",
+      "sha256": "584a312ccf1eea82d4db69135a40fa4ce9a01ecb474ea37f08d50f051a368c27"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/command_lifetime_lock/mod.rs",
+      "sha256": "093d9404d7e065a7ec0eedd2244df9688c624e99b7f3478f8d74357db2ea6e44"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/command_lifetime_lock/tests/mod.rs",
+      "sha256": "5e3c3fe0b51fa5446ce1f2de717ee6dbc1d9c0a7cd78fc108f8d313d494a7937"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/consistency/mod.rs",
+      "sha256": "1c15cc665b817a7c7709655afe4ceddd19220c780aadb839a4e2ac9d6856fdc7"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/consistency/tests/mod.rs",
+      "sha256": "4cdf42fbc53e9cd9334c6ff1f6f61816274d74c0bebd1c6a7ad1dd5b947e76bc"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/mod.rs",
+      "sha256": "1e10a53a9d81582c9fedd8bc304be2e3b42ee030bc21e03ef87ed2b666ea1e15"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/tests/custody/mod.rs",
+      "sha256": "68c31d94726ae51c4779819e2f25cc092f98b2164c1b86dcb2f97924f7deadd6"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/tests/mod.rs",
+      "sha256": "2a8149b38bc4c777a636ad411c8d35b5cd8b010e8bbe135b5227cb42e4c592c0"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/tests/upload/mod.rs",
+      "sha256": "824bc14021b127af39d59d98b5f50817e5fe9103e79aae572bf76e145f17b4ab"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/tests/verification/mod.rs",
+      "sha256": "943783a26a598660cc92964d4bae07024461dc1f60f8cec96518606e968c0575"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs",
+      "sha256": "aaf960e70e03f5d8e1cf537b0629683037690034a76c9775c497de66057760ca"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs",
+      "sha256": "1cad6c32bda725bd0f37fd731f3a76acbf1f71e1b57b84ba7860281f1dd09871"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/tests/mod.rs",
+      "sha256": "32fc4fc023998511b46ee46db9513f119ec4c70fc107e786731de4b7e023444d"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/integrity/mod.rs",
+      "sha256": "0c02f0a9cddfee049061dda6c8f0f80f5848c1cebab685c3e8bc3939352ee53d"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/integrity/tests/mod.rs",
+      "sha256": "f289424f69d982b50fff77107d258e94e825695af5069b32a38c165621a95d57"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/mod.rs",
+      "sha256": "f9bf5e1851e54115c4a45cba430cd265e59ed742a0f3fc5c81667765c777d81d"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/publication/mod.rs",
+      "sha256": "d4d1ec9e976a1368cb5e324e55eee3cddd3c992a3e55897704bf74aa94b3d741"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/publication/tests/mod.rs",
+      "sha256": "4b04280c8925028940ef3e83ba87c4298dfa9afe1d5679c620006ee10cbcc21a"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/local_restore_artifact/tests/mod.rs",
+      "sha256": "9be17e2a323d79ada9dea2c35170c2b35adc4482323786c78ccab7f69ce6bbbb"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/local_restore_source/mod.rs",
+      "sha256": "fa79d77364744ccf0a753d8496701994199e868592743ac386f670f8f2f0132a"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/local_restore_source/tests/mod.rs",
+      "sha256": "e685188e8370802026a1bd37560e7f335133d8798f9dafc869328b16e216a1c5"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/manifest/mod.rs",
+      "sha256": "64a0d7c99e93ec5a0faa067a4c8757633c216cc7e8710e6644928b36d871fb87"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/manifest/tests/mod.rs",
+      "sha256": "ade65398f43ea7857142ebccaadd101d26ee4f517cab17fe3834f8ab580d5f78"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/metrics/mod.rs",
+      "sha256": "3dbc82aaabf28425cc0126ec27bf46774a3632253a7d81082c827045fc44d017"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/metrics/tests/mod.rs",
+      "sha256": "eb85c18ee2f4d02f330b8305fb18e14292febfd804b02ae08de90b9a50e939f6"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/mod.rs",
+      "sha256": "7b1a196da9feb8f1498b7b24ad4a11bcba5cfad40dbb34b38b64a33d143b6738"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/tests/mod.rs",
+      "sha256": "0ac63cc92eeac84c4286e9f3d668986e1bcef02ff25a466a40b3c96186b490a1"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/effect_graph/mod.rs",
+      "sha256": "dabcbd11b803e4b8466d27d1de90736cc6bde84886e05449f97cc90bf85180ea"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/effect_graph/tests/mod.rs",
+      "sha256": "22247a7df889de45bf60f8b21757d3811212761c2e521f633795a2eb592e659f"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_progress/mod.rs",
+      "sha256": "721b07edf12bab3543942730efe499cfd62b14ffcbec828b2998a525077b4d7a"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_progress/tests/mod.rs",
+      "sha256": "a9ed5dde86ba78d7e9c20d6d214dda6d25867c41d1aae53a41f0bd190f30e2f5"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_settlement/mod.rs",
+      "sha256": "af8a1dc40a4af6529e1c436c351168113c9d8b4d3d49fb86cea4f77d2aa62c8e"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_settlement/tests/mod.rs",
+      "sha256": "fe60a3a1226f838bdf559e35c7aad77688d9fb6b0082970b93fbf4acc0399965"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/fence_obligation/mod.rs",
+      "sha256": "64696ad10129cb398ec8655ba3aed699aa29940242d844167cc04e6ecc0daf56"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/fence_obligation/tests/mod.rs",
+      "sha256": "73ba8dcd786f2585f925ee4a2d29b914b6e1a89deca5cc2ceca399300628b793"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/file_lock/mod.rs",
+      "sha256": "2e5763dc243db81c093644a04ac49ff65fd9ff39794591b1fb9aec018fe35125"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/inventory/mod.rs",
+      "sha256": "89a804774592d408947dfdad533cb4ef98d07dd276e75771f374e2beabd39f02"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/inventory/tests/mod.rs",
+      "sha256": "73eaa2b00f40635a7e4064daddba6565919fb7d01421d86620627a0ebd68c582"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/journal_lock/mod.rs",
+      "sha256": "64dd8f596a0d2d46eeb4c186ce0d474cf218db47d9f7a59fd42a46d9b98e6285"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/journal_lock/tests/mod.rs",
+      "sha256": "5af493b753950aa8054bd8a5bdabcd19be1213700b6dae9bec06cfcf035226c6"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/json/mod.rs",
+      "sha256": "37a0bc4a50a16085bc221f74360b53dc7921be2c2f34ecf2565969adb7a68c39"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/json/regressions/mod.rs",
+      "sha256": "61ce28254f889b124222db8cd82db5b5413d31064dc4df21ca5e74581ad73cf3"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/json/tests/mod.rs",
+      "sha256": "47e1c06610d4b81b64b604fb18ee2341cbade4fecd490f2e4fcfe29f899e0eae"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/layout_lifetime/mod.rs",
+      "sha256": "26f906fda9dbe5a57c9f06390ceb9fd0476caa11b5bd90e5ce00ef2a4de92a68"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/layout_lifetime/tests/mod.rs",
+      "sha256": "cd69048589f14b4decb9c9dec6c87c21c7ce1d36bb273d13bdde2297e5ed9512"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/mod.rs",
+      "sha256": "d301cd5416a0c69456a0e82385b0a66d97e5c682aa12e1ccaa72b0c3c7a0a5c3"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/operation_plan/mod.rs",
+      "sha256": "0294b000a9d24d276fee1782c80c56e78468a8e085ccd79ae3fab887a31223a9"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/operation_plan/tests/mod.rs",
+      "sha256": "e1e39d880e2ed32c7e28279445020b81df3f5b4c31405ac23051678c480a114c"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/restore_safety/mod.rs",
+      "sha256": "7e2c1e4622f686b26149170c023153d0ee3a300de56369b30563e1335b56a294"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/restore_safety/tests/mod.rs",
+      "sha256": "a16a183645917d7f4e3317706ec250d3019e9c6186ae8cc592ae8c6bc70dacbd"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/consistency/mod.rs",
+      "sha256": "28fd296af1b0c5b8aeea49a875b7b9ad0f0cddd59eda40b5f17f7656be40ad86"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/consistency/tests/mod.rs",
+      "sha256": "99b11e7db75652597411602f7386c4b79987ee9ff5a2042220304b822fcf1593"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/control_authority/mod.rs",
+      "sha256": "4fadea5358972e3870427258bfb4bb3a9512bd110c1f2ef72aeb06db43925081"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/control_authority/tests/mod.rs",
+      "sha256": "922e32e27b41565ff87dd5d678c0fd647dfc91ad0a3d0fb0834d78d1a00716fb"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/download_integrity/mod.rs",
+      "sha256": "235bd27bb9fd1dd359810d870bb1b3422f44daf75764993f5274f68cc7190cb8"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/download_integrity/tests/mod.rs",
+      "sha256": "0e5aa4e2334f726e44e361bae748ea8bc42159c9795d74be0ed7ff1d142f0ce0"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/effect_order/mod.rs",
+      "sha256": "276c127b84c9c5b03e1d2d42c93a914d2acda86b1887a051a0baabed33762ba7"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/effect_order/tests/mod.rs",
+      "sha256": "05786e3265424614aea35b96dadc0b004d7297d7a523c1815bef4f0656f9ecdf"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/execution_progress/mod.rs",
+      "sha256": "82724481cec38a9a9d42034a67da7d6e36671094e997fd689f8042d5f075558b"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/execution_progress/tests/mod.rs",
+      "sha256": "a6cc02ef05068a2ca98c72edcac1820fae44189c17b215778c78b0240ad6a701"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/execution_settlement/mod.rs",
+      "sha256": "a2d5bac57bbe718f216c0f67a54c720f3fc8074536b8a8d0b43bff0945d03877"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/execution_settlement/tests/mod.rs",
+      "sha256": "5bcb3d4a1925949d01fe083bdb1d4153ad8b3d3801b093e12cf164bbb683f42e"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/fence_acquisition/mod.rs",
+      "sha256": "29a1f962a9bec078d1951d0aaea5fbacacfcf717e977caab219d4a74bd769420"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/fence_acquisition/tests/mod.rs",
+      "sha256": "e916aa88457b9b2d3dfc527347c236770c80a2292c86cf26b5391756a6a3cdab"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/fence_obligation/mod.rs",
+      "sha256": "dc4ae648be14507217dd69b730e6a8b1845e2e8a8e220cf66feadf68afa4563b"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/fence_obligation/tests/mod.rs",
+      "sha256": "5eb192fa1ff6adde223145906d7c16a6e94c3f150a1be1b3cf84b4a10da3b6b1"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/fence_reconciliation/mod.rs",
+      "sha256": "daad3303e0d339c68e54bfbf40f297098dbe2c2be5ab44c7d14203a0ef97d8e2"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/fence_reconciliation/tests/mod.rs",
+      "sha256": "1685f377dbe8ac93254e1d7d28ebefa499b20b4474337a0faceae89e63507f0a"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_mutation/mod.rs",
+      "sha256": "6ac89745855307f3776064d03bc6e856c287319d48f16519188699e133a3e5be"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_mutation/tests/mod.rs",
+      "sha256": "02acfe8239e1bf1b9c4a33cb73f3265f9bdccfd68b0f91f81b5ec35420af0333"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/capture_settlement/mod.rs",
+      "sha256": "d83ac1c51d37ec5d774d3ad7e9769a0752d0c65c6e343c3f785364a975aaa50e"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/capture_settlement/tests/mod.rs",
+      "sha256": "1a2299353b190fd6b9c45068b91f8f4f1198764d0da092252db89c141b3c095b"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/mod.rs",
+      "sha256": "bed89023867a5ef81cc884bd40da480ee358bcc41db9925b02b73ad020b4d269"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/settlement/mod.rs",
+      "sha256": "d1bfb782fb7a7e19ae5a6b63d9ce38e5eb37891bd3e73e962415dbfaded61666"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/settlement/tests/mod.rs",
+      "sha256": "ad3be1af0849da7c9cb327da7120cf83fd03fe2ab082f0f7e4451af4e5160333"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/tests/mod.rs",
+      "sha256": "462e97f9502f49f50d4764877cf6ecfbd2eb8853eccff10eb2bf476fd02cb447"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_transfer_read/mod.rs",
+      "sha256": "c6c838e2a25118ba3caadd48c0b2cbc99628eada077cd0b8cd0c1cf08772f851"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_transfer_read/tests/mod.rs",
+      "sha256": "0e77c59f8e99ef54f0d81f06f0006bf6cc882e4c67d10803ae64d4adf9aa4825"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload/mod.rs",
+      "sha256": "3b30c7dd5a6db83c28d74de27248d3b887b10bd8f45ef27a605cd0a7a1838be4"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload/tests/mod.rs",
+      "sha256": "cc1e9ef8736722e1be6c1992cab4857483d7811f2a038e3ed950cb63cb2860fe"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_data_observation/mod.rs",
+      "sha256": "18e78b878ae7603bea239961b7e8dcebcc39008c6736e70104ec5cef5d240342"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_data_observation/settlement/mod.rs",
+      "sha256": "7e5a274a28b5f2347d23d06f8f531df2590ae319630b05a430196096d93676cf"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_data_observation/settlement/tests/mod.rs",
+      "sha256": "8f15a9150a89deae42eb91c7ea37721c870884cc3bb53e77c9c7972311953941"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_data_observation/tests/mod.rs",
+      "sha256": "e90cc795110d9b385aed7b2019b0963560619db226f9c9019e870d4ca2ad8718"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_observation/mod.rs",
+      "sha256": "8ccc75ac4701f20f2208e08007385df0530f12b14054c8d4d6fc95322473064e"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_observation/settlement/mod.rs",
+      "sha256": "ee48776f659d1795f8387377a6c3d0712e3c8d9f5d16a17582286aa5fae5212e"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_observation/settlement/tests/mod.rs",
+      "sha256": "c34e2f85ad67d05d1c70205f368814f27f95a1ffa9bc46a358da911e9ee519d8"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_snapshot_upload_observation/tests/mod.rs",
+      "sha256": "07a50e0047b869752ba4a9ea85d7a818ee9535f8484d6127fe997b1feb8e18b1"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/local_restore_source/mod.rs",
+      "sha256": "8f271b1a029fd23ba3a6bbe04fdf8d07dfd59cb180344fb195ab216d9007af0f"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/local_restore_source/tests/mod.rs",
+      "sha256": "27ed44c4b5bac2da3f4debe5a2751c6c6f088119a49f8abcd84cf3b607179b50"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/membership/mod.rs",
+      "sha256": "03f99cb5872d1d10ee40fe7b929ee625e0af11bf94c85e8561d7277966765bb1"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/membership/tests/mod.rs",
+      "sha256": "7cba83ee35792f11082258193c4b7c649e9799966a21a3796453e6c761418a98"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/mod.rs",
+      "sha256": "4338df1f0adc498bbc1ebf8aab30ab8052875ac670877b86150c61be58d330cf"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/restore_safety/mod.rs",
+      "sha256": "2f738346e55c2e409e99832d96ae77c78140f419569cf40df6bae5f437e2318c"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/restore_safety/tests/mod.rs",
+      "sha256": "e366917dd4719f23d397067147f6b973d6518394bc2277058b0cd1b2efb9889b"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/selection/mod.rs",
+      "sha256": "a7a849dfaa6c05a892aa52d430b09dbea2e1bae51a95f7561ef70711f9a20af6"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/selection/tests/mod.rs",
+      "sha256": "3c108d3333a358fe039b1ebf0d53b4f5862555c9d18a5debad2875f14f94436a"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/snapshot_inventory_delta/mod.rs",
+      "sha256": "41caaab7dc9f36da8e83294d6633b37cdf6ce2ad8e9c8fcd7b8d5e9f5914f0fe"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/snapshot_inventory_delta/tests/mod.rs",
+      "sha256": "ac892387d547566d7a4123157198c83c88c4e433e5095c57ea76205fa1138071"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/snapshot_read/mod.rs",
+      "sha256": "abc08d9a246e9526cef8ef51ea564bb01175cb42ce2bb2ac636aabfe92e86411"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/snapshot_read/tests/mod.rs",
+      "sha256": "6204dc891befc9d77f96492e395d6a5769ebe5a19dc278d9098e400da5a98337"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/consistency/mod.rs",
+      "sha256": "5001dffaaf5c1b194ef8d774be07a03ebac5be18b0bbe664806a3e50ee3a1595"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/control_authority/mod.rs",
+      "sha256": "7dd3fff2da888186d2f7c93f5c52e7bf8a6b0a42793e000a6228dd9987c5d7a8"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/fence_acquisition/mod.rs",
+      "sha256": "0047f3453a098ed04a202aa233947db7bef1f59e08559c1129a4dfaf8bdb8d54"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/fence_reconciliation/mod.rs",
+      "sha256": "955e77164633b28aa1cdbd913261c9d1d7e2134e767a5433c7133345f1a1049c"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_mutation/mod.rs",
+      "sha256": "d1a962132f4476d3f50129167b86c198421f7e4af9e16282f0cba91ed9c7287b"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_observation/mod.rs",
+      "sha256": "991f5fc3434a167d1cbfb528a29283630f3cebff48e3fed34056d8def8085468"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_transfer_read/mod.rs",
+      "sha256": "a8f19fabf3eeeff527e5cc87878808ca2b406cf6da5e4d84f398a38089725bda"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_upload/mod.rs",
+      "sha256": "8c2831948b9201301114c9da75d87dfc367fa7ff7b7ad6b1623375b8684ce3d9"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_upload/tests/mod.rs",
+      "sha256": "5b280c90e77f84a37e58d7fe2bf3c34dcb2d50af5c3e5882690a3fbad87b0ee8"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_upload_data_observation/mod.rs",
+      "sha256": "342ac7107c8311082eed002abcc9029bd723d712a6dc6bf520a5cfba33b532cc"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_upload_data_observation/tests/mod.rs",
+      "sha256": "ea8715ee545bc2a9c6923813a6ba7abf82d265739502e8212a704e079b39e8f2"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_upload_observation/mod.rs",
+      "sha256": "e1bb380e26e5f8c2c954d22392b29b048e873fee1ebd9541a7517d9c0b0f538a"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/ic_snapshot_upload_observation/tests/mod.rs",
+      "sha256": "31a63f4ea155051c0ffce6d730e8ed9838b52b367f98aef0ed013290404e2eea"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/membership/mod.rs",
+      "sha256": "fa762b464cbb67cfa33689a1768815cad342b282c68d561eda9d001a2aa591e2"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/mod.rs",
+      "sha256": "41b6bd80b8c76613825f101f20e607fd5199faeb0cfb97d63b3a19acf7df4d2a"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/restore_safety/mod.rs",
+      "sha256": "90fd24b4e9bcdeee7675aeb541d60050d91b8e088092cb1c7d46acb9e87a8213"
+    },
+    {
+      "path": "crates/ic-backup/src/ports/snapshot_read/mod.rs",
+      "sha256": "f719d5eeb620ab1a7bc9edf12a7c9d206e8717d19cadb40d5a527860d54dba76"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/consistency/mod.rs",
+      "sha256": "08cf5f4df03d8d840cd71cce096e78d7197a4bb6d2f7f357d99981ffd42c3f43"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/control_authority/mod.rs",
+      "sha256": "d26343c1fcb52c58e109f12737330dec4fa7a485ff0ec9e0cb36435e1b19bf13"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/execution_settlement/mod.rs",
+      "sha256": "0e284ba765224bc3e69e23f610f1c27bbe46788ad3b1d16ea47b91f480fc5a74"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/fence_acquisition/mod.rs",
+      "sha256": "70fe48db0723e5d7d7aeed870b5138935bd6cc157cd3cb85ce1f67931b77ff4a"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/fence_reconciliation/mod.rs",
+      "sha256": "53a06b33a9bc2fb135fe3b4b8203c9233c50333c922ca10f5bfc7f17d0d82edf"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/ic_mutation/mod.rs",
+      "sha256": "fb49ad523dae66384dddb439e5c50b2f65e0977c3a54aa7619103dd7e8c540df"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/ic_observation/mod.rs",
+      "sha256": "1891237bab169a8091c3419ac407945887f4b3556e2a6da7e3e6cd10a45a7b56"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/ic_snapshot_upload/mod.rs",
+      "sha256": "d2668787ea25646392314bd6afaa7cdb605045e8407dbb42ecb2051a67f04c2b"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/ic_snapshot_upload_data_observation/mod.rs",
+      "sha256": "7fb1b0a56e3880ec37381d4a7e70984b8a87f309f892d08226cb5cac49608fde"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/local_restore_source/mod.rs",
+      "sha256": "c00df0841a035f3a82ac13594eef4c591a150856bf414ec3f247efe0b044a24d"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/membership/mod.rs",
+      "sha256": "3f00c608ec4444f04166b23a84fbf7caef691cbeb32f22ca73cb558338901969"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/mod.rs",
+      "sha256": "05c279f75cfea2254d54be57fdf5cec4d7eba1972569adf803053b2014c7574f"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/restore_safety/mod.rs",
+      "sha256": "45f6b09dbd9e8951dd4657a749cbc22c2706181feeec4459f32c3213b6e57025"
+    },
+    {
+      "path": "crates/ic-backup/src/test_support/snapshot_read/mod.rs",
+      "sha256": "9639e83130b86079ab421e2c1713dabad1faee3c0b15258cf9920d64a4241b2a"
+    },
+    {
+      "path": "crates/ic-backup/tests/attempt_recovery.rs",
+      "sha256": "3c3ae0e04cfd98008a4cf4b1a07212f24c16a6cacada1808f94a4716523eee97"
+    },
+    {
+      "path": "crates/ic-backup/tests/consistency.rs",
+      "sha256": "43d920d07122a52ced3c35320b0971358317a0faa5bb1c8520a5af5cdaa4214c"
+    },
+    {
+      "path": "crates/ic-backup/tests/control_authority.rs",
+      "sha256": "5c15afae49777c671ebaab419f3f4a25695f52b5b77f0d80c2d952e6a9612a81"
+    },
+    {
+      "path": "crates/ic-backup/tests/directory_checksum.rs",
+      "sha256": "5ee173176b95be0da32cde2244f4236e1b3ef0b8110c50a300bfec5af69bf16b"
+    },
+    {
+      "path": "crates/ic-backup/tests/download_integrity.rs",
+      "sha256": "acc46053dd49b1b380ef50dfa84e87539f02e9f14541936facd717013a2e2f9a"
+    },
+    {
+      "path": "crates/ic-backup/tests/effect_order.rs",
+      "sha256": "4ae5b7a49967cca21d399aecdd2678f61a73a285048461f6ff205bb0a31d5537"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_progress.rs",
+      "sha256": "7cfa11d30d89293f2e7db8386deaaf8941bdbaa82429595a6ff5f1f32461eb30"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_settlement.rs",
+      "sha256": "d687165ccc754da92542ddaf6528aff6aa802f38f135a7993365d1c9f4d3de25"
+    },
+    {
+      "path": "crates/ic-backup/tests/fence_acquisition.rs",
+      "sha256": "6a560daca9aaf15c0fe73bb82ccceca0ed3c867b908712fb99a67b8312317749"
+    },
+    {
+      "path": "crates/ic-backup/tests/fence_obligation.rs",
+      "sha256": "47ec83b5464ec4ddf9ef3ed1764710afc60b2b26d6f946b9eea4edc9b3685f59"
+    },
+    {
+      "path": "crates/ic-backup/tests/fence_reconciliation.rs",
+      "sha256": "343bdfc322af5a3f1aca0594e43a04b646f37456b1428a3e296f21ded68d2cf0"
+    },
+    {
+      "path": "crates/ic-backup/tests/fixture_roots.rs",
+      "sha256": "12fc32d018493655eab756c6d5e1db950e5abe9e829e18987334017890da6e14"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_lifecycle_reply.rs",
+      "sha256": "12d75338f172b5c05d10cc7e52a005ae53439794b2388a774845d376148b6fb8"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_mutation.rs",
+      "sha256": "5e81286c0222b0ac98b6084b3206829cfce0fe03b78b0302f3a7a2a8ef1c2f93"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_observation.rs",
+      "sha256": "d1b1023be5f0920fb78b9dee584a1c2021ddb4d7deed6c56e39ca67893146fc5"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_request.rs",
+      "sha256": "35d4a9a1fb5ca82496cd944179bd8b55f12fe19e8ea334841b900e1378be8a93"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_snapshot_artifact.rs",
+      "sha256": "de08901f5de586dcc7b7fee5668a35b5f809d5faf1ee78709a2cdcfd093a2f2c"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_snapshot_data.rs",
+      "sha256": "83f594bf17a4a940f553a98c95dc0e5a8e90009a7549ed83a0ac188451f3ff47"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_snapshot_metadata.rs",
+      "sha256": "923fccf38f02ca34f6075015751f7ae887e06632f8f640b4d2aee0671df85d2f"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_snapshot_reply.rs",
+      "sha256": "297653e2246d7d319435cc0b13130b9e22773dacb460613da7d8dcd5e624214d"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_snapshot_upload.rs",
+      "sha256": "1f23cc950bb6c5556422e02bf5f137eeb1fcb2813d8914ec22bb3d01b4cd216e"
+    },
+    {
+      "path": "crates/ic-backup/tests/inventory_selection.rs",
+      "sha256": "ae1c740f6547d63ec17edc2da8a073482208bc1f0e0ec9ead03543fa497b36a6"
+    },
+    {
+      "path": "crates/ic-backup/tests/local_recovery.rs",
+      "sha256": "2d7968700da56ebb335b1d613c5fda596d4468039fe4ae68c4e60c1b373883ab"
+    },
+    {
+      "path": "crates/ic-backup/tests/local_restore_source.rs",
+      "sha256": "e4aee2ff3d0298e6cc48516aaef73bfa4ace7cfe6769faa03d297a14d8d59fd4"
+    },
+    {
+      "path": "crates/ic-backup/tests/membership.rs",
+      "sha256": "686d36c66a31485b03577d263b3f4b82aac7f5b191d39f4c124c2ac86c534bcd"
+    },
+    {
+      "path": "crates/ic-backup/tests/operation_plan.rs",
+      "sha256": "03052745a577413bb9412c3ca70f5805fa582d0a9790bf698ab38d55be00ec0e"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/backend/mod.rs",
+      "sha256": "c62d1b5d4500e1da7c200b2734ee39fd5ad9c0e8af004f788048c37d9cf211b5"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/mod.rs",
+      "sha256": "9841430ad4d8fb406ed919f0be7b995e6794a01b788c7f1beaad347aa25f5ab8"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/recovery/lifecycle/mod.rs",
+      "sha256": "f4189278a22dd8ee8b49b933e0f9b9db4ab5d8e330d0e9bb32922a28b1651b0e"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/recovery/mod.rs",
+      "sha256": "bb6969e6b75c078251779ba5d9668e58af9d1e2f844a1e3e46b770645eab6907"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/state.wat",
+      "sha256": "3d4e947eb4b44571ac1a6c162e1cc85548a4dae57ea7520a2918b1935892aec7"
+    },
+    {
+      "path": "crates/ic-backup/tests/pocketic_snapshot.rs",
+      "sha256": "469e50277526c7bbacb4f2a3d72cab2f81701ace2036c45188453d33082fa6f2"
+    },
+    {
+      "path": "crates/ic-backup/tests/restore_safety.rs",
+      "sha256": "b22498b4f47c6674642ded3621a3b658d8b890cbb0546d034104ffcfcc5d42ca"
+    },
+    {
+      "path": "crates/ic-backup/tests/snapshot_inventory_delta.rs",
+      "sha256": "be2a859bfc9c30b4a40a6ac5965e749593dda253b691d1dda2f4e7e2cdd5ac9a"
+    },
+    {
+      "path": "crates/ic-backup/tests/snapshot_read.rs",
+      "sha256": "2372a5174f0c5a3beb4f12e180df80e42755708ba23cdfc622bbf9c0fff193d0"
+    },
+    {
+      "path": "crates/ic-backup/tests/support/mod.rs",
+      "sha256": "dfb0ecbb6d4a3561140a0d29305918f5f8e2def4596f06a66711dac6e7788882"
+    },
+    {
+      "path": "crates/ic-backup/tests/upload_data_observation/mod.rs",
+      "sha256": "38e66c70edd0530249f3efc20212e095b456f1e03e8524d2edfed889ee22d6d0"
+    },
+    {
+      "path": "crates/ic-backup/tests/upload_observation/mod.rs",
+      "sha256": "f6b15afc31a763dae4a30d935b3cffc6f2161f594cb80e401ce361e1249f045b"
+    },
+    {
+      "path": "crates/ic-backup/tests/upload_provider/mod.rs",
+      "sha256": "73ab448530bf81dea477e7b587a7b2bdf2978b643b8abe2fbf52c0e0ec6ef0ab"
+    },
+    {
+      "path": "crates/ic-backup-agent/Cargo.toml",
+      "sha256": "2f6afeeea62e2ef818311d86a3b89debcff71bdcbf3f7fdc426bb16bbe4acfa6"
+    },
+    {
+      "path": "crates/ic-backup-agent/src/lib.rs",
+      "sha256": "30f1e2a0b247263d4eef0e33a90974a5e9e1a1938ddff6c319da0b25aff01514"
+    },
+    {
+      "path": "crates/ic-backup-agent/src/request/mod.rs",
+      "sha256": "65b90a5fe78b7310afcec863c26e64fb04bcb8cf5a8d33c32b8df9716975a881"
+    },
+    {
+      "path": "crates/ic-backup-agent/tests/http_boundary.rs",
+      "sha256": "27638c553c72d80c7460448681341ec65e35ee5cc6f95c6b48ac0e39c972ad03"
+    },
+    {
+      "path": "crates/ic-backup-agent/tests/pocketic_transport.rs",
+      "sha256": "8b923dcbead8b2b97841a830fd3f6017fd325d6624adae0bb4a4a4e31d285223"
+    },
+    {
+      "path": "crates/ic-backup-agent/tests/state.wat",
+      "sha256": "e013443e5ee6df81d507416fe1f980b40ec33a785bfd9cb866c0bdae73d7c1b4"
+    },
+    {
+      "path": "crates/ic-backup-agent/tests/support/mod.rs",
+      "sha256": "d86cf46f4fe757859fdc4172041def7ed21a835ff2d2b7a505de82ee591566a2"
+    },
+    {
+      "path": "docs/release-fixture-ownership.json",
+      "sha256": "b0599859ee6ffa8fef3637c58768a75e4cc8cf4b47ace1b288aa097823dd0d8b"
+    },
+    {
+      "path": "scripts/ci/check-doc-links.sh",
+      "sha256": "508c307b89905d632106386a2413d0fadc1ace23bca13ef330fde44b5625eb87"
+    },
+    {
+      "path": "scripts/ci/test-tooling.sh",
+      "sha256": "ea2c5bc6bb1209a86ea866adb15a72d0f875c1abe2e1b066415be20e484b1cb0"
+    },
+    {
+      "path": "scripts/hooks/test-hooks.sh",
+      "sha256": "2feaeb00d0c19800dd3fd8144cb4ade4f6d10781a2faf29c66c4a9267c980949"
+    },
+    {
+      "path": "scripts/release/release-data.pl",
+      "sha256": "ec5339486af471d444a03949dcad579196b8226e191dad4f4a03e10130117981"
+    },
+    {
+      "path": "scripts/release/release.sh",
+      "sha256": "3228a0b4b315c5d9c280d8cba30f179707748c8d15c9c8afdc5f996dc7329d96"
+    },
+    {
+      "path": "scripts/release/test-release.sh",
+      "sha256": "ba16d10b3352fa65e1cc033a745b80af0f787068a697f7d6abcd00842648bdeb"
+    }
+  ],
+  "checks": [
+    {
+      "path": "target/upstream-081-review/persistence.log",
+      "sha256": "71b618bf4195e8d16e4c5d2ce88701246af22088a1525a979f267a42f8a75fce",
+      "command": "TMPDIR=\"$PWD/target/upstream-081-review/rust-fixtures\" cargo test --offline --locked -p ic-backup --lib ops::persistence",
+      "result": "passed",
+      "registered_cases": [
+        "ops::persistence::artifact_commit::regressions::missing_or_non_sibling_paths_reject_without_publication",
+        "ops::persistence::command_lifetime_lock::tests::quiescence_drop_releases_exclusion_with_a_retained_descriptor_copy",
+        "ops::persistence::command_lifetime_lock::tests::missing_replaced_or_unsafe_sidecars_do_not_prove_quiescence",
+        "ops::persistence::command_lifetime_lock::tests::parent_aliases_share_custody_and_unsafe_journal_leaves_reject",
+        "ops::persistence::download_journal::ic_snapshot_artifact::verification::tests::exact_stream_admission_retries_interruption_and_preserves_io_and_invalid_count_errors",
+        "ops::persistence::command_lifetime_lock::tests::failed_spawn_consumes_the_allowance_without_leaking_custody",
+        "ops::persistence::download_journal::metrics::tests::diagnostics_preserve_the_guard_and_views_send_sync_contract",
+        "ops::persistence::download_journal::metrics::tests::duration_conversion_preserves_nanoseconds_and_clamps_overflow",
+        "ops::persistence::download_journal::metrics::tests::prepared_chunks_use_inclusive_disjoint_bounds_and_one_summary_owner",
+        "ops::persistence::download_journal::metrics::tests::saturated_prepared_total_preserves_unsaturated_distribution",
+        "ops::persistence::download_journal::ic_snapshot_artifact::verification::tests::exact_stream_admission_preserves_empty_and_multibuffer_identity_and_rejects_size_changes",
+        "ops::persistence::attempt_journal::tests::unsafe_corrupt_excessive_and_replaced_evidence_rejects",
+        "ops::persistence::artifact_commit::tests::changed_temporary_tree_cannot_be_published_under_an_old_checksum",
+        "ops::persistence::artifact_commit::tests::rejects_existing_destinations_and_unsupported_entries",
+        "ops::persistence::artifact_commit::tests::publication_race_cannot_replace_a_new_destination",
+        "ops::persistence::command_lifetime_lock::tests::one_spawn_inherits_custody_without_parent_or_command_descriptor_leaks",
+        "ops::persistence::consistency::tests::bounded_invalid_records_and_other_plan_preserve_exact_rejected_bytes",
+        "ops::persistence::download_journal::tests::byte_limits_and_replaced_layouts_reject_before_progress",
+        "ops::persistence::download_journal::tests::reopen_validates_exact_digest_text_before_locking_without_changing_evidence",
+        "ops::persistence::consistency::tests::symlink_and_replaced_layout_reject_without_repair_or_new_guarantee",
+        "ops::persistence::command_lifetime_lock::tests::owner_death_keeps_custody_through_direct_child_and_descendant_exit",
+        "ops::persistence::download_journal::integrity::tests::rejects_non_durable_set_before_attempting_any_artifact_reads",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::verification::non_durable_originals_and_replaced_layout_reject_before_artifact_reads",
+        "ops::persistence::download_journal::tests::unsafe_paths_and_corrupt_journals_reject_without_overwriting",
+        "ops::persistence::download_journal::tests::failed_write_keeps_previous_bytes_and_requires_retained_recovery",
+        "ops::persistence::artifact_commit::tests::publishes_and_recovers_the_exact_verified_tree",
+        "ops::persistence::effect_graph::tests::invalid_graph_unsafe_entry_and_replaced_root_fail_without_repair",
+        "ops::persistence::consistency::tests::original_guarantee_reconciles_exact_create_and_cannot_be_downgraded_or_replaced",
+        "ops::persistence::attempt_journal::tests::failed_reservation_never_returns_a_slot_and_forces_exact_recovery",
+        "ops::persistence::effect_graph::tests::exact_immutable_graph_reconciles_lost_creation_and_rejects_replacement",
+        "ops::persistence::effect_graph::tests::output_and_input_byte_bounds_reject_without_discarding_evidence",
+        "ops::persistence::attempt_journal::tests::retained_limits_exact_identity_and_receipts_survive_reopen",
+        "ops::persistence::download_journal::tests::post_write_error_requires_reopen_and_adopts_exact_retained_state",
+        "ops::persistence::download_journal::tests::changed_bytes_reject_publication_without_resetting_evidence",
+        "ops::persistence::download_journal::tests::encoded_output_bound_preserves_previous_progress",
+        "ops::persistence::artifact_commit::regressions::process_death_recovers_only_verified_bytes",
+        "ops::persistence::execution_progress::tests::held_originals_fail_without_releasing_custody_or_consuming_allowance",
+        "ops::persistence::command_lifetime_lock::tests::finish_is_bounded_while_a_dispatched_command_still_holds_custody",
+        "ops::persistence::download_journal::tests::exact_guarded_lifecycle_and_local_terminal_replay_preserve_bytes",
+        "ops::persistence::journal_lock::tests::lock_excludes_a_second_owner_and_reacquires_after_drop",
+        "ops::persistence::journal_lock::tests::lock_rejects_symlink_and_special_entry_substitution",
+        "ops::persistence::execution_progress::tests::original_complete_coverage_and_selected_identity_are_required_before_spending",
+        "ops::persistence::journal_lock::tests::process_death_child_holds_lock",
+        "ops::persistence::fence_obligation::tests::oversized_invalid_and_rebound_fence_bytes_are_rejected_without_repair",
+        "ops::persistence::journal_lock::tests::process_death_releases_lock_without_sidecar_removal",
+        "ops::persistence::attempt_journal::tests::acknowledged_owner_death_selects_exact_reservation_recovery",
+        "ops::persistence::inventory::tests::malformed_unsafe_and_replaced_layout_records_remain_retained",
+        "ops::persistence::inventory::tests::canonical_output_bound_rejects_escaped_roles_before_creating_a_record",
+        "ops::persistence::json::regressions::shared_record_reads_preserve_extreme_limits_missing_files_and_parent_aliases",
+        "ops::persistence::json::tests::bounded_json_size_preserves_serializer_errors",
+        "ops::persistence::json::regressions::shared_record_reads_reject_real_fifo_and_device_without_waiting_for_a_writer",
+        "ops::persistence::execution_progress::tests::premature_retained_attempts_reject_without_changing_original_accounting",
+        "ops::persistence::inventory::tests::immutable_publication_reconciles_exact_digest_and_preserves_prior_evidence",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::custody::changed_region_identity_or_extent_stops_an_unrelated_append_without_writes",
+        "ops::persistence::json::tests::bounded_json_size_uses_exact_pretty_encoding_and_original_limits",
+        "ops::persistence::json::tests::serialization_failure_preserves_the_previous_document",
+        "ops::persistence::fence_obligation::tests::immutable_original_obligation_requires_retained_plan_and_requirement",
+        "ops::persistence::layout_lifetime::tests::canonical_digest_retains_exact_layout_lock_names_and_existing_contention",
+        "ops::persistence::json::tests::rename_failure_removes_the_staging_file",
+        "ops::persistence::download_journal::tests::owner_death_after_directory_publication_reconciles_without_download_retry",
+        "ops::persistence::layout_lifetime::tests::missing_layouts_and_corrupt_or_excessive_records_cannot_authorize_empty_retention",
+        "ops::persistence::json::tests::durable_json_replaces_the_complete_document",
+        "ops::persistence::execution_progress::tests::lost_observation_reopens_pending_original_spending_without_writes_or_reissue",
+        "ops::persistence::layout_lifetime::tests::removed_and_recreated_layout_keeps_the_same_lock_identity",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::changed_unsafe_extra_and_missing_files_reject_before_any_journal_transition",
+        "ops::persistence::layout_lifetime::tests::unsafe_reference_entries_fail_closed_without_following_links",
+        "ops::persistence::json::tests::foreign_staging_replacement_retains_typed_cleanup_evidence",
+        "ops::persistence::fence_obligation::tests::symlink_and_replaced_layout_preserve_original_obligation",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::original_mismatches_reject_before_creation_and_replaced_custody_receives_no_writes",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::partial_drop_and_coverage_rejections_retain_bytes_without_completion_or_recreation",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::interleaved_bytes_metadata_and_empty_chunks_publish_under_the_original_journal",
+        "ops::persistence::json::regressions::new_machine_records_and_directories_have_private_permissions",
+        "ops::persistence::json::regressions::create_only_publication_preserves_an_existing_record",
+        "ops::persistence::layout_lifetime::tests::exact_authority_survives_reopen_and_missing_external_journals",
+        "ops::persistence::fence_obligation::tests::restoration_requires_both_original_plans_and_unchanged_source_layout",
+        "ops::persistence::json::regressions::record_reads_enforce_exact_byte_limits_and_reject_symlinks",
+        "ops::persistence::operation_plan::tests::malformed_original_binding_unsafe_file_and_replaced_layout_reject_without_repair",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::verification::explicit_retained_verification_keeps_exact_metadata_journal_and_plan_bytes",
+        "ops::persistence::artifact_commit::tests::injected_commit_failures_never_expose_a_partial_tree",
+        "ops::persistence::json::tests::held_parent_publication_does_not_switch_to_a_replaced_path",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty_values",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::local_metrics_count_returned_work_without_writes_unique_progress_or_replay_samples",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::verification::exact_original_metadata_request_and_retained_declarations_are_required",
+        "ops::persistence::operation_plan::tests::immutable_plan_admits_original_intent_and_rejects_different_ceilings_without_replacement",
+        "ops::persistence::layout_lifetime::tests::root_and_journal_parent_aliases_resolve_to_one_identity",
+        "ops::persistence::restore_safety::tests::oversized_malformed_and_rebound_requirements_preserve_exact_rejected_bytes",
+        "ops::persistence::execution_settlement::tests::held_layout_replacement_preserves_retained_checkpoint",
+        "ops::persistence::download_journal::integrity::tests::requires_original_persisted_plan_and_unchanged_guarded_journal",
+        "ops::persistence::layout_lifetime::tests::process_death_before_or_after_reference_publication_retains_exact_evidence",
+        "ops::persistence::download_journal::integrity::tests::unusable_custody_and_corrupt_retained_journal_stop_without_changes",
+        "ops::persistence::download_journal::integrity::tests::rejects_replaced_original_plan_without_rebinding_the_download_journal",
+        "ops::persistence::download_journal::manifest::tests::download_manifest_rejects_changed_last_tree_and_original_journal_without_publication",
+        "ops::persistence::execution_progress::tests::dependency_gate_preserves_bytes_then_reserves_under_original_applied_evidence",
+        "ops::persistence::layout_lifetime::tests::publication_byte_bound_preserves_existing_dependencies",
+        "ops::persistence::execution_settlement::tests::unsafe_excessive_missing_and_changed_originals_reject_without_repair",
+        "ops::persistence::restore_safety::tests::requires_both_retained_original_plans_and_reconciles_creation_without_replacement",
+        "ops::persistence::json::tests::serialization_runs_once_before_parent_creation_even_when_it_fails",
+        "ops::persistence::download_journal::integrity::tests::ordinary_reopen_skips_but_explicit_verification_rejects_changed_second_tree",
+        "ops::persistence::execution_settlement::tests::immutable_private_publication_reopens_exact_originals_and_rejects_contention",
+        "ops::persistence::download_journal::integrity::tests::checks_every_selected_published_tree_and_preserves_exact_evidence",
+        "ops::persistence::json::regressions::process_death_preserves_exact_publication_sides",
+        "ops::persistence::download_journal::manifest::tests::download_manifest_publishes_private_exact_records_and_replays_without_artifact_reads",
+        "ops::persistence::restore_safety::tests::rejects_symlinks_and_replaced_restore_or_source_roots_without_repair",
+        "ops::persistence::operation_plan::tests::maximum_model_count_and_independent_persistence_bounds_preserve_original_absence",
+        "ops::persistence::download_journal::local_restore_source::tests::local_restore_source_retains_exact_original_records_and_selects_existing_ids",
+        "ops::persistence::download_journal::local_restore_artifact::publication::tests::replaced_restore_layout_rejects_before_writing_into_the_replacement",
+        "ops::persistence::download_journal::local_restore_artifact::tests::local_restore_artifact_closing_original_admission_and_contention_preserve_copied_bytes",
+        "ops::persistence::download_journal::local_restore_artifact::publication::tests::original_admission_and_shared_operation_contention_precede_publication",
+        "ops::persistence::download_journal::local_restore_artifact::tests::local_restore_artifact_exact_private_copy_preserves_source_and_originals_on_drop",
+        "ops::persistence::download_journal::local_restore_artifact::tests::local_restore_artifact_recovery_checks_copy_without_rereading_or_recreating_source_trees",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reject",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::acknowledged_process_death_retains_partial_or_exact_verified_publication_recovery",
+        "ops::persistence::download_journal::local_restore_artifact::publication::tests::original_restore_copy_publishes_recovers_and_checks_without_source_tree_reads",
+        "ops::persistence::execution_settlement::tests::lost_publication_response_before_or_after_write_reconciles_exact_local_evidence",
+        "ops::persistence::execution_settlement::tests::acknowledged_process_death_before_publication_or_after_sync_replays_locally",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::maximum_bounded_descriptor_slice_does_not_buffer_the_whole_region",
+        "ops::persistence::download_journal::manifest::tests::download_manifest_lost_reply_preserves_originals_and_requires_exact_local_replay",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::closing_publication_custody_drift_rejects_and_retains_the_completed_local_evidence",
+        "ops::persistence::download_journal::manifest::tests::download_manifest_acknowledged_death_on_both_publication_sides_recovers_originals",
+        "ops::persistence::download_journal::local_restore_artifact::tests::local_restore_artifact_acknowledged_death_before_or_after_copy_recovers_without_cleanup",
+        "ops::persistence::download_journal::integrity::tests::rejects_missing_regular_file_and_symlink_artifact_substitutions",
+        "ops::persistence::download_journal::local_restore_artifact::publication::tests::acknowledged_owner_death_before_or_after_publication_recovers_exact_original_copy",
+        "ops::persistence::download_journal::local_restore_source::tests::local_restore_source_checks_unselected_original_bytes_and_never_repairs_unsafe_trees",
+        "ops::persistence::download_journal::local_restore_source::tests::local_restore_source_replaced_layouts_and_manifest_contention_retain_originals",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::verification::matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity",
+        "ops::persistence::download_journal::local_restore_artifact::tests::local_restore_artifact_partial_and_lost_copy_replies_preserve_unfinished_evidence",
+        "ops::persistence::download_journal::local_restore_artifact::publication::tests::missing_conflicting_changed_and_unsafe_restore_copies_remain_retained",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::upload::changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retained",
+        "ops::persistence::download_journal::local_restore_artifact::publication::tests::lost_publication_reply_and_closing_original_drift_preserve_canonical_recovery",
+        "ops::persistence::download_journal::manifest::tests::download_manifest_replay_rejects_missing_changed_unsafe_and_excessive_records_without_repair",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::verification::changed_unsafe_missing_extra_and_unbounded_children_reject_without_repair",
+        "ops::persistence::download_journal::local_restore_source::tests::local_restore_source_rejects_missing_changed_and_unsafe_original_evidence",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::verification::maximum_chunks_and_region_bytes_verify_without_an_aggregate_buffer",
+        "ops::persistence::download_journal::ic_snapshot_artifact::tests::zero_regions_maximum_chunks_and_streamed_maximum_replies_keep_exact_bytes"
+      ],
+      "case_count": 134
+    },
+    {
+      "path": "target/upstream-081-review/public-recovery.log",
+      "sha256": "f9c11318068c2dc3186493abd8e73c543c61261e3c45d514840e98c072faaa1c",
+      "command": "TMPDIR=\"$PWD/target/upstream-081-review/rust-fixtures\" cargo test --offline --locked -p ic-backup --test execution_settlement --test local_recovery --test local_restore_source --test fixture_roots",
+      "result": "passed",
+      "registered_cases": [
+        "immutable_download_manifest_replay_retains_unfinished_restore_references",
+        "all_applied_local_replay_retains_exact_spending_fence_and_source_without_fresh_calls",
+        "occupied_names_preserve_original_files_directories_and_links",
+        "independent_concurrent_allocators_reserve_distinct_roots_without_a_clock",
+        "bounded_exhaustion_and_parent_errors_preserve_existing_evidence",
+        "public_download_journal_adopts_publication_before_retained_progress",
+        "public_primitives_preserve_intent_and_reconcile_only_matching_bytes",
+        "fresh_local_source_verification_reopens_without_new_spending_or_releasing_obligations",
+        "private_restore_copy_recovers_with_source_trees_absent_and_original_obligations_retained"
+      ],
+      "case_count": 9
+    },
+    {
+      "path": "target/upstream-081-review/agent.log",
+      "sha256": "be9ff59e858aaedbda0255dec668ecdefad1e5a1836b4b17457c58ad2d246d91",
+      "command": "TMPDIR=\"$PWD/target/upstream-081-review/rust-fixtures\" cargo test --offline --locked -p ic-backup-agent --test http_boundary --test pocketic_transport -- --nocapture",
+      "result": "passed",
+      "registered_cases": [
+        "context_and_stale_reservations_reject_before_network",
+        "accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep_spending",
+        "discarded_actual_stop_reply_halts_with_pending_original_and_no_reissue",
+        "wrong_trusted_root_rejects_actual_reply_without_settling_applied_stop",
+        "real_agent_capture_complete_transfer_upload_and_same_id_restore_preserve_originals"
+      ],
+      "case_count": 5
+    },
+    {
+      "path": "target/upstream-081-review/core-pocketic.log",
+      "sha256": "fe9c654620cf056437a14ffdf59473edf256be5386dbb4653c279d7f322e8215",
+      "command": "TMPDIR=\"$PWD/target/upstream-081-review/rust-fixtures\" cargo test --offline --locked -p ic-backup --test pocketic_snapshot -- --test-threads=2",
+      "result": "passed",
+      "registered_cases": [
+        "lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload",
+        "lost_capture_reply_requires_reserved_reconciliation_and_never_reissues",
+        "lost_data_reply_reconciles_original_extent_without_reupload",
+        "lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restart",
+        "lost_metadata_read_reply_keeps_original_spending_and_stops_before_download",
+        "lost_load_reply_requires_complete_stopped_state_verification_before_start",
+        "lost_metadata_reply_reconciles_original_allocation_before_data_upload",
+        "lost_start_reply_reconciles_original_ingress_without_restart",
+        "lost_stop_reply_reconciles_original_ingress_without_restop",
+        "real_capture_download_upload_and_same_id_restore_preserve_complete_state"
+      ],
+      "case_count": 10
+    },
+    {
+      "path": "target/upstream-081-review/clippy.log",
+      "sha256": "e20092228123ddc1752282abb920ea51181f8829fd313f6820917e6a33b76e0f",
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/msrv.log",
+      "sha256": "8e75d429bb3846f19b4a18e4951f239226f72cedd2022a27fcd6ce71138d82c9",
+      "command": "cargo +1.91.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/package.log",
+      "sha256": "45e442837ce7bb90242605dec5cc47828147f12bf62877efb03943c47e3359d4",
+      "command": "cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/make-context-corrected.log",
+      "sha256": "0ecb839d163483f33231b57bc694420396fa2d7747e96a152d05b13de16c969a",
+      "command": "MAKEFILES=\"$PWD/target/upstream-081-review/hostile-include.mk\" GNUMAKEFLAGS=-n bash scripts/release/test-release.sh --metadata-only",
+      "result": "passed",
+      "case_registry": {
+        "path": "target/shared-release-tests.Uzqh8p/cases.txt",
+        "sha256": "00655e1f0c1f92163b7b83805658eb257c373911ae7f481cf6df6ebaac8cbe53"
+      },
+      "cases": [
+        "dependency-success",
+        "dependency-failure",
+        "validation-source-identity",
+        "real-index-boundaries"
+      ]
+    },
+    {
+      "path": "target/upstream-081-review/release-adapter.log",
+      "sha256": "ad9c57c49a341656e1908212be584b47cd2967d84e077d78c8b1d34405948530",
+      "command": "bash scripts/release/test-release.sh",
+      "result": "passed",
+      "case_registry": {
+        "path": "target/shared-release-tests.wDhvU6/cases.txt",
+        "sha256": "972f6b49503d80e6d4545ee144bdc549623253b2f5e063a81b8ae4d750c9c7a9"
+      },
+      "cases": [
+        "dependency-success",
+        "nested-dependency-success",
+        "dependency-failure",
+        "nested-dependency-failure",
+        "validation-source-identity",
+        "versions",
+        "version-reader-comments",
+        "version-reader-selected",
+        "version-reader-duplicate",
+        "version-reader-failed-output",
+        "version-reader-empty",
+        "version-reader-failed-parser",
+        "notes-conflict",
+        "notes-duplicate",
+        "notes-dated",
+        "notes-historical-duplicate",
+        "notes-competing",
+        "notes-same-date",
+        "notes-unnumbered",
+        "shared-notes-empty",
+        "shared-notes-missing",
+        "shared-notes-imported",
+        "shared-notes-bumped",
+        "shared-notes-failed-output",
+        "shared-notes-empty-output",
+        "preparation",
+        "multi-package-preparation",
+        "lockfile-mismatch",
+        "lockfile-duplicate",
+        "lockfile-missing",
+        "lockfile-failed-output",
+        "reject-TEST_FETCH_FAIL",
+        "reject-TEST_GATE_FAIL",
+        "reject-TEST_METADATA_FAIL",
+        "reject-TEST_DIRTY",
+        "reject-TEST_TAG_EXISTS",
+        "reject-TEST_GATE_DIRTY",
+        "reject-TEST_GATE_HEAD",
+        "reject-TEST_PREPARED_FORMAT_FAIL",
+        "staging",
+        "publish-no-release",
+        "publish-tagged",
+        "publish-failure",
+        "completed-notes",
+        "completed-tag",
+        "completed-head",
+        "validation-missing",
+        "validation-member",
+        "early-plan-retry-retention",
+        "prepared-normal-retry",
+        "older-release-explicit",
+        "older-release-patch",
+        "older-release-minor",
+        "older-release-gate-failure",
+        "selected-proof-missing",
+        "selected-proof-identity",
+        "selected-proof-remote",
+        "completed-evidence-replay",
+        "dependency-failure-conditional-status",
+        "conditional-substitute-rejections",
+        "real-index-boundaries"
+      ]
+    },
+    {
+      "path": "target/upstream-081-review/release-runner.log",
+      "sha256": "e1f39d7050923b62f1be5ffafede4b67d33a82a4225dea0e214a1017145b07fe",
+      "command": "RELEASE_MAKE=make bash scripts/ci/test-release-runner.sh",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/validation-runner.log",
+      "sha256": "ceebc3d0815f8bf5a70fc330e9d76cbe0e4c1f7e87cccbae6d060addee3c5ff8",
+      "command": "bash scripts/ci/test-validation-target-runner.sh",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/tooling.log",
+      "sha256": "c42ecea3be4c310afe85f638b82c2dea1ec54ad256dc8c11bbd486d801752606",
+      "command": "bash scripts/ci/test-tooling.sh",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/cloc-tooling.log",
+      "sha256": "547baeda28568dd9cf3e4632e04262b310689d839309ac5fd5515fd04c413883",
+      "command": "bash scripts/ci/test-cloc-tooling.sh",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/hooks.log",
+      "sha256": "be24ed8ef62985e15999c887a4148f23be0fce32d52960d7e9ee03327eea8582",
+      "command": "bash scripts/hooks/test-hooks.sh",
+      "result": "passed"
+    },
+    {
+      "path": "target/upstream-081-review/declarations.log",
+      "sha256": "19b134bd9c8475741dcc7220bcf7ba2577b0c0373e725d728078d65c494328d8",
+      "command": "make fmt-check check-doc-links shared-tooling-check dependency-pins-check shell-check",
+      "result": "passed"
+    }
+  ],
+  "focused_rust_cases": 158,
+  "release_adapter_cases": 61,
+  "tooling_environment": {
+    "TMPDIR": "target/upstream-081-review/tooling-fixtures",
+    "CDPATH": "/home/adam/projects/ic-backup"
+  },
+  "retained_original_failures": [
+    {
+      "command": "CDPATH=\"$PWD\" bash scripts/release/release.sh version",
+      "exit": 1,
+      "cause": "Relative root bootstrap captured CDPATH output as part of the checkout path.",
+      "path": "target/upstream-081-review/cdpath-before.log",
+      "sha256": "b00d0fc35cf77fbec9a09299ac0e3b996375727b715cfd1588342c09d36a0025"
+    },
+    {
+      "command": "MAKEFILES=hostile-include.mk GNUMAKEFLAGS=-n bash scripts/release/test-release.sh --metadata-only",
+      "exit": 2,
+      "cause": "Fixture Make inherited the enclosing environment.",
+      "path": "target/upstream-081-review/make-context-before.log",
+      "sha256": "15661b62826088d111db7e2cb388c93411d58e9b66a16929fdb7c867dbe39be9"
+    }
+  ],
+  "refresh": [
+    {
+      "path": "target/upstream-081-review/refresh.log",
+      "sha256": "1c9c8d1167e89ad4d653056973196c549b39c488e2f404860bdd6cf1df38f6c2"
+    },
+    {
+      "path": "target/upstream-081-review/refresh-first.log",
+      "sha256": "1c9c8d1167e89ad4d653056973196c549b39c488e2f404860bdd6cf1df38f6c2"
+    },
+    {
+      "path": "target/upstream-081-review/refresh-repeat.log",
+      "sha256": "1c9c8d1167e89ad4d653056973196c549b39c488e2f404860bdd6cf1df38f6c2"
+    },
+    {
+      "path": "target/upstream-081-review/refresh-refusal.log",
+      "sha256": "660a67a8eaa3dd9cd49487f203964427562d3d914bec4371189be92017b8288e"
+    },
+    {
+      "path": "target/upstream-081-review/refresh-fixture-path.txt",
+      "sha256": "c6ef2a1ff9d501038713143f2171320acfab91eb5facabd67e56a339106770da"
+    }
+  ],
+  "packaged_archives": [
+    {
+      "path": "target/package/ic-backup-0.8.0.crate",
+      "sha256": "1352908bc26a07eabc9295889c2ffb0c8023bed4ec42511b707a76b3b36bf2cb"
+    },
+    {
+      "path": "target/package/ic-backup-agent-0.8.0.crate",
+      "sha256": "0caa6b374a9db4635b4e72a292c33b6910295f51ef9b0bdd7e61d7a404ac0ac3"
+    }
+  ],
+  "ci_observations": {
+    "shared": [
+      {
+        "conclusion": "",
+        "databaseId": 37778118837,
+        "headSha": "b866d41041a1986eeec95bde9af4c6ba0853d2e3",
+        "status": "queued"
+      },
+      {
+        "conclusion": "failure",
+        "databaseId": 37770856593,
+        "headSha": "75a8a60f49cec11d3f6aecab5c977029c42cc549",
+        "status": "completed"
+      }
+    ],
+    "host": [
+      {
+        "conclusion": "",
+        "databaseId": 37776708008,
+        "headSha": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
+        "status": "queued"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37773664766,
+        "headSha": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
+        "status": "completed"
+      }
+    ],
+    "metrics": [
+      {
+        "conclusion": "",
+        "databaseId": 37776691554,
+        "headSha": "4091366bcd97ddf4f31d5993c954f6f4a269bc63",
+        "status": "in_progress"
+      },
+      {
+        "conclusion": "cancelled",
+        "databaseId": 37773131075,
+        "headSha": "d16aa0aeb0e0f4fcbbc6962ba3f86c7348ecff88",
+        "status": "completed"
+      }
+    ],
+    "released_consumer": [
+      {
+        "conclusion": "",
+        "databaseId": 37777744868,
+        "headSha": "04f65896060b1f1cd47fd36906a6d88dbe6c8501",
+        "status": "queued"
+      },
+      {
+        "conclusion": "",
+        "databaseId": 37777744403,
+        "headSha": "04f65896060b1f1cd47fd36906a6d88dbe6c8501",
+        "status": "queued"
+      }
+    ]
+  },
+  "limits": [
+    "Current upstream and released consumer native CI is not complete; Linux local results do not qualify macOS.",
+    "Prior Shared 0.1.26 Intel timed out under upstream #71.",
+    "Full CI/release gates were not requested or run.",
+    "Generic orchestration/stage binding and fresh Canic adoption remain separate."
+  ],
+  "effects": "Uncommitted Backup work only. Canonical export reads exact clean sibling source. Isolated refresh clone and release fixtures retain their own evidence; no root Git writes, sibling edits, live IC, release/version transaction or registry upload.",
+  "documentation_closeout": {
+    "command": "make check-doc-links shared-tooling-check; git diff --check",
+    "result": "passed",
+    "path": "target/upstream-081-review/documentation-closeout.log",
+    "sha256": "ef019eb42aec07c6496e2a98b04ec8e4514dd70789e4d7562acbe43ceb1ecbca"
+  },
+  "public_description_correction": {
+    "original": {
+      "description": "Host-side Rust foundations for Internet Computer backup and same-release recovery: local artifacts, journals, plans and bounded IC codecs. Transport and runners are not yet implemented."
+    },
+    "actual": {
+      "description": "Host-side Rust libraries for Internet Computer backup and same-release recovery: durable artifacts, journals, plans, bounded codecs and direct Agent transport. Full runners are not yet implemented."
+    }
+  },
+  "issue_updates": {
+    "issue-25-result.log": "https://github.com/dragginzgame/ic-backup/issues/25#issuecomment-6060244019",
+    "issue-28-result.log": "https://github.com/dragginzgame/ic-backup/issues/28#issuecomment-6060244387",
+    "shared-7-result.log": "https://github.com/dragginzgame/shared-tooling/issues/7#issuecomment-6060244853"
+  }
+}

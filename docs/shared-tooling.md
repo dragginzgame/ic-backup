@@ -49,7 +49,26 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 77-file snapshot selects committed Shared Tooling 0.1.25 at
+The current 77-file snapshot selects committed Shared Tooling 0.1.27 at
+`b866d41041a1986eeec95bde9af4c6ba0853d2e3`. Thirty-two selected paths change;
+common baseline/rules remain unchanged. The canonical exporter runs directly
+against this repository, preserving the incoming unrelated lockfile update.
+Exact source bytes and executable modes match every selected path. A retained
+isolated consumer also qualifies consecutive uncommitted refresh and refusal of
+edited input without replacing its manifest or unrelated work.
+
+Focused consumer release/validation/snapshot/LOC/hook checks pass under inherited
+`CDPATH`. Local entry points use physical absolute roots; release fixtures exclude
+inherited Make includes and GNU flags after both original failures were retained.
+The new shared compact installer-evidence selector is not part of this consumer's
+selected file set or archive policy. Existing explicit evidence roots and retention
+remain selected. Exact upstream 0.1.27 CI and released consumer 0.8.0 CI are still
+pending; prior 0.1.26 Intel CI timed out under
+[shared #71](https://github.com/dragginzgame/shared-tooling/issues/71).
+[The current review](reports/audits/2026/10/08/upstream-refresh/01/report.md)
+binds the compatible 0.8.1 draft to its actual inputs and focused Linux results.
+
+The earlier 77-file snapshot selected committed Shared Tooling 0.1.25 at
 `eeb72e741199bd8574280eacb3542d8379b912f6`. Exact owner
 [CI](https://github.com/dragginzgame/shared-tooling/actions/runs/37762726615) passes
 Linux and both native macOS hosts, including hosted evidence round trips.

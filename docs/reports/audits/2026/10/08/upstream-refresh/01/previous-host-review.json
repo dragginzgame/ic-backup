@@ -1,16 +1,17 @@
 {
   "version": 1,
   "inspection_date": "2026-10-08",
+  "kind": "Preserved external Host 0.7.0 and Metrics 0.2.12 graph under Agent hard cut",
   "repository": "https://github.com/dragginzgame/ic-host-tooling",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
-  "published_source_revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
+  "published_source_revision": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
   "packages": {
     "ic-host-artifacts": {
-      "version": "0.7.1",
-      "revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
-      "archive_sha256": "583dce23ad5266462397a777b927050a7884c9e87a23cad29a1fa8b80af0c0ca",
+      "version": "0.7.0",
+      "revision": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
+      "archive_sha256": "71dca731ceb4bdfe482ac746f68372333381824c7112b53aa5344c6378b65260",
+      "matches_official_source": true,
       "yanked": false,
-      "all_published_rust_and_original_manifest_match_committed_source": true,
       "sources": {
         "Cargo.toml.orig": "7759140547f4daca7dc1a1a4a960ce9da3e627b8120a762a05b4bd55baae35a4",
         "src/archive/mod.rs": "0aa25f26c92962cb8d7c937a45520d70ab08cbeffcb19346b43e0c76560bd1d1",
@@ -34,14 +35,14 @@
         "src/wasm/tests.rs": "6c602d58024a539c02b524489fc0adfed75e73a911d4cb69f224fa7d726cf0bc",
         "tests/consumer_contracts.rs": "73284325f81c682b42409e66d7560ee06ee2a303c1a9e635776bf93eba04b1a9"
       },
-      "changed_rust_from_previous_selection": []
+      "changed_rust": []
     },
     "ic-host-fs": {
-      "version": "0.7.1",
-      "revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
-      "archive_sha256": "16e31ff78c4411397e95ea9c35978f42084e4fb7d949b78a8ea52c6139482b28",
+      "version": "0.7.0",
+      "revision": "491fc0e231b9650526f5f57b9ab7b1f62f02218c",
+      "archive_sha256": "9ffac1c91c2cee4fb602533222f07750d2e9a196370618f5a0a1b9a87d34a28d",
+      "matches_official_source": true,
       "yanked": false,
-      "all_published_rust_and_original_manifest_match_committed_source": true,
       "sources": {
         "Cargo.toml.orig": "a256d57ab6eced69da52f48871b47e406091e62a15ac64f7b8388352b54825c4",
         "src/durable/lock_wait/mod.rs": "b2f7abd572a2721949e6bfe4225802719fa8dc39f0846000e2ff834d26c6f6a3",
@@ -63,26 +64,20 @@
         "src/read/tests.rs": "b759c8db2c123d4eccbde43847866d8dd867990684f5e0cc9fac65064895a74d",
         "src/test_support/mod.rs": "9f6fe53974cacc49439f776abd6148a21fce7812a36d3b0fac800b585ab8e0c5"
       },
-      "changed_rust_from_previous_selection": []
+      "changed_rust": []
     }
   },
-  "features": {
-    "ic-host-artifacts": [],
-    "ic-host-fs": []
-  },
   "public_compatibility": {
-    "released_base": "0.8.0",
-    "next_draft": "0.8.1",
-    "reason": "Same Host 0.7 Rust type identity and unchanged source; compatible patch graph, no record/accounting changes."
+    "released_base": "0.7.0",
+    "next_draft": "0.8.0",
+    "reason": "Host 0.7 exposed publication-error Rust identity changes again; full pending transport/command hard cut uses minor 0.8.0. Core v1 bytes/budgets remain unchanged."
   },
-  "qualification": "docs/reports/audits/2026/10/08/upstream-refresh/01/qualification.json",
-  "source_proof": "docs/reports/audits/2026/10/08/upstream-refresh/01/published-source-proof.json",
-  "previous_review": "docs/reports/audits/2026/10/08/upstream-refresh/01/previous-host-review.json",
-  "limits": [
-    "Current upstream and released consumer native CI is not complete; Linux local results do not qualify macOS.",
-    "Prior Shared 0.1.26 Intel timed out under upstream #71.",
-    "Full CI/release gates were not requested or run.",
-    "Generic orchestration/stage binding and fresh Canic adoption remain separate."
-  ],
-  "process": "Not selected after the released ICP hard cut; existing descriptor custody/local capture remain separate."
+  "qualification": {
+    "source_proof": "docs/reports/audits/2026/10/08/agent-transport/01/host-070-metrics-source-proof.json",
+    "consumer_record": "docs/reports/audits/2026/10/08/agent-transport/01/qualification.json",
+    "status": "Final frozen Linux graph passes 158 focused Rust cases, both-library Clippy/MSRV/package checks, strict Agent rustdoc and declarations. Source and logs bind the separate consumer record. Process is absent.",
+    "limits": "Host exact-source CI passes; Metrics owner CI queued at review; current consumer native macOS remains separate."
+  },
+  "previous_review": "docs/reports/audits/2026/10/08/agent-transport/01/previous-host-060-review.json",
+  "removed_dependency": "ic-host-process: sole ICP probe caller retired; ordinary descriptor custody/local test capture retain their separate owners."
 }

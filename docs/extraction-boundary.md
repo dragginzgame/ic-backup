@@ -183,9 +183,9 @@ errors keep their own boundaries. The public exhaustive enum changed in
 completion. All v1 bytes, original limits, spending and journal transitions remain
 unchanged. Neither helper grants operation or retry authority.
 
-The pending 0.7.0 adoption selects published Host 0.5.0, changing the exposed
-`NamedWriteError` Rust type identity without changing its variant shapes or v1
-records. Direct Host dependencies sharing that value must use the same line.
+Released 0.8.0 selects the Host 0.7 `NamedWriteError` Rust type identity. The
+current draft qualifies Host 0.7.1 without changing variant shapes or v1 records.
+Direct Host dependencies sharing that value must use the same compatible line.
 The new closed-writer executable-admission API has no record-writing purpose;
 JSON publication keeps this single held-parent adapter and preflight contract.
 

@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Shared companions: scripts/ci/verify-file-checksum.sh
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
+ROOT="$0"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 [[ $# == 3 ]] || { echo 'usage: check-pocketic-binary.sh VERSION SHA256 EXECUTABLE' >&2; exit 2; }
 version="$1" digest="$2" executable="$3"
 [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || {

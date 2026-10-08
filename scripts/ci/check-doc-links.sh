@@ -2,7 +2,10 @@
 set -euo pipefail
 
 # Consumer-owned Markdown selection; parsing belongs to the shared checker.
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+ROOT="${BASH_SOURCE[0]}"
+[[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
+ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
+ROOT="${ROOT%/.}"
 cd "$ROOT"
 roster="$(mktemp "${TMPDIR:-/tmp}/ic-backup-documents.XXXXXX")"
 trap 'rm -f "$roster"' EXIT

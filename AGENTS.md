@@ -59,8 +59,8 @@ into an issue tracker or release authority.
   public `PersistenceError::Publication` retains original producer, cleanup and
   visibility evidence; no local-write error grants paid retry or resets spending.
   The Host 0.5 error identity was delivered in 0.7.0. The externally selected
-  Host 0.7 graph changes that exposed Rust identity again; the pending 0.8.0
-  transport hard cut covers it. Artifacts/fs source is unchanged from 0.5.2;
+  Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
+  The compatible 0.8.1 draft qualifies Host 0.7.1; artifacts/fs source is unchanged from 0.5.2;
   the now-unused process dependency is retired with its sole ICP probe caller.
   Local bounded capture retains its direct-child semantics. Group cleanup does not
   replace inherited descriptor custody or prove descendant quiescence; bounded
