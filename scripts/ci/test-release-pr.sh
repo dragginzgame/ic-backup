@@ -48,14 +48,13 @@ set -euo pipefail
 [[ "${PR_TEST_API_FAIL:-}" != yes ]] || exit 29
 [[ "$1" == api && "$2" == --hostname && "$3" == github.com ]]
 shift 3
-method=GET; input=''; endpoint=''; selection=''; pages=no; slurp=no
+method=GET; input=''; endpoint=''; selection=''; pages=no
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --method) method="$2"; shift 2 ;;
         --input) input="$2"; shift 2 ;;
         --jq) selection="$2"; shift 2 ;;
         --paginate) pages=yes; shift ;;
-        --slurp) slurp=yes; shift ;;
         --include) shift ;;
         -f) case "$2" in state=all|head=example:release/v0.1.1|base=main) ;; *) exit 86 ;; esac; shift 2 ;;
         repos/*) [[ -z "$endpoint" ]]; endpoint="$1"; shift ;;
@@ -66,11 +65,19 @@ case "$method:$endpoint" in
     GET:repos/example/project)
         [[ "$selection" == .full_name ]]; echo example/project ;;
     GET:repos/example/project/pulls)
-        [[ "$pages" == yes && "$slurp" == yes ]]
+        [[ "$pages" == yes ]]
+        case "${PR_TEST_QUERY_RESPONSE:-valid}" in
+            empty) exit 0 ;;
+            malformed) printf '[\n'; exit 0 ;;
+            nonarray) echo '{}'; exit 0 ;;
+            partial) echo '[]'; exit 29 ;;
+        esac
         if [[ -f "$PR_TEST_DATA/pr.json" ]]; then
-            if [[ "${PR_TEST_DUPLICATE:-}" == yes ]]; then jq -s '[., .] | flatten | [.]' "$PR_TEST_DATA/pr.json"
-            else jq -s '[.]' "$PR_TEST_DATA/pr.json"; fi
-        else echo '[[]]'; fi
+            jq '[.]' "$PR_TEST_DATA/pr.json"
+            # Multiple matching PRs remain a conflict even on separate pages.
+            if [[ "${PR_TEST_DUPLICATE:-}" == yes ]]; then jq '[.]' "$PR_TEST_DATA/pr.json"; fi
+            if [[ "${PR_TEST_PAGINATED:-}" == yes ]]; then echo '[]'; fi
+        else echo '[]'; fi
         ;;
     GET:repos/example/project/pulls/1) cat "$PR_TEST_DATA/pr.json" ;;
     POST:repos/example/project/pulls)
@@ -137,6 +144,9 @@ case "$1" in
         [[ "$(cat "$(git rev-parse --git-path qualified-source)")" == "$RELEASE_SOURCE" ]]
         [[ "$(git show "$RELEASE_COMMIT:VERSION")" == "$RELEASE_VERSION" ]]
         if [[ "${PR_TEST_DIRTY_PUSH:-}" == yes && "$1" == release-push-check ]]; then echo changed >> VERSION; fi
+        if [[ "${PR_TEST_RETAG_PUSH:-}" == yes && "$1" == release-push-check ]]; then
+            git tag -f -a "v$RELEASE_VERSION" "$RELEASE_COMMIT" -m 'Changed annotation after checking'
+        fi
         ;;
     *) exit 84 ;;
 esac
@@ -261,10 +271,26 @@ cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-uncertain"
 [[ "$(jq -r .attempted .git/release-state/0.1.1.plan.pr.json)" == true ]]
 
 new_fixture failed-query
-run_release 75
+# Stop before the first branch push or PR creation, even if an earlier page was
+# received successfully. Retrying the retained preparation must not repeat it.
+PR_TEST_QUERY_RESPONSE=partial run_release 29
+[[ "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-publish ]]
+[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 1 && ! -f "$PR_TEST_DATA/pr.json" ]]
+[[ "$(grep -c -- '-push$' "$PR_TEST_EVENTS" || true)" == 0 ]]
 cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-query"
 PR_TEST_API_FAIL=yes run_release 29
 cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-query"
+for response in empty malformed nonarray partial; do
+    expected=1
+    [[ "$response" != partial ]] || expected=29
+    PR_TEST_QUERY_RESPONSE="$response" run_release "$expected"
+    cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-query"
+done
+PR_TEST_PAGINATED=yes run_release 75
+[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]]
+cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-paginated-query"
+PR_TEST_PAGINATED=yes run_release 75
+cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-paginated-query"
 
 new_fixture changed-push-input
 run_release 75
@@ -272,6 +298,14 @@ merge_pr squash
 PR_TEST_DIRTY_PUSH=yes run_release 1
 [[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]]
 [[ -f .git/release-state/0.1.1.merged/VERSION ]]
+
+new_fixture changed-push-tag-object
+run_release 75
+merge_pr squash
+PR_TEST_RETAG_PUSH=yes run_release 1
+[[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]]
+[[ "$(git rev-parse 'v0.1.1^{commit}')" == "$merged" && "$(git cat-file -t v0.1.1)" == tag ]]
+[[ "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-push ]]
 
 for conflict in closed duplicate head base destination index delivery tree lock local-tag remote-tag; do
     new_fixture "conflict-$conflict"

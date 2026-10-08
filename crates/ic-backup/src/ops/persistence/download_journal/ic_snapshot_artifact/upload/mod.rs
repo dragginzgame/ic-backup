@@ -3,8 +3,7 @@
 use super::super::metrics::LocalOperation;
 use super::{
     DownloadJournalGuard, File, IcSnapshotArtifactError, Mode, OFlags, REGIONS,
-    check_directory_identity, errno_to_io, hex_bytes, open_directory, unix_fs,
-    verification::open_regular_child,
+    check_directory_identity, hex_bytes, open_directory, unix_fs, verification::open_regular_child,
 };
 use crate::model::{
     ic_snapshot_data::{MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
@@ -13,7 +12,7 @@ use crate::model::{
     operation_plan::OperationPlanRecord,
 };
 use ic_management_canister_types::SnapshotDataKind;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{self, Read, Seek, SeekFrom};
 use std::time::Instant;
 use thiserror::Error;
 
@@ -90,7 +89,7 @@ impl DownloadJournalGuard<'_> {
                     OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
                     Mode::empty(),
                 )
-                .map_err(errno_to_io)
+                .map_err(io::Error::from)
                 .map_err(IcSnapshotArtifactError::from)?,
             );
             let chunk = read_chunk(&directory, metadata, &source_kind)?;

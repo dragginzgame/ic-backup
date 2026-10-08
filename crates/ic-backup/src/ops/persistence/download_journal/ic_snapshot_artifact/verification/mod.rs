@@ -4,7 +4,7 @@ use super::super::metrics::LocalOperation;
 use super::{
     ArtifactChecksumRecord, DownloadJournalGuard, FORMAT, File, IcSnapshotArtifactError,
     IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES, Mode, OFlags, REGIONS,
-    check_closed_tree, check_directory_identity, checksum_relative_files, errno_to_io, hex_bytes,
+    check_closed_tree, check_directory_identity, checksum_relative_files, hex_bytes,
     open_directory, unix_fs,
 };
 use crate::{
@@ -19,7 +19,10 @@ use crate::{
 };
 use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_reader};
 use std::time::Instant;
-use std::{io::Read, os::unix::fs::MetadataExt};
+use std::{
+    io::{self, Read},
+    os::unix::fs::MetadataExt,
+};
 
 impl DownloadJournalGuard<'_> {
     /// Explicitly verify one published IC tree against exact original metadata and intent.
@@ -72,7 +75,7 @@ impl DownloadJournalGuard<'_> {
                     OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
                     Mode::empty(),
                 )
-                .map_err(errno_to_io)?,
+                .map_err(io::Error::from)?,
             );
             checksum_ic_tree(&directory, metadata)?.verify(expected.hash())?;
             check_directory_identity(&parent_path, &parent)?;
@@ -178,9 +181,10 @@ fn checksum_child(
     let (mut file, original) = open_regular_child(directory, name, length, maximum)?;
     let checksum = checksum_exact_reader(&mut file, original.len())?;
     let held = file.metadata()?;
-    let current =
-        File::from(unix_fs::openat(directory, name, flags, Mode::empty()).map_err(errno_to_io)?)
-            .metadata()?;
+    let current = File::from(
+        unix_fs::openat(directory, name, flags, Mode::empty()).map_err(io::Error::from)?,
+    )
+    .metadata()?;
     if !current.is_file()
         || original.dev() != current.dev()
         || original.ino() != current.ino()
@@ -223,7 +227,7 @@ pub(super) fn open_regular_child(
             OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
             Mode::empty(),
         )
-        .map_err(errno_to_io)?,
+        .map_err(io::Error::from)?,
     );
     let metadata = file.metadata()?;
     if !metadata.is_file()

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.0]
+
+- **Breaking:** Adopt published Host 0.5 libraries. `PersistenceError::Publication` now carries the 0.5 `NamedWriteError` Rust type; align direct Host dependencies when matching or exchanging that value. Preserve JSON publication, checksum framing, record formats and original spending contracts.
+- Adopt Shared Tooling 0.1.23 to recheck release payloads and exact tags after final hooks and verify published identity on completed resume ([shared #58](https://github.com/dragginzgame/shared-tooling/issues/58)).
+- Remove duplicate Unix error-conversion helpers and use Rustix's native IO conversion directly, preserving artifact publication, lock failures and interruption recovery.
+
 ## [0.6.0] - 2026-10-08
 
 - **Breaking:** JSON publication now returns `PersistenceError::Publication` with shared typed producer, cleanup and before/after-publication evidence. Update exhaustive error matches; reconcile visible output after completion failures. Delegate allocation and atomic publication to `ic-host-fs`, retaining private parents, serialize-once preflight and crash recovery ([#24](https://github.com/dragginzgame/ic-backup/issues/24)).

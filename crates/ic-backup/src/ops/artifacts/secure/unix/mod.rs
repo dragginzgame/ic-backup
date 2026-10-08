@@ -85,20 +85,20 @@ fn open_relative(root: &Path, relative: &Path) -> Result<(OwnedFd, FileType), Ar
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
         Mode::empty(),
     )
-    .map_err(errno_to_io)?;
+    .map_err(std::io::Error::from)?;
     for (index, component) in components.iter().enumerate() {
         let is_leaf = index + 1 == components.len();
         let mut flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
         if !is_leaf {
             flags |= OFlags::DIRECTORY;
         }
-        current =
-            unix_fs::openat(&current, *component, flags, Mode::empty()).map_err(errno_to_io)?;
+        current = unix_fs::openat(&current, *component, flags, Mode::empty())
+            .map_err(std::io::Error::from)?;
         if !is_leaf {
             ensure_opened_type(&current, FileType::Directory, relative)?;
         }
     }
-    let metadata = unix_fs::fstat(&current).map_err(errno_to_io)?;
+    let metadata = unix_fs::fstat(&current).map_err(std::io::Error::from)?;
     Ok((current, FileType::from_raw_mode(metadata.st_mode)))
 }
 
@@ -138,9 +138,9 @@ fn collect_directory_checksums(
     display_root: &Path,
     checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
 ) -> Result<(), ArtifactError> {
-    let mut directory = Dir::read_from(directory_fd).map_err(errno_to_io)?;
+    let mut directory = Dir::read_from(directory_fd).map_err(std::io::Error::from)?;
     while let Some(entry) = directory.read() {
-        let entry = entry.map_err(errno_to_io)?;
+        let entry = entry.map_err(std::io::Error::from)?;
         let name_bytes = entry.file_name().to_bytes();
         if matches!(name_bytes, b"." | b"..") {
             continue;
@@ -192,9 +192,9 @@ fn copy_directory_entries(
     destination_root: &Path,
     checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
 ) -> Result<(), ArtifactError> {
-    let mut directory = Dir::read_from(directory_fd).map_err(errno_to_io)?;
+    let mut directory = Dir::read_from(directory_fd).map_err(std::io::Error::from)?;
     while let Some(entry) = directory.read() {
-        let entry = entry.map_err(errno_to_io)?;
+        let entry = entry.map_err(std::io::Error::from)?;
         let name_bytes = entry.file_name().to_bytes();
         if matches!(name_bytes, b"." | b"..") {
             continue;
@@ -248,7 +248,8 @@ fn create_private_directory(path: &Path) -> Result<(), ArtifactError> {
 }
 
 fn entry_type(parent: &impl AsFd, name: &std::ffi::CStr) -> Result<FileType, ArtifactError> {
-    let metadata = unix_fs::statat(parent, name, AtFlags::SYMLINK_NOFOLLOW).map_err(errno_to_io)?;
+    let metadata =
+        unix_fs::statat(parent, name, AtFlags::SYMLINK_NOFOLLOW).map_err(std::io::Error::from)?;
     Ok(FileType::from_raw_mode(metadata.st_mode))
 }
 
@@ -262,7 +263,7 @@ fn open_child(
         flags |= OFlags::DIRECTORY;
     }
     unix_fs::openat(parent, name, flags, Mode::empty())
-        .map_err(errno_to_io)
+        .map_err(std::io::Error::from)
         .map_err(ArtifactError::from)
 }
 
@@ -271,7 +272,7 @@ fn ensure_opened_type(
     expected: FileType,
     path: &Path,
 ) -> Result<(), ArtifactError> {
-    let metadata = unix_fs::fstat(fd).map_err(errno_to_io)?;
+    let metadata = unix_fs::fstat(fd).map_err(std::io::Error::from)?;
     let actual = FileType::from_raw_mode(metadata.st_mode);
     if actual == expected {
         Ok(())
@@ -285,8 +286,4 @@ fn unsupported_entry(path: &Path, kind: FileType) -> ArtifactError {
         path: path.display().to_string(),
         kind: format!("{kind:?}"),
     }
-}
-
-fn errno_to_io(error: rustix::io::Errno) -> std::io::Error {
-    std::io::Error::from_raw_os_error(error.raw_os_error())
 }

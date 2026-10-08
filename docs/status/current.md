@@ -23,9 +23,124 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-07
+# Current handoff — 2026-10-08
 
-## Pending 0.6.0 typed JSON publication and checked directory framing
+## Current 0.7.0 canonical IO cleanup and Metrics qualification
+
+The preserved incoming lock now selects registry Metrics 0.2.11, with Host
+artifacts/fs/process 0.5.0. No dependency update ran. Its non-yanked official archive
+matches the declared checksum and every published source blob matches committed
+`69b110b8fbefdac4773eac7631796f9dcb3f41a0`. Metrics Rust is unchanged from 0.2.9/0.2.10;
+the actual resolved feature set is empty. Fresh diagnostics/guarded upload checks
+qualify this selection rather than relabelling the earlier graph's evidence.
+
+Four private `errno_to_io` functions and their repeated inline conversions are
+removed in favor of Rustix's existing `io::Error::from` implementation. Artifact
+traversal, directory publication, IC tree verification/upload and layout/journal/
+command locks retain native codes and typed failures without a replacement local
+wrapper. All 142 affected operations cases, eight public artifact/upload/source/
+recovery/settlement cases, configured Clippy and Rust 1.91 checks pass on Linux.
+Exact inputs, registered cases, archive/source proof and logs remain under
+`target/hard-cut-070-review`; the failed initial selection of a nonexistent public
+test target is retained separately, then corrected. No new test mirrors the removed
+helper. Earlier PocketIC results retain their actual inputs; no IC effect path changes
+and no new simulator or complete gate runs.
+
+The hard-cut review retains independent source-byte/custody checks, immutable v1
+record boundaries, serialize-once JSON buffering and same-contract interruption
+recovery. It finds no compatibility alias or dual reader in the inspected metrics/
+artifact/lock scope. Existing reservations, fence obligations and references retain
+their exact owners; no reset, cleanup, provider, terminal or release API is added.
+Only production transport [#25](https://github.com/dragginzgame/ic-backup/issues/25)
+remains open. Current consumer native macOS delivery remains separate. The draft
+stays 0.7.0 for Host's exposed error-type identity; package/receipt stay 0.6.0 and
+all work remains uncommitted.
+
+## Shared Tooling 0.1.23 and delivered 0.6.0 inspection
+
+The accepted refresh adopts exact committed Shared Tooling
+`0ba0ad00ed94848e54ecc82629b6b7873b7284c0` through the canonical exporter from a
+clean isolated source. All 75 prior paths remain; seven change and every blob/mode
+matches remote committed source. The baseline/rules are unchanged. Direct release
+admission now rechecks payload/index/tag after final hooks and completed resume
+observes exact destination identity without repeating effects. PR pagination uses
+jq; the consumer still selects direct delivery. Fresh Linux release adapter/private
+index, canonical runner, snapshot/logger/retention and shell checks pass. The
+optional PR fixture passes on synthetic Git and a GitHub substitute; no actual PR
+or merged-source product release is qualified. [The review](../shared-tooling-review.json)
+binds source, focused results and native owner scope. The batch extends 0.7.0 and
+keeps package/receipt 0.6.0; no repository Git or release effects run.
+Exact upstream 0.1.23 CI now passes Linux, both native macOS architectures and
+lint/security. The current dirty consumer graph retains its separate native gate.
+
+Exact released 0.6.0 main and tag CI now pass Linux, Intel macOS and ARM macOS at
+`8a1152d0a510f34f8daed59f06632306f7cf134e`. Actual registry source was independently
+verified. Published directory framing and typed JSON publication therefore have
+complete native delivery. The maintainer's normative serialize-once-before-effects
+contract explicitly retains the buffer; no memory-saving claim is made. Delivery
+evidence is recorded on [#24](https://github.com/dragginzgame/ic-backup/issues/24#issuecomment-6055599951)
+and [#26](https://github.com/dragginzgame/ic-backup/issues/26#issuecomment-6055600738),
+with a [Canic handoff](https://github.com/dragginzgame/canic/issues/490#issuecomment-6055666405).
+
+ICP's latest release remains 1.6.0. Its maintainer asked about dedicated commands;
+[the response](https://github.com/dfinity/icp-cli/issues/811#issuecomment-6055666046)
+names exact granular metadata/data read/allocation/write requests and original
+per-call accounting, backed by the pinned transfer implementation. Whole-transfer
+commands orchestrate several calls. [#25](https://github.com/dragginzgame/ic-backup/issues/25)
+still owns actual production transport qualification, independently of routing.
+
+A later concurrent Cargo.lock edit selects Metrics 0.2.10 instead of 0.2.9. It is
+preserved; no lock update command ran in this adoption. Earlier Host/PocketIC proof
+retains its actual lock identity and does not qualify that new selection. The
+current graph needs focused Metrics/runtime qualification and independent native
+delivery. Rust implementation and incoming Host requirements remain unchanged;
+no broad gate, live IC call, sibling edit or retained-evidence cleanup runs.
+
+## Pending 0.7.0 published Host 0.5 qualification
+
+Released 0.6.0 is the incoming base, `8a1152d0a510f34f8daed59f06632306f7cf134e`.
+Its non-yanked official registry row is observed. The maintainer's
+incoming manifest/lock edits select registry artifacts/fs/process 0.5.0 with empty
+Host features; they are preserved exactly. Package/receipt remain 0.6.0. The
+exposed `PersistenceError::Publication` now carries Host 0.5's `NamedWriteError`
+Rust identity, so the single numbered next draft is 0.7.0. Consumers exchanging
+that value must align direct Host dependencies. No schema, digest, budget,
+reservation, record format or byte framing changes.
+
+All three official non-yanked registry archives match their declared SHA-256,
+published source `db637fac8b7a9ef62301e1d9009ffeb5ffcd0be7` and all 54 remote
+committed Rust blobs. The locked metadata graph is admitted offline after explicit
+cache preparation. Gzip/Wasm changes affect disabled features. Closed-writer
+executable admission has no JSON-record caller; retained descriptor publication
+already uses the canonical owner. Bounded test capture now uses Host's child
+owner internally but stays direct-child-only. Group signalling is neither escaped
+descendant confinement nor completed quiescence; Backup's one-spawn descriptor
+inheritance, original custody records and fresh non-spawning guards remain local.
+No duplicate cleanup wrapper, production provider or new mode is introduced.
+
+Fresh Linux checks on this selected graph pass all 142 operations cases, four
+checksum-model cases, six public framing cases, four public recovery/source/
+artifact/upload targets and all 11 real PocketIC journeys. The actual ICP routing
+refusal still retains exact pending exhausted spending and local replay; cleanup
+does not settle the update. Configured Clippy, Rust 1.91, the compiled public
+example, offline locked standalone packaging, formatting, dependency pins, links,
+canonical snapshot and simulator
+alignment also pass. The retained local 0.6.0-labelled package contains pending
+0.7.0 dependency selections, distinct from the actual registry release. Exact new
+source/archive/graph/log/simulator evidence is under `target/host-050-review-3`;
+prior qualification keeps its original dependency and source scope. Current
+consumer native macOS qualification remains independently required. Exact Host
+0.5 owner CI passes Linux, Intel/ARM macOS and MSRV. Released Backup 0.6.0
+main/tag pass Linux/ARM macOS; Intel macOS remains in progress at final inspection.
+The actual registry archive confirms the published checksum API; this does not
+qualify the pending graph. No sibling edit, commit, package version change,
+release, push, upload or public IC effect runs.
+
+See [the current Host review](../ic-host-tools-adoption.json) for package proof,
+feature and compatibility decisions, and [the PocketIC scope](../pocketic-qualification.md)
+for the limited fixture guarantees.
+
+## Earlier 0.6.0 typed JSON publication and checked directory framing
 
 The complete pending batch now selects 0.6.0: adding the exhaustive public
 `PersistenceError::Publication` variant changes JSON writer error matching. The

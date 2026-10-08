@@ -2405,5 +2405,42 @@
       "target/publication-060/ic-backup-pocketic-3157636-9/icp probe with spaces/qualification-result.json": "bb6ff77bacbd6d6440f54f61767b44bd78e87eb08b11d0c53f3b0e39aa8ffd05"
     },
     "scope": "Fresh actual 11-case Linux PocketIC execution after JSON publisher adoption; no current native/production transport or broader application qualification. Earlier proof retains original source and graph."
+  },
+  "host_050": {
+    "inspection_date": "2026-10-08",
+    "consumer_base": "8a1152d0a510f34f8daed59f06632306f7cf134e",
+    "draft": "0.7.0",
+    "package_and_receipt": "0.6.0",
+    "dependencies": {
+      "selection": "Maintainer selected registry host artifacts/fs/process 0.5.0 with empty features; unchanged management/PocketIC/Metrics/tool selections. No sibling patch or source edit.",
+      "lock_sha256": "7fc66d275e62225a30cd4f7fa632412dc8fb309e7073fc65358daecbd870d29f"
+    },
+    "evidence": "/home/adam/projects/ic-backup/target/host-050-review-3",
+    "log_sha256": "3ceafc4643b70e7ac03f5e5bdf884391b115d426b5d73992351321883bb2c90d",
+    "registered_passed_cases": [
+      "lost_capture_reply_requires_reserved_reconciliation_and_never_reissues",
+      "lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload",
+      "lost_data_reply_reconciles_original_extent_without_reupload",
+      "lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restart",
+      "lost_load_reply_requires_complete_stopped_state_verification_before_start",
+      "lost_metadata_read_reply_keeps_original_spending_and_stops_before_download",
+      "lost_metadata_reply_reconciles_original_allocation_before_data_upload",
+      "lost_start_reply_reconciles_original_ingress_without_restart",
+      "lost_stop_reply_reconciles_original_ingress_without_restop",
+      "pinned_icp_generic_management_route_failure_retains_pending_original_spending",
+      "real_capture_download_upload_and_same_id_restore_preserve_complete_state"
+    ],
+    "retained_result_sha256": {
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-0/qualification-result.json": "092204f991e4a8423a9d50a1c88a7a5763b25ccfb1848519ab74a6ba4ffb8b9e",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-10/qualification-result.json": "e696706272d16b389be9b4e23be51f3178b6d921995e05d49f2079f43a23f91c",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-2/qualification-result.json": "c1c856c1ad6796987e6d3abfd0ecc26d7c4043b94bcf28e4eabacf87d3160e50",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-3/qualification-result.json": "4eb6151204d8248203a26c970bff1e3d1f24371d83e34302673f5dbe8dadb269",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-4/qualification-result.json": "b3d4073804012ee0bd0354ccb018a974488328d56dea40792be8a3a1cc5dca86",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-6/qualification-result.json": "58109a9dacb8f6b68829eb0e6c515bfb6c2d0dbd000d5f33c53c5bd454720546",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-7/qualification-result.json": "55bcce4f5b46adfc2e173ab44a16b13d8d75c0082179aae26f5ce0ba934297bc",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-8/qualification-result.json": "820c0723540a992dd566e62a5228f0bbf17ab4c1157094ad795c2216189bac6c",
+      "/home/adam/projects/ic-backup/target/host-050-review-3/ic-backup-pocketic-159097-9/icp probe with spaces/qualification-result.json": "685a56fcf94251d0c87b44084a7b4ddb1317ee6e1725e8ae056d0bc566ea71b8"
+    },
+    "scope": "Fresh actual Linux capture/download/upload/same-ID restore, deliberately discarded replies and pinned generic management-route refusal. No production provider, automatic settlement, hidden reissue/refund or group/escaped-descendant qualification. Existing host 0.4.x runs retain original identities; native macOS consumer evidence for this graph remains separate."
   }
 }

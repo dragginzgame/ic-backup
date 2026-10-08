@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-07",
+  "inspection_date": "2026-10-08",
   "registry_package": "ic-metrics",
-  "selected_version": "0.2.8",
-  "archive_sha256": "2ff922721253a9e6d921203809d99e871128edfc5b0613661c64d094d58343d6",
+  "selected_version": "0.2.11",
+  "archive_sha256": "dc75470aa6335a0b1f3dbefd30229e0ac10713f21193f21af3c03987afdfa0c9",
   "source": "registry+https://github.com/rust-lang/crates.io-index",
   "repository": "https://github.com/dragginzgame/ic-metrics",
-  "published_source_revision": "0eac2b0baa9d03b8f2430a24dfe596d93f5bfc16",
-  "source_review": "Every published Rust source matches the locked archive checksum and exact committed release. Histogram is allocation-free shared arithmetic; local code owns bounds, sample admission, lifetime and reporting.",
-  "catalog": "Compatible 0.2.4 minimum remains the first published histogram owner. Incoming registry 0.2.8 selection is preserved; default features disabled and instruction-reader absent. No sibling patch.",
+  "published_source_revision": "69b110b8fbefdac4773eac7631796f9dcb3f41a0",
+  "source_review": "Official non-yanked 0.2.11 archive matches its registry checksum and every published source blob matches the exact remote committed release. Published Rust is identical to 0.2.9 and 0.2.10; local diagnostics retain one histogram owner and never grant accounting authority.",
+  "catalog": "Compatible 0.2.4 minimum remains the first published histogram owner. Maintainer-selected incoming registry 0.2.11 lock is preserved byte-for-byte along with both manifests. Resolved features are empty; no instruction reader or sibling patch exists.",
   "production_owner": "crates/ic-backup/src/ops/persistence/download_journal/metrics/",
   "public_types": [
     "ic_backup::ops::persistence::MeasurementSummary",
     "ic_backup::ops::persistence::MeasurementHistogram"
   ],
-  "compatibility": "Existing histogram/summary APIs remain unchanged in this compatible 0.5.4 graph qualification. Original 0.5.2 implementation/evidence remains historical; current package/released receipt stay 0.5.3.",
+  "compatibility": "Metrics remains the shared 0.2 Rust identity with unchanged diagnostic APIs, units, saturation and no persistence. The pending 0.7.0 batch is breaking for the separately exposed Host publication-error identity; package/receipt remain 0.6.0.",
   "histogram": {
     "owner": "One successful prepared-chunk histogram; no second byte aggregate",
     "upper_bounds_bytes": [
@@ -39,21 +39,26 @@
     }
   },
   "qualification": {
-    "status": "passed focused native Linux checks; uncommitted native macOS delivery pending",
-    "evidence": "target/metrics-histogram-052-review",
-    "scope": "Original 0.2.6 graph: native Linux arithmetic/routing and guarded filesystem/public upload journeys; no live IC or native macOS qualification. Previous 0.2.7 review is preserved under follow_up_selection_review.previous_review; current 0.2.8 graph is qualified in that follow-up.",
-    "registered_cases": "target/metrics-histogram-052-review/registered-cases.json",
+    "status": "passed focused native Linux checks; current consumer macOS delivery pending",
+    "evidence": "target/hard-cut-070-review",
+    "scope": "Actual incoming Metrics 0.2.11 and Host 0.5.0 graph with the canonical errno-conversion cleanup. No live IC, simulator rerun, full CI/release gate, package publication, dependency update or Git write. Prior PocketIC/metrics runs retain their actual source and selections.",
+    "registered_cases": "target/hard-cut-070-review/ops-cases.log",
     "passed_logs": [
-      "metrics-tests-poison.log",
+      "metrics.log",
+      "ic-artifact.log",
       "public-upload.log",
-      "clippy-final.log",
+      "ops.log",
+      "public.log",
+      "clippy.log",
       "msrv.log",
-      "msrv-tests.log",
-      "package-final.log",
-      "quality-final.log"
+      "quality.log"
     ],
-    "guarded_scope": "Real source descriptors; deliberate diagnostic mutex poison recovers through successful metadata/data preparation, returned failures and unchanged journal bytes. Zero/repeated chunks, missing source and empty reopen preserve actual outcomes.",
-    "initial_failure": "clippy.log retained: 296-byte helper value parameter exceeds lint threshold; helper now borrows the copied view without suppression."
+    "guarded_scope": "Shared arithmetic bounds, valid zero/repeated payload preparation, saturating distributions, poison recovery, failures, empty reopen and unchanged guarded journal/obligation/reference evidence. Eight public artifact/upload/source/recovery/settlement cases and all affected native ops validate the current graph.",
+    "initial_failure": "public-target-selection-failure.log retains the first invocation naming a nonexistent local_restore_artifact target; corrected actual targets pass.",
+    "source_proof": "target/hard-cut-070-review/metrics-source-proof.json",
+    "upstream_ci": "https://github.com/dragginzgame/ic-metrics/actions/runs/37748731541",
+    "upstream_ci_scope": "Exact release has these current owner results: msrv: success, native (macos-15, Darwin, arm64): success, native (ubuntu-24.04, Linux, x86_64): success, native (macos-15-intel, Darwin, x86_64): in_progress. This does not qualify native delivery of the current consumer.",
+    "native_io_owner": "Actual lock selects Rustix 1.1.5; its std From<Errno> implementation retains the same raw OS code as the removed helpers."
   },
   "prior_adoption_review": "target/metrics-histogram-052-review/original/docs/ic-metrics-adoption.json",
   "issue": "https://github.com/dragginzgame/ic-backup/issues/15",
@@ -83,5 +88,23 @@
   "host_046_review": {
     "evidence": "target/host-054-followup",
     "scope": "Metrics 0.2.8 selection/source/features/arithmetic are unchanged. Fresh IC artifact/public upload checks exercise the exact incoming host 0.4.6 graph. Prior arithmetic and PocketIC proof retains original inputs. Host owner native CI passes; current Backup native qualification remains pending."
+  },
+  "previous_selected_review": "target/hard-cut-070-review/incoming/ic-metrics-adoption.json",
+  "previous_qualification": {
+    "status": "passed focused native Linux checks; uncommitted native macOS delivery pending",
+    "evidence": "target/metrics-histogram-052-review",
+    "scope": "Original 0.2.6 graph: native Linux arithmetic/routing and guarded filesystem/public upload journeys; no live IC or native macOS qualification. Previous 0.2.7 review is preserved under follow_up_selection_review.previous_review; current 0.2.8 graph is qualified in that follow-up.",
+    "registered_cases": "target/metrics-histogram-052-review/registered-cases.json",
+    "passed_logs": [
+      "metrics-tests-poison.log",
+      "public-upload.log",
+      "clippy-final.log",
+      "msrv.log",
+      "msrv-tests.log",
+      "package-final.log",
+      "quality-final.log"
+    ],
+    "guarded_scope": "Real source descriptors; deliberate diagnostic mutex poison recovers through successful metadata/data preparation, returned failures and unchanged journal bytes. Zero/repeated chunks, missing source and empty reopen preserve actual outcomes.",
+    "initial_failure": "clippy.log retained: 296-byte helper value parameter exceeds lint threshold; helper now borrows the copied view without suppression."
   }
 }

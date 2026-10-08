@@ -87,8 +87,8 @@ impl CommandLifetimeLock {
         {
             use command_fds::CommandFdExt;
             use std::os::fd::AsRawFd;
-            let descriptor = rustix::io::fcntl_dupfd_cloexec(&self.file, 3)
-                .map_err(|error| io::Error::from_raw_os_error(error.raw_os_error()))?;
+            let descriptor =
+                rustix::io::fcntl_dupfd_cloexec(&self.file, 3).map_err(io::Error::from)?;
             command.env(
                 COMMAND_CUSTODY_DESCRIPTOR_ENV,
                 descriptor.as_raw_fd().to_string(),

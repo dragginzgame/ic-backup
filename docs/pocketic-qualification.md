@@ -1,6 +1,16 @@
 # Real single-canister snapshot qualification
 
-A fresh Linux run after typed JSON publication adoption passes all 11 registered
+A fresh Linux run on the maintainer-selected published Host 0.5.0 graph passes
+all 11 registered journeys, including the actual bounded ICP capture/refusal path.
+The pending 0.7.0 draft changes the exposed Host publication-error Rust identity;
+package/receipt remain 0.6.0. Exact current graph, source, logs and simulator
+results are under `target/host-050-review-3`. This run does not qualify Host's
+unused process-group API, escaped descendants, production retry/polling or fresh
+permissions. Original journals and pending spending retain their existing owners.
+No public IC calls or sibling edits occur; native macOS consumer evidence for
+this selected graph remains separate.
+
+The earlier Linux run after typed JSON publication adoption passes all 11 registered
 journeys on the unchanged host 0.4.6 / Metrics 0.2.8 lock. The 0.6.0 draft's exact
 source, simulator results and local archive proof are under `target/publication-060`.
 Earlier results below retain their actual source/dependency identities. This

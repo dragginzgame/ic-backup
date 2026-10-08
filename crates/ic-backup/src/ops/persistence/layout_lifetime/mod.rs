@@ -172,7 +172,7 @@ fn open_directory(path: &Path) -> io::Result<File> {
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
             Mode::empty(),
         )
-        .map_err(|error| io::Error::from_raw_os_error(error.raw_os_error()))?;
+        .map_err(io::Error::from)?;
         Ok(File::from(fd))
     }
     #[cfg(not(unix))]
@@ -191,9 +191,8 @@ fn sync_reference(path: &Path) -> io::Result<()> {
             OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
             Mode::empty(),
         )
-        .map_err(|error| io::Error::from_raw_os_error(error.raw_os_error()))?;
-        let metadata =
-            fstat(&fd).map_err(|error| io::Error::from_raw_os_error(error.raw_os_error()))?;
+        .map_err(io::Error::from)?;
+        let metadata = fstat(&fd).map_err(io::Error::from)?;
         if !FileType::from_raw_mode(metadata.st_mode).is_file() {
             return Err(io::Error::from(io::ErrorKind::InvalidInput));
         }

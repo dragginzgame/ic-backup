@@ -103,7 +103,8 @@ impl<'layout> DownloadJournalGuard<'layout> {
         let name = path
             .file_name()
             .ok_or(IcSnapshotArtifactError::CustodyChanged)?;
-        unix_fs::mkdirat(&parent, name, Mode::from_bits_truncate(0o700)).map_err(errno_to_io)?;
+        unix_fs::mkdirat(&parent, name, Mode::from_bits_truncate(0o700))
+            .map_err(io::Error::from)?;
         let directory = File::from(
             unix_fs::openat(
                 &parent,
@@ -111,7 +112,7 @@ impl<'layout> DownloadJournalGuard<'layout> {
                 OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
                 Mode::empty(),
             )
-            .map_err(errno_to_io)?,
+            .map_err(io::Error::from)?,
         );
         let mut checksums = Vec::new();
         for (name, bytes) in [
@@ -296,9 +297,9 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
             .zip(&self.regions)
             .zip(self.coverage.covered_region_bytes())
         {
-            let held = unix_fs::fstat(file).map_err(errno_to_io)?;
+            let held = unix_fs::fstat(file).map_err(io::Error::from)?;
             let current = unix_fs::statat(&self.directory, *name, AtFlags::SYMLINK_NOFOLLOW)
-                .map_err(errno_to_io)?;
+                .map_err(io::Error::from)?;
             let same_file = (current.st_dev, current.st_ino) == (held.st_dev, held.st_ino);
             let exact_extent = current.st_size == held.st_size
                 && u64::try_from(held.st_size).ok() == Some(expected);
@@ -318,9 +319,9 @@ fn check_closed_tree(
         .iter()
         .map(|(path, _)| path.as_os_str().as_encoded_bytes().to_vec())
         .collect::<BTreeSet<_>>();
-    let mut directory = Dir::read_from(directory).map_err(errno_to_io)?;
+    let mut directory = Dir::read_from(directory).map_err(io::Error::from)?;
     while let Some(entry) = directory.read() {
-        let entry = entry.map_err(errno_to_io)?;
+        let entry = entry.map_err(io::Error::from)?;
         let name = entry.file_name().to_bytes();
         if matches!(name, b"." | b"..") {
             continue;
@@ -350,7 +351,7 @@ fn open_directory(path: &Path) -> io::Result<File> {
         Mode::empty(),
     )
     .map(File::from)
-    .map_err(errno_to_io)
+    .map_err(io::Error::from)
 }
 
 fn check_directory_identity(path: &Path, held: &File) -> Result<(), IcSnapshotArtifactError> {
@@ -370,11 +371,7 @@ fn create_file(directory: &File, name: &str) -> io::Result<File> {
         Mode::from_bits_truncate(0o600),
     )
     .map(File::from)
-    .map_err(errno_to_io)
-}
-
-fn errno_to_io(error: rustix::io::Errno) -> io::Error {
-    io::Error::from_raw_os_error(error.raw_os_error())
+    .map_err(io::Error::from)
 }
 
 /// Typed local artifact failures; no wire payload or raw snapshot identity is retained.

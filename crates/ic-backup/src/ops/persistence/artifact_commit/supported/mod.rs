@@ -55,9 +55,9 @@ pub(super) fn commit_with_hook(
                 canonical_name,
                 RenameFlags::NOREPLACE,
             )
-            .map_err(errno_to_io)?;
+            .map_err(io::Error::from)?;
             at_step(ArtifactCommitStep::ParentDirectorySync, parent)?;
-            unix_fs::fsync(&parent_fd).map_err(errno_to_io)?;
+            unix_fs::fsync(&parent_fd).map_err(io::Error::from)?;
             at_step(ArtifactCommitStep::PublicationDurable, canonical)?;
             Ok(ArtifactCommitOutcome::Published)
         }
@@ -65,7 +65,7 @@ pub(super) fn commit_with_hook(
             let checksum = sync_tree(&parent_fd, canonical_name, canonical, &mut at_step)?;
             checksum.verify(expected_checksum)?;
             at_step(ArtifactCommitStep::ParentDirectorySync, parent)?;
-            unix_fs::fsync(&parent_fd).map_err(errno_to_io)?;
+            unix_fs::fsync(&parent_fd).map_err(io::Error::from)?;
             at_step(ArtifactCommitStep::PublicationDurable, canonical)?;
             Ok(ArtifactCommitOutcome::Recovered)
         }
@@ -113,7 +113,7 @@ fn open_parent_directory(path: &Path) -> io::Result<OwnedFd> {
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
         Mode::empty(),
     )
-    .map_err(errno_to_io)
+    .map_err(io::Error::from)
 }
 
 fn sync_tree(
@@ -128,7 +128,7 @@ fn sync_tree(
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
         Mode::empty(),
     )
-    .map_err(errno_to_io)?;
+    .map_err(io::Error::from)?;
     let mut checksums = Vec::new();
     sync_directory(
         &directory_fd,
@@ -149,9 +149,9 @@ fn sync_directory(
     checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
     at_step: &mut impl FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
 ) -> Result<(), PersistenceError> {
-    let mut directory = Dir::read_from(directory_fd).map_err(errno_to_io)?;
+    let mut directory = Dir::read_from(directory_fd).map_err(io::Error::from)?;
     while let Some(entry) = directory.read() {
-        let entry = entry.map_err(errno_to_io)?;
+        let entry = entry.map_err(io::Error::from)?;
         let name_bytes = entry.file_name().to_bytes();
         if matches!(name_bytes, b"." | b"..") {
             continue;
@@ -167,7 +167,7 @@ fn sync_directory(
         let relative_path = relative_directory.join(name);
         let display_path = display_root.join(&relative_path);
         let observed = unix_fs::statat(directory_fd, entry.file_name(), AtFlags::SYMLINK_NOFOLLOW)
-            .map_err(errno_to_io)?;
+            .map_err(io::Error::from)?;
         let observed_type = FileType::from_raw_mode(observed.st_mode);
         match observed_type {
             FileType::RegularFile => {
@@ -200,7 +200,7 @@ fn sync_directory(
         )
     };
     at_step(step, &display_path)?;
-    unix_fs::fsync(directory_fd).map_err(errno_to_io)?;
+    unix_fs::fsync(directory_fd).map_err(io::Error::from)?;
     Ok(())
 }
 
@@ -211,7 +211,7 @@ fn open_child(parent: &impl AsFd, name: &std::ffi::CStr) -> io::Result<OwnedFd> 
         OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
         Mode::empty(),
     )
-    .map_err(errno_to_io)
+    .map_err(io::Error::from)
 }
 
 fn ensure_opened_type(
@@ -219,7 +219,7 @@ fn ensure_opened_type(
     expected: FileType,
     path: &Path,
 ) -> Result<(), PersistenceError> {
-    let opened = unix_fs::fstat(fd).map_err(errno_to_io)?;
+    let opened = unix_fs::fstat(fd).map_err(io::Error::from)?;
     let actual = FileType::from_raw_mode(opened.st_mode);
     if actual == expected {
         Ok(())
@@ -233,8 +233,4 @@ fn unsupported_entry(path: &Path, kind: FileType) -> PersistenceError {
         path: path.display().to_string(),
         kind: format!("{kind:?}"),
     }
-}
-
-fn errno_to_io(error: rustix::io::Errno) -> io::Error {
-    io::Error::from_raw_os_error(error.raw_os_error())
 }

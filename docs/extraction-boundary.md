@@ -178,10 +178,20 @@ that ordering, and preflight followed by streaming would invoke it twice.
 
 `PersistenceError::Publication` retains Host's original typed producer, cleanup
 and before/after-publication errors. Parent-preparation IO and serialization JSON
-errors keep their own boundaries. This public exhaustive enum change selects a
-0.6.0 draft; callers must update matches and reconcile visible output after failed
+errors keep their own boundaries. The public exhaustive enum changed in
+0.6.0; callers must update matches and reconcile visible output after failed
 completion. All v1 bytes, original limits, spending and journal transitions remain
 unchanged. Neither helper grants operation or retry authority.
+
+The pending 0.7.0 adoption selects published Host 0.5.0, changing the exposed
+`NamedWriteError` Rust type identity without changing its variant shapes or v1
+records. Direct Host dependencies sharing that value must use the same line.
+The new closed-writer executable-admission API has no record-writing purpose;
+JSON publication keeps this single held-parent adapter and preflight contract.
+
+Native artifact, publication and lock syscall failures use Rustix's canonical
+conversion into `io::Error`, retaining the original OS code before the existing
+typed local projection. No local errno conversion, retry or cleanup owner remains.
 
 Ordinary calls and crash fixtures use one adapter and the same Host engine. The
 producer writes and synchronizes bytes before acknowledging the pre-publication

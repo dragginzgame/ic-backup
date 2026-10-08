@@ -58,6 +58,10 @@ into an issue tracker or release authority.
   Preserve synchronized pre-publication and durable-completion barriers. The
   public `PersistenceError::Publication` retains original producer, cleanup and
   visibility evidence; no local-write error grants paid retry or resets spending.
+  The selected Host 0.5 registry graph changes the exposed publication-error Rust
+  identity, requiring the 0.7.0 minor draft. Host's child-group cleanup does not
+  replace inherited descriptor custody or prove descendant quiescence; bounded
+  test capture retains its separate direct-child semantics.
 
 - Pure directory checksum composition accepts exact canonical relative UTF-8 file
   identities and validated checksums through the same owner as local artifact

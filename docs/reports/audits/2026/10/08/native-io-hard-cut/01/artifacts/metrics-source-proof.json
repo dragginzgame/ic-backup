@@ -1,0 +1,14 @@
+{
+  "selected": "0.2.11",
+  "archive_sha256": "dc75470aa6335a0b1f3dbefd30229e0ac10713f21193f21af3c03987afdfa0c9",
+  "yanked": false,
+  "published_source": "69b110b8fbefdac4773eac7631796f9dcb3f41a0",
+  "remote_matched_source": [
+    "src/application.md",
+    "src/histogram/mod.rs",
+    "src/histogram/tests.rs",
+    "src/lib.rs",
+    "src/summary/mod.rs",
+    "src/summary/tests.rs"
+  ]
+}

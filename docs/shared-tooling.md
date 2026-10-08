@@ -49,7 +49,35 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 75-file snapshot selects committed Shared Tooling 0.1.21 at
+The current 75-file snapshot selects committed Shared Tooling 0.1.23 at
+`0ba0ad00ed94848e54ecc82629b6b7873b7284c0`, matching the remotely reviewed main.
+The canonical committed exporter runs from a clean isolated checkout; all prior
+paths remain and every exported blob/mode matches the exact remote source.
+Seven adopted files change. Common baseline/rules and product policy remain
+unchanged. Direct releases recheck payload/index and exact annotated tag after
+the final hook, and completed resume verifies observed published identity without
+repeating effects. The optional PR helper now aggregates pages with jq instead of
+requiring a newer GitHub CLI `--slurp` option.
+
+Focused consumer release-adapter/private-index, canonical direct-runner,
+snapshot/logger/retention and shell checks pass. The optional canonical PR fixture
+also passes using synthetic Git histories/bare destinations and a GitHub command
+substitute; it qualifies the helper, not a real GitHub release or this consumer's
+merged-source adapter. Consumer policy remains explicitly direct. Scope and
+source identities are in [the review](shared-tooling-review.json) under
+`target/shared-tooling-0123-inspection`. Earlier Host runtime evidence remains
+bound to its original graph; the observed later Metrics 0.2.10 lock selection is
+preserved and needs its own runtime qualification. Package/receipt remain 0.6.0;
+this compatible tooling batch joins the existing 0.7.0 draft. No sibling source,
+repository Git or release/publication effects run.
+
+Exact upstream 0.1.23 CI passes Linux, Intel macOS, Apple Silicon macOS and
+lint/security. This does not supply native consumer proof for the current dirty
+0.7.0 graph.
+
+### Retained 0.1.21 review
+
+The earlier 75-file snapshot selects committed Shared Tooling 0.1.21 at
 `45e34e92b43edb9543d5b7212774f87f8334079f`, matching remotely verified main.
 All 73 prior paths remain; canonical `release-pr.sh` and its fixture are explicitly
 added before committed export. Exact blobs and executable modes are independently

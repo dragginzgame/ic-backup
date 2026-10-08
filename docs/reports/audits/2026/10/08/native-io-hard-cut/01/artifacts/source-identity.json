@@ -1,0 +1,51 @@
+{
+  "base_commit": "8a1152d0a510f34f8daed59f06632306f7cf134e",
+  "draft": "0.7.0",
+  "package": "0.6.0",
+  "scope": "Canonical native errno conversion cleanup and maintainer-selected Metrics 0.2.11 graph qualification. No public/wire/storage or effect contract changes.",
+  "shared_tooling_commit": "0ba0ad00ed94848e54ecc82629b6b7873b7284c0",
+  "lock_sha256": "775715639d03d16dfdfede0015ab9e5c0f5ad4e9cd692f7ef2bc88b75d249961",
+  "manifest_sha256": "a46ae01a4f57121620fe90697132822359f7b305c0ac7dbb19a596676371c167",
+  "selected_metrics": {
+    "id": "registry+https://github.com/rust-lang/crates.io-index#ic-metrics@0.2.11",
+    "dependencies": [],
+    "deps": [],
+    "features": []
+  },
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "sources": {
+    "crates/ic-backup/src/ops/artifacts/secure/unix/mod.rs": "50606bb90d6f73945f541cb827e947617385ee302e247d4cfe328f302b83829c",
+    "crates/ic-backup/src/ops/persistence/command_lifetime_lock/mod.rs": "093d9404d7e065a7ec0eedd2244df9688c624e99b7f3478f8d74357db2ea6e44",
+    "crates/ic-backup/src/ops/persistence/file_lock/mod.rs": "2e5763dc243db81c093644a04ac49ff65fd9ff39794591b1fb9aec018fe35125",
+    "crates/ic-backup/src/ops/persistence/layout_lifetime/mod.rs": "26f906fda9dbe5a57c9f06390ceb9fd0476caa11b5bd90e5ce00ef2a4de92a68",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/mod.rs": "1e10a53a9d81582c9fedd8bc304be2e3b42ee030bc21e03ef87ed2b666ea1e15",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs": "aaf960e70e03f5d8e1cf537b0629683037690034a76c9775c497de66057760ca",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs": "1cad6c32bda725bd0f37fd731f3a76acbf1f71e1b57b84ba7860281f1dd09871",
+    "crates/ic-backup/src/ops/persistence/artifact_commit/supported/mod.rs": "daeb5754adbd8f3d6a8091443e06afc8c1487848d162b2c6472159beb240d435"
+  },
+  "incoming_source_sha256": {
+    "crates/ic-backup/src/ops/artifacts/secure/unix/mod.rs": "40db864e5e086f3fddc6592a4c056370158d46dc097b791cd04f1ceba15f4483",
+    "crates/ic-backup/src/ops/persistence/command_lifetime_lock/mod.rs": "17a42764fa5f707936c24d83631ab0ecf455e6c76f3cbf9df17d538e748b2cdb",
+    "crates/ic-backup/src/ops/persistence/file_lock/mod.rs": "f84ee0291e2f091f67aab0dc24d49bbb350598f36cfd20aac19c9209ed1ab0fc",
+    "crates/ic-backup/src/ops/persistence/layout_lifetime/mod.rs": "9c7684f7eb694d0e2d9bc5641018609a40f3eb5d1074923f04f67f0f11e88d19",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/mod.rs": "1d22ba3ac9e8903fada8904736be6ae9b093c364195215e405ef638d8112ea32",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/upload/mod.rs": "a2ca888f4f20de1a72a6b03f21f69a3bf122e570df2516798b519c9551db0124",
+    "crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs": "def7f41dfa69848c7f81fc47a30a65c9d0ab93332af057c7caae11caf3daa03a",
+    "crates/ic-backup/src/ops/persistence/artifact_commit/supported/mod.rs": "17cd9bc362aa577d6ec1fa259e699a77a9399572a626ff7b218ddbc0f582926b"
+  },
+  "removed_functions": [
+    "ops::artifacts::secure::unix::errno_to_io",
+    "ops::persistence::file_lock::errno_to_io",
+    "ops::persistence::download_journal::ic_snapshot_artifact::errno_to_io",
+    "ops::persistence::artifact_commit::supported::errno_to_io"
+  ],
+  "removed_methods": [],
+  "removed_types": [],
+  "remaining": "Current consumer native macOS delivery, production transport #25, and independently usable backup/restore remain unqualified.",
+  "overlay_sha256": "ffbd96bce72fb52db770504e0a2162927bf829447171b179b70027cf44410942",
+  "native_errno_owner": {
+    "version": "1.1.5",
+    "source_sha256": "d014b6a4a4d92cda1e75873a074226101b58bccb4b787985ab00517a3dd9b926"
+  }
+}

@@ -202,7 +202,11 @@ member hashes, and keep the shared runner as the sole tree/history/Git-effect ow
 After runner completion, the local resume wrapper resolves the requested annotated
 tag and checks its original committed receipt and retained validation sidecar.
 It never substitutes HEAD's newer metadata. Completed replay validates local receipt/
-tag evidence; the runner's complete phase performs no remote push or observations.
+tag evidence and observes the selected destination's exact tag and branch history.
+The shared runner also rechecks payload, index and tag after final push admission.
+Missing or conflicting published identities and unavailable observations stop
+completion without another commit, tag or push; unknown branch history requires
+fetch and reconciliation. Earlier plans and evidence remain retained.
 An interrupted multi-file metadata replacement may leave a partial candidate; this
 fails prepared admission. Review the exact saved inputs/backups and restore or finish
 the intended candidate before resuming. Do not launch a fresh increment from partial

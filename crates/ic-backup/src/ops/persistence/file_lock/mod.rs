@@ -58,9 +58,11 @@ fn acquire_supported(path: &Path, create: bool) -> Result<fs::File, FileLockErro
         flags |= OFlags::CREATE;
     }
     let fd = openat(CWD, path, flags, Mode::RUSR | Mode::WUSR)
-        .map_err(errno_to_io)
+        .map_err(io::Error::from)
         .map_err(FileLockError::Io)?;
-    let metadata = fstat(&fd).map_err(errno_to_io).map_err(FileLockError::Io)?;
+    let metadata = fstat(&fd)
+        .map_err(io::Error::from)
+        .map_err(FileLockError::Io)?;
     let kind = FileType::from_raw_mode(metadata.st_mode);
     if !kind.is_file() {
         return Err(FileLockError::UnsafeEntry {
@@ -74,7 +76,7 @@ fn acquire_supported(path: &Path, create: bool) -> Result<fs::File, FileLockErro
         Err(error) if error == rustix::io::Errno::WOULDBLOCK => {
             return Err(FileLockError::Locked);
         }
-        Err(error) => return Err(FileLockError::Io(errno_to_io(error))),
+        Err(error) => return Err(FileLockError::Io(io::Error::from(error))),
     }
     Ok(file)
 }
@@ -95,9 +97,4 @@ fn reject_existing_unsafe_entry(path: &Path) -> Result<(), FileLockError> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(FileLockError::Io(error)),
     }
-}
-
-#[cfg(unix)]
-fn errno_to_io(error: rustix::io::Errno) -> io::Error {
-    io::Error::from_raw_os_error(error.raw_os_error())
 }
