@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0]
+## [0.6.0] - 2026-10-08
 
 - **Breaking:** JSON publication now returns `PersistenceError::Publication` with shared typed producer, cleanup and before/after-publication evidence. Update exhaustive error matches; reconcile visible output after completion failures. Delegate allocation and atomic publication to `ic-host-fs`, retaining private parents, serialize-once preflight and crash recovery ([#24](https://github.com/dragginzgame/ic-backup/issues/24)).
 
