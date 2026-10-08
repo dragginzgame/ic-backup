@@ -15,7 +15,7 @@ ic-metrics.workspace = true
 rustix.workspace = true
 
 [target.'cfg(unix)'.dev-dependencies]
-pocket-ic.workspace = true
+ic-testkit.workspace = true
 wat.workspace = true
 
 [dependencies]

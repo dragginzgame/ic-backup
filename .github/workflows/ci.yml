@@ -27,7 +27,7 @@ jobs:
       - name: Install the pinned development toolchain
         run: rustup show active-toolchain
       - name: Install the minimum supported Rust toolchain
-        run: rustup toolchain install 1.91.0 --profile minimal
+        run: rustup toolchain install 1.88.0 --profile minimal
       - name: Install the reviewed manifest formatter
         run: |
           source ci/tool-versions.env
@@ -50,6 +50,7 @@ jobs:
         shell: /bin/bash --noprofile --norc -eo pipefail {0}
         run: |
           /bin/bash scripts/ci/test-tooling.sh
+          /bin/bash scripts/ci/test-maintenance-task.sh
           perl scripts/ci/test-documentation-links.pl
           perl scripts/ci/test-local-lock-versions.pl
           /bin/bash scripts/ci/test-file-digests.sh

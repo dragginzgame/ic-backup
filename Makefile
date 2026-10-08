@@ -20,14 +20,14 @@ endif
         release-version release-preflight release-prepare-version release-prepared-check \
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
-        tags test tooling-check validate version
+        tags tasks test tooling-check validate version
 .PHONY: dependency-pins-check format-tools-check pocketic-alignment-check release-delivery-check
 
 help:
 	@echo "release-delivery-check      Verify the supported direct release policy without effects"
 	@echo "check                       Compile this library's native targets"
 	@echo "check-doc-links             Check maintained local Markdown targets"
-	@echo "check-msrv                  Check Rust 1.91.0"
+	@echo "check-msrv                  Check Rust 1.88.0 and independent consumers"
 	@echo "ci                          Fetch dependencies and run the full gate"
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
@@ -65,6 +65,7 @@ help:
 	@echo "shared-tooling-check        Verify the reviewed local tooling snapshot"
 	@echo "shell-check                 Check maintained shell and Perl tooling"
 	@echo "tags                        List local version tags"
+	@echo "tasks                       Read the shared maintenance catalog"
 	@echo "test                        Run native library tests and doctests"
 	@echo "tooling-check               Test snapshot integrity and CI diagnostics"
 	@echo "tools-check                 Verify both local executable sets offline"
@@ -78,7 +79,10 @@ check-doc-links:
 	bash scripts/ci/check-doc-links.sh
 
 check-msrv:
-	cargo +1.91.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
+	RUSTUP_AUTO_INSTALL=0 rustc +1.88.0 --version
+	RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 --version
+	RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
+	bash scripts/ci/check-msrv-consumers.sh 1.88.0
 
 ci:
 	+@bash scripts/ci/run-validation-targets.sh --fail-fast $(CI_TARGETS)
@@ -212,8 +216,12 @@ tags:
 test:
 	cargo test --offline --locked -p ic-backup -p ic-backup-agent --all-features
 
+tasks:
+	@cat tasks/README.md
+
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
+	bash scripts/ci/test-maintenance-task.sh
 	perl scripts/ci/test-documentation-links.pl
 	perl scripts/ci/test-local-lock-versions.pl
 	bash scripts/ci/test-file-digests.sh

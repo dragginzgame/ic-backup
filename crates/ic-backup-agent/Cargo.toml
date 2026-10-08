@@ -16,7 +16,7 @@ thiserror.workspace = true
 
 [dev-dependencies]
 ic-management-canister-types.workspace = true
-pocket-ic.workspace = true
+ic-testkit.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 wat.workspace = true

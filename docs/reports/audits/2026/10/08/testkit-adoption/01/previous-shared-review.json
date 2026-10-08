@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "inspection_date": "2026-10-08",
+  "source": "https://github.com/dragginzgame/shared-tooling",
+  "revision": "db039347d2372b877c1c46dcdd2b5c3aa9412009",
+  "label": "0.1.27",
+  "manifest": ".shared-tooling.snapshot",
+  "selected_files": 80,
+  "changed_paths": [
+    "docs/verification-helpers.md",
+    "scripts/dev/install-host-tools.sh",
+    "scripts/dev/install-ic-tools.sh",
+    "scripts/ci/test-host-tools.sh",
+    "scripts/ci/test-ic-tools.sh",
+    "scripts/dev/install-rust-tools.sh"
+  ],
+  "added_paths": [
+    "scripts/ci/test-tool-evidence.sh",
+    "scripts/ci/select-tool-evidence.sh",
+    ".github/actions/retain-failure-evidence/action.yml"
+  ],
+  "baseline_changed": false,
+  "canonical_refresh": true,
+  "source_proof": "docs/reports/audits/2026/10/08/tooling-companions/01/source-proof.json",
+  "qualification": "docs/reports/audits/2026/10/08/tooling-companions/01/qualification.json",
+  "previous_review": "docs/reports/audits/2026/10/08/tooling-companions/01/previous-review.json",
+  "limits": [
+    "Linux local complete tooling target passed. Native macOS and hosted upload are not newly qualified.",
+    "Full CI/release gate was not rerun; no Rust/dependency graph changed."
+  ]
+}

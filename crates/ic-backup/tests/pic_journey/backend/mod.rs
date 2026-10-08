@@ -23,17 +23,22 @@ use ic_backup::{
         ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     },
 };
-use pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal};
+use ic_testkit::{
+    pic::{PocketIcBuilderExt, PocketIcManagedServer, PocketIcStartupConfig},
+    pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal},
+};
 use serde_json::json;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
     path::PathBuf,
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 pub(super) struct Backend {
     pub pic: PocketIc,
+    // Instance teardown precedes the managed server, retaining its original output files.
+    _server: PocketIcManagedServer,
     pub target: Principal,
     pub root: PathBuf,
     pub release: ArtifactChecksumRecord,
@@ -58,7 +63,10 @@ impl Backend {
         assert!(version.status.success());
         assert_eq!(
             String::from_utf8(version.stdout).unwrap().trim(),
-            "pocket-ic-server 16.0.0"
+            format!(
+                "pocket-ic-server {}",
+                ic_testkit::pocket_ic::LATEST_SERVER_VERSION
+            )
         );
         let server_digest = ArtifactChecksumRecord::from_bytes(&fs::read(&binary).unwrap());
         let installed = fs::read_to_string(
@@ -71,12 +79,20 @@ impl Backend {
             .expect("installed PocketIC checksum");
         assert_eq!(server_digest.hash(), expected);
         fs::write(root.join("server.sha256"), server_digest.hash()).unwrap();
+        let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
+            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
+            .start_managed_server()
+            .unwrap();
         let builder = PocketIcBuilder::new()
-            .with_server_binary(binary)
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
-        let pic = builder.build();
+        let pic = builder
+            .try_build(PocketIcStartupConfig::connect(
+                server.url(),
+                Duration::from_secs(60),
+            ))
+            .unwrap();
         let wasm = wat::parse_str(include_str!("../state.wat")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
@@ -89,6 +105,7 @@ impl Backend {
         fs::create_dir(root.join("calls")).unwrap();
         let backend = Self {
             pic,
+            _server: server,
             target,
             root,
             release,

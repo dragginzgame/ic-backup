@@ -25,7 +25,81 @@
 
 # Current handoff — 2026-10-08
 
-## Current 0.8.1 upstream refresh
+## Current 0.9.0 Shared Tooling 0.1.28 adoption
+
+Adopt committed Shared Tooling `1872ed2c20f6c70689bb2249050b1d673c60bfa0`
+through the canonical exporter. All 94 selected files match committed bytes/modes:
+17 existing paths change and 15 explicit task/runner-fixture additions close the
+new governance roster. The consumer-owned PocketIC 16.1 matrix and exact
+original Host 0.8.1 / Testkit 0.25.1 / Metrics 0.2.14 lock were preserved by
+the refresh. A subsequent concurrent update selects Host 0.8.2; retain it and
+repeat MSRV/independent-consumer, declarations, Clippy and package checks.
+Only Host's private macOS cleanup fixture changes; production Rust is identical. No vendored
+patch, sibling edit, root Git write, release or publication occurs.
+
+The new common rules separate low qualified MSRVs from development compilers.
+Both libraries pass Rust 1.88 all-target/all-feature compilation in a retained
+candidate before changing the actual inherited floor. Independent actual consumers
+then compile the exact original selected normal dependency graph without Testkit
+or dev feature unification. Host/Agent declare 1.88; no dependency downgrade or
+ignored floor is used. `make check-msrv` records compiler/Cargo versions and retains
+both consumers, and CI explicitly installs/selects 1.88. Development stays 1.99.
+The `std`-path rule already matches every maintained Rust source/test/example.
+
+Shared release-runner tests now simulate Git effects, while the separate real-Git
+suite remains owner-only. Installed host/IC links reject literal malformed targets
+before execution/download. The new maintenance catalog is accessible through
+`make tasks`; its fixture uses a substitute CLI. No live agent or schedule is
+activated. Existing archive roots, uploader and retention remain unchanged.
+
+Full tooling and release-adapter/simulation fixtures pass locally on Linux.
+The [review](../reports/audits/2026/10/08/shared-028/01/report.md) owns source-bound
+focused evidence and original preparation failures. Prior 0.1.27 owner CI now
+passes; exact 0.1.28 was queued at the last read. Current consumer native macOS,
+full workflow/stage binding (#29), actual Canic adoption and terminal/fence/reference
+release remain separate. The current draft stays 0.9.0 and package/receipt 0.8.1;
+work remains uncommitted. Earlier Testkit/runtime proof retains its original scope.
+
+## Retained 0.9.0 Testkit adoption
+
+0.8.1 is released at `8d1656e7c6c9c29032ad063fe351fc040d316252`.
+The maintainer requested Testkit instead of a direct PocketIC dependency.
+Both dev dependency declarations and fixture imports now use published Testkit
+0.25.1. Managed startup has a 60-second readiness deadline, explicit admitted
+server bytes and caller-owned retained 0600 output files. Instance teardown
+precedes server cleanup. Exact original calls, reservations, lost-reply behavior,
+byte comparisons and fixture application safety stay local; no Testkit snapshot
+retry/reset or funding policy is selected.
+
+Preserve the incoming Host artifacts/FS 0.8, Metrics 0.2.14 and PocketIC 16.1
+selection. Final Testkit 0.25.1 joins a single Host 0.8.1 graph; process/tools are
+dev-only through Testkit. A concurrent patch update
+selected Testkit 0.25.1 and all four Host 0.8.1 packages; preserve and freshly
+qualify it. All 151 published Rust/original-manifest blobs match non-yanked
+official archives and committed source. Testkit and Metrics Rust bytes are
+unchanged; Host adds bounded allocation improvements and an unused immediate
+path-lock API. Original Backup records/bounds remain unchanged, but the public
+publication error's Host identity changes: select the 0.9.0 draft. Package/receipt stay 0.8.1.
+
+Under the shared guide's delegated pin selection, transfer `ci/ic-tools.tsv`
+out of the immutable snapshot. Other 79 paths retain exact source/modes at
+`db039347d2372b877c1c46dcdd2b5c3aa9412009`. The single consumer matrix pins
+PocketIC 16.1's three official archive hashes; other rows/entry points remain.
+Explicit preparation and offline alignment pass on Linux. The local tooling
+fixture initially omitted this consumer-owned file; retain its failure, copy the
+matrix into the isolated consumer and pass the full tooling target. Preliminary
+Testkit 0.24 / PocketIC 16.0 proof remains separate from final evidence.
+
+All 158 focused Rust cases, both-library Clippy, Rust 1.91, strict rustdoc and
+package checks pass on Linux. Full tooling, shell, formatting, dependency,
+documentation, snapshot and exact installed IC admission also pass. Native macOS
+acceptance for this uncommitted source, full workflow/stage binding (#29), fresh Canic adapters and terminal/fence/reference
+release remain separate. The [review](../reports/audits/2026/10/08/testkit-adoption/01/report.md)
+owns exact inputs, graph/features, command logs and qualification limits.
+Work remains uncommitted; no sibling edit, root Git write, release, publication
+or public IC effect is performed.
+
+## Earlier 0.8.1 upstream refresh
 
 The maintainer's full `tooling-check` failed at consumer commit
 `9be366b`: adopted host/IC installer suites called missing `test-tool-evidence.sh`.

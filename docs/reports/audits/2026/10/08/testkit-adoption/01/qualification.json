@@ -1,0 +1,236 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "base_commit": "8d1656e7c6c9c29032ad063fe351fc040d316252",
+  "draft": "0.9.0",
+  "package_version": "0.8.1",
+  "platform": "Linux x86_64",
+  "source_inputs": "consumer-inputs.json",
+  "source_proof": "published-source-proof.json",
+  "snapshot_source_proof": "snapshot-source-proof.json",
+  "preserved_incoming": {
+    "manifest": {
+      "path": "target/testkit-adoption-090/incoming.toml",
+      "sha256": "5535685e1218ef51097e71b2a3a5d5460196e283c1d731c6695b2782b81a81f8"
+    },
+    "lock": {
+      "path": "target/testkit-adoption-090/incoming.lock",
+      "sha256": "811785c62b71c744e24e1e90b1068733edd93688065d626d6a545ca923cd3a09"
+    },
+    "retained_selections": [
+      "Host artifacts/FS 0.8.0",
+      "Metrics 0.2.14",
+      "PocketIC 16.1.0"
+    ]
+  },
+  "final_lock": {
+    "path": "target/testkit-adoption-090/selected-patch-final.lock",
+    "sha256": "4ce76e35215f7fb67c65c9e3b75bcd1edfae46e01c3029393e49029ca8298352"
+  },
+  "focused_test_count": 158,
+  "focused_tests": {
+    "agent_http": 2,
+    "agent_gateway": 3,
+    "core_simulator": 10,
+    "persistence": 134,
+    "public_recovery_source_settlement": 9
+  },
+  "checks": [
+    {
+      "command": "TMPDIR=\"$PWD/target/testkit-adoption-090/fixtures\" cargo test --offline --locked -p ic-backup-agent --test http_boundary --test pocketic_transport -- --nocapture",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/agent-patch-final.log",
+      "sha256": "0a3a7444901c71db605231639fcb6708c444d23aca211fe3e4e0f5cb3af6fa27"
+    },
+    {
+      "command": "TMPDIR=\"$PWD/target/testkit-adoption-090/fixtures\" cargo test --offline --locked -p ic-backup --test pocketic_snapshot -- --test-threads=2",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/core-pocketic-patch-final.log",
+      "sha256": "1aa37df98aaef0bd8bf548f48f6584efc674d4dc7d7d50781c26aa3ec73102bd"
+    },
+    {
+      "command": "TMPDIR=\"$PWD/target/testkit-adoption-090/fixtures\" cargo test --offline --locked -p ic-backup --lib ops::persistence",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/persistence-patch-final.log",
+      "sha256": "6cfbca07337abdc0a81c3e76a4f9965f55ad4ea205a07bf169313070202b6925"
+    },
+    {
+      "command": "TMPDIR=\"$PWD/target/testkit-adoption-090/fixtures\" cargo test --offline --locked -p ic-backup --test execution_settlement --test local_recovery --test local_restore_source --test fixture_roots",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/recovery-patch-final.log",
+      "sha256": "0e61430b65bd8a0a774b550709cceffb50ad16c9533d2fef0fa1064a510a6d9b"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/clippy-patch-final.log",
+      "sha256": "f9d2aadb7819d39990ed09a8010c6df6d458c414087f97151a91b40ca1669ed6"
+    },
+    {
+      "command": "cargo +1.91.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/msrv-patch-final.log",
+      "sha256": "0616359b457e9d99b61ccdae214e4a3224cdbb5664ed2702b53234561eb1989e"
+    },
+    {
+      "command": "RUSTDOCFLAGS=\"-D warnings\" cargo doc --offline --locked -p ic-backup -p ic-backup-agent --no-deps --all-features",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/rustdoc-patch-final.log",
+      "sha256": "52fc95372ad759db24f444f9749d2a6312d77934b3463e219991d236b1834ffb"
+    },
+    {
+      "command": "cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent (after final README edits)",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/package-patch-final.log",
+      "sha256": "f7e01c06d0b8e7f1756eaf79e8470496fc11b7ed4a4ffd3552ae9ca18ef96dc1"
+    },
+    {
+      "command": "make install-ic-tools",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/server-preparation.log",
+      "sha256": "5f268c630d3702a79d5cee2d3a88c6c12f5f887e7e9042dd9984d5a1b732e5ed"
+    },
+    {
+      "command": "make ic-tools-check pocketic-alignment-check",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/server-admission.log",
+      "sha256": "fb63202c51c2e98399a2d2c4f0b82abfa3abb4ddb8b3379463779be8968781f8"
+    },
+    {
+      "command": "make fmt-check",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/format-final.log",
+      "sha256": "05d4bcab05ab1c1aa35cbdd7f85d134a2aba670b830b6af5680c761a2a2340a5"
+    },
+    {
+      "command": "make tooling-check (after copying consumer-owned matrix into local fixture)",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/tooling-final.log",
+      "sha256": "8c60ec9c8e75040d4a1fb11a4cd9fbdf7a3169a5fde2e28c42274fcd9c295f10"
+    },
+    {
+      "command": "make shell-check dependency-pins-check fmt-check check-doc-links shared-tooling-check ic-tools-check pocketic-alignment-check",
+      "result": "passed",
+      "log": "target/testkit-adoption-090/declarations-patch-final.log",
+      "sha256": "1f798c505ec338696e482e9ac00eb1002640bc6510f1ee907f8f667b56c6d545"
+    }
+  ],
+  "retained_server_output": {
+    "path": "target/testkit-adoption-090/retained-server-output-patch-final.json",
+    "sha256": "92816148274cd917e6a8599ba86cb3d07d8619a14605694efad91476d4e98545"
+  },
+  "preliminary_stage": {
+    "testkit": "0.24.0",
+    "pocket_ic": "16.0.0",
+    "retained_inputs_logs_and_packages": "target/testkit-adoption-090/preliminary-024",
+    "meaning": "Earlier successful qualification remains bound to its original graph, never final 0.25/16.1 evidence."
+  },
+  "original_failures": [
+    {
+      "result": "failed",
+      "log": {
+        "path": "target/testkit-adoption-090/tooling-original-failure.log",
+        "sha256": "09eb4681997eabd1a04fad673cbd0e60c6c9570f3959a9133a104d89a7c04e13"
+      },
+      "fixture": "target/shared-tooling-tests.J4C41P",
+      "cause": "Local closed-consumer fixture omitted the consumer-owned matrix outside the 79-path snapshot. Explicit local input copy corrects it; full tooling retry passes."
+    },
+    {
+      "result": "failed",
+      "log": {
+        "path": "target/testkit-adoption-090/documentation-incomplete-failure.log",
+        "sha256": "4017f3dd40c5c8aa97368a88c05e38146a900da64dad3215d980ccf036ae3e9e"
+      },
+      "cause": "Documentation check ran before the linked audit report existed."
+    },
+    {
+      "result": "failed",
+      "log": {
+        "path": "target/testkit-adoption-090/documentation-report-failure.log",
+        "sha256": "1f4527d4b03ef31e3c31370ec84f2696e6bf2c30ecaff73a182615d795832783"
+      },
+      "cause": "Second documentation check identified a report relative path error and qualification.json not yet written; both corrected before final check."
+    },
+    {
+      "result": "failed",
+      "evidence": "Original one-off preparation tool transcript",
+      "cause": "Guessed official asset filename reversed platform/architecture; assertion refused before matrix writes, corrected against actual release JSON."
+    },
+    {
+      "result": "failed",
+      "log": {
+        "path": "target/testkit-adoption-090/pins-comment-admission-failure.log",
+        "sha256": "87e53f510aa1cc95746c44e340336c8f1d197e0729bd4e4c8380319584f7b7eb"
+      },
+      "cause": "Installer receipt binds complete matrix bytes, including the finalized provenance comment. Explicit re-preparation selects a fresh bundle with identical tool versions/server bytes; prior bundle retained."
+    }
+  ],
+  "owner_ci": {
+    "testkit": {
+      "path": "target/testkit-adoption-090/testkit-0251-check-runs.json",
+      "sha256": "4f07f6b676501b3698e2a49ceb2de0431fe44063b7e2e1907dd04222f9486b28"
+    },
+    "host": {
+      "path": "target/testkit-adoption-090/host-081-check-runs.json",
+      "sha256": "9ceeef57776167be152a0e8f0659f0a49f7f73c5e6e0c406b8d4aa992021b9c6"
+    },
+    "metrics": {
+      "path": "target/testkit-adoption-090/metrics-ci.json",
+      "sha256": "7638130a52f7c1104a4c4bdd53f0fa10c6ab7ab3fca25718159b2c679cb95134"
+    },
+    "prior_host_native_failure": {
+      "path": "target/testkit-adoption-090/host-080-ci-failure.log",
+      "sha256": "e481b1da43e6a9ebc4aff5992e8794fb36f47ac470fb96b236b7b637a46efeeb"
+    },
+    "meaning": "Exact new patch checks incomplete: in progress/queued/cancelled. Metrics exact owner passed. Host 0.8.0 prior native fixture fails on missing /bin/true; #5 owns feedback. No current consumer macOS proof."
+  },
+  "removed_symbols": [],
+  "limits": [
+    "Focused local Linux checks only; no full CI/release gate.",
+    "Native macOS current-source qualification remains separate.",
+    "Full workflow/stage binding #29, actual Canic adapter and generic application/fence safety remain unfinished.",
+    "No terminal/fence/reference release, new spending owner, schema or hidden retry.",
+    "No Git writes, sibling edits, publication or public IC effects."
+  ],
+  "production_graph": {
+    "path": "target/testkit-adoption-090/production-graph-patch-final.txt",
+    "sha256": "811820a6e14898d563315b4710e9b5edb7fbe4e3b48387cdd9c77d64d89e42dd"
+  },
+  "packages": [
+    {
+      "name": "ic-backup",
+      "version": "0.8.1",
+      "path": "target/package/ic-backup-0.8.1.crate",
+      "sha256": "5b5a260fb11a655854b9ef1b759a5998aa4739846e3747109868c82beb3d82a7",
+      "exact_current_rust_wat_files": 265
+    },
+    {
+      "name": "ic-backup-agent",
+      "version": "0.8.1",
+      "path": "target/package/ic-backup-agent-0.8.1.crate",
+      "sha256": "6f6bc8647d152ec500f9dbba8826a2052be817a0397c42ae70aa92689d802e4d",
+      "exact_current_rust_wat_files": 6
+    }
+  ],
+  "issue_updates": [
+    "https://github.com/dragginzgame/shared-tooling/issues/76#issuecomment-6063041959",
+    "https://github.com/dragginzgame/ic-testkit/issues/32#issuecomment-6063042367",
+    "https://github.com/dragginzgame/ic-backup/issues/25",
+    "https://github.com/dragginzgame/ic-backup/issues/29",
+    "https://github.com/dragginzgame/ic-host-tooling/issues/5"
+  ],
+  "final_matrix_sha256": "48906db13823edb2ffd59c1db1850e7965364fa45efd333c5d26a13616246a90",
+  "current_installed_matrix_matches_consumer": true,
+  "earlier_qualified_stage": {
+    "host": "0.8.0",
+    "testkit": "0.25.0",
+    "evidence": "target/testkit-adoption-090/qualified-0250",
+    "meaning": "Earlier successful stage, preserved separately from final patch inputs/results."
+  },
+  "concurrent_patch_update": {
+    "path": "target/testkit-adoption-090/incoming-patch.lock",
+    "sha256": "4ce76e35215f7fb67c65c9e3b75bcd1edfae46e01c3029393e49029ca8298352"
+  },
+  "source_proof_blob_count": 151,
+  "concurrent_source_guard": "Final record admission detected a concurrent Cargo.lock update before attributing original 0.25.0/0.8.0 evidence to it. Preserve both locks and complete fresh patch qualification."
+}

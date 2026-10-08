@@ -1,5 +1,25 @@
 # Real single-canister snapshot qualification
 
+## Current Testkit qualification
+
+Both simulator suites depend on published `ic-testkit` 0.25.1 and its complete
+`pocket_ic` re-export. Their exact management calls, byte comparisons and original
+reservation/lost-reply assertions remain local. Testkit owns explicit bounded
+server readiness and cleanup; raw 0600 stdout/stderr survive in caller-owned
+fixture roots. No Testkit snapshot retry, baseline reset or funding policy is used.
+
+The single [consumer-owned matrix](shared-tooling.md#consumer-owned-ic-pins)
+selects PocketIC 16.1, explicitly installed and admitted before tests. Ordinary
+checks do not download servers. All ten core simulator cases and three Agent
+gateway cases pass on Linux with the final Host 0.8 / Metrics 0.2.14 graph.
+Current logs and fixture state live under `target/testkit-adoption-090`;
+[the source-bound review](reports/audits/2026/10/08/testkit-adoption/01/report.md)
+keeps preliminary Testkit 0.24 / PocketIC 16.0 results separate. These results
+qualify the isolated fixture and transport; full workflow runners, generic
+application safety, Canic adoption and native macOS acceptance remain separate.
+
+## Earlier qualification
+
 Current direct Agent gateway qualification is documented in [agent-transport.md](agent-transport.md).
 The earlier 11-case results below retain their original source/graph; the maintained
 core target now has ten cases after retiring the ICP probe.

@@ -60,8 +60,10 @@ into an issue tracker or release authority.
   visibility evidence; no local-write error grants paid retry or resets spending.
   The Host 0.5 error identity was delivered in 0.7.0. The externally selected
   Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
-  The compatible 0.8.1 draft qualifies Host 0.7.1; artifacts/fs source is unchanged from 0.5.2;
-  the now-unused process dependency is retired with its sole ICP probe caller.
+  Released 0.8.1 qualifies Host 0.7.1. The incoming Host 0.8 graph changes the
+  exposed Rust identity again, requiring the 0.9.0 draft. The direct process
+  dependency retired with its sole ICP probe caller; Testkit's dev-only managed
+  server owner does not grant backup command custody or spending authority.
   Local bounded capture retains its direct-child semantics. Group cleanup does not
   replace inherited descriptor custody or prove descendant quiescence; bounded
   test capture retains its separate direct-child semantics.
@@ -518,6 +520,23 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   Real local HTTP and PocketIC fixtures qualify transport, not fresh permissions,
   never-dispatched custody, application safety, full runners or terminal release.
   Old ICP logs/journals remain historical evidence; no ICP backend fallback remains.
+
+## Simulator qualification
+
+Simulator fixtures depend on published `ic-testkit` and use its complete
+`pocket_ic` re-export for exact management ingress and async gateway qualification.
+Testkit's explicit managed server owns bounded readiness/cleanup and retains raw
+output in each caller-owned fixture directory. No baseline reuse/reset, funding
+policy, hidden snapshot retry or receipt inference is adopted. Preserve original
+plans, journals, byte evidence and fixture-specific application safety.
+
+`ci/ic-tools.tsv` is now the single consumer-owned IC tool matrix, outside the
+immutable shared snapshot. This is the delegated selection allowed by
+[the shared IC guide](docs/ic-tools.md#snapshot-and-pin-selection): PocketIC
+16.1.0 pairs with Testkit 0.25's selected client. Preserve the other executable
+rows, shared install/check entry points, official archive hashes and old/failed
+bundles. Explicit preparation and offline exact alignment precede simulator tests;
+ordinary checks never install or download a server. No second pin catalog exists.
 
 ## Tracking
 

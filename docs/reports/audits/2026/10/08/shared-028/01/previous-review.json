@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "inspection_date": "2026-10-08",
+  "source": "https://github.com/dragginzgame/shared-tooling",
+  "revision": "db039347d2372b877c1c46dcdd2b5c3aa9412009",
+  "label": "0.1.27",
+  "manifest": ".shared-tooling.snapshot",
+  "selected_files": 79,
+  "changed_paths": [],
+  "added_paths": [],
+  "baseline_changed": false,
+  "canonical_refresh": false,
+  "source_proof": "docs/reports/audits/2026/10/08/testkit-adoption/01/snapshot-source-proof.json",
+  "qualification": "docs/reports/audits/2026/10/08/testkit-adoption/01/qualification.json",
+  "previous_review": "docs/reports/audits/2026/10/08/testkit-adoption/01/previous-shared-review.json",
+  "limits": [
+    "Full tooling and focused consumer checks pass locally on Linux; current native macOS remains unqualified.",
+    "Full CI/release gates were not run; no Git/release effects."
+  ],
+  "retired_paths": [
+    "ci/ic-tools.tsv"
+  ],
+  "consumer_pins": {
+    "path": "ci/ic-tools.tsv",
+    "reason": "Qualified Testkit 0.25 / PocketIC 16.1 pair under delegated docs/ic-tools.md#snapshot-and-pin-selection; unchanged shared install/check behavior.",
+    "version": "16.1.0",
+    "upstream_issue": "https://github.com/dragginzgame/shared-tooling/issues/76"
+  }
+}

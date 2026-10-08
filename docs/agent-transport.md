@@ -2,10 +2,11 @@
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
-transport was released in 0.8.0. The current compatible draft is 0.8.1; package
-versions remain 0.8.0 until separately authorized release. The ICP transport destination and executable routing probe are retired.
-Historical evidence and original journals remain retained. The canonical shared
-IC executable inventory is unchanged and does not select a backup backend.
+transport was released in 0.8.0; 0.8.1 is now released. The current draft is
+0.9.0 because the selected Host 0.8 graph changes the core publication-error
+Rust identity. Package versions remain 0.8.1 until separately authorized release. The ICP transport destination and executable routing probe are retired.
+Historical evidence and original journals remain retained. The consumer-owned
+IC executable matrix selects a qualified simulator pair and no product backend.
 
 `ic-backup` owns generic models, policy and local persistence; it has no Agent
 runtime dependency. `ic-backup-agent` depends on those original public request
@@ -67,7 +68,10 @@ oversized/disconnected/timed-out responses, no implicit polling and byte-identic
 pending journals across reopen. Context and reservation mismatches reject before
 network access. These controlled servers prove HTTP behavior, not management effects.
 
-Actual isolated PocketIC HTTP gateways qualify the production transport's separate
+Published Testkit 0.25.1 manages explicit PocketIC 16.1 startup/cleanup and retains
+server stdout/stderr in each fixture root. The async client uses its complete
+PocketIC re-export; exact call accounting remains in Backup. Actual isolated
+PocketIC HTTP gateways qualify the production transport's separate
 management receiver/effective target and certificate verification. A no-external-
 effects fixture captures and reads exact metadata, transfers every Wasm/1 MiB heap/
 1 MiB stable byte, uploads metadata/data, loads the same existing ID, and restores
@@ -75,7 +79,11 @@ heap/stable/global/certified state through an actual Ed25519 controller. A disca
 pending original accounting and denies a repeat reservation. A wrong root rejects an
 actual reply while an independent oracle proves the stop applied. Neither path
 writes an automatic receipt. Fixtures retain exact original plans/journals, signed
-requests/IDs, raw replies and simulator state under `target/agent-hard-cut-080`.
+requests/IDs, raw replies and simulator state. Current Testkit evidence is under
+`target/testkit-adoption-090`; the original released transport evidence stays under
+`target/agent-hard-cut-080`.
+[The current review](reports/audits/2026/10/08/testkit-adoption/01/report.md)
+records the final graph, 158 focused cases and tooling correction.
 
 [The source-bound review](reports/audits/2026/10/08/agent-transport/01/report.md)
 records dependencies, commands, results and failed/corrected attempts. Linux

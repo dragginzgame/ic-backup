@@ -107,6 +107,10 @@ reset_consumer() {
         rm -f "$CONSUMER/$path"
         cp -p "$ROOT/$path" "$CONSUMER/$path"
     done <"$ROOT/.shared-tooling.snapshot"
+    # The qualified IC matrix is consumer-owned, but shared governance documents
+    # still link to it. Retain that input in this closed consumer fixture too.
+    mkdir -p "$CONSUMER/ci"
+    cp -p "$ROOT/ci/ic-tools.tsv" "$CONSUMER/ci/ic-tools.tsv"
 }
 
 verify() {

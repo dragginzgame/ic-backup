@@ -2,30 +2,62 @@
   "version": 1,
   "inspection_date": "2026-10-08",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "db039347d2372b877c1c46dcdd2b5c3aa9412009",
-  "label": "0.1.27",
+  "revision": "1872ed2c20f6c70689bb2249050b1d673c60bfa0",
+  "label": "0.1.28",
   "manifest": ".shared-tooling.snapshot",
-  "selected_files": 80,
+  "selected_files": 94,
   "changed_paths": [
-    "docs/verification-helpers.md",
+    "audits/README.md",
+    "docs/ic-tools.md",
+    "docs/local-setup.md",
     "scripts/dev/install-host-tools.sh",
     "scripts/dev/install-ic-tools.sh",
     "scripts/ci/test-host-tools.sh",
     "scripts/ci/test-ic-tools.sh",
-    "scripts/dev/install-rust-tools.sh"
+    "docs/principles/rust-code-hygiene.md",
+    "docs/consuming-snapshots.md",
+    "docs/supported-hosts.md",
+    "DRAGGINZGAME.md",
+    "docs/releases.md",
+    "scripts/ci/test-release-runner.sh",
+    "rules/cargo-dependencies.md",
+    "rules/agent-maintenance.md",
+    "scripts/distribution/governance-files.txt",
+    "rules/rust-workspaces.md"
   ],
   "added_paths": [
-    "scripts/ci/test-tool-evidence.sh",
-    "scripts/ci/select-tool-evidence.sh",
-    ".github/actions/retain-failure-evidence/action.yml"
+    "tasks/README.md",
+    "tasks/cargo-machete.md",
+    "tasks/msrv.md",
+    "tasks/rust-toolchain.md",
+    "tasks/ci-health.md",
+    "tasks/snapshot-drift.md",
+    "tasks/dependency-security.md",
+    "tasks/code-audit.md",
+    "tasks/tooling-duplication.md",
+    "tasks/maintenance-prompt.md",
+    "tasks/local-schedule.md",
+    "tasks/systemd/shared-tooling-maintenance.service",
+    "tasks/systemd/shared-tooling-maintenance.timer",
+    "scripts/dev/run-maintenance.sh",
+    "scripts/ci/test-maintenance-task.sh"
   ],
-  "baseline_changed": false,
+  "baseline_changed": true,
   "canonical_refresh": true,
-  "source_proof": "docs/reports/audits/2026/10/08/tooling-companions/01/source-proof.json",
-  "qualification": "docs/reports/audits/2026/10/08/tooling-companions/01/qualification.json",
-  "previous_review": "docs/reports/audits/2026/10/08/tooling-companions/01/previous-review.json",
+  "source_proof": "docs/reports/audits/2026/10/08/shared-028/01/source-proof.json",
+  "qualification": "docs/reports/audits/2026/10/08/shared-028/01/qualification.json",
+  "previous_review": "docs/reports/audits/2026/10/08/shared-028/01/previous-review.json",
   "limits": [
-    "Linux local complete tooling target passed. Native macOS and hosted upload are not newly qualified.",
-    "Full CI/release gate was not rerun; no Rust/dependency graph changed."
-  ]
+    "Focused Linux tooling, release simulation and Rust 1.88 consumer qualification; current native macOS remains unqualified.",
+    "No complete CI/release gate, schedule activation or Git/release effects."
+  ],
+  "retired_paths": [
+    "ci/ic-tools.tsv"
+  ],
+  "consumer_pins": {
+    "path": "ci/ic-tools.tsv",
+    "reason": "Qualified Testkit 0.25 / PocketIC 16.1 pair under delegated docs/ic-tools.md#snapshot-and-pin-selection; unchanged shared install/check behavior.",
+    "version": "16.1.0",
+    "upstream_issue": "https://github.com/dragginzgame/shared-tooling/issues/76"
+  }
 }

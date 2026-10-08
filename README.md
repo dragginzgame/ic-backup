@@ -221,7 +221,7 @@ will be added only when their implementation is required.
 ## Development
 
 Development uses Rust 1.99.0, edition 2024 and a minimum supported Rust version
-of 1.91.0. The workspace owns package metadata, dependency declarations and
+of 1.88.0. The workspace owns package metadata, dependency declarations and
 lints. Builds stay in this repository's `target/` directory.
 
 ```bash
@@ -231,8 +231,11 @@ make check
 make test
 ```
 
-`make help` lists the available development and release commands. CI runs the
-native library and repository-tooling gate. A real PocketIC integration target
+`make help` lists the available development and release commands. `make tasks`
+reads the shared [maintenance catalog](tasks/README.md); adopting it activates
+no scheduler. CI runs the
+native library and repository-tooling gate. Published `ic-testkit` owns simulator
+startup/cleanup and supplies the complete PocketIC API. A real integration target
 qualifies single-canister capture, complete streamed transfer and same-ID restore,
 including deliberately lost replies. See [its exact scope](docs/pocketic-qualification.md).
 Direct Agent transport has separate [HTTP/gateway qualification](docs/agent-transport.md).

@@ -183,8 +183,9 @@ errors keep their own boundaries. The public exhaustive enum changed in
 completion. All v1 bytes, original limits, spending and journal transitions remain
 unchanged. Neither helper grants operation or retry authority.
 
-Released 0.8.0 selects the Host 0.7 `NamedWriteError` Rust type identity. The
-current draft qualifies Host 0.7.1 without changing variant shapes or v1 records.
+Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
+current 0.9.0 draft selects Host 0.8, changing that public Rust identity while
+preserving variant shapes and v1 records.
 Direct Host dependencies sharing that value must use the same compatible line.
 The new closed-writer executable-admission API has no record-writing purpose;
 JSON publication keeps this single held-parent adapter and preflight contract.
@@ -2444,7 +2445,11 @@ and [fresh source review](ic-snapshot-upload-settlement-source.json).
 
 ## Real single-canister platform qualification
 
-The test-only driver now exercises actual PocketIC 16 capture, complete bounded
+The test-only driver uses published Testkit 0.25 for managed server startup/cleanup
+and the complete PocketIC re-export, with retained private raw output. The
+[qualified consumer pins](shared-tooling.md#consumer-owned-ic-pins) select 16.1.
+Original calls, reservations and application safety remain local. It exercises
+actual PocketIC capture, complete bounded
 metadata/data reads, canonical durable artifact publication and retained original
 manifest replay through the production library. Exact source-bound upload preparation
 feeds real metadata/data calls, complete destination metadata/byte verification and

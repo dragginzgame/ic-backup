@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "inspection_date": "2026-10-08",
+  "repository": "https://github.com/dragginzgame/ic-host-tooling",
+  "source": "registry+https://github.com/rust-lang/crates.io-index",
+  "published_source_revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
+  "packages": {
+    "ic-host-artifacts": {
+      "version": "0.7.1",
+      "revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
+      "archive_sha256": "583dce23ad5266462397a777b927050a7884c9e87a23cad29a1fa8b80af0c0ca",
+      "yanked": false,
+      "all_published_rust_and_original_manifest_match_committed_source": true,
+      "sources": {
+        "Cargo.toml.orig": "7759140547f4daca7dc1a1a4a960ce9da3e627b8120a762a05b4bd55baae35a4",
+        "src/archive/mod.rs": "0aa25f26c92962cb8d7c937a45520d70ab08cbeffcb19346b43e0c76560bd1d1",
+        "src/archive/tests.rs": "f421faa806b90ad5ae9190b31cd8be4254b0e762b5f7dfd4b673251747d5f87c",
+        "src/artifact/chunks/mod.rs": "b63941eae381501ec7c05dd729e728890ae0ccf1f5feb8522b7642bde9be7286",
+        "src/artifact/chunks/tests.rs": "758e62b7ef14f586cc9c3bf2068f48b8f3c9543a9749b6204314e8c02fb81c29",
+        "src/artifact/copy/mod.rs": "949f65bffe44df87ac60cf85661c913bd22901d116d7331d1d00c08ebaf07e63",
+        "src/artifact/copy/tests.rs": "3be798ab7429699fd45ade714929cbe74d7cd2ec586990ed520af7162b650c54",
+        "src/artifact/gzip/mod.rs": "7023c40a9d3112d6d5703623f11ceb81ab07afc72a344935c3bd67009cd9ede1",
+        "src/artifact/gzip/tests.rs": "71d97c811fb65977b0e14f93852e622e94795944d9fa4470405237efa36ecfb9",
+        "src/artifact/hashing/mod.rs": "8d0e8e036a889ec69c08d81a6bb985d98747c648fd4776ae2083d338d62ccf90",
+        "src/artifact/hashing/tests.rs": "415c017525da0a4239caa95847538dd7e434bb5d2ac54b8ee630e92370030297",
+        "src/artifact/matching/mod.rs": "41caec22e1ca9ed06a585f81e3cfb722d5dae913588d718f644bacb3ba7c8d5a",
+        "src/artifact/matching/tests.rs": "a279485feaa927afab1784420ddd175906aebe09ec8f34d632af9ae21723f3bb",
+        "src/artifact/mod.rs": "d822eacb91759397dcd451700ec620a5f165cf62e08975ba5ebb7d0c89cbd5ac",
+        "src/artifact/tests.rs": "4a08b2b36cacfc034c0842204f64d75788bbb81a19715347bb037485e2c7650f",
+        "src/artifact/writer/mod.rs": "e68f3cd9081699ec327e6ce39c6d6477846815321eca3730ccfc5367de7392bf",
+        "src/artifact/writer/tests.rs": "1deed1e755d459b275cfdb0b2553d930f56980e2381b7b14325c405a54b649af",
+        "src/lib.rs": "eb2fbc7e97d2c03a714c08ce8abcb54ab302370a9bab34828ac05f7c70579af2",
+        "src/wasm/mod.rs": "63031cba74223cb52aa741db9d12578dcccf94920824215da8441dbc3b8e90fb",
+        "src/wasm/tests.rs": "6c602d58024a539c02b524489fc0adfed75e73a911d4cb69f224fa7d726cf0bc",
+        "tests/consumer_contracts.rs": "73284325f81c682b42409e66d7560ee06ee2a303c1a9e635776bf93eba04b1a9"
+      },
+      "changed_rust_from_previous_selection": []
+    },
+    "ic-host-fs": {
+      "version": "0.7.1",
+      "revision": "410fee7c309e781edf6a361f0e480d71b7c11e5a",
+      "archive_sha256": "16e31ff78c4411397e95ea9c35978f42084e4fb7d949b78a8ea52c6139482b28",
+      "yanked": false,
+      "all_published_rust_and_original_manifest_match_committed_source": true,
+      "sources": {
+        "Cargo.toml.orig": "a256d57ab6eced69da52f48871b47e406091e62a15ac64f7b8388352b54825c4",
+        "src/durable/lock_wait/mod.rs": "b2f7abd572a2721949e6bfe4225802719fa8dc39f0846000e2ff834d26c6f6a3",
+        "src/durable/lock_wait/tests.rs": "465a873327fc5f3bd5872eaa9f98d9fdc36db7dd005c5836aa37ea55dd88d73b",
+        "src/durable/mod.rs": "b3176675df7ba3363cc12fa553af5336e4284b660bffb70977b53ec4f25f6c3c",
+        "src/durable/named/mod.rs": "9ba1af898192ac79bd706f4e830318359ca581b1c1acf3b1c12db4df0aa1c717",
+        "src/durable/named/tests.rs": "e82b1f2a9d746a50b94149b97568eb55a22f4a4af64ab0f4abcefcfc0d561d08",
+        "src/durable/stream/mod.rs": "920f208d2de075dd483777b2b2bdee5878376af802669e2cd01d03fd9246e27d",
+        "src/durable/stream/tests.rs": "6c053b5c803ad8c1c825b1eacbfad3c06fca47def7afe397ea2e3d0b0556d5b1",
+        "src/durable/tests.rs": "ffa877751e526e97b4cd5646070d1cbfcb2c7d64be6450f2281214f0ee4f7c70",
+        "src/lib.rs": "7fafcfc1bd549b83c75f89601aa26a65ee1f628becff128c65faf965391b890d",
+        "src/path/mod.rs": "f03b059ba11cb1320ed86abb1e06893efa98e3bbf27d5eedea332ac173b7a341",
+        "src/path/tests.rs": "c0b7f8139e858d0417c6b07ca196cbcde4274cc887385a08e4165a017f87dcc5",
+        "src/read/mod.rs": "e7ff6cfc4eff2e9080b8af398059edf08e7ba01092d6bb4c0151ea18ccf4c8d6",
+        "src/read/no_follow/mod.rs": "4e600f008cae4f57ac2511a681ebfd068fff5e67bd8b1d20cb69cb8cb9b07802",
+        "src/read/no_follow/tests.rs": "cd83d9417d00980ede54e8b1e65f6f063165d6cd6b088a3db231f3fd34b113de",
+        "src/read/private/mod.rs": "00475adc31940f82b236aa1a1f2c2abdaa64861b6862259b71fd2feff67fbda9",
+        "src/read/private/tests/mod.rs": "d764c5e5dc03a602347d73df60dcc042999ebe141f3f6de2498514804c348af8",
+        "src/read/tests.rs": "b759c8db2c123d4eccbde43847866d8dd867990684f5e0cc9fac65064895a74d",
+        "src/test_support/mod.rs": "9f6fe53974cacc49439f776abd6148a21fce7812a36d3b0fac800b585ab8e0c5"
+      },
+      "changed_rust_from_previous_selection": []
+    }
+  },
+  "features": {
+    "ic-host-artifacts": [],
+    "ic-host-fs": []
+  },
+  "public_compatibility": {
+    "released_base": "0.8.0",
+    "next_draft": "0.8.1",
+    "reason": "Same Host 0.7 Rust type identity and unchanged source; compatible patch graph, no record/accounting changes."
+  },
+  "qualification": "docs/reports/audits/2026/10/08/upstream-refresh/01/qualification.json",
+  "source_proof": "docs/reports/audits/2026/10/08/upstream-refresh/01/published-source-proof.json",
+  "previous_review": "docs/reports/audits/2026/10/08/upstream-refresh/01/previous-host-review.json",
+  "limits": [
+    "Current upstream and released consumer native CI is not complete; Linux local results do not qualify macOS.",
+    "Prior Shared 0.1.26 Intel timed out under upstream #71.",
+    "Full CI/release gates were not requested or run.",
+    "Generic orchestration/stage binding and fresh Canic adoption remain separate."
+  ],
+  "process": "Not selected after the released ICP hard cut; existing descriptor custody/local capture remain separate."
+}

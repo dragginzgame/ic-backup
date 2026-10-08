@@ -1,0 +1,324 @@
+{
+  "revision": "db039347d2372b877c1c46dcdd2b5c3aa9412009",
+  "files": {
+    "docs/verification-helpers.md": {
+      "sha256": "79304d8ba54f65e39a3ed5de05d8e737e315741a0f3fae93e845469d905bb8c5",
+      "mode": "100644"
+    },
+    "scripts/ci/check-documentation-links.pl": {
+      "sha256": "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7",
+      "mode": "100755"
+    },
+    "scripts/ci/test-documentation-links.pl": {
+      "sha256": "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd",
+      "mode": "100755"
+    },
+    "scripts/ci/test-file-digests.sh": {
+      "sha256": "e3f72da1cb87bd8cbe37eff7ab7f23eca374e11f59b94669984dc9baf6c831ee",
+      "mode": "100755"
+    },
+    "rules/dependency-pinning.md": {
+      "sha256": "fda4a696f5c6e288e19aaaf7e89a1ad9ef151c742d54ce1470021079ffb72fb9",
+      "mode": "100644"
+    },
+    "audits/README.md": {
+      "sha256": "02d18f9bdeeab13244f64c828cfb36c4c07ae079929431c4322011261d3c55e7",
+      "mode": "100644"
+    },
+    "audits/code-hygiene.md": {
+      "sha256": "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3",
+      "mode": "100644"
+    },
+    "audits/flow-convergence-and-duplication.md": {
+      "sha256": "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484",
+      "mode": "100644"
+    },
+    "audits/complexity-and-technical-debt.md": {
+      "sha256": "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b",
+      "mode": "100644"
+    },
+    "audits/module-surface-hardening.md": {
+      "sha256": "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075",
+      "mode": "100644"
+    },
+    "audits/module-cleanup.md": {
+      "sha256": "ad0c56d074fb54455932bab7fcff0908dac34f000d2961caeca12616b79b778b",
+      "mode": "100644"
+    },
+    "docs/provenance.md": {
+      "sha256": "1a0d1d6f2a87a0d77378fdda605f5700cc7e2ca8c8dfac79418248da30b7e657",
+      "mode": "100644"
+    },
+    "docs/ic-tools.md": {
+      "sha256": "ff700a201efff31508d1682e5701b94e41d68f4892307d53b59e37f36e210264",
+      "mode": "100644"
+    },
+    "docs/local-setup.md": {
+      "sha256": "bb7e91db83eae51bdea679e43038b31fc67984a60e5fbc6e7f0f186d3d1ebb26",
+      "mode": "100644"
+    },
+    "ci/tool-versions.env": {
+      "sha256": "82892e25292fe47c26035a0031aa4ad1996fcf181732163e75039bd657f2f84b",
+      "mode": "100644"
+    },
+    "scripts/ci/check-dependency-pins.sh": {
+      "sha256": "ebb3f8d39cf4b4f61fdb145619637da0009e1cebe9e9af9cc9c75439036a1717",
+      "mode": "100755"
+    },
+    "scripts/ci/dependency-pins.jq": {
+      "sha256": "43b22d137421962ab6b34634e60d94b8cc6cf5483f9bc55afa8a0d1cd0964a28",
+      "mode": "100644"
+    },
+    "scripts/ci/verify-evidence-checksums.sh": {
+      "sha256": "ab2202f89a077373fffac29f57527b88ccc65998f5c85c60a32081edd8338150",
+      "mode": "100755"
+    },
+    "scripts/dev/install-host-tools.sh": {
+      "sha256": "6c762098082b95603cba93fa6013d77420a051ea3014adae6b21e5c4099eb99c",
+      "mode": "100755"
+    },
+    "scripts/dev/install-ic-tools.sh": {
+      "sha256": "5f472a6e590baf048293e55b5dad6703baefb0f655b91f785d0ecb300d3360fc",
+      "mode": "100755"
+    },
+    "scripts/ci/test-dependency-pins.sh": {
+      "sha256": "479cec75dff5f81705db3f10d63f494b6eca73d5a0714e648ab3174c645ca93d",
+      "mode": "100755"
+    },
+    "scripts/ci/test-host-tools.sh": {
+      "sha256": "d1a0b0be255a72e5438c74052ee5f9e00584050f5ce15d6e9d9edc124146b1b8",
+      "mode": "100755"
+    },
+    "scripts/ci/test-ic-tools.sh": {
+      "sha256": "c4600e06579cfca70aeedb08589c83ca85238db45bb1b1a9683e6d5b4b344a77",
+      "mode": "100755"
+    },
+    "scripts/ci/test-evidence-checksums.sh": {
+      "sha256": "17e7a1e929934fa763afad4b6443bffd930ee316814912689b0a4b7df7ac9be7",
+      "mode": "100755"
+    },
+    "docs/principles/README.md": {
+      "sha256": "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499",
+      "mode": "100644"
+    },
+    "docs/principles/decision-artifact-discipline.md": {
+      "sha256": "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7",
+      "mode": "100644"
+    },
+    "docs/principles/reviewable-changes.md": {
+      "sha256": "ee68649246bad21f0f28df4ea3809d8e2c7bcf1cd2a3d68e44684b855badc1c2",
+      "mode": "100644"
+    },
+    "docs/principles/rust-code-hygiene.md": {
+      "sha256": "7e5fd8a3c3b1dc5a829a19ad1a4933fdc17792c8e923871da1e9f36586baff41",
+      "mode": "100644"
+    },
+    "docs/principles/simplicity-and-maintainability.md": {
+      "sha256": "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55",
+      "mode": "100644"
+    },
+    "docs/consuming-snapshots.md": {
+      "sha256": "17da36b641e62f6885877fa0649919b7bb7292ef9b2d46edba11b09a6e1b859b",
+      "mode": "100644"
+    },
+    "docs/supported-hosts.md": {
+      "sha256": "4946e444748a3627be0abc73d1560af38ed43f5c5d02c0084b8cabd50eb8e247",
+      "mode": "100644"
+    },
+    "scripts/ci/verify-file-checksum.sh": {
+      "sha256": "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708",
+      "mode": "100755"
+    },
+    "scripts/ci/verify-shared-tooling-snapshot.sh": {
+      "sha256": "ba5c6b76d15bec4ac226f1ab0732d5087446152d64107993c52642a68d2ff464",
+      "mode": "100755"
+    },
+    "scripts/ci/run-validation-targets.sh": {
+      "sha256": "49ec78ab63a587a2f74f0f7da3e06d9f9942f831129b9201cba5bcd0698548fe",
+      "mode": "100755"
+    },
+    "scripts/ci/test-validation-target-runner.sh": {
+      "sha256": "94e2c276b8a365fb0dd492ebada199de96c8e40737faad9b47a996d3af22aa22",
+      "mode": "100755"
+    },
+    "DRAGGINZGAME.md": {
+      "sha256": "fe90530851fed47985442343664b5f5f44fde396d78a0d6f489cc1562c61592d",
+      "mode": "100644"
+    },
+    "rules/changelogs.md": {
+      "sha256": "b5a6e8fb723a861b722834675e27b4b16f3d296112622c1b40cdc8714f575404",
+      "mode": "100644"
+    },
+    "docs/releases.md": {
+      "sha256": "5166b2aca90aa35b9ec1c796816b2a7f49c87ccbd7d9baf06a7a649503833632",
+      "mode": "100644"
+    },
+    "scripts/ci/run-release.sh": {
+      "sha256": "430f6bb6008dcad91ca7f72fb1563f0d1959d6619cf97eccfb050ffee9c723fd",
+      "mode": "100755"
+    },
+    "scripts/ci/next-release-version.sh": {
+      "sha256": "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642",
+      "mode": "100755"
+    },
+    "scripts/ci/finalize-release-changelog.awk": {
+      "sha256": "e7f4c82566858b89b50c5c2f929097bdde85345a2c0c1bf553bb1170cc4f5960",
+      "mode": "100644"
+    },
+    "scripts/ci/test-release-runner.sh": {
+      "sha256": "3c88128afd53629f41d3045f477b7fb5f71fc7c51b326b4ca527b27e58660f81",
+      "mode": "100755"
+    },
+    "rules/cargo-dependencies.md": {
+      "sha256": "a1c172a7bfca31497e383f485b63fae4c22e39aa2b4bbe76c07059d28ba03eee",
+      "mode": "100644"
+    },
+    "rules/git-hooks.md": {
+      "sha256": "25485770b77ce6c537e5ded883fce3db58c1ebcb3b3796e236bbc22c291308ef",
+      "mode": "100644"
+    },
+    ".githooks/pre-commit": {
+      "sha256": "f99c4f8677c4608aafad5953d558d233962fda9ba6b769dfe9bd9202c8eda502",
+      "mode": "100755"
+    },
+    "scripts/dev/install-git-hooks.sh": {
+      "sha256": "04314208858a3b8c6833aee30b8574741518b4ca36ed509c095424762a7be79e",
+      "mode": "100755"
+    },
+    "rules/agent-maintenance.md": {
+      "sha256": "f89704cf085101453703e38c205afe5367eb71aecb2531ddc82544a75cfd13cf",
+      "mode": "100644"
+    },
+    "scripts/ci/rewrite-local-lock-versions.pl": {
+      "sha256": "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086",
+      "mode": "100755"
+    },
+    "scripts/ci/test-local-lock-versions.pl": {
+      "sha256": "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6",
+      "mode": "100755"
+    },
+    "scripts/ci/check-formatting-hooks.sh": {
+      "sha256": "6bbdb81bfe4b69311e57529866ccac2d8394de1452479c656ef9b7dd2a69e529",
+      "mode": "100755"
+    },
+    "docs/tag-maintenance.md": {
+      "sha256": "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6",
+      "mode": "100644"
+    },
+    "scripts/ci/read-cargo-workspace-version.sh": {
+      "sha256": "40f31a19d6115411ebffe7c26e3ed30b8af7eead10dd4830de8d5a9312291222",
+      "mode": "100755"
+    },
+    "scripts/ci/test-cargo-metadata.sh": {
+      "sha256": "740dd07566c83efc8c89f6ec661d1ed95956cf990073387ceb1f4055cae4373b",
+      "mode": "100755"
+    },
+    "scripts/ci/check-format-tools.sh": {
+      "sha256": "a52db278800a9f02d85a6b8a780a9b1eed860c49d5442cef9db1f7f9d7ddee0a",
+      "mode": "100755"
+    },
+    "scripts/ci/test-format-tools.sh": {
+      "sha256": "3aadaef7cac355bd2bdeab2999729ee7e55fde1048f0f40f0940316fbe9bf338",
+      "mode": "100755"
+    },
+    "scripts/distribution/governance-files.txt": {
+      "sha256": "ba1a9a2579402e6d919c3745b13cfe31fdac56911784fab76573aa403ff8f2a2",
+      "mode": "100644"
+    },
+    "rules/rust-workspaces.md": {
+      "sha256": "d27ab1519b8f75033e106719178dd9da287dd7384026fd7ba07668a8d0f7544b",
+      "mode": "100644"
+    },
+    "make/tools.mk": {
+      "sha256": "04794f1906f95c938cb2653036ae9c06b38aaa964e79072c6bb0e5a8f4019fa6",
+      "mode": "100644"
+    },
+    "scripts/dev/cloc.sh": {
+      "sha256": "8a14c80cec16a2cb07454c4e0f741150bc8385cd51ebc720a84ee3af1cc63043",
+      "mode": "100755"
+    },
+    "scripts/dev/cloc-tooling.pl": {
+      "sha256": "1dd0f35519fc3afafb723eadbb7d2cce1207e4103f41939d3ceec5a6678ebb22",
+      "mode": "100755"
+    },
+    "scripts/ci/check-make-execution.sh": {
+      "sha256": "c0d4bed8f2b876f5ae0a61f6c56e4c71736ab9888f092ab6c67d9f5ba142543d",
+      "mode": "100755"
+    },
+    "scripts/ci/test-tool-commands.sh": {
+      "sha256": "458e8f46b21887e892ea506768602477581a80fd10ffb579d1aeb46e20d9bcb4",
+      "mode": "100755"
+    },
+    "scripts/ci/test-cloc.sh": {
+      "sha256": "261dec422b038266a754babcffbd2492b54b92712ef1108b20a2cb8c1dbe114a",
+      "mode": "100755"
+    },
+    "scripts/ci/test-cloc-tooling.sh": {
+      "sha256": "6e2bb50c2f0d6f229bf93eb7904134232ed08ece3fcc9c4cc5886d52d7c64008",
+      "mode": "100755"
+    },
+    "audits/ic-canister-applications.md": {
+      "sha256": "94a934651d5cb0c6f77fa429df277856dbda4c1a7441b2b8563e678c416258f6",
+      "mode": "100644"
+    },
+    "scripts/dev/install-rust-tools.sh": {
+      "sha256": "ac24a1367e55b9e4f19cf67d5e19547aebca278a8b625a565c0e2f4e01e3fe9b",
+      "mode": "100755"
+    },
+    "scripts/ci/test-rust-tools.sh": {
+      "sha256": "a74fc5ec8415bbe2ccbd9c51ba16b544bffb1f72a89a981b68e19aff8edbc8c0",
+      "mode": "100755"
+    },
+    "rules/contributions.md": {
+      "sha256": "05838a36f21bb4299617ae8965687791062c94d768181f5f97676cc577382153",
+      "mode": "100644"
+    },
+    "scripts/ci/ic-tool-pins.awk": {
+      "sha256": "49e5c54defd9330aacf2635fd36803f3ea469ea278a2628f63dbd82458dfd5a9",
+      "mode": "100644"
+    },
+    "scripts/ci/check-pocketic-alignment.sh": {
+      "sha256": "77dac099996e513b3c44384e8e22ac66e6b06fe4f2ae3199af1c26fe07485b0a",
+      "mode": "100755"
+    },
+    "scripts/ci/check-pocketic-binary.sh": {
+      "sha256": "3e0f75c6388c503c86828811e69786506272dd3ec317b133b0b263369447e858",
+      "mode": "100755"
+    },
+    "scripts/ci/test-pocketic-checks.sh": {
+      "sha256": "09dcaac753c3c5350641b91f50d961b16080ae33122b659960b6f2b4e3cb8deb",
+      "mode": "100755"
+    },
+    "scripts/ci/release-pr.sh": {
+      "sha256": "fc40c8ad1c4ab850fda0e60b8cb0b3201724d020966e4d7e5d07620781f5e814",
+      "mode": "100644"
+    },
+    "scripts/ci/test-release-pr.sh": {
+      "sha256": "d02ea89b8c0eee4832357614942aab217698380d8a431eb66a1c76e36c69e9d7",
+      "mode": "100755"
+    },
+    "scripts/ci/archive-evidence.sh": {
+      "sha256": "5be336cb3e8045b2d2d536542a94944b376ee812b03f786a90b9d962ab697f13",
+      "mode": "100755"
+    },
+    "scripts/ci/test-evidence-archive.sh": {
+      "sha256": "565bcc658d1e6102b33790fb4828fe699f92ad0384a35189416547374ea56fe8",
+      "mode": "100755"
+    },
+    "scripts/ci/test-tool-evidence.sh": {
+      "sha256": "90e6b75e1bd3e3d7bc68b18f727379981e6811aa0a1b061e75d32c4699b13632",
+      "mode": "100755"
+    },
+    "scripts/ci/select-tool-evidence.sh": {
+      "sha256": "d7feda634703b4e0acb9e5406deccca2b81b821dfa738b714708b82a2c2e9bc3",
+      "mode": "100755"
+    },
+    ".github/actions/retain-failure-evidence/action.yml": {
+      "sha256": "020b67bcb75d35f5c12392b8c9ec3d7ba31f3a8e07c8318c35643be1ddf72d40",
+      "mode": "100644"
+    }
+  },
+  "retired_selection": {
+    "ci/ic-tools.tsv": "Qualified consumer-owned matrix under delegated shared IC pin selection; no other source bytes/modes change."
+  }
+}

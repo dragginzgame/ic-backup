@@ -54,8 +54,11 @@ export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/bin:$PATH"
 
 See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
 [IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck and
-macOS GNU Make/flock remain separate product prerequisites. The test-only PocketIC client
-uses the explicitly prepared server for [real single-canister qualification](pocketic-qualification.md).
+macOS GNU Make/flock remain separate product prerequisites. Published Testkit
+0.25 supplies the test-only PocketIC client and managed server. The
+[consumer-owned matrix](shared-tooling.md#consumer-owned-ic-pins) selects the
+matching 16.1 server; use `make install-ic-tools` explicitly before tests.
+Offline byte/version checks precede [real single-canister qualification](pocketic-qualification.md).
 Direct Agent transport is implemented separately; runners remain unimplemented.
 Installing tools alone establishes
 no backend or application qualification.
@@ -139,13 +142,15 @@ that contract. Host's typed descriptor publisher owns staging/atomic publication
 with private parent policy and acknowledged crash barriers in Backup. In the
 0.6.0 release, match `PersistenceError::Publication` for its original typed producer,
 cleanup and before/after-publication failures; visible output requires recovery.
-Released 0.8.0 selects the Host 0.7 publication-error Rust identity; the current
-0.8.1 draft qualifies its compatible 0.7.1 patch without changing variant shapes
-or persisted records.
+Released 0.8.1 selects the Host 0.7.1 publication-error Rust identity. The
+current 0.9.0 draft selects Host 0.8 and changes that exposed Rust identity,
+while preserving variant shapes and persisted records.
 Consumers sharing `NamedWriteError` values or matching through a direct Host
-dependency must select that same compatible line. Host features remain empty;
-no gzip, Wasm inspection or IC installation-limit policy is enabled. The unused
-process dependency retired with the ICP probe. Local bounded test capture still
+dependency must select that same compatible line. Production direct Host
+dependencies still disable default features. Testkit enables artifact archive/Wasm
+and Candid-extraction features in the dev graph, and owns dev-only Host process
+startup/cleanup. No new production inspection, installation-limit or process
+policy is added. The direct process dependency retired with the ICP probe. Local bounded test capture still
 cleans only its direct child; process-group signalling
 does not replace Backup's inherited lock-descriptor quiescence checks.
 Unix artifact and lock operations use Rustix's `io::Error::from` conversion
@@ -373,8 +378,15 @@ is installed. See [the reply contract](contracts/ic-lifecycle-reply.json) and
 `cargo test --offline --locked -p ic-backup --test ic_lifecycle_reply`.
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
-minimum supported version is 1.91.0. Install that toolchain separately for
-`make check-msrv`. Native builds are the supported product lane; the toolkit
+minimum supported version is 1.88.0. The selected Host and Agent dependencies
+declare that floor; both libraries compile on the actual compiler. Install it
+separately for `make check-msrv`, which records Cargo/rustc versions, compiles
+all targets/features and checks each public library in an independent consumer
+without Testkit feature unification. Those fixtures seed the unchanged workspace
+lock, prepare only their own standalone locks offline and refuse any different
+selected package/version/source. No dependency downgrade or ignored Rust floor
+is used. The retained isolated candidate passed before the support claim changed.
+Current native macOS qualification remains separate. Native builds are the supported product lane; the toolkit
 runs on an operator host.
 
 `policy::download_integrity::validate` checks retained plan/journal declarations
@@ -633,7 +645,8 @@ entries do not establish IC Backup qualification.
 | Windows and non-Bash shells | No supported product lane |
 | Complete backup/restore | Unimplemented; no host has end-to-end product qualification |
 
-The pinned development toolchain, Rust 1.91.0, rustfmt and Clippy are required on
+The pinned Rust 1.99.0 development toolchain, Rust 1.88.0 minimum compiler,
+rustfmt and Clippy are required on
 each native host. Repository tooling requires Git, GNU Make, Bash, Perl with core
 JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck, cargo-sort 2.1.4 and either `sha256sum` or
 `shasum`. Native process fixtures also require Python 3. The standard Unix utilities
@@ -645,7 +658,7 @@ tools and Homebrew, then run `brew install flock make ripgrep shellcheck`; provi
 Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
 `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through
 rustup, then run `rustup show active-toolchain` and
-`rustup toolchain install 1.91.0 --profile minimal` in this checkout. Install the
+`rustup toolchain install 1.88.0 --profile minimal` in this checkout. Install the
 reviewed manifest formatter after `source ci/tool-versions.env` with
 `cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked`,
 then run `make install-hooks` once per clone or after updating the hook contract.
@@ -665,7 +678,9 @@ validate contributor tooling. `shared-tooling-check` verifies the exact local
 snapshot; `tooling-check` tests its integrity and CI diagnostics without network
 or compilation. [Shared adoption](shared-tooling.md) identifies the reviewed
 source and the product overlay. `version` and `release-plan` inspect release
-metadata without changing the workspace.
+metadata without changing the workspace. `make tasks` reads the adopted shared
+maintenance catalog. Its runner is qualified only with a substitute CLI; no live
+agent or timer is activated by snapshot adoption.
 
 Release tooling uses the exact vendored common runner.
 Patch/minor/major share one workflow and explicit branch/remote inputs. Normal

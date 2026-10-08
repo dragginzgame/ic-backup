@@ -1229,7 +1229,9 @@ The extraction is complete only when all promised boundaries are executable:
 Moving files or passing copied unit tests is not completion. The product's value
 is independent usability with preserved recovery and custody guarantees.
 
-The first executable qualification now uses a private real PocketIC driver for
+The first executable qualification uses a private real PocketIC driver through
+published Testkit for bounded managed startup/cleanup and the complete client API.
+Original byte, accounting and fixture-safety owners stay local. It covers
 single-canister capture, complete production artifact transfer, upload and same-ID
 load/start, including reserved recovery of deliberately lost capture/allocation/data
 and stop/load/start replies. Complete separately accounted fresh snapshot checks

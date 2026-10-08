@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "base_commit": "8d1656e7c6c9c29032ad063fe351fc040d316252",
+  "draft": "0.9.0",
+  "package_version": "0.8.1",
+  "shared_revision": "1872ed2c20f6c70689bb2249050b1d673c60bfa0",
+  "source_proof": "source-proof.json",
+  "snapshot_count": 94,
+  "changed_existing_count": 17,
+  "added_count": 15,
+  "checks": [
+    {
+      "command": "canonical refresh with fifteen explicit additions",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/refresh.log",
+        "sha256": "4885686a19d346f6e63aab623ec6e5fb1b4be2449e7a47de996743ab95f8e3e3"
+      }
+    },
+    {
+      "command": "Rust 1.88 all-target/all-feature isolated candidate before changing actual declaration",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/candidate-msrv.log",
+        "sha256": "db689efb73706fb9e63b0724b0aca10577944a0a24ae6d88f9d07c97ddedd2b6"
+      }
+    },
+    {
+      "command": "make tooling-check",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/tooling-final.log",
+        "sha256": "79636663eb6985d2264fb8a39c74541a124beb19b8046016347f16a30ff4c9a5"
+      }
+    },
+    {
+      "command": "make release-check",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/release-final.log",
+        "sha256": "451bf27d6e34e3a018416cf6f59456d494477c5f72a010cd99568601afe98e5a"
+      }
+    },
+    {
+      "command": "make check-msrv (Rust 1.88 all targets/features and independent consumers on final Host 0.8.2)",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/msrv-host-082-final.log",
+        "sha256": "70afcee89077b5334f2022c66feec18ea59b4c0c2b904de2414e4cfbea3037e7"
+      }
+    },
+    {
+      "command": "make shell-check dependency-pins-check fmt-check check-doc-links shared-tooling-check tools-check pocketic-alignment-check",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/declarations-host-082-final.log",
+        "sha256": "2e373d017a9248f8493357d6de19e7fbebe749daa4a236166a1fa7ddb1afac3d"
+      }
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/clippy-host-082-final.log",
+        "sha256": "156522d652acdea6307259dddf4439dd62d1099bdd7ec5cec80dbe68921e1db6"
+      }
+    },
+    {
+      "command": "cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/package-host-082-final.log",
+        "sha256": "2dd12c22704cf4f42c61ac8cf51d14c715fdeee226e58a36a87f2963c8573f1a"
+      }
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/actionlint-final.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "command": "make tasks; compare exact catalog bytes",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/tasks-final.log",
+        "sha256": "c1f75a2b844bdcba2028d1881cc532ef5968ab3a1520603abf3b8992825480f4"
+      }
+    },
+    {
+      "command": "make check-doc-links after complete review records; git diff --check",
+      "result": "passed",
+      "log": {
+        "path": "target/shared-028-review/documentation-final.log",
+        "sha256": "2a412c7c5c2a557c803d395358fbc2291c18e72033cb2d09e216ca74120a010d"
+      }
+    }
+  ],
+  "original_failures": [
+    {
+      "cause": "Candidate omitted six included JSON schema fixtures; corrected original contract copy qualifies.",
+      "log": {
+        "path": "target/shared-028-review/candidate-original-failure.log",
+        "sha256": "7ce506ba616ba57d8c033327a4ba0e0c8b2a610279af4fe8a0c742a7058236d4"
+      }
+    },
+    {
+      "cause": "generate-lockfile reselected cached versions; normal-graph admission refused before compilation. Seeded metadata preparation retains originals; root lock unchanged.",
+      "log": {
+        "path": "target/shared-028-review/consumer-lock-original-failure.log",
+        "sha256": "228da53aa15f7a1d45ae3eb8c283ac1dea8c4be47f759a64d41b8f1277d893ec"
+      },
+      "fixture": "target/msrv-consumers.O0qODV"
+    },
+    {
+      "cause": "ShellCheck SC2154 did not admit inline trap status assignment; replace with local-status exit handler.",
+      "log": {
+        "path": "target/shared-028-review/shell-original-failure.log",
+        "sha256": "488e342cd63483fbd3e7c2099b8ff160e5724924efb11986adb4bb25781aef09"
+      }
+    }
+  ],
+  "prior_runtime_qualification": "docs/reports/audits/2026/10/08/testkit-adoption/01/qualification.json",
+  "prior_testkit_packages": [
+    {
+      "path": "target/shared-028-review/prior-testkit-packages/ic-backup-agent-0.8.1.crate",
+      "sha256": "6f6bc8647d152ec500f9dbba8826a2052be817a0397c42ae70aa92689d802e4d"
+    },
+    {
+      "path": "target/shared-028-review/prior-testkit-packages/ic-backup-0.8.1.crate",
+      "sha256": "5b5a260fb11a655854b9ef1b759a5998aa4739846e3747109868c82beb3d82a7"
+    }
+  ],
+  "limits": [
+    "Focused local Linux checks; current native macOS and complete CI/release acceptance remain separate.",
+    "No live agent/scheduler, sibling edits, root Git writes or publication.",
+    "No changed Rust behavior or paid accounting/record/recovery owner. The concurrent external Host patch lock is preserved and freshly checked.",
+    "Prior 158 runtime cases keep their original Host 0.8.1 graph; no new simulator run is claimed for the production-identical 0.8.2 patch."
+  ],
+  "independent_consumers": [
+    {
+      "package": "ic-backup",
+      "floor": "1.88.0",
+      "path": "target/msrv-consumers.vk5KVA/ic-backup",
+      "metadata_sha256": "836dbab98fd8998cd82c0dd0cb1c6309e678439ca3f1695148083dbf4ccd5158",
+      "lock_sha256": "2256c060d5223819b614756ae6ffd15e8a440863dd3c26d3f7ae7b7e81cc3bac",
+      "log_sha256": "fb43b4bf39845494ae4619107320a3382341658b47b6a28cf45d2547364a35f5",
+      "all_registry_checksums_match_original_lock": true,
+      "host_features": {
+        "ic-host-artifacts": [],
+        "ic-host-fs": []
+      },
+      "simulator_packages_present": false
+    },
+    {
+      "package": "ic-backup-agent",
+      "floor": "1.88.0",
+      "path": "target/msrv-consumers.vk5KVA/ic-backup-agent",
+      "metadata_sha256": "75596716ceae59d4abdd9da543ac4b9071737431954d405d93dced8464cef670",
+      "lock_sha256": "dfbe7016b5929964d8a1bdaec4d0f56458efd1d91dc982af0a53a561b2eed2ea",
+      "log_sha256": "47eb6134b646f1475be890a400b820d8f8826182a92779d069bb8b6cb823f564",
+      "all_registry_checksums_match_original_lock": true,
+      "host_features": {
+        "ic-host-artifacts": [],
+        "ic-host-fs": []
+      },
+      "simulator_packages_present": false
+    }
+  ],
+  "concurrent_host_patch": {
+    "version": "0.8.2",
+    "revision": "92bd2fecc71124b562e227a32a67644e1e5e34b7",
+    "incoming_lock": {
+      "path": "target/shared-028-review/incoming-host-082.lock",
+      "sha256": "3bf54948007024f7d6e8274bb66a008c0143f43bc637f7928c20d9a0a8344aae"
+    },
+    "earlier_stage": "target/shared-028-review/qualified-host-081",
+    "reason": "An external lock update arrived after initial qualification; preserve it and repeat MSRV/declaration/Clippy/package checks. Only a private Host test changes, not production Rust."
+  },
+  "preservation": {
+    "root_lock_matches_concurrent_incoming": true,
+    "consumer_pins_unchanged": true,
+    "rust_sources_unchanged": true
+  },
+  "consumer_inputs": {
+    "Cargo.toml": "69f09d5497251f36a01424307ddcaed4adf1886e71851bfe6bba1e87352f73aa",
+    "Cargo.lock": "3bf54948007024f7d6e8274bb66a008c0143f43bc637f7928c20d9a0a8344aae",
+    "Makefile": "fee1be3def7c8c81f5c47f6cc076018ba03838f7461ca7839d542fc79ea1fded",
+    ".shared-tooling.snapshot": "42abf7c2f0886242ec219181916dfa1eb78202e1919feb8399731621fcbbe8ca",
+    "ci/ic-tools.tsv": "48906db13823edb2ffd59c1db1850e7965364fa45efd333c5d26a13616246a90",
+    ".github/workflows/ci.yml": "9c73f8e2a45692fbb2416c3086dfd6f254f5419c8efb50090dc174e810bdb7be",
+    "scripts/ci/check-msrv-consumers.sh": "503d4b98afdf152510cfb4e6d59e9a05c37472345b3581ab98682e7826d85241",
+    "scripts/ci/test-tooling.sh": "f15086c88052a8dfeaa9dddadb7f8c603c68a1f1e6b86b70cfc0554744bde279"
+  },
+  "removed_symbols": [],
+  "packages": [
+    {
+      "name": "ic-backup",
+      "version": "0.8.1",
+      "rust_version": "1.88.0",
+      "path": "target/package/ic-backup-0.8.1.crate",
+      "sha256": "757e7511f3482a8016adb64407e8c0f031d5982eda822862bb41c27ab6721c88",
+      "exact_current_rust_wat_files": 265
+    },
+    {
+      "name": "ic-backup-agent",
+      "version": "0.8.1",
+      "rust_version": "1.88.0",
+      "path": "target/package/ic-backup-agent-0.8.1.crate",
+      "sha256": "c90e1e8152314a2ba3c1ebdee87fd4bcf8584b08b4a2a3db8cc9c16f6f40e13a",
+      "exact_current_rust_wat_files": 6
+    }
+  ],
+  "owner_ci": {
+    "shared": {
+      "path": "target/shared-028-review/shared-ci-final.json",
+      "sha256": "653ff8ff87fcc9de34455630718150925021dc7e76dcfcdf369bf431bd1a7370"
+    },
+    "host": {
+      "path": "target/shared-028-review/host-082-ci-final.json",
+      "sha256": "42e75bac2c90eddb31f3c5d5dac4e7eb44ef11d8b07d98599d68befa147d0b1b"
+    },
+    "state_at_inspection": "Shared 0.1.28 queued; prior db039347 success. Host 0.8.2 Linux/MSRV success, native macOS queued; no uncommitted consumer CI proof."
+  },
+  "published_source_proof": "published-source-proof.json"
+}

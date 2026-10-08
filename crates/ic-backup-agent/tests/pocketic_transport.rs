@@ -19,7 +19,10 @@ use ic_backup::{
 };
 use ic_backup_agent::{AgentTransport, ReservedUpdate, TransportError, UpdateOutcome};
 use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
-use pocket_ic::PocketIcBuilder;
+use ic_testkit::{
+    pic::{PocketIcManagedServer, PocketIcStartupConfig},
+    pocket_ic::{PocketIcBuilder, nonblocking::PocketIc},
+};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -28,7 +31,9 @@ use std::{
 };
 
 struct Fixture {
-    pic: pocket_ic::nonblocking::PocketIc,
+    pic: PocketIc,
+    // Preserve raw server output and retain cleanup custody until the fixture drops.
+    _server: PocketIcManagedServer,
     target: String,
     root: PathBuf,
     endpoint: String,
@@ -57,8 +62,12 @@ impl Fixture {
             expected
         );
         fs::write(root.join("server.sha256"), expected).unwrap();
+        let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
+            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
+            .start_managed_server()
+            .unwrap();
         let mut pic = PocketIcBuilder::new()
-            .with_server_binary(binary)
+            .with_server_url(server.url().parse().unwrap())
             .with_application_subnet()
             .with_nns_subnet()
             .with_state_dir(root.join("simulator"))
@@ -90,6 +99,7 @@ impl Fixture {
         fs::write(root.join("trusted-root.der"), &key).unwrap();
         Self {
             pic,
+            _server: server,
             target: target.to_text(),
             root,
             endpoint,

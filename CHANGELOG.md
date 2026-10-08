@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.0]
+
+- Adopt Shared Tooling 0.1.28: preserve literal installed tool-link targets, use simulation-only shared release fixtures and add the maintenance task catalog without activating a schedule.
+- Lower the qualified MSRV to Rust 1.88.0. Check both libraries and independent consumers explicitly in CI, preserving the selected lockfile and separate Rust 1.99 development toolchain.
+
+- Run simulator qualification through published `ic-testkit`, using its complete PocketIC API and managed server startup. Retain caller-owned server logs and original lost-reply/recovery coverage; remove the direct PocketIC dependency.
+- Select PocketIC 16.1 through one consumer-owned IC tool matrix; run `make install-ic-tools` to prepare the matching server. Shared installer and admission behavior remain unchanged ([shared #76](https://github.com/dragginzgame/shared-tooling/issues/76)).
+- **Breaking:** Adopt the incoming Host 0.8 graph. `PersistenceError::Publication` carries the Host 0.8 error identity; align direct Host dependencies when sharing that value. Preserve record formats, publication barriers and original spending. Metrics 0.2.14 remains within the existing compatible requirement.
+
 ## [0.8.1] - 2026-10-08
 
 - Adopt Shared Tooling 0.1.27. Keep release and validation fixtures independent of inherited Make includes and flags; resolve local script roots safely under `CDPATH`. Tooling counts recognize dotted snapshot names ([shared #7](https://github.com/dragginzgame/shared-tooling/issues/7), [shared #64](https://github.com/dragginzgame/shared-tooling/issues/64), [shared #69](https://github.com/dragginzgame/shared-tooling/issues/69)).

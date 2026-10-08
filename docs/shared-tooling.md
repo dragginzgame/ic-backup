@@ -49,7 +49,35 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 80-file snapshot selects committed Shared Tooling 0.1.27 correction
+The current 94-file snapshot selects committed Shared Tooling 0.1.28 at
+`1872ed2c20f6c70689bb2249050b1d673c60bfa0` through the canonical exporter.
+Seventeen existing paths change; fifteen explicit additions close the new task
+catalog's governance links and add its substitute-CLI regression. Common rules
+now require `std` paths in host code and qualify low package-specific MSRVs.
+Backup already uses `std` throughout; a retained isolated candidate qualifies
+Rust 1.88 before lowering the inherited floor, then both independent consumers
+qualify the public dependency paths.
+CI explicitly selects that compiler and records its versions. The development
+compiler stays 1.99 and the selected dependency lock remains unchanged.
+
+Installer checks now preserve literal link targets, rejecting malformed links
+before tool execution/download. Full tooling checks cover the new cases and
+maintenance runner with a substitute CLI. Shared release-runner fixtures now
+simulate Git effects; the separate real-Git owner suite is not selected here.
+The task catalog is available through `make tasks` and the README. Adoption does
+not run a live agent or install/activate a schedule. The existing failure archive
+policy, uploader and retention remain selected.
+
+The consumer-owned PocketIC 16.1 matrix stays outside the snapshot, byte-for-byte
+unchanged. [The current review](reports/audits/2026/10/08/shared-028/01/report.md)
+records source, command evidence, retained preparation failures and limits.
+Current native macOS and full CI/release acceptance remain separate; exact
+upstream 0.1.28 CI was queued at the last read. Prior 0.1.27 correction CI now
+passes, without retroactively qualifying this uncommitted consumer.
+
+## Earlier selected sources
+
+The earlier 79-file snapshot selects committed Shared Tooling 0.1.27 correction
 `db039347d2372b877c1c46dcdd2b5c3aa9412009`. The previous committed consumer
 selection omitted the installer suites' new evidence fixture; `make tooling-check`
 failed with status 127. Its original log remains retained. Adopt the corrected
@@ -62,6 +90,32 @@ payloads. The shared action is a fixture dependency; consumer CI continues to us
 its existing collection roots, pinned uploader and retention policy.
 [The repair review](reports/audits/2026/10/08/tooling-companions/01/report.md)
 keeps the failure and corrected results separate from earlier focused evidence.
+
+## Consumer-owned IC pins
+
+The released 0.8.1 snapshot contained 80 paths. This batch transfers only
+`ci/ic-tools.tsv` to consumer ownership under
+[the shared selection contract](ic-tools.md#snapshot-and-pin-selection).
+At transfer, the other 79 paths retained exact committed source bytes/modes at
+that revision; the current refresh deliberately extends them to the 94-file
+0.1.28 selection above. No vendored file is patched in place. The local closed-consumer tooling
+fixture now also copies this reviewed matrix; its original missing-input failure
+and corrected full `make tooling-check` result remain retained.
+
+Published Testkit 0.25.1 selects PocketIC 16.1 and Host 0.8. The single matrix now
+pins the matching 16.1 server with all three official release-asset digests. Other
+tool rows remain unchanged. The immutable shared guide's 16.0 table describes
+its default source selection; this paragraph owns Backup's deliberate override.
+The existing Make install/check/alignment commands all use the same matrix.
+Explicit installation and offline byte/version admission pass on Linux, followed
+by all ten core and three Agent simulator cases. macOS assets are declared;
+consumer native macOS execution remains unqualified for this uncommitted source.
+[Shared #76](https://github.com/dragginzgame/shared-tooling/issues/76) owns the
+upstream default update. No additional catalog or automatic server download exists.
+[The review](reports/audits/2026/10/08/testkit-adoption/01/report.md) binds exact
+published source, selected graph, pin ownership and focused qualification.
+
+## Older snapshots
 
 The earlier 77-file snapshot selected committed Shared Tooling 0.1.27 at
 `b866d41041a1986eeec95bde9af4c6ba0853d2e3`. Thirty-two selected paths change;
