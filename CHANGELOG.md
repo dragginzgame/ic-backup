@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.0]
+## [0.9.0] - 2026-10-08
 
 - Adopt Shared Tooling 0.1.28: preserve literal installed tool-link targets, use simulation-only shared release fixtures and add the maintenance task catalog without activating a schedule.
 - Lower the qualified MSRV to Rust 1.88.0. Check both libraries and independent consumers explicitly in CI, preserving the selected lockfile and separate Rust 1.99 development toolchain.
