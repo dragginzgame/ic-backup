@@ -49,31 +49,46 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 94-file snapshot selects committed Shared Tooling 0.1.28 at
-`1872ed2c20f6c70689bb2249050b1d673c60bfa0` through the canonical exporter.
-Seventeen existing paths change; fifteen explicit additions close the new task
-catalog's governance links and add its substitute-CLI regression. Common rules
-now require `std` paths in host code and qualify low package-specific MSRVs.
-Backup already uses `std` throughout; a retained isolated candidate qualifies
-Rust 1.88 before lowering the inherited floor, then both independent consumers
-qualify the public dependency paths.
-CI explicitly selects that compiler and records its versions. The development
-compiler stays 1.99 and the selected dependency lock remains unchanged.
+The current 97-file snapshot selects committed Shared Tooling 0.1.29 at
+`1a54fb625d6e47efa64c4384808ecbc87be84e7e`. The canonical exporter runs from a
+clean isolated checkout, excluding dirty sibling proposals. Fifteen existing
+paths change and the release-source checker and two CI-installer files are added explicitly; every source
+blob and executable mode matches. The consumer-owned PocketIC 16.1 matrix and
+original Host 0.8.2 selections remain unchanged.
 
-Installer checks now preserve literal link targets, rejecting malformed links
-before tool execution/download. Full tooling checks cover the new cases and
-maintenance runner with a substitute CLI. Shared release-runner fixtures now
-simulate Git effects; the separate real-Git owner suite is not selected here.
-The task catalog is available through `make tasks` and the README. Adoption does
-not run a live agent or install/activate a schedule. The existing failure archive
-policy, uploader and retention remain selected.
+Common issue authority now covers only repositories owned by `dragginzgame`.
+Other GitHub destinations require explicit authorization for the destination and
+intended action; read-only inspection remains allowed. The adopted task prompts
+carry that boundary. No issue is posted by this review.
 
-The consumer-owned PocketIC 16.1 matrix stays outside the snapshot, byte-for-byte
-unchanged. [The current review](reports/audits/2026/10/08/shared-028/01/report.md)
-records source, command evidence, retained preparation failures and limits.
-Current native macOS and full CI/release acceptance remain separate; exact
-upstream 0.1.28 CI was queued at the last read. Prior 0.1.27 correction CI now
-passes, without retroactively qualifying this uncommitted consumer.
+The release adapter delegates dirty-source admission to the shared checker.
+Initial preflight allows pending notes only and states that validation/version
+preparation have not started when refused. Prepared checks retain exact metadata
+allowances and require unchanged original HEAD; committed/resumed checks require
+clean source. Actual private-index fixtures verify all three change categories,
+quoted unusual names, original Git errors and unchanged index/lock/working bytes.
+No function, method or type is removed. Existing receipts, spending and release
+recovery remain unchanged.
+
+The delivered 0.9.0 Linux CI uses Ubuntu ShellCheck 0.9 and fails SC2015 in
+the unchanged shared checker, while local 0.11 passes. Linux CI now selects the
+already-reviewed 0.11 pin through the canonical installer, and local shell-check
+prefers a prepared checkout binary. Actual checksum-admitted Linux installation
+and shell lint pass. macOS retains its Homebrew setup. Vendored code stays intact.
+
+A concurrent external lock update selects Metrics 0.2.15; retain it. Every
+published Rust byte is identical to 0.2.14 and exact committed source/archive
+proof matches the non-yanked registry row. Empty host features remain selected.
+Fresh Rust 1.88 checks compile both libraries and two independent public consumers,
+and all five focused diagnostic/distribution cases pass on this exact graph.
+Original tooling proof remains separate; no accounting or metrics schema changes.
+
+Focused Linux release-adapter, runner-simulation, full tooling, shell and Cargo
+pin checks pass. The optional npm checker is adopted with its canonical owner but
+is not selected by this Rust-only consumer. The sibling dashboard and Shared
+Tooling's repository-specific source fixture remain unselected. No schedule is
+activated. [The review](reports/audits/2026/10/08/shared-029/01/report.md) binds exact
+inputs and retained evidence; native macOS and full CI/release remain separate.
 
 ## Earlier selected sources
 
@@ -458,7 +473,8 @@ policy or a vendored patch.
 
 That review adopted the earlier baseline and maintenance rule together and
 retained local product, validation and release restrictions. The current baseline
-above supersedes its narrower standing issue-reporting authority.
+above governs current issue-reporting authority; this paragraph records only
+that earlier adoption.
 
 The shared logger now distinguishes Rust `error::` names and ordinary failure
 context from actual diagnostics. The finalizer compares large version components
@@ -764,8 +780,10 @@ GitHub issues as the sole record for bugs and follow-up work. For reusable Share
 Tooling feedback, record the reviewed revision, affected
 owner/callers/hosts, symptom, focused evidence, smallest proposal and disposition
 in the owning repository's issue, then link it from the handoff. Do not create a
-competing local feedback list. Sending feedback or changing upstream requires
-separate authorization. This document records adoption, not outstanding issues.
+competing local feedback list. Standing issue authority covers `dragginzgame/*`
+only; verify the owner before writing. Other destinations require explicit
+authorization for that destination and action. Upstream file edits remain
+separately authorized. This document records adoption, not outstanding issues.
 
 `make shared-tooling-check` verifies the snapshot offline. `make tooling-check`
 runs upstream runner cases against the vendored implementation plus local

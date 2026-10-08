@@ -15,20 +15,13 @@ fail() { echo "error: $*" >&2; exit 1; }
 version() { perl "$DATA" version; }
 ensure_clean() {
     git rev-parse --verify HEAD >/dev/null
-    [[ -z "$(git status --porcelain --untracked-files=all)" ]] || fail 'worktree must be clean'
+    bash "$ROOT/scripts/ci/check-release-source.sh"
 }
 allowed_changes() {
-    local base="$1" path paths denied=''
-    paths="$(mktemp "$CARGO_TARGET_DIR/release-paths.XXXXXX")"
-    git diff --cached --name-only -z "$base" -- > "$paths"
-    git diff --name-only -z -- >> "$paths"
-    git ls-files --others --exclude-standard -z >> "$paths"
-    while IFS= read -r -d '' path; do
-        case "$path" in Cargo.toml|Cargo.lock|CHANGELOG.md|docs/release.json) ;;
-            *) denied="$path"; break ;; esac
-    done < "$paths"
-    rm -f "$paths"
-    [[ -z "$denied" ]] || fail "unrelated release path: $denied"
+    local base="$1"
+    [[ "$(git rev-parse HEAD)" == "$base" ]] || fail 'original source changed'
+    bash "$ROOT/scripts/ci/check-release-source.sh" \
+        --allow Cargo.toml --allow Cargo.lock --allow CHANGELOG.md --allow docs/release.json
 }
 context() {
     : "${RELEASE_SOURCE:?}" "${RELEASE_PREVIOUS:?}" "${RELEASE_VERSION:?}" "${RELEASE_DATE:?}"
@@ -49,7 +42,9 @@ validation_check() {
 preflight() {
     context
     [[ "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$(version)" == "$RELEASE_PREVIOUS" ]] || fail 'original source/version changed'
-    allowed_changes "$RELEASE_SOURCE"
+    if ! bash "$ROOT/scripts/ci/check-release-source.sh" --allow CHANGELOG.md; then
+        fail 'release preflight refused; validation and version preparation have not started for this attempt'
+    fi
     # Pending notes may be dirty; package/lock/previous receipt must still match
     # the selected source so a partial prior bump cannot become a new base.
     git diff --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'original release metadata changed'

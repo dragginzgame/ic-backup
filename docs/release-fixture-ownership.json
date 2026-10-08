@@ -72,7 +72,7 @@
     "test_completed_evidence_replay": "Local completed replay requires retained validation; malformed selected-commit/read/write arguments refuse without effects",
     "test_dependency_failure_conditional_status": "Cargo substitute cannot produce false-success/cache under conditional errexit semantics",
     "test_conditional_substitute_rejections": "Fixture Git/formatter missing proofs cannot become false-success under supported shell semantics",
-    "test_real_index_boundaries": "Real private Git indexes distinguish staged/working unrelated and original metadata edits without creating commits"
+    "test_real_index_boundaries": "Real private Git index distinguishes staged, unstaged, untracked and unusual-name paths, initial phase refusals and observation errors; preserves index, lock, working bytes and HEAD without creating commits"
   },
   "retained_git_substitute": "Still required by actual selected historical receipts: immutable full product file trees, source/member/lock/notes/receipt reads, descendant proofs and remote tag association. Canonical runner fixture models generic version/evidence files, so no new generic fake-Git framework or callback contract is introduced. Unused lost-tag/push injection branches are retired.",
   "evidence": "target/release-fixture-052-review",
@@ -87,7 +87,7 @@
     "commands": "make release-check; targeted syntax/lint and documentation/snapshot checks. No Rust build or full CI gate.",
     "effects": "Actual consumer Make/adapters/private indexes plus command substitutes; no real commit/tag/push or registry effect."
   },
-  "current_fixture_sha256": "854f75ce4d7b606a6ef3a190f2a6dcc7b69bab5ad66c0f177733290a3375f98e",
+  "current_fixture_sha256": "03bd55e91fcd58e91e8e130f0ef09d386cf3051d66c2805964dbfee9f61e8181",
   "registered_case_evidence": "target/release-fixture-052-review/registered-case-delta.json",
   "source_loc": {
     "tool": "cloc 2.10; whole shell fixture including generated mock/data here-documents",
@@ -105,5 +105,6 @@
     "consumer_fixture_sha256": "d037db833152e041b1f02bf92f8762cd788b28493c6cd71b671f557144ba9394",
     "owner": "test_staging now refuses pr/invalid selections through patch and exact resume before state/Git effects.",
     "PR_scope": "Optional upstream fixture is vendored, but consumer merged-source adapter is unimplemented and mode refuses; no local PR fixture execution or release delivery."
-  }
+  },
+  "latest_diagnostics_qualification": "docs/reports/audits/2026/10/08/shared-029/01/qualification.json"
 }

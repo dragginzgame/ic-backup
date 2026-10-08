@@ -95,13 +95,24 @@ qualified client/server version pairing through read-only offline Cargo metadata
 The normal gate runs it after `deps`; it neither installs a tool nor qualifies
 runtime behavior or permissions.
 
-`make shell-check` also requires ShellCheck and Perl. It uses ShellCheck from
-`PATH` first, then an executable `~/.local/bin/shellcheck` if PATH lookup fails.
-It reports the selected command and fails if neither location provides the tool;
-lint failures never trigger a fallback or skip. Perl must be on PATH. CI installs
-ShellCheck explicitly; locally, install it with the host package manager or in
-the user-local location. An existing user-local installation works with plain
-`make shell-check` in non-login shells without changing the terminal's PATH.
+`make shell-check` also requires ShellCheck and Perl. It prefers a prepared
+`.tools/ci/bin/shellcheck`, then searches `PATH` and `~/.local/bin/shellcheck`.
+It reports the selected command; lint failures never trigger a fallback or skip.
+Perl must be on PATH. Linux CI selects reviewed ShellCheck 0.11.0 because Ubuntu
+24.04's 0.9 checker rejects an intentional expression in the shared pin checker.
+Prepare the same pinned Linux x86-64 binary explicitly:
+
+```bash
+source ci/tool-versions.env
+bash scripts/ci/install-shellcheck.sh \
+  --version "$SHARED_TOOLING_SHELLCHECK_VERSION" \
+  --sha256 "$SHARED_TOOLING_SHELLCHECK_SHA256_LINUX_X86_64" \
+  --install-dir "$PWD/.tools/ci/bin"
+```
+
+macOS uses Homebrew ShellCheck. Local installations on PATH or at the user-local
+location still work when no checkout-local binary is prepared; validation never
+installs a tool implicitly.
 
 ## Architecture at a glance
 
@@ -653,7 +664,8 @@ JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck, cargo-sort 2.1.4 and eithe
 listed below may use their GNU or BSD implementations.
 
 On Ubuntu, install missing tooling with `sudo apt-get install make git perl
-python3 ripgrep shellcheck util-linux`. On macOS 15, install the Xcode command-line
+python3 ripgrep util-linux`, then prepare ShellCheck with the pinned command above.
+On macOS 15, install the Xcode command-line
 tools and Homebrew, then run `brew install flock make ripgrep shellcheck`; provide
 Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
 `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through

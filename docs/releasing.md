@@ -122,6 +122,15 @@ and cargo-sort 2.1.4 plus the declared Rust toolchains. Install the formatter du
 explicit developer setup; validation never installs it. Supported host evidence
 remains separately qualified.
 
+Source admission reports every staged, unstaged and untracked path outside the
+phase's exact metadata allowance, quoting unusual names and retaining Git errors.
+Initial preflight permits pending `CHANGELOG.md` notes only; package metadata and
+the lockfile must match the selected source. Its refusal states that validation
+and version preparation have not started for that attempt. Prepared checks keep
+their existing metadata allowance and original-source/receipt requirements;
+committed and resumed checks require a clean checkout. Admission never stages,
+repairs or commits the reported paths.
+
 Prepare the reviewed local executables with `make install-tools` before the
 release gate. Both CI and release validation include offline `make tools-check`
 and `make dependency-pins-check`; missing/changed tools stop the gate without

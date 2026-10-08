@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "base_commit": "32f091a3cc576dc7e0d8b80aea6a484abf905984",
+  "draft": "0.9.1",
+  "package_version": "0.9.0",
+  "shared_revision": "1a54fb625d6e47efa64c4384808ecbc87be84e7e",
+  "snapshot_count": 97,
+  "changed_existing_count": 15,
+  "added_count": 3,
+  "consumer_inputs": {
+    ".shared-tooling.snapshot": "ccf920faa5688acc5c8fd5168173c7f8f24cd4cded4c83936f94d3bc66b00691",
+    "Cargo.toml": "5a402ef8bcc5a000f7f0057c8d5d202718972ae2e432a01fb79eb10f65858a60",
+    "Cargo.lock": "226e26be9e51b6dd9cc86122a8fa14d5759f2fa96af1af054501e14e3dfd319d",
+    "Makefile": "1d193c29e0cb0daeea6f08d39616b238be938d55c346fe8848779c2b50e4da72",
+    ".github/workflows/ci.yml": "3b2420af86c2f4026214fc81487ef13fdef0ad3ae24f860153abe73321fd0dac",
+    "ci/ic-tools.tsv": "48906db13823edb2ffd59c1db1850e7965364fa45efd333c5d26a13616246a90",
+    "ci/tool-versions.env": "82892e25292fe47c26035a0031aa4ad1996fcf181732163e75039bd657f2f84b",
+    "scripts/release/release.sh": "83ee259091bbd5358c2cdf7cbebfaa45bee25c2daed35b022f56de400ac83b86",
+    "scripts/release/test-release.sh": "03bd55e91fcd58e91e8e130f0ef09d386cf3051d66c2805964dbfee9f61e8181",
+    "scripts/ci/check-release-source.sh": "a3af7084956384262842be33100f91a22fdd82b0f91b6091a00e90f8726f67fe",
+    "scripts/ci/install-shellcheck.sh": "c133d81786de40433b64fbc497db763151705d52e910607e768b8f986fc20548",
+    "scripts/ci/install-ci-tool.sh": "885cb85d250ef80ced2df05d05c4187b2d05998a7526b6983fd037f3327bdf29"
+  },
+  "checks": [
+    {
+      "command": "make release-check; prior Make with unchanged release recipes",
+      "status": "pass",
+      "log": "target/shared-029-review/release.log",
+      "sha256": "ed207c90a58fdadb3b421fff6f18961c2b1e2b320c90f19e51f238c8b325e829"
+    },
+    {
+      "command": "make shared-tooling-check dependency-pins-check shell-check",
+      "status": "pass",
+      "log": "target/shared-029-review/declarations-shell-final.log",
+      "sha256": "b04509a118eb58269bf3af1376bc4d3cfac90616c6642c582d424d5999b23bd5"
+    },
+    {
+      "command": "make tooling-check",
+      "status": "pass",
+      "log": "target/shared-029-review/tooling-final.log",
+      "sha256": "73e2f784a811023162ea2f29f6681cf45af757fd8eac5d674f4030948b56380e"
+    },
+    {
+      "command": "bash scripts/release/test-release.sh --metadata-only",
+      "status": "pass",
+      "log": "target/shared-029-review/release-metadata-final.log",
+      "sha256": "7fcdaa332fe178649895ee53984b4b346511a8514ad92ada2ea4af4531dc8d6c"
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "status": "pass",
+      "log": "target/shared-029-review/actionlint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "Canonical pinned ShellCheck 0.11.0 Linux installer",
+      "status": "pass",
+      "log": "target/shared-029-review/shellcheck-install.log",
+      "sha256": "d833b8d3b7c1730a1a4aa56e4f2a25068fdeec9d7f905268f6fa2b98f996843c"
+    },
+    {
+      "command": "make check-msrv; exact Metrics 0.2.15 graph and independent consumers",
+      "status": "pass",
+      "log": "target/shared-029-review/msrv-metrics-0215.log",
+      "sha256": "57d3bdea8576b28bae7ea88acbc40b86b003eeb5c4b6cdd3df3096ac6f1f95de"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib metrics",
+      "status": "pass",
+      "log": "target/shared-029-review/metrics-0215-tests.log",
+      "sha256": "5244473ff737133842513c1e86c83d32de756a15af58898496836a04a71f6415"
+    },
+    {
+      "command": "make shared-tooling-check dependency-pins-check check-doc-links",
+      "status": "pass",
+      "log": "target/shared-029-review/documentation-final.log",
+      "sha256": "173696f4af6d2dd52c64552f2108e58320b5d3f8ca49bdaaa8a11e985952e91f"
+    },
+    {
+      "command": "Prepared checkout ShellCheck --version",
+      "status": "pass",
+      "log": "target/shared-029-review/shellcheck-version-final.log",
+      "sha256": "fc9eec16b4191d058a295813ca9afbe9d2b37b59975da860170726be162a3924"
+    }
+  ],
+  "source_proof": "docs/reports/audits/2026/10/08/shared-029/01/source-proof.json",
+  "host_proof": "docs/reports/audits/2026/10/08/shared-029/01/host-proof.json",
+  "metrics_proof": "docs/reports/audits/2026/10/08/shared-029/01/metrics-proof.json",
+  "original_failure": {
+    "run": 37808142240,
+    "job": 113417722597,
+    "source": "32f091a3cc576dc7e0d8b80aea6a484abf905984",
+    "log": "target/shared-029-review/consumer-linux-failure.log",
+    "sha256": "6ae9881b0499e294839da0a90c141dff71ddc8e69a91a9c7401e1f30b32728fc",
+    "symptom": "Ubuntu ShellCheck 0.9 SC2015 in shared checker; canonical/local 0.11 passes."
+  },
+  "owner_ci": {
+    "host": {
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "92bd2fecc71124b562e227a32a67644e1e5e34b7",
+      "jobs": [
+        {
+          "name": "native (macos-15-intel, Darwin, x86_64)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "native (macos-15, Darwin, arm64)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "msrv",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "native (ubuntu-24.04, Linux, x86_64)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "shared": {
+      "status": "queued",
+      "conclusion": "",
+      "headSha": "1a54fb625d6e47efa64c4384808ecbc87be84e7e",
+      "jobs": [
+        {
+          "name": "portable-regression (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "portable-regression (macos-15-intel)",
+          "status": "queued",
+          "conclusion": ""
+        },
+        {
+          "name": "lint-and-security",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "portable-regression (macos-15)",
+          "status": "queued",
+          "conclusion": ""
+        }
+      ]
+    },
+    "consumer": {
+      "status": "queued",
+      "conclusion": "",
+      "headSha": "32f091a3cc576dc7e0d8b80aea6a484abf905984",
+      "jobs": [
+        {
+          "name": "library (macos-15-intel)",
+          "status": "in_progress",
+          "conclusion": ""
+        },
+        {
+          "name": "library (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "library (macos-15)",
+          "status": "queued",
+          "conclusion": ""
+        }
+      ]
+    }
+  },
+  "preservation": {
+    "initial_lock": "target/shared-029-review/original.lock",
+    "incoming_metrics_lock": "target/shared-029-review/incoming-metrics-0215.lock",
+    "incoming_metrics_lock_preserved": true,
+    "rust_source_manifests_ic_matrix_unchanged": true
+  },
+  "independent_consumers": "target/msrv-consumers.wEi6A6",
+  "removed_symbols": [],
+  "limits": [
+    "Focused Linux checks only; no complete CI/release gate or current dirty-source native macOS acceptance.",
+    "No dependency reselection, sibling edit, Git/release, external issue, scheduler or live IC effect.",
+    "Host 0.8.3 is a local unpublished draft; registry/remote selects 0.8.2. crates.io metadata API refused 403; sparse index succeeded. Draft remote query refused 422.",
+    "Metrics was unavailable during initial offline metadata inspection; explicit locked fetch prepared it before offline MSRV and diagnostic qualification."
+  ],
+  "shellcheck_binary": {
+    "path": ".tools/ci/bin/shellcheck",
+    "version": "0.11.0",
+    "sha256": "4da528ddb3a4d1b7b24a59d4e16eb2f5fd960f4bd9a3708a15baddbdf1d5a55b",
+    "archive_pin": "ci/tool-versions.env#SHARED_TOOLING_SHELLCHECK_SHA256_LINUX_X86_64"
+  }
+}

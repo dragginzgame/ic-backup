@@ -1,0 +1,17 @@
+{
+  "version": "0.2.15",
+  "revision": "287251eb51412852a58cabd9de5b3c28e207e705",
+  "archive_sha256": "15dd6475ed0173a63cb35215032d499e239596d6f23163602688399e41002a54",
+  "yanked": false,
+  "source_files": {
+    "Cargo.toml.orig": "1b33da2564b97bf34bbae8c5d22bfda4dda792bbd4d049194442f1495508e662",
+    "src/lib.rs": "722ce8a28f183de1bba2adeb1add51ecbbb93e0dfaa8e19ae485e4cd041290e8",
+    "src/summary/tests.rs": "0e3990adc7bb65da7544d5bc206c257398ddb2e665d1fe0b9a6a2671517019c4",
+    "src/summary/mod.rs": "c5c275c84cc724939bd48f6a74ae9cdbb390e78a92800fb5167917d6d0aa8446",
+    "src/histogram/tests.rs": "4dd28a91687330ddb740f99720bf57e72a438f332317f96ef63597f8c8ef4429",
+    "src/histogram/mod.rs": "0a699655fc2d5e38298bb405dbbdc8a034ed73afe86c7d1d5ca8511be1df90aa"
+  },
+  "rust_identical_to": "0.2.14",
+  "selected_features": [],
+  "official_source": "https://github.com/dragginzgame/ic-metrics/tree/287251eb51412852a58cabd9de5b3c28e207e705"
+}

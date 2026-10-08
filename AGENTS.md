@@ -60,8 +60,8 @@ into an issue tracker or release authority.
   visibility evidence; no local-write error grants paid retry or resets spending.
   The Host 0.5 error identity was delivered in 0.7.0. The externally selected
   Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
-  Released 0.8.1 qualifies Host 0.7.1. The incoming Host 0.8 graph changes the
-  exposed Rust identity again, requiring the 0.9.0 draft. The direct process
+  Released 0.8.1 qualifies Host 0.7.1. Released 0.9.0 qualifies the Host 0.8
+  exposed Rust identity. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
   server owner does not grant backup command custody or spending authority.
   Local bounded capture retains its direct-child semantics. Group cleanup does not

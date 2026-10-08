@@ -147,9 +147,9 @@
     }
   },
   "public_compatibility": {
-    "released_base": "0.8.1",
-    "next_draft": "0.9.0",
-    "reason": "Host 0.8 changes exposed Publication/NamedWriteError Rust type identity; v1 and original accounting unchanged."
+    "released_base": "0.9.0",
+    "next_draft": "0.9.1",
+    "reason": "Published Host 0.8.2 and its exposed Publication Rust identity are unchanged; this batch improves release diagnostics."
   },
   "qualification": "docs/reports/audits/2026/10/08/shared-028/01/qualification.json",
   "source_proof": "docs/reports/audits/2026/10/08/shared-028/01/published-source-proof.json",
@@ -160,5 +160,14 @@
     "Linux focused consumer checks pass; exact current native macOS remains separate.",
     "Generic runners, fresh Canic adoption and terminal/reference release remain separate."
   ],
-  "patch_update": "Concurrent Host 0.8.2 changes only the private macOS cleanup fixture; all production Rust is unchanged from 0.8.1. Fresh Rust 1.88 workspace/independent-consumer, Clippy and package checks qualify the selected lock. Prior runtime results retain their original graph."
+  "patch_update": "Concurrent Host 0.8.2 changes only the private macOS cleanup fixture; all production Rust is unchanged from 0.8.1. Fresh Rust 1.88 workspace/independent-consumer, Clippy and package checks qualify the selected lock. Prior runtime results retain their original graph.",
+  "latest_registry_review": {
+    "date": "2026-10-08",
+    "proof": "docs/reports/audits/2026/10/08/shared-029/01/host-proof.json",
+    "latest_published": "0.8.2",
+    "unpublished_source": "d5e7a6ae98be52370d162d576fcda754e366d87d",
+    "scope": "Registry/archival review only; original source and runtime qualification keep their existing owners.",
+    "host_versions_unchanged": true,
+    "concurrent_metrics_patch": "0.2.15; source and focused qualification in docs/reports/audits/2026/10/08/shared-029/01/qualification.json"
+  }
 }

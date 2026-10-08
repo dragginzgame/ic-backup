@@ -25,7 +25,60 @@
 
 # Current handoff — 2026-10-08
 
-## Current 0.9.0 Shared Tooling 0.1.28 adoption
+## Current 0.9.1 upstream review
+
+Release 0.9.0 is HEAD at `32f091a3cc576dc7e0d8b80aea6a484abf905984`.
+The compatible next draft is 0.9.1; package versions and the release receipt stay
+at 0.9.0. Rust source remains unchanged. A concurrent lock edit selects Metrics 0.2.15.
+
+Adopt committed Shared Tooling 0.1.29 at
+`1a54fb625d6e47efa64c4384808ecbc87be84e7e` through the canonical exporter from a
+clean isolated checkout. All 97 files match committed bytes/modes: 15 existing paths change and
+the release-source checker plus two CI-installer paths are added explicitly. Initial preflight now reports
+all offending staged/unstaged/untracked paths, quotes unusual names and explains
+that validation/version preparation have not started for that attempt. Prepared
+checks preserve metadata allowances and unchanged original HEAD; committed/resumed
+checks require clean source. Git errors remain visible; nothing is auto-staged or
+repaired. Real private-index fixtures preserve lock/index/working bytes and HEAD.
+
+Standing issue permission is restricted to `dragginzgame/*`, including adopted
+maintenance prompts. Other destinations need explicit destination/action authority.
+No external issue write or schedule activation occurs. The Rust-only pin gate
+continues without selecting the new optional npm mode. Local full tooling,
+release-adapter/runner simulation, declaration, shell and documentation checks
+pass on Linux; exact native macOS remains separate.
+
+The official registry index still selects non-yanked Host 0.8.2 for all four
+packages; cached archive digests match the original lock and source proof. Host's
+read-only local committed 0.8.3 draft adds live child output observation and an unlocked durable
+path opener, but neither is published or selected. Backup's existing-only custody
+admission and 0600 sidecar policy cannot be replaced by an opener that always
+creates missing files/parents. Existing source/runtime evidence retains its original
+owner; no dependency downgrade, path patch or extra process owner is introduced.
+The consumer-owned PocketIC 16.1 matrix stays unchanged.
+
+Delivered 0.9.0 Linux CI fails SC2015 with Ubuntu ShellCheck 0.9; local 0.11
+accepts the same shared expression. Select the reviewed 0.11 binary in Linux CI
+through its canonical checksum installer, and prefer a prepared checkout-local
+ShellCheck. Actual installer, shell lint, full tooling and final real-index
+metadata fixtures pass. No vendored checker edit or lint suppression is added.
+Host 0.8.2 now passes all native/MSRV owner jobs. Shared 0.1.29 passes Linux and
+lint/security while both macOS jobs remain queued; current consumer native CI
+must run on the new committed source before claiming acceptance.
+
+A concurrent external lock update selects Metrics 0.2.15; retain it. Every
+published Rust byte is identical to 0.2.14 and exact committed source/archive
+proof matches the non-yanked registry row. Empty host features remain selected.
+Fresh Rust 1.88 checks compile both libraries and two independent public consumers,
+and all five focused diagnostic/distribution cases pass on this exact graph.
+Original tooling proof remains separate; no accounting or metrics schema changes.
+
+[The review](../reports/audits/2026/10/08/shared-029/01/report.md) records exact source,
+registry, focused checks and observed native CI scope. Full workflow/stage binding,
+Canic adoption and terminal/fence/reference release remain separate. Work remains
+uncommitted; no sibling edit, release, publication or live IC effect is performed.
+
+## Retained 0.9.0 Shared Tooling 0.1.28 adoption
 
 Adopt committed Shared Tooling `1872ed2c20f6c70689bb2249050b1d673c60bfa0`
 through the canonical exporter. All 94 selected files match committed bytes/modes:

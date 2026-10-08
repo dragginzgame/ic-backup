@@ -1,0 +1,42 @@
+{
+  "packages": [
+    {
+      "package": "ic-host-artifacts",
+      "version": "0.8.2",
+      "checksum": "4529fea7411df6e4322e2b1c3d71b1c2e27170c149a4b3f212e36d6f38af11c1",
+      "archive": "/home/adam/.cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/ic-host-artifacts-0.8.2.crate",
+      "latest_non_yanked": true,
+      "source_proof": "https://github.com/dragginzgame/ic-host-tooling/tree/92bd2fecc71124b562e227a32a67644e1e5e34b7"
+    },
+    {
+      "package": "ic-host-fs",
+      "version": "0.8.2",
+      "checksum": "1bdb238db839014d6935fab024b483128076241dd070c5a6120a077ab7173c02",
+      "archive": "/home/adam/.cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/ic-host-fs-0.8.2.crate",
+      "latest_non_yanked": true,
+      "source_proof": "https://github.com/dragginzgame/ic-host-tooling/tree/92bd2fecc71124b562e227a32a67644e1e5e34b7"
+    },
+    {
+      "package": "ic-host-process",
+      "version": "0.8.2",
+      "checksum": "b69fa749088267074c39267ff5a739f33aaf54a999443368972deb581741f67f",
+      "archive": "/home/adam/.cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/ic-host-process-0.8.2.crate",
+      "latest_non_yanked": true,
+      "source_proof": "https://github.com/dragginzgame/ic-host-tooling/tree/92bd2fecc71124b562e227a32a67644e1e5e34b7"
+    },
+    {
+      "package": "ic-host-tools",
+      "version": "0.8.2",
+      "checksum": "6e14ffe38ef083ec392376dab508caad7ae90d6b5c6345fca8c00eaaa7e868a0",
+      "archive": "/home/adam/.cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/ic-host-tools-0.8.2.crate",
+      "latest_non_yanked": true,
+      "source_proof": "https://github.com/dragginzgame/ic-host-tooling/tree/92bd2fecc71124b562e227a32a67644e1e5e34b7"
+    }
+  ],
+  "prior_source_proof": "docs/reports/audits/2026/10/08/shared-028/01/published-source-proof.json",
+  "unpublished_draft_revision": "d5e7a6ae98be52370d162d576fcda754e366d87d",
+  "draft_source_scope": "Read-only local committed 0.8.3 draft, with dirty fixture changes separately excluded. GitHub returns 422 for this draft SHA; remote main remains released 0.8.2.",
+  "initial_lock_sha256": "59ca173d5413012f5837974dc233dab8c6e9f6daa0d2d53957124fe7cec46f17",
+  "current_lock_sha256": "226e26be9e51b6dd9cc86122a8fa14d5759f2fa96af1af054501e14e3dfd319d",
+  "host_versions_unchanged": true
+}

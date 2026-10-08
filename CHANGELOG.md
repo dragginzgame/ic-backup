@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1]
+
+- Adopt Shared Tooling 0.1.29 and report every staged, unstaged and untracked release-source violation, preserving files and the index. Initial preflight refusals explain that validation and version preparation have not started ([shared #74](https://github.com/dragginzgame/shared-tooling/issues/74)).
+- Use the reviewed ShellCheck 0.11 installer in Linux CI and prefer a prepared checkout-local ShellCheck, avoiding Ubuntu's older-checker failure on the shared dependency checker.
+
 ## [0.9.0] - 2026-10-08
 
 - Adopt Shared Tooling 0.1.28: preserve literal installed tool-link targets, use simulation-only shared release fixtures and add the maintenance task catalog without activating a schedule.

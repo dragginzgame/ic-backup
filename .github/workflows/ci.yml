@@ -32,9 +32,15 @@ jobs:
         run: |
           source ci/tool-versions.env
           cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked
-      - name: Install Linux shell tooling
+      - name: Install the reviewed Linux ShellCheck
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install --yes shellcheck
+        run: |
+          source ci/tool-versions.env
+          bash scripts/ci/install-shellcheck.sh \
+            --version "$SHARED_TOOLING_SHELLCHECK_VERSION" \
+            --sha256 "$SHARED_TOOLING_SHELLCHECK_SHA256_LINUX_X86_64" \
+            --install-dir "$GITHUB_WORKSPACE/.tools/ci/bin"
+          echo "$GITHUB_WORKSPACE/.tools/ci/bin" >> "$GITHUB_PATH"
       - name: Install macOS shell tooling
         if: runner.os == 'macOS'
         run: |

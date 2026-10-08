@@ -54,7 +54,7 @@ create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
     cp "$ROOT/make/tools.mk" "$FIXTURE/make/"
-    cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
@@ -133,6 +133,7 @@ case "$1" in
         value="${*: -1}"
         case "$value" in
             --show-toplevel) pwd ;;
+            --show-prefix) ;;
             release-state) echo target/release-state ;;
             HEAD) head ;;
             HEAD^) cat "target/commits/$(head)/parent" ;;
@@ -147,7 +148,18 @@ case "$1" in
     show)
         value="$2"; sha="${value%%:*}"; path="${value#*:}"
         [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 1; cat "target/commits/$sha/files/$path" ;;
-    status) if dirty; then echo ' M retained-source'; fi ;;
+    status)
+        ending='\n'
+        case " $* " in *' -z '*) ending='\0' ;; esac
+        if [[ "${TEST_DIRTY:-0}" == 1 ]]; then
+            printf " M src/changed.rs$ending"
+        elif [[ -d "target/commits/$(head)" ]]; then
+            for file in Cargo.toml Cargo.lock CHANGELOG.md docs/release.json crates/ic-backup/Cargo.toml; do
+                if ! cmp -s "$file" "target/commits/$(head)/files/$file"; then
+                    printf " M %s$ending" "$file"
+                fi
+            done
+        fi ;;
     diff)
         case "${2:-}" in
             --name-only) if [[ "${TEST_DIRTY:-0}" == 1 ]]; then printf 'src/changed.rs\0'; fi ;;
@@ -702,16 +714,28 @@ test_real_index_boundaries() {
     local native="$FIXTURE/target/real-worktree" source helper="$FIXTURE/target/native-guard.sh"
     "$TEST_REAL_GIT" clone --shared --quiet "$ROOT" "$native"
     source="$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)"
+    mkdir "$FIXTURE/target/native-bin"
+    cat > "$FIXTURE/target/native-bin/git" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${TEST_NATIVE_GIT_FAIL:-}" == "$1" ]]; then
+    echo 'injected native Git observation failure' >&2
+    exit 9
+fi
+exec "$TEST_REAL_GIT" "$@"
+SH
+    chmod +x "$FIXTURE/target/native-bin/git"
     cat > "$helper" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
-git() { "$TEST_REAL_GIT" "$@"; }
+export PATH="$FIXTURE/target/native-bin:$PATH"
 source "$1" version
 cd "$2"
 export CARGO_TARGET_DIR="$PWD/target"
 mkdir -p "$CARGO_TARGET_DIR"
 case "$3" in
     paths) allowed_changes "$4" ;;
+    clean) ensure_clean ;;
     preflight)
         export RELEASE_SOURCE="$4" RELEASE_PREVIOUS="$5" RELEASE_VERSION="$6" RELEASE_DATE=2026-10-06
         preflight ;;
@@ -726,7 +750,7 @@ SH
     "$TEST_REAL_GIT" -C "$native" add -- README.md
     "$TEST_REAL_GIT" -C "$native" show HEAD:README.md > "$native/README.md"
     expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
-    rg -F 'unrelated release path: README.md' target/rejection.log >/dev/null
+    rg -F 'staged: README.md' target/rejection.log >/dev/null
     "$TEST_REAL_GIT" -C "$native" diff --cached --name-only > target/native-staged.txt
     [[ "$(cat target/native-staged.txt)" == README.md ]]
     "$TEST_REAL_GIT" -C "$native" restore --staged -- README.md
@@ -737,10 +761,55 @@ SH
     previous="$(cd "$native" && perl scripts/release/release-data.pl version)"
     candidate="$(cd "$native" && perl scripts/release/release-data.pl next patch)"
     expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" preflight "$source" "$previous" "$candidate"
-    rg -F 'staged original release metadata changed' target/rejection.log >/dev/null
+    rg -F 'staged: Cargo.toml' target/rejection.log >/dev/null
+    rg -F 'validation and version preparation have not started for this attempt' target/rejection.log >/dev/null
     [[ ! -f "$native/target/commands.log" ]]
     "$TEST_REAL_GIT" -C "$native" diff --cached --name-only > target/native-staged.txt
     [[ "$(cat target/native-staged.txt)" == Cargo.toml ]]
+    "$TEST_REAL_GIT" -C "$native" restore --staged -- Cargo.toml
+
+    # Report every observed category and quote unusual bytes without changing
+    # the actual private index, lock, working files or retained untracked bytes.
+    printf '\n' >> "$native/Cargo.lock"
+    cp "$native/Cargo.lock" target/native-lock
+    cp "$native/.git/index" target/native-index
+    expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" preflight "$source" "$previous" "$candidate"
+    rg -F 'unstaged: Cargo.lock' target/rejection.log >/dev/null
+    cmp "$native/Cargo.lock" target/native-lock
+    cmp "$native/.git/index" target/native-index
+    "$TEST_REAL_GIT" -C "$native" show HEAD:Cargo.lock > "$native/Cargo.lock"
+
+    printf '\nstaged unrelated edit\n' >> "$native/README.md"
+    "$TEST_REAL_GIT" -C "$native" add -- README.md
+    "$TEST_REAL_GIT" -C "$native" show HEAD:README.md > "$native/README.md"
+    printf '\nworking edit\n' >> "$native/AGENTS.md"
+    local unusual=$'untracked\nname.txt'
+    printf 'retained evidence\n' > "$native/$unusual"
+    cp "$native/.git/index" target/native-index
+    cp "$native/AGENTS.md" target/native-working
+    expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
+    for expected in 'staged: README.md' 'unstaged: README.md' 'unstaged: AGENTS.md'; do
+        rg -F "$expected" target/rejection.log >/dev/null
+    done
+    printf '  untracked: %q\n' "$unusual" > target/native-expected
+    rg -Fx -f target/native-expected target/rejection.log >/dev/null
+    cmp "$native/.git/index" target/native-index
+    cmp "$native/AGENTS.md" target/native-working
+    [[ "$(cat "$native/$unusual")" == 'retained evidence' ]]
+
+    TEST_NATIVE_GIT_FAIL=status expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
+    rg -F 'injected native Git observation failure' target/rejection.log >/dev/null
+    rg -F 'cannot inspect release-source status' target/rejection.log >/dev/null
+    if rg -F 'uncommitted paths' target/rejection.log >/dev/null; then exit 1; fi
+    cmp "$native/.git/index" target/native-index
+
+    "$TEST_REAL_GIT" -C "$native" restore --staged -- README.md
+    "$TEST_REAL_GIT" -C "$native" show HEAD:AGENTS.md > "$native/AGENTS.md"
+    rm "$native/$unusual"
+    bash "$helper" "$ROOT/scripts/release/release.sh" "$native" clean "$source"
+    printf '\n- Permitted pending notes.\n' >> "$native/CHANGELOG.md"
+    expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" clean "$source"
+    rg -F 'unstaged: CHANGELOG.md' target/rejection.log >/dev/null
     [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]]
 }
 

@@ -1,0 +1,684 @@
+{
+  "revision": "1a54fb625d6e47efa64c4384808ecbc87be84e7e",
+  "files": [
+    {
+      "path": "docs/verification-helpers.md",
+      "sha256": "79304d8ba54f65e39a3ed5de05d8e737e315741a0f3fae93e845469d905bb8c5",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-documentation-links.pl",
+      "sha256": "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-documentation-links.pl",
+      "sha256": "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-file-digests.sh",
+      "sha256": "e3f72da1cb87bd8cbe37eff7ab7f23eca374e11f59b94669984dc9baf6c831ee",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "rules/dependency-pinning.md",
+      "sha256": "f114e128d2d3ab1cd4fae4c8eb89866990063cd5cd4a6dbafde49872f0a02af1",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "audits/README.md",
+      "sha256": "faa9a62257ecdfd6532ac2225b3fd053012dfe9c35b8bc2ddc95288d8626a518",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "audits/code-hygiene.md",
+      "sha256": "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "audits/flow-convergence-and-duplication.md",
+      "sha256": "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "audits/complexity-and-technical-debt.md",
+      "sha256": "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "audits/module-surface-hardening.md",
+      "sha256": "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "audits/module-cleanup.md",
+      "sha256": "8f415bcb0e97fcc0e27519e727e7aefae94686e6e5e3619d24e3df3ace5d7708",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "docs/provenance.md",
+      "sha256": "1a0d1d6f2a87a0d77378fdda605f5700cc7e2ca8c8dfac79418248da30b7e657",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/ic-tools.md",
+      "sha256": "758cd0977502a54d2ebfb28bb58a5c2ff6691da85f7b5dab0cef4c231ec234d8",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "docs/local-setup.md",
+      "sha256": "7182b923e6270f7a01b2fa5b2866ec7b829f496ff1ff6a64706c35e006c0bb27",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "ci/tool-versions.env",
+      "sha256": "82892e25292fe47c26035a0031aa4ad1996fcf181732163e75039bd657f2f84b",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-dependency-pins.sh",
+      "sha256": "c50a0e7c23ad9bbace12c9e8fa9aa8e6c5bc97151a9c76cf5d371f18922a0b94",
+      "mode": "x",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "scripts/ci/dependency-pins.jq",
+      "sha256": "3d56ca1b0c5952b9534ece61b6754ca39e6ec1980d929f09de3dbd967a0c4977",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "scripts/ci/verify-evidence-checksums.sh",
+      "sha256": "ab2202f89a077373fffac29f57527b88ccc65998f5c85c60a32081edd8338150",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/install-host-tools.sh",
+      "sha256": "74134f6567746b2071ecfca28829b0ea4da69ed207b958b38fd181e722a3aea9",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/install-ic-tools.sh",
+      "sha256": "463106a6ba07018c4b9b8ff9d736367d68bad195dc47e754b0f1617f0fb51c73",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-dependency-pins.sh",
+      "sha256": "479cec75dff5f81705db3f10d63f494b6eca73d5a0714e648ab3174c645ca93d",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-host-tools.sh",
+      "sha256": "ab60367040118f0e26a1ae7daf8e29832a9e9887fc6e9039dc5b0b41c80bbd1b",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-ic-tools.sh",
+      "sha256": "3994480fad95bcd65e4f2d188183e9b322f76564e0accb62f9a031eebe1fd873",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-evidence-checksums.sh",
+      "sha256": "17e7a1e929934fa763afad4b6443bffd930ee316814912689b0a4b7df7ac9be7",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/principles/README.md",
+      "sha256": "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/principles/decision-artifact-discipline.md",
+      "sha256": "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/principles/reviewable-changes.md",
+      "sha256": "ee68649246bad21f0f28df4ea3809d8e2c7bcf1cd2a3d68e44684b855badc1c2",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/principles/rust-code-hygiene.md",
+      "sha256": "27a04aeee753252b310fef363856edf83577337bfaea1e63a50017460eddde59",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/principles/simplicity-and-maintainability.md",
+      "sha256": "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/consuming-snapshots.md",
+      "sha256": "5cdc1f2e8c2743d659f1374c03c40b2c379ecbf7bd34f6c0a3794c6d7e160c64",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "docs/supported-hosts.md",
+      "sha256": "97072090a8c3170e2125240670448bc26e54c916451f2a28997e2240cb3689c5",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/verify-file-checksum.sh",
+      "sha256": "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/verify-shared-tooling-snapshot.sh",
+      "sha256": "ba5c6b76d15bec4ac226f1ab0732d5087446152d64107993c52642a68d2ff464",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/run-validation-targets.sh",
+      "sha256": "49ec78ab63a587a2f74f0f7da3e06d9f9942f831129b9201cba5bcd0698548fe",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-validation-target-runner.sh",
+      "sha256": "94e2c276b8a365fb0dd492ebada199de96c8e40737faad9b47a996d3af22aa22",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "DRAGGINZGAME.md",
+      "sha256": "554907477c03b57a727cc4aa12915c051b3e42b0d7f6505b21e3ba0575f5a1ef",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "rules/changelogs.md",
+      "sha256": "b5a6e8fb723a861b722834675e27b4b16f3d296112622c1b40cdc8714f575404",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/releases.md",
+      "sha256": "7d59ac97924572bd3f8fcb15021e2465aabd5f8a8060052a766203d76ed7f323",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "scripts/ci/run-release.sh",
+      "sha256": "fc689ff5d636be1049a527f6cafa74a768005211dcbecb074b8b327d8e6bab04",
+      "mode": "x",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "scripts/ci/next-release-version.sh",
+      "sha256": "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/finalize-release-changelog.awk",
+      "sha256": "e7f4c82566858b89b50c5c2f929097bdde85345a2c0c1bf553bb1170cc4f5960",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-release-runner.sh",
+      "sha256": "027575ae9be221c3ef9e903239fbfdb40aa5192c2f5e08c157a5d15dc3cd52ae",
+      "mode": "x",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "rules/cargo-dependencies.md",
+      "sha256": "6f10d8bfaaa5641f47ca6638c38be056b01d00b5b22ccbd381e8df076767c3e1",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "rules/git-hooks.md",
+      "sha256": "25485770b77ce6c537e5ded883fce3db58c1ebcb3b3796e236bbc22c291308ef",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "sha256": "f99c4f8677c4608aafad5953d558d233962fda9ba6b769dfe9bd9202c8eda502",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/install-git-hooks.sh",
+      "sha256": "04314208858a3b8c6833aee30b8574741518b4ca36ed509c095424762a7be79e",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "rules/agent-maintenance.md",
+      "sha256": "1ce78a5a5fedab6dd66c1a3454c8fd986ce4fd458b29a5c0617bd6572d64f21e",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "scripts/ci/rewrite-local-lock-versions.pl",
+      "sha256": "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-local-lock-versions.pl",
+      "sha256": "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-formatting-hooks.sh",
+      "sha256": "6bbdb81bfe4b69311e57529866ccac2d8394de1452479c656ef9b7dd2a69e529",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "docs/tag-maintenance.md",
+      "sha256": "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/read-cargo-workspace-version.sh",
+      "sha256": "40f31a19d6115411ebffe7c26e3ed30b8af7eead10dd4830de8d5a9312291222",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-cargo-metadata.sh",
+      "sha256": "740dd07566c83efc8c89f6ec661d1ed95956cf990073387ceb1f4055cae4373b",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-format-tools.sh",
+      "sha256": "a52db278800a9f02d85a6b8a780a9b1eed860c49d5442cef9db1f7f9d7ddee0a",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-format-tools.sh",
+      "sha256": "3aadaef7cac355bd2bdeab2999729ee7e55fde1048f0f40f0940316fbe9bf338",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/distribution/governance-files.txt",
+      "sha256": "431f4a40037fc341bec1d53416b440b3bcd4b6af5cd45210e390c82abb08b475",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "rules/rust-workspaces.md",
+      "sha256": "144f811057e2c5e9692175da463e3fd6be716470a22c48a6bf56f9aabb1f3940",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "make/tools.mk",
+      "sha256": "04794f1906f95c938cb2653036ae9c06b38aaa964e79072c6bb0e5a8f4019fa6",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/cloc.sh",
+      "sha256": "8a14c80cec16a2cb07454c4e0f741150bc8385cd51ebc720a84ee3af1cc63043",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/cloc-tooling.pl",
+      "sha256": "1dd0f35519fc3afafb723eadbb7d2cce1207e4103f41939d3ceec5a6678ebb22",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-make-execution.sh",
+      "sha256": "c0d4bed8f2b876f5ae0a61f6c56e4c71736ab9888f092ab6c67d9f5ba142543d",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-tool-commands.sh",
+      "sha256": "458e8f46b21887e892ea506768602477581a80fd10ffb579d1aeb46e20d9bcb4",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-cloc.sh",
+      "sha256": "261dec422b038266a754babcffbd2492b54b92712ef1108b20a2cb8c1dbe114a",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-cloc-tooling.sh",
+      "sha256": "6e2bb50c2f0d6f229bf93eb7904134232ed08ece3fcc9c4cc5886d52d7c64008",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "audits/ic-canister-applications.md",
+      "sha256": "94a934651d5cb0c6f77fa429df277856dbda4c1a7441b2b8563e678c416258f6",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/install-rust-tools.sh",
+      "sha256": "ac24a1367e55b9e4f19cf67d5e19547aebca278a8b625a565c0e2f4e01e3fe9b",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-rust-tools.sh",
+      "sha256": "a74fc5ec8415bbe2ccbd9c51ba16b544bffb1f72a89a981b68e19aff8edbc8c0",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "rules/contributions.md",
+      "sha256": "05838a36f21bb4299617ae8965687791062c94d768181f5f97676cc577382153",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/ic-tool-pins.awk",
+      "sha256": "49e5c54defd9330aacf2635fd36803f3ea469ea278a2628f63dbd82458dfd5a9",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-pocketic-alignment.sh",
+      "sha256": "77dac099996e513b3c44384e8e22ac66e6b06fe4f2ae3199af1c26fe07485b0a",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-pocketic-binary.sh",
+      "sha256": "3e0f75c6388c503c86828811e69786506272dd3ec317b133b0b263369447e858",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-pocketic-checks.sh",
+      "sha256": "09dcaac753c3c5350641b91f50d961b16080ae33122b659960b6f2b4e3cb8deb",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/release-pr.sh",
+      "sha256": "fc40c8ad1c4ab850fda0e60b8cb0b3201724d020966e4d7e5d07620781f5e814",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-release-pr.sh",
+      "sha256": "d02ea89b8c0eee4832357614942aab217698380d8a431eb66a1c76e36c69e9d7",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/archive-evidence.sh",
+      "sha256": "5be336cb3e8045b2d2d536542a94944b376ee812b03f786a90b9d962ab697f13",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-evidence-archive.sh",
+      "sha256": "565bcc658d1e6102b33790fb4828fe699f92ad0384a35189416547374ea56fe8",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-tool-evidence.sh",
+      "sha256": "90e6b75e1bd3e3d7bc68b18f727379981e6811aa0a1b061e75d32c4699b13632",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/select-tool-evidence.sh",
+      "sha256": "d7feda634703b4e0acb9e5406deccca2b81b821dfa738b714708b82a2c2e9bc3",
+      "mode": "x",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": ".github/actions/retain-failure-evidence/action.yml",
+      "sha256": "020b67bcb75d35f5c12392b8c9ec3d7ba31f3a8e07c8318c35643be1ddf72d40",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/README.md",
+      "sha256": "3bbed65dbcd53ef17a7da5a50604d3a586951b7a56dacad9c98bb92bf9cf47ce",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "tasks/cargo-machete.md",
+      "sha256": "eb2419a5762a3cb02f25811d93becb6b18ca520df0bc3448ea35dfa187a034b4",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/msrv.md",
+      "sha256": "b20211ec1c39ef262c8ab266b207db43c44cd1474acde18297586590c7885810",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/rust-toolchain.md",
+      "sha256": "ed8d04d20a6e5bd77aece468a5f44f7d9e1c8a52411431d24e052e20c39038f3",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/ci-health.md",
+      "sha256": "2ba5de4ca0247f0af6e008a4d952d14270e53510597ffd78ea47e2c05b8fd050",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/snapshot-drift.md",
+      "sha256": "32542f9879fcb5f2fa0f32ec0c71afb53380f1b365b900b24f5a736e776e1945",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/dependency-security.md",
+      "sha256": "5057273d73e5bae55b9cebb0c8cd606afcd9a413a0c8cf89c3a634ca7b63aa4a",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/code-audit.md",
+      "sha256": "5d0c7d274dd9da1e5064287c7bd89c7baec9b0a9ba5a8f1a44e918bb60a28943",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/tooling-duplication.md",
+      "sha256": "661ff5d16c8a41c597d14550294901cbfcc38b7e5e5931646a6739d0dce2ecd5",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/maintenance-prompt.md",
+      "sha256": "fba891e27166497efcc5e57e0c28146c3e22d8f340d97926d0fbe4a3a269c831",
+      "mode": "-",
+      "new": false,
+      "changed": true
+    },
+    {
+      "path": "tasks/local-schedule.md",
+      "sha256": "f99365d4045c620ae186c06a86a8f898a534d2ad9d8d01d783706c192c7813e3",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/systemd/shared-tooling-maintenance.service",
+      "sha256": "d26462d2d6e9c1e991a6f1f45f2a12ce919a29eab987665438af530f51b6fee5",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "tasks/systemd/shared-tooling-maintenance.timer",
+      "sha256": "f7b95816164980993403d2d6eae13336db1c476c58217c8e8d356e6d01fe9b27",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/dev/run-maintenance.sh",
+      "sha256": "dfccb5fa0194b343d140512c892a31eac902cb1a489e641feae3c18e1cf70a1c",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/test-maintenance-task.sh",
+      "sha256": "7aa8b26a081399ac63dc823479936e5f663aef40fec91a9d5dae978956341e37",
+      "mode": "-",
+      "new": false,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/check-release-source.sh",
+      "sha256": "a3af7084956384262842be33100f91a22fdd82b0f91b6091a00e90f8726f67fe",
+      "mode": "x",
+      "new": true,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/install-shellcheck.sh",
+      "sha256": "c133d81786de40433b64fbc497db763151705d52e910607e768b8f986fc20548",
+      "mode": "x",
+      "new": true,
+      "changed": false
+    },
+    {
+      "path": "scripts/ci/install-ci-tool.sh",
+      "sha256": "885cb85d250ef80ced2df05d05c4187b2d05998a7526b6983fd037f3327bdf29",
+      "mode": "x",
+      "new": true,
+      "changed": false
+    }
+  ]
+}

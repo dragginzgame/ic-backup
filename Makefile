@@ -194,7 +194,9 @@ shell-check:
 		bash -n "$$script" || exit $$?; \
 	done
 	@set -e; \
-	if command -v shellcheck >/dev/null 2>&1; then \
+	if [[ -x "$(CURDIR)/.tools/ci/bin/shellcheck" ]]; then \
+		shellcheck_bin="$(CURDIR)/.tools/ci/bin/shellcheck"; \
+	elif command -v shellcheck >/dev/null 2>&1; then \
 		shellcheck_bin=shellcheck; \
 	elif [[ -x "$$HOME/.local/bin/shellcheck" ]]; then \
 		shellcheck_bin="$$HOME/.local/bin/shellcheck"; \
