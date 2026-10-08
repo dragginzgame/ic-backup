@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "date": "2026-10-08",
+  "base_commit": "9be366b47d0dc0b2b06272c0901c8645a3ab3e31",
+  "draft": "0.8.1",
+  "package_version": "0.8.0",
+  "original_failure": {
+    "path": "target/validation-failures/20261008T135721Z-1071736-7-tooling-check.log",
+    "sha256": "5665a2416fa266f6b228ae5c07d185aaff3660e13f7d2b5b6b0f220b8ad92af1",
+    "result": "failed",
+    "exit": 127,
+    "cause": "test-host-tools.sh calls omitted test-tool-evidence.sh; test-ic-tools.sh has the same unconditional dependency."
+  },
+  "earlier_scope": "Prior focused checks did not run complete tooling-check or installer suites. Their recorded results keep their original source/scope.",
+  "canonical_refresh": {
+    "command": "refresh-consumer.sh --source <exact clean db039347 clone> --consumer \"$PWD\" --add-file scripts/ci/test-tool-evidence.sh --add-file scripts/ci/select-tool-evidence.sh --add-file .github/actions/retain-failure-evidence/action.yml",
+    "result": "passed",
+    "log": {
+      "path": "target/tooling-companions-081/refresh-corrected.log",
+      "sha256": "b8dbe9e64db30aef1c9d7ad2455decdf0d066d07e05339a90f50a2f52c205a7e"
+    }
+  },
+  "refusal": {
+    "result": "passed: expected missing companion refusal before manifest replacement",
+    "log": {
+      "path": "target/tooling-companions-081/companion-refusal.log",
+      "sha256": "09842c0b56c96807062b3817c6135afb0afc11ad18d8676a1b279a0e0ea11ecd"
+    }
+  },
+  "preparation_failures": [
+    {
+      "result": "failed: isolated local clone initially retained its local-path origin; set only clone origin to verified canonical HTTPS source and retry",
+      "logs": [
+        {
+          "path": "target/tooling-companions-081/incomplete-refusal.log",
+          "sha256": "6d89f1055b0d078628f902ed9f5e8f99b34924c6e97e352739cd569e54fcbeb0"
+        },
+        {
+          "path": "target/tooling-companions-081/refresh.log",
+          "sha256": "6d89f1055b0d078628f902ed9f5e8f99b34924c6e97e352739cd569e54fcbeb0"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "command": "TMPDIR=\"$PWD/target/tooling-companions-081/fixtures\" make tooling-check",
+      "result": "passed",
+      "path": "target/tooling-companions-081/tooling-check.log",
+      "sha256": "96e5ab08ef6a18f0d34483d5346e3f9a85ec34e7fa519b837c2ba6e44b6dcb12"
+    },
+    {
+      "command": "make shell-check dependency-pins-check; git diff --check",
+      "result": "passed",
+      "path": "target/tooling-companions-081/declarations.log",
+      "sha256": "cc7bdd58f73a80724f366da6bcc9aeb869a5ba4aad86ac8a0c62fb0f778041ea"
+    }
+  ],
+  "source_proof": "source-proof.json",
+  "consumer_ci_policy": "unchanged; imported action/selector are installer fixture dependencies, not workflow adoption",
+  "limits": [
+    "Linux local complete tooling target passed. Native macOS and hosted upload are not newly qualified.",
+    "Full CI/release gate was not rerun; no Rust/dependency graph changed."
+  ],
+  "effects": "Uncommitted current-repository canonical refresh only; isolated source clone Git metadata is local preparation. No root Git writes, sibling edits, release, publication or live IC.",
+  "documentation": {
+    "command": "make check-doc-links shared-tooling-check; git diff --check",
+    "result": "passed",
+    "path": "target/tooling-companions-081/documentation.log",
+    "sha256": "5d0c7a3d7e3c5ba4cd10c34378139425ff0fb79407c71f808fbc598c4bcb0235"
+  },
+  "caller_inputs": [
+    {
+      "path": "Makefile",
+      "sha256": "cc9b6af6f13f48f9d09e4eeb827fa56a759d5b8c3cbed5e51f7655ff74cf15c1"
+    },
+    {
+      "path": "scripts/ci/test-tooling.sh",
+      "sha256": "ea2c5bc6bb1209a86ea866adb15a72d0f875c1abe2e1b066415be20e484b1cb0"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "ad55f32f0a8911b71e6121a51a9044f93046d5def980cc2cbe925259248183fd"
+    },
+    {
+      "path": ".shared-tooling.snapshot",
+      "sha256": "b0a99271ed8076f23d152110e2ae115589f165599ae5f618adab6fac3b5afaf4"
+    }
+  ],
+  "upstream_feedback": "https://github.com/dragginzgame/shared-tooling/issues/73#issuecomment-6061621667"
+}

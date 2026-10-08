@@ -3,6 +3,7 @@
 ## [0.8.1]
 
 - Adopt Shared Tooling 0.1.27. Keep release and validation fixtures independent of inherited Make includes and flags; resolve local script roots safely under `CDPATH`. Tooling counts recognize dotted snapshot names ([shared #7](https://github.com/dragginzgame/shared-tooling/issues/7), [shared #64](https://github.com/dragginzgame/shared-tooling/issues/64), [shared #69](https://github.com/dragginzgame/shared-tooling/issues/69)).
+- Include the installer evidence fixtures and their declared companions so `tooling-check` resolves every required helper; canonical refresh refuses incomplete selections ([shared #73](https://github.com/dragginzgame/shared-tooling/issues/73)).
 - Qualify Host artifacts/FS 0.7.1 and Metrics 0.2.13 with their existing compatible requirements, retaining publication, recovery and diagnostic contracts.
 
 ## [0.8.0] - 2026-10-08

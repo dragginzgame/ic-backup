@@ -49,7 +49,21 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 77-file snapshot selects committed Shared Tooling 0.1.27 at
+The current 80-file snapshot selects committed Shared Tooling 0.1.27 correction
+`db039347d2372b877c1c46dcdd2b5c3aa9412009`. The previous committed consumer
+selection omitted the installer suites' new evidence fixture; `make tooling-check`
+failed with status 127. Its original log remains retained. Adopt the corrected
+companion declarations through the canonical exporter and explicitly add
+`test-tool-evidence.sh`, `select-tool-evidence.sh` and the shared failure action.
+All selected source bytes/modes match; the incomplete selection now refuses
+before manifest replacement. The full `tooling-check` target, shell and dependency
+declarations pass on Linux, including the actual collector shell body with fixture
+payloads. The shared action is a fixture dependency; consumer CI continues to use
+its existing collection roots, pinned uploader and retention policy.
+[The repair review](reports/audits/2026/10/08/tooling-companions/01/report.md)
+keeps the failure and corrected results separate from earlier focused evidence.
+
+The earlier 77-file snapshot selected committed Shared Tooling 0.1.27 at
 `b866d41041a1986eeec95bde9af4c6ba0853d2e3`. Thirty-two selected paths change;
 common baseline/rules remain unchanged. The canonical exporter runs directly
 against this repository, preserving the incoming unrelated lockfile update.
@@ -60,8 +74,8 @@ edited input without replacing its manifest or unrelated work.
 Focused consumer release/validation/snapshot/LOC/hook checks pass under inherited
 `CDPATH`. Local entry points use physical absolute roots; release fixtures exclude
 inherited Make includes and GNU flags after both original failures were retained.
-The new shared compact installer-evidence selector is not part of this consumer's
-selected file set or archive policy. Existing explicit evidence roots and retention
+At that inspection the new shared compact installer-evidence selector was outside
+this consumer's selected file set and archive policy. Existing explicit evidence roots and retention
 remain selected. Exact upstream 0.1.27 CI and released consumer 0.8.0 CI are still
 pending; prior 0.1.26 Intel CI timed out under
 [shared #71](https://github.com/dragginzgame/shared-tooling/issues/71).

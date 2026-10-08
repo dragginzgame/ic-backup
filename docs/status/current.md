@@ -27,6 +27,21 @@
 
 ## Current 0.8.1 upstream refresh
 
+The maintainer's full `tooling-check` failed at consumer commit
+`9be366b`: adopted host/IC installer suites called missing `test-tool-evidence.sh`.
+The earlier focused qualification did not run those suites. Preserve the original
+full log and correct the incomplete selection through committed Shared Tooling
+`db039347d2372b877c1c46dcdd2b5c3aa9412009` and explicit companion additions.
+The current snapshot has 80 exact source/mode paths. The exporter now refuses
+the old incomplete selection before writes. Full `make tooling-check`, shell
+and dependency checks pass on Linux, including both installer suites and the
+actual shared collector shell body against substituted payloads. Consumer CI
+keeps its original archive policy/uploader/retention; the imported action is a
+fixture dependency. No Rust, dependency selection, package or recovery contract
+changes. [The repair review](../reports/audits/2026/10/08/tooling-companions/01/report.md)
+binds original failure and current evidence. This repair remains uncommitted.
+The earlier 77-file adoption below retains its original source and test scope.
+
 0.8.0 is released at `04f65896060b1f1cd47fd36906a6d88dbe6c8501`.
 The incoming lockfile selected Host artifacts/FS 0.7.1 and Metrics 0.2.13;
 preserve it exactly. All 46 published Rust/original-manifest blobs match official
