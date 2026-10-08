@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.8.0]
+## [0.8.0] - 2026-10-08
 
 - **Breaking:** Select direct Rust `ic-backup-agent` transport and retire the ICP backend/probe and its unused process dependency. Submit exact original reserved updates with explicit endpoint/caller/root trust, no retries or automatic polling, and retained signed ingress identity. Pending/lost replies preserve original spending; integrations still own fresh permissions and application safety ([#25](https://github.com/dragginzgame/ic-backup/issues/25)).
 - Include both libraries in native CI, packaging and explicit publication; release preparation binds both member manifests and advances internal requirements together.
