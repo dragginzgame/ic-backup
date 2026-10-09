@@ -646,6 +646,19 @@ complete backend transfer, fresh permissions/accounting and stable noncooperatin
 custody still require integration qualification. See
 [the implemented local artifact boundary](extraction-boundary.md#durable-metadata-bound-ic-snapshot-artifacts).
 
+`workflow::ic_snapshot_download::download_snapshot` now streams the complete
+nonempty metadata-derived data plan through an existing private writer. Require
+exact retained stage/metadata/writer intent, empty original coverage and no consumed
+data attempts before spending. Reuse the single-read coordinator for every request,
+then require an explicit independently qualified Applied receipt under the original
+journal lock. Append accepted bytes before the sole journal owner records the receipt
+and admits dependent dispatch. Failure consumes the writer and preserves partial
+bytes, spending, recorded receipts and bounded returned response evidence. Finish
+through the existing checksum/durable publisher; manifest/checkpoint publication
+remains explicit. Metadata-stage preparation, authentic token/raw-ID association,
+application admission and terminal/custody proof remain independent integration work.
+There is no partial-read resume or default Agent provider.
+
 Explicit `verify_ic_snapshot_artifact` checks one published tree under the full
 retained original plan and unchanged journal. It reuses complete Durable selected-set
 admission, then verifies exact format/metadata/request, region lengths, bounded chunk

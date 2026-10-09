@@ -33,6 +33,7 @@ use ic_backup::{
     },
     workflow::{
         ic_snapshot_capture::{IcSnapshotCaptureExecutionError, capture_snapshot},
+        ic_snapshot_download::{IcSnapshotDownloadExecutionError, download_snapshot},
         ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
     },
 };
@@ -104,14 +105,17 @@ struct ReadProvider<'a> {
     backend: &'a mut Backend,
     failure: ReadFailure,
     oracle: &'a Path,
+    calls: usize,
 }
 impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
     fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
     ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        let index = self.calls;
+        self.calls += 1;
         let response = self.backend.read_snapshot(request)?;
-        if self.failure == ReadFailure::None {
+        if self.failure == ReadFailure::None || index != 1 {
             return Ok(response);
         }
         // Retained fixture oracle is never outcome/retry evidence for the workflow.
@@ -384,83 +388,72 @@ pub(crate) fn run(failure: ReadFailure) {
         }],
     )
     .unwrap();
-    let mut writer = artifacts
+    let writer = artifacts
         .stage_ic_snapshot_artifact(token, &metadata, raw_metadata)
         .unwrap();
     let calls_before_data = backend.calls;
-    let mut stopped = false;
-    for (index, payload) in download.requests().iter().enumerate() {
-        let sequence = u64::try_from(index).unwrap();
-        let context = backend.plan(&payload.digest(), sequence).context().clone();
-        let oracle = stage_layout.root().join("discarded-data-oracle.candid");
-        let mut provider = ReadProvider {
-            backend: &mut backend,
-            failure: if index == 1 {
-                failure
-            } else {
-                ReadFailure::None
-            },
-            oracle: &oracle,
-        };
-        let result = read_snapshot(
-            &stage,
-            sequence,
-            IcSnapshotTransferReadPayload::Data(payload),
-            &mut provider,
-            |request| {
-                // Exact original metadata and never-dispatched single-call custody
-                // remain with this isolated authenticated fixture.
-                assert_eq!(request.plan().context(), &context);
-                assert_eq!(request.payload().digest(), payload.digest());
-                Ok::<(), Infallible>(())
-            },
-        );
-        let mut journal =
-            AttemptJournalGuard::open(stage_layout, &plan.attempt_authority(sequence).unwrap())
-                .unwrap();
-        let request = IcSnapshotTransferReadRequest::new(
-            plan,
-            sequence,
-            journal.record().unwrap(),
-            IcSnapshotTransferReadPayload::Data(payload),
-        )
-        .unwrap();
-        if index == 1 && failure != ReadFailure::None {
-            if failure == ReadFailure::Malformed {
-                let Err(IcSnapshotTransferReadExecutionError::Association { response, .. }) =
-                    result
-                else {
-                    panic!("retained malformed reply")
-                };
-                assert_eq!(response.input().reply, [] as [u8; 0]);
-            } else {
-                assert!(matches!(
-                    result,
-                    Err(IcSnapshotTransferReadExecutionError::Provider(
-                        IcObservationProviderError::Indeterminate
-                    ))
-                ));
-            }
-            assert!(journal.record().unwrap().view().pending_mutation.is_some());
-            stopped = true;
-            break;
+    let oracle = stage_layout.root().join("discarded-data-oracle.candid");
+    let mut provider = ReadProvider {
+        backend: &mut backend,
+        failure,
+        oracle: &oracle,
+        calls: 0,
+    };
+    let result = download_snapshot(
+        &stage,
+        &download,
+        writer,
+        &mut provider,
+        |request| {
+            // This stopped isolated application owns original metadata, fresh
+            // access and never-dispatched ingress custody, without a generic default.
+            assert_eq!(request.plan().context(), plan.context());
+            Ok::<(), Infallible>(())
+        },
+        |request, response| {
+            // The actual fixture owns this exact authenticated successful ingress.
+            // Explicit receipt admission remains separate from passive wire shape.
+            let sequence = request.authority().binding().operation_sequence();
+            fs::write(
+                stage_layout.root().join(format!("data-{sequence}.candid")),
+                &response.input().reply,
+            )
+            .unwrap();
+            Ok::<_, Infallible>(MutationReceiptRequest {
+                attempt: request.mutation_attempt(),
+                request: request.payload().digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: response.input().evidence.hash().into(),
+            })
+        },
+    );
+    assert_eq!(
+        provider.calls,
+        if failure == ReadFailure::None {
+            download.requests().len()
+        } else {
+            2
         }
-        let response = result.unwrap();
-        let admitted = validate_response(&request, journal.record().unwrap(), &response).unwrap();
-        let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
-            panic!("exact data method");
-        };
-        fs::write(
-            stage_layout.root().join(format!("data-{sequence}.candid")),
-            &response.input().reply,
-        )
-        .unwrap();
-        let evidence = reply.digest();
-        writer = writer.append(reply).unwrap();
-        record_applied(&mut journal, &evidence);
-    }
-    if stopped {
-        drop(writer);
+    );
+    if failure != ReadFailure::None {
+        if failure == ReadFailure::Malformed {
+            let Err(IcSnapshotDownloadExecutionError::Read(
+                IcSnapshotTransferReadExecutionError::Association { response, .. },
+            )) = result
+            else {
+                panic!("retained malformed reply")
+            };
+            assert_eq!(response.input().reply, [] as [u8; 0]);
+        } else {
+            assert!(matches!(
+                result,
+                Err(IcSnapshotDownloadExecutionError::Read(
+                    IcSnapshotTransferReadExecutionError::Provider(
+                        IcObservationProviderError::Indeterminate
+                    )
+                ))
+            ));
+        }
         let view = read_execution_progress(stage_layout, &plan.digest()).unwrap();
         assert_eq!(view.attempts.mutations_used, 2);
         assert_eq!(view.applied_operations, 1);
@@ -497,7 +490,7 @@ pub(crate) fn run(failure: ReadFailure) {
         assert!(ExecutionStageGuard::create(&layout, binding, plan.clone()).is_err());
         return;
     }
-    let checksum = writer.finish().unwrap();
+    let checksum = result.unwrap();
     assert_eq!(
         artifacts
             .verify_ic_snapshot_artifact(plan, token, &metadata)

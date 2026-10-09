@@ -25,6 +25,37 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.5 complete data-transfer continuation
+
+Released 0.11.4 is `a585ae1064b1db49cd33f5c02dfe76637bd9f1b9`.
+The compatible 0.11.5 draft adds `workflow::ic_snapshot_download::download_snapshot`:
+join the exact nonempty metadata-derived data stage and existing private writer,
+refuse prior consumption/coverage, reuse single-read durable admission, then require
+explicit independently qualified Applied receipts. Append before recording each
+receipt and dependent dispatch; finish through existing fresh checksum/durable
+publication. Failed qualification/persistence, lost/malformed replies and changed
+custody retain spending, partial bytes and bounded returned responses. No partial
+read resume, default Agent provider or terminal/reference/fence release is introduced.
+
+The actual planned download caller uses this owner and retains complete publication
+and safe-stop cases. Finish #34's redundant formatting declarations; preserve the
+shared include and specialized post-run release-resume check. Shared 0.2.6's exact
+93-file snapshot is unchanged. Preserve incoming Host 0.9.4; a subsequent external
+lock update selects Metrics 0.3.3. Prepare only its locked cache, retain earlier
+selection/evidence and qualify the final graph with Testkit 0.27.1/Agent 0.49.2.
+Package/receipt remain 0.11.4. The
+[review](../reports/audits/2026/10/09/continuation-0115/01/report.md) retains exact proof.
+
+Focused streaming/stage, metrics, both-library Clippy, independent Rust 1.88/public
+API, five core and three Agent actual simulator cases pass. Eight Agent HTTP cases
+pass with local loopback enabled. Released 0.11.4 Linux passes; both macOS jobs are
+queued, so #32/#33 and #34's consumer native acceptance remain open. #25 still owns
+installed/downstream Agent trust/identity/custody qualification. #29 retains full
+metadata/capture/upload/restore orchestration and application/terminal proof; the
+new synchronous core loop does not bypass the async Agent signed-envelope retention
+boundary. Work stays uncommitted; no root Git write, release, production IC effect,
+sibling edit, recovery cleanup or Rust-symbol removal occurred.
+
 ## Current 0.11.4 capture-step continuation
 
 Released 0.11.3 is `2939a41805ce5c2fa3913162b4028bc970d3d85f`.

@@ -153,6 +153,28 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
     pub const fn plan(&self) -> Option<&OperationPlanRecord> {
         self.plan.as_ref()
     }
+
+    /// Re-admit an exact retained data-stage binding and its original metadata evidence.
+    /// This structural association grants no fresh permission or transfer attestation.
+    pub(crate) fn validate_binding(
+        &self,
+        binding: &ExecutionStageBindingRecord,
+    ) -> Result<(), IcSnapshotDownloadPlanningError> {
+        let plan = self
+            .plan
+            .as_ref()
+            .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
+        binding.validate(self.workflow, plan)?;
+        if binding.stage_sequence() != self.sequence
+            || !binding
+                .predecessors()
+                .iter()
+                .any(|row| row.learned_evidence() == &self.metadata.digest())
+        {
+            return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
+        }
+        Ok(())
+    }
     /// Bind the exact original metadata stage and reply evidence before stage creation.
     ///
     /// The source stage must contain exactly one metadata request under this original
@@ -233,4 +255,4 @@ pub enum IcSnapshotDownloadPlanningError {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

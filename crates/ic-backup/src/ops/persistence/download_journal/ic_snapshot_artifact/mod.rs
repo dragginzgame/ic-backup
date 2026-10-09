@@ -145,6 +145,21 @@ impl<'layout> DownloadJournalGuard<'layout> {
 }
 
 impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
+    /// Join this existing private writer to an exact original transfer stage.
+    /// This reuses custody admission; no new byte fence or spending owner follows.
+    pub(crate) fn validate_transfer_origin(
+        &self,
+        root: &Path,
+        intent: &str,
+    ) -> Result<(), IcSnapshotArtifactError> {
+        self.check_custody()?;
+        self.check_region_custody()?;
+        if self.journal.layout.root() != root || self.journal.record()?.intent() != intent {
+            return Err(IcSnapshotArtifactError::OriginalMismatch);
+        }
+        Ok(())
+    }
+
     /// Read the original declared coverage without changing it.
     #[must_use]
     pub const fn coverage(&self) -> &IcSnapshotDataCoverage<'_> {

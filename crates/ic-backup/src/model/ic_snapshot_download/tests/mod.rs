@@ -6,7 +6,7 @@ use crate::model::{
 use ic_management_canister_types::{ChunkHash, ReadCanisterSnapshotMetadataResult};
 use sha2::Digest;
 
-fn values() -> ReadCanisterSnapshotMetadataResult {
+pub(crate) fn values() -> ReadCanisterSnapshotMetadataResult {
     let cases: Vec<serde_json::Value> =
         serde_json::from_str(include_str!("../../ic_snapshot_metadata/tests/golden.json")).unwrap();
     let hex = cases
@@ -28,7 +28,7 @@ fn values() -> ReadCanisterSnapshotMetadataResult {
     values.stable_memory_size = 64;
     values
 }
-fn workflow(mutations: u32) -> ExecutionWorkflowRecord {
+pub(crate) fn workflow(mutations: u32) -> ExecutionWorkflowRecord {
     let mut request = crate::model::operation_plan::tests::request();
     let target = request.selected_targets[0].clone();
     request.operations = [(0, 1, 0), (7, mutations, 1)]
@@ -46,7 +46,7 @@ fn workflow(mutations: u32) -> ExecutionWorkflowRecord {
     request.budget = PlanBudgetRecord::new(mutations + 10, 10).unwrap();
     ExecutionWorkflowRecord::new(OperationPlanRecord::new(request).unwrap())
 }
-fn source_plan(source: &IcSnapshotMetadataRequest) -> OperationPlanRecord {
+pub(crate) fn source_plan(source: &IcSnapshotMetadataRequest) -> OperationPlanRecord {
     let mut request = crate::model::execution_workflow::tests::child_request(0);
     request.operations = vec![
         PlannedOperationRecord::new(PlannedOperationRequest {
@@ -60,7 +60,7 @@ fn source_plan(source: &IcSnapshotMetadataRequest) -> OperationPlanRecord {
     request.budget = PlanBudgetRecord::new(1, 0).unwrap();
     OperationPlanRecord::new(request).unwrap()
 }
-fn source() -> IcSnapshotMetadataRequest {
+pub(crate) fn source() -> IcSnapshotMetadataRequest {
     IcSnapshotMetadataRequest::new("renrk-eyaaa-aaaaa-aaada-cai", &[0, 255, 17]).unwrap()
 }
 fn predecessor(

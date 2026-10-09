@@ -4,4 +4,6 @@
 //! steps do not implement complete backup/restore or terminal/reference release.
 
 pub mod ic_snapshot_capture;
+#[cfg(unix)]
+pub mod ic_snapshot_download;
 pub mod ic_snapshot_transfer_read;

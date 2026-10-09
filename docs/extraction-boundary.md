@@ -2524,6 +2524,42 @@ restore safety, stable custody and terminal/fence/reference release. See
 [#29](https://github.com/dragginzgame/ic-backup/issues/29) and the
 [port contract](contracts/ic-snapshot-transfer-read-port.json).
 
+### Complete original snapshot data transfer
+
+`workflow::ic_snapshot_download::download_snapshot` joins a nonempty exact
+`IcSnapshotDownloadPlan`, retained data stage and existing private artifact writer.
+Reject changed bindings/metadata/writer origins, prior writer coverage and any
+original mutation/observation consumption before a provider call. Complete original
+journal admission still owns missing/held evidence. A read-free plan creates no
+placeholder operation; it is refused by this data-stage entrypoint.
+
+For each original ordinal, reuse `read_snapshot` for durable reservation, mandatory
+fresh read admission and one provider invocation. Reopen the selected original
+journal, re-admit the exact bounded response and require an integration-qualified
+exact Applied receipt. The integration independently authenticates attribution;
+successful wire shape never generates that receipt. Append decoded bytes through
+the existing writer before the sole attempt owner persists the receipt. Only then
+can the next dependent read enter admission. Closing stage/ancestor checks remain
+mandatory. No new schema, journal, allowance, decoder or progress owner is introduced.
+
+Any failure consumes the writer, retaining partial bytes, every original reservation
+and recorded receipt. Post-read errors retain the bounded returned response; lost
+replies stay pending and stop without follow-up. Failed receipt persistence can leave
+accepted bytes with pending spending; those bytes grant no restart or completion.
+Do not reconstruct coverage or repeat reads after interruption. Complete original
+Applied evidence and exact coverage precede existing fresh checksum/durable publication.
+Post-publication stage rejection retains the returned checksum in its typed error.
+Immutable manifest/checkpoint publication and ordinary effect-free resume remain
+separate owners; source references and fence obligations are unchanged.
+
+The actual isolated capture-to-download fixture now uses this loop, retaining
+complete publication and lost/malformed second-read cases. Pure adversarial tests
+also cover wrong receipts/outcomes, failed qualification/persistence, changed
+metadata/intent/coverage and stage/byte custody. These qualify the stopped fixture,
+not arbitrary application consistency, stable noncooperating byte custody, complete
+product manifests, full Agent/backup/restore orchestration or terminal/fence/reference
+release. [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

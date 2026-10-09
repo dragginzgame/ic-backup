@@ -15,14 +15,14 @@ ifneq ($(word 2,$(filter release-patch release-minor release-major release-resum
 $(error Select exactly one release target)
 endif
 
-.PHONY: check check-doc-links check-msrv ci clean clippy deps doc ensure-clean fmt fmt-check \
+.PHONY: check check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check install-hooks package publish publish-dry-run \
         release-check release-major release-minor release-patch release-plan release-resume \
         release-version release-preflight release-prepare-version release-prepared-check \
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
         tags tasks test tooling-check validate version
-.PHONY: dependency-pins-check format-tools-check install-testkit-server testkit-server-check release-delivery-check
+.PHONY: dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 
 help:
 	@echo "release-delivery-check      Verify the supported direct release policy without effects"

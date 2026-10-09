@@ -155,6 +155,8 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
   and unchanged pending spending;
 - provider-driven snapshot capture and metadata/data read steps with durable
   spending, explicit fresh admission and one-call dispatch;
+- complete original-plan data streaming into a durable artifact, with explicit
+  qualified receipts and retention of partial bytes on failure;
 - typed Internet Computer request and reply encoding for selected snapshot and
   lifecycle operations;
 - original-attempt-bound snapshot metadata/data read requests, a single-call provider

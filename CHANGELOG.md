@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.5]
+
+- Stream a complete original snapshot data plan through the library, requiring
+  explicit qualified receipts before dependent reads and durable publication.
+  Retain pending spending, partial artifacts and returned replies on failure
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Finish shared formatting ownership by removing redundant local target
+  declarations while preserving release-resume checks
+  ([#34](https://github.com/dragginzgame/ic-backup/issues/34)).
+- Qualify the selected Host 0.9.4 / Metrics 0.3.3 graph through local streaming,
+  original-spending and direct Agent simulator journeys
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25)).
+
 ## [0.11.4] - 2026-10-09
 
 - Add a provider-driven snapshot capture step with durable original spending,

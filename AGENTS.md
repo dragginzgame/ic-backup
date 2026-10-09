@@ -553,6 +553,20 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   and command/byte custody, application requirements and explicit qualified receipts.
   This single step does not qualify full runners or terminal/fence/reference release.
 
+- The provider-driven data download loop consumes an existing private writer under
+  an exact retained metadata-derived data stage. Reject read-free, changed metadata/
+  writer/intent and any originally consumed data stage before new spending. Reuse
+  the single-read coordinator; require a separate integration-qualified exact Applied
+  receipt under selected journal exclusion. Append admitted bytes before recording
+  that receipt through the sole attempt owner, then admit dependent reads. On failure
+  consume the writer, retain partial bytes/spending/recorded receipts and return
+  bounded replies in post-read errors. Finish through the existing checksum/durable
+  publisher and recheck stage/ancestors; retain returned checksum on closing rejection.
+  No partial-read resume, schema, allowance, default provider, manifest/checkpoint,
+  complete product runner or terminal/fence/reference release is added. Metadata and
+  token/raw-ID authentication, fresh read/application admission and stable noncooperating
+  custody remain integration-owned.
+
 ## Simulator qualification
 
 Simulator fixtures depend on published `ic-testkit` and use its complete
