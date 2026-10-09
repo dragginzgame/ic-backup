@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.12.0]
+## [0.12.0] - 2026-10-09
 
 - **Breaking:** Upgrade direct Artifact/FS dependencies to Host 0.10.1.
   `PersistenceError::Publication` now carries the Host 0.10 Rust error identity;
