@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.0]
+## [0.11.0] - 2026-10-09
 
 - Name the locked Testkit version and explicit setup command when CLI admission fails; document Testkit preparation before release validation.
 
