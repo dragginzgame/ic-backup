@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.10.0]
+## [0.10.0] - 2026-10-09
 
 - **Breaking:** Retire this repository's fleet tooling report and its regression suite. Run fleet reports from Shared Tooling; local `make cloc`, setup and offline checks remain supported ([#30](https://github.com/dragginzgame/ic-backup/issues/30)).
 - Adopt Shared Tooling 0.1.34 with optional fleet selections, concise maintenance handoffs and literal offline PocketIC manifest-path selection under `CDPATH` ([shared #83](https://github.com/dragginzgame/shared-tooling/issues/83), [shared #81](https://github.com/dragginzgame/shared-tooling/issues/81), [shared #82](https://github.com/dragginzgame/shared-tooling/issues/82)).
