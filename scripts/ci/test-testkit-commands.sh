@@ -74,10 +74,17 @@ printf '%s\n' "setup --directory $fixture/consumer/.tools/testkit-server" >> "$f
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 # Missing/changed CLI admission must stop before invoking the server owner.
 if TESTKIT_COMMAND_INSTALL_FAILURE=1 run_make testkit-server-check > "$fixture/missing.log" 2>&1; then exit 1; fi
+grep -F 'Testkit 0.25.5' "$fixture/missing.log" >/dev/null
+grep -F 'make install-testkit-server' "$fixture/missing.log" >/dev/null
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 # Server admission failure propagates without a setup or alternate server attempt.
 if TESTKIT_COMMAND_SERVER_FAILURE=1 run_make testkit-server-check > "$fixture/changed.log" 2>&1; then exit 1; fi
 printf '%s\n' "check --directory $fixture/consumer/.tools/testkit-server" >> "$fixture/expected-calls"
+cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
+printf '%s\n' '{"packages":[{"name":"ic-testkit","version":"0.26.0"}]}' > "$TESTKIT_COMMAND_METADATA"
+if TESTKIT_COMMAND_INSTALL_FAILURE=1 run_make testkit-server-check > "$fixture/updated.log" 2>&1; then exit 1; fi
+grep -F 'Testkit 0.26.0' "$fixture/updated.log" >/dev/null
+tail -n 1 "$TESTKIT_COMMAND_INSTALL" | grep -F -- '--version 0.26.0' >/dev/null
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 cp "$TESTKIT_COMMAND_INSTALL" "$fixture/before-install"
 for metadata in '{"packages":[]}' '{"packages":[{"name":"ic-testkit","version":"0.25.4"},{"name":"ic-testkit","version":"0.25.5"}]}'; do

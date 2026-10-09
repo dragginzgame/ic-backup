@@ -25,6 +25,20 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.0 missing Testkit selection correction
+
+Committed implementation HEAD is `dfef36774eb778d52615aece3c47e254c7a63a57`,
+with package/receipt still 0.10.1 and 0.11.0 pending. The maintainer-selected lock
+now contains Testkit 0.26.0 and Metrics 0.3.0; earlier 0.25.5 CLI preparation does
+not satisfy that exact selection. Explicitly prepare the locked 0.26.0 CLI/server.
+Direct offline check and its actual validation-runner target pass. Missing CLI
+admission now names the selected version and explicit setup command, preserving
+its original failure status. Release docs include Testkit setup after locked cache
+preparation and require repeating it when the selected package version changes.
+Routing fixtures and ShellCheck/link checks pass; earlier graph qualification and
+the original failed release evidence remain separate. Ordinary validation still
+installs nothing. Keep changes uncommitted; no release resume or Git write follows.
+
 ## Current 0.11.0 local persistence cleanup
 
 Remove nine private size-check forwarders and call the existing bounded JSON

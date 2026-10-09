@@ -111,6 +111,9 @@ through Shared Tooling before invoking Testkit's offline server check. No separa
 server pin, cache scan, version equality check or shared-bundle fallback exists.
 The normal gate runs it after `deps`; it installs nothing and qualifies no product
 permissions. Missing/changed selections refuse before server startup.
+After a locked Testkit version update, repeat `make install-testkit-server`; the
+older retained CLI cannot satisfy the updated selection. Admission failures name
+the selected version and the explicit setup command.
 
 Shared 0.2.0 requires explicit `make install-ic-tools` to select the five-tool
 bundle. Old six-tool bundles, pins, receipts and failed candidates are retained.

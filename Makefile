@@ -129,7 +129,11 @@ define TESTKIT_SERVER
 	version="$$(cargo metadata --offline --locked --format-version 1 | jq -er \
 	  '[.packages[] | select(.name == "ic-testkit") | .version] | if length == 1 then .[0] else error("expected one locked Testkit package") end')"; \
 	cli="$$(bash scripts/dev/install-rust-tools.sh --consumer "$(CURDIR)" \
-	  --package ic-testkit --version "$$version" --bin ic-testkit-server --profile release $(1))"; \
+	  --package ic-testkit --version "$$version" --bin ic-testkit-server --profile release $(1))" || { \
+	  status=$$?; \
+	  printf 'Testkit %s CLI admission failed. Prepare a missing selection with make install-testkit-server; inspect retained evidence if it is changed.\n' "$$version" >&2; \
+	  exit "$$status"; \
+	}; \
 	"$$cli" $(2) --directory "$(CURDIR)/.tools/testkit-server"
 endef
 

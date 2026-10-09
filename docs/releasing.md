@@ -131,10 +131,21 @@ their existing metadata allowance and original-source/receipt requirements;
 committed and resumed checks require a clean checkout. Admission never stages,
 repairs or commits the reported paths.
 
-Prepare the reviewed local executables with `make install-tools` before the
-release gate. Both CI and release validation include offline `make tools-check`
-and `make dependency-pins-check`; missing/changed tools stop the gate without
-implicit installation or unlocked dependency changes. The [local setup guide](local-setup.md)
+Prepare the reviewed tools and the exact locked Testkit CLI/server explicitly
+before the release gate:
+
+```bash
+make install-tools
+make deps
+make install-testkit-server
+make testkit-server-check
+```
+
+Repeat Testkit setup after its locked package version changes; an older retained
+CLI does not satisfy the new selection. Setup retains earlier installations.
+CI and release validation run offline `make tools-check`,
+`make testkit-server-check` and `make dependency-pins-check`; missing/changed tools
+stop the gate without implicit installation or unlocked dependency changes. The [local setup guide](local-setup.md)
 owns bootstrap prerequisites; exact registry compatibility constraints remain in
 [the local overlay](../AGENTS.md#qualified-dependency-constraints).
 

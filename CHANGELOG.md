@@ -2,6 +2,8 @@
 
 ## [0.11.0]
 
+- Name the locked Testkit version and explicit setup command when CLI admission fails; document Testkit preparation before release validation.
+
 - Use the canonical JSON size checker directly throughout local persistence, retaining original record bounds, typed failures and interruption recovery.
 
 - **Breaking:** Adopt the incoming Host 0.9 artifact/FS selection. `PersistenceError::Publication` carries the Host 0.9 Rust error identity; align direct Host dependencies when exchanging that value. Preserve record formats, publication barriers and original spending.
