@@ -2,6 +2,8 @@
 
 ## [0.11.1]
 
+- Qualify the selected Host 0.9.2/Testkit 0.27.0 graph and explicit CLI/server preparation through both libraries’ managed simulator cases, retaining pending spending and original recovery evidence ([#32](https://github.com/dragginzgame/ic-backup/issues/32)).
+
 - Adopt Shared Tooling 0.2.3 guidance for complete optional installer-test selections and evidence-based native CI queue review; preserve our existing tool selection ([shared #73](https://github.com/dragginzgame/shared-tooling/issues/73)).
 
 - Derive and durably publish an exact all-Applied execution checkpoint from the retained original plan and complete journals. Reject pending, missing, held or changed evidence without replacing checkpoints or resetting spending; use the canonical entrypoint in learned-stage callers ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).

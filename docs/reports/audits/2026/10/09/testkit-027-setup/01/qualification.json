@@ -1,0 +1,133 @@
+{
+  "head": "d168993f5398c402f477096e80a536d6f6185caf",
+  "draft": "0.11.1",
+  "package_version": "0.11.0",
+  "unchanged_inputs": {
+    "Cargo.toml": "c0d1d5f1004ffdc8ff0eb5c2d89d688f5d24dcae9870af51382e4fb23dd6e5c3",
+    "Cargo.lock": "e9eee2333abc8aa1c39468a265121e34782c4659f2574c7943b133d0fa809cdf",
+    ".shared-tooling.snapshot": "6ca4dacfe3e75be05c804bdc4543767fd82a2f7584c1dfd18d0201ec672275cf"
+  },
+  "packages": [
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.9.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.9.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.9.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.9.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.3.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.27.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    }
+  ],
+  "cli_selection": {
+    "package": "ic-testkit",
+    "version": "0.27.0",
+    "kind": "bin",
+    "target": "ic-testkit-server",
+    "profile": "release",
+    "host": "x86_64-unknown-linux-gnu",
+    "binary_sha256": "1d763435fc9eb8e7a684d4cce801c76f2f34c12c50598d70562cf822916e77bb",
+    "receipt_sha256": "20efa41eb4c295020535f7ee4b4fac37d4734c4fddde9ff4f8e7f233a3637e18"
+  },
+  "server": {
+    "path": "/home/adam/projects/ic-backup/.tools/testkit-server/16.1.0-x86_64-linux/pocket-ic",
+    "sha256": "b44e1eccd66e02328146b3e209e3403e3a3428a25d25555aca2f67500e5ae9db"
+  },
+  "commands": [
+    {
+      "command": "make install-testkit-server",
+      "status": 0,
+      "log": "target/testkit-027-setup/setup.log",
+      "log_sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+    },
+    {
+      "command": "make testkit-server-check",
+      "status": 0,
+      "log": "target/testkit-027-setup/offline-check.log",
+      "log_sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+    },
+    {
+      "command": "VALIDATION_LOG_DIR=target/testkit-027-setup/validation bash scripts/ci/run-validation-targets.sh testkit-server-check",
+      "status": 0,
+      "log": "target/testkit-027-setup/runner-check.log",
+      "log_sha256": "ae197d9bd318e8740bee7d5f5ad1c04eb4a8103046330c51fde429b7989912e8"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--test",
+        "pocketic_snapshot",
+        "planned_download",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": 0,
+      "log": "target/testkit-027-setup/core-simulator.log",
+      "log_sha256": "397a4be7c6d62aa30fac8a6ca8b94698ef620c139aff3d3467664e95d6083421"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup-agent",
+        "--test",
+        "pocketic_transport",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": 0,
+      "log": "target/testkit-027-setup/agent-simulator.log",
+      "log_sha256": "34b6c5316d80fd85eadb42766ed1cd098e339948e697d9b7c3f5fbbf3f70659d"
+    },
+    {
+      "command": "make check-doc-links",
+      "status": 0,
+      "log": "target/testkit-027-setup/doc-links.log",
+      "log_sha256": "9baa608f0d34c3bcf23d88864044c9e41477b8aa633421cc334f7173824a0715"
+    }
+  ],
+  "original_failures": [
+    {
+      "path": "target/validation-failures/20261009T115325Z-3314417-combined.log",
+      "sha256": "bbbcca9588551b3b879dfa05db9f6c2e684bbbf4f2b1eafb99de8be4c9c45018"
+    },
+    {
+      "path": "target/validation-failures/20261009T115325Z-3314417-5-testkit-server-check.log",
+      "sha256": "bbbcca9588551b3b879dfa05db9f6c2e684bbbf4f2b1eafb99de8be4c9c45018"
+    }
+  ],
+  "removed_functions_methods_types": []
+}

@@ -25,6 +25,20 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.1 selected Testkit 0.27.0 preparation
+
+Resolve the reported server-gate failure with explicit `make install-testkit-server`:
+the locked 0.27.0 CLI was missing. Both direct offline admission and the actual
+validation-runner target now pass. All six core/Agent simulator cases pass with
+managed startup on unchanged Host 0.9.2, Testkit 0.27.0 and Metrics 0.3.1 under
+Shared 0.2.3. Retain old installations and original failed validation evidence;
+manifest/lock/snapshot bytes are unchanged. The
+[review](../reports/audits/2026/10/09/testkit-027-setup/01/report.md) records exact
+receipts, server bytes and checks. Repeat explicit setup after a Testkit selection
+change; ordinary checks install nothing. Keep the 0.11.1 draft uncommitted with
+package/receipt at 0.11.0. Local fixture qualification grants no arbitrary application
+or terminal/release permission and does not close remaining native acceptance.
+
 ## Current 0.11.1 Shared Tooling 0.2.3 adoption
 
 Canonically adopt committed Shared 0.2.3
