@@ -68,6 +68,12 @@ and check Cargo-sort, derive-sort and Candid-extractor under `.tools/rust/`.
 This library requires only the existing Cargo-sort formatter; the extra set is
 not part of aggregate setup or CI. Both commands use the reviewed shared pins.
 
+The shared installer also supports an explicitly selected exact Cargo package,
+binary or example, and debug/release profile. See [consumer-selected Cargo
+tools](local-setup.md#consumer-selected-cargo-tools) for setup and
+offline receipt checks. This optional mode does not change Backup's default tools
+or CI prerequisites.
+
 `make cloc` reports source/test LOC from this root workspace and excludes Cargo's
 selected build outputs. Run fleet tooling/LOC reports from Shared Tooling; this
 consumer no longer selects those reporters or their regression suite. The shared

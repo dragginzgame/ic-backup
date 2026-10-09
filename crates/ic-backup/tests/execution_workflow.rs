@@ -64,10 +64,10 @@ fn retain_capture(
     .unwrap();
     let plan = plan(&capture.digest());
     let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::create(layout, binding.clone(), plan).unwrap();
-    let mut journal = AttemptJournalGuard::create(
+    let stage = ExecutionStageGuard::prepare(layout, binding.clone(), plan).unwrap();
+    let mut journal = AttemptJournalGuard::open(
         stage.layout().unwrap(),
-        stage.plan().attempt_authority(42).unwrap(),
+        &stage.plan().attempt_authority(42).unwrap(),
     )
     .unwrap();
     capture
@@ -114,11 +114,10 @@ fn learned_snapshot_payload_is_bound_once_and_pending_read_retains_original_allo
     let metadata_plan = plan(&metadata.digest());
     let binding =
         ExecutionStageBindingRecord::new(&workflow, 7, &metadata_plan, vec![predecessor]).unwrap();
-    let stage = ExecutionStageGuard::create(&layout, binding.clone(), metadata_plan).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), metadata_plan).unwrap();
     let authority = stage.plan().attempt_authority(42).unwrap();
     assert_eq!(authority.binding().request(), metadata.digest().hash());
-    let mut journal =
-        AttemptJournalGuard::create(stage.layout().unwrap(), authority.clone()).unwrap();
+    let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
     let attempt = journal
         .reserve_planned_mutation(&stage.plan().digest())
         .unwrap();

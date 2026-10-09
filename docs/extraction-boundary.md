@@ -2346,6 +2346,14 @@ stops safely. A lost successful creation response reopens the exact complete pai
 
 `open` and `layout` re-admit original workflow, child plan/binding and predecessor
 settlements, retaining both layout lifetimes. Derived stage symlinks reject.
+Admission traverses the complete original ancestor DAG iteratively, checking each
+distinct stage's exact binding, plan, chronological settlement and complete original
+journal set. Shared ancestors require identical binding/settlement identities;
+their per-edge learned-input commitments may differ. At most one row per original
+catalog node is retained, bounded by the existing 8,192-node catalog, and only one
+ancestor layout/journal reader is held at a time. Missing or changed transitive
+evidence rejects before descendant allocation or retained-layout access. Sequential
+checks do not establish atomic evidence or noncooperating byte custody.
 Only existing attempt journals own spending; these APIs never create a journal,
 reserve a call, infer zero consumption, refund or automatically settle a receipt.
 Resume must use complete original journal admission; a missing original rejects.
@@ -2353,6 +2361,19 @@ Stage creation is preparation, not dispatch. Integrations own the input contract
 exact learned snapshot/extent evidence and derivation, receipt authentication,
 fresh effect-boundary permissions/safety and never-dispatched command/byte custody.
 Noncooperating filesystem custody retains its existing operator-owned boundary.
+
+`ExecutionStageGuard::prepare` additionally derives all original child authorities
+before allocation and creates their complete attempt-journal set through the
+existing durable create-only journal owner before returning. It takes one journal
+lock at a time and re-admits original stage/predecessor records after publication.
+`create` remains the record/layout primitive and creates no journals. Neither
+entrypoint reserves attempts, authenticates receipts or supplies fresh dispatch
+custody. Partial journal preparation retains the occupied stage and every original
+record; calling `prepare` again refuses rather than filling gaps. A lost successful
+response can reopen the complete exact set. `open` creates no journal, and execution
+admission still rejects any missing, changed or unsafe original. The typed
+`ExecutionStagePreparationError` preserves original stage, authority and journal
+errors without granting repair, refunds or retries. No schema or digest changes.
 
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact

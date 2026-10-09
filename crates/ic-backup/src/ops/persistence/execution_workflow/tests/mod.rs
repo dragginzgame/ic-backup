@@ -14,6 +14,9 @@ use crate::{
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::process::Command;
 
+mod ancestry;
+mod preparation;
+
 fn prepare() -> (PathBuf, BackupLayoutGuard, ExecutionWorkflowRecord) {
     let root = temp_dir("ic-backup-execution-workflow");
     fs::create_dir(&root).unwrap();
@@ -246,9 +249,9 @@ fn acknowledged_process_death_retains_partial_stage_or_reopens_complete_binding(
         let layout = BackupLayoutGuard::acquire(&PathBuf::from(root)).unwrap();
         let handshake = PathBuf::from(std::env::var_os(HANDSHAKE).unwrap());
         let selected = if std::env::var(BARRIER).unwrap() == "complete" {
-            StagePreparationBarrier::AfterBindingPublication
+            StagePreparationBarrier::Binding
         } else {
-            StagePreparationBarrier::AfterPlanPublication
+            StagePreparationBarrier::Plan
         };
         let binding = ExecutionStageBindingRecord::new(&workflow(), 0, &child(0), vec![]).unwrap();
         ExecutionStageGuard::create_with(&layout, binding, child(0), |barrier| {

@@ -444,7 +444,10 @@ exact child plan within the original target/context/inventory and stage ceilings
 Predecessor bindings and complete chronological Applied settlements are required
 before creating the child. Learned snapshot ID/dimension evidence is an opaque
 commitment whose authenticity and derivation remain integration-qualified.
-Reopen preserves original journals; interrupted preparation stops with evidence
+Local stage admission checks complete exact chronological settlements and original
+journals throughout the ancestor DAG, visiting shared ancestors once with sequential
+locks. Missing or changed transitive evidence rejects; no atomic byte-custody claim
+follows. Reopen preserves original journals; interrupted preparation stops with evidence
 retained. No workflow runner, automatic outcome, fresh permission, transfer
 completion or terminal/release authority follows. See
 [the implemented contract](extraction-boundary.md#original-workflow-allocations-and-learned-stage-binding).

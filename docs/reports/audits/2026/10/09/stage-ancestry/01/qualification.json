@@ -1,0 +1,162 @@
+{
+  "head": "d909fb2f2ecbcc40e8bea920bd3fa45a0a5ea57b",
+  "cargo_lock_sha256": "f20554a0b51cd8097d344285c4c50c0dcf3e0ab8611fc2a4372e0a10dbbde4c0",
+  "selected_dependencies": [
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.8.9",
+      "checksum": "2fefad1ae4756603dc3c40ae959c636ffc3a6e2ea06a6787c814eae056042813"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.8.9",
+      "checksum": "febd1654e330ba56b5abc6e1ee5044f65a36ca79aa1648ac1b9efacf8e3f2e5d"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.8.9",
+      "checksum": "b8b8d8a9d8106cd01cff4eef0dee1d5cab13d86ecb16bbea475e19bdf40aca6e"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.8.9",
+      "checksum": "83e4f8eeac9adcec73378ea61056eb26e1a447741d5eb8cd0aee5bfb48dffdbd"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.2.18",
+      "checksum": "2ff2e0e09dd7a1ee832582062825f03b46e9fb1f3c7272f0a86ffecfd54fa513"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.25.4",
+      "checksum": "78283d252a61e39298f4cd78eed6cb9d65fd6e55d2ec51572e4360c3bfd12f35"
+    }
+  ],
+  "draft": "0.10.1",
+  "source_kind": "uncommitted stage ancestor-admission fix",
+  "shared_revision": "be550afa57fe9e16872e5110b5cd69c24b4fa9e8",
+  "passed_cases": {
+    "stage": 13,
+    "public": 1,
+    "actual_simulator": 3
+  },
+  "commands": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests::ancestry -- --test-threads=1 --nocapture",
+      "exit_code": 101,
+      "scope": "Missing incoming Host 0.8.9 cache",
+      "log": "target/stage-ancestry-0101/before.log",
+      "sha256": "dbe85fa5d9069809478c5335051afd04cb7562909c906cd1db86935bf3e1ddbf"
+    },
+    {
+      "command": "cargo fetch --locked",
+      "exit_code": 0,
+      "scope": "Exact incoming cache preparation; no dependency reselection",
+      "log": "target/stage-ancestry-0101/fetch.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests::ancestry -- --test-threads=1 --nocapture",
+      "exit_code": 101,
+      "scope": "Two reproduced ancestor-admission regressions before repair",
+      "log": "target/stage-ancestry-0101/before-cached.log",
+      "sha256": "e1e5b81f973377e69ecb345301a61ef59943c97cfa483cb808343fc72595a7b3"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "scope": "13 cases",
+      "log": "target/stage-ancestry-0101/stage-tests.log",
+      "sha256": "9dd5e3a9a19addacc613cfdaa4cf3c41e01f45e305d7e2943944559e1485e5a6"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test execution_workflow -- --nocapture",
+      "exit_code": 0,
+      "scope": "Public consuming integration",
+      "log": "target/stage-ancestry-0101/public-stage.log",
+      "sha256": "83bfb6b0b8c1be6b404eb432fb20eda6b267dc3bc8e3143472957815b25eb95d"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1 --nocapture",
+      "exit_code": 101,
+      "scope": "Sandbox refused localhost binding before fixture ingress",
+      "log": "target/stage-ancestry-0101/planned-download.log",
+      "sha256": "ce3678db3b698549813710e7d1530c536fedd81a8cf26525e1eadff379aa889f"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "scope": "Permitted actual loopback simulator; three cases",
+      "log": "target/stage-ancestry-0101/planned-download-loopback.log",
+      "sha256": "2a9abbca1548207d9bf7581dea79c91f66575aeffe21353c13db29ca1566648c"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "exit_code": 0,
+      "scope": "Both libraries",
+      "log": "target/stage-ancestry-0101/clippy.log",
+      "sha256": "cb93f428dcd9a6c33ae2aff6de306f60ba46a7e151d0721a8b70177b70601574"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "scope": "13 cases on final source",
+      "log": "target/stage-ancestry-0101/stage-final.log",
+      "sha256": "a2d4c9a1bb8b21fb3b297e77be11eddb4385a1146347b55755f77cea7e27b05e"
+    },
+    {
+      "command": "make fmt-check",
+      "exit_code": 0,
+      "scope": "Manifest/Rust formatting",
+      "log": "target/stage-ancestry-0101/fmt.log",
+      "sha256": "b2bad35d89039fd8a360a0a55fd22d994d5c8a8308a9831c19ae900f122c069b"
+    },
+    {
+      "command": "make check-doc-links",
+      "exit_code": 0,
+      "scope": "Local references",
+      "log": "target/stage-ancestry-0101/doc-links.log",
+      "sha256": "36a811827dca80eab6b66c094bb99392ba034dbe176708191e2778d4b6b62084"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "scope": "Patch whitespace",
+      "log": "target/stage-ancestry-0101/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "removed_functions_methods_types": [],
+  "limits": [
+    "No matching native committed consumer CI",
+    "No full CI/release gate or installed Canic/runner qualification"
+  ],
+  "final_sources": [
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+      "sha256": "cdd1a9d2d0e7dee2a50acd514a05c49275992238b630f2389c408e5dfaaf8e60"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/mod.rs",
+      "sha256": "0d655cf81e8cd7561f9cf7deeb56d915d127611b5645d37991f764a394fd8266"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/ancestry/mod.rs",
+      "sha256": "b1239de0be614ab68e349d21c8600c1708bf8e5f10905bb5b54b14de4ae8336e"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "sha256": "e5f26ab36c7836e4a88d8c6ac98194418c76f49b7b47c4761cb2830b0d1ab15d"
+    }
+  ],
+  "final_source_commands": [
+    "stage-final.log",
+    "public-stage.log",
+    "planned-download-loopback.log",
+    "clippy.log",
+    "fmt.log",
+    "doc-links.log",
+    "diff-check.log"
+  ]
+}

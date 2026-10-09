@@ -92,10 +92,10 @@ fn capture(
     let payload = management(backend, Method::TakeCanisterSnapshot, None);
     let plan = backend.plan(&payload.digest(), 0);
     let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::create(layout, binding.clone(), plan).unwrap();
+    let stage = ExecutionStageGuard::prepare(layout, binding.clone(), plan).unwrap();
     let stage_layout = stage.layout().unwrap();
     let mut journal =
-        AttemptJournalGuard::create(stage_layout, stage.plan().attempt_authority(0).unwrap())
+        AttemptJournalGuard::open(stage_layout, &stage.plan().attempt_authority(0).unwrap())
             .unwrap();
     journal
         .reserve_planned_mutation(&stage.plan().digest())
@@ -150,11 +150,11 @@ pub(crate) fn run(failure: ReadFailure) {
     let metadata_binding =
         ExecutionStageBindingRecord::new(&workflow, 7, &metadata_plan, vec![capture]).unwrap();
     let metadata_stage =
-        ExecutionStageGuard::create(&layout, metadata_binding.clone(), metadata_plan.clone())
+        ExecutionStageGuard::prepare(&layout, metadata_binding.clone(), metadata_plan.clone())
             .unwrap();
-    let mut journal = AttemptJournalGuard::create(
+    let mut journal = AttemptJournalGuard::open(
         metadata_stage.layout().unwrap(),
-        metadata_plan.attempt_authority(7).unwrap(),
+        &metadata_plan.attempt_authority(7).unwrap(),
     )
     .unwrap();
     journal
@@ -199,13 +199,9 @@ pub(crate) fn run(failure: ReadFailure) {
         .bind(&metadata_binding, &metadata_plan, vec![original])
         .unwrap();
     let plan = download.plan().unwrap();
-    let stage = ExecutionStageGuard::create(&layout, binding.clone(), plan.clone()).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan.clone()).unwrap();
     let stage_layout = stage.layout().unwrap();
-    // Every original journal exists before the first data ingress. Neither a
-    // pending reply nor missing journal can become unused original allowance.
-    for authority in plan.attempt_authorities().unwrap() {
-        drop(AttemptJournalGuard::create(stage_layout, authority).unwrap());
-    }
+    // The public preparation owner retained every original journal before ingress.
     fs::DirBuilder::new()
         .mode(0o700)
         .create(stage_layout.root().join("artifacts"))

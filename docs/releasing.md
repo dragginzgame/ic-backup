@@ -143,7 +143,11 @@ single push URL before mutation. Preflight admits pending notes and rejects unre
 staged/unstaged/untracked work and changed original manifest/lock/receipt. Staged
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
-the snapshot and fetches the selected locked dependency cache. The full gate runs
+the snapshot and runs root-workspace `cargo fetch --locked` to prepare both
+libraries' selected dependency cache. The standard release authorizes this locked
+cache preparation; explicit offline Cargo settings remain authoritative and missing
+inputs fail without switching online. Ordinary validation does not acquire new
+network or installation authority. The full gate runs
 offline; a consumer validation sidecar binds the original source, selections and
 manifest/lock/member/notes bytes before preparation. Missing evidence is never approval.
 

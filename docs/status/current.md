@@ -25,6 +25,66 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.10.1 ancestor-history admission
+
+Fix stage admission skipping transitive predecessor history: `create`, `prepare`,
+`open` and `layout` now check every ancestor's exact binding/plan, chronological
+settlement and original journals. Iterative traversal admits shared ancestors once
+with sequential locks and rejects changed/missing history without repair or spending.
+Capture/metadata/data simulator stages all use complete journal preparation.
+Thirteen focused stage cases, the public journey, three actual Testkit download
+cases and both-library Clippy pass on the incoming Host 0.8.9/Metrics 0.2.18/Testkit
+0.25.4 graph. The [review](../reports/audits/2026/10/09/stage-ancestry/01/report.md)
+retains failures and exact qualification. Keep 0.10.1 pending and versions/receipt
+at 0.10.0; no schema/API change, release or Canic adoption follows. Earlier entries
+retain the graphs and snapshots used for their original qualification.
+
+## Current 0.10.1 Shared Tooling follow-up
+
+Canonically refresh the unchanged 95-file selection to committed Shared Tooling
+0.1.35 at `be550afa57fe9e16872e5110b5cd69c24b4fa9e8`; seven selected files change.
+The optional exact Cargo binary/example installer adds profile and receipt checks
+without changing default setup. Existing release preflight already prepares the
+locked root-workspace cache; explicit offline settings remain authoritative.
+Focused installer/command/release-adapter fixtures, ShellCheck, actual offline
+tool checks and snapshot verification pass on Linux. Upstream's exact 0.1.35 CI is
+in progress at inspection; no candidate-native or real registry-install claim follows.
+The [review](../reports/audits/2026/10/09/shared-035/01/report.md) retains scope and
+evidence. Preserve all incoming stage work and lock selections; versions/receipt
+remain 0.10.0 and work remains uncommitted. The earlier stage qualification below
+records the 0.1.34 snapshot used for that earlier batch.
+
+## Current 0.10.1 complete stage-journal preparation
+
+Pushed 0.10.0 is HEAD at `d909fb2f2ecbcc40e8bea920bd3fa45a0a5ea57b`.
+Select compatible 0.10.1 for the new `ExecutionStageGuard::prepare` entrypoint:
+derive all original child authorities before allocating and durably create every
+journal through existing owners before returning. Keep record-only `create`
+distinct and reopen read-only. Partial publication, occupied journals and process
+death retain originals; no retry fills gaps, and missing evidence never supplies
+unused allowance. This advances [#29](https://github.com/dragginzgame/ic-backup/issues/29)
+without introducing a schema, spending owner, receipt or installed runner.
+
+Ten stage cases and the public learned-ID journey pass. Three real Testkit planned
+download cases now use preparation: complete durable publication, lost reply and
+malformed reply preserve original spending, partial bytes and references. Both
+libraries' Clippy passes on the released graph. Preserve the incoming Metrics
+0.2.18/Testkit 0.25.4 lock update, unchanged Host 0.8.8 and reviewed Shared Tooling
+0.1.34. The same fourteen focused cases, Clippy, Rust 1.88 with independent
+consumers and strict rustdoc pass on the incoming graph. The agent performs no
+dependency selection or snapshot refresh.
+The [review](../reports/audits/2026/10/09/stage-preparation/01/report.md) retains exact
+commands, source and failures separately. Work remains uncommitted, with package
+versions/receipt at 0.10.0 and no sibling, release, publication or live IC effects.
+
+Released 0.10.0 Linux CI passes; Intel/Apple Silicon jobs remain queued.
+[#30](https://github.com/dragginzgame/ic-backup/issues/30) and
+[#31](https://github.com/dragginzgame/ic-backup/issues/31) retain native acceptance;
+new uncommitted preparation has no matching hosted qualification. Fresh application
+admission/custody, installed orchestration, upload/restore and terminal/fence/source
+reference release remain separate. Earlier handoff entries below describe their
+original preparation state rather than current release identity.
+
 ## Current 0.10.0 tooling retirement and HTTP fixture repair
 
 Release 0.9.2 is now HEAD and GitHub main at

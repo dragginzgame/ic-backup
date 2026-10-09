@@ -1,19 +1,24 @@
 //! Fixed immutable stage admission using the existing layout, plan and settlement owners.
 
 use super::{
-    BackupLayoutGuard, ExecutionSettlementPersistenceError, JournalLock, JournalLockError,
+    AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard,
+    ExecutionSettlementPersistenceError, JournalLock, JournalLockError,
     OperationPlanPersistenceError, PersistenceError, create_json_durable, create_operation_plan,
     read_execution_settlement, read_json, read_operation_plan,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     execution_workflow::{
-        ExecutionStageBindingRecord, ExecutionWorkflowError, ExecutionWorkflowRecord,
-        MAX_EXECUTION_STAGE_BYTES, MAX_EXECUTION_WORKFLOW_BYTES,
+        ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
+        ExecutionWorkflowRecord, MAX_EXECUTION_STAGE_BYTES, MAX_EXECUTION_WORKFLOW_BYTES,
     },
-    operation_plan::OperationPlanRecord,
+    operation_plan::{OperationPlanError, OperationPlanRecord},
 };
-use std::{fs, path::PathBuf};
+use std::{
+    collections::{BTreeMap, btree_map::Entry},
+    fs,
+    path::PathBuf,
+};
 use thiserror::Error;
 
 const WORKFLOW_FILE: &str = "execution-workflow.json";
@@ -21,8 +26,9 @@ const BINDING_FILE: &str = "stage-binding.json";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum StagePreparationBarrier {
-    AfterPlanPublication,
-    AfterBindingPublication,
+    Plan,
+    Binding,
+    Journal(u64),
 }
 
 /// Durably create the full original workflow allocation without replacement.
@@ -59,8 +65,9 @@ pub fn read_execution_workflow(
 
 /// One original stage's fixed layout, retained under both workflow and child exclusion.
 ///
-/// Existing attempt journals remain the only spending owner. Creation supplies no
-/// journals and reopening never creates, resets or reconstructs them. Integrations
+/// Existing attempt journals remain the only spending owner. `create` supplies no
+/// journals; `prepare` creates the complete original set. Reopening never creates,
+/// resets or reconstructs journals. Integrations
 /// retain exact learned inputs, authenticate their relation to settled originals,
 /// and qualify fresh authority, command custody and proof of no previous dispatch.
 #[derive(Debug)]
@@ -71,9 +78,47 @@ pub struct ExecutionStageGuard<'a> {
     plan: OperationPlanRecord,
 }
 impl<'a> ExecutionStageGuard<'a> {
+    /// Durably prepare a new stage and its complete original attempt-journal set.
+    ///
+    /// Reuses create-only stage admission and the existing journal owner, taking
+    /// one journal lock at a time. Every original authority is derived before
+    /// stage allocation. No reservation, receipt, backend call or fresh dispatch
+    /// authority follows. Hold no other attempt guards during preparation.
+    ///
+    /// Partial preparation remains occupied and is never repaired by retrying.
+    /// Reopen only retained originals and require complete execution admission;
+    /// missing journals never mean unused allowance. A lost successful response
+    /// can reopen the complete exact stage without creating another journal.
+    /// # Errors
+    /// Rejects invalid originals, occupied stages, journal contention and failed
+    /// durable publication, preserving all partial records and original limits.
+    pub fn prepare(
+        workflow_layout: &'a BackupLayoutGuard,
+        binding: ExecutionStageBindingRecord,
+        plan: OperationPlanRecord,
+    ) -> Result<Self, ExecutionStagePreparationError> {
+        Self::prepare_with(workflow_layout, binding, plan, |_| {})
+    }
+    fn prepare_with(
+        workflow_layout: &'a BackupLayoutGuard,
+        binding: ExecutionStageBindingRecord,
+        plan: OperationPlanRecord,
+        mut barrier: impl FnMut(StagePreparationBarrier),
+    ) -> Result<Self, ExecutionStagePreparationError> {
+        let authorities = plan.attempt_authorities()?;
+        let stage = Self::create_with(workflow_layout, binding, plan, &mut barrier)?;
+        let layout = stage.layout()?;
+        for authority in authorities {
+            let sequence = authority.binding().operation_sequence();
+            drop(AttemptJournalGuard::create(layout, authority)?);
+            barrier(StagePreparationBarrier::Journal(sequence));
+        }
+        stage.layout()?;
+        Ok(stage)
+    }
     /// Create a fixed private stage directory, exact child plan and immutable binding.
     ///
-    /// Every original predecessor must have its exact retained binding, plan and
+    /// Every original predecessor and ancestor needs its exact retained binding, plan and
     /// complete chronological Applied settlement. The directory is create-only:
     /// occupied or interrupted preparation is retained and cannot be recreated
     /// with another plan. No journal or backend effect occurs before return.
@@ -108,9 +153,9 @@ impl<'a> ExecutionStageGuard<'a> {
             .map_err(PersistenceError::from)?;
         let stage_layout = acquire_stage(workflow_layout, binding.stage_sequence())?;
         create_operation_plan(&stage_layout, &plan)?;
-        barrier(StagePreparationBarrier::AfterPlanPublication);
+        barrier(StagePreparationBarrier::Plan);
         create_json_durable(&stage_layout.root().join(BINDING_FILE), &binding)?;
-        barrier(StagePreparationBarrier::AfterBindingPublication);
+        barrier(StagePreparationBarrier::Binding);
         workflow_layout.check_root()?;
         Ok(Self {
             workflow_layout,
@@ -163,7 +208,7 @@ impl<'a> ExecutionStageGuard<'a> {
     /// Callers must use complete original journal admission for resume. Never
     /// create a missing journal on resume or substitute a freshly derived plan.
     /// # Errors
-    /// Rejects changed roots, retained records or predecessor settlement histories.
+    /// Rejects changed roots, retained records or any ancestor settlement history.
     pub fn layout(&self) -> Result<&BackupLayoutGuard, ExecutionWorkflowPersistenceError> {
         let workflow = read_execution_workflow(self.workflow_layout, self.binding.workflow())?;
         read_binding(
@@ -175,6 +220,20 @@ impl<'a> ExecutionStageGuard<'a> {
         validate_predecessors(self.workflow_layout, &workflow, &self.binding)?;
         Ok(&self.stage_layout)
     }
+}
+
+/// Failed create-only preparation; retained records never grant repair or extra spending.
+#[derive(Debug, Error)]
+pub enum ExecutionStagePreparationError {
+    /// Original stage records, predecessor settlement or layout were rejected.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
+    /// Complete original child authority derivation failed before allocation.
+    #[error(transparent)]
+    Authority(#[from] OperationPlanError),
+    /// Existing attempt-journal locking or durable create-only publication failed.
+    #[error(transparent)]
+    Journal(#[from] AttemptJournalError),
 }
 fn read_binding(
     layout: &BackupLayoutGuard,
@@ -198,13 +257,40 @@ fn validate_predecessors(
     workflow: &ExecutionWorkflowRecord,
     binding: &ExecutionStageBindingRecord,
 ) -> Result<(), ExecutionWorkflowPersistenceError> {
-    // Sequential existing layout/journal admission avoids holding multiple
-    // predecessor locks or inventing a second outcome/accounting projection.
-    for row in binding.predecessors() {
-        let predecessor = acquire_stage(layout, row.stage_sequence())?;
-        let (original, _) =
-            read_binding(&predecessor, workflow, row.stage_sequence(), row.binding())?;
-        read_execution_settlement(&predecessor, original.plan(), row.settlement())?;
+    // Traverse the original acyclic catalog iteratively, admitting each ancestor
+    // once. Keep at most one row per catalog node, not one per dependency path.
+    // Learned evidence may differ between edges; binding/settlement identity cannot.
+    let mut expected: BTreeMap<u64, ExecutionStagePredecessorRecord> = binding
+        .predecessors()
+        .iter()
+        .map(|row| (row.stage_sequence(), row.clone()))
+        .collect();
+    let mut pending: Vec<_> = expected.keys().copied().collect();
+    while let Some(sequence) = pending.pop() {
+        let row = &expected[&sequence];
+        let original = {
+            // Release this layout and every journal lock before admitting another
+            // ancestor, including an ancestor shared by multiple branches.
+            let predecessor = acquire_stage(layout, sequence)?;
+            let (original, _) = read_binding(&predecessor, workflow, sequence, row.binding())?;
+            read_execution_settlement(&predecessor, original.plan(), row.settlement())?;
+            original
+        };
+        for ancestor in original.predecessors() {
+            match expected.entry(ancestor.stage_sequence()) {
+                Entry::Vacant(entry) => {
+                    pending.push(ancestor.stage_sequence());
+                    entry.insert(ancestor.clone());
+                }
+                Entry::Occupied(entry) => {
+                    if entry.get().binding() != ancestor.binding()
+                        || entry.get().settlement() != ancestor.settlement()
+                    {
+                        return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
+                    }
+                }
+            }
+        }
     }
     Ok(())
 }

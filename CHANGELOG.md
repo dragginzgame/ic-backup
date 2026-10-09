@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.1]
+
+- Prepare a learned execution stage with its complete durable original attempt-journal set before returning. Preserve partial preparation after failure or interruption; reopen creates no missing journals or new allowance ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Reject later-stage preparation and reopen when any ancestor's retained binding, plan, settlement or original journals are missing or changed. Check shared ancestors once without retaining multiple stage locks ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.1.35 with optional exact Cargo binary/example installation and explicit profile/receipt checks. Clarify authorized locked dependency-cache preparation while preserving explicit offline settings ([shared #65](https://github.com/dragginzgame/shared-tooling/issues/65), [shared #84](https://github.com/dragginzgame/shared-tooling/issues/84)).
+
 ## [0.10.0] - 2026-10-09
 
 - **Breaking:** Retire this repository's fleet tooling report and its regression suite. Run fleet reports from Shared Tooling; local `make cloc`, setup and offline checks remain supported ([#30](https://github.com/dragginzgame/ic-backup/issues/30)).

@@ -1,0 +1,81 @@
+{
+  "consumer_head": "d909fb2f2ecbcc40e8bea920bd3fa45a0a5ea57b",
+  "source_kind": "uncommitted consumer snapshot adoption",
+  "draft": "0.10.1",
+  "package_version": "0.10.0",
+  "shared_revision": "be550afa57fe9e16872e5110b5cd69c24b4fa9e8",
+  "selected_file_count": 95,
+  "changed_selected_file_count": 7,
+  "source_proof": {
+    "path": "target/shared-035-review/source-proof.json",
+    "sha256": "8f215c1851a62054fbb5b12b93306143b86c89753ddb8866d3ecda72c5e49bad"
+  },
+  "incoming_preservation_proof": {
+    "path": "target/shared-035-review/preservation-proof.json",
+    "sha256": "81a794a42a2202e6180f633f6796442c04e30cef23211217e3f85af02007ee01"
+  },
+  "checks": [
+    {
+      "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" bash scripts/ci/test-rust-tools.sh",
+      "exit_code": 0,
+      "log": "target/shared-035-review/rust-tools.log",
+      "sha256": "d0f87d323f4178f561839c79732b87d961b1a4e2b8d4f380387979eb1853f67e"
+    },
+    {
+      "command": "bash scripts/ci/test-tool-commands.sh",
+      "exit_code": 0,
+      "log": "target/shared-035-review/tool-commands.log",
+      "sha256": "7bb1c9fddef644e5de76a50aa7b0887697578c2779be61e79d25ad42d3e5a37c"
+    },
+    {
+      "command": "bash scripts/release/test-release.sh",
+      "exit_code": 0,
+      "log": "target/shared-035-review/release-adapter.log",
+      "sha256": "e790c34db179f6e9ec12a5b18bd24c490c6b58aced75d2fb671a8d4935753641"
+    },
+    {
+      "command": "make shell-check",
+      "exit_code": 0,
+      "log": "target/shared-035-review/shell.log",
+      "sha256": "3c08bd3ab5253e0320c9589a037f7cbe88ec958437c41ee849bb05da5c4d5675"
+    },
+    {
+      "command": "make tools-check",
+      "exit_code": 0,
+      "log": "target/shared-035-review/offline-tools.log",
+      "sha256": "689e6ec1e0aa3ddfc43f6e7ad52c0317f602fa6795ae890db53856169d229331"
+    },
+    {
+      "command": "make shared-tooling-check",
+      "exit_code": 0,
+      "log": "target/shared-035-review/snapshot.log",
+      "sha256": "8a95049a67d879dbd54c7fd071affe72c5a5df84b5903d60c701f4340e34c6ba"
+    },
+    {
+      "command": "make check-doc-links",
+      "exit_code": 0,
+      "log": "target/shared-035-review/doc-links.log",
+      "sha256": "37899565965cb23d1f42113b059e630a2c4acc1c4677ce1ff26eca88bcf3db84"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "target/shared-035-review/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "upstream_run": {
+    "id": 37904190217,
+    "head_sha": "be550afa57fe9e16872e5110b5cd69c24b4fa9e8",
+    "status": "in_progress",
+    "conclusion": null,
+    "updated_at": "2026-10-09T08:28:58Z",
+    "html_url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37904190217"
+  },
+  "limits": [
+    "Cargo installation fixtures use substitutes; no actual registry binary/example installation",
+    "Linux local qualification only; no matching committed consumer native CI",
+    "No full CI/release gate, dependency selection, root Git writes, sibling edits or publication"
+  ],
+  "removed_functions_methods_types": []
+}

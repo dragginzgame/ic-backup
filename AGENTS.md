@@ -573,6 +573,23 @@ was recorded. Linking provenance or describing implementation status is allowed.
   effect safety and never-dispatched custody remain integration-qualified. No runner,
   automatic receipt, transfer completion or terminal/release authority follows.
 
+- Explicit fresh stage preparation additionally publishes every original child
+  attempt journal through the existing create-only owner before returning.
+  Derive all authorities before stage allocation; retain one journal lock at a
+  time and re-admit original stage/predecessor records after publication. Preserve
+  all partial records on failure/death. Occupied stages reject another preparation;
+  reopen never creates missing journals, repairs gaps or resets allowance. The
+  record-only create primitive stays separate. No reservation, new record/schema,
+  provider, fresh dispatch custody, installed runner or release authority follows.
+
+- Stage admission additionally checks every transitive ancestor's exact retained
+  binding/plan and complete chronological Applied settlement/original journals.
+  Traverse iteratively with at most one row per bounded catalog node and sequential
+  ancestor layout/journal admission. Shared edges must agree on binding/settlement
+  identity; their learned-input evidence remains edge-specific. Missing/changed
+  history rejects preparation, reopen and retained-layout access without repair or
+  new spending. No atomic noncooperating custody or terminal authority follows.
+
 - The product runs on the operator host. Canisters receive no local filesystem,
   signing keys or restore runner permissions.
 - The generic library owns snapshot/artifact/journal/recovery mechanisms.

@@ -49,7 +49,31 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 95-file snapshot selects committed Shared Tooling 0.1.34 at
+The current 95-file snapshot selects committed Shared Tooling 0.1.35 at
+`be550afa57fe9e16872e5110b5cd69c24b4fa9e8`. Canonical export from a clean
+isolated checkout changes seven selected files; all committed bytes and executable
+modes match. The new consumer-selected Cargo binary/example installer is optional:
+the existing three-tool bundle and aggregate setup/check selections remain unchanged.
+Its substitute-Cargo fixtures cover exact profiles, receipts, offline reuse,
+corruption refusal, retained failures and concurrent setup.
+
+The reviewed rules permit registry access for authorized dependency preparation;
+explicit offline settings remain authoritative. Backup already runs root-workspace
+`cargo fetch --locked` during release preflight before offline validation, so no
+release adapter change is required. Ordinary checks still install nothing.
+
+Focused installer, command-wiring, release-adapter, ShellCheck, offline installed-tool
+and snapshot checks pass on Linux. Upstream's exact 0.1.35 CI is in progress at
+inspection; this uncommitted consumer candidate has no matching native CI. Actual
+registry binary/example installation is not qualified by substitute fixtures.
+Keep the compatible 0.10.1 draft and preserve incoming stage work and dependency
+selection. The [review](reports/audits/2026/10/09/shared-035/01/report.md) retains
+source proof, check commands and qualification limits. No function, method or type
+is removed by this adoption.
+
+### Prior Shared Tooling 0.1.34 review
+
+The prior 95-file snapshot selects committed Shared Tooling 0.1.34 at
 `3d33cd250fcae7dbe5cabe44b2abd6b2c91a1822`. Canonical export from a clean
 isolated checkout changes eight retained files. The maintainer explicitly selected
 retirement of the optional fleet reporter and its regression suite under

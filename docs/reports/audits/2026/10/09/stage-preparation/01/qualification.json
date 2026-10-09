@@ -1,0 +1,353 @@
+{
+  "inputs": {
+    "head": "d909fb2f2ecbcc40e8bea920bd3fa45a0a5ea57b",
+    "lock_sha256": "ca7c5a5338c02779bb8d5980b11ddb87a47a64a472b4a95bd32c8b255d74188e",
+    "locked_packages": [
+      {
+        "name": "ic-host-artifacts",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "606926664bacc3d1da87749ded9f96643ab585ea02f97e503be3453a22ca55f3",
+        "dependencies": [
+          "flate2",
+          "sha2 0.10.9",
+          "tar",
+          "wasmparser"
+        ]
+      },
+      {
+        "name": "ic-host-fs",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "8113bd0abe5a81e0770c5fe7b4cc0e21d31b710d36bbc006181555d626359cc0",
+        "dependencies": [
+          "ic-host-artifacts",
+          "rustix"
+        ]
+      },
+      {
+        "name": "ic-host-process",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "76288489748e27fa6e64a723827416fde21daac47c9f730099af737b7bc40186",
+        "dependencies": [
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "libc",
+          "rustix"
+        ]
+      },
+      {
+        "name": "ic-host-tools",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "de60f742bd17f2e29a306237b38220a5c95240772ac2ecf3116583d2d5029637",
+        "dependencies": [
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "ic-host-process",
+          "serde",
+          "serde_json"
+        ]
+      },
+      {
+        "name": "ic-metrics",
+        "version": "0.2.17",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "546430c8842aa043a041e51a69b49ef6ab280353aff5a05caa1cbdacd5508676"
+      },
+      {
+        "name": "ic-testkit",
+        "version": "0.25.3",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "9a98c8de9778c3e9a6ee11f3f0dbdb203826e1f19311656b15b5c5b3c33d111a",
+        "dependencies": [
+          "candid",
+          "fs2",
+          "ic-cdk",
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "ic-host-process",
+          "ic-host-tools",
+          "libc",
+          "pocket-ic",
+          "serde",
+          "serde_json",
+          "sha2 0.10.9",
+          "toml"
+        ]
+      }
+    ],
+    "unchanged_from_released_head": true
+  },
+  "shared_revision": "3d33cd250fcae7dbe5cabe44b2abd6b2c91a1822",
+  "draft": "0.10.1",
+  "source_kind": "uncommitted local implementation",
+  "commands": {
+    "stage-tests.log": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests -- --test-threads=1 --nocapture",
+    "public-stage.log": "cargo test --offline --locked -p ic-backup --test execution_workflow -- --nocapture",
+    "planned-download.log": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1 --nocapture",
+    "clippy-02.log": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings"
+  },
+  "passed_cases": {
+    "stage": 10,
+    "public": 1,
+    "simulator": 3
+  },
+  "evidence": [
+    {
+      "path": "target/continuation-0101/inputs.json",
+      "sha256": "de0220cf1376866f3f16ae0a012ea6f2c987e408bcddd6d8de61181fa2c30073",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/native-runs.json",
+      "sha256": "e288a69dbd6eea37b37f7b034bfc40d6935035f07676d8b32e57b62562cb1cef",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/released-jobs-latest.json",
+      "sha256": "9883fdecc2f9e41d1dc8fc9d1d688df83d6dbae836d85d2dfd899c23754804aa",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/stage-tests.log",
+      "sha256": "2ec8eece385dbbdb21b29647d460ffeec786343cbea3af5ad544962b2af0b484",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/public-stage.log",
+      "sha256": "b3ada3e47e5bf744f0e018fc05138c098c8a79eb6fb7d438bf5b24eb162394de",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/planned-download.log",
+      "sha256": "edf6a3f3b1b073be97e44c9b65be5f9814e1c05ff61ccf80cf0e6789c943fed0",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/clippy-01.log",
+      "sha256": "c026e9eb70130802f7d781d3dad9f3fcf4410cbe73ecad48ed1436f305ecd8ce",
+      "scope": "retained initial failure"
+    },
+    {
+      "path": "target/continuation-0101/clippy-02.log",
+      "sha256": "e00bdf9cc8d51bd975d53f8132fb70c8206d2afd427bb7fefa91a11cd3a7e602",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/snapshot.log",
+      "sha256": "8a95049a67d879dbd54c7fd071affe72c5a5df84b5903d60c701f4340e34c6ba",
+      "scope": "input or focused verification"
+    },
+    {
+      "path": "target/continuation-0101/msrv.log",
+      "sha256": "736230ba862f215dc49c2ae419b0a76a79d8be7865071cac5d5fc645ffdb2c40",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/clippy-incoming.log",
+      "sha256": "343dde5bbc65ff74cd5f895ad09061c32afb53b91c1e0c3b2ee27e9b1442de48",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/doc.log",
+      "sha256": "f4a1f3301b5badfe764f4257ed322936be44edfa43fd8cacbfca026b9f5e94d7",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/stage-incoming.log",
+      "sha256": "0f5a9e75e6ed69b64bd27ca4330297248869f80df25721aaf4a5b859fd7cfd64",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/public-incoming.log",
+      "sha256": "0f11ed32e6394ad1e77df3df0e70d448f2dc31292a03640c8ec6f661a8c9efa4",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/planned-download-incoming.log",
+      "sha256": "2b13a792d87f8dc067b7050b28926a7357ecfbfcc3d38283b75462e0a8f29d51",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/doc-links-final.log",
+      "sha256": "c0bdc0acd82a43e3853bdd37fae4d24bf1a1026cb4e0e60b605e88f7110a03d8",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/released-jobs-final.json",
+      "sha256": "9883fdecc2f9e41d1dc8fc9d1d688df83d6dbae836d85d2dfd899c23754804aa",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/incoming-inputs.json",
+      "sha256": "41b430ba0f855a6eb65783761da9cf4e7808200bdbc756995289afc4a266e346",
+      "scope": "incoming graph/final evidence"
+    },
+    {
+      "path": "target/continuation-0101/issue-29-posted.json",
+      "sha256": "774b06d5e16db1aac3d1c30ca0b2b3d0151931019669c1ba8e29fb4fc5e89435",
+      "scope": "final issue/docs evidence"
+    },
+    {
+      "path": "target/continuation-0101/issue-30-posted.json",
+      "sha256": "33b57dcc7c98f19221ca5a3e624e6d14baec5b9a39a78e66c504b02c5923fa26",
+      "scope": "final issue/docs evidence"
+    },
+    {
+      "path": "target/continuation-0101/issue-31-posted.json",
+      "sha256": "5ad6ddee15273a294f743fb38e1715c2a0603bdb34f9eabbddd013c6af68f578",
+      "scope": "final issue/docs evidence"
+    },
+    {
+      "path": "target/continuation-0101/doc-links-final-02.log",
+      "sha256": "c0bdc0acd82a43e3853bdd37fae4d24bf1a1026cb4e0e60b605e88f7110a03d8",
+      "scope": "final issue/docs evidence"
+    }
+  ],
+  "native_candidate": "not run; pushed base Linux success, macOS queued",
+  "deleted_symbols": [],
+  "fixture_roots": [
+    "/tmp/ic-backup-prepared-stage-2149-1791533597774719963-9",
+    "/tmp/ic-backup-prepared-stage-2149-1791533597850939521-11",
+    "/tmp/ic-backup-prepared-stage-2149-1791533597938063539-13",
+    "/tmp/ic-backup-prepared-stage-2149-1791533597950138332-14",
+    "/tmp/ic-backup-prepared-stage-2149-1791533598034248288-15",
+    "/tmp/ic-backup-pocketic-489265-0",
+    "/tmp/ic-backup-pocketic-489265-1",
+    "/tmp/ic-backup-pocketic-489265-2",
+    "/tmp/ic-backup-prepared-stage-324-1791533919292020755-9",
+    "/tmp/ic-backup-prepared-stage-324-1791533919357632806-11",
+    "/tmp/ic-backup-prepared-stage-324-1791533919443433771-13",
+    "/tmp/ic-backup-prepared-stage-324-1791533919455473645-14",
+    "/tmp/ic-backup-prepared-stage-324-1791533919535848981-15",
+    "/tmp/ic-backup-pocketic-557138-0",
+    "/tmp/ic-backup-pocketic-557138-1",
+    "/tmp/ic-backup-pocketic-557138-2"
+  ],
+  "source": [
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+      "sha256": "0c5442ae024c01fc1a2e855ec1d73e12070b9838a274af4181ca75a709e55b05"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/mod.rs",
+      "sha256": "10ea60e4d724738db1c630e1fa32f9fbe705f9d1e2d8705d90dc1c06bdf405d1"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/mod.rs",
+      "sha256": "72d4e0937f55074867d852660d7a0a7c2279a6421a35ab64f87eb54b8c214719"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_workflow.rs",
+      "sha256": "9a9b7e39351fc636f8334807670d0dfac55416dd442c75e9e855d02db29dbc55"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "sha256": "de4ea49d024c0182484985108b99fdb60886723a602de3f780066e0e4a3f7133"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/preparation/mod.rs",
+      "sha256": "9b91f3db2adcbe2f5ea26c89d1b57faf798e71328c1f3b1bd51772bff44340b2"
+    }
+  ],
+  "incoming_graph_preserved": {
+    "lock_sha256": "34c1e6d548913007e55db759702badf10b93392e8ab5627c39e43f5b775b9fb9",
+    "locked_packages": [
+      {
+        "name": "ic-host-artifacts",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "606926664bacc3d1da87749ded9f96643ab585ea02f97e503be3453a22ca55f3",
+        "dependencies": [
+          "flate2",
+          "sha2 0.10.9",
+          "tar",
+          "wasmparser"
+        ]
+      },
+      {
+        "name": "ic-host-fs",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "8113bd0abe5a81e0770c5fe7b4cc0e21d31b710d36bbc006181555d626359cc0",
+        "dependencies": [
+          "ic-host-artifacts",
+          "rustix"
+        ]
+      },
+      {
+        "name": "ic-host-process",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "76288489748e27fa6e64a723827416fde21daac47c9f730099af737b7bc40186",
+        "dependencies": [
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "libc",
+          "rustix"
+        ]
+      },
+      {
+        "name": "ic-host-tools",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "de60f742bd17f2e29a306237b38220a5c95240772ac2ecf3116583d2d5029637",
+        "dependencies": [
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "ic-host-process",
+          "serde",
+          "serde_json"
+        ]
+      },
+      {
+        "name": "ic-metrics",
+        "version": "0.2.18",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "2ff2e0e09dd7a1ee832582062825f03b46e9fb1f3c7272f0a86ffecfd54fa513"
+      },
+      {
+        "name": "ic-testkit",
+        "version": "0.25.4",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "78283d252a61e39298f4cd78eed6cb9d65fd6e55d2ec51572e4360c3bfd12f35",
+        "dependencies": [
+          "candid",
+          "fs2",
+          "ic-cdk",
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "ic-host-process",
+          "ic-host-tools",
+          "libc",
+          "pocket-ic",
+          "serde",
+          "serde_json",
+          "sha2 0.10.9",
+          "toml"
+        ]
+      }
+    ]
+  },
+  "earlier_test_scope": "stage/public/simulator and Clippy .02 used Metrics .17/Testkit .25.3",
+  "incoming_results": {
+    "stage_cases": 10,
+    "public_cases": 1,
+    "simulator_cases": 3,
+    "clippy": "passed",
+    "rustdoc_warnings_denied": "passed",
+    "rust_188_all_targets_independent_consumers": "passed"
+  },
+  "issue_comments": {
+    "29": "https://github.com/dragginzgame/ic-backup/issues/29#issuecomment-6077217299",
+    "30": "https://github.com/dragginzgame/ic-backup/issues/30#issuecomment-6077218135",
+    "31": "https://github.com/dragginzgame/ic-backup/issues/31#issuecomment-6077218868"
+  }
+}
