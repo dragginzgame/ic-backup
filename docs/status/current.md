@@ -25,6 +25,32 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.4 capture-step continuation
+
+Released 0.11.3 is `2939a41805ce5c2fa3913162b4028bc970d3d85f`.
+The compatible 0.11.4 draft adds `workflow::ic_snapshot_capture::capture_snapshot`:
+canonical payload binding, existing durable original reservation, mandatory fresh
+integration admission and one provider invocation under selected journal exclusion.
+Success remains pending until an independently qualified integration records a
+receipt. Lost/malformed replies retain original spending/references and block
+recapture or successor stages. The real isolated Testkit journey connects this
+capture step to the existing reads and durable artifact publication.
+
+Canonically adopt committed Shared 0.2.6
+`ce13a5314916891fd239d9b199b4a91b04775054`, adding its formatting include to the
+93-file snapshot. Local formatter recipes retire; consumer fixtures export the
+new companion. Keep specialized release routing because `release-resume` checks
+the exact receipt/tag/saved validation after the shared runner. Manifest/lock and
+package/receipt remain exact 0.11.3, including Host 0.9.3, Testkit 0.27.1 and
+Metrics 0.3.2. Both independent Rust 1.88 consumers and focused local checks pass;
+the [review](../reports/audits/2026/10/09/continuation-0114/01/report.md) retains proof.
+
+Released 0.11.3 Linux CI passes; both macOS jobs are queued. This candidate is
+uncommitted and has no remote result. Keep #29 open for full provider-driven
+transfer/upload/restore coordination, actual application/Agent admission and
+terminal/custody proof; #32 owns native acceptance. No full gate, root Git write,
+release, production IC effect, sibling edit or Rust-symbol removal occurred.
+
 ## Current 0.11.3 provider-driven read continuation
 
 Released 0.11.2 is `2f441df35bffb0e9a8d4ea93e826045d0e71424d`.

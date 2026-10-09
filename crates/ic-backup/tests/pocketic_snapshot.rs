@@ -19,6 +19,20 @@ fn planned_download_malformed_reply_retains_pending_stage_without_followup() {
 }
 
 #[test]
+fn planned_capture_lost_reply_retains_pending_original_without_recapture_or_successor() {
+    pic_journey::planned_download::capture_failure(
+        pic_journey::planned_download::CaptureFailure::Lost,
+    );
+}
+
+#[test]
+fn planned_capture_malformed_reply_retains_pending_original_without_recapture_or_successor() {
+    pic_journey::planned_download::capture_failure(
+        pic_journey::planned_download::CaptureFailure::Malformed,
+    );
+}
+
+#[test]
 fn real_capture_download_upload_and_same_id_restore_preserve_complete_state() {
     pic_journey::run(pic_journey::Fault::None);
 }

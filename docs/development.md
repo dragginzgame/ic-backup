@@ -932,6 +932,9 @@ removed by their owning tests. The consumer tooling check injects failures throu
 these actual adopted helpers and checks exact status, retained inputs and reported
 paths; it runs in the existing Linux/macOS CI selection without adding tool setup.
 
+`fmt`, `fmt-check` and `format-tools-check` come from the selected Shared Tooling
+`make/rust-format.mk` include. `FORMAT_CARGO` may explicitly name the prepared
+Cargo executable; the recipes use portable checkout-local PATH lookup.
 `fmt` and `fmt-check` share `format-tools-check`, which reads the reviewed pin
 from `ci/tool-versions.env`. It requires successful exact cargo-sort and rustfmt
 availability probes, offline with rustup automatic installation disabled. It

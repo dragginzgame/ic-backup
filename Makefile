@@ -2,6 +2,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
 include make/tools.mk
+include make/rust-format.mk
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
@@ -102,17 +103,6 @@ doc:
 ensure-clean:
 	@$(RELEASE) ensure-clean
 
-format-tools-check:
-	@source "$(HOST_TOOL_VERSIONS)" && bash scripts/ci/check-format-tools.sh "$$SHARED_TOOLING_CARGO_SORT_VERSION"
-
-fmt: format-tools-check
-	cargo sort --workspace
-	cargo fmt --all
-
-fmt-check: format-tools-check
-	cargo sort --workspace --check
-	cargo fmt --all -- --check
-
 hooks-check:
 	bash scripts/hooks/test-hooks.sh
 
@@ -162,6 +152,7 @@ release-delivery-check:
 release-patch release-minor release-major: release-delivery-check
 	@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
 
+# Keep this specialized route local: the consumer receipt check follows the runner.
 release-resume: release-delivery-check
 	@bash scripts/ci/run-release.sh resume "$(VERSION)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
 	@$(RELEASE) resume-check "$(VERSION)"

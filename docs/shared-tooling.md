@@ -49,7 +49,26 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 92-file snapshot selects committed Shared Tooling 0.2.5 at
+The current 93-file snapshot selects committed Shared Tooling 0.2.6 at
+`ce13a5314916891fd239d9b199b4a91b04775054`. Canonical refresh from a clean
+isolated source adds `make/rust-format.mk` and refreshes consumption/release/hook
+guidance. Replace the local formatting recipes with that include; keep pinned
+offline admission and portable checkout-local Cargo lookup. Consumer hook,
+Testkit-routing and release fixtures export the new companion too. Owner format/
+hook suites and actual consumer fixtures pass independently. The baseline and
+tool pins are unchanged; no hook activation or dependency reselection occurs.
+
+The optional `make/release.mk` is not selected: this consumer's `release-resume`
+must run its exact receipt/tag/saved-validation check after the shared runner.
+The include's prerequisites-only composition cannot retain that post-run step.
+Shared 0.2.6 explicitly permits specialized direct runner routing with required
+post-run checks preserved. Keep the existing specialized route without a wrapper.
+Exact provenance and focused evidence are retained in the
+[review](reports/audits/2026/10/09/continuation-0114/01/report.md).
+
+### Prior Shared Tooling 0.2.5 review
+
+The prior 92-file snapshot selects committed Shared Tooling 0.2.5 at
 `04e07b4bf54e7aeb03eb7804a845cee27b7305df`. Canonical refresh from a clean
 isolated committed checkout changes only the pre-commit hook, its installer and
 the hook rule within the same roster. Hook paths preserve literal trailing newlines;

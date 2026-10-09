@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.11.4]
+
+- Add a provider-driven snapshot capture step with durable original spending,
+  mandatory fresh admission and one update. Connect it to the isolated download
+  journey; lost or malformed replies retain pending attempts and block recapture
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.2.6's reusable Rust formatting include, preserving pinned
+  offline formatter admission and checkout-local tool lookup. Keep the specialized
+  release-resume receipt check after the shared runner.
+
 ## [0.11.3] - 2026-10-09
 
 - Add one provider-driven snapshot metadata/data read step with durable original

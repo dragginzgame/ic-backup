@@ -527,6 +527,19 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   never-dispatched custody, application safety, full runners or terminal release.
   Old ICP logs/journals remain historical evidence; no ICP backend fallback remains.
 
+- The provider-driven snapshot capture step accepts only the exact original
+  take payload, opens its existing stage journal and durably reserves through
+  complete-plan admission. Hold that journal through mandatory fresh actual
+  control/consistency/quiescence/fence and never-dispatched custody admission,
+  one existing mutation-provider invocation and bounded passive association.
+  Recheck retained stage/ancestors around dispatch; retain bounded returned
+  acknowledgements on later rejection. Success and all post-reservation failures
+  stay pending; missing, held, pending or Applied originals never grant recapture.
+  Integrations explicitly authenticate and record qualified outcomes. Preserve
+  original schemas, limits, source references and fence obligations. The isolated
+  capture-to-download fixture does not install a default Agent provider, complete
+  runner, fresh permission, terminal proof or fence/reference release.
+
 - The provider-driven snapshot transfer read step opens the original stage journal
   and reserves through canonical complete-plan admission before mandatory explicit
   fresh integration admission and exactly one provider call. Hold the selected

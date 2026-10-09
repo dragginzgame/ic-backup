@@ -17,7 +17,7 @@ finish() {
 trap finish EXIT
 mkdir -p "$fixture/consumer/make" "$fixture/bin" "$fixture/cli"
 cp "$ROOT/Makefile" "$fixture/consumer/Makefile"
-cp "$ROOT/make/tools.mk" "$fixture/consumer/make/tools.mk"
+cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$fixture/consumer/make/"
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail

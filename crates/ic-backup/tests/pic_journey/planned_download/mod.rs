@@ -9,7 +9,9 @@ use ic_backup::{
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
         },
-        ic_mutation::IcMutationRequest,
+        ic_mutation::{
+            IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
+        },
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
@@ -25,10 +27,14 @@ use ic_backup::{
     },
     policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, validate_response},
     ports::{
+        ic_mutation::{IcMutationProvider, IcMutationProviderError},
         ic_observation::IcObservationProviderError,
         ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     },
-    workflow::ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
+    workflow::{
+        ic_snapshot_capture::{IcSnapshotCaptureExecutionError, capture_snapshot},
+        ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
+    },
 };
 use ic_management_canister_types::CanisterStatusType;
 use serde_json::json;
@@ -39,6 +45,59 @@ pub(crate) enum ReadFailure {
     None,
     Lost,
     Malformed,
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum CaptureFailure {
+    None,
+    Lost,
+    Malformed,
+}
+
+struct CaptureProvider<'a> {
+    backend: &'a mut Backend,
+    failure: CaptureFailure,
+    oracle: &'a Path,
+    submitted: bool,
+}
+impl IcMutationProvider for CaptureProvider<'_> {
+    fn submit_mutation(
+        &mut self,
+        request: &IcMutationRequest<'_>,
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        assert!(!self.submitted);
+        self.submitted = true;
+        let payload = request.payload();
+        assert_eq!(payload.method(), Method::TakeCanisterSnapshot);
+        assert_eq!(payload.receiver(), "aaaaa-aa");
+        assert_eq!(payload.target(), self.backend.target.to_text());
+        let actual = self.backend.plan(
+            &payload.digest(),
+            request.authority().binding().operation_sequence(),
+        );
+        assert_eq!(request.plan().context(), actual.context());
+        let raw = self
+            .backend
+            .management(payload.method().name(), payload.arguments());
+        fs::write(self.oracle, &raw).unwrap();
+        if self.failure == CaptureFailure::Lost {
+            return Err(IcMutationProviderError::Indeterminate);
+        }
+        let reply = if self.failure == CaptureFailure::Malformed {
+            Vec::new()
+        } else {
+            raw
+        };
+        IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            authority: request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: actual.context().clone(),
+            target: self.backend.target.to_text(),
+            evidence: ArtifactChecksumRecord::from_bytes(&reply),
+            reply,
+        })
+        .map_err(|_| IcMutationProviderError::Indeterminate)
+    }
 }
 
 struct ReadProvider<'a> {
@@ -98,47 +157,114 @@ fn capture(
     backend: &mut Backend,
     layout: &BackupLayoutGuard,
     workflow: &ExecutionWorkflowRecord,
-) -> (
+    failure: CaptureFailure,
+) -> Option<(
     ic_backup::model::ic_snapshot_reply::IcSnapshotInfo,
     ExecutionStagePredecessorRecord,
-) {
+)> {
     let payload = management(backend, Method::TakeCanisterSnapshot, None);
     let plan = backend.plan(&payload.digest(), 0);
     let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::prepare(layout, binding, plan).unwrap();
+    let stage = ExecutionStageGuard::prepare(layout, binding.clone(), plan).unwrap();
     let stage_layout = stage.layout().unwrap();
+    stage_layout
+        .retain_restore(
+            &backend.root.join("unfinished-capture-reference.json"),
+            stage.plan().digest().hash(),
+        )
+        .unwrap();
+    let references = stage_layout.restore_references().unwrap();
+    let context = stage.plan().context().clone();
+    let calls = backend.calls;
+    let oracle = stage_layout.root().join("capture-reply.candid");
+    let mut provider = CaptureProvider {
+        backend,
+        failure,
+        oracle: &oracle,
+        submitted: false,
+    };
+    let result = capture_snapshot(&stage, 0, &payload, &mut provider, |request| {
+        // This isolated stopped application owns fresh direct control, complete
+        // drain/no-external-effects consistency and original ingress custody.
+        assert_eq!(request.plan().context(), &context);
+        assert_eq!(request.payload().digest(), payload.digest());
+        Ok::<(), Infallible>(())
+    });
     let mut journal =
         AttemptJournalGuard::open(stage_layout, &stage.plan().attempt_authority(0).unwrap())
             .unwrap();
-    journal
-        .reserve_planned_mutation(&stage.plan().digest())
-        .unwrap();
-    let request =
-        IcMutationRequest::new(stage.plan(), 0, journal.record().unwrap(), &payload).unwrap();
-    let raw = backend.management(
-        request.payload().method().name(),
-        request.payload().arguments(),
-    );
-    fs::write(stage_layout.root().join("capture-reply.candid"), &raw).unwrap();
-    let reply = IcSnapshotReply::decode(&payload, &raw).unwrap();
+    if failure != CaptureFailure::None {
+        if failure == CaptureFailure::Lost {
+            assert!(matches!(
+                result,
+                Err(IcSnapshotCaptureExecutionError::Provider(
+                    IcMutationProviderError::Indeterminate
+                ))
+            ));
+        } else {
+            let Err(IcSnapshotCaptureExecutionError::Association {
+                acknowledgement, ..
+            }) = result
+            else {
+                panic!("retained malformed capture acknowledgement")
+            };
+            assert_eq!(acknowledgement.input().reply, [] as [u8; 0]);
+        }
+        assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+        assert!(!journal.record().unwrap().view().applied);
+        let original = fs::read(journal.path()).unwrap();
+        drop(journal);
+        assert!(
+            stage
+                .checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
+                .is_err()
+        );
+        drop(stage);
+        let (stage, progress) =
+            ExecutionStageGuard::resume(layout, &workflow.digest(), 0, &binding.digest()).unwrap();
+        assert_eq!(progress.attempts.mutations_used, 1);
+        assert_eq!(progress.applied_operations, 0);
+        assert!(
+            capture_snapshot(
+                &stage,
+                0,
+                &payload,
+                &mut provider,
+                |_| -> Result<(), Infallible> {
+                    panic!("pending capture never reaches fresh admission")
+                }
+            )
+            .is_err()
+        );
+        assert_eq!(
+            fs::read(stage.layout().unwrap().root().join("attempt-0.json")).unwrap(),
+            original
+        );
+        assert_eq!(
+            stage.layout().unwrap().restore_references().unwrap(),
+            references
+        );
+        assert_eq!(provider.backend.calls, calls + 1);
+        assert!(!layout.root().join("execution-stage-7").exists());
+        assert!(!layout.root().join("execution-stage-9").exists());
+        return None;
+    }
+    let acknowledgement = result.unwrap();
+    let reply = IcSnapshotReply::decode(&payload, &acknowledgement.input().reply).unwrap();
     // The isolated fixture owns this exact successful ingress; no list cardinality
     // or discarded reply is used to infer original attribution.
     record_applied(&mut journal, &reply.digest());
     drop(journal);
-    (
+    Some((
         reply.snapshots()[0].clone(),
         stage.checkpoint(reply.digest()).unwrap(),
-    )
+    ))
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "keep the isolated ingress, spending and retained-byte chronology in one qualification trace"
-)]
-pub(crate) fn run(failure: ReadFailure) {
+fn prepare() -> (Backend, BackupLayoutGuard, ExecutionWorkflowRecord) {
     let mut backend = Backend::new();
-    // Actual fixture-specific stopped/no-external-effects admission and separately
-    // accounted lifecycle/status calls; this is never a generic application default.
+    // Actual stopped/no-external-effects admission and separately accounted
+    // lifecycle/status calls are private qualification for this isolated application.
     assert!(
         lifecycle(
             &mut backend,
@@ -155,7 +281,23 @@ pub(crate) fn run(failure: ReadFailure) {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = workflow(&backend);
     create_execution_workflow(&layout, &workflow).unwrap();
-    let (snapshot, capture) = capture(&mut backend, &layout, &workflow);
+    (backend, layout, workflow)
+}
+
+pub(crate) fn capture_failure(failure: CaptureFailure) {
+    assert!(failure != CaptureFailure::None);
+    let (mut backend, layout, workflow) = prepare();
+    assert!(capture(&mut backend, &layout, &workflow, failure).is_none());
+}
+
+#[expect(
+    clippy::too_many_lines,
+    reason = "keep the isolated ingress, spending and retained-byte chronology in one qualification trace"
+)]
+pub(crate) fn run(failure: ReadFailure) {
+    let (mut backend, layout, workflow) = prepare();
+    let (snapshot, capture) =
+        capture(&mut backend, &layout, &workflow, CaptureFailure::None).unwrap();
     let metadata_request =
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata_plan = backend.plan(&metadata_request.digest(), 7);

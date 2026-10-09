@@ -53,7 +53,7 @@ run_case() {
 create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
-    cp "$ROOT/make/tools.mk" "$FIXTURE/make/"
+    cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$FIXTURE/make/"
     cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"

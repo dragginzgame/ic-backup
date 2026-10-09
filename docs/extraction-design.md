@@ -610,6 +610,17 @@ provider or automatic receipt/aggregate transfer proof is introduced. The real
 PocketIC driver uses this public boundary before explicit success recording; see
 [the contract](contracts/ic-snapshot-transfer-read-port.json).
 
+`workflow::ic_snapshot_capture::capture_snapshot` now coordinates one new original
+capture under a retained execution stage. Reuse exact management payload binding,
+complete-plan durable reservation and the existing single-call mutation port.
+Mandatory integration admission qualifies fresh control, capture consistency,
+quiescence/fence obligations and never-dispatched custody while the journal stays
+locked. Successful passive acknowledgements remain pending; existing explicit
+receipt admission alone records qualified outcomes. The isolated Testkit driver
+connects this capture step to metadata/data reads and durable artifact publication,
+and blocks recapture or successor stages after lost/malformed capture replies.
+No default Agent provider or complete application runner follows.
+
 `workflow::ic_snapshot_transfer_read::read_snapshot` now coordinates one new
 planned read under an exact retained stage. It rejects mismatched original payloads
 before spending, opens the existing journal, durably reserves through canonical

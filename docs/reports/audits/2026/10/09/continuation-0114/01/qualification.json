@@ -1,0 +1,866 @@
+{
+   "base" : "2939a41805ce5c2fa3913162b4028bc970d3d85f",
+   "checks" : [
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --lib workflow::ic_snapshot_capture",
+         "path" : "target/continuation-0114/capture-unit.log",
+         "result" : "pass",
+         "sha256" : "ddfe876dd169f654723f603692d76474e1220805c5f7421c8d4b64f85ebfbc2c"
+      },
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --lib workflow::",
+         "path" : "target/continuation-0114/workflow-regression.log",
+         "result" : "pass",
+         "sha256" : "ecdcff906be92522a5556474d1bb55a0380f3a6d7ad6f70c2d2f4f1bd207da03"
+      },
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --lib policy::ic_mutation",
+         "path" : "target/continuation-0114/mutation-policy.log",
+         "result" : "pass",
+         "sha256" : "1ceed7d8aa9eb6cc64375b6edf5f2404e78f5de12b3bfc3da7b623d54e474379"
+      },
+      {
+         "command" : "cargo clippy --offline --locked -p ic-backup --lib --tests -- -D warnings",
+         "path" : "target/continuation-0114/clippy.log",
+         "result" : "pass",
+         "sha256" : "7b31b4bb989000b3ba4514379408585d3f68ea2aaa148e87f8afc16ba953feff"
+      },
+      {
+         "command" : "cargo clippy --offline --locked -p ic-backup-agent --lib -- -D warnings",
+         "path" : "target/continuation-0114/agent-clippy.log",
+         "result" : "pass",
+         "sha256" : "7dfbf2a54bb77685f7881b225bc1e77b2cfa02430be3a2ac3c2067c08991446c"
+      },
+      {
+         "command" : "RUSTDOCFLAGS=\"-D warnings\" cargo doc --offline --locked -p ic-backup --no-deps",
+         "path" : "target/continuation-0114/rustdoc.log",
+         "result" : "pass",
+         "sha256" : "58852d2623c0bc91bd292635dce11f981d70ea77903c83b8d084263060cc5a9b"
+      },
+      {
+         "command" : "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+         "path" : "target/continuation-0114/msrv-consumers.log",
+         "result" : "pass",
+         "sha256" : "b2cafb9107ae55957b4cfb9e7f1bf29435fb535dcffe642b557850a0436588bf"
+      },
+      {
+         "command" : "CARGO_TARGET_DIR=$PWD/target RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked --manifest-path target/msrv-consumers.tMkttk/ic-backup/Cargo.toml",
+         "path" : "target/continuation-0114/msrv-api.log",
+         "result" : "pass",
+         "sha256" : "2b9c1ea3e98189cdbb03f83ea823d19abdbfc33700b4a06a5eaa5f2a2864cacf"
+      },
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_ -- --test-threads=1 (local loopback enabled)",
+         "path" : "target/continuation-0114/simulator.log",
+         "result" : "pass",
+         "sha256" : "49fea8c9e7dd4d9adc59a1d78f4920433865a11860da675e7510f3bb3775c302"
+      },
+      {
+         "command" : "isolated clean Shared 0.2.6: scripts/distribution/refresh-consumer.sh --consumer /home/adam/projects/ic-backup --add-file make/rust-format.mk",
+         "path" : "target/continuation-0114/shared-refresh.log",
+         "result" : "pass",
+         "sha256" : "3ee0ebeba582524f37c42e36e7d036c2fc956557fb52ce2d3f2df4fdb81a79a4"
+      },
+      {
+         "command" : "isolated committed Shared 0.2.6: bash scripts/ci/test-make-format.sh",
+         "path" : "target/continuation-0114/shared-format.log",
+         "result" : "pass",
+         "sha256" : "b2803b4371bd67edda8271775f342b5083f59686b6302ae14a81fb783ba3b8d6"
+      },
+      {
+         "command" : "isolated committed Shared 0.2.6: bash scripts/ci/test-git-hooks.sh",
+         "path" : "target/continuation-0114/shared-hooks.log",
+         "result" : "pass",
+         "sha256" : "21062548b1b9aedd3c22b28dc5cd02347d9289f8056a2765a8191456a492d0ba"
+      },
+      {
+         "command" : "bash scripts/hooks/test-hooks.sh",
+         "path" : "target/continuation-0114/consumer-hooks.log",
+         "result" : "pass",
+         "sha256" : "355782b650c6881d7532857f5a48d88303664049ca0d6ec9c7b092888a232c9f"
+      },
+      {
+         "command" : "bash scripts/ci/test-testkit-commands.sh",
+         "path" : "target/continuation-0114/testkit-routing.log",
+         "result" : "pass",
+         "sha256" : "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901"
+      },
+      {
+         "command" : "bash scripts/release/test-release.sh",
+         "path" : "target/continuation-0114/release-adapter.log",
+         "result" : "pass",
+         "sha256" : "0bcf020985ffd53209c10275c967da70be68887079dcaafd28397cd3ff568481"
+      },
+      {
+         "command" : "make shared-tooling-check dependency-pins-check fmt-check shell-check",
+         "path" : "target/continuation-0114/tools.log",
+         "result" : "pass",
+         "sha256" : "bc18a7197be4034ad82bb45ded82d100d70450bb35e4ae01f62bc2d05c17f4c3"
+      },
+      {
+         "command" : "make testkit-server-check",
+         "path" : "target/continuation-0114/testkit.log",
+         "result" : "pass",
+         "sha256" : "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+      },
+      {
+         "command" : "make check-doc-links",
+         "path" : "target/continuation-0114/doc-links.log",
+         "result" : "pass",
+         "sha256" : "ba7292ddac7ab58dd6cd4ef604e35c2f26d5719a10c03481be65a2dc4848fa50"
+      },
+      {
+         "command" : "first two incoming Cargo input hashes: sha256sum -c",
+         "path" : "target/continuation-0114/inputs.log",
+         "result" : "pass",
+         "sha256" : "467af0e590e594a59a24ef6df1afffc853aa2aff6097d256bc8bc69935e76b32"
+      },
+      {
+         "command" : "jq admission of v1 capture-step contract",
+         "path" : "target/continuation-0114/contract.log",
+         "result" : "pass",
+         "sha256" : "a17fcf0a2f50e2d495e4f90ce263410edc183add6c62699a2facbccf60410f74"
+      },
+      {
+         "command" : "git diff --check",
+         "path" : "target/continuation-0114/whitespace.log",
+         "result" : "pass",
+         "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+   ],
+   "description" : {
+      "path" : "target/continuation-0114/github-repository.json",
+      "sha256" : "5a3202f49caf9de14a3727ded6a599b0c98dd7d90025edc0bde8e3abe75d68b2"
+   },
+   "draft" : "0.11.4",
+   "graph" : {
+      "path" : "target/continuation-0114/graph.json",
+      "sha256" : "21ee4dc3999c8467ed10ac1ecdfbc97d033cb98486a40ed0e9737d8b2f620387"
+   },
+   "independent_consumer" : {
+      "lock" : {
+         "path" : "target/msrv-consumers.tMkttk/ic-backup/Cargo.lock",
+         "sha256" : "dff88f91d3a063a00f36ddcf0160736e62416d6cc2edc903183355e98b9f79f1"
+      },
+      "root" : "target/msrv-consumers.tMkttk/ic-backup",
+      "source" : {
+         "path" : "target/msrv-consumers.tMkttk/ic-backup/src/main.rs",
+         "sha256" : "1c4c967b78d64604b34291abbb57354460ec99c739707346f787ebd3f312bc67"
+      }
+   },
+   "inputs" : {
+      "initial" : {
+         "path" : "target/continuation-0114/incoming.sha256",
+         "sha256" : "3612947cd4005dfa4d2510a8ba6ae6568bdf80ac050da8280d668d69d40ce1ca"
+      },
+      "lock" : {
+         "path" : "Cargo.lock",
+         "sha256" : "3a8431b57b19681d59fc7a0631ad78524241631a81201baaefc17851ce1bb2b4"
+      },
+      "manifest" : {
+         "path" : "Cargo.toml",
+         "sha256" : "8eb70ad00996c957692965e0d6efdf88b11081aad3164b1d7d4eaba056624d78"
+      },
+      "preserved" : true
+   },
+   "issue" : {
+      "after" : {
+         "path" : "target/continuation-0114/issue29-after.json",
+         "sha256" : "af6e118c4f18fc960ac86d3520fb1bc247759ba53684b2bcd20dc02a005864a9"
+      },
+      "before" : {
+         "path" : "target/continuation-0114/issue29-before.json",
+         "sha256" : "560905e5a35f963d19ea3309289f720150ada4204008bbc4c95ee758b2d36ee6"
+      },
+      "number" : 29,
+      "state" : "OPEN"
+   },
+   "kind" : "focused_uncommitted_consumer_qualification",
+   "limitations" : [
+      "No default Agent provider or complete backup/restore runner",
+      "Fresh authentication/control/consistency/custody and qualified outcome recording remain integration-owned",
+      "No retry/refund/automatic uncertainty or terminal/fence/reference release",
+      "No full workspace/CI/release gate or native candidate qualification",
+      "No root Git writes, release/version transaction, package publication, production IC effects or sibling edits"
+   ],
+   "package_version" : "0.11.3",
+   "packages" : [
+      {
+         "name" : "ic-agent",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.49.2"
+      },
+      {
+         "name" : "ic-backup",
+         "source" : null,
+         "version" : "0.11.3"
+      },
+      {
+         "name" : "ic-backup-agent",
+         "source" : null,
+         "version" : "0.11.3"
+      },
+      {
+         "name" : "ic-host-artifacts",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-host-fs",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-host-process",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-host-tools",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-management-canister-types",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.8.0"
+      },
+      {
+         "name" : "ic-management-canister-types",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.11.0"
+      },
+      {
+         "name" : "ic-metrics",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.3.2"
+      },
+      {
+         "name" : "ic-testkit",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.27.1"
+      },
+      {
+         "name" : "pocket-ic",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "16.1.0"
+      }
+   ],
+   "released_ci" : {
+      "candidate" : "uncommitted; no remote result",
+      "evidence" : {
+         "path" : "target/continuation-0114/release-ci.json",
+         "sha256" : "a3783bb2f605c761d82c953cd67094e8da403768e79692262060947ee8672f54"
+      },
+      "linux" : "pass",
+      "macos" : "queued"
+   },
+   "removed_rust_symbols" : [],
+   "retired_make_recipes" : [
+      "format-tools-check",
+      "fmt",
+      "fmt-check"
+   ],
+   "shared" : {
+      "changed_files" : [
+         "docs/consuming-snapshots.md",
+         "docs/releases.md",
+         "rules/git-hooks.md",
+         "make/rust-format.mk"
+      ],
+      "latest_observation" : {
+         "path" : "target/continuation-0114/shared-main-final.json",
+         "sha256" : "41080b7682573f1a669f02d0fda6818e220f1efe9f94f7a4cd50b91592902cc2"
+      },
+      "previous" : {
+         "path" : "target/continuation-0114/previous.snapshot",
+         "sha256" : "45e989c4fbcae1ac103a568592b4cce61c8d5d1838d91352191955913d0e974f"
+      },
+      "release_include" : "Not selected: preserve consumer post-run resume receipt/tag/saved-validation checks; specialized direct runner routing is supported",
+      "revision" : "ce13a5314916891fd239d9b199b4a91b04775054",
+      "selected_files" : [
+         {
+            "executable" : false,
+            "path" : "docs/verification-helpers.md",
+            "sha256" : "8ea130d767dd83ea491f8321b34b6498538220a99b1685ccbec0cbbef0522b48"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/check-documentation-links.pl",
+            "sha256" : "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-documentation-links.pl",
+            "sha256" : "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-file-digests.sh",
+            "sha256" : "c80d7ed47d1bbb46fdd2b437fc1a3293738ac51c2f6c89e456bdb68c39ef2443"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/dependency-pinning.md",
+            "sha256" : "4692d760ea97861b52c183bb69e24c929d9baf7c292795c61d65ea3166368787"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/README.md",
+            "sha256" : "faa9a62257ecdfd6532ac2225b3fd053012dfe9c35b8bc2ddc95288d8626a518"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/code-hygiene.md",
+            "sha256" : "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/flow-convergence-and-duplication.md",
+            "sha256" : "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/complexity-and-technical-debt.md",
+            "sha256" : "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/module-surface-hardening.md",
+            "sha256" : "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/module-cleanup.md",
+            "sha256" : "8f415bcb0e97fcc0e27519e727e7aefae94686e6e5e3619d24e3df3ace5d7708"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/provenance.md",
+            "sha256" : "1a0d1d6f2a87a0d77378fdda605f5700cc7e2ca8c8dfac79418248da30b7e657"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/ic-tools.md",
+            "sha256" : "67cc50a0c95ad7d9d50b4a50ec2969ce3455c7fdefc4a4a61e00f3a68a7d501c"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/local-setup.md",
+            "sha256" : "077c98e506e8b3998b3b9e668b656c60a502610df06a513e4241bf93bc01b790"
+         },
+         {
+            "executable" : false,
+            "path" : "ci/tool-versions.env",
+            "sha256" : "82892e25292fe47c26035a0031aa4ad1996fcf181732163e75039bd657f2f84b"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/check-dependency-pins.sh",
+            "sha256" : "de68acd7ba25355c73fa3e9a32cbde5525debf081862c1f1a52eccb4a66c48de"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/ci/dependency-pins.jq",
+            "sha256" : "3d56ca1b0c5952b9534ece61b6754ca39e6ec1980d929f09de3dbd967a0c4977"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/verify-evidence-checksums.sh",
+            "sha256" : "ab2202f89a077373fffac29f57527b88ccc65998f5c85c60a32081edd8338150"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/dev/install-host-tools.sh",
+            "sha256" : "74134f6567746b2071ecfca28829b0ea4da69ed207b958b38fd181e722a3aea9"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/dev/install-ic-tools.sh",
+            "sha256" : "f41ba134d2838df094d373c70ba254f6bc2f1184914eee06119062708f2d6797"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-dependency-pins.sh",
+            "sha256" : "4c2577bd91936d542c0f95ec27e8f554e2f1ac190bd2a7e8904859081b219c1c"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-host-tools.sh",
+            "sha256" : "ab60367040118f0e26a1ae7daf8e29832a9e9887fc6e9039dc5b0b41c80bbd1b"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-ic-tools.sh",
+            "sha256" : "ea7a37717a8200e29a01358a02a03fce70f3967e8c2165d0378df3351176d3c0"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-evidence-checksums.sh",
+            "sha256" : "b8468beabae2a39faed9d776be101cd08e5378d39b711b82cff0c8fc0d573ad2"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/principles/README.md",
+            "sha256" : "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/principles/decision-artifact-discipline.md",
+            "sha256" : "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/principles/reviewable-changes.md",
+            "sha256" : "ee68649246bad21f0f28df4ea3809d8e2c7bcf1cd2a3d68e44684b855badc1c2"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/principles/rust-code-hygiene.md",
+            "sha256" : "27a04aeee753252b310fef363856edf83577337bfaea1e63a50017460eddde59"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/principles/simplicity-and-maintainability.md",
+            "sha256" : "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/consuming-snapshots.md",
+            "sha256" : "c504bfccb87ae2bbd286c9182076ff82d86ea274126edb97cfdb108e5cf98931"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/supported-hosts.md",
+            "sha256" : "60645a72a0d0e8dbe7bb66b67fd16b5bc01a4445b8876f1136ef2ef0e9f35eec"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/verify-file-checksum.sh",
+            "sha256" : "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/verify-shared-tooling-snapshot.sh",
+            "sha256" : "ba5c6b76d15bec4ac226f1ab0732d5087446152d64107993c52642a68d2ff464"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/run-validation-targets.sh",
+            "sha256" : "49ec78ab63a587a2f74f0f7da3e06d9f9942f831129b9201cba5bcd0698548fe"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-validation-target-runner.sh",
+            "sha256" : "94e2c276b8a365fb0dd492ebada199de96c8e40737faad9b47a996d3af22aa22"
+         },
+         {
+            "executable" : false,
+            "path" : "DRAGGINZGAME.md",
+            "sha256" : "0d472a74369e6aa772d585305e19b398fb86f0ef9698f1564356ddc11c60e0b6"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/changelogs.md",
+            "sha256" : "b5a6e8fb723a861b722834675e27b4b16f3d296112622c1b40cdc8714f575404"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/releases.md",
+            "sha256" : "825e0f93b3d6e3a135c43b535b1619980defb82d27d75f366a3cb991e47a04e3"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/run-release.sh",
+            "sha256" : "fc689ff5d636be1049a527f6cafa74a768005211dcbecb074b8b327d8e6bab04"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/next-release-version.sh",
+            "sha256" : "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/ci/finalize-release-changelog.awk",
+            "sha256" : "e7f4c82566858b89b50c5c2f929097bdde85345a2c0c1bf553bb1170cc4f5960"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-release-runner.sh",
+            "sha256" : "027575ae9be221c3ef9e903239fbfdb40aa5192c2f5e08c157a5d15dc3cd52ae"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/cargo-dependencies.md",
+            "sha256" : "a7d6612e6c9cfea5f8e920f82109094851876d0dfc117ecc454f966cb50d7c66"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/git-hooks.md",
+            "sha256" : "68f325537b928729a8b8f973538588c5332fa50b1a52aec17a64a4e334f24559"
+         },
+         {
+            "executable" : true,
+            "path" : ".githooks/pre-commit",
+            "sha256" : "fbee8c292a242ec71babca5eebc30613c82005b6e9e80c850a1ebca1112eaea6"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/dev/install-git-hooks.sh",
+            "sha256" : "c1fcf72754976d3d2e5203226e97ef5f50eff4b5c0dabeb2a9b00cfcf0326645"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/agent-maintenance.md",
+            "sha256" : "d0e3e07844d06f46ffe01d406ffb29624b31079c1402b899262aabb718cbb436"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/rewrite-local-lock-versions.pl",
+            "sha256" : "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-local-lock-versions.pl",
+            "sha256" : "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/check-formatting-hooks.sh",
+            "sha256" : "dd44fb01214ef771bc5be9759a6441dfa45f1249fd3d6eccfcefd0dea5391b75"
+         },
+         {
+            "executable" : false,
+            "path" : "docs/tag-maintenance.md",
+            "sha256" : "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/read-cargo-workspace-version.sh",
+            "sha256" : "40f31a19d6115411ebffe7c26e3ed30b8af7eead10dd4830de8d5a9312291222"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-cargo-metadata.sh",
+            "sha256" : "03d7f0c880cfd5d44e55c8e2453ed49d623f497fdcf54ce6f9a7400e1d4f88ae"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/check-format-tools.sh",
+            "sha256" : "a52db278800a9f02d85a6b8a780a9b1eed860c49d5442cef9db1f7f9d7ddee0a"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-format-tools.sh",
+            "sha256" : "3a41e1601ca23f14137dca33005da034b34a5143e960fd3e59605a3fc18d2071"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/distribution/governance-files.txt",
+            "sha256" : "431f4a40037fc341bec1d53416b440b3bcd4b6af5cd45210e390c82abb08b475"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/rust-workspaces.md",
+            "sha256" : "144f811057e2c5e9692175da463e3fd6be716470a22c48a6bf56f9aabb1f3940"
+         },
+         {
+            "executable" : false,
+            "path" : "make/tools.mk",
+            "sha256" : "49c3ea9db43f37ea293be61a1031c61bdf00745ae58bc66b76afcea07f9a2128"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/dev/cloc.sh",
+            "sha256" : "8a14c80cec16a2cb07454c4e0f741150bc8385cd51ebc720a84ee3af1cc63043"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/check-make-execution.sh",
+            "sha256" : "c0d4bed8f2b876f5ae0a61f6c56e4c71736ab9888f092ab6c67d9f5ba142543d"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-tool-commands.sh",
+            "sha256" : "65d35e627f2b83c5b17fa2f198376139ad826aa67199fbd5ab1b6c6a31d519fb"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-cloc.sh",
+            "sha256" : "5c984a6fea79f3c275b7c846bacf0fe3767ba2733581648fd77083a621be3005"
+         },
+         {
+            "executable" : false,
+            "path" : "audits/ic-canister-applications.md",
+            "sha256" : "94a934651d5cb0c6f77fa429df277856dbda4c1a7441b2b8563e678c416258f6"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/dev/install-rust-tools.sh",
+            "sha256" : "83e60382356dcf245349b41658b36560bc17a14b1c3be8abc8c6d7101f6376ac"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-rust-tools.sh",
+            "sha256" : "ffbcacc284996bf0b0a5ffae87efabd10a9d29552089225b927c9a97048a1ccc"
+         },
+         {
+            "executable" : false,
+            "path" : "rules/contributions.md",
+            "sha256" : "05838a36f21bb4299617ae8965687791062c94d768181f5f97676cc577382153"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/ci/ic-tool-pins.awk",
+            "sha256" : "775da89f655a3781059f433f80470ee6db9675e08942a805c111614183322fe1"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/ci/release-pr.sh",
+            "sha256" : "fc40c8ad1c4ab850fda0e60b8cb0b3201724d020966e4d7e5d07620781f5e814"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-release-pr.sh",
+            "sha256" : "e41f25a660f42cd9b8ffd96e411657286f1a6f8e6a56d95b003eacd6e0a5e859"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/archive-evidence.sh",
+            "sha256" : "5be336cb3e8045b2d2d536542a94944b376ee812b03f786a90b9d962ab697f13"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-evidence-archive.sh",
+            "sha256" : "a9f7cbe3a60c669932f41b718a55ef33b5a4cdd6f685e9a3e473c03d6204e047"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/test-tool-evidence.sh",
+            "sha256" : "90e6b75e1bd3e3d7bc68b18f727379981e6811aa0a1b061e75d32c4699b13632"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/select-tool-evidence.sh",
+            "sha256" : "d7feda634703b4e0acb9e5406deccca2b81b821dfa738b714708b82a2c2e9bc3"
+         },
+         {
+            "executable" : false,
+            "path" : ".github/actions/retain-failure-evidence/action.yml",
+            "sha256" : "020b67bcb75d35f5c12392b8c9ec3d7ba31f3a8e07c8318c35643be1ddf72d40"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/README.md",
+            "sha256" : "7c63c133b3b35bc7648f0269271a2cbf5f36916e9ab79ca89185e2c34e017140"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/cargo-machete.md",
+            "sha256" : "eb2419a5762a3cb02f25811d93becb6b18ca520df0bc3448ea35dfa187a034b4"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/msrv.md",
+            "sha256" : "b20211ec1c39ef262c8ab266b207db43c44cd1474acde18297586590c7885810"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/rust-toolchain.md",
+            "sha256" : "ed8d04d20a6e5bd77aece468a5f44f7d9e1c8a52411431d24e052e20c39038f3"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/ci-health.md",
+            "sha256" : "4f48ed5bec0cb8310884e67912d1ab7cf2701c0987aa1dc77e75b57f0493edfb"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/snapshot-drift.md",
+            "sha256" : "32542f9879fcb5f2fa0f32ec0c71afb53380f1b365b900b24f5a736e776e1945"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/dependency-security.md",
+            "sha256" : "5057273d73e5bae55b9cebb0c8cd606afcd9a413a0c8cf89c3a634ca7b63aa4a"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/code-audit.md",
+            "sha256" : "5d0c7d274dd9da1e5064287c7bd89c7baec9b0a9ba5a8f1a44e918bb60a28943"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/tooling-duplication.md",
+            "sha256" : "661ff5d16c8a41c597d14550294901cbfcc38b7e5e5931646a6739d0dce2ecd5"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/maintenance-prompt.md",
+            "sha256" : "fba891e27166497efcc5e57e0c28146c3e22d8f340d97926d0fbe4a3a269c831"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/local-schedule.md",
+            "sha256" : "f99365d4045c620ae186c06a86a8f898a534d2ad9d8d01d783706c192c7813e3"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/systemd/shared-tooling-maintenance.service",
+            "sha256" : "d26462d2d6e9c1e991a6f1f45f2a12ce919a29eab987665438af530f51b6fee5"
+         },
+         {
+            "executable" : false,
+            "path" : "tasks/systemd/shared-tooling-maintenance.timer",
+            "sha256" : "f7b95816164980993403d2d6eae13336db1c476c58217c8e8d356e6d01fe9b27"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/dev/run-maintenance.sh",
+            "sha256" : "dfccb5fa0194b343d140512c892a31eac902cb1a489e641feae3c18e1cf70a1c"
+         },
+         {
+            "executable" : false,
+            "path" : "scripts/ci/test-maintenance-task.sh",
+            "sha256" : "7aa8b26a081399ac63dc823479936e5f663aef40fec91a9d5dae978956341e37"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/check-release-source.sh",
+            "sha256" : "a3af7084956384262842be33100f91a22fdd82b0f91b6091a00e90f8726f67fe"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/install-shellcheck.sh",
+            "sha256" : "c133d81786de40433b64fbc497db763151705d52e910607e768b8f986fc20548"
+         },
+         {
+            "executable" : true,
+            "path" : "scripts/ci/install-ci-tool.sh",
+            "sha256" : "e15dbf4612dddffa925e57e878db8bcbd7765c7b350ebbe41635e3df4d38bee5"
+         },
+         {
+            "executable" : false,
+            "path" : "make/rust-format.mk",
+            "sha256" : "744ee908b1e5c7b5f709ce8854187015abfc1673305f89865bce37ab3db752c9"
+         }
+      ],
+      "snapshot" : {
+         "path" : ".shared-tooling.snapshot",
+         "sha256" : "362845865e419a5f94e13009151e078bf24429b46ee1058464309f205a32b23d"
+      },
+      "source" : "/tmp/ic-backup-shared-026.a1ifES/source",
+      "version" : "0.2.6"
+   },
+   "simulator" : {
+      "cases" : 5,
+      "cli" : {
+         "path" : ".tools/rust/ic-testkit-0.27.1-bin-ic-testkit-server-release/installed/bin/ic-testkit-server",
+         "sha256" : "150bcfb453fdb68e80d0820d91dce86cd1eb0bb58737ce158e2ecc4569e82649"
+      },
+      "scope" : "Actual isolated stopped Testkit capture-to-download and lost/malformed capture/data retention; no production or arbitrary application qualification",
+      "server" : {
+         "path" : ".tools/testkit-server/16.1.0-x86_64-linux/pocket-ic",
+         "sha256" : "b44e1eccd66e02328146b3e209e3403e3a3428a25d25555aca2f67500e5ae9db"
+      }
+   },
+   "sources" : [
+      {
+         "path" : ".shared-tooling.snapshot",
+         "sha256" : "362845865e419a5f94e13009151e078bf24429b46ee1058464309f205a32b23d"
+      },
+      {
+         "path" : "AGENTS.md",
+         "sha256" : "f1409b90ef8c6d4cb8811660b860b65a3155000096ab0a0839acb53cb7ec5680"
+      },
+      {
+         "path" : "CHANGELOG.md",
+         "sha256" : "a8f156a4e4ff8c6e347ea0b44b5de8b194abb663dd5b366abc70c907f3600e73"
+      },
+      {
+         "path" : "Makefile",
+         "sha256" : "4331ec65820818bd8f06362f989490ddd0fcb14395f110f00f06fca4a6b28f00"
+      },
+      {
+         "path" : "README.md",
+         "sha256" : "b1fc37e3009b5936f27cf83372645eebd6594212ab7cdc932a2613cf23be9c78"
+      },
+      {
+         "path" : "crates/ic-backup/src/workflow/ic_snapshot_capture/mod.rs",
+         "sha256" : "9f3a06d13136bcc7d4600225456abdadc74bef2bbe9a36d1cc006451a4940cb1"
+      },
+      {
+         "path" : "crates/ic-backup/src/workflow/ic_snapshot_capture/tests/mod.rs",
+         "sha256" : "87f7017e3848a0f60a41e3ff4ee52d16477936a9c3f1c372dbca43c514086ce5"
+      },
+      {
+         "path" : "crates/ic-backup/src/workflow/mod.rs",
+         "sha256" : "3736c5f3cff9879c3eaae6e3c395b228a5c39aa15ce4c3379717004ce9673cf0"
+      },
+      {
+         "path" : "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+         "sha256" : "3116eee097322fde1782a6dff2ef81156ce38a900153068bedd98c04e889faa4"
+      },
+      {
+         "path" : "crates/ic-backup/tests/pocketic_snapshot.rs",
+         "sha256" : "a76e20446d011b0c5a294d208f627c46a6c759cd15e9387c66bbc0e4f2235736"
+      },
+      {
+         "path" : "docs/consuming-snapshots.md",
+         "sha256" : "c504bfccb87ae2bbd286c9182076ff82d86ea274126edb97cfdb108e5cf98931"
+      },
+      {
+         "path" : "docs/contracts/ic-mutation-port.json",
+         "sha256" : "6aa01e4e6d13a2787532cf16e76bfb8c4bd1c420a0979b693753c33b7950d07a"
+      },
+      {
+         "path" : "docs/development.md",
+         "sha256" : "ec29f8d979051804f42297bf583481579d0d43120131ef6627d57cb0b803e248"
+      },
+      {
+         "path" : "docs/extraction-boundary.md",
+         "sha256" : "acf17c2728f11a70ef3a31ec74501f3459eb03506a55500bf4899c1f145e1e4a"
+      },
+      {
+         "path" : "docs/extraction-design.md",
+         "sha256" : "6ee4238ef5bf1fc57baf728fdbac5485c37d445ddf41912acb1996018f819b7d"
+      },
+      {
+         "path" : "docs/releases.md",
+         "sha256" : "825e0f93b3d6e3a135c43b535b1619980defb82d27d75f366a3cb991e47a04e3"
+      },
+      {
+         "path" : "docs/reports/audits/2026/10/09/continuation-0114/01/report.md",
+         "sha256" : "3047ca245fbba84143c7acdc2dba03d002131bbf40851c5524fd923b689d5f9b"
+      },
+      {
+         "path" : "docs/shared-tooling.md",
+         "sha256" : "9ee745df5a6e07880e26435beb6853352c34a6b4d627bace9854015c5d80d4db"
+      },
+      {
+         "path" : "docs/status/current.md",
+         "sha256" : "47252be41e47866db640b0a99d57d0539d8b3465e37843e0ba2dfd17f6794e75"
+      },
+      {
+         "path" : "make/rust-format.mk",
+         "sha256" : "744ee908b1e5c7b5f709ce8854187015abfc1673305f89865bce37ab3db752c9"
+      },
+      {
+         "path" : "rules/git-hooks.md",
+         "sha256" : "68f325537b928729a8b8f973538588c5332fa50b1a52aec17a64a4e334f24559"
+      },
+      {
+         "path" : "scripts/ci/test-testkit-commands.sh",
+         "sha256" : "632e7228dae7f3bd6425180cfa51963ba5fe2eb346d75635ffed9424a8cff57b"
+      },
+      {
+         "path" : "scripts/hooks/test-hooks.sh",
+         "sha256" : "1254c9c9768e4ed81469cffbd57ebccb002c396e299f09f95380f02f116a075e"
+      },
+      {
+         "path" : "scripts/release/test-release.sh",
+         "sha256" : "2c5fc01aa61b7b81534ed9e8946cafdd94584148f21d5b44228d94d2a937e1c8"
+      }
+   ],
+   "version" : 1
+}

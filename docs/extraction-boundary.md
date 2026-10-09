@@ -2456,6 +2456,37 @@ The fixture owns explicit simulator setup, single-ingress custody and its
 application's stopped/no-external-effects admission. This is not generic application
 qualification, Canic adoption, full restore or terminal/fence/reference release.
 
+### Provider-driven snapshot capture step
+
+`workflow::ic_snapshot_capture::capture_snapshot` accepts only the exact original
+`TakeCanisterSnapshot` payload under a retained execution stage. Canonical target/
+wire binding rejects before spending. Open the existing original journal, never
+create it; complete original-plan progress owns the durable reservation. Hold the
+selected journal through mandatory fallible fresh integration admission, one
+`IcMutationProvider::submit_mutation` invocation and existing bounded passive
+acknowledgement association. Recheck stage/ancestors before dispatch and after
+the reply. Fresh actual control, capture consistency, quiescence/fence obligations,
+authentication and never-dispatched command custody remain integration-owned.
+Remote preflight has its own prior accounting; no default provider or lane exists.
+
+Success stays pending until an independently qualified integration explicitly
+records a receipt. Every post-reservation failure retains original consumption;
+association and post-reply errors retain the bounded returned acknowledgement.
+Pending/Applied, missing/held originals, changed binding or unfulfilled prerequisites
+cannot invoke the callback/provider again. No new schema, journal, allowance,
+decoder, refund, automatic uncertainty or reference/fence disposition is added.
+Reuse existing 1,024-attempt, 256-ID-byte, 4 KiB argument and 1 MiB raw-reply bounds.
+Sequential checks do not fence noncooperating actors.
+
+The isolated Testkit download driver uses this public step before its explicit
+qualified capture receipt and existing metadata/data read steps. Successful capture
+joins durable artifact publication; lost/malformed capture replies preserve pending
+originals and source references, with no recapture, checkpoint or successor stage.
+These cases qualify the controlled stopped fixture only. Full backup/restore,
+default Agent provider, application admission and terminal/custody/fence/reference
+release remain open in [#29](https://github.com/dragginzgame/ic-backup/issues/29).
+See the [mutation port contract](contracts/ic-mutation-port.json).
+
 ### Provider-driven snapshot transfer read step
 
 `workflow::ic_snapshot_transfer_read::read_snapshot` coordinates exactly one
