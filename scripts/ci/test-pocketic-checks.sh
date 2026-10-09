@@ -31,6 +31,18 @@ TOML
 cp "$fixture/workspace/Cargo.lock" "$fixture/original.lock"
 [[ "$(bash "$alignment" --manifest "$manifest" --pins "$pins")" == "$version" ]]
 cmp "$fixture/original.lock" "$fixture/workspace/Cargo.lock"
+
+# Real offline Cargo must select the same workspace under CDPATH and preserve
+# literal directory bytes, including a leading dash, spaces and a final newline.
+for directory in workspace '-workspace with spaces' $'workspace\n'; do
+    if [[ "$directory" != workspace ]]; then
+        cp -R "$fixture/workspace" "$fixture/$directory"
+    fi
+    selected="$(cd "$fixture" && CDPATH="$fixture" bash "$alignment" \
+        --manifest "$directory/Cargo.toml" --pins "$pins")"
+    [[ "$selected" == "$version" ]]
+    cmp "$fixture/original.lock" "$fixture/$directory/Cargo.lock"
+done
 expect_failure() {
     if "$@" > "$fixture/refusal.out" 2> "$fixture/refusal.err"; then
         echo 'PocketIC check accepted invalid input' >&2; exit 1
@@ -49,10 +61,10 @@ export POCKETIC_CHECK_FIXTURE="$fixture"
 cat > "$fixture/bin/cargo" <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
+echo called >> "$POCKETIC_CHECK_FIXTURE/cargo-calls"
 [[ "$CARGO_NET_OFFLINE" == true && "$RUSTUP_AUTO_INSTALL" == 0 ]]
 [[ "$PWD" == "$POCKETIC_CHECK_FIXTURE/workspace" ]]
 [[ $# == 7 && "$1" == metadata && "$2" == --locked && "$3" == --offline && "$4" == --format-version && "$5" == 1 && "$6" == --manifest-path && "$7" == "$PWD/Cargo.toml" ]]
-echo called >> "$POCKETIC_CHECK_FIXTURE/cargo-calls"
 cat "$POCKETIC_CHECK_FIXTURE/metadata.json"
 exit "${POCKETIC_CHECK_CARGO_STATUS:-0}"
 SCRIPT
@@ -61,6 +73,24 @@ export PATH="$fixture/bin:$PATH"
 printf '{"version":1,"packages":[{"name":"pocket-ic","version":"%s"}]}\n' "$version" > "$fixture/good.json"
 cp "$fixture/good.json" "$fixture/metadata.json"
 [[ "$(bash "$alignment" --manifest "$manifest" --pins "$pins")" == "$version" ]]
+
+# Losing the selected directory after normalization must stop before Cargo;
+# otherwise metadata could accidentally run in the invoking repository.
+POCKETIC_CHECK_REAL_MKTEMP="$(command -v mktemp)"
+export POCKETIC_CHECK_REAL_MKTEMP
+cat > "$fixture/bin/mktemp" <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+"$POCKETIC_CHECK_REAL_MKTEMP" "$@"
+mv "$POCKETIC_CHECK_FIXTURE/workspace" "$POCKETIC_CHECK_FIXTURE/unavailable"
+SCRIPT
+chmod +x "$fixture/bin/mktemp"
+before="$(wc -l < "$fixture/cargo-calls")"
+expect_failure bash "$alignment" --manifest "$manifest" --pins "$pins"
+[[ "$(wc -l < "$fixture/cargo-calls")" == "$before" ]]
+mv "$fixture/unavailable" "$fixture/workspace"
+rm "$fixture/bin/mktemp"
+
 POCKETIC_CHECK_CARGO_STATUS=7 expect_failure bash "$alignment" --manifest "$manifest" --pins "$pins"
 for transform in \
     '.packages = []' \

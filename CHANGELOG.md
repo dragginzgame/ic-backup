@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.0]
+
+- **Breaking:** Retire this repository's fleet tooling report and its regression suite. Run fleet reports from Shared Tooling; local `make cloc`, setup and offline checks remain supported ([#30](https://github.com/dragginzgame/ic-backup/issues/30)).
+- Adopt Shared Tooling 0.1.34 with optional fleet selections, concise maintenance handoffs and literal offline PocketIC manifest-path selection under `CDPATH` ([shared #83](https://github.com/dragginzgame/shared-tooling/issues/83), [shared #81](https://github.com/dragginzgame/shared-tooling/issues/81), [shared #82](https://github.com/dragginzgame/shared-tooling/issues/82)).
+- Bound HTTP fixture request capture, retain partial bytes and original read failures, and preserve the primary test failure during server cleanup. Explicitly select blocking accepted sockets while retaining the original deadline and transport/accounting assertions ([#31](https://github.com/dragginzgame/ic-backup/issues/31)).
+
 ## [0.9.2] - 2026-10-09
 
 - Adopt Shared Tooling 0.1.32 so unchanged IC tool selections reuse verified installations after pin comments or row order change, preserving original receipts and bundles ([shared #79](https://github.com/dragginzgame/shared-tooling/issues/79)).

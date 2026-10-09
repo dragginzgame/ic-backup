@@ -69,9 +69,11 @@ This library requires only the existing Cargo-sort formatter; the extra set is
 not part of aggregate setup or CI. Both commands use the reviewed shared pins.
 
 `make cloc` reports source/test LOC from this root workspace and excludes Cargo's
-selected build outputs. `make cloc-tooling` inventories sibling CI/tooling using
-Git and cloc without executing sibling commands; `CLOC_PARENT` selects the parent.
-Both commands use the prepared checkout-local tools and perform no installation.
+selected build outputs. Run fleet tooling/LOC reports from Shared Tooling; this
+consumer no longer selects those reporters or their regression suite. The shared
+`cloc-tooling` entry point explains that optional ownership when invoked here.
+Local setup, offline checks and workspace LOC retain their prepared tools and
+perform no implicit installation.
 
 `make dependency-pins-check` checks declarations and tracked lockfiles without
 downloads. The three qualified exact constraints and their required review are

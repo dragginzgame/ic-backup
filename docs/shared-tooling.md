@@ -49,7 +49,32 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 97-file snapshot selects committed Shared Tooling 0.1.32 at
+The current 95-file snapshot selects committed Shared Tooling 0.1.34 at
+`3d33cd250fcae7dbe5cabe44b2abd6b2c91a1822`. Canonical export from a clean
+isolated checkout changes eight retained files. The maintainer explicitly selected
+retirement of the optional fleet reporter and its regression suite under
+[#30](https://github.com/dragginzgame/ic-backup/issues/30): remove both verified
+copies and manifest rows, then refresh the narrowed selection. All remaining
+source bytes and executable modes match; no vendored helper is patched locally.
+
+Run fleet reports from Shared Tooling. Local `make cloc`, host/IC setup and offline
+checks retain their canonical owners. Shared `make cloc-tooling` refuses an absent
+selection with its ownership diagnostic; the consumer no longer advertises or
+schedules the retired reporter. The measured removed surface is 405 code LOC.
+This command change selects the undated 0.10.0 draft from released 0.9.2, without
+changing package versions or release metadata.
+
+Focused command wiring, workspace LOC, archive boundaries and ShellCheck pass on
+Linux. The exact Shared Tooling 0.1.34 CI is queued at review; this local
+consumer candidate has no matching native macOS CI. Preserve the incoming lock's
+Host 0.8.7, Metrics 0.2.16 and Testkit 0.25.3 selections. No new runtime offload,
+dependency reselection or provisioning handoff occurs. The
+[review](reports/audits/2026/10/09/shared-033-issues/01/report.md) separates local
+checks from prior released-source hosted evidence and remaining issue acceptance.
+
+### Prior Shared Tooling 0.1.32 review
+
+The prior 97-file snapshot selects committed Shared Tooling 0.1.32 at
 `635a39a9dd5f8d021fa9c9196b591e00521a7e02`. Canonical export from a clean
 isolated checkout changes eight selected files; the sibling's dirty 0.1.33
 dashboard proposals are excluded. All selected bytes and executable modes match.

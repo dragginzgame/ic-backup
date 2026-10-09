@@ -1,0 +1,416 @@
+{
+  "released_base": "f7868ce3f672da5ea1489172fd97e83699fe4f99",
+  "pending_changelog": "0.10.0",
+  "package_version_unchanged": "0.9.2",
+  "incoming_graph_preserved": {
+    "lock_sha256": "ebeaab29ad8a4652e1d69577555e94f3542037f15824ef6cf9b95f5829414e45",
+    "selected_packages": [
+      {
+        "name": "ic-host-artifacts",
+        "version": "0.8.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "5eadf8350576ab2b514cf8e6fd3bfb354012a555daf89e93477c0d5aa5ba5a34",
+        "dependencies": [
+          "flate2",
+          "sha2 0.10.9",
+          "tar",
+          "wasmparser"
+        ]
+      },
+      {
+        "name": "ic-host-fs",
+        "version": "0.8.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "9a358ba4c23afcac579b948638274bf9b8ccdd7807ff2b9689bb3e0012c1dc63",
+        "dependencies": [
+          "ic-host-artifacts",
+          "rustix"
+        ]
+      },
+      {
+        "name": "ic-host-process",
+        "version": "0.8.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "e7239127602e9e03813de1e598b2f15b9a53e2bfcffa9a568a5d77e8de9e9f4c",
+        "dependencies": [
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "libc",
+          "rustix"
+        ]
+      },
+      {
+        "name": "ic-host-tools",
+        "version": "0.8.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "1c9dde6d41a84fce8894773caced5aef4b72b87307d0506908788b05a4f5e74c",
+        "dependencies": [
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "ic-host-process",
+          "serde",
+          "serde_json"
+        ]
+      },
+      {
+        "name": "ic-metrics",
+        "version": "0.2.16",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "44b447757f583aa5e5145e34bbd6d8b75004614d90ef33544252c9e496178155"
+      },
+      {
+        "name": "ic-testkit",
+        "version": "0.25.3",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "9a98c8de9778c3e9a6ee11f3f0dbdb203826e1f19311656b15b5c5b3c33d111a",
+        "dependencies": [
+          "candid",
+          "fs2",
+          "ic-cdk",
+          "ic-host-artifacts",
+          "ic-host-fs",
+          "ic-host-process",
+          "ic-host-tools",
+          "libc",
+          "pocket-ic",
+          "serde",
+          "serde_json",
+          "sha2 0.10.9",
+          "toml"
+        ]
+      }
+    ]
+  },
+  "previous_graph_evidence": "Host 0.8.6; locked-inputs.json",
+  "shared_revision": "3d33cd250fcae7dbe5cabe44b2abd6b2c91a1822",
+  "selected_files": 95,
+  "removed_code_loc": 405,
+  "removed_symbols": [
+    {
+      "path": "scripts/dev/cloc-tooling.pl",
+      "sha256": "1dd0f35519fc3afafb723eadbb7d2cce1207e4103f41939d3ceec5a6678ebb22",
+      "named_functions": [
+        "usage",
+        "capture",
+        "read_file",
+        "write_file",
+        "safe_path",
+        "is_linked",
+        "in_scope",
+        "load_snapshot"
+      ]
+    },
+    {
+      "path": "scripts/ci/test-cloc-tooling.sh",
+      "sha256": "6e2bb50c2f0d6f229bf93eb7904134232ed08ece3fcc9c4cc5886d52d7c64008",
+      "named_functions": []
+    }
+  ],
+  "http_linux_cases_on_each_graph": 8,
+  "artifact_cases_on_087": 13,
+  "native_candidate_qualification": "pending; no uncommitted-source hosted run",
+  "archives": [
+    {
+      "host": "linux",
+      "artifact_id": 11564225687,
+      "run": {
+        "id": 37808140696,
+        "repository_id": 1404263922,
+        "head_repository_id": 1404263922,
+        "head_branch": "v0.9.0",
+        "head_sha": "32f091a3cc576dc7e0d8b80aea6a484abf905984"
+      },
+      "created_at": "2026-10-08T16:22:47Z",
+      "expires_at": "2026-10-15T16:22:46Z",
+      "members": 8,
+      "links": 0,
+      "special_names": 0,
+      "zip_sha256": "532fe6c37ac7d79a0705a1a663cea077bdb855dea926f6ef2bd51ad64e993380",
+      "tar_sha256": "cd966775a8922fdaa65305ca025c56e2130e4043b8828839faede9b111419750"
+    },
+    {
+      "host": "intel",
+      "artifact_id": 11576766843,
+      "run": {
+        "id": 37816554603,
+        "repository_id": 1404263922,
+        "head_repository_id": 1404263922,
+        "head_branch": "v0.9.1",
+        "head_sha": "d6c6082efc7c36de98e6e92ec5b4091de5ca43b4"
+      },
+      "created_at": "2026-10-08T20:20:57Z",
+      "expires_at": "2026-10-15T20:20:55Z",
+      "members": 20420,
+      "links": 2,
+      "special_names": 0,
+      "zip_sha256": "4480eeda542a1c78a3ff1fae3be3a39a6c104511edd282acee2cf927e7b36b54",
+      "tar_sha256": "9248b43d1829e84de5a6d5d18fd6cf5c298efea7b7a82b3b784045057e2eb885"
+    },
+    {
+      "host": "arm",
+      "artifact_id": 11576004326,
+      "run": {
+        "id": 37816554603,
+        "repository_id": 1404263922,
+        "head_repository_id": 1404263922,
+        "head_branch": "v0.9.1",
+        "head_sha": "d6c6082efc7c36de98e6e92ec5b4091de5ca43b4"
+      },
+      "created_at": "2026-10-08T20:25:27Z",
+      "expires_at": "2026-10-15T20:25:24Z",
+      "members": 20420,
+      "links": 2,
+      "special_names": 0,
+      "zip_sha256": "726e8b350cf3f985eaa272c4586d4405c9b93cca8191e4019a127ee05a9622a5",
+      "tar_sha256": "4026bf43bc7f57f657dbdbb9345014c1e843c9160d3171266d971fb75b59030c"
+    }
+  ],
+  "retained_evidence": [
+    {
+      "path": "target/issues-shared-033-review-01/http-tests-01.log",
+      "sha256": "1f4fde97848a8d0fd02ec323ad4eae5609aa29371b110af0ca026c9fb04db27c",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/http-tests-host-087.log",
+      "sha256": "df0843a93d9b937e6501f1bbe7f2a2a7259945deb513fd5cb76a7fdbb820d326",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/clippy-final.log",
+      "sha256": "a62dc06242a437afefa75f11c76e852a9df2282331b72e8b206932bb0ede2b75",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/clippy-host-087-final.log",
+      "sha256": "aa243fc3ac91ca0dabf3d974622d921198f6263503e4d61843855c2b58fd829c",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/msrv-final.log",
+      "sha256": "e23bffec445182c595d13d6b50bafcd353392bbbcc30384640f546e1981b2aef",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/msrv-host-087-final.log",
+      "sha256": "4a003da2d1462c55f81bc7ed747655d9d42cd3a8462dd22099e4686e9826d7bb",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/artifacts-host-087.log",
+      "sha256": "71ec4bc084fa40bcea0e3f602e5048f5f7eb40b67dd70a7ecc8a84b21fe7276b",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/host-087-published-proof.json",
+      "sha256": "5e9e0aa637ee4204c0c140f77c7c335448afe742a33bcd69b4f935a48d837623",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/fmt-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/tool-commands-final.log",
+      "sha256": "7bb1c9fddef644e5de76a50aa7b0887697578c2779be61e79d25ad42d3e5a37c",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/cloc-prepared-final.log",
+      "sha256": "3c9b1e28c07ea644e3069a31b06ecadd305716113ae111a52fd1a327773ee3b5",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/workspace-cloc.log",
+      "sha256": "abc524f62d41bcb48fa0d195a4f65f9992eae636345d376fa8117502e458861c",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shell-final.log",
+      "sha256": "3c08bd3ab5253e0320c9589a037f7cbe88ec958437c41ee849bb05da5c4d5675",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/evidence-archive-final.log",
+      "sha256": "313992f1d972cf3f5e9be55e8f867695471b135dead3468326be9fddd67279bf",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shared-narrow-refresh.log",
+      "sha256": "e27b5c27d29ff28661c6745ffa54b40c989f47dc61d57be59ce21002c1d043d5",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shared-source-proof.json",
+      "sha256": "b369b0c0fc32ad23a90b5ca5fc333048bb7148cdf19e9d20e171a96935b84ccf",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/hosted-archive-roundtrip.json",
+      "sha256": "19c206d7288935ea3cae8bd45d09386650fefd20c7b8960c466c60dce87094bd",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/linux-jobs.json",
+      "sha256": "cd396578665fca8b1e275d91e1fae7f0b1f2176f0bd0659ee8741e46aa687163",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/run-37816554603-jobs.json",
+      "sha256": "ee93bf5d44c73611750ddefd54e178274194f5e05a2ece4a9946b895bdabf01a",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/job-113446554221.log",
+      "sha256": "23f61c3206a4a720642e98c59a5bd588a6bec927d17832791ccda7bcbe0b09e3",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/job-113446554555.log",
+      "sha256": "c975213dd6f465778991b05ddc39f5bd29d5dead3112f13fb594b239b0fd409d",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/job-113446555303.log",
+      "sha256": "226c5ceb0438f045a0da0fc60376a9c7b225804e835b40dfe7b370f8094080d5",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shared-ci-final.json",
+      "sha256": "55acca685743f3ec79a084dfe8469a2976e39884cec66504ae2ff196dc081961",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/released-ci-final.json",
+      "sha256": "f72897b04a2d9cda93f54a41112c1dfe3a5c1ffbeea1c043aa57a9a9bfd6f1c7",
+      "classification": "review/check evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/http-clippy-01.log",
+      "sha256": "f7e8a7d88ee7498485143d4c5b6d06612d1a42dbc4a3ffea3f00aca96e3c3719",
+      "classification": "retained earlier failure"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/http-clippy-02.log",
+      "sha256": "9c3ba797a9634b14e470e3c089f3725e41cb644bcd85daac20b30c46908453d4",
+      "classification": "retained earlier failure"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/cloc-final.log",
+      "sha256": "dd405c7f497ac9c5b1e7f72ff4fd5891d7b3d293b6c67597d0a3f95c86e519df",
+      "classification": "retained earlier failure"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/doc-links-final.log",
+      "sha256": "c36b1ffdc10c1ba2d8bb4a9ba05d541b390046e61a323aef62d5038b7c45edd3",
+      "classification": "retained earlier failure"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/clippy-host-087.log",
+      "sha256": "e8955b895df375c2c7c8e5520f0662c0b5617bf14200b4169078d3595cc5da8e",
+      "classification": "retained earlier failure"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/snapshot-final.log",
+      "sha256": "8a95049a67d879dbd54c7fd071affe72c5a5df84b5903d60c701f4340e34c6ba",
+      "classification": "final check/posted evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/doc-links-corrected-final.log",
+      "sha256": "e302e7f945fa71ffa10d2a82d14db2b1f1710b4afdcb1fab1f618101735e08aa",
+      "classification": "final check/posted evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/diff-check-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification": "final check/posted evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/issue-28-posted.json",
+      "sha256": "487664d4ccdd099c7188fb2083fda6183aa9b389ee926e4d9801dfe429ea642b",
+      "classification": "final check/posted evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/issue-30-posted.json",
+      "sha256": "f075d66fd7ca459b244ea3c80350c547418fc165e00141dad90675e94608a94f",
+      "classification": "final check/posted evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/issue-31-posted.json",
+      "sha256": "bd7ebb95a6ba441623d0cbc9d391ecdb4a60fecd807792c616c9e80de35a2ab1",
+      "classification": "final check/posted evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shared-034-refresh.log",
+      "sha256": "1e064b22a6b4093b6a7f5c9437fd82ac143037f251c179e74fa07c8db4a004ee",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shared-034-source-proof.json",
+      "sha256": "73b16df224da4366038ede3e14683abeeca6cbd524f1e5e02b45e8e6bfa54d26",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shared-034-ci.json",
+      "sha256": "d6b8dce574dc322ae35432269bb73606e73e1ea5ec6721d76a1a10f82ac02e37",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/pocketic-034-fixture.log",
+      "sha256": "651f3f7c5d35f20c3b24319ea4e474eda860304490fcb6f086ab279246846a60",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/pocketic-034-actual.log",
+      "sha256": "9ef59cc55b77811df4122fecf1e37daeeb018ad42cd40c409989a782bd74df44",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/shell-034-final.log",
+      "sha256": "3c08bd3ab5253e0320c9589a037f7cbe88ec958437c41ee849bb05da5c4d5675",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/issue-28-closed.json",
+      "sha256": "ebb5357e3994e3898e79ceb50df8f77899983ea253dc2d5286d49ed1ff316dd3",
+      "classification": "final refresh/check/issue evidence"
+    },
+    {
+      "path": "target/issues-shared-033-review-01/issue-30-final-posted.json",
+      "sha256": "69080e3a9078c2a8a3fd82bf20a08638276f2798ea4feeaa31a5743af661e410",
+      "classification": "final refresh/check/issue evidence"
+    }
+  ],
+  "issue_comments": {
+    "28": "https://github.com/dragginzgame/ic-backup/issues/28#issuecomment-6076759364",
+    "30": "https://github.com/dragginzgame/ic-backup/issues/30#issuecomment-6076757990",
+    "31": "https://github.com/dragginzgame/ic-backup/issues/31#issuecomment-6076758610"
+  },
+  "current_source": [
+    {
+      "path": "crates/ic-backup-agent/tests/http_boundary.rs",
+      "sha256": "adb22ea163d655e800667904a07807a11a96d72c685a62bb6920d4a86983ee5d"
+    },
+    {
+      "path": "crates/ic-backup-agent/tests/http_capture/mod.rs",
+      "sha256": "e435e49d9e10f222cc1d26557261f3a0458c04d0523e5d28b9c1eadfc377469a"
+    },
+    {
+      "path": "crates/ic-backup-agent/tests/http_capture/tests/mod.rs",
+      "sha256": "49b133184aa8a51045b80aaabd9de3f8ff98cc4e22e18a90ef9c871e49977f74"
+    },
+    {
+      "path": ".shared-tooling.snapshot",
+      "sha256": "98a43945988828e503e2dbd8463beaa56830e6589ee63eae6d6808996c1cb8c4"
+    }
+  ],
+  "initial_shared_revision": "ddd3e1c01ba8aab13a56277e05679e43a8a9d88a",
+  "issue_28_state": "closed",
+  "issues_30_31_state": "open; pending native committed-source qualification",
+  "shared_034_ci": {
+    "run": 37900620129,
+    "status": "queued",
+    "conclusion": null
+  }
+}

@@ -25,6 +25,53 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.10.0 tooling retirement and HTTP fixture repair
+
+Release 0.9.2 is now HEAD and GitHub main at
+`f7868ce3f672da5ea1489172fd97e83699fe4f99`. The maintainer explicitly selected
+retirement of local fleet reports under
+[#30](https://github.com/dragginzgame/ic-backup/issues/30); choose 0.10.0 because
+`make cloc-tooling` stops producing reports here. Run it from Shared Tooling.
+Package versions and release receipt remain unchanged. Preserve the concurrent
+Host 0.8.7 lock update; Metrics 0.2.16 and Testkit 0.25.3 remain selected. Earlier 0.9.2 preparation entries below are historical.
+
+Canonically adopt committed Shared Tooling 0.1.34 at
+`3d33cd250fcae7dbe5cabe44b2abd6b2c91a1822` from a clean isolated checkout.
+Remove the verified fleet Perl reporter and shell regression, both snapshot rows
+and scheduled Make/CI/help references. The narrowed 95-file snapshot matches all
+committed bytes/modes; local setup/check/LOC owners remain selected. The retirement
+removes 405 measured code LOC. Focused shared commands, workspace LOC, ShellCheck,
+archive boundaries and snapshot checks pass on Linux. Exact upstream 0.1.34 CI is queued and released 0.9.2 CI was still in progress
+at inspection; no candidate-native claim follows. Focused literal manifest-path
+fixtures and actual offline PocketIC alignment pass on the final snapshot.
+
+For [#31](https://github.com/dragginzgame/ic-backup/issues/31), explicitly select
+blocking accepted sockets and retain the original three-second capture deadline.
+Bound header/body framing and retain exact partial bytes with original IO errors.
+Explicit server finish reports errors; Drop preserves a primary unwind and writes
+cleanup diagnostics instead of panicking again. Original one-request, routing,
+signed body and pending-spending assertions remain. Eight focused HTTP cases,
+both libraries' warnings-denied Clippy and Rust 1.88/all-target/independent-consumer
+checks pass on Host 0.8.7, along with focused artifact regressions. All four
+published archives and 65 Rust files match registry/committed VCS evidence.
+Native Intel/Apple Silicon acceptance remains pending; keep #31 and
+#30 open until matching committed native qualification.
+
+Released archive integration under
+[#28](https://github.com/dragginzgame/ic-backup/issues/28) now has actual hosted
+upload/download evidence on all three hosts; #28 is closed. Native archive fixtures cover unusual
+names, modes, symlinks and refusal/partial-output behavior; ordinary failed jobs
+retain their failure status while archive/upload succeed. Downloaded exact-ID
+payloads retain bounded selected roots, private modes and links. Special-name
+fixtures and ordinary hosted payloads are separate evidence, not one combined test.
+[#25](https://github.com/dragginzgame/ic-backup/issues/25) and
+[#29](https://github.com/dragginzgame/ic-backup/issues/29) still own complete Agent,
+installed runner and application/terminal qualification. This batch adds no product
+effect authority or runner. The
+[review](../reports/audits/2026/10/09/shared-033-issues/01/report.md) retains inputs,
+failure logs and exact check scope. Work stays uncommitted; no sibling, Git/release,
+publication or live IC effects occur.
+
 ## Current 0.9.2 Shared Tooling and Host follow-up
 
 Extend the same compatible 0.9.2 draft from released 0.9.1; package versions and

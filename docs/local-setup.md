@@ -48,6 +48,11 @@ snapshot's file instead of maintaining copied recipes or installer flags. Shared
 Tooling's own Makefile and CI use the same commands. Snapshot adoption brings
 command updates; explicit setup brings newly required executables.
 
+The installed `cloc` executable and local workspace `make cloc` are common setup.
+Fleet reports such as `make cloc-tooling` normally run in Shared Tooling; consumers
+need not vendor those reporters or run their regression suites. See the
+[optional fleet selection](consuming-snapshots.md#local-ic-tool-adoption).
+
 ## Diagnosing a missing command
 
 Installing tools in Shared Tooling does not install them in another checkout.

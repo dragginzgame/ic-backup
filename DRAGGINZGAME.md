@@ -110,6 +110,10 @@ Consumer choices described in those guides remain subject to this baseline.
 - Deliver one coherent outcome with its directly required implementation,
   rejection/recovery evidence, callers, fixtures, documentation and cleanup.
   Split independent outcomes, not compiler fallout or each proof of one change.
+- Scale the handoff to the change: lead a small fix with its practical effect,
+  focused verification and actionable blocker, linking detailed evidence at its
+  owner. Keep independent dependency updates separate even within one release.
+  Inspect newly discovered concerns before expanding the accepted repair scope.
 - Contract changes must trace producers, consumers, codecs, generated artifacts,
   persisted data and installation/recovery helpers. Reuse the canonical encoder
   rather than reconstructing its payload in another path.

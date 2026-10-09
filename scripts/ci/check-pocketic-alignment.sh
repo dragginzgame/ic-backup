@@ -32,13 +32,15 @@ fi
 server="$(awk -v tool=pocket-ic -f "$ROOT/scripts/ci/ic-tool-pins.awk" "$pins")" || {
     echo 'invalid or incomplete IC tool pin matrix' >&2; exit 1;
 }
-manifest="$(cd "$(dirname "$manifest")" && pwd -P)/$(basename "$manifest")"
+[[ "$manifest" == /* ]] || manifest="$PWD/$manifest"
+manifest_directory="$(cd -P "${manifest%/*}" && printf '%s/.' "$PWD")" || exit 1
+manifest="${manifest_directory%/.}/${manifest##*/}"
 scratch="$(mktemp -d "${TMPDIR:-/tmp}/pocketic-alignment.XXXXXX")"
 trap 'if [[ $? == 0 ]]; then rm -rf "$scratch"; else printf "PocketIC alignment evidence retained: %s\n" "$scratch" >&2; fi' EXIT
 # Cargo owns TOML/lock validity, dependency selection and duplicate-key refusal.
 # The selected workspace must already have its locked offline cache prepared.
 (
-    cd "$(dirname "$manifest")"
+    cd "${manifest%/*}" || exit 1
     CARGO_NET_OFFLINE=true RUSTUP_AUTO_INSTALL=0 cargo metadata \
         --locked --offline --format-version 1 --manifest-path "$manifest"
 ) > "$scratch/metadata.json" || exit 1

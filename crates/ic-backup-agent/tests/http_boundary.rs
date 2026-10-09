@@ -1,4 +1,5 @@
 //! Real local HTTP operations with controlled responses; no simulated management effects.
+mod http_capture;
 mod support;
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 use ic_backup::{
@@ -14,8 +15,9 @@ use ic_backup_agent::{
 };
 use std::{
     fs,
-    io::{Read, Write},
+    io::{self, Write},
     net::TcpListener,
+    path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
@@ -26,12 +28,13 @@ use std::{
 
 struct Server {
     endpoint: String,
-    requests: Arc<Mutex<Vec<Vec<u8>>>>,
+    requests: Arc<Mutex<Vec<http_capture::CapturedRequest>>>,
     done: Arc<AtomicBool>,
-    thread: Option<thread::JoinHandle<()>>,
+    thread: Option<thread::JoinHandle<io::Result<()>>>,
+    root: PathBuf,
 }
 impl Server {
-    fn new(status: &str, body: Vec<u8>, discard: bool, delay: bool) -> Self {
+    fn new(root: &Path, status: &str, body: Vec<u8>, discard: bool, delay: bool) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
         let endpoint = format!("http://{}/", listener.local_addr().unwrap());
@@ -40,41 +43,26 @@ impl Server {
         let done = Arc::new(AtomicBool::new(false));
         let stopping = done.clone();
         let status = status.to_owned();
+        let evidence = root.to_path_buf();
         let thread = thread::spawn(move || {
             while !stopping.load(Ordering::Acquire) {
                 match listener.accept() {
                     Ok((mut stream, _)) => {
-                        stream
-                            .set_read_timeout(Some(Duration::from_secs(3)))
-                            .unwrap();
-                        let mut bytes = Vec::new();
-                        let mut chunk = [0; 4096];
-                        loop {
-                            let count = stream.read(&mut chunk).unwrap();
-                            assert_ne!(count, 0);
-                            bytes.extend_from_slice(&chunk[..count]);
-                            if let Some(end) = bytes.windows(4).position(|p| p == b"\r\n\r\n") {
-                                let header = String::from_utf8_lossy(&bytes[..end]);
-                                let len = header
-                                    .lines()
-                                    .find_map(|line| {
-                                        line.to_ascii_lowercase()
-                                            .strip_prefix("content-length: ")
-                                            .map(|n| n.parse::<usize>().unwrap())
-                                    })
-                                    .unwrap();
-                                if bytes.len() >= end + 4 + len {
-                                    break;
-                                }
-                            }
-                        }
-                        retained.lock().unwrap().push(bytes);
-                        if discard {
+                        let capture = http_capture::capture(&mut stream, Duration::from_secs(3));
+                        let complete = capture.failure.is_none();
+                        let mut requests = retained
+                            .lock()
+                            .map_err(|_| io::Error::other("fixture request lock poisoned"))?;
+                        capture.retain(&evidence, requests.len())?;
+                        requests.push(capture);
+                        drop(requests);
+                        if !complete || discard {
                             continue;
                         }
                         if delay {
                             thread::sleep(Duration::from_millis(1200));
                         }
+                        stream.set_write_timeout(Some(Duration::from_secs(3)))?;
                         let location = if status.starts_with("307") {
                             "Location: /retry\r\n"
                         } else {
@@ -87,25 +75,51 @@ impl Server {
                         let _ = stream.write_all(header.as_bytes());
                         let _ = stream.write_all(&body);
                     }
-                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
                         thread::sleep(Duration::from_millis(5));
                     }
-                    Err(e) => panic!("{e}"),
+                    Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
+                    Err(error) => return Err(error),
                 }
             }
+            Ok(())
         });
         Self {
             endpoint,
             requests,
             done,
             thread: Some(thread),
+            root: root.to_path_buf(),
         }
+    }
+    fn finish(&mut self) -> io::Result<()> {
+        self.done.store(true, Ordering::Release);
+        let result = match self.thread.take() {
+            Some(thread) => thread
+                .join()
+                .map_err(|_| io::Error::other("fixture server thread panicked"))
+                .and_then(|result| result),
+            None => Ok(()),
+        };
+        if let Err(error) = &result {
+            let _ = fs::write(
+                self.root.join("http-server-cleanup-error.txt"),
+                error.to_string(),
+            );
+        }
+        result
     }
 }
 impl Drop for Server {
     fn drop(&mut self) {
-        self.done.store(true, Ordering::Release);
-        self.thread.take().unwrap().join().unwrap();
+        // Cleanup may report a worker failure, but must preserve an original test
+        // assertion while unwinding instead of causing a second panic/abort.
+        if let Err(error) = self.finish() {
+            eprintln!(
+                "HTTP fixture cleanup failed: {error}; retained at {}",
+                self.root.display()
+            );
+        }
     }
 }
 
@@ -150,7 +164,7 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
         ("timeout", "200 OK", vec![], false, true, false),
     ] {
         let root = support::root(label);
-        let server = Server::new(status, body, discard, delay);
+        let mut server = Server::new(&root, status, body, discard, delay);
         let payload = support::payload(Method::StopCanister, TARGET, None);
         let plan = support::plan(TARGET, &payload.digest(), 1);
         fs::create_dir(root.join("layout")).unwrap();
@@ -175,6 +189,7 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
         fs::write(root.join("signed-ingress.cbor"), &envelope).unwrap();
         fs::write(root.join("request-id.txt"), id.to_string()).unwrap();
         let result = prepared.submit().await;
+        server.finish().unwrap();
         if pending {
             assert!(matches!(result,Ok(UpdateOutcome::Pending{request_id}) if request_id==id));
         } else {
@@ -199,7 +214,7 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
         assert_eq!(fs::read(reopened.path()).unwrap(), before);
         let requests = server.requests.lock().unwrap();
         assert_eq!(requests.len(), 1, "{label}");
-        let bytes = &requests[0];
+        let bytes = requests[0].complete_bytes(&root);
         let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
         assert_eq!(&bytes[end + 4..], envelope);
         assert!(
@@ -212,10 +227,10 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
 
 #[tokio::test]
 async fn context_and_stale_reservations_reject_before_network() {
-    let server = Server::new("202 Accepted", vec![], false, false);
+    let root = support::root("admission");
+    let mut server = Server::new(&root, "202 Accepted", vec![], false, false);
     let payload = support::payload(Method::StopCanister, TARGET, None);
     let plan = support::plan(TARGET, &payload.digest(), 1);
-    let root = support::root("admission");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let guard = support::retain(&layout, &plan, 1);
     let request = IcMutationRequest::new(&plan, 1, guard.record().unwrap(), &payload).unwrap();
@@ -270,5 +285,31 @@ async fn context_and_stale_reservations_reject_before_network() {
             Err(TransportError::Configuration)
         ));
     }
+    server.finish().unwrap();
     assert!(server.requests.lock().unwrap().is_empty());
+}
+
+#[test]
+fn worker_cleanup_failure_preserves_the_primary_unwind_and_retains_diagnosis() {
+    let root = support::root("cleanup-unwind");
+    let server = Server {
+        endpoint: String::new(),
+        requests: Arc::new(Mutex::new(vec![])),
+        done: Arc::new(AtomicBool::new(false)),
+        thread: Some(thread::spawn(|| panic!("controlled worker failure"))),
+        root: root.clone(),
+    };
+    let primary = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _server = server;
+        panic!("primary test assertion");
+    }))
+    .unwrap_err();
+    assert_eq!(
+        primary.downcast_ref::<&str>(),
+        Some(&"primary test assertion")
+    );
+    assert_eq!(
+        fs::read_to_string(root.join("http-server-cleanup-error.txt")).unwrap(),
+        "fixture server thread panicked"
+    );
 }

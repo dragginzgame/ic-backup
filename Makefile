@@ -32,7 +32,6 @@ help:
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
 	@echo "cloc                        Report Rust workspace source and test LOC"
-	@echo "cloc-tooling                Report sibling CI and tooling LOC"
 	@echo "dependency-pins-check       Check dependency declarations and exceptions"
 	@echo "deps                        Fetch locked dependencies"
 	@echo "doc                         Build documentation with warnings denied"
@@ -235,7 +234,6 @@ tooling-check: shared-tooling-check
 	bash scripts/ci/test-host-tools.sh
 	bash scripts/ci/test-tool-commands.sh
 	bash scripts/ci/test-cloc.sh
-	bash scripts/ci/test-cloc-tooling.sh
 	bash scripts/ci/test-rust-tools.sh
 	bash scripts/ci/test-ic-tools.sh
 

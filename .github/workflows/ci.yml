@@ -68,7 +68,6 @@ jobs:
           /bin/bash scripts/ci/test-host-tools.sh
           /bin/bash scripts/ci/test-tool-commands.sh
           /bin/bash scripts/ci/test-cloc.sh
-          /bin/bash scripts/ci/test-cloc-tooling.sh
           /bin/bash scripts/ci/test-rust-tools.sh
           /bin/bash scripts/ci/test-ic-tools.sh
           /bin/bash scripts/release/test-release.sh
