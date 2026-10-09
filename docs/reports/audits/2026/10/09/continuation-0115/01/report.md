@@ -114,3 +114,23 @@ implementation sources do not substitute for selected executable admission.
 comparison, exact input hashes and logs under `target/host-testkit-review-0115/`.
 This inspection does not apply new repairs, refresh the snapshot, reselect
 dependencies or provision tools. No Rust function, method or type was removed.
+
+## Selected Testkit CLI preparation
+
+The subsequent setup request prepares Testkit 0.27.2 with the canonical
+`make install-testkit-server` route. Cargo builds the exact registry CLI with its
+locked installation graph; receipt/byte admission succeeds and Testkit admits the
+existing authenticated PocketIC 16.1.0 server. Retain all previous CLI selections
+and failed validation evidence. `make testkit-server-check` now passes.
+
+The maintainer's current committed candidate is
+`d6be377300b43eff76b3e15c7ac034fedbc5bca6`; its incoming lock also selects Metrics
+0.3.4. Preserve the complete current manifest/lock/snapshot bytes. Five planned
+core and three Agent actual simulator cases pass with Host 0.9.5, Testkit 0.27.2,
+Metrics 0.3.4 and Agent 0.49.2. An initial wrong test-target invocation is retained
+separately; it dispatched no test. The exact CLI selection, binary/server hashes,
+commands and logs are bound by [testkit-preparation.json](testkit-preparation.json).
+
+This closes the local missing-selection setup gap. No full CI/release gate,
+native macOS acceptance, new standalone MSRV qualification, source repair,
+dependency reselection or release occurred. No Rust symbol was removed.

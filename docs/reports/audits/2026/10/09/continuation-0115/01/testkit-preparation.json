@@ -1,0 +1,116 @@
+{
+  "scope": "Repair missing selected Testkit CLI setup; no source or dependency reselection.",
+  "reviewed_at": "2026-10-09T16:04:52.475352+00:00",
+  "source_commit": "d6be377300b43eff76b3e15c7ac034fedbc5bca6",
+  "inputs_unchanged": {
+    "Cargo.toml": "d293c9bf1ed7db2ff0bc7e36d9d5ac2676299a71870867d09141d00529761781",
+    "Cargo.lock": "204994e70f594f2b2747d9f3c51a6649b0602014c0dfb249a3a0024665d468e5",
+    ".shared-tooling.snapshot": "362845865e419a5f94e13009151e078bf24429b46ee1058464309f205a32b23d"
+  },
+  "selected_graph": {
+    "ic-agent": "0.49.2",
+    "ic-host-artifacts": "0.9.5",
+    "ic-host-fs": "0.9.5",
+    "ic-host-process": "0.9.5",
+    "ic-host-tools": "0.9.5",
+    "ic-metrics": "0.3.4",
+    "ic-testkit": "0.27.2",
+    "pocket-ic": "16.1.0"
+  },
+  "setup": {
+    "command": [
+      "make",
+      "--no-print-directory",
+      "install-testkit-server"
+    ],
+    "exit_code": 0,
+    "cli_selection": {
+      "package": "ic-testkit",
+      "version": "0.27.2",
+      "kind": "bin",
+      "target": "ic-testkit-server",
+      "profile": "release",
+      "host": "x86_64-unknown-linux-gnu",
+      "binary_sha256": "cfc4587bd0c1ce23faf6c68ff3b9eda2ad51e73425daaa20de0e614a1e44c08a",
+      "receipt_sha256": "a8b8bf31be85f5035a6f7b5abd89ed8fd045e9b959b503aa7ad75a433a36894a"
+    },
+    "cli_binary": ".tools/rust/ic-testkit-0.27.2-bin-ic-testkit-server-release/installed/bin/ic-testkit-server",
+    "server_binary": "/home/adam/projects/ic-backup/.tools/testkit-server/16.1.0-x86_64-linux/pocket-ic",
+    "server_sha256": "b44e1eccd66e02328146b3e209e3403e3a3428a25d25555aca2f67500e5ae9db",
+    "retained_previous_selections": [
+      ".tools/rust/ic-testkit-0.25.5-bin-ic-testkit-server-release/installed",
+      ".tools/rust/ic-testkit-0.26.0-bin-ic-testkit-server-release/installed",
+      ".tools/rust/ic-testkit-0.27.0-bin-ic-testkit-server-release/installed",
+      ".tools/rust/ic-testkit-0.27.1-bin-ic-testkit-server-release/installed",
+      ".tools/rust/ic-testkit-0.27.2-bin-ic-testkit-server-release/installed"
+    ]
+  },
+  "admission": {
+    "command": [
+      "make",
+      "--silent",
+      "--no-print-directory",
+      "testkit-server-check"
+    ],
+    "exit_code": 0,
+    "log": "target/testkit-0272-preparation/check.log"
+  },
+  "simulator_checks": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--test",
+        "pocketic_snapshot",
+        "planned_",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "log": "target/testkit-0272-preparation/core-simulator.log"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup-agent",
+        "--test",
+        "pocketic_transport",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "log": "target/testkit-0272-preparation/agent-simulator.log"
+    }
+  ],
+  "retained_unsuccessful_attempt": {
+    "log": "target/testkit-0272-preparation/core-simulator-target-error.log",
+    "diagnosis": "Wrong test-target name on initial invocation; corrected to pocketic_snapshot without source changes."
+  },
+  "limitations": [
+    "Focused Linux simulator checks only; no full CI/release gate or native macOS qualification.",
+    "Prior standalone MSRV proof still binds its earlier dependency graph.",
+    "No source edit, dependency reselection, recovery cleanup, Git write, release or production IC effect."
+  ],
+  "evidence": {
+    "target/testkit-0272-preparation/agent-simulator.log": "78ca70c6ecf72a3cd4d11b0c44aed4e9b391cbc2626701680be9df26e4ce5c17",
+    "target/testkit-0272-preparation/check.log": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+    "target/testkit-0272-preparation/core-simulator-target-error.log": "fe7ae1e9732e116ad996ac6087aca98ee01116a0c638b7b7dd6898127159b35c",
+    "target/testkit-0272-preparation/core-simulator.log": "54133b95a651b1016aa76421cf5064f3b9dace219ef7b44cda83cc46e6c58014",
+    "target/testkit-0272-preparation/inputs.sha256": "db4987e32b06b05e0c8dd9827b4cb286e48c0cb6f9fcc1e6c4e6540d8703b265",
+    "target/testkit-0272-preparation/install.log": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+    "target/testkit-0272-preparation/simulator-checks.json": "d22bf98c9e2451f97f56762df430b6ad176c25f28364b649747d61e24d3a3128",
+    "target/testkit-0272-preparation/simulator-target-error.json": "7fcc5cd72ce8c62cd3885723f8b74fed0e3115f3612ef064d4f27c3bfec94bea",
+    ".tools/rust/ic-testkit-0.27.2-bin-ic-testkit-server-release/installed/selection.json": "b2e1370095a475bddf893afb1f21d9ff00b2a78c6cbb545ebb356aa2f1a72123",
+    ".tools/rust/ic-testkit-0.27.2-bin-ic-testkit-server-release/installed/install.log": "1c0a9d241dd91641f466c163e72ee054bf06f2d75ba872d3d438f4e1fe7de671",
+    ".tools/rust/ic-testkit-0.27.2-bin-ic-testkit-server-release/installed/.crates.toml": "05667ab48b5c505723b6e6deeb9e95a6ccd2426ad7fd34520ff2004a8fe3a3ff",
+    ".tools/rust/ic-testkit-0.27.2-bin-ic-testkit-server-release/installed/.crates2.json": "a8b8bf31be85f5035a6f7b5abd89ed8fd045e9b959b503aa7ad75a433a36894a"
+  }
+}

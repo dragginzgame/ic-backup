@@ -75,6 +75,20 @@ remains a separate batch. The [review](../reports/audits/2026/10/09/continuation
 records evidence. No source repair, dependency reselection, tool setup, full gate,
 Git write or release was performed in this inspection.
 
+## Testkit 0.27.2 setup completed
+
+The subsequent setup request prepares the exact registry 0.27.2 CLI through
+`make install-testkit-server`; receipt/byte checks and existing PocketIC 16.1.0
+server admission pass. `make testkit-server-check` now succeeds. Retain all old
+selections and failure evidence. The current maintainer commit
+`d6be377300b43eff76b3e15c7ac034fedbc5bca6` also selects incoming Metrics 0.3.4.
+Five planned core and three Agent actual simulator cases pass on Host 0.9.5 /
+Testkit 0.27.2 / Metrics 0.3.4 / Agent 0.49.2. Manifest/lock/snapshot bytes remain
+unchanged. [Setup proof](../reports/audits/2026/10/09/continuation-0115/01/testkit-preparation.json)
+retains exact executable identity and logs. This resolves the local missing CLI;
+full CI, native macOS and fresh standalone MSRV qualification remain separate.
+No source repair, dependency reselection, Git write or release occurred.
+
 ## Current 0.11.4 capture-step continuation
 
 Released 0.11.3 is `2939a41805ce5c2fa3913162b4028bc970d3d85f`.
