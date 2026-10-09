@@ -598,6 +598,14 @@ was recorded. Linking provenance or describing implementation status is allowed.
   history rejects preparation, reopen and retained-layout access without repair or
   new spending. No atomic noncooperating custody or terminal authority follows.
 
+- Stage-owned checkpoint publication joins the canonical all-Applied journal owner
+  to exact retained workflow/binding/child-plan and complete ancestor admission
+  before and after publication. Return the existing predecessor identity with the
+  integration's opaque learned digest; authenticate no learned input or receipt.
+  Hold no attempt guards. Post-publication failures retain checkpoint/originals;
+  occupied checkpoints reject without replacement, repair or spending changes.
+  No provider, successor dispatch, product terminal or fence/reference release follows.
+
 - Complete stage resume joins exact record-only admission to the existing complete
   original child-journal progress reader and rechecks original stage/ancestor records
   before returning. Preserve original typed stage/progress errors and both layout

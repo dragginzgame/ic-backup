@@ -21,7 +21,7 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
-        checkpoint_execution_settlement, create_execution_workflow, read_execution_progress,
+        create_execution_workflow, read_execution_progress,
     },
     policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, validate_response},
     ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
@@ -76,7 +76,7 @@ fn capture(
     let payload = management(backend, Method::TakeCanisterSnapshot, None);
     let plan = backend.plan(&payload.digest(), 0);
     let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::prepare(layout, binding.clone(), plan).unwrap();
+    let stage = ExecutionStageGuard::prepare(layout, binding, plan).unwrap();
     let stage_layout = stage.layout().unwrap();
     let mut journal =
         AttemptJournalGuard::open(stage_layout, &stage.plan().attempt_authority(0).unwrap())
@@ -96,12 +96,9 @@ fn capture(
     // or discarded reply is used to infer original attribution.
     record_applied(&mut journal, &reply.digest());
     drop(journal);
-    let settlement = checkpoint_execution_settlement(stage_layout, &stage.plan().digest())
-        .unwrap()
-        .digest();
     (
         reply.snapshots()[0].clone(),
-        ExecutionStagePredecessorRecord::new(0, binding.digest(), settlement, reply.digest()),
+        stage.checkpoint(reply.digest()).unwrap(),
     )
 }
 
@@ -172,17 +169,8 @@ pub(crate) fn run(failure: ReadFailure) {
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, raw_metadata).unwrap();
     record_applied(&mut journal, &metadata.digest());
     drop(journal);
-    let metadata_settlement =
-        checkpoint_execution_settlement(metadata_stage.layout().unwrap(), &metadata_plan.digest())
-            .unwrap()
-            .digest();
+    let original = metadata_stage.checkpoint(metadata.digest()).unwrap();
     drop(metadata_stage);
-    let original = ExecutionStagePredecessorRecord::new(
-        7,
-        metadata_binding.digest(),
-        metadata_settlement,
-        metadata.digest(),
-    );
     let download = IcSnapshotDownloadPlan::new(&workflow, 9, &metadata, 32 * 1024).unwrap();
     let binding = download
         .bind(&metadata_binding, &metadata_plan, vec![original])
@@ -304,7 +292,7 @@ pub(crate) fn run(failure: ReadFailure) {
     let manifest = artifacts.publish_download_manifest(plan).unwrap();
     let retained = artifacts.record().unwrap().clone();
     drop(artifacts);
-    checkpoint_execution_settlement(stage_layout, &plan.digest()).unwrap();
+    stage.checkpoint(manifest.clone()).unwrap();
     let view = read_execution_progress(stage_layout, &plan.digest()).unwrap();
     assert_eq!(view.applied_operations, download.requests().len());
     assert_eq!(view.attempts.mutations_remaining, 0); // Original spare headroom is unassigned.

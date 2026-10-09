@@ -451,6 +451,11 @@ follows. Reopen preserves original journals; interrupted preparation stops with 
 retained. No workflow runner, automatic outcome, fresh permission, transfer
 completion or terminal/release authority follows. See
 [the implemented contract](extraction-boundary.md#original-workflow-allocations-and-learned-stage-binding).
+The stage guard now owns checkpoint/predecessor assembly, admitting full original
+workflow and ancestor history before and after immutable journal-checkpoint
+publication. Failed post-admission retains published evidence; learned-input
+qualification and effect-boundary permission stay integration-owned.
+
 
 The implemented metadata-derived data planner counts complete region/chunk reads
 before allocation and binds exact requests to an original finite data stage. Every

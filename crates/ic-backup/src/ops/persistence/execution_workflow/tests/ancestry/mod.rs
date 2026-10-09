@@ -32,7 +32,7 @@ fn settled_stage(
     let plan = plan(sequence);
     let binding =
         ExecutionStageBindingRecord::new(workflow, sequence, &plan, predecessors).unwrap();
-    let stage = ExecutionStageGuard::prepare(layout, binding.clone(), plan).unwrap();
+    let stage = ExecutionStageGuard::prepare(layout, binding, plan).unwrap();
     let current = stage.layout().unwrap();
     let mut journal =
         AttemptJournalGuard::open(current, &stage.plan().attempt_authority(42).unwrap()).unwrap();
@@ -49,21 +49,12 @@ fn settled_stage(
                 .into(),
         })
         .unwrap();
-    let settlement = ExecutionSettlementRecord::new(
-        stage.plan().digest(),
-        vec![ExecutionSettlementJournalRecord::from_journal(
-            journal.record().unwrap(),
-        )],
-    )
-    .unwrap();
     drop(journal);
-    create_execution_settlement(current, &settlement).unwrap();
-    ExecutionStagePredecessorRecord::new(
-        sequence,
-        binding.digest(),
-        settlement.digest(),
-        ArtifactChecksumRecord::from_bytes(b"fixture learned evidence"),
-    )
+    stage
+        .checkpoint(ArtifactChecksumRecord::from_bytes(
+            b"fixture learned evidence",
+        ))
+        .unwrap()
 }
 fn retained_chain() -> (
     PathBuf,
@@ -179,4 +170,62 @@ fn shared_ancestor_admits_both_branches_with_distinct_learned_evidence() {
     drop(held);
     stage.layout().unwrap();
     eprintln!("Shared-ancestor evidence retained: {}", root.display());
+}
+
+#[test]
+fn ancestor_drift_before_or_after_checkpoint_retains_child_and_refuses_predecessor() {
+    for after_publication in [false, true] {
+        let (root, layout, _, binding) = retained_chain();
+        let stage = ExecutionStageGuard::prepare(&layout, binding, plan(9)).unwrap();
+        let mut journal = AttemptJournalGuard::open(
+            stage.layout().unwrap(),
+            &stage.plan().attempt_authority(42).unwrap(),
+        )
+        .unwrap();
+        let attempt = journal
+            .reserve_planned_mutation(&stage.plan().digest())
+            .unwrap();
+        journal
+            .record_mutation(MutationReceiptRequest {
+                attempt,
+                request: stage.plan().operation(42).unwrap().request().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: "12".repeat(32),
+            })
+            .unwrap();
+        drop(journal);
+        let original = fs::read(root.join("execution-stage-9/attempt-42.json")).unwrap();
+        let ancestor = root.join("execution-stage-0/attempt-42.json");
+        let change = || {
+            let mut value: serde_json::Value =
+                serde_json::from_slice(&fs::read(&ancestor).unwrap()).unwrap();
+            value["events"][1]["evidence"] = json!("34".repeat(32));
+            fs::write(&ancestor, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        };
+        let learned = ArtifactChecksumRecord::from_bytes(b"fixture input");
+        let result = if after_publication {
+            stage.checkpoint_with(learned, change)
+        } else {
+            change();
+            stage.checkpoint(learned)
+        };
+        assert!(matches!(
+            result,
+            Err(ExecutionStageCheckpointError::Stage(
+                ExecutionWorkflowPersistenceError::Settlement(_)
+            ))
+        ));
+        assert_eq!(
+            root.join("execution-stage-9/execution-settlement.json")
+                .exists(),
+            after_publication
+        );
+        assert_eq!(
+            fs::read(root.join("execution-stage-9/attempt-42.json")).unwrap(),
+            original
+        );
+        drop(stage);
+        drop(layout);
+        fs::remove_dir_all(root).unwrap();
+    }
 }

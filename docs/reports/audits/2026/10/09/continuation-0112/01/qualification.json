@@ -1,0 +1,555 @@
+{
+  "head": "7492b19d2e5db8c9952c39f045568166f9a1f1c7",
+  "draft": "0.11.2",
+  "package_version": "0.11.1",
+  "snapshot": {
+    "source": "/tmp/ic-backup-shared-024-7hub0ac6/source",
+    "revision": "ffbf665b8481c36b2d9f4d988abec557c3485fa6",
+    "previous_revision": "ac4549c5ebde497f7db0da5d05d32835112e51de",
+    "selected_files": 92,
+    "changed": [
+      "scripts/ci/test-file-digests.sh",
+      "scripts/ci/test-dependency-pins.sh",
+      "scripts/ci/test-evidence-checksums.sh",
+      "docs/consuming-snapshots.md",
+      "scripts/ci/test-cargo-metadata.sh",
+      "scripts/ci/test-format-tools.sh",
+      "scripts/ci/test-tool-commands.sh",
+      "scripts/ci/test-cloc.sh",
+      "scripts/ci/test-rust-tools.sh",
+      "scripts/ci/test-release-pr.sh",
+      "scripts/ci/test-evidence-archive.sh"
+    ],
+    "inputs": {
+      "Cargo.toml": "a55ac63ddf342d6b38a18adc1d33d442b9e19e2cd4160610257af0e35928a383",
+      "Cargo.lock": "fd67770e8efc19f80abb3ace3fdb66a0dbe15191f91e86710a8526ab0a358193"
+    },
+    "committed_bytes_modes_verified": 92
+  },
+  "sources": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "a55ac63ddf342d6b38a18adc1d33d442b9e19e2cd4160610257af0e35928a383"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "fd67770e8efc19f80abb3ace3fdb66a0dbe15191f91e86710a8526ab0a358193"
+    },
+    {
+      "path": ".shared-tooling.snapshot",
+      "sha256": "1a1da01be9410d9e53dfe6dc13c812dccfa50f4f65ca604fc79389f69535836b"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "132646659c1062131b191b3eda60d3447d11fd7a0ec7077a2918e782132bcdf4"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "9b4e19275819f1ed345862a8939201fb77e07e1b5a1fc87219dbc43edfd0f916"
+    },
+    {
+      "path": "docs/shared-tooling.md",
+      "sha256": "5d1adda6210cf6522cbd7785b60c02709ad3b65b6565121ecf0f7e080ba92b3a"
+    },
+    {
+      "path": "docs/extraction-design.md",
+      "sha256": "c731252d6955c85dc39dd75d7a6e1f8fc719501e008f0d053451a0d38801ca76"
+    },
+    {
+      "path": "docs/extraction-boundary.md",
+      "sha256": "02b5b43ef58f57ce64aeee3c56e675e742ce43a98f9309a4f1243eb4bbfab3b1"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/mod.rs",
+      "sha256": "e84187b4291203a87882a1c3cf36737d515726b803413c48922c840503da6ed2"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+      "sha256": "28e69dd4cc8efa095e5ac0d77814e4d4bae3ecb87fdd19461ec73d1805affc55"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/mod.rs",
+      "sha256": "4d1ba4d1ab398db06f55f8ed08a36a76da241d2025ee93c9913a16c1e235f2d3"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/ancestry/mod.rs",
+      "sha256": "1d0aa65bab91afab88d03169e8aa04d155cb487e4440bb572daff7171eacfbe9"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/checkpoint/mod.rs",
+      "sha256": "9f3b8455589cb713eb372e924cf0e82458adccd7f07a061d4372a0d31ff3267d"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_workflow.rs",
+      "sha256": "9f4fe9230e9d609a1dcfb6b1dec934cdde6598c4598e44e5750386a9b00b9a1c"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "sha256": "6105450f09954e7739888ecd60b526910fbab6e1079fc81a71da77463d540a31"
+    }
+  ],
+  "commands": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow",
+      "status": 0,
+      "log": "target/continuation-0112/stage-tests-final.log",
+      "log_sha256": "806e76b2d3d471f4e9f69eaaaa77b163b46c29c2f9ba371af0f24278aad445d1"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib execution_settlement",
+      "status": 0,
+      "log": "target/continuation-0112/settlement-tests.log",
+      "log_sha256": "d38b9cc8556a635917e58d8ad77f61eb706d1b2c7119be9b5bb7940298476b18"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test execution_workflow",
+      "status": 0,
+      "log": "target/continuation-0112/public-stage.log",
+      "log_sha256": "073dbbf1201f9a4eb8df4deb04ecef24b2c7abb262ed5185e31f6186ea31bfb5"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1",
+      "status": 0,
+      "log": "target/continuation-0112/planned-download.log",
+      "log_sha256": "71cc35c6df368d6bad35d7e8b5f2dc6dd85d7d51d1dd512737a0c7c0d4cd3876"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup --lib --tests -- -D warnings",
+      "status": 0,
+      "log": "target/continuation-0112/core-test-clippy.log",
+      "log_sha256": "4451f75857b5b470332d7d33517f33907ddf4e515630f94ce2ad25ab17307fad"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup --lib --test execution_workflow --test pocketic_snapshot -- -D warnings",
+      "status": 0,
+      "log": "target/continuation-0112/core-clippy.log",
+      "log_sha256": "78c8c9016e10739a9353889ffa688f66a8bba6bd5a13ad2e7e66749cb41faf42"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup-agent --lib -- -D warnings",
+      "status": 0,
+      "log": "target/continuation-0112/agent-clippy.log",
+      "log_sha256": "c035eab93ee3c5e56c62643de5001c5dd5a8ca5e87c5146f28a01b37b3ee43f1"
+    },
+    {
+      "command": "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "status": 0,
+      "log": "target/continuation-0112/msrv-consumers.log",
+      "log_sha256": "a0efa64ef99fb3b04cb6b6ffdb31a02e35b595e59ba309af1941df52228201df"
+    },
+    {
+      "command": "cargo +1.88.0 check --offline --locked (standalone API caller; see fixture record)",
+      "status": 0,
+      "log": "target/continuation-0112/stage-api-consumer.log",
+      "log_sha256": "70bda5422bb326445b197be54dfcf88813c92ef6db89217a091e7a8127751bd6"
+    },
+    {
+      "command": "bash /tmp/ic-backup-shared-024-7hub0ac6/source/scripts/ci/test-snapshot-distribution.sh",
+      "status": 0,
+      "log": "target/continuation-0112/exporter-fixtures.log",
+      "log_sha256": "6096b5b3b9106854d47e5526f86872d32d377d2b8f167340e54d5d5c0ae5529f"
+    },
+    {
+      "command": "make shared-tooling-check dependency-pins-check shell-check fmt-check check-doc-links",
+      "status": 0,
+      "log": "target/continuation-0112/consumer-checks.log",
+      "log_sha256": "168ef553fbc9d48a0ba7f44429dd2a88bd9a7edceaac8dacdfa707092cd6e0c0"
+    },
+    {
+      "command": "make check-doc-links (final report/handoff)",
+      "status": 0,
+      "log": "target/continuation-0112/final-links.log",
+      "log_sha256": "1c5189cc924347a206bf7f8430ee6f4990e5cb72d4435d99dc6ddaf199785605"
+    }
+  ],
+  "api_consumer": {
+    "fixture": "/home/adam/projects/ic-backup/target/msrv-consumers.tWbxGZ/ic-backup",
+    "command": [
+      "cargo",
+      "+1.88.0",
+      "check",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "/home/adam/projects/ic-backup/target/msrv-consumers.tWbxGZ/ic-backup/Cargo.toml",
+      "--all-features"
+    ],
+    "status": 0
+  },
+  "initial_unit_test_warning": {
+    "log": "target/continuation-0112/stage-tests.log",
+    "sha256": "7a9308bd5275fa9fed934b3f586ad9ca191592c53bca5011ef30b854aaf16fe4",
+    "resolved_by": "Assert changed-byte preservation; final stage tests and warnings-denied core test Clippy pass"
+  },
+  "consumer_release_ci": {
+    "conclusion": "",
+    "headSha": "7492b19d2e5db8c9952c39f045568166f9a1f1c7",
+    "jobs": [
+      {
+        "completedAt": "2026-10-09T12:14:29Z",
+        "conclusion": "success",
+        "databaseId": 113810482336,
+        "name": "library (ubuntu-24.04)",
+        "startedAt": "2026-10-09T12:04:38Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Retain temporary validation fixtures",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the pinned development toolchain",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the minimum supported Rust toolchain",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the reviewed manifest formatter",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the reviewed Linux ShellCheck",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Install macOS shell tooling",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare reviewed local host and IC executables",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare locked dependencies and the Testkit-owned simulator",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Check tooling with macOS system Bash 3.2",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate the native library and repository tooling",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Archive failed validation evidence",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Retain failed validation evidence",
+            "number": 14,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 28,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 29,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37927689030/job/113810482336"
+      },
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113810482344,
+        "name": "library (macos-15-intel)",
+        "startedAt": "2026-10-09T12:04:36Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37927689030/job/113810482344"
+      },
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113810482414,
+        "name": "library (macos-15)",
+        "startedAt": "2026-10-09T12:04:36Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37927689030/job/113810482414"
+      }
+    ],
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37927689030"
+  },
+  "shared_ci": {
+    "conclusion": "",
+    "headSha": "ffbf665b8481c36b2d9f4d988abec557c3485fa6",
+    "jobs": [
+      {
+        "completedAt": "2026-10-09T12:01:15Z",
+        "conclusion": "success",
+        "databaseId": 113809219469,
+        "name": "lint-and-security",
+        "startedAt": "2026-10-09T12:00:59Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned validation tools",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Check shell and workflow sources",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Scan repository history for secrets",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 11,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37927306875/job/113809219469"
+      },
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113809219769,
+        "name": "portable-regression (macos-15-intel)",
+        "startedAt": "2026-10-09T12:00:57Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37927306875/job/113809219769"
+      },
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113809219777,
+        "name": "portable-regression (macos-15)",
+        "startedAt": "2026-10-09T12:00:57Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37927306875/job/113809219777"
+      },
+      {
+        "completedAt": "2026-10-09T12:05:24Z",
+        "conclusion": "success",
+        "databaseId": 113809219794,
+        "name": "portable-regression (ubuntu-24.04)",
+        "startedAt": "2026-10-09T12:00:59Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install fixture dependencies on Linux",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Select system Bash on macOS",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned Cargo manifest formatter",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned parsers, ripgrep and cloc",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Select the frontend fixture runtime",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare the locked frontend fixture",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run portable regression set with prepared tools",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Qualify the real frontend formatter and Rust hook",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Qualify pinned native IC executables",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Exercise expected native installer and check failures",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload the native failure qualification evidence",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Download the uploaded native failure evidence",
+            "number": 14,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify native failure status and uploaded payload",
+            "number": 15,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare failed candidate alongside verified native toolsets",
+            "number": 16,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload compact native tool evidence",
+            "number": 17,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Download compact native tool evidence",
+            "number": 18,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify compact native tool evidence and retained candidate",
+            "number": 19,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Retain failed validation and installer evidence",
+            "number": 20,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Select the frontend fixture runtime",
+            "number": 39,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 40,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 41,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37927306875/job/113809219794"
+      }
+    ],
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37927306875"
+  },
+  "removed_functions_methods_types": [],
+  "moves_or_renames": [],
+  "limits": [
+    "Focused local Linux qualification; no committed current-candidate native run",
+    "Local predecessor commitment does not authenticate learned inputs or grant full orchestration/terminal/release authority"
+  ]
+}

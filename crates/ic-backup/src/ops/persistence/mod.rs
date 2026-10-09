@@ -44,8 +44,9 @@ pub use execution_settlement::{
     checkpoint_execution_settlement, create_execution_settlement, read_execution_settlement,
 };
 pub use execution_workflow::{
-    ExecutionStageGuard, ExecutionStagePreparationError, ExecutionStageResumeError,
-    ExecutionWorkflowPersistenceError, create_execution_workflow, read_execution_workflow,
+    ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionStagePreparationError,
+    ExecutionStageResumeError, ExecutionWorkflowPersistenceError, create_execution_workflow,
+    read_execution_workflow,
 };
 pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,

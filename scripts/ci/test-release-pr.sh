@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/release-pr.sh scripts/ci/run-release.sh
 set -euo pipefail
 
 # Synthetic Git histories and bare destinations under one disposable root;

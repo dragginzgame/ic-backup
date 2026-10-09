@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.11.2]
+
+- Publish stage-owned predecessor checkpoints only after admitting the exact workflow, binding and complete ancestor histories; recheck those originals after publication and retain checkpoint/journal evidence on failure ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.2.4 companion declarations for reusable test suites, retaining the existing snapshot selection ([shared #73](https://github.com/dragginzgame/shared-tooling/issues/73)).
+
 ## [0.11.1] - 2026-10-09
 
 - Qualify the selected Host 0.9.2/Testkit 0.27.0 graph and explicit CLI/server preparation through both libraries’ managed simulator cases, retaining pending spending and original recovery evidence ([#32](https://github.com/dragginzgame/ic-backup/issues/32)).

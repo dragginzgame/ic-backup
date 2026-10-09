@@ -2387,6 +2387,19 @@ retains its distinct record-only inspection purpose for incomplete preparation.
 The returned sequential view is no atomic custody, fresh authority, receipt,
 transfer completion or terminal/fence/reference-release proof.
 
+`ExecutionStageGuard::checkpoint` publishes the existing all-Applied journal
+checkpoint and returns the exact original stage/binding/settlement predecessor
+commitment. The guard re-admits the retained workflow, binding, child plan and
+complete ancestor histories before and after canonical checkpoint publication.
+Post-publication failure keeps the checkpoint and all original spending; an
+occupied checkpoint is never replaced. Missing/held/pending originals or changed
+workflow/ancestor evidence return typed refusals. Drop active attempt guards at
+admission. The caller's learned-evidence digest remains opaque and independently
+qualified; this operation authenticates no learned ID, receipt or provider and
+grants no successor dispatch, full completion or fence/reference-release proof.
+The standalone original-plan checkpoint and exact identity-bound replay retain
+their independent local recovery responsibilities.
+
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact
 workflow/child identities, stage sequence and canonical predecessor rows; no

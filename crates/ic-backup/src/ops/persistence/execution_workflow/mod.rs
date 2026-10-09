@@ -2,8 +2,9 @@
 
 use super::{
     AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, ExecutionProgressPersistenceError,
-    ExecutionSettlementPersistenceError, JournalLock, JournalLockError,
-    OperationPlanPersistenceError, PersistenceError, create_json_durable, create_operation_plan,
+    ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError, JournalLock,
+    JournalLockError, OperationPlanPersistenceError, PersistenceError,
+    checkpoint_execution_settlement, create_json_durable, create_operation_plan,
     read_execution_progress, read_execution_settlement, read_json, read_operation_plan,
 };
 use crate::model::{
@@ -79,6 +80,39 @@ pub struct ExecutionStageGuard<'a> {
     plan: OperationPlanRecord,
 }
 impl<'a> ExecutionStageGuard<'a> {
+    /// Publish the original all-Applied checkpoint and derive its exact predecessor commitment.
+    ///
+    /// Re-admits the workflow, stage and complete ancestor histories before and after
+    /// delegating to the canonical original-journal checkpoint owner. Hold no attempt
+    /// guards. Failed post-publication admission retains the checkpoint and all originals;
+    /// an occupied checkpoint is never replaced. Identity-bound local replay remains
+    /// owned by `read_execution_settlement`.
+    ///
+    /// The supplied learned evidence stays integration-owned: this authenticates no
+    /// learned input, receipt or effect, and grants no dispatch or terminal/release proof.
+    /// # Errors
+    /// Rejects changed/missing/held originals, unsettled journals and publication failures.
+    pub fn checkpoint(
+        &self,
+        learned_evidence: ArtifactChecksumRecord,
+    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
+        self.checkpoint_with(learned_evidence, || {})
+    }
+    fn checkpoint_with(
+        &self,
+        learned_evidence: ArtifactChecksumRecord,
+        after_publication: impl FnOnce(),
+    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
+        let settlement = checkpoint_execution_settlement(self.layout()?, &self.plan.digest())?;
+        after_publication();
+        self.layout()?;
+        Ok(ExecutionStagePredecessorRecord::new(
+            self.binding.stage_sequence(),
+            self.binding.digest(),
+            settlement.digest(),
+            learned_evidence,
+        ))
+    }
     /// Resume an exact retained stage with its complete original journal progress.
     ///
     /// Reuses record-only `open` and canonical complete-journal admission, then
@@ -249,6 +283,17 @@ impl<'a> ExecutionStageGuard<'a> {
         validate_predecessors(self.workflow_layout, &workflow, &self.binding)?;
         Ok(&self.stage_layout)
     }
+}
+
+/// Stage-bound checkpoint refusal; original spending and published evidence remain retained.
+#[derive(Debug, Error)]
+pub enum ExecutionStageCheckpointError {
+    /// Original workflow/stage or complete ancestor history cannot be admitted.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
+    /// Complete original journal checkpoint derivation/publication failed.
+    #[error(transparent)]
+    Settlement(#[from] ExecutionSettlementCheckpointError),
 }
 
 /// Failed create-only preparation; retained records never grant repair or extra spending.

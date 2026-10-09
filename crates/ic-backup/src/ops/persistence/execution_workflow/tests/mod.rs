@@ -2,19 +2,19 @@ use super::*;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-        execution_settlement::{ExecutionSettlementJournalRecord, ExecutionSettlementRecord},
         execution_workflow::{
             ExecutionStagePredecessorRecord,
             tests::{child, workflow},
         },
     },
-    ops::persistence::{AttemptJournalGuard, create_execution_settlement, read_execution_progress},
+    ops::persistence::{AttemptJournalGuard, read_execution_progress},
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::process::Command;
 
 mod ancestry;
+mod checkpoint;
 mod preparation;
 mod resume;
 
@@ -56,21 +56,12 @@ fn settle_first(
             evidence: "12".repeat(32),
         })
         .unwrap();
-    let settlement = ExecutionSettlementRecord::new(
-        plan.digest(),
-        vec![ExecutionSettlementJournalRecord::from_journal(
-            journal.record().unwrap(),
-        )],
-    )
-    .unwrap();
     drop(journal);
-    create_execution_settlement(stage_layout, &settlement).unwrap();
-    ExecutionStagePredecessorRecord::new(
-        0,
-        binding.digest(),
-        settlement.digest(),
-        ArtifactChecksumRecord::from_bytes(b"snapshot ID and metadata evidence"),
-    )
+    stage
+        .checkpoint(ArtifactChecksumRecord::from_bytes(
+            b"snapshot ID and metadata evidence",
+        ))
+        .unwrap()
 }
 
 #[test]

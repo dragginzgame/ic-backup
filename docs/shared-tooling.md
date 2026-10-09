@@ -49,7 +49,19 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 92-file snapshot selects committed Shared Tooling 0.2.3 at
+The current 92-file snapshot selects committed Shared Tooling 0.2.4 at
+`ffbf665b8481c36b2d9f4d988abec557c3485fa6`. Canonical refresh from a clean
+isolated source changes ten test companion declarations and the consumer guidance,
+with the same complete roster and exact committed bytes/modes. Common engineering
+rules, production helper behavior and tool pins are unchanged. Required test
+helpers are now declared at more owners; canonical export admits our existing
+complete selection. The optional CI installer suite stays omitted. Focused owner
+exporter fixtures and actual consumer admission remain separate; the current
+[review](reports/audits/2026/10/09/continuation-0112/01/report.md) records both.
+
+### Prior Shared Tooling 0.2.3 review
+
+The prior 92-file snapshot selected committed Shared Tooling 0.2.3 at
 `ac4549c5ebde497f7db0da5d05d32835112e51de`. Canonical refresh from a clean
 isolated checkout changes four selected documentation/task files and preserves
 all selected executable bytes, modes and pins. Common engineering rules remain

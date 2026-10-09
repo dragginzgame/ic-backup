@@ -14,8 +14,7 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard,
-        checkpoint_execution_settlement, create_execution_workflow,
+        AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
     },
 };
 use serde_json::json;
@@ -86,14 +85,11 @@ fn retain_capture(
         })
         .unwrap();
     drop(journal);
-    let settlement =
-        checkpoint_execution_settlement(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-    ExecutionStagePredecessorRecord::new(
-        0,
-        binding.digest(),
-        settlement.digest(),
-        ArtifactChecksumRecord::from_bytes(b"test-owned learned raw ID [0,255,17]"),
-    )
+    stage
+        .checkpoint(ArtifactChecksumRecord::from_bytes(
+            b"test-owned learned raw ID [0,255,17]",
+        ))
+        .unwrap()
 }
 
 #[test]

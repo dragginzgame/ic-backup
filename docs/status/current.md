@@ -25,6 +25,28 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.2 stage-owned checkpoint continuation
+
+0.11.1 is live at `7492b19d2e5db8c9952c39f045568166f9a1f1c7`. Select compatible
+0.11.2 for `ExecutionStageGuard::checkpoint`, which derives the existing exact
+predecessor from canonical all-Applied publication and checks retained workflow,
+binding/plan and complete ancestor histories before and after publication. The
+public learned-stage and real capture/metadata/data callers now use this owner.
+Failed post-admission retains checkpoint/journals and returns no predecessor;
+learned-evidence qualification and effect permissions remain integration-owned.
+
+44 focused stage/settlement/public/simulator cases, core test/Agent library Clippy,
+both independent Rust 1.88 consumers and a standalone new-API caller pass.
+Canonically adopt committed Shared 0.2.4
+`ffbf665b8481c36b2d9f4d988abec557c3485fa6`: ten companion comments and guidance
+change within the same 92-file roster; production helpers/rules/pins are unchanged.
+The [review](../reports/audits/2026/10/09/continuation-0112/01/report.md) retains
+exact provenance/checks. Preserve manifest/lock bytes, prepared Testkit 0.27.0,
+all old/failed evidence and uncommitted work; package/receipt stay 0.11.1.
+Released Linux CI passes while macOS/native acceptance remains pending. Keep
+#29 open for installed full workflows and application/terminal/custody proof.
+No release, Git write, live IC effect or Canic edit follows.
+
 ## Current 0.11.1 selected Testkit 0.27.0 preparation
 
 Resolve the reported server-gate failure with explicit `make install-testkit-server`:
