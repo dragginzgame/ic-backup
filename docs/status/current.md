@@ -25,7 +25,72 @@
 
 # Current handoff — 2026-10-09
 
-## Current 0.11.5 complete data-transfer continuation
+## Current 0.12.0 direct Host upgrade
+
+Released base remains 0.11.5 at `6b5714aed1b3f69636b037fafebdee03b627a418`.
+Relabel the complete pending batch to 0.12.0: the requested direct Host 0.10
+upgrade changes the public `PersistenceError::Publication` Rust identity. Consumers
+sharing that value must align their direct Host dependency to 0.10. Variant shapes,
+v1 records, original limits/spending and private publication barriers are unchanged.
+Carry the preceding Shared 0.2.8 tooling work into this minor draft; package and
+release receipt stay at 0.11.5.
+
+Keep the incoming 0.10 requirements and select Host 0.10.1 for all four crates.
+Use canonical `write_with` for pathname publication; supported Unix callers retain
+held-parent `write_at_with`. Preserve serialize-once preflight, 0700/0600 permissions
+and synchronized pre-publication/durable-completion barriers. During qualification
+an external update selects published Testkit 0.28.0 and Metrics 0.3.5. Keep earlier
+0.27.2 results separately; qualify the frozen final selection. The exact 0.28.0 CLI
+is prepared through `make install-testkit-server`, with offline server admission
+passing. Preserve previous installations and server/recovery evidence. No sibling
+patch or production process dependency is introduced.
+
+All 221 focused artifact/persistence/workflow tests and eight actual core/Agent
+simulator cases pass. Both-library Clippy, warning-denied rustdoc, both independent
+Rust 1.88 consumers and a direct Host 0.10 public-error/pathname-API interoperability
+consumer pass. Normal consumers retain disabled optional archive/Wasm features and
+exclude Testkit/process/tools. Formatter, snapshot/pin and local-link checks pass.
+The [upgrade review](../reports/audits/2026/10/09/host-010/01/report.md) binds exact
+published sources, selected graph and retained evidence; the earlier 0.11.6 review
+remains historical qualification of its original graph. No Rust function, method
+or type was removed.
+
+No full gate, root Git write, version transaction, release, production IC effect,
+sibling edit or recovery cleanup occurred. Native macOS acceptance and this dirty
+candidate's remote CI remain unqualified. Released 0.11.5 Linux passes; both macOS
+jobs remain queued at inspection. Next accepted product work remains #29
+complete orchestration and independently qualified application/Agent/terminal custody.
+
+## Prior 0.11.6 tooling and selected Host continuation
+
+Released 0.11.5 is `6b5714aed1b3f69636b037fafebdee03b627a418`.
+Select compatible 0.11.6: canonically adopt committed Shared 0.2.8 at
+`b2646cde9abbc8861857a4379c683a0c19eba43e`, including the declared execution
+companion in the 94-file snapshot. Reject unsafe Make modes before recipes; keep
+probe selection local and accept recursive Make arguments. Preserve default help,
+prepared formatter admission and the post-run release-resume receipt check. Local
+hook, release and Testkit fixtures retain complete companions. Dry-run release
+preview now uses `make release-plan`; unsafe modes refuse with no effects.
+The sibling's dirty 0.3.0 proposal stays outside this adoption.
+
+Preserve the incoming Host 0.9.7 lock selection, Testkit 0.27.2, Metrics 0.3.4 and
+Agent 0.49.2. Published Artifact/FS/Process source is unchanged; Host Tools' hex
+cleanup adds no API for Backup to adopt. No safe extra local code retirement was
+found. Exact Testkit CLI/server admission, 80 focused unit and eight actual core/
+Agent simulator cases, both-library Clippy and independent Rust 1.88 consumers
+pass. Hooks, Make admission, release adapters, formatter/snapshot/pin and shell
+checks pass; the [review](../reports/audits/2026/10/09/continuation-0116/01/report.md)
+retains exact source/graph evidence. Package/receipt remain 0.11.5 and incoming
+manifest/lock bytes are unchanged.
+
+The exact released-source CI run has Linux in progress and both macOS jobs queued
+at inspection. Keep native acceptance open in #32/#33/#34; this dirty candidate has
+no remote result. Next accepted product work remains #29 metadata/capture/upload/
+restore orchestration with independently qualified application/Agent admission and
+terminal/custody proof. This batch performs no full gate, root Git write, release,
+production IC effect, sibling edit or recovery cleanup. No Rust symbol was removed.
+
+## Released 0.11.5 complete data-transfer continuation
 
 Released 0.11.4 is `a585ae1064b1db49cd33f5c02dfe76637bd9f1b9`.
 The compatible 0.11.5 draft adds `workflow::ic_snapshot_download::download_snapshot`:

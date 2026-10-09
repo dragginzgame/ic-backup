@@ -184,9 +184,11 @@ completion. All v1 bytes, original limits, spending and journal transitions rema
 unchanged. Neither helper grants operation or retry authority.
 
 Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
-released 0.9.0 selected Host 0.8. Pending 0.11.0 selects incoming direct Host 0.9,
-changing that public Rust identity again while preserving variant shapes and v1
-records. Testkit retains its independently published dev-only Host 0.8 graph.
+released 0.9.0 selected Host 0.8 and released 0.11.0 selected direct Host 0.9.
+Pending 0.12.0 selects direct Host 0.10, changing that public Rust identity again
+while preserving variant shapes and v1 records. The pathname adapter uses Host's
+canonical `write_with`; the Unix held-parent adapter retains `write_at_with`.
+Testkit 0.28 selects the same independently published Host 0.10 test-only graph.
 Direct Host dependencies sharing that value must use the same compatible line.
 The new closed-writer executable-admission API has no record-writing purpose;
 JSON publication keeps this single held-parent adapter and preflight contract.

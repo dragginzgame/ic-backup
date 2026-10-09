@@ -49,7 +49,21 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 93-file snapshot selects committed Shared Tooling 0.2.6 at
+The current 94-file snapshot selects committed Shared Tooling 0.2.8 at
+`b2646cde9abbc8861857a4379c683a0c19eba43e`. Canonical refresh from a clean
+isolated checkout adds the declared `make/execution.mk` companion and refreshes
+hook adoption and release guidance. The parse-time owner rejects Make modes that
+skip recipes or hide failures, resolves its probe beside the selected include,
+and accepts recursive Make commands carrying arguments. Preserve harmless default
+help, pinned formatter admission and specialized post-run release-resume checks.
+Local hook, release and Testkit-routing fixtures export the new companion and its
+existing probe. No tool pin, hook activation or dependency reselection changes.
+The sibling's uncommitted 0.3.0 work is excluded. Focused review and exact provenance
+are retained in the [review](reports/audits/2026/10/09/continuation-0116/01/report.md).
+
+### Prior Shared Tooling 0.2.6 review
+
+The prior 93-file snapshot selects committed Shared Tooling 0.2.6 at
 `ce13a5314916891fd239d9b199b4a91b04775054`. Canonical refresh from a clean
 isolated source adds `make/rust-format.mk` and refreshes consumption/release/hook
 guidance. Replace the local formatting recipes with that include; keep pinned

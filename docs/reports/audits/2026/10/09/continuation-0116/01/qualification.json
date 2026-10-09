@@ -1,0 +1,1155 @@
+{
+  "scope": "Compatible 0.11.6 Shared Tooling adoption and qualification of the incoming Host patch graph; uncommitted consumer work.",
+  "reviewed_at": "2026-10-09T16:35:43.189991+00:00",
+  "base": "6b5714aed1b3f69636b037fafebdee03b627a418",
+  "draft": "0.11.6",
+  "unchanged_incoming_inputs": {
+    "Cargo.toml": "7436f61ead4697228c92267116652294981f06b043f81e6afd54f39de1044db2",
+    "Cargo.lock": "fbecc8ce7fd7f1953f3974a78f5794083f1fdf0411a5795fe3ed7cf103b5f14e"
+  },
+  "selected_graph": {
+    "ic-agent": "0.49.2",
+    "ic-host-artifacts": "0.9.7",
+    "ic-host-fs": "0.9.7",
+    "ic-host-process": "0.9.7",
+    "ic-host-tools": "0.9.7",
+    "ic-metrics": "0.3.4",
+    "ic-testkit": "0.27.2",
+    "pocket-ic": "16.1.0"
+  },
+  "shared_revision": "b2646cde9abbc8861857a4379c683a0c19eba43e",
+  "shared_files": [
+    {
+      "path": "docs/verification-helpers.md",
+      "sha256": "8ea130d767dd83ea491f8321b34b6498538220a99b1685ccbec0cbbef0522b48",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/check-documentation-links.pl",
+      "sha256": "a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-documentation-links.pl",
+      "sha256": "7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-file-digests.sh",
+      "sha256": "c80d7ed47d1bbb46fdd2b437fc1a3293738ac51c2f6c89e456bdb68c39ef2443",
+      "executable": true
+    },
+    {
+      "path": "rules/dependency-pinning.md",
+      "sha256": "4692d760ea97861b52c183bb69e24c929d9baf7c292795c61d65ea3166368787",
+      "executable": false
+    },
+    {
+      "path": "audits/README.md",
+      "sha256": "faa9a62257ecdfd6532ac2225b3fd053012dfe9c35b8bc2ddc95288d8626a518",
+      "executable": false
+    },
+    {
+      "path": "audits/code-hygiene.md",
+      "sha256": "518d890bf485bef06c316b4cf26ac6bf357ed52bcce995e8d9b1232a103d0ea3",
+      "executable": false
+    },
+    {
+      "path": "audits/flow-convergence-and-duplication.md",
+      "sha256": "35fd87d36a09ed0971841abf28535d43470c713a82581c2251b924da1ab8f484",
+      "executable": false
+    },
+    {
+      "path": "audits/complexity-and-technical-debt.md",
+      "sha256": "ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b",
+      "executable": false
+    },
+    {
+      "path": "audits/module-surface-hardening.md",
+      "sha256": "1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075",
+      "executable": false
+    },
+    {
+      "path": "audits/module-cleanup.md",
+      "sha256": "8f415bcb0e97fcc0e27519e727e7aefae94686e6e5e3619d24e3df3ace5d7708",
+      "executable": false
+    },
+    {
+      "path": "docs/provenance.md",
+      "sha256": "1a0d1d6f2a87a0d77378fdda605f5700cc7e2ca8c8dfac79418248da30b7e657",
+      "executable": false
+    },
+    {
+      "path": "docs/ic-tools.md",
+      "sha256": "67cc50a0c95ad7d9d50b4a50ec2969ce3455c7fdefc4a4a61e00f3a68a7d501c",
+      "executable": false
+    },
+    {
+      "path": "docs/local-setup.md",
+      "sha256": "077c98e506e8b3998b3b9e668b656c60a502610df06a513e4241bf93bc01b790",
+      "executable": false
+    },
+    {
+      "path": "ci/tool-versions.env",
+      "sha256": "82892e25292fe47c26035a0031aa4ad1996fcf181732163e75039bd657f2f84b",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/check-dependency-pins.sh",
+      "sha256": "de68acd7ba25355c73fa3e9a32cbde5525debf081862c1f1a52eccb4a66c48de",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/dependency-pins.jq",
+      "sha256": "3d56ca1b0c5952b9534ece61b6754ca39e6ec1980d929f09de3dbd967a0c4977",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/verify-evidence-checksums.sh",
+      "sha256": "ab2202f89a077373fffac29f57527b88ccc65998f5c85c60a32081edd8338150",
+      "executable": true
+    },
+    {
+      "path": "scripts/dev/install-host-tools.sh",
+      "sha256": "74134f6567746b2071ecfca28829b0ea4da69ed207b958b38fd181e722a3aea9",
+      "executable": true
+    },
+    {
+      "path": "scripts/dev/install-ic-tools.sh",
+      "sha256": "f41ba134d2838df094d373c70ba254f6bc2f1184914eee06119062708f2d6797",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-dependency-pins.sh",
+      "sha256": "4c2577bd91936d542c0f95ec27e8f554e2f1ac190bd2a7e8904859081b219c1c",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-host-tools.sh",
+      "sha256": "ab60367040118f0e26a1ae7daf8e29832a9e9887fc6e9039dc5b0b41c80bbd1b",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-ic-tools.sh",
+      "sha256": "ea7a37717a8200e29a01358a02a03fce70f3967e8c2165d0378df3351176d3c0",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-evidence-checksums.sh",
+      "sha256": "b8468beabae2a39faed9d776be101cd08e5378d39b711b82cff0c8fc0d573ad2",
+      "executable": true
+    },
+    {
+      "path": "docs/principles/README.md",
+      "sha256": "59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/decision-artifact-discipline.md",
+      "sha256": "9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/reviewable-changes.md",
+      "sha256": "ee68649246bad21f0f28df4ea3809d8e2c7bcf1cd2a3d68e44684b855badc1c2",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/rust-code-hygiene.md",
+      "sha256": "27a04aeee753252b310fef363856edf83577337bfaea1e63a50017460eddde59",
+      "executable": false
+    },
+    {
+      "path": "docs/principles/simplicity-and-maintainability.md",
+      "sha256": "457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55",
+      "executable": false
+    },
+    {
+      "path": "docs/consuming-snapshots.md",
+      "sha256": "039f9e043059985a60e3022e53d243c8430ca67ae813fa926be5e7ffb67ef65e",
+      "executable": false
+    },
+    {
+      "path": "docs/supported-hosts.md",
+      "sha256": "60645a72a0d0e8dbe7bb66b67fd16b5bc01a4445b8876f1136ef2ef0e9f35eec",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/verify-file-checksum.sh",
+      "sha256": "4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/verify-shared-tooling-snapshot.sh",
+      "sha256": "ba5c6b76d15bec4ac226f1ab0732d5087446152d64107993c52642a68d2ff464",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/run-validation-targets.sh",
+      "sha256": "49ec78ab63a587a2f74f0f7da3e06d9f9942f831129b9201cba5bcd0698548fe",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-validation-target-runner.sh",
+      "sha256": "94e2c276b8a365fb0dd492ebada199de96c8e40737faad9b47a996d3af22aa22",
+      "executable": true
+    },
+    {
+      "path": "DRAGGINZGAME.md",
+      "sha256": "0d472a74369e6aa772d585305e19b398fb86f0ef9698f1564356ddc11c60e0b6",
+      "executable": false
+    },
+    {
+      "path": "rules/changelogs.md",
+      "sha256": "b5a6e8fb723a861b722834675e27b4b16f3d296112622c1b40cdc8714f575404",
+      "executable": false
+    },
+    {
+      "path": "docs/releases.md",
+      "sha256": "e9a4f50ec386838698a44946f44aa777c4ad37bcfe1c65f4d63da281058cac97",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/run-release.sh",
+      "sha256": "fc689ff5d636be1049a527f6cafa74a768005211dcbecb074b8b327d8e6bab04",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/next-release-version.sh",
+      "sha256": "37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/finalize-release-changelog.awk",
+      "sha256": "e7f4c82566858b89b50c5c2f929097bdde85345a2c0c1bf553bb1170cc4f5960",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/test-release-runner.sh",
+      "sha256": "027575ae9be221c3ef9e903239fbfdb40aa5192c2f5e08c157a5d15dc3cd52ae",
+      "executable": true
+    },
+    {
+      "path": "rules/cargo-dependencies.md",
+      "sha256": "a7d6612e6c9cfea5f8e920f82109094851876d0dfc117ecc454f966cb50d7c66",
+      "executable": false
+    },
+    {
+      "path": "rules/git-hooks.md",
+      "sha256": "a2e97546221bfad33c4a82d7022570655a05b2d493a5f210c4599306651e7676",
+      "executable": false
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "sha256": "fbee8c292a242ec71babca5eebc30613c82005b6e9e80c850a1ebca1112eaea6",
+      "executable": true
+    },
+    {
+      "path": "scripts/dev/install-git-hooks.sh",
+      "sha256": "c1fcf72754976d3d2e5203226e97ef5f50eff4b5c0dabeb2a9b00cfcf0326645",
+      "executable": true
+    },
+    {
+      "path": "rules/agent-maintenance.md",
+      "sha256": "d0e3e07844d06f46ffe01d406ffb29624b31079c1402b899262aabb718cbb436",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/rewrite-local-lock-versions.pl",
+      "sha256": "236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-local-lock-versions.pl",
+      "sha256": "d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/check-formatting-hooks.sh",
+      "sha256": "c18c97af2aae52f163674254c9256dc8051387cc834326fd4c57d5890e8b0d85",
+      "executable": true
+    },
+    {
+      "path": "docs/tag-maintenance.md",
+      "sha256": "1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/read-cargo-workspace-version.sh",
+      "sha256": "40f31a19d6115411ebffe7c26e3ed30b8af7eead10dd4830de8d5a9312291222",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-cargo-metadata.sh",
+      "sha256": "03d7f0c880cfd5d44e55c8e2453ed49d623f497fdcf54ce6f9a7400e1d4f88ae",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/check-format-tools.sh",
+      "sha256": "a52db278800a9f02d85a6b8a780a9b1eed860c49d5442cef9db1f7f9d7ddee0a",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-format-tools.sh",
+      "sha256": "3a41e1601ca23f14137dca33005da034b34a5143e960fd3e59605a3fc18d2071",
+      "executable": true
+    },
+    {
+      "path": "scripts/distribution/governance-files.txt",
+      "sha256": "431f4a40037fc341bec1d53416b440b3bcd4b6af5cd45210e390c82abb08b475",
+      "executable": false
+    },
+    {
+      "path": "rules/rust-workspaces.md",
+      "sha256": "144f811057e2c5e9692175da463e3fd6be716470a22c48a6bf56f9aabb1f3940",
+      "executable": false
+    },
+    {
+      "path": "make/tools.mk",
+      "sha256": "49c3ea9db43f37ea293be61a1031c61bdf00745ae58bc66b76afcea07f9a2128",
+      "executable": false
+    },
+    {
+      "path": "scripts/dev/cloc.sh",
+      "sha256": "8a14c80cec16a2cb07454c4e0f741150bc8385cd51ebc720a84ee3af1cc63043",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/check-make-execution.sh",
+      "sha256": "c0d4bed8f2b876f5ae0a61f6c56e4c71736ab9888f092ab6c67d9f5ba142543d",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-tool-commands.sh",
+      "sha256": "65d35e627f2b83c5b17fa2f198376139ad826aa67199fbd5ab1b6c6a31d519fb",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-cloc.sh",
+      "sha256": "5c984a6fea79f3c275b7c846bacf0fe3767ba2733581648fd77083a621be3005",
+      "executable": true
+    },
+    {
+      "path": "audits/ic-canister-applications.md",
+      "sha256": "94a934651d5cb0c6f77fa429df277856dbda4c1a7441b2b8563e678c416258f6",
+      "executable": false
+    },
+    {
+      "path": "scripts/dev/install-rust-tools.sh",
+      "sha256": "83e60382356dcf245349b41658b36560bc17a14b1c3be8abc8c6d7101f6376ac",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-rust-tools.sh",
+      "sha256": "ffbcacc284996bf0b0a5ffae87efabd10a9d29552089225b927c9a97048a1ccc",
+      "executable": true
+    },
+    {
+      "path": "rules/contributions.md",
+      "sha256": "05838a36f21bb4299617ae8965687791062c94d768181f5f97676cc577382153",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/ic-tool-pins.awk",
+      "sha256": "775da89f655a3781059f433f80470ee6db9675e08942a805c111614183322fe1",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/release-pr.sh",
+      "sha256": "fc40c8ad1c4ab850fda0e60b8cb0b3201724d020966e4d7e5d07620781f5e814",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/test-release-pr.sh",
+      "sha256": "e41f25a660f42cd9b8ffd96e411657286f1a6f8e6a56d95b003eacd6e0a5e859",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/archive-evidence.sh",
+      "sha256": "5be336cb3e8045b2d2d536542a94944b376ee812b03f786a90b9d962ab697f13",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-evidence-archive.sh",
+      "sha256": "a9f7cbe3a60c669932f41b718a55ef33b5a4cdd6f685e9a3e473c03d6204e047",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/test-tool-evidence.sh",
+      "sha256": "90e6b75e1bd3e3d7bc68b18f727379981e6811aa0a1b061e75d32c4699b13632",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/select-tool-evidence.sh",
+      "sha256": "d7feda634703b4e0acb9e5406deccca2b81b821dfa738b714708b82a2c2e9bc3",
+      "executable": true
+    },
+    {
+      "path": ".github/actions/retain-failure-evidence/action.yml",
+      "sha256": "020b67bcb75d35f5c12392b8c9ec3d7ba31f3a8e07c8318c35643be1ddf72d40",
+      "executable": false
+    },
+    {
+      "path": "tasks/README.md",
+      "sha256": "7c63c133b3b35bc7648f0269271a2cbf5f36916e9ab79ca89185e2c34e017140",
+      "executable": false
+    },
+    {
+      "path": "tasks/cargo-machete.md",
+      "sha256": "eb2419a5762a3cb02f25811d93becb6b18ca520df0bc3448ea35dfa187a034b4",
+      "executable": false
+    },
+    {
+      "path": "tasks/msrv.md",
+      "sha256": "b20211ec1c39ef262c8ab266b207db43c44cd1474acde18297586590c7885810",
+      "executable": false
+    },
+    {
+      "path": "tasks/rust-toolchain.md",
+      "sha256": "ed8d04d20a6e5bd77aece468a5f44f7d9e1c8a52411431d24e052e20c39038f3",
+      "executable": false
+    },
+    {
+      "path": "tasks/ci-health.md",
+      "sha256": "4f48ed5bec0cb8310884e67912d1ab7cf2701c0987aa1dc77e75b57f0493edfb",
+      "executable": false
+    },
+    {
+      "path": "tasks/snapshot-drift.md",
+      "sha256": "32542f9879fcb5f2fa0f32ec0c71afb53380f1b365b900b24f5a736e776e1945",
+      "executable": false
+    },
+    {
+      "path": "tasks/dependency-security.md",
+      "sha256": "5057273d73e5bae55b9cebb0c8cd606afcd9a413a0c8cf89c3a634ca7b63aa4a",
+      "executable": false
+    },
+    {
+      "path": "tasks/code-audit.md",
+      "sha256": "5d0c7d274dd9da1e5064287c7bd89c7baec9b0a9ba5a8f1a44e918bb60a28943",
+      "executable": false
+    },
+    {
+      "path": "tasks/tooling-duplication.md",
+      "sha256": "661ff5d16c8a41c597d14550294901cbfcc38b7e5e5931646a6739d0dce2ecd5",
+      "executable": false
+    },
+    {
+      "path": "tasks/maintenance-prompt.md",
+      "sha256": "fba891e27166497efcc5e57e0c28146c3e22d8f340d97926d0fbe4a3a269c831",
+      "executable": false
+    },
+    {
+      "path": "tasks/local-schedule.md",
+      "sha256": "f99365d4045c620ae186c06a86a8f898a534d2ad9d8d01d783706c192c7813e3",
+      "executable": false
+    },
+    {
+      "path": "tasks/systemd/shared-tooling-maintenance.service",
+      "sha256": "d26462d2d6e9c1e991a6f1f45f2a12ce919a29eab987665438af530f51b6fee5",
+      "executable": false
+    },
+    {
+      "path": "tasks/systemd/shared-tooling-maintenance.timer",
+      "sha256": "f7b95816164980993403d2d6eae13336db1c476c58217c8e8d356e6d01fe9b27",
+      "executable": false
+    },
+    {
+      "path": "scripts/dev/run-maintenance.sh",
+      "sha256": "dfccb5fa0194b343d140512c892a31eac902cb1a489e641feae3c18e1cf70a1c",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/test-maintenance-task.sh",
+      "sha256": "7aa8b26a081399ac63dc823479936e5f663aef40fec91a9d5dae978956341e37",
+      "executable": false
+    },
+    {
+      "path": "scripts/ci/check-release-source.sh",
+      "sha256": "a3af7084956384262842be33100f91a22fdd82b0f91b6091a00e90f8726f67fe",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/install-shellcheck.sh",
+      "sha256": "c133d81786de40433b64fbc497db763151705d52e910607e768b8f986fc20548",
+      "executable": true
+    },
+    {
+      "path": "scripts/ci/install-ci-tool.sh",
+      "sha256": "e15dbf4612dddffa925e57e878db8bcbd7765c7b350ebbe41635e3df4d38bee5",
+      "executable": true
+    },
+    {
+      "path": "make/rust-format.mk",
+      "sha256": "1fd9242abe9dfcfe2dc4639644c178c59e92e55efed7ec90443b56f4590a57d8",
+      "executable": false
+    },
+    {
+      "path": "make/execution.mk",
+      "sha256": "6b3532abce23f8fe3a57a1c3327455c8975d9ba6e66529255cdc566dfbbe914e",
+      "executable": false
+    }
+  ],
+  "changed_sources": [
+    {
+      "path": ".shared-tooling.snapshot",
+      "sha256": "5215248c71f16919d3478daaa3aa605216b8a45a60cf902877408fd2dba2ebd6"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "5ceab50db857b8c82c92c1ed06d91de6d53cdcff241ba730c7203bda82713a32"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "fbecc8ce7fd7f1953f3974a78f5794083f1fdf0411a5795fe3ed7cf103b5f14e"
+    },
+    {
+      "path": "docs/consuming-snapshots.md",
+      "sha256": "039f9e043059985a60e3022e53d243c8430ca67ae813fa926be5e7ffb67ef65e"
+    },
+    {
+      "path": "docs/development.md",
+      "sha256": "fec5551a79ada0b15bd22db356534b225c46fb84ed774d3a8af5715677337c25"
+    },
+    {
+      "path": "docs/releases.md",
+      "sha256": "e9a4f50ec386838698a44946f44aa777c4ad37bcfe1c65f4d63da281058cac97"
+    },
+    {
+      "path": "docs/reports/audits/2026/10/09/continuation-0116/01/report.md",
+      "sha256": "d8d8fd77c8e51c097d290d5cb20ecdd9d93a56155f6d2ca0770b17969aa46b2e"
+    },
+    {
+      "path": "docs/shared-tooling.md",
+      "sha256": "a93c4faa426ef075eb160f37ed8be1fbfb8bc6b60c995e4972fa733cd10ad416"
+    },
+    {
+      "path": "docs/status/current.md",
+      "sha256": "f990659785df6c274cab8fb8fd9bd3cd23afd7086aa3a2a2ff431a6272e406e1"
+    },
+    {
+      "path": "make/execution.mk",
+      "sha256": "6b3532abce23f8fe3a57a1c3327455c8975d9ba6e66529255cdc566dfbbe914e"
+    },
+    {
+      "path": "make/rust-format.mk",
+      "sha256": "1fd9242abe9dfcfe2dc4639644c178c59e92e55efed7ec90443b56f4590a57d8"
+    },
+    {
+      "path": "rules/git-hooks.md",
+      "sha256": "a2e97546221bfad33c4a82d7022570655a05b2d493a5f210c4599306651e7676"
+    },
+    {
+      "path": "scripts/ci/check-formatting-hooks.sh",
+      "sha256": "c18c97af2aae52f163674254c9256dc8051387cc834326fd4c57d5890e8b0d85"
+    },
+    {
+      "path": "scripts/ci/test-testkit-commands.sh",
+      "sha256": "4837fa4ba7150f420caa859772b99f69a35e788f31d68ec3d8806b1e1adf5395"
+    },
+    {
+      "path": "scripts/hooks/test-hooks.sh",
+      "sha256": "e7a68dd78e70cc83a3d260722af22ec488d6d46ff9dfc94b917f06ec45758966"
+    },
+    {
+      "path": "scripts/release/test-release.sh",
+      "sha256": "994f56e544fa6b6461bf11eddaa47e5799b51d780d40ad97ce594ab62dcde6c3"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "bash",
+        "/tmp/ic-backup-shared-028.4sgis80b/source/scripts/ci/test-make-format.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/shared-format.log",
+      "sha256": "b2803b4371bd67edda8271775f342b5083f59686b6302ae14a81fb783ba3b8d6"
+    },
+    {
+      "command": [
+        "bash",
+        "/tmp/ic-backup-shared-028.4sgis80b/source/scripts/ci/test-release-commands.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/shared-release.log",
+      "sha256": "df0fb022e8d0782f66d3471214a681354277582bf87ba1732a7a6f9959f28f91"
+    },
+    {
+      "command": [
+        "bash",
+        "/tmp/ic-backup-shared-028.4sgis80b/source/scripts/ci/test-git-hooks.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/shared-hooks.log",
+      "sha256": "21062548b1b9aedd3c22b28dc5cd02347d9289f8056a2765a8191456a492d0ba"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/release/test-release.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/release-adapters.log",
+      "sha256": "55e1b78bc3e0385f4449bb207c3346c404981aa87ac0a213400fe42f45e0d6d2"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/ci/test-release-runner.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/release-runner.log",
+      "sha256": "ae44a54a9ec3879324d6d50381533a91c0888c202b4ece961d0961864652f922"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "ops::artifacts::"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/artifacts.log",
+      "sha256": "c713675f29aa29f04e58da3f5a49f943198f53e2c0f781a6d337e34faa97ed44"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "ops::persistence::json::"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/json.log",
+      "sha256": "5c5381bc8a3fcb71b60f456e76d452b72f9def708a3b9ae04537ff9ac4f7b8f0"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "workflow::"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/workflow.log",
+      "sha256": "44418bcc88468ea7f20d342e5b3778c4fbd2bbeb55c3cb40f47b32c93aa1f0cd"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "download_journal::metrics::"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/metrics.log",
+      "sha256": "865741d50d689ab9c69f1e7d4dce3f8f89d9a9afc40f33ac91a25277932deb69"
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "--tests",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/clippy.log",
+      "sha256": "f5c14df3f8979769e97013b54a61bf2763e9367d77bc5d982fb59bfaae650844"
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup-agent",
+        "--lib",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/agent-clippy.log",
+      "sha256": "79763b011aeae1bc8e2d0e3bf271ad3f13e4da5f76c0894c580cf4b454d979d0"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/ci/check-msrv-consumers.sh",
+        "1.88.0"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/msrv.log",
+      "sha256": "34d6740b9097b24b541b74f9f7eca53f97c527db3c45139ebc5d03ac8caf272d"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--test",
+        "pocketic_snapshot",
+        "planned_",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/core-simulator.log",
+      "sha256": "b46e2db12c1d8d7bed79ac9e015cfc9ab0c23948c565e89390ce2860dfa3f4a8"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup-agent",
+        "--test",
+        "pocketic_transport",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/agent-simulator.log",
+      "sha256": "808a1d52b4412780a8ef09c285c746b51173a3d3dac4e26993911a3acdd444bc"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/hooks/test-hooks.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/hooks.log",
+      "sha256": "d1a5704b1d91c17da1d30abf1ee7e838fce56499fd479d8f4e1785b8be9aa463"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/ci/test-testkit-commands.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/testkit-routing.log",
+      "sha256": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901"
+    },
+    {
+      "command": [
+        "make",
+        "--silent",
+        "--no-print-directory",
+        "fmt-check",
+        "shared-tooling-check",
+        "dependency-pins-check",
+        "testkit-server-check"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/tools.log",
+      "sha256": "04bf3e49451b7ea3928a1da4580041a1371be15eeb8fe404bf826733e48f6d74"
+    },
+    {
+      "command": [
+        "make",
+        "--silent",
+        "--no-print-directory",
+        "shell-check"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/shell-check.log",
+      "sha256": "3f894a5a9e82720700f65084205428a55f7c8943a789d71a796ead01ab317a0b"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/ci/check-doc-links.sh"
+      ],
+      "exit_code": 0,
+      "log": "target/continuation-0116/doc-links.log",
+      "sha256": "a13c7bbc4869c38585d57877239ccfecb33b791e3c4344cdbbf13f4cb7d08557"
+    }
+  ],
+  "make_admission": [
+    {
+      "case": "help",
+      "command": [
+        "make",
+        "--silent",
+        "--no-print-directory",
+        "help"
+      ],
+      "exit_code": 0,
+      "expected_success": true,
+      "log": "target/continuation-0116/make-help.log"
+    },
+    {
+      "case": "ignore-errors",
+      "command": [
+        "make",
+        "-i",
+        "help"
+      ],
+      "exit_code": 2,
+      "expected_success": false,
+      "log": "target/continuation-0116/make-ignore-errors.log"
+    },
+    {
+      "case": "dry-run",
+      "command": [
+        "make",
+        "-n",
+        "help"
+      ],
+      "exit_code": 2,
+      "expected_success": false,
+      "log": "target/continuation-0116/make-dry-run.log"
+    },
+    {
+      "case": "touch",
+      "command": [
+        "make",
+        "-t",
+        "help"
+      ],
+      "exit_code": 2,
+      "expected_success": false,
+      "log": "target/continuation-0116/make-touch.log"
+    },
+    {
+      "case": "question",
+      "command": [
+        "make",
+        "-q",
+        "help"
+      ],
+      "exit_code": 2,
+      "expected_success": false,
+      "log": "target/continuation-0116/make-question.log"
+    },
+    {
+      "case": "alternate-root",
+      "command": [
+        "make",
+        "--silent",
+        "help",
+        "SHARED_TOOLING_ROOT=/tmp/unselected-tooling-root"
+      ],
+      "exit_code": 0,
+      "expected_success": true,
+      "log": "target/continuation-0116/make-alternate-root.log"
+    },
+    {
+      "case": "recursive-arguments",
+      "command": [
+        "make",
+        "--silent",
+        "help",
+        "MAKE=make --no-print-directory"
+      ],
+      "exit_code": 0,
+      "expected_success": true,
+      "log": "target/continuation-0116/make-recursive-arguments.log"
+    },
+    {
+      "case": "unsafe-alternate-root",
+      "command": [
+        "make",
+        "-i",
+        "help",
+        "SHARED_TOOLING_ROOT=/tmp/unselected-tooling-root",
+        "_shared_make_execution_checked=yes"
+      ],
+      "exit_code": 2,
+      "expected_success": false,
+      "log": "target/continuation-0116/make-unsafe-alternate-root.log"
+    }
+  ],
+  "host_review": {
+    "registry": [
+      {
+        "crate": "ic-host-artifacts",
+        "latest_stable": "0.9.7",
+        "published": "2026-10-09T16:17:28.628983Z",
+        "checksum": "67370ad6694be28e687d9797d0505320c94f84fd488d92aa8fbcb5c836c979a8",
+        "yanked": false,
+        "repository": "https://github.com/dragginzgame/ic-host-tooling"
+      },
+      {
+        "crate": "ic-host-fs",
+        "latest_stable": "0.9.7",
+        "published": "2026-10-09T16:17:31.155061Z",
+        "checksum": "3ea403e45ff971df9c9b1ad2ef5a567055b3264b415ec0024d203336ad46f178",
+        "yanked": false,
+        "repository": "https://github.com/dragginzgame/ic-host-tooling"
+      },
+      {
+        "crate": "ic-host-process",
+        "latest_stable": "0.9.7",
+        "published": "2026-10-09T16:17:33.399880Z",
+        "checksum": "a19c2e7435c2524ee32f6ae34a39dbe3f842d9cbbcc3f16ad4a74aef6b3495b7",
+        "yanked": false,
+        "repository": "https://github.com/dragginzgame/ic-host-tooling"
+      },
+      {
+        "crate": "ic-host-tools",
+        "latest_stable": "0.9.7",
+        "published": "2026-10-09T16:17:36.102770Z",
+        "checksum": "03f667395744013694546866b7fa35eaad46d15001752c2e65fbeca5a4f93049",
+        "yanked": false,
+        "repository": "https://github.com/dragginzgame/ic-host-tooling"
+      },
+      {
+        "crate": "ic-testkit",
+        "latest_stable": "0.27.2",
+        "published": "2026-10-09T15:46:37.988724Z",
+        "checksum": "d5caa4c8cbcc23aea70627a05dcb50923ec88a167542bff1c856f5e72b5d4d75",
+        "yanked": false,
+        "repository": "https://github.com/dragginzgame/ic-testkit"
+      }
+    ],
+    "archive_checks": [
+      {
+        "crate": "ic-host-artifacts",
+        "latest_selected": true,
+        "archive_checksum_matches_registry_and_lock": true
+      },
+      {
+        "crate": "ic-host-fs",
+        "latest_selected": true,
+        "archive_checksum_matches_registry_and_lock": true
+      },
+      {
+        "crate": "ic-host-process",
+        "latest_selected": true,
+        "archive_checksum_matches_registry_and_lock": true
+      },
+      {
+        "crate": "ic-host-tools",
+        "latest_selected": true,
+        "archive_checksum_matches_registry_and_lock": true
+      },
+      {
+        "crate": "ic-testkit",
+        "latest_selected": true,
+        "archive_checksum_matches_registry_and_lock": true
+      }
+    ],
+    "source_comparison": [
+      {
+        "crate": "ic-host-artifacts",
+        "previous": "0.9.5",
+        "selected": "0.9.7",
+        "changed_files": [],
+        "vcs": {
+          "git": {
+            "sha1": "ca62e661918db2f4320743b9042a4993a5fff2aa"
+          },
+          "path_in_vcs": "crates/ic-host-artifacts"
+        }
+      },
+      {
+        "crate": "ic-host-fs",
+        "previous": "0.9.5",
+        "selected": "0.9.7",
+        "changed_files": [],
+        "vcs": {
+          "git": {
+            "sha1": "ca62e661918db2f4320743b9042a4993a5fff2aa"
+          },
+          "path_in_vcs": "crates/ic-host-fs"
+        }
+      },
+      {
+        "crate": "ic-host-process",
+        "previous": "0.9.5",
+        "selected": "0.9.7",
+        "changed_files": [],
+        "vcs": {
+          "git": {
+            "sha1": "ca62e661918db2f4320743b9042a4993a5fff2aa"
+          },
+          "path_in_vcs": "crates/ic-host-process"
+        }
+      },
+      {
+        "crate": "ic-host-tools",
+        "previous": "0.9.5",
+        "selected": "0.9.7",
+        "changed_files": [
+          "src/response/mod.rs"
+        ],
+        "vcs": {
+          "git": {
+            "sha1": "ca62e661918db2f4320743b9042a4993a5fff2aa"
+          },
+          "path_in_vcs": "crates/ic-host-tools"
+        }
+      }
+    ]
+  },
+  "testkit_cli": {
+    "package": "ic-testkit",
+    "version": "0.27.2",
+    "kind": "bin",
+    "target": "ic-testkit-server",
+    "profile": "release",
+    "host": "x86_64-unknown-linux-gnu",
+    "binary_sha256": "cfc4587bd0c1ce23faf6c68ff3b9eda2ad51e73425daaa20de0e614a1e44c08a",
+    "receipt_sha256": "a8b8bf31be85f5035a6f7b5abd89ed8fd045e9b959b503aa7ad75a433a36894a"
+  },
+  "metrics_instruction_feature_present": false,
+  "retained_unsuccessful_attempts": [
+    {
+      "log": "target/continuation-0116/release-adapters-prior-expectation.log",
+      "reason": "Old consumer fixture expected dry-run success before adopting parse-time execution guards; final corrected fixture passes."
+    },
+    {
+      "log": "target/continuation-0116/doc-links-before-proof.log",
+      "reason": "Report link was checked before qualification.json creation; final completed proof is checked separately."
+    }
+  ],
+  "released_ci": [
+    {
+      "conclusion": "",
+      "databaseId": 37958355952,
+      "event": "push",
+      "headSha": "6b5714aed1b3f69636b037fafebdee03b627a418",
+      "status": "queued",
+      "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37958355952",
+      "workflowName": "CI"
+    }
+  ],
+  "released_jobs": [
+    {
+      "name": "library (macos-15-intel)",
+      "status": "queued",
+      "conclusion": null
+    },
+    {
+      "name": "library (macos-15)",
+      "status": "queued",
+      "conclusion": null
+    },
+    {
+      "name": "library (ubuntu-24.04)",
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "limitations": [
+    "No full CI/release gate, native macOS acceptance, Git write, release or production IC effect.",
+    "Sibling checkout and its uncommitted 0.3.0 work remain untouched.",
+    "No Rust function, method or type removed; Backup journal/custody/publication contracts remain at their existing owners."
+  ],
+  "evidence": {
+    "target/continuation-0116/agent-clippy.log": "79763b011aeae1bc8e2d0e3bf271ad3f13e4da5f76c0894c580cf4b454d979d0",
+    "target/continuation-0116/agent-simulator.log": "808a1d52b4412780a8ef09c285c746b51173a3d3dac4e26993911a3acdd444bc",
+    "target/continuation-0116/archive-verification.json": "29ff9a7735b19f449f379ab7ac31f7eb8d9b0ce49c581d481a5449f3850c03e9",
+    "target/continuation-0116/artifacts.log": "c713675f29aa29f04e58da3f5a49f943198f53e2c0f781a6d337e34faa97ed44",
+    "target/continuation-0116/clippy.log": "f5c14df3f8979769e97013b54a61bf2763e9367d77bc5d982fb59bfaae650844",
+    "target/continuation-0116/consumer-checks.json": "829a2adaeb55ac32b14833e37472c963ea84551ac11e15a8324569d41e7deb04",
+    "target/continuation-0116/core-simulator.log": "b46e2db12c1d8d7bed79ac9e015cfc9ab0c23948c565e89390ce2860dfa3f4a8",
+    "target/continuation-0116/doc-links-before-proof.log": "42944b4d002cad865e8a06f91f07ba944b681623ec466aa308df78f55611b357",
+    "target/continuation-0116/doc-links.log": "a13c7bbc4869c38585d57877239ccfecb33b791e3c4344cdbbf13f4cb7d08557",
+    "target/continuation-0116/graph.json": "7bdd7219486adba76c6c74c5aded7389165a0f9d19782aecba3afce46ae5f2be",
+    "target/continuation-0116/hooks.log": "d1a5704b1d91c17da1d30abf1ee7e838fce56499fd479d8f4e1785b8be9aa463",
+    "target/continuation-0116/host-source-comparison.json": "1ac41254f1bc78f5689942e14058da76bb7d9fb41162e919a92bf2dc4eaf7abb",
+    "target/continuation-0116/ic-host-artifacts-registry.json": "e26183bf1168efe19011cc98e4379cb14af12becc379f9fe2461159f28382307",
+    "target/continuation-0116/ic-host-fs-registry.json": "250eee99317f9337440eb41c7e73eff0c38ed34c4e272f5c11082ab55219bc8b",
+    "target/continuation-0116/ic-host-process-registry.json": "904282c6c64951154cb9a0c3289487730018171497252f17f127ebd361ce47f4",
+    "target/continuation-0116/ic-host-tools-registry.json": "8807d235e0b29970c4291f890904e898dd878d81d4feb199cef4b2a8d3a8d358",
+    "target/continuation-0116/ic-testkit-registry.json": "1eccb4ea92e2a31167f31a4ab944a958551e930769ece4c513191532f9b07729",
+    "target/continuation-0116/incoming.sha256": "52327879092086e3746e4de984fa7661953f247224a0961bcf3f285c94df52b5",
+    "target/continuation-0116/issue29.json": "0ed4259a58472c03dff117ab94933c67aa6cd8453bfe5046982ae3b0a4591522",
+    "target/continuation-0116/issue29.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "target/continuation-0116/issue32.json": "386699f616e12b3f2029344c26c8af0602365ed0d65c7fdce1c878a8dc80ec17",
+    "target/continuation-0116/issue34-comments.json": "186be859c9c61e25969a8d4330d3f96e3e8124130cb142a4989d73ecba89743f",
+    "target/continuation-0116/issue34.json": "ea5c25fa8e8f8f908d2be79deabbd4ef868b603c0c13044954f3b076acce28f9",
+    "target/continuation-0116/issue34.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "target/continuation-0116/issues.json": "2bc701fa940b6c414713ddd0abf88cc1ce5ffe6c9cf2bbab50678dbb4629ccde",
+    "target/continuation-0116/json.log": "5c5381bc8a3fcb71b60f456e76d452b72f9def708a3b9ae04537ff9ac4f7b8f0",
+    "target/continuation-0116/make-admission.json": "25fff6c135c9ec6c795c544ab0d1af024963a0fd17dadb7100f5fec6f27cf90c",
+    "target/continuation-0116/make-alternate-root.log": "70aa8e28f49a2756c718ed8434b58202bfb2f3f555912e4869d3fef695a9c0be",
+    "target/continuation-0116/make-dry-run.log": "43659dfe82fd9194b8987bb78c3bf6c6ba41edaa2cf5b653374f2a53589ec947",
+    "target/continuation-0116/make-help.log": "70aa8e28f49a2756c718ed8434b58202bfb2f3f555912e4869d3fef695a9c0be",
+    "target/continuation-0116/make-ignore-errors.log": "43659dfe82fd9194b8987bb78c3bf6c6ba41edaa2cf5b653374f2a53589ec947",
+    "target/continuation-0116/make-question.log": "43659dfe82fd9194b8987bb78c3bf6c6ba41edaa2cf5b653374f2a53589ec947",
+    "target/continuation-0116/make-recursive-arguments.log": "70aa8e28f49a2756c718ed8434b58202bfb2f3f555912e4869d3fef695a9c0be",
+    "target/continuation-0116/make-touch.log": "43659dfe82fd9194b8987bb78c3bf6c6ba41edaa2cf5b653374f2a53589ec947",
+    "target/continuation-0116/make-unsafe-alternate-root.log": "43659dfe82fd9194b8987bb78c3bf6c6ba41edaa2cf5b653374f2a53589ec947",
+    "target/continuation-0116/metrics-features.log": "b32f06f4ec62c5973fdf573101f72151950569df3876d681d56584e751f43d1b",
+    "target/continuation-0116/metrics.log": "865741d50d689ab9c69f1e7d4dce3f8f89d9a9afc40f33ac91a25277932deb69",
+    "target/continuation-0116/msrv.log": "34d6740b9097b24b541b74f9f7eca53f97c527db3c45139ebc5d03ac8caf272d",
+    "target/continuation-0116/open-prs.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "target/continuation-0116/refresh.log": "28336c9f364f76e373160f6d1a2a2ac584865f013d30f1345b585d0319b80492",
+    "target/continuation-0116/release-adapters-prior-expectation.log": "5008ab3fc17e204fd3b368685cfea990144be39a0afc69db0f446c2f83f3085f",
+    "target/continuation-0116/release-adapters.log": "55e1b78bc3e0385f4449bb207c3346c404981aa87ac0a213400fe42f45e0d6d2",
+    "target/continuation-0116/release-checks.json": "2e83360ad0434e2d48713510fb254220f76c46dd3f6ff560b1c9f2906727d60b",
+    "target/continuation-0116/release-runner.log": "ae44a54a9ec3879324d6d50381533a91c0888c202b4ece961d0961864652f922",
+    "target/continuation-0116/released-ci.json": "6edac02c001cdbfd93dde16dda061712a77aac4f9d7a9cf2e6d1656ad6276e7f",
+    "target/continuation-0116/released-jobs.json": "73e52768f013a2ac89a5ad558903fe3dd9d57c2fb7dd2b16d3af94fa91ecdfd8",
+    "target/continuation-0116/repository.json": "a6e9b4ed630b2dcda9ae47d96a64da27057a6a49f01379b0e3ab685763b191ff",
+    "target/continuation-0116/rust-checks.json": "73d99a296a35963096044ff101b08dc4d0c4f45669eb10e82b29f093a7fad96d",
+    "target/continuation-0116/shared-checks.json": "169a05e4061b74cb1a0a1f57c8ecbac1b6ce72662481444f93f2537e491007f7",
+    "target/continuation-0116/shared-format.log": "b2803b4371bd67edda8271775f342b5083f59686b6302ae14a81fb783ba3b8d6",
+    "target/continuation-0116/shared-head.json": "4a945768e883c8c2ea5edd006c949caaacbb01bcaf0eb05eb7cf219d7feadbca",
+    "target/continuation-0116/shared-hooks.log": "21062548b1b9aedd3c22b28dc5cd02347d9289f8056a2765a8191456a492d0ba",
+    "target/continuation-0116/shared-release.log": "df0fb022e8d0782f66d3471214a681354277582bf87ba1732a7a6f9959f28f91",
+    "target/continuation-0116/shared-source.txt": "a6ea272833d6fb4c5900cff12376bb5dfb52820ea9501b49d2c620f088f04742",
+    "target/continuation-0116/shell-check.log": "3f894a5a9e82720700f65084205428a55f7c8943a789d71a796ead01ab317a0b",
+    "target/continuation-0116/simulator-checks.json": "4f2faca4d9d6af95f82c64c6e35fbfd05bc4858bf07f5aba48a67c21403aadef",
+    "target/continuation-0116/snapshot-before": "362845865e419a5f94e13009151e078bf24429b46ee1058464309f205a32b23d",
+    "target/continuation-0116/testkit-routing.log": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901",
+    "target/continuation-0116/tools.log": "04bf3e49451b7ea3928a1da4580041a1371be15eeb8fe404bf826733e48f6d74",
+    "target/continuation-0116/workflow.log": "44418bcc88468ea7f20d342e5b3778c4fbd2bbeb55c3cb40f47b32c93aa1f0cd",
+    "target/continuation-0116/issue34-comment-after.json": "40a38c4809690742a1516bd56be9e8e2d47be2e9c159a7e59427e59c13b720ff",
+    "target/continuation-0116/issue32-comment-after.json": "79d69955a8170c55e7cdb51bb3a92b7a3ebe9e9953452cf6564518f4892ab82b",
+    "target/continuation-0116/issue29-comment-after.json": "e5b7c39ac185e3af5133da1688574a577889412efa015667be11154ac5b13da9"
+  },
+  "issue_updates": [
+    {
+      "issue": 34,
+      "url": "https://github.com/dragginzgame/ic-backup/issues/34#issuecomment-6085099994",
+      "state": "open",
+      "qualification": "Local batch recorded; remaining acceptance retained."
+    },
+    {
+      "issue": 32,
+      "url": "https://github.com/dragginzgame/ic-backup/issues/32#issuecomment-6085100229",
+      "state": "open",
+      "qualification": "Local batch recorded; remaining acceptance retained."
+    },
+    {
+      "issue": 29,
+      "url": "https://github.com/dragginzgame/ic-backup/issues/29#issuecomment-6085100467",
+      "state": "open",
+      "qualification": "Local batch recorded; remaining acceptance retained."
+    }
+  ]
+}

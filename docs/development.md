@@ -755,7 +755,9 @@ build artifacts and source backups. `release-check` runs actual Make entry point
 with Git/Cargo substitutes plus the common runner's isolated regressions. Read
 [the release guide](releasing.md) before an explicitly requested one-shot release
 or resume. Ordinary development and PR delivery grant no release authority.
-`make -n` remains read-only.
+Use `make release-plan` for a non-mutating release preview. Make rejects
+ignore-errors, dry-run, touch and question modes before recipes run, so skipped
+commands or ignored failures cannot appear to validate a release or formatting.
 
 `publish-dry-run` and `publish` delegate to Cargo for the current library version.
 They use locked dependencies and crates.io. Cargo checks package cleanliness and

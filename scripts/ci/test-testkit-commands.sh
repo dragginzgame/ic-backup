@@ -15,9 +15,10 @@ finish() {
     fi
 }
 trap finish EXIT
-mkdir -p "$fixture/consumer/make" "$fixture/bin" "$fixture/cli"
+mkdir -p "$fixture/consumer/make" "$fixture/consumer/scripts/ci" "$fixture/bin" "$fixture/cli"
 cp "$ROOT/Makefile" "$fixture/consumer/Makefile"
-cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$fixture/consumer/make/"
+cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$fixture/consumer/make/"
+cp "$ROOT/scripts/ci/check-make-execution.sh" "$fixture/consumer/scripts/ci/"
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail

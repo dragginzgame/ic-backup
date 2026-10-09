@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.0]
+
+- **Breaking:** Upgrade direct Artifact/FS dependencies to Host 0.10.1.
+  `PersistenceError::Publication` now carries the Host 0.10 Rust error identity;
+  align direct Host dependencies when sharing that value. Preserve v1 records,
+  private publication, barriers and original spending. Testkit 0.28 uses the
+  same Host line; explicitly prepare its CLI with `make install-testkit-server`.
+
+- Adopt Shared Tooling 0.2.8's Make execution safeguards: reject modes that skip
+  commands or hide failures, keep admission bound to the selected snapshot and
+  support recursive Make arguments. Preserve formatting and release-resume checks
+  ([shared #30](https://github.com/dragginzgame/shared-tooling/issues/30),
+  [shared #90](https://github.com/dragginzgame/shared-tooling/issues/90)).
+
 ## [0.11.5] - 2026-10-09
 
 - Stream a complete original snapshot data plan through the library, requiring

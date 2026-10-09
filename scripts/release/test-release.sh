@@ -53,7 +53,7 @@ run_case() {
 create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
-    cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$FIXTURE/make/"
+    cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
     cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
@@ -494,8 +494,11 @@ test_staging() {
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch release-minor
     assert_unchanged
     [[ ! -s "$TEST_EFFECTS" ]]
-    "$TEST_REAL_MAKE" --no-print-directory -n release-patch
-    [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
+    for mode in -i -n -t -q; do
+        expect_failure "$TEST_REAL_MAKE" --no-print-directory "$mode" release-patch
+        assert_unchanged
+        [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
+    done
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-stage
     for delivery in pr invalid; do
         expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch "RELEASE_DELIVERY=$delivery"
