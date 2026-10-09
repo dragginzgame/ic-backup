@@ -1,5 +1,6 @@
 //! Bounded no-replace original fence obligations under retained plan/requirement custody.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, ConsistencyPersistenceError, JournalLock, JournalLockError,
     PersistenceError, RestoreSafetyPersistenceError, create_json_durable,
@@ -82,7 +83,7 @@ pub fn create_fence_obligation(
     requirement.validate(layout, plan, record)?;
     let path = layout.root().join("fence-obligation.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_FENCE_OBLIGATION_BYTES)?;
     create_json_durable(&path, record)?;
     Ok(())
 }
@@ -104,15 +105,12 @@ pub fn read_fence_obligation(
     let path = layout.root().join("fence-obligation.json");
     let _lock = JournalLock::acquire(&path)?;
     let record: FenceObligationRecord = read_json(&path, MAX_FENCE_OBLIGATION_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_FENCE_OBLIGATION_BYTES)?;
     requirement.validate(layout, plan, &record)?;
     if &record.digest() != expected {
         return Err(FenceObligationPersistenceError::DigestMismatch);
     }
     Ok(record)
-}
-fn check_size(record: &FenceObligationRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_FENCE_OBLIGATION_BYTES)
 }
 /// Typed denial preserving original obligation bytes and acquisition spending.
 #[derive(Debug, Error)]

@@ -1,5 +1,6 @@
 //! Bounded immutable original-plan consistency requirement retention; no fence authority.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, OperationPlanPersistenceError,
     PersistenceError, create_json_durable, read_json, read_operation_plan,
@@ -29,7 +30,7 @@ pub fn create_consistency_requirement(
     read_operation_plan(layout, &plan.digest())?;
     let path = layout.root().join("consistency-requirement.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_CONSISTENCY_REQUIREMENT_BYTES)?;
     create_json_durable(&path, record)?;
     Ok(())
 }
@@ -48,15 +49,12 @@ pub fn read_consistency_requirement(
     let path = layout.root().join("consistency-requirement.json");
     let _lock = JournalLock::acquire(&path)?;
     let record: ConsistencyRequirementRecord = read_json(&path, MAX_CONSISTENCY_REQUIREMENT_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_CONSISTENCY_REQUIREMENT_BYTES)?;
     record.validate_plan(plan)?;
     if &record.digest() != expected {
         return Err(ConsistencyPersistenceError::DigestMismatch);
     }
     Ok(record)
-}
-fn check_size(record: &ConsistencyRequirementRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_CONSISTENCY_REQUIREMENT_BYTES)
 }
 /// Typed exact retained requirement or bounded local storage denial.
 #[derive(Debug, Error)]

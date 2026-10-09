@@ -1,0 +1,349 @@
+{
+  "head": "5c4bd9df50d2cf4f954a236ab9b155778b33d645",
+  "draft": "0.11.0",
+  "package_version": "0.10.1",
+  "snapshot": {
+    "source": "/tmp/ic-backup-shared-020-heiheerb/source",
+    "revision": "8140e3dd1b44409d682c721889ab702f438c6a17",
+    "previous_revision": "926a20606591214ab29faa236b0b584e4857439e",
+    "removed_files": [
+      "scripts/ci/check-pocketic-alignment.sh",
+      "scripts/ci/check-pocketic-binary.sh",
+      "scripts/ci/test-pocketic-checks.sh"
+    ],
+    "selected_files": 92,
+    "changed_selected_files": [
+      "docs/verification-helpers.md",
+      "docs/ic-tools.md",
+      "docs/local-setup.md",
+      "scripts/dev/install-ic-tools.sh",
+      "scripts/ci/test-ic-tools.sh",
+      "docs/consuming-snapshots.md",
+      "docs/supported-hosts.md",
+      "DRAGGINZGAME.md",
+      "scripts/ci/ic-tool-pins.awk"
+    ],
+    "removed_functions": [
+      {
+        "name": "usage",
+        "former_path": "scripts/ci/check-pocketic-alignment.sh",
+        "replacement": "Testkit CLI setup/check and canonical shared installer fixtures"
+      },
+      {
+        "name": "expect_failure",
+        "former_path": "scripts/ci/test-pocketic-checks.sh",
+        "replacement": "Testkit CLI setup/check and canonical shared installer fixtures"
+      }
+    ],
+    "lock_sha256": "976761fcab5af153cfb02bb5c9a91cd12314fa9fd6b946de2cf2868c99826cbf"
+  },
+  "final_graph": {
+    "inputs": [
+      {
+        "path": "Cargo.lock",
+        "sha256": "7fbbe6848c60d3d78dac3d6b751699e703802970d40f3276370b3ae4156ad308"
+      },
+      {
+        "path": "Cargo.toml",
+        "sha256": "838aec3c87d792eb6ae970b93d7684ce97c03b88c2fa6904345a4c07ebfa30c7"
+      },
+      {
+        "path": "crates/ic-backup/tests/pic_journey/backend/mod.rs",
+        "sha256": "a1ded863d1ecac18c3ef31af731398901c662fd2ff602eec116018a1598eca5d"
+      },
+      {
+        "path": "crates/ic-backup-agent/tests/pocketic_transport.rs",
+        "sha256": "b13fbf2e13205f0cf4048ba086907b70cfd555d2f4d9b3de8db812c848ea447a"
+      },
+      {
+        "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+        "sha256": "378d242ffb5766e18e47b5e472598f6fbacdd3ebf5dc53b1cd8b4b94a023f4a2"
+      }
+    ],
+    "packages": [
+      {
+        "name": "ic-host-artifacts",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-host-artifacts",
+        "version": "0.9.0"
+      },
+      {
+        "name": "ic-host-fs",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-host-fs",
+        "version": "0.9.0"
+      },
+      {
+        "name": "ic-host-process",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-host-tools",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-metrics",
+        "version": "0.2.20"
+      },
+      {
+        "name": "ic-testkit",
+        "version": "0.25.5"
+      }
+    ]
+  },
+  "passed_cases": {
+    "core_simulator": 13,
+    "agent_gateway": 3,
+    "original_stage": 17
+  },
+  "commands": [
+    {
+      "command": "canonical committed refresh",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/refresh.log",
+      "sha256": "048f7c540629f7fbf2d8f75c92e13d1eecbbfcb9f049a3ad34d13a197b240ba8"
+    },
+    {
+      "command": "make install-testkit-server",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/testkit-setup-corrected.log",
+      "sha256": "b7134e473b0bf8aba4dc944834f9622b725097e355d17f2e03c65f4600d23ef7"
+    },
+    {
+      "command": "make testkit-server-check",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/testkit-check.log",
+      "sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+    },
+    {
+      "command": "make install-ic-tools",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/ic-setup.log",
+      "sha256": "22444f3f0a3de38cb4caf89f05da2f09f246b880429d684491ae40a1f5ccf74f"
+    },
+    {
+      "command": "make ic-tools-check",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/ic-check.log",
+      "sha256": "6a948b8469a60e9038dcbeb5971c9badb1a8deafb7665c26c569deea6fe5e22a"
+    },
+    {
+      "command": "bash scripts/ci/test-ic-tools.sh",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/ic-fixtures.log",
+      "sha256": "a9113306e6c10f7ce5e53f37493968b74f64e3219791e809b06154bdeac66ba6"
+    },
+    {
+      "command": "bash scripts/ci/test-testkit-commands.sh",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/commands-corrected.log",
+      "sha256": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901"
+    },
+    {
+      "command": "bash scripts/ci/test-tooling.sh",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/consumer-fixtures.log",
+      "sha256": "c42ecea3be4c310afe85f638b82c2dea1ec54ad256dc8c11bbd486d801752606"
+    },
+    {
+      "command": "make shared-tooling-check dependency-pins-check shell-check",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/tooling-corrected.log",
+      "sha256": "e27b6d6b0ddd41d660e7596c9ea7b0f1bf224792f117dbbbbba3deef2cb459c0"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/core-final-graph.log",
+      "sha256": "60da509e5026bf7d617626717c61060667b591e8fff63aabf67d90750c54724d"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup-agent --test pocketic_transport -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/agent-final-graph.log",
+      "sha256": "50b1ae8b4380de4e014d54e77d7f815b2b8ad09e1c9e29c6a13a9cf61eb6b455"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests -- --test-threads=1",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/stage-final-graph.log",
+      "sha256": "e465dcd5ba3e82b09d523ffd8f83065eb815f299fe93d7818ccac165e72a93d2"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/clippy-final-graph.log",
+      "sha256": "d1d8fa92f9bffaa9ca25e465000847500c247c8b94f4ad3bd0c7f206f99d6c7a"
+    },
+    {
+      "command": "RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/msrv-final-graph.log",
+      "sha256": "e70064627a85a485e1974aef345e5abf95a0bdbdc5978a45f7af69431a9bfbfc"
+    },
+    {
+      "command": "RUSTUP_AUTO_INSTALL=0 bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/msrv-consumers-final-graph.log",
+      "sha256": "140028e237c4a5986fe256a4987b6c8f93ae7a5f89179bbb1170cdcc67a63d39"
+    },
+    {
+      "command": "make fmt-check check-doc-links",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/format-links-final.log",
+      "sha256": "fd250792701fde346d358ccd1999a8747fd02754e958c50aea81656c731d7753"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "target/hard-cut-0110/diff-check-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "failed_attempts": [
+    {
+      "command": "initial make install-testkit-server",
+      "exit_code": 2,
+      "reason": "Installer returns executable path; initial caller appended another basename. Observed stderr remains in tool history; initial redirected log was empty."
+    },
+    {
+      "log": "target/hard-cut-0110/tooling.log",
+      "exit_code": 2,
+      "reason": "Inline trap variable reference rejected by ShellCheck; scoped cleanup fixes it.",
+      "sha256": "92f96cdd0b905b09ee6cc821f1a11d944b1ba77fe7b30ecb5c0181f282aca93a"
+    },
+    {
+      "log": "target/hard-cut-0110/agent-simulator.log",
+      "exit_code": 101,
+      "reason": "Path import removed despite evidence helper using it.",
+      "sha256": "a544b9a13a63ee7d8d1550aa587bc8eb45d3fbf7d9ad62e9ec707951e0f09507"
+    },
+    {
+      "log": "target/hard-cut-0110/agent-simulator-corrected.log",
+      "exit_code": 101,
+      "reason": "First replacement missed rustfmt-compacted import; exact replacement restored it.",
+      "sha256": "42e2db0ac5878065d95bc8808954b81bc486eac3fe327d135dfd9e9f13ed854f"
+    }
+  ],
+  "earlier_checks": {
+    "scope": "Passed before final-graph binding; concurrent direct Host 0.9 update detected by lock hash. Results retained without claiming exact final graph.",
+    "logs": [
+      "core-simulator.log",
+      "agent-simulator-final.log",
+      "clippy.log",
+      "msrv.log"
+    ]
+  },
+  "actual_missing_server_refusal": {
+    "log": "target/hard-cut-0110/missing-server.log",
+    "result": "nonzero offline refusal; no installation/directory created"
+  },
+  "preserved_old_bundle": {
+    "path": "target/hard-cut-0110/old-ic-bundle.json",
+    "verified_unchanged_files": 21
+  },
+  "evidence": [
+    {
+      "path": "target/hard-cut-0110/source-proof.json",
+      "sha256": "ecdb8a0b03ef5aff76edb8045a364c484f02968609e76cdfc050911d8eb934a8"
+    },
+    {
+      "path": "target/hard-cut-0110/final-graph.json",
+      "sha256": "0ac7a0cc1af2b770a45d2e72bb0a62229b381c1608b48cf6fd86ed07fc91bb83"
+    },
+    {
+      "path": "target/hard-cut-0110/old-ic-bundle.json",
+      "sha256": "477dab63b905d899bc13849b9e7caeb274301b250b7df49066646ed56e57ab18"
+    },
+    {
+      "path": "target/hard-cut-0110/shared-ci.json",
+      "sha256": "fed99c1f25325b1e02aed2e6a1be90c69a52e40e448dc45815f8470181056af1"
+    },
+    {
+      "path": "target/hard-cut-0110/repository.json",
+      "sha256": "ccfd366d1a9dc0886bed39f6f373a97e6e940ffe976951039fd2dfd6310b8921"
+    },
+    {
+      "path": "target/hard-cut-0110/host-090-proof.json",
+      "sha256": "2408f613411a787870aec54d3f1c2de7402ff7a7af94246c3b75aa8a01718ce5"
+    },
+    {
+      "path": "target/hard-cut-0110/missing-server.log",
+      "sha256": "3cfa5e3ccc891c15f6a4e06df9236e57065f38302eb50c03b881ed778440a1f1"
+    },
+    {
+      "path": "target/hard-cut-0110/previous.snapshot",
+      "sha256": "9a8a498d37a8a332ae216d08fc3f89206df59e896e48f271507d47243eb59e26"
+    },
+    {
+      "path": "target/hard-cut-0110/core-simulator.log",
+      "sha256": "f7a9f429f42a62caa93dc58eeb8cefe2eae264bf667882afadef60485a9e8c91"
+    },
+    {
+      "path": "target/hard-cut-0110/agent-simulator-final.log",
+      "sha256": "593f687e800ced17af8ee8da89bcfb22e930b9377d73d3183f1e65135e9757ba"
+    },
+    {
+      "path": "target/hard-cut-0110/clippy.log",
+      "sha256": "0880bc22677808b90edfbf01a8f9cc0d9658326af3ceedb2c575f4d5e9ca4c87"
+    },
+    {
+      "path": "target/hard-cut-0110/msrv.log",
+      "sha256": "4c664112826a4b3538a0d3b35db0369b8384fff7d1577473e4db4a33c72eb584"
+    },
+    {
+      "path": "target/hard-cut-0110/testkit-setup.log",
+      "sha256": "a2ecc7b6c23e2e5ef7075ded9b49f08f1625abf9e1cd4d2c402d6c5cfc7518cd"
+    },
+    {
+      "path": ".tools/rust/ic-testkit-0.25.5-bin-ic-testkit-server-release/installed/selection.json",
+      "sha256": "e2c612262689302ff23a8b34bea94db29bcc1e1409ae12491cf70990249772bb"
+    },
+    {
+      "path": ".tools/rust/ic-testkit-0.25.5-bin-ic-testkit-server-release/installed/.crates2.json",
+      "sha256": "a81d7562bcd32ea7e55d6faa07738c4388d779d4b02c755446612d810195caa4"
+    },
+    {
+      "path": ".tools/rust/ic-testkit-0.25.5-bin-ic-testkit-server-release/installed/install.log",
+      "sha256": "ab3507f4b2a46bdadda74328280b1a479c0fb9363a460414e5546d851f6497c2"
+    },
+    {
+      "path": "target/hard-cut-0110/issue-32-comment.md",
+      "sha256": "f8e524f79a82098b3d19533b55e97f10118b02364f0e52f0e591d7a5e5460007"
+    },
+    {
+      "path": "target/hard-cut-0110/issue-32-result.log",
+      "sha256": "76313fecec0e437d2612c55d7edcc128a27b2814fe0616f87e1a4e63cc1d4589"
+    }
+  ],
+  "sources": [
+    {
+      "path": "Makefile",
+      "sha256": "738ffe4fcf49905981373d4aa80c31d0c7068480a4144d99f636634342074c6b"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "87a414d2de525d5fa87bf174c497d0beb5158483e20a3886690daf8377d5a373"
+    },
+    {
+      "path": "ci/ic-tools.tsv",
+      "sha256": "304c3c55f98dc134a6093b622047345a78ef6277860d275b52440179da779d18"
+    },
+    {
+      "path": "scripts/ci/test-testkit-commands.sh",
+      "sha256": "1dc74915a3d9057c23a36833abeef36b26a5a50f00368dbe710cecf53945146d"
+    }
+  ],
+  "limits": [
+    "Uncommitted consumer candidate has no matching Linux/Intel/Apple Silicon hosted CI; #32 remains open.",
+    "Committed Shared 0.2.0 handoff still has source VERSION 0.1.38 and queued exact CI at inspection.",
+    "Product direct Host artifacts/FS use 0.9.0; published Testkit and its exact CLI retain independent Host 0.8 graphs. No adapter/patch joins type identities.",
+    "No full CI/release gate, package version transaction, sibling edits, root Git writes, publication or public IC effects.",
+    "No installed product runner, fresh application/terminal qualification or fence/reference release follows."
+  ],
+  "issue_update": "https://github.com/dragginzgame/ic-backup/issues/32#issuecomment-6079163657"
+}

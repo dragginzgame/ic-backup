@@ -31,20 +31,19 @@ Canisters can hold both application code and important data. A canister snapshot
 captures that state so it can be restored later. `ic-backup` is intended to keep
 an independently verified recovery copy outside the running application.
 
-> **Current status:** This is an early-stage Rust library, not yet a working
-> backup application. It can securely prepare, record and verify local files and
-> recovery plans, but it does not yet connect to the Internet Computer or perform
-> a complete canister backup or restore.
+> **Current status:** Two host-side Rust libraries provide durable local artifacts,
+> journals, recovery plans, bounded IC codecs and direct Agent transport.
+> Complete backup/restore runners and a command-line application remain unimplemented.
 
 ## At a glance
 
 | Question | Answer |
 | --- | --- |
-| What is it? | A planned tool for creating verified local copies of Internet Computer canister snapshots |
+| What is it? | Host-side Rust libraries and a planned operator tool for verified Internet Computer canister snapshots |
 | Who is it for? | Teams responsible for operating an Internet Computer application |
 | Where does it run? | On an operator-controlled computer or server, outside the canisters |
 | What can it recover? | The same canisters using the same application release |
-| Is it ready for backups today? | No. Local safety components exist, but the IC connection, runners and command-line application are not implemented |
+| Is it ready for backups today? | No. Direct Agent transport and local safety components exist; complete backup/restore runners and a command-line application remain unimplemented |
 
 ## When might it be useful?
 
@@ -141,8 +140,8 @@ actual file contents must be checked at their appropriate boundaries.
 
 ## What is implemented today
 
-The repository currently contains one Rust library at `crates/ic-backup`. Its
-implemented foundation includes:
+The repository contains the core library at `crates/ic-backup` and direct Agent
+transport at `crates/ic-backup-agent`. The implemented foundation includes:
 
 - checksums, secure staging and durable publication of verified local files;
 - bounded local records, journal locking and interruption-safe state transitions;
@@ -152,6 +151,8 @@ implemented foundation includes:
 - exact canister inventories, target selection and dependency graphs;
 - immutable operation plans with bounded mutation and observation attempts;
 - local progress derived from the original plan and retained journals;
+- complete original stage-journal preparation and resume with exact ancestor history
+  and unchanged pending spending;
 - typed Internet Computer request and reply encoding for selected snapshot and
   lifecycle operations;
 - original-attempt-bound snapshot metadata/data read requests, a single-call provider
@@ -165,7 +166,8 @@ implemented foundation includes:
   durable publication, local interruption recovery through the original journal,
   and explicit retained metadata/extent/chunk verification;
 - source-bound snapshot upload metadata and bounded byte preparation, with a single-update
-  provider contract and passive replies under separate pending attempts; live upload is pending;
+  provider contract and passive replies under separate pending attempts; complete
+  application-qualified upload/restore orchestration is pending;
 - per-guard host timing summaries and bounded prepared chunk-size distributions using `ic-metrics`, with
   diagnostics kept separate from retained progress, spending and completion evidence;
 - contracts for exact originally reserved IC updates and bounded passive reply

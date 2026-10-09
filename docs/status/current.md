@@ -25,6 +25,86 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.0 local persistence cleanup
+
+Remove nine private size-check forwarders and call the existing bounded JSON
+owner directly with each original model limit. Keep the same admission sites,
+error conversions, locking/publication order and recovery checks. All 151
+persistence cases, both-library Clippy, Rust 1.88 and formatting/snapshot checks
+pass on unchanged direct Host 0.9, Testkit's Host 0.8.10 dev graph, Metrics 0.2.20
+and Testkit 0.25.5. The
+[review](../reports/audits/2026/10/09/local-size-cleanup/01/report.md) lists every
+removed helper and exact evidence. Keep the 0.11.0 draft, versions/receipt at
+0.10.1 and all work uncommitted. No public/schema/effect change or native/full
+CI qualification follows; prior hard-cut and dependency evidence stays separate.
+
+## Current 0.11.0 Testkit server ownership cut
+
+Select 0.11.0 for the breaking Shared Tooling 0.2.0 handoff committed at
+`8140e3dd1b44409d682c721889ab702f438c6a17`. Canonically refresh 92 selected files,
+removing both server checkers and their dedicated fixture. Keep the five shared
+IC tool pins unchanged and select the exact locked Testkit 0.25.5 CLI through
+Shared Tooling's Cargo installer. Explicit `make install-testkit-server` prepares
+it; offline `make testkit-server-check` prints Testkit's admitted server path.
+Both simulator suites use that route without local version/receipt projection or
+shared-bundle fallback, retaining private logs/digests and original spending.
+
+Actual Testkit setup/check and five-tool shared reinstallation pass on Linux;
+all 21 old-bundle files remain unchanged. Thirteen core and three Agent simulator
+journeys, seventeen original-stage cases, command/refusal/retention fixtures,
+Clippy and Rust 1.88 pass; a concurrent direct Host 0.9 selection is separately
+qualified on its final graph, retaining Testkit's Host 0.8.10 dev graph, Metrics
+0.2.20 and Testkit 0.25.5. Host's exposed Rust error identity is part of this
+minor hard cut. The
+[review](../reports/audits/2026/10/09/testkit-server-cut/01/report.md) retains exact
+inputs, failed attempts and final checks. #32 stays open for committed consumer
+Linux/Intel/Apple Silicon acceptance; owner CI is separate. No complete runner or
+application/terminal qualification follows. Keep prior stage resume work in this
+draft, package versions/receipt at 0.10.1 and all changes uncommitted.
+
+## Current 0.10.2 pinning fix and published graph follow-up
+
+Adopt the committed Shared Tooling 0.1.38 fix at
+`926a20606591214ab29faa236b0b584e4857439e`, keeping all 95 selections and excluding
+the sibling's dirty VERSION. Multi-document exception catalogs now reject; focused
+fixtures, actual pin/snapshot checks and ShellCheck pass. Preserve the incoming
+Host 0.8.10/Metrics 0.2.20/Testkit 0.25.5 lock changes. Official registry checksums
+and committed package sources match; Host's Rust/member manifests and Metrics
+arithmetic are unchanged, so no new runtime offload appears. Testkit's optional
+idle lifetime keeps our existing managed-server defaults.
+
+Seventeen stage cases, the public journey, four diagnostics cases and three actual
+Testkit download cases pass on the final graph. The
+[review](../reports/audits/2026/10/09/updates-0102/01/report.md) retains earlier
+Host 0.8.9 results, cache/registry refusals and final qualification separately.
+Keep 0.10.2 pending and versions/receipt at 0.10.1. #25/#29 retain their broader
+acceptance; the candidate has no matching native CI or installed runner claim.
+Work remains uncommitted, without dependency reselection, sibling edits or release effects.
+
+## Current 0.10.2 complete stage resume and tooling follow-up
+
+Released 0.10.1 is local/GitHub main at
+`5c4bd9df50d2cf4f954a236ab9b155778b33d645`; select compatible 0.10.2 for current work.
+`ExecutionStageGuard::resume` returns the exact retained stage and complete original
+child-journal progress, rechecking original ancestor history. Missing/changed/held
+evidence rejects without creation, artifact/provider reads or allowance reset.
+The public and real Testkit callers use this admission. Seventeen focused stage
+cases, the public journey, three actual simulator cases, both-library Clippy and
+Rust 1.88 checks pass on unchanged Host 0.8.9/Metrics 0.2.18/Testkit 0.25.4.
+
+Canonically adopt Shared Tooling 0.1.37 at
+`dc4fdf0f78928d75b69bbf43b37c690c53a04d1e`, keeping the 95-file selection. Installer
+and local hook fixtures pass, including checkout-local tool discovery with wrong
+inherited tools and missing/wrong pinned-tool refusal. The
+[review](../reports/audits/2026/10/09/continuation-0102/01/report.md) retains focused
+evidence. Correct stale README transport claims; the GitHub description is accurate.
+
+Close #30/#31 from released 0.10.0's completed Linux/Intel/Apple Silicon tag CI,
+separate from still-pending 0.10.1/new upstream runs. #25/#29 retain complete
+transport/installed orchestration/application/restore/terminal acceptance. Work is
+uncommitted, versions/receipt remain 0.10.1 and no sibling or release effect occurs.
+Earlier entries retain the graphs and snapshots used for their original checks.
+
 ## Current 0.10.1 ancestor-history admission
 
 Fix stage admission skipping transitive predecessor history: `create`, `prepare`,

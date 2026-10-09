@@ -52,32 +52,22 @@ pub(super) struct Backend {
 impl Backend {
     pub fn new() -> Self {
         let root = crate::support::temp_root("ic-backup-pocketic");
-        let binary = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.tools/ic/bin/pocket-ic")
-            .canonicalize()
-            .expect("prepare the pinned PocketIC server with make install-ic-tools");
-        let version = std::process::Command::new(&binary)
-            .arg("--version")
+        let admission = std::process::Command::new("make")
+            .current_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
+            .args(["--silent", "--no-print-directory", "testkit-server-check"])
             .output()
-            .unwrap();
-        assert!(version.status.success());
-        assert_eq!(
-            String::from_utf8(version.stdout).unwrap().trim(),
-            format!(
-                "pocket-ic-server {}",
-                ic_testkit::pocket_ic::LATEST_SERVER_VERSION
-            )
+            .expect("run offline Testkit admission; prepare with make install-testkit-server");
+        assert!(
+            admission.status.success(),
+            "Testkit admission failed: {}",
+            String::from_utf8_lossy(&admission.stderr)
+        );
+        let binary = PathBuf::from(String::from_utf8(admission.stdout).unwrap().trim());
+        assert!(
+            binary.is_absolute(),
+            "Testkit must admit an absolute server path"
         );
         let server_digest = ArtifactChecksumRecord::from_bytes(&fs::read(&binary).unwrap());
-        let installed = fs::read_to_string(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.tools/ic/files.sha256"),
-        )
-        .unwrap();
-        let expected = installed
-            .lines()
-            .find_map(|line| line.strip_suffix("  bin/pocket-ic"))
-            .expect("installed PocketIC checksum");
-        assert_eq!(server_digest.hash(), expected);
         fs::write(root.join("server.sha256"), server_digest.hash()).unwrap();
         let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
             .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))

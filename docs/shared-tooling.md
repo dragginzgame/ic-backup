@@ -49,7 +49,59 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 95-file snapshot selects committed Shared Tooling 0.1.35 at
+The current 92-file snapshot selects the committed Shared Tooling 0.2.0 handoff at
+`8140e3dd1b44409d682c721889ab702f438c6a17`. Canonical refresh removes the two
+PocketIC checkers and their dedicated fixture from the selection; selected bytes
+and executable modes come from a clean isolated committed checkout. Testkit now
+owns server release/assets, provisioning and offline admission. The five-tool
+consumer matrix keeps all other reviewed pins unchanged.
+
+The pending 0.11.0 hard cut adds explicit `make install-testkit-server` and offline
+`make testkit-server-check`, which prints the admitted absolute server path. Cargo
+metadata selects the unique locked Testkit version for both libraries' fixtures
+and the CLI; Shared Tooling's selected Cargo installer admits the CLI receipt.
+Testkit's check supplies server admission, replacing local version equality and
+installed-receipt projection. Both simulator suites keep managed custody, private
+logs/digests and original spending locally. CI explicitly prepares and checks this
+route on Linux and both macOS hosts; current local evidence and native acceptance
+limits are retained in the handoff. Ordinary checks install nothing. Reinstall the
+shared five-tool bundle explicitly; previous bundles/evidence remain retained.
+
+### Prior Shared Tooling 0.1.38 review
+
+The prior 95-file snapshot selected the committed Shared Tooling 0.1.38 fix at
+`926a20606591214ab29faa236b0b584e4857439e`. Canonical refresh changes three selected
+files from 0.1.37, matching all committed bytes and executable modes. The sibling's
+dirty VERSION preparation is excluded. Dependency exception admission now requires
+one complete JSON array; valid existing exceptions remain unchanged. The regression
+suite qualifies conflicting first/last documents and preserves manifests, locks,
+exception bytes and the private index on rejection. Real consumer pin/snapshot
+checks and ShellCheck pass. The [follow-up review](reports/audits/2026/10/09/updates-0102/01/report.md)
+separates this adoption and incoming published dependency qualification from the
+earlier 0.10.2 graph. Exact upstream CI remains queued at inspection.
+
+### Prior Shared Tooling 0.1.37 review
+
+The prior 95-file snapshot selects committed Shared Tooling 0.1.37 at
+`dc4fdf0f78928d75b69bbf43b37c690c53a04d1e`. Canonical refresh from a clean
+isolated checkout changes seven selected files, with all committed bytes and modes
+matching. The installer now refuses conflicting multi-document receipts, rechecks
+installation ancestors after Cargo and preserves the original failed-build status.
+Formatting hooks and their adoption checker reuse the original consumer's prepared
+tools while continuing to format exact isolated staged inputs.
+
+Focused installer fixtures and local hook/adoption checks pass on Linux. The local
+hook fixture qualifies a prepared pinned sorter ahead of a deliberately wrong
+inherited tool, plus missing/wrong local-tool rejection without changing the index
+or unrelated files. No implicit installation or default tool selection changes.
+Exact upstream 0.1.37 CI and the new 0.10.1 release CI are queued at inspection;
+the uncommitted 0.10.2 consumer candidate has no matching native run. The
+[review](reports/audits/2026/10/09/continuation-0102/01/report.md) separates current
+local checks, prior released native acceptance and remaining runner scope.
+
+### Prior Shared Tooling 0.1.35 review
+
+The prior 95-file snapshot selects committed Shared Tooling 0.1.35 at
 `be550afa57fe9e16872e5110b5cd69c24b4fa9e8`. Canonical export from a clean
 isolated checkout changes seven selected files; all committed bytes and executable
 modes match. The new consumer-selected Cargo binary/example installer is optional:
@@ -194,27 +246,17 @@ keeps the failure and corrected results separate from earlier focused evidence.
 
 ## Consumer-owned IC pins
 
-The released 0.8.1 snapshot contained 80 paths. This batch transfers only
-`ci/ic-tools.tsv` to consumer ownership under
-[the shared selection contract](ic-tools.md#snapshot-and-pin-selection).
-At transfer, the other 79 paths retained exact committed source bytes/modes at
-that revision; the current refresh deliberately extends them to the 94-file
-0.1.28 selection above. No vendored file is patched in place. The local closed-consumer tooling
-fixture now also copies this reviewed matrix; its original missing-input failure
-and corrected full `make tooling-check` result remain retained.
+The current matrix is consumer-owned and outside the immutable snapshot. It
+contains exactly the five shared executables, with unchanged official archive
+hashes across Linux x86-64, Intel macOS and Apple Silicon macOS. Testkit owns
+PocketIC pins and assets; no server row or duplicate client/server policy remains.
+Explicit setup selects the new bundle; checks reject old six-tool selections
+without rewriting their pins, receipts or binary evidence.
 
-Published Testkit 0.25.1 selects PocketIC 16.1 and Host 0.8. The single matrix now
-pins the matching 16.1 server with all three official release-asset digests. Other
-tool rows remain unchanged. The immutable shared guide's 16.0 table describes
-its default source selection; this paragraph owns Backup's deliberate override.
-The existing Make install/check/alignment commands all use the same matrix.
-Explicit installation and offline byte/version admission pass on Linux, followed
-by all ten core and three Agent simulator cases. macOS assets are declared;
-consumer native macOS execution remains unqualified for this uncommitted source.
-[Shared #76](https://github.com/dragginzgame/shared-tooling/issues/76) owns the
-upstream default update. No additional catalog or automatic server download exists.
-[The review](reports/audits/2026/10/08/testkit-adoption/01/report.md) binds exact
-published source, selected graph, pin ownership and focused qualification.
+The original matrix-ownership transfer in 0.8.1 and earlier Testkit 0.25.1
+qualification retained exact shared pins and server evidence at that time. Those
+historical reviews below describe their original inputs, not the current server
+selection. CLI and product qualification remain separate from tool provisioning.
 
 ## Older snapshots
 

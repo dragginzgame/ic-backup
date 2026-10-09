@@ -102,6 +102,47 @@ CARGO
     rg -q 'Error 13' rejection.log
 }
 
+test_checkout_local_tools() {
+    local original_tool before sources
+    original_tool="$(command -v cargo-sort)"
+    mkdir -p .tools/rust/bin fallback-bin
+    cp "$original_tool" .tools/rust/bin/cargo-sort
+    export HOOK_TEST_REAL_CARGO
+    HOOK_TEST_REAL_CARGO="$(command -v cargo)"
+    # Dispatch sort through PATH to expose the checkout/export distinction,
+    # while preserving the real pinned sorter and Rust formatter behavior.
+    cat > fallback-bin/cargo <<'CARGO'
+#!/usr/bin/env bash
+case "${1:-}" in
+    sort) exec cargo-sort "$@" ;;
+    *) exec "$HOOK_TEST_REAL_CARGO" "$@" ;;
+esac
+CARGO
+    printf '#!/usr/bin/env bash\necho cargo-sort 0.0.0\n' > fallback-bin/cargo-sort
+    chmod +x fallback-bin/cargo fallback-bin/cargo-sort
+    export PATH="$FIXTURE/fallback-bin:$PATH"
+    printf 'unformatted unrelated working edit\n' > README.md
+    git hook run pre-commit
+    rg -q --fixed-strings 'pub fn answer() -> u32' crates/ic-backup/src/lib.rs
+    [[ "$(git show :crates/ic-backup/src/lib.rs)" == "$(cat crates/ic-backup/src/lib.rs)" ]]
+    [[ "$(cat README.md)" == 'unformatted unrelated working edit' ]]
+    [[ -z "$(git ls-files -- .tools fallback-bin)" ]]
+    for state in missing wrong; do
+        printf 'pub fn answer()->u32{42}\n' > crates/ic-backup/src/lib.rs
+        git add -- crates/ic-backup/src/lib.rs
+        if [[ "$state" == missing ]]; then
+            rm .tools/rust/bin/cargo-sort
+        else
+            cp fallback-bin/cargo-sort .tools/rust/bin/cargo-sort
+        fi
+        before="$(index_fingerprint)"
+        sources="$(sources_fingerprint)"
+        expect_hook_failure
+        [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]]
+        [[ "$(cat README.md)" == 'unformatted unrelated working edit' ]]
+    done
+}
+
 run_case() {
     CASE_NAME="$1"
     shift
@@ -133,4 +174,5 @@ bash "$ROOT/scripts/ci/check-formatting-hooks.sh" "$ROOT" \
     "$TEMPORARY/unsorted-Cargo.toml" "${formatter_inputs[@]}" > "$CASE_LOG" 2>&1
 
 run_case formatter-failure test_formatter_failure
+run_case checkout-local-tools test_checkout_local_tools
 echo 'Hook tests: PASS (selected auto-formatting, index refresh, partial-stage rejection, unrelated edit preservation, formatter failure and local installation).'

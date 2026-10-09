@@ -1,0 +1,172 @@
+{
+  "head": "5c4bd9df50d2cf4f954a236ab9b155778b33d645",
+  "draft": "0.11.0",
+  "package_version": "0.10.1",
+  "lock_sha256": "7fbbe6848c60d3d78dac3d6b751699e703802970d40f3276370b3ae4156ad308",
+  "snapshot_sha256": "41867a2eb4bb7e9c0cfa9afbf2f21aad39c55249941568cc3c8b16db7e3babbe",
+  "finding": "Nine private check_size functions only forward the existing record and model-owned limit to json::check_json_size. Remove this extra call surface; retain each check site and explicit original limit.",
+  "removed_functions": [
+    {
+      "path": "crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs",
+      "name": "check_size",
+      "record": "AttemptJournalRecord",
+      "limit": "MAX_ATTEMPT_JOURNAL_BYTES",
+      "sha256_before": "a342173719c30fefee6b928c2e3e1ac2f3c24462e603b9d35671d657aa8173bd"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/consistency/mod.rs",
+      "name": "check_size",
+      "record": "ConsistencyRequirementRecord",
+      "limit": "MAX_CONSISTENCY_REQUIREMENT_BYTES",
+      "sha256_before": "1c15cc665b817a7c7709655afe4ceddd19220c780aadb839a4e2ac9d6856fdc7"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/mod.rs",
+      "name": "check_size",
+      "record": "DownloadJournalRecord",
+      "limit": "MAX_DOWNLOAD_JOURNAL_BYTES",
+      "sha256_before": "7b1a196da9feb8f1498b7b24ad4a11bcba5cfad40dbb34b38b64a33d143b6738"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/effect_graph/mod.rs",
+      "name": "check_size",
+      "record": "EffectGraphRecord",
+      "limit": "MAX_EFFECT_GRAPH_BYTES",
+      "sha256_before": "dabcbd11b803e4b8466d27d1de90736cc6bde84886e05449f97cc90bf85180ea"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_settlement/mod.rs",
+      "name": "check_size",
+      "record": "ExecutionSettlementRecord",
+      "limit": "MAX_EXECUTION_SETTLEMENT_BYTES",
+      "sha256_before": "af8a1dc40a4af6529e1c436c351168113c9d8b4d3d49fb86cea4f77d2aa62c8e"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/fence_obligation/mod.rs",
+      "name": "check_size",
+      "record": "FenceObligationRecord",
+      "limit": "MAX_FENCE_OBLIGATION_BYTES",
+      "sha256_before": "64696ad10129cb398ec8655ba3aed699aa29940242d844167cc04e6ecc0daf56"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/inventory/mod.rs",
+      "name": "check_size",
+      "record": "InventoryRecord",
+      "limit": "MAX_INVENTORY_BYTES",
+      "sha256_before": "89a804774592d408947dfdad533cb4ef98d07dd276e75771f374e2beabd39f02"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/operation_plan/mod.rs",
+      "name": "check_size",
+      "record": "OperationPlanRecord",
+      "limit": "MAX_OPERATION_PLAN_BYTES",
+      "sha256_before": "0294b000a9d24d276fee1782c80c56e78468a8e085ccd79ae3fab887a31223a9"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/restore_safety/mod.rs",
+      "name": "check_size",
+      "record": "RestoreSafetyRequirementRecord",
+      "limit": "MAX_RESTORE_SAFETY_REQUIREMENT_BYTES",
+      "sha256_before": "7e2c1e4622f686b26149170c023153d0ee3a300de56369b30563e1335b56a294"
+    }
+  ],
+  "replacement": "ops::persistence::json::check_json_size",
+  "sources": [
+    {
+      "path": "crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs",
+      "sha256": "536ec3f348e13437e9c0c2524ecc78e8c419aa53ad686f8189c6bc382165cd61"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/consistency/mod.rs",
+      "sha256": "282354389a2c96217708ceb3e99fee991c52de996e8a5a77009f13658d24b523"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/mod.rs",
+      "sha256": "b10c70201a1baec3eebeb29687fa1cb6360f6d7638065cda500e61341f9ea6cc"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/effect_graph/mod.rs",
+      "sha256": "f1ac7bfe9e5f3542d1ce179f94c45eaf09e5541dcc9d46d814ee2bd5d91abd65"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_settlement/mod.rs",
+      "sha256": "ae23ab50d4a2d380a6f9935bb2f9e8aad5249c4d40a249566a615fd780a309f7"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/fence_obligation/mod.rs",
+      "sha256": "6a43eee38e99772e553206ffe49c10ebcd729ec33500c2535ebd4f3c039191e7"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/inventory/mod.rs",
+      "sha256": "f44128d5553b4514d89978f8f9970ec663a2a23ac8d355b2779f72ce0732bc19"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/operation_plan/mod.rs",
+      "sha256": "bc802be030ec5708a4a08bd425ab8034282c4058f32ff46c83ad96ef5d7ce6ed"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/restore_safety/mod.rs",
+      "sha256": "c6c9b0af4a0261f274586acd315f567d96f894124c5df7c1cc9ebd499783881f"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/integrity/mod.rs",
+      "sha256": "6d336315a1f59d8ab4c72337a099ea7909f97d7d0ea822d5a5b7bff5bdc03f1b"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/download_journal/manifest/mod.rs",
+      "sha256": "0feb248924148329bae45c1e1d03227b57c59baa387f8187e1e523b888098448"
+    }
+  ],
+  "commands": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence:: -- --test-threads=1",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/persistence.log",
+      "sha256": "1914daf11506d1691d887b5c4bc3c74479734bba6fe93128d1e0045c53942ee3"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/clippy.log",
+      "sha256": "365ed2fdb33e7aec00df2229b8412fbefff1f42f50958785b4b1f4da7e091204"
+    },
+    {
+      "command": "RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/msrv.log",
+      "sha256": "be57bb2ae7bbd20a53f6a1a790f58cb148c6f1ccae06d3551053e6f8a717cd44"
+    },
+    {
+      "command": "make fmt-check shared-tooling-check",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/format-snapshot.log",
+      "sha256": "94e9849a12d0cc4db63c5f1fce5043a32aef687db14a32a67b6017ecdc8d3f01"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "make check-doc-links",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/doc-links.log",
+      "sha256": "66d449906c26bd2e10a6a8a980d987ed8d4eb8905acb8704b667dd9402862fce"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "target/local-cleanup-0110/diff-check-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "passed_persistence_cases": 151,
+  "failures": [],
+  "limits": [
+    "Internal forwarding cleanup; no public API, schema, limit, error conversion, effect order or recovery transition changed.",
+    "Protective pre/post evidence checks and distinct record-only inspection/complete resume remain.",
+    "All prior dirty work preserved; no dependency reselection, vendored edit, root Git write, release, cleanup of evidence or live IC effect.",
+    "Focused Linux evidence; no full workspace/CI/release gate or fresh native/simulator qualification."
+  ]
+}

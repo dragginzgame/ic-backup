@@ -1,5 +1,6 @@
 //! Immutable bounded operation plan publication and original local intent admission.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
     read_json,
@@ -24,7 +25,7 @@ pub fn create_operation_plan(
     layout.check_root()?;
     let path = layout.root().join("operation-plan.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_OPERATION_PLAN_BYTES)?;
     create_json_durable(&path, record)?;
     Ok(())
 }
@@ -44,14 +45,11 @@ pub fn read_operation_plan(
     let path = layout.root().join("operation-plan.json");
     let _lock = JournalLock::acquire(&path)?;
     let record: OperationPlanRecord = read_json(&path, MAX_OPERATION_PLAN_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_OPERATION_PLAN_BYTES)?;
     if &record.digest() != expected {
         return Err(OperationPlanPersistenceError::DigestMismatch);
     }
     Ok(record)
-}
-fn check_size(record: &OperationPlanRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_OPERATION_PLAN_BYTES)
 }
 
 /// Typed original operation-plan identity or bounded immutable local admission failure.

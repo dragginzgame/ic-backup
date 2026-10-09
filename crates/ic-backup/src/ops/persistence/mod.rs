@@ -43,8 +43,8 @@ pub use execution_settlement::{
     ExecutionSettlementPersistenceError, create_execution_settlement, read_execution_settlement,
 };
 pub use execution_workflow::{
-    ExecutionStageGuard, ExecutionStagePreparationError, ExecutionWorkflowPersistenceError,
-    create_execution_workflow, read_execution_workflow,
+    ExecutionStageGuard, ExecutionStagePreparationError, ExecutionStageResumeError,
+    ExecutionWorkflowPersistenceError, create_execution_workflow, read_execution_workflow,
 };
 pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0]
+
+- Use the canonical JSON size checker directly throughout local persistence, retaining original record bounds, typed failures and interruption recovery.
+
+- **Breaking:** Adopt the incoming Host 0.9 artifact/FS selection. `PersistenceError::Publication` carries the Host 0.9 Rust error identity; align direct Host dependencies when exchanging that value. Preserve record formats, publication barriers and original spending.
+
+- **Breaking:** Move PocketIC preparation and offline admission to the locked Testkit CLI under Shared Tooling 0.2.0. Run `make install-testkit-server` and reinstall the shared five-tool IC bundle; `make testkit-server-check` replaces the retired alignment command. Keep old bundles and failed evidence ([#32](https://github.com/dragginzgame/ic-backup/issues/32), [shared #76](https://github.com/dragginzgame/shared-tooling/issues/76)).
+
+- Resume an exact learned execution stage together with its complete original journal progress. Reject missing, changed or held evidence without creating journals, reading artifacts or resetting spending ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt the committed Shared Tooling 0.1.38 fixes: reject multi-document dependency exceptions and conflicting Cargo-tool receipts, recheck installation paths and retain original build failures. Formatting hooks and their adoption checks find checkout-local tools without a PATH export while preserving staged inputs and pinned prerequisites ([shared #86](https://github.com/dragginzgame/shared-tooling/issues/86), [shared #65](https://github.com/dragginzgame/shared-tooling/issues/65), [shared #85](https://github.com/dragginzgame/shared-tooling/issues/85)).
+- Qualify the incoming published Metrics 0.2.20 and Testkit 0.25.5 selection with original spending, stage recovery and isolated simulator contracts intact.
+
 ## [0.10.1] - 2026-10-09
 
 - Prepare a learned execution stage with its complete durable original attempt-journal set before returning. Preserve partial preparation after failure or interruption; reopen creates no missing journals or new allowance ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).

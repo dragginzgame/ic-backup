@@ -1,5 +1,6 @@
 //! Immutable bounded graph publication and exact original local graph admission.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
     read_json,
@@ -21,7 +22,7 @@ pub fn create_effect_graph(
     layout.check_root()?;
     let path = layout.root().join("effect-graph.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_EFFECT_GRAPH_BYTES)?;
     create_json_durable(&path, record)?;
     Ok(())
 }
@@ -41,14 +42,11 @@ pub fn read_effect_graph(
     let path = layout.root().join("effect-graph.json");
     let _lock = JournalLock::acquire(&path)?;
     let record: EffectGraphRecord = read_json(&path, MAX_EFFECT_GRAPH_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_EFFECT_GRAPH_BYTES)?;
     if &record.digest() != expected {
         return Err(EffectGraphPersistenceError::DigestMismatch);
     }
     Ok(record)
-}
-fn check_size(record: &EffectGraphRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_EFFECT_GRAPH_BYTES)
 }
 
 /// Typed declared graph identity or immutable local persistence rejection.

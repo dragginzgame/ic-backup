@@ -1,0 +1,214 @@
+{
+  "head": "5c4bd9df50d2cf4f954a236ab9b155778b33d645",
+  "shared_revision": "dc4fdf0f78928d75b69bbf43b37c690c53a04d1e",
+  "lock_sha256": "326e3576556b33dd36caf37dddc2d5cc4542a32484de80ca8fcb55993262d105",
+  "dependencies": [
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.8.9"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.8.9"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.8.9"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.8.9"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.2.18"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.25.4"
+    }
+  ],
+  "draft": "0.10.2",
+  "source_kind": "uncommitted compatible implementation and canonical consumer adoption",
+  "selected_shared_files": 95,
+  "changed_selected_shared_files": 7,
+  "passed_cases": {
+    "stage": 17,
+    "public": 1,
+    "actual_simulator": 3
+  },
+  "sources": [
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+      "sha256": "378d242ffb5766e18e47b5e472598f6fbacdd3ebf5dc53b1cd8b4b94a023f4a2"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/mod.rs",
+      "sha256": "8881807f8e0fab7b21800c4d09a534b2dddafc5a4140afc39d4cdef8413b698f"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/mod.rs",
+      "sha256": "b384e96bc8544e8de877f607f5388e3df62eb8471fc694f65d74c2949dc187ad"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/preparation/mod.rs",
+      "sha256": "67520677ff4b7912a7e01c717df9e2462b3862a004c7a8393f67c3742e7b599c"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/resume/mod.rs",
+      "sha256": "eb748cd991f7bead798ab3e0bfe464ce372246eeb51522e63dec3b00585cd2d3"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_workflow.rs",
+      "sha256": "d105cecabaa91ccbfeb53aece3836707ce7b543d88ddfe3045336221f23c0e26"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "sha256": "c57e10f5a647ebf9693c3145aefb475510edbeb85ec7a4222750b60e21077130"
+    },
+    {
+      "path": "scripts/hooks/test-hooks.sh",
+      "sha256": "716636f91bad14325f8d1e88d6c94e2b61e308da41c3bd7cff6fb372cc481a08"
+    }
+  ],
+  "commands": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "log": "target/continuation-0102/stage-tests.log",
+      "sha256": "86769a10e7977a9ec7a439da04a32fb99f2df4c889eff3b0a9f04d3a81687ad9"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test execution_workflow -- --nocapture",
+      "exit_code": 0,
+      "log": "target/continuation-0102/public-stage.log",
+      "sha256": "8e399840fa86b320fb313bd985f6a7d8e285553498ad6eef5129d447f7e6369f"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "log": "target/continuation-0102/planned-download.log",
+      "sha256": "efff150955aaef75aad578bc872d10bd083b8a58f1aa1c5ac5a9d305dd62fd2d"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "exit_code": 0,
+      "log": "target/continuation-0102/clippy.log",
+      "sha256": "670a13e67ea0142c138cfff23b938134df9646183b3ca12560a5ce59181db724"
+    },
+    {
+      "command": "cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets",
+      "exit_code": 0,
+      "log": "target/continuation-0102/msrv.log",
+      "sha256": "6b6d517344ca700e80a72c94846f25a68ef91449965106157f1850c984068867"
+    },
+    {
+      "command": "RUSTUP_AUTO_INSTALL=0 bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "exit_code": 0,
+      "log": "target/continuation-0102/msrv-consumers.log",
+      "sha256": "3d4ffa8d773b5409c5ea9dce2e5e1a44a998162adceaf5adea6ea2d440384beb"
+    },
+    {
+      "command": "RUSTDOCFLAGS='-D warnings' cargo doc --offline --locked -p ic-backup -p ic-backup-agent --all-features --no-deps",
+      "exit_code": 0,
+      "log": "target/continuation-0102/rustdoc.log",
+      "sha256": "b7af8933a79f51a034728a825b5ee62a981f2311264875a6e3dc2ba407d9cd41"
+    },
+    {
+      "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" bash scripts/ci/test-rust-tools.sh",
+      "exit_code": 0,
+      "log": "target/continuation-0102/rust-tools.log",
+      "sha256": "d0f87d323f4178f561839c79732b87d961b1a4e2b8d4f380387979eb1853f67e"
+    },
+    {
+      "command": "bash scripts/hooks/test-hooks.sh",
+      "exit_code": 0,
+      "log": "target/continuation-0102/hooks.log",
+      "sha256": "433bfd1664f8ba015be6b7afdf352d09eacb0a21418fee5c4f3462b6f024b240"
+    },
+    {
+      "command": "make shell-check",
+      "exit_code": 0,
+      "log": "target/continuation-0102/shell.log",
+      "sha256": "3c08bd3ab5253e0320c9589a037f7cbe88ec958437c41ee849bb05da5c4d5675"
+    },
+    {
+      "command": "make shared-tooling-check",
+      "exit_code": 0,
+      "log": "target/continuation-0102/snapshot.log",
+      "sha256": "8a95049a67d879dbd54c7fd071affe72c5a5df84b5903d60c701f4340e34c6ba"
+    },
+    {
+      "command": "make fmt-check",
+      "exit_code": 0,
+      "log": "target/continuation-0102/fmt.log",
+      "sha256": "b2bad35d89039fd8a360a0a55fd22d994d5c8a8308a9831c19ae900f122c069b"
+    },
+    {
+      "command": "make check-doc-links",
+      "exit_code": 0,
+      "log": "target/continuation-0102/doc-links.log",
+      "sha256": "467e5e9100e7f639417e6f661891a8e8cf857531dd79bd58ab96cab25bbd1677"
+    },
+    {
+      "command": "make shell-check",
+      "exit_code": 0,
+      "log": "target/continuation-0102/shell-final.log",
+      "sha256": "3c08bd3ab5253e0320c9589a037f7cbe88ec958437c41ee849bb05da5c4d5675"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "target/continuation-0102/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "target/continuation-0102/source-proof.json",
+      "sha256": "e11be332273cfbe448909bc88ef489055cf694380e1793dadefc7da5809ffb27"
+    },
+    {
+      "path": "target/continuation-0102/shared-remote-main.json",
+      "sha256": "da7fd1bd36ce67ae81b65ed7f7b703114ce98e3404cf35a4eb49a9fb6a68e306"
+    },
+    {
+      "path": "target/continuation-0102/shared-runs.json",
+      "sha256": "3b57e0550f698049daa2553fd89e938574be966910414b377d1a0f3c853ef0fe"
+    },
+    {
+      "path": "target/continuation-0102/consumer-runs.json",
+      "sha256": "5698deeea87d380d186e88efff481772ca60465bccbbce36b598e99597c6c10d"
+    },
+    {
+      "path": "target/continuation-0102/released-0100-jobs.json",
+      "sha256": "6d5ce490ab2761d19398324b03f22436ea07708647733d38119dd349ddb8e803"
+    },
+    {
+      "path": "target/continuation-0102/released-0100-main-run.json",
+      "sha256": "8f454631e188229161e2436e26ee3a4ca74a9bc31e3e5e9fa159a59c9ed591c5"
+    },
+    {
+      "path": "target/continuation-0102/released-0100-main-jobs.json",
+      "sha256": "b1a96e37ea84cdd0d66f6f06070cf4610fff7524928bae05e4360f3cd2c82e9d"
+    },
+    {
+      "path": "target/continuation-0102/issue-30-closed.json",
+      "sha256": "9fbbc50cbe84b6f12134cb1698acc6feff65b729f6805d9d2f0159d5b78ce629"
+    },
+    {
+      "path": "target/continuation-0102/issue-31-closed.json",
+      "sha256": "0a99c8cdb5a2d9fb2b98560665a4dba0da3aaef090c2911487bf2cb9e91dcd54"
+    },
+    {
+      "path": "target/continuation-0102/repository.json",
+      "sha256": "ae2ab433b371b6c91a549a30a6c3d1e88cd6a758a76d4f6e8a37382a3b60021b"
+    }
+  ],
+  "removed_functions_methods_types": [],
+  "limits": [
+    "No matching committed consumer native CI for this candidate",
+    "Shared Rust installer fixtures use substitute Cargo; no actual registry tool installation",
+    "No full CI/release gate, dependency selection, root Git writes, sibling edits, publication or production IC effects"
+  ]
+}

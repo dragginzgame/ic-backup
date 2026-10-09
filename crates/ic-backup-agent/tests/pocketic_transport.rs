@@ -45,23 +45,23 @@ struct Fixture {
 impl Fixture {
     async fn new(identity: Arc<dyn ic_agent::Identity>) -> Self {
         let root = support::root("pocketic");
-        let binary = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.tools/ic/bin/pocket-ic")
-            .canonicalize()
-            .expect("prepare pinned PocketIC explicitly");
-        let checksums = fs::read_to_string(
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.tools/ic/files.sha256"),
-        )
-        .unwrap();
-        let expected = checksums
-            .lines()
-            .find_map(|line| line.strip_suffix("  bin/pocket-ic"))
-            .unwrap();
-        assert_eq!(
-            ArtifactChecksumRecord::from_bytes(&fs::read(&binary).unwrap()).hash(),
-            expected
+        let admission = std::process::Command::new("make")
+            .current_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
+            .args(["--silent", "--no-print-directory", "testkit-server-check"])
+            .output()
+            .expect("run offline Testkit admission; prepare with make install-testkit-server");
+        assert!(
+            admission.status.success(),
+            "Testkit admission failed: {}",
+            String::from_utf8_lossy(&admission.stderr)
         );
-        fs::write(root.join("server.sha256"), expected).unwrap();
+        let binary = PathBuf::from(String::from_utf8(admission.stdout).unwrap().trim());
+        assert!(
+            binary.is_absolute(),
+            "Testkit must admit an absolute server path"
+        );
+        let server_digest = ArtifactChecksumRecord::from_bytes(&fs::read(&binary).unwrap());
+        fs::write(root.join("server.sha256"), server_digest.hash()).unwrap();
         let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
             .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
             .start_managed_server()

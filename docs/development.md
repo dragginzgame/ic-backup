@@ -37,6 +37,8 @@ From the repository root:
 make install-tools
 make tools-check
 make deps
+make install-testkit-server
+make testkit-server-check
 make check
 make test
 ```
@@ -44,7 +46,7 @@ make test
 Explicit local setup uses the reviewed [host pins](../ci/tool-versions.env)
 and [IC tool matrix](../ci/ic-tools.tsv), through the shared
 [Make commands](../make/tools.mk). It downloads and verifies jq/yq, ripgrep with
-PCRE2, cloc and the six IC executables, then activates each complete set under `.tools/`; previous
+PCRE2, cloc and the five IC executables, then activates each complete set under `.tools/`; previous
 sets and failed candidates are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and the optional `.tools/rust/bin`.
 Interactive shells can use:
 
@@ -55,10 +57,12 @@ export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/bin:$PATH"
 See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
 [IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck and
 macOS GNU Make/flock remain separate product prerequisites. Published Testkit
-0.25 supplies the test-only PocketIC client and managed server. The
-[consumer-owned matrix](shared-tooling.md#consumer-owned-ic-pins) selects the
-matching 16.1 server; use `make install-ic-tools` explicitly before tests.
-Offline byte/version checks precede [real single-canister qualification](pocketic-qualification.md).
+0.25 supplies the test-only PocketIC client and managed server. The locked Testkit package also selects its CLI and server assets; run
+`make install-testkit-server` explicitly before tests. Testkit authenticates the
+server through `make testkit-server-check`, which prints its admitted absolute
+path offline. Both simulator suites call that check before managed startup.
+Original server digests, private logs and fixture state remain retained.
+Offline admission precedes [real single-canister qualification](pocketic-qualification.md).
 Direct Agent transport is implemented separately; runners remain unimplemented.
 Installing tools alone establishes
 no backend or application qualification.
@@ -67,12 +71,15 @@ The optional shared `make install-rust-tools` and `make rust-tools-check` prepar
 and check Cargo-sort, derive-sort and Candid-extractor under `.tools/rust/`.
 This library requires only the existing Cargo-sort formatter; the extra set is
 not part of aggregate setup or CI. Both commands use the reviewed shared pins.
+The pre-commit hook and formatting-adoption checker find prepared checkout-local
+tools without an interactive PATH export. Their source/configuration inputs remain
+the isolated staged export; missing or wrongly pinned tools still reject.
 
 The shared installer also supports an explicitly selected exact Cargo package,
 binary or example, and debug/release profile. See [consumer-selected Cargo
 tools](local-setup.md#consumer-selected-cargo-tools) for setup and
-offline receipt checks. This optional mode does not change Backup's default tools
-or CI prerequisites.
+offline receipt checks. Backup uses this selected mode for its locked `ic-testkit-server` executable;
+formatter prerequisites remain separate.
 
 `make cloc` reports source/test LOC from this root workspace and excludes Cargo's
 selected build outputs. Run fleet tooling/LOC reports from Shared Tooling; this
@@ -98,10 +105,17 @@ this offline check. See [the shared helper contract](verification-helpers.md).
 use this repository's own `target/` directory. Check for an active build before
 editing source or lockfiles or starting another compilation.
 
-With the locked cache prepared, `make pocketic-alignment-check` verifies the
-qualified client/server version pairing through read-only offline Cargo metadata.
-The normal gate runs it after `deps`; it neither installs a tool nor qualifies
-runtime behavior or permissions.
+With the locked cache prepared, `make testkit-server-check` obtains the unique
+Testkit package version from Cargo metadata and verifies the selected CLI receipt
+through Shared Tooling before invoking Testkit's offline server check. No separate
+server pin, cache scan, version equality check or shared-bundle fallback exists.
+The normal gate runs it after `deps`; it installs nothing and qualifies no product
+permissions. Missing/changed selections refuse before server startup.
+
+Shared 0.2.0 requires explicit `make install-ic-tools` to select the five-tool
+bundle. Old six-tool bundles, pins, receipts and failed candidates are retained.
+Their offline check refuses under the new selection; no automatic conversion or
+cleanup occurs. CI prepares both the shared bundle and Testkit on all three hosts.
 
 `make shell-check` also requires ShellCheck and Perl. It prefers a prepared
 `.tools/ci/bin/shellcheck`, then searches `PATH` and `~/.local/bin/shellcheck`.
@@ -162,8 +176,9 @@ with private parent policy and acknowledged crash barriers in Backup. In the
 0.6.0 release, match `PersistenceError::Publication` for its original typed producer,
 cleanup and before/after-publication failures; visible output requires recovery.
 Released 0.8.1 selects the Host 0.7.1 publication-error Rust identity. The
-current 0.9.0 draft selects Host 0.8 and changes that exposed Rust identity,
-while preserving variant shapes and persisted records.
+released 0.9.0 selected Host 0.8. Pending 0.11.0 selects incoming direct Host 0.9
+and changes that exposed Rust identity again, preserving variant shapes and
+persisted records. Testkit keeps its published dev-only Host 0.8 graph.
 Consumers sharing `NamedWriteError` values or matching through a direct Host
 dependency must select that same compatible line. Production direct Host
 dependencies still disable default features. Testkit enables artifact archive/Wasm

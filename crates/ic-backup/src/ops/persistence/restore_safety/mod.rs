@@ -1,5 +1,6 @@
 //! Immutable original restore/source safety retention under both layout guards.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, OperationPlanPersistenceError,
     PersistenceError, create_json_durable, read_json, read_operation_plan,
@@ -33,7 +34,7 @@ pub fn create_restore_safety_requirement(
     read_operation_plan(source_layout, &source.digest())?;
     let path = layout.root().join("restore-safety-requirement.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)?;
     create_json_durable(&path, record)?;
     Ok(())
 }
@@ -56,15 +57,12 @@ pub fn read_restore_safety_requirement(
     let _lock = JournalLock::acquire(&path)?;
     let record: RestoreSafetyRequirementRecord =
         read_json(&path, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)?;
     record.validate_plans(plan, source)?;
     if &record.digest() != expected {
         return Err(RestoreSafetyPersistenceError::DigestMismatch);
     }
     Ok(record)
-}
-fn check_size(record: &RestoreSafetyRequirementRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)
 }
 /// Typed original restore/source safety persistence denial.
 #[derive(Debug, Error)]

@@ -1,5 +1,6 @@
 //! Exclusive durable attempt reservations and exact receipt retention; no transport.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, ExecutionProgressPersistenceError, JournalLock, JournalLockError,
     PersistenceError, create_json_durable, read_json, write_json_durable,
@@ -37,7 +38,7 @@ impl<'a> AttemptJournalGuard<'a> {
         let path = journal_path(layout, &authority);
         let lock = JournalLock::acquire(&path)?;
         let record = AttemptJournalRecord::new(authority);
-        check_size(&record)?;
+        check_json_size(&record, MAX_ATTEMPT_JOURNAL_BYTES)?;
         create_json_durable(&path, &record)?;
         Ok(Self {
             layout,
@@ -58,7 +59,7 @@ impl<'a> AttemptJournalGuard<'a> {
         let path = journal_path(layout, expected);
         let lock = JournalLock::acquire(&path)?;
         let record: AttemptJournalRecord = read_json(&path, MAX_ATTEMPT_JOURNAL_BYTES)?;
-        check_size(&record)?;
+        check_json_size(&record, MAX_ATTEMPT_JOURNAL_BYTES)?;
         if record.authority() != expected {
             return Err(AttemptJournalError::AuthorityMismatch);
         }
@@ -190,7 +191,7 @@ impl<'a> AttemptJournalGuard<'a> {
         self.check_usable()?;
         let mut next = self.record.clone();
         let result = transition(&mut next)?;
-        check_size(&next)?;
+        check_json_size(&next, MAX_ATTEMPT_JOURNAL_BYTES)?;
         self.usable = false;
         write(&self.path(), &next)?;
         self.record = next;
@@ -237,9 +238,6 @@ fn journal_path(layout: &BackupLayoutGuard, authority: &AttemptAuthorityRecord) 
         "attempt-{}.json",
         authority.binding().operation_sequence()
     ))
-}
-fn check_size(record: &AttemptJournalRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_ATTEMPT_JOURNAL_BYTES)
 }
 
 /// Typed exact admission, local accounting or durable publication failure.

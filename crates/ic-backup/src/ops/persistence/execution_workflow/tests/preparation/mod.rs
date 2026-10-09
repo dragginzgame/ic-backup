@@ -7,13 +7,13 @@ use crate::model::{
 };
 use serde_json::json;
 
-fn catalog() -> ExecutionWorkflowRecord {
+pub(super) fn catalog() -> ExecutionWorkflowRecord {
     let mut value = serde_json::to_value(workflow()).unwrap();
     value["allocation"]["operations"][0]["budget"] = json!({"mutations":3,"observations":0});
     value["allocation"]["budget"] = json!({"mutations":5,"observations":1});
     serde_json::from_value(value).unwrap()
 }
-fn plan() -> OperationPlanRecord {
+pub(super) fn plan() -> OperationPlanRecord {
     let mut request = child_request(0);
     request.budget = PlanBudgetRecord::new(3, 0).unwrap();
     request.graph = EffectGraphRecord::new(
@@ -45,7 +45,7 @@ fn plan() -> OperationPlanRecord {
         .collect();
     OperationPlanRecord::new(request).unwrap()
 }
-fn retained_catalog() -> (PathBuf, BackupLayoutGuard) {
+pub(super) fn retained_catalog() -> (PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-prepared-stage");
     fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();

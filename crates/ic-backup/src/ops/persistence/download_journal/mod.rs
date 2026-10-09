@@ -21,6 +21,7 @@ pub use manifest::{DownloadManifestError, read_download_manifest};
 #[cfg(unix)]
 pub use metrics::{IcSnapshotLocalMetrics, MeasurementHistogram, MeasurementSummary};
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,
     create_json_durable, read_json, write_json_durable,
@@ -68,7 +69,7 @@ impl<'a> DownloadJournalGuard<'a> {
         let path = layout.root().join(JOURNAL_FILE);
         let lock = JournalLock::acquire(&path)?;
         let record = DownloadJournalRecord::new(intent, artifacts)?;
-        check_size(&record)?;
+        check_json_size(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         create_json_durable(&path, &record)?;
         Ok(Self {
             layout,
@@ -94,7 +95,7 @@ impl<'a> DownloadJournalGuard<'a> {
         let path = layout.root().join(JOURNAL_FILE);
         let lock = JournalLock::acquire(&path)?;
         let record: DownloadJournalRecord = read_json(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
-        check_size(&record)?;
+        check_json_size(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         if record.intent() != expected {
             return Err(DownloadJournalError::IntentMismatch);
         }
@@ -192,7 +193,7 @@ impl<'a> DownloadJournalGuard<'a> {
         write: impl FnOnce(&std::path::Path, &DownloadJournalRecord) -> Result<(), PersistenceError>,
     ) -> Result<(), DownloadJournalError> {
         let next = self.next(canister, snapshot, ArtifactStateRecord::Durable, None)?;
-        check_size(&next)?;
+        check_json_size(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         self.check_artifact_parent()?;
         let entry = next.artifact(canister, snapshot)?;
         let checksum = entry
@@ -245,7 +246,7 @@ impl<'a> DownloadJournalGuard<'a> {
         next: DownloadJournalRecord,
         write: impl FnOnce(&std::path::Path, &DownloadJournalRecord) -> Result<(), PersistenceError>,
     ) -> Result<(), DownloadJournalError> {
-        check_size(&next)?;
+        check_json_size(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         self.layout.check_root()?;
         self.usable = false;
         write(&self.path(), &next)?;
@@ -253,10 +254,6 @@ impl<'a> DownloadJournalGuard<'a> {
         self.usable = true;
         Ok(())
     }
-}
-
-fn check_size(record: &DownloadJournalRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_DOWNLOAD_JOURNAL_BYTES)
 }
 
 /// Typed local journal admission or durable lifecycle failure.

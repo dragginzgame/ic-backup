@@ -1,0 +1,227 @@
+{
+  "head": "5c4bd9df50d2cf4f954a236ab9b155778b33d645",
+  "draft": "0.10.2",
+  "package_version": "0.10.1",
+  "shared_revision": "926a20606591214ab29faa236b0b584e4857439e",
+  "selected_files": 95,
+  "changed_from_0_1_37": 3,
+  "earlier_graph_lock_sha256": "d8c59ce476a8d893dedca0d508ee74cc63c154645ecf0fe51126f78bfc9a883b",
+  "final_graph": {
+    "lock_sha256": "976761fcab5af153cfb02bb5c9a91cd12314fa9fd6b946de2cf2868c99826cbf",
+    "packages": [
+      {
+        "name": "ic-host-artifacts",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-host-fs",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-host-process",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-host-tools",
+        "version": "0.8.10"
+      },
+      {
+        "name": "ic-metrics",
+        "version": "0.2.20"
+      },
+      {
+        "name": "ic-testkit",
+        "version": "0.25.5"
+      }
+    ]
+  },
+  "earlier_graph_scope": "Metrics 0.2.20/Testkit 0.25.5 with Host 0.8.9; separate stage/public/simulator logs",
+  "failed_final_graph_attempt": {
+    "log": "target/updates-0102/clippy.log",
+    "exit_code": 101,
+    "reason": "Host 0.8.10 cache missing before final locked fetch"
+  },
+  "registry_summary_api": {
+    "status": 403,
+    "fallback": "Official crates.io sparse index and static archives"
+  },
+  "passed_cases": {
+    "stage": 17,
+    "public": 1,
+    "metrics": 4,
+    "actual_simulator": 3
+  },
+  "commands": [
+    {
+      "command": "PATH=\"$PWD/.tools/host/bin:$PATH\" bash scripts/ci/test-dependency-pins.sh",
+      "exit_code": 0,
+      "log": "target/updates-0102/pin-fixtures.log",
+      "sha256": "8c8898035cbaa58b37a0288d0ef4ce01f26e1f3e7b39393984f40bdd4fcd8948"
+    },
+    {
+      "command": "make dependency-pins-check shared-tooling-check",
+      "exit_code": 0,
+      "log": "target/updates-0102/pin-snapshot.log",
+      "sha256": "0d2dcfe09544ca4a75168e24909ae6afdf5a9c27fffe3c9be374909351dc2d95"
+    },
+    {
+      "command": "make shell-check",
+      "exit_code": 0,
+      "log": "target/updates-0102/shell.log",
+      "sha256": "3c08bd3ab5253e0320c9589a037f7cbe88ec958437c41ee849bb05da5c4d5675"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow::tests -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "log": "target/updates-0102/stage-final.log",
+      "sha256": "acc8ce68037d75b432c9746285914276dfe6958f417931eb7e5e5c52adcd90dd"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test execution_workflow -- --nocapture",
+      "exit_code": 0,
+      "log": "target/updates-0102/public-final.log",
+      "sha256": "1d0c8f1b64d3b4db406d7b4f3b48a3b4b3a7991b468f88371669af92bad56735"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1 --nocapture",
+      "exit_code": 0,
+      "log": "target/updates-0102/planned-final.log",
+      "sha256": "31567fba3d0c15ef8424ae4354c969f7981004ffb600e05716e780c2e66068ea"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::metrics -- --nocapture",
+      "exit_code": 0,
+      "log": "target/updates-0102/metrics.log",
+      "sha256": "b07439fd9ed944efb74cf0fff2c98304fc7458b0fb56d5c2397925d2f1cf8b36"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "exit_code": 0,
+      "log": "target/updates-0102/clippy-final.log",
+      "sha256": "a26e23e5f91689ac9258eb7ca12211c87a1077c89ff63d1ce983289984b1d2ba"
+    },
+    {
+      "command": "RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features",
+      "exit_code": 0,
+      "log": "target/updates-0102/msrv.log",
+      "sha256": "dfa24dcfcc96a2e152b0b2b0d1fb8574642a860ba00ad8312a75175c8fa1b2f2"
+    },
+    {
+      "command": "RUSTUP_AUTO_INSTALL=0 bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "exit_code": 0,
+      "log": "target/updates-0102/msrv-consumers.log",
+      "sha256": "13257fc0a4189dd71f52cb88d847b39340e15f21c759578ab14ef24c55bf1cde"
+    },
+    {
+      "command": "make fmt-check",
+      "exit_code": 0,
+      "log": "target/updates-0102/fmt.log",
+      "sha256": "b2bad35d89039fd8a360a0a55fd22d994d5c8a8308a9831c19ae900f122c069b"
+    },
+    {
+      "command": "make check-doc-links",
+      "exit_code": 0,
+      "log": "target/updates-0102/doc-links.log",
+      "sha256": "22243233665ac4a72decbf0c391c646fd3f3f11f8ad9664f6cdb539937a6dd52"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "target/updates-0102/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "target/updates-0102/source-proof.json",
+      "sha256": "13f1c9ec838b1403c1ce4c5d1b14bb6981fbce3fa3eae56f8fcd9f4decce4d4f"
+    },
+    {
+      "path": "target/updates-0102/package-proof.json",
+      "sha256": "8211b837a5870ce49d6e3e13212a14d50f1cb79179e49955cba176fd6c4dba05"
+    },
+    {
+      "path": "target/updates-0102/host-0810-proof.json",
+      "sha256": "c5db61617b379c6851906f7641ecee9874a357dcbfbe1995048e3d1f08ece2f7"
+    },
+    {
+      "path": "target/updates-0102/host-index.jsonl",
+      "sha256": "ee9af3570343f06558cf645444154191af18188d66e680f9c3f8facf25fbb275"
+    },
+    {
+      "path": "target/updates-0102/host-artifacts-index.jsonl",
+      "sha256": "c99949c2c113db24572dc214bf9c241df26b35de8093d0b57ca73e4056af9f5f"
+    },
+    {
+      "path": "target/updates-0102/host-process-index.jsonl",
+      "sha256": "ada1ea08a267d395624598eeb368945bade6ac6665cb49fa3183e3e61c2f8dac"
+    },
+    {
+      "path": "target/updates-0102/host-tools-index.jsonl",
+      "sha256": "b89ecfca1e2e9c3e42bb82423df7f103c9e3a22b397d4e027a76df6133a9d487"
+    },
+    {
+      "path": "target/updates-0102/metrics-index.jsonl",
+      "sha256": "856e28bd377159d996f319cb7ccb073a18bf9241848071f0b116801eb84352fd"
+    },
+    {
+      "path": "target/updates-0102/testkit-index.jsonl",
+      "sha256": "d28d61e18b1876ac07cb412ff1c4fbd0cfb9a8efcef3868b1f634b4df7510778"
+    },
+    {
+      "path": "target/updates-0102/shared-runs.json",
+      "sha256": "e750e0a6d5360dd26a8e5aae2f4b3a6d86a9c6215f7b3d0aad1c7a310d12da63"
+    },
+    {
+      "path": "target/updates-0102/consumer-runs.json",
+      "sha256": "5668f7146da9cd0b800546398bcb7b336a35fd52fc455ea76c11d97192864775"
+    },
+    {
+      "path": "target/updates-0102/stage.log",
+      "sha256": "81af2f7bbe68b9b00ca086463d498b0adf80f6066994fa544dbc6382ad30fe7c"
+    },
+    {
+      "path": "target/updates-0102/public-stage.log",
+      "sha256": "09e4b1a8fd28cd0168bb1467203d1564eb98864a975ace1d0651f11c356739d7"
+    },
+    {
+      "path": "target/updates-0102/planned-download.log",
+      "sha256": "c39851e3d229d47045d13b2c263985bb95027395b9426e69720ad907cbae169f"
+    },
+    {
+      "path": "target/updates-0102/fetch.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "target/updates-0102/fetch-final.log",
+      "sha256": "78cb2b840990ae0ddd9ad50a32f1ac6d60102b35b40f63ae29b761d6e6090827"
+    },
+    {
+      "path": "target/updates-0102/clippy.log",
+      "sha256": "9fad3129dc3572413ae22617123b89f5110a067648b50ac5793846770b201519"
+    }
+  ],
+  "consumer_sources": [
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+      "sha256": "378d242ffb5766e18e47b5e472598f6fbacdd3ebf5dc53b1cd8b4b94a023f4a2"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/resume/mod.rs",
+      "sha256": "eb748cd991f7bead798ab3e0bfe464ce372246eeb51522e63dec3b00585cd2d3"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_workflow.rs",
+      "sha256": "d105cecabaa91ccbfeb53aece3836707ce7b543d88ddfe3045336221f23c0e26"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "sha256": "c57e10f5a647ebf9693c3145aefb475510edbeb85ec7a4222750b60e21077130"
+    }
+  ],
+  "removed_functions_methods_types": [],
+  "limits": [
+    "Uncommitted consumer candidate has no matching native CI",
+    "No full gate, dependency reselection, root Git writes, sibling edits, publication or production IC effects"
+  ]
+}

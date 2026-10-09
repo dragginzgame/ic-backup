@@ -1,5 +1,6 @@
 //! Immutable original all-Applied journal checkpoint publication and local replay.
 
+use super::json::check_json_size;
 use super::{
     AttemptJournalError, BackupLayoutGuard, JournalLock, JournalLockError,
     OperationPlanPersistenceError, PersistenceError, create_json_durable, read_json,
@@ -38,7 +39,7 @@ fn create_with(
     layout.check_root()?;
     let path = layout.root().join("execution-settlement.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_EXECUTION_SETTLEMENT_BYTES)?;
     validate_retained(layout, record)?;
     writer(&path, record)?;
     Ok(())
@@ -59,7 +60,7 @@ pub fn read_execution_settlement(
     let path = layout.root().join("execution-settlement.json");
     let _lock = JournalLock::acquire(&path)?;
     let record: ExecutionSettlementRecord = read_json(&path, MAX_EXECUTION_SETTLEMENT_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_EXECUTION_SETTLEMENT_BYTES)?;
     if record.plan_intent() != expected_plan || &record.digest() != expected {
         return Err(ExecutionSettlementPersistenceError::DigestMismatch);
     }
@@ -77,9 +78,6 @@ fn validate_retained(
     validate(&plan, &references, record)?;
     layout.check_root()?;
     Ok(())
-}
-fn check_size(record: &ExecutionSettlementRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_EXECUTION_SETTLEMENT_BYTES)
 }
 /// Typed immutable publication/replay failure, preserving all original journals and obligations.
 #[derive(Debug, Error)]

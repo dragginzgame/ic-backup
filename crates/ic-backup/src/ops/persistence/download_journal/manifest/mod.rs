@@ -1,6 +1,7 @@
 //! Immutable local download declarations using the existing v1 journal schema.
 
-use super::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard, check_size};
+use super::super::json::check_json_size;
+use super::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -108,7 +109,7 @@ fn read_manifest_record(
 ) -> Result<DownloadJournalRecord, DownloadManifestError> {
     let path = layout.root().join(MANIFEST_FILE);
     let record: DownloadJournalRecord = read_json(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
     if &record.digest() != expected {
         return Err(DownloadManifestError::DigestMismatch);
     }

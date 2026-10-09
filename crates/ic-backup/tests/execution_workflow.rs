@@ -16,7 +16,7 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_settlement,
-        create_execution_workflow, read_execution_progress,
+        create_execution_workflow,
     },
 };
 use serde_json::json;
@@ -125,9 +125,8 @@ fn learned_snapshot_payload_is_bound_once_and_pending_read_retains_original_allo
     drop(journal);
     drop(stage);
     // A lost read reply leaves the original reservation pending. Reopen is local.
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 7, &binding.digest()).unwrap();
-    let view = read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
+    let (stage, view) =
+        ExecutionStageGuard::resume(&layout, &workflow.digest(), 7, &binding.digest()).unwrap();
     assert_eq!(view.attempts.mutations_used, 1);
     assert_eq!(view.attempts.mutations_remaining, 0);
     let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();

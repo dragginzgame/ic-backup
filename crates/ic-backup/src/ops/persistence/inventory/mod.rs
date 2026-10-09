@@ -1,5 +1,6 @@
 //! Immutable bounded inventory publication and exact local declared-identity admission.
 
+use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
     read_json,
@@ -21,7 +22,7 @@ pub fn create_inventory(
     layout.check_root()?;
     let path = layout.root().join("inventory.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_size(record)?;
+    check_json_size(record, MAX_INVENTORY_BYTES)?;
     create_json_durable(&path, record)?;
     Ok(())
 }
@@ -41,15 +42,11 @@ pub fn read_inventory(
     let path = layout.root().join("inventory.json");
     let _lock = JournalLock::acquire(&path)?;
     let record: InventoryRecord = read_json(&path, MAX_INVENTORY_BYTES)?;
-    check_size(&record)?;
+    check_json_size(&record, MAX_INVENTORY_BYTES)?;
     if &record.digest() != expected {
         return Err(InventoryError::DigestMismatch);
     }
     Ok(record)
-}
-
-fn check_size(record: &InventoryRecord) -> Result<(), PersistenceError> {
-    super::json::check_json_size(record, MAX_INVENTORY_BYTES)
 }
 
 /// Typed exact declared-identity or durable local inventory admission failure.

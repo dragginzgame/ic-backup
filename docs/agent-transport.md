@@ -2,11 +2,14 @@
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
-transport was released in 0.8.0; 0.8.1 is now released. The current draft is
-0.9.0 because the selected Host 0.8 graph changes the core publication-error
-Rust identity. Package versions remain 0.8.1 until separately authorized release. The ICP transport destination and executable routing probe are retired.
-Historical evidence and original journals remain retained. The consumer-owned
-IC executable matrix selects a qualified simulator pair and no product backend.
+transport was first released in 0.8.0 and remains in released 0.10.1. Pending
+0.11.0 adopts incoming direct Host 0.9 and changes the core publication-error
+Rust identity. Package versions remain 0.10.1 until a separately authorized
+release. The ICP transport/probe is retired; historical evidence and original
+journals remain retained. Testkit owns explicit simulator selection/admission
+through the [current setup contract](development.md); shared IC executables
+provide no product backend.
+
 
 `ic-backup` owns generic models, policy and local persistence; it has no Agent
 runtime dependency. `ic-backup-agent` depends on those original public request

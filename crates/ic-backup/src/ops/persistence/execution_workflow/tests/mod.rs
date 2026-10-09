@@ -16,6 +16,7 @@ use std::process::Command;
 
 mod ancestry;
 mod preparation;
+mod resume;
 
 fn prepare() -> (PathBuf, BackupLayoutGuard, ExecutionWorkflowRecord) {
     let root = temp_dir("ic-backup-execution-workflow");

@@ -8,7 +8,7 @@ RELEASE_BRANCH ?= main
 RELEASE_DELIVERY ?= direct
 export RELEASE_DELIVERY
 RELEASE := bash scripts/release/release.sh
-CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps pocketic-alignment-check shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps testkit-server-check shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 ifneq ($(word 2,$(filter release-patch release-minor release-major release-resume,$(MAKECMDGOALS))),)
 $(error Select exactly one release target)
@@ -21,7 +21,7 @@ endif
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shared-tooling-check shell-check \
         tags tasks test tooling-check validate version
-.PHONY: dependency-pins-check format-tools-check pocketic-alignment-check release-delivery-check
+.PHONY: dependency-pins-check format-tools-check install-testkit-server testkit-server-check release-delivery-check
 
 help:
 	@echo "release-delivery-check      Verify the supported direct release policy without effects"
@@ -49,7 +49,8 @@ help:
 	@echo "install-rust-tools          Prepare the optional shared Cargo tool set"
 	@echo "install-tools               Prepare host tools followed by IC tools"
 	@echo "package                     Verify both library packages locally"
-	@echo "pocketic-alignment-check     Check the locked client against the reviewed server pin"
+	@echo "install-testkit-server       Prepare the locked Testkit CLI and its PocketIC server"
+	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
 	@echo "publish                     Publish both libraries to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
 	@echo "release-check               Test release helpers with isolated substitutes"
@@ -121,8 +122,22 @@ install-hooks:
 dependency-pins-check:
 	bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
 
-pocketic-alignment-check:
-	bash scripts/ci/check-pocketic-alignment.sh --manifest crates/ic-backup/Cargo.toml --pins ci/ic-tools.tsv
+# Cargo owns the selected Testkit identity. The canonical Cargo installer owns
+# CLI receipts; Testkit owns server assets, admission and provisioning.
+define TESTKIT_SERVER
+	@set -eo pipefail; \
+	version="$$(cargo metadata --offline --locked --format-version 1 | jq -er \
+	  '[.packages[] | select(.name == "ic-testkit") | .version] | if length == 1 then .[0] else error("expected one locked Testkit package") end')"; \
+	cli="$$(bash scripts/dev/install-rust-tools.sh --consumer "$(CURDIR)" \
+	  --package ic-testkit --version "$$version" --bin ic-testkit-server --profile release $(1))"; \
+	"$$cli" $(2) --directory "$(CURDIR)/.tools/testkit-server"
+endef
+
+install-testkit-server:
+	$(call TESTKIT_SERVER,,setup)
+
+testkit-server-check:
+	$(call TESTKIT_SERVER,--check,check)
 
 package:
 	cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent
@@ -233,6 +248,7 @@ tooling-check: shared-tooling-check
 	bash scripts/ci/test-evidence-archive.sh
 	bash scripts/ci/test-host-tools.sh
 	bash scripts/ci/test-tool-commands.sh
+	bash scripts/ci/test-testkit-commands.sh
 	bash scripts/ci/test-cloc.sh
 	bash scripts/ci/test-rust-tools.sh
 	bash scripts/ci/test-ic-tools.sh

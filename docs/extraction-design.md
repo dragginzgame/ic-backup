@@ -460,6 +460,12 @@ journey and safe stopping after lost/malformed data replies. This does not insta
 the proposed generic runner or qualify a real application's fresh admission.
 See [the planner contract](extraction-boundary.md#metadata-derived-original-download-planning).
 
+Complete local stage resume now returns the exact retained stage and its canonical
+original child-journal progress together, with original ancestor history admitted
+before and after reading. Missing/changed/held journals reject without creation or
+allowance reset; record-only inspection remains distinct. This supplies local
+recovery admission, not fresh application authority or an installed runner.
+
 | Record | Required purpose and binding |
 | --- | --- |
 | `BackupPlanRecord` | Exact membership, network/caller/release, consistency, effects and budget authority |

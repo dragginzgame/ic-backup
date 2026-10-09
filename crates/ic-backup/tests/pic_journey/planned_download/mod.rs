@@ -292,13 +292,10 @@ pub(crate) fn run(failure: ReadFailure) {
         let original = fs::read(stage_layout.root().join("attempt-1.json")).unwrap();
         drop(artifacts);
         drop(stage);
-        let reopened =
-            ExecutionStageGuard::open(&layout, &workflow.digest(), 9, &binding.digest()).unwrap();
+        let (reopened, resumed) =
+            ExecutionStageGuard::resume(&layout, &workflow.digest(), 9, &binding.digest()).unwrap();
         let current = reopened.layout().unwrap();
-        assert_eq!(
-            read_execution_progress(current, &plan.digest()).unwrap(),
-            view
-        );
+        assert_eq!(resumed, view);
         assert_eq!(
             fs::read(current.root().join("attempt-1.json")).unwrap(),
             original
@@ -328,8 +325,9 @@ pub(crate) fn run(failure: ReadFailure) {
     );
     let calls = backend.calls;
     drop(stage);
-    let reopened =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 9, &binding.digest()).unwrap();
+    let (reopened, resumed) =
+        ExecutionStageGuard::resume(&layout, &workflow.digest(), 9, &binding.digest()).unwrap();
+    assert_eq!(resumed, view);
     let journal =
         DownloadJournalGuard::open(reopened.layout().unwrap(), plan.digest().hash()).unwrap();
     assert_eq!(

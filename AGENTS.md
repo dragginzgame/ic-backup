@@ -61,7 +61,9 @@ into an issue tracker or release authority.
   The Host 0.5 error identity was delivered in 0.7.0. The externally selected
   Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
   Released 0.8.1 qualifies Host 0.7.1. Released 0.9.0 qualifies the Host 0.8
-  exposed Rust identity. The direct process
+  exposed Rust identity. The pending 0.11.0 draft selects incoming direct Host 0.9
+  artifact/FS packages, changing that identity again; Testkit keeps its published
+  dev-only Host 0.8 graph. No compatibility adapter or record change follows. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
   server owner does not grant backup command custody or spending authority.
   Local bounded capture retains its direct-child semantics. Group cleanup does not
@@ -530,13 +532,15 @@ output in each caller-owned fixture directory. No baseline reuse/reset, funding
 policy, hidden snapshot retry or receipt inference is adopted. Preserve original
 plans, journals, byte evidence and fixture-specific application safety.
 
-`ci/ic-tools.tsv` is now the single consumer-owned IC tool matrix, outside the
-immutable shared snapshot. This is the delegated selection allowed by
-[the shared IC guide](docs/ic-tools.md#snapshot-and-pin-selection): PocketIC
-16.1.0 pairs with Testkit 0.25's selected client. Preserve the other executable
-rows, shared install/check entry points, official archive hashes and old/failed
-bundles. Explicit preparation and offline exact alignment precede simulator tests;
-ordinary checks never install or download a server. No second pin catalog exists.
+`ci/ic-tools.tsv` selects the five shared IC executables only. Testkit owns
+PocketIC release selection, authenticated assets, explicit setup and offline
+admission. The unique locked Testkit package also selects the exact CLI through
+Shared Tooling's Cargo installer; no second server catalog, version equality
+policy or shared-bundle fallback exists. `make install-testkit-server` prepares it;
+`make testkit-server-check` prints the admitted absolute server path without setup.
+Both simulator suites invoke that check before managed startup. Keep product
+fixture custody, digests/logs and original journals local, and retain old/failed
+bundles. Native consumer acceptance remains required; owner CI is separate.
 
 ## Tracking
 
@@ -589,6 +593,14 @@ was recorded. Linking provenance or describing implementation status is allowed.
   identity; their learned-input evidence remains edge-specific. Missing/changed
   history rejects preparation, reopen and retained-layout access without repair or
   new spending. No atomic noncooperating custody or terminal authority follows.
+
+- Complete stage resume joins exact record-only admission to the existing complete
+  original child-journal progress reader and rechecks original stage/ancestor records
+  before returning. Preserve original typed stage/progress errors and both layout
+  lifetimes. Missing/changed/held journals reject without creation, artifact/provider
+  reads or allowance reset. Record-only open remains available for retained evidence
+  inspection. Sequential progress grants no atomic custody, fresh authority, receipt,
+  installed orchestration or terminal/fence/reference-release permit.
 
 - The product runs on the operator host. Canisters receive no local filesystem,
   signing keys or restore runner permissions.

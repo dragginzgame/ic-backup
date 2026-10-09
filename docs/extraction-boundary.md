@@ -184,8 +184,9 @@ completion. All v1 bytes, original limits, spending and journal transitions rema
 unchanged. Neither helper grants operation or retry authority.
 
 Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
-current 0.9.0 draft selects Host 0.8, changing that public Rust identity while
-preserving variant shapes and v1 records.
+released 0.9.0 selected Host 0.8. Pending 0.11.0 selects incoming direct Host 0.9,
+changing that public Rust identity again while preserving variant shapes and v1
+records. Testkit retains its independently published dev-only Host 0.8 graph.
 Direct Host dependencies sharing that value must use the same compatible line.
 The new closed-writer executable-admission API has no record-writing purpose;
 JSON publication keeps this single held-parent adapter and preflight contract.
@@ -2374,6 +2375,17 @@ response can reopen the complete exact set. `open` creates no journal, and execu
 admission still rejects any missing, changed or unsafe original. The typed
 `ExecutionStagePreparationError` preserves original stage, authority and journal
 errors without granting repair, refunds or retries. No schema or digest changes.
+
+`ExecutionStageGuard::resume` joins exact record-only `open` admission to the
+existing complete original child-journal progress reader, then re-admits original
+stage/ancestor records before returning the guard and canonical progress view.
+Missing, changed or held journals reject through `ExecutionStageResumeError`,
+preserving original stage and progress errors. Hold no attempt guards. Pending and
+exhausted spending remains unchanged; unassigned headroom supplies no allowance.
+Resume creates no journal, reads no artifact tree and calls no provider. `open`
+retains its distinct record-only inspection purpose for incomplete preparation.
+The returned sequential view is no atomic custody, fresh authority, receipt,
+transfer completion or terminal/fence/reference-release proof.
 
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact

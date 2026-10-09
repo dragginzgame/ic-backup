@@ -1,6 +1,17 @@
 # Real single-canister snapshot qualification
 
-## Current Testkit qualification
+## Current server ownership cut
+
+The pending 0.11.0 adoption uses the exact locked Testkit CLI for explicit
+`make install-testkit-server` and offline `make testkit-server-check`. The check
+returns the authenticated absolute server path for both simulator suites;
+server selection/asset/version admission belongs to Testkit. Caller-owned private
+logs, server digests, topology, spending and lost-reply assertions remain local.
+Shared 0.2.0's five-tool bundle supplies no PocketIC binary or fallback.
+Qualification for this candidate is recorded in the current handoff; older results
+below retain their actual sources and graphs.
+
+## Earlier Testkit qualification
 
 Both simulator suites depend on published `ic-testkit` 0.25.1 and its complete
 `pocket_ic` re-export. Their exact management calls, byte comparisons and original
@@ -193,13 +204,15 @@ Prepare the reviewed local tools and locked Cargo cache explicitly before runnin
 ```bash
 make install-tools
 make deps
+make install-testkit-server
+make testkit-server-check
 cargo test --offline --locked -p ic-backup --test pocketic_snapshot -- --nocapture
 ```
 
-The test requires the explicitly selected `.tools/ic/bin/pocket-ic` binary,
-checks its installed checksum and exact server version, and never downloads or
-silently substitutes a server. CI already prepares that reviewed tool set before
-running the native package tests. Missing tools reject rather than skip cases.
+The test requires the explicitly prepared locked Testkit CLI and its admitted
+server. Its offline check runs before startup and never downloads or silently
+substitutes a server. CI prepares that selection before native package tests.
+Missing/changed tools reject rather than skip cases.
 The server stays local; no public IC network is contacted.
 
 Fresh fixture directories remain retained beneath the selected temporary parent

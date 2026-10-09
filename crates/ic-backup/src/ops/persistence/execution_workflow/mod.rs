@@ -1,10 +1,10 @@
 //! Fixed immutable stage admission using the existing layout, plan and settlement owners.
 
 use super::{
-    AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard,
+    AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, ExecutionProgressPersistenceError,
     ExecutionSettlementPersistenceError, JournalLock, JournalLockError,
     OperationPlanPersistenceError, PersistenceError, create_json_durable, create_operation_plan,
-    read_execution_settlement, read_json, read_operation_plan,
+    read_execution_progress, read_execution_settlement, read_json, read_operation_plan,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -14,6 +14,7 @@ use crate::model::{
     },
     operation_plan::{OperationPlanError, OperationPlanRecord},
 };
+use crate::policy::execution_progress::ExecutionProgressView;
 use std::{
     collections::{BTreeMap, btree_map::Entry},
     fs,
@@ -78,6 +79,34 @@ pub struct ExecutionStageGuard<'a> {
     plan: OperationPlanRecord,
 }
 impl<'a> ExecutionStageGuard<'a> {
+    /// Resume an exact retained stage with its complete original journal progress.
+    ///
+    /// Reuses record-only `open` and canonical complete-journal admission, then
+    /// rechecks the original stage and ancestor histories before returning. Hold
+    /// no attempt guards. Reads only retained local records, without creating
+    /// journals, reading artifact trees or calling providers. Pending and exhausted
+    /// spending is retained.
+    /// The returned progress is a sequential local projection, not atomic custody,
+    /// fresh permission, dispatch, authenticated receipt or terminal/release proof.
+    /// # Errors
+    /// Rejects missing/changed/unsafe originals, journal contention and invalid
+    /// retained accounting/causality without repair or replenishing allowance.
+    pub fn resume(
+        workflow_layout: &'a BackupLayoutGuard,
+        expected_workflow: &ArtifactChecksumRecord,
+        sequence: u64,
+        expected_binding: &ArtifactChecksumRecord,
+    ) -> Result<(Self, ExecutionProgressView), ExecutionStageResumeError> {
+        let stage = Self::open(
+            workflow_layout,
+            expected_workflow,
+            sequence,
+            expected_binding,
+        )?;
+        let progress = read_execution_progress(&stage.stage_layout, &stage.plan.digest())?;
+        stage.layout()?;
+        Ok((stage, progress))
+    }
     /// Durably prepare a new stage and its complete original attempt-journal set.
     ///
     /// Reuses create-only stage admission and the existing journal owner, taking
@@ -234,6 +263,17 @@ pub enum ExecutionStagePreparationError {
     /// Existing attempt-journal locking or durable create-only publication failed.
     #[error(transparent)]
     Journal(#[from] AttemptJournalError),
+}
+
+/// Complete retained stage-resume refusal; original evidence and spending remain unchanged.
+#[derive(Debug, Error)]
+pub enum ExecutionStageResumeError {
+    /// Original stage, ancestor history or layout cannot be admitted.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
+    /// Complete original child journals, accounting or causality cannot be admitted.
+    #[error(transparent)]
+    Progress(#[from] ExecutionProgressPersistenceError),
 }
 fn read_binding(
     layout: &BackupLayoutGuard,
