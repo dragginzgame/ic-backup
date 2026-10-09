@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.1]
+## [0.11.1] - 2026-10-09
 
 - Qualify the selected Host 0.9.2/Testkit 0.27.0 graph and explicit CLI/server preparation through both libraries’ managed simulator cases, retaining pending spending and original recovery evidence ([#32](https://github.com/dragginzgame/ic-backup/issues/32)).
 
