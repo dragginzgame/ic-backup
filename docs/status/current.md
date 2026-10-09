@@ -25,6 +25,47 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.3 provider-driven read continuation
+
+Released 0.11.2 is `2f441df35bffb0e9a8d4ea93e826045d0e71424d`.
+Keep the compatible 0.11.3 draft and incoming CI fix for #33. Add one callable
+snapshot metadata/data read step under exact retained stage/journal evidence:
+durable original reservation, mandatory fresh admission, one provider call and
+bounded passive association. Retain spending and returned rejection evidence;
+success stays pending until an independently qualified integration records a receipt.
+The real download fixture now uses this step for metadata and every planned data call.
+
+Canonically refresh the same 92-file snapshot to committed Shared 0.2.5
+`04e07b4bf54e7aeb03eb7804a845cee27b7305df`; only literal hook-path handling,
+its installer and rule change. The maintainer changed the lock during qualification
+from Host 0.9.2/Testkit 0.27.0 to Host 0.9.3/Testkit 0.27.1; preserve that final
+selection and Metrics 0.3.2, with earlier graph evidence separate. Explicitly
+prepare the new locked cache and Testkit CLI before final offline checks.
+Package/receipt stay 0.11.2. Focused evidence and
+limitations are retained in the
+[review](../reports/audits/2026/10/09/continuation-0113/01/report.md).
+Released Linux CI passes; both macOS jobs remain queued. No full gate, release,
+Git write, hook activation, sibling edit or production IC effect ran. Keep #29
+open for full capture/transfer/upload/restore coordination, independently qualified
+application admission and terminal/custody proof; #32 still owns native acceptance.
+No Rust function, method or type was removed.
+
+## Pending 0.11.3 CI source qualification
+
+Released 0.11.2 is at `2f441df35bffb0e9a8d4ea93e826045d0e71424d`.
+The authorized local fix for [#33](https://github.com/dragginzgame/ic-backup/issues/33)
+restricts automatic push CI to main, retaining pull requests and existing manual
+exact-ref dispatch. Atomic main/tag releases select one full native matrix;
+all job bodies, permissions, matrices and validation gates are unchanged.
+The development guide records exact-commit qualification for tag-only releases.
+
+Actionlint, six event/ref selection cases, before/after workflow-body equality,
+selected documentation links and whitespace checks pass. Evidence is retained
+in `/tmp/ic-backup-ci-033/`. Manifest and incoming dirty lock bytes are preserved.
+No Rust symbols were removed. No compilation, full gate, dispatch, commit, push
+or release ran. Delivery and actual native CI acceptance remain with #33;
+local workflow checks do not establish macOS qualification.
+
 ## Current 0.11.2 stage-owned checkpoint continuation
 
 0.11.1 is live at `7492b19d2e5db8c9952c39f045568166f9a1f1c7`. Select compatible

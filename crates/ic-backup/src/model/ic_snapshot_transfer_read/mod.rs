@@ -20,6 +20,17 @@ pub enum IcSnapshotTransferReadPayload<'request, 'metadata> {
 }
 
 impl IcSnapshotTransferReadPayload<'_, '_> {
+    pub(crate) fn validate_binding(
+        &self,
+        authority: &AttemptAuthorityRecord,
+    ) -> Result<(), IcSnapshotTransferReadError> {
+        if self.target() != authority.binding().target()
+            || self.digest().hash() != authority.binding().request()
+        {
+            return Err(IcSnapshotTransferReadError::PayloadMismatch);
+        }
+        Ok(())
+    }
     /// Read the canonical effective routing target.
     #[must_use]
     pub fn target(&self) -> &str {
@@ -90,11 +101,7 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         if journal.authority() != &authority {
             return Err(IcSnapshotTransferReadError::AuthorityMismatch);
         }
-        if payload.target() != authority.binding().target()
-            || payload.digest().hash() != authority.binding().request()
-        {
-            return Err(IcSnapshotTransferReadError::PayloadMismatch);
-        }
+        payload.validate_binding(&authority)?;
         let mutation_attempt = journal
             .view()
             .pending_mutation

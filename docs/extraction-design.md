@@ -610,6 +610,18 @@ provider or automatic receipt/aggregate transfer proof is introduced. The real
 PocketIC driver uses this public boundary before explicit success recording; see
 [the contract](contracts/ic-snapshot-transfer-read-port.json).
 
+`workflow::ic_snapshot_transfer_read::read_snapshot` now coordinates one new
+planned read under an exact retained stage. It rejects mismatched original payloads
+before spending, opens the existing journal, durably reserves through canonical
+complete-plan admission, and holds that journal through mandatory integration-owned
+fresh admission and one provider call. Stage/ancestor checks bracket dispatch;
+bounded response association creates no receipt. All post-reservation failures
+retain consumption; returned replies survive later rejection in typed errors.
+Success also stays pending until an independently qualified integration records its
+outcome. The real isolated download driver uses this step for metadata and every
+data request. Full backup/restore coordination, application admission and terminal
+proof remain incomplete; no default provider, permission or retry is installed.
+
 The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
 private exact region/chunk bytes, original raw metadata/request and incremental
 checksums. Before another append, every region name must still select its held

@@ -153,6 +153,8 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
 - local progress derived from the original plan and retained journals;
 - complete original stage-journal preparation and resume with exact ancestor history
   and unchanged pending spending;
+- a provider-driven snapshot metadata/data read step with durable spending,
+  explicit fresh admission and one-call dispatch;
 - typed Internet Computer request and reply encoding for selected snapshot and
   lifecycle operations;
 - original-attempt-bound snapshot metadata/data read requests, a single-call provider

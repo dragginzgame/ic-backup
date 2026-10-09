@@ -49,7 +49,19 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 92-file snapshot selects committed Shared Tooling 0.2.4 at
+The current 92-file snapshot selects committed Shared Tooling 0.2.5 at
+`04e07b4bf54e7aeb03eb7804a845cee27b7305df`. Canonical refresh from a clean
+isolated committed checkout changes only the pre-commit hook, its installer and
+the hook rule within the same roster. Hook paths preserve literal trailing newlines;
+failed Git configuration reads stop setup without replacing the current selection.
+No hook activation, root Git configuration or dependency selection changes.
+The complete upstream hook regression and consumer formatting/install fixtures
+pass independently. Exact bytes/modes and focused checks are retained in the
+[review](reports/audits/2026/10/09/continuation-0113/01/report.md).
+
+### Prior Shared Tooling 0.2.4 review
+
+The prior 92-file snapshot selects committed Shared Tooling 0.2.4 at
 `ffbf665b8481c36b2d9f4d988abec557c3485fa6`. Canonical refresh from a clean
 isolated source changes ten test companion declarations and the consumer guidance,
 with the same complete roster and exact committed bytes/modes. Common engineering

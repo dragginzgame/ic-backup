@@ -1,0 +1,403 @@
+{
+   "base" : "2f441df35bffb0e9a8d4ea93e826045d0e71424d",
+   "checks" : [
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --lib ic_snapshot_transfer_read",
+         "path" : "target/continuation-0113/transfer-current.log",
+         "result" : "pass",
+         "sha256" : "b536bf818c5473c32f4726e9fdce7c08b37ac37b5ab190f2357f0dec21b1887a"
+      },
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --lib download_journal::metrics",
+         "path" : "target/continuation-0113/metrics-current.log",
+         "result" : "pass",
+         "sha256" : "6937044daf4b1f80f9983bbff648013bcde5627e7ef711a89d6a5ea1cf540b19"
+      },
+      {
+         "command" : "cargo clippy --offline --locked -p ic-backup --lib --tests -- -D warnings",
+         "path" : "target/continuation-0113/clippy-current.log",
+         "result" : "pass",
+         "sha256" : "82dcfe79bfeab1449a30ff23ca3b4e28403ddd0803d1e1a3cf426fad0b117ce2"
+      },
+      {
+         "command" : "cargo clippy --offline --locked -p ic-backup-agent --lib -- -D warnings",
+         "path" : "target/continuation-0113/agent-clippy-current.log",
+         "result" : "pass",
+         "sha256" : "bb464a4a911902863cd18c75a222ec652db93c6213bb790131d0f7dc2fd1d743"
+      },
+      {
+         "command" : "RUSTDOCFLAGS=\"-D warnings\" cargo doc --offline --locked -p ic-backup --no-deps",
+         "path" : "target/continuation-0113/rustdoc-current.log",
+         "result" : "pass",
+         "sha256" : "96d1d7a89247f47322aed7cfe0e2625ff8052eaee0684a362f07c5b7ba6f88e8"
+      },
+      {
+         "command" : "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+         "path" : "target/continuation-0113/msrv-current.log",
+         "result" : "pass",
+         "sha256" : "62c435b198cf784a0c035d724f88cd956bf715a6ef6e01c754068a25e777f23d"
+      },
+      {
+         "command" : "CARGO_TARGET_DIR=/home/adam/projects/ic-backup/target RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked --manifest-path target/msrv-consumers.hZh16a/ic-backup/Cargo.toml",
+         "path" : "target/continuation-0113/msrv-api-current.log",
+         "result" : "pass",
+         "sha256" : "ba126355c69a5a2f327b14c2de46e113cbbfe2873e6a87378d2064d0a227206a"
+      },
+      {
+         "command" : "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1 (local loopback enabled)",
+         "path" : "target/continuation-0113/simulator-current.log",
+         "result" : "pass",
+         "sha256" : "c0cd31ed87f1c403c7c9e8aebd50f3077443e4fbeec1126f856292761da580ce"
+      },
+      {
+         "command" : "make shared-tooling-check dependency-pins-check fmt-check shell-check",
+         "path" : "target/continuation-0113/tools-current.log",
+         "result" : "pass",
+         "sha256" : "9e39dec7b62068110d2da17ff51b5de516bacbdabc14950fc7401ddc32b96274"
+      },
+      {
+         "command" : "make install-testkit-server (explicit selected 0.27.1 preparation)",
+         "path" : "target/continuation-0113/testkit-0271-install.log",
+         "result" : "pass",
+         "sha256" : "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+      },
+      {
+         "command" : "make testkit-server-check",
+         "path" : "target/continuation-0113/testkit-current.log",
+         "result" : "pass",
+         "sha256" : "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+      },
+      {
+         "command" : "clean isolated Shared 0.2.5: bash scripts/ci/test-git-hooks.sh",
+         "path" : "target/continuation-0113/shared-hooks.log",
+         "result" : "pass",
+         "sha256" : "1c058ba3f8cacdf268391f30e11ccde07421d461e877d63ade9a7acc5323cba3"
+      },
+      {
+         "command" : "bash scripts/hooks/test-hooks.sh",
+         "path" : "target/continuation-0113/consumer-hooks.log",
+         "result" : "pass",
+         "sha256" : "df3072a1777f06f46ae55fbb6758a7432cbbf7bf0c461c772ce9ba51d035960b"
+      },
+      {
+         "command" : "make check-doc-links",
+         "path" : "target/continuation-0113/doc-links.log",
+         "result" : "pass",
+         "sha256" : "8a5363e49a424dcd1335d3ae4a06638e3405824e0d57161a1ff15a5cef05a5f9"
+      },
+      {
+         "command" : "sha256sum -c target/continuation-0113/final-inputs.sha256",
+         "path" : "target/continuation-0113/inputs-current.log",
+         "result" : "pass",
+         "sha256" : "467af0e590e594a59a24ef6df1afffc853aa2aff6097d256bc8bc69935e76b32"
+      }
+   ],
+   "draft" : "0.11.3",
+   "independent_consumer" : {
+      "lock" : {
+         "path" : "target/msrv-consumers.hZh16a/ic-backup/Cargo.lock",
+         "sha256" : "fde4d3d1a842b9db3a480ad84f25c9c91cd91e5a8b5cd840d4f62b5419879fef"
+      },
+      "root" : "target/msrv-consumers.hZh16a/ic-backup",
+      "source" : {
+         "path" : "target/msrv-consumers.hZh16a/ic-backup/src/main.rs",
+         "sha256" : "f36f5e09806d1f9ea5bdfec46ed67b4be8e943278a36fcfc11e2abd9203011d3"
+      }
+   },
+   "inputs" : {
+      "explanation" : "Maintainer lock changed mid-turn from Host 0.9.2/Testkit 0.27.0 to Host 0.9.3/Testkit 0.27.1. Metrics 0.3.2 unchanged. No agent dependency reselection; manifest and final observed lock bytes preserved. Earlier graph evidence retained separately.",
+      "final" : {
+         "path" : "target/continuation-0113/final-inputs.sha256",
+         "sha256" : "347d77f9e526d144f56bc3a70a0ad9b0b256f894afeaab6533e0aab287858d89"
+      },
+      "initial" : {
+         "path" : "target/continuation-0113/incoming.sha256",
+         "sha256" : "71a352544ca2d3641a111ddcf332e941c3ac6e5582a21b26f9ea24a11536e825"
+      }
+   },
+   "limitations" : [
+      "Single provider-driven transfer read step only; full capture/transfer/upload/restore orchestration incomplete",
+      "No default Agent provider or application freshness/authentication/custody proof",
+      "No automatically recorded receipt, retry, refund or terminal/fence/reference release",
+      "No candidate native macOS or full workspace/CI/release gate",
+      "No root Git writes, publication, production IC operations or sibling edits"
+   ],
+   "package_version" : "0.11.2",
+   "packages" : [
+      {
+         "name" : "ic-agent",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.49.2"
+      },
+      {
+         "name" : "ic-backup",
+         "source" : null,
+         "version" : "0.11.2"
+      },
+      {
+         "name" : "ic-backup-agent",
+         "source" : null,
+         "version" : "0.11.2"
+      },
+      {
+         "name" : "ic-host-artifacts",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-host-fs",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-host-process",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-host-tools",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.9.3"
+      },
+      {
+         "name" : "ic-management-canister-types",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.8.0"
+      },
+      {
+         "name" : "ic-management-canister-types",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.11.0"
+      },
+      {
+         "name" : "ic-metrics",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.3.2"
+      },
+      {
+         "name" : "ic-testkit",
+         "source" : "registry+https://github.com/rust-lang/crates.io-index",
+         "version" : "0.27.1"
+      }
+   ],
+   "released_ci" : {
+      "base_only" : true,
+      "evidence" : {
+         "path" : "target/continuation-0113/released-ci-jobs.json",
+         "sha256" : "2d02b90043aa1e1456a6eb4aeb1f592c96d6153411cd5334b73a2a3214c7b035"
+      },
+      "linux" : "pass",
+      "macos_15" : "queued",
+      "macos_15_intel" : "queued",
+      "run" : "https://github.com/dragginzgame/ic-backup/actions/runs/37936454297"
+   },
+   "removed_rust_symbols" : [],
+   "retained_attempts" : [
+      {
+         "path" : "target/continuation-0113/unit.log",
+         "sha256" : "f849ad6d79fe7ad25e44e2a43f917e1f0fe0c2dc0ef5d4f10a77cdc6c68918f7"
+      },
+      {
+         "path" : "target/continuation-0113/clippy.log",
+         "sha256" : "02acf1e70560a4bcdef3c1117edde56156821c34c74f932bba5eeb22ad947c70"
+      },
+      {
+         "path" : "target/continuation-0113/clippy-2.log",
+         "sha256" : "111eb4d29dcb77a81bb72cc4cf00d452e9c8b4d2e16cc3883e0fc903edde7eda"
+      },
+      {
+         "path" : "target/continuation-0113/simulator.log",
+         "sha256" : "f1f2e64a520deeb4d0ec6669b82d14cbfe6a29b0c5450357cccaf71501a0f592"
+      },
+      {
+         "path" : "target/continuation-0113/simulator-native.log",
+         "sha256" : "d316f849cc8d0024dae3f0086b9b6f7b53064e1911b0089658b0ccd5f7040cb4"
+      },
+      {
+         "path" : "target/continuation-0113/simulator-final.log",
+         "sha256" : "c07a6ce66c4a7c0fce3a85370818f1915743311dafd8ba0e112d36f56b941e56"
+      },
+      {
+         "path" : "target/continuation-0113/simulator-complete.log",
+         "sha256" : "0591ec5bd072e9780e755427f310a4c1f254ca550592321b8296cf3765f1bbf1"
+      },
+      {
+         "path" : "target/continuation-0113/transfer-complete.log",
+         "sha256" : "a424c96590d0e661d8f3f3d0095cab293c929780b516a5839ac66c8d507461ea"
+      },
+      {
+         "path" : "target/continuation-0113/metrics.log",
+         "sha256" : "e6d607789c3ed50ece370341a688a61dc5ae10e95d6f809a0e1e4a6cf026c411"
+      },
+      {
+         "path" : "target/continuation-0113/msrv.log",
+         "sha256" : "a56d5c6b6c8c10e61c4c36e1aeaef2d80daddd21e5b842b5d39e24cf58492104"
+      },
+      {
+         "path" : "target/continuation-0113/msrv-api.log",
+         "sha256" : "87799fc5c7c165de7b311e38866c665d2857167106e0486706a528b7748300fb"
+      },
+      {
+         "path" : "target/continuation-0113/graph.json",
+         "sha256" : "388c01fa8da5f8b28226c852b91625274b82f65cf59b9a4f6e60f2d4d40a1b63"
+      }
+   ],
+   "runtime_cases" : {
+      "metrics" : 4,
+      "passive_read" : 5,
+      "real_planned_download" : 3,
+      "workflow" : 7
+   },
+   "selected_testkit" : {
+      "binary_sha256" : "150bcfb453fdb68e80d0820d91dce86cd1eb0bb58737ce158e2ecc4569e82649",
+      "host" : "x86_64-unknown-linux-gnu",
+      "kind" : "bin",
+      "package" : "ic-testkit",
+      "profile" : "release",
+      "receipt_sha256" : "d292f684b9fa91af7e4c69cc08eaa6908c13a8af7e2fe36479095868e67288f3",
+      "target" : "ic-testkit-server",
+      "version" : "0.27.1"
+   },
+   "server_bytes" : {
+      "path" : ".tools/testkit-server/16.1.0-x86_64-linux/pocket-ic",
+      "sha256" : "b44e1eccd66e02328146b3e209e3403e3a3428a25d25555aca2f67500e5ae9db"
+   },
+   "snapshot" : {
+      "changed" : [
+         "rules/git-hooks.md",
+         ".githooks/pre-commit",
+         "scripts/dev/install-git-hooks.sh"
+      ],
+      "export" : {
+         "path" : "target/continuation-0113/shared-refresh.log",
+         "sha256" : "d66149cefa23df99b7d58491fc45196ae8365660294765bc278ffa664611cefe"
+      },
+      "previous_revision" : "ffbf665b8481c36b2d9f4d988abec557c3485fa6",
+      "revision" : "04e07b4bf54e7aeb03eb7804a845cee27b7305df",
+      "selected_files" : 92,
+      "source" : "/tmp/ic-backup-shared-025.bB5K9J/source"
+   },
+   "sources" : [
+      {
+         "path" : "Cargo.toml",
+         "sha256" : "c5acac08b644898abc3b22f4dfc9e3de894770c975fdd16a0dc05763a2e772f7"
+      },
+      {
+         "path" : "Cargo.lock",
+         "sha256" : "a473b1f4a949b005a98b3f62f53d1e2e899f0ec113c83cd642c6e5ce52f41809"
+      },
+      {
+         "path" : ".shared-tooling.snapshot",
+         "sha256" : "45e989c4fbcae1ac103a568592b4cce61c8d5d1838d91352191955913d0e974f"
+      },
+      {
+         "path" : "AGENTS.md",
+         "sha256" : "e068d6e253bfa564a21f639e05110f24e64ea7d033426c9b1276b8162c4f8fdb"
+      },
+      {
+         "path" : "CHANGELOG.md",
+         "sha256" : "1bb4f7ac5045f6a111ed181e5fada91c920f1d087004b2a59090135c6f7298de"
+      },
+      {
+         "path" : "README.md",
+         "sha256" : "1f0335bd9e906a73695ce6d2a398e2947bc041d53f67ca100673f4c98bf1df4b"
+      },
+      {
+         "path" : ".github/workflows/ci.yml",
+         "sha256" : "ec56cae75e99511eb9023bdf7f053c86c0156348f43a2e16b13def4728efcbca"
+      },
+      {
+         "path" : "docs/development.md",
+         "sha256" : "1a47f9f756a709ee5db69939d82d8948d8b91b85010c7bd7fc43838ef3e07f1f"
+      },
+      {
+         "path" : "docs/status/current.md",
+         "sha256" : "37e542a46424242287b10db40540ef9429438ccfe4d6bc7b58fdce947e0e1272"
+      },
+      {
+         "path" : "docs/shared-tooling.md",
+         "sha256" : "2be7d5ffd9f73ce4796df4a236d90db501c26cf786075edc207e8b0363c73fad"
+      },
+      {
+         "path" : "docs/extraction-design.md",
+         "sha256" : "bfd9e63862f42ed4800977aae9f0bc8649b6d7e9d06ae19614f2ec2ce76c8ab1"
+      },
+      {
+         "path" : "docs/extraction-boundary.md",
+         "sha256" : "1bb7465f23013e7fa1dbf28b118b490093efc489366bacaf0ed1e7248e77370a"
+      },
+      {
+         "path" : "docs/contracts/ic-snapshot-transfer-read-port.json",
+         "sha256" : "3ecbffcae8557fed4a29012b83277ee376fcf19e5c0784bf1d0b77a544c2fbe5"
+      },
+      {
+         "path" : ".githooks/pre-commit",
+         "sha256" : "fbee8c292a242ec71babca5eebc30613c82005b6e9e80c850a1ebca1112eaea6"
+      },
+      {
+         "path" : "rules/git-hooks.md",
+         "sha256" : "6c763c1a8b7ccb20d37476627341a6da73fdf4cf8a6081f19d87da115dcda958"
+      },
+      {
+         "path" : "scripts/dev/install-git-hooks.sh",
+         "sha256" : "c1fcf72754976d3d2e5203226e97ef5f50eff4b5c0dabeb2a9b00cfcf0326645"
+      },
+      {
+         "path" : "crates/ic-backup/src/lib.rs",
+         "sha256" : "0f6a0d66e13b66dba5998b6c0ff0f86f27d0072a74248100a21c2e69ab47483c"
+      },
+      {
+         "path" : "crates/ic-backup/src/model/ic_snapshot_transfer_read/mod.rs",
+         "sha256" : "d298b3836039ff2fbc4815bd5a04b6b89bf4d40611b5fb1ace8d2941bfbe4ac2"
+      },
+      {
+         "path" : "crates/ic-backup/src/ports/ic_snapshot_transfer_read/mod.rs",
+         "sha256" : "a8f19fabf3eeeff527e5cc87878808ca2b406cf6da5e4d84f398a38089725bda"
+      },
+      {
+         "path" : "crates/ic-backup/src/policy/ic_snapshot_transfer_read/mod.rs",
+         "sha256" : "c6c838e2a25118ba3caadd48c0b2cbc99628eada077cd0b8cd0c1cf08772f851"
+      },
+      {
+         "path" : "crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs",
+         "sha256" : "536ec3f348e13437e9c0c2524ecc78e8c419aa53ad686f8189c6bc382165cd61"
+      },
+      {
+         "path" : "crates/ic-backup/src/ops/persistence/execution_progress/mod.rs",
+         "sha256" : "721b07edf12bab3543942730efe499cfd62b14ffcbec828b2998a525077b4d7a"
+      },
+      {
+         "path" : "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+         "sha256" : "28e69dd4cc8efa095e5ac0d77814e4d4bae3ecb87fdd19461ec73d1805affc55"
+      },
+      {
+         "path" : "crates/ic-backup/src/workflow/mod.rs",
+         "sha256" : "1f366cc2a5583ea8bf6cb9113454b965c22d6b72b9f9da402cee6d351e90a2db"
+      },
+      {
+         "path" : "crates/ic-backup/src/workflow/ic_snapshot_transfer_read/mod.rs",
+         "sha256" : "af1c7dd56fba6b3809f80e8b3f8d6f08bd3cf4d246f6f051f412a5f80b4f6dc1"
+      },
+      {
+         "path" : "crates/ic-backup/src/workflow/ic_snapshot_transfer_read/tests/mod.rs",
+         "sha256" : "c06c01c14d99487496cdca264c33171301a06a8e5e890a90d5307f67e4590f07"
+      },
+      {
+         "path" : "crates/ic-backup/src/model/ic_snapshot_metadata/tests/golden.json",
+         "sha256" : "78ab44bed1068b759b299d7761a8555a68e2b1e2e6b0f7bc6413ec09f70ba968"
+      },
+      {
+         "path" : "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+         "sha256" : "25d84eb0c505cbb968aadd604d35bda443d5ef516b0209f53d252ccf17f5a7e3"
+      },
+      {
+         "path" : "crates/ic-backup/tests/pic_journey/backend/mod.rs",
+         "sha256" : "a1ded863d1ecac18c3ef31af731398901c662fd2ff602eec116018a1598eca5d"
+      },
+      {
+         "path" : "docs/reports/audits/2026/10/09/continuation-0113/01/report.md",
+         "sha256" : "fc01d7754a523f672441ad589e1fd704354ffea0ad7012835a98a7c035785e50"
+      }
+   ],
+   "status" : "uncommitted compatible candidate; no release or Git effects"
+}

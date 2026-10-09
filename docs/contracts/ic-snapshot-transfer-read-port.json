@@ -5,6 +5,9 @@
   "request": "model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest",
   "response": "model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse",
   "association": "policy::ic_snapshot_transfer_read::validate_response",
+  "execution_step": "workflow::ic_snapshot_transfer_read::read_snapshot",
+  "step_accounting": "Under the exact retained stage, precheck canonical target/wire binding, open the existing original journal and durably reserve through complete original-plan admission. Hold the selected journal through mandatory fresh admission, one provider invocation and bounded association; recheck stage/ancestor evidence before dispatch and after an associated reply. Never dispatch a reconstructed pending attempt; success remains pending until an explicitly qualified integration records its receipt.",
+  "step_admission": "Mandatory fallible integration callback for fresh actual read permission, authentic original metadata/raw-ID custody, current application requirements and exclusive never-dispatched command custody. Any remote preflight calls require their own prior accounting. There is no default or persisted permission flag. All post-reservation failures retain spending; bounded returned replies survive later rejection in typed errors. No retry, new journal/schema, automatic receipt or complete runner is installed.",
   "failure_owner": "ports::ic_observation::IcObservationProviderError",
   "methods": [
     "read_canister_snapshot_metadata",

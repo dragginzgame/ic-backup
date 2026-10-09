@@ -2456,6 +2456,43 @@ The fixture owns explicit simulator setup, single-ingress custody and its
 application's stopped/no-external-effects admission. This is not generic application
 qualification, Canic adoption, full restore or terminal/fence/reference release.
 
+### Provider-driven snapshot transfer read step
+
+`workflow::ic_snapshot_transfer_read::read_snapshot` coordinates exactly one
+metadata/data replicated update under `ExecutionStageGuard`. Payload target/wire
+binding reuses the model owner before spending. The existing selected journal is
+opened, never created, and canonical `reserve_planned_mutation` admits the complete
+original set and Applied prerequisites before durable consumption. The guard holds
+the selected journal throughout mandatory fresh admission, one provider invocation
+and bounded passive reply association. Retained stage and ancestor admission runs
+again after the callback and after an associated reply.
+
+The explicit fallible callback qualifies actual fresh read permission, original
+snapshot/metadata custody, current application requirements and exclusive original
+command custody. It has no library default or persisted permission flag. Any remote
+preflight work needs its own prior accounting. The existing provider owns actual
+authentication and a single exact ingress, without hidden calls or retries. These
+sequential local checks do not fence noncooperating filesystem actors.
+
+Success returns an immutable bounded raw response and leaves spending pending.
+Only separately authenticated integration evidence may enter the existing receipt
+owner. Lost, unavailable, unsupported or malformed replies never refund consumption,
+settle uncertainty or permit repetition; a second invocation rejects the pending
+attempt before callback/provider entry. Typed association and post-reply failures
+retain the exact returned bounded response. No journal/schema, artifact progress,
+fence obligation or source reference changes beyond the original reservation.
+Original 1,024-attempt, 4 KiB argument, 1 MiB metadata and 2 MiB raw-data limits and
+all decoder quotas remain with their existing owners.
+
+The public simulator download fixture now uses this step for metadata and every
+planned data call. Complete artifact publication and lost/malformed second-read
+retention are qualified for that isolated stopped application only. This installs
+one callable coordination step, not a complete backup/restore runner or default
+Agent provider. Applications still own full transfer, fresh membership/consistency,
+restore safety, stable custody and terminal/fence/reference release. See
+[#29](https://github.com/dragginzgame/ic-backup/issues/29) and the
+[port contract](contracts/ic-snapshot-transfer-read-port.json).
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

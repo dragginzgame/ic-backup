@@ -527,6 +527,19 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   never-dispatched custody, application safety, full runners or terminal release.
   Old ICP logs/journals remain historical evidence; no ICP backend fallback remains.
 
+- The provider-driven snapshot transfer read step opens the original stage journal
+  and reserves through canonical complete-plan admission before mandatory explicit
+  fresh integration admission and exactly one provider call. Hold the selected
+  journal through dispatch/association and recheck stage/ancestors around it.
+  Pre-spending payload binding reuses the existing model; no new journal, allowance,
+  schema or default permission/provider is introduced. Every post-reservation
+  failure and successful structurally associated reply leave spending pending.
+  Retain returned bounded responses in association/post-reply errors. Never
+  redispatch reconstructed pending requests or automatically record outcomes.
+  Integrations still own authentication, actual access, original metadata/raw-ID
+  and command/byte custody, application requirements and explicit qualified receipts.
+  This single step does not qualify full runners or terminal/fence/reference release.
+
 ## Simulator qualification
 
 Simulator fixtures depend on published `ic-testkit` and use its complete

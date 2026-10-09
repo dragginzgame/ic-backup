@@ -106,6 +106,7 @@ pub mod model;
 pub mod ops;
 pub mod policy;
 pub mod ports;
+pub mod workflow;
 
 #[cfg(test)]
 mod test_support;

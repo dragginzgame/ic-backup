@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.3]
+
+- Add one provider-driven snapshot metadata/data read step with durable original
+  spending and explicit fresh admission. Retain pending attempts and returned
+  reply evidence on failure, without retry or automatic outcome recording
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.2.5's literal hook-path handling and failed Git-read
+  refusal ([upstream #89](https://github.com/dragginzgame/shared-tooling/issues/89)).
+- Run automatic native CI once for each main release commit instead of repeating
+  the same matrix for its tag. Preserve PR checks and explicit exact-ref
+  qualification through manual dispatch
+  ([#33](https://github.com/dragginzgame/ic-backup/issues/33)).
+
 ## [0.11.2] - 2026-10-09
 
 - Publish stage-owned predecessor checkpoints only after admitting the exact workflow, binding and complete ancestor histories; recheck those originals after publication and retain checkpoint/journal evidence on failure ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).

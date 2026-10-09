@@ -29,6 +29,28 @@ This guide is for contributors working on the Rust library and its repository
 tooling. It describes the current local implementation; it is not an operator
 guide for performing a canister backup or restore.
 
+## CI source qualification
+
+Automatic CI runs for main pushes and pull requests. An atomic main/tag release
+selects one complete native matrix for that source; the tag does not repeat it.
+Distinct main commits retain their own runs. Every selected run keeps Linux,
+Intel macOS, Apple Silicon, MSRV, simulator and shell-portability checks.
+
+For an explicitly authorized tag-only or other branch qualification, select its
+exact ref through the existing manual workflow:
+
+```bash
+gh workflow run ci.yml --repo dragginzgame/ic-backup --ref REF
+```
+
+The dispatch-enabled workflow must be on the default branch and at the selected
+ref. Verify the resulting run's `headSha` and complete native results before
+claiming qualification. A tag-only release may reuse successful main evidence
+only for its exact commit. Historical refs retain their own workflow version;
+an unavailable dispatch path or missing result is unqualified, not permission to
+use another commit's evidence. Tag/version/source guards remain in the release
+and publication owners. This guide does not authorize dispatch or release.
+
 ## Quick start
 
 From the repository root:

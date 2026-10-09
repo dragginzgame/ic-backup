@@ -1,7 +1,7 @@
 # Shared Tooling snapshot v1
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	ffbf665b8481c36b2d9f4d988abec557c3485fa6
+revision	04e07b4bf54e7aeb03eb7804a845cee27b7305df
 file	8ea130d767dd83ea491f8321b34b6498538220a99b1685ccbec0cbbef0522b48	-	docs/verification-helpers.md
 file	a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7	x	scripts/ci/check-documentation-links.pl
 file	7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd	x	scripts/ci/test-documentation-links.pl
@@ -45,9 +45,9 @@ file	37e028e2d9fee271ffdc06d06fc15d7a148ec524def3d9ed2afcd9910c0ec642	x	scripts/
 file	e7f4c82566858b89b50c5c2f929097bdde85345a2c0c1bf553bb1170cc4f5960	-	scripts/ci/finalize-release-changelog.awk
 file	027575ae9be221c3ef9e903239fbfdb40aa5192c2f5e08c157a5d15dc3cd52ae	x	scripts/ci/test-release-runner.sh
 file	a7d6612e6c9cfea5f8e920f82109094851876d0dfc117ecc454f966cb50d7c66	-	rules/cargo-dependencies.md
-file	a6c686b7e789b8bdd4680e65c1031cf86f6b73a9feb1008fb553d033126ae978	-	rules/git-hooks.md
-file	643dbf5ebb54bc9c8768b77c8b88b288b4dd19a8719c67d8e89617e953271c7a	x	.githooks/pre-commit
-file	04314208858a3b8c6833aee30b8574741518b4ca36ed509c095424762a7be79e	x	scripts/dev/install-git-hooks.sh
+file	6c763c1a8b7ccb20d37476627341a6da73fdf4cf8a6081f19d87da115dcda958	-	rules/git-hooks.md
+file	fbee8c292a242ec71babca5eebc30613c82005b6e9e80c850a1ebca1112eaea6	x	.githooks/pre-commit
+file	c1fcf72754976d3d2e5203226e97ef5f50eff4b5c0dabeb2a9b00cfcf0326645	x	scripts/dev/install-git-hooks.sh
 file	d0e3e07844d06f46ffe01d406ffb29624b31079c1402b899262aabb718cbb436	-	rules/agent-maintenance.md
 file	236f9b2d7fe391a73d03cfe355c0d26fa73de8db1553c7e670f7b19aeb65d086	x	scripts/ci/rewrite-local-lock-versions.pl
 file	d4b498337bfd681466e7b541cb2783779aad2a8b326e927450d98f3b570fb5c6	x	scripts/ci/test-local-lock-versions.pl

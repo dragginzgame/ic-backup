@@ -24,17 +24,46 @@ use ic_backup::{
         create_execution_workflow, read_execution_progress,
     },
     policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, validate_response},
-    ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
+    ports::{
+        ic_observation::IcObservationProviderError,
+        ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
+    },
+    workflow::ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
 };
 use ic_management_canister_types::CanisterStatusType;
 use serde_json::json;
-use std::{fs, os::unix::fs::DirBuilderExt};
+use std::{convert::Infallible, fs, os::unix::fs::DirBuilderExt, path::Path};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum ReadFailure {
     None,
     Lost,
     Malformed,
+}
+
+struct ReadProvider<'a> {
+    backend: &'a mut Backend,
+    failure: ReadFailure,
+    oracle: &'a Path,
+}
+impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
+    fn read_snapshot(
+        &mut self,
+        request: &IcSnapshotTransferReadRequest<'_, '_>,
+    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        let response = self.backend.read_snapshot(request)?;
+        if self.failure == ReadFailure::None {
+            return Ok(response);
+        }
+        // Retained fixture oracle is never outcome/retry evidence for the workflow.
+        fs::write(self.oracle, &response.input().reply).unwrap();
+        if self.failure == ReadFailure::Lost {
+            return Err(IcObservationProviderError::Indeterminate);
+        }
+        let mut input = response.input().clone();
+        input.reply.clear();
+        Ok(IcSnapshotTransferReadResponse::new(input).unwrap())
+    }
 }
 
 fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
@@ -135,14 +164,26 @@ pub(crate) fn run(failure: ReadFailure) {
     let metadata_stage =
         ExecutionStageGuard::prepare(&layout, metadata_binding.clone(), metadata_plan.clone())
             .unwrap();
+    // The fixture owns this stopped, isolated target and the actual original ID.
+    // This explicit admission is fixture qualification, never a library default.
+    let context = metadata_plan.context().clone();
+    let response = read_snapshot(
+        &metadata_stage,
+        7,
+        IcSnapshotTransferReadPayload::Metadata(&metadata_request),
+        &mut backend,
+        |request| {
+            assert_eq!(request.plan().context(), &context);
+            assert_eq!(request.payload().digest(), metadata_request.digest());
+            Ok::<(), Infallible>(())
+        },
+    )
+    .unwrap();
     let mut journal = AttemptJournalGuard::open(
         metadata_stage.layout().unwrap(),
         &metadata_plan.attempt_authority(7).unwrap(),
     )
     .unwrap();
-    journal
-        .reserve_planned_mutation(&metadata_plan.digest())
-        .unwrap();
     let request = IcSnapshotTransferReadRequest::new(
         &metadata_plan,
         7,
@@ -150,7 +191,6 @@ pub(crate) fn run(failure: ReadFailure) {
         IcSnapshotTransferReadPayload::Metadata(&metadata_request),
     )
     .unwrap();
-    let response = backend.read_snapshot(&request).unwrap();
     let admitted = validate_response(&request, journal.record().unwrap(), &response).unwrap();
     assert!(matches!(
         admitted.reply(),
@@ -209,10 +249,33 @@ pub(crate) fn run(failure: ReadFailure) {
     let mut stopped = false;
     for (index, payload) in download.requests().iter().enumerate() {
         let sequence = u64::try_from(index).unwrap();
+        let context = backend.plan(&payload.digest(), sequence).context().clone();
+        let oracle = stage_layout.root().join("discarded-data-oracle.candid");
+        let mut provider = ReadProvider {
+            backend: &mut backend,
+            failure: if index == 1 {
+                failure
+            } else {
+                ReadFailure::None
+            },
+            oracle: &oracle,
+        };
+        let result = read_snapshot(
+            &stage,
+            sequence,
+            IcSnapshotTransferReadPayload::Data(payload),
+            &mut provider,
+            |request| {
+                // Exact original metadata and never-dispatched single-call custody
+                // remain with this isolated authenticated fixture.
+                assert_eq!(request.plan().context(), &context);
+                assert_eq!(request.payload().digest(), payload.digest());
+                Ok::<(), Infallible>(())
+            },
+        );
         let mut journal =
             AttemptJournalGuard::open(stage_layout, &plan.attempt_authority(sequence).unwrap())
                 .unwrap();
-        journal.reserve_planned_mutation(&plan.digest()).unwrap();
         let request = IcSnapshotTransferReadRequest::new(
             plan,
             sequence,
@@ -220,25 +283,27 @@ pub(crate) fn run(failure: ReadFailure) {
             IcSnapshotTransferReadPayload::Data(payload),
         )
         .unwrap();
-        let response = backend.read_snapshot(&request).unwrap();
         if index == 1 && failure != ReadFailure::None {
-            fs::write(
-                stage_layout.root().join("discarded-data-oracle.candid"),
-                &response.input().reply,
-            )
-            .unwrap();
             if failure == ReadFailure::Malformed {
-                let mut input = response.input().clone();
-                input.reply.clear();
-                let malformed = IcSnapshotTransferReadResponse::new(input).unwrap();
-                assert!(
-                    validate_response(&request, journal.record().unwrap(), &malformed).is_err()
-                );
+                let Err(IcSnapshotTransferReadExecutionError::Association { response, .. }) =
+                    result
+                else {
+                    panic!("retained malformed reply")
+                };
+                assert_eq!(response.input().reply, [] as [u8; 0]);
+            } else {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotTransferReadExecutionError::Provider(
+                        IcObservationProviderError::Indeterminate
+                    ))
+                ));
             }
             assert!(journal.record().unwrap().view().pending_mutation.is_some());
             stopped = true;
             break;
         }
+        let response = result.unwrap();
         let admitted = validate_response(&request, journal.record().unwrap(), &response).unwrap();
         let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
             panic!("exact data method");
@@ -262,10 +327,18 @@ pub(crate) fn run(failure: ReadFailure) {
             artifacts.record().unwrap().artifacts()[0].state(),
             ArtifactStateRecord::Created
         );
-        let mut next =
-            AttemptJournalGuard::open(stage_layout, &plan.attempt_authority(2).unwrap()).unwrap();
-        assert!(next.reserve_planned_mutation(&plan.digest()).is_err());
-        drop(next);
+        assert!(
+            read_snapshot(
+                &stage,
+                2,
+                IcSnapshotTransferReadPayload::Data(&download.requests()[2]),
+                &mut backend,
+                |_| -> Result<(), Infallible> {
+                    panic!("pending prerequisite rejects before admission")
+                },
+            )
+            .is_err()
+        );
         let original = fs::read(stage_layout.root().join("attempt-1.json")).unwrap();
         drop(artifacts);
         drop(stage);
