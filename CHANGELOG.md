@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.3]
+## [0.11.3] - 2026-10-09
 
 - Add one provider-driven snapshot metadata/data read step with durable original
   spending and explicit fresh admission. Retain pending attempts and returned
