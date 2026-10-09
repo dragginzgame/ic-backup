@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.2]
+## [0.9.2] - 2026-10-09
 
 - Adopt Shared Tooling 0.1.32 so unchanged IC tool selections reuse verified installations after pin comments or row order change, preserving original receipts and bundles ([shared #79](https://github.com/dragginzgame/shared-tooling/issues/79)).
 - Bind learned execution stages to immutable original target and attempt allocations, fixed child plans and exact predecessor journal settlements. Preserve pending attempts on reopen and refuse occupied or incomplete preparation ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
