@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1]
+
+- Adopt Shared Tooling 0.2.3 guidance for complete optional installer-test selections and evidence-based native CI queue review; preserve our existing tool selection ([shared #73](https://github.com/dragginzgame/shared-tooling/issues/73)).
+
+- Derive and durably publish an exact all-Applied execution checkpoint from the retained original plan and complete journals. Reject pending, missing, held or changed evidence without replacing checkpoints or resetting spending; use the canonical entrypoint in learned-stage callers ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt the committed Shared Tooling 0.2.2 installer fixes: process the final IC pin row without a newline and refuse late destination directories and replace symlink entries without following their targets during CI tool publication ([shared #87](https://github.com/dragginzgame/shared-tooling/issues/87), [shared #88](https://github.com/dragginzgame/shared-tooling/issues/88)).
+
 ## [0.11.0] - 2026-10-09
 
 - Name the locked Testkit version and explicit setup command when CLI admission fails; document Testkit preparation before release validation.

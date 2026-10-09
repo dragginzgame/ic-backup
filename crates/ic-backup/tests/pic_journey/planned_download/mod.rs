@@ -6,7 +6,6 @@ use ic_backup::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
-        execution_settlement::{ExecutionSettlementJournalRecord, ExecutionSettlementRecord},
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
         },
@@ -19,11 +18,10 @@ use ic_backup::{
             IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
             IcSnapshotTransferReadResponse,
         },
-        operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
-        create_execution_settlement, create_execution_workflow, read_execution_progress,
+        checkpoint_execution_settlement, create_execution_workflow, read_execution_progress,
     },
     policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, validate_response},
     ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
@@ -67,20 +65,6 @@ fn record_applied(journal: &mut AttemptJournalGuard<'_>, evidence: &ArtifactChec
     };
     journal.record_mutation(receipt).unwrap();
 }
-fn settle(layout: &BackupLayoutGuard, plan: &OperationPlanRecord) -> ArtifactChecksumRecord {
-    let rows = plan
-        .attempt_authorities()
-        .unwrap()
-        .iter()
-        .map(|authority| {
-            let journal = AttemptJournalGuard::open(layout, authority).unwrap();
-            ExecutionSettlementJournalRecord::from_journal(journal.record().unwrap())
-        })
-        .collect();
-    let record = ExecutionSettlementRecord::new(plan.digest(), rows).unwrap();
-    create_execution_settlement(layout, &record).unwrap();
-    record.digest()
-}
 fn capture(
     backend: &mut Backend,
     layout: &BackupLayoutGuard,
@@ -112,7 +96,9 @@ fn capture(
     // or discarded reply is used to infer original attribution.
     record_applied(&mut journal, &reply.digest());
     drop(journal);
-    let settlement = settle(stage_layout, stage.plan());
+    let settlement = checkpoint_execution_settlement(stage_layout, &stage.plan().digest())
+        .unwrap()
+        .digest();
     (
         reply.snapshots()[0].clone(),
         ExecutionStagePredecessorRecord::new(0, binding.digest(), settlement, reply.digest()),
@@ -186,7 +172,10 @@ pub(crate) fn run(failure: ReadFailure) {
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, raw_metadata).unwrap();
     record_applied(&mut journal, &metadata.digest());
     drop(journal);
-    let metadata_settlement = settle(metadata_stage.layout().unwrap(), &metadata_plan);
+    let metadata_settlement =
+        checkpoint_execution_settlement(metadata_stage.layout().unwrap(), &metadata_plan.digest())
+            .unwrap()
+            .digest();
     drop(metadata_stage);
     let original = ExecutionStagePredecessorRecord::new(
         7,
@@ -315,7 +304,7 @@ pub(crate) fn run(failure: ReadFailure) {
     let manifest = artifacts.publish_download_manifest(plan).unwrap();
     let retained = artifacts.record().unwrap().clone();
     drop(artifacts);
-    settle(stage_layout, plan);
+    checkpoint_execution_settlement(stage_layout, &plan.digest()).unwrap();
     let view = read_execution_progress(stage_layout, &plan.digest()).unwrap();
     assert_eq!(view.applied_operations, download.requests().len());
     assert_eq!(view.attempts.mutations_remaining, 0); // Original spare headroom is unassigned.

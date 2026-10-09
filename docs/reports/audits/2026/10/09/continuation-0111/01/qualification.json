@@ -1,0 +1,372 @@
+{
+  "head": "d13823bcbf52649e3935ba8a48b1540b889174e9",
+  "draft": "0.11.1",
+  "package_version": "0.11.0",
+  "lock_sha256": "7474cca6fc464325c8e0abee0ab18c9911a6273a94f77e8bdc3d75c57ffa490f",
+  "snapshot": {
+    "source": "/tmp/ic-backup-shared-022-w2em_w8b/source",
+    "revision": "ee48bb37c98c771e77b92fd891f0757d8c1c8b99",
+    "selected_files": 92,
+    "changed": [
+      "docs/verification-helpers.md",
+      "docs/ic-tools.md",
+      "scripts/dev/install-ic-tools.sh",
+      "scripts/ci/test-ic-tools.sh",
+      "docs/supported-hosts.md",
+      "scripts/ci/install-ci-tool.sh"
+    ],
+    "lock_sha256": "7474cca6fc464325c8e0abee0ab18c9911a6273a94f77e8bdc3d75c57ffa490f"
+  },
+  "packages": [
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.9.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.9.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.9.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.9.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.3.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.26.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "tokio-util",
+      "version": "0.7.20",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    }
+  ],
+  "metrics_features": [],
+  "sources": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "dfdd20219ee93429ddb6d56947bc193be807a8f0eb1e73b7fe28cf508ad11897"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "7474cca6fc464325c8e0abee0ab18c9911a6273a94f77e8bdc3d75c57ffa490f"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "ec2dbe489291166d8c3cae795344751ae0e645c13bf5949687e52cd7f5ad5ac9"
+    },
+    {
+      "path": ".shared-tooling.snapshot",
+      "sha256": "a9fbcaf7fe443ba98298c74cb879ab43200671b73876d281551b95b3d6eaa9ec"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "352f48476d664a8c4c433f50795dc24d33d526afee915e7541f280362c1a0ed4"
+    },
+    {
+      "path": "docs/extraction-boundary.md",
+      "sha256": "1a3c9fae2ed0e66a7f6e617e2642703a8021dc91e614867625cbb13cb1a808cb"
+    },
+    {
+      "path": "docs/extraction-design.md",
+      "sha256": "8c51457bdb4ff884f54227fa1dcc09c849236f5dbc4f69bfaf39e9a9c2714797"
+    },
+    {
+      "path": "docs/shared-tooling.md",
+      "sha256": "6a58708665f50a4935b72f38da08de0d908baa1148d9acad331158dc55a99c64"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/mod.rs",
+      "sha256": "3ddd5584ffbf6f383633a7841ff515413437f5a83865812989397fbd55d29fbd"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_settlement/mod.rs",
+      "sha256": "07b5b3f01f83e3f6691808be6fce1d9155cf532f6ec6c3b1cd09ac3074a0ac6b"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_settlement/tests/mod.rs",
+      "sha256": "2db018c5190b0a44a06f5c96a6342c10ed4e012ea3881e84ad765dd6447e6fb0"
+    },
+    {
+      "path": "crates/ic-backup/src/model/execution_settlement/mod.rs",
+      "sha256": "85c6dae977ed18b79f53600d7f9a237377adbda051471434a5dd49b8c423e191"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/execution_settlement/mod.rs",
+      "sha256": "a2d5bac57bbe718f216c0f67a54c720f3fc8074536b8a8d0b43bff0945d03877"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs",
+      "sha256": "536ec3f348e13437e9c0c2524ecc78e8c419aa53ad686f8189c6bc382165cd61"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_workflow.rs",
+      "sha256": "fe74f4983a7b3d108115f8c1fb785c37f93932ca0e544711c9ff42622bf7a3ef"
+    },
+    {
+      "path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "sha256": "ea25d8c2bd427c083db039566844f0a3734cfcc62f83bd1504b8589c81e4905b"
+    }
+  ],
+  "commands": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib execution_settlement",
+      "status": 0,
+      "log": "target/continuation-0111/settlement-tests.log",
+      "log_sha256": "ccc30100a06e81b1d213e4d20e36f5fc5c0e26aeb73d9620d3de5f61e6f89483"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_workflow",
+      "status": 0,
+      "log": "target/continuation-0111/workflow-tests.log",
+      "log_sha256": "2d4db8fefd93704398e89a1a08f200df8fa5f473de3396424c8297711f99adb6"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test execution_workflow",
+      "status": 0,
+      "log": "target/continuation-0111/public-workflow.log",
+      "log_sha256": "edbbbc10a86030176a79cc5544000c902fbb3424fec446cf4bb945aff5ae211f"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_download -- --test-threads=1",
+      "status": 0,
+      "log": "target/continuation-0111/planned-download.log",
+      "log_sha256": "84a12d689961a40e4084a916b4d0ad5d3959fb8577a5acb364104427879dacfe"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup --lib --test execution_workflow --test pocketic_snapshot -- -D warnings",
+      "status": 0,
+      "log": "target/continuation-0111/checkpoint-clippy.log",
+      "log_sha256": "264e5f75845ebf900fe97891d7d5925214054a74c194b099335afddac8d5cfa0"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup-agent --lib -- -D warnings",
+      "status": 0,
+      "log": "target/continuation-0111/agent-clippy.log",
+      "log_sha256": "fdb4b213dc9500a3b25e9a7280d3c55fcc189dec055928426c29a9f28d48f2ba"
+    },
+    {
+      "command": "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "status": 0,
+      "log": "target/continuation-0111/msrv-consumers.log",
+      "log_sha256": "06b2a735aabbf6f80006f9e32d338e11d14239c857d9592cc74074c43345e10a"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::metrics",
+      "status": 0,
+      "log": "target/continuation-0111/metrics-tests.log",
+      "log_sha256": "86fdaa3e1a9a462ab004fbba89828a5bf675563c756bba046e067dffba1a2c04"
+    },
+    {
+      "command": "bash scripts/ci/test-ic-tools.sh",
+      "status": 0,
+      "log": "target/continuation-0111/ic-tools.log",
+      "log_sha256": "481c86b48ddfcfc18d41faf4182c49c648efcba8acf1ec447181d83a4a0cbe2e"
+    },
+    {
+      "command": "bash /tmp/ic-backup-shared-022-w2em_w8b/source/scripts/ci/test-installers.sh",
+      "status": 0,
+      "log": "target/continuation-0111/ci-installers.log",
+      "log_sha256": "8bde9f35301c99c4eadf93fa8d17f888f859731679121b932cdf08b6186001d6"
+    },
+    {
+      "command": "make shared-tooling-check dependency-pins-check shell-check",
+      "status": 0,
+      "log": "target/continuation-0111/snapshot-shell.log",
+      "log_sha256": "e27b6d6b0ddd41d660e7596c9ea7b0f1bf224792f117dbbbbba3deef2cb459c0"
+    },
+    {
+      "command": "make testkit-server-check",
+      "status": 0,
+      "log": "target/continuation-0111/testkit-server.log",
+      "log_sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+    },
+    {
+      "command": "make fmt-check check-doc-links",
+      "status": 0,
+      "log": "target/continuation-0111/format-links.log",
+      "log_sha256": "2f92d79d84d9aa5253a10a1400323fdcec2b091f9f694b0d444711a72ebcc889"
+    },
+    {
+      "command": "make check-doc-links (final documentation and evidence)",
+      "status": 0,
+      "log": "target/continuation-0111/final-links.log",
+      "log_sha256": "2ce8daa8a781bf90dc02b673a9ffb595c836014fdd3720b9f179c085caa75880"
+    }
+  ],
+  "removed_functions": [
+    {
+      "name": "pic_journey::planned_download::settle",
+      "former_path": "crates/ic-backup/tests/pic_journey/planned_download/mod.rs",
+      "reason": "Move manual checkpoint assembly to the library-owned retained-journal boundary",
+      "replacement": "ops::persistence::checkpoint_execution_settlement"
+    }
+  ],
+  "moves_or_renames": [],
+  "consumer_release_ci": {
+    "conclusion": "",
+    "headSha": "d13823bcbf52649e3935ba8a48b1540b889174e9",
+    "jobs": [
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113793125695,
+        "name": "library (macos-15-intel)",
+        "startedAt": "2026-10-09T11:13:10Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37922374746/job/113793125695"
+      },
+      {
+        "completedAt": "2026-10-09T11:25:49Z",
+        "conclusion": "success",
+        "databaseId": 113793125857,
+        "name": "library (ubuntu-24.04)",
+        "startedAt": "2026-10-09T11:13:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Retain temporary validation fixtures",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the pinned development toolchain",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the minimum supported Rust toolchain",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the reviewed manifest formatter",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the reviewed Linux ShellCheck",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Install macOS shell tooling",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare reviewed local host and IC executables",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare locked dependencies and the Testkit-owned simulator",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Check tooling with macOS system Bash 3.2",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate the native library and repository tooling",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Archive failed validation evidence",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Retain failed validation evidence",
+            "number": 14,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 28,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 29,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37922374746/job/113793125857"
+      },
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113793125909,
+        "name": "library (macos-15)",
+        "startedAt": "2026-10-09T11:13:11Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37922374746/job/113793125909"
+      }
+    ],
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/37922374746"
+  },
+  "shared_source_ci": [
+    {
+      "conclusion": "",
+      "headSha": "ee48bb37c98c771e77b92fd891f0757d8c1c8b99",
+      "name": "CI",
+      "status": "queued",
+      "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37918955655"
+    }
+  ],
+  "limits": [
+    "Focused Linux qualification only; no matching committed candidate native CI",
+    "No full runner, product terminal, fence/reference release, live IC, sibling edits or release effects"
+  ]
+}

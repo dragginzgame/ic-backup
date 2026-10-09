@@ -59,6 +59,12 @@ group and cancel superseded review revisions. This retains more main-commit
 runs when native runners are busy; it does not add runner capacity. Inspect each
 selected commit's result before treating its snapshot as qualified.
 
+Use the [CI-health task](../tasks/ci-health.md#queued-native-jobs-and-repeated-validation)
+to diagnose persistent native queues and repeated branch/tag gates. Preserve
+each distinct source's required coverage while removing equivalent work;
+queue length alone does not justify dropping a supported architecture or
+cancelling release qualification.
+
 The portable job uses GitHub Actions' default job timeout, allowing long native
 builds to finish without a shorter regression-step deadline. Ordinary failures
 still run the evidence collector; reaching the platform job limit can prevent
@@ -88,6 +94,7 @@ required to run setup. Make targets and CI select this same local tool set.
 | Local maintenance coordinator | Bash 3.2+, Git, prepared/authenticated Codex CLI with `exec --approve-for-me`, and a serial scheduler; the supplied user units require Linux systemd. Task tools remain optional consumer-qualified inputs; see [local scheduling](../tasks/local-schedule.md). The offline fixture substitutes Codex and starts no agent. |
 | `scripts/ci/run-validation-targets.sh` | GNU Make plus `awk`, `grep` or `rg`, `sed`, `tail`, and `tee` |
 | Archive installer scripts | `curl`, `tar`, a SHA-256 implementation, and the archive codec used by the selected tool |
+| CI binary installer entry points | The archive prerequisites above and Perl core for exact-path atomic publication |
 | Evidence archiver | Bash 3.2+, tar and gzip; explicit existing roots and relative selections |
 | `scripts/dev/install-rust-tools.sh` | Prepared Rust/Cargo toolchain and native compilation prerequisites for explicit registry installation; offline `--check` only runs the selected local executables |
 | Local IC tool setup | Bash 3.2+, `curl`, `tar`, xz/gzip, Perl, and a SHA-256 implementation; see [IC tools](ic-tools.md) |

@@ -25,6 +25,66 @@
 
 # Current handoff — 2026-10-09
 
+## Current 0.11.1 Shared Tooling 0.2.3 adoption
+
+Canonically adopt committed Shared 0.2.3
+`ac4549c5ebde497f7db0da5d05d32835112e51de`, superseding the preceding review's
+uncommitted-source limitation. The same 92-file selection changes four guidance
+files only; engineering rules, executable bytes/modes and tool pins stay exact.
+Keep the optional installer suite omitted rather than adding unused production
+wrappers. Its owner regression qualifies companion refusals from the complete
+committed source; consumer qualification is separate. The
+[review](../reports/audits/2026/10/09/shared-023/01/report.md) retains provenance
+and focused checks. Preserve all current 0.11.1 work and Host 0.9.2/Testkit 0.27.0
+manifest/lock bytes. The previously observed selected Testkit CLI prerequisite
+remains separate; this guidance adoption changes no installation or runner.
+
+## Latest Shared/issue review of 0.11.1
+
+GitHub main still selects Shared 0.2.2
+`ee48bb37c98c771e77b92fd891f0757d8c1c8b99`; our 92-file snapshot and pin checks
+pass. The uncommitted upstream 0.2.3 fix for
+[optional installer-fixture companions](https://github.com/dragginzgame/shared-tooling/issues/73)
+is excluded; that optional suite is not in our snapshot. No new committed update
+or closeable issue was found. Released consumer Linux CI and Shared Linux/lint
+jobs pass; both repositories' macOS jobs remain queued.
+
+The incoming selection has changed to Host 0.9.2 and Testkit 0.27.0, with Metrics
+0.3.1 retained. Preserve these manifest/lock bytes. On this graph, 36 focused
+settlement/stage/public cases pass and the Agent simulator fixture compiles.
+The offline server gate correctly refuses the missing selected 0.27.0 CLI;
+explicit `make install-testkit-server` preparation is needed before qualifying
+actual startup. Earlier 0.26.0 simulator evidence remains separate. Review/check
+evidence is retained at `target/shared-issues-review-0111/`. Keep the compatible
+0.11.1 draft and uncommitted work; no implicit installation or release follows.
+
+## Current 0.11.1 original-journal checkpoint continuation
+
+0.11.0 is live at `d13823bcbf52649e3935ba8a48b1540b889174e9`. Select compatible
+0.11.1 for canonical checkpoint derivation/publication from the exact retained
+plan and complete original journals. Replace the simulator's private `settle`
+assembly and the public learned-stage caller with that entrypoint; the existing
+publisher rechecks full histories before immutable publication. Missing, held,
+pending, NotApplied or Uncertain originals refuse without resetting spending.
+No record format, outcome, terminal proof or release permission changes.
+
+Canonically adopt committed Shared 0.2.2 handoff
+`ee48bb37c98c771e77b92fd891f0757d8c1c8b99`: six changes within the same 92-file
+snapshot fix final pin rows without newlines and exact CI-tool publication.
+Focused checks pass, including 43 settlement/stage/public/simulator/metrics cases,
+both-library and changed-target Clippy, independent Rust 1.88 consumers, installer
+fixtures, snapshot/pin/ShellCheck, Testkit admission, formatting and links. The
+[review](../reports/audits/2026/10/09/continuation-0111/01/report.md) binds exact
+sources and retained logs. Preserve incoming lock bytes (Host 0.9.1, Metrics
+0.3.1, Testkit 0.26.0), prior failed release evidence and all uncommitted changes.
+Package/receipt remain 0.11.0; no release or Git write follows.
+
+Released 0.11.0 Linux CI passes; both macOS jobs and exact Shared CI remain queued.
+Keep #32 open for native adoption and #29 open for full provider-driven workflows,
+fresh application authority/fencing and product terminal proof. Canic still owns
+its separately authorized application integration; local checkpointing does not
+complete that runner or release retained fences/source references.
+
 ## Current 0.11.0 missing Testkit selection correction
 
 Committed implementation HEAD is `dfef36774eb778d52615aece3c47e254c7a63a57`,

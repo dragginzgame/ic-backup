@@ -2481,6 +2481,16 @@ new cache or accounting owner. Existing no-follow bounded readers and durable pr
 no-replace publication retain prior bytes on conflict. Lost publication replies and
 process death reopen exact local evidence, without paid calls or rewriting originals.
 
+`checkpoint_execution_settlement` derives the existing record from the exact
+expected retained plan and every original journal through the same sequential
+reader. It then delegates to the existing immutable publisher, which re-admits
+the plan and complete histories before writing. Its separate typed derivation
+error preserves the existing publication/replay error contract. Pending,
+NotApplied, Uncertain, missing or held originals cannot produce a checkpoint;
+an occupied checkpoint is retained without replacement. Independent callers may
+still construct a record for exact publication or retain its digest for replay.
+No new schema, budget or outcome is introduced.
+
 The checkpoint qualifies local ledger binding only. Authentication, cross-journal
 dispatch chronology, stable noncooperating byte custody, transfer completeness,
 manifest/application safety and command quiescence remain separate qualification.

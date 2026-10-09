@@ -40,7 +40,8 @@ pub use download_journal::{
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};
 pub use execution_settlement::{
-    ExecutionSettlementPersistenceError, create_execution_settlement, read_execution_settlement,
+    ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError,
+    checkpoint_execution_settlement, create_execution_settlement, read_execution_settlement,
 };
 pub use execution_workflow::{
     ExecutionStageGuard, ExecutionStagePreparationError, ExecutionStageResumeError,

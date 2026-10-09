@@ -9,12 +9,40 @@ use super::{
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        execution_settlement::{ExecutionSettlementRecord, MAX_EXECUTION_SETTLEMENT_BYTES},
+        attempt_journal::AttemptJournalRecord,
+        execution_settlement::{
+            ExecutionSettlementError, ExecutionSettlementJournalRecord, ExecutionSettlementRecord,
+            MAX_EXECUTION_SETTLEMENT_BYTES,
+        },
+        operation_plan::OperationPlanRecord,
     },
     policy::execution_settlement::{ExecutionSettlementPolicyError, validate},
 };
 use std::path::Path;
 use thiserror::Error;
+
+/// Derive and publish an all-Applied checkpoint from the exact retained original journals.
+///
+/// Reads every original journal sequentially, then delegates immutable publication
+/// to [`create_execution_settlement`], which rechecks the complete original histories.
+/// Hold no journal guards at admission. This creates no receipts, spending allowance,
+/// product terminal proof or release permission. An occupied checkpoint is never replaced;
+/// use [`read_execution_settlement`] with its retained identity for local replay.
+/// # Errors
+/// Rejects missing, held, changed or unsettled originals and publication failures.
+pub fn checkpoint_execution_settlement(
+    layout: &BackupLayoutGuard,
+    expected_plan: &ArtifactChecksumRecord,
+) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
+    let (plan, journals) = read_retained_journals(layout, expected_plan)?;
+    let rows = journals
+        .iter()
+        .map(ExecutionSettlementJournalRecord::from_journal)
+        .collect();
+    let record = ExecutionSettlementRecord::new(plan.digest(), rows)?;
+    create_execution_settlement(layout, &record)?;
+    Ok(record)
+}
 
 /// Publish fixed `execution-settlement.json` under original retained plan/journal evidence.
 ///
@@ -71,13 +99,30 @@ fn validate_retained(
     layout: &BackupLayoutGuard,
     record: &ExecutionSettlementRecord,
 ) -> Result<(), ExecutionSettlementPersistenceError> {
-    let plan = read_operation_plan(layout, record.plan_intent())?;
-    let authorities = plan.attempt_authorities()?;
-    let journals = super::attempt_journal::read_original_journals(layout, &authorities, None)?;
+    let (plan, journals) = read_retained_journals(layout, record.plan_intent())?;
     let references: Vec<_> = journals.iter().collect();
     validate(&plan, &references, record)?;
     layout.check_root()?;
     Ok(())
+}
+fn read_retained_journals(
+    layout: &BackupLayoutGuard,
+    expected_plan: &ArtifactChecksumRecord,
+) -> Result<(OperationPlanRecord, Vec<AttemptJournalRecord>), ExecutionSettlementPersistenceError> {
+    let plan = read_operation_plan(layout, expected_plan)?;
+    let authorities = plan.attempt_authorities()?;
+    let journals = super::attempt_journal::read_original_journals(layout, &authorities, None)?;
+    Ok((plan, journals))
+}
+/// Failure deriving or publishing a checkpoint; original records remain retained.
+#[derive(Debug, Error)]
+pub enum ExecutionSettlementCheckpointError {
+    /// Original local evidence or immutable publication cannot be admitted.
+    #[error(transparent)]
+    Persistence(#[from] ExecutionSettlementPersistenceError),
+    /// The derived checkpoint cannot satisfy the existing bounded record schema.
+    #[error(transparent)]
+    Record(#[from] ExecutionSettlementError),
 }
 /// Typed immutable publication/replay failure, preserving all original journals and obligations.
 #[derive(Debug, Error)]

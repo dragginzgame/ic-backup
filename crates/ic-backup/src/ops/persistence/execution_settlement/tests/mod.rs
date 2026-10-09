@@ -1,7 +1,10 @@
 use super::*;
 use crate::ops::persistence::AttemptJournalGuard;
 use crate::{
-    model::attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+    model::attempt_journal::{
+        MutationOutcomeRecord, MutationReceiptRequest, ObservationOutcomeRecord,
+        ObservationReceiptRequest,
+    },
     test_support::{
         execution_settlement::{applied, record},
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
@@ -41,6 +44,126 @@ fn prepare() -> (PathBuf, BackupLayoutGuard, ExecutionSettlementRecord) {
     }
     let record = record(&plan, &applied(&plan));
     (root, layout, record)
+}
+#[test]
+fn derived_checkpoint_preserves_original_histories_and_replays_without_replacement() {
+    let (root, layout, expected) = prepare();
+    let before: Vec<_> = [0, 7]
+        .map(|sequence| fs::read(root.join(format!("attempt-{sequence}.json"))).unwrap())
+        .into();
+    let actual = checkpoint_execution_settlement(&layout, expected.plan_intent()).unwrap();
+    assert_eq!(actual, expected);
+    let path = root.join("execution-settlement.json");
+    let bytes = fs::read(&path).unwrap();
+    assert_eq!(
+        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    assert_eq!(
+        read_execution_settlement(&layout, actual.plan_intent(), &actual.digest()).unwrap(),
+        actual
+    );
+    assert!(checkpoint_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert_eq!(fs::read(&path).unwrap(), bytes);
+    for (sequence, original) in [0, 7].into_iter().zip(before) {
+        assert_eq!(
+            fs::read(root.join(format!("attempt-{sequence}.json"))).unwrap(),
+            original
+        );
+    }
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+#[test]
+fn derivation_requires_complete_unheld_originals_and_exact_plan_identity() {
+    let (root, layout, expected) = prepare();
+    let plan = plan();
+    let held = AttemptJournalGuard::open(&layout, &plan.attempt_authority(7).unwrap()).unwrap();
+    assert!(matches!(
+        checkpoint_execution_settlement(&layout, expected.plan_intent()),
+        Err(ExecutionSettlementCheckpointError::Persistence(
+            ExecutionSettlementPersistenceError::Journal(AttemptJournalError::Lock(_))
+        ))
+    ));
+    drop(held);
+    fs::rename(root.join("attempt-7.json"), root.join("retained-journal")).unwrap();
+    assert!(matches!(
+        checkpoint_execution_settlement(&layout, expected.plan_intent()),
+        Err(ExecutionSettlementCheckpointError::Persistence(
+            ExecutionSettlementPersistenceError::Journal(_)
+        ))
+    ));
+    assert!(matches!(
+        checkpoint_execution_settlement(
+            &layout,
+            &ArtifactChecksumRecord::from_bytes(b"other plan")
+        ),
+        Err(ExecutionSettlementCheckpointError::Persistence(
+            ExecutionSettlementPersistenceError::Plan(_)
+        ))
+    ));
+    assert!(!root.join("execution-settlement.json").exists());
+    assert!(root.join("retained-journal").exists());
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+#[test]
+fn pending_negative_and_uncertain_histories_cannot_be_checkpointed_or_reset() {
+    for state in ["pending", "not-applied", "uncertain"] {
+        let (root, layout, expected) = prepare();
+        fs::rename(
+            root.join("attempt-7.json"),
+            root.join("retained-applied-journal"),
+        )
+        .unwrap();
+        let authority = plan().attempt_authority(7).unwrap();
+        let mut journal = AttemptJournalGuard::create(&layout, authority).unwrap();
+        let attempt = journal.reserve_mutation().unwrap();
+        if state == "not-applied" {
+            journal
+                .record_mutation(MutationReceiptRequest {
+                    attempt,
+                    request: journal
+                        .record()
+                        .unwrap()
+                        .authority()
+                        .binding()
+                        .request()
+                        .into(),
+                    outcome: MutationOutcomeRecord::NotApplied,
+                    evidence: "34".repeat(32),
+                })
+                .unwrap();
+        } else if state == "uncertain" {
+            let request = "56".repeat(32);
+            let observation = journal.reserve_observation(attempt, &request).unwrap();
+            journal
+                .record_observation(ObservationReceiptRequest {
+                    attempt: observation,
+                    request,
+                    outcome: ObservationOutcomeRecord::Uncertain,
+                    evidence: "78".repeat(32),
+                })
+                .unwrap();
+        }
+        drop(journal);
+        let original = fs::read(root.join("attempt-7.json")).unwrap();
+        assert!(
+            matches!(
+                checkpoint_execution_settlement(&layout, expected.plan_intent()),
+                Err(ExecutionSettlementCheckpointError::Persistence(
+                    ExecutionSettlementPersistenceError::Policy(
+                        ExecutionSettlementPolicyError::UnsettledOperation(7)
+                    )
+                ))
+            ),
+            "{state}"
+        );
+        assert!(!root.join("execution-settlement.json").exists());
+        assert_eq!(fs::read(root.join("attempt-7.json")).unwrap(), original);
+        drop(layout);
+        fs::remove_dir_all(root).unwrap();
+    }
 }
 #[test]
 fn immutable_private_publication_reopens_exact_originals_and_rejects_contention() {

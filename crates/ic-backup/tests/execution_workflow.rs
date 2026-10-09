@@ -6,7 +6,6 @@ use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-        execution_settlement::{ExecutionSettlementJournalRecord, ExecutionSettlementRecord},
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
         },
@@ -15,8 +14,8 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_settlement,
-        create_execution_workflow,
+        AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard,
+        checkpoint_execution_settlement, create_execution_workflow,
     },
 };
 use serde_json::json;
@@ -86,15 +85,9 @@ fn retain_capture(
                 .into(),
         })
         .unwrap();
-    let settlement = ExecutionSettlementRecord::new(
-        stage.plan().digest(),
-        vec![ExecutionSettlementJournalRecord::from_journal(
-            journal.record().unwrap(),
-        )],
-    )
-    .unwrap();
     drop(journal);
-    create_execution_settlement(stage.layout().unwrap(), &settlement).unwrap();
+    let settlement =
+        checkpoint_execution_settlement(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
     ExecutionStagePredecessorRecord::new(
         0,
         binding.digest(),

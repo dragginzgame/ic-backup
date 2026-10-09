@@ -768,7 +768,10 @@ checkpoint primitive. It verifies retained original plan/journal fingerprints,
 without calling providers or fresh artifact/application checks. Full product terminal
 evidence still requires qualified effects, manifests/transfer, application safety
 and command custody before reference or fence release; these are not inferred from
-the local ledger checkpoint.
+the local ledger checkpoint. Callers can now derive and publish that checkpoint
+from the retained original plan and complete journals with
+`checkpoint_execution_settlement`; the existing publisher rechecks exact histories
+before writing, and the existing reader owns identity-bound replay.
 
 Immutable local download manifest publication now reuses the existing v1 download
 journal record after guarded original-plan-bound fresh verification. Its canonical

@@ -261,6 +261,10 @@ into an issue tracker or release authority.
   all spending, obligations and references. This is not full backup/restore completion,
   authenticated receipts, cross-journal chronology, byte/extent/application qualification,
   command quiescence or fence/reference release. No release API is implemented.
+  Canonical checkpoint derivation reads every exact retained original journal and
+  delegates publication to the existing owner, rechecking full histories before
+  writing. Hold no journal guards; occupied checkpoints remain retained. The
+  additive derivation error leaves the existing publication/replay error unchanged.
 
 - Immutable local download manifests now reuse the exact v1 download journal schema
   after original-plan-bound fresh byte verification. Preserve 1 MiB IO, 1,024 artifacts,

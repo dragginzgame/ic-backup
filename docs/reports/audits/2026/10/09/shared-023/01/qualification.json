@@ -1,0 +1,299 @@
+{
+  "source": "/tmp/ic-backup-shared-023-v2q6mnuk/source",
+  "revision": "ac4549c5ebde497f7db0da5d05d32835112e51de",
+  "previous_revision": "ee48bb37c98c771e77b92fd891f0757d8c1c8b99",
+  "selected_files": 92,
+  "changed": [
+    "docs/consuming-snapshots.md",
+    "docs/supported-hosts.md",
+    "tasks/README.md",
+    "tasks/ci-health.md"
+  ],
+  "inputs": {
+    "Cargo.toml": "c0d1d5f1004ffdc8ff0eb5c2d89d688f5d24dcae9870af51382e4fb23dd6e5c3",
+    "Cargo.lock": "e9eee2333abc8aa1c39468a265121e34782c4659f2574c7943b133d0fa809cdf"
+  },
+  "optional_installer_fixture_selected": false,
+  "upstream_runs": [
+    {
+      "conclusion": "",
+      "databaseId": 37925303425,
+      "headSha": "ac4549c5ebde497f7db0da5d05d32835112e51de",
+      "status": "queued",
+      "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37925303425"
+    }
+  ],
+  "head": "d13823bcbf52649e3935ba8a48b1540b889174e9",
+  "draft": "0.11.1",
+  "package_version": "0.11.0",
+  "snapshot_sha256": "6ca4dacfe3e75be05c804bdc4543767fd82a2f7584c1dfd18d0201ec672275cf",
+  "removed_functions_methods_types": [],
+  "commands": [
+    {
+      "command": "Canonical refresh-consumer.sh --consumer /home/adam/projects/ic-backup from exact isolated committed source",
+      "status": 0,
+      "log": "target/shared-023-adoption/refresh.log",
+      "log_sha256": "ae3ad7502f75b2677d3efe3ef8c9f4bbe3882c3bda07069edeee0e64ce0a1a55"
+    },
+    {
+      "command": "bash /tmp/ic-backup-shared-023-v2q6mnuk/source/scripts/ci/test-snapshot-distribution.sh",
+      "status": 0,
+      "log": "target/shared-023-adoption/exporter-fixtures.log",
+      "log_sha256": "6096b5b3b9106854d47e5526f86872d32d377d2b8f167340e54d5d5c0ae5529f"
+    },
+    {
+      "command": "make shared-tooling-check dependency-pins-check check-doc-links",
+      "status": 0,
+      "log": "target/shared-023-adoption/consumer-checks.log",
+      "log_sha256": "d900cb155690dbd008d664050ef71c0ace763d9aeebe8fd3edf086e8f5c51596"
+    },
+    {
+      "command": "git diff --check",
+      "status": 0
+    }
+  ],
+  "upstream_ci": {
+    "conclusion": "",
+    "headSha": "ac4549c5ebde497f7db0da5d05d32835112e51de",
+    "jobs": [
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113802689646,
+        "name": "portable-regression (macos-15)",
+        "startedAt": "2026-10-09T11:41:36Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37925303425/job/113802689646"
+      },
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 113802689722,
+        "name": "portable-regression (macos-15-intel)",
+        "startedAt": "2026-10-09T11:41:36Z",
+        "status": "queued",
+        "steps": [],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37925303425/job/113802689722"
+      },
+      {
+        "completedAt": "2026-10-09T11:41:53Z",
+        "conclusion": "success",
+        "databaseId": 113802689823,
+        "name": "lint-and-security",
+        "startedAt": "2026-10-09T11:41:38Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned validation tools",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Check shell and workflow sources",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Scan repository history for secrets",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 11,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37925303425/job/113802689823"
+      },
+      {
+        "completedAt": "2026-10-09T11:45:47Z",
+        "conclusion": "success",
+        "databaseId": 113802689855,
+        "name": "portable-regression (ubuntu-24.04)",
+        "startedAt": "2026-10-09T11:41:38Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install fixture dependencies on Linux",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Select system Bash on macOS",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned Cargo manifest formatter",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned parsers, ripgrep and cloc",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Select the frontend fixture runtime",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare the locked frontend fixture",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run portable regression set with prepared tools",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Qualify the real frontend formatter and Rust hook",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Qualify pinned native IC executables",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Exercise expected native installer and check failures",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload the native failure qualification evidence",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Download the uploaded native failure evidence",
+            "number": 14,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify native failure status and uploaded payload",
+            "number": 15,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Prepare failed candidate alongside verified native toolsets",
+            "number": 16,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload compact native tool evidence",
+            "number": 17,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Download compact native tool evidence",
+            "number": 18,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify compact native tool evidence and retained candidate",
+            "number": 19,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Retain failed validation and installer evidence",
+            "number": 20,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Select the frontend fixture runtime",
+            "number": 39,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "number": 40,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 41,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37925303425/job/113802689855"
+      }
+    ],
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/37925303425"
+  },
+  "local_sources": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "cfb60daa9c417687ffa32dafaed18922b71d9df739c4791e8583f46f5ca11824"
+    },
+    {
+      "path": "docs/shared-tooling.md",
+      "sha256": "bb613343b60ec4aa259af127d1ade2f5ff2711bf0641b8165260672036824a77"
+    },
+    {
+      "path": "docs/status/current.md",
+      "sha256": "971578e42c07cf1b59467c7e6f4b3eac3bbf96f2caef350501f9bc33d7706dcb"
+    }
+  ]
+}

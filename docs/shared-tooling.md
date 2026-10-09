@@ -49,14 +49,41 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 92-file snapshot selects the committed Shared Tooling 0.2.0 handoff at
+The current 92-file snapshot selects committed Shared Tooling 0.2.3 at
+`ac4549c5ebde497f7db0da5d05d32835112e51de`. Canonical refresh from a clean
+isolated checkout changes four selected documentation/task files and preserves
+all selected executable bytes, modes and pins. Common engineering rules remain
+unchanged. The optional CI installer fixture now requires explicit selection of
+all five wrapper companions; this consumer selects only its production ShellCheck
+wrapper/engine and does not vendor that fixture. Focused exporter qualification
+uses the complete exact upstream source, retaining that distinction from the
+consumer snapshot. Updated CI-health guidance separates queued jobs from code
+failures and requires evidence before treating branch/tag runs as equivalent.
+It grants no cancellation, workflow change or runner-capacity authority.
+The [adoption review](reports/audits/2026/10/09/shared-023/01/report.md) records
+exact source/export evidence and consumer checks.
+
+### Prior Shared Tooling 0.2.2 review
+
+The prior 92-file snapshot selected the committed Shared Tooling 0.2.2 handoff at
+`ee48bb37c98c771e77b92fd891f0757d8c1c8b99`. Canonical refresh from a clean
+isolated committed checkout changes six selected files, preserving the roster,
+all pinned IC tools and exact executable modes. The IC installer/checker handles
+the final pin row without a newline. CI tool installation publishes to the exact
+executable destination, rejects late directories and replaces late symlink entries
+without following their targets; Perl is an explicit bootstrap prerequisite.
+Rejected publication retains the candidate and conflicting directory contents. Consumer qualification is recorded in the current handoff.
+
+### Released Shared Tooling 0.2.0 adoption
+
+The released 92-file snapshot selects the committed Shared Tooling 0.2.0 handoff at
 `8140e3dd1b44409d682c721889ab702f438c6a17`. Canonical refresh removes the two
 PocketIC checkers and their dedicated fixture from the selection; selected bytes
 and executable modes come from a clean isolated committed checkout. Testkit now
 owns server release/assets, provisioning and offline admission. The five-tool
 consumer matrix keeps all other reviewed pins unchanged.
 
-The pending 0.11.0 hard cut adds explicit `make install-testkit-server` and offline
+The released 0.11.0 hard cut adds explicit `make install-testkit-server` and offline
 `make testkit-server-check`, which prints the admitted absolute server path. Cargo
 metadata selects the unique locked Testkit version for both libraries' fixtures
 and the CLI; Shared Tooling's selected Cargo installer admits the CLI receipt.
