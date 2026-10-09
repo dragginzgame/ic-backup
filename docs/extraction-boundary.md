@@ -2313,6 +2313,103 @@ premature histories and lost-observation reopen. The public settlement journey
 uses the new reservation boundary while retaining its fence/source obligations.
 This is reusable execution admission, not an installed scheduler or IC transport.
 
+### Original workflow allocations and learned-stage binding
+
+`ExecutionWorkflowRecord` retains a distinct strict v1 stage catalog under fixed
+`execution-workflow.json`. It reuses `OperationPlanRecord` for canonical context,
+full inventory, selection, closed dependency graph and bounded allocations.
+Catalog operation sequences identify stages; request hashes commit original
+integration-owned input/purpose contracts. The catalog supplies no attempt
+authority. Each stage's original per-operation ceiling is at most 1,024 combined
+attempts; the full original allocation remains at most 65,536. Unassigned workflow
+headroom is never transferred. Ordinary operation-plan v1 semantics remain intact.
+
+`ExecutionStageBindingRecord` joins the original workflow digest and stage identity
+to one exact ordinary child plan digest and the complete exact set of direct
+predecessors. Each row retains the predecessor binding, chronological settlement
+and opaque learned-input evidence digest. Child context/full inventory must equal
+the original catalog; selection is exactly that stage's target. Aggregate mutation
+and observation ceilings equal the original stage allocation, while the existing
+plan owner bounds assigned operation allowances. Zero-total child operations
+reject, bounding total child operations by original allocated attempts. Rebuilding
+an in-memory plan grants no extra allowance and cannot replace the retained plan.
+
+`ExecutionStageGuard::create` borrows the original workflow layout and creates
+only its fixed direct `execution-stage-{sequence}` child with 0700 permissions.
+It validates all records before filesystem allocation and requires each original
+predecessor's exact retained binding/plan and complete Applied settlement through
+the existing journal-history owner. Parent synchronization and existing durable
+0600 JSON publication retain `operation-plan.json` and `stage-binding.json` before
+return. Occupied directories reject; partial preparation is retained without
+repair, cleanup or rebinding. An interrupted preparation with a missing document
+stops safely. A lost successful creation response reopens the exact complete pair.
+
+`open` and `layout` re-admit original workflow, child plan/binding and predecessor
+settlements, retaining both layout lifetimes. Derived stage symlinks reject.
+Only existing attempt journals own spending; these APIs never create a journal,
+reserve a call, infer zero consumption, refund or automatically settle a receipt.
+Resume must use complete original journal admission; a missing original rejects.
+Stage creation is preparation, not dispatch. Integrations own the input contract,
+exact learned snapshot/extent evidence and derivation, receipt authentication,
+fresh effect-boundary permissions/safety and never-dispatched command/byte custody.
+Noncooperating filesystem custody retains its existing operator-owned boundary.
+
+The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
+hashing retains the full canonical allocation digest. Stage hashing retains exact
+workflow/child identities, stage sequence and canonical predecessor rows; no
+counters or terminal flags are copied. Workflow JSON is bounded to 1 MiB, binding
+JSON to 512 KiB and rows to the existing 1,024 direct-dependency limit. Strict
+[workflow](contracts/execution-workflow.schema.json) and
+[binding](contracts/execution-stage.schema.json) schemas include independent
+binary goldens. Native tests cover exact/missing/changed evidence, finite original
+budgets, occupied/unsafe stages, pending reopen and acknowledged process death
+between plan/binding publication and after durable binding completion. The public
+journey binds real capture/metadata codec digests with a learned raw snapshot ID;
+its native receipt fixtures qualify local admission, not IC effects. Full capture/
+download orchestration, authenticated transfer, application adapters and terminal/
+fence/reference release remain unimplemented.
+
+### Metadata-derived original download planning
+
+`model::ic_snapshot_download::IcSnapshotDownloadPlan` borrows an exact original
+workflow stage and decoded metadata. It checks target equality and chunk size
+within 1..=1 MiB, then counts all Wasm-module, heap, stable and known-chunk requests
+with checked nat64 arithmetic before allocating or encoding payloads. The entire
+read set must fit the original stage mutation ceiling; the existing stage owner
+bounds combined attempts to 1,024. Oversized snapshots reject without iteration
+proportional to remote sizes. This bounded planner does not partition a larger
+snapshot into additional stages or create fresh allowance.
+
+Requests cover contiguous module/heap/stable regions followed by known chunks in
+the exact metadata order. Empty regions need no call; known empty chunks still
+need their exact hash-checked reply. Existing data codecs own every extent, raw ID
+and payload hash. The ordinary child plan copies original context/full inventory,
+selects the exact original target, retains original aggregate ceilings and assigns
+each zero-based ordinal one mutation and zero observations. Explicit sequential
+dependencies admit the contiguous writer order. Spare headroom stays unassigned.
+Entirely read-free metadata yields no child plan or binding, without a placeholder
+operation or inference of complete transfer/publication.
+
+Binding requires the exact single-request metadata child plan under the original
+workflow, its direct predecessor binding and exact request/raw-reply metadata
+evidence digest. Existing stage creation separately admits complete original
+Applied predecessor journals and chronological settlement. These checks authenticate
+neither opaque receipt semantics nor metadata provenance. Fresh permissions,
+original capture/extent custody, purpose contracts and never-dispatched command
+custody remain integration responsibilities. No new record, journal, spending
+owner, provider or installed runner appears.
+
+Real Testkit/PocketIC qualification freezes capture/metadata/data stage ceilings
+before capture, creates every original data journal before the first data call,
+and downloads the isolated stopped fixture through this exact plan. Success joins
+existing coverage, durable IC-tree publication, fresh verification and immutable
+local manifest replay. Lost/malformed replies after the first successful append
+retain the second pending mutation, partial Created bytes and source references;
+dependent reservations reject and reopen makes no provider call or fresh journal.
+The fixture owns explicit simulator setup, single-ingress custody and its
+application's stopped/no-external-effects admission. This is not generic application
+qualification, Canic adoption, full restore or terminal/fence/reference release.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

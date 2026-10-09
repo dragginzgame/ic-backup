@@ -23,7 +23,110 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-08
+# Current handoff — 2026-10-09
+
+## Current 0.9.2 Shared Tooling and Host follow-up
+
+Extend the same compatible 0.9.2 draft from released 0.9.1; package versions and
+release receipt remain unchanged. Canonically adopt committed Shared Tooling
+0.1.32 at `635a39a9dd5f8d021fa9c9196b591e00521a7e02` from a clean isolated
+checkout. Eight files change in the unchanged 97-file selection; dirty sibling
+0.1.33 dashboard work is excluded. The IC installer reuses complete validated
+selections despite comments/row order, retaining original receipts/bundles.
+Changed records and malformed/unsafe evidence still refuse. Focused installer
+fixtures, ShellCheck, alignment and real offline equivalent-pin admission pass.
+
+Official Host 0.8.5 archives and all committed package source/manifest bytes match.
+Its Rust sources are unchanged from 0.8.4, so no additional runtime offload is
+justified. Preserve the incoming Host 0.8.5 graph and all prior dirty implementation.
+Focused JSON publication/read, inherited custody, original journal, stage/planner
+and public stage cases pass on that graph. Three real planned-download Testkit
+cases also pass: durable publication, lost reply and malformed reply with retained
+original spending/partial bytes. Both libraries pass warnings-denied
+Clippy/rustdoc and Rust 1.88 with independent normal consumers. Both exact Host
+revisions now have successful Linux and both macOS native CI; Shared Tooling
+0.1.32 does too.
+This uncommitted consumer candidate has no new native CI evidence.
+
+Testkit's PocketIC setup/check handoff remains open and unpublished. Preserve
+the functioning selected matrix, explicit setup and all bundles until that owner
+is published and qualified. Cargo-install assessment/fleet dashboard scripts
+remain upstream; no extra consumer gate or Metrics feature is introduced.
+The [review](../reports/audits/2026/10/09/shared-032-host-085/01/report.md) retains
+exact evidence. This batch changes no Rust API, journal, allowance or IC behavior.
+Work stays uncommitted; no sibling, Git/release, publication or live IC effects.
+
+## Current 0.9.2 original download planning
+
+The maintainer clarified that 0.9.2 has not been pushed. Release 0.9.1 remains HEAD
+at `d6c6082efc7c36de98e6e92ec5b4091de5ca43b4`; extend the existing compatible
+undated 0.9.2 draft. Package versions and release receipt remain at 0.9.1.
+Preserve incoming Host 0.8.4, Metrics 0.2.16 and TOML/parser lock selections.
+
+`IcSnapshotDownloadPlan` counts complete metadata-derived region/chunk reads with
+checked arithmetic before allocation, within the original data stage's finite
+allowance. Reuse exact existing codecs, original ordinary plans and stage bindings;
+each request has one update and zero observations, with explicit writer dependencies.
+Binding checks the exact original metadata stage/request and reply evidence. No
+journal, spending owner, new record or automatic receipt is introduced. Oversized
+snapshots reject; entirely read-free metadata creates no placeholder operation.
+
+Three real Testkit/PocketIC cases pass: complete capture/download/durable publication
+and manifest replay, lost data reply, and malformed data reply. Failure cases stop
+with original pending spending, partial Created bytes and source references intact;
+dependent admission/recreation refuse and reopen makes no call or new journal.
+The driver owns isolated stopped-fixture safety and single-ingress custody only.
+It is not an installed generic runner or actual Canic application qualification.
+
+Five planner boundary cases, eleven stage regression cases and the public stage
+journey pass. Both libraries pass warnings-denied Clippy/rustdoc and Rust 1.88,
+including independent normal consumers. Formatting, local documentation links and shared snapshot integrity
+pass. Local Linux evidence is separate from native macOS/full product qualification.
+The [review](../reports/audits/2026/10/09/planned-download/01/report.md) retains exact
+source, graph, logs and simulator evidence. [#29](https://github.com/dragginzgame/ic-backup/issues/29)
+remains open for installed provider-driven orchestration, fresh application admission,
+upload/restore and full terminal/release qualification. Work stays uncommitted.
+
+## Current 0.9.2 stage-binding and Host review
+
+Release 0.9.1 is HEAD at `d6c6082efc7c36de98e6e92ec5b4091de5ca43b4`.
+Select the compatible next draft 0.9.2 for new local APIs and Host 0.8.4 within
+the existing 0.8 requirement. Existing public types and record semantics remain;
+package versions and release receipt stay at 0.9.1. Preserve the incoming lock
+update from Host 0.8.3 to 0.8.4; no dependency reselection or sibling patch occurs.
+
+Distinct original workflow allocations bind fixed later stages to exact child
+plans, original target/context/full inventory and immutable per-stage ceilings.
+Only existing child attempt journals own spending. Creation requires exact
+predecessor bindings and complete chronological Applied settlements; retained
+opaque learned-input commitments do not authenticate snapshot IDs/dimensions or
+their derivation. Integrations retain original learned evidence bytes. Fixed
+private stage directories refuse replacement; partial preparation stops with
+evidence retained. Reopen admits exact originals without journal creation,
+budget reset, dispatch, repair or cleanup. Strict v1 schemas and independent binary
+goldens are linked from [the contract](../extraction-boundary.md#original-workflow-allocations-and-learned-stage-binding).
+
+Published Host 0.8.4 at `97187b2a46d6f8a6964224a36a133d858ef0d223` matches all
+four official registry rows, archive checksums, clean VCS identity and committed
+source files. Its existing-lock fast path avoids staging/sync in read-only parents.
+The shared opener still creates missing files with general publication permissions;
+Backup's existing-only custody and 0600 sidecars retain their current owner.
+No further production offload is admitted. Host Process/Tools stay test-only
+transitive dependencies through published Testkit, not a restored subprocess backend.
+
+Eleven new model/persistence cases and the public learned-ID/pending journey pass.
+Focused existing JSON publication/read, journal reservation, settlement replay and
+inherited command-custody cases pass on the selected graph. Both libraries and
+independent normal consumers compile on Rust 1.88; final Clippy, rustdoc, formatting
+and local documentation links pass. Exact Host 0.8.4 native CI remains queued,
+and this uncommitted candidate has no native macOS or full IC workflow qualification.
+
+The [review](../reports/audits/2026/10/08/workflow-host-084/01/report.md) owns exact
+checks and CI scope. This batch advances local stage binding under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29); authenticated learned
+inputs, installed capture/download orchestration, fresh application admission,
+complete transfer and terminal/fence/reference release remain separate. Work stays
+uncommitted; no release, live IC effect, publication or sibling edit occurs.
 
 ## Current 0.9.1 upstream review
 

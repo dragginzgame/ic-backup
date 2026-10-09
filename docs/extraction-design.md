@@ -435,6 +435,28 @@ moving execution code. Human selection/configuration uses TOML. Reject unknown
 schema fields and missing required nullable fields where required by the current
 contract. Bound counts, strings, depth and total metadata bytes before allocation.
 
+The implemented learned-stage binding uses a distinct `ExecutionWorkflowRecord`
+for original stage allocations and `ExecutionStageBindingRecord` for later exact
+child plans. The allocation reuses ordinary plan structural validation; its request
+hashes commit integration-owned stage input/purpose contracts and are never wire
+requests or journal authority. Each fixed stage directory retains one ordinary
+exact child plan within the original target/context/inventory and stage ceilings.
+Predecessor bindings and complete chronological Applied settlements are required
+before creating the child. Learned snapshot ID/dimension evidence is an opaque
+commitment whose authenticity and derivation remain integration-qualified.
+Reopen preserves original journals; interrupted preparation stops with evidence
+retained. No workflow runner, automatic outcome, fresh permission, transfer
+completion or terminal/release authority follows. See
+[the implemented contract](extraction-boundary.md#original-workflow-allocations-and-learned-stage-binding).
+
+The implemented metadata-derived data planner counts complete region/chunk reads
+before allocation and binds exact requests to an original finite data stage. Every
+request retains one update and zero observation allowance under explicit sequential
+dependencies. Testkit qualifies an isolated complete capture/download/publication
+journey and safe stopping after lost/malformed data replies. This does not install
+the proposed generic runner or qualify a real application's fresh admission.
+See [the planner contract](extraction-boundary.md#metadata-derived-original-download-planning).
+
 | Record | Required purpose and binding |
 | --- | --- |
 | `BackupPlanRecord` | Exact membership, network/caller/release, consistency, effects and budget authority |

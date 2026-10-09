@@ -549,6 +549,30 @@ was recorded. Linking provenance or describing implementation status is allowed.
 
 ## Product contracts
 
+- Metadata-derived download planning counts all region/chunk requests with checked
+  arithmetic before allocating, within the original stage's at-most-1,024 combined
+  attempts. Reuse exact metadata-bound payloads, ordinary plans and stage bindings.
+  Preserve module/heap/stable/chunk order, explicit sequential dependencies and
+  one mutation/zero observations per request; unassigned headroom grants no retry.
+  Binding requires the exact single-request original metadata stage and reply
+  evidence. Entirely read-free metadata creates no placeholder operation. The real
+  Testkit driver qualifies only its isolated application and explicit originals;
+  no installed runner, authenticated input, fresh application admission or terminal/
+  reference release follows. Lost/malformed replies preserve pending spending,
+  original journals, partial Created bytes and all references without follow-up.
+
+- Distinct workflow allocations and learned-stage bindings reuse canonical plan,
+  layout, journal and complete chronological settlement owners. Preserve original
+  target/context/full inventory, exact stage ceilings, fixed create-only stage
+  directories, strict v1 1 MiB workflow/512 KiB binding IO and 1,024 predecessors.
+  Catalog request hashes commit integration-owned purpose/input contracts; catalog
+  rows are never journal authority. Only exact child plans own original journals;
+  no unassigned headroom, rebuilt plan, missing journal or interrupted preparation
+  resets spending. Reopen admits exact originals and predecessor histories without
+  allocation/repair. Learned evidence bytes, authentic derivation, fresh permissions,
+  effect safety and never-dispatched custody remain integration-qualified. No runner,
+  automatic receipt, transfer completion or terminal/release authority follows.
+
 - The product runs on the operator host. Canisters receive no local filesystem,
   signing keys or restore runner permissions.
 - The generic library owns snapshot/artifact/journal/recovery mechanisms.

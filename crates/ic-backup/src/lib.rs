@@ -86,10 +86,17 @@
 //! Immutable execution settlement checkpoints bind complete original Applied
 //! journals and their exact chronological histories for local replay. They prove
 //! no full backup/restore completion, command quiescence or fence/reference release.
+//! Distinct workflow allocations bind learned stages to one fixed exact child plan
+//! and original ceilings. Predecessor settlement admission reuses retained journal
+//! histories; stage reopen preserves spending without dispatch or repair.
+//! Metadata-derived download plans admit every exact data request against the
+//! original stage allowance before allocation, retaining one accounted update per
+//! request and explicit sequential dependencies. Planning grants no fresh access.
 //!
 //! Applications own membership, release identity, control routing, quiescence
-//! and external-effect settlement. Capture/restore runners and an IC transport
-//! have not been extracted yet. Filesystem access and credentials remain on the
+//! and external-effect settlement. Capture/restore runners remain unimplemented;
+//! the direct Agent transport lives in the separate `ic-backup-agent` crate.
+//! Filesystem access and credentials remain on the
 //! operator host.
 //! Bounded Unix record reads reuse ic-host-fs regular-file admission while
 //! publication, record validation, confinement and command custody remain local.

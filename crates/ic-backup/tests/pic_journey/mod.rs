@@ -1,6 +1,7 @@
 //! First real management-service journey; product terminal/release remains separate.
 
 mod backend;
+pub(super) mod planned_download;
 mod recovery;
 
 use backend::Backend;

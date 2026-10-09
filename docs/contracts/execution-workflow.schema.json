@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutionWorkflowRecord",
+  "description": "Distinct immutable original stage allocation, reusing ordinary plan structural admission. Allocation operations denote stage purpose commitments, exact targets and immutable ceilings; allocation is never a dispatch plan or spending ledger. Duplicate fields reject.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "allocation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "allocation": {
+      "$ref": "operation-plan.schema.json"
+    }
+  },
+  "x-max-encoded-bytes": 1048576,
+  "x-max-canonical-output-bytes": 1048576,
+  "x-canonical-digest": {
+    "encoding": [
+      "ASCII ic-backup/execution-workflow/v1, NUL, 64 ASCII bytes of the existing canonical allocation plan digest"
+    ],
+    "golden-vector": {
+      "record": {
+        "version": 1,
+        "allocation": {
+          "version": 1,
+          "context": {
+            "network": "abababababababababababababababababababababababababababababababab",
+            "caller": "2vxsx-fae",
+            "release": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+          },
+          "inventory": {
+            "version": 1,
+            "targets": [
+              {
+                "canister_id": "aaaaa-aa",
+                "parent_canister_id": null,
+                "role": null,
+                "module_hash": null
+              },
+              {
+                "canister_id": "renrk-eyaaa-aaaaa-aaada-cai",
+                "parent_canister_id": "aaaaa-aa",
+                "role": null,
+                "module_hash": null
+              }
+            ]
+          },
+          "selected_targets": [
+            "renrk-eyaaa-aaaaa-aaada-cai"
+          ],
+          "graph": {
+            "version": 1,
+            "nodes": [
+              {
+                "operation_sequence": 0,
+                "depends_on": []
+              },
+              {
+                "operation_sequence": 7,
+                "depends_on": [
+                  0
+                ]
+              }
+            ]
+          },
+          "operations": [
+            {
+              "operation_sequence": 0,
+              "target": "renrk-eyaaa-aaaaa-aaada-cai",
+              "request": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+              "budget": {
+                "mutations": 1,
+                "observations": 1
+              }
+            },
+            {
+              "operation_sequence": 7,
+              "target": "renrk-eyaaa-aaaaa-aaada-cai",
+              "request": "0101010101010101010101010101010101010101010101010101010101010101",
+              "budget": {
+                "mutations": 2,
+                "observations": 1
+              }
+            }
+          ],
+          "budget": {
+            "mutations": 3,
+            "observations": 2
+          }
+        }
+      },
+      "workflow-sha256": "e116cc770152fc7e96275ade3ac7903d1bae1335d444dfb6d9640ebe31f7a580"
+    }
+  }
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2]
+
+- Adopt Shared Tooling 0.1.32 so unchanged IC tool selections reuse verified installations after pin comments or row order change, preserving original receipts and bundles ([shared #79](https://github.com/dragginzgame/shared-tooling/issues/79)).
+- Bind learned execution stages to immutable original target and attempt allocations, fixed child plans and exact predecessor journal settlements. Preserve pending attempts on reopen and refuse occupied or incomplete preparation ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Plan complete snapshot data reads from exact retained metadata within the original stage allowance. Qualify the isolated capture/download path through Testkit, including durable publication and safe stopping after lost or malformed replies ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Qualify the incoming published Host 0.8.5 selection within the existing compatible requirements, retaining private publication and existing-only command custody.
+
 ## [0.9.1] - 2026-10-08
 
 - Adopt Shared Tooling 0.1.29 and report every staged, unstaged and untracked release-source violation, preserving files and the index. Initial preflight refusals explain that validation and version preparation have not started ([shared #74](https://github.com/dragginzgame/shared-tooling/issues/74)).

@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutionStageBindingRecord",
+  "description": "Exact immutable child-plan association, not receipt authentication, spending, fresh permission, automatic outcome or complete workflow proof. Decode is structural; original workflow/full child plan and retained predecessors must be admitted independently. Duplicate fields reject.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "workflow",
+    "stage_sequence",
+    "plan",
+    "predecessors"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "workflow": {
+      "$ref": "execution-settlement.schema.json#/$defs/hash"
+    },
+    "stage_sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "plan": {
+      "$ref": "execution-settlement.schema.json#/$defs/hash"
+    },
+    "predecessors": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "$ref": "#/$defs/predecessor"
+      }
+    }
+  },
+  "$defs": {
+    "predecessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage_sequence",
+        "binding",
+        "settlement",
+        "learned_evidence"
+      ],
+      "properties": {
+        "stage_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "binding": {
+          "$ref": "execution-settlement.schema.json#/$defs/hash"
+        },
+        "settlement": {
+          "$ref": "execution-settlement.schema.json#/$defs/hash"
+        },
+        "learned_evidence": {
+          "$ref": "execution-settlement.schema.json#/$defs/hash"
+        }
+      }
+    }
+  },
+  "x-max-encoded-bytes": 524288,
+  "x-max-canonical-output-bytes": 524288,
+  "x-admission": [
+    "Canonical unique predecessor sequence set exactly equals original direct stage dependencies. Each retained binding/plan and complete chronological Applied settlement is independently admitted through existing owners.",
+    "Child context/full inventory are identical to the original allocation; selection contains exactly the allocated target. Child aggregate ceilings equal original stage ceilings, each assigned operation has nonzero total allowance, and ordinary plan admission bounds all assigned allowances. No transfer of unassigned workflow/stage headroom.",
+    "Exact learned-input meaning and derivation, authentic receipts, fresh permissions, command custody and never-dispatched original reservations remain integration-qualified."
+  ],
+  "x-canonical-digest": {
+    "encoding": [
+      "ASCII ic-backup/execution-stage/v1, NUL, 64 workflow hash ASCII bytes, u64 big-endian stage sequence, 64 child plan hash ASCII bytes, u64 big-endian predecessor count",
+      "Ascending predecessor rows: u64 big-endian stage sequence followed by 64 ASCII hash bytes each for binding, settlement and learned evidence"
+    ],
+    "golden-vector": {
+      "record": {
+        "version": 1,
+        "workflow": {
+          "algorithm": "sha256",
+          "hash": "e116cc770152fc7e96275ade3ac7903d1bae1335d444dfb6d9640ebe31f7a580"
+        },
+        "stage_sequence": 7,
+        "plan": {
+          "algorithm": "sha256",
+          "hash": "e4653d6a676da12b50da01e6a96add38a89ad63f3adc0b766acb8b381c658a4e"
+        },
+        "predecessors": [
+          {
+            "stage_sequence": 0,
+            "binding": {
+              "algorithm": "sha256",
+              "hash": "80f70afeef3caa57646fd20afb95be9c3f2c03d38e091906de31838813dcc22e"
+            },
+            "settlement": {
+              "algorithm": "sha256",
+              "hash": "a75c433ab2ae1daf8b032d38bf64e02fb152076b487bfb2784d10e4cf1bba73a"
+            },
+            "learned_evidence": {
+              "algorithm": "sha256",
+              "hash": "d78e3c38d98d17d7355ec4a989e477bace56a6fa2508121a520146cd0a23ec80"
+            }
+          }
+        ]
+      },
+      "child-plan": {
+        "version": 1,
+        "context": {
+          "network": "abababababababababababababababababababababababababababababababab",
+          "caller": "2vxsx-fae",
+          "release": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        },
+        "inventory": {
+          "version": 1,
+          "targets": [
+            {
+              "canister_id": "aaaaa-aa",
+              "parent_canister_id": null,
+              "role": null,
+              "module_hash": null
+            },
+            {
+              "canister_id": "renrk-eyaaa-aaaaa-aaada-cai",
+              "parent_canister_id": "aaaaa-aa",
+              "role": null,
+              "module_hash": null
+            }
+          ]
+        },
+        "selected_targets": [
+          "renrk-eyaaa-aaaaa-aaada-cai"
+        ],
+        "graph": {
+          "version": 1,
+          "nodes": [
+            {
+              "operation_sequence": 42,
+              "depends_on": []
+            }
+          ]
+        },
+        "operations": [
+          {
+            "operation_sequence": 42,
+            "target": "renrk-eyaaa-aaaaa-aaada-cai",
+            "request": "7878787878787878787878787878787878787878787878787878787878787878",
+            "budget": {
+              "mutations": 2,
+              "observations": 1
+            }
+          }
+        ],
+        "budget": {
+          "mutations": 2,
+          "observations": 1
+        }
+      },
+      "child-plan-sha256": "e4653d6a676da12b50da01e6a96add38a89ad63f3adc0b766acb8b381c658a4e",
+      "stage-sha256": "dafb4aae8659cee3f1175904276ba0e818ee5731cb5fa516c849b3cf1928e8a3"
+    }
+  }
+}

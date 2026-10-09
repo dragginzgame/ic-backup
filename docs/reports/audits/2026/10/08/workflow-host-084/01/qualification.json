@@ -1,0 +1,166 @@
+{
+  "base_head": "d6c6082efc7c36de98e6e92ec5b4091de5ca43b4",
+  "package_version": "0.9.1",
+  "compatible_draft": "0.9.2",
+  "source_state": "uncommitted local stage-binding implementation plus preserved incoming Host lock update",
+  "candidate_files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "0cf6dd8dd5e16a63ae1144143e5c34caca37f62ea25218a6c28dda784ed628e3"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "a0c010b262f680edb8f37d177aab0e802da8ad298c6b5c954301ba0a76a4794a"
+    },
+    {
+      "path": "crates/ic-backup-agent/Cargo.toml",
+      "sha256": "8273ac1a6a2cc2204ddfdc690a38be9dff6c4c6baf5a17c8df34b0a82c5718d0"
+    },
+    {
+      "path": "crates/ic-backup/Cargo.toml",
+      "sha256": "7c078215f0f6c36da6a4f9edae850b49d51f7970e15111aa83ba7c9cf2bed9f1"
+    },
+    {
+      "path": "crates/ic-backup/src/lib.rs",
+      "sha256": "46e9333b149200dbfedd02fc371ca9d4fcddd8f78248de64d03eab42aa5709da"
+    },
+    {
+      "path": "crates/ic-backup/src/model/execution_workflow/mod.rs",
+      "sha256": "72f2f1654edc04cf2a937da01e45e9bba43582ea4ef62916b602cb2cde7d13bc"
+    },
+    {
+      "path": "crates/ic-backup/src/model/execution_workflow/tests/mod.rs",
+      "sha256": "9d8d03183f0420a4f707cd70d37fc082be6ad7167c122dff6f748085fabc1587"
+    },
+    {
+      "path": "crates/ic-backup/src/model/mod.rs",
+      "sha256": "79174acd5be3e0e3850cf06dee16b83c86373551e97925bc8b4c50ab381f5a4a"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/mod.rs",
+      "sha256": "f6d7f85f912667d176d25efd419b7d52d442e349fe0a0fc75a786827896049cd"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/execution_workflow/tests/mod.rs",
+      "sha256": "80db35b2659a183ce9577f4de184d94be055cf5e02615ec6d729c3bbf55073d0"
+    },
+    {
+      "path": "crates/ic-backup/src/ops/persistence/mod.rs",
+      "sha256": "382ff38afc53da28a9458425c054304de7390ef65cf2cf229724da5757142189"
+    },
+    {
+      "path": "crates/ic-backup/tests/execution_workflow.rs",
+      "sha256": "698a3d60f20d54dce8036157090503d2c8659cac9881bf69731d56be1b466a43"
+    },
+    {
+      "path": "docs/contracts/execution-stage.schema.json",
+      "sha256": "58efa7b6dadcca98ecd91a09f7ea85a26abad585712f62b73839a14b30bfe947"
+    },
+    {
+      "path": "docs/contracts/execution-workflow.schema.json",
+      "sha256": "785d99d5ac635900009dd69cdb1f944a737bea802ede16d3f35e38f82585a0c5"
+    }
+  ],
+  "checks": [
+    {
+      "name": "stage_models_and_persistence",
+      "command": "cargo test --offline --locked -p ic-backup execution_workflow",
+      "outcome": "passed",
+      "registered_cases_passed": 11,
+      "log": "target/execution-workflow-tests.log",
+      "log_sha256": "c3f1139e84cd18144a3110723b9e7f87887447fc46af87cc30405d715e89885d"
+    },
+    {
+      "name": "public_learned_stage_journey",
+      "command": "cargo test --offline --locked -p ic-backup --test execution_workflow",
+      "outcome": "passed",
+      "registered_cases_passed": 1,
+      "log": "target/execution-workflow-public.log",
+      "log_sha256": "f7363c35b62e77265e7af213afe15bce715fab490fe463f51b765a046373743e"
+    },
+    {
+      "name": "host_json_publication_and_reads",
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::json",
+      "outcome": "passed",
+      "registered_cases_passed": 14,
+      "log": "target/host-084-json.log",
+      "log_sha256": "f9fca58f45f0fcf8d3e6087c0704da13a6f6352d195c8748748604ca30ddd9c7"
+    },
+    {
+      "name": "original_attempt_journals",
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::attempt_journal",
+      "outcome": "passed",
+      "registered_cases_passed": 4,
+      "log": "target/host-084-attempts.log",
+      "log_sha256": "cdb0a7239a2309c124c4e64e144805128f0564729ada6af688dd347790cd5be1"
+    },
+    {
+      "name": "exact_settlement_replay",
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::execution_settlement",
+      "outcome": "passed",
+      "registered_cases_passed": 5,
+      "log": "target/host-084-settlement.log",
+      "log_sha256": "d967725106e181596728e4549a51b87d2628a9e5087ee647a45a9047a3699110"
+    },
+    {
+      "name": "command_descriptor_custody",
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::command_lifetime_lock",
+      "outcome": "passed",
+      "registered_cases_passed": 7,
+      "log": "target/host-084-custody.log",
+      "log_sha256": "af62e2e832675847762e70208ff3f6d2417c60877954422ac6ad0782732300b7"
+    },
+    {
+      "name": "clippy",
+      "command": "cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings",
+      "outcome": "passed",
+      "registered_cases_passed": null,
+      "log": "target/workflow-host-clippy-final.log",
+      "log_sha256": "b5d1d85d47b7438d1f390334e7570648f6c2a2dd198da6597c784ece17c5d661"
+    },
+    {
+      "name": "msrv_and_independent_consumers",
+      "command": "make check-msrv",
+      "outcome": "passed",
+      "registered_cases_passed": null,
+      "log": "target/workflow-host-msrv.log",
+      "log_sha256": "e45814278ff68bc3b2c348b0506308b0feb2440f9712b15f628ef1fde7add8dc"
+    },
+    {
+      "name": "rustdoc",
+      "command": "RUSTDOCFLAGS='-D warnings' cargo doc --offline --locked -p ic-backup -p ic-backup-agent --no-deps --all-features",
+      "outcome": "passed",
+      "registered_cases_passed": null,
+      "log": "target/workflow-host-doc.log",
+      "log_sha256": "17fa4e094926c74364a323bcb287a5a53cef7cde210fbd55f40da203a589e19e"
+    },
+    {
+      "name": "formatting",
+      "command": "cargo fmt --all -- --check",
+      "outcome": "passed"
+    },
+    {
+      "name": "documentation_links",
+      "command": "make check-doc-links",
+      "outcome": "passed",
+      "log": "target/workflow-host-links.log",
+      "log_sha256": "3ae001622077a8e937eeacd07f7fc036dafb87d3d5ad38cadf2a8bc7b006e383",
+      "local_references": 689,
+      "documents": 64
+    },
+    {
+      "name": "whitespace",
+      "command": "git diff --check",
+      "outcome": "passed"
+    }
+  ],
+  "native_host_scope": "local Linux; exact Host 0.8.4 native CI and released consumer CI queued at final inspection; uncommitted candidate native CI not run",
+  "not_qualified": [
+    "authenticated learned input derivation",
+    "installed capture/download workflow",
+    "complete transfer",
+    "fresh application preflight and restore safety",
+    "terminal/fence/reference release"
+  ],
+  "effects": "No root Git writes, sibling edits, release, publication or live IC calls."
+}

@@ -8,6 +8,7 @@ mod download_journal;
 mod effect_graph;
 mod execution_progress;
 mod execution_settlement;
+mod execution_workflow;
 mod fence_obligation;
 mod file_lock;
 mod inventory;
@@ -40,6 +41,10 @@ pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_ef
 pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};
 pub use execution_settlement::{
     ExecutionSettlementPersistenceError, create_execution_settlement, read_execution_settlement,
+};
+pub use execution_workflow::{
+    ExecutionStageGuard, ExecutionWorkflowPersistenceError, create_execution_workflow,
+    read_execution_workflow,
 };
 pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,

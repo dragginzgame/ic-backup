@@ -49,7 +49,44 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 97-file snapshot selects committed Shared Tooling 0.1.29 at
+The current 97-file snapshot selects committed Shared Tooling 0.1.32 at
+`635a39a9dd5f8d021fa9c9196b591e00521a7e02`. Canonical export from a clean
+isolated checkout changes eight selected files; the sibling's dirty 0.1.33
+dashboard proposals are excluded. All selected bytes and executable modes match.
+IC tool reuse now compares the complete validated records across supported hosts,
+ignoring comments and row order without rewriting installation pins or receipts.
+Changed records, malformed matrices, unsafe links and altered bytes still reject.
+Focused installer fixtures and real offline checks of the retained local bundle
+pass, including equivalent commented and reordered inputs with unchanged custody.
+
+The baseline clarifies that Shared Tooling owns fleet reports and Metrics owns
+measurement arithmetic. No fleet dashboard or sibling scan is added here. The
+new Cargo-install assessment is upstream qualification, not a published generic
+consumer installer; its scripts/workflow remain unselected. Our native CI already
+preserves pushed-commit runs without a cancellation group. Upstream's exact 0.1.32
+native CI passes on Linux and both macOS architectures; consumer native CI for
+this uncommitted candidate remains separate.
+
+Host 0.8.5's four published archives match their official registry checksums,
+clean release VCS identity and committed Rust/package files. All Rust sources
+under `crates/` are unchanged from 0.8.4; the release brings the same tooling
+reuse fix and no new runtime offload. The incoming lock already selects 0.8.5;
+preserve that selection. Focused local IO/custody, spending, stage/planner and
+public stage cases pass on the actual graph, along with all three real planned
+download Testkit cases, as do both libraries' Clippy/rustdoc
+and Rust 1.88/independent consumers. Exact Host 0.8.4 and 0.8.5 native CI now pass
+on all three supported hosts. Published Testkit 0.25.3 still lacks the proposed PocketIC provisioning
+contract; preserve the functioning six-tool matrix and bundles until the
+[coordinated handoff](https://github.com/dragginzgame/ic-testkit/issues/38) is
+published and qualified.
+
+The [review](reports/audits/2026/10/09/shared-032-host-085/01/report.md) binds
+source, registry, native CI and local check evidence. No dependency reselection,
+package/version transaction, schedule, release or sibling edit occurs.
+
+### Prior Shared Tooling 0.1.29 review
+
+The prior 97-file snapshot selected committed Shared Tooling 0.1.29 at
 `1a54fb625d6e47efa64c4384808ecbc87be84e7e`. The canonical exporter runs from a
 clean isolated checkout, excluding dirty sibling proposals. Fifteen existing
 paths change and the release-source checker and two CI-installer files are added explicitly; every source

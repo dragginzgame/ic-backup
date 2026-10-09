@@ -6,6 +6,19 @@ mod pic_journey;
 mod support;
 
 #[test]
+fn planned_download_uses_one_original_stage_and_publishes_complete_artifact() {
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::None);
+}
+#[test]
+fn planned_download_lost_reply_retains_pending_stage_and_partial_bytes() {
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Lost);
+}
+#[test]
+fn planned_download_malformed_reply_retains_pending_stage_without_followup() {
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Malformed);
+}
+
+#[test]
 fn real_capture_download_upload_and_same_id_restore_preserve_complete_state() {
     pic_journey::run(pic_journey::Fault::None);
 }
