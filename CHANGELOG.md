@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.5]
+## [0.11.5] - 2026-10-09
 
 - Stream a complete original snapshot data plan through the library, requiring
   explicit qualified receipts before dependent reads and durable publication.
