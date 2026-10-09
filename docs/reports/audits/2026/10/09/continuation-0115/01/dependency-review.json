@@ -1,0 +1,214 @@
+{
+  "scope": "Published Host/Testkit inspection; preserve the externally selected graph. No source repair, upgrade or provisioning performed.",
+  "inputs": {
+    "Cargo.toml": "d293c9bf1ed7db2ff0bc7e36d9d5ac2676299a71870867d09141d00529761781",
+    "Cargo.lock": "e10694434ff672f4dc9ca47883b4738de6f0466258da40688e5065d25e124754",
+    ".shared-tooling.snapshot": "362845865e419a5f94e13009151e078bf24429b46ee1058464309f205a32b23d"
+  },
+  "source_commit": "d9517a42d685b240933affd58b211364823d5122",
+  "registry": [
+    {
+      "crate": "ic-host-artifacts",
+      "latest_stable": "0.9.5",
+      "published": "2026-10-09T15:46:37.608736Z",
+      "checksum": "dacf349789ee238b60bbca3fd0a164d585338dbfb62e1fa6037317c3bbe47cda",
+      "yanked": false,
+      "repository": "https://github.com/dragginzgame/ic-host-tooling"
+    },
+    {
+      "crate": "ic-host-fs",
+      "latest_stable": "0.9.5",
+      "published": "2026-10-09T15:46:40.320735Z",
+      "checksum": "f746f1d73b013826294fc35eab89bc7890d153578092f8d8922322f218288196",
+      "yanked": false,
+      "repository": "https://github.com/dragginzgame/ic-host-tooling"
+    },
+    {
+      "crate": "ic-host-process",
+      "latest_stable": "0.9.5",
+      "published": "2026-10-09T15:46:43.136366Z",
+      "checksum": "0b5f13fd4d9ece9e5eae61df502caa97a925d6231c05a27019a54c02eb03d973",
+      "yanked": false,
+      "repository": "https://github.com/dragginzgame/ic-host-tooling"
+    },
+    {
+      "crate": "ic-host-tools",
+      "latest_stable": "0.9.5",
+      "published": "2026-10-09T15:46:45.656620Z",
+      "checksum": "f88bd9006023621ab474d876a58ec0d2449ba86eddba2c60ebf6dbbbc7dcba98",
+      "yanked": false,
+      "repository": "https://github.com/dragginzgame/ic-host-tooling"
+    },
+    {
+      "crate": "ic-testkit",
+      "latest_stable": "0.27.2",
+      "published": "2026-10-09T15:46:37.988724Z",
+      "checksum": "d5caa4c8cbcc23aea70627a05dcb50923ec88a167542bff1c856f5e72b5d4d75",
+      "yanked": false,
+      "repository": "https://github.com/dragginzgame/ic-testkit"
+    }
+  ],
+  "archive_checks": [
+    {
+      "crate": "ic-host-artifacts",
+      "latest_selected": true,
+      "archive_checksum_matches_registry_and_lock": true
+    },
+    {
+      "crate": "ic-host-fs",
+      "latest_selected": true,
+      "archive_checksum_matches_registry_and_lock": true
+    },
+    {
+      "crate": "ic-host-process",
+      "latest_selected": true,
+      "archive_checksum_matches_registry_and_lock": true
+    },
+    {
+      "crate": "ic-host-tools",
+      "latest_selected": true,
+      "archive_checksum_matches_registry_and_lock": true
+    },
+    {
+      "crate": "ic-testkit",
+      "latest_selected": true,
+      "archive_checksum_matches_registry_and_lock": true
+    }
+  ],
+  "source_comparison": [
+    {
+      "crate": "ic-host-artifacts",
+      "previous": "0.9.4",
+      "selected": "0.9.5",
+      "files_compared": 20,
+      "changed_implementation_files": [],
+      "vcs": {
+        "git": {
+          "sha1": "0f61811c88a6b6b4b026b04ca16e428409be877f"
+        },
+        "path_in_vcs": "crates/ic-host-artifacts"
+      },
+      "archive_cached": true
+    },
+    {
+      "crate": "ic-host-fs",
+      "previous": "0.9.4",
+      "selected": "0.9.5",
+      "files_compared": 19,
+      "changed_implementation_files": [],
+      "vcs": {
+        "git": {
+          "sha1": "0f61811c88a6b6b4b026b04ca16e428409be877f"
+        },
+        "path_in_vcs": "crates/ic-host-fs"
+      },
+      "archive_cached": true
+    },
+    {
+      "crate": "ic-host-process",
+      "previous": "0.9.4",
+      "selected": "0.9.5",
+      "files_compared": 23,
+      "changed_implementation_files": [],
+      "vcs": {
+        "git": {
+          "sha1": "0f61811c88a6b6b4b026b04ca16e428409be877f"
+        },
+        "path_in_vcs": "crates/ic-host-process"
+      },
+      "archive_cached": true
+    },
+    {
+      "crate": "ic-host-tools",
+      "previous": "0.9.4",
+      "selected": "0.9.5",
+      "files_compared": 20,
+      "changed_implementation_files": [],
+      "vcs": {
+        "git": {
+          "sha1": "0f61811c88a6b6b4b026b04ca16e428409be877f"
+        },
+        "path_in_vcs": "crates/ic-host-tools"
+      },
+      "archive_cached": true
+    },
+    {
+      "crate": "ic-testkit",
+      "previous": "0.27.1",
+      "selected": "0.27.2",
+      "files_compared": 66,
+      "changed_implementation_files": [],
+      "vcs": {
+        "git": {
+          "sha1": "1a8f2ff570ea1c3bd58b215e28af52e5d99870e8"
+        },
+        "path_in_vcs": "crates/ic-testkit"
+      },
+      "archive_cached": true
+    }
+  ],
+  "focused_checks": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "ops::artifacts::"
+      ],
+      "exit_code": 0,
+      "log": "target/host-testkit-review-0115/artifacts.log"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ic-backup",
+        "--lib",
+        "ops::persistence::json::"
+      ],
+      "exit_code": 0,
+      "log": "target/host-testkit-review-0115/json-publication.log"
+    }
+  ],
+  "testkit_server_check": {
+    "command": [
+      "make",
+      "--silent",
+      "--no-print-directory",
+      "testkit-server-check"
+    ],
+    "exit_code": 2,
+    "diagnosis": "Selected ic-testkit 0.27.2 CLI is not installed; prepare explicitly with make install-testkit-server. Retained 0.27.1 selection remains intact.",
+    "log": "target/host-testkit-review-0115/testkit-server-check.log"
+  },
+  "recommendation": [
+    "Prepare the selected 0.27.2 CLI explicitly, then repeat actual managed simulator qualification.",
+    "Deliberately adopt committed Shared Tooling 0.2.7 Make execution and hook-path safeguards; dependency upgrades do not refresh Backup tooling."
+  ],
+  "limitations": [
+    "No new Rust implementation API was found: src/tests/examples are byte-identical to prior published releases.",
+    "The earlier simulator/MSRV proof remains for Host 0.9.4 and Testkit 0.27.1, not this selected graph.",
+    "No full CI, native-host acceptance, dependency reselection, sibling edit, Git write or release occurred."
+  ],
+  "evidence": {
+    "target/host-testkit-review-0115/archive-verification.json": "29ff9a7735b19f449f379ab7ac31f7eb8d9b0ce49c581d481a5449f3850c03e9",
+    "target/host-testkit-review-0115/artifacts.log": "f2a15a5fda2895d6926a4f2a562c96cddee3e5eff4f067b41d0eacbd3a64d6bf",
+    "target/host-testkit-review-0115/focused-checks.json": "e8d1ba948fcf81ad4dbc3b076e6432e83d6e9be99132f6872302eb84e873947f",
+    "target/host-testkit-review-0115/graph.json": "d386cb0a4eda8d9228a980bf6f6cf03a02f478da6c69ba4701a5144b4ba62a82",
+    "target/host-testkit-review-0115/ic-host-artifacts-registry.json": "1979da446155992103f0283bc339cfd481db039013e0b357cd90416959b3d4fc",
+    "target/host-testkit-review-0115/ic-host-fs-registry.json": "8068bde5941ca1b6184c0998f651bc930730c54dac0b98a97a36097b60d8e35e",
+    "target/host-testkit-review-0115/ic-host-process-registry.json": "fc231ceecf024f135b703326ee7a55c1ecf0f9046103c30e8107b365d94296bc",
+    "target/host-testkit-review-0115/ic-host-tools-registry.json": "80dc626c6bfe9eca415125ee88fdcccf8d42cf274a895732b1ab7eba27d8cd12",
+    "target/host-testkit-review-0115/ic-testkit-registry.json": "1eccb4ea92e2a31167f31a4ab944a958551e930769ece4c513191532f9b07729",
+    "target/host-testkit-review-0115/json-publication.log": "5c987223cd81e2fe58623d62f21f8effc3191e070198fcd12cc91b4746e08d79",
+    "target/host-testkit-review-0115/source-comparison.json": "b3db467283a060f46eb621836b8ce43ad62ce9aa3a0e4bf182026a7dd8a60e75",
+    "target/host-testkit-review-0115/testkit-server-check.log": "ff549458bebb6518d4fba020e41289e1c2729e5956c4cd541b716b21327decde"
+  }
+}

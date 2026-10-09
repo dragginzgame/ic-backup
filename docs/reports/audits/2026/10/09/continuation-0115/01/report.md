@@ -4,7 +4,10 @@ Released base: `a585ae1064b1db49cd33f5c02dfe76637bd9f1b9` (0.11.4).
 The compatible undated 0.11.5 draft extends [#29](https://github.com/dragginzgame/ic-backup/issues/29)
 with a complete original planned data-transfer loop and finishes the remaining
 formatting declaration cleanup in [#34](https://github.com/dragginzgame/ic-backup/issues/34).
-Package/receipt remain 0.11.4. No release or root Git writes occur.
+Package/receipt remain 0.11.4. During final review the maintainer committed the
+implementation as `d9517a42d685b240933affd58b211364823d5122`. The candidate remains
+undated; final evidence updates follow separately. The agent performed no release
+or root Git writes.
 
 ## Transfer behavior
 
@@ -74,7 +77,7 @@ listeners were refused before transport behavior; local-loopback rerun passes.
 
 Released 0.11.4 has one main-push
 [exact-source matrix](https://github.com/dragginzgame/ic-backup/actions/runs/37949516046).
-Linux passes; both macOS jobs remain queued. That run does not qualify this dirty
+Linux passes; both macOS jobs remain queued. That run does not qualify this 0.11.5
 candidate. Keep [#32](https://github.com/dragginzgame/ic-backup/issues/32) and
 [#33](https://github.com/dragginzgame/ic-backup/issues/33) open for native acceptance;
 #34 still requires delivery/consumer acceptance of its final cleanup.
@@ -84,5 +87,30 @@ consumer identity/root/endpoint and never-dispatched custody qualification;
 admission and terminal/custody proof. No overlapping open pull request was found
 in the preceding review. No new duplicate issue or premature closure is warranted.
 
-No full workspace/CI/release gate, root hook activation, version transaction,
+The agent performed no full workspace/CI/release gate, root hook activation, version transaction,
 publication, live production IC effect, Canic/sibling edit or recovery cleanup ran.
+
+## Subsequent published Host/Testkit inspection
+
+The maintainer's subsequent lock update selects Host 0.9.5 and Testkit 0.27.2.
+Crates.io confirms these as the latest stable, unyanked releases at review time;
+all five cached archive checksums match both registry and lock. Compare the exact
+published `src`, `tests` and `examples` trees against Host 0.9.4/Testkit 0.27.1:
+all 148 files are unchanged. No new Rust API or safe additional offload follows.
+Their repository changes adopt Shared Tooling 0.2.7's Make execution/hook-path
+safeguards; Backup still selects Shared 0.2.6 and must adopt those independently.
+See the [Host release notes](https://github.com/dragginzgame/ic-host-tooling/blob/0f61811c88a6b6b4b026b04ca16e428409be877f/CHANGELOG.md)
+and [Testkit release notes](https://github.com/dragginzgame/ic-testkit/blob/1a8f2ff570ea1c3bd58b215e28af52e5d99870e8/CHANGELOG.md).
+
+Locked offline metadata and 27 focused artifact/JSON-publication cases pass on
+the newly selected graph. Offline server admission refuses the missing exact
+Testkit 0.27.2 CLI. Prepare it explicitly with `make install-testkit-server`,
+then repeat the actual managed core/Agent simulator cases. Preserve the existing
+0.27.1 installation and all retained evidence. The earlier complete simulator
+and MSRV qualification above remains tied to its earlier graph; identical
+implementation sources do not substitute for selected executable admission.
+
+[dependency-review.json](dependency-review.json) binds registry, archive/source
+comparison, exact input hashes and logs under `target/host-testkit-review-0115/`.
+This inspection does not apply new repairs, refresh the snapshot, reselect
+dependencies or provision tools. No Rust function, method or type was removed.

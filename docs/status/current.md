@@ -45,6 +45,9 @@ lock update selects Metrics 0.3.3. Prepare only its locked cache, retain earlier
 selection/evidence and qualify the final graph with Testkit 0.27.1/Agent 0.49.2.
 Package/receipt remain 0.11.4. The
 [review](../reports/audits/2026/10/09/continuation-0115/01/report.md) retains exact proof.
+The maintainer committed the implementation as
+`d9517a42d685b240933affd58b211364823d5122` during final review; final evidence
+updates follow separately. The undated candidate is not a release transaction.
 
 Focused streaming/stage, metrics, both-library Clippy, independent Rust 1.88/public
 API, five core and three Agent actual simulator cases pass. Eight Agent HTTP cases
@@ -53,8 +56,24 @@ queued, so #32/#33 and #34's consumer native acceptance remain open. #25 still o
 installed/downstream Agent trust/identity/custody qualification. #29 retains full
 metadata/capture/upload/restore orchestration and application/terminal proof; the
 new synchronous core loop does not bypass the async Agent signed-envelope retention
-boundary. Work stays uncommitted; no root Git write, release, production IC effect,
+boundary. Final review updates remain local; the agent performed no root Git write,
+release, production IC effect,
 sibling edit, recovery cleanup or Rust-symbol removal occurred.
+
+## Subsequent Host/Testkit review
+
+The incoming lock now selects published Host 0.9.5/Testkit 0.27.2. Registry and
+archive checks match; all 148 published implementation/test/example files are
+unchanged from the previously qualified versions. Locked metadata and 27 focused
+artifact/JSON-publication cases pass. The exact 0.27.2 CLI is absent, so offline
+server admission correctly refuses it. Explicitly prepare with
+`make install-testkit-server`, then repeat actual core/Agent simulator qualification.
+Earlier simulator/MSRV proof retains its original graph and does not qualify this
+selection. Keep existing installations/evidence. Their useful tooling changes are
+Shared 0.2.7 Make execution/hook safeguards; deliberate Backup snapshot adoption
+remains a separate batch. The [review](../reports/audits/2026/10/09/continuation-0115/01/report.md#subsequent-published-hosttestkit-inspection)
+records evidence. No source repair, dependency reselection, tool setup, full gate,
+Git write or release was performed in this inspection.
 
 ## Current 0.11.4 capture-step continuation
 
