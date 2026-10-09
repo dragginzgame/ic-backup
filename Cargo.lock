@@ -1174,7 +1174,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.11.3"
+version = "0.11.4"
 dependencies = [
  "candid",
  "command-fds",
@@ -1194,7 +1194,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup-agent"
-version = "0.11.3"
+version = "0.11.4"
 dependencies = [
  "ic-agent",
  "ic-backup",

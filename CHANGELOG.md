@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.4]
+## [0.11.4] - 2026-10-09
 
 - Add a provider-driven snapshot capture step with durable original spending,
   mandatory fresh admission and one update. Connect it to the isolated download
