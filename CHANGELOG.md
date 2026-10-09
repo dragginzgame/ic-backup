@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.11.2]
+## [0.11.2] - 2026-10-09
 
 - Publish stage-owned predecessor checkpoints only after admitting the exact workflow, binding and complete ancestor histories; recheck those originals after publication and retain checkpoint/journal evidence on failure ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
 - Adopt Shared Tooling 0.2.4 companion declarations for reusable test suites, retaining the existing snapshot selection ([shared #73](https://github.com/dragginzgame/shared-tooling/issues/73)).
