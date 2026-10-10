@@ -10,7 +10,8 @@ mod manifest;
 mod metrics;
 #[cfg(unix)]
 pub use ic_snapshot_artifact::{
-    IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotUploadArtifactError,
+    IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotDataUploadPreparationError,
+    IcSnapshotUploadArtifactError,
 };
 pub use integrity::DownloadIntegrityError;
 pub use local_restore_artifact::{

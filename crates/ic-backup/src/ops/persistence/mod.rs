@@ -34,8 +34,9 @@ pub use download_journal::{
 };
 #[cfg(unix)]
 pub use download_journal::{
-    IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotLocalMetrics,
-    IcSnapshotUploadArtifactError, MeasurementHistogram, MeasurementSummary,
+    IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotDataUploadPreparationError,
+    IcSnapshotLocalMetrics, IcSnapshotUploadArtifactError, MeasurementHistogram,
+    MeasurementSummary,
 };
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};

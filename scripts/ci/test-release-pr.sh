@@ -12,7 +12,16 @@ ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/release-pr-test.XXXXXX")"
 fixture="$(cd "$fixture" && pwd -P)"
-trap 'if [[ $? == 0 ]]; then rm -rf -- "$fixture"; else echo "PR release fixtures retained: $fixture" >&2; fi' EXIT
+# Bash 3.2 can enter EXIT with status zero after nounset; require completion too.
+fixture_complete=false
+finish() {
+    local status=$?
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
+    if [[ "$status" == 0 ]]; then rm -rf -- "$fixture"
+    else echo "PR release fixtures retained: $fixture" >&2; fi
+    exit "$status"
+}
+trap finish EXIT
 mkdir "$fixture/bin" "$fixture/templates"
 export PR_TEST_GIT
 PR_TEST_GIT="$(command -v git)"
@@ -349,3 +358,4 @@ for conflict in closed duplicate head base destination index delivery tree lock 
     export RELEASE_DELIVERY=pr
 done
 echo 'PR release review, merge/squash/rebase validation, recovery and conflict checks passed'
+fixture_complete=true

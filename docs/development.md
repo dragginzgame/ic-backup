@@ -668,6 +668,24 @@ settled-uncertainty receipt through the existing journal owner and exhausted reo
 This qualifies persistence only. See
 [the contract](contracts/ic-snapshot-upload-data-settlement.json).
 
+For complete data-stage coordination, first obtain the independently qualified
+allocation acknowledgement/predecessor from `allocate_snapshot`. Admit its canonical
+metadata reply and call `prepare_ic_snapshot_data_upload_plan` on the original source
+guard. Use its `bind` with the allocation binding, plan and retained predecessor;
+prepare that exact original stage and complete journals through existing workflow
+owners. `upload_snapshot_data` then requires separate fresh-admission and independent
+qualification callbacks for each write. Qualification must durably retain original
+request/reply bytes before returning its explicit exact Applied receipt.
+
+The coordinator buffers one freshly verified payload at a time, stops on every
+failure and refuses any consumed stage on reentry. Source preparation still verifies
+the full tree for each payload; reduced aggregate buffering is not an IO speed claim.
+Empty data has no child plan. Checkpointed writes need independent destination and
+application qualification before load/start. Focused actual simulator checks are
+`cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_upload`;
+they include complete upload and lost/malformed second writes. Local fixtures also
+cover source drift, invalid receipts, missing journals and occupied checkpoints.
+
 ## Local IC artifact diagnostics
 
 Local IC artifact diagnostics are available through

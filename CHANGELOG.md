@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.14.1]
+
+- Plan and coordinate a complete original snapshot data-upload stage, buffering
+  one exact source payload at a time. Require qualified receipts before dependent
+  writes; preserve source bytes, pending spending and replies on failure
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.3.2: refuse missing setup prerequisites before downloads,
+  preserve Cargo jobserver descriptors and retain prematurely exited fixtures.
+  Align local Cargo/Testkit recipes and fixture completion with these owners.
+- Qualify Host Artifact/FS 0.12.2; published Rust behavior and persisted records
+  match 0.12.0.
+- Qualify the incoming Metrics 0.5.1 selection; arithmetic remains unchanged.
+- Qualify incoming Testkit 0.32 and its exact CLI; its test-only Host graph now
+  aligns with direct Host 0.12 without changing product records or spending.
+
 ## [0.14.0] - 2026-10-10
 
 - **Breaking:** Adopt Shared Tooling 0.3.0. `make install-tools` now prepares

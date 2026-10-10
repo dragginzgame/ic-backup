@@ -80,34 +80,34 @@ help:
 check check-msrv clippy test: testkit-server-check
 
 check:
-	cargo check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
+	+cargo check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
 
 check-doc-links:
 	bash scripts/ci/check-doc-links.sh
 
 check-msrv:
 	RUSTUP_AUTO_INSTALL=0 rustc +1.88.0 --version
-	RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 --version
-	RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
-	bash scripts/ci/check-msrv-consumers.sh 1.88.0
+	+RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 --version
+	+RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
+	+bash scripts/ci/check-msrv-consumers.sh 1.88.0
 
 ci:
 	+@bash scripts/ci/run-validation-targets.sh --fail-fast $(CI_TARGETS)
 
 clean:
-	cargo clean
+	+cargo clean
 
 clippy:
-	cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings
+	+cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings
 
 deps:
-	cargo fetch --locked
+	+cargo fetch --locked
 
 doc:
-	RUSTDOCFLAGS="-D warnings" cargo doc --offline --locked -p ic-backup -p ic-backup-agent --no-deps --all-features
+	+RUSTDOCFLAGS="-D warnings" cargo doc --offline --locked -p ic-backup -p ic-backup-agent --no-deps --all-features
 
 ensure-clean:
-	@$(RELEASE) ensure-clean
+	+@$(RELEASE) ensure-clean
 
 hooks-check:
 	bash scripts/hooks/test-hooks.sh
@@ -121,7 +121,7 @@ dependency-pins-check:
 # Cargo owns the selected Testkit identity. The canonical Cargo installer owns
 # CLI receipts; Testkit owns server assets, admission and provisioning.
 define TESTKIT_SERVER
-	@set -eo pipefail; \
+	+@set -eo pipefail; \
 	version="$$(cargo metadata --offline --locked --format-version 1 | jq -er \
 	  '[.packages[] | select(.name == "ic-testkit") | .version] | if length == 1 then .[0] else error("expected one locked Testkit package") end')"; \
 	cli="$$(bash scripts/dev/install-rust-tools.sh --consumer "$(CURDIR)" \
@@ -140,64 +140,64 @@ testkit-server-check:
 	$(call TESTKIT_SERVER,--check,check)
 
 package:
-	cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent
+	+cargo package --offline --locked --allow-dirty -p ic-backup -p ic-backup-agent
 
 publish:
-	$(RELEASE) publish
+	+$(RELEASE) publish
 
 publish-dry-run:
-	$(RELEASE) publish --dry-run
+	+$(RELEASE) publish --dry-run
 
 release-check:
-	bash scripts/release/test-release.sh
-	RELEASE_MAKE=make bash scripts/ci/test-release-runner.sh
+	+bash scripts/release/test-release.sh
+	+RELEASE_MAKE=make bash scripts/ci/test-release-runner.sh
 
 release-delivery-check:
 	@[[ "$${RELEASE_DELIVERY:-direct}" == direct ]] || { echo 'This repository supports direct release delivery; PR delivery needs a qualified consumer adapter.' >&2; exit 2; }
 
 release-patch release-minor release-major: release-delivery-check
-	@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
+	+@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
 
 # Keep this specialized route local: the consumer receipt check follows the runner.
 release-resume: release-delivery-check
-	@bash scripts/ci/run-release.sh resume "$(VERSION)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
-	@$(RELEASE) resume-check "$(VERSION)"
+	+@bash scripts/ci/run-release.sh resume "$(VERSION)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
+	+@$(RELEASE) resume-check "$(VERSION)"
 
 release-plan:
-	@$(RELEASE) plan "$(if $(VERSION),$(VERSION),patch)"
+	+@$(RELEASE) plan "$(if $(VERSION),$(VERSION),patch)"
 
 release-tag-check:
-	$(RELEASE) tag-check
+	+$(RELEASE) tag-check
 
 release-verify: ci
-	@if [[ -n "$(RELEASE_SOURCE)" ]]; then $(RELEASE) validation-record; fi
+	+@if [[ -n "$(RELEASE_SOURCE)" ]]; then $(RELEASE) validation-record; fi
 
 release-version:
-	@$(RELEASE) version
+	+@$(RELEASE) version
 
 release-preflight:
-	@$(RELEASE) preflight
+	+@$(RELEASE) preflight
 
 release-prepare-version:
-	@$(RELEASE) prepare
+	+@$(RELEASE) prepare
 
 release-prepared-check:
-	@$(RELEASE) prepared-check
+	+@$(RELEASE) prepared-check
 
 release-files:
-	@$(RELEASE) files
+	+@$(RELEASE) files
 
 release-commit-check:
-	@$(RELEASE) commit-check
+	+@$(RELEASE) commit-check
 
 release-committed-check:
-	@$(RELEASE) committed-check
+	+@$(RELEASE) committed-check
 
 release-tagged-check:
-	@$(RELEASE) tagged-check
+	+@$(RELEASE) tagged-check
 
 release-push-check:
-	@$(RELEASE) push-check
+	+@$(RELEASE) push-check
 
 export RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_COMMIT
 
@@ -231,7 +231,7 @@ tags:
 	@git tag --sort=-version:refname
 
 test:
-	cargo test --offline --locked -p ic-backup -p ic-backup-agent --all-features
+	+cargo test --offline --locked -p ic-backup -p ic-backup-agent --all-features
 
 tasks:
 	@cat tasks/README.md
@@ -257,4 +257,4 @@ tooling-check: shared-tooling-check
 validate: ci
 
 version:
-	@$(RELEASE) version
+	+@$(RELEASE) version

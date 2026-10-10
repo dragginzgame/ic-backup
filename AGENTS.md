@@ -719,6 +719,19 @@ was recorded. Linking provenance or describing implementation status is allowed.
   dispatch. Lost replies stay pending; no provider, transport, settlement, complete
   upload or terminal/reference-release authority is installed.
 
+- Complete snapshot data-upload preparation counts exact metadata extents against
+  the original stage ceiling before source IO, then retains canonical payload
+  digests while buffering one bounded payload at a time. Bind the exact singleton
+  allocation reply and Applied predecessor; preserve source network/release and
+  independently qualified current caller permissions. The fresh-stage coordinator
+  refuses any consumed original journal, freshly prepares each payload and delegates
+  one update to the existing spending owner. Mandatory independent qualification
+  durably retains original request/reply bytes before each exact Applied receipt.
+  Stop on every failure; pending spending, returned replies, source bytes/references
+  and occupied checkpoints remain. Final ordered reply evidence uses the existing
+  all-Applied checkpoint, not backend completeness, partial-upload resume, load/start,
+  terminal or fence/reference release authority. No new record/provider is installed.
+
 ## Qualified dependency constraints
 
 The maintainer-authorized tooling adoption retains these existing exact registry

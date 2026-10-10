@@ -101,12 +101,18 @@ pub(crate) fn original_authority(
     {
         return Err(IcSnapshotUploadAttemptError::PayloadMismatch);
     }
-    if plan.context().network() != payload.source_plan().context().network()
-        || plan.context().release() != payload.source_plan().context().release()
-    {
+    if !source_context_matches(plan, payload) {
         return Err(IcSnapshotUploadAttemptError::SourceContextMismatch);
     }
     Ok(authority)
+}
+
+pub(crate) fn source_context_matches(
+    plan: &OperationPlanRecord,
+    payload: &IcSnapshotUploadRequest<'_>,
+) -> bool {
+    plan.context().network() == payload.source_plan().context().network()
+        && plan.context().release() == payload.source_plan().context().release()
 }
 
 /// Original upload reservation rejection; no variant changes spending or recovery.

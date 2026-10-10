@@ -8,7 +8,7 @@ use crate::model::{
         ExecutionWorkflowRecord,
     },
     ic_snapshot_data::{
-        IcSnapshotDataError, IcSnapshotDataRequest, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES,
+        ExtentPlanningError, IcSnapshotDataError, IcSnapshotDataRequest, planned_extents,
     },
     ic_snapshot_metadata::IcSnapshotMetadataReply,
     operation_plan::{
@@ -16,7 +16,6 @@ use crate::model::{
         PlannedOperationRecord, PlannedOperationRequest,
     },
 };
-use ic_management_canister_types::SnapshotDataKind;
 use thiserror::Error;
 
 /// Exact finite data requests and their original allocation-bound ordinary child plan.
@@ -55,53 +54,13 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
         if stage.target() != metadata.request().target() {
             return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
         }
-        if chunk_bytes == 0 || chunk_bytes > MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64 {
-            return Err(IcSnapshotDownloadPlanningError::InvalidChunkSize);
-        }
-        let values = metadata.metadata();
-        let sizes = [
-            values.wasm_module_size,
-            values.wasm_memory_size,
-            values.stable_memory_size,
-        ];
-        let mut count = u64::try_from(values.wasm_chunk_store.len())
-            .map_err(|_| IcSnapshotDownloadPlanningError::CountOverflow)?;
-        for size in sizes {
-            let region = size / chunk_bytes + u64::from(size % chunk_bytes != 0);
-            count = count
-                .checked_add(region)
-                .ok_or(IcSnapshotDownloadPlanningError::CountOverflow)?;
-        }
-        if count > u64::from(stage.budget().mutations()) {
-            return Err(IcSnapshotDownloadPlanningError::InsufficientAllowance {
-                required: count,
-                original: stage.budget().mutations(),
-            });
-        }
-        let capacity =
-            usize::try_from(count).map_err(|_| IcSnapshotDownloadPlanningError::CountOverflow)?;
-        let mut requests = Vec::with_capacity(capacity);
-        for (region, total) in sizes.into_iter().enumerate() {
-            let mut offset = 0;
-            while offset < total {
-                let size = (total - offset).min(chunk_bytes);
-                let kind = match region {
-                    0 => SnapshotDataKind::WasmModule { offset, size },
-                    1 => SnapshotDataKind::WasmMemory { offset, size },
-                    _ => SnapshotDataKind::StableMemory { offset, size },
-                };
-                requests.push(IcSnapshotDataRequest::new(metadata, kind)?);
-                offset += size; // The admitted size never exceeds total - offset.
-            }
-        }
-        for chunk in &values.wasm_chunk_store {
-            requests.push(IcSnapshotDataRequest::new(
-                metadata,
-                SnapshotDataKind::WasmChunk {
-                    hash: chunk.hash.clone(),
-                },
-            )?);
-        }
+        let kinds = planned_extents(metadata, chunk_bytes, stage.budget().mutations())
+            .map_err(IcSnapshotDownloadPlanningError::from)?;
+        let capacity = kinds.len();
+        let requests = kinds
+            .into_iter()
+            .map(|kind| IcSnapshotDataRequest::new(metadata, kind))
+            .collect::<Result<Vec<_>, _>>()?;
         let plan = if requests.is_empty() {
             None
         } else {
@@ -256,3 +215,15 @@ pub enum IcSnapshotDownloadPlanningError {
 
 #[cfg(test)]
 pub(crate) mod tests;
+
+impl From<ExtentPlanningError> for IcSnapshotDownloadPlanningError {
+    fn from(error: ExtentPlanningError) -> Self {
+        match error {
+            ExtentPlanningError::InvalidChunkSize => Self::InvalidChunkSize,
+            ExtentPlanningError::CountOverflow => Self::CountOverflow,
+            ExtentPlanningError::InsufficientAllowance { required, original } => {
+                Self::InsufficientAllowance { required, original }
+            }
+        }
+    }
+}

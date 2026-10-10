@@ -1,6 +1,12 @@
 //! One fresh original source-bound metadata/data upload; no automatic receipt or retry.
 
 mod allocation;
+#[cfg(unix)]
+mod data;
+#[cfg(unix)]
+pub use data::{
+    IcSnapshotDataUploadExecutionError, IcSnapshotDataUploadReplyError, upload_snapshot_data,
+};
 
 pub use allocation::{
     IcSnapshotAllocationExecutionError, IcSnapshotAllocationSettlementError, allocate_snapshot,

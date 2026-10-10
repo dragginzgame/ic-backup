@@ -12,8 +12,13 @@ Prepare the declared Rust/Cargo toolchain and native build prerequisites first,
 even when the repository has no Rust packages. The Makefile uses local tool
 paths automatically. Interactive shells need the
 export above; setup does not edit shell profiles. Installation downloads tools;
-checks are offline and never install missing dependencies. `install-tools` runs
-host, IC and Rust setup in that order, followed by declared product tools;
+checks are offline and never install missing dependencies. Before downloads,
+`install-tools` uses the existing IC and Rust installers to admit the complete-set
+platform/pins and probe the consumer's selected `rustc` and `cargo`. These
+read-only `--preflight` calls create no tool/build directories and disable
+Rustup auto-installation; missing or unavailable toolchains require explicit
+bootstrap. This is not a compiler/linker qualification or a toolchain upgrade.
+Setup then runs host, IC and Rust installation in that order, followed by declared product tools;
 `tools-check` checks the same sets in order. Each stops at the first failure.
 Sets activate independently: a later failure preserves earlier completed sets.
 
@@ -68,6 +73,12 @@ snapshot's file instead of maintaining copied recipes or installer flags. Shared
 Tooling's own Makefile and CI use the same commands. Snapshot adoption brings
 command updates; explicit setup brings newly required executables.
 
+The include also selects `make/execution.mk` and its
+`scripts/ci/check-make-execution.sh` companion. It rejects dry-run, touch,
+question and ignore-errors modes before recipes execute. Cargo recipes retain
+Make's jobserver descriptors for parallel execution; this does not grant
+installation authority to an inspection command or change the setup order.
+
 The installed `cloc` executable and local workspace `make cloc` are common setup.
 Fleet reports such as `make cloc-tooling` normally run in Shared Tooling; consumers
 need not vendor those reporters or run their regression suites. See the
@@ -104,7 +115,10 @@ adoption needs the shared report script and the Make include shown in the
 
 `make install-host-tools` installs jq, **Mike Farah yq** (including its TOML
 parser), ripgrep with PCRE2, and cloc under `.tools/host/bin`. `make host-tools-check`
-verifies their bytes before executing version and feature checks. The reviewed selections
+verifies their bytes before executing version and feature checks. Failures report
+the exact tool, expected version, selected path, reason and repair command.
+Actual version/probe output is included only after all payloads authenticate;
+missing or unauthenticated executables are never run for diagnosis. The reviewed selections
 live in [ci/tool-versions.env](../ci/tool-versions.env):
 [jq 1.8.2](https://github.com/jqlang/jq/releases/tag/jq-1.8.2),
 [yq 4.47.2](https://github.com/mikefarah/yq/releases/tag/v4.47.2),

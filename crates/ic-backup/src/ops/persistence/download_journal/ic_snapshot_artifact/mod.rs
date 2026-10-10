@@ -2,7 +2,7 @@
 
 mod upload;
 mod verification;
-pub use upload::IcSnapshotUploadArtifactError;
+pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactError};
 
 use super::{DownloadJournalError, DownloadJournalGuard};
 use crate::{

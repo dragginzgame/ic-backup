@@ -7,10 +7,14 @@ ROOT="$0"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/ic-tools-test.XXXXXX")"
+fixture_complete=false
 finish() {
     local status=$?
+    # Bash 3.2 may report zero after nounset before assertions finish.
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
     if [[ "$status" == 0 ]]; then rm -rf "$fixture";
     else echo "IC tool fixture retained: $fixture" >&2; fi
+    exit "$status"
 }
 trap finish EXIT
 mkdir -p "$fixture/bin" "$fixture/assets" "$fixture/payload"
@@ -94,6 +98,8 @@ for host in Linux:x86_64 Darwin:x86_64 Darwin:arm64; do
     export IC_TOOLS_TEST_OS="${host%:*}" IC_TOOLS_TEST_ARCH="${host#*:}"
     consumer="$fixture/consumer $host"
     mkdir "$consumer"
+    install --preflight > "$fixture/preflight.log" 2>&1
+    [[ ! -s "$fixture/preflight.log" && ! -e "$consumer/.tools" ]]
     install > "$fixture/install.log" 2>&1
     [[ -f "$consumer/.tools/ic/lib/libbinaryen.dylib" ]]
     before="$(wc -l < "$fixture/downloads")"
@@ -308,3 +314,4 @@ ln -s "$fixture" "$consumer/.tools"
 expect_failure install
 
 echo 'IC tool installation, offline verification, retention and activation tests passed'
+fixture_complete=true

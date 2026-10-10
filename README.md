@@ -229,9 +229,10 @@ will be added only when their implementation is required.
 Development uses Rust 1.99.0, edition 2024 and a minimum supported Rust version
 of 1.88.0. The workspace owns package metadata, dependency declarations and
 lints. Builds stay in this repository's `target/` directory.
+Prepare the declared Rust toolchain before running tool setup.
 
 ```bash
-cargo install cargo-sort --version 2.1.4 --locked
+make install-tools
 make install-hooks
 make check
 make test

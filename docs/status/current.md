@@ -25,7 +25,81 @@
 
 # Current handoff — 2026-10-10
 
-## Current 0.14.0 complete-toolset adoption
+## Current 0.14.1 tooling and dependency refresh
+
+The same compatible 0.14.1 draft now selects committed Shared Tooling 0.3.2 at
+`c16444bf006f17c5bb4dda5ad070a0f345da9623` through canonical clean export.
+The 96-file roster adds the advisory README freshness task. Setup refuses missing
+platform/toolchain prerequisites before downloads; diagnostics identify exact
+tools and repair commands. Shared and local Cargo/Testkit/release recipes preserve
+jobserver descriptors. Local fixtures require explicit completion before success,
+with independent read-only preflight substitutes and retained premature exits.
+README setup uses the existing complete `make install-tools` owner.
+
+Final locked direct Host Artifact/FS 0.12.2 and incoming Metrics 0.5.1 retain
+unchanged Rust source. The subsequent incoming Testkit 0.32 selection aligns
+its four test-only Host crates with 0.12.2; published Testkit Rust source matches
+0.31. Canonical setup prepares its exact new CLI and retains earlier installations.
+Full `make ci` passes all delivery gates, 500 core unit cases, 25 core simulator
+journeys, eight Agent HTTP cases and three Agent simulator journeys, strict
+Clippy/docs, MSRV and both packages. A separate locked Rust 1.88 consumer qualifies
+the new public data-upload API on the unchanged normal Host/Metrics graph.
+After Testkit 0.32 arrives, all affected gates pass again, reusing unchanged
+shell/tooling/release/hook proof. Prior graph proofs remain historical. See
+[the initial review](../reports/audits/2026/10/10/shared-032/01/report.md) and
+[final Testkit qualification](../reports/audits/2026/10/10/shared-032/02/report.md).
+Root package/receipt remain 0.14.0 and work is uncommitted. Native macOS acceptance
+stays open with #32/#36; #29 retains restore orchestration and #25 Agent/application
+integration. No sibling edit, release, registry upload or recovery cleanup ran.
+
+## Prior 0.14.1 complete data-upload batch
+
+Released base and package/receipt remain 0.14.0 at
+`eaefe8b0888759603cd19acaf94eabd039d7499a`. The compatible 0.14.1 draft adds
+guarded complete original-source/destination-bound data planning and fresh-stage
+coordination under #29. Count exact extents against original ceilings before source
+IO, retain request digests while buffering one payload, and bind the exact allocation
+reply/predecessor. Mandatory fresh admission and independent durable request/reply
+qualification precede explicit Applied receipts and dependent writes. The existing
+all-Applied checkpoint retains full histories and ordered reply evidence. Consumed
+stages refuse reentry; failures preserve source, pending spending and references.
+
+The incoming lock changed to Host Artifact/FS 0.12.1 during validation; retain it.
+Published Rust sources match 0.12.0. Final graph retains Testkit 0.31.0/test-only
+Host 0.11, Metrics 0.5.0, Agent 0.49.2 and Shared 0.3.0. Complete delivery gates
+pass: 500 core unit cases, 25 core simulator journeys, eight Agent HTTP cases,
+three Agent simulator journeys, strict Clippy/docs, MSRV and both packages.
+After correcting a bounded caller fixture, rerun all affected/remaining gates and
+reuse unchanged passing tooling/release/hook evidence. An independent Rust 1.88
+consumer also compiles the complete new public API. Initial failures remain retained.
+See [the qualification](../reports/audits/2026/10/10/continuation-0141/01/report.md).
+
+Released 0.14.0 CI now passes Linux; both macOS jobs remain queued. This uncommitted
+candidate has no hosted result. #29 retains same-ID restore coordination; #25 retains
+async Agent/application integration. Authentic backend completeness, byte/command
+custody and terminal/fence/reference release remain separate. No root Git write,
+release, registry publication, sibling edit or recovery cleanup ran.
+
+## Prior released 0.14.0 inspection
+
+Local HEAD and GitHub main match released 0.14.0
+`eaefe8b0888759603cd19acaf94eabd039d7499a`; the worktree was clean at inspection.
+The released graph selects direct Host Artifact/FS 0.12.0, Testkit 0.31.0 with
+independent test-only Host 0.11, Metrics 0.5.0 and Agent 0.49.2. Prior local
+Host/Testkit qualification below used Metrics 0.4; preserve its exact identity.
+Do not relabel it as execution proof for the final release graph.
+
+[Exact-release CI](https://github.com/dragginzgame/ic-backup/actions/runs/38048572026)
+has one main-push run, successful Linux common/Testkit setup and Linux native
+validation in progress; both macOS jobs are queued. No open PR covers the remaining
+product work. The next bounded step under [#29](https://github.com/dragginzgame/ic-backup/issues/29)
+is complete original-source/destination-bound data-upload planning and coordination,
+reusing existing one-call uploads, qualified receipts and checkpoints. Full restore,
+async Agent/application admission and terminal/custody proof remain separate.
+This inspection runs no build, source repair, CI retry or release and selects no
+new draft. Issue/native evidence is retained under `target/issues-review-0140/`.
+
+## Prior 0.14.0 complete-toolset adoption
 
 Released base is 0.13.0 at `bf5138ec99c2f02650b8af618fc30195ef50dada`.
 Select 0.14.0 for Shared Tooling 0.3.0

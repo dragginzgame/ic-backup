@@ -1,4 +1,5 @@
 //! Real guarded source descriptors, unchanged journals and exact SDK upload bytes.
+mod plan;
 use super::*;
 use crate::{
     model::ic_snapshot_upload::{IcSnapshotUploadError, IcSnapshotUploadRequest},

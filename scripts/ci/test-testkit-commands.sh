@@ -6,13 +6,16 @@ ROOT="${BASH_SOURCE[0]}"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 fixture="$(mktemp -d "$ROOT/target/testkit-commands.XXXXXX")"
+fixture_complete=false
 finish() {
     local status=$?
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
     if [[ $status == 0 ]]; then
         rm -rf "$fixture"
     else
         printf 'Testkit command fixture retained: %s\n' "$fixture" >&2
     fi
+    exit "$status"
 }
 trap finish EXIT
 mkdir -p "$fixture/consumer/make" "$fixture/consumer/scripts/ci" "$fixture/bin" "$fixture/cli"
@@ -22,6 +25,12 @@ cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.s
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ "${TESTKIT_COMMAND_JOBSERVER:-0}" == 1 ]]; then
+    [[ "${MAKEFLAGS:-}" =~ --jobserver-(auth|fds)=([0-9]+),([0-9]+) ]]
+    reader="${BASH_REMATCH[2]}"; writer="${BASH_REMATCH[3]}"
+    : <&"$reader"
+    : >&"$writer"
+fi
 case "$*" in
     'fetch --locked') printf 'fetch\n' >> "$TESTKIT_COMMAND_ORDER" ;;
     'metadata --offline --locked --format-version 1') cat "$TESTKIT_COMMAND_METADATA" ;;
@@ -43,6 +52,10 @@ else
     case "${1:-}" in
         */scripts/dev/install-host-tools.sh|*/scripts/dev/install-ic-tools.sh|*/scripts/dev/install-rust-tools.sh)
             name="${1##*/}"
+            if [[ "${!#}" == --preflight ]]; then
+                [[ "${TESTKIT_COMMAND_PREFLIGHT_FAILURE:-}" != "$name" ]] || exit 24
+                exit 0
+            fi
             printf 'common %s\n' "$name" >> "$TESTKIT_COMMAND_ORDER"
             [[ "${TESTKIT_COMMAND_COMMON_FAILURE:-}" != "$name" ]] || exit 18
             exit 0 ;;
@@ -118,14 +131,14 @@ for failure in TESTKIT_COMMAND_INSTALL_FAILURE TESTKIT_COMMAND_SERVER_FAILURE; d
     tail -n 1 "$TESTKIT_COMMAND_INSTALL" | grep -F -- '--check' >/dev/null
 done
 : > "$TESTKIT_COMMAND_ORDER"
-run_make -j4 check clippy > "$fixture/parallel-success.log" 2>&1
+TESTKIT_COMMAND_JOBSERVER=1 run_make -j4 check clippy > "$fixture/parallel-success.log" 2>&1
 [[ "$(head -n 1 "$TESTKIT_COMMAND_ORDER")" == 'server check' ]]
 [[ "$(grep -c '^server ' "$TESTKIT_COMMAND_ORDER")" == 1 ]]
 [[ "$(grep -c '^build ' "$TESTKIT_COMMAND_ORDER")" == 2 ]]
 # The actual consumer aggregate includes locked fetch before Testkit setup;
 # parallel Make must preserve common host/IC/Cargo order and stop on failure.
 : > "$TESTKIT_COMMAND_ORDER"
-run_make -j4 install-tools > "$fixture/aggregate-install.log" 2>&1
+TESTKIT_COMMAND_JOBSERVER=1 run_make -j4 install-tools > "$fixture/aggregate-install.log" 2>&1
 printf '%s\n' 'common install-host-tools.sh' 'common install-ic-tools.sh' 'common install-rust-tools.sh' fetch 'server setup' > "$fixture/expected-order"
 cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
 : > "$TESTKIT_COMMAND_ORDER"
@@ -138,5 +151,11 @@ for target in install-tools tools-check; do
     printf '%s\n' 'common install-host-tools.sh' 'common install-ic-tools.sh' 'common install-rust-tools.sh' > "$fixture/expected-order"
     cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
 done
+for tool in install-ic-tools.sh install-rust-tools.sh; do
+    : > "$TESTKIT_COMMAND_ORDER"
+    if TESTKIT_COMMAND_PREFLIGHT_FAILURE="$tool" run_make -j4 install-tools > "$fixture/preflight-$tool.log" 2>&1; then exit 1; fi
+    [[ ! -s "$TESTKIT_COMMAND_ORDER" ]]
+done
 [[ "$(cat "$fixture/retained")" == 'retained original evidence' ]]
 printf '%s\n' 'Testkit setup/check routing, original selection and refusal fixtures passed'
+fixture_complete=true

@@ -116,3 +116,16 @@ fn planned_upload_lost_data_retains_source_and_pending_without_reissue() {
 fn planned_upload_malformed_data_retains_reply_source_and_pending_without_reissue() {
     pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataMalformed);
 }
+
+#[test]
+fn planned_upload_lost_second_data_write_retains_applied_and_pending_without_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataLostSecond);
+}
+#[test]
+fn planned_upload_malformed_second_data_write_retains_original_history_without_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataMalformedSecond);
+}
+#[test]
+fn planned_upload_insufficient_original_data_allowance_refuses_before_writes() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataAllowance);
+}

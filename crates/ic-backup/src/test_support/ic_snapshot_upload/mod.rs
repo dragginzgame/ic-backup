@@ -102,3 +102,23 @@ pub fn observation_input(
         ),
     }
 }
+
+pub fn data_workflow(
+    payload: &IcSnapshotUploadRequest<'_>,
+    mutations: u32,
+) -> crate::model::execution_workflow::ExecutionWorkflowRecord {
+    let mut fields = serde_json::to_value(upload_plan(payload)).unwrap();
+    fields["graph"]["nodes"] = json!([
+        {"operation_sequence":0,"depends_on":[]}, {"operation_sequence":7,"depends_on":[0]}
+    ]);
+    let mut allocation = fields["operations"][0].clone();
+    allocation["operation_sequence"] = json!(0);
+    allocation["budget"] = json!({"mutations":1,"observations":0});
+    let mut data = fields["operations"][0].clone();
+    data["budget"] = json!({"mutations":mutations,"observations":1});
+    fields["operations"] = json!([allocation, data]);
+    fields["budget"] = json!({"mutations":mutations+10,"observations":10});
+    crate::model::execution_workflow::ExecutionWorkflowRecord::new(
+        serde_json::from_value(fields).unwrap(),
+    )
+}

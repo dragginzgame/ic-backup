@@ -713,6 +713,20 @@ is generated. Lost/unqualified replies, invalid receipts and occupied checkpoint
 retain spending/returned bytes and prevent allocation reissue. The actual Testkit
 upload caller now delegates this metadata assembly to the public coordinator.
 
+`DownloadJournalGuard::prepare_ic_snapshot_data_upload_plan` counts complete exact
+extents against the original data-stage ceiling before source IO. Guarded canonical
+preparation retains each request digest while buffering one payload at a time.
+The ephemeral plan binds the exact allocation reply and Applied predecessor, with
+one update and zero observations per ordered write; spare headroom stays unassigned.
+`workflow::ic_snapshot_upload::upload_snapshot_data` refuses any prior spending,
+freshly prepares each payload and delegates single-call admission/reservation.
+Mandatory independent qualification durably retains request/reply bytes before
+each explicit Applied receipt. All writes settle through the existing checkpoint;
+failures stop without reissue, preserving source, spending and returned evidence.
+Actual simulator journeys qualify complete destination verification and stopping
+after lost/malformed second writes. Full restore, async Agent/application admission
+and terminal/custody proof remain separate.
+
 Explicit local IC-tree verification and upload preparation now expose per-guard
 `ic-metrics` summaries and a bounded prepared-size histogram. Host durations use nanoseconds, successful prepared data uses
 bytes, and returned successes/rejections stay separate. Internal verification and

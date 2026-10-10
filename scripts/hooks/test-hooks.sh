@@ -9,14 +9,17 @@ mkdir -p "$ROOT/target"
 TEMPORARY="$(mktemp -d "$ROOT/target/hook-tests.XXXXXX")"
 CASE_NAME=setup
 CASE_LOG=/dev/null
+fixture_complete=false
 finish() {
     local status=$?
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
     if [[ "$status" == 0 ]]; then
         printf 'Hook fixtures retained: %s\n' "$TEMPORARY"
     else
         printf 'Hook tests: FAIL [%s]; fixtures retained at %s\n' "$CASE_NAME" "$TEMPORARY" >&2
         tail -n 80 "$CASE_LOG" >&2
     fi
+    exit "$status"
 }
 trap finish EXIT
 
@@ -189,9 +192,12 @@ run_case() {
     printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
     # Do not place the subshell in an if/OR-list: assertions must keep errexit.
     (
+        case_complete=false
+        trap 'status=$?; [[ "$case_complete" == true || "$status" != 0 ]] || status=1; exit "$status"' EXIT
         trap 'printf "Failed at line %s: %s\n" "$LINENO" "$BASH_COMMAND" >&2' ERR
         create_fixture
         "$@"
+        case_complete=true
     ) > "$CASE_LOG" 2>&1
 }
 
@@ -215,3 +221,4 @@ run_case formatter-failure test_formatter_failure
 run_case formatting-output test_formatting_output
 run_case checkout-local-tools test_checkout_local_tools
 echo 'Hook tests: PASS (selected auto-formatting, index refresh, partial-stage rejection, unrelated edit preservation, formatter failure and local installation).'
+fixture_complete=true

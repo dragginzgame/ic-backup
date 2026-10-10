@@ -1,5 +1,8 @@
 //! Fresh original source-byte preparation; payloads confer no upload permission.
 
+mod plan;
+pub use plan::IcSnapshotDataUploadPreparationError;
+
 use super::super::metrics::LocalOperation;
 use super::{
     DownloadJournalGuard, File, IcSnapshotArtifactError, Mode, OFlags, REGIONS,

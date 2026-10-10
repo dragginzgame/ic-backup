@@ -49,7 +49,24 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 95-file snapshot selects committed Shared Tooling 0.3.0 at
+The current 96-file snapshot selects committed Shared Tooling 0.3.2 at
+`c16444bf006f17c5bb4dda5ad070a0f345da9623`, verified against remote main.
+Canonical export from an isolated clean committed checkout preserves local product
+work and adds the advisory README freshness task required by the maintenance catalog.
+Setup checks platform and Rust/Cargo prerequisites before downloading; offline
+diagnostics identify exact tool/path/version and repair commands. Shared Cargo
+formatting/setup/check recipes preserve Make jobserver descriptors and standalone
+tool includes retain execution-mode refusal. Fixtures require explicit completion
+before reporting success or removing evidence, including premature zero exits.
+Local Cargo/Testkit/release recipes and local fixture boundaries use these same
+contracts. README setup now uses the complete existing `make install-tools` owner.
+The compatible 0.14.1 draft keeps package versions unchanged. See
+[the initial adoption review](reports/audits/2026/10/10/shared-032/01/report.md) and
+[final Testkit 0.32 qualification](reports/audits/2026/10/10/shared-032/02/report.md).
+
+### Prior Shared Tooling 0.3.0 review
+
+The prior 95-file snapshot selects committed Shared Tooling 0.3.0 at
 `88a73139a0f083344c41a6f6f4b5c3a8aca7dc1d`. Canonical export excludes the dirty
 upstream sibling reporter. The complete shared host/IC/Cargo roster is mandatory;
 ripgrep/cloc flags and extra Rust aggregate prerequisites are retired. Backup

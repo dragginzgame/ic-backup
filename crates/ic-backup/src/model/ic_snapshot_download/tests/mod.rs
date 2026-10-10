@@ -3,7 +3,9 @@ use crate::model::{
     artifacts::ArtifactChecksumRecord,
     ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
 };
-use ic_management_canister_types::{ChunkHash, ReadCanisterSnapshotMetadataResult};
+use ic_management_canister_types::{
+    ChunkHash, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
+};
 use sha2::Digest;
 
 pub(crate) fn values() -> ReadCanisterSnapshotMetadataResult {

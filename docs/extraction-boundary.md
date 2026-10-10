@@ -2638,6 +2638,44 @@ Applied history and occupied evidence; local replay never repeats allocation.
 The real Testkit caller delegates metadata assembly to this public API while
 retaining fixture-owned authentication and durable byte qualification.
 
+`DownloadJournalGuard::prepare_ic_snapshot_data_upload_plan` produces an ephemeral
+complete `IcSnapshotDataUploadPlan`. Count Wasm module, heap and stable contiguous
+extents followed by known chunks in metadata order before source IO or allocation.
+Chunk sizes are 1..=1 MiB; checked nat64 counts must fit the original stage mutation
+ceiling. Empty regions require no calls; known empty chunks require their hash-bound
+write. All-empty data returns no placeholder child plan. Reuse the download owner's
+extent arithmetic and guarded upload source owner. Verify each exact payload while
+retaining only its binding digest, then recheck the full original source. Preparation
+changes no journal, bytes, references or allowance; it grants no future byte custody.
+
+The ordinary child plan binds the selected source/destination, original network and
+release, current workflow caller, one update and zero observations per operation,
+and explicit sequential dependencies. Original stage headroom stays unassigned.
+`bind` requires the exact singleton metadata request and allocation reply evidence
+in the original predecessor; retained stage admission rechecks Applied histories.
+Decoded allocation IDs and matching hashes alone authenticate no attribution.
+
+`workflow::ic_snapshot_upload::upload_snapshot_data` admits complete unused original
+journals before source preparation. It freshly prepares one payload, delegates
+reservation/fresh admission/one call to the existing upload owner, then requires
+independent qualification of write attribution and durable original request/reply
+retention before recording the exact Applied receipt. Subsequent writes require
+that retained prerequisite. Lost/malformed replies, qualification failure, incorrect
+receipts, changed source and occupied checkpoints stop immediately and preserve
+original spending, returned bounded evidence and source references. This entrypoint
+provides no partial-upload resume or hidden observations/reissue.
+
+After every exact Applied receipt, release journal locks and checkpoint through
+the existing owner. Learned evidence hashes the NUL-terminated
+`ic-backup/ic-snapshot-data-upload/v1` domain, 64 ASCII original plan-hash bytes,
+then each ordered 64 ASCII canonical upload reply digest. The original plan binds
+the exact operation count/order; canonical reply digests bind request and raw reply.
+No persisted schema or existing digest changes. This stage settlement establishes
+neither authenticated backend completeness nor load/start/application/terminal or
+fence/reference-release authority. The isolated Testkit caller delegates complete
+data assembly and independently verifies destination bytes; second-write lost or
+malformed replies and insufficient original allocation qualify bounded stopping.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

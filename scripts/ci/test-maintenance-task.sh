@@ -7,7 +7,16 @@ ROOT="$0"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/maintenance-task-test.XXXXXX")"
-trap 'if [[ $? == 0 ]]; then rm -rf "$FIXTURE"; else printf "Maintenance fixture retained: %s\n" "$FIXTURE" >&2; fi' EXIT
+# Bash 3.2 can enter EXIT with status zero after nounset; require completion too.
+fixture_complete=false
+finish() {
+    local status=$?
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
+    if [[ "$status" == 0 ]]; then rm -rf "$FIXTURE"
+    else printf "Maintenance fixture retained: %s\n" "$FIXTURE" >&2; fi
+    exit "$status"
+}
+trap finish EXIT
 mkdir -p "$FIXTURE/projects with spaces" "$FIXTURE/state with spaces"
 mkdir "$FIXTURE/bin"
 MAINTENANCE_REAL_DATE="$(command -v date)"
@@ -84,3 +93,4 @@ printf '9999999999\n' > "$state/last-attempt"
 if bash "$runner" --if-due "$projects" "$state" > "$FIXTURE/future.log" 2>&1; then exit 1; fi
 [[ "$(wc -l < "$MAINTENANCE_TEST_TRACE" | tr -d ' ')" == 3 ]]
 echo 'Maintenance task fixture passed (substitute CLI; no live agent or schedule).'
+fixture_complete=true

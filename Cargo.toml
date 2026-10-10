@@ -19,7 +19,7 @@ ic-host-artifacts = { version = "0.12", default-features = false }
 ic-host-fs = { version = "0.12", default-features = false }
 ic-management-canister-types = "=0.11.0"
 ic-metrics = { version = "0.5", default-features = false }
-ic-testkit = "0.31"
+ic-testkit = "0.32"
 ic_principal = { version = "=0.1.5", default-features = false, features = [
     "convert",
 ] }

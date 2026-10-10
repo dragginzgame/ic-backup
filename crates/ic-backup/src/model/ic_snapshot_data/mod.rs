@@ -1,6 +1,8 @@
 //! Metadata-bound snapshot data codecs, without dispatch or transfer completion.
 
+mod extents;
 mod wire;
+pub(crate) use extents::{ExtentPlanningError, planned_extents};
 
 use super::{
     artifacts::ArtifactChecksumRecord,

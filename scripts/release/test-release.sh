@@ -32,15 +32,18 @@ TEMPORARY="$(mktemp -d "$ROOT/target/shared-release-tests.XXXXXX")"
 mkdir -p "$TEMPORARY/bin"
 CASE_NAME=setup
 CASE_LOG=/dev/null
+fixture_complete=false
 export TEST_SOURCE=1111111111111111111111111111111111111111
 finish() {
     local status=$?
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
     if [[ "$status" != 0 ]]; then
         printf 'Release adapter tests failed [%s]; retained: %s\n' "$CASE_NAME" "$TEMPORARY" >&2
         tail -n 80 "$CASE_LOG" >&2
     else
         printf 'Release adapter fixtures and command traces retained: %s\n' "$TEMPORARY"
     fi
+    exit "$status"
 }
 trap finish EXIT
 run_case() {
@@ -48,7 +51,13 @@ run_case() {
     CASE_LOG="$TEMPORARY/$CASE_NAME.log"
     printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
     export FIXTURE="$TEMPORARY/$CASE_NAME"
-    (create_fixture; "$@") > "$CASE_LOG" 2>&1
+    (
+        case_complete=false
+        trap 'status=$?; [[ "$case_complete" == true || "$status" != 0 ]] || status=1; exit "$status"' EXIT
+        create_fixture
+        "$@"
+        case_complete=true
+    ) > "$CASE_LOG" 2>&1
 }
 create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
@@ -93,6 +102,11 @@ TOML
 #!/usr/bin/env bash
 set -euo pipefail
 target="${0##*/}"; target="${target%.sh}"
+if [[ "${!#}" == --preflight ]]; then
+    printf 'preflight %s\n' "$target" >> "$TEST_LOG"
+    [[ "${TEST_COMMON_PREFLIGHT_FAIL:-}" != "$target" ]] || exit 24
+    exit 0
+fi
 printf 'common %s\n' "$target" >> "$TEST_LOG"
 [[ "${TEST_COMMON_TOOL_FAIL:-}" != "$target" ]] || exit 8
 TOOL
@@ -101,14 +115,20 @@ TOOL
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'installer %s\n' "$*" >> "$TEST_LOG"
-version=''; check=false
+version=''; check=false; preflight=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --version) version="$2"; shift 2 ;;
         --check) check=true; shift ;;
+        --preflight) preflight=true; shift ;;
         *) shift ;;
     esac
 done
+if [[ "$preflight" == true ]]; then
+    printf 'preflight install-rust-tools\n' >> "$TEST_LOG"
+    [[ "${TEST_COMMON_PREFLIGHT_FAIL:-}" != install-rust-tools ]] || exit 24
+    exit 0
+fi
 if [[ -z "$version" ]]; then
     printf 'common install-rust-tools\n' >> "$TEST_LOG"
     [[ "${TEST_COMMON_TOOL_FAIL:-}" != install-rust-tools ]] || exit 8
@@ -653,6 +673,7 @@ test_selected_tool_preflight() {
         offline) export CARGO_NET_OFFLINE=true ;;
         network) export TEST_TOOL_FAIL=1 ;;
         common) export TEST_COMMON_TOOL_FAIL=install-rust-tools ;;
+        prerequisite) export TEST_COMMON_PREFLIGHT_FAIL=install-rust-tools ;;
         invalid|lock)
             mkdir -p target/mock-tools/0.28.2
             if [[ "$mode" == invalid ]]; then touch target/mock-tools/0.28.2/invalid; else mkdir target/mock-tools/0.28.2/lock; fi ;;
@@ -675,6 +696,7 @@ test_selected_tool_preflight() {
     else
         [[ ! -s target/tool-effects.log ]]
         if grep -q '^validate$' "$TEST_EFFECTS"; then exit 1; fi
+        if [[ "$mode" == prerequisite ]] && grep -q '^common ' "$TEST_LOG"; then exit 1; fi
     fi
     assert_cache_retained
 }
@@ -912,6 +934,7 @@ if [[ "$metadata_only" == true ]]; then
     run_case validation-source-identity test_validation_source_identity
     run_case real-index-boundaries test_real_index_boundaries
     echo 'release metadata real-Git and validation-retention tests passed'
+    fixture_complete=true
     exit 0
 fi
 
@@ -935,7 +958,7 @@ for drift in notes tag head; do run_case "completed-$drift" test_invalid_release
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
 run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-normal-retry test_prepared_normal_retry
-for mode in retry offline network invalid lock common; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
+for mode in retry offline network invalid lock common prerequisite; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
 for mode in explicit patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
 run_case completed-evidence-replay test_completed_evidence_replay
@@ -943,3 +966,4 @@ run_case dependency-failure-conditional-status test_dependency_failure_condition
 run_case conditional-substitute-rejections test_conditional_substitute_rejections
 run_case real-index-boundaries test_real_index_boundaries
 printf 'Release adapters: PASS (Make/gate/recovery command substitutes and real private-index boundaries; no new Git commits or live publication).\n'
+fixture_complete=true

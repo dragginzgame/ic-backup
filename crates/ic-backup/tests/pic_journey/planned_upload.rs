@@ -1,4 +1,4 @@
-//! Actual original metadata/data stages using the public one-upload coordinator.
+//! Actual original allocation and complete data stages using the public coordinators.
 
 use super::{Backend, Fault, capture, download, extents, lifecycle, status, verify_destination};
 use ic_backup::{
@@ -14,16 +14,15 @@ use ic_backup::{
             IcSnapshotUploadAttempt, IcSnapshotUploadKind, IcSnapshotUploadReply,
             IcSnapshotUploadReplyKind, IcSnapshotUploadRequest,
         },
-        operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
-        create_execution_workflow, read_execution_progress,
+        BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard, create_execution_workflow,
+        read_execution_progress,
     },
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
     workflow::ic_snapshot_upload::{
-        IcSnapshotAllocationExecutionError, IcSnapshotUploadExecutionError, allocate_snapshot,
-        upload_snapshot,
+        IcSnapshotAllocationExecutionError, IcSnapshotDataUploadExecutionError,
+        IcSnapshotUploadExecutionError, allocate_snapshot, upload_snapshot, upload_snapshot_data,
     },
 };
 use ic_management_canister_types::CanisterStatusType;
@@ -37,6 +36,9 @@ pub(crate) enum Failure {
     MetadataMalformed,
     DataLost,
     DataMalformed,
+    DataLostSecond,
+    DataMalformedSecond,
+    DataAllowance,
 }
 struct Provider<'a> {
     backend: &'a mut Backend,
@@ -68,10 +70,18 @@ impl IcSnapshotUploadProvider for Provider<'_> {
             (metadata, self.failure),
             (true, Failure::MetadataLost) | (false, Failure::DataLost)
         );
+        let lost = lost
+            || (self.failure == Failure::DataLostSecond
+                && !metadata
+                && request.authority().binding().operation_sequence() == 1);
         let malformed = matches!(
             (metadata, self.failure),
             (true, Failure::MetadataMalformed) | (false, Failure::DataMalformed)
         );
+        let malformed = malformed
+            || (self.failure == Failure::DataMalformedSecond
+                && !metadata
+                && request.authority().binding().operation_sequence() == 1);
         if lost || malformed {
             // The independent test oracle never enters outcome/destination admission.
             fs::write(
@@ -94,30 +104,6 @@ impl IcSnapshotUploadProvider for Provider<'_> {
         })
         .map_err(|_| IcMutationProviderError::Indeterminate)
     }
-}
-fn retain_applied(
-    stage: &ExecutionStageGuard<'_>,
-    sequence: u64,
-    payload: &IcSnapshotUploadRequest<'_>,
-    acknowledgement: &IcMutationAcknowledgement,
-) -> ArtifactChecksumRecord {
-    // Explicit fixture-owned exact ingress attribution, never a library wire-derived receipt.
-    let layout = stage.layout().unwrap();
-    let mut journal =
-        AttemptJournalGuard::open(layout, &stage.plan().attempt_authority(sequence).unwrap())
-            .unwrap();
-    let reply = IcSnapshotUploadReply::decode(payload, &acknowledgement.input().reply).unwrap();
-    retain_reply(layout, sequence, acknowledgement);
-    let digest = reply.digest();
-    journal
-        .record_mutation(MutationReceiptRequest {
-            attempt: acknowledgement.input().mutation_attempt,
-            request: payload.binding_digest().hash().into(),
-            outcome: MutationOutcomeRecord::Applied,
-            evidence: digest.hash().into(),
-        })
-        .unwrap();
-    digest
 }
 fn retain_reply(
     layout: &BackupLayoutGuard,
@@ -148,18 +134,6 @@ fn allocation(
     plan["operations"].as_array_mut().unwrap().push(data);
     plan["budget"] = json!({"mutations":count+1,"observations":0});
     ExecutionWorkflowRecord::new(serde_json::from_value(plan).unwrap())
-}
-fn data_plan(backend: &Backend, payloads: &[IcSnapshotUploadRequest<'_>]) -> OperationPlanRecord {
-    let mut plan = serde_json::to_value(backend.plan(&payloads[0].binding_digest(), 0)).unwrap();
-    plan["graph"]["nodes"] = json!([]);
-    plan["operations"] = json!([]);
-    for (index, payload) in payloads.iter().enumerate() {
-        let sequence = u64::try_from(index).unwrap();
-        plan["graph"]["nodes"].as_array_mut().unwrap().push(json!({"operation_sequence":sequence,"depends_on":sequence.checked_sub(1).into_iter().collect::<Vec<_>>()}));
-        plan["operations"].as_array_mut().unwrap().push(json!({"operation_sequence":sequence,"target":payload.target(),"request":payload.binding_digest().hash(),"budget":{"mutations":1,"observations":0}}));
-    }
-    plan["budget"] = json!({"mutations":payloads.len(),"observations":0});
-    serde_json::from_value(plan).unwrap()
 }
 fn assert_failed(
     stage: ExecutionStageGuard<'_>,
@@ -258,7 +232,15 @@ pub(crate) fn run(failure: Failure) {
         .prepare_ic_snapshot_upload_metadata(&source_plan, "retained-original-snapshot", &metadata)
         .unwrap();
     let kinds = extents(&metadata);
-    let workflow = allocation(&backend, &upload, kinds.len());
+    let workflow = allocation(
+        &backend,
+        &upload,
+        if failure == Failure::DataAllowance {
+            1
+        } else {
+            kinds.len()
+        },
+    );
     let root = backend.root.join("original-upload-workflow");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -334,23 +316,27 @@ pub(crate) fn run(failure: Failure) {
         panic!("exact allocation reply")
     };
     // The fixture owns exact successful allocation ingress, not singleton-list attribution.
-    let payloads: Vec<_> = kinds
-        .iter()
-        .map(|kind| {
-            source_journal
-                .prepare_ic_snapshot_upload_data(
-                    &source_plan,
-                    "retained-original-snapshot",
-                    &upload,
-                    destination,
-                    kind.clone(),
-                )
-                .unwrap()
-        })
-        .collect();
+    let calls = provider.backend.calls;
+    let planned = source_journal.prepare_ic_snapshot_data_upload_plan(
+        &workflow,
+        7,
+        "retained-original-snapshot",
+        &reply,
+        1024 * 1024,
+    );
+    if failure == Failure::DataAllowance {
+        assert!(matches!(planned, Err(ic_backup::ops::persistence::IcSnapshotDataUploadPreparationError::Planning(ic_backup::model::ic_snapshot_upload::IcSnapshotDataUploadPlanningError::InsufficientAllowance { .. }))));
+        assert_eq!(provider.backend.calls, calls);
+        assert!(!layout.root().join("execution-stage-7").exists());
+        assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
+        return;
+    }
+    let data = planned.unwrap();
+    let binding = data
+        .bind(stage.binding(), stage.plan(), vec![predecessor])
+        .unwrap();
+    let plan = data.plan().unwrap().clone();
     drop(stage);
-    let plan = data_plan(provider.backend, &payloads);
-    let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![predecessor]).unwrap();
     let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
     stage
         .layout()
@@ -360,45 +346,90 @@ pub(crate) fn run(failure: Failure) {
             source_plan.digest().hash(),
         )
         .unwrap();
-    for (index, payload) in payloads.iter().enumerate() {
-        let sequence = u64::try_from(index).unwrap();
-        let result = upload_snapshot(&stage, sequence, payload, &mut provider, |request| {
+    let result = upload_snapshot_data(
+        &stage,
+        &data,
+        &source_journal,
+        "retained-original-snapshot",
+        &mut provider,
+        |request| {
             assert_eq!(request.payload().source_checksum(), &source.checksum);
             assert!(
                 matches!(request.payload().kind(), IcSnapshotUploadKind::Data { snapshot_id, .. } if snapshot_id == destination)
             );
             Ok::<_, Infallible>(())
-        });
-        if matches!(failure, Failure::DataLost | Failure::DataMalformed) {
-            assert_failed(stage, &layout, payload, sequence, &mut provider, result);
-            assert_eq!(provider.submitted.len(), 2);
-            assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
-            assert_eq!(
-                source_layout.restore_references().unwrap(),
-                original_references
+        },
+        |request, acknowledgement| {
+            retain_reply(
+                stage.layout().unwrap(),
+                request.authority().binding().operation_sequence(),
+                acknowledgement,
             );
-            return;
-        }
-        let acknowledgement = result.unwrap();
-        retain_applied(&stage, sequence, payload, &acknowledgement);
+            let admitted =
+                IcSnapshotUploadReply::decode(request.payload(), &acknowledgement.input().reply)
+                    .unwrap();
+            Ok(MutationReceiptRequest {
+                attempt: request.mutation_attempt(),
+                request: request.payload().binding_digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: admitted.digest().hash().into(),
+            })
+        },
+    );
+    if matches!(
+        failure,
+        Failure::DataLost
+            | Failure::DataMalformed
+            | Failure::DataLostSecond
+            | Failure::DataMalformedSecond
+    ) {
+        let pending = u64::from(matches!(
+            failure,
+            Failure::DataLostSecond | Failure::DataMalformedSecond
+        ));
+        assert_data_failed(
+            stage,
+            &layout,
+            &data,
+            &source_journal,
+            &mut provider,
+            pending,
+            result,
+        );
+        assert_eq!(
+            provider.submitted.len(),
+            usize::try_from(pending).unwrap() + 2
+        );
+        assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
+        assert_eq!(
+            source_layout.restore_references().unwrap(),
+            original_references
+        );
+        return;
     }
+    let checkpoint = result.unwrap();
+    assert_eq!(checkpoint.stage_sequence(), 7);
     assert_eq!(
         read_execution_progress(stage.layout().unwrap(), &stage.plan().digest())
             .unwrap()
             .applied_operations,
-        payloads.len()
+        data.kinds().len()
     );
     let calls = provider.backend.calls;
-    assert!(
-        upload_snapshot(
+    assert!(matches!(
+        upload_snapshot_data(
             &stage,
-            0,
-            &payloads[0],
+            &data,
+            &source_journal,
+            "retained-original-snapshot",
             &mut provider,
-            |_| -> Result<(), Infallible> { panic!("Applied cannot replay") }
-        )
-        .is_err()
-    );
+            |_| -> Result<(), Infallible> { panic!("Applied cannot replay") },
+            |_, _| -> Result<MutationReceiptRequest, Infallible> {
+                panic!("Applied cannot settle again")
+            }
+        ),
+        Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
+    ));
     assert_eq!(provider.backend.calls, calls);
     verify_destination(provider.backend, &metadata, destination, &source.chunks);
     assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
@@ -406,5 +437,73 @@ pub(crate) fn run(failure: Failure) {
         source_layout.restore_references().unwrap(),
         original_references
     );
-    assert_eq!(provider.submitted.len(), payloads.len() + 1);
+    assert_eq!(provider.submitted.len(), data.kinds().len() + 1);
+}
+
+fn assert_data_failed(
+    stage: ExecutionStageGuard<'_>,
+    workflow_layout: &BackupLayoutGuard,
+    data: &ic_backup::model::ic_snapshot_upload::IcSnapshotDataUploadPlan<'_, '_, '_>,
+    source: &DownloadJournalGuard<'_>,
+    provider: &mut Provider<'_>,
+    pending: u64,
+    result: Result<
+        ic_backup::model::execution_workflow::ExecutionStagePredecessorRecord,
+        IcSnapshotDataUploadExecutionError<Infallible>,
+    >,
+) {
+    match result {
+        Err(IcSnapshotDataUploadExecutionError::Upload(
+            IcSnapshotUploadExecutionError::Provider(IcMutationProviderError::Indeterminate),
+        )) => {}
+        Err(IcSnapshotDataUploadExecutionError::Upload(
+            IcSnapshotUploadExecutionError::Association {
+                acknowledgement, ..
+            },
+        )) => assert_eq!(acknowledgement.input().reply, [] as [u8; 0]),
+        _ => panic!("original data stage safe stop"),
+    }
+    let binding = stage.binding().clone();
+    let root = stage.layout().unwrap().root().to_path_buf();
+    let originals: Vec<_> = (0..data.kinds().len())
+        .map(|i| fs::read(root.join(format!("attempt-{i}.json"))).unwrap())
+        .collect();
+    let references = stage.layout().unwrap().restore_references().unwrap();
+    assert!(
+        stage
+            .checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
+            .is_err()
+    );
+    drop(stage);
+    let (stage, view) =
+        ExecutionStageGuard::resume(workflow_layout, binding.workflow(), 7, &binding.digest())
+            .unwrap();
+    assert_eq!(u64::from(view.attempts.mutations_used), pending + 1);
+    assert_eq!(u64::try_from(view.applied_operations).unwrap(), pending);
+    let calls = provider.backend.calls;
+    assert!(matches!(
+        upload_snapshot_data(
+            &stage,
+            data,
+            source,
+            "retained-original-snapshot",
+            provider,
+            |_| -> Result<(), Infallible> { panic!("pending cannot reissue") },
+            |_, _| -> Result<MutationReceiptRequest, Infallible> {
+                panic!("pending cannot settle without evidence")
+            }
+        ),
+        Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
+    ));
+    assert_eq!(provider.backend.calls, calls);
+    for (i, original) in originals.iter().enumerate() {
+        assert_eq!(
+            &fs::read(root.join(format!("attempt-{i}.json"))).unwrap(),
+            original
+        );
+    }
+    assert_eq!(
+        stage.layout().unwrap().restore_references().unwrap(),
+        references
+    );
 }

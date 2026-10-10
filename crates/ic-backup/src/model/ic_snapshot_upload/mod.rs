@@ -1,9 +1,11 @@
 //! Exact same-target snapshot upload codecs and passive original-reservation binding.
 
 mod attempt;
+mod plan;
 mod reply;
 pub(crate) use attempt::original_authority;
 pub use attempt::{IcSnapshotUploadAttempt, IcSnapshotUploadAttemptError};
+pub use plan::{IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError};
 pub use reply::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind};
 
 use super::{
