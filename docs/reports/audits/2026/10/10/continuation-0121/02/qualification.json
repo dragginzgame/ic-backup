@@ -1,0 +1,320 @@
+{
+  "base": "f1bba34b667a724274a65ac9653b4de88f30414f",
+  "draft": "0.12.1",
+  "recorded_at": "2026-10-10T08:08:51.895720+00:00",
+  "qualified_inputs": {
+    "Cargo.toml": "f8cad36071e7ef9dfc07e198fdaa620c9a9a4754b1320a80341fbc8b54127098",
+    "Cargo.lock": "c73ecc162cb2181fbebb2fc6b5c6807607e01e6190c1de9da31f5531fb4fa07f",
+    ".shared-tooling.snapshot": "dc2e26e37a533421da4c314b7088b5bc735d792b0a46e4c522a8c5ebd5709337",
+    "crates/ic-backup/src/workflow/mod.rs": "a5d8c9b9a35f4309a79b69561cba93d3fe8e6a02754941907bbd85b19c2f4c80",
+    "crates/ic-backup/src/workflow/ic_snapshot_upload/mod.rs": "c805646c49ad5523b92e871620898d0ddcad59deee6878c83bf183b0209d9b20",
+    "crates/ic-backup/src/workflow/ic_snapshot_upload/tests/mod.rs": "5d1ea97b8b79452e5b3fb383b414ba5389171aa1e32179350c3aec0ffd91487a",
+    "crates/ic-backup/tests/pic_journey/mod.rs": "3e176dea7fc85492b9ba524c73d8705a8eb9dd2c12dcb24e92d66446a62c93fe",
+    "crates/ic-backup/tests/pic_journey/planned_upload.rs": "acf85605a7114d4fa84bdacbdc5a14c751d83c8bbfe2acc607100d9f2b72815e",
+    "crates/ic-backup/tests/pocketic_snapshot.rs": "f1cdaea640b5194b0147d15b832309bb59544e15261f9b379b6d7d9c7144c6ca"
+  },
+  "selected_packages": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea",
+      "dependencies": [
+        "arc-swap",
+        "async-channel 2.5.0",
+        "async-lock",
+        "async-trait",
+        "async-watch",
+        "backon",
+        "bytes",
+        "cached",
+        "candid",
+        "ecdsa",
+        "ed25519-consensus",
+        "elliptic-curve",
+        "futures-util",
+        "hex",
+        "http",
+        "http-body",
+        "http-body-util",
+        "ic-certification",
+        "ic-ed25519",
+        "ic-transport-types",
+        "ic-verify-bls-signature",
+        "ic_principal",
+        "k256",
+        "leb128",
+        "p256",
+        "pkcs8",
+        "rand 0.10.3",
+        "rangemap",
+        "reqwest",
+        "sec1",
+        "serde",
+        "serde_bytes",
+        "serde_cbor",
+        "serde_repr",
+        "sha2 0.10.9",
+        "stop-token",
+        "thiserror 2.0.18",
+        "time",
+        "tokio",
+        "tower-service",
+        "url"
+      ]
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "a99e46f828ed6944bc398069ab557d1ccedf260a1974f4028418b4f4c9b66c04",
+      "dependencies": [
+        "flate2",
+        "sha2 0.10.9",
+        "tar",
+        "wasmparser"
+      ]
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "a8ad852553cd23ca1a509be2af9bc4d38a39663fe6af0aa6365250046f6f0b76",
+      "dependencies": [
+        "ic-host-artifacts",
+        "rustix"
+      ]
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c84291f0ff8e233b1e6a8b72089cae85083fcfdc94903fedd8e58c4de5a3124a",
+      "dependencies": [
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "libc",
+        "rustix"
+      ]
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "f2116ac49e1c94fc842241e380847f27dad27852d00b072f6e89dc417ef63589",
+      "dependencies": [
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "ic-host-process",
+        "serde",
+        "serde_json"
+      ]
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.3.6",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "84cfc0047aea1166444ad3f900fc1d78715dbb2a212db25f0032519492d084a7"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.28.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "74adf86b483fa901a646f62b9ddcccbb829914a652866ae705f160d529f70a2c",
+      "dependencies": [
+        "candid",
+        "fs2",
+        "ic-cdk",
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "ic-host-process",
+        "ic-host-tools",
+        "libc",
+        "pocket-ic",
+        "serde",
+        "serde_json",
+        "sha2 0.10.9",
+        "toml"
+      ]
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "85135917c845e8fc132f5eca3a0a8cbab696477a5fee3c2dda168a0797f81e1c",
+      "dependencies": [
+        "backon",
+        "base64 0.22.1",
+        "candid",
+        "flate2",
+        "hex",
+        "ic-certification",
+        "ic-management-canister-types 0.8.0",
+        "ic-transport-types",
+        "reqwest",
+        "schemars",
+        "semver",
+        "serde",
+        "serde_cbor",
+        "serde_json",
+        "sha2 0.10.9",
+        "slog",
+        "strum",
+        "strum_macros",
+        "tempfile",
+        "thiserror 2.0.18",
+        "tokio",
+        "tracing",
+        "tracing-appender",
+        "tracing-subscriber"
+      ]
+    }
+  ],
+  "shared_source": {
+    "revision": "43a0dc46cdc3c77e70a68e192561642ed50a3e0f",
+    "version": "0.2.10",
+    "files": 95
+  },
+  "testkit_published_revision": "ebbea97c90161eb03834b01a9fb0159aa0d99d89",
+  "checks": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib workflow::",
+      "path": "target/continuation-0121-upload/workflow-selected.log",
+      "sha256": "d125efb6d401329ce8ef8b5a65c2fe378a400d40cbd03146d6d71c4b4a7171cf",
+      "result": "pass: 66 cases"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_ -- --test-threads=1; earlier upload fixture reference rejected",
+      "path": "target/continuation-0121-upload/simulator-rejected-reference.log",
+      "sha256": "269f0bd1a896ad58322c372fe27b4228a20626a9a3a0b7a5584c2b861bca6a9b",
+      "result": "7 existing cases pass; 5 new cases rejected before upload"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_upload -- --test-threads=1 (local loopback enabled)",
+      "path": "target/continuation-0121-upload/upload-simulator-final.log",
+      "sha256": "8bd533bf77ae3518192ecd4a459446261711a31b3c30a50e0277c4a7162bd4c4",
+      "result": "pass: 5 corrected upload cases"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup --lib --tests -- -D warnings",
+      "path": "target/continuation-0121-upload/clippy-final.log",
+      "sha256": "da53175e9d24b066930e64e065ba5183b4d361891498255c1929b6bfc5d94c22",
+      "result": "pass"
+    },
+    {
+      "command": "RUSTDOCFLAGS=-D warnings cargo doc --offline --locked -p ic-backup --no-deps",
+      "path": "target/continuation-0121-upload/rustdoc.log",
+      "sha256": "2ebfe54dbbd3fe6e7033e10f3e753f795f121d264f7bec1676152fd3e56cc0c5",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "path": "target/continuation-0121-upload/msrv.log",
+      "sha256": "2c854545cd40d8587e71710306433141fb3ffa16fccfcb52e378ba382e5f41d9",
+      "result": "pass: two independent consumers"
+    },
+    {
+      "command": "CARGO_TARGET_DIR=$PWD/target cargo +1.88.0 check --offline --locked --manifest-path target/msrv-consumers.jAFGG2/ic-backup/Cargo.toml; explicit public upload API caller",
+      "path": "target/continuation-0121-upload/msrv-api.log",
+      "sha256": "17115a93ef99fbe85c18cbb42309fa7d5d70fb8a3ffd3999c2b3428bf519102d",
+      "result": "pass"
+    },
+    {
+      "command": "make install-testkit-server",
+      "path": "target/continuation-0121-upload/testkit-prepare.log",
+      "sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+      "result": "pass: exact locked Testkit 0.28.1 CLI prepared"
+    },
+    {
+      "command": "make testkit-server-check",
+      "path": "target/continuation-0121-upload/testkit-check.log",
+      "sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+      "result": "pass: offline admission"
+    },
+    {
+      "command": "make --no-print-directory fmt-check",
+      "path": "target/continuation-0121-upload/format-final.log",
+      "sha256": "2f9e2265171e67daa0fb224ac53f087df43b0e9e36778284a9791f72b0ad1c0e",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory shared-tooling-check",
+      "path": "target/continuation-0121-upload/snapshot-final.log",
+      "sha256": "c4626089079edfb9e2b96a3b8cd9540ee577b6afdbb74cab5177f4e0de084142",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory dependency-pins-check",
+      "path": "target/continuation-0121-upload/pins-final.log",
+      "sha256": "b7c15dc93d4daac99cce9897c633e95d06f224f84467cb93e56a96208d3d7ae5",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "path": "target/continuation-0121-upload/whitespace-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory check-doc-links",
+      "path": "target/continuation-0121-upload/doc-links-final.log",
+      "sha256": "9abd57ad606b4a172d78a6adaea2a95c48d42504e74a9fc6e8ed4f2008892b04",
+      "result": "pass"
+    }
+  ],
+  "earlier_rejected_checks": [
+    "target/continuation-0121-upload/workflow-initial.log",
+    "target/continuation-0121-upload/clippy-initial.log",
+    "target/continuation-0121-upload/simulator-initial.log",
+    "target/continuation-0121-upload/simulator-rejected-reference.log"
+  ],
+  "removed_rust_symbols": [],
+  "native_limit": "Local dirty 0.12.1/Testkit 0.28.1 graph qualified only on Linux. Hosted retry concerns released 0.12.0 separately.",
+  "ci_retries": {
+    "run": "https://github.com/dragginzgame/ic-backup/actions/runs/37969178975",
+    "source": "f1bba34b667a724274a65ac9653b4de88f30414f",
+    "jobs": [
+      {
+        "id": 114163705666,
+        "name": "library (macos-15-intel)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 114163706368,
+        "name": "library (macos-15)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 114163706620,
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "testkit_cli_selection": {
+    "package": "ic-testkit",
+    "version": "0.28.1",
+    "kind": "bin",
+    "target": "ic-testkit-server",
+    "profile": "release",
+    "host": "x86_64-unknown-linux-gnu",
+    "binary_sha256": "a67fb7cda478172b42b66f2541d56c1b905bc2a7b42c13556f5a4a7abbed82fc",
+    "receipt_sha256": "ea54e1ee5cd60cb3352fa22aa9019323d8e3c7e7328ac9065388b3abcb6e33b8"
+  },
+  "testkit_server": {
+    "path": ".tools/testkit-server/16.1.0-x86_64-linux/pocket-ic",
+    "sha256": "b44e1eccd66e02328146b3e209e3403e3a3428a25d25555aca2f67500e5ae9db"
+  },
+  "public_api_consumer_inputs": {
+    "target/msrv-consumers.jAFGG2/ic-backup/Cargo.toml": "c91375b4f52dfee229389098dadbdba173a4879e59157d871338d40049cfbb90",
+    "target/msrv-consumers.jAFGG2/ic-backup/Cargo.lock": "3c0d962fb8ca3552844d375e12a442a572deba0b0cd632606bc67e8f15312a9f",
+    "target/msrv-consumers.jAFGG2/ic-backup/src/main.rs": "c9b9b2fb57094b7c7875e4e466ec2cb394921fd89ce4947271c35e77266d8dd9"
+  },
+  "issue_updates": [
+    "https://github.com/dragginzgame/ic-backup/issues/29#issuecomment-6095549449",
+    "https://github.com/dragginzgame/ic-backup/issues/32#issuecomment-6095549740"
+  ]
+}

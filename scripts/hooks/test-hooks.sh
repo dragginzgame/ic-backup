@@ -26,7 +26,7 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 
 create_fixture() {
     mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks" "$FIXTURE/make"
-    cp "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
     cp "$ROOT/ci/tool-versions.env" "$FIXTURE/ci/"
     cp "$ROOT/.githooks/pre-commit" "$FIXTURE/.githooks/"
@@ -102,6 +102,44 @@ CARGO
     rg -q 'Error 13' rejection.log
 }
 
+test_formatting_output() {
+    make --no-print-directory fmt > write.log 2>&1
+    [[ "$(cat write.log)" == 'Formatting... ok' ]]
+    local before sources lock_before
+    before="$(index_fingerprint)"
+    sources="$(sources_fingerprint)"
+    printf 'unrelated retained lock\n' > Cargo.lock
+    lock_before="$(checksum Cargo.lock)"
+    make --no-print-directory fmt-check > check.log 2>&1
+    [[ "$(cat check.log)" == 'Checking formatting... ok' ]]
+    mkdir failing-bin diagnostics
+    export HOOK_TEST_REAL_CARGO
+    HOOK_TEST_REAL_CARGO="$(command -v cargo)"
+    cat > failing-bin/cargo <<'CARGO'
+#!/usr/bin/env bash
+if [[ "$*" == 'sort --workspace --check' ]]; then
+    echo 'sorter stdout diagnosis'
+    echo 'sorter stderr diagnosis' >&2
+    exit 17
+fi
+if [[ "$*" == 'fmt --all -- --check' ]]; then touch unexpected-rustfmt; fi
+exec "$HOOK_TEST_REAL_CARGO" "$@"
+CARGO
+    chmod +x failing-bin/cargo
+    if RUNNER_TEMP="$FIXTURE/diagnostics" make --no-print-directory fmt-check \
+        "FORMAT_CARGO=$FIXTURE/failing-bin/cargo" > failure.log 2>&1; then
+        echo 'expected formatting refusal' >&2; return 1
+    fi
+    rg -q 'Checking formatting\.\.\. FAILED \(exit 17\)' failure.log
+    rg -q 'Details: .*formatting\.' failure.log
+    local logs=(diagnostics/formatting.*)
+    [[ ${#logs[@]} == 1 && -s "${logs[0]}" && ! -e unexpected-rustfmt ]]
+    rg -q 'sorter stdout diagnosis' "${logs[0]}"
+    rg -q 'sorter stderr diagnosis' "${logs[0]}"
+    [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]]
+    [[ "$(checksum Cargo.lock)" == "$lock_before" ]]
+}
+
 test_checkout_local_tools() {
     local original_tool before sources
     original_tool="$(command -v cargo-sort)"
@@ -165,7 +203,7 @@ CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
 perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-artifacts\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
-formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh make/tools.mk make/rust-format.mk make/execution.mk)
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/tools.mk make/rust-format.mk make/execution.mk)
 while IFS= read -r -d '' path; do
     formatter_inputs[${#formatter_inputs[@]}]="$path"
 done < <(git -C "$ROOT" ls-files -z --cached --others --exclude-standard -- '*.rs')
@@ -174,5 +212,6 @@ bash "$ROOT/scripts/ci/check-formatting-hooks.sh" "$ROOT" \
     "$TEMPORARY/unsorted-Cargo.toml" "${formatter_inputs[@]}" > "$CASE_LOG" 2>&1
 
 run_case formatter-failure test_formatter_failure
+run_case formatting-output test_formatting_output
 run_case checkout-local-tools test_checkout_local_tools
 echo 'Hook tests: PASS (selected auto-formatting, index refresh, partial-stage rejection, unrelated edit preservation, formatter failure and local installation).'

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.1]
+
+- Coordinate one original metadata stage through a single read, independently
+  qualified receipt and exact learned-evidence checkpoint. Retain pending spending
+  and returned bytes on failure; adopt it in the real Testkit download caller
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Coordinate one original metadata/data upload under retained stages and fresh
+  admission. Keep acknowledgements pending and preserve replies/spending on failure;
+  qualify original allocation-to-data binding and lost/malformed replies in Testkit
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt committed Shared Tooling 0.2.10's concise formatting output, retaining
+  full failure logs in CI and preserving formatter order, hooks and release checks
+  ([#34](https://github.com/dragginzgame/ic-backup/issues/34)).
+
 ## [0.12.0] - 2026-10-09
 
 - **Breaking:** Upgrade direct Artifact/FS dependencies to Host 0.10.1.

@@ -23,9 +23,85 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-09
+# Current handoff — 2026-10-10
 
-## Current 0.12.0 direct Host upgrade
+## Current 0.12.1 upload continuation
+
+Continue the compatible 0.12.1 draft from released 0.12.0
+`f1bba34b667a724274a65ac9653b4de88f30414f`; package/receipt remain 0.12.0.
+`workflow::ic_snapshot_upload::upload_snapshot` now coordinates one exact original
+metadata allocation or data write: canonical source/context binding before spending,
+complete original reservation/prerequisites, mandatory fresh integration admission
+and one provider invocation under the selected journal lock. Re-admit stage/ancestors
+and bounded acknowledgement; success remains pending. Explicit independent receipt
+qualification, durable reply retention, destination/source custody and application
+safety remain integration-owned. No hidden observation, retry/refund, automatic
+allocation receipt, schema or terminal/fence/reference release is added.
+
+The actual isolated Testkit caller binds metadata allocation and all exact learned
+data requests within original workflow ceilings, retaining replies before explicit
+receipts. Complete destination byte checks and lost/malformed metadata/data safe
+stops across reopen pass. This is a public one-call owner plus qualified stage
+assembly fixture; generic upload/restore orchestration and application-qualified
+async Agent/product terminal custody remain incomplete under #29.
+
+Preserve the external Testkit 0.28.1 lock update and explicitly prepare its exact
+CLI; offline server admission passes. Host 0.10.1/Metrics 0.3.6/Agent 0.49.2 and
+Shared 0.2.10 (95 files) remain selected. All 66 workflow/stage unit cases, seven
+existing planned simulator cases and five corrected upload journeys pass on that
+graph, as do strict core tests Clippy/rustdoc, both independent Rust 1.88 consumers
+and a new public upload API caller. Formatting/snapshot/pins/links/whitespace pass.
+The [upload review](../reports/audits/2026/10/10/continuation-0121/02/report.md)
+retains final source/log evidence separately from preceding Testkit 0.28.0 proof.
+The fixture reference owner correctly rejected an initial directory-as-journal
+path before upload; failed logs/fixtures remain retained. No Rust symbol was removed.
+
+Released-source CI has Linux/Apple Silicon success; Intel macOS remains in progress
+in [the release run](https://github.com/dragginzgame/ic-backup/actions/runs/37969178975).
+Keep native acceptance open. The dirty candidate has no hosted result. No broad
+local gate, root Git write, release, production IC effect, sibling edit or recovery
+cleanup ran.
+
+## Prior 0.12.1 metadata-stage and formatting continuation
+
+Released 0.12.0 is `f1bba34b667a724274a65ac9653b4de88f30414f`.
+Select compatible 0.12.1 for the additive singleton metadata-stage coordinator and
+human formatting diagnostics. Package versions and release receipt remain 0.12.0.
+`workflow::ic_snapshot_metadata::read_snapshot_metadata` delegates one exact new
+read to original spending/fresh admission, requires integration-qualified durable
+original bytes and attribution before its explicit Applied receipt, then checkpoints
+exact metadata request/raw-reply evidence. Returned response/predecessor feeds the
+existing download-plan binding; data-stage/writer preparation stays explicit.
+Failures retain replies, spending and Applied/occupied checkpoint history. Pending
+or Applied reads never reissue. No new schema, default async Agent bridge or terminal/
+fence/reference release follows. The actual Testkit caller uses this owner, with
+lost/malformed metadata safe stops across reopen and no successor data stage.
+
+Canonically adopt committed Shared Tooling 0.2.10 at
+`43a0dc46cdc3c77e70a68e192561642ed50a3e0f` (95 files), selecting the formatting
+reporter explicitly. Success is one line; failures retain stdout/stderr/status and
+CI collection. Hook/release/Testkit fixtures include the helper; preserve prepared
+tools, Make admission/default help and the post-run release-resume check.
+
+All 58 workflow/stage unit cases, seven real planned simulator journeys, strict
+core tests Clippy/rustdoc, both independent Rust 1.88 consumers and a new API caller
+pass. Actual hooks/output/preservation, release adapters, Testkit routing, collector
+byte checks, formatting/snapshot/pins/links, ShellCheck and workflow lint pass.
+The [review](../reports/audits/2026/10/10/continuation-0121/01/report.md) retains
+source/log evidence and initial test-only Clippy failures. Preserve incoming Host
+0.10.1/Testkit 0.28.0/Metrics 0.3.6/Agent 0.49.2 and the already dirty cc/syn/smallvec
+lock changes; no dependency reselect or Rust symbol removal occurred.
+
+The authorized released-source CI retry passes Linux after the original installer
+HTTP 500; Apple Silicon also passes. Intel macOS has been retried and remains pending
+in [the release run](https://github.com/dragginzgame/ic-backup/actions/runs/37969178975).
+This qualifies released 0.12.0 separately from the uncommitted draft. Keep native
+acceptance open; next product work remains complete upload/restore orchestration,
+application-qualified async Agent integration and product terminal/custody proof.
+No broad local gate, root Git write, release, production IC effect, sibling edit or
+recovery cleanup ran.
+
+## Prior 0.12.0 direct Host upgrade
 
 Released base remains 0.11.5 at `6b5714aed1b3f69636b037fafebdee03b627a418`.
 Relabel the complete pending batch to 0.12.0: the requested direct Host 0.10

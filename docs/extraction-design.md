@@ -633,6 +633,19 @@ outcome. The real isolated download driver uses this step for metadata and every
 data request. Full backup/restore coordination, application admission and terminal
 proof remain incomplete; no default provider, permission or retry is installed.
 
+`workflow::ic_snapshot_metadata::read_snapshot_metadata` now joins a singleton
+original metadata stage to the existing single-read, explicit receipt and checkpoint
+owners. Mandatory integration qualification authenticates exact attribution and
+retains original request/reply bytes durably before returning an Applied receipt.
+Only then record the receipt and checkpoint the exact request/raw-metadata digest.
+Returned response/predecessor feed the existing metadata decoder and download-plan
+binding; successor stage/writer preparation stays explicit. Lost or rejected replies
+retain pending spending; receipt/checkpoint failures retain returned bytes and any
+already Applied history. Ordinary reopen or explicit checkpoint recovery never
+reissues the read. No new schema, byte store, allowance or default Agent provider
+is introduced. The actual stopped fixture uses the coordinator and qualifies lost/
+malformed metadata safe stops before a data stage is created.
+
 The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
 private exact region/chunk bytes, original raw metadata/request and incremental
 checksums. Before another append, every region name must still select its held
@@ -655,7 +668,7 @@ journal lock. Append accepted bytes before the sole journal owner records the re
 and admits dependent dispatch. Failure consumes the writer and preserves partial
 bytes, spending, recorded receipts and bounded returned response evidence. Finish
 through the existing checksum/durable publisher; manifest/checkpoint publication
-remains explicit. Metadata-stage preparation, authentic token/raw-ID association,
+remains explicit. Successor data-stage preparation, authentic token/raw-ID association,
 application admission and terminal/custody proof remain independent integration work.
 There is no partial-read resume or default Agent provider.
 
@@ -674,6 +687,21 @@ reply admission retains pending spending and proves no destination attribution o
 complete upload. Live transfer permissions, providers, original dispatch custody and
 lost-effect reconciliation remain integration work. See
 [the upload boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
+
+`workflow::ic_snapshot_upload::upload_snapshot` now joins exact original source/
+wire binding to retained stage/journal admission, durable reservation and one upload
+provider call under mandatory fresh integration admission. Controller, authentic
+complete source, new-destination attribution and never-dispatched stable custody
+remain integration-owned. Bounded associated acknowledgements remain pending until
+an independently qualified explicit receipt is retained. Stage/ancestor checks
+bracket dispatch; post-reply errors retain returned bytes. No automatic metadata
+allocation outcome, data plan, retry, load/start or terminal/release follows.
+The actual Testkit workflow retains one original allocation, checkpoints explicitly
+attributed metadata before learning data payloads, prepares complete data journals
+within its original ceiling and verifies the uploaded destination independently.
+Lost/malformed metadata creates no data stage; lost/malformed data stops without
+reissue and retains original source evidence/references. Full generic upload/restore
+orchestration and async Agent/application admission remain incomplete.
 
 Explicit local IC-tree verification and upload preparation now expose per-guard
 `ic-metrics` summaries and a bounded prepared-size histogram. Host durations use nanoseconds, successful prepared data uses

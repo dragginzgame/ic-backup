@@ -81,3 +81,38 @@ fn lost_metadata_read_reply_keeps_original_spending_and_stops_before_download() 
 fn lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload() {
     pic_journey::lost_transfer_read(true);
 }
+
+#[test]
+fn planned_metadata_lost_reply_retains_pending_without_data_stage_or_reissue() {
+    pic_journey::planned_download::metadata_failure(
+        pic_journey::planned_download::ReadFailure::Lost,
+    );
+}
+
+#[test]
+fn planned_metadata_malformed_reply_retains_bytes_without_data_stage_or_reissue() {
+    pic_journey::planned_download::metadata_failure(
+        pic_journey::planned_download::ReadFailure::Malformed,
+    );
+}
+
+#[test]
+fn planned_upload_uses_original_allocation_and_exact_data_stages() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::None);
+}
+#[test]
+fn planned_upload_lost_metadata_stops_without_data_stage_or_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::MetadataLost);
+}
+#[test]
+fn planned_upload_malformed_metadata_stops_without_data_stage_or_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::MetadataMalformed);
+}
+#[test]
+fn planned_upload_lost_data_retains_source_and_pending_without_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataLost);
+}
+#[test]
+fn planned_upload_malformed_data_retains_reply_source_and_pending_without_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataMalformed);
+}

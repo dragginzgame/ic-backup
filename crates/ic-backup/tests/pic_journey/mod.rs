@@ -2,6 +2,7 @@
 
 mod backend;
 pub(super) mod planned_download;
+pub(super) mod planned_upload;
 mod recovery;
 
 use backend::Backend;

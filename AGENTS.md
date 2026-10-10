@@ -61,8 +61,8 @@ into an issue tracker or release authority.
   The Host 0.5 error identity was delivered in 0.7.0. The externally selected
   Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
   Released 0.8.1 qualifies Host 0.7.1. Released 0.9.0 qualifies the Host 0.8
-  exposed Rust identity. Released 0.11.0 selects direct Host 0.9. The pending
-  0.12.0 draft selects direct Host 0.10 artifact/FS packages, changing that public
+  exposed Rust identity. Released 0.11.0 selects direct Host 0.9. Released
+  0.12.0 selects direct Host 0.10 artifact/FS packages, changing that public
   Rust identity again. Testkit 0.28 selects the same Host 0.10 test-only graph.
   No compatibility adapter or record change follows. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
@@ -296,6 +296,14 @@ into an issue tracker or release authority.
   durable publication, spending transition, upload/load/start permit or release
   admission. Integrations own stable noncooperating destination/byte custody.
 
+- Metadata-stage coordination now joins one exact singleton original metadata read
+  to mandatory integration-qualified byte retention/attribution, the sole receipt
+  owner and canonical all-Applied checkpoint. Learned evidence binds exact request/
+  raw metadata; successor plan/writer preparation stays explicit. Lost replies stay
+  pending; failed checkpoint publication retains Applied history and returned bytes.
+  Reopen/checkpoint recovery never reissues. No new schema, default Agent provider,
+  spending owner, terminal or fence/reference release follows.
+
 - The IC mutation port now binds exact existing capture/load/start/stop payloads to
   the full original plan, operation authority and already pending mutation. Preserve
   original allowances, the separate recovery-observation owner and existing codecs:
@@ -399,6 +407,14 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   attribution, original per-call dispatch, fresh controllers, complete transfer and
   restore/fence/load/start/terminal safety remain integration-owned. No upload provider,
   transport or runner is installed.
+
+- Upload coordination now binds exact source/upload context and payload before
+  durable original reservation, mandatory fresh admission and one provider call.
+  Retain stage/ancestor checks and bounded returned acknowledgements on rejection.
+  Success stays pending; independently qualified explicit receipts alone permit
+  successors. Actual source/controller/destination/byte/never-dispatched custody
+  remains integration-owned. Preserve original allowances/references and no batching,
+  retry, automatic allocation, default Agent bridge or terminal/release authority.
 
 - Local IC artifact diagnostics reuse registry `ic-metrics` arithmetic under a
   guard-local synchronized owner. Preserve explicit nanosecond/byte units, separate

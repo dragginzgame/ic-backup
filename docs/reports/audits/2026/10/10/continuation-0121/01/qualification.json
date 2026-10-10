@@ -1,0 +1,278 @@
+{
+  "base": "f1bba34b667a724274a65ac9653b4de88f30414f",
+  "draft": "0.12.1",
+  "recorded_at": "2026-10-10T07:36:51.434319+00:00",
+  "shared_source": {
+    "revision": "43a0dc46cdc3c77e70a68e192561642ed50a3e0f",
+    "version": "0.2.10",
+    "files": 95
+  },
+  "qualified_inputs": {
+    "Cargo.toml": "f8cad36071e7ef9dfc07e198fdaa620c9a9a4754b1320a80341fbc8b54127098",
+    "Cargo.lock": "c7c0fe1c0d632d0892341eaf4b4dbf4bfc049e054a4b3f31328e84dc2cfeecf7",
+    ".shared-tooling.snapshot": "dc2e26e37a533421da4c314b7088b5bc735d792b0a46e4c522a8c5ebd5709337",
+    "crates/ic-backup/src/workflow/mod.rs": "df4684d49416f8ecf96c508df8f802c6dc40b61e14b83081ba192579c51a0f98",
+    "crates/ic-backup/src/workflow/ic_snapshot_metadata/mod.rs": "7026738c7177c64db5debc028e92b66c285cfd166cd434c9551fb8224f66c599",
+    "crates/ic-backup/src/workflow/ic_snapshot_metadata/tests/mod.rs": "8bffbd347e9dc41a46c75ab1795094b01600929bf30a25ba3cb4ed9c322c1074",
+    "crates/ic-backup/tests/pic_journey/planned_download/mod.rs": "c06b0fdb84451d2948e978667c7457112e8e89b64e1b3821f3f5662cb3cb6a3d",
+    "crates/ic-backup/tests/pocketic_snapshot.rs": "40236c12683dfe3d0fd1aec736125105f724f709020fb246bc94ed2923042bff",
+    ".github/workflows/ci.yml": "31c14f66f73c8637f33affd88506db91782b148ddb98b3ed0b4ba6cf07cc884d",
+    "scripts/hooks/test-hooks.sh": "b021c277a1cf4f898c2f2192e0a1b1ca75be32497f6640d3e8847b9b9bfe78f9",
+    "scripts/release/test-release.sh": "6382b422b7355aa85f686b83b9b08863cececbad66f670da1f597653e2a6dee5",
+    "scripts/ci/test-testkit-commands.sh": "2e3f4d7996155f0856dded29e49a79389d9327725610d34cb097d692a6d4c8d9"
+  },
+  "selected_packages": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea",
+      "dependencies": [
+        "arc-swap",
+        "async-channel 2.5.0",
+        "async-lock",
+        "async-trait",
+        "async-watch",
+        "backon",
+        "bytes",
+        "cached",
+        "candid",
+        "ecdsa",
+        "ed25519-consensus",
+        "elliptic-curve",
+        "futures-util",
+        "hex",
+        "http",
+        "http-body",
+        "http-body-util",
+        "ic-certification",
+        "ic-ed25519",
+        "ic-transport-types",
+        "ic-verify-bls-signature",
+        "ic_principal",
+        "k256",
+        "leb128",
+        "p256",
+        "pkcs8",
+        "rand 0.10.3",
+        "rangemap",
+        "reqwest",
+        "sec1",
+        "serde",
+        "serde_bytes",
+        "serde_cbor",
+        "serde_repr",
+        "sha2 0.10.9",
+        "stop-token",
+        "thiserror 2.0.18",
+        "time",
+        "tokio",
+        "tower-service",
+        "url"
+      ]
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "a99e46f828ed6944bc398069ab557d1ccedf260a1974f4028418b4f4c9b66c04",
+      "dependencies": [
+        "flate2",
+        "sha2 0.10.9",
+        "tar",
+        "wasmparser"
+      ]
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "a8ad852553cd23ca1a509be2af9bc4d38a39663fe6af0aa6365250046f6f0b76",
+      "dependencies": [
+        "ic-host-artifacts",
+        "rustix"
+      ]
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c84291f0ff8e233b1e6a8b72089cae85083fcfdc94903fedd8e58c4de5a3124a",
+      "dependencies": [
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "libc",
+        "rustix"
+      ]
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.10.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "f2116ac49e1c94fc842241e380847f27dad27852d00b072f6e89dc417ef63589",
+      "dependencies": [
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "ic-host-process",
+        "serde",
+        "serde_json"
+      ]
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.3.6",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "84cfc0047aea1166444ad3f900fc1d78715dbb2a212db25f0032519492d084a7"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.28.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "22804b86dc1e51548dca32d8bc41d91877ba9bd3fca646ebd1c0952b633a4366",
+      "dependencies": [
+        "candid",
+        "fs2",
+        "ic-cdk",
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "ic-host-process",
+        "ic-host-tools",
+        "libc",
+        "pocket-ic",
+        "serde",
+        "serde_json",
+        "sha2 0.10.9",
+        "toml"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib workflow::",
+      "path": "target/continuation-0121/workflow-final.log",
+      "sha256": "c20911ec2897c9dd59f25f876ae1d51b98ae78d27ca2596022722bde6c96e2ca",
+      "result": "pass"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_ -- --test-threads=1 (local loopback enabled)",
+      "path": "target/continuation-0121/simulator.log",
+      "sha256": "a67c454ebc1643fb1deee2f554253b0d676e700dd2afad1796cd2fa950a50131",
+      "result": "pass"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup --lib --tests -- -D warnings",
+      "path": "target/continuation-0121/clippy-complete.log",
+      "sha256": "57857e502b44468305d1a21faa10855bff6744bf2a992d043253b25be545b3a4",
+      "result": "pass"
+    },
+    {
+      "command": "RUSTDOCFLAGS=-D warnings cargo doc --offline --locked -p ic-backup --no-deps",
+      "path": "target/continuation-0121/rustdoc.log",
+      "sha256": "06a1888d563dc0931c7dfb29334cb1db38ac63b0222a2c4d3ac1def9d3fc3f78",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "path": "target/continuation-0121/msrv.log",
+      "sha256": "f614db2499886c49d16ec53222c1e155f7dca1fb6f045e0d97f9f9ad38785e71",
+      "result": "pass"
+    },
+    {
+      "command": "cargo +1.88.0 check --offline --locked --manifest-path target/msrv-consumers.PHlDqD/ic-backup/Cargo.toml (independent public API caller)",
+      "path": "target/continuation-0121/msrv-api.log",
+      "sha256": "51df1079a8cdf7e2ab7d5b76da6081583c44d8f9066676f84e403bc8b6bcda34",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/hooks/test-hooks.sh",
+      "path": "target/continuation-0121/hooks.log",
+      "sha256": "639444a1bb73e9f997930044d68ccbb26f985181ab4eecd71d7b1f1068140e84",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/ci/test-testkit-commands.sh",
+      "path": "target/continuation-0121/testkit-routing.log",
+      "sha256": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/release/test-release.sh",
+      "path": "target/continuation-0121/release-adapters.log",
+      "sha256": "48f48f5a5fc4881255d5fd5a913eb89972410bff8518ea95bf0747445de21073",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory fmt-check",
+      "path": "target/continuation-0121/format-check.log",
+      "sha256": "2f9e2265171e67daa0fb224ac53f087df43b0e9e36778284a9791f72b0ad1c0e",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory shared-tooling-check",
+      "path": "target/continuation-0121/snapshot.log",
+      "sha256": "c4626089079edfb9e2b96a3b8cd9540ee577b6afdbb74cab5177f4e0de084142",
+      "result": "pass"
+    },
+    {
+      "command": "shellcheck scripts/hooks/test-hooks.sh scripts/release/test-release.sh scripts/ci/test-testkit-commands.sh scripts/ci/run-formatting.sh",
+      "path": "target/continuation-0121/shellcheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "pass"
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "path": "target/continuation-0121/actionlint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "pass"
+    },
+    {
+      "command": "Execute exact consumer CI collector in retained isolated fixture; compare archived formatting stdout/stderr and existing validation bytes",
+      "path": "target/continuation-0121/collector.log",
+      "sha256": "6438c85b229fe04df2650b8e09710fa85299999973993d66d3e53b9dc8cd5af8",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory dependency-pins-check",
+      "path": "target/continuation-0121/dependency-pins.log",
+      "sha256": "b7c15dc93d4daac99cce9897c633e95d06f224f84467cb93e56a96208d3d7ae5",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory check-doc-links",
+      "path": "target/continuation-0121/doc-links.log",
+      "sha256": "9e324b0381120ef36ddf88bd05022d7dd2a399a0247eb5da3ef6c336d1a30d84",
+      "result": "pass"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib download_journal::metrics",
+      "path": "target/continuation-0121/metrics.log",
+      "sha256": "689a41fd8060220b0eec52a27b8c2b5cc04ac3412cc106c4ca44cf765c83529a",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory check-doc-links (complete final docs)",
+      "path": "target/continuation-0121/doc-links-final.log",
+      "sha256": "7b9279b23c6e22cce9cbd4854702e5a84036990f693de32fe5d96b4eeb13799a",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory fmt-check (final source)",
+      "path": "target/continuation-0121/format-final.log",
+      "sha256": "2f9e2265171e67daa0fb224ac53f087df43b0e9e36778284a9791f72b0ad1c0e",
+      "result": "pass"
+    }
+  ],
+  "earlier_rejected_checks": [
+    "target/continuation-0121/clippy-initial.log"
+  ],
+  "removed_rust_symbols": [],
+  "native_limit": "Local dirty draft is qualified only on Linux. Hosted retries test released 0.12.0 separately.",
+  "ci_retries": {
+    "run": "https://github.com/dragginzgame/ic-backup/actions/runs/37969178975",
+    "source": "f1bba34b667a724274a65ac9653b4de88f30414f",
+    "linux": "success on authorized retry",
+    "arm_macos": "success retained",
+    "intel_macos": "authorized retry accepted; final result pending",
+    "latest_observation": "2026-10-10T07:38:19.027611+00:00"
+  }
+}

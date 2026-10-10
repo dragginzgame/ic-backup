@@ -49,7 +49,21 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 94-file snapshot selects committed Shared Tooling 0.2.8 at
+The current 95-file snapshot selects committed Shared Tooling 0.2.10 at
+`43a0dc46cdc3c77e70a68e192561642ed50a3e0f`. Canonical refresh adds the explicitly
+selected `scripts/ci/run-formatting.sh` companion and records the source version.
+The existing formatting include prints one success line and retains complete
+stdout/stderr on failure, with unchanged status, order and prepared-tool admission.
+Local hook/release/Testkit fixtures include the helper; the consumer CI collector
+retains its `formatting.*` logs from RUNNER_TEMP and TMPDIR. Preserve default help,
+Make execution admission and the specialized post-run release-resume check.
+The reviewed snapshot also refreshes shared evidence/guidance without selecting
+an unused registry observer or changing tool pins. Detailed qualification is in
+[the continuation review](reports/audits/2026/10/10/continuation-0121/01/report.md).
+
+### Prior Shared Tooling 0.2.8 review
+
+The prior 94-file snapshot selects committed Shared Tooling 0.2.8 at
 `b2646cde9abbc8861857a4379c683a0c19eba43e`. Canonical refresh from a clean
 isolated checkout adds the declared `make/execution.mk` companion and refreshes
 hook adoption and release guidance. The parse-time owner rejects Make modes that

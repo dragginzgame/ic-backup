@@ -92,6 +92,13 @@ jobs:
               inputs+=("$GITHUB_WORKSPACE" "$path")
             fi
           done
+          for root in "$RUNNER_TEMP" "$TMPDIR"; do
+            for path in "$root"/formatting.*; do
+              if [[ -e "$path" || -L "$path" ]]; then
+                inputs+=("$root" "${path#"$root/"}")
+              fi
+            done
+          done
           if [[ ${#inputs[@]} != 0 ]]; then
             archive="$(mktemp -d "$RUNNER_TEMP/ic-backup-evidence.XXXXXX")/evidence.tar.gz"
             bash scripts/ci/archive-evidence.sh "$archive" "${inputs[@]}"

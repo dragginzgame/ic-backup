@@ -2526,6 +2526,32 @@ restore safety, stable custody and terminal/fence/reference release. See
 [#29](https://github.com/dragginzgame/ic-backup/issues/29) and the
 [port contract](contracts/ic-snapshot-transfer-read-port.json).
 
+### Original metadata-stage coordination
+
+`workflow::ic_snapshot_metadata::read_snapshot_metadata` accepts exactly one
+original metadata operation under its retained stage. Reuse `read_snapshot` for
+complete original-journal admission, durable reservation, fresh integration admission
+and one provider call. Reopen the selected journal, re-admit the bounded response,
+then require an independently qualified exact Applied receipt. Qualification owns
+actual authentication/attribution and durable retention of original request/reply
+bytes before returning; no default callback or new byte store is installed.
+
+Check stage/ancestor identity before recording the receipt through the sole attempt
+owner. Release its lock before canonical all-Applied checkpoint publication, binding
+the exact metadata request/raw-reply digest as learned evidence. Return original
+response/predecessor for existing metadata decoding and `IcSnapshotDownloadPlan::bind`.
+Data-stage preparation, generic token/raw-ID association and writer creation stay
+explicit; no metadata-derived permission, data call or automatic artifact appears.
+
+Lost/malformed replies remain pending and block successors. Qualification or receipt
+rejection retains exact returned bytes and consumption. Checkpoint failure may follow
+an Applied receipt; retain it and any occupied checkpoint. Resume and explicit
+checkpoint recovery reuse exact originals and never repeat the metadata update.
+Existing bounds, v1 records, spending, references and obligations remain unchanged.
+The actual Testkit download fixture now uses the coordinator, including lost/malformed
+metadata cases with no data stage or reissue. This qualifies the isolated application,
+not installed async Agent wiring, full runners, terminal proof or fence/reference release.
+
 ### Complete original snapshot data transfer
 
 `workflow::ic_snapshot_download::download_snapshot` joins a nonempty exact
@@ -2561,6 +2587,39 @@ metadata/intent/coverage and stage/byte custody. These qualify the stopped fixtu
 not arbitrary application consistency, stable noncooperating byte custody, complete
 product manifests, full Agent/backup/restore orchestration or terminal/fence/reference
 release. [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open.
+
+### Original snapshot upload coordination
+
+`workflow::ic_snapshot_upload::upload_snapshot` admits exact canonical source/upload
+context and payload binding before spending. Open the existing journal, reserve
+through complete original-plan admission and hold the selected lock through fresh
+integration admission, one provider call and passive bounded reply checks. Re-admit
+stage and ancestors before and after dispatch. Missing, pending, Applied, exhausted
+or prerequisite-incomplete originals grant no new call. Source network/release and
+payload mismatch reject before reservation; later failures retain original spending.
+
+The mandatory integration callback qualifies fresh actual controller/application
+permissions, authentic complete source, independently attributed new destination,
+stable bytes and exclusive never-dispatched command custody. Guarded source/payload
+preparation precedes retained upload intent; pure declarations or reconstructed
+attempts provide no such authority. Each metadata/data update remains independently
+accounted, without replacement/deletion, batching, hidden observations or retries.
+
+Success retains pending spending. Returned metadata IDs and canonical empty data
+acknowledgements never create automatic outcomes, learned data authority or complete
+transfer. The existing explicit receipt owner alone records qualified evidence.
+Association and post-reply errors retain exact bounded acknowledgements. No new
+record, allowance, source reference disposition, default Agent bridge, load/start
+permit, terminal proof or fence/reference release appears.
+
+The actual isolated Testkit caller retains original metadata/data stage ceilings,
+explicitly attributes and checkpoints metadata, binds every later data payload before
+stage preparation, then uses the coordinator for each exact original upload. Independent
+destination verification compares all metadata and complete source bytes. Lost/malformed
+metadata cannot create a data stage; lost/malformed data retains source records and
+references across reopen without repetition. These are fixture qualifications, not
+a generic complete upload/restore runner. Keep full application/async Agent/terminal
+custody work in [#29](https://github.com/dragginzgame/ic-backup/issues/29).
 
 ### Original execution settlement checkpoints
 

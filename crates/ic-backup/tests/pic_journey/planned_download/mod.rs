@@ -25,7 +25,6 @@ use ic_backup::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
         create_execution_workflow, read_execution_progress,
     },
-    policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, validate_response},
     ports::{
         ic_mutation::{IcMutationProvider, IcMutationProviderError},
         ic_observation::IcObservationProviderError,
@@ -34,12 +33,13 @@ use ic_backup::{
     workflow::{
         ic_snapshot_capture::{IcSnapshotCaptureExecutionError, capture_snapshot},
         ic_snapshot_download::{IcSnapshotDownloadExecutionError, download_snapshot},
+        ic_snapshot_metadata::{IcSnapshotMetadataExecutionError, read_snapshot_metadata},
         ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
     },
 };
 use ic_management_canister_types::CanisterStatusType;
 use serde_json::json;
-use std::{convert::Infallible, fs, os::unix::fs::DirBuilderExt, path::Path};
+use std::{convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt, path::Path};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum ReadFailure {
@@ -106,6 +106,7 @@ struct ReadProvider<'a> {
     failure: ReadFailure,
     oracle: &'a Path,
     calls: usize,
+    fail_at: usize,
 }
 impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
     fn read_snapshot(
@@ -115,7 +116,7 @@ impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
         let index = self.calls;
         self.calls += 1;
         let response = self.backend.read_snapshot(request)?;
-        if self.failure == ReadFailure::None || index != 1 {
+        if self.failure == ReadFailure::None || index != self.fail_at {
             return Ok(response);
         }
         // Retained fixture oracle is never outcome/retry evidence for the workflow.
@@ -313,49 +314,42 @@ pub(crate) fn run(failure: ReadFailure) {
     // The fixture owns this stopped, isolated target and the actual original ID.
     // This explicit admission is fixture qualification, never a library default.
     let context = metadata_plan.context().clone();
-    let response = read_snapshot(
+    let (response, original) = read_snapshot_metadata(
         &metadata_stage,
         7,
-        IcSnapshotTransferReadPayload::Metadata(&metadata_request),
+        &metadata_request,
         &mut backend,
         |request| {
             assert_eq!(request.plan().context(), &context);
             assert_eq!(request.payload().digest(), metadata_request.digest());
             Ok::<(), Infallible>(())
         },
+        |request, response| {
+            // Actual isolated ingress attribution and durable original byte custody
+            // are fixture-owned qualification, never inferred from metadata shape.
+            let path = metadata_stage
+                .layout()
+                .unwrap()
+                .root()
+                .join("metadata.candid");
+            let file = fs::File::create(path).unwrap();
+            (&file).write_all(&response.input().reply).unwrap();
+            file.sync_all().unwrap();
+            fs::File::open(metadata_stage.layout().unwrap().root())
+                .unwrap()
+                .sync_all()
+                .unwrap();
+            Ok::<_, Infallible>(MutationReceiptRequest {
+                attempt: request.mutation_attempt(),
+                request: request.payload().digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: response.input().evidence.hash().into(),
+            })
+        },
     )
     .unwrap();
-    let mut journal = AttemptJournalGuard::open(
-        metadata_stage.layout().unwrap(),
-        &metadata_plan.attempt_authority(7).unwrap(),
-    )
-    .unwrap();
-    let request = IcSnapshotTransferReadRequest::new(
-        &metadata_plan,
-        7,
-        journal.record().unwrap(),
-        IcSnapshotTransferReadPayload::Metadata(&metadata_request),
-    )
-    .unwrap();
-    let admitted = validate_response(&request, journal.record().unwrap(), &response).unwrap();
-    assert!(matches!(
-        admitted.reply(),
-        IcSnapshotTransferReadReply::Metadata(_)
-    ));
     let raw_metadata = &response.input().reply;
-    fs::write(
-        metadata_stage
-            .layout()
-            .unwrap()
-            .root()
-            .join("metadata.candid"),
-        raw_metadata,
-    )
-    .unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, raw_metadata).unwrap();
-    record_applied(&mut journal, &metadata.digest());
-    drop(journal);
-    let original = metadata_stage.checkpoint(metadata.digest()).unwrap();
     drop(metadata_stage);
     let download = IcSnapshotDownloadPlan::new(&workflow, 9, &metadata, 32 * 1024).unwrap();
     let binding = download
@@ -398,6 +392,7 @@ pub(crate) fn run(failure: ReadFailure) {
         failure,
         oracle: &oracle,
         calls: 0,
+        fail_at: 1,
     };
     let result = download_snapshot(
         &stage,
@@ -524,4 +519,97 @@ pub(crate) fn run(failure: ReadFailure) {
         references
     );
     assert_eq!(backend.calls, calls);
+}
+
+pub(crate) fn metadata_failure(failure: ReadFailure) {
+    assert!(failure != ReadFailure::None);
+    let (mut backend, layout, workflow) = prepare();
+    let (snapshot, capture) =
+        capture(&mut backend, &layout, &workflow, CaptureFailure::None).unwrap();
+    let payload = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
+    let plan = backend.plan(&payload.digest(), 7);
+    let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![capture]).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan.clone()).unwrap();
+    stage
+        .layout()
+        .unwrap()
+        .retain_restore(
+            &backend.root.join("unfinished-metadata-reference.json"),
+            plan.digest().hash(),
+        )
+        .unwrap();
+    let references = stage.layout().unwrap().restore_references().unwrap();
+    let oracle = stage
+        .layout()
+        .unwrap()
+        .root()
+        .join("discarded-metadata-oracle.candid");
+    let calls = backend.calls;
+    let mut provider = ReadProvider {
+        backend: &mut backend,
+        failure,
+        oracle: &oracle,
+        calls: 0,
+        fail_at: 0,
+    };
+    let result = read_snapshot_metadata(
+        &stage,
+        7,
+        &payload,
+        &mut provider,
+        |_| Ok::<_, Infallible>(()),
+        |_, _| -> Result<_, Infallible> { panic!("lost/malformed metadata cannot qualify") },
+    );
+    if failure == ReadFailure::Lost {
+        assert!(matches!(
+            result,
+            Err(IcSnapshotMetadataExecutionError::Read(
+                IcSnapshotTransferReadExecutionError::Provider(
+                    IcObservationProviderError::Indeterminate
+                )
+            ))
+        ));
+    } else {
+        let Err(IcSnapshotMetadataExecutionError::Read(
+            IcSnapshotTransferReadExecutionError::Association { response, .. },
+        )) = result
+        else {
+            panic!("retain malformed metadata")
+        };
+        assert_eq!(response.input().reply, [] as [u8; 0]);
+    }
+    assert_eq!(provider.calls, 1);
+    assert_eq!(provider.backend.calls, calls + 1);
+    let original = fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap();
+    assert!(
+        stage
+            .checkpoint(ArtifactChecksumRecord::from_bytes(b"no metadata outcome"))
+            .is_err()
+    );
+    drop(stage);
+    let (stage, progress) =
+        ExecutionStageGuard::resume(&layout, &workflow.digest(), 7, &binding.digest()).unwrap();
+    assert_eq!(progress.attempts.mutations_used, 1);
+    assert_eq!(progress.applied_operations, 0);
+    assert!(
+        read_snapshot_metadata(
+            &stage,
+            7,
+            &payload,
+            &mut provider,
+            |_| -> Result<(), Infallible> { panic!("pending read never admitted") },
+            |_, _| -> Result<_, Infallible> { panic!("no reissue") }
+        )
+        .is_err()
+    );
+    assert_eq!(provider.calls, 1);
+    assert_eq!(
+        fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap(),
+        original
+    );
+    assert_eq!(
+        stage.layout().unwrap().restore_references().unwrap(),
+        references
+    );
+    assert!(!layout.root().join("execution-stage-9").exists());
 }
