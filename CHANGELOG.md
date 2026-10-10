@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.15.0]
+## [0.15.0] - 2026-10-10
 
 - **Breaking:** Make `IcMutationProvider` and the capture/load/start coordinators
   async. Await the coordinators, supply async admission/qualification callbacks,
