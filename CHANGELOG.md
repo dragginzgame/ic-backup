@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.16.0]
+## [0.16.0] - 2026-10-10
 
 - **Breaking:** Await snapshot transfer providers and read/metadata/download
   coordinators, with async fresh admission and independent qualification under
