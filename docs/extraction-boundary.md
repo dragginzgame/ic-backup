@@ -2676,6 +2676,42 @@ fence/reference-release authority. The isolated Testkit caller delegates complet
 data assembly and independently verifies destination bytes; second-write lost or
 malformed replies and insufficient original allocation qualify bounded stopping.
 
+### Original same-ID load/start coordination
+
+`workflow::ic_snapshot_restore::restore_snapshot` coordinates one exact singleton
+load/start stage under the original workflow, complete journal set and source plan.
+The caller constructs an exact challenge-bound `RestoreSafetyRequest`; both layouts
+must retain the original source/restore plans and immutable requirement. Read that
+requirement before spending and recheck it across admission, dispatch and settlement.
+Missing evidence supplies no default safety lane or source reconstruction.
+
+The existing plan-bound journal owns durable reservation. Mandatory fresh admission
+qualifies actual authentication, controllers and snapshot-origin permissions,
+complete uploaded-source association, byte/command custody and proof of no prior
+dispatch. Returned actual evidence passes the existing restore-safety policy before
+one provider invocation: load needs all selected targets stopped; start additionally
+needs every selected restored state accepted and controlled execution when fenced.
+Preflight/qualification calls need independently reserved spending; descriptive
+ceilings never account calls. Opaque evidence remains application-qualified.
+
+Under the selected journal lock, passive bounded association precedes mandatory
+independent authentication/attribution and durable original request/reply retention.
+Require the exact explicit Applied receipt, then use the sole journal owner.
+Release the journal lock before the existing all-Applied checkpoint. Learned evidence
+is the existing canonical lifecycle request/raw-reply digest; no schema or digest
+owner changes. A load receipt does not prove application acceptance before start.
+
+Pending/Applied reentry never invokes fresh callbacks or providers again. Lost or
+malformed replies, safety/qualification/receipt failures, changed originals and
+occupied checkpoints retain spending, returned bounded evidence, source references
+and obligations. Recovery uses retained evidence without another load/start. The
+real Testkit caller now joins complete upload, load, independently verified stopped
+restored bytes, and start with an explicit dependency even when numeric sequences
+run in reverse order. Lost/malformed load stops before creating start; lost/malformed
+start retains its pending original. This qualifies an isolated fixture, not a default
+application lane, async Agent bridge, full restore runner, terminal/fence/reference
+release or prune. Existing uncertain-effect reconciliation remains maintained.
+
 ### Original execution settlement checkpoints
 
 `model::execution_settlement::ExecutionSettlementRecord` is the immutable v1 local

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.14.2]
+
+- Coordinate original same-ID load/start stages with fresh application safety,
+  independently qualified receipts and retained source requirements. Lost or
+  malformed replies stop without restart/reissue or reference release
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.3.3: reject malformed validation nesting depth before
+  dispatch and fail premature runner exits while retaining available evidence
+  ([shared #104](https://github.com/dragginzgame/shared-tooling/issues/104)).
+  Isolate consumer fixture logging from outer validation and require completed
+  fixture execution before reporting success or removing evidence
+  ([shared #105](https://github.com/dragginzgame/shared-tooling/issues/105)).
+- Qualify Host 0.12.4, Testkit 0.32.2 and Metrics 0.5.3, prepare the exact selected
+  Testkit CLI, and preserve Cargo jobserver access in local dependency discovery.
+  Published Rust behavior and persisted product records are unchanged.
+
 ## [0.14.1] - 2026-10-10
 
 - Plan and coordinate a complete original snapshot data-upload stage, buffering

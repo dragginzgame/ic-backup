@@ -64,10 +64,12 @@ into an issue tracker or release authority.
   exposed Rust identity. Released 0.11.0 selects direct Host 0.9. Released
   0.12.0 selects direct Host 0.10 artifact/FS packages. Released 0.13.0 selects
   direct Host 0.11, changing that public Rust identity again; consumers sharing
-  publication errors must align Host 0.11. Pending 0.14.0 selects direct Host
+  publication errors must align Host 0.11. Released 0.14.0 selects direct Host
   Artifact/FS 0.12, changing that public Rust identity without a library behavior
   or record change. Consumers sharing publication errors must align Host 0.12.
-  Testkit 0.31 retains its independently owned test-only Host 0.11 graph.
+  Released 0.14.1 selects Testkit 0.32 and aligns its test-only Host graph with
+  direct Host 0.12. The pending compatible batch qualifies Host 0.12.4 and
+  Testkit 0.32.2 without changing published Rust behavior or product records.
   No compatibility adapter or record change follows. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
   server owner does not grant backup command custody or spending authority.
@@ -731,6 +733,18 @@ was recorded. Linking provenance or describing implementation status is allowed.
   and occupied checkpoints remain. Final ordered reply evidence uses the existing
   all-Applied checkpoint, not backend completeness, partial-upload resume, load/start,
   terminal or fence/reference release authority. No new record/provider is installed.
+
+Original singleton load/start coordination rechecks the retained source plan and
+exact safety requirement under both layouts before spending and across effects.
+Mandatory fresh integration admission returns actual evidence to the existing
+restore-safety policy before exactly one update. Independent authentication,
+exclusive attribution and durable original request/reply retention precede the
+explicit exact Applied receipt. Checkpoint only after journal-lock release; a
+load receipt never supplies later restored-state acceptance. Pending/Applied
+reentry, lost/malformed replies, qualification or checkpoint failures retain
+spending, bounded returned bytes, source references and obligations. No default
+safety lane, hidden observations/reissue, new schema, full runner or terminal/
+fence/reference release is introduced.
 
 ## Qualified dependency constraints
 

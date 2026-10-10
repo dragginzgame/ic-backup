@@ -39,6 +39,10 @@ pub(crate) enum Failure {
     DataLostSecond,
     DataMalformedSecond,
     DataAllowance,
+    LoadLost,
+    LoadMalformed,
+    StartLost,
+    StartMalformed,
 }
 struct Provider<'a> {
     backend: &'a mut Backend,
@@ -438,6 +442,17 @@ pub(crate) fn run(failure: Failure) {
         original_references
     );
     assert_eq!(provider.submitted.len(), data.kinds().len() + 1);
+    drop(stage);
+    super::planned_restore::run(
+        provider.backend,
+        &source_plan,
+        &source_layout,
+        &source_journal,
+        &metadata,
+        destination,
+        &source,
+        failure,
+    );
 }
 
 fn assert_data_failed(

@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.3.2
+# version	0.3.3
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	c16444bf006f17c5bb4dda5ad070a0f345da9623
+revision	d63f0cfaba8ab2961d6012064adbf051c1898bc1
 file	96082282847ad61680223226755ff5cc21582e0749eccb191db8a0417b84ca10	-	docs/verification-helpers.md
 file	a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7	x	scripts/ci/check-documentation-links.pl
 file	7ccdd181e517e563e8541b341c1313fa5e25094ee45f8fee81843471a65893bd	x	scripts/ci/test-documentation-links.pl
@@ -36,8 +36,8 @@ file	a825ee270d5a9adefa7fec56e9c506ba2a62a7dd021c6e55b3590d8632a953c8	-	docs/con
 file	a88c7fc0977a47d28c1a66d66ee8b976f7b0ece0225da01a64fc8dce813187dd	-	docs/supported-hosts.md
 file	4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708	x	scripts/ci/verify-file-checksum.sh
 file	71d1c69a25f190bc4b2b1df66d3359f172638371caa722142e820a8294d1938e	x	scripts/ci/verify-shared-tooling-snapshot.sh
-file	49ec78ab63a587a2f74f0f7da3e06d9f9942f831129b9201cba5bcd0698548fe	x	scripts/ci/run-validation-targets.sh
-file	e0806995c9eb111179298dba66706e3625792126b1569ecc5df6a037b363c85c	x	scripts/ci/test-validation-target-runner.sh
+file	8063c47b5249ec6d20680485026f6f77df7d48e2645343b8cbd5ef6d09a9c542	x	scripts/ci/run-validation-targets.sh
+file	995a245f93c023a0b45bbec99134517bf99559be6fcead2737f7f757e81bee17	x	scripts/ci/test-validation-target-runner.sh
 file	e5d128419ea122da0d5654fa4c9f7ba772b12a3e104ad9796c38da856b52df78	-	DRAGGINZGAME.md
 file	b5a6e8fb723a861b722834675e27b4b16f3d296112622c1b40cdc8714f575404	-	rules/changelogs.md
 file	7162b12e73d3b89a604fc1a4963245454c61ca3b8568d7b879d0c18693be6c0b	-	docs/releases.md

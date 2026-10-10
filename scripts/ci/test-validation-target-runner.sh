@@ -62,6 +62,81 @@ printf '%s\n' \
     $'\t@echo "test error::tests::actual ... FAILED"' \
     $'\t@exit 13' >"$FIXTURE/Makefile"
 
+# Reject malformed inherited depth before creating logs or dispatching targets.
+# Read the child value through Make to prove increment and ordinary completion.
+cat >> "$FIXTURE/Makefile" <<'MAKE'
+depth:
+	@printf '%s\n' "$$VALIDATION_RUNNER_DEPTH" >> dispatched
+MAKE
+for depth in '' 0 1 8 999999999999999999; do
+    mkdir -p "$FIXTURE/depth-tmp"
+    : > "$FIXTURE/dispatched"
+    VALIDATION_RUNNER_DEPTH="$depth" VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+        TMPDIR="$FIXTURE/depth-tmp" bash "$FIXTURE/scripts/ci/run-validation-targets.sh" depth \
+        > "$FIXTURE/depth-valid.log" 2>&1
+    [[ "$(cat "$FIXTURE/dispatched")" == "$((${depth:-0} + 1))" ]]
+    rg -F 'VALIDATION PASSED:' "$FIXTURE/depth-valid.log" >/dev/null
+    # Successful wrapper and body cleanup removes only their owned scratch.
+    for entry in "$FIXTURE/depth-tmp/"*; do [[ ! -e "$entry" ]]; done
+done
+for depth in SHARED_DEPTH_UNDEFINED 00 01 08 -1 +1 '1+1' '1/0' '1 ' $'1\n' \
+    9223372036854775807 18446744073709551616; do
+    : > "$FIXTURE/dispatched"
+    status=0
+    VALIDATION_RUNNER_DEPTH="$depth" VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+        VALIDATION_LOG_DIR="$FIXTURE/invalid-depth-logs" \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" depth \
+        > "$FIXTURE/depth-invalid.log" 2>&1 || status=$?
+    [[ "$status" == 2 && ! -s "$FIXTURE/dispatched" && ! -e "$FIXTURE/invalid-depth-logs" ]]
+    rg -F 'VALIDATION_RUNNER_DEPTH must be' "$FIXTURE/depth-invalid.log" >/dev/null
+    if rg -F 'VALIDATION PASSED:' "$FIXTURE/depth-invalid.log" >/dev/null; then exit 1; fi
+done
+
+# Fault-inject copies of the actual runner: premature exits must fail and retain
+# evidence in both the source wrapper and executing body, even after dispatch
+# has made temporary logs eligible for cleanup. No production test hook is used.
+mkdir -p "$FIXTURE/exit-probe/scripts/ci"
+cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/exit-probe/scripts/ci/"
+for boundary in snapshot body summary; do
+    for failure in nounset zero nonzero command; do
+        # shellcheck disable=SC2016 # Expanded only in the copied runner.
+        case "$failure" in
+            nounset) injection='unset RUNNER_UNBOUND; printf "%s\n" "$RUNNER_UNBOUND"'; expected=1 ;;
+            zero) injection='exit 0'; expected=1 ;;
+            nonzero) injection='exit 23'; expected=23 ;;
+            command) injection='false'; expected=1 ;;
+        esac
+        case "$boundary" in
+            snapshot) at='    trap cleanup_snapshot EXIT'; retained_variable=RUNNER_SNAPSHOT_DIR ;;
+            body) at='trap cleanup_logs EXIT'; retained_variable=LOG_DIR ;;
+            summary) at=write_github_summary; retained_variable=LOG_DIR ;;
+        esac
+        RUNNER_INJECTION="$injection" RUNNER_BOUNDARY="$at" RUNNER_RETAINED="$retained_variable" awk '
+            { print }
+            $0 == ENVIRON["RUNNER_BOUNDARY"] {
+                print "printf evidence > \"$" ENVIRON["RUNNER_RETAINED"] "/probe.log\""
+                print ENVIRON["RUNNER_INJECTION"]
+                print "exit 99"
+                injected++
+            }
+            END { if (injected != 1) exit 1 }
+        ' "$ROOT/scripts/ci/run-validation-targets.sh" > "$FIXTURE/exit-probe/scripts/ci/run-validation-targets.sh"
+        : > "$FIXTURE/dispatched"
+        status=0
+        TMPDIR="$FIXTURE/depth-tmp" VALIDATION_RUNNER_DEPTH=0 VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+            bash "$FIXTURE/exit-probe/scripts/ci/run-validation-targets.sh" depth \
+            > "$FIXTURE/exit-$boundary-$failure.log" 2>&1 || status=$?
+        [[ "$status" == "$expected" ]]
+        retained="$(sed -n -e 's/^Runner source retained at: //p' \
+            -e 's/^Validation logs retained at: //p' "$FIXTURE/exit-$boundary-$failure.log")"
+        [[ -f "$retained/probe.log" && "$(cat "$retained/probe.log")" == evidence ]]
+        if [[ "$boundary" == summary ]]; then
+            [[ "$(cat "$FIXTURE/dispatched")" == 1 && -f "$retained/0.log" ]]
+        else [[ ! -s "$FIXTURE/dispatched" ]]; fi
+        if rg -F 'VALIDATION PASSED:' "$FIXTURE/exit-$boundary-$failure.log" >/dev/null; then exit 1; fi
+    done
+done
+
 # GNU Make owns option parsing, including compact flags and long aliases.
 # Matching variable values and legitimate parallel controls must remain valid.
 for variable in MAKEFLAGS MFLAGS GNUMAKEFLAGS; do

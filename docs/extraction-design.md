@@ -727,6 +727,18 @@ Actual simulator journeys qualify complete destination verification and stopping
 after lost/malformed second writes. Full restore, async Agent/application admission
 and terminal/custody proof remain separate.
 
+`workflow::ic_snapshot_restore::restore_snapshot` now coordinates an original
+singleton load/start stage under both retained source and restore layouts. Recheck
+the immutable requirement, reserve through the existing journal owner and apply
+the existing current safety policy to mandatory fresh integration evidence before
+one update. Independently qualified durable request/reply evidence precedes each
+exact Applied receipt and existing checkpoint. A load receipt supplies no later
+application acceptance; lost/malformed replies stop without reissue or successor
+start. Actual Testkit journeys join complete upload, independently verified stopped
+restored bytes and start while retaining source obligations. Full runners, async
+Agent/application integration and terminal/custody proof remain separate. See
+[the maintained coordination boundary](extraction-boundary.md#original-same-id-loadstart-coordination).
+
 Explicit local IC-tree verification and upload preparation now expose per-guard
 `ic-metrics` summaries and a bounded prepared-size histogram. Host durations use nanoseconds, successful prepared data uses
 bytes, and returned successes/rejections stay separate. Internal verification and

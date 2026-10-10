@@ -49,7 +49,24 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 96-file snapshot selects committed Shared Tooling 0.3.2 at
+The current 96-file snapshot selects committed Shared Tooling 0.3.3 at
+`d63f0cfaba8ab2961d6012064adbf051c1898bc1`, verified against remote main.
+Canonical clean export changes only the validation runner and its regression
+owner. Nesting depth is a bounded canonical decimal, rejected before dispatch.
+Explicit completion distinguishes completed target failure from premature runner
+exit; available source/log evidence remains retained. Local dependency discovery
+also preserves Make jobserver descriptors through its Cargo metadata wrapper.
+The local tooling adapter owns isolated logger context and completion, including
+inherited-parent qualification of the unchanged shared regression. The reusable
+fixture leak remains [Shared #105](https://github.com/dragginzgame/shared-tooling/issues/105).
+Host 0.12.4 and Testkit 0.32.2 retain unchanged published Rust sources, with their
+exact selected CLI explicitly prepared. See
+[the consumer review](reports/audits/2026/10/10/shared-033/01/report.md).
+The compatible draft is 0.14.2; package/receipt remain released 0.14.1.
+
+### Prior Shared Tooling 0.3.2 review
+
+The prior 96-file snapshot selects committed Shared Tooling 0.3.2 at
 `c16444bf006f17c5bb4dda5ad070a0f345da9623`, verified against remote main.
 Canonical export from an isolated clean committed checkout preserves local product
 work and adds the advisory README freshness task required by the maintenance catalog.

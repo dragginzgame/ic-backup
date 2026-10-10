@@ -129,3 +129,20 @@ fn planned_upload_malformed_second_data_write_retains_original_history_without_r
 fn planned_upload_insufficient_original_data_allowance_refuses_before_writes() {
     pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::DataAllowance);
 }
+
+#[test]
+fn planned_restore_lost_load_retains_pending_without_start_or_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::LoadLost);
+}
+#[test]
+fn planned_restore_malformed_load_retains_reply_without_start_or_reissue() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::LoadMalformed);
+}
+#[test]
+fn planned_restore_lost_start_retains_pending_without_restart() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::StartLost);
+}
+#[test]
+fn planned_restore_malformed_start_retains_reply_without_restart() {
+    pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::StartMalformed);
+}

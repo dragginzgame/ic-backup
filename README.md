@@ -170,8 +170,10 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
   durable publication, local interruption recovery through the original journal,
   and explicit retained metadata/extent/chunk verification;
 - source-bound snapshot upload metadata and bounded byte preparation, with a single-update
-  provider contract and passive replies under separate pending attempts; complete
-  application-qualified upload/restore orchestration is pending;
+  provider contract and passive replies under separate pending attempts, plus
+  complete data-stage planning and independently qualified receipt coordination;
+- original same-ID load/start steps with fresh application safety, explicit qualified
+  receipts and retained source requirements; complete application runners remain pending;
 - per-guard host timing summaries and bounded prepared chunk-size distributions using `ic-metrics`, with
   diagnostics kept separate from retained progress, spending and completion evidence;
 - contracts for exact originally reserved IC updates and bounded passive reply

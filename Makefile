@@ -116,7 +116,7 @@ install-hooks:
 	bash scripts/dev/install-git-hooks.sh
 
 dependency-pins-check:
-	bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
+	+bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
 
 # Cargo owns the selected Testkit identity. The canonical Cargo installer owns
 # CLI receipts; Testkit owns server assets, admission and provisioning.

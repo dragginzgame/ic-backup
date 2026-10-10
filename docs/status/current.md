@@ -25,7 +25,45 @@
 
 # Current handoff — 2026-10-10
 
-## Current 0.14.1 tooling and dependency refresh
+## Current 0.14.2 restore and tooling continuation
+
+Local HEAD and GitHub main match released 0.14.1
+`434454b2923c2cd004ffe2697770a7f3b9b07d7e`. Select compatible 0.14.2; package
+and receipt remain 0.14.1. Adopt committed Shared Tooling 0.3.3
+`d63f0cfaba8ab2961d6012064adbf051c1898bc1` through canonical clean export,
+retaining the 96-file roster. Reject malformed nesting depth before dispatch;
+premature runner exits fail and retain available evidence. Preserve incoming
+Host 0.12.4/Testkit 0.32.2 and Metrics 0.5.3 lock selections and prepare the exact CLI. Published
+Rust source remains unchanged; local dependency discovery preserves jobserver FDs.
+
+`workflow::ic_snapshot_restore::restore_snapshot` joins an original singleton
+load/start, both retained plans/layouts and immutable safety requirement. The
+existing journal owns reservation, fresh integration evidence passes canonical
+restore safety before one update, and mandatory independent durable request/reply
+qualification precedes the exact Applied receipt/checkpoint. Load settlement
+never supplies later restored acceptance. Real Testkit upload journeys now continue
+through load, complete separately accounted stopped-state verification and start.
+Lost/malformed load/start replies stop without reissue, preserving pending originals
+and source references. Full delivery gates pass, with all graph-dependent gates
+rerun after the final incoming selections. The final graph passes 502 core unit
+cases, 29 core simulator journeys, eight Agent HTTP cases and three Agent simulator
+journeys, strict Clippy/docs, Rust 1.88 consumers and both packages. A separate
+locked Rust 1.88 consumer compiles the new public restore API. Exact technical
+inputs and the incoming lock remain unchanged throughout final qualification.
+See [the review](../reports/audits/2026/10/10/shared-033/01/report.md).
+
+Released 0.14.1 has one native CI run: Linux passes and both macOS jobs remain
+queued. This local candidate has no hosted result; macOS acceptance remains separate.
+#29 retains full product
+coordination/terminal custody and #25 the async Agent/application bridge. No root
+Git write, release, registry upload, sibling edit or recovery cleanup ran.
+
+Shared main subsequently releases 0.3.4's Binaryen 133 pins; Host 0.12.4 adopts
+those upstream tool pins without changing its published Rust source. Backup's
+reviewed snapshot remains the requested 0.3.3. Qualify that independent toolset
+refresh next; sibling 0.3.5 work for #105 is not yet committed adoption evidence.
+
+## Prior 0.14.1 tooling and dependency refresh
 
 The same compatible 0.14.1 draft now selects committed Shared Tooling 0.3.2 at
 `c16444bf006f17c5bb4dda5ad070a0f345da9623` through canonical clean export.

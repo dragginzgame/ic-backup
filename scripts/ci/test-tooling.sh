@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Isolated fixtures own their logging context, including fallback TMPDIR paths.
+# Do not inherit an outer validation runner's retained-log selection or identity.
+unset VALIDATION_LOG_DIR VALIDATION_FAILURE_LOG_DIR VALIDATION_FAILURE_EVENT_PREFIX
+unset VALIDATION_RUNNER_DEPTH VALIDATION_RUNNER_SNAPSHOT_PATH VALIDATION_REPOSITORY_ROOT
+
 # Consumer integration checks; no Git mutations, network calls or Rust builds.
 ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
@@ -9,14 +14,17 @@ ROOT="${ROOT%/.}"
 mkdir -p "$ROOT/target"
 FIXTURE="$(mktemp -d "$ROOT/target/shared-tooling-tests.XXXXXX")"
 CONSUMER="$FIXTURE/consumer"
+fixture_complete=false
 
 finish() {
     local status=$?
+    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
     if [[ "$status" -eq 0 ]]; then
         rm -rf "$FIXTURE"
     else
         printf 'Shared-tooling tests failed; fixture/logs retained: %s\n' "$FIXTURE" >&2
     fi
+    exit "$status"
 }
 trap finish EXIT
 
@@ -189,3 +197,4 @@ reset_consumer
 verify >"$FIXTURE/recovered.log" 2>&1
 
 echo 'Shared-tooling consumer checks: PASS (exact bytes/modes, rejection and evidence retention).'
+fixture_complete=true
