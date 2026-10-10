@@ -1,5 +1,6 @@
 //! Actual agent HTTP gateway effects on an isolated no-external-effects fixture.
 mod support;
+use ic_backup::ports::ic_mutation::{IcMutationProvider, IcMutationProviderError};
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -17,7 +18,10 @@ use ic_backup::{
     },
     ops::persistence::BackupLayoutGuard,
 };
-use ic_backup_agent::{AgentTransport, ReservedUpdate, TransportError, UpdateOutcome};
+use ic_backup_agent::{
+    AgentMutationProvider, AgentTransport, PreparedUpdate, ReservedUpdate, TransportError,
+    UpdateOutcome,
+};
 use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use ic_testkit::{
     pic::{PocketIcManagedServer, PocketIcStartupConfig},
@@ -29,6 +33,132 @@ use std::{
     sync::Arc,
     time::Duration,
 };
+
+#[tokio::test(flavor = "multi_thread")]
+#[expect(
+    clippy::too_many_lines,
+    reason = "keep original preflight, locked async dispatch and no-reissue proof in one trace"
+)]
+async fn original_capture_stage_awaits_accounted_fresh_admission_then_retains_one_signed_update() {
+    use ic_backup::{
+        model::execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
+        ops::persistence::{AttemptJournalGuard, ExecutionStageGuard, create_execution_workflow},
+        workflow::ic_snapshot_capture::capture_snapshot,
+    };
+    use std::{cell::Cell, io};
+    let mut fixture = Fixture::new(support::identity()).await;
+    fixture.mutation(Method::StopCanister, None, false).await;
+    // Reserve this independent replicated status call before selected-stage admission.
+    // Exclusive fixture custody proves it has never been dispatched. Its pending
+    // accounting is retained independently; it is not a recovery observation.
+    let status_payload = support::payload(Method::CanisterStatus, &fixture.target, None);
+    let (status_plan, status_layout, status_root) = fixture.original(&status_payload.digest());
+    let status_guard = support::retain(&status_layout, &status_plan, fixture.sequence);
+    let status_path = status_guard.path().clone();
+    let original_status = fs::read(&status_path).unwrap();
+    drop(status_guard);
+    let payload = support::payload(Method::TakeCanisterSnapshot, &fixture.target, None);
+    let (plan, layout, _root) = fixture.original(&payload.digest());
+    let sequence = fixture.sequence;
+    let workflow = ExecutionWorkflowRecord::new(plan.clone());
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan.clone()).unwrap();
+    let transport = fixture.transport(&plan);
+    let target = fixture.principal();
+    let caller = fixture.caller();
+    let retained = Cell::new(0);
+    let observed = Cell::new(0);
+    let mut provider = AgentMutationProvider::new(
+        &transport,
+        |request: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+            assert_eq!(request.payload().digest(), payload.digest());
+            assert!(
+                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
+            );
+            assert_eq!(observed.get(), 1);
+            support::retain_signed(stage.layout().unwrap().root(), prepared)
+                .map_err(|_| IcMutationProviderError::Unavailable)?;
+            retained.set(retained.get() + 1);
+            Ok(())
+        },
+    );
+    let acknowledgement =
+        capture_snapshot(&stage, sequence, &payload, &mut provider, async |request| {
+            assert_eq!(request.plan().context(), status_plan.context());
+            assert_eq!(status_payload.target(), payload.target());
+            assert_eq!(observed.get(), 0);
+            assert_eq!(fs::read(&status_path)?, original_status);
+            let actual = fixture
+                .pic
+                .canister_status(target, Some(caller))
+                .await
+                .unwrap();
+            assert_eq!(
+                serde_json::to_value(actual.status).unwrap(),
+                serde_json::to_value(CanisterStatusType::Stopped).unwrap()
+            );
+            assert_eq!(actual.settings.controllers, vec![caller]);
+            observed.set(1);
+            fs::write(
+                status_root.join("actual-status.json"),
+                serde_json::to_vec(&actual).unwrap(),
+            )?;
+            // This stopped, drained isolated fixture has no external effects. Exclusive
+            // controller/command custody admits capture here, never a product default.
+            tokio::task::yield_now().await;
+            assert!(
+                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
+            );
+            Ok::<(), io::Error>(())
+        })
+        .await
+        .unwrap();
+    let raw = &acknowledgement.input().reply;
+    assert_ne!(
+        IcSnapshotReply::decode(&payload, raw).unwrap().snapshots()[0].id(),
+        [] as [u8; 0]
+    );
+    fs::write(
+        stage.layout().unwrap().root().join("passive-reply.candid"),
+        raw,
+    )
+    .unwrap();
+    let guard = AttemptJournalGuard::open(
+        stage.layout().unwrap(),
+        &plan.attempt_authority(sequence).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+    let original = fs::read(guard.path()).unwrap();
+    drop(guard);
+    assert!(
+        capture_snapshot(
+            &stage,
+            sequence,
+            &payload,
+            &mut provider,
+            async |_| -> Result<(), io::Error> {
+                panic!("pending capture never re-enters admission")
+            }
+        )
+        .await
+        .is_err()
+    );
+    assert_eq!((observed.get(), retained.get()), (1, 1));
+    assert_eq!(
+        fs::read(
+            stage
+                .layout()
+                .unwrap()
+                .root()
+                .join(format!("attempt-{sequence}.json"))
+        )
+        .unwrap(),
+        original
+    );
+    assert_eq!(fs::read(status_path).unwrap(), original_status);
+}
 
 struct Fixture {
     pic: PocketIc,
@@ -76,7 +206,23 @@ impl Fixture {
             .await;
         let target = pic.create_canister().await;
         pic.add_cycles(target, 100_000_000_000_000).await;
-        let wasm = wat::parse_str(include_str!("state.wat")).unwrap();
+        fs::write(
+            root.join("original.wasm"),
+            wat::parse_str(include_str!("state.wat")).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            std::process::Command::new("bash")
+                .arg(
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                        .join("../../scripts/ci/optimize-test-wasm.sh")
+                )
+                .arg(&root)
+                .status()
+                .unwrap()
+                .success()
+        );
+        let wasm = fs::read(root.join("optimized.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
         pic.install_canister(target, wasm, vec![], None).await;
@@ -156,13 +302,19 @@ impl Fixture {
             IcMutationRequest::new(&plan, self.sequence, guard.record().unwrap(), &payload)
                 .unwrap();
         let transport = self.transport(&plan);
-        let raw = submit(
+        let mut provider = AgentMutationProvider::new(
             &transport,
-            ReservedUpdate::Mutation(&request),
-            guard.record().unwrap(),
-            &root,
-        )
-        .await;
+            |_: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+                support::retain_signed(&root, prepared)
+                    .map_err(|_| IcMutationProviderError::Unavailable)
+            },
+        );
+        let acknowledgement = provider
+            .submit_mutation(&request, guard.record().unwrap())
+            .await
+            .unwrap();
+        let raw = acknowledgement.input().reply.clone();
+        fs::write(root.join("reply.candid"), &raw).unwrap();
         assert_eq!(fs::read(guard.path()).unwrap(), before);
         assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
         if lose {
@@ -213,8 +365,7 @@ async fn submit(
 ) -> Vec<u8> {
     let prepared = transport.prepare(request, journal).unwrap();
     let id = *prepared.request_id();
-    fs::write(root.join("signed-ingress.cbor"), prepared.envelope()).unwrap();
-    fs::write(root.join("request-id.txt"), id.to_string()).unwrap();
+    support::retain_signed(root, &prepared).unwrap();
     match prepared.submit().await.unwrap() {
         UpdateOutcome::Replied { request_id, reply } => {
             assert_eq!(request_id, id);

@@ -4,6 +4,8 @@ set -euo pipefail
 # Fixtures below supply their own Make selections and logger identities.
 unset MAKEFLAGS MFLAGS MAKEOVERRIDES GNUMAKEFLAGS MAKEFILES
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
+# Synthetic failures and summaries belong to this fixture, not its caller.
+unset VALIDATION_LOG_DIR VALIDATION_FAILURE_LOG_DIR GITHUB_STEP_SUMMARY
 
 ROOT="$0"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
@@ -74,10 +76,10 @@ for depth in '' 0 1 8 999999999999999999; do
     VALIDATION_RUNNER_DEPTH="$depth" VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
         TMPDIR="$FIXTURE/depth-tmp" bash "$FIXTURE/scripts/ci/run-validation-targets.sh" depth \
         > "$FIXTURE/depth-valid.log" 2>&1
-    [[ "$(cat "$FIXTURE/dispatched")" == "$((${depth:-0} + 1))" ]]
+    [[ "$(cat "$FIXTURE/dispatched")" == "$((${depth:-0} + 1))" ]] || exit 1
     rg -F 'VALIDATION PASSED:' "$FIXTURE/depth-valid.log" >/dev/null
     # Successful wrapper and body cleanup removes only their owned scratch.
-    for entry in "$FIXTURE/depth-tmp/"*; do [[ ! -e "$entry" ]]; done
+    for entry in "$FIXTURE/depth-tmp/"*; do [[ ! -e "$entry" ]] || exit 1; done
 done
 for depth in SHARED_DEPTH_UNDEFINED 00 01 08 -1 +1 '1+1' '1/0' '1 ' $'1\n' \
     9223372036854775807 18446744073709551616; do
@@ -87,7 +89,7 @@ for depth in SHARED_DEPTH_UNDEFINED 00 01 08 -1 +1 '1+1' '1/0' '1 ' $'1\n' \
         VALIDATION_LOG_DIR="$FIXTURE/invalid-depth-logs" \
         bash "$FIXTURE/scripts/ci/run-validation-targets.sh" depth \
         > "$FIXTURE/depth-invalid.log" 2>&1 || status=$?
-    [[ "$status" == 2 && ! -s "$FIXTURE/dispatched" && ! -e "$FIXTURE/invalid-depth-logs" ]]
+    [[ "$status" == 2 && ! -s "$FIXTURE/dispatched" && ! -e "$FIXTURE/invalid-depth-logs" ]] || exit 1
     rg -F 'VALIDATION_RUNNER_DEPTH must be' "$FIXTURE/depth-invalid.log" >/dev/null
     if rg -F 'VALIDATION PASSED:' "$FIXTURE/depth-invalid.log" >/dev/null; then exit 1; fi
 done
@@ -126,13 +128,13 @@ for boundary in snapshot body summary; do
         TMPDIR="$FIXTURE/depth-tmp" VALIDATION_RUNNER_DEPTH=0 VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
             bash "$FIXTURE/exit-probe/scripts/ci/run-validation-targets.sh" depth \
             > "$FIXTURE/exit-$boundary-$failure.log" 2>&1 || status=$?
-        [[ "$status" == "$expected" ]]
+        [[ "$status" == "$expected" ]] || exit 1
         retained="$(sed -n -e 's/^Runner source retained at: //p' \
             -e 's/^Validation logs retained at: //p' "$FIXTURE/exit-$boundary-$failure.log")"
-        [[ -f "$retained/probe.log" && "$(cat "$retained/probe.log")" == evidence ]]
+        [[ -f "$retained/probe.log" && "$(cat "$retained/probe.log")" == evidence ]] || exit 1
         if [[ "$boundary" == summary ]]; then
-            [[ "$(cat "$FIXTURE/dispatched")" == 1 && -f "$retained/0.log" ]]
-        else [[ ! -s "$FIXTURE/dispatched" ]]; fi
+            [[ "$(cat "$FIXTURE/dispatched")" == 1 && -f "$retained/0.log" ]] || exit 1
+        else [[ ! -s "$FIXTURE/dispatched" ]] || exit 1; fi
         if rg -F 'VALIDATION PASSED:' "$FIXTURE/exit-$boundary-$failure.log" >/dev/null; then exit 1; fi
     done
 done
@@ -166,7 +168,7 @@ for invalid in '' --dry-run --version --ignore-errors -n MAKEFLAGS=i 'VALUE=1' $
     VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/refused-logs" \
         bash "$FIXTURE/scripts/ci/run-validation-targets.sh" pass "$invalid" \
         > "$FIXTURE/refused-goal.log" 2>&1 || status=$?
-    [[ "$status" == 2 && ! -e "$FIXTURE/refused-logs" ]]
+    [[ "$status" == 2 && ! -e "$FIXTURE/refused-logs" ]] || exit 1
     if rg 'pass-marker|VALIDATION PASSED' "$FIXTURE/refused-goal.log" >/dev/null; then
         echo 'invalid goal list dispatched a target or reported success' >&2; exit 1
     fi
@@ -180,7 +182,7 @@ VALIDATION_FAILURE_LOG_DIR="$FIXTURE/passing-logs" \
 rg -Fx 'test error::tests::passing ... ok' "$FIXTURE/passing-tests.log" >/dev/null
 rg -Fx 'test error::tests::ignored ... ignored' "$FIXTURE/passing-tests.log" >/dev/null
 rg -F 'VALIDATION PASSED:' "$FIXTURE/passing-tests.log" >/dev/null
-[[ ! -e "$FIXTURE/passing-logs" ]]
+[[ ! -e "$FIXTURE/passing-logs" ]] || exit 1
 
 fail_fast_status=0
 VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
@@ -278,7 +280,7 @@ cat "$FIXTURE/failure-logs/"*-2-fail-one.log "$FIXTURE/failure-logs/"*-3-fail-tw
     > "$FIXTURE/combined.expected"
 cmp "$FIXTURE/combined.expected" "$combined"
 cmp "$combined" "$FIXTURE/failure-logs/latest-combined.log"
-[[ -f "$fast_combined" ]]
+[[ -f "$fast_combined" ]] || exit 1
 for expected in \
     '[fail-one] first-failure-marker' \
     '[fail-two] second-failure-marker' \
@@ -325,9 +327,9 @@ for failure in mkdir copy; do
         VALIDATION_RUNNER_DEPTH=0 VALIDATION_RUNNER_SNAPSHOT_PATH='' \
         bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
         > "$FIXTURE/fallback-$failure.log" 2>&1 || status=$?
-    [[ "$status" == 2 ]]
+    [[ "$status" == 2 ]] || exit 1
     fallback_logs=("$fallback_tmp"/validation.*/0.log)
-    [[ "${#fallback_logs[@]}" == 1 && -f "${fallback_logs[0]}" ]]
+    [[ "${#fallback_logs[@]}" == 1 && -f "${fallback_logs[0]}" ]] || exit 1
     rg -F first-failure-marker "${fallback_logs[0]}" >/dev/null
     rg -F "${fallback_logs[0]}" "$FIXTURE/fallback-$failure.log" >/dev/null
 done
@@ -415,9 +417,9 @@ VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
     GITHUB_STEP_SUMMARY="$FIXTURE/summary.md" VALIDATION_RUNNER_DEPTH=0 \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" pass structured \
     > "$FIXTURE/retained.log" 2>&1 || status=$?
-[[ "$status" == 2 ]]
+[[ "$status" == 2 ]] || exit 1
 run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/retained.log")"
-[[ -d "$run" ]]
+[[ -d "$run" ]] || exit 1
 printf 'pass-marker\n' > "$FIXTURE/pass.expected"
 cmp "$FIXTURE/pass.expected" "$run/0.log"
 awk -F '\t' -v run="$run" '
@@ -430,15 +432,15 @@ rg -F '[ERR:structured] [CONSUMER:E001] structured-marker' "$FIXTURE/retained.lo
 rg -F '[ERR:structured] [CONSUMER:E001] structured-marker' "$FIXTURE/failure-logs/latest-errors.log" >/dev/null
 rg -F $'\033[32mcolored raw bytes\033[0m' "$run/1.log" >/dev/null
 if rg -F '[ERR:' "$run/1.log" >/dev/null; then exit 1; fi
-[[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]]
+[[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]] || exit 1
 cp "$FIXTURE/failure-logs/latest-combined.log" "$FIXTURE/combined-before-pass"
 VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
     VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     GITHUB_STEP_SUMMARY="$FIXTURE/summary.md" VALIDATION_RUNNER_DEPTH=1 \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" pass > "$FIXTURE/retained-pass.log" 2>&1
 pass_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/retained-pass.log")"
-[[ "$pass_run" != "$run" && -f "$pass_run/0.log" && -f "$run/1.log" ]]
-[[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]]
+[[ "$pass_run" != "$run" && -f "$pass_run/0.log" && -f "$run/1.log" ]] || exit 1
+[[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]] || exit 1
 cmp "$FIXTURE/combined-before-pass" "$FIXTURE/failure-logs/latest-combined.log"
 
 # Each nesting level combines its own raw target streams, without rediscovering
@@ -448,7 +450,7 @@ VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
     VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" nested-failure fail-two \
     > "$FIXTURE/nested-failures.log" 2>&1 || status=$?
-[[ "$status" == 2 ]]
+[[ "$status" == 2 ]] || exit 1
 outer_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/nested-failures.log" | head -n 1)"
 cat "$outer_run/0.log" "$outer_run/1.log" > "$FIXTURE/nested-combined.expected"
 cmp "$FIXTURE/nested-combined.expected" "$FIXTURE/failure-logs/latest-combined.log"
@@ -470,7 +472,7 @@ PATH="$FIXTURE/cat-bin:$PATH" TMPDIR="$FIXTURE/aggregate-tmp" \
     VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
     > "$FIXTURE/aggregate-failure.log" 2>&1 || status=$?
-[[ "$status" == 2 ]]
+[[ "$status" == 2 ]] || exit 1
 cmp "$FIXTURE/combined-before-failure" "$FIXTURE/failure-logs/latest-combined.log"
 aggregate_raw=("$FIXTURE/aggregate-tmp/"validation.*/0.log)
 rg -F first-failure-marker "${aggregate_raw[0]}" >/dev/null
@@ -495,10 +497,10 @@ REAL_MAKE="$real_make" PATH="$FIXTURE/signal-bin:$PATH" \
     VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" interrupt-fixture \
     > "$FIXTURE/interrupted.log" 2>&1 || status=$?
-[[ "$status" == 143 ]]
+[[ "$status" == 143 ]] || exit 1
 interrupted_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/interrupted.log")"
 rg -Fx 'partial raw output' "$interrupted_run/0.log" >/dev/null
-[[ "$(wc -l < "$interrupted_run/timings.tsv" | tr -d ' ')" == 1 ]]
+[[ "$(wc -l < "$interrupted_run/timings.tsv" | tr -d ' ')" == 1 ]] || exit 1
 cmp "$FIXTURE/combined-before-failure" "$FIXTURE/failure-logs/latest-combined.log"
 echo "validation target runner test passed"
 fixture_complete=true

@@ -30,6 +30,9 @@ use thiserror::Error;
 /// never-dispatched command custody. Any remote preflight calls need their own prior
 /// accounting. There is no default permission, provider or application consistency
 /// lane. The existing provider retains its authenticated single-update contract.
+/// Admission and submission are awaited while the selected journal stays locked.
+/// Cancellation releases that lock while retaining its pending reservation;
+/// even cancellation before dispatch grants no repeat callback or submission.
 ///
 /// Success returns a bounded passive acknowledgement and leaves spending pending.
 /// Integrations authenticate exact original attribution and explicitly record any
@@ -40,12 +43,12 @@ use thiserror::Error;
 /// provider failures or malformed/mismatched replies. All post-reservation failures
 /// retain consumption; returned acknowledgements survive later rejection in typed
 /// errors. No failure permits retry, recapture, refund, cleanup or automatic uncertainty.
-pub fn capture_snapshot<E: std::error::Error + 'static>(
+pub async fn capture_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     operation_sequence: u64,
     payload: &IcManagementRequestRecord,
     provider: &mut impl IcMutationProvider,
-    admit: impl FnOnce(&IcMutationRequest<'_>) -> Result<(), E>,
+    admit: impl AsyncFnOnce(&IcMutationRequest<'_>) -> Result<(), E>,
 ) -> Result<IcMutationAcknowledgement, IcSnapshotCaptureExecutionError<E>> {
     if payload.method() != IcManagementMethodRecord::TakeCanisterSnapshot {
         return Err(IcSnapshotCaptureExecutionError::CaptureRequired);
@@ -58,9 +61,13 @@ pub fn capture_snapshot<E: std::error::Error + 'static>(
     let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
     journal.reserve_planned_mutation(&plan.digest())?;
     let request = IcMutationRequest::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request).map_err(IcSnapshotCaptureExecutionError::Admission)?;
+    admit(&request)
+        .await
+        .map_err(IcSnapshotCaptureExecutionError::Admission)?;
     stage.layout()?;
-    let acknowledgement = provider.submit_mutation(&request)?;
+    let acknowledgement = provider
+        .submit_mutation(&request, journal.record()?)
+        .await?;
     let association = match journal.record() {
         Ok(record) => record,
         Err(source) => {

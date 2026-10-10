@@ -4,6 +4,7 @@ use super::{
     Backend, Downloaded, Fault, lifecycle, management, planned_upload::Failure, status,
     verify_loaded,
 };
+use crate::ready::ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -44,46 +45,51 @@ impl IcMutationProvider for Provider<'_, '_> {
     fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        let mut backend = self.backend.borrow_mut();
-        let actual = backend.plan(
-            &request.payload().digest(),
-            request.authority().binding().operation_sequence(),
-        );
-        assert_eq!(request.plan().context(), actual.context());
-        assert_eq!(request.payload().target(), backend.target.to_text());
-        let raw = backend.management(
-            request.payload().method().name(),
-            request.payload().arguments(),
-        );
-        let lost = matches!(
-            (request.payload().method(), self.failure),
-            (Method::LoadCanisterSnapshot, Failure::LoadLost)
-                | (Method::StartCanister, Failure::StartLost)
-        );
-        let malformed = matches!(
-            (request.payload().method(), self.failure),
-            (Method::LoadCanisterSnapshot, Failure::LoadMalformed)
-                | (Method::StartCanister, Failure::StartMalformed)
-        );
-        if lost || malformed {
-            fs::write(backend.root.join("discarded-restore-oracle.candid"), &raw).unwrap();
-        }
-        if lost {
-            return Err(IcMutationProviderError::Indeterminate);
-        }
-        let reply = if malformed { vec![] } else { raw };
-        Ok(
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: actual.context().clone(),
-                target: backend.target.to_text(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap(),
-        )
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            let mut backend = self.backend.borrow_mut();
+            let actual = backend.plan(
+                &request.payload().digest(),
+                request.authority().binding().operation_sequence(),
+            );
+            assert_eq!(request.plan().context(), actual.context());
+            assert_eq!(request.payload().target(), backend.target.to_text());
+            let raw = backend.management(
+                request.payload().method().name(),
+                request.payload().arguments(),
+            );
+            let lost = matches!(
+                (request.payload().method(), self.failure),
+                (Method::LoadCanisterSnapshot, Failure::LoadLost)
+                    | (Method::StartCanister, Failure::StartLost)
+            );
+            let malformed = matches!(
+                (request.payload().method(), self.failure),
+                (Method::LoadCanisterSnapshot, Failure::LoadMalformed)
+                    | (Method::StartCanister, Failure::StartMalformed)
+            );
+            if lost || malformed {
+                fs::write(backend.root.join("discarded-restore-oracle.candid"), &raw).unwrap();
+            }
+            if lost {
+                return Err(IcMutationProviderError::Indeterminate);
+            }
+            let reply = if malformed { vec![] } else { raw };
+            Ok(
+                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    context: actual.context().clone(),
+                    target: backend.target.to_text(),
+                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                    reply,
+                })
+                .unwrap(),
+            )
+        })())
     }
 }
 fn child(
@@ -202,13 +208,13 @@ pub(super) fn run(
             backend: &backend,
             failure,
         };
-        let result = restore_snapshot(
+        let result = ready(restore_snapshot(
             &stage,
             source_layout,
             source_plan,
             &safety,
             &mut provider,
-            |request, safety| {
+            async |request, safety| {
                 assert_eq!(
                     request.payload().target(),
                     backend.borrow().target.to_text()
@@ -254,7 +260,7 @@ pub(super) fn run(
                     .unwrap(),
                 )
             },
-            |request, acknowledgement| {
+            async |request, acknowledgement| {
                 // Exact successful original simulator ingress is attributed independently
                 // of its empty tuple; retain both original byte sets before Applied.
                 for (name, bytes) in [
@@ -273,7 +279,7 @@ pub(super) fn run(
                     evidence: acknowledgement.input().evidence.hash().into(),
                 })
             },
-        );
+        ));
         if matches!(
             (sequence, failure),
             (17, Failure::LoadLost | Failure::LoadMalformed)
@@ -319,15 +325,15 @@ pub(super) fn run(
             )
             .unwrap();
             assert!(
-                restore_snapshot(
+                ready(restore_snapshot(
                     &stage,
                     source_layout,
                     source_plan,
                     &safety,
                     &mut provider,
-                    |_, _| -> Result<_, io::Error> { panic!("pending never admits") },
-                    |_, _| -> Result<_, io::Error> { panic!("pending never settles") }
-                )
+                    async |_, _| -> Result<_, io::Error> { panic!("pending never admits") },
+                    async |_, _| -> Result<_, io::Error> { panic!("pending never settles") }
+                ))
                 .is_err()
             );
             assert_eq!(backend.borrow().calls, calls);

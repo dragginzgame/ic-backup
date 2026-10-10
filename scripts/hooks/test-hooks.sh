@@ -64,7 +64,7 @@ TOML
     cp "$ROOT/crates/ic-backup/LICENSE" crates/ic-backup/LICENSE
     git add -- Makefile rust-toolchain.toml Cargo.toml crates scripts make .githooks README.md
     make --no-print-directory install-hooks
-    [[ "$(git config --local --get core.hooksPath)" == .githooks ]]
+    [[ "$(git config --local --get core.hooksPath)" == .githooks ]] || exit 1
 }
 
 checksum() {
@@ -101,20 +101,20 @@ CARGO
     sources="$(sources_fingerprint)"
     export PATH="$FIXTURE/failing-bin:$PATH"
     expect_hook_failure
-    [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]]
+    [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]] || exit 1
     rg -q 'Error 13' rejection.log
 }
 
 test_formatting_output() {
     make --no-print-directory fmt > write.log 2>&1
-    [[ "$(cat write.log)" == 'Formatting... ok' ]]
+    [[ "$(cat write.log)" == 'Formatting... ok' ]] || exit 1
     local before sources lock_before
     before="$(index_fingerprint)"
     sources="$(sources_fingerprint)"
     printf 'unrelated retained lock\n' > Cargo.lock
     lock_before="$(checksum Cargo.lock)"
     make --no-print-directory fmt-check > check.log 2>&1
-    [[ "$(cat check.log)" == 'Checking formatting... ok' ]]
+    [[ "$(cat check.log)" == 'Checking formatting... ok' ]] || exit 1
     mkdir failing-bin diagnostics
     export HOOK_TEST_REAL_CARGO
     HOOK_TEST_REAL_CARGO="$(command -v cargo)"
@@ -136,11 +136,11 @@ CARGO
     rg -q 'Checking formatting\.\.\. FAILED \(exit 17\)' failure.log
     rg -q 'Details: .*formatting\.' failure.log
     local logs=(diagnostics/formatting.*)
-    [[ ${#logs[@]} == 1 && -s "${logs[0]}" && ! -e unexpected-rustfmt ]]
+    [[ ${#logs[@]} == 1 && -s "${logs[0]}" && ! -e unexpected-rustfmt ]] || exit 1
     rg -q 'sorter stdout diagnosis' "${logs[0]}"
     rg -q 'sorter stderr diagnosis' "${logs[0]}"
-    [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]]
-    [[ "$(checksum Cargo.lock)" == "$lock_before" ]]
+    [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]] || exit 1
+    [[ "$(checksum Cargo.lock)" == "$lock_before" ]] || exit 1
 }
 
 test_checkout_local_tools() {
@@ -165,9 +165,9 @@ CARGO
     printf 'unformatted unrelated working edit\n' > README.md
     git hook run pre-commit
     rg -q --fixed-strings 'pub fn answer() -> u32' crates/ic-backup/src/lib.rs
-    [[ "$(git show :crates/ic-backup/src/lib.rs)" == "$(cat crates/ic-backup/src/lib.rs)" ]]
-    [[ "$(cat README.md)" == 'unformatted unrelated working edit' ]]
-    [[ -z "$(git ls-files -- .tools fallback-bin)" ]]
+    [[ "$(git show :crates/ic-backup/src/lib.rs)" == "$(cat crates/ic-backup/src/lib.rs)" ]] || exit 1
+    [[ "$(cat README.md)" == 'unformatted unrelated working edit' ]] || exit 1
+    [[ -z "$(git ls-files -- .tools fallback-bin)" ]] || exit 1
     for state in missing wrong; do
         printf 'pub fn answer()->u32{42}\n' > crates/ic-backup/src/lib.rs
         git add -- crates/ic-backup/src/lib.rs
@@ -179,8 +179,8 @@ CARGO
         before="$(index_fingerprint)"
         sources="$(sources_fingerprint)"
         expect_hook_failure
-        [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]]
-        [[ "$(cat README.md)" == 'unformatted unrelated working edit' ]]
+        [[ "$(index_fingerprint)" == "$before" && "$(sources_fingerprint)" == "$sources" ]] || exit 1
+        [[ "$(cat README.md)" == 'unformatted unrelated working edit' ]] || exit 1
     done
 }
 

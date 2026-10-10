@@ -5,7 +5,7 @@ ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
-fixture="$(mktemp -d "$ROOT/target/testkit-commands.XXXXXX")"
+fixture="$(mktemp -d "${TMPDIR:-$ROOT/target}/testkit-commands.XXXXXX")"
 fixture_complete=false
 finish() {
     local status=$?
@@ -20,20 +20,27 @@ finish() {
 trap finish EXIT
 mkdir -p "$fixture/consumer/make" "$fixture/consumer/scripts/ci" "$fixture/bin" "$fixture/cli"
 cp "$ROOT/Makefile" "$fixture/consumer/Makefile"
+cat > "$fixture/consumer/Cargo.lock" <<'LOCK'
+version = 4
+
+[[package]]
+name = "ic-testkit"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+LOCK
 cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$fixture/consumer/make/"
 cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$fixture/consumer/scripts/ci/"
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "${TESTKIT_COMMAND_JOBSERVER:-0}" == 1 ]]; then
-    [[ "${MAKEFLAGS:-}" =~ --jobserver-(auth|fds)=([0-9]+),([0-9]+) ]]
+    [[ "${MAKEFLAGS:-}" =~ --jobserver-(auth|fds)=([0-9]+),([0-9]+) ]] || exit 1
     reader="${BASH_REMATCH[2]}"; writer="${BASH_REMATCH[3]}"
     : <&"$reader"
     : >&"$writer"
 fi
 case "$*" in
     'fetch --locked') printf 'fetch\n' >> "$TESTKIT_COMMAND_ORDER" ;;
-    'metadata --offline --locked --format-version 1') cat "$TESTKIT_COMMAND_METADATA" ;;
     'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features'|'clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings')
         printf 'build %s\n' "$1" >> "$TESTKIT_COMMAND_ORDER" ;;
     *) exit 97 ;;
@@ -73,7 +80,6 @@ printf 'server %s\n' "$1" >> "$TESTKIT_COMMAND_ORDER"
 printf '%s\n' "$TESTKIT_COMMAND_SERVER"
 CLI
 chmod +x "$fixture/bin/cargo" "$fixture/bin/bash" "$fixture/cli/ic-testkit-server"
-export TESTKIT_COMMAND_METADATA="$fixture/metadata.json"
 export TESTKIT_COMMAND_INSTALL="$fixture/install.log"
 export TESTKIT_COMMAND_CALLS="$fixture/calls.log"
 export TESTKIT_COMMAND_ORDER="$fixture/order.log"
@@ -81,7 +87,6 @@ export TESTKIT_COMMAND_CLI="$fixture/cli/ic-testkit-server"
 export TESTKIT_COMMAND_SERVER="$fixture/admitted-server"
 export TESTKIT_COMMAND_BASH="$BASH"
 export PATH="$fixture/bin:$ROOT/.tools/host/bin:$PATH"
-printf '%s\n' '{"packages":[{"name":"ic-testkit","version":"0.25.5"}]}' > "$TESTKIT_COMMAND_METADATA"
 printf '%s\n' 'retained original evidence' > "$fixture/retained"
 # Each invocation owns its Make context, including under a parent CI runner.
 run_make() {
@@ -91,39 +96,28 @@ run_make() {
 run_make testkit-server-check > "$fixture/path"
 printf '%s\n' "$TESTKIT_COMMAND_SERVER" > "$fixture/expected-path"
 cmp "$fixture/path" "$fixture/expected-path"
-printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --version 0.25.5 --bin ic-testkit-server --profile release --check" > "$fixture/expected-install"
+printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release --check" > "$fixture/expected-install"
 cmp "$TESTKIT_COMMAND_INSTALL" "$fixture/expected-install"
 printf '%s\n' "check --directory $fixture/consumer/.tools/testkit-server" > "$fixture/expected-calls"
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 run_make install-testkit-server > "$fixture/setup-path"
-printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --version 0.25.5 --bin ic-testkit-server --profile release" >> "$fixture/expected-install"
+printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release" >> "$fixture/expected-install"
 cmp "$TESTKIT_COMMAND_INSTALL" "$fixture/expected-install"
 printf '%s\n' "setup --directory $fixture/consumer/.tools/testkit-server" >> "$fixture/expected-calls"
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 # Missing/changed CLI admission must stop before invoking the server owner.
 if TESTKIT_COMMAND_INSTALL_FAILURE=1 run_make testkit-server-check > "$fixture/missing.log" 2>&1; then exit 1; fi
-grep -F 'Testkit 0.25.5' "$fixture/missing.log" >/dev/null
+grep -F 'Locked Testkit CLI' "$fixture/missing.log" >/dev/null
 grep -F 'make install-testkit-server' "$fixture/missing.log" >/dev/null
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 # Server admission failure propagates without a setup or alternate server attempt.
 if TESTKIT_COMMAND_SERVER_FAILURE=1 run_make testkit-server-check > "$fixture/changed.log" 2>&1; then exit 1; fi
 printf '%s\n' "check --directory $fixture/consumer/.tools/testkit-server" >> "$fixture/expected-calls"
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
-printf '%s\n' '{"packages":[{"name":"ic-testkit","version":"0.26.0"}]}' > "$TESTKIT_COMMAND_METADATA"
-if TESTKIT_COMMAND_INSTALL_FAILURE=1 run_make testkit-server-check > "$fixture/updated.log" 2>&1; then exit 1; fi
-grep -F 'Testkit 0.26.0' "$fixture/updated.log" >/dev/null
-tail -n 1 "$TESTKIT_COMMAND_INSTALL" | grep -F -- '--version 0.26.0' >/dev/null
-cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
-cp "$TESTKIT_COMMAND_INSTALL" "$fixture/before-install"
-for metadata in '{"packages":[]}' '{"packages":[{"name":"ic-testkit","version":"0.25.4"},{"name":"ic-testkit","version":"0.25.5"}]}'; do
-    printf '%s\n' "$metadata" > "$TESTKIT_COMMAND_METADATA"
-    if run_make testkit-server-check > "$fixture/ambiguous.log" 2>&1; then exit 1; fi
-    cmp "$TESTKIT_COMMAND_INSTALL" "$fixture/before-install"
-    cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
-done
+# Canonical lockfile identity, source and drift cases belong to test-rust-tools.sh.
+# This consumer fixture qualifies routing and fail-closed command ordering.
 # Exercise real prerequisite edges under parallel Make. Refusal must precede
 # every dependent compiler/test invocation without installing anything.
-printf '%s\n' '{"packages":[{"name":"ic-testkit","version":"0.26.0"}]}' > "$TESTKIT_COMMAND_METADATA"
 for failure in TESTKIT_COMMAND_INSTALL_FAILURE TESTKIT_COMMAND_SERVER_FAILURE; do
     : > "$TESTKIT_COMMAND_ORDER"
     if env -u MAKEFLAGS -u MFLAGS -u MAKELEVEL -u MAKEFILES "$failure=1" make --silent --no-print-directory -C "$fixture/consumer" -j4 check clippy test check-msrv > "$fixture/parallel-$failure.log" 2>&1; then exit 1; fi
@@ -132,9 +126,9 @@ for failure in TESTKIT_COMMAND_INSTALL_FAILURE TESTKIT_COMMAND_SERVER_FAILURE; d
 done
 : > "$TESTKIT_COMMAND_ORDER"
 TESTKIT_COMMAND_JOBSERVER=1 run_make -j4 check clippy > "$fixture/parallel-success.log" 2>&1
-[[ "$(head -n 1 "$TESTKIT_COMMAND_ORDER")" == 'server check' ]]
-[[ "$(grep -c '^server ' "$TESTKIT_COMMAND_ORDER")" == 1 ]]
-[[ "$(grep -c '^build ' "$TESTKIT_COMMAND_ORDER")" == 2 ]]
+[[ "$(head -n 1 "$TESTKIT_COMMAND_ORDER")" == 'server check' ]] || exit 1
+[[ "$(grep -c '^server ' "$TESTKIT_COMMAND_ORDER")" == 1 ]] || exit 1
+[[ "$(grep -c '^build ' "$TESTKIT_COMMAND_ORDER")" == 2 ]] || exit 1
 # The actual consumer aggregate includes locked fetch before Testkit setup;
 # parallel Make must preserve common host/IC/Cargo order and stop on failure.
 : > "$TESTKIT_COMMAND_ORDER"
@@ -154,8 +148,8 @@ done
 for tool in install-ic-tools.sh install-rust-tools.sh; do
     : > "$TESTKIT_COMMAND_ORDER"
     if TESTKIT_COMMAND_PREFLIGHT_FAILURE="$tool" run_make -j4 install-tools > "$fixture/preflight-$tool.log" 2>&1; then exit 1; fi
-    [[ ! -s "$TESTKIT_COMMAND_ORDER" ]]
+    [[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
 done
-[[ "$(cat "$fixture/retained")" == 'retained original evidence' ]]
+[[ "$(cat "$fixture/retained")" == 'retained original evidence' ]] || exit 1
 printf '%s\n' 'Testkit setup/check routing, original selection and refusal fixtures passed'
 fixture_complete=true

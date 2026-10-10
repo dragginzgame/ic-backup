@@ -68,8 +68,10 @@ into an issue tracker or release authority.
   Artifact/FS 0.12, changing that public Rust identity without a library behavior
   or record change. Consumers sharing publication errors must align Host 0.12.
   Released 0.14.1 selects Testkit 0.32 and aligns its test-only Host graph with
-  direct Host 0.12. The pending compatible batch qualifies Host 0.12.4 and
-  Testkit 0.32.2 without changing published Rust behavior or product records.
+  direct Host 0.12. Released 0.14.2 qualifies Host 0.12.4 and Testkit 0.32.2.
+  The pending batch selects Host 0.12.6 and Testkit 0.33. Host rejects NUL paths
+  before publication effects; Testkit's scoped reset classification supplies no
+  Backup recovery recipe, repeat-call authority or product record change.
   No compatibility adapter or record change follows. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
   server owner does not grant backup command custody or spending authority.
@@ -191,6 +193,11 @@ into an issue tracker or release authority.
   runs do not themselves upload packages. Repository release preparation,
   tagging and pushing retain their clean-source, tag and receipt requirements;
   registry publication delegates admission to Cargo for the current package.
+  Local `make package` admits/creates both current archives through Cargo and
+  mandatorily builds their exact unpacked pair in an independent normal consumer.
+  Its fixture-only core override prevents same-version published-source fallback;
+  require original selections, exact archive paths, immutable bytes and unchanged
+  root manifests/lock. No root/sibling patch or release/version authority follows.
 - Snapshot capture/inventory reply decoding now retains exact raw IDs and required
   nat64 timestamp/size fields under a declared request. Preserve the 1 MiB raw,
   1,024-entry, 256-ID-byte, 16-type-table and finite decoder-work bounds. Canonical
@@ -559,6 +566,16 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   Real local HTTP and PocketIC fixtures qualify transport, not fresh permissions,
   never-dispatched custody, application safety, full runners or terminal release.
   Old ICP logs/journals remain historical evidence; no ICP backend fallback remains.
+
+- The mutation port and capture/load/start coordinators are async. Keep the selected
+  original journal locked across admission, one submission and independent restore
+  qualification; providers recheck the currently guarded record. The configured
+  Agent mutation provider requires durable exact signed-envelope/request-ID retention
+  before consuming one submission. No default retention/application lane or core
+  runtime/Send bound exists. Cancellation preserves current pending/Applied spending,
+  releases the guard and denies reentry; retain replies before cancellable
+  qualification work. Other provider families remain synchronous and separately
+  accounted. No automatic receipt, retry, terminal/fence/reference release follows.
 
 - The provider-driven snapshot capture step accepts only the exact original
   take payload, opens its existing stage journal and durably reserves through

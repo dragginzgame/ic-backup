@@ -1,6 +1,7 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -42,20 +43,25 @@ impl IcMutationProvider for Provider {
     fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        self.calls += 1;
-        let reply = self.reply.clone()?;
-        Ok(
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap(),
-        )
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            let reply = self.reply.clone()?;
+            Ok(
+                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    context: request.plan().context().clone(),
+                    target: request.payload().target().into(),
+                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                    reply,
+                })
+                .unwrap(),
+            )
+        })())
     }
 }
 fn receipt(
@@ -120,20 +126,20 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
             calls: 0,
             reply: Ok(b"DIDL\0\0".to_vec()),
         };
-        let (reply, checkpoint) = restore_snapshot(
+        let (reply, checkpoint) = ready(restore_snapshot(
             &stage,
             &source_layout,
             &source,
             &safety,
             &mut provider,
-            |request, safety| {
+            async |request, safety| {
                 assert!(
                     AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
                         .is_err()
                 );
                 Ok::<_, io::Error>(RestoreSafetyObservation::new(input(safety)).unwrap())
             },
-            |request, reply| {
+            async |request, reply| {
                 assert!(
                     AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
                         .is_err()
@@ -145,7 +151,7 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
                 fs::File::open(stage.layout().unwrap().root())?.sync_all()?;
                 Ok(receipt(request, reply))
             },
-        )
+        ))
         .unwrap();
         assert_eq!(
             checkpoint.learned_evidence(),
@@ -181,15 +187,15 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         )
         .unwrap();
         assert!(
-            restore_snapshot(
+            ready(restore_snapshot(
                 &stage,
                 &source_layout,
                 &source,
                 &safety,
                 &mut provider,
-                |_, _| -> Result<_, io::Error> { panic!("Applied never admits") },
-                |_, _| -> Result<_, io::Error> { panic!("Applied never settles") }
-            )
+                async |_, _| -> Result<_, io::Error> { panic!("Applied never admits") },
+                async |_, _| -> Result<_, io::Error> { panic!("Applied never settles") }
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, 1);
@@ -205,6 +211,108 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
             original
         );
     }
+}
+
+#[test]
+fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() {
+    use std::{future::Future, task::Context};
+    let root = temp_dir("ic-backup-restore-cancel");
+    fs::create_dir(&root).unwrap();
+    fs::create_dir(root.join("source")).unwrap();
+    let layout = BackupLayoutGuard::acquire(&root).unwrap();
+    let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
+    let source = source();
+    create_operation_plan(&source_layout, &source).unwrap();
+    let plan = single(Method::LoadCanisterSnapshot);
+    let sequence = plan.operations()[0].operation_sequence();
+    let workflow = ExecutionWorkflowRecord::new(plan.clone());
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
+    let requirement = requirement(
+        stage.plan(),
+        &source,
+        RestoreSafetyLaneRecord::NoIrreversibleEffects,
+    );
+    create_restore_safety_requirement(
+        stage.layout().unwrap(),
+        &source_layout,
+        stage.plan(),
+        &source,
+        &requirement,
+    )
+    .unwrap();
+    let payload = wire(Method::LoadCanisterSnapshot);
+    let safety = RestoreSafetyRequest::new(
+        stage.plan(),
+        &source,
+        &requirement,
+        &payload,
+        RestoreSafetyRequestInput {
+            operation_sequence: sequence,
+            challenge: ArtifactChecksumRecord::from_bytes(b"original cancellation challenge"),
+            max_remote_observations: 1,
+        },
+    )
+    .unwrap();
+    let mut provider = Provider {
+        calls: 0,
+        reply: Ok(b"DIDL\0\0".to_vec()),
+    };
+    let reply_path = root.join("retained-reply.candid");
+    let mut future = Box::pin(restore_snapshot(
+        &stage,
+        &source_layout,
+        &source,
+        &safety,
+        &mut provider,
+        async |_, safety| Ok::<_, io::Error>(RestoreSafetyObservation::new(input(safety)).unwrap()),
+        async |request, reply| {
+            assert!(
+                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
+            );
+            let file = fs::File::create(&reply_path)?;
+            (&file).write_all(&reply.input().reply)?;
+            file.sync_all()?;
+            fs::File::open(&root)?.sync_all()?;
+            std::future::pending::<()>().await;
+            Ok(receipt(request, reply))
+        },
+    ));
+    assert!(
+        future
+            .as_mut()
+            .poll(&mut Context::from_waker(std::task::Waker::noop()))
+            .is_pending()
+    );
+    let authority = stage.plan().attempt_authority(sequence).unwrap();
+    assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+    let journal_path = stage
+        .layout()
+        .unwrap()
+        .root()
+        .join(format!("attempt-{sequence}.json"));
+    let original = fs::read(&journal_path).unwrap();
+    drop(future);
+    assert_eq!(provider.calls, 1);
+    let journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+    drop(journal);
+    assert!(
+        ready(restore_snapshot(
+            &stage,
+            &source_layout,
+            &source,
+            &safety,
+            &mut provider,
+            async |_, _| -> Result<_, io::Error> { panic!("pending never readmits") },
+            async |_, _| -> Result<_, io::Error> { panic!("pending never requalifies") },
+        ))
+        .is_err()
+    );
+    assert_eq!(provider.calls, 1);
+    assert_eq!(fs::read(journal_path).unwrap(), original);
+    assert_eq!(fs::read(reply_path).unwrap(), b"DIDL\0\0");
 }
 
 #[test]
@@ -293,13 +401,13 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
             )
             .unwrap();
         }
-        let result = restore_snapshot(
+        let result = ready(restore_snapshot(
             &stage,
             &source_layout,
             &source,
             &safety,
             &mut provider,
-            |_, safety| {
+            async |_, safety| {
                 if failure == 0 {
                     return Err(io::Error::other("fresh admission refused"));
                 }
@@ -327,7 +435,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
                 }
                 Ok(RestoreSafetyObservation::new(actual).unwrap())
             },
-            |request, reply| {
+            async |request, reply| {
                 if failure == 4 {
                     return Err(io::Error::other("durable qualification refused"));
                 }
@@ -337,7 +445,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
                 }
                 Ok(receipt)
             },
-        );
+        ));
         match (failure, result) {
             (0, Err(IcRestoreExecutionError::Admission(_)))
             | (1, Err(IcRestoreExecutionError::Safety(RestoreSafetyError::TargetNotStopped)))
@@ -389,15 +497,15 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         .unwrap();
         let calls = provider.calls;
         assert!(
-            restore_snapshot(
+            ready(restore_snapshot(
                 &stage,
                 &source_layout,
                 &source,
                 &safety,
                 &mut provider,
-                |_, _| -> Result<_, io::Error> { panic!("pending never admits") },
-                |_, _| -> Result<_, io::Error> { panic!("pending never settles") }
-            )
+                async |_, _| -> Result<_, io::Error> { panic!("pending never admits") },
+                async |_, _| -> Result<_, io::Error> { panic!("pending never settles") }
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, calls);

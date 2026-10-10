@@ -46,21 +46,26 @@ use thiserror::Error;
 /// Pending/Applied stages never invoke callbacks/providers again. Checkpoint replay
 /// stays local; failure preserves spending, replies, obligations and references.
 /// This is one bounded step, not complete restore, terminal or fence/reference release.
+/// Admission, submission and independent qualification are awaited under the
+/// selected journal lock. Cancellation retains its current pending/Applied state
+/// and grants no repeat invocation. Qualification must durably retain returned
+/// bytes before awaiting work that could be cancelled; in-memory replies do not
+/// survive cancellation. The core imposes no executor or `Send` requirement.
 /// # Errors
 /// Rejects changed/non-singleton originals, retained source/requirement failures,
 /// spending, fresh admission/safety, provider/association, qualification/receipt or
 /// checkpoint failure. Returned bounded replies survive post-reply rejection.
-pub fn restore_snapshot<E: std::error::Error + 'static>(
+pub async fn restore_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     source_layout: &BackupLayoutGuard,
     source_plan: &OperationPlanRecord,
     safety: &RestoreSafetyRequest<'_>,
     provider: &mut impl IcMutationProvider,
-    admit: impl FnOnce(
+    admit: impl AsyncFnOnce(
         &IcMutationRequest<'_>,
         &RestoreSafetyRequest<'_>,
     ) -> Result<RestoreSafetyObservation, E>,
-    qualify: impl FnOnce(
+    qualify: impl AsyncFnOnce(
         &IcMutationRequest<'_>,
         &IcMutationAcknowledgement,
     ) -> Result<MutationReceiptRequest, E>,
@@ -92,15 +97,20 @@ pub fn restore_snapshot<E: std::error::Error + 'static>(
     let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
     journal.reserve_planned_mutation(&plan.digest())?;
     let request = IcMutationRequest::new(plan, sequence, journal.record()?, safety.wire())?;
-    let observation = admit(&request, safety).map_err(IcRestoreExecutionError::Admission)?;
+    let observation = admit(&request, safety)
+        .await
+        .map_err(IcRestoreExecutionError::Admission)?;
     validate(safety, &observation)?;
     retain()?;
-    let acknowledgement = provider.submit_mutation(&request)?;
-    let settle = || {
+    let acknowledgement = provider
+        .submit_mutation(&request, journal.record()?)
+        .await?;
+    let settle = async || {
         let admitted = validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
         retain()?;
-        let receipt =
-            qualify(&request, &acknowledgement).map_err(IcRestoreReplyError::Qualification)?;
+        let receipt = qualify(&request, &acknowledgement)
+            .await
+            .map_err(IcRestoreReplyError::Qualification)?;
         if receipt.outcome != MutationOutcomeRecord::Applied
             || receipt.attempt != request.mutation_attempt()
             || receipt.request != safety.wire().digest().hash()
@@ -115,7 +125,7 @@ pub fn restore_snapshot<E: std::error::Error + 'static>(
         };
         Ok(reply.digest())
     };
-    let evidence = match settle() {
+    let evidence = match settle().await {
         Ok(evidence) => evidence,
         Err(source) => {
             return Err(IcRestoreExecutionError::AfterReply {

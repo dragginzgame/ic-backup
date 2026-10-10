@@ -3,6 +3,8 @@
 #![cfg(unix)]
 
 mod pic_journey;
+#[path = "../src/test_support/ready.rs"]
+mod ready;
 mod support;
 
 #[test]

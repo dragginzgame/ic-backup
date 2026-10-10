@@ -49,20 +49,35 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 96-file snapshot selects committed Shared Tooling 0.3.3 at
-`d63f0cfaba8ab2961d6012064adbf051c1898bc1`, verified against remote main.
-Canonical clean export changes only the validation runner and its regression
-owner. Nesting depth is a bounded canonical decimal, rejected before dispatch.
-Explicit completion distinguishes completed target failure from premature runner
-exit; available source/log evidence remains retained. Local dependency discovery
-also preserves Make jobserver descriptors through its Cargo metadata wrapper.
-The local tooling adapter owns isolated logger context and completion, including
-inherited-parent qualification of the unchanged shared regression. The reusable
-fixture leak remains [Shared #105](https://github.com/dragginzgame/shared-tooling/issues/105).
-Host 0.12.4 and Testkit 0.32.2 retain unchanged published Rust sources, with their
-exact selected CLI explicitly prepared. See
-[the consumer review](reports/audits/2026/10/10/shared-033/01/report.md).
-The compatible draft is 0.14.2; package/receipt remain released 0.14.1.
+The current 96-file snapshot selects committed Shared Tooling 0.3.7 at
+`34e5ad7aac3599306c9572bb547f2239d09df1a3`, verified against remote main and
+adopted through canonical clean export. The common baseline now requires routine
+CI to cancel superseded runs per workflow/ref; Backup's workflow already preserves
+the complete host matrix under that group. Cancelled jobs supply no qualification.
+The shared runner fixture isolates inherited log/summary paths; formatter fixtures
+require explicit completion. Failed Git index-tree observations stop the hook even
+when stdout looks valid. The shared Cargo installer now owns exact registry package
+selection from `--lockfile Cargo.lock`, including source, ambiguity and drift refusal.
+Backup removes its Cargo metadata/JQ selector; local fixtures retain Make routing,
+offline refusal and ordered setup ownership. No validation command installs tools.
+Mandatory assertions now fail explicitly on Bash 3.2, including in local tooling,
+Testkit, hook and release fixtures. A contradicted local command result verifies
+failure status and retained original evidence through the actual fixture.
+
+Consumer-owned IC pins select Binaryen 133 with exact committed archive hashes.
+An offline test helper retains original/optimized Wasm and optimizer identity;
+both actual simulator suites run that optimized fixture. Earlier tools, server
+installations and failed evidence remain retained. The incoming graph selects
+Host 0.12.6, Testkit 0.33 and Metrics 0.5.4. The 0.15.0 draft is required by the
+independent public async mutation hard cut; package/receipt remain released 0.14.2.
+See [the current qualification](reports/audits/2026/10/10/continuation-0150/01/report.md).
+
+### Prior Shared Tooling 0.3.3 review
+
+Released 0.14.2 adopted the same 96-file roster at committed Shared Tooling 0.3.3
+`d63f0cfaba8ab2961d6012064adbf051c1898bc1`. Its bounded nesting-depth admission,
+runner completion and consumer-owned fixture isolation remain qualified under
+[the historical graph](reports/audits/2026/10/10/shared-033/01/report.md).
 
 ### Prior Shared Tooling 0.3.2 review
 
@@ -421,8 +436,9 @@ keeps the failure and corrected results separate from earlier focused evidence.
 ## Consumer-owned IC pins
 
 The current matrix is consumer-owned and outside the immutable snapshot. It
-contains exactly the five shared executables, with unchanged official archive
-hashes across Linux x86-64, Intel macOS and Apple Silicon macOS. Testkit owns
+contains exactly the five shared executables. Binaryen now selects the committed
+133 archive hashes across Linux x86-64, Intel macOS and Apple Silicon macOS; the
+other four tool rows retain their earlier pins. Testkit owns
 PocketIC pins and assets; no server row or duplicate client/server policy remains.
 Explicit setup selects the new bundle; checks reject old six-tool selections
 without rewriting their pins, receipts or binary evidence.

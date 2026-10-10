@@ -2465,7 +2465,7 @@ qualification, Canic adoption, full restore or terminal/fence/reference release.
 `TakeCanisterSnapshot` payload under a retained execution stage. Canonical target/
 wire binding rejects before spending. Open the existing original journal, never
 create it; complete original-plan progress owns the durable reservation. Hold the
-selected journal through mandatory fallible fresh integration admission, one
+selected journal across awaited mandatory fallible fresh integration admission, one
 `IcMutationProvider::submit_mutation` invocation and existing bounded passive
 acknowledgement association. Recheck stage/ancestors before dispatch and after
 the reply. Fresh actual control, capture consistency, quiescence/fence obligations,
@@ -2486,7 +2486,7 @@ qualified capture receipt and existing metadata/data read steps. Successful capt
 joins durable artifact publication; lost/malformed capture replies preserve pending
 originals and source references, with no recapture, checkpoint or successor stage.
 These cases qualify the controlled stopped fixture only. Full backup/restore,
-default Agent provider, application admission and terminal/custody/fence/reference
+configured full Agent runner, default application admission and terminal/custody/fence/reference
 release remain open in [#29](https://github.com/dragginzgame/ic-backup/issues/29).
 See the [mutation port contract](contracts/ic-mutation-port.json).
 
@@ -2709,8 +2709,18 @@ real Testkit caller now joins complete upload, load, independently verified stop
 restored bytes, and start with an explicit dependency even when numeric sequences
 run in reverse order. Lost/malformed load stops before creating start; lost/malformed
 start retains its pending original. This qualifies an isolated fixture, not a default
-application lane, async Agent bridge, full restore runner, terminal/fence/reference
+application lane, full async provider integration, full restore runner, terminal/fence/reference
 release or prune. Existing uncertain-effect reconciliation remains maintained.
+
+The mutation port and capture/load/start coordinators now return futures; admission
+and restore qualification callbacks are async. Providers receive the currently
+guarded original journal. `AgentMutationProvider` signs, requires durable exact
+signed-envelope/request-ID retention, then submits once through the existing
+transport. Passive replies still require independent qualification. Cancellation
+releases the selected lock, retains current pending/Applied spending and denies
+callback/provider reentry; durable reply retention must precede cancellable
+qualification work. The core adds no runtime/Send requirement. Other provider
+families remain synchronous; full async product/application coordination is pending.
 
 ### Original execution settlement checkpoints
 

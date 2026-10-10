@@ -2,6 +2,10 @@
 
 mod support;
 
+use crate::ready::ready;
+
+#[path = "../src/test_support/ready.rs"]
+mod ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -61,37 +65,42 @@ impl IcMutationProvider for NativeProvider {
     fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        let payload = request.payload();
-        self.calls.push((
-            payload.receiver().into(),
-            payload.target().into(),
-            payload.method().name().into(),
-            payload.arguments().into(),
-            request.mutation_attempt(),
-        ));
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
-        let reply = if payload.method() == Method::TakeCanisterSnapshot {
-            candid::encode_one(ic_management_canister_types::Snapshot {
-                id: vec![0, 255, 128],
-                taken_at_timestamp: 42,
-                total_size: 128,
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            let payload = request.payload();
+            self.calls.push((
+                payload.receiver().into(),
+                payload.target().into(),
+                payload.method().name().into(),
+                payload.arguments().into(),
+                request.mutation_attempt(),
+            ));
+            if let Some(error) = self.failure {
+                return Err(error);
+            }
+            let reply = if payload.method() == Method::TakeCanisterSnapshot {
+                candid::encode_one(ic_management_canister_types::Snapshot {
+                    id: vec![0, 255, 128],
+                    taken_at_timestamp: 42,
+                    total_size: 128,
+                })
+                .unwrap()
+            } else {
+                b"DIDL\0\0".to_vec()
+            };
+            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: payload.target().into(),
+                reply,
+                evidence: hash("12"),
             })
-            .unwrap()
-        } else {
-            b"DIDL\0\0".to_vec()
-        };
-        IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context().clone(),
-            target: payload.target().into(),
-            reply,
-            evidence: hash("12"),
-        })
-        .map_err(|_| IcMutationProviderError::Indeterminate)
+            .map_err(|_| IcMutationProviderError::Indeterminate)
+        })())
     }
 }
 
@@ -157,7 +166,8 @@ fn retained_case(method: Method, failure: Option<IcMutationProviderError>) {
         failure,
         calls: vec![],
     };
-    let acknowledgement = match provider.submit_mutation(&request) {
+    let acknowledgement = match ready(provider.submit_mutation(&request, journal.record().unwrap()))
+    {
         Ok(acknowledgement) => {
             validate_acknowledgement(&request, journal.record().unwrap(), &acknowledgement)
                 .unwrap();

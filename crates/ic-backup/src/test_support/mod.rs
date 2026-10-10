@@ -11,6 +11,7 @@ pub mod ic_snapshot_upload;
 pub mod ic_snapshot_upload_data_observation;
 pub mod local_restore_source;
 pub mod membership;
+pub mod ready;
 pub mod restore_safety;
 pub mod snapshot_read;
 

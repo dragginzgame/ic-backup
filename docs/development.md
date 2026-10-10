@@ -831,7 +831,17 @@ summary. Full and highlighted failure logs remain under
 The runner requires GNU Make, `awk`, `sed`, `tail`, `tee` and ripgrep or grep.
 Snapshot verification requires `sha256sum` or `shasum`. Shared Tooling is never
 fetched at validation time. Local package verification permits reviewed dirty
-source and builds the packaged crate; it does not publish it.
+source and builds both current archives together; it does not publish them.
+`make package` retains a fresh `package-check.*` fixture under `TMPDIR`, defaulting
+to `target/`. CI's retained `target/ci-fixtures` root includes package and Testkit
+routing failures in its archive. Cargo creates the
+archives; an independent normal consumer then mandatorily builds their exact
+unpacked pair. A fixture-only registry override selects the unpacked core, avoiding
+the already published same-version core during unreleased API work. Metadata checks
+preserve original dependency selections, exclude simulator packages and require
+both exact archive paths; archive/source hashes and root manifest/lock remain
+unchanged. This adds no root/sibling patch or version transaction. Registry
+publication continues to use Cargo's ordinary admission.
 
 ## Formatting and evidence
 

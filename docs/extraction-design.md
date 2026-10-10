@@ -262,7 +262,7 @@ status/read visibility must never be mistaken for write authority.
 | Port | Owned contract |
 | --- | --- |
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
-| `IcMutationProvider` | Implemented exact original IC update/reserved-mutation envelope and bounded passive acknowledgement association; no installed provider or automatic settlement |
+| `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentMutationProvider requires durable signed retention, with no default or automatic settlement |
 | `IcSnapshotTransferReadProvider` | Implemented exact original metadata/data payload and pending-update request, bounded passive actual-context response and existing decoder association; no installed provider, automatic receipt or read reissue |
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented single reserved source-bound metadata/data update signature, reusing exact upload attempts, passive acknowledgements and IC update failures; no installed provider, automatic settlement or retry |
@@ -619,7 +619,10 @@ locked. Successful passive acknowledgements remain pending; existing explicit
 receipt admission alone records qualified outcomes. The isolated Testkit driver
 connects this capture step to metadata/data reads and durable artifact publication,
 and blocks recapture or successor stages after lost/malformed capture replies.
-No default Agent provider or complete application runner follows.
+Capture admission and mutation submission are async under journal exclusion. The
+configured Agent mutation provider requires durable signed-ingress retention before
+one call. Cancellation preserves pending spending and denies reentry. No default
+application admission or complete runner follows.
 
 `workflow::ic_snapshot_transfer_read::read_snapshot` now coordinates one new
 planned read under an exact retained stage. It rejects mismatched original payloads
@@ -735,8 +738,10 @@ one update. Independently qualified durable request/reply evidence precedes each
 exact Applied receipt and existing checkpoint. A load receipt supplies no later
 application acceptance; lost/malformed replies stop without reissue or successor
 start. Actual Testkit journeys join complete upload, independently verified stopped
-restored bytes and start while retaining source obligations. Full runners, async
-Agent/application integration and terminal/custody proof remain separate. See
+restored bytes and start while retaining source obligations. Admission, mutation submission and independent qualification are now async under
+the selected journal lock; the configured Agent mutation provider joins this exact
+port. Retain replies before cancellable qualification work. Other async provider
+ports, full runners and terminal/custody proof remain separate. See
 [the maintained coordination boundary](extraction-boundary.md#original-same-id-loadstart-coordination).
 
 Explicit local IC-tree verification and upload preparation now expose per-guard

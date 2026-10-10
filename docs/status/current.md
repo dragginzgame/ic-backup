@@ -25,7 +25,46 @@
 
 # Current handoff — 2026-10-10
 
-## Current 0.14.2 restore and tooling continuation
+## Current 0.15.0 async mutation continuation
+
+Released local/remote main is 0.14.2 at
+`c157d43e542dc27dc5f7781850c7b8bb169b5a0c`. Select uncommitted 0.15.0 for the
+public async mutation hard cut: await `IcMutationProvider` and capture/load/start
+coordinators, supply async admission/qualification callbacks and the current
+original guarded journal. Package/receipt remain 0.14.2. The configured
+`AgentMutationProvider` requires durable exact signed-envelope/request-ID retention
+before one submission. Selected journal exclusion spans awaits; cancellation
+retains current spending and denies reentry. Replies remain passive and other
+provider families stay synchronous. Full runners/application custody and
+terminal/fence/source-reference release remain separate under #25/#29.
+
+Canonically adopt committed Shared Tooling 0.3.7
+`34e5ad7aac3599306c9572bb547f2239d09df1a3` (same 96 files). Upstream owns fixture
+logger isolation/completion, failed Git index observations and lockfile-based
+Cargo tool selection. Retire local Cargo metadata/JQ Testkit selection; migrate
+local routing/release substitutes to the shared lockfile command. Consumer IC pins
+select Binaryen 133; both actual simulator suites use retained optimized fixtures.
+Fail shared/local mandatory Bash 3.2 assertions explicitly; CI already follows
+the new baseline's workflow/ref cancellation policy. Preserve incoming Host 0.12.6,
+Testkit 0.33 and Metrics 0.5.4. Host 0.12.6 Rust source matches 0.12.5; the graph
+changed during prior validation and must be qualified again. Earlier tools/evidence
+remain retained.
+
+Focused checks pass 49 workflow cases, 29 core simulator journeys, four Agent
+simulator journeys, strict Clippy and an independent Rust 1.88 consumer compiling
+both new public coordinators with the Agent provider on an exact normal graph
+subset. All 16 delivery gates pass on Shared 0.3.7 and the fixed Host 0.12.6 graph;
+the final routing-retention adjustment passes affected shell/tooling and actual
+Bash 3.2 checks. The actual CI collector preserves exact failed routing logs and
+lockfile. Technical inputs stay unchanged during qualification. See
+[the current review](../reports/audits/2026/10/10/continuation-0150/01/report.md).
+Released 0.14.2 has one native CI run: Linux passes; both macOS jobs failed at
+system-Bash Testkit routing. Its omitted fixture logs leave the exact cause unproven.
+The draft fixes evidence retention; native acceptance remains open. This uncommitted
+draft has no hosted result. No root Git write, release,
+registry upload, production IC effect, sibling edit or recovery cleanup ran.
+
+## Prior 0.14.2 restore and tooling continuation
 
 Local HEAD and GitHub main match released 0.14.1
 `434454b2923c2cd004ffe2697770a7f3b9b07d7e`. Select compatible 0.14.2; package

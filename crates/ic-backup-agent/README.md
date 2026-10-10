@@ -11,6 +11,15 @@ identity/root key. Bind an existing request using `ReservedUpdate`, then call
 `envelope` and `request_id` durably with original intent before consuming the
 preparation through `submit().await`. An async network/timer executor is required.
 
+For capture/load/start coordination, configure `AgentMutationProvider` with that
+transport and a mandatory fallible callback retaining the exact signed envelope
+and request ID privately and durably under the original plan/attempt. Retention
+failure stops before submission. Await the core `capture_snapshot` or
+`restore_snapshot` coordinator with async fresh admission and, for restore,
+independent reply qualification. The selected journal stays locked across awaits;
+cancellation preserves pending spending and denies reentry. Other request families
+still use the original explicit `prepare`/`submit` interface.
+
 A certificate-verified reply is passive evidence for the existing method-specific
 codec and association checks. `Pending` returns the original ingress ID without
 polling. Errors, cancellation and lost replies leave original reservations pending;

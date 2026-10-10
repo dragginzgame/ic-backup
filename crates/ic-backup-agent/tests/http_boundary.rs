@@ -2,6 +2,7 @@
 mod http_capture;
 mod support;
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
+use ic_backup::ports::ic_mutation::{IcMutationProvider, IcMutationProviderError};
 use ic_backup::{
     model::{
         ic_mutation::IcMutationRequest,
@@ -10,9 +11,72 @@ use ic_backup::{
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard},
 };
+use ic_backup_agent::{AgentMutationProvider, PreparedUpdate};
 use ic_backup_agent::{
     AgentTransport, MAX_HTTP_RESPONSE_BYTES, ReservedUpdate, TransportError, UpdateOutcome,
 };
+
+#[tokio::test]
+async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or_lost_pending() {
+    for (label, refuse, discard) in [
+        ("retention-refused", true, false),
+        ("accepted", false, false),
+        ("lost", false, true),
+    ] {
+        let root = support::root(label);
+        let mut server = Server::new(&root, "202 Accepted", vec![], discard, false);
+        let payload = support::payload(Method::StopCanister, TARGET, None);
+        let plan = support::plan(TARGET, &payload.digest(), 1);
+        let layout = BackupLayoutGuard::acquire(&root).unwrap();
+        let guard = support::retain(&layout, &plan, 1);
+        let before = fs::read(guard.path()).unwrap();
+        let request = IcMutationRequest::new(&plan, 1, guard.record().unwrap(), &payload).unwrap();
+        let transport = AgentTransport::new(
+            plan.context().clone(),
+            &server.endpoint,
+            support::identity(),
+            vec![1],
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        let mut provider = AgentMutationProvider::new(
+            &transport,
+            |actual: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+                assert_eq!(actual.authority().digest(), request.authority().digest());
+                assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                assert!(server.requests.lock().unwrap().is_empty());
+                if refuse {
+                    return Err(IcMutationProviderError::Unavailable);
+                }
+                support::retain_signed(&root, prepared).unwrap();
+                Ok(())
+            },
+        );
+        let result = provider
+            .submit_mutation(&request, guard.record().unwrap())
+            .await;
+        assert_eq!(
+            result.unwrap_err(),
+            if refuse {
+                IcMutationProviderError::Unavailable
+            } else {
+                IcMutationProviderError::Indeterminate
+            }
+        );
+        server.finish().unwrap();
+        assert_eq!(server.requests.lock().unwrap().len(), usize::from(!refuse));
+        assert_eq!(fs::read(guard.path()).unwrap(), before);
+        if !refuse {
+            let requests = server.requests.lock().unwrap();
+            let bytes = requests[0].complete_bytes(&root);
+            let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
+            assert_eq!(
+                &bytes[end + 4..],
+                fs::read(root.join("signed-ingress.cbor")).unwrap()
+            );
+        }
+    }
+}
 use std::{
     fs,
     io::{self, Write},
@@ -186,8 +250,7 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
         assert!(server.requests.lock().unwrap().is_empty());
         let envelope = prepared.envelope().to_vec();
         let id = *prepared.request_id();
-        fs::write(root.join("signed-ingress.cbor"), &envelope).unwrap();
-        fs::write(root.join("request-id.txt"), id.to_string()).unwrap();
+        support::retain_signed(&root, &prepared).unwrap();
         let result = prepared.submit().await;
         server.finish().unwrap();
         if pending {

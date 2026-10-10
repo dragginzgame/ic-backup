@@ -83,7 +83,23 @@ impl Backend {
                 Duration::from_secs(60),
             ))
             .unwrap();
-        let wasm = wat::parse_str(include_str!("../state.wat")).unwrap();
+        fs::write(
+            root.join("original.wasm"),
+            wat::parse_str(include_str!("../state.wat")).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            std::process::Command::new("bash")
+                .arg(
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                        .join("../../scripts/ci/optimize-test-wasm.sh")
+                )
+                .arg(&root)
+                .status()
+                .unwrap()
+                .success()
+        );
+        let wasm = fs::read(root.join("optimized.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
         // Explicit simulator fixture setup, outside backup/restore authority.

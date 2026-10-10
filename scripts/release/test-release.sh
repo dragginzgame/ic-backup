@@ -87,12 +87,12 @@ publish.workspace = true
 TOML
     printf '// Native metadata fixture target; no canister behavior.\n' > crates/ic-backup/src/lib.rs
     printf 'version = 4\n\n[[package]]\nname = "ic-backup"\nversion = "0.1.0"\n\n[[package]]\nname = "retained-dependency"\nversion = "9.8.7"\n' > Cargo.lock
+    printf '\n[[package]]\nname = "ic-testkit"\nversion = "0.28.1"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\n' >> Cargo.lock
     printf '# Changelog\n\n## [0.1.1]\n\n- Completed notes.\n\n## [0.1.0] - 2026-10-01\n\n- Retained history.\n\n## [0.0.9]\n\n- Imported undated history.\n' > CHANGELOG.md
     sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md > target/history
     export TEST_LOG="$FIXTURE/target/commands.log" TEST_EFFECTS="$FIXTURE/target/effects.log"
     : > "$TEST_LOG"; : > "$TEST_EFFECTS"
     mkdir -p scripts/dev target/mock-tools/0.28.1
-    printf '0.28.1\n' > target/mock-testkit-selection
     printf 'original receipt\n' > target/mock-tools/0.28.1/receipt
     : > target/tool-effects.log
     # Substitutes qualify consumer ordering only. Canonical installer tests own
@@ -118,7 +118,11 @@ printf 'installer %s\n' "$*" >> "$TEST_LOG"
 version=''; check=false; preflight=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --version) version="$2"; shift 2 ;;
+        --lockfile)
+            # Project this fixture's known package. Strict source/ambiguity/drift
+            # admission belongs to the real shared installer's own regressions.
+            version="$(yq -p toml -o json -I 0 '.' "$2" | jq -er '.package[] | select(.name == "ic-testkit") | .version')"
+            shift 2 ;;
         --check) check=true; shift ;;
         --preflight) preflight=true; shift ;;
         *) shift ;;
@@ -168,8 +172,8 @@ checksum() {
     if command -v sha256sum >/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi
 }
 fingerprint() { checksum Cargo.toml Cargo.lock crates/ic-backup/Cargo.toml CHANGELOG.md; }
-assert_unchanged() { [[ "$(fingerprint)" == "$before" && ! -e docs/release.json ]]; }
-assert_cache_retained() { [[ "$(cat target/debug/cache-sentinel)" == 'retained build artifact' ]]; }
+assert_unchanged() { [[ "$(fingerprint)" == "$before" && ! -e docs/release.json ]] || exit 1; }
+assert_cache_retained() { [[ "$(cat target/debug/cache-sentinel)" == 'retained build artifact' ]] || exit 1; }
 
 cat > "$TEMPORARY/bin/git" <<'STUB'
 #!/usr/bin/env bash
@@ -346,7 +350,6 @@ case "$*" in
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
     'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
-    'metadata --offline --locked --format-version 1') printf '{"packages":[{"name":"ic-testkit","version":"%s"}]}\n' "$(cat target/mock-testkit-selection)" ;;
     'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent'|'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent --dry-run')
         if [[ "${TEST_PUBLISH_FAIL:-0}" == 1 ]]; then exit 101; fi
         echo publish >> "$TEST_EFFECTS" ;;
@@ -361,8 +364,8 @@ test_dependency_bootstrap() {
     if [[ "$1" == failure ]]; then
         export TEST_FETCH_FAIL=1
         expect_failure "$TEST_REAL_MAKE" --no-print-directory validate 'CI_TARGETS=deps check'
-        [[ "$(cat "$TEST_EFFECTS")" == fetch ]]
-        [[ -s target/validation-failures/latest.log && -s target/validation-failures/latest-errors.log ]]
+        [[ "$(cat "$TEST_EFFECTS")" == fetch ]] || exit 1
+        [[ -s target/validation-failures/latest.log && -s target/validation-failures/latest-errors.log ]] || exit 1
     else
         "$TEST_REAL_MAKE" --no-print-directory release-verify 'CI_TARGETS=deps check'
         printf '%s\n' fetch check > target/expected
@@ -375,7 +378,7 @@ test_nested_dependency_bootstrap() {
     printf 'parent evidence\n' > target/parent/summary
     export VALIDATION_RUNNER_DEPTH=1
     test_dependency_bootstrap "$1"
-    [[ "$(cat target/parent/summary)" == 'parent evidence' ]]
+    [[ "$(cat target/parent/summary)" == 'parent evidence' ]] || exit 1
 }
 test_validation_source_identity() {
     before="$(fingerprint)"
@@ -385,22 +388,22 @@ test_validation_source_identity() {
         'CI_TARGETS=deps check' RELEASE_SOURCE=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
         RELEASE_PREVIOUS=0.1.0 RELEASE_VERSION=0.1.1 RELEASE_DATE=2026-10-05
     assert_unchanged
-    [[ ! -e target/release-state/0.1.1.validation.json ]]
+    [[ ! -e target/release-state/0.1.1.validation.json ]] || exit 1
     "$TEST_REAL_MAKE" --no-print-directory release-verify 'CI_TARGETS=deps check' \
         "RELEASE_SOURCE=$TEST_SOURCE" RELEASE_PREVIOUS=0.1.0 \
         RELEASE_VERSION=0.1.1 RELEASE_DATE=2026-10-05
     perl scripts/release/release-data.pl validation-check \
         target/release-state/0.1.1.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.1.1 original
     assert_unchanged
-    [[ ! -e target/release-state/0.1.1.plan && ! -e target/mock-staged && ! -e target/mock-tag && ! -e target/remote-head ]]
+    [[ ! -e target/release-state/0.1.1.plan && ! -e target/mock-staged && ! -e target/mock-tag && ! -e target/remote-head ]] || exit 1
     assert_cache_retained
 }
 test_versions() {
     # Invoke the actual consumer entry point under a noisy directory-search environment.
-    [[ "$(CDPATH="$PWD" bash scripts/release/release.sh version)" == 0.1.0 ]]
-    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 patch)" == 0.1.1 ]]
-    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 minor)" == 0.2.0 ]]
-    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 major)" == 1.0.0 ]]
+    [[ "$(CDPATH="$PWD" bash scripts/release/release.sh version)" == 0.1.0 ]] || exit 1
+    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 patch)" == 0.1.1 ]] || exit 1
+    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 minor)" == 0.2.0 ]] || exit 1
+    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 major)" == 1.0.0 ]] || exit 1
     for value in 01.2.3 0.1.1-extra 0.0.9; do expect_failure perl scripts/release/release-data.pl next "$value"; done
 }
 test_invalid_changelog() {
@@ -440,7 +443,7 @@ AWK
             expect_failure perl scripts/release/release-data.pl finalize 0.1.1 2026-10-05 0.1.0
             assert_unchanged
             local candidates=("$TMPDIR"/ic-backup-changelog.*/candidate.md)
-            [[ "${#candidates[@]}" == 1 && -f "${candidates[0]}" && ! -s "${candidates[0]}" ]]
+            [[ "${#candidates[@]}" == 1 && -f "${candidates[0]}" && ! -s "${candidates[0]}" ]] || exit 1
             return ;;
     esac
     cp CHANGELOG.md target/original-notes
@@ -466,7 +469,7 @@ test_version_reader() {
         sed 's/version.workspace = true/version.workspace = true # valid inheritance comment/' crates/ic-backup/Cargo.toml > target/member.toml
         cp target/member.toml crates/ic-backup/Cargo.toml
         before="$(fingerprint)"
-        [[ "$(perl scripts/release/release-data.pl version)" == 0.1.0 ]]
+        [[ "$(perl scripts/release/release-data.pl version)" == 0.1.0 ]] || exit 1
         assert_unchanged
     elif [[ "$mode" == selected ]]; then
         mkdir -p "target/commits/$TEST_SOURCE/files/crates/ic-backup/src"
@@ -476,7 +479,7 @@ test_version_reader() {
         printf 'invalid working TOML\n' >> Cargo.toml
         printf 'invalid working member TOML\n' >> crates/ic-backup/Cargo.toml
         before="$(fingerprint)"
-        [[ "$(perl scripts/release/release-data.pl version --commit "$TEST_SOURCE")" == 0.1.0 ]]
+        [[ "$(perl scripts/release/release-data.pl version --commit "$TEST_SOURCE")" == 0.1.0 ]] || exit 1
         assert_unchanged
         expect_failure perl scripts/release/release-data.pl version
     else
@@ -492,11 +495,11 @@ test_version_reader() {
         before="$(fingerprint)"
         expect_failure perl scripts/release/release-data.pl prepare-version 0.1.1
         assert_unchanged
-        [[ ! -s "$TEST_EFFECTS" ]]
+        [[ ! -s "$TEST_EFFECTS" ]] || exit 1
         if perl scripts/release/release-data.pl version > target/version-output 2> target/version-error; then
             echo 'invalid version read was accepted' >&2; exit 1
         fi
-        [[ ! -s target/version-output ]]
+        [[ ! -s target/version-output ]] || exit 1
     fi
     assert_cache_retained
 }
@@ -505,12 +508,12 @@ test_preparation() {
     export TEST_LOST_EFFECT=commit
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     perl scripts/release/release-data.pl verify
-    [[ -f target/release-state/0.1.1.validation.json ]]
+    [[ -f target/release-state/0.1.1.validation.json ]] || exit 1
     rg -q '^name = "retained-dependency"$' Cargo.lock
     rg -q '^version = "9.8.7"$' Cargo.lock
     cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
     local backups=(target/release-backup.*)
-    [[ -d "${backups[0]}" ]]
+    [[ -d "${backups[0]}" ]] || exit 1
     assert_cache_retained
 }
 test_multi_package_preparation() {
@@ -529,7 +532,7 @@ test_multi_package_preparation() {
     perl scripts/release/release-data.pl verify
     jq -e '.files | has("crates/ic-backup-agent/Cargo.toml")' docs/release.json
     rg -F 'ic-backup = { version = "0.2.0", path = "crates/ic-backup" }' Cargo.toml
-    [[ "$(rg -c 'version = "0.2.0"' Cargo.lock)" == 2 ]]
+    [[ "$(rg -c 'version = "0.2.0"' Cargo.lock)" == 2 ]] || exit 1
     mkdir -p "target/commits/$TEST_SOURCE/files"
     cp Cargo.toml Cargo.lock CHANGELOG.md "target/commits/$TEST_SOURCE/files/"
     cp -R crates docs "target/commits/$TEST_SOURCE/files/"
@@ -550,7 +553,7 @@ test_lockfile_rejection() {
     before="$(fingerprint)"
     expect_failure perl scripts/release/release-data.pl prepare-version 0.1.1
     assert_unchanged
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     assert_cache_retained
 }
 test_rejected_preparation() {
@@ -558,25 +561,25 @@ test_rejected_preparation() {
     export "$1=1"
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     if [[ "$1" != TEST_GATE_DIRTY ]]; then assert_unchanged; fi
-    [[ ! -f target/mock-tag && ! -f target/remote-head ]]
+    [[ ! -f target/mock-tag && ! -f target/remote-head ]] || exit 1
     assert_cache_retained
 }
 test_staging() {
     before="$(fingerprint)"
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch release-minor
     assert_unchanged
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     for mode in -i -n -t -q; do
         expect_failure "$TEST_REAL_MAKE" --no-print-directory "$mode" release-patch
         assert_unchanged
-        [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
+        [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]] || exit 1
     done
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-stage
     for delivery in pr invalid; do
         expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch "RELEASE_DELIVERY=$delivery"
         expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1 "RELEASE_DELIVERY=$delivery"
         assert_unchanged
-        [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]]
+        [[ ! -s "$TEST_EFFECTS" && ! -e target/release-state ]] || exit 1
     done
 }
 prepare_tagged_release() {
@@ -588,14 +591,14 @@ test_publish() {
     if [[ "$1" == tagged ]]; then prepare_tagged_release; before="$(fingerprint)"; fi
     : > "$TEST_EFFECTS"
     "$TEST_REAL_MAKE" --no-print-directory publish
-    [[ "$(cat "$TEST_EFFECTS")" == publish && "$(fingerprint)" == "$before" ]]
+    [[ "$(cat "$TEST_EFFECTS")" == publish && "$(fingerprint)" == "$before" ]] || exit 1
     assert_cache_retained
 }
 test_publish_failure() {
     before="$(fingerprint)"; export TEST_PUBLISH_FAIL=1
     expect_failure "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
     assert_unchanged
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
 }
 test_invalid_release() {
     prepare_tagged_release
@@ -606,7 +609,7 @@ test_invalid_release() {
     esac
     : > "$TEST_EFFECTS"
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.2.0
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     expect_failure bash scripts/release/release.sh tag-check
 }
 test_validation_custody() {
@@ -619,7 +622,7 @@ test_validation_custody() {
         member) printf '\n# Changed source after validation.\n' >> crates/ic-backup/Cargo.toml ;;
     esac
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
-    [[ ! -s "$TEST_EFFECTS" && ! -f target/mock-tag ]]
+    [[ ! -s "$TEST_EFFECTS" && ! -f target/mock-tag ]] || exit 1
     assert_cache_retained
 }
 test_early_plan_retry() {
@@ -637,7 +640,7 @@ test_early_plan_retry() {
     local proofs=(target/release-state/0.1.1.validation.*/validation.json)
     cmp target/earlier-plan "${archives[0]}"
     cmp target/earlier-proof "${proofs[0]}"
-    [[ "$(perl scripts/release/release-data.pl source)" == "$TEST_SOURCE" ]]
+    [[ "$(perl scripts/release/release-data.pl source)" == "$TEST_SOURCE" ]] || exit 1
     assert_cache_retained
 }
 test_prepared_normal_retry() {
@@ -651,14 +654,14 @@ test_prepared_normal_retry() {
     : > "$TEST_EFFECTS"
     cp target/tool-effects.log target/tools-before-resume
     "$TEST_REAL_MAKE" --no-print-directory release-patch
-    [[ "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'tag\npush' ]]
+    [[ "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'tag\npush' ]] || exit 1
     cmp docs/release.json target/original-receipt.json
     cmp target/release-state/0.1.1.validation.json target/original-validation.json
     perl scripts/release/release-data.pl verify
-    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]]
-    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]]
+    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1
+    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]] || exit 1
     cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
-    [[ ! -e target/release-state/0.1.2.plan ]]
+    [[ ! -e target/release-state/0.1.2.plan ]] || exit 1
     "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
     cmp target/tool-effects.log target/tools-before-resume
     assert_cache_retained
@@ -666,8 +669,8 @@ test_prepared_normal_retry() {
 
 test_selected_tool_preflight() {
     local mode="$1"
+    perl -pi -e 's/version = "0\.28\.1"/version = "0.28.2"/' Cargo.lock
     before="$(fingerprint)"
-    printf '0.28.2\n' > target/mock-testkit-selection
     case "$mode" in
         retry) export TEST_GATE_FAIL=1 ;;
         offline) export CARGO_NET_OFFLINE=true ;;
@@ -680,21 +683,21 @@ test_selected_tool_preflight() {
     esac
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     assert_unchanged
-    [[ "$(cat target/mock-tools/0.28.1/receipt)" == 'original receipt' ]]
+    [[ "$(cat target/mock-tools/0.28.1/receipt)" == 'original receipt' ]] || exit 1
     if [[ "$mode" == retry ]]; then
-        [[ "$(cat target/tool-effects.log)" == $'build 0.28.2\nsetup\ncheck' ]]
+        [[ "$(cat target/tool-effects.log)" == $'build 0.28.2\nsetup\ncheck' ]] || exit 1
         # First original-source preflight fetched before setup/admission/gate.
         awk '/^cargo fetch/{fetch=NR} /^cli setup/{setup=NR} /^cli check/{check=NR} /^make .*release-verify/{gate=NR} END {exit !(fetch < setup && setup < check && check < gate)}' "$TEST_LOG"
         awk '/^common install-host-tools$/{host=NR} /^common install-ic-tools$/{ic=NR} /^common install-rust-tools$/{rust=NR} /^cargo fetch/{fetch=NR} /^cli setup/{exit !(host < ic && ic < rust && rust < fetch)}' "$TEST_LOG"
         unset TEST_GATE_FAIL
         "$TEST_REAL_MAKE" --no-print-directory release-patch
-        [[ "$(grep -c '^build ' target/tool-effects.log)" == 1 ]]
-        [[ "$(grep -c '^setup$' target/tool-effects.log)" == 3 ]]
+        [[ "$(grep -c '^build ' target/tool-effects.log)" == 1 ]] || exit 1
+        [[ "$(grep -c '^setup$' target/tool-effects.log)" == 3 ]] || exit 1
         cp target/tool-effects.log target/tools-before-resume
         "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
         cmp target/tool-effects.log target/tools-before-resume
     else
-        [[ ! -s target/tool-effects.log ]]
+        [[ ! -s target/tool-effects.log ]] || exit 1
         if grep -q '^validate$' "$TEST_EFFECTS"; then exit 1; fi
         if [[ "$mode" == prerequisite ]] && grep -q '^common ' "$TEST_LOG"; then exit 1; fi
     fi
@@ -730,32 +733,32 @@ test_older_release_recovery() {
     : > "$TEST_EFFECTS"
     if [[ "$mode" == explicit ]]; then
         "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
-        [[ "$(cat "$TEST_EFFECTS")" == push ]]
-        [[ "$(cat target/remote-head)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]]
-        [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]]
-        [[ ! -e "target/release-state/$next.plan" ]]
+        [[ "$(cat "$TEST_EFFECTS")" == push ]] || exit 1
+        [[ "$(cat target/remote-head)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]] || exit 1
+        [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1
+        [[ ! -e "target/release-state/$next.plan" ]] || exit 1
     else
         if [[ "$mode" == gate-failure ]]; then
             export TEST_GATE_FAIL=1
             expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-            [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]]
-            [[ ! -e target/release-state/0.1.2.plan ]]
-            [[ "$(cat target/remote-head)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]]
+            [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1
+            [[ ! -e target/release-state/0.1.2.plan ]] || exit 1
+            [[ "$(cat target/remote-head)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]] || exit 1
             unset TEST_GATE_FAIL
             "$TEST_REAL_MAKE" --no-print-directory release-patch
         else
             "$TEST_REAL_MAKE" --no-print-directory "release-$mode"
         fi
-        [[ "$(perl scripts/release/release-data.pl version)" == "$next" ]]
-        [[ "$(perl scripts/release/release-data.pl source)" == ffffffffffffffffffffffffffffffffffffffff ]]
-        [[ "$(tail -n 1 "target/release-state/$next.plan")" == complete ]]
-        [[ "$(cat "target/tags/v$next.commit")" == "$(cat target/mock-head)" ]]
+        [[ "$(perl scripts/release/release-data.pl version)" == "$next" ]] || exit 1
+        [[ "$(perl scripts/release/release-data.pl source)" == ffffffffffffffffffffffffffffffffffffffff ]] || exit 1
+        [[ "$(tail -n 1 "target/release-state/$next.plan")" == complete ]] || exit 1
+        [[ "$(cat "target/tags/v$next.commit")" == "$(cat target/mock-head)" ]] || exit 1
         rg -q 'release-verify.*RELEASE_SOURCE=ffffffffffffffffffffffffffffffffffffffff' "$TEST_LOG"
         perl scripts/release/release-data.pl verify
     fi
-    [[ "$(cat target/tags/v0.1.1.commit)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]]
-    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]]
-    [[ "$(sed -n '2p' target/pushes.log)" == 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb v0.1.1' ]]
+    [[ "$(cat target/tags/v0.1.1.commit)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]] || exit 1
+    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]] || exit 1
+    [[ "$(sed -n '2p' target/pushes.log)" == 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb v0.1.1' ]] || exit 1
     cmp target/original-proof.json target/release-state/0.1.1.validation.json
     perl scripts/release/release-data.pl verify --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     assert_cache_retained
@@ -775,8 +778,8 @@ test_selected_proof_rejection() {
     fi
     : > "$TEST_EFFECTS"
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-    [[ ! -s "$TEST_EFFECTS" && ! -f target/remote-head ]]
-    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == push ]]
+    [[ ! -s "$TEST_EFFECTS" && ! -f target/remote-head ]] || exit 1
+    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == push ]] || exit 1
     assert_cache_retained
 }
 test_completed_evidence_replay() {
@@ -784,14 +787,14 @@ test_completed_evidence_replay() {
     mv target/release-state/0.1.1.validation.json target/retained-proof.json
     : > "$TEST_EFFECTS"
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     mv target/retained-proof.json target/release-state/0.1.1.validation.json
     "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     expect_failure perl scripts/release/release-data.pl set-version 9.9.9 --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     expect_failure perl scripts/release/release-data.pl verify --commit invalid
     expect_failure perl scripts/release/release-data.pl verify "$TEST_SOURCE" 1900-01-01 0.1.1 --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]]
+    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1
     assert_cache_retained
 }
 test_dependency_failure_conditional_status() {
@@ -802,7 +805,7 @@ test_dependency_failure_conditional_status() {
 if source "$1" fetch --locked; then exit 0; else exit $?; fi
 SH
     expect_failure bash target/conditional-fetch.sh "$TEMPORARY/bin/cargo"
-    [[ ! -e target/mock-cache && "$(cat "$TEST_EFFECTS")" == fetch ]]
+    [[ ! -e target/mock-cache && "$(cat "$TEST_EFFECTS")" == fetch ]] || exit 1
     assert_cache_retained
 }
 test_conditional_substitute_rejections() {
@@ -815,11 +818,11 @@ SH
     expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" rev-parse refs/tags/v0.1.1
     expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" rev-parse 'refs/tags/v0.1.1^{commit}'
     expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/git" rev-parse aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    [[ ! -s "$TEST_EFFECTS" ]]
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     export TEST_PREPARED_FORMAT_FAIL=1
     expect_failure bash target/conditional-substitute.sh "$TEMPORARY/bin/make" fmt-check
-    [[ "$(cat "$TEST_EFFECTS")" == prepared-format-check ]]
-    [[ ! -e target/mock-tag && ! -e target/mock-staged && ! -e target/mock-head ]]
+    [[ "$(cat "$TEST_EFFECTS")" == prepared-format-check ]] || exit 1
+    [[ ! -e target/mock-tag && ! -e target/mock-staged && ! -e target/mock-head ]] || exit 1
     assert_cache_retained
 }
 
@@ -866,7 +869,7 @@ SH
     expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
     rg -F 'staged: README.md' target/rejection.log >/dev/null
     "$TEST_REAL_GIT" -C "$native" diff --cached --name-only > target/native-staged.txt
-    [[ "$(cat target/native-staged.txt)" == README.md ]]
+    [[ "$(cat target/native-staged.txt)" == README.md ]] || exit 1
     "$TEST_REAL_GIT" -C "$native" restore --staged -- README.md
     printf '\n# staged original metadata edit\n' >> "$native/Cargo.toml"
     "$TEST_REAL_GIT" -C "$native" add -- Cargo.toml
@@ -877,9 +880,9 @@ SH
     expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" preflight "$source" "$previous" "$candidate"
     rg -F 'staged: Cargo.toml' target/rejection.log >/dev/null
     rg -F 'validation and version preparation have not started for this attempt' target/rejection.log >/dev/null
-    [[ ! -f "$native/target/commands.log" ]]
+    [[ ! -f "$native/target/commands.log" ]] || exit 1
     "$TEST_REAL_GIT" -C "$native" diff --cached --name-only > target/native-staged.txt
-    [[ "$(cat target/native-staged.txt)" == Cargo.toml ]]
+    [[ "$(cat target/native-staged.txt)" == Cargo.toml ]] || exit 1
     "$TEST_REAL_GIT" -C "$native" restore --staged -- Cargo.toml
 
     # Report every observed category and quote unusual bytes without changing
@@ -909,7 +912,7 @@ SH
     rg -Fx -f target/native-expected target/rejection.log >/dev/null
     cmp "$native/.git/index" target/native-index
     cmp "$native/AGENTS.md" target/native-working
-    [[ "$(cat "$native/$unusual")" == 'retained evidence' ]]
+    [[ "$(cat "$native/$unusual")" == 'retained evidence' ]] || exit 1
 
     TEST_NATIVE_GIT_FAIL=status expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" paths "$source"
     rg -F 'injected native Git observation failure' target/rejection.log >/dev/null
@@ -924,7 +927,7 @@ SH
     printf '\n- Permitted pending notes.\n' >> "$native/CHANGELOG.md"
     expect_failure bash "$helper" "$ROOT/scripts/release/release.sh" "$native" clean "$source"
     rg -F 'unstaged: CHANGELOG.md' target/rejection.log >/dev/null
-    [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]]
+    [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]] || exit 1
 }
 
 if [[ "$metadata_only" == true ]]; then

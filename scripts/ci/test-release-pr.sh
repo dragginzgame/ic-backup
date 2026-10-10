@@ -44,7 +44,7 @@ if [[ "$1" == push ]]; then
         refs/tags/*:refs/tags/*) effect=tag ;;
         *) echo 'unexpected push scope' >&2; exit 88 ;;
     esac
-    [[ "$2" == --no-follow-tags && "$3" == --atomic && $# == 6 ]]
+    [[ "$2" == --no-follow-tags && "$3" == --atomic && $# == 6 ]] || exit 1
     echo "$effect-push" >> "$PR_TEST_EVENTS"
     "$PR_TEST_GIT" "${arguments[@]}"
     if [[ "${PR_TEST_LOST_PUSH:-}" == "$effect" && ! -f "$PR_TEST_DATA/lost-$effect" ]]; then
@@ -59,7 +59,7 @@ cat > "$fixture/bin/gh" <<'GH'
 #!/usr/bin/env bash
 set -euo pipefail
 [[ "${PR_TEST_API_FAIL:-}" != yes ]] || exit 29
-[[ "$1" == api && "$2" == --hostname && "$3" == github.com ]]
+[[ "$1" == api && "$2" == --hostname && "$3" == github.com ]] || exit 1
 shift 3
 method=GET; input=''; endpoint=''; selection=''; pages=no
 while [[ $# -gt 0 ]]; do
@@ -70,15 +70,15 @@ while [[ $# -gt 0 ]]; do
         --paginate) pages=yes; shift ;;
         --include) shift ;;
         -f) case "$2" in state=all|head=example:release/v0.1.1|base=main) ;; *) exit 86 ;; esac; shift 2 ;;
-        repos/*) [[ -z "$endpoint" ]]; endpoint="$1"; shift ;;
+        repos/*) [[ -z "$endpoint" ]] || exit 1; endpoint="$1"; shift ;;
         *) exit 87 ;;
     esac
 done
 case "$method:$endpoint" in
     GET:repos/example/project)
-        [[ "$selection" == .full_name ]]; echo example/project ;;
+        [[ "$selection" == .full_name ]] || exit 1; echo example/project ;;
     GET:repos/example/project/pulls)
-        [[ "$pages" == yes ]]
+        [[ "$pages" == yes ]] || exit 1
         case "${PR_TEST_QUERY_RESPONSE:-valid}" in
             empty) exit 0 ;;
             malformed) printf '[\n'; exit 0 ;;
@@ -94,7 +94,7 @@ case "$method:$endpoint" in
         ;;
     GET:repos/example/project/pulls/1) cat "$PR_TEST_DATA/pr.json" ;;
     POST:repos/example/project/pulls)
-        [[ ! -e "$PR_TEST_DATA/pr.json" ]]
+        [[ ! -e "$PR_TEST_DATA/pr.json" ]] || exit 1
         [[ "${PR_TEST_UNCERTAIN_CREATE:-}" != yes ]] || exit 23
         if [[ "${PR_TEST_REJECT_CREATE:-}" == yes ]]; then
             printf 'HTTP/2.0 403 Forbidden\n\n{}\n'
@@ -136,7 +136,7 @@ MAKE
 #!/usr/bin/env bash
 set -euo pipefail
 case "$1" in
-    release-preflight) [[ "$(cat VERSION)" == "$RELEASE_PREVIOUS" ]] ;;
+    release-preflight) [[ "$(cat VERSION)" == "$RELEASE_PREVIOUS" ]] || exit 1 ;;
     release-prepare-version) echo "$RELEASE_VERSION" > VERSION ;;
     release-verify)
         printf 'gate %s %s\n' "$RELEASE_SOURCE" "${RELEASE_COMMIT:-initial}" >> "$PR_TEST_EVENTS"
@@ -146,16 +146,16 @@ case "$1" in
         ;;
     release-prepared-check|release-commit-check)
         [[ "${PR_TEST_STOP_COMMIT:-}" != yes || "$1" != release-commit-check ]] || exit 32
-        [[ "$(cat VERSION)" == "$RELEASE_VERSION" ]]
+        [[ "$(cat VERSION)" == "$RELEASE_VERSION" ]] || exit 1
         ;;
     release-merged-preflight)
-        [[ "$(cat VERSION)" == "$RELEASE_VERSION" && "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$RELEASE_COMMIT" == "$RELEASE_SOURCE" ]]
+        [[ "$(cat VERSION)" == "$RELEASE_VERSION" && "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$RELEASE_COMMIT" == "$RELEASE_SOURCE" ]] || exit 1
         echo merged-preflight >> "$PR_TEST_EVENTS"
         ;;
     release-committed-check|release-tagged-check|release-push-check)
-        [[ "$(cat VERSION)" == "$RELEASE_VERSION" ]]
-        [[ "$(cat "$(git rev-parse --git-path qualified-source)")" == "$RELEASE_SOURCE" ]]
-        [[ "$(git show "$RELEASE_COMMIT:VERSION")" == "$RELEASE_VERSION" ]]
+        [[ "$(cat VERSION)" == "$RELEASE_VERSION" ]] || exit 1
+        [[ "$(cat "$(git rev-parse --git-path qualified-source)")" == "$RELEASE_SOURCE" ]] || exit 1
+        [[ "$(git show "$RELEASE_COMMIT:VERSION")" == "$RELEASE_VERSION" ]] || exit 1
         if [[ "${PR_TEST_DIRTY_PUSH:-}" == yes && "$1" == release-push-check ]]; then echo changed >> VERSION; fi
         if [[ "${PR_TEST_RETAG_PUSH:-}" == yes && "$1" == release-push-check ]]; then
             git tag -f -a "v$RELEASE_VERSION" "$RELEASE_COMMIT" -m 'Changed annotation after checking'
@@ -197,8 +197,8 @@ merge_pr() {
 for shape in merge squash rebase; do
     new_fixture "$shape"
     run_release 75
-    [[ "$(cat VERSION)" == 0.1.1 && "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-review ]]
-    [[ "$("$PR_TEST_GIT" --git-dir "$PR_TEST_REMOTE" rev-parse main)" == "$source_commit" && -z "$(git tag)" ]]
+    [[ "$(cat VERSION)" == 0.1.1 && "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-review ]] || exit 1
+    [[ "$("$PR_TEST_GIT" --git-dir "$PR_TEST_REMOTE" rev-parse main)" == "$source_commit" && -z "$(git tag)" ]] || exit 1
     cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-wait"
     run_release 75
     cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-wait"
@@ -207,11 +207,11 @@ for shape in merge squash rebase; do
     "$PR_TEST_GIT" --git-dir "$PR_TEST_REMOTE" update-ref -d refs/heads/release/v0.1.1
     git switch -q main
     run_release 0
-    [[ "$(git rev-parse 'v0.1.1^{commit}')" == "$merged" && "$(git cat-file -t v0.1.1)" == tag ]]
-    [[ "$("$PR_TEST_GIT" --git-dir "$PR_TEST_REMOTE" rev-parse 'v0.1.1^{commit}')" == "$merged" ]]
-    [[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 2 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]]
+    [[ "$(git rev-parse 'v0.1.1^{commit}')" == "$merged" && "$(git cat-file -t v0.1.1)" == tag ]] || exit 1
+    [[ "$("$PR_TEST_GIT" --git-dir "$PR_TEST_REMOTE" rev-parse 'v0.1.1^{commit}')" == "$merged" ]] || exit 1
+    [[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 2 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]] || exit 1
     grep -Fx "gate $merged $merged" "$PR_TEST_EVENTS" >/dev/null
-    [[ -d .git/release-state/0.1.1.merged && "$(tail -n 1 .git/release-state/0.1.1.plan)" == complete ]]
+    [[ -d .git/release-state/0.1.1.merged && "$(tail -n 1 .git/release-state/0.1.1.plan)" == complete ]] || exit 1
     cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-completed-resume"
     run_release 0 resume 0.1.1
     cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-completed-resume"
@@ -226,30 +226,30 @@ git switch -q main
 cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-branch-refusal"
 run_release 1
 cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-branch-refusal"
-[[ "$(git rev-parse main)" == "$source_commit" ]]
+[[ "$(git rev-parse main)" == "$source_commit" ]] || exit 1
 git switch -q release/v0.1.1
 run_release 75
 
 new_fixture inherited-git-context
 GIT_INDEX_FILE="$PR_TEST_DATA/foreign-index" run_release 1
-[[ ! -d .git/release-state && ! -s "$PR_TEST_EVENTS" ]]
+[[ ! -d .git/release-state && ! -s "$PR_TEST_EVENTS" ]] || exit 1
 
 new_fixture linked-worktree-lock
 mkdir -p .git/release-state/lock
 git worktree add -q -b topic "$PR_TEST_DATA/linked" HEAD
 cd "$PR_TEST_DATA/linked"
 run_release 1
-[[ ! -s "$PR_TEST_EVENTS" ]]
+[[ ! -s "$PR_TEST_EVENTS" ]] || exit 1
 
 new_fixture failed-gates
 PR_TEST_FAIL_GATE=initial run_release 2
-[[ ! -f .git/release-state/0.1.1.plan && "$(cat VERSION)" == 0.1.0 ]]
+[[ ! -f .git/release-state/0.1.1.plan && "$(cat VERSION)" == 0.1.0 ]] || exit 1
 run_release 75
 merge_pr squash
 PR_TEST_FAIL_GATE=merged run_release 2
-[[ -z "$(git tag)" && "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-validate ]]
+[[ -z "$(git tag)" && "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-validate ]] || exit 1
 run_release 0
-[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 4 ]]
+[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 4 ]] || exit 1
 
 for effect in branch create tag; do
     new_fixture "lost-$effect"
@@ -260,7 +260,7 @@ for effect in branch create tag; do
     esac
     if [[ "$effect" != tag ]]; then run_release 75; merge_pr squash; fi
     run_release 0
-    [[ "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^tag-push$' "$PR_TEST_EVENTS")" == 1 ]]
+    [[ "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^tag-push$' "$PR_TEST_EVENTS")" == 1 ]] || exit 1
 done
 
 new_fixture lost-create-merged
@@ -268,28 +268,28 @@ PR_TEST_LOST_CREATE=yes run_release 23
 merge_pr squash
 "$PR_TEST_GIT" --git-dir "$PR_TEST_REMOTE" update-ref -d refs/heads/release/v0.1.1
 run_release 0
-[[ "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]]
+[[ "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]] || exit 1
 
 new_fixture rejected-creation
 PR_TEST_REJECT_CREATE=yes run_release 1
-[[ "$(jq -r .attempted .git/release-state/0.1.1.plan.pr.json)" == false ]]
+[[ "$(jq -r .attempted .git/release-state/0.1.1.plan.pr.json)" == false ]] || exit 1
 run_release 75
-[[ "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]]
+[[ "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]] || exit 1
 
 new_fixture uncertain-creation
 PR_TEST_UNCERTAIN_CREATE=yes run_release 23
 cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-uncertain"
 run_release 1
 cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-uncertain"
-[[ "$(jq -r .attempted .git/release-state/0.1.1.plan.pr.json)" == true ]]
+[[ "$(jq -r .attempted .git/release-state/0.1.1.plan.pr.json)" == true ]] || exit 1
 
 new_fixture failed-query
 # Stop before the first branch push or PR creation, even if an earlier page was
 # received successfully. Retrying the retained preparation must not repeat it.
 PR_TEST_QUERY_RESPONSE=partial run_release 29
-[[ "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-publish ]]
-[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 1 && ! -f "$PR_TEST_DATA/pr.json" ]]
-[[ "$(grep -c -- '-push$' "$PR_TEST_EVENTS" || true)" == 0 ]]
+[[ "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-publish ]] || exit 1
+[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 1 && ! -f "$PR_TEST_DATA/pr.json" ]] || exit 1
+[[ "$(grep -c -- '-push$' "$PR_TEST_EVENTS" || true)" == 0 ]] || exit 1
 cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-query"
 PR_TEST_API_FAIL=yes run_release 29
 cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-query"
@@ -300,7 +300,7 @@ for response in empty malformed nonarray partial; do
     cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-query"
 done
 PR_TEST_PAGINATED=yes run_release 75
-[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]]
+[[ "$(grep -c '^gate ' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^branch-push$' "$PR_TEST_EVENTS")" == 1 && "$(grep -c '^create$' "$PR_TEST_EVENTS")" == 1 ]] || exit 1
 cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-paginated-query"
 PR_TEST_PAGINATED=yes run_release 75
 cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-paginated-query"
@@ -309,16 +309,16 @@ new_fixture changed-push-input
 run_release 75
 merge_pr squash
 PR_TEST_DIRTY_PUSH=yes run_release 1
-[[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]]
-[[ -f .git/release-state/0.1.1.merged/VERSION ]]
+[[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]] || exit 1
+[[ -f .git/release-state/0.1.1.merged/VERSION ]] || exit 1
 
 new_fixture changed-push-tag-object
 run_release 75
 merge_pr squash
 PR_TEST_RETAG_PUSH=yes run_release 1
-[[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]]
-[[ "$(git rev-parse 'v0.1.1^{commit}')" == "$merged" && "$(git cat-file -t v0.1.1)" == tag ]]
-[[ "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-push ]]
+[[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]] || exit 1
+[[ "$(git rev-parse 'v0.1.1^{commit}')" == "$merged" && "$(git cat-file -t v0.1.1)" == tag ]] || exit 1
+[[ "$(tail -n 1 .git/release-state/0.1.1.plan)" == pr-push ]] || exit 1
 
 for conflict in closed duplicate head base destination index delivery tree lock local-tag remote-tag; do
     new_fixture "conflict-$conflict"
@@ -351,8 +351,8 @@ for conflict in closed duplicate head base destination index delivery tree lock 
     cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-conflict"
     run_release 1
     case "$conflict" in
-        local-tag|remote-tag) [[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]] ;;
-        *) [[ -z "$(git tag)" ]]; cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-conflict" ;;
+        local-tag|remote-tag) [[ "$(grep -c '^tag-push$' "$PR_TEST_EVENTS" || true)" == 0 ]] || exit 1 ;;
+        *) [[ -z "$(git tag)" ]] || exit 1; cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-conflict" ;;
     esac
     unset PR_TEST_DUPLICATE
     export RELEASE_DELIVERY=pr

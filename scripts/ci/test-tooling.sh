@@ -34,6 +34,29 @@ GITHUB_STEP_SUMMARY="$FIXTURE/runner-summary.md" \
     bash "$ROOT/scripts/ci/test-validation-target-runner.sh" >"$FIXTURE/runner.log" 2>&1
 cat "$FIXTURE/runner.log"
 
+# Contradict a successful local command result: Bash 3.2 must stop at the
+# assertion rather than continue to completion and discard its original inputs.
+assertion="$FIXTURE/assertion"
+mkdir -p "$assertion/bin"
+export ASSERTION_REAL_HEAD
+ASSERTION_REAL_HEAD="$(command -v head)"
+cat > "$assertion/bin/head" <<'HEAD'
+#!/usr/bin/env bash
+if [[ "$*" == '-n 1 '* ]]; then
+    printf 'wrong first command\n'
+else
+    exec "$ASSERTION_REAL_HEAD" "$@"
+fi
+HEAD
+chmod +x "$assertion/bin/head"
+status=0
+TMPDIR="$assertion" PATH="$assertion/bin:$PATH" "$BASH" "$ROOT/scripts/ci/test-testkit-commands.sh" \
+    > "$assertion/output.log" 2>&1 || status=$?
+[[ "$status" == 1 ]] || exit 1
+retained="$(sed -n 's/^Testkit command fixture retained: //p' "$assertion/output.log")"
+[[ -n "$retained" && -s "$retained/order.log" ]] || exit 1
+if grep -F 'Testkit setup/check routing' "$assertion/output.log" > /dev/null; then exit 1; fi
+
 # Qualify failure retention through the actual adopted scripts. Intercept only
 # their first child helper after original fixture inputs have been written.
 # Use the selected Bash directly; generating its shebang avoids BSD sed's
@@ -90,7 +113,7 @@ for owner in dependency-pins validation-target-runner release-runner; do
         exit 1
     }
     retained=("$retention/$owner/$prefix".*)
-    [[ "${#retained[@]}" == 1 && -f "${retained[0]}/$original" ]]
+    [[ "${#retained[@]}" == 1 && -f "${retained[0]}/$original" ]] || exit 1
     rg -F "${retained[0]}" "$retention/$owner.log" >/dev/null
     captured="$retention/$owner.log"
     case "$owner" in
@@ -98,7 +121,7 @@ for owner in dependency-pins validation-target-runner release-runner; do
         validation-target-runner)
             captured="${retained[0]}/passing-tests.log"
             rg -F 'first-failure-marker' "${retained[0]}/$original" >/dev/null ;;
-        release-runner) [[ "$(cat "${retained[0]}/$original")" == 0.1.0 ]] ;;
+        release-runner) [[ "$(cat "${retained[0]}/$original")" == 0.1.0 ]] || exit 1 ;;
     esac
     # A missing/broken launcher must not accidentally satisfy a refusal case.
     rg -Fx "injected child-helper status: $child_status" "$captured" >/dev/null
@@ -132,7 +155,7 @@ expect_rejection() {
         printf 'Expected snapshot rejection in %s; got %s\n' "$1" "$status" >&2
         exit 1
     }
-    [[ "$(cat "$CONSUMER/target/evidence")" == 'retained evidence' ]]
+    [[ "$(cat "$CONSUMER/target/evidence")" == 'retained evidence' ]] || exit 1
 }
 
 reset_consumer
@@ -150,7 +173,7 @@ for changed in helper-only helper-and-payload; do
         printf '\nchanged payload\n' >> "$CONSUMER/docs/principles/README.md"
     fi
     expect_rejection "$changed"
-    [[ ! -e "$CONSUMER/target/helper-executed" ]]
+    [[ ! -e "$CONSUMER/target/helper-executed" ]] || exit 1
     reset_consumer
 done
 
@@ -158,7 +181,7 @@ done
 # without borrowing linked documents from the upstream checkout.
 governance_documents=()
 while IFS= read -r path || [[ -n "$path" ]]; do
-    [[ -f "$CONSUMER/$path" && ! -L "$CONSUMER/$path" ]]
+    [[ -f "$CONSUMER/$path" && ! -L "$CONSUMER/$path" ]] || exit 1
     case "$path" in
         *.md) governance_documents[${#governance_documents[@]}]="$path" ;;
     esac

@@ -46,6 +46,28 @@ original intent/reservation before calling the consuming `submit().await`.
 An async executor with network/timer support is required. Preparation grants no
 fresh effect authority or proof that a reconstructed pending request was never sent.
 
+## Async mutation coordination
+
+`AgentMutationProvider` implements the core async `IcMutationProvider` for exact
+capture/stop/load/start mutations. Configure it with `AgentTransport` and a mandatory
+fallible callback that durably retains the exact prepared envelope and request ID
+with original plan/attempt and exclusive never-dispatched custody. It rechecks the
+currently guarded journal, signs, runs retention, then consumes one submission.
+Retention failure performs no HTTP call. Accepted responses and submission errors
+return `Indeterminate`; neither creates a receipt or an automatic observation.
+
+Await `capture_snapshot` and `restore_snapshot`; their admission callbacks are async,
+as is restore's independent qualification callback. The original selected journal
+stays locked across awaits. Cancellation releases the guard while preserving its
+current pending/Applied state; reopening cannot invoke those callbacks/providers
+again. Restore qualification must durably retain the returned reply before awaiting
+cancellable work. The core imposes no executor or `Send` bound and has no runtime
+dependency. The configured Agent needs a network/timer executor.
+
+Transfer, upload, recovery and fence ports remain separate synchronous contracts;
+their async provider integration and full application runners remain pending. No
+compatibility wrapper or default application safety/retention callback is supplied.
+
 ## Results and interruption
 
 `UpdateOutcome::Replied` contains the exact original request ID and bounded raw
@@ -70,7 +92,7 @@ oversized/disconnected/timed-out responses, no implicit polling and byte-identic
 pending journals across reopen. Context and reservation mismatches reject before
 network access. These controlled servers prove HTTP behavior, not management effects.
 
-Published Testkit 0.25.1 manages explicit PocketIC 16.1 startup/cleanup and retains
+The selected published Testkit 0.33 manages explicit PocketIC 16.1 startup/cleanup and retains
 server stdout/stderr in each fixture root. The async client uses its complete
 PocketIC re-export; exact call accounting remains in Backup. Actual isolated
 PocketIC HTTP gateways qualify the production transport's separate

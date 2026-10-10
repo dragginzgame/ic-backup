@@ -1,6 +1,7 @@
 //! Exact spending, locked admission, bounded evidence and no recapture on failure.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -17,6 +18,68 @@ use crate::{
     test_support::{ic_mutation::reply, temp_dir},
 };
 use std::{convert::Infallible, fs, path::PathBuf};
+
+struct SuspendedProvider {
+    calls: usize,
+}
+impl IcMutationProvider for SuspendedProvider {
+    async fn submit_mutation(
+        &mut self,
+        request: &IcMutationRequest<'_>,
+        journal: &AttemptJournalRecord,
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        self.calls += 1;
+        std::future::pending().await
+    }
+}
+
+#[test]
+fn cancellation_during_admission_or_submission_releases_lock_without_reset_or_reissue() {
+    use std::task::{Context, Poll, Waker};
+    for suspend_admission in [true, false] {
+        let payload = payload(IcManagementMethodRecord::TakeCanisterSnapshot);
+        let (_root, layout, binding, plan) = prepare(&payload);
+        let stage =
+            ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
+        let mut provider = SuspendedProvider { calls: 0 };
+        let mut future = Box::pin(capture_snapshot(
+            &stage,
+            42,
+            &payload,
+            &mut provider,
+            async |_| {
+                if suspend_admission {
+                    std::future::pending::<()>().await;
+                }
+                Ok::<(), Infallible>(())
+            },
+        ));
+        assert!(matches!(
+            future
+                .as_mut()
+                .poll(&mut Context::from_waker(Waker::noop())),
+            Poll::Pending
+        ));
+        assert!(
+            AttemptJournalGuard::open(
+                stage.layout().unwrap(),
+                &plan.attempt_authority(42).unwrap()
+            )
+            .is_err()
+        );
+        let before = fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap();
+        drop(future);
+        assert_eq!(provider.calls, usize::from(!suspend_admission));
+        assert_pending(&stage, &plan);
+        assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
+        assert_eq!(provider.calls, usize::from(!suspend_admission));
+        assert_eq!(
+            fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap(),
+            before
+        );
+    }
+}
 
 fn payload(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
     IcManagementRequestRecord::new(IcManagementRequest {
@@ -56,12 +119,8 @@ fn prepare(
     drop(stage);
     (root, layout, binding, plan)
 }
-#[expect(
-    clippy::unnecessary_wraps,
-    reason = "implements the mandatory fallible callback for structural fixture admission only"
-)]
-fn admit(_: &IcMutationRequest<'_>) -> Result<(), Infallible> {
-    Ok(())
+fn admit(_: &IcMutationRequest<'_>) -> impl std::future::Future<Output = Result<(), Infallible>> {
+    std::future::ready(Ok(()))
 }
 struct Provider {
     calls: usize,
@@ -85,28 +144,33 @@ impl IcMutationProvider for Provider {
     fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        self.calls += 1;
-        assert_eq!(
-            request.payload().method(),
-            IcManagementMethodRecord::TakeCanisterSnapshot
-        );
-        if let Some(path) = &self.change_stage {
-            fs::write(path, b"{}").unwrap();
-        }
-        if let Some(path) = &self.replace_layout {
-            fs::rename(path, path.with_extension("retained-original")).unwrap();
-            fs::create_dir(path).unwrap();
-        }
-        IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context().clone(),
-            target: self.target.unwrap_or(request.payload().target()).into(),
-            reply: self.reply.clone()?,
-            evidence: ArtifactChecksumRecord::from_bytes(b"passive fixture association"),
-        })
-        .map_err(|_| IcMutationProviderError::Indeterminate)
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            assert_eq!(
+                request.payload().method(),
+                IcManagementMethodRecord::TakeCanisterSnapshot
+            );
+            if let Some(path) = &self.change_stage {
+                fs::write(path, b"{}").unwrap();
+            }
+            if let Some(path) = &self.replace_layout {
+                fs::rename(path, path.with_extension("retained-original")).unwrap();
+                fs::create_dir(path).unwrap();
+            }
+            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: self.target.unwrap_or(request.payload().target()).into(),
+                reply: self.reply.clone()?,
+                evidence: ArtifactChecksumRecord::from_bytes(b"passive fixture association"),
+            })
+            .map_err(|_| IcMutationProviderError::Indeterminate)
+        })())
     }
 }
 fn assert_pending(stage: &ExecutionStageGuard<'_>, plan: &OperationPlanRecord) {
@@ -129,30 +193,40 @@ fn one_durably_reserved_capture_holds_exclusion_and_leaves_receipt_qualification
     let stage =
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let mut provider = Provider::new(Ok(raw.clone()));
-    let acknowledgement = capture_snapshot(&stage, 42, &payload, &mut provider, |request| {
-        let retained: AttemptJournalRecord = serde_json::from_slice(
-            &fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(
-            retained.view().pending_mutation,
-            Some(request.mutation_attempt())
-        );
-        assert_eq!(request.payload().digest(), payload.digest());
-        assert!(AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err());
-        Ok::<(), Infallible>(())
-    })
+    let acknowledgement = ready(capture_snapshot(
+        &stage,
+        42,
+        &payload,
+        &mut provider,
+        async |request| {
+            let retained: AttemptJournalRecord = serde_json::from_slice(
+                &fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(
+                retained.view().pending_mutation,
+                Some(request.mutation_attempt())
+            );
+            assert_eq!(request.payload().digest(), payload.digest());
+            assert!(
+                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
+            );
+            Ok::<(), Infallible>(())
+        },
+    ))
     .unwrap();
     assert_eq!(acknowledgement.input().reply, raw);
     assert_pending(&stage, &plan);
     assert!(
-        capture_snapshot(
+        ready(capture_snapshot(
             &stage,
             42,
             &payload,
             &mut provider,
-            |_| -> Result<(), Infallible> { panic!("pending original cannot re-enter admission") }
-        )
+            async |_| -> Result<(), Infallible> {
+                panic!("pending original cannot re-enter admission")
+            }
+        ))
         .is_err()
     );
     let mut journal = AttemptJournalGuard::open(
@@ -177,7 +251,7 @@ fn one_durably_reserved_capture_holds_exclusion_and_leaves_receipt_qualification
         })
         .unwrap();
     drop(journal);
-    assert!(capture_snapshot(&stage, 42, &payload, &mut provider, admit).is_err());
+    assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 1);
     stage
         .checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
@@ -204,13 +278,15 @@ fn every_other_management_method_rejects_before_spending_callback_or_provider() 
         let original = fs::read(&path).unwrap();
         let mut provider = Provider::new(Ok(reply(method)));
         assert!(matches!(
-            capture_snapshot(
+            ready(capture_snapshot(
                 &stage,
                 42,
                 &payload,
                 &mut provider,
-                |_| -> Result<(), Infallible> { panic!("wrong method never reaches admission") }
-            ),
+                async |_| -> Result<(), Infallible> {
+                    panic!("wrong method never reaches admission")
+                }
+            )),
             Err(IcSnapshotCaptureExecutionError::CaptureRequired)
         ));
         assert_eq!(fs::read(&path).unwrap(), original);
@@ -237,11 +313,11 @@ fn changed_payload_unknown_operation_missing_and_held_originals_refuse_without_c
     })
     .unwrap();
     assert!(matches!(
-        capture_snapshot(&stage, 42, &other, &mut provider, admit),
+        ready(capture_snapshot(&stage, 42, &other, &mut provider, admit)),
         Err(IcSnapshotCaptureExecutionError::Request(_))
     ));
     assert!(matches!(
-        capture_snapshot(&stage, 99, &payload, &mut provider, admit),
+        ready(capture_snapshot(&stage, 99, &payload, &mut provider, admit)),
         Err(IcSnapshotCaptureExecutionError::Plan(_))
     ));
     let held = AttemptJournalGuard::open(
@@ -250,14 +326,14 @@ fn changed_payload_unknown_operation_missing_and_held_originals_refuse_without_c
     )
     .unwrap();
     assert!(matches!(
-        capture_snapshot(&stage, 42, &payload, &mut provider, admit),
+        ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)),
         Err(IcSnapshotCaptureExecutionError::Journal(_))
     ));
     drop(held);
     assert_eq!(fs::read(&path).unwrap(), original);
     fs::remove_file(&path).unwrap();
     assert!(matches!(
-        capture_snapshot(&stage, 42, &payload, &mut provider, admit),
+        ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)),
         Err(IcSnapshotCaptureExecutionError::Journal(_))
     ));
     assert!(!path.exists());
@@ -275,13 +351,17 @@ fn fresh_consistency_rejection_consumes_original_reservation_without_dispatch_or
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let mut provider = Provider::new(Ok(reply(payload.method())));
     assert!(matches!(
-        capture_snapshot(&stage, 42, &payload, &mut provider, |_| Err(
-            std::io::Error::other("fixture drain refused")
+        ready(capture_snapshot(
+            &stage,
+            42,
+            &payload,
+            &mut provider,
+            async |_| Err(std::io::Error::other("fixture drain refused"))
         )),
         Err(IcSnapshotCaptureExecutionError::Admission(_))
     ));
     assert_pending(&stage, &plan);
-    assert!(capture_snapshot(&stage, 42, &payload, &mut provider, admit).is_err());
+    assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 0);
     drop(stage);
     drop(layout);
@@ -306,7 +386,7 @@ fn provider_failures_retain_original_pending_spending_and_references_across_resu
         let references = stage_layout.restore_references().unwrap();
         let mut provider = Provider::new(Err(failure));
         assert!(
-            matches!(capture_snapshot(&stage, 42, &payload, &mut provider, admit), Err(IcSnapshotCaptureExecutionError::Provider(actual)) if actual == failure)
+            matches!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)), Err(IcSnapshotCaptureExecutionError::Provider(actual)) if actual == failure)
         );
         assert_pending(&stage, &plan);
         let path = stage_layout.root().join("attempt-42.json");
@@ -315,7 +395,7 @@ fn provider_failures_retain_original_pending_spending_and_references_across_resu
         let (stage, progress) =
             ExecutionStageGuard::resume(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         assert_eq!(progress.attempts.mutations_used, 1);
-        assert!(capture_snapshot(&stage, 42, &payload, &mut provider, admit).is_err());
+        assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
         assert_eq!(fs::read(&path).unwrap(), original);
         assert_eq!(
             stage.layout().unwrap().restore_references().unwrap(),
@@ -344,7 +424,8 @@ fn malformed_and_wrong_target_acknowledgements_retain_original_bytes_without_rec
         if !malformed {
             provider.target = Some("aaaaa-aa");
         }
-        let error = capture_snapshot(&stage, 42, &payload, &mut provider, admit).unwrap_err();
+        let error =
+            ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).unwrap_err();
         let IcSnapshotCaptureExecutionError::Association {
             acknowledgement, ..
         } = error
@@ -377,12 +458,18 @@ fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retain
             2 => provider.replace_layout = Some(stage_root.clone()),
             _ => {}
         }
-        let error = capture_snapshot(&stage, 42, &payload, &mut provider, |_| {
-            if boundary == 0 {
-                fs::write(&path, b"{}").unwrap();
-            }
-            Ok::<(), Infallible>(())
-        })
+        let error = ready(capture_snapshot(
+            &stage,
+            42,
+            &payload,
+            &mut provider,
+            async |_| {
+                if boundary == 0 {
+                    fs::write(&path, b"{}").unwrap();
+                }
+                Ok::<(), Infallible>(())
+            },
+        ))
         .unwrap_err();
         match error {
             IcSnapshotCaptureExecutionError::Stage(_) if boundary == 0 => {}

@@ -25,7 +25,39 @@ pub fn root(label: &str) -> PathBuf {
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
     fs::create_dir(&p).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&p, fs::Permissions::from_mode(0o700)).unwrap();
+    }
     p
+}
+
+/// Retain exact original signed ingress privately and durably before test dispatch.
+pub fn retain_signed(
+    root: &std::path::Path,
+    prepared: &ic_backup_agent::PreparedUpdate<'_>,
+) -> std::io::Result<()> {
+    use std::io::Write;
+    for (name, bytes) in [
+        ("signed-ingress.cbor", prepared.envelope().to_vec()),
+        (
+            "request-id.txt",
+            prepared.request_id().to_string().into_bytes(),
+        ),
+    ] {
+        let mut options = fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let mut file = options.open(root.join(name))?;
+        file.write_all(&bytes)?;
+        file.sync_all()?;
+    }
+    fs::File::open(root)?.sync_all()
 }
 pub fn identity() -> Arc<dyn Identity> {
     Arc::new(AnonymousIdentity)

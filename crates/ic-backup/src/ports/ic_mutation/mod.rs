@@ -1,6 +1,8 @@
-//! Single reserved IC update contract; no installed transport or dispatch implementation.
+//! Async single reserved IC update contract; no default transport or dispatch implementation.
 
+use crate::model::attempt_journal::AttemptJournalRecord;
 use crate::model::ic_mutation::{IcMutationAcknowledgement, IcMutationRequest};
+use std::future::Future;
 use thiserror::Error;
 
 /// Integration-owned authenticated single-update submission for an original reservation.
@@ -31,12 +33,18 @@ use thiserror::Error;
 /// or refunds allowance. Terminal replay invokes no provider. No default exists.
 pub trait IcMutationProvider {
     /// Submit one exact originally reserved update without retry or follow-up observation.
+    ///
+    /// Recheck `request` against the exact currently guarded `journal` before signing
+    /// or dispatch. The caller retains journal exclusion across the returned future.
+    /// No runtime or `Send` requirement is imposed by this core port. Dropping a
+    /// pending future retains consumption and grants no reentry or repeat submission.
     /// # Errors
     /// Every failure preserves pending original evidence; reconcile indeterminate replies.
     fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>;
 }
 
 /// Redacted single-call failure; no variant grants retry, nonapplication or a refund.

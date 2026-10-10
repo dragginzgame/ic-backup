@@ -153,6 +153,8 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
 - local progress derived from the original plan and retained journals;
 - complete original stage-journal preparation and resume with exact ancestor history
   and unchanged pending spending;
+- async capture/load/start coordination and a configured Agent mutation provider
+  requiring durable signed-ingress retention before one submission;
 - provider-driven snapshot capture and metadata/data read steps with durable
   spending, explicit fresh admission and one-call dispatch;
 - complete original-plan data streaming into a durable artifact, with explicit

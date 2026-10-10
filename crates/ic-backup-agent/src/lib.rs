@@ -7,6 +7,8 @@
 
 mod request;
 pub use request::ReservedUpdate;
+mod mutation;
+pub use mutation::AgentMutationProvider;
 
 use ic_agent::{
     Agent, Identity, RequestId,

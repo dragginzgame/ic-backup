@@ -13,17 +13,17 @@
       "wire" : "Delegate capture to IcSnapshotReply and stop/start/load to IcLifecycleReply. Reuse existing exact request/raw-reply digests, raw IDs/required timestamp/size, canonical empty tuple and finite decoding quotas. No additional decoder or evidence hash."
    },
    "capture_step" : {
+      "admission" : "Hold the selected journal through mandatory fallible integration-owned fresh control, capture consistency, quiescence/fence and never-dispatched command custody admission, one existing provider call and bounded passive association. Remote preflight needs separate prior accounting. Recheck stage/ancestors around dispatch. Admission and submission are async; journal exclusion remains held across awaits. Cancellation preserves pending spending and denies callback/provider reentry.",
       "entry" : "workflow::ic_snapshot_capture::capture_snapshot accepts only TakeCanisterSnapshot under an exact retained ExecutionStageGuard. Validate canonical original binding before spending; open the existing journal and delegate durable reservation to complete-plan admission.",
-      "admission" : "Hold the selected journal through mandatory fallible integration-owned fresh control, capture consistency, quiescence/fence and never-dispatched command custody admission, one existing provider call and bounded passive association. Remote preflight needs separate prior accounting. Recheck stage/ancestors around dispatch.",
-      "retention" : "Successful acknowledgement and all post-reservation failures remain pending. Pending/Applied or missing/held originals cannot authorize another callback/provider call. Typed association and post-reply errors retain exact bounded returned acknowledgement. No new schema, allowance, automatic receipt, refund or release follows.",
-      "qualification" : "The isolated stopped Testkit fixture connects this step to metadata/data reads and durable artifact publication. Lost/malformed capture replies block recapture and successor stages. No default Agent provider, full application runner or terminal/custody qualification is installed."
+      "qualification" : "The isolated Testkit driver and configured AgentMutationProvider exercise this step. Mandatory retention durably binds exact signed envelope/request ID before one update. Lost, accepted and malformed replies deny recapture; no default application lane, full runner or terminal custody is installed.",
+      "retention" : "Successful acknowledgement and all post-reservation failures remain pending. Pending/Applied or missing/held originals cannot authorize another callback/provider call. Typed association and post-reply errors retain exact bounded returned acknowledgement. No new schema, allowance, automatic receipt, refund or release follows."
    },
    "effects" : [
       "Exactly one previously durably accounted original host update. No extra observations, implicit retries, proxy/query substitution, funding or hidden calls.",
       "Reconstruction never proves no previous dispatch. Lost replies require original-effect reconciliation, not another mutation invocation; a pending reservation supplies no retry permission.",
       "Unavailable, Unsupported, Indeterminate, drop and death retain consumed pending mutations, obligations/source references and original evidence. No automatic NotApplied, Applied, Uncertain, retry, refund, terminal proof or release.",
       "Passive association can admit retained late reply bytes while the exact mutation remains pending and no recovery observation is pending. It writes no receipt. Recovery observations retain their existing independent owner.",
-      "Terminal replay invokes no provider. This port alone installs no default implementation or complete runner; the separate capture step has only isolated Testkit qualification, without production IC or arbitrary application qualification."
+      "Terminal replay invokes no provider. Configured AgentMutationProvider requires explicit transport and durable retention; no default application admission or complete runner follows. Core adds no runtime or Send bound."
    ],
    "kind" : "ephemeral exact originally reserved IC mutation port; no persisted authority schema",
    "methods" : [
@@ -32,7 +32,7 @@
       "stop_canister",
       "take_canister_snapshot"
    ],
-   "provider" : "IcMutationProvider::submit_mutation",
+   "provider" : "IcMutationProvider::submit_mutation(request, current guarded journal) -> Future<Result<passive acknowledgement, provider error>>",
    "request" : {
       "admission" : "Integrations retain durable originals and qualify exact fresh context/control, full prerequisite evidence, capture consistency, exact load snapshot-origin permissions and same-release load/start safety, complete original/upload bytes and exclusive dispatch/command custody. Target control/read visibility cannot substitute for load-origin permission. Structural binding is not a permit.",
       "bytes" : "Reuse canonical management receiver, effective target, replicated update ingress, exact closed method and derived Candid arguments. Existing 256 raw snapshot-ID byte and 4096 argument byte bounds remain.",

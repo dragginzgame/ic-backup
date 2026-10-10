@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.15.0]
+
+- **Breaking:** Make `IcMutationProvider` and the capture/load/start coordinators
+  async. Await the coordinators, supply async admission/qualification callbacks,
+  and pass the currently guarded original journal to mutation providers. Cancelled
+  operations retain spending and deny reentry
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Add `AgentMutationProvider` with mandatory durable signed-ingress retention
+  before one submission. Replies remain passive; accepted/lost responses never
+  retry or settle journals automatically.
+- Verify both current package archives together in a retained independent consumer,
+  avoiding the published same-version core during unreleased API changes. Keep
+  original dependency selections, archive bytes and root versions unchanged
+  ([shared #109](https://github.com/dragginzgame/shared-tooling/issues/109)).
+- Adopt Shared Tooling 0.3.7: reject failed Git index observations, isolate
+  validation fixtures, and select the Testkit CLI directly from the lockfile
+  through the shared installer instead of local Cargo metadata parsing
+  ([shared #106](https://github.com/dragginzgame/shared-tooling/issues/106),
+  [shared #105](https://github.com/dragginzgame/shared-tooling/issues/105),
+  [shared #96](https://github.com/dragginzgame/shared-tooling/issues/96)).
+  Fail mandatory Bash 3.2 assertions explicitly in shared and local fixtures,
+  retaining failed inputs instead of reporting success
+  ([shared #107](https://github.com/dragginzgame/shared-tooling/issues/107)).
+- Retain failed Testkit routing and package fixtures under CI's temporary evidence
+  root so the failure archive includes their original command logs.
+- Select Binaryen 133 and exercise optimized Wasm in both real simulator suites.
+  Prepare the toolset with `make install-ic-tools`; retain earlier bundles
+  ([shared #102](https://github.com/dragginzgame/shared-tooling/issues/102)).
+- Qualify Host 0.12.6's pre-effect NUL-path rejection, Testkit 0.33's scoped
+  connection-reset classification and Metrics 0.5.4's unchanged arithmetic.
+  Backup adds no simulator recovery/retry policy or persisted-format change.
+- Keep only the newest CI run per workflow and branch or PR, cancelling older
+  queued and running checks while retaining the existing host matrix and gates
+  ([Shared #108](https://github.com/dragginzgame/shared-tooling/issues/108)).
+
 ## [0.14.2] - 2026-10-10
 
 - Coordinate original same-ID load/start stages with fresh application safety,

@@ -1,6 +1,7 @@
 //! Real bounded downloads under one original workflow; this is an isolated test driver.
 
 use super::{Fault, backend::Backend, lifecycle, management, status};
+use crate::ready::ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -65,39 +66,44 @@ impl IcMutationProvider for CaptureProvider<'_> {
     fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        assert!(!self.submitted);
-        self.submitted = true;
-        let payload = request.payload();
-        assert_eq!(payload.method(), Method::TakeCanisterSnapshot);
-        assert_eq!(payload.receiver(), "aaaaa-aa");
-        assert_eq!(payload.target(), self.backend.target.to_text());
-        let actual = self.backend.plan(
-            &payload.digest(),
-            request.authority().binding().operation_sequence(),
-        );
-        assert_eq!(request.plan().context(), actual.context());
-        let raw = self
-            .backend
-            .management(payload.method().name(), payload.arguments());
-        fs::write(self.oracle, &raw).unwrap();
-        if self.failure == CaptureFailure::Lost {
-            return Err(IcMutationProviderError::Indeterminate);
-        }
-        let reply = if self.failure == CaptureFailure::Malformed {
-            Vec::new()
-        } else {
-            raw
-        };
-        IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: actual.context().clone(),
-            target: self.backend.target.to_text(),
-            evidence: ArtifactChecksumRecord::from_bytes(&reply),
-            reply,
-        })
-        .map_err(|_| IcMutationProviderError::Indeterminate)
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            assert!(!self.submitted);
+            self.submitted = true;
+            let payload = request.payload();
+            assert_eq!(payload.method(), Method::TakeCanisterSnapshot);
+            assert_eq!(payload.receiver(), "aaaaa-aa");
+            assert_eq!(payload.target(), self.backend.target.to_text());
+            let actual = self.backend.plan(
+                &payload.digest(),
+                request.authority().binding().operation_sequence(),
+            );
+            assert_eq!(request.plan().context(), actual.context());
+            let raw = self
+                .backend
+                .management(payload.method().name(), payload.arguments());
+            fs::write(self.oracle, &raw).unwrap();
+            if self.failure == CaptureFailure::Lost {
+                return Err(IcMutationProviderError::Indeterminate);
+            }
+            let reply = if self.failure == CaptureFailure::Malformed {
+                Vec::new()
+            } else {
+                raw
+            };
+            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: actual.context().clone(),
+                target: self.backend.target.to_text(),
+                evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                reply,
+            })
+            .map_err(|_| IcMutationProviderError::Indeterminate)
+        })())
     }
 }
 
@@ -188,13 +194,19 @@ fn capture(
         oracle: &oracle,
         submitted: false,
     };
-    let result = capture_snapshot(&stage, 0, &payload, &mut provider, |request| {
-        // This isolated stopped application owns fresh direct control, complete
-        // drain/no-external-effects consistency and original ingress custody.
-        assert_eq!(request.plan().context(), &context);
-        assert_eq!(request.payload().digest(), payload.digest());
-        Ok::<(), Infallible>(())
-    });
+    let result = ready(capture_snapshot(
+        &stage,
+        0,
+        &payload,
+        &mut provider,
+        async |request| {
+            // This isolated stopped application owns fresh direct control, complete
+            // drain/no-external-effects consistency and original ingress custody.
+            assert_eq!(request.plan().context(), &context);
+            assert_eq!(request.payload().digest(), payload.digest());
+            Ok::<(), Infallible>(())
+        },
+    ));
     let mut journal =
         AttemptJournalGuard::open(stage_layout, &stage.plan().attempt_authority(0).unwrap())
             .unwrap();
@@ -230,15 +242,15 @@ fn capture(
         assert_eq!(progress.attempts.mutations_used, 1);
         assert_eq!(progress.applied_operations, 0);
         assert!(
-            capture_snapshot(
+            ready(capture_snapshot(
                 &stage,
                 0,
                 &payload,
                 &mut provider,
-                |_| -> Result<(), Infallible> {
+                async |_| -> Result<(), Infallible> {
                     panic!("pending capture never reaches fresh admission")
                 }
-            )
+            ))
             .is_err()
         );
         assert_eq!(
