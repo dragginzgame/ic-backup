@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.14.1]
+## [0.14.1] - 2026-10-10
 
 - Plan and coordinate a complete original snapshot data-upload stage, buffering
   one exact source payload at a time. Require qualified receipts before dependent
