@@ -118,8 +118,8 @@ Commit and review the completed source before starting a release. Set the intend
 `main`. Exactly one release selection is admitted. All three increments run the same
 complete `release-verify` gate; see [development](development.md). Required tools are
 GNU Make, Bash 3.2 or newer, Git, core Perl modules, SHA-256, ShellCheck, ripgrep, flock
-and cargo-sort 2.1.4 plus the declared Rust toolchains. Install the formatter during
-explicit developer setup; validation never installs it. Supported host evidence
+and the complete reviewed common Cargo set plus the declared Rust toolchains.
+Prepare toolchains before setup; ordinary validation never installs tools. Supported host evidence
 remains separately qualified.
 
 Source admission reports every staged, unstaged and untracked path outside the
@@ -135,16 +135,15 @@ Prepare the reviewed tools and the exact locked Testkit CLI/server explicitly
 before the release gate:
 
 ```bash
+rustup show active-toolchain
 make install-tools
-make deps
-make install-testkit-server
-make testkit-server-check
+make tools-check
 ```
 
 Repeat Testkit setup after its locked package version changes; an older retained
 CLI does not satisfy the new selection. Setup retains earlier installations.
-CI and release validation run offline `make tools-check`,
-`make testkit-server-check` and `make dependency-pins-check`; missing/changed tools
+CI and release validation run offline `make tools-check` (including Testkit)
+and `make dependency-pins-check`; missing/changed tools
 stop the gate without implicit installation or unlocked dependency changes. The [local setup guide](local-setup.md)
 owns bootstrap prerequisites; exact registry compatibility constraints remain in
 [the local overlay](../AGENTS.md#qualified-dependency-constraints).
@@ -154,10 +153,10 @@ single push URL before mutation. Preflight admits pending notes and rejects unre
 staged/unstaged/untracked work and changed original manifest/lock/receipt. Staged
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
-the snapshot and runs root-workspace `cargo fetch --locked` to prepare both
-libraries' selected dependency cache. Original-source preflight then runs
-`make install-testkit-server` and offline `make testkit-server-check` before the
-full gate, rechecking original source/manifest/lock/receipt afterward. The standard
+the snapshot and runs `make install-tools`: common host, IC and Cargo setup,
+then the local ordered root-workspace `cargo fetch --locked` and Testkit setup
+targets. Offline `make tools-check` runs the same common order followed by Testkit
+admission before the full gate. Recheck original source/manifest/lock/receipt afterward. The standard
 release includes this required selected-CLI preparation; explicit offline Cargo
 settings remain authoritative and missing inputs fail without switching online.
 Setup reuses an admitted selection, preserves earlier tools and refuses invalid

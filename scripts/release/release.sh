@@ -51,11 +51,10 @@ preflight() {
     git diff --cached --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'staged original release metadata changed'
     perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE" "$RELEASE_PREVIOUS"
     make --no-print-directory shared-tooling-check
-    cargo fetch --locked
-    # Only original-source preflight prepares the locked consumer CLI. Saved
+    # Only original-source preflight prepares the common and locked tools. Saved
     # prepared/committed/tagged releases reconcile without replaying setup.
-    make --no-print-directory install-testkit-server
-    make --no-print-directory testkit-server-check
+    make --no-print-directory install-tools
+    make --no-print-directory tools-check
     [[ "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$(version)" == "$RELEASE_PREVIOUS" ]] || fail 'original source/version changed during setup'
     bash "$ROOT/scripts/ci/check-release-source.sh" --allow CHANGELOG.md
     git diff --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'original release metadata changed during setup'

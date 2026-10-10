@@ -25,7 +25,37 @@
 
 # Current handoff — 2026-10-10
 
-## Current 0.13.0 Host/Shared adoption
+## Current 0.14.0 complete-toolset adoption
+
+Released base is 0.13.0 at `bf5138ec99c2f02650b8af618fc30195ef50dada`.
+Select 0.14.0 for Shared Tooling 0.3.0
+`88a73139a0f083344c41a6f6f4b5c3a8aca7dc1d` (same 95 selected files): aggregate
+setup/check now requires all common host/IC/Cargo tools. Prepare the declared
+Rust toolchain first. Backup registers locked dependency fetch and Testkit setup
+in the ordered local installation list, with Testkit admission after common
+checks. Release preflight and CI use that one owner; duplicate formatter and
+Testkit CI setup retires. Parallel Make preserves order and stops on failure.
+
+Preserve the subsequent incoming direct Host Artifact/FS 0.12 and Testkit 0.31
+requirements/lock, Metrics 0.4 and package/receipt 0.13.0. Host changes the exposed
+`PersistenceError::Publication` Rust identity; consumers sharing it must align
+Host 0.12. Published Rust library sources are unchanged from Host 0.11/Testkit
+0.30. Testkit keeps its independent Host 0.11 test-only graph. Its exact CLI is
+explicitly prepared; older tools, server bytes, journals and failed evidence remain.
+No product schema, spending, transport or runner change follows.
+
+The full `make ci` gate passes again on this exact final graph, including all
+unit/integration/simulator tests, strict Clippy/docs, both independent Rust 1.88
+consumers and both packages. A separate Rust 1.88 consumer shares Host 0.12
+publication errors and retains primary/cleanup evidence. Source, incoming lock and
+41 previously captured tool/receipt/server hashes stay unchanged. Current proof is
+in [the Host/Testkit review](../reports/audits/2026/10/10/host-012/01/report.md);
+the [Shared review](../reports/audits/2026/10/10/shared-030/01/report.md) retains
+its original Host 0.11/Testkit 0.30 qualification. Released 0.13.0 Linux CI passes;
+macOS jobs remain queued. This dirty candidate has no hosted result. Keep native
+acceptance with #36/#32; no Git write or release ran.
+
+## Prior 0.13.0 Host/Shared adoption
 
 Released base remains 0.12.1 at `f5b0b093dd10ec6b25934e80ceaadb4f32d7506e`.
 Select the complete pending batch as 0.13.0 for direct Host Artifact/FS 0.11.0:

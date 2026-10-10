@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.14.0]
+
+- **Breaking:** Adopt Shared Tooling 0.3.0. `make install-tools` now prepares
+  the complete host, IC and Cargo toolsets, then locked dependencies and Testkit.
+  `make tools-check` checks those sets offline in the same order. Prepare the
+  declared Rust toolchain first; optional ripgrep/cloc flags are retired
+  ([#36](https://github.com/dragginzgame/ic-backup/issues/36),
+  [shared #98](https://github.com/dragginzgame/shared-tooling/issues/98)).
+- Use the ordered aggregate for release preflight and CI, removing duplicate
+  formatter/Testkit setup. Preserve earlier tools and recovery evidence.
+- **Breaking:** Select direct Host Artifact/FS 0.12.0. Consumers sharing
+  `PersistenceError::Publication` must align to the Host 0.12 Rust error type.
+  Library behavior and persisted records are unchanged.
+- Qualify incoming Testkit 0.31.0 and its exact CLI, retaining bounded build
+  diagnostics and complete metadata/tool probes. Its independently selected
+  test-only Host graph remains 0.11.
+
 ## [0.13.0] - 2026-10-10
 
 - **Breaking:** Select direct Host Artifact/FS 0.11.0. Consumers sharing

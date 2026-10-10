@@ -1,6 +1,8 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
+LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server
+LOCAL_TOOL_CHECK_TARGETS := testkit-server-check
 include make/tools.mk
 include make/rust-format.mk
 VERSION ?=
@@ -9,7 +11,7 @@ RELEASE_BRANCH ?= main
 RELEASE_DELIVERY ?= direct
 export RELEASE_DELIVERY
 RELEASE := bash scripts/release/release.sh
-CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps testkit-server-check shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 ifneq ($(word 2,$(filter release-patch release-minor release-major release-resume,$(MAKECMDGOALS))),)
 $(error Select exactly one release target)
@@ -25,7 +27,6 @@ endif
 .PHONY: dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 
 help:
-	@echo "release-delivery-check      Verify the supported direct release policy without effects"
 	@echo "check                       Compile this library's native targets"
 	@echo "check-doc-links             Check maintained local Markdown targets"
 	@echo "check-msrv                  Check Rust 1.88.0 and independent consumers"
@@ -47,14 +48,14 @@ help:
 	@echo "install-hooks               Enable the tracked pre-commit formatter"
 	@echo "install-host-tools          Prepare pinned local jq/yq/ripgrep/cloc"
 	@echo "install-ic-tools            Prepare the pinned local IC executables"
-	@echo "install-rust-tools          Prepare the optional shared Cargo tool set"
-	@echo "install-tools               Prepare host tools followed by IC tools"
-	@echo "package                     Verify both library packages locally"
+	@echo "install-rust-tools          Prepare the complete shared Cargo tool set"
 	@echo "install-testkit-server       Prepare the locked Testkit CLI and its PocketIC server"
-	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
+	@echo "install-tools               Prepare host, IC, Cargo and locked Testkit tools in order"
+	@echo "package                     Verify both library packages locally"
 	@echo "publish                     Publish both libraries to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
 	@echo "release-check               Test release helpers with isolated substitutes"
+	@echo "release-delivery-check      Verify the supported direct release policy without effects"
 	@echo "release-major               Maintainer: prepare, commit, tag and push a major"
 	@echo "release-minor               Maintainer: prepare, commit, tag and push a minor"
 	@echo "release-patch               Maintainer: prepare, commit, tag and push a patch"
@@ -62,14 +63,15 @@ help:
 	@echo "release-resume VERSION=x.y.z Maintainer: resume the exact saved release"
 	@echo "release-tag-check           Verify the current annotated release tag"
 	@echo "release-verify              Run the full release validation gate"
-	@echo "rust-tools-check            Verify the optional local Cargo tools offline"
+	@echo "rust-tools-check            Verify the complete local Cargo tools offline"
 	@echo "shared-tooling-check        Verify the reviewed local tooling snapshot"
 	@echo "shell-check                 Check maintained shell and Perl tooling"
 	@echo "tags                        List local version tags"
 	@echo "tasks                       Read the shared maintenance catalog"
 	@echo "test                        Run native library tests and doctests"
+	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
 	@echo "tooling-check               Test snapshot integrity and CI diagnostics"
-	@echo "tools-check                 Verify both local executable sets offline"
+	@echo "tools-check                 Verify common and locked Testkit tools offline in order"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 

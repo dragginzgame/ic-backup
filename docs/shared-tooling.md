@@ -49,7 +49,21 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 95-file snapshot selects committed Shared Tooling 0.2.14 at
+The current 95-file snapshot selects committed Shared Tooling 0.3.0 at
+`88a73139a0f083344c41a6f6f4b5c3a8aca7dc1d`. Canonical export excludes the dirty
+upstream sibling reporter. The complete shared host/IC/Cargo roster is mandatory;
+ripgrep/cloc flags and extra Rust aggregate prerequisites are retired. Backup
+registers locked fetch then Testkit setup in the ordered local installation list,
+and Testkit admission in the local check list. Release preflight and CI use these
+aggregates; CI no longer separately installs Cargo-sort or repeats Testkit setup.
+Select 0.14.0 because the aggregate command contract changes after released 0.13.0.
+Earlier tools, snapshots, receipts and failed evidence remain retained.
+The repository description remains accurate. Consumer qualification is recorded
+in [the adoption review](reports/audits/2026/10/10/shared-030/01/report.md).
+
+### Prior Shared Tooling 0.2.14 review
+
+The prior 95-file snapshot selects committed Shared Tooling 0.2.14 at
 `fd11692f31e7dfd44dcc2ca56634eaeab3569825`. Canonical export adopts selected
 Cargo-tool diagnostics, original-release CLI setup before validation and early
 offline admission before dependent qualification. Backup routes these through

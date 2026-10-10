@@ -56,11 +56,9 @@ and publication owners. This guide does not authorize dispatch or release.
 From the repository root:
 
 ```bash
+rustup show active-toolchain
 make install-tools
 make tools-check
-make deps
-make install-testkit-server
-make testkit-server-check
 make check
 make test
 ```
@@ -68,8 +66,10 @@ make test
 Explicit local setup uses the reviewed [host pins](../ci/tool-versions.env)
 and [IC tool matrix](../ci/ic-tools.tsv), through the shared
 [Make commands](../make/tools.mk). It downloads and verifies jq/yq, ripgrep with
-PCRE2, cloc and the five IC executables, then activates each complete set under `.tools/`; previous
-sets and failed candidates are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and the optional `.tools/rust/bin`.
+PCRE2, cloc and the five IC executables, followed by Cargo-sort, Cargo-sort-derives
+and Candid-extractor. The ordered Backup extension fetches locked dependencies
+then prepares its selected Testkit CLI/server. Previous sets and failed candidates
+are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and `.tools/rust/bin`.
 Interactive shells can use:
 
 ```bash
@@ -77,10 +77,12 @@ export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/bin:$PATH"
 ```
 
 See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
-[IC setup](ic-tools.md). Cargo toolchains, cargo-sort, ShellCheck and
-macOS GNU Make/flock remain separate product prerequisites. Published Testkit
-0.25 supplies the test-only PocketIC client and managed server. The locked Testkit package also selects its CLI and server assets; run
-`make install-testkit-server` explicitly before tests. Testkit authenticates the
+[IC setup](ic-tools.md). Prepared Cargo toolchains, ShellCheck and macOS GNU
+Make/flock remain separate product prerequisites. Published Testkit supplies the
+test-only PocketIC client and managed server. Its locked package selects CLI and
+server assets; the aggregate prepares them before tests. The narrow
+`make install-testkit-server` target remains available after a selected-version
+change. Testkit authenticates the
 server through `make testkit-server-check`, which prints its admitted absolute
 path offline. Both simulator suites call that check before managed startup.
 Original server digests, private logs and fixture state remain retained.
@@ -89,10 +91,14 @@ Direct Agent transport is implemented separately; runners remain unimplemented.
 Installing tools alone establishes
 no backend or application qualification.
 
-The optional shared `make install-rust-tools` and `make rust-tools-check` prepare
-and check Cargo-sort, derive-sort and Candid-extractor under `.tools/rust/`.
-This library requires only the existing Cargo-sort formatter; the extra set is
-not part of aggregate setup or CI. Both commands use the reviewed shared pins.
+The shared `make install-rust-tools` and offline `make rust-tools-check` prepare
+and check the mandatory common Cargo-sort, Cargo-sort-derives and Candid-extractor
+set under `.tools/rust/`. Both commands use the reviewed shared pins. The aggregate
+runs common host, IC and Cargo steps in order, then product targets registered
+through `LOCAL_TOOL_INSTALL_TARGETS`/`LOCAL_TOOL_CHECK_TARGETS`. Backup registers
+locked fetch before Testkit setup, and Testkit admission after common checks.
+Do not attach unordered aggregate prerequisites or call the aggregate from an
+extension target.
 The pre-commit hook and formatting-adoption checker find prepared checkout-local
 tools without an interactive PATH export. Their source/configuration inputs remain
 the isolated staged export; missing or wrongly pinned tools still reject.
@@ -101,7 +107,7 @@ The shared installer also supports an explicitly selected exact Cargo package,
 binary or example, and debug/release profile. See [consumer-selected Cargo
 tools](local-setup.md#consumer-selected-cargo-tools) for setup and
 offline receipt checks. Backup uses this selected mode for its locked `ic-testkit-server` executable;
-formatter prerequisites remain separate. Native `check`, `check-msrv`, `clippy`
+the complete common formatter set is also checked by `tools-check`. Native `check`, `check-msrv`, `clippy`
 and `test` depend on offline `testkit-server-check`, so parallel Make also refuses
 missing or changed selected tools before dependent qualification. Prepare them
 explicitly with `make install-testkit-server`; ordinary validation never installs.
@@ -204,9 +210,11 @@ with private parent policy and acknowledged crash barriers in Backup. In the
 0.6.0 release, match `PersistenceError::Publication` for its original typed producer,
 cleanup and before/after-publication failures; visible output requires recovery.
 Released 0.8.1 selects the Host 0.7.1 publication-error Rust identity. The
-released 0.9.0 selected Host 0.8. Pending 0.11.0 selects incoming direct Host 0.9
-and changes that exposed Rust identity again, preserving variant shapes and
-persisted records. Testkit keeps its published dev-only Host 0.8 graph.
+released 0.9.0 selected Host 0.8. Released 0.11.0, 0.12.0 and 0.13.0 selected
+direct Host 0.9, 0.10 and 0.11 respectively. Pending 0.14.0 selects Host 0.12
+and changes that exposed Rust identity again, preserving library behavior,
+variant shapes and persisted records. Testkit 0.31 keeps its independently
+selected dev-only Host 0.11 graph.
 Consumers sharing `NamedWriteError` values or matching through a direct Host
 dependency must select that same compatible line. Production direct Host
 dependencies still disable default features. Testkit enables artifact archive/Wasm

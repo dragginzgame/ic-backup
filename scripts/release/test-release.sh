@@ -88,6 +88,15 @@ TOML
     : > target/tool-effects.log
     # Substitutes qualify consumer ordering only. Canonical installer tests own
     # receipt/lock integrity and real Testkit owns server asset admission.
+    for common in install-host-tools install-ic-tools; do
+        cat > "scripts/dev/$common.sh" <<'TOOL'
+#!/usr/bin/env bash
+set -euo pipefail
+target="${0##*/}"; target="${target%.sh}"
+printf 'common %s\n' "$target" >> "$TEST_LOG"
+[[ "${TEST_COMMON_TOOL_FAIL:-}" != "$target" ]] || exit 8
+TOOL
+    done
     cat > scripts/dev/install-rust-tools.sh <<'TOOL'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -100,6 +109,11 @@ while [[ $# -gt 0 ]]; do
         *) shift ;;
     esac
 done
+if [[ -z "$version" ]]; then
+    printf 'common install-rust-tools\n' >> "$TEST_LOG"
+    [[ "${TEST_COMMON_TOOL_FAIL:-}" != install-rust-tools ]] || exit 8
+    exit 0
+fi
 selection="target/mock-tools/$version"
 [[ ! -e "$selection/invalid" && ! -d "$selection/lock" ]] || exit 8
 if [[ ! -f "$selection/receipt" ]]; then
@@ -122,7 +136,7 @@ TOOL
     printf 'retained build artifact\n' > target/debug/cache-sentinel
     export VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/target/validation-failures" GITHUB_STEP_SUMMARY="$FIXTURE/target/summary.md"
     unset YQ
-    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL TEST_TOOL_FAIL TEST_SERVER_FAIL CARGO_NET_OFFLINE
+    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL TEST_TOOL_FAIL TEST_SERVER_FAIL TEST_COMMON_TOOL_FAIL CARGO_NET_OFFLINE
 }
 expect_failure() {
     local status
@@ -638,6 +652,7 @@ test_selected_tool_preflight() {
         retry) export TEST_GATE_FAIL=1 ;;
         offline) export CARGO_NET_OFFLINE=true ;;
         network) export TEST_TOOL_FAIL=1 ;;
+        common) export TEST_COMMON_TOOL_FAIL=install-rust-tools ;;
         invalid|lock)
             mkdir -p target/mock-tools/0.28.2
             if [[ "$mode" == invalid ]]; then touch target/mock-tools/0.28.2/invalid; else mkdir target/mock-tools/0.28.2/lock; fi ;;
@@ -649,6 +664,7 @@ test_selected_tool_preflight() {
         [[ "$(cat target/tool-effects.log)" == $'build 0.28.2\nsetup\ncheck' ]]
         # First original-source preflight fetched before setup/admission/gate.
         awk '/^cargo fetch/{fetch=NR} /^cli setup/{setup=NR} /^cli check/{check=NR} /^make .*release-verify/{gate=NR} END {exit !(fetch < setup && setup < check && check < gate)}' "$TEST_LOG"
+        awk '/^common install-host-tools$/{host=NR} /^common install-ic-tools$/{ic=NR} /^common install-rust-tools$/{rust=NR} /^cargo fetch/{fetch=NR} /^cli setup/{exit !(host < ic && ic < rust && rust < fetch)}' "$TEST_LOG"
         unset TEST_GATE_FAIL
         "$TEST_REAL_MAKE" --no-print-directory release-patch
         [[ "$(grep -c '^build ' target/tool-effects.log)" == 1 ]]
@@ -919,7 +935,7 @@ for drift in notes tag head; do run_case "completed-$drift" test_invalid_release
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
 run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-normal-retry test_prepared_normal_retry
-for mode in retry offline network invalid lock; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
+for mode in retry offline network invalid lock common; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
 for mode in explicit patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
 run_case completed-evidence-replay test_completed_evidence_replay

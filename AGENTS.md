@@ -62,10 +62,12 @@ into an issue tracker or release authority.
   Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
   Released 0.8.1 qualifies Host 0.7.1. Released 0.9.0 qualifies the Host 0.8
   exposed Rust identity. Released 0.11.0 selects direct Host 0.9. Released
-  0.12.0 selects direct Host 0.10 artifact/FS packages. Pending 0.13.0 selects
+  0.12.0 selects direct Host 0.10 artifact/FS packages. Released 0.13.0 selects
   direct Host 0.11, changing that public Rust identity again; consumers sharing
-  publication errors must align Host 0.11. The incoming Testkit 0.29 selection
-  unifies its independently owned test-only graph at Host 0.11.
+  publication errors must align Host 0.11. Pending 0.14.0 selects direct Host
+  Artifact/FS 0.12, changing that public Rust identity without a library behavior
+  or record change. Consumers sharing publication errors must align Host 0.12.
+  Testkit 0.31 retains its independently owned test-only Host 0.11 graph.
   No compatibility adapter or record change follows. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
   server owner does not grant backup command custody or spending authority.
