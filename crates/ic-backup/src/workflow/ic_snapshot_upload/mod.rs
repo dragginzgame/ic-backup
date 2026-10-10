@@ -1,5 +1,11 @@
 //! One fresh original source-bound metadata/data upload; no automatic receipt or retry.
 
+mod allocation;
+
+pub use allocation::{
+    IcSnapshotAllocationExecutionError, IcSnapshotAllocationSettlementError, allocate_snapshot,
+};
+
 use crate::{
     model::{
         ic_mutation::IcMutationAcknowledgement,

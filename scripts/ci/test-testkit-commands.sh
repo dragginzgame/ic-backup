@@ -22,8 +22,12 @@ cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.s
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ "$*" == 'metadata --offline --locked --format-version 1' ]]
-cat "$TESTKIT_COMMAND_METADATA"
+case "$*" in
+    'metadata --offline --locked --format-version 1') cat "$TESTKIT_COMMAND_METADATA" ;;
+    'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features'|'clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings')
+        printf 'build %s\n' "$1" >> "$TESTKIT_COMMAND_ORDER" ;;
+    *) exit 97 ;;
+esac
 CARGO
 {
     printf '#!%s\n' "$BASH"
@@ -43,6 +47,7 @@ cat > "$fixture/cli/ic-testkit-server" <<'CLI'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "$*" >> "$TESTKIT_COMMAND_CALLS"
+printf 'server %s\n' "$1" >> "$TESTKIT_COMMAND_ORDER"
 [[ ${TESTKIT_COMMAND_SERVER_FAILURE:-0} == 0 ]] || exit 23
 printf '%s\n' "$TESTKIT_COMMAND_SERVER"
 CLI
@@ -50,6 +55,7 @@ chmod +x "$fixture/bin/cargo" "$fixture/bin/bash" "$fixture/cli/ic-testkit-serve
 export TESTKIT_COMMAND_METADATA="$fixture/metadata.json"
 export TESTKIT_COMMAND_INSTALL="$fixture/install.log"
 export TESTKIT_COMMAND_CALLS="$fixture/calls.log"
+export TESTKIT_COMMAND_ORDER="$fixture/order.log"
 export TESTKIT_COMMAND_CLI="$fixture/cli/ic-testkit-server"
 export TESTKIT_COMMAND_SERVER="$fixture/admitted-server"
 export TESTKIT_COMMAND_BASH="$BASH"
@@ -94,5 +100,19 @@ for metadata in '{"packages":[]}' '{"packages":[{"name":"ic-testkit","version":"
     cmp "$TESTKIT_COMMAND_INSTALL" "$fixture/before-install"
     cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 done
+# Exercise real prerequisite edges under parallel Make. Refusal must precede
+# every dependent compiler/test invocation without installing anything.
+printf '%s\n' '{"packages":[{"name":"ic-testkit","version":"0.26.0"}]}' > "$TESTKIT_COMMAND_METADATA"
+for failure in TESTKIT_COMMAND_INSTALL_FAILURE TESTKIT_COMMAND_SERVER_FAILURE; do
+    : > "$TESTKIT_COMMAND_ORDER"
+    if env -u MAKEFLAGS -u MFLAGS -u MAKELEVEL -u MAKEFILES "$failure=1" make --silent --no-print-directory -C "$fixture/consumer" -j4 check clippy test check-msrv > "$fixture/parallel-$failure.log" 2>&1; then exit 1; fi
+    if grep -q '^build ' "$TESTKIT_COMMAND_ORDER"; then exit 1; fi
+    tail -n 1 "$TESTKIT_COMMAND_INSTALL" | grep -F -- '--check' >/dev/null
+done
+: > "$TESTKIT_COMMAND_ORDER"
+run_make -j4 check clippy > "$fixture/parallel-success.log" 2>&1
+[[ "$(head -n 1 "$TESTKIT_COMMAND_ORDER")" == 'server check' ]]
+[[ "$(grep -c '^server ' "$TESTKIT_COMMAND_ORDER")" == 1 ]]
+[[ "$(grep -c '^build ' "$TESTKIT_COMMAND_ORDER")" == 2 ]]
 [[ "$(cat "$fixture/retained")" == 'retained original evidence' ]]
 printf '%s\n' 'Testkit setup/check routing, original selection and refusal fixtures passed'

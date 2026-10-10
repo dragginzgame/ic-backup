@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.13.0]
+
+- **Breaking:** Select direct Host Artifact/FS 0.11.0. Consumers sharing
+  `PersistenceError::Publication` must align to the Host 0.11 Rust error type.
+  Publication errors now display retained secondary cleanup failures. Select
+  Testkit 0.29.0 and explicitly prepare its CLI; its test-only Host graph also
+  uses 0.11.
+- Adopt Shared Tooling 0.2.14. Original release preflight prepares and checks the
+  locked Testkit CLI; standalone native qualification checks it before builds,
+  including parallel Make. Missing or invalid selections fail without implicit
+  validation installation ([shared #96](https://github.com/dragginzgame/shared-tooling/issues/96)).
+
+- Coordinate an original metadata allocation through an independently qualified
+  retained reply, explicit receipt and exact checkpoint for learned data binding.
+  Preserve pending/Applied spending and reply evidence after failures; adopt the
+  coordinator in the real Testkit upload caller
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
+- Adopt committed Shared Tooling's stronger Make-mode admission and LF/CR
+  directory-path rejection, preserving ordinary commands and retained evidence
+  ([shared #30](https://github.com/dragginzgame/shared-tooling/issues/30),
+  [shared #95](https://github.com/dragginzgame/shared-tooling/issues/95)).
+
 ## [0.12.1] - 2026-10-10
 
 - Coordinate one original metadata stage through a single read, independently

@@ -21,7 +21,10 @@ use ic_backup::{
         create_execution_workflow, read_execution_progress,
     },
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
-    workflow::ic_snapshot_upload::{IcSnapshotUploadExecutionError, upload_snapshot},
+    workflow::ic_snapshot_upload::{
+        IcSnapshotAllocationExecutionError, IcSnapshotUploadExecutionError, allocate_snapshot,
+        upload_snapshot,
+    },
 };
 use ic_management_canister_types::CanisterStatusType;
 use serde_json::json;
@@ -104,10 +107,7 @@ fn retain_applied(
         AttemptJournalGuard::open(layout, &stage.plan().attempt_authority(sequence).unwrap())
             .unwrap();
     let reply = IcSnapshotUploadReply::decode(payload, &acknowledgement.input().reply).unwrap();
-    let file = fs::File::create(layout.root().join(format!("reply-{sequence}.candid"))).unwrap();
-    (&file).write_all(&acknowledgement.input().reply).unwrap();
-    file.sync_all().unwrap();
-    fs::File::open(layout.root()).unwrap().sync_all().unwrap();
+    retain_reply(layout, sequence, acknowledgement);
     let digest = reply.digest();
     journal
         .record_mutation(MutationReceiptRequest {
@@ -118,6 +118,16 @@ fn retain_applied(
         })
         .unwrap();
     digest
+}
+fn retain_reply(
+    layout: &BackupLayoutGuard,
+    sequence: u64,
+    acknowledgement: &IcMutationAcknowledgement,
+) {
+    let file = fs::File::create(layout.root().join(format!("reply-{sequence}.candid"))).unwrap();
+    (&file).write_all(&acknowledgement.input().reply).unwrap();
+    file.sync_all().unwrap();
+    fs::File::open(layout.root()).unwrap().sync_all().unwrap();
 }
 fn allocation(
     backend: &Backend,
@@ -273,13 +283,38 @@ pub(crate) fn run(failure: Failure) {
         failure,
         submitted: BTreeSet::new(),
     };
-    let result = upload_snapshot(&stage, 0, &upload, &mut provider, |request| {
-        // This stopped fixture owns current controller, immutable complete source and
-        // original never-dispatched custody; the generic library has no default.
-        assert_eq!(request.payload().source_checksum(), &source.checksum);
-        Ok::<_, Infallible>(())
-    });
+    let result = allocate_snapshot(
+        &stage,
+        0,
+        &upload,
+        &mut provider,
+        |request| {
+            // This stopped fixture owns current controller, immutable complete source and
+            // original never-dispatched custody; the generic library has no default.
+            assert_eq!(request.payload().source_checksum(), &source.checksum);
+            Ok::<_, Infallible>(())
+        },
+        |request, acknowledgement| {
+            // The fixture independently owns this exact successful allocation ingress.
+            // Retain actual original reply bytes before qualifying its explicit receipt.
+            retain_reply(stage.layout().unwrap(), 0, acknowledgement);
+            let reply =
+                IcSnapshotUploadReply::decode(request.payload(), &acknowledgement.input().reply)
+                    .unwrap();
+            Ok(MutationReceiptRequest {
+                attempt: request.mutation_attempt(),
+                request: request.payload().binding_digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: reply.digest().hash().into(),
+            })
+        },
+    );
     if matches!(failure, Failure::MetadataLost | Failure::MetadataMalformed) {
+        let result = match result {
+            Err(IcSnapshotAllocationExecutionError::Upload(source)) => Err(source),
+            Ok((acknowledgement, _)) => Ok(acknowledgement),
+            Err(source) => panic!("unexpected allocation settlement: {source}"),
+        };
         assert_failed(stage, &layout, &upload, 0, &mut provider, result);
         assert!(!layout.root().join("execution-stage-7").exists());
         assert_eq!(provider.submitted.len(), 1);
@@ -290,9 +325,7 @@ pub(crate) fn run(failure: Failure) {
         );
         return;
     }
-    let acknowledgement = result.unwrap();
-    let digest = retain_applied(&stage, 0, &upload, &acknowledgement);
-    let predecessor = stage.checkpoint(digest).unwrap();
+    let (acknowledgement, predecessor) = result.unwrap();
     let reply = IcSnapshotUploadReply::decode(&upload, &acknowledgement.input().reply).unwrap();
     let IcSnapshotUploadReplyKind::Metadata {
         snapshot_id: destination,

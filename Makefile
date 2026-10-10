@@ -73,6 +73,10 @@ help:
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 
+# Refuse a missing/changed selected CLI before native qualification, including
+# parallel standalone invocations. Validation never provisions it implicitly.
+check check-msrv clippy test: testkit-server-check
+
 check:
 	cargo check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
 

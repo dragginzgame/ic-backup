@@ -2,10 +2,9 @@
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
-transport was first released in 0.8.0 and remains in released 0.10.1. Pending
-0.11.0 adopts incoming direct Host 0.9 and changes the core publication-error
-Rust identity. Package versions remain 0.10.1 until a separately authorized
-release. The ICP transport/probe is retired; historical evidence and original
+transport was first released in 0.8.0 and remains in released 0.12.1. Pending
+0.13.0 selects direct Host 0.11 and changes the core publication-error Rust
+identity. Package versions remain 0.12.1 until a separately authorized release. The ICP transport/probe is retired; historical evidence and original
 journals remain retained. Testkit owns explicit simulator selection/admission
 through the [current setup contract](development.md); shared IC executables
 provide no product backend.

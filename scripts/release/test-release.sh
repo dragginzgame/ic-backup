@@ -82,10 +82,47 @@ TOML
     sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md > target/history
     export TEST_LOG="$FIXTURE/target/commands.log" TEST_EFFECTS="$FIXTURE/target/effects.log"
     : > "$TEST_LOG"; : > "$TEST_EFFECTS"
+    mkdir -p scripts/dev target/mock-tools/0.28.1
+    printf '0.28.1\n' > target/mock-testkit-selection
+    printf 'original receipt\n' > target/mock-tools/0.28.1/receipt
+    : > target/tool-effects.log
+    # Substitutes qualify consumer ordering only. Canonical installer tests own
+    # receipt/lock integrity and real Testkit owns server asset admission.
+    cat > scripts/dev/install-rust-tools.sh <<'TOOL'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'installer %s\n' "$*" >> "$TEST_LOG"
+version=''; check=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --version) version="$2"; shift 2 ;;
+        --check) check=true; shift ;;
+        *) shift ;;
+    esac
+done
+selection="target/mock-tools/$version"
+[[ ! -e "$selection/invalid" && ! -d "$selection/lock" ]] || exit 8
+if [[ ! -f "$selection/receipt" ]]; then
+    [[ "$check" == false && "${CARGO_NET_OFFLINE:-false}" != true && "${TEST_TOOL_FAIL:-0}" != 1 ]] || exit 8
+    mkdir -p "$selection"
+    printf 'selected receipt\n' > "$selection/receipt"
+    printf 'build %s\n' "$version" >> target/tool-effects.log
+fi
+printf '%s/target/mock-testkit-cli\n' "$PWD"
+TOOL
+    cat > target/mock-testkit-cli <<'TOOL'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'cli %s\n' "$*" >> "$TEST_LOG"
+printf '%s\n' "$1" >> target/tool-effects.log
+[[ "${TEST_SERVER_FAIL:-0}" != 1 ]] || exit 8
+printf '%s/mock-server\n' "$PWD"
+TOOL
+    chmod +x target/mock-testkit-cli
     printf 'retained build artifact\n' > target/debug/cache-sentinel
     export VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/target/validation-failures" GITHUB_STEP_SUMMARY="$FIXTURE/target/summary.md"
     unset YQ
-    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL
+    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL TEST_TOOL_FAIL TEST_SERVER_FAIL CARGO_NET_OFFLINE
 }
 expect_failure() {
     local status
@@ -275,6 +312,7 @@ case "$*" in
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
     'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
+    'metadata --offline --locked --format-version 1') printf '{"packages":[{"name":"ic-testkit","version":"%s"}]}\n' "$(cat target/mock-testkit-selection)" ;;
     'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent'|'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent --dry-run')
         if [[ "${TEST_PUBLISH_FAIL:-0}" == 1 ]]; then exit 101; fi
         echo publish >> "$TEST_EFFECTS" ;;
@@ -577,6 +615,7 @@ test_prepared_normal_retry() {
     cp target/release-state/0.1.1.validation.json target/original-validation.json
     perl scripts/release/release-data.pl verify
     : > "$TEST_EFFECTS"
+    cp target/tool-effects.log target/tools-before-resume
     "$TEST_REAL_MAKE" --no-print-directory release-patch
     [[ "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'tag\npush' ]]
     cmp docs/release.json target/original-receipt.json
@@ -587,6 +626,40 @@ test_prepared_normal_retry() {
     cmp target/history <(sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md)
     [[ ! -e target/release-state/0.1.2.plan ]]
     "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
+    cmp target/tool-effects.log target/tools-before-resume
+    assert_cache_retained
+}
+
+test_selected_tool_preflight() {
+    local mode="$1"
+    before="$(fingerprint)"
+    printf '0.28.2\n' > target/mock-testkit-selection
+    case "$mode" in
+        retry) export TEST_GATE_FAIL=1 ;;
+        offline) export CARGO_NET_OFFLINE=true ;;
+        network) export TEST_TOOL_FAIL=1 ;;
+        invalid|lock)
+            mkdir -p target/mock-tools/0.28.2
+            if [[ "$mode" == invalid ]]; then touch target/mock-tools/0.28.2/invalid; else mkdir target/mock-tools/0.28.2/lock; fi ;;
+    esac
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
+    assert_unchanged
+    [[ "$(cat target/mock-tools/0.28.1/receipt)" == 'original receipt' ]]
+    if [[ "$mode" == retry ]]; then
+        [[ "$(cat target/tool-effects.log)" == $'build 0.28.2\nsetup\ncheck' ]]
+        # First original-source preflight fetched before setup/admission/gate.
+        awk '/^cargo fetch/{fetch=NR} /^cli setup/{setup=NR} /^cli check/{check=NR} /^make .*release-verify/{gate=NR} END {exit !(fetch < setup && setup < check && check < gate)}' "$TEST_LOG"
+        unset TEST_GATE_FAIL
+        "$TEST_REAL_MAKE" --no-print-directory release-patch
+        [[ "$(grep -c '^build ' target/tool-effects.log)" == 1 ]]
+        [[ "$(grep -c '^setup$' target/tool-effects.log)" == 3 ]]
+        cp target/tool-effects.log target/tools-before-resume
+        "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
+        cmp target/tool-effects.log target/tools-before-resume
+    else
+        [[ ! -s target/tool-effects.log ]]
+        if grep -q '^validate$' "$TEST_EFFECTS"; then exit 1; fi
+    fi
     assert_cache_retained
 }
 record_reviewed_fix() {
@@ -846,6 +919,7 @@ for drift in notes tag head; do run_case "completed-$drift" test_invalid_release
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
 run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-normal-retry test_prepared_normal_retry
+for mode in retry offline network invalid lock; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
 for mode in explicit patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
 run_case completed-evidence-replay test_completed_evidence_replay

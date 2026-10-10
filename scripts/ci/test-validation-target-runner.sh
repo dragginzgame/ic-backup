@@ -55,7 +55,7 @@ printf '%s\n' \
 
 # GNU Make owns option parsing, including compact flags and long aliases.
 # Matching variable values and legitimate parallel controls must remain valid.
-for variable in MAKEFLAGS GNUMAKEFLAGS; do
+for variable in MAKEFLAGS MFLAGS GNUMAKEFLAGS; do
     for flags in i n q t v ksin --ignore-errors --dry-run --just-print --recon --question --touch --version; do
         if env "$variable=$flags" VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
             bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \

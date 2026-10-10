@@ -155,10 +155,14 @@ staged/unstaged/untracked work and changed original manifest/lock/receipt. Stage
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
 the snapshot and runs root-workspace `cargo fetch --locked` to prepare both
-libraries' selected dependency cache. The standard release authorizes this locked
-cache preparation; explicit offline Cargo settings remain authoritative and missing
-inputs fail without switching online. Ordinary validation does not acquire new
-network or installation authority. The full gate runs
+libraries' selected dependency cache. Original-source preflight then runs
+`make install-testkit-server` and offline `make testkit-server-check` before the
+full gate, rechecking original source/manifest/lock/receipt afterward. The standard
+release includes this required selected-CLI preparation; explicit offline Cargo
+settings remain authoritative and missing inputs fail without switching online.
+Setup reuses an admitted selection, preserves earlier tools and refuses invalid
+receipts or occupied installer locks. Prepared/committed/tagged recovery does not
+repeat setup. Ordinary validation checks prepared tools without installing. The full gate runs
 offline; a consumer validation sidecar binds the original source, selections and
 manifest/lock/member/notes bytes before preparation. Missing evidence is never approval.
 
@@ -271,4 +275,5 @@ production guard.
 `make shell-check`, `make shared-tooling-check` and `make tooling-check` cover syntax,
 lints, pinned bytes/modes and rejection/evidence behavior. These are focused tooling
 checks, not actual releases, native macOS qualification or real registry publication.
-The full `make ci`/`make release-verify` gate remains separately authorized/configured.
+Completed code delivery requires the full `make ci` suite under standing validation
+authority. Release execution retains separate explicit authorization.

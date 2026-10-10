@@ -25,7 +25,73 @@
 
 # Current handoff — 2026-10-10
 
-## Current 0.12.1 upload continuation
+## Current 0.13.0 Host/Shared adoption
+
+Released base remains 0.12.1 at `f5b0b093dd10ec6b25934e80ceaadb4f32d7506e`.
+Select the complete pending batch as 0.13.0 for direct Host Artifact/FS 0.11.0:
+`PersistenceError::Publication` exposes the new Host Rust type identity. Consumers
+sharing it must align Host 0.11. Preserve incoming manifest/lock selections; the
+new Testkit 0.29.0 selection unifies its test-only graph at Host 0.11. Prepare its
+exact CLI, retaining prior installations. Package/receipt stay 0.12.1.
+No record, allowance or publication-barrier change is introduced.
+
+Canonically adopt committed Shared 0.2.14 at
+`fd11692f31e7dfd44dcc2ca56634eaeab3569825` (same 95 selected files). Original
+release preflight prepares/checks only the locked Testkit CLI after fetch and
+rechecks original metadata before validation. Prepared/committed/tagged recovery
+skips setup. Native check/Clippy/test/MSRV use real early offline-check dependency
+edges, including parallel Make. Missing/invalid selections never install during
+validation. Full completed-code delivery validation now has standing baseline
+authority; release and Git effects remain separately authorized.
+
+The full `make ci` suite passes on the initial Host-0.11/Testkit-0.28.1 graph. After
+the incoming 0.29.0 update, all graph-dependent targets pass again, including strict
+Clippy, all native tests, 22 core/three Agent simulator cases, warning-denied docs,
+both independent Rust 1.88 consumers and both packages. Unchanged tooling/release/
+hook evidence is reused. The separate Host-0.11 public-error consumer passes,
+including primary/secondary error display. Exact source/graph/log evidence is in
+[the review](../reports/audits/2026/10/10/continuation-0130/01/report.md). Preserve
+previous allocation evidence as qualification of its original Host-0.10 graph.
+Released 0.12.1 Linux/Apple Silicon CI passes; Intel ended cancelled. Keep native
+acceptance open; this dirty candidate has no hosted result.
+
+## Prior 0.12.2 allocation continuation
+
+Released 0.12.1 is `f5b0b093dd10ec6b25934e80ceaadb4f32d7506e`. Select compatible
+0.12.2 for `workflow::ic_snapshot_upload::allocate_snapshot`: one exact singleton
+metadata stage through existing durable spending/fresh admission, mandatory
+independent allocation attribution and durable original request/reply retention,
+then explicit exact Applied receipt under journal exclusion. Release that lock
+before checkpointing the canonical allocation reply digest. Return bounded original
+acknowledgement/predecessor for explicit learned data binding. Pending/Applied
+allocations never reissue; failures retain replies, consumption and Applied/occupied
+evidence. The actual Testkit upload caller delegates this assembly to the API.
+Generic data planning/full upload/restore orchestration, application-qualified async
+Agent and product terminal/command/byte custody remain next under #29.
+
+Canonically adopt the same 95 files from committed Shared
+`a8ba9b461b831846eacf64452e6ddcd2acd000f1` (version annotation 0.2.12), including
+stronger MAKEFLAGS/MFLAGS admission and LF/CR supplied/resolved directory rejection.
+Preserve default help, formatter order, release-resume and invalid historical evidence.
+Isolated consumer Make/path and actual hook/release/Testkit fixtures pass. No optional
+upstream fixture was imported. Preserve incoming Host 0.10.2/Metrics 0.3.7, Testkit
+0.28.1/Agent 0.49.2 and all retained tools/evidence; explicitly prepare only locked
+caches. Package/receipt remain 0.12.1, with root requirements/lock bytes unchanged.
+
+All 72 workflow/stage cases, 14 JSON publication cases, four artifact model and four
+metrics cases, 12 actual planned core and three Agent simulator journeys pass. Strict
+core tests Clippy/rustdoc, both independent Rust 1.88 consumers and a public allocation
+caller pass; formatting/snapshot/pins/links/shell/whitespace pass. The
+[review](../reports/audits/2026/10/10/continuation-0122/01/report.md) binds exact
+source/graph/log evidence and retained rejected attempts. No Rust symbol was removed.
+
+Released-source 0.12.1 Linux CI passes; both macOS jobs are queued in
+[the exact-source run](https://github.com/dragginzgame/ic-backup/actions/runs/38037385719).
+The earlier 0.12.0 Intel retry ended cancelled. Keep native acceptance open;
+this uncommitted candidate has no hosted result. No full local gate, root Git write,
+release, publication, production IC effect, sibling edit or recovery cleanup ran.
+
+## Prior 0.12.1 upload continuation
 
 Continue the compatible 0.12.1 draft from released 0.12.0
 `f1bba34b667a724274a65ac9653b4de88f30414f`; package/receipt remain 0.12.0.

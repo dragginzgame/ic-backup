@@ -62,8 +62,10 @@ into an issue tracker or release authority.
   Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
   Released 0.8.1 qualifies Host 0.7.1. Released 0.9.0 qualifies the Host 0.8
   exposed Rust identity. Released 0.11.0 selects direct Host 0.9. Released
-  0.12.0 selects direct Host 0.10 artifact/FS packages, changing that public
-  Rust identity again. Testkit 0.28 selects the same Host 0.10 test-only graph.
+  0.12.0 selects direct Host 0.10 artifact/FS packages. Pending 0.13.0 selects
+  direct Host 0.11, changing that public Rust identity again; consumers sharing
+  publication errors must align Host 0.11. The incoming Testkit 0.29 selection
+  unifies its independently owned test-only graph at Host 0.11.
   No compatibility adapter or record change follows. The direct process
   dependency retired with its sole ICP probe caller; Testkit's dev-only managed
   server owner does not grant backup command custody or spending authority.
@@ -416,6 +418,16 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   remains integration-owned. Preserve original allowances/references and no batching,
   retry, automatic allocation, default Agent bridge or terminal/release authority.
 
+- Singleton upload allocation now delegates spending/fresh admission to the
+  existing one-upload coordinator. Mandatory independent qualification durably
+  retains original request/reply bytes and authenticates exclusive allocation
+  attribution before an explicit exact Applied receipt. Hold the selected journal
+  lock through qualification/receipt, then release it before the canonical learned
+  checkpoint. Preserve bounded acknowledgements on post-reply failure, original
+  consumption, Applied/occupied evidence and explicit data-stage binding. Reopen
+  uses original replay; no allocation reissue, automatic receipt, byte store,
+  replacement, default Agent bridge or terminal/fence/reference release follows.
+
 - Local IC artifact diagnostics reuse registry `ic-metrics` arithmetic under a
   guard-local synchronized owner. Preserve explicit nanosecond/byte units, separate
   returned success/rejection samples, valid zero and repeated preparation semantics.
@@ -750,10 +762,13 @@ Product transport/runtime qualification stays separate from executable version c
 
 ## Validation and delivery
 
-- Run only checks targeted to changed packages and behavior during coding.
-  Broad validation requires the maintainer's explicit command or the repository's
-  configured CI/release pipeline. [Development](docs/development.md) describes
-  the local commands and target-directory ownership.
+- Run focused checks during development and the documented full `make ci` suite
+  before delivering completed code as ready, under the shared standing validation
+  authority. Reuse unchanged passing evidence; rerun affected checks after edits.
+  Documentation-only and inspection-only work follow the baseline's narrower
+  validation scope. Release, publication and deployment still require explicit
+  authorization. [Development](docs/development.md) describes local commands
+  and target-directory ownership.
 - Before compilation, check for an active command using this repository's
   target directory. Do not alter source or locks beneath active validation.
 - Unit tests live beside code; integration tests live in `tests/`. Canister

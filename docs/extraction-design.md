@@ -703,6 +703,16 @@ Lost/malformed metadata creates no data stage; lost/malformed data stops without
 reissue and retains original source evidence/references. Full generic upload/restore
 orchestration and async Agent/application admission remain incomplete.
 
+`workflow::ic_snapshot_upload::allocate_snapshot` now coordinates an exact singleton
+metadata allocation through the existing one-upload owner. Require mandatory fresh
+admission and independently qualified durable original request/reply retention before
+recording an explicit exact Applied receipt under journal exclusion. Release that
+lock before checkpointing the canonical allocation reply digest. The returned original
+acknowledgement/predecessor feeds explicit learned data binding; no data plan or call
+is generated. Lost/unqualified replies, invalid receipts and occupied checkpoints
+retain spending/returned bytes and prevent allocation reissue. The actual Testkit
+upload caller now delegates this metadata assembly to the public coordinator.
+
 Explicit local IC-tree verification and upload preparation now expose per-guard
 `ic-metrics` summaries and a bounded prepared-size histogram. Host durations use nanoseconds, successful prepared data uses
 bytes, and returned successes/rejections stay separate. Internal verification and

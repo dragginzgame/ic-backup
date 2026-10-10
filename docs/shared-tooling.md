@@ -49,7 +49,35 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 95-file snapshot selects committed Shared Tooling 0.2.10 at
+The current 95-file snapshot selects committed Shared Tooling 0.2.14 at
+`fd11692f31e7dfd44dcc2ca56634eaeab3569825`. Canonical export adopts selected
+Cargo-tool diagnostics, original-release CLI setup before validation and early
+offline admission before dependent qualification. Backup routes these through
+its existing Testkit setup/check owners, with real parallel Make dependency edges.
+The baseline now requires the full documented suite before completed code delivery
+and confines removed-symbol inventories to the final Codex response. Shared 0.2.14
+also requires missing failed-step logs to remain an explicit diagnosis gap. The
+optional upstream CI observer is not selected locally. Repository description
+remains accurate: full runners are not yet implemented.
+
+### Prior Shared Tooling 0.2.12 review
+
+The prior 95-file snapshot selects committed Shared Tooling
+`a8ba9b461b831846eacf64452e6ddcd2acd000f1`, whose committed version annotation
+is 0.2.12. Canonical export preserves the exact roster; the annotation is source
+metadata, not release/tag proof. The common baseline now rejects LF/CR directory
+names, including ancestors and resolved aliases, while preserving invalid historical
+evidence. The verifier/exporter refuse those paths before command substitution can
+trim them. Make admission separately probes computed `MAKEFLAGS` and retained
+`MFLAGS`, rejecting attempts to erase the latter. Cleared/replaced MAKEFLAGS cannot
+hide unsafe recipe modes. Default help, normal parallel/recursive commands,
+formatter order and specialized release-resume checks remain. Focused consumer
+Make/path, hook/release/Testkit fixtures pass; detailed evidence is in
+[the allocation continuation review](reports/audits/2026/10/10/continuation-0122/01/report.md).
+
+### Prior Shared Tooling 0.2.10 review
+
+The prior 95-file snapshot selects committed Shared Tooling 0.2.10 at
 `43a0dc46cdc3c77e70a68e192561642ed50a3e0f`. Canonical refresh adds the explicitly
 selected `scripts/ci/run-formatting.sh` companion and records the source version.
 The existing formatting include prints one success line and retains complete

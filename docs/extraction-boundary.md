@@ -185,10 +185,11 @@ unchanged. Neither helper grants operation or retry authority.
 
 Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
 released 0.9.0 selected Host 0.8 and released 0.11.0 selected direct Host 0.9.
-Pending 0.12.0 selects direct Host 0.10, changing that public Rust identity again
-while preserving variant shapes and v1 records. The pathname adapter uses Host's
+Released 0.12.0 selects direct Host 0.10. Pending 0.13.0 selects direct Host 0.11,
+changing that public Rust identity again while preserving variant shapes and v1
+records. Error display includes retained secondary staging cleanup failures. The pathname adapter uses Host's
 canonical `write_with`; the Unix held-parent adapter retains `write_at_with`.
-Testkit 0.28 selects the same independently published Host 0.10 test-only graph.
+The selected Testkit 0.29 test-only graph also uses published Host 0.11.
 Direct Host dependencies sharing that value must use the same compatible line.
 The new closed-writer executable-admission API has no record-writing purpose;
 JSON publication keeps this single held-parent adapter and preflight contract.
@@ -2620,6 +2621,22 @@ metadata cannot create a data stage; lost/malformed data retains source records 
 references across reopen without repetition. These are fixture qualifications, not
 a generic complete upload/restore runner. Keep full application/async Agent/terminal
 custody work in [#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
+`workflow::ic_snapshot_upload::allocate_snapshot` requires an exact singleton original
+metadata stage before dispatch. Reuse one-upload authority/reservation/admission and
+bounded reply association. Under the selected journal lock, mandatory integration
+qualification independently authenticates exclusive allocation attribution and
+retains original request/reply bytes durably before returning the exact Applied
+receipt. A decoded destination ID or provider evidence alone cannot supply it.
+Record through the sole attempt owner, release its lock, then checkpoint the exact
+canonical allocation reply digest through the existing stage owner. Return the
+bounded acknowledgement and predecessor for explicit data-stage preparation within
+original ceilings. No learned payload, new byte store, default qualification,
+replacement or terminal/release authority is generated. Qualification/receipt/stage/
+checkpoint failures retain bounded replies and original consumption, including
+Applied history and occupied evidence; local replay never repeats allocation.
+The real Testkit caller delegates metadata assembly to this public API while
+retaining fixture-owned authentication and durable byte qualification.
 
 ### Original execution settlement checkpoints
 

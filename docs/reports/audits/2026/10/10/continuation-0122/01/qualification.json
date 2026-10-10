@@ -1,0 +1,435 @@
+{
+  "base": "f5b0b093dd10ec6b25934e80ceaadb4f32d7506e",
+  "draft": "0.12.2",
+  "recorded_at": "2026-10-10T08:43:57.806928+00:00",
+  "qualified_inputs": {
+    "Cargo.toml": "f76651e7b14b775fda3486814b2f95197266ea53038dfbf48fd89c407c0a1a6d",
+    "Cargo.lock": "9e5e389e003acca4bb86b6fc4abbb893ae58272978e83aeaf57a783f24e66aa9",
+    ".shared-tooling.snapshot": "f3c3462215d1641f44ca8d5863c6e33e008dd8e3cb20e6eeb2ab4f7a63e64cd7",
+    "crates/ic-backup/src/workflow/ic_snapshot_upload/mod.rs": "fbfda464ab68382826ff89bc275f8956d541e1849b99e42c2051a02b638fa29f",
+    "crates/ic-backup/src/workflow/ic_snapshot_upload/allocation/mod.rs": "6e4d9d13730998c22fae3ad0688b2e345a7918f95178e647d3fcd4a9e2875a53",
+    "crates/ic-backup/src/workflow/ic_snapshot_upload/allocation/tests/mod.rs": "1da7083b944804cc9afa93674f0adc34107efabd74fc83d91d36ad4ad4447dc6",
+    "crates/ic-backup/tests/pic_journey/planned_upload.rs": "ceeae9d3c69b51b0469653b6405a4edc01d0543ee4957a8ca0da051cdc28bcba",
+    "DRAGGINZGAME.md": "0654c5082635b9c677574566bf9cb6b7926046cf5ea4c45628ec3d8f947528cd",
+    "make/execution.mk": "cebc0fa4ee9944550350a492a3bc1084e28820e2c915e20351c336d87ce0359f",
+    "scripts/ci/check-make-execution.sh": "9e32385247296ce95d2b15b1290c64e6b6dff15716c1c139f21ab5e5128f4be3",
+    "scripts/ci/verify-shared-tooling-snapshot.sh": "71d1c69a25f190bc4b2b1df66d3359f172638371caa722142e820a8294d1938e",
+    "AGENTS.md": "5a113c89a81a362e1a795b6f52ad83702f1d1bb542aaa4e34e4efa038e65ce66",
+    "CHANGELOG.md": "452031b3b6d5226d168804e989304fadd021d5e94cf145c8b9baf836a805aa11",
+    "docs/extraction-design.md": "d9176ddf954c936786f188316b64d30fc642e33c8ed8b353ebcc44c25217c257",
+    "docs/extraction-boundary.md": "1d6673a03199cd5b953f2f7174ce4af550fe383d05f9507e5b21217c0a0efed8",
+    "docs/shared-tooling.md": "a7465b6330480cb3d4a4eb5cfb3cee3e71b1d953fdbfb953f61b08f65ce4d99d",
+    "docs/status/current.md": "01ff377e4b2f983bedfe0fa33cbcf8becb2759fc3074c368a6f09df43bc874f6"
+  },
+  "incoming_selected_packages": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea",
+      "dependencies": [
+        "arc-swap",
+        "async-channel 2.5.0",
+        "async-lock",
+        "async-trait",
+        "async-watch",
+        "backon",
+        "bytes",
+        "cached",
+        "candid",
+        "ecdsa",
+        "ed25519-consensus",
+        "elliptic-curve",
+        "futures-util",
+        "hex",
+        "http",
+        "http-body",
+        "http-body-util",
+        "ic-certification",
+        "ic-ed25519",
+        "ic-transport-types",
+        "ic-verify-bls-signature",
+        "ic_principal",
+        "k256",
+        "leb128",
+        "p256",
+        "pkcs8",
+        "rand 0.10.3",
+        "rangemap",
+        "reqwest",
+        "sec1",
+        "serde",
+        "serde_bytes",
+        "serde_cbor",
+        "serde_repr",
+        "sha2 0.10.9",
+        "stop-token",
+        "thiserror 2.0.18",
+        "time",
+        "tokio",
+        "tower-service",
+        "url"
+      ]
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.10.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "8def502b78969275663c03bbd6b635a520ee9837087811296c49c45d4d7768b5",
+      "dependencies": [
+        "flate2",
+        "sha2 0.10.9",
+        "tar",
+        "wasmparser"
+      ]
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.10.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c3467fe2e91c4ee66fe6a7101ee9472b07aed03b84b114f778610f5e94e0a0ae",
+      "dependencies": [
+        "ic-host-artifacts",
+        "rustix"
+      ]
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.10.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "66890a783ccd79839edade06e0b86a0993e429a24f84b1f490bc0c3475a9765e",
+      "dependencies": [
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "libc",
+        "rustix"
+      ]
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.10.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c09db6d53a0b484ad80d7de1c698c29eddfe718f48e1b71f2b7621da93e4fc0f",
+      "dependencies": [
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "ic-host-process",
+        "serde",
+        "serde_json"
+      ]
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.3.7",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "7c2d679bec5d4473761ddca27d77cbbfc5aae277a3a9634f90f63bbcc7b8bcb2"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.28.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "74adf86b483fa901a646f62b9ddcccbb829914a652866ae705f160d529f70a2c",
+      "dependencies": [
+        "candid",
+        "fs2",
+        "ic-cdk",
+        "ic-host-artifacts",
+        "ic-host-fs",
+        "ic-host-process",
+        "ic-host-tools",
+        "libc",
+        "pocket-ic",
+        "serde",
+        "serde_json",
+        "sha2 0.10.9",
+        "toml"
+      ]
+    }
+  ],
+  "published_source_review": [
+    {
+      "package": "ic-host-artifacts",
+      "old": "0.10.1",
+      "selected": "0.10.2",
+      "published_vcs": {
+        "git": {
+          "sha1": "6b755763aca71b7ea8c3de40edf032093dfdc62c"
+        },
+        "path_in_vcs": "crates/ic-host-artifacts"
+      },
+      "rust_files": 20,
+      "changed_rust_files": []
+    },
+    {
+      "package": "ic-host-fs",
+      "old": "0.10.1",
+      "selected": "0.10.2",
+      "published_vcs": {
+        "git": {
+          "sha1": "6b755763aca71b7ea8c3de40edf032093dfdc62c"
+        },
+        "path_in_vcs": "crates/ic-host-fs"
+      },
+      "rust_files": 18,
+      "changed_rust_files": [
+        "src/durable/mod.rs",
+        "src/durable/named/mod.rs",
+        "src/durable/stream/mod.rs",
+        "src/durable/stream/tests.rs"
+      ]
+    },
+    {
+      "package": "ic-host-process",
+      "old": "0.10.1",
+      "selected": "0.10.2",
+      "published_vcs": {
+        "git": {
+          "sha1": "6b755763aca71b7ea8c3de40edf032093dfdc62c"
+        },
+        "path_in_vcs": "crates/ic-host-process"
+      },
+      "rust_files": 21,
+      "changed_rust_files": []
+    },
+    {
+      "package": "ic-host-tools",
+      "old": "0.10.1",
+      "selected": "0.10.2",
+      "published_vcs": {
+        "git": {
+          "sha1": "6b755763aca71b7ea8c3de40edf032093dfdc62c"
+        },
+        "path_in_vcs": "crates/ic-host-tools"
+      },
+      "rust_files": 19,
+      "changed_rust_files": []
+    },
+    {
+      "package": "ic-metrics",
+      "old": "0.3.6",
+      "selected": "0.3.7",
+      "published_vcs": {
+        "git": {
+          "sha1": "7c9402eb8e0bc38fffa0db62be77ab314a88a0e2"
+        },
+        "path_in_vcs": "crates/ic-metrics"
+      },
+      "rust_files": 7,
+      "changed_rust_files": []
+    }
+  ],
+  "shared_source": {
+    "revision": "a8ba9b461b831846eacf64452e6ddcd2acd000f1",
+    "version_annotation": "0.2.12",
+    "files": 95
+  },
+  "testkit_cli_selection": {
+    "package": "ic-testkit",
+    "version": "0.28.1",
+    "kind": "bin",
+    "target": "ic-testkit-server",
+    "profile": "release",
+    "host": "x86_64-unknown-linux-gnu",
+    "binary_sha256": "a67fb7cda478172b42b66f2541d56c1b905bc2a7b42c13556f5a4a7abbed82fc",
+    "receipt_sha256": "ea54e1ee5cd60cb3352fa22aa9019323d8e3c7e7328ac9065388b3abcb6e33b8"
+  },
+  "checks": [
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib workflow::",
+      "path": "target/continuation-0122/workflow-final.log",
+      "sha256": "8675c51a29f23dd0a3114f45fbe95176986fa8433e7acf38d20fca635808198b",
+      "result": "pass: 72 cases"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib ops::persistence::json",
+      "path": "target/continuation-0122/json-publication.log",
+      "sha256": "aeb6f48930b3e41c35ff1dad2a1fa1cfaa83acfde1c39f6c8c661e9c80826315",
+      "result": "pass: 14 cases"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib model::artifacts",
+      "path": "target/continuation-0122/artifacts.log",
+      "sha256": "6170ce45631a07e705f626fca3c6fbc52c63dc427740e075480c23440ab4f51d",
+      "result": "pass: 4 cases"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --lib download_journal::metrics",
+      "path": "target/continuation-0122/metrics.log",
+      "sha256": "468dc89a9bd1450858ef919d9610769570d0bfe3e7d1393b905b0526bc76a232",
+      "result": "pass: 4 cases"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_ -- --test-threads=1; isolated local loopback enabled",
+      "path": "target/continuation-0122/simulator.log",
+      "sha256": "4303449629ae243a59bdcca4fd99f4a576798ebf81bc82742c21c1c00f83462d",
+      "result": "pass: 12 cases"
+    },
+    {
+      "command": "cargo test --offline --locked -p ic-backup-agent --test pocketic_transport -- --test-threads=1; isolated local loopback enabled",
+      "path": "target/continuation-0122/agent-simulator.log",
+      "sha256": "d672181262ec2014cc5cbed65aa766b15d007831affec44953e4bbdd7ffda118",
+      "result": "pass: 3 cases"
+    },
+    {
+      "command": "cargo clippy --offline --locked -p ic-backup --lib --tests -- -D warnings",
+      "path": "target/continuation-0122/clippy.log",
+      "sha256": "4f0771b9ae9b58664253ef2bc291e0f14976dee56d971b3b715d8252f87a02e2",
+      "result": "pass"
+    },
+    {
+      "command": "RUSTDOCFLAGS=-D warnings cargo doc --offline --locked -p ic-backup --no-deps",
+      "path": "target/continuation-0122/rustdoc.log",
+      "sha256": "54304e145482f46220259f691de1e1671fd596c68300f24c6109910203dc9279",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/ci/check-msrv-consumers.sh 1.88.0",
+      "path": "target/continuation-0122/msrv.log",
+      "sha256": "7f7205994a7741e3267a638ba9eec21e1eb4c63ddb090fce836d57e7b65ce912",
+      "result": "pass: two independent consumers"
+    },
+    {
+      "command": "CARGO_TARGET_DIR=$PWD/target cargo +1.88.0 check --offline --locked --manifest-path target/msrv-consumers.3qcdND/ic-backup/Cargo.toml; separate public allocation API caller",
+      "path": "target/continuation-0122/msrv-api.log",
+      "sha256": "7ae356e6e35740196b8e9d3d658a9bb0fe75fc1b0281cb8680ee06d52718ef90",
+      "result": "pass"
+    },
+    {
+      "command": "Canonical refresh-consumer.sh from clean committed Shared source",
+      "path": "target/continuation-0122/shared-refresh.log",
+      "sha256": "4b37da291a5e9271a8bcbf6a6d0e6821b2808045342302083228e534b220357c",
+      "result": "pass: exact 95-file export"
+    },
+    {
+      "command": "make --no-print-directory shared-tooling-check",
+      "path": "target/continuation-0122/snapshot.log",
+      "sha256": "3020fecca876ce47c8165b4bf2907461dc9afcc55c0d2d30f59de68be668d0f6",
+      "result": "pass"
+    },
+    {
+      "command": "Isolated actual consumer include: -n/-i/-t/-q with cleared MAKEFLAGS and overwritten MFLAGS refuse before recipe; normal -j2 succeeds",
+      "path": "target/continuation-0122/make-admission.log",
+      "sha256": "01ed965c888872dd2fdd1cd864066deb96bf0bb7387b87b5d809f4df45264124",
+      "result": "pass"
+    },
+    {
+      "command": "Actual consumer snapshot verifier: supplied/resolved LF/CR directory rejection, invalid fixtures retained",
+      "path": "target/continuation-0122/path-admission.log",
+      "sha256": "5e36cd54875b5ae0f093928bee2e58a10a86a4a070756d4f03ed0cfed68ff25e",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/hooks/test-hooks.sh",
+      "path": "target/continuation-0122/hooks.log",
+      "sha256": "934fce32d264a479aa78d1dec3af4093fdc999454f6b48277ec17c42bb06bd72",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/release/test-release.sh",
+      "path": "target/continuation-0122/release-adapters.log",
+      "sha256": "036b4bff8d7c636dc13e166292728976d63677dd7db6fbe80732a93c0334eaa8",
+      "result": "pass"
+    },
+    {
+      "command": "bash scripts/ci/test-testkit-commands.sh",
+      "path": "target/continuation-0122/testkit-routing.log",
+      "sha256": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory testkit-server-check",
+      "path": "target/continuation-0122/testkit-check.log",
+      "sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+      "result": "pass: existing exact CLI/server offline admission"
+    },
+    {
+      "command": "make --no-print-directory fmt-check",
+      "path": "target/continuation-0122/format.log",
+      "sha256": "2f9e2265171e67daa0fb224ac53f087df43b0e9e36778284a9791f72b0ad1c0e",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory dependency-pins-check",
+      "path": "target/continuation-0122/pins.log",
+      "sha256": "b7c15dc93d4daac99cce9897c633e95d06f224f84467cb93e56a96208d3d7ae5",
+      "result": "pass"
+    },
+    {
+      "command": "shellcheck scripts/ci/check-make-execution.sh scripts/ci/verify-shared-tooling-snapshot.sh scripts/ci/test-validation-target-runner.sh",
+      "path": "target/continuation-0122/shellcheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "path": "target/continuation-0122/whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory check-doc-links",
+      "path": "target/continuation-0122/doc-links.log",
+      "sha256": "ce56b898a28b6e9b714945d7c633fc69c18596738610242b8e2bb49bab840cf2",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory check-doc-links (complete final documents)",
+      "path": "target/continuation-0122/doc-links-final.log",
+      "sha256": "ce56b898a28b6e9b714945d7c633fc69c18596738610242b8e2bb49bab840cf2",
+      "result": "pass"
+    },
+    {
+      "command": "make --no-print-directory shared-tooling-check (final adopted source)",
+      "path": "target/continuation-0122/snapshot-final.log",
+      "sha256": "3020fecca876ce47c8165b4bf2907461dc9afcc55c0d2d30f59de68be668d0f6",
+      "result": "pass"
+    }
+  ],
+  "public_api_consumer_inputs": {
+    "target/msrv-consumers.3qcdND/ic-backup/Cargo.toml": "c91375b4f52dfee229389098dadbdba173a4879e59157d871338d40049cfbb90",
+    "target/msrv-consumers.3qcdND/ic-backup/Cargo.lock": "193cc26bab95df82e016d8066fd49374e4e2bbdbcc6e9dc902c030e7ab74b628",
+    "target/msrv-consumers.3qcdND/ic-backup/src/main.rs": "5556c87fa060a94b18369fc32ea9888a99d3e43111097a8e1ec4f4350cb16ad0"
+  },
+  "earlier_rejected_checks": [
+    "target/continuation-0122/workflow-initial.log",
+    "target/continuation-0122/make-format.log"
+  ],
+  "removed_rust_symbols": [],
+  "native_limit": "Dirty 0.12.2 and selected Host/Metrics graph qualified only on Linux. Hosted source is released 0.12.1 separately.",
+  "released_ci": {
+    "source": "f5b0b093dd10ec6b25934e80ceaadb4f32d7506e",
+    "run": "https://github.com/dragginzgame/ic-backup/actions/runs/38037385719",
+    "jobs": [
+      {
+        "id": 114170560764,
+        "name": "library (macos-15-intel)",
+        "status": "queued",
+        "conclusion": null
+      },
+      {
+        "id": 114170560846,
+        "name": "library (macos-15)",
+        "status": "queued",
+        "conclusion": null
+      },
+      {
+        "id": 114170560933,
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "observed_at": "2026-10-10T08:47:31.615512+00:00"
+  },
+  "issue_updates": [
+    "https://github.com/dragginzgame/ic-backup/issues/29#issuecomment-6095809898",
+    "https://github.com/dragginzgame/ic-backup/issues/32#issuecomment-6095810114",
+    "https://github.com/dragginzgame/ic-backup/issues/34#issuecomment-6095810228"
+  ],
+  "closed_issues": [
+    {
+      "number": 34,
+      "scope": "Formatting owner adoption delivered in released 0.12.1; native acceptance remains explicitly owned by issue 32."
+    }
+  ]
+}

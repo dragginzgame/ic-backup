@@ -101,7 +101,10 @@ The shared installer also supports an explicitly selected exact Cargo package,
 binary or example, and debug/release profile. See [consumer-selected Cargo
 tools](local-setup.md#consumer-selected-cargo-tools) for setup and
 offline receipt checks. Backup uses this selected mode for its locked `ic-testkit-server` executable;
-formatter prerequisites remain separate.
+formatter prerequisites remain separate. Native `check`, `check-msrv`, `clippy`
+and `test` depend on offline `testkit-server-check`, so parallel Make also refuses
+missing or changed selected tools before dependent qualification. Prepare them
+explicitly with `make install-testkit-server`; ordinary validation never installs.
 
 `make cloc` reports source/test LOC from this root workspace and excludes Cargo's
 selected build outputs. Run fleet tooling/LOC reports from Shared Tooling; this
@@ -787,8 +790,10 @@ copies the maintained root MIT notice exactly, preserving contributor attributio
 in the standalone crate archive. Update both copies together; a tracked symlink
 would violate the shared index-snapshot formatting contract.
 
-Run checks targeted to changed packages and behavior while developing. Full
-validation requires a maintainer request or CI. `make ci`, `make validate` and
+Run focused checks during development, then the full `make ci` suite before
+delivering completed code as ready, under the shared standing validation authority.
+Reuse passing evidence for unchanged inputs. Documentation-only and inspection-only
+work retain the baseline's narrower scope; release effects need explicit authority. `make ci`, `make validate` and
 `make release-verify` run the full configured gate: snapshot verification,
 offline local-tool and pin checks, dependency fetch, tooling, formatting,
 native compilation, Clippy, tests, docs,
