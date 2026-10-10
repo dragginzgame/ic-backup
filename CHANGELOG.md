@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.14.0]
+## [0.14.0] - 2026-10-10
 
 - **Breaking:** Adopt Shared Tooling 0.3.0. `make install-tools` now prepares
   the complete host, IC and Cargo toolsets, then locked dependencies and Testkit.
