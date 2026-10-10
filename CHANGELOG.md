@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.16.0]
+
+- **Breaking:** Await snapshot transfer providers and read/metadata/download
+  coordinators, with async fresh admission and independent qualification under
+  original journal exclusion. Providers receive the currently guarded original
+  record; cancellation retains consumption and denies reentry
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Add `AgentSnapshotTransferReadProvider` with mandatory durable signed-ingress
+  retention before one metadata/data update. Replies remain passive; lost or
+  accepted reads grant no automatic receipt, retry or allowance reset.
+- Accept both numeric-descriptor and FIFO GNU Make jobservers in the Testkit
+  routing fixture. Reject missing/non-FIFO paths before compiler effects, fixing
+  macOS Homebrew Make admission
+  ([#37](https://github.com/dragginzgame/ic-backup/issues/37)).
+- Qualify incoming Host 0.12.8 and Metrics 0.5.5, and released Testkit 0.33.1;
+  production Rust behavior and persisted product records remain unchanged.
+
 ## [0.15.0] - 2026-10-10
 
 - **Breaking:** Make `IcMutationProvider` and the capture/load/start coordinators

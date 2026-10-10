@@ -38,6 +38,10 @@ use thiserror::Error;
 /// It runs under the selected original journal lock. Append exact decoded bytes before
 /// the sole journal owner records that receipt; only then may the next dependent read
 /// run. Failed qualification, append or persistence stops without another provider call.
+/// Admission, submission and qualification are awaited under their selected journal
+/// guards. Retain each reply durably before cancellable qualification work. Dropping
+/// this future consumes the writer, retaining partial bytes, earlier receipts and
+/// the current pending reservation; it grants no resume or repeat-call authority.
 ///
 /// All original limits/records remain unchanged. Errors consume the writer and preserve
 /// partial bytes, pending spending and every recorded receipt. Returned bounded replies
@@ -48,13 +52,13 @@ use thiserror::Error;
 /// # Errors
 /// Rejects changed stage/plan/metadata/writer, prior consumption, spending, admission,
 /// provider or receipt failures, malformed replies and local IO/publication failure.
-pub fn download_snapshot<E: std::error::Error + 'static>(
+pub async fn download_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     download: &IcSnapshotDownloadPlan<'_, '_>,
     mut writer: IcSnapshotArtifactWriter<'_, '_, '_>,
     provider: &mut impl IcSnapshotTransferReadProvider,
-    mut admit: impl FnMut(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
-    mut qualify: impl FnMut(
+    mut admit: impl AsyncFnMut(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
+    mut qualify: impl AsyncFnMut(
         &IcSnapshotTransferReadRequest<'_, '_>,
         &IcSnapshotTransferReadResponse,
     ) -> Result<MutationReceiptRequest, E>,
@@ -88,8 +92,10 @@ pub fn download_snapshot<E: std::error::Error + 'static>(
             IcSnapshotTransferReadPayload::Data(payload),
             provider,
             &mut admit,
-        )?;
+        )
+        .await?;
         writer = append_qualified(stage, sequence, payload, writer, &response, &mut qualify)
+            .await
             .map_err(|source| IcSnapshotDownloadExecutionError::AfterReply {
                 operation_sequence: sequence,
                 source,
@@ -108,13 +114,13 @@ pub fn download_snapshot<E: std::error::Error + 'static>(
     Ok(checksum)
 }
 
-fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + 'static>(
+async fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     sequence: u64,
     payload: &crate::model::ic_snapshot_data::IcSnapshotDataRequest<'_>,
     writer: IcSnapshotArtifactWriter<'journal, 'layout, 'metadata>,
     response: &IcSnapshotTransferReadResponse,
-    qualify: &mut impl FnMut(
+    qualify: &mut impl AsyncFnMut(
         &IcSnapshotTransferReadRequest<'_, '_>,
         &IcSnapshotTransferReadResponse,
     ) -> Result<MutationReceiptRequest, E>,
@@ -132,8 +138,9 @@ fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + 'static
         IcSnapshotTransferReadPayload::Data(payload),
     )?;
     let admitted = validate_response(&request, journal.record()?, response)?;
-    let receipt =
-        qualify(&request, response).map_err(IcSnapshotDownloadReplyError::Qualification)?;
+    let receipt = qualify(&request, response)
+        .await
+        .map_err(IcSnapshotDownloadReplyError::Qualification)?;
     if receipt.outcome != MutationOutcomeRecord::Applied
         || receipt.attempt != request.mutation_attempt()
         || receipt.request != request.payload().digest().hash()

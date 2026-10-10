@@ -17,8 +17,15 @@ and request ID privately and durably under the original plan/attempt. Retention
 failure stops before submission. Await the core `capture_snapshot` or
 `restore_snapshot` coordinator with async fresh admission and, for restore,
 independent reply qualification. The selected journal stays locked across awaits;
-cancellation preserves pending spending and denies reentry. Other request families
-still use the original explicit `prepare`/`submit` interface.
+cancellation preserves pending spending and denies reentry.
+
+For metadata/data reads, configure `AgentSnapshotTransferReadProvider` with the
+same mandatory durable signed-ingress retainer. Await core `read_snapshot`,
+`read_snapshot_metadata` or `download_snapshot` with async fresh admission and,
+for metadata/download, independent qualification. Retain replies before awaiting
+cancellable qualification. Download cancellation preserves partial bytes, earlier
+receipts and pending spending. Upload, recovery and fence requests still use the
+original explicit `prepare`/`submit` interface.
 
 A certificate-verified reply is passive evidence for the existing method-specific
 codec and association checks. `Pending` returns the original ingress ID without

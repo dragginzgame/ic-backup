@@ -263,7 +263,7 @@ status/read visibility must never be mistaken for write authority.
 | --- | --- |
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
 | `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentMutationProvider requires durable signed retention, with no default or automatic settlement |
-| `IcSnapshotTransferReadProvider` | Implemented exact original metadata/data payload and pending-update request, bounded passive actual-context response and existing decoder association; no installed provider, automatic receipt or read reissue |
+| `IcSnapshotTransferReadProvider` | Implemented async exact original metadata/data payload and current guarded pending-update record, bounded passive response and existing decoder association; configured Agent adapter requires durable signed retention, with no automatic receipt or read reissue |
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented single reserved source-bound metadata/data update signature, reusing exact upload attempts, passive acknowledgements and IC update failures; no installed provider, automatic settlement or retry |
 | `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; no installed provider, allocation outcome, data reconciliation or reissue |
@@ -648,6 +648,15 @@ already Applied history. Ordinary reopen or explicit checkpoint recovery never
 reissues the read. No new schema, byte store, allowance or default Agent provider
 is introduced. The actual stopped fixture uses the coordinator and qualifies lost/
 malformed metadata safe stops before a data stage is created.
+
+The transfer provider and read/metadata/download coordinators are async. Await
+fresh admission and independent qualification under selected original journal
+exclusion; providers recheck the currently guarded record. The configured Agent
+transfer adapter retains signed ingress durably before one submission. Retain
+replies before cancellable qualification work. Cancellation preserves pending or
+Applied spending, earlier download receipts and partial files, denying reentry.
+The core adds no runtime or `Send` bound. Upload/recovery/fence ports remain separate
+synchronous contracts; full application coordination remains incomplete.
 
 The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
 private exact region/chunk bytes, original raw metadata/request and incremental

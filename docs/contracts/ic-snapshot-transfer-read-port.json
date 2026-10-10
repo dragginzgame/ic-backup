@@ -1,47 +1,49 @@
 {
-  "version": 1,
-  "kind": "Ephemeral originally reserved snapshot transfer read port; no persisted schema",
-  "provider": "ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider::read_snapshot",
-  "request": "model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest",
-  "response": "model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse",
-  "association": "policy::ic_snapshot_transfer_read::validate_response",
-  "execution_step": "workflow::ic_snapshot_transfer_read::read_snapshot",
-  "data_transfer": {
-    "entry": "workflow::ic_snapshot_download::download_snapshot consumes an existing private artifact writer under an exact nonempty metadata-derived original data stage. Validate original binding/metadata/writer intent and empty coverage; refuse any original consumption before new spending. Metadata receipt/checkpoint and complete original data journals must already exist.",
-    "receipts": "Reuse the single-read coordinator per original ordinal. Reopen the selected journal and require a separate independently authenticated exact Applied MutationReceiptRequest. Append admitted data before the sole attempt owner records that explicit receipt; only then admit dependent reads. Passive wire shape never generates receipts.",
-    "failure": "Consume the writer and retain partial bytes, original spending and recorded receipts. Post-read errors retain exact bounded responses; lost replies remain pending with no follow-up. Failed receipt persistence can leave bytes without an Applied receipt. No partial-read resume, coverage reconstruction, retry, refund or new journal/schema follows.",
-    "publication": "Require complete original Applied progress and exact coverage, then use the existing fresh checksum/durable publisher. Retain returned checksum on closing stage/ancestor rejection. Manifest/checkpoint publication remains explicit; no full product runner or terminal/fence/reference release follows."
-  },
-  "step_accounting": "Under the exact retained stage, precheck canonical target/wire binding, open the existing original journal and durably reserve through complete original-plan admission. Hold the selected journal through mandatory fresh admission, one provider invocation and bounded association; recheck stage/ancestor evidence before dispatch and after an associated reply. Never dispatch a reconstructed pending attempt; success remains pending until an explicitly qualified integration records its receipt.",
-  "step_admission": "Mandatory fallible integration callback for fresh actual read permission, authentic original metadata/raw-ID custody, current application requirements and exclusive never-dispatched command custody. Any remote preflight calls require their own prior accounting. There is no default or persisted permission flag. All post-reservation failures retain spending; bounded returned replies survive later rejection in typed errors. No retry, new journal/schema, automatic receipt or complete runner is installed.",
-  "failure_owner": "ports::ic_observation::IcObservationProviderError",
-  "methods": [
-    "read_canister_snapshot_metadata",
-    "read_canister_snapshot_data"
-  ],
-  "identity": "Full original plan/context/operation/immutable allowances, exact original target and existing nonrecursive request digest. Data retains supplied original metadata via its existing borrowed request/reply evidence owner.",
-  "accounting": "Already pending exact mutation-lane replicated update; no pending recovery observation. Recheck current journal during response association. No journal creation, reservation/reset, inferred never-dispatched proof or automatic receipt.",
-  "response_claims": [
-    "authority",
-    "mutation_attempt",
-    "context",
-    "target",
-    "reply",
-    "evidence"
-  ],
-  "bounds": {
-    "attempts": 1024,
-    "raw_snapshot_id_bytes": 256,
-    "argument_bytes": 4096,
-    "response_raw_bytes": 2097152,
-    "metadata_raw_bytes": 1048576,
-    "data_chunk_bytes": 1048576,
-    "decoding": "Original metadata/data work/table/header quotas unchanged; exact requested range length or known hash-checked chunk, including empty known chunks."
-  },
-  "provider_admission": "Retain original plans/bytes/metadata before prior accounting. Qualify actual network/caller/target, authentic snapshot association, fresh method-specific read permission, stable byte/command custody and proof of no prior dispatch.",
-  "invocation": "Exactly one original management receiver/effective target/method/arguments host replicated update. No proxy/query substitution, hidden retries, follow-up reads, funding or extra calls.",
-  "loss": "Failure, drop, death or lost reply retain pending consumed update, references/fences and original evidence. No settled uncertainty, reissue or refund is inferred.",
-  "qualification": "Real isolated PocketIC driver uses the public boundary for ordinary reads and explicitly records independently qualified successful reads. Real reply-discard cases retain pending accounting and stop before download or leave Created partial staging/source references; no upload/load/start follows. Not a production transport or process/network-loss qualification.",
-  "grants": "No fresh permission, signing, authenticated response, automatic outcome, aggregate transfer, durability, restoration safety, terminal completion or reference/fence release.",
-  "issue": "https://github.com/dragginzgame/ic-backup/issues/22"
+   "accounting" : "Already pending exact mutation-lane replicated update; no pending recovery observation. Recheck current journal during response association. No journal creation, reservation/reset, inferred never-dispatched proof or automatic receipt.",
+   "agent_adapter" : "ic-backup-agent::AgentSnapshotTransferReadProvider requires a configured transport and mandatory durable exact signed-envelope/request-ID retainer before one metadata/data update. Accepted, lost and cancelled reads stay pending; no automatic receipt or retry.",
+   "association" : "policy::ic_snapshot_transfer_read::validate_response",
+   "async_contract" : "Provider returns a future and rechecks the supplied currently guarded original journal. Await single-read, metadata and complete-download coordinators with async admission/qualification. Selected exclusion spans their awaits; retain replies before cancellable qualification. Cancellation preserves spending, earlier receipts and partial files, denies reentry and adds no runtime or Send bound.",
+   "bounds" : {
+      "argument_bytes" : 4096,
+      "attempts" : 1024,
+      "data_chunk_bytes" : 1048576,
+      "decoding" : "Original metadata/data work/table/header quotas unchanged; exact requested range length or known hash-checked chunk, including empty known chunks.",
+      "metadata_raw_bytes" : 1048576,
+      "raw_snapshot_id_bytes" : 256,
+      "response_raw_bytes" : 2097152
+   },
+   "data_transfer" : {
+      "entry" : "workflow::ic_snapshot_download::download_snapshot consumes an existing private artifact writer under an exact nonempty metadata-derived original data stage. Validate original binding/metadata/writer intent and empty coverage; refuse any original consumption before new spending. Metadata receipt/checkpoint and complete original data journals must already exist.",
+      "failure" : "Consume the writer and retain partial bytes, original spending and recorded receipts. Post-read errors retain exact bounded responses; lost replies remain pending with no follow-up. Failed receipt persistence can leave bytes without an Applied receipt. No partial-read resume, coverage reconstruction, retry, refund or new journal/schema follows.",
+      "publication" : "Require complete original Applied progress and exact coverage, then use the existing fresh checksum/durable publisher. Retain returned checksum on closing stage/ancestor rejection. Manifest/checkpoint publication remains explicit; no full product runner or terminal/fence/reference release follows.",
+      "receipts" : "Reuse the single-read coordinator per original ordinal. Reopen the selected journal and require a separate independently authenticated exact Applied MutationReceiptRequest. Append admitted data before the sole attempt owner records that explicit receipt; only then admit dependent reads. Passive wire shape never generates receipts."
+   },
+   "execution_step" : "workflow::ic_snapshot_transfer_read::read_snapshot",
+   "failure_owner" : "ports::ic_observation::IcObservationProviderError",
+   "grants" : "No fresh permission, signing, authenticated response, automatic outcome, aggregate transfer, durability, restoration safety, terminal completion or reference/fence release.",
+   "identity" : "Full original plan/context/operation/immutable allowances, exact original target and existing nonrecursive request digest. Data retains supplied original metadata via its existing borrowed request/reply evidence owner.",
+   "invocation" : "Exactly one original management receiver/effective target/method/arguments host replicated update. No proxy/query substitution, hidden retries, follow-up reads, funding or extra calls.",
+   "issue" : "https://github.com/dragginzgame/ic-backup/issues/22",
+   "kind" : "Ephemeral originally reserved snapshot transfer read port; no persisted schema",
+   "loss" : "Failure, drop, death or lost reply retain pending consumed update, references/fences and original evidence. No settled uncertainty, reissue or refund is inferred.",
+   "methods" : [
+      "read_canister_snapshot_metadata",
+      "read_canister_snapshot_data"
+   ],
+   "provider" : "ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider::read_snapshot",
+   "provider_admission" : "Retain original plans/bytes/metadata before prior accounting. Qualify actual network/caller/target, authentic snapshot association, fresh method-specific read permission, stable byte/command custody and proof of no prior dispatch.",
+   "qualification" : "Actual isolated Agent simulator reads exercise the configured adapter and async single-read coordinator. The Testkit fixture separately exercises the async metadata/download loop. Cancellation regressions retain original reservations, durable raw replies, earlier Applied receipts and partial Created bytes; no production application or terminal qualification follows.",
+   "request" : "model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest",
+   "response" : "model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse",
+   "response_claims" : [
+      "authority",
+      "mutation_attempt",
+      "context",
+      "target",
+      "reply",
+      "evidence"
+   ],
+   "step_accounting" : "Under the exact retained stage, precheck canonical target/wire binding, open the existing original journal and durably reserve through complete original-plan admission. Hold the selected journal through mandatory fresh admission, one provider invocation and bounded association; recheck stage/ancestor evidence before dispatch and after an associated reply. Never dispatch a reconstructed pending attempt; success remains pending until an explicitly qualified integration records its receipt.",
+   "step_admission" : "Mandatory fallible integration callback for fresh actual read permission, authentic original metadata/raw-ID custody, current application requirements and exclusive never-dispatched command custody. Any remote preflight calls require their own prior accounting. There is no default or persisted permission flag. All post-reservation failures retain spending; bounded returned replies survive later rejection in typed errors. No retry, new journal/schema, automatic receipt or complete runner is installed.",
+   "version" : 1
 }

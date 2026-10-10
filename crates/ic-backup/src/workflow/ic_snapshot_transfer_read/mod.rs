@@ -29,6 +29,8 @@ use thiserror::Error;
 /// pending attempts and unfulfilled prerequisites reject before provider invocation.
 /// This only accepts a newly reserved attempt; reconstructed pending requests are
 /// never dispatched. Every failure after reservation retains its consumed allowance.
+/// Admission and provider submission are awaited under that same selected guard.
+/// Dropping the future releases the guard without refunding or granting reentry.
 ///
 /// `admit` must qualify actual fresh method-specific access, original metadata/raw-ID
 /// custody, current application requirements and exclusive never-dispatched command
@@ -44,12 +46,12 @@ use thiserror::Error;
 /// Rejects changed originals, payloads, spending, fresh admission, provider failure
 /// or malformed/mismatched replies. Replies returned before a later rejection are
 /// retained in the error. No failure grants a repeat call, refund or cleanup.
-pub fn read_snapshot<E: std::error::Error + 'static>(
+pub async fn read_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     operation_sequence: u64,
     payload: IcSnapshotTransferReadPayload<'_, '_>,
     provider: &mut impl IcSnapshotTransferReadProvider,
-    admit: impl FnOnce(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
+    admit: impl AsyncFnOnce(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
 ) -> Result<IcSnapshotTransferReadResponse, IcSnapshotTransferReadExecutionError<E>> {
     let plan = stage.plan();
     let authority = plan.attempt_authority(operation_sequence)?;
@@ -58,9 +60,11 @@ pub fn read_snapshot<E: std::error::Error + 'static>(
     journal.reserve_planned_mutation(&plan.digest())?;
     let request =
         IcSnapshotTransferReadRequest::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request).map_err(IcSnapshotTransferReadExecutionError::Admission)?;
+    admit(&request)
+        .await
+        .map_err(IcSnapshotTransferReadExecutionError::Admission)?;
     stage.layout()?;
-    let response = provider.read_snapshot(&request)?;
+    let response = provider.read_snapshot(&request, journal.record()?).await?;
     let association = match journal.record() {
         Ok(record) => record,
         Err(source) => {

@@ -2529,6 +2529,17 @@ restore safety, stable custody and terminal/fence/reference release. See
 
 ### Original metadata-stage coordination
 
+The transfer-read provider and single-read/metadata/download coordinators are async.
+Providers receive the currently guarded original journal; selected exclusion spans
+admission/submission or independent qualification awaits. The configured
+`AgentSnapshotTransferReadProvider` requires durable exact signed-envelope/request-ID
+retention before one update. Qualifiers retain replies before cancellable work.
+Cancellation releases exclusion while preserving consumed pending/Applied spending,
+earlier download receipts and partial files; reentry cannot dispatch a pending read.
+No runtime dependency, `Send` bound, new schema or automatic receipt is introduced.
+Actual Agent simulator reads use the configured adapter and single-read coordinator;
+the Testkit driver separately qualifies the complete metadata/download loop.
+
 `workflow::ic_snapshot_metadata::read_snapshot_metadata` accepts exactly one
 original metadata operation under its retained stage. Reuse `read_snapshot` for
 complete original-journal admission, durable reservation, fresh integration admission
@@ -2551,7 +2562,7 @@ checkpoint recovery reuse exact originals and never repeat the metadata update.
 Existing bounds, v1 records, spending, references and obligations remain unchanged.
 The actual Testkit download fixture now uses the coordinator, including lost/malformed
 metadata cases with no data stage or reissue. This qualifies the isolated application,
-not installed async Agent wiring, full runners, terminal proof or fence/reference release.
+not full application runners, terminal proof or fence/reference release.
 
 ### Complete original snapshot data transfer
 
@@ -2719,8 +2730,9 @@ signed-envelope/request-ID retention, then submits once through the existing
 transport. Passive replies still require independent qualification. Cancellation
 releases the selected lock, retains current pending/Applied spending and denies
 callback/provider reentry; durable reply retention must precede cancellable
-qualification work. The core adds no runtime/Send requirement. Other provider
-families remain synchronous; full async product/application coordination is pending.
+qualification work. The core adds no runtime/Send requirement. The
+upload/recovery/fence provider families remain synchronous; full async product/application
+coordination is pending.
 
 ### Original execution settlement checkpoints
 

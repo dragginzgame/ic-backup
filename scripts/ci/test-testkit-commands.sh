@@ -34,10 +34,16 @@ cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "${TESTKIT_COMMAND_JOBSERVER:-0}" == 1 ]]; then
-    [[ "${MAKEFLAGS:-}" =~ --jobserver-(auth|fds)=([0-9]+),([0-9]+) ]] || exit 1
-    reader="${BASH_REMATCH[2]}"; writer="${BASH_REMATCH[3]}"
-    : <&"$reader"
-    : >&"$writer"
+    if [[ "${MAKEFLAGS:-}" =~ --jobserver-(auth|fds)=([0-9]+),([0-9]+) ]]; then
+        reader="${BASH_REMATCH[2]}"; writer="${BASH_REMATCH[3]}"
+        : <&"$reader"
+        : >&"$writer"
+    elif [[ "${MAKEFLAGS:-}" =~ --jobserver-auth=fifo:([^[:space:]]+) ]]; then
+        [[ -p "${BASH_REMATCH[1]}" ]] || exit 1
+    else
+        echo 'missing usable GNU Make jobserver' >&2
+        exit 1
+    fi
 fi
 case "$*" in
     'fetch --locked') printf 'fetch\n' >> "$TESTKIT_COMMAND_ORDER" ;;
@@ -114,6 +120,13 @@ cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 if TESTKIT_COMMAND_SERVER_FAILURE=1 run_make testkit-server-check > "$fixture/changed.log" 2>&1; then exit 1; fi
 printf '%s\n' "check --directory $fixture/consumer/.tools/testkit-server" >> "$fixture/expected-calls"
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
+# A jobserver declaration alone is insufficient: absent/non-FIFO paths and
+# missing authentication must refuse before the mock compiler records a build.
+for auth in '' "--jobserver-auth=fifo:$fixture/missing-fifo" "--jobserver-auth=fifo:$fixture/retained"; do
+    : > "$TESTKIT_COMMAND_ORDER"
+    if TESTKIT_COMMAND_JOBSERVER=1 MAKEFLAGS="$auth" "$fixture/bin/cargo" check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features > "$fixture/invalid-jobserver.log" 2>&1; then exit 1; fi
+    [[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
+done
 # Canonical lockfile identity, source and drift cases belong to test-rust-tools.sh.
 # This consumer fixture qualifies routing and fail-closed command ordering.
 # Exercise real prerequisite edges under parallel Make. Refusal must precede

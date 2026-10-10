@@ -1,5 +1,6 @@
 //! Explicit local simulator custody/accounting. No mainnet provider or retry loop.
 
+use crate::ready::ready;
 use candid::Principal;
 use ic_backup::{
     model::{
@@ -238,7 +239,7 @@ impl Backend {
         let request =
             IcSnapshotTransferReadRequest::new(&plan, index, journal.record().unwrap(), payload)
                 .unwrap();
-        let response = self.read_snapshot(&request).unwrap();
+        let response = ready(self.read_snapshot(&request, journal.record().unwrap())).unwrap();
         if lose_reply {
             // Oracle bytes never enter passive association or a success receipt.
             fs::write(
@@ -524,30 +525,36 @@ impl IcSnapshotTransferReadProvider for Backend {
     fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
-    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
-        // This private fixture owns the isolated instance and original ingress history.
-        // It never reconstructs this memory as a production never-dispatched proof.
-        let payload = request.payload();
-        let actual = self.plan(
-            &payload.digest(),
-            request.authority().binding().operation_sequence(),
-        );
-        assert_eq!(request.plan().context(), actual.context());
-        assert_eq!(payload.receiver(), "aaaaa-aa");
-        assert_eq!(payload.target(), self.target.to_text());
-        assert!(self.submitted_reads.insert((
-            request.authority().digest().hash().into(),
-            request.mutation_attempt()
-        )));
-        let raw = self.management(payload.method(), payload.arguments());
-        IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: actual.context().clone(),
-            target: self.target.to_text(),
-            evidence: ArtifactChecksumRecord::from_bytes(&raw),
-            reply: raw,
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<
+        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
+    > {
+        std::future::ready({
+            request.validate_journal(journal).unwrap();
+            // This private fixture owns the isolated instance and original ingress history.
+            // It never reconstructs this memory as a production never-dispatched proof.
+            let payload = request.payload();
+            let actual = self.plan(
+                &payload.digest(),
+                request.authority().binding().operation_sequence(),
+            );
+            assert_eq!(request.plan().context(), actual.context());
+            assert_eq!(payload.receiver(), "aaaaa-aa");
+            assert_eq!(payload.target(), self.target.to_text());
+            assert!(self.submitted_reads.insert((
+                request.authority().digest().hash().into(),
+                request.mutation_attempt()
+            )));
+            let raw = self.management(payload.method(), payload.arguments());
+            IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: actual.context().clone(),
+                target: self.target.to_text(),
+                evidence: ArtifactChecksumRecord::from_bytes(&raw),
+                reply: raw,
+            })
+            .map_err(|_| IcObservationProviderError::Indeterminate)
         })
-        .map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }

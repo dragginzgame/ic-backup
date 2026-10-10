@@ -11,7 +11,7 @@ use ic_backup::{
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard},
 };
-use ic_backup_agent::{AgentMutationProvider, PreparedUpdate};
+use ic_backup_agent::{AgentMutationProvider, AgentSnapshotTransferReadProvider, PreparedUpdate};
 use ic_backup_agent::{
     AgentTransport, MAX_HTTP_RESPONSE_BYTES, ReservedUpdate, TransportError, UpdateOutcome,
 };
@@ -77,6 +77,86 @@ async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or
         }
     }
 }
+#[tokio::test]
+async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failures_pending() {
+    use ic_backup::{
+        model::{
+            ic_snapshot_metadata::IcSnapshotMetadataRequest,
+            ic_snapshot_transfer_read::{
+                IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
+            },
+        },
+        ports::{
+            ic_observation::IcObservationProviderError,
+            ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
+        },
+    };
+    for (label, refuse, discard) in [
+        ("transfer-retention-refused", true, false),
+        ("transfer-accepted", false, false),
+        ("transfer-lost", false, true),
+    ] {
+        let root = support::root(label);
+        let mut server = Server::new(&root, "202 Accepted", vec![], discard, false);
+        let payload = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
+        let plan = support::plan(TARGET, &payload.digest(), 1);
+        let layout = BackupLayoutGuard::acquire(&root).unwrap();
+        let guard = support::retain(&layout, &plan, 1);
+        let before = fs::read(guard.path()).unwrap();
+        let request = IcSnapshotTransferReadRequest::new(
+            &plan,
+            1,
+            guard.record().unwrap(),
+            IcSnapshotTransferReadPayload::Metadata(&payload),
+        )
+        .unwrap();
+        let transport = AgentTransport::new(
+            plan.context().clone(),
+            &server.endpoint,
+            support::identity(),
+            vec![1],
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        let mut provider = AgentSnapshotTransferReadProvider::new(
+            &transport,
+            |actual: &IcSnapshotTransferReadRequest<'_, '_>, prepared: &PreparedUpdate<'_>| {
+                assert_eq!(actual.authority().digest(), request.authority().digest());
+                assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                assert!(server.requests.lock().unwrap().is_empty());
+                if refuse {
+                    return Err(IcObservationProviderError::Unavailable);
+                }
+                support::retain_signed(&root, prepared).unwrap();
+                Ok(())
+            },
+        );
+        let result = provider
+            .read_snapshot(&request, guard.record().unwrap())
+            .await;
+        assert_eq!(
+            result.unwrap_err(),
+            if refuse {
+                IcObservationProviderError::Unavailable
+            } else {
+                IcObservationProviderError::Indeterminate
+            }
+        );
+        server.finish().unwrap();
+        assert_eq!(server.requests.lock().unwrap().len(), usize::from(!refuse));
+        assert_eq!(fs::read(guard.path()).unwrap(), before);
+        if !refuse {
+            let requests = server.requests.lock().unwrap();
+            let bytes = requests[0].complete_bytes(&root);
+            let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
+            assert_eq!(
+                &bytes[end + 4..],
+                fs::read(root.join("signed-ingress.cbor")).unwrap()
+            );
+        }
+    }
+}
+
 use std::{
     fs,
     io::{self, Write},

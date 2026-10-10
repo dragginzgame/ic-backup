@@ -25,7 +25,40 @@
 
 # Current handoff — 2026-10-10
 
-## Current 0.15.0 async mutation continuation
+## Current 0.16.0 async transfer continuation
+
+Released local HEAD is 0.15.0 at
+`eae844847e109004eb9427bfd02bd66e16f9e6df`. Select uncommitted 0.16.0 for
+async transfer-read providers and read/metadata/download coordinators. Package and
+receipt remain 0.15.0. The configured Agent transfer adapter requires exact signed
+ingress retention before one call. Selected journal exclusion spans async admission
+or qualification; cancellation retains pending/Applied spending, earlier receipts
+and partial download bytes and denies reentry. Upload/recovery/fence ports and full
+application/terminal custody remain separate under #25/#29.
+
+Preserve incoming Metrics 0.5.5 and the released Testkit 0.33.1 graph. Host changed
+from released 0.12.7 to incoming 0.12.8 before final qualification; freeze the latter.
+All four Host packages' Rust source matches 0.12.7.
+Metrics Rust source matches 0.5.4; Testkit 0.33.1 changes upstream tests only.
+Shared Tooling stays at the reviewed committed 0.3.7 snapshot. Released 0.15.0 CI
+has Linux success and an Apple Silicon failure: retained routing logs identify the
+local fixture's rejection of GNU Make's supported FIFO jobserver. Exact released
+source reproduces with actual Make 4.4.1/Bash 3.2.57; the local repair accepts both
+FIFO and pipe styles and refuses invalid paths. Native acceptance remains separate
+under [#37](https://github.com/dragginzgame/ic-backup/issues/37).
+
+All 16 delivery gates pass on the frozen final graph: 507 core unit cases, 29 core
+simulator journeys, ten Agent HTTP cases and four Agent simulator journeys. A locked
+Rust 1.88 normal consumer compiles all three new coordinators with the Agent adapter,
+excluding Testkit/PocketIC and Metrics features. The complete tooling fixture passes
+with actual GNU Make 4.4.1/Bash 3.2.57; both jobserver styles and invalid-path refusals
+pass. Source bytes/modes and lock remain unchanged throughout qualification. Released
+Intel macOS is running at final inspection; the uncommitted candidate has no hosted
+result. See [the review](../reports/audits/2026/10/10/continuation-0160/01/report.md).
+No root Git write, release, registry upload, production IC effect, sibling edit or
+recovery cleanup ran.
+
+## Prior 0.15.0 async mutation continuation
 
 Released local/remote main is 0.14.2 at
 `c157d43e542dc27dc5f7781850c7b8bb169b5a0c`. Select uncommitted 0.15.0 for the

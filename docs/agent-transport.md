@@ -64,7 +64,18 @@ again. Restore qualification must durably retain the returned reply before await
 cancellable work. The core imposes no executor or `Send` bound and has no runtime
 dependency. The configured Agent needs a network/timer executor.
 
-Transfer, upload, recovery and fence ports remain separate synchronous contracts;
+`AgentSnapshotTransferReadProvider` implements the async metadata/data-read port
+with the same mandatory durable signed-envelope/request-ID retainer. It rechecks
+the currently guarded journal before one exact update. Await `read_snapshot`,
+`read_snapshot_metadata` and `download_snapshot`; admission and independent
+metadata/data qualification callbacks are async. Qualifiers retain each exact reply
+before awaiting cancellable work. Dropping a download preserves partial files,
+earlier Applied receipts and its current pending reservation. There is no partial
+resume or implicit repeat call. Real Agent simulator reads exercise this adapter
+and the single-read coordinator; the Testkit fixture separately exercises the
+metadata/download loop. Neither supplies a default application qualification lane.
+
+Upload, recovery and fence ports remain separate synchronous contracts;
 their async provider integration and full application runners remain pending. No
 compatibility wrapper or default application safety/retention callback is supplied.
 

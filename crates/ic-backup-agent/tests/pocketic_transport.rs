@@ -19,8 +19,8 @@ use ic_backup::{
     ops::persistence::BackupLayoutGuard,
 };
 use ic_backup_agent::{
-    AgentMutationProvider, AgentTransport, PreparedUpdate, ReservedUpdate, TransportError,
-    UpdateOutcome,
+    AgentMutationProvider, AgentSnapshotTransferReadProvider, AgentTransport, PreparedUpdate,
+    ReservedUpdate, TransportError, UpdateOutcome,
 };
 use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use ic_testkit::{
@@ -323,23 +323,56 @@ impl Fixture {
         (plan, raw)
     }
     async fn read(&mut self, payload: IcSnapshotTransferReadPayload<'_, '_>) -> Vec<u8> {
+        use ic_backup::{
+            model::execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
+            ops::persistence::{
+                AttemptJournalGuard, ExecutionStageGuard, create_execution_workflow,
+            },
+            ports::ic_observation::IcObservationProviderError,
+            workflow::ic_snapshot_transfer_read::read_snapshot,
+        };
         let (plan, layout, root) = self.original(&payload.digest());
-        let guard = support::retain(&layout, &plan, self.sequence);
-        let request = IcSnapshotTransferReadRequest::new(
-            &plan,
-            self.sequence,
-            guard.record().unwrap(),
-            payload,
-        )
-        .unwrap();
+        let workflow = ExecutionWorkflowRecord::new(plan.clone());
+        create_execution_workflow(&layout, &workflow).unwrap();
+        let binding =
+            ExecutionStageBindingRecord::new(&workflow, self.sequence, &plan, vec![]).unwrap();
+        let stage = ExecutionStageGuard::prepare(&layout, binding, plan.clone()).unwrap();
         let transport = self.transport(&plan);
-        submit(
+        let mut provider = AgentSnapshotTransferReadProvider::new(
             &transport,
-            ReservedUpdate::TransferRead(&request),
-            guard.record().unwrap(),
-            &root,
+            |_: &IcSnapshotTransferReadRequest<'_, '_>, prepared: &PreparedUpdate<'_>| {
+                support::retain_signed(&root, prepared)
+                    .map_err(|_| IcObservationProviderError::Unavailable)
+            },
+        );
+        let response = read_snapshot(
+            &stage,
+            self.sequence,
+            payload,
+            &mut provider,
+            async |request| {
+                assert_eq!(request.plan().context(), plan.context());
+                // This controlled stopped fixture retains original snapshot identity,
+                // controller/read access and exclusive never-dispatched ingress custody.
+                tokio::task::yield_now().await;
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
+                        .is_err()
+                );
+                Ok::<(), std::io::Error>(())
+            },
         )
         .await
+        .unwrap();
+        let guard = AttemptJournalGuard::open(
+            stage.layout().unwrap(),
+            &plan.attempt_authority(self.sequence).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+        let raw = response.input().reply.clone();
+        fs::write(root.join("reply.candid"), &raw).unwrap();
+        raw
     }
     async fn upload(&mut self, payload: &IcSnapshotUploadRequest<'_>) -> Vec<u8> {
         let (plan, layout, root) = self.original(&payload.binding_digest());

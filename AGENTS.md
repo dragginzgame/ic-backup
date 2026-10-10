@@ -574,8 +574,14 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   before consuming one submission. No default retention/application lane or core
   runtime/Send bound exists. Cancellation preserves current pending/Applied spending,
   releases the guard and denies reentry; retain replies before cancellable
-  qualification work. Other provider families remain synchronous and separately
-  accounted. No automatic receipt, retry, terminal/fence/reference release follows.
+  qualification work. The transfer-read port and metadata/data-read coordinators
+  are also async, with the currently guarded original record supplied to providers.
+  The configured Agent transfer adapter requires the same mandatory signed-ingress
+  retention before one read. Metadata/data qualification retains replies before
+  cancellable work; download cancellation preserves partial bytes, earlier receipts
+  and pending spending. Upload, recovery and fence provider families remain
+  synchronous and separately accounted. No automatic receipt, retry,
+  terminal/fence/reference release follows.
 
 - The provider-driven snapshot capture step accepts only the exact original
   take payload, opens its existing stage journal and durably reserves through

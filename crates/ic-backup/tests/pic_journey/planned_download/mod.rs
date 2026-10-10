@@ -118,21 +118,27 @@ impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
     fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
-    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
-        let index = self.calls;
-        self.calls += 1;
-        let response = self.backend.read_snapshot(request)?;
-        if self.failure == ReadFailure::None || index != self.fail_at {
-            return Ok(response);
-        }
-        // Retained fixture oracle is never outcome/retry evidence for the workflow.
-        fs::write(self.oracle, &response.input().reply).unwrap();
-        if self.failure == ReadFailure::Lost {
-            return Err(IcObservationProviderError::Indeterminate);
-        }
-        let mut input = response.input().clone();
-        input.reply.clear();
-        Ok(IcSnapshotTransferReadResponse::new(input).unwrap())
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<
+        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
+    > {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            let index = self.calls;
+            self.calls += 1;
+            let response = ready(self.backend.read_snapshot(request, journal))?;
+            if self.failure == ReadFailure::None || index != self.fail_at {
+                return Ok(response);
+            }
+            // Retained fixture oracle is never outcome/retry evidence for the workflow.
+            fs::write(self.oracle, &response.input().reply).unwrap();
+            if self.failure == ReadFailure::Lost {
+                return Err(IcObservationProviderError::Indeterminate);
+            }
+            let mut input = response.input().clone();
+            input.reply.clear();
+            Ok(IcSnapshotTransferReadResponse::new(input).unwrap())
+        })())
     }
 }
 
@@ -326,17 +332,17 @@ pub(crate) fn run(failure: ReadFailure) {
     // The fixture owns this stopped, isolated target and the actual original ID.
     // This explicit admission is fixture qualification, never a library default.
     let context = metadata_plan.context().clone();
-    let (response, original) = read_snapshot_metadata(
+    let (response, original) = ready(read_snapshot_metadata(
         &metadata_stage,
         7,
         &metadata_request,
         &mut backend,
-        |request| {
+        async |request| {
             assert_eq!(request.plan().context(), &context);
             assert_eq!(request.payload().digest(), metadata_request.digest());
             Ok::<(), Infallible>(())
         },
-        |request, response| {
+        async |request, response| {
             // Actual isolated ingress attribution and durable original byte custody
             // are fixture-owned qualification, never inferred from metadata shape.
             let path = metadata_stage
@@ -358,7 +364,7 @@ pub(crate) fn run(failure: ReadFailure) {
                 evidence: response.input().evidence.hash().into(),
             })
         },
-    )
+    ))
     .unwrap();
     let raw_metadata = &response.input().reply;
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, raw_metadata).unwrap();
@@ -406,18 +412,18 @@ pub(crate) fn run(failure: ReadFailure) {
         calls: 0,
         fail_at: 1,
     };
-    let result = download_snapshot(
+    let result = ready(download_snapshot(
         &stage,
         &download,
         writer,
         &mut provider,
-        |request| {
+        async |request| {
             // This stopped isolated application owns original metadata, fresh
             // access and never-dispatched ingress custody, without a generic default.
             assert_eq!(request.plan().context(), plan.context());
             Ok::<(), Infallible>(())
         },
-        |request, response| {
+        async |request, response| {
             // The actual fixture owns this exact authenticated successful ingress.
             // Explicit receipt admission remains separate from passive wire shape.
             let sequence = request.authority().binding().operation_sequence();
@@ -433,7 +439,7 @@ pub(crate) fn run(failure: ReadFailure) {
                 evidence: response.input().evidence.hash().into(),
             })
         },
-    );
+    ));
     assert_eq!(
         provider.calls,
         if failure == ReadFailure::None {
@@ -470,15 +476,15 @@ pub(crate) fn run(failure: ReadFailure) {
             ArtifactStateRecord::Created
         );
         assert!(
-            read_snapshot(
+            ready(read_snapshot(
                 &stage,
                 2,
                 IcSnapshotTransferReadPayload::Data(&download.requests()[2]),
                 &mut backend,
-                |_| -> Result<(), Infallible> {
+                async |_| -> Result<(), Infallible> {
                     panic!("pending prerequisite rejects before admission")
                 },
-            )
+            ))
             .is_err()
         );
         let original = fs::read(stage_layout.root().join("attempt-1.json")).unwrap();
@@ -564,14 +570,14 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
         calls: 0,
         fail_at: 0,
     };
-    let result = read_snapshot_metadata(
+    let result = ready(read_snapshot_metadata(
         &stage,
         7,
         &payload,
         &mut provider,
-        |_| Ok::<_, Infallible>(()),
-        |_, _| -> Result<_, Infallible> { panic!("lost/malformed metadata cannot qualify") },
-    );
+        async |_| Ok::<_, Infallible>(()),
+        async |_, _| -> Result<_, Infallible> { panic!("lost/malformed metadata cannot qualify") },
+    ));
     if failure == ReadFailure::Lost {
         assert!(matches!(
             result,
@@ -604,14 +610,14 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
     assert_eq!(progress.attempts.mutations_used, 1);
     assert_eq!(progress.applied_operations, 0);
     assert!(
-        read_snapshot_metadata(
+        ready(read_snapshot_metadata(
             &stage,
             7,
             &payload,
             &mut provider,
-            |_| -> Result<(), Infallible> { panic!("pending read never admitted") },
-            |_, _| -> Result<_, Infallible> { panic!("no reissue") }
-        )
+            async |_| -> Result<(), Infallible> { panic!("pending read never admitted") },
+            async |_, _| -> Result<_, Infallible> { panic!("no reissue") }
+        ))
         .is_err()
     );
     assert_eq!(provider.calls, 1);

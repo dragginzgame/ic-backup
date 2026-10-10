@@ -1,6 +1,7 @@
 //! Spending, exclusive dispatch and retained failures through the public step.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -70,12 +71,10 @@ fn prepare(
     drop(stage);
     (root, layout, binding, plan)
 }
-#[expect(
-    clippy::unnecessary_wraps,
-    reason = "implements the mandatory fallible admission callback in this isolated fixture"
-)]
-fn admit(_: &IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), Infallible> {
-    Ok(())
+fn admit(
+    _: &IcSnapshotTransferReadRequest<'_, '_>,
+) -> impl std::future::Future<Output = Result<(), Infallible>> {
+    std::future::ready(Ok(()))
 }
 struct Provider {
     calls: usize,
@@ -99,24 +98,30 @@ impl IcSnapshotTransferReadProvider for Provider {
     fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
-    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
-        self.calls += 1;
-        if let Some(path) = &self.change_stage {
-            fs::write(path, b"{}").unwrap();
-        }
-        if let Some(path) = &self.replace_layout {
-            fs::rename(path, path.with_extension("retained-original")).unwrap();
-            fs::create_dir(path).unwrap();
-        }
-        IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context().clone(),
-            target: self.target.unwrap_or(request.payload().target()).into(),
-            reply: self.reply.clone()?,
-            evidence: ArtifactChecksumRecord::from_bytes(b"fixture association only"),
-        })
-        .map_err(|_| IcObservationProviderError::Indeterminate)
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<
+        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
+    > {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            if let Some(path) = &self.change_stage {
+                fs::write(path, b"{}").unwrap();
+            }
+            if let Some(path) = &self.replace_layout {
+                fs::rename(path, path.with_extension("retained-original")).unwrap();
+                fs::create_dir(path).unwrap();
+            }
+            IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: self.target.unwrap_or(request.payload().target()).into(),
+                reply: self.reply.clone()?,
+                evidence: ArtifactChecksumRecord::from_bytes(b"fixture association only"),
+            })
+            .map_err(|_| IcObservationProviderError::Indeterminate)
+        })())
     }
 }
 fn assert_pending(stage: &ExecutionStageGuard<'_>, plan: &OperationPlanRecord) {
@@ -129,6 +134,79 @@ fn assert_pending(stage: &ExecutionStageGuard<'_>, plan: &OperationPlanRecord) {
     assert_eq!(view.pending_mutation, Some(1));
     assert!(!view.applied);
     assert_eq!(view.mutations_used, 1);
+}
+
+struct SuspendedProvider {
+    calls: usize,
+}
+impl IcSnapshotTransferReadProvider for SuspendedProvider {
+    async fn read_snapshot(
+        &mut self,
+        request: &IcSnapshotTransferReadRequest<'_, '_>,
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        request.validate_journal(journal).unwrap();
+        self.calls += 1;
+        std::future::pending().await
+    }
+}
+
+#[test]
+fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() {
+    use std::task::{Context, Poll, Waker};
+    let original = metadata_request();
+    let wire = metadata_wire();
+    let metadata = IcSnapshotMetadataReply::decode(&original, &wire).unwrap();
+    let data = IcSnapshotDataRequest::new(
+        &metadata,
+        SnapshotDataKind::WasmModule { offset: 0, size: 3 },
+    )
+    .unwrap();
+    for payload in [
+        IcSnapshotTransferReadPayload::Metadata(&original),
+        IcSnapshotTransferReadPayload::Data(&data),
+    ] {
+        for suspend_admission in [true, false] {
+            let (_root, layout, binding, plan) = prepare(payload);
+            let stage =
+                ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest())
+                    .unwrap();
+            let mut provider = SuspendedProvider { calls: 0 };
+            let mut future = Box::pin(read_snapshot(
+                &stage,
+                42,
+                payload,
+                &mut provider,
+                async |_| {
+                    if suspend_admission {
+                        std::future::pending::<()>().await;
+                    }
+                    Ok::<(), Infallible>(())
+                },
+            ));
+            assert!(matches!(
+                future
+                    .as_mut()
+                    .poll(&mut Context::from_waker(Waker::noop())),
+                Poll::Pending
+            ));
+            assert!(
+                AttemptJournalGuard::open(
+                    stage.layout().unwrap(),
+                    &plan.attempt_authority(42).unwrap()
+                )
+                .is_err()
+            );
+            let path = stage.layout().unwrap().root().join("attempt-42.json");
+            let before = fs::read(&path).unwrap();
+            drop(future);
+            assert_pending(&stage, &plan);
+            assert_eq!(provider.calls, usize::from(!suspend_admission));
+            assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
+            assert_eq!(provider.calls, usize::from(!suspend_admission));
+            assert_eq!(fs::read(path).unwrap(), before);
+        }
+    }
 }
 
 #[test]
@@ -158,35 +236,42 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let mut provider = Provider::new(Ok(raw.clone()));
-        let response = read_snapshot(&stage, 42, payload, &mut provider, |request| {
-            let retained: crate::model::attempt_journal::AttemptJournalRecord =
-                serde_json::from_slice(
-                    &fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap(),
-                )
-                .unwrap();
-            assert_eq!(
-                retained.view().pending_mutation,
-                Some(request.mutation_attempt())
-            );
-            assert!(
-                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
-            );
-            Ok::<(), Infallible>(())
-        })
+        let response = ready(read_snapshot(
+            &stage,
+            42,
+            payload,
+            &mut provider,
+            async |request| {
+                let retained: crate::model::attempt_journal::AttemptJournalRecord =
+                    serde_json::from_slice(
+                        &fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap(),
+                    )
+                    .unwrap();
+                assert_eq!(
+                    retained.view().pending_mutation,
+                    Some(request.mutation_attempt())
+                );
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
+                        .is_err()
+                );
+                Ok::<(), Infallible>(())
+            },
+        ))
         .unwrap();
         assert_eq!(response.input().reply, raw);
         assert_eq!(provider.calls, 1);
         assert_pending(&stage, &plan);
         assert!(
-            read_snapshot(
+            ready(read_snapshot(
                 &stage,
                 42,
                 payload,
                 &mut provider,
-                |_| -> Result<(), Infallible> {
+                async |_| -> Result<(), Infallible> {
                     panic!("pending attempt must reject before fresh admission")
                 }
-            )
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, 1);
@@ -205,7 +290,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
             })
             .unwrap();
         drop(journal);
-        assert!(read_snapshot(&stage, 42, payload, &mut provider, admit).is_err());
+        assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 1);
         stage
             .checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
@@ -228,19 +313,19 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
     let mut provider = Provider::new(Ok(metadata_wire()));
     let other = IcSnapshotMetadataRequest::new(request.target(), &[1]).unwrap();
     assert!(matches!(
-        read_snapshot(
+        ready(read_snapshot(
             &stage,
             42,
             IcSnapshotTransferReadPayload::Metadata(&other),
             &mut provider,
             admit
-        ),
+        )),
         Err(IcSnapshotTransferReadExecutionError::Request(
             IcSnapshotTransferReadError::PayloadMismatch
         ))
     ));
     assert!(matches!(
-        read_snapshot(&stage, 99, payload, &mut provider, admit),
+        ready(read_snapshot(&stage, 99, payload, &mut provider, admit)),
         Err(IcSnapshotTransferReadExecutionError::Plan(_))
     ));
     let held = AttemptJournalGuard::open(
@@ -249,14 +334,14 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
     )
     .unwrap();
     assert!(matches!(
-        read_snapshot(&stage, 42, payload, &mut provider, admit),
+        ready(read_snapshot(&stage, 42, payload, &mut provider, admit)),
         Err(IcSnapshotTransferReadExecutionError::Journal(_))
     ));
     drop(held);
     assert_eq!(fs::read(&path).unwrap(), original);
     fs::remove_file(&path).unwrap();
     assert!(matches!(
-        read_snapshot(&stage, 42, payload, &mut provider, admit),
+        ready(read_snapshot(&stage, 42, payload, &mut provider, admit)),
         Err(IcSnapshotTransferReadExecutionError::Journal(_))
     ));
     assert!(!path.exists());
@@ -275,13 +360,17 @@ fn fresh_admission_rejection_retains_spending_without_provider_or_redispatch() {
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let mut provider = Provider::new(Ok(metadata_wire()));
     assert!(matches!(
-        read_snapshot(&stage, 42, payload, &mut provider, |_| Err(
-            std::io::Error::other("fixture access refused")
+        ready(read_snapshot(
+            &stage,
+            42,
+            payload,
+            &mut provider,
+            async |_| Err(std::io::Error::other("fixture access refused"))
         )),
         Err(IcSnapshotTransferReadExecutionError::Admission(_))
     ));
     assert_pending(&stage, &plan);
-    assert!(read_snapshot(&stage, 42, payload, &mut provider, admit).is_err());
+    assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 0);
     drop(stage);
     drop(layout);
@@ -302,7 +391,7 @@ fn each_provider_failure_retains_pending_original_across_resume_without_reissue(
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let mut provider = Provider::new(Err(failure));
         assert!(
-            matches!(read_snapshot(&stage, 42, payload, &mut provider, admit), Err(IcSnapshotTransferReadExecutionError::Provider(actual)) if actual == failure)
+            matches!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)), Err(IcSnapshotTransferReadExecutionError::Provider(actual)) if actual == failure)
         );
         assert_pending(&stage, &plan);
         let path = stage.layout().unwrap().root().join("attempt-42.json");
@@ -311,7 +400,7 @@ fn each_provider_failure_retains_pending_original_across_resume_without_reissue(
         let (stage, progress) =
             ExecutionStageGuard::resume(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         assert_eq!(progress.attempts.mutations_used, 1);
-        assert!(read_snapshot(&stage, 42, payload, &mut provider, admit).is_err());
+        assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
         assert_eq!(fs::read(&path).unwrap(), original);
         assert_eq!(provider.calls, 1);
         drop(stage);
@@ -329,7 +418,7 @@ fn malformed_reply_retains_returned_bytes_and_original_pending_reservation() {
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let raw = b"invalid bounded candid".to_vec();
     let mut provider = Provider::new(Ok(raw.clone()));
-    let error = read_snapshot(&stage, 42, payload, &mut provider, admit).unwrap_err();
+    let error = ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).unwrap_err();
     let IcSnapshotTransferReadExecutionError::Association { response, .. } = error else {
         panic!("retained association failure")
     };
@@ -356,12 +445,18 @@ fn changed_stage_at_admission_stops_dispatch_and_changed_stage_after_reply_retai
         if after_reply {
             provider.change_stage = Some(path.clone());
         }
-        let error = read_snapshot(&stage, 42, payload, &mut provider, |_| {
-            if !after_reply {
-                fs::write(&path, b"{}").unwrap();
-            }
-            Ok::<(), Infallible>(())
-        })
+        let error = ready(read_snapshot(
+            &stage,
+            42,
+            payload,
+            &mut provider,
+            async |_| {
+                if !after_reply {
+                    fs::write(&path, b"{}").unwrap();
+                }
+                Ok::<(), Infallible>(())
+            },
+        ))
         .unwrap_err();
         if after_reply {
             let IcSnapshotTransferReadExecutionError::AfterReplyStage { response, .. } = error
@@ -400,7 +495,7 @@ fn wrong_claim_and_replaced_layout_retain_reply_without_outcome_or_repair() {
         } else {
             provider.target = Some("aaaaa-aa");
         }
-        let error = read_snapshot(&stage, 42, payload, &mut provider, admit).unwrap_err();
+        let error = ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).unwrap_err();
         let response = match error {
             IcSnapshotTransferReadExecutionError::AfterReplyJournal { response, .. }
                 if replaced =>

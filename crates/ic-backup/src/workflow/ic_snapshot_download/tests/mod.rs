@@ -1,6 +1,7 @@
 //! Complete original streaming, explicit receipts and retained failed transfer evidence.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
@@ -93,51 +94,55 @@ impl IcSnapshotTransferReadProvider for Provider {
     fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
-    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
-        let index = self.calls;
-        self.calls += 1;
-        let IcSnapshotTransferReadPayload::Data(payload) = request.payload() else {
-            panic!("data only")
-        };
-        let chunk = match payload.kind() {
-            SnapshotDataKind::WasmModule { size, .. }
-            | SnapshotDataKind::WasmMemory { size, .. }
-            | SnapshotDataKind::StableMemory { size, .. } => {
-                vec![7; usize::try_from(*size).unwrap()]
-            }
-            SnapshotDataKind::WasmChunk { hash }
-                if *hash == payload.metadata().metadata().wasm_chunk_store[0].hash =>
-            {
-                vec![0, 255, 17]
-            }
-            SnapshotDataKind::WasmChunk { .. } => vec![],
-        };
-        let raw = match self.failure {
-            Some((failed, false)) if failed == index => {
-                return Err(IcObservationProviderError::Indeterminate);
-            }
-            Some((failed, true)) if failed == index => vec![],
-            _ => candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
-        };
-        Ok(
-            IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: payload.target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                reply: raw,
-            })
-            .unwrap(),
-        )
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<
+        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
+    > {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            let index = self.calls;
+            self.calls += 1;
+            let IcSnapshotTransferReadPayload::Data(payload) = request.payload() else {
+                panic!("data only")
+            };
+            let chunk = match payload.kind() {
+                SnapshotDataKind::WasmModule { size, .. }
+                | SnapshotDataKind::WasmMemory { size, .. }
+                | SnapshotDataKind::StableMemory { size, .. } => {
+                    vec![7; usize::try_from(*size).unwrap()]
+                }
+                SnapshotDataKind::WasmChunk { hash }
+                    if *hash == payload.metadata().metadata().wasm_chunk_store[0].hash =>
+                {
+                    vec![0, 255, 17]
+                }
+                SnapshotDataKind::WasmChunk { .. } => vec![],
+            };
+            let raw = match self.failure {
+                Some((failed, false)) if failed == index => {
+                    return Err(IcObservationProviderError::Indeterminate);
+                }
+                Some((failed, true)) if failed == index => vec![],
+                _ => candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
+            };
+            Ok(
+                IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    context: request.plan().context().clone(),
+                    target: payload.target().into(),
+                    evidence: ArtifactChecksumRecord::from_bytes(&raw),
+                    reply: raw,
+                })
+                .unwrap(),
+            )
+        })())
     }
 }
-#[expect(
-    clippy::unnecessary_wraps,
-    reason = "compile the required fallible integration admission, without installing a default"
-)]
-fn admit(_: &IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), Infallible> {
-    Ok(())
+fn admit(
+    _: &IcSnapshotTransferReadRequest<'_, '_>,
+) -> impl std::future::Future<Output = Result<(), Infallible>> {
+    std::future::ready(Ok(()))
 }
 #[expect(
     clippy::unnecessary_wraps,
@@ -159,6 +164,103 @@ fn raw_metadata() -> Vec<u8> {
 }
 
 #[test]
+fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pending_reply() {
+    use std::{
+        cell::Cell,
+        io::Write,
+        task::{Context, Poll, Waker},
+    };
+    let workflow = workflow(256);
+    let request = source();
+    let raw = raw_metadata();
+    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+    let download = IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 32).unwrap();
+    let (root, layout, binding) = prepare(&workflow, &metadata, &download);
+    let stage =
+        ExecutionStageGuard::open(&layout, &workflow.digest(), 7, &binding.digest()).unwrap();
+    let mut artifacts = artifacts(&stage, &metadata, stage.plan().digest().hash());
+    let partial = stage
+        .layout()
+        .unwrap()
+        .root()
+        .join(artifacts.record().unwrap().artifacts()[0].staging_path())
+        .join("wasm-module.bin");
+    let writer = artifacts
+        .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
+        .unwrap();
+    let mut provider = Provider {
+        calls: 0,
+        failure: None,
+    };
+    let qualified = Cell::new(0);
+    let mut future = Box::pin(download_snapshot(
+        &stage,
+        &download,
+        writer,
+        &mut provider,
+        admit,
+        async |request, response| {
+            let sequence = request.authority().binding().operation_sequence();
+            let file = fs::File::create(root.join(format!("reply-{sequence}.candid"))).unwrap();
+            (&file).write_all(&response.input().reply).unwrap();
+            file.sync_all().unwrap();
+            fs::File::open(&root).unwrap().sync_all().unwrap();
+            qualified.set(qualified.get() + 1);
+            if sequence == 1 {
+                std::future::pending::<()>().await;
+            }
+            qualify(request, response)
+        },
+    ));
+    assert!(matches!(
+        future
+            .as_mut()
+            .poll(&mut Context::from_waker(Waker::noop())),
+        Poll::Pending
+    ));
+    let authority = stage.plan().attempt_authority(1).unwrap();
+    assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+    let path = stage.layout().unwrap().root().join("attempt-1.json");
+    let before = fs::read(&path).unwrap();
+    let reply = fs::read(root.join("reply-1.candid")).unwrap();
+    let original_partial = fs::read(&partial).unwrap();
+    assert_eq!(original_partial, [7; 32]);
+    drop(future);
+    assert_eq!(provider.calls, 2);
+    assert_eq!(qualified.get(), 2);
+    let progress =
+        read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
+    assert_eq!(progress.applied_operations, 1);
+    assert_eq!(progress.attempts.mutations_used, 2);
+    let journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+    drop(journal);
+    assert_eq!(
+        artifacts.record().unwrap().artifacts()[0].state(),
+        ArtifactStateRecord::Created
+    );
+    assert!(
+        artifacts
+            .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
+            .is_err()
+    );
+    assert!(
+        ready(read_snapshot(
+            &stage,
+            1,
+            IcSnapshotTransferReadPayload::Data(&download.requests()[1]),
+            &mut provider,
+            admit,
+        ))
+        .is_err()
+    );
+    assert_eq!(provider.calls, 2);
+    assert_eq!(fs::read(path).unwrap(), before);
+    assert_eq!(fs::read(root.join("reply-1.candid")).unwrap(), reply);
+    assert_eq!(fs::read(partial).unwrap(), original_partial);
+}
+
+#[test]
 fn streams_every_exact_region_and_known_chunk_with_explicit_receipts_then_publishes() {
     let workflow = workflow(256);
     let request = source();
@@ -177,19 +279,19 @@ fn streams_every_exact_region_and_known_chunk_with_explicit_receipts_then_publis
         calls: 0,
         failure: None,
     };
-    let checksum = download_snapshot(
+    let checksum = ready(download_snapshot(
         &stage,
         &download,
         writer,
         &mut provider,
         admit,
-        |request, response| {
+        async |request, response| {
             assert!(
                 AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
             );
             qualify(request, response)
         },
-    )
+    ))
     .unwrap();
     assert_eq!(provider.calls, download.requests().len());
     assert_eq!(
@@ -245,8 +347,15 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
             calls: 0,
             failure: Some((1, malformed)),
         };
-        let error = download_snapshot(&stage, &download, writer, &mut provider, admit, qualify)
-            .unwrap_err();
+        let error = ready(download_snapshot(
+            &stage,
+            &download,
+            writer,
+            &mut provider,
+            admit,
+            async |request, response| qualify(request, response),
+        ))
+        .unwrap_err();
         if malformed {
             assert!(matches!(
                 error,
@@ -324,14 +433,14 @@ fn qualification_rejection_retains_exact_response_and_does_not_append_or_record_
         calls: 0,
         failure: None,
     };
-    let error = download_snapshot(
+    let error = ready(download_snapshot(
         &stage,
         &download,
         writer,
         &mut provider,
-        |_| Ok::<(), io::Error>(()),
-        |_, _| Err(io::Error::other("authentication rejected")),
-    )
+        async |_| Ok::<(), io::Error>(()),
+        async |_, _| Err(io::Error::other("authentication rejected")),
+    ))
     .unwrap_err();
     let IcSnapshotDownloadExecutionError::AfterReply {
         operation_sequence,
@@ -378,13 +487,13 @@ fn changed_receipt_or_negative_outcome_rejects_before_append_and_retains_pending
             calls: 0,
             failure: None,
         };
-        let error = download_snapshot(
+        let error = ready(download_snapshot(
             &stage,
             &download,
             writer,
             &mut provider,
             admit,
-            |request, response| {
+            async |request, response| {
                 let mut receipt = qualify(request, response)?;
                 match variant {
                     0 => receipt.attempt += 1,
@@ -393,7 +502,7 @@ fn changed_receipt_or_negative_outcome_rejects_before_append_and_retains_pending
                 }
                 Ok::<_, Infallible>(receipt)
             },
-        )
+        ))
         .unwrap_err();
         assert!(matches!(
             error,
@@ -453,14 +562,14 @@ fn consumed_missing_or_held_originals_never_enter_fresh_admission_or_provider() 
             calls: 0,
             failure: None,
         };
-        let error = download_snapshot(
+        let error = ready(download_snapshot(
             &stage,
             &download,
             writer,
             &mut provider,
-            |_| -> Result<(), Infallible> { panic!("original rejection") },
-            qualify,
-        )
+            async |_| -> Result<(), Infallible> { panic!("original rejection") },
+            async |request, response| qualify(request, response),
+        ))
         .unwrap_err();
         assert!(matches!(
             error,
@@ -497,13 +606,13 @@ fn stage_or_local_byte_drift_during_qualification_retains_reply_and_pending_atte
             calls: 0,
             failure: None,
         };
-        let error = download_snapshot(
+        let error = ready(download_snapshot(
             &stage,
             &download,
             writer,
             &mut provider,
             admit,
-            |request, response| {
+            async |request, response| {
                 if stage_changed {
                     fs::write(stage_root.join("stage-binding.json"), b"{}").unwrap();
                 } else {
@@ -511,7 +620,7 @@ fn stage_or_local_byte_drift_during_qualification_retains_reply_and_pending_atte
                 }
                 qualify(request, response)
             },
-        )
+        ))
         .unwrap_err();
         let IcSnapshotDownloadExecutionError::AfterReply {
             source, response, ..
@@ -593,16 +702,16 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
             calls: 0,
             failure: None,
         };
-        let error = download_snapshot(
+        let error = ready(download_snapshot(
             &stage,
             selected,
             writer,
             &mut provider,
-            |_| -> Result<(), Infallible> {
+            async |_| -> Result<(), Infallible> {
                 panic!("invalid original must reject before admission")
             },
-            qualify,
-        )
+            async |request, response| qualify(request, response),
+        ))
         .unwrap_err();
         assert!(matches!(
             error,
@@ -648,18 +757,18 @@ fn receipt_persistence_failure_retains_appended_bytes_reply_and_original_pending
         calls: 0,
         failure: None,
     };
-    let error = download_snapshot(
+    let error = ready(download_snapshot(
         &stage,
         &download,
         writer,
         &mut provider,
         admit,
-        |request, response| {
+        async |request, response| {
             fs::rename(&journal_path, &retained).unwrap();
             fs::create_dir(&journal_path).unwrap();
             qualify(request, response)
         },
-    )
+    ))
     .unwrap_err();
     let IcSnapshotDownloadExecutionError::AfterReply {
         source: IcSnapshotDownloadReplyError::Journal(_),

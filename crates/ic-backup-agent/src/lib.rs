@@ -9,6 +9,8 @@ mod request;
 pub use request::ReservedUpdate;
 mod mutation;
 pub use mutation::AgentMutationProvider;
+mod transfer_read;
+pub use transfer_read::AgentSnapshotTransferReadProvider;
 
 use ic_agent::{
     Agent, Identity, RequestId,

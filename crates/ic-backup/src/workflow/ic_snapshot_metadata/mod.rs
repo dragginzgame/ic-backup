@@ -35,6 +35,10 @@ use thiserror::Error;
 /// returning the explicit Applied receipt. There is no default qualification or byte
 /// store. Opaque provider evidence and valid wire shape cannot substitute for it.
 /// Account any remote qualification separately before its calls.
+/// Admission, submission and independent qualification are async. Qualification
+/// holds the selected original journal and must retain the reply durably before
+/// awaiting cancellable work. Cancellation keeps pending/Applied spending and denies
+/// reentry; no executor or `Send` bound is imposed by the core.
 ///
 /// Record the receipt through the sole spending owner, release its lock, then publish
 /// the canonical all-Applied checkpoint with the exact request/raw-metadata digest as
@@ -47,13 +51,13 @@ use thiserror::Error;
 /// # Errors
 /// Rejects non-singleton or changed originals, spending, fresh admission, provider,
 /// association, qualification, receipt and checkpoint failures without cleanup/refund.
-pub fn read_snapshot_metadata<E: std::error::Error + 'static>(
+pub async fn read_snapshot_metadata<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     operation_sequence: u64,
     payload: &IcSnapshotMetadataRequest,
     provider: &mut impl IcSnapshotTransferReadProvider,
-    admit: impl FnOnce(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
-    qualify: impl FnOnce(
+    admit: impl AsyncFnOnce(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
+    qualify: impl AsyncFnOnce(
         &IcSnapshotTransferReadRequest<'_, '_>,
         &IcSnapshotTransferReadResponse,
     ) -> Result<MutationReceiptRequest, E>,
@@ -77,8 +81,9 @@ pub fn read_snapshot_metadata<E: std::error::Error + 'static>(
         IcSnapshotTransferReadPayload::Metadata(payload),
         provider,
         admit,
-    )?;
-    match settle_metadata(stage, operation_sequence, payload, &response, qualify) {
+    )
+    .await?;
+    match settle_metadata(stage, operation_sequence, payload, &response, qualify).await {
         Ok(predecessor) => Ok((response, predecessor)),
         Err(source) => Err(IcSnapshotMetadataExecutionError::AfterReply {
             source,
@@ -87,12 +92,12 @@ pub fn read_snapshot_metadata<E: std::error::Error + 'static>(
     }
 }
 
-fn settle_metadata<E: std::error::Error + 'static>(
+async fn settle_metadata<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     sequence: u64,
     payload: &IcSnapshotMetadataRequest,
     response: &IcSnapshotTransferReadResponse,
-    qualify: impl FnOnce(
+    qualify: impl AsyncFnOnce(
         &IcSnapshotTransferReadRequest<'_, '_>,
         &IcSnapshotTransferReadResponse,
     ) -> Result<MutationReceiptRequest, E>,
@@ -109,8 +114,9 @@ fn settle_metadata<E: std::error::Error + 'static>(
         IcSnapshotTransferReadPayload::Metadata(payload),
     )?;
     let admitted = validate_response(&request, journal.record()?, response)?;
-    let receipt =
-        qualify(&request, response).map_err(IcSnapshotMetadataSettlementError::Qualification)?;
+    let receipt = qualify(&request, response)
+        .await
+        .map_err(IcSnapshotMetadataSettlementError::Qualification)?;
     if receipt.outcome != MutationOutcomeRecord::Applied
         || receipt.attempt != request.mutation_attempt()
         || receipt.request != payload.digest().hash()

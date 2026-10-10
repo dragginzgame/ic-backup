@@ -155,6 +155,8 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
   and unchanged pending spending;
 - async capture/load/start coordination and a configured Agent mutation provider
   requiring durable signed-ingress retention before one submission;
+- async metadata/data-read coordination and a configured Agent transfer provider,
+  retaining partial downloads and original spending after cancellation;
 - provider-driven snapshot capture and metadata/data read steps with durable
   spending, explicit fresh admission and one-call dispatch;
 - complete original-plan data streaming into a durable artifact, with explicit
