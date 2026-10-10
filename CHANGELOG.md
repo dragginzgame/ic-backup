@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.14.2]
+## [0.14.2] - 2026-10-10
 
 - Coordinate original same-ID load/start stages with fresh application safety,
   independently qualified receipts and retained source requirements. Lost or
