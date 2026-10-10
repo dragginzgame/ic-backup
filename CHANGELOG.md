@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.13.0]
+## [0.13.0] - 2026-10-10
 
 - **Breaking:** Select direct Host Artifact/FS 0.11.0. Consumers sharing
   `PersistenceError::Publication` must align to the Host 0.11 Rust error type.
