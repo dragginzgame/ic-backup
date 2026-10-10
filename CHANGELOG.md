@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.12.1]
+## [0.12.1] - 2026-10-10
 
 - Coordinate one original metadata stage through a single read, independently
   qualified receipt and exact learned-evidence checkpoint. Retain pending spending
