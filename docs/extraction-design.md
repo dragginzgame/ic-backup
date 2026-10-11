@@ -1100,6 +1100,11 @@ ICP subprocess extraction/probing. Historical routing evidence remains in
 No compatibility backend or fallback is retained. The common shared IC tool
 inventory remains canonical; installation does not select a product backend.
 
+A public acquisition step now joins exact retained stage/requirement/obligation
+admission to the original journal reservation, mandatory fresh application callback
+and one configured acquisition provider await. Passive replies remain pending;
+application reconciliation/Active semantics and full terminal custody remain separate.
+
 The implemented async package accepts only existing original reserved mutation,
 recovery observation, transfer read, upload, upload observation/readback and
 application fence-acquisition requests. It reuses their exact receiver, effective

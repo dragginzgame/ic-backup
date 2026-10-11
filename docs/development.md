@@ -582,6 +582,17 @@ See the [typed contract and independent goldens](contracts/fence-acquisition-por
 Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_acquisition`
 and `cargo test --offline --locked -p ic-backup --test fence_acquisition`.
 
+Use `workflow::fence_acquisition::acquire_fence` with the prepared original stage,
+retained purpose-specific requirement/obligation and exact original payload. Hold
+no attempt guards on entry. The coordinator checks originals before spending,
+reserves through complete-plan admission and holds the selected journal across
+fresh application admission and one provider call. Capture and restore retain
+separate original requirements; restore keeps its source layout/plan. Callers
+qualify actual application semantics, fresh permissions and command custody.
+Replies stay pending, and cancellation cannot grant reentry. Post-reply errors
+retain passive acknowledgement evidence. Focused native orchestration checks are
+`cargo test --offline --locked -p ic-backup --lib workflow::fence_acquisition`.
+
 `model::ic_mutation::IcMutationRequest` binds the exact original plan operation,
 immutable allowances and existing closed IC payload to an already pending mutation.
 The provider contract describes one previously accounted host update. Pure

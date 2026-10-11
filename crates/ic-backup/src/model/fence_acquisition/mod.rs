@@ -104,6 +104,32 @@ impl fmt::Debug for FenceAcquisitionPayload {
     }
 }
 
+/// Admit exact original acquisition authority and payload before reserving spending.
+///
+/// This checks declarations only: no pending reservation, fresh permission,
+/// never-dispatched custody or executable application contract is established.
+/// # Errors
+/// Rejects changed obligation/plan, journal authority, receiver or exact wire bytes.
+pub fn original_authority(
+    plan: &OperationPlanRecord,
+    obligation: &FenceObligationRecord,
+    journal: &AttemptJournalRecord,
+    payload: &FenceAcquisitionPayload,
+) -> Result<AttemptAuthorityRecord, FenceAcquisitionError> {
+    obligation.validate_plan(plan)?;
+    let authority = plan.attempt_authority(obligation.acquisition_operation())?;
+    if journal.authority() != &authority {
+        return Err(FenceAcquisitionError::AuthorityMismatch);
+    }
+    if payload.target() != authority.binding().target() {
+        return Err(FenceAcquisitionError::TargetMismatch);
+    }
+    if payload.digest().hash() != authority.binding().request() {
+        return Err(FenceAcquisitionError::PayloadMismatch);
+    }
+    Ok(authority)
+}
+
 /// Structural binding to an already reserved acquisition; never a fresh dispatch permit.
 ///
 /// Integration admission additionally requires durable originals, exact request semantics,
@@ -128,17 +154,7 @@ impl<'a> FenceAcquisitionRequest<'a> {
         journal: &AttemptJournalRecord,
         payload: &'a FenceAcquisitionPayload,
     ) -> Result<Self, FenceAcquisitionError> {
-        obligation.validate_plan(plan)?;
-        let authority = plan.attempt_authority(obligation.acquisition_operation())?;
-        if journal.authority() != &authority {
-            return Err(FenceAcquisitionError::AuthorityMismatch);
-        }
-        if payload.target() != authority.binding().target() {
-            return Err(FenceAcquisitionError::TargetMismatch);
-        }
-        if payload.digest().hash() != authority.binding().request() {
-            return Err(FenceAcquisitionError::PayloadMismatch);
-        }
+        let authority = original_authority(plan, obligation, journal, payload)?;
         let mutation_attempt = journal
             .view()
             .pending_mutation

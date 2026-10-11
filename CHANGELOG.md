@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.18.1]
+
+- Add an async application-fence acquisition step that checks retained stage,
+  requirement and obligation evidence, durably reserves through the original
+  journal and holds exclusion across fresh admission and one provider call.
+  Replies and failures retain pending spending; changed post-reply evidence
+  retains the acknowledgement
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.18.0] - 2026-10-11
 
 - **Breaking:** Adopt Metrics 0.6.1. `prepared_chunk_bytes()` now returns the shared

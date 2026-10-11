@@ -103,6 +103,12 @@ exclusive attribution remain integration-owned. Await `observe_fence_acquisition
 with the original guarded record for independently reserved application reconciliation;
 no generic application read method or reconciliation provider is supplied. Full
 application runners remain pending; no default safety/retention callback exists.
+Use the core `workflow::fence_acquisition::acquire_fence` step to open/reserve the
+prepared stage and retain journal exclusion across fresh application admission
+and this adapter. Purpose-specific retained requirements/obligations are rechecked
+around dispatch. Its passive success stays pending; post-reply errors retain the
+acknowledgement. The isolated actual counter fixture exercises this orchestration
+without establishing an Active application fence.
 
 ## Results and interruption
 

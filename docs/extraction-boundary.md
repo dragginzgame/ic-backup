@@ -1408,6 +1408,30 @@ local association/persistence only. [Fresh Canic inspection](fence-acquisition-s
 imports no production code, default command, effect flag or dispatch/outcome proof.
 Actual application/IC backend qualification remains required.
 
+`workflow::fence_acquisition::acquire_fence` opens the exact prepared stage's
+original acquisition journal and reuses complete-plan reservation, including all
+original journals and Applied prerequisites. `original_authority` owns payload/
+obligation/authority checks before spending and is also used by request construction.
+The step reopens the exact retained purpose-specific requirement and obligation,
+including the source plan/layout for restore, before reservation, after fresh
+admission and after reply. Stage/ancestor checks bracket the same effect boundaries.
+
+Selected journal exclusion spans both awaits. Mandatory application admission
+qualifies current whole-unit permissions, purpose/argument semantics, original
+fence/revisions and never-dispatched command custody; preflight calls need their
+own prior accounting. Success is passive and remains pending. Cancellation,
+admission/provider failures and changed originals retain spending, obligations and
+source references. Post-reply typed errors retain the acknowledgement. No direct
+receipt, acquisition/Active proof, hidden observation, new record or terminal/
+fence/reference-release authority is produced.
+
+Native checks exercise both purposes, complete original journal coverage and
+prerequisites, cancellation, rejected admission, missing/changed originals and
+post-reply custody failures. The actual configured Agent journey uses this public
+step for one isolated opaque counter update and failed reply retention after
+application, with no reissue. It proves transport/orchestration and retained pending
+spending, never whole-unit application fence semantics or Active custody.
+
 ### Immutable local download manifests
 
 `DownloadJournalGuard::publish_download_manifest` publishes the exact guarded

@@ -25,7 +25,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
                 .unwrap();
         let plan = support::plan(TARGET, &payload.digest(), 1);
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let obligation = support::retain_fence_originals(&layout, &plan, 1);
+        let obligation = retain_fence_originals(&layout, &plan, 1);
         let original_obligation = fs::read(root.join("fence-obligation.json")).unwrap();
         let mut guard =
             AttemptJournalGuard::create(&layout, plan.attempt_authority(1).unwrap()).unwrap();
@@ -121,4 +121,46 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
             );
         }
     }
+}
+
+/// Retain declared capture obligations before any acquisition reservation; no Active fence is proven.
+fn retain_fence_originals(
+    layout: &BackupLayoutGuard,
+    plan: &ic_backup::model::operation_plan::OperationPlanRecord,
+    sequence: u64,
+) -> ic_backup::model::fence_obligation::FenceObligationRecord {
+    use ic_backup::{
+        model::{
+            artifacts::ArtifactChecksumRecord,
+            consistency::{
+                ApplicationFenceBinding, ConsistencyGuaranteeRecord, ConsistencyRequirementRecord,
+            },
+            fence_obligation::FenceObligationRecord,
+        },
+        ops::persistence::{
+            FenceObligationRequirement, create_consistency_requirement, create_fence_obligation,
+            create_operation_plan,
+        },
+    };
+    create_operation_plan(layout, plan).unwrap();
+    let requirement =
+        ConsistencyRequirementRecord::new(plan, ConsistencyGuaranteeRecord::ApplicationCoordinated);
+    create_consistency_requirement(layout, plan, &requirement).unwrap();
+    let fence = ApplicationFenceBinding {
+        identity: ArtifactChecksumRecord::from_bytes(b"fixture fence declaration"),
+        membership_revision: ArtifactChecksumRecord::from_bytes(b"fixture membership declaration"),
+    };
+    let obligation =
+        FenceObligationRecord::for_capture(plan, &requirement, sequence, &fence).unwrap();
+    create_fence_obligation(
+        layout,
+        plan,
+        FenceObligationRequirement::Capture {
+            requirement: &requirement,
+            fence: &fence,
+        },
+        &obligation,
+    )
+    .unwrap();
+    obligation
 }

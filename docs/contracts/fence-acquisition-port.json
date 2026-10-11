@@ -1,6 +1,7 @@
 {
    "acknowledgement" : "Passive full original authority digest, exact mutation attempt and opaque retained reply evidence. Pure association authenticates no response/context and produces no outcome/receipt, Active custody or negative proof.",
    "async_contract" : "Await the provider with the currently guarded original AttemptJournalRecord; recheck current reservations before dispatch. Retain selected exclusion across await. Cancellation preserves pending spending, original obligations and source references; no repeat-dispatch authority or runtime/Send bound follows.",
+   "coordinator" : "workflow::fence_acquisition::acquire_fence checks retained stage/ancestors and purpose-specific requirement/obligation before complete-plan reservation and around dispatch. Canonical original payload admission precedes spending. Selected journal exclusion spans mandatory fresh application admission and one provider await. Success/errors retain pending spending; post-reply errors retain acknowledgement. No receipt, Active fence, hidden observation, new schema or release follows.",
    "configured_adapter" : "AgentFenceAcquisitionProvider requires mandatory durable exact signed ingress/request ID before one update and exact bounded raw reply retention before passive acknowledgement. Reply-retention failure is Indeterminate. No default callbacks, whole-unit application semantics, Active custody or automatic settlement.",
    "digest_goldens" : [
       {

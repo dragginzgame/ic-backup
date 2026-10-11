@@ -922,12 +922,27 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[expect(
+    clippy::too_many_lines,
+    reason = "keep retained originals, locked acquisition and actual reply-custody failure chronological"
+)]
 async fn configured_application_update_retains_empty_reply_without_claiming_active_fence() {
     use ic_backup::{
-        model::fence_acquisition::{FenceAcquisitionPayload, FenceAcquisitionRequest},
-        ops::persistence::AttemptJournalGuard,
+        model::{
+            consistency::{
+                ApplicationFenceBinding, ConsistencyGuaranteeRecord, ConsistencyRequirementRecord,
+            },
+            execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
+            fence_acquisition::{FenceAcquisitionPayload, FenceAcquisitionRequest},
+            fence_obligation::FenceObligationRecord,
+        },
+        ops::persistence::{
+            AttemptJournalGuard, ExecutionStageGuard, FenceObligationRequirement,
+            create_consistency_requirement, create_execution_workflow, create_fence_obligation,
+        },
         policy::fence_acquisition::validate_acknowledgement,
-        ports::fence_acquisition::{FenceAcquisitionProvider, FenceAcquisitionProviderError},
+        ports::fence_acquisition::FenceAcquisitionProviderError,
+        workflow::fence_acquisition::{FenceAcquisitionExecutionError, acquire_fence},
     };
     use ic_backup_agent::AgentFenceAcquisitionProvider;
     let mut fixture = Fixture::new(support::identity()).await;
@@ -937,29 +952,52 @@ async fn configured_application_update_retains_empty_reply_without_claiming_acti
         // opaque transport and custody only; no whole-unit acquisition is inferred.
         let payload =
             FenceAcquisitionPayload::new(&fixture.target, "write", &value.to_le_bytes()).unwrap();
-        let (plan, layout, root) = fixture.original(&payload.digest());
+        let (plan, layout, _root) = fixture.original(&payload.digest());
         let sequence = fixture.sequence;
-        let obligation = support::retain_fence_originals(&layout, &plan, sequence);
+        let workflow = ExecutionWorkflowRecord::new(plan.clone());
+        create_execution_workflow(&layout, &workflow).unwrap();
+        let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
+        let stage = ExecutionStageGuard::prepare(&layout, binding, plan.clone()).unwrap();
+        let root = stage.layout().unwrap().root().to_path_buf();
+        let requirement = ConsistencyRequirementRecord::new(
+            &plan,
+            ConsistencyGuaranteeRecord::ApplicationCoordinated,
+        );
+        let fence = ApplicationFenceBinding {
+            identity: ArtifactChecksumRecord::from_bytes(b"fixture original fence"),
+            membership_revision: ArtifactChecksumRecord::from_bytes(b"fixture original membership"),
+        };
+        let retained_requirement = FenceObligationRequirement::Capture {
+            requirement: &requirement,
+            fence: &fence,
+        };
+        create_consistency_requirement(stage.layout().unwrap(), &plan, &requirement).unwrap();
+        let obligation =
+            FenceObligationRecord::for_capture(&plan, &requirement, sequence, &fence).unwrap();
+        create_fence_obligation(
+            stage.layout().unwrap(),
+            &plan,
+            retained_requirement,
+            &obligation,
+        )
+        .unwrap();
         let original_obligation = fs::read(root.join("fence-obligation.json")).unwrap();
-        let mut guard =
-            AttemptJournalGuard::create(&layout, plan.attempt_authority(sequence).unwrap())
-                .unwrap();
-        guard.reserve_planned_mutation(&plan.digest()).unwrap();
-        let original = fs::read(guard.path()).unwrap();
-        let request =
-            FenceAcquisitionRequest::new(&plan, &obligation, guard.record().unwrap(), &payload)
-                .unwrap();
+        let authority = plan.attempt_authority(sequence).unwrap();
         let transport = fixture.transport(&plan);
         let mut provider = AgentFenceAcquisitionProvider::new(
             &transport,
             |actual: &FenceAcquisitionRequest<'_>, prepared: &PreparedUpdate<'_>| {
-                assert_eq!(actual.authority().digest(), request.authority().digest());
-                assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                assert_eq!(actual.authority(), &authority);
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), actual.authority()).is_err()
+                );
                 support::retain_signed(&root, prepared)
                     .map_err(|_| FenceAcquisitionProviderError::Unavailable)
             },
             |actual: &FenceAcquisitionRequest<'_>, id: &ic_agent::RequestId, reply: &[u8]| {
-                assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), actual.authority()).is_err()
+                );
                 assert_eq!(
                     fs::read_to_string(root.join("request-id.txt")).unwrap(),
                     id.to_string()
@@ -971,14 +1009,35 @@ async fn configured_application_update_retains_empty_reply_without_claiming_acti
                 retain_reply(&root, reply).map_err(|_| FenceAcquisitionProviderError::Unavailable)
             },
         );
-        let result = provider
-            .acquire_fence(&request, guard.record().unwrap())
-            .await;
+        let result = acquire_fence(
+            &stage,
+            retained_requirement,
+            &obligation,
+            &payload,
+            &mut provider,
+            async |actual| {
+                assert_eq!(actual.obligation(), &obligation);
+                tokio::task::yield_now().await;
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), actual.authority()).is_err()
+                );
+                // Isolated fixture admission for an exact opaque write, not Active-fence proof.
+                Ok::<(), std::convert::Infallible>(())
+            },
+        )
+        .await;
+        let guard = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+        let original = fs::read(guard.path()).unwrap();
+        let request =
+            FenceAcquisitionRequest::new(&plan, &obligation, guard.record().unwrap(), &payload)
+                .unwrap();
         if refuse_reply {
-            assert_eq!(
-                result.unwrap_err(),
-                FenceAcquisitionProviderError::Indeterminate
-            );
+            assert!(matches!(
+                result,
+                Err(FenceAcquisitionExecutionError::Provider(
+                    FenceAcquisitionProviderError::Indeterminate
+                ))
+            ));
             assert!(!root.join("reply.candid").exists());
         } else {
             validate_acknowledgement(&request, guard.record().unwrap(), &result.unwrap()).unwrap();
@@ -987,27 +1046,38 @@ async fn configured_application_update_retains_empty_reply_without_claiming_acti
                 Vec::<u8>::new()
             );
         }
-        assert_eq!(
-            provider
-                .acquire_fence(&request, guard.record().unwrap())
-                .await
-                .unwrap_err(),
-            FenceAcquisitionProviderError::Unavailable
+        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+        drop(guard);
+        assert!(
+            acquire_fence(
+                &stage,
+                retained_requirement,
+                &obligation,
+                &payload,
+                &mut provider,
+                async |_| -> Result<(), std::convert::Infallible> {
+                    panic!("pending acquisition reached fresh admission again")
+                }
+            )
+            .await
+            .is_err()
         );
-        assert_eq!(fs::read(guard.path()).unwrap(), original);
+        assert_eq!(
+            fs::read(root.join(format!("attempt-{sequence}.json"))).unwrap(),
+            original
+        );
         assert_eq!(
             fs::read(root.join("fence-obligation.json")).unwrap(),
             original_obligation
         );
-        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
         // Independently controlled Testkit oracle confirms dispatch despite failed reply retention.
-        let state = fixture
+        let observed_bytes = fixture
             .pic
             .query_call(fixture.principal(), fixture.caller(), "read", vec![])
             .await
             .unwrap();
-        assert_eq!(&state[..8], &value.to_le_bytes());
-        fs::write(root.join("oracle-state.bin"), state).unwrap();
+        assert_eq!(&observed_bytes[..8], &value.to_le_bytes());
+        fs::write(root.join("oracle-state.bin"), observed_bytes).unwrap();
     }
 }
 

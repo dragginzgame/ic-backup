@@ -70,7 +70,7 @@ into an issue tracker or release authority.
   Released 0.14.1 selects Testkit 0.32 and aligns its test-only Host graph with
   direct Host 0.12. Released 0.14.2 qualifies Host 0.12.4 and Testkit 0.32.2.
   Released 0.17.0 qualifies Host 0.12.10 and Testkit 0.33.1.
-  The pending 0.18.0 batch selects direct Host Artifact/FS 0.13, changing exposed
+  Released 0.18.0 selects direct Host Artifact/FS 0.13, changing exposed
   publication error identity. Testkit 0.33.2 retains separate dev-only Host 0.12.10. Host rejects NUL paths
   before publication effects; Testkit's scoped reset classification supplies no
   Backup recovery recipe, repeat-call authority or product record change.
@@ -600,6 +600,16 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   no generic observation method or Active-fence interpretation is installed.
   No automatic receipt, retry,
   terminal/fence/reference release follows.
+
+- The provider-driven application acquisition step rechecks the exact retained
+  stage/ancestors, requirement and obligation before spending and across dispatch.
+  Canonical original payload admission precedes complete-plan mutation reservation.
+  Hold selected journal exclusion across mandatory fresh whole-unit application,
+  permissions/revisions/custody admission and one acquisition-provider await.
+  Success and every post-reservation failure retain pending spending. Post-reply
+  association/journal/stage/obligation failures retain the acknowledgement. No
+  receipt, Active fence, implicit reconciliation, refund or release is inferred.
+  Application semantics and outside-snapshot restore custody stay integration-owned.
 
 - The provider-driven snapshot capture step accepts only the exact original
   take payload, opens its existing stage journal and durably reserves through

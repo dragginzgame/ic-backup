@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "base_commit": "ff7ecbb287dde1e078e55548a9d2814472476d42",
+  "pending_changelog": "0.18.1",
+  "qualification": "All 16 make ci targets pass on frozen Linux inputs; independent Rust 1.88 public acquisition coordinator/configured Agent consumer passes. No matching hosted candidate acceptance.",
+  "artifacts": {
+    "target/continuation-0181/candidate.toml": "3c319eb2910770fb556f6610acb739bdfafc098c22935a514b47e958718a9bcb",
+    "target/continuation-0181/candidate.lock": "0f48e00b2d711146b388d062a3fe1115b27ef0a0602a67685dccd9d4769525d1",
+    "target/continuation-0181/workspace.json": "b57197bdc11ac31ed628a28e0653aeaa414ba2b61ebd7a40bac7072a182069c7",
+    "target/continuation-0181/technical-before-ci.json": "7db21eab67a254c41a235620433e8541fbc534f0067fc648af8f1578fac11dd0",
+    "target/continuation-0181/technical-after-ci.json": "7db21eab67a254c41a235620433e8541fbc534f0067fc648af8f1578fac11dd0",
+    "target/continuation-0181/passed-cases.json": "1d3324eca8eceb214fc6fb2232d3b2b3be83afc79f355515b76df5e0a6a902f3",
+    "target/continuation-0181/fence-focused.log": "64bb5d0384431d3e25da920e403534a8095cde4d0d253855fab091d1580c6885",
+    "target/continuation-0181/fence-focused-repaired.log": "c0d5fed294c9bb2747063aa0aa65a8bdddbf0a9a72d63faae48fb68ff6f8406d",
+    "target/continuation-0181/fence-focused-final.log": "b1709242669c3517ada6d97485e98bf9b8075839a46db868d460c938da0d202d",
+    "target/continuation-0181/clippy.log": "8e220312d90cf9d5f345867efff633276edde0f4a85c49d3568c6800b373b805",
+    "target/continuation-0181/clippy-repaired.log": "abb5dec5a6c61443eacd28bb1e19cc69b3aea8158cf67ca83354977151993b23",
+    "target/continuation-0181/clippy-final.log": "6c33087c90e77fa5bb0d0a20e5597b0708647a54698f907153ccf10885f40b32",
+    "target/continuation-0181/agent-fence.log": "b015772b133b5110d31fcc058206f5cdea3a649be7f2b84cc2fb555c0654465f",
+    "target/continuation-0181/agent-fence-qualified.log": "4d6756f659e3157ad3e5ce5c5869b27e6b4825f8a0cc315ff9cad0d64f0b7738",
+    "target/continuation-0181/full-ci.log": "b99058296ccfb3f26a07ba16437e19f7bd45d1d7191ad8db1893b7f2060f5194",
+    "target/continuation-0181/public-consumer/Cargo.toml": "6d2845ff0d73a17c9d84d3df3e0492a72f6e4a0abd7b9e7a057137870cbbfc7b",
+    "target/continuation-0181/public-consumer/Cargo.lock": "9b216c3c2120fc00a5a631d2396cbac59c6469137b38cf9d111bfc68651e2d89",
+    "target/continuation-0181/public-consumer/src/main.rs": "d52981ce81cc5774390f42ec7b6d7767c5306bd764b4b7849b17d242de0e837a",
+    "target/continuation-0181/public-consumer/metadata.json": "6fd847c9d6a272ee86bb840274bffaf51e7ed992aa935cf191fcf984e575f4e2",
+    "target/continuation-0181/public-consumer/check.log": "326024595d2df5556baae1f5f75e84ecb9863cdf0cf464969b9928b3bacde4fd",
+    "target/continuation-0181/public-consumer/check-qualified.log": "72a555ba4c54a7c81867937b59faf33f9874c90db1a061f882fa24c675cc2420",
+    "target/continuation-0181/released-run-final.json": "f3c002a7b6258f60b71f8827114867af41581279f7f3b05b38f001326430f6c0",
+    "target/continuation-0181/technical-final.json": "7db21eab67a254c41a235620433e8541fbc534f0067fc648af8f1578fac11dd0",
+    "target/continuation-0181/final-doc-links.log": "37b3ac2898849623af0d5674b36ebe761237ed0cfbf7cfa1e8ec79e59ec6a0cf",
+    "target/continuation-0181/issues-before-update.json": "32bb898a9e305e6951d34065b568475bea442da93f5d5092868c45e1689e16b3",
+    "target/continuation-0181/issues-after.json": "fc5f6d3a1e68dc3cf16e06adbd9b7d4b6ef05eb98c1535f58a391af679ae5605"
+  },
+  "released_ci": {
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/38126623108",
+    "source": "ff7ecbb287dde1e078e55548a9d2814472476d42",
+    "scope": "Released 0.18.0 passes Linux; both macOS jobs queued. Uncommitted 0.18.1 has no hosted result."
+  }
+}

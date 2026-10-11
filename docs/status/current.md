@@ -25,7 +25,34 @@
 
 # Current handoff — 2026-10-11
 
-## Current 0.18.0 Metrics hard cut
+## Current 0.18.1 acquisition orchestration
+
+Released HEAD is 0.18.0 at `ff7ecbb287dde1e078e55548a9d2814472476d42`.
+The exact-release CI passes Linux; both macOS jobs remain queued at final review.
+Keep matching native acceptance distinct from earlier cancelled runs.
+
+Select additive 0.18.1 for `workflow::fence_acquisition::acquire_fence`. It joins
+retained stage/ancestor, requirement and obligation checks to canonical original
+payload admission, complete-plan mutation reservation, mandatory fresh application
+admission and one provider await under selected journal exclusion. Restore keeps
+both original layouts/plans and source references. Success and all post-reservation
+failures stay pending; post-reply errors retain the acknowledgement. Cancellation
+cannot grant redispatch. No record, allowance, receipt, Active fence or release is
+inferred. Actual whole-unit application semantics/reconciliation and outside-snapshot
+restore custody remain integration-owned under #25/#29.
+
+Eight focused native cases, strict Clippy and the configured actual Agent simulator
+journey pass. The latter uses one opaque fixture counter update, including applied
+update after failed reply retention; it is not an Active-fence qualification.
+The independent Rust 1.88 public consumer and all 16 `make ci` delivery targets
+pass on unchanged technical inputs, including every registered native/simulator
+case and exact paired-package builds. Detailed evidence remains under
+`target/continuation-0181`; see [the compact review](../reports/audits/2026/10/11/continuation-0181/01/report.md). Preserve the released Host 0.13, Metrics 0.6.1,
+Testkit 0.33.3 and Shared Tooling 0.3.11 graph. Package versions remain 0.18.0.
+Work remains uncommitted; no release, publication, production IC, sibling edit or
+recovery cleanup is performed.
+
+## Prior 0.18.0 Metrics hard cut
 
 Extend the existing undated 0.18.0 batch with published Metrics 0.6.1. The public
 `IcSnapshotLocalMetrics::prepared_chunk_bytes()` returns the shared re-exported
