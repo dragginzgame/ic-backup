@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.19.1]
+
+- Add explicit guarded fence-observation settlement with independent application
+  qualification. Recheck original plans and complete journals before recording
+  an exact receipt; cancellation, rejection and settled uncertainty preserve
+  spending, obligations and source references
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.19.0] - 2026-10-11
 
 - **Breaking:** Select Host Artifact/FS 0.14. Consumers sharing the public

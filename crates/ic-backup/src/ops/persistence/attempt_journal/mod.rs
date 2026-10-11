@@ -183,6 +183,35 @@ impl<'a> AttemptJournalGuard<'a> {
         )
     }
 
+    /// Record an independently qualified observation after complete original-plan admission.
+    ///
+    /// Hold no other attempt guards. Original journals are read with sequential locks;
+    /// missing evidence never means unused allowance. This reuses the existing receipt
+    /// transition and durable writer, without another reservation or spending owner.
+    /// Authentication, settled outcome and retained evidence remain integration-owned.
+    /// # Errors
+    /// Rejects missing/changed/held originals, invalid causality or receipt, and failed IO.
+    pub fn record_planned_observation(
+        &mut self,
+        expected_plan: &ArtifactChecksumRecord,
+        receipt: ObservationReceiptRequest,
+    ) -> Result<(), ExecutionProgressPersistenceError> {
+        self.admit_planned_progress(expected_plan)?;
+        Ok(self.record_observation(receipt)?)
+    }
+
+    pub(crate) fn admit_planned_progress(
+        &self,
+        expected_plan: &ArtifactChecksumRecord,
+    ) -> Result<(), ExecutionProgressPersistenceError> {
+        super::execution_progress::read_with_current(
+            self.layout,
+            expected_plan,
+            Some(self.record()?),
+        )?;
+        Ok(())
+    }
+
     fn reserve_with<T>(
         &mut self,
         transition: impl FnOnce(&mut AttemptJournalRecord) -> Result<T, AttemptJournalRecordError>,

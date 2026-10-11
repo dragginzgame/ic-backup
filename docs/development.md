@@ -1038,3 +1038,12 @@ sorting, actual Rust formatting and hook/index custody remain consumer-owned.
 The helper's rejection fixtures run in normal tooling checks and explicitly
 under macOS system Bash 3.2. Native qualification belongs to the configured
 consumer jobs, independently from a Linux pass or upstream source adoption.
+
+## Explicit fence-observation receipt recording
+
+For a retained result from `observe_fence_acquisition`, supply its original challenge
+and observation to `settle_fence_acquisition_observation`. The required callback
+qualifies actual application attribution/authentication and retained evidence before
+returning the exact `ObservationReceiptRequest`. The selected journal stays locked
+through that callback; hold no attempt guards on entry. See the
+[settlement contract](extraction-boundary.md#explicit-original-fence-observation-settlement).

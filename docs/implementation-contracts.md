@@ -622,6 +622,18 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   token/raw-ID authentication, fresh read/application admission and stable noncooperating
   custody remain integration-owned.
 
+- Explicit retained fence-observation settlement reopens exact original stage,
+  acquisition bytes, requirement/obligation and pending journal under both layout
+  lifetimes. Admit the complete original plan/journals before qualification and
+  publication; hold selected journal exclusion across the mandatory async callback.
+  Require exact observation attempt, request, matched outcome and retained evidence.
+  Delegate one receipt to the existing owner without reservation, new schema or
+  provider dispatch. Uncertain closes the observation but keeps its mutation pending.
+  Cancellation/rejection retain spending; write or closing-admission errors may
+  leave a retained receipt requiring original-accounting replay. Stable byte custody,
+  actual authentication/attribution and whole-unit safety remain integration-owned.
+  No Active custody, checkpoint or fence/reference release is granted.
+
 ## Product contracts
 
 - Metadata-derived download planning counts all region/chunk requests with checked

@@ -390,6 +390,14 @@ late replies are distinct. Pure views create no receipts, redispatch or release.
 Actual authenticated providers, acquisition and controlled release remain pending.
 See the [typed contract](contracts/fence-reconciliation-port.json).
 
+`workflow::fence_reconciliation::settle_fence_acquisition_observation` now joins
+retained originals and complete journal admission to mandatory independent async
+receipt qualification. Supply the original challenge and retained observation;
+match exact attempt/request/outcome/evidence before the existing durable transition.
+The helper calls no provider or new reservation. Settled uncertainty retains the
+pending mutation; original obligations/references remain. Local settlement grants
+no current Active custody, terminal proof or release.
+
 Application acquisition now has a bounded exact host update envelope. Its canonical
 receiver, mode, exact method and opaque arguments are hashed before the plan, avoiding
 a cycle through requirement/obligation digests. The original acquisition operation

@@ -1,0 +1,108 @@
+{
+  "result": "local qualification passed; required native acceptance pending",
+  "base": "b0670330feaadc1d15006bb580d350c2c5a77dc4",
+  "shared_tooling": {
+    "version": "0.6.3",
+    "revision": "4fd979d13c32adb3cb2f51f213ebfc4f98339b3d"
+  },
+  "graph": {
+    "normal_host": "0.14.1",
+    "testkit": "0.33.8",
+    "dev_host": "0.13.5",
+    "metrics": "0.6.4",
+    "agent": "0.49.2",
+    "pocketic": "16.1.0"
+  },
+  "qualification": {
+    "focused": "pass; six new cases and previous observation cases",
+    "clippy": "pass",
+    "full_gate": {
+      "registered_targets": [
+        "shared-tooling-check",
+        "tools-check",
+        "dependency-pins-check",
+        "check-doc-links",
+        "deps",
+        "shell-check",
+        "tooling-check",
+        "release-check",
+        "hooks-check",
+        "fmt-check",
+        "check",
+        "clippy",
+        "test",
+        "doc",
+        "check-msrv",
+        "package"
+      ],
+      "passed_targets": [
+        "shared-tooling-check",
+        "tools-check",
+        "dependency-pins-check",
+        "check-doc-links",
+        "deps",
+        "shell-check",
+        "tooling-check",
+        "release-check",
+        "hooks-check",
+        "fmt-check",
+        "check",
+        "clippy",
+        "test",
+        "doc",
+        "check-msrv",
+        "package"
+      ],
+      "log_sha256": "2d7d362e39595235efff2f836c39bd1d3f8ae6a63197b84375ac45f8cb7a47dc"
+    },
+    "public_consumer": "Rust 1.88 pass; non-Send async callback; original normal graph; no simulator dev dependencies",
+    "technical_inputs_unchanged": true,
+    "lockfile_unchanged": true,
+    "index_unchanged": true,
+    "head_unchanged": true
+  },
+  "evidence": {
+    "target/continuation-0191/technical-before-ci.json": "3a4d47a16c1d5f695838524a480b8bf0e1dae1b8f6b64a21c90a4dab1d3b662e",
+    "target/continuation-0191/technical-after-ci.json": "3a4d47a16c1d5f695838524a480b8bf0e1dae1b8f6b64a21c90a4dab1d3b662e",
+    "target/continuation-0191/incoming.lock": "7aa7f9d56efde3d97659ea10d5b6d2b5981b67f051e988a9291e75b7c9adc370",
+    "target/continuation-0191/fence-tests-initial-failure.log": "b238fd642a7cae9c0e881d9d97a7ec50f873a4f1daa82cce96c9765f00a9d71d",
+    "target/continuation-0191/fence-tests.log": "87abe78fd43425aeb7219573cf2feae4700d5df7b327bf540c087c6ee9c66fc0",
+    "target/continuation-0191/clippy.log": "ffc0d5a1923ed54039056973576884a9e7f501bd2a2b911fda096bdd2f7716ec",
+    "target/continuation-0191/public-consumer.log": "3cc863739a41ad1ea195bf06f50448bd767df776cdddf217e41c641fab4b068c",
+    "target/continuation-0191/instruction-disposition.json": "ab8e136a8683c73c1af155de703cb52963a35aa4554ab8427f94fa50aa830c20"
+  },
+  "hosted_release": {
+    "conclusion": "",
+    "headSha": "b0670330feaadc1d15006bb580d350c2c5a77dc4",
+    "jobs": [
+      {
+        "name": "library (macos-15-intel)",
+        "status": "in_progress",
+        "conclusion": ""
+      },
+      {
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "library (macos-15)",
+        "status": "queued",
+        "conclusion": ""
+      }
+    ],
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/38149973591"
+  },
+  "limitations": [
+    "Actual application authentication, original attribution and whole-unit outside-snapshot custody remain integration-owned.",
+    "No installed full runner, fresh Active custody, terminal proof or fence/source-reference release.",
+    "Uncommitted candidate has no hosted result; exact released native gates remain incomplete."
+  ],
+  "delivery": {
+    "changelog": "0.19.1",
+    "package_versions": "0.19.0",
+    "committed": false,
+    "issue_39": "closed against delivered documentation"
+  }
+}

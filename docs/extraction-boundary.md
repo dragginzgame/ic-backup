@@ -3043,3 +3043,32 @@ attempt, ingress ID and reply bytes, without settlement or Active custody.
 Actual reconciliation read methods, whole-unit permissions/purpose/revisions and
 outside-snapshot restore safety remain application-owned. Frozen v1 records and
 original attempt/argument/reply bounds are unchanged; no release API follows.
+
+### Explicit original fence-observation settlement
+
+`workflow::fence_reconciliation::settle_fence_acquisition_observation` admits the
+exact retained stage/ancestors, requirement/obligation and acquisition bytes before
+reconstructing the already pending observation from its original challenge. Supply
+the retained returned observation, including an authenticated late reply; this step
+calls no provider and reserves nothing. Complete original plan/journal coverage is
+checked before qualification and again before durable recording, using sequential
+locks while the selected journal stays excluded. Missing evidence never means unused
+allowance. Both source and restore layout lifetimes remain held.
+
+The mandatory async callback independently qualifies authenticated completion,
+exclusive acquisition attribution or nonapplication/settled uncertainty, actual
+whole-unit/outside-snapshot custody and durably retained request/result evidence.
+Its `ObservationReceiptRequest` must exactly match the passive observation’s attempt,
+request, outcome and evidence. `AttemptJournalGuard::record_planned_observation`
+delegates publication to the existing receipt owner after complete-plan admission.
+No record, digest or accounting owner is added.
+
+Applied/NotApplied close the mutation; Uncertain closes only its observation. No
+allowance is refunded. Reentry with the same settled observation rejects before
+qualification. Cancellation or pre-write rejection retains both pending attempts.
+Publication or closing-admission failures may leave a retained receipt; reopen
+original accounting to reconcile rather than repeating dispatch or assuming no
+settlement. The borrowed observation remains available on every error. Stable
+noncooperating byte custody remains integration-owned. All obligations and source
+references remain; no current Active custody, checkpoint, terminal proof, capture/
+load/start permission, fence/reference release or prune follows.

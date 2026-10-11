@@ -19,6 +19,8 @@ use crate::{
 };
 use std::{convert::Infallible, fs, path::PathBuf};
 
+mod settlement;
+
 fn challenge() -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_bytes(b"fresh native observation challenge")
 }

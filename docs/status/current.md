@@ -25,6 +25,26 @@
 
 # Current handoff — 2026-10-11
 
+## Current 0.19.1 explicit fence-observation settlement
+
+Released HEAD is 0.19.0 at `b0670330feaadc1d15006bb580d350c2c5a77dc4`.
+Issue #39’s delivered instruction cleanup retains all detailed safeguards through
+mandatory conditional reading and shared scope/contribution/tracking/changelog
+owners. Add `settle_fence_acquisition_observation` under #29: exact retained
+originals, complete journal admission and selected exclusion across independent
+async qualification, then exact receipt recording through the existing owner.
+Success calls no provider, creates no reservation and releases no obligation or
+reference. Uncertain retains its pending mutation. Write/closing errors can leave
+a receipt; original-accounting replay owns recovery.
+
+Focused cases, every registered full `make ci` target and an independent Rust 1.88
+non-Send public consumer pass on unchanged inputs. Issue #39 is closed. Preserve
+stable incoming Host 0.14.1, Testkit 0.33.8 and Metrics 0.6.4. Host/Testkit patch
+Rust sources match predecessors. Shared Tooling stays committed 0.6.3. Package versions stay 0.19.0; compatible notes are
+0.19.1 and work remains uncommitted. Exact released-source CI passes Linux; Intel
+macOS is running and Apple Silicon queued. No hosted acceptance exists for this candidate. See
+[the review](../reports/audits/2026/10/11/continuation-0191/01/report.md).
+
 ## Current 0.19.0 Shared Tooling 0.6.3 and incoming Host qualification
 
 Released HEAD is 0.18.4 at `55f3a80354b3e1afe6bc81634e02363fde835ea0`.
