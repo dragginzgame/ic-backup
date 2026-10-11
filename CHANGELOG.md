@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.18.1]
+## [0.18.1] - 2026-10-11
 
 - Add an async application-fence acquisition step that checks retained stage,
   requirement and obligation evidence, durably reserves through the original
