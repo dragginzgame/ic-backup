@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.18.3]
+
+- Adopt Shared Tooling 0.6.0. Common and selected Cargo tools now reuse shared
+  bundles with exact build identities; application flags and wrappers stay local.
+  Contributors must rerun `make install-tools` and `make tools-check`. Preserve
+  previous selections and failed builds
+  ([#36](https://github.com/dragginzgame/ic-backup/issues/36)).
+- Use canonical evidence selection for shared Cargo bundles and safe local
+  records when store admission fails, preserving uploadable diagnostics and
+  explicit incomplete-collection failures
+  ([shared #121](https://github.com/dragginzgame/shared-tooling/issues/121)).
+
 ## [0.18.2] - 2026-10-11
 
 - Adopt Shared Tooling 0.5.0. Host and IC tools share verified bundles across

@@ -25,7 +25,35 @@
 
 # Current handoff — 2026-10-11
 
-## Current 0.18.2 Shared Tooling 0.5 adoption
+## Current 0.18.3 Shared Tooling 0.6 adoption
+
+Released HEAD is 0.18.2 at `e2e19b168630cdc808a7477c4a50b18e9b6222d4`.
+Canonically adopt committed Shared Tooling 0.6.0
+`75180980a0c4e4252d8a915aaecfaefd92bf9a4e`, adding the required Cargo-build
+companion (99 selected paths). Common and selected Cargo tools share verified
+generations with exact build identities; application flags and wrappers stay local.
+Testkit keeps server storage/lifecycle ownership. Explicit setup and offline
+admission replace old tool selections while preserving their bytes and evidence.
+CI checks actual offline common/selected Cargo reuse and delegates retained Rust
+records/shared bundle selection to the canonical owner, including safe selections
+on rejected store configuration. Original collector failures remain explicit.
+
+The user paused dependency updates after the external Metrics 0.6.3/Testkit 0.33.6
+refresh. Both patches' Rust sources match their predecessors. Host 0.13.2,
+PocketIC 16.1.0 and Agent 0.49.2 stay selected. All 16 delivery targets pass on
+frozen inputs, including actual simulator tests, Rust 1.88 consumers and paired
+packages. Actual native Linux offline host/IC/common/selected Cargo reuse and
+12 full/compact collector cases pass. Final CI assertions reject missing tools.
+The upstream common installer still reports success on a held store lock; native
+and isolated reproduction are recorded on
+[#120](https://github.com/dragginzgame/shared-tooling/issues/120#issuecomment-6108794633).
+Do not treat setup's status alone as admission; preserve explicit offline checks.
+Matching candidate macOS acceptance remains pending. Detailed evidence remains
+under `target/shared-060`; see the [review](../reports/audits/2026/10/11/shared-060/01/report.md).
+The library contract is unchanged; select compatible 0.18.3 notes and leave package
+versions at 0.18.2. No Git/release, sibling edit or recovery cleanup is performed.
+
+## Prior 0.18.2 Shared Tooling 0.5 adoption
 
 Released HEAD remains 0.18.1 at `7e9eaf2da8a6e89ba790210d895effc1a9b0898d`.
 Adopt committed Shared Tooling 0.5.0

@@ -49,7 +49,27 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 98-file snapshot selects committed Shared Tooling 0.5.0 at
+The current 99-file snapshot selects committed Shared Tooling 0.6.0 at
+`75180980a0c4e4252d8a915aaecfaefd92bf9a4e`, verified against remote main.
+Clean canonical preview/export adds the required `cargo-tool-build.sh` companion;
+16 existing selected files change from 0.5.0. Cargo tools now reuse shared
+generations under exact compiler/native/package/packaged-lock identities and a
+standard build environment. Application flags and wrappers stay local. Existing
+common and selected command paths remain; explicit setup and offline admission
+are required. Testkit still owns server selection, local storage and lifecycle.
+
+CI checks actual common/selected Cargo reuse offline with different application
+flags. Canonical evidence selection owns local Cargo records and referenced shared
+generations, including admitted local selections on rejected store configuration.
+The local collector preserves failure status after archiving those selections;
+the shared action now uploads partial evidence before its completeness refusal.
+Preserve original generations and failed attempts. Library contracts remain
+unchanged, so pending notes select compatible 0.18.3; package versions stay 0.18.2.
+See [the current review](reports/audits/2026/10/11/shared-060/01/report.md).
+
+### Prior Shared Tooling 0.5.0 review
+
+The prior 98-file snapshot selects committed Shared Tooling 0.5.0 at
 `a306180ce534227fcb98b882fba9a526d5d747e0`, verified against remote main.
 Clean canonical preview/export excludes the sibling's uncommitted 0.5.1 work.
 It adds the explicit `tool-store.sh` and sourced `test-tool-store.sh` companions;
