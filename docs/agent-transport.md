@@ -3,7 +3,7 @@
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
 transport was first released in 0.8.0. Consumers sharing the core
-`PersistenceError::Publication` must align with its selected Host 0.12 Rust error
+`PersistenceError::Publication` must align with its selected Host 0.13 Rust error
 identity. The ICP transport/probe is retired; historical evidence and original
 journals remain retained. Testkit owns explicit simulator selection/admission
 through the [current setup contract](development.md); shared IC executables
@@ -93,8 +93,16 @@ and signed preparation; durably retain both original attempt identities, envelop
 request ID under exclusive never-dispatched custody before one status/list/readback
 update. Retention must reject prior dispatch. Cancellation and lost replies retain
 both pending attempts; certificate-verified projections do not settle them.
-Fence-provider async integration and full application runners remain pending. No
-default application safety/retention callback is supplied.
+Configure `AgentFenceAcquisitionProvider` with mandatory ingress and reply retainers.
+Await `acquire_fence` with the current guarded original journal. Retain signed bytes
+and request ID before one original opaque application update, and retain its exact
+bounded raw reply before returning passive acknowledgement. Failed reply retention
+is Indeterminate because dispatch may already have applied. Application codecs,
+permissions, whole-unit purpose/revisions, outside-snapshot restore custody and
+exclusive attribution remain integration-owned. Await `observe_fence_acquisition`
+with the original guarded record for independently reserved application reconciliation;
+no generic application read method or reconciliation provider is supplied. Full
+application runners remain pending; no default safety/retention callback exists.
 
 ## Results and interruption
 

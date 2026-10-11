@@ -2753,7 +2753,7 @@ transport. Passive replies still require independent qualification. Cancellation
 releases the selected lock, retains current pending/Applied spending and denies
 callback/provider reentry; durable reply retention must precede cancellable
 qualification work. The core adds no runtime/Send requirement. The
-recovery/fence provider families remain synchronous; full async product/application
+recovery/fence providers also use async current-record contracts; full product/application
 coordination is pending.
 
 ### Original execution settlement checkpoints
@@ -2982,3 +2982,16 @@ spending, obligations and references. The ICP-specific executable probe is remov
 retained historical evidence and independent descriptor custody contracts remain.
 [Transport scope and qualification](agent-transport.md) own current bounds and
 host limits. Core model/policy contracts still install no provider or generic runner.
+
+### Async application-fence boundary
+
+Application acquisition and separately reserved reconciliation now return futures
+and accept the current original guarded journal. Caller-held exclusion spans awaits;
+failed/cancelled observations preserve both pending attempts and restore references.
+`AgentFenceAcquisitionProvider` reuses exact existing payload/preparation/one-submit
+owners with mandatory durable ingress and bounded raw-reply retainers. A failure
+after dispatch remains Indeterminate. Passive evidence hashes bind original authority,
+attempt, ingress ID and reply bytes, without settlement or Active custody.
+Actual reconciliation read methods, whole-unit permissions/purpose/revisions and
+outside-snapshot restore safety remain application-owned. Frozen v1 records and
+original attempt/argument/reply bounds are unchanged; no release API follows.

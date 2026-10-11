@@ -1,0 +1,180 @@
+{
+  "draft": "0.18.0",
+  "package_and_receipt": "0.17.0",
+  "released_base": "501c438b3d68b88b6942258bd1ec8682ce9e1bb6",
+  "shared": {
+    "version": "0.3.11",
+    "revision": "db143ae9ae140eb66826c413360723d23c078f66",
+    "snapshot_sha256": "2657cc155feecb8398d4f24470a8dbfb4adbb5035bf4bab08c354cb8e3990cc5"
+  },
+  "overlay_sha256": "ea9a4f001ea04a6aca68e5ed3d2768cc0a526250c023014c2c86779d2eb7adb6",
+  "method": "audits/flow-convergence-and-duplication.md",
+  "host": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "compiler": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "selected": {
+    "direct_host": "0.13.0",
+    "testkit": "0.33.2",
+    "test_only_host": "0.12.10",
+    "metrics": "0.5.6",
+    "agent": "0.49.2",
+    "pocket_ic": "16.1.0"
+  },
+  "locked_graph": {
+    "path": "target/continuation-0180/workspace-metadata.json",
+    "sha256": "30ad9d766ccb4c44689c32e0fd06fafead9a0c9220644d5fbecb5a8d82252ff3"
+  },
+  "published_source_and_verified_archives": {
+    "path": "target/continuation-0180/published-source-review.json",
+    "sha256": "1e538919955d1fc5c49f7b0e09e17964879c93d01df15c791737afce136c54f2"
+  },
+  "full_delivery": {
+    "command": "make ci",
+    "status": "passed",
+    "passed_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ],
+    "inputs_unchanged": true,
+    "shared_revision_at_execution": "67285b28a98b7c4211ad32de726709d4e87edea4",
+    "evidence": {
+      "path": "target/continuation-0180/full-ci-shared-038.log",
+      "sha256": "eebe481caf989c131dfd52f9fbf780d24778c79c75daf497eec51c7d131986b7"
+    }
+  },
+  "subsequent_tooling": {
+    "command": "bash scripts/ci/run-validation-targets.sh --fail-fast shared-tooling-check tools-check check-doc-links shell-check tooling-check release-check hooks-check fmt-check",
+    "status": "passed",
+    "passed_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "check-doc-links",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check"
+    ],
+    "inputs_unchanged": true,
+    "changed_technical_paths": [
+      ".shared-tooling.snapshot",
+      "scripts/ci/run-validation-targets.sh",
+      "scripts/ci/test-host-tools.sh",
+      "scripts/ci/test-rust-tools.sh",
+      "scripts/ci/test-validation-target-runner.sh",
+      "scripts/dev/install-rust-tools.sh"
+    ],
+    "unchanged_product_checks_reused": true,
+    "evidence": {
+      "path": "target/continuation-0180/shared-0311-checks.log",
+      "sha256": "43f74bf3d08cfac583e889e250074f9a339f967b66a9d786fdb6b8770fe13c53"
+    }
+  },
+  "final_product_followup": {
+    "command": "bash scripts/ci/run-validation-targets.sh --fail-fast check-doc-links fmt-check check clippy test doc check-msrv package",
+    "status": "passed",
+    "passed_targets": [
+      "check-doc-links",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ],
+    "inputs_unchanged": true,
+    "changed_technical_paths": [
+      "crates/ic-backup-agent/tests/pocketic_transport.rs"
+    ],
+    "evidence": {
+      "path": "target/continuation-0180/final-affected.log",
+      "sha256": "763466903fb718178219765f7f77310082aba2bf0ab5ad04ebe0eccf01da683d"
+    }
+  },
+  "technical_inputs": {
+    "path": "target/continuation-0180/technical-after-ci.json",
+    "sha256": "ccbcd172fb22e408363d220bc4b3e5300f79327a6a8661c4792f3c0adb7387c3"
+  },
+  "full_gate_inputs": {
+    "path": "target/continuation-0180/technical-after-ci-038.json",
+    "sha256": "025dfd42541675cf6eb88ac8c1339f38edee0c43b0504d6e136dfc9de99a6534"
+  },
+  "lock_sha256": "73fe4bdc4b538524a05c87c001ce17fc650b4f13bdc466860c11434850d624a9",
+  "manifest_sha256": "47d5f6f7bb8665ccc091e1e76b4dfe119aea76ec6debbfab57d22a66e460f0fa",
+  "registered_tests": {
+    "path": "target/continuation-0180/registered-test-evidence.json",
+    "sha256": "f0b588ef8aed1ca1b51bd143f64b4c3eccceff7ad64cce058b3492faf41304b3"
+  },
+  "public_consumer": {
+    "compiler": "Rust 1.88.0",
+    "status": "passed",
+    "normal_graph_subset": true,
+    "simulator_dependencies": false,
+    "metrics_ic_features": false,
+    "apis": [
+      "FenceAcquisitionProvider::acquire_fence",
+      "FenceReconciliationProvider::observe_fence_acquisition",
+      "AgentFenceAcquisitionProvider",
+      "PersistenceError::Publication Host0.13 identity"
+    ],
+    "source": {
+      "path": "target/continuation-0180/public-consumer/src/lib.rs",
+      "sha256": "c12635fc571c8fa0acd28ae686a045e52509685b07464b21d10ba75e3e8b1482"
+    },
+    "metadata": {
+      "path": "target/continuation-0180/public-consumer/metadata.json",
+      "sha256": "6ed02a96305d5e6655017b2704784721129747095c5bbb5b55ebbed3afcb3288"
+    }
+  },
+  "prepared_tools": {
+    "testkit_selection": {
+      "path": ".tools/rust/ic-testkit-0.33.2-bin-ic-testkit-server-release/installed/selection.json",
+      "sha256": "0232ad6a7e373a6f60c690b12d2a54a654b264a46b24b0d65c1e45a46b3f450a"
+    },
+    "server": {
+      "path": ".tools/testkit-server/16.1.0-x86_64-linux/pocket-ic",
+      "sha256": "b44e1eccd66e02328146b3e209e3403e3a3428a25d25555aca2f67500e5ae9db"
+    },
+    "binaryen": {
+      "path": ".tools/ic/bin/wasm-opt",
+      "sha256": "8f25e9fd5db0fc5f210003aaa432922feb2e52d309e430def2f929e34da9466b"
+    }
+  },
+  "logs": {
+    "path": "target/continuation-0180/log-manifest.json",
+    "sha256": "4038368f7a28b0845c731eea25913c375b5925726bc7dc8b3ffc0aede5e5cb58"
+  },
+  "released_native_jobs": {
+    "path": "target/continuation-0180/released-jobs.json",
+    "sha256": "b036b26f469de40cef7e2112f5fd9c1e7ec1785d9dd587a9301cb767a97d605e"
+  },
+  "limitations": [
+    "candidate uncommitted; no hosted qualification",
+    "native jobs retained separately; local Linux does not qualify macOS",
+    "opaque fixture update does not prove application fence semantics",
+    "actual application reconciliation/read attribution, full runner and terminal custody remain incomplete"
+  ],
+  "effects": {
+    "root_git_write": false,
+    "release": false,
+    "registry_upload": false,
+    "workflow_action": false,
+    "production_ic": false,
+    "sibling_edit": false,
+    "recovery_cleanup": false
+  }
+}

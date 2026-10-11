@@ -25,7 +25,45 @@
 
 # Current handoff — 2026-10-11
 
-## Current 0.17.0 recovery and cleanup extension
+## Current 0.18.0 Host and application-fence continuation
+
+Released HEAD is 0.17.0 at `501c438b3d68b88b6942258bd1ec8682ce9e1bb6`.
+Preserve incoming direct Host Artifact/FS 0.13 and Testkit 0.33.2 selections.
+The exposed Host publication-error identity changes, requiring consumers sharing
+that type to align Host 0.13. Testkit keeps its own dev-only Host 0.12.10 graph;
+no sibling path patch or forced incompatible transitive selection follows.
+The published Artifact Rust files are unchanged; FS retires an unused convenience
+lock wrapper, and Testkit Rust files match 0.33.1. Backup retains its descriptor
+custody, private durable publication, interruption recovery and original bounds.
+
+Select uncommitted 0.18.0 for that identity change and async application-fence
+acquisition/reconciliation ports. Supply the current guarded original journal
+and hold exclusion through awaits. The configured Agent acquisition provider
+requires durable ingress before one opaque update and durable raw reply before
+passive acknowledgement. Failed reply retention stays Indeterminate. HTTP
+refusal/lost/accepted/cancelled traces, native reconciliation cancellation and an
+actual isolated simulator update/reply-retention-failure trace pass. The latter
+changes fixture counter state, not an Active application fence. Fresh whole-unit
+permissions/purpose/revisions, actual reconciliation read method and restore's
+outside-snapshot custody remain application-owned under #25/#29.
+
+Strict Clippy, the Rust 1.88 public consumer and all 16 delivery gates pass on
+frozen Host/product inputs. Canonically adopt committed Shared Tooling 0.3.11
+`db143ae9ae140eb66826c413360723d23c078f66` with the same 96 paths and seven
+selected file changes. All eight affected integrity/tools/docs/shell/tooling/release/
+hooks/format checks pass. The final test-only oracle distinguishes successful and
+failed reply-retention writes; all eight affected docs/Rust/test/MSRV/package checks
+pass again under the new helpers. Final membership includes 510 core unit cases,
+29 core simulator journeys, 16 Agent HTTP cases, seven Agent simulator journeys
+and one Agent golden case. Source/graph inputs remain unchanged during each gate.
+Package/receipt remain 0.17.0. Keep Metrics 0.5.6 while #38 coordinates unpublished
+Metrics 0.6. Released 0.17.0 CI passes Linux; Apple Silicon is in progress and Intel
+macOS is queued at final inspection. Earlier 0.16.0 outcomes are distinct evidence.
+Keep native issues open; the current uncommitted candidate has no hosted result.
+See [the compact review](../reports/audits/2026/10/11/continuation-0180/01/report.md). No Git write, release, publication,
+workflow action, production IC, sibling edit or recovery cleanup is performed.
+
+## Prior 0.17.0 recovery and cleanup extension
 
 The draft remains uncommitted on released 0.16.0. All three IC recovery-observation
 ports now return futures and accept the currently guarded original journal. The

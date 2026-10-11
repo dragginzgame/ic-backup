@@ -1,5 +1,6 @@
 //! Native exact update acknowledgement/failure recovery; no application or IC effects.
 
+mod ready;
 mod support;
 
 use ic_backup::{
@@ -100,22 +101,29 @@ impl FenceAcquisitionProvider for NativeProvider {
     fn acquire_fence(
         &mut self,
         request: &FenceAcquisitionRequest<'_>,
-    ) -> Result<FenceAcquisitionAcknowledgement, FenceAcquisitionProviderError> {
-        self.calls.push((
-            request.payload().target().into(),
-            request.mutation_attempt(),
-            request.payload().method().into(),
-            request.payload().arguments().into(),
-        ));
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
-        FenceAcquisitionAcknowledgement::new(
-            request.authority().digest(),
-            request.mutation_attempt(),
-            hash("34"),
-        )
-        .map_err(|_| FenceAcquisitionProviderError::Indeterminate)
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl Future<Output = Result<FenceAcquisitionAcknowledgement, FenceAcquisitionProviderError>>
+    {
+        std::future::ready((|| {
+            request
+                .validate_journal(journal)
+                .map_err(|_| FenceAcquisitionProviderError::Unsupported)?;
+            self.calls.push((
+                request.payload().target().into(),
+                request.mutation_attempt(),
+                request.payload().method().into(),
+                request.payload().arguments().into(),
+            ));
+            if let Some(error) = self.failure {
+                return Err(error);
+            }
+            FenceAcquisitionAcknowledgement::new(
+                request.authority().digest(),
+                request.mutation_attempt(),
+                hash("34"),
+            )
+            .map_err(|_| FenceAcquisitionProviderError::Indeterminate)
+        })())
     }
 }
 
@@ -181,7 +189,7 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
             failure,
             calls: vec![],
         };
-        let result = provider.acquire_fence(&request);
+        let result = ready::ready(provider.acquire_fence(&request, journal.record().unwrap()));
         if let Some(expected) = failure {
             assert_eq!(result.unwrap_err(), expected);
         } else {

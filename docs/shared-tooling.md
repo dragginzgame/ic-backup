@@ -49,7 +49,22 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 96-file snapshot selects committed Shared Tooling 0.3.8 at
+The current 96-file snapshot selects committed Shared Tooling 0.3.11 at
+`db143ae9ae140eb66826c413360723d23c078f66`, matching remote main. Canonical
+export from an isolated clean committed checkout preserves all existing paths and
+excludes the sibling's uncommitted 0.3.12 work. Seven selected files change: Cargo
+probes/install/check effects share the selected consumer's directory, host-tool
+fixtures normalize physical temporary roots and validation summaries classify
+errors consistently. The scoped derive-macro protection guidance applies only to
+actual dollar-prefixed derive definitions; Backup currently has none. New upstream
+release/frontend fixtures remain unselected; they are not consumer qualification.
+The current Host/application-fence batch reuses unchanged product qualification
+and reruns affected consumer tooling checks. See
+[the current review](reports/audits/2026/10/11/continuation-0180/01/report.md).
+
+### Prior Shared Tooling 0.3.8 review
+
+The prior 96-file snapshot selects committed Shared Tooling 0.3.8 at
 `67285b28a98b7c4211ad32de726709d4e87edea4`, verified against remote main and
 adopted through canonical clean export. New coordinated-archive guidance matches
 Backup's existing paired-package check: Cargo admits both archives, an isolated

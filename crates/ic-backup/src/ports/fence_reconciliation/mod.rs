@@ -1,5 +1,6 @@
 //! Read-only original fence-acquisition reconciliation; no acquire/release implementation.
 
+use crate::model::attempt_journal::AttemptJournalRecord;
 use crate::model::fence_reconciliation::{
     FenceReconciliationObservation, FenceReconciliationRequest,
 };
@@ -26,6 +27,9 @@ use thiserror::Error;
 /// reply remains pending and is not dispatched again; a retained late reply may be
 /// admitted under its exact original reservation. Terminal replay invokes no provider.
 /// Pure matching never automatically writes a receipt or replenishes spending.
+/// Await under the currently guarded original journal and recheck its reservation.
+/// Cancellation retains original pending spending, obligations and references;
+/// it grants no repeat dispatch. No runtime or `Send` bound is imposed.
 pub trait FenceReconciliationProvider {
     /// Observe the exact reserved original acquisition without acquiring or releasing any fence.
     /// # Errors
@@ -33,7 +37,8 @@ pub trait FenceReconciliationProvider {
     fn observe_fence_acquisition(
         &mut self,
         request: &FenceReconciliationRequest<'_, '_>,
-    ) -> Result<FenceReconciliationObservation, FenceReconciliationProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<FenceReconciliationObservation, FenceReconciliationProviderError>>;
 }
 /// Redacted qualified-provider failure; no variant resets spending or releases obligations.
 #[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]

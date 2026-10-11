@@ -264,17 +264,17 @@ status/read visibility must never be mistaken for write authority.
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
 | `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentMutationProvider requires durable signed retention, with no default or automatic settlement |
 | `IcSnapshotTransferReadProvider` | Implemented async exact original metadata/data payload and current guarded pending-update record, bounded passive response and existing decoder association; configured Agent adapter requires durable signed retention, with no automatic receipt or read reissue |
-| `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
+| `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; configured async Agent observation adapter with durable ingress; no automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented async source-bound metadata/data update and current guarded record, reusing exact attempts, passive acknowledgements and IC update failures; configured Agent adapter requires durable signed retention, with no automatic settlement or retry |
-| `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; no installed provider, allocation outcome, data reconciliation or reissue |
-| `IcSnapshotUploadDataObservationProvider` | Implemented exact original destination/extent/reserved readback observation with passive chunk comparison; no installed provider, write attribution, automatic receipt or reissue |
+| `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; configured async Agent observation adapter with durable ingress; no allocation outcome, data reconciliation or reissue |
+| `IcSnapshotUploadDataObservationProvider` | Implemented exact original destination/extent/reserved readback observation with passive chunk comparison; configured async Agent observation adapter with durable ingress; no write attribution, automatic receipt or reissue |
 | `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
 | `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
 | `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
 | `ConsistencyProvider` | Implemented ephemeral current stopped/drained target and existing exact application fence validation under original guarantee; no provider or acquisition/release effects |
 | `ConsistencyCoordinator` | Original fence obligation retention and exact acquisition-journal projections are implemented; actual acquisition, authenticated uncertain-effect reconciliation and controlled release remain intended integration responsibilities |
 | `FenceReconciliationProvider` | Implemented read-only original pending acquisition/reserved observation binding and pure actual unit/attribution checks; no installed provider, automatic receipts or acquisition/release effects |
-| `FenceAcquisitionProvider` | Implemented bounded original application update envelope and exact reserved-mutation/passive acknowledgement association contract; actual permissions, whole-unit semantics and exclusive dispatch custody remain integration-owned, with no installed provider |
+| `FenceAcquisitionProvider` | Implemented bounded original application update envelope and exact reserved-mutation/passive acknowledgement association contract; actual permissions, whole-unit semantics and exclusive dispatch custody remain integration-owned, with configured async Agent acquisition and mandatory ingress/reply retention; no automatic receipt |
 | `RestoreSafetyProvider` | Implemented immutable original source/safety requirement and fresh exact load/start evidence matching; actual source, fence, restored acceptance and external-obligation qualification remain integration-owned |
 | `ArtifactStore` | Local durable custody, streamed verification, references and retention locks |
 | `Clock` | Testable deadline/lease policy; time is not an authority identifier |
@@ -400,8 +400,13 @@ exclusive proof of no prior dispatch. The single-update contract forbids hidden
 reissues/observations; reconstructed pending requests supply no retry authority.
 Acknowledgements associate full original authority and exact mutation only, with
 no outcome, current Active proof or automatic receipt. Failures keep pending consumed
-spending and original obligations/source references. Actual application codecs,
-authenticated providers and controlled release remain unimplemented. See the
+spending and original obligations/source references. The acquisition port is async and receives the current guarded original journal.
+The configured Agent adapter requires exact durable ingress before one update and
+exact bounded raw-reply retention before passive acknowledgement. Acquisition
+semantics, current Active custody and exclusive attribution are application-owned.
+The reconciliation port also returns a future under original journal exclusion;
+actual application read methods and qualification remain unimplemented. Controlled
+release is not implemented. See the
 [typed contract](contracts/fence-acquisition-port.json).
 
 Snapshot load can restore old journals, timer state and application intent while
@@ -659,7 +664,7 @@ The core adds no runtime or `Send` bound. All three separately reserved IC recov
 observation ports also return futures and accept the currently guarded original
 journal. The configured Agent observation adapter durably retains signed ingress
 before one status/list/readback submission; both attempts stay pending on cancellation
-or passive replies. Fence-provider async integration and full application coordination
+or passive replies. Application-fence semantics and full application coordination
 remain incomplete.
 
 The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to

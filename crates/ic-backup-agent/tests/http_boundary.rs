@@ -1,4 +1,5 @@
 //! Real local HTTP operations with controlled responses; no simulated management effects.
+mod fence;
 mod http_capture;
 mod recovery;
 mod support;

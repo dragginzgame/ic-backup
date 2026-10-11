@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.18.0]
+
+- **Breaking:** Select Host Artifact/FS 0.13. Consumers sharing
+  `PersistenceError::Publication` must align with the new Host Rust type identity.
+  Testkit 0.33.2 retains its separate dev-only Host 0.12 graph; persisted records
+  and Backup's publication/custody contracts remain unchanged.
+- **Breaking:** Await application-fence acquisition and reconciliation providers
+  with the currently guarded original journal. Add `AgentFenceAcquisitionProvider`
+  with mandatory durable signed-ingress and raw-reply retention. Cancellation or
+  reply-retention failure preserves pending spending and obligations; replies
+  never establish Active fence custody or settle automatically
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt committed Shared Tooling 0.3.11: use the selected consumer directory for
+  Cargo tool operations, normalize host-tool temporary roots and keep validation
+  error classification consistent
+  ([shared #101](https://github.com/dragginzgame/shared-tooling/issues/101),
+  [shared #110](https://github.com/dragginzgame/shared-tooling/issues/110),
+  [shared #111](https://github.com/dragginzgame/shared-tooling/issues/111)).
+
 ## [0.17.0] - 2026-10-11
 
 - **Breaking:** Await snapshot upload providers and upload/allocation/data-upload

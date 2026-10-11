@@ -1,5 +1,6 @@
-//! Application-owned single-update fence acquisition port; no installed implementation.
+//! Application-owned single-update async fence acquisition port; no default implementation.
 
+use crate::model::attempt_journal::AttemptJournalRecord;
 use crate::model::fence_acquisition::{FenceAcquisitionAcknowledgement, FenceAcquisitionRequest};
 use thiserror::Error;
 
@@ -28,6 +29,9 @@ use thiserror::Error;
 /// references; never synthesize nonapplication or a refund. Lost replies require
 /// the reserved reconciliation port, not another invocation of this mutation.
 /// Terminal replay is local and invokes no provider. No automatic release exists.
+/// Await under the currently guarded original journal and recheck its reservation.
+/// Cancellation retains original pending spending, obligations and references;
+/// it grants no repeat dispatch. No runtime or `Send` bound is imposed.
 pub trait FenceAcquisitionProvider {
     /// Submit one originally reserved exact application acquisition update.
     /// # Errors
@@ -35,7 +39,8 @@ pub trait FenceAcquisitionProvider {
     fn acquire_fence(
         &mut self,
         request: &FenceAcquisitionRequest<'_>,
-    ) -> Result<FenceAcquisitionAcknowledgement, FenceAcquisitionProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<FenceAcquisitionAcknowledgement, FenceAcquisitionProviderError>>;
 }
 
 /// Redacted application update failure; no automatic receipt, refund or retry.

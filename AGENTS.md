@@ -69,7 +69,9 @@ into an issue tracker or release authority.
   or record change. Consumers sharing publication errors must align Host 0.12.
   Released 0.14.1 selects Testkit 0.32 and aligns its test-only Host graph with
   direct Host 0.12. Released 0.14.2 qualifies Host 0.12.4 and Testkit 0.32.2.
-  The pending batch selects Host 0.12.6 and Testkit 0.33. Host rejects NUL paths
+  Released 0.17.0 qualifies Host 0.12.10 and Testkit 0.33.1.
+  The pending 0.18.0 batch selects direct Host Artifact/FS 0.13, changing exposed
+  publication error identity. Testkit 0.33.2 retains separate dev-only Host 0.12.10. Host rejects NUL paths
   before publication effects; Testkit's scoped reset classification supplies no
   Backup recovery recipe, repeat-call authority or product record change.
   No compatibility adapter or record change follows. The direct process
@@ -588,7 +590,13 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   original journal under caller-held exclusion. The configured Agent observation
   adapter retains exact signed ingress before one independently reserved status/list/
   readback update. Cancellation retains both pending attempts; retainer-owned original
-  custody refuses prior dispatch. Fence providers remain synchronous and separate. No automatic receipt, retry,
+  custody refuses prior dispatch. Application-fence acquisition and reconciliation
+  also return futures with the current guarded original record. The configured
+  Agent acquisition adapter requires durable exact ingress and bounded raw reply
+  retention before passive acknowledgement; failed reply retention is Indeterminate.
+  Application reconciliation keeps its separately qualified read/attribution owner;
+  no generic observation method or Active-fence interpretation is installed.
+  No automatic receipt, retry,
   terminal/fence/reference release follows.
 
 - The provider-driven snapshot capture step accepts only the exact original

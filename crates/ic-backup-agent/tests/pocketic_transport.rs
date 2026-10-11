@@ -920,3 +920,109 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
         IcObservationProviderError::Unavailable
     );
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn configured_application_update_retains_empty_reply_without_claiming_active_fence() {
+    use ic_backup::{
+        model::fence_acquisition::{FenceAcquisitionPayload, FenceAcquisitionRequest},
+        ops::persistence::AttemptJournalGuard,
+        policy::fence_acquisition::validate_acknowledgement,
+        ports::fence_acquisition::{FenceAcquisitionProvider, FenceAcquisitionProviderError},
+    };
+    use ic_backup_agent::AgentFenceAcquisitionProvider;
+    let mut fixture = Fixture::new(support::identity()).await;
+    for refuse_reply in [false, true] {
+        let value = if refuse_reply { 1000_u64 } else { 999_u64 };
+        // This fixture update changes a counter, not an application fence. It qualifies
+        // opaque transport and custody only; no whole-unit acquisition is inferred.
+        let payload =
+            FenceAcquisitionPayload::new(&fixture.target, "write", &value.to_le_bytes()).unwrap();
+        let (plan, layout, root) = fixture.original(&payload.digest());
+        let sequence = fixture.sequence;
+        let obligation = support::retain_fence_originals(&layout, &plan, sequence);
+        let original_obligation = fs::read(root.join("fence-obligation.json")).unwrap();
+        let mut guard =
+            AttemptJournalGuard::create(&layout, plan.attempt_authority(sequence).unwrap())
+                .unwrap();
+        guard.reserve_planned_mutation(&plan.digest()).unwrap();
+        let original = fs::read(guard.path()).unwrap();
+        let request =
+            FenceAcquisitionRequest::new(&plan, &obligation, guard.record().unwrap(), &payload)
+                .unwrap();
+        let transport = fixture.transport(&plan);
+        let mut provider = AgentFenceAcquisitionProvider::new(
+            &transport,
+            |actual: &FenceAcquisitionRequest<'_>, prepared: &PreparedUpdate<'_>| {
+                assert_eq!(actual.authority().digest(), request.authority().digest());
+                assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                support::retain_signed(&root, prepared)
+                    .map_err(|_| FenceAcquisitionProviderError::Unavailable)
+            },
+            |actual: &FenceAcquisitionRequest<'_>, id: &ic_agent::RequestId, reply: &[u8]| {
+                assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                assert_eq!(
+                    fs::read_to_string(root.join("request-id.txt")).unwrap(),
+                    id.to_string()
+                );
+                assert_eq!(reply, &[] as &[u8]);
+                if refuse_reply {
+                    return Err(FenceAcquisitionProviderError::Unavailable);
+                }
+                retain_reply(&root, reply).map_err(|_| FenceAcquisitionProviderError::Unavailable)
+            },
+        );
+        let result = provider
+            .acquire_fence(&request, guard.record().unwrap())
+            .await;
+        if refuse_reply {
+            assert_eq!(
+                result.unwrap_err(),
+                FenceAcquisitionProviderError::Indeterminate
+            );
+            assert!(!root.join("reply.candid").exists());
+        } else {
+            validate_acknowledgement(&request, guard.record().unwrap(), &result.unwrap()).unwrap();
+            assert_eq!(
+                fs::read(root.join("reply.candid")).unwrap(),
+                Vec::<u8>::new()
+            );
+        }
+        assert_eq!(
+            provider
+                .acquire_fence(&request, guard.record().unwrap())
+                .await
+                .unwrap_err(),
+            FenceAcquisitionProviderError::Unavailable
+        );
+        assert_eq!(fs::read(guard.path()).unwrap(), original);
+        assert_eq!(
+            fs::read(root.join("fence-obligation.json")).unwrap(),
+            original_obligation
+        );
+        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+        // Independently controlled Testkit oracle confirms dispatch despite failed reply retention.
+        let state = fixture
+            .pic
+            .query_call(fixture.principal(), fixture.caller(), "read", vec![])
+            .await
+            .unwrap();
+        assert_eq!(&state[..8], &value.to_le_bytes());
+        fs::write(root.join("oracle-state.bin"), state).unwrap();
+    }
+}
+
+/// Create-only durable exact passive reply evidence, including valid empty application replies.
+fn retain_reply(root: &std::path::Path, reply: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(root.join("reply.candid"))?;
+    file.write_all(reply)?;
+    file.sync_all()?;
+    fs::File::open(root)?.sync_all()
+}

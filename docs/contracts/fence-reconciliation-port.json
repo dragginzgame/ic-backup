@@ -1,4 +1,5 @@
 {
+   "async_contract" : "Await the provider with the currently guarded original AttemptJournalRecord; recheck current reservations before dispatch. Retain selected exclusion across await. Cancellation preserves pending spending, original obligations and source references; no repeat-dispatch authority or runtime/Send bound follows.",
    "digest_goldens" : [
       {
          "authority" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",

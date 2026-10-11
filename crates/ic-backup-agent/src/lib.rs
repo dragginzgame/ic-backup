@@ -5,6 +5,8 @@
 //! actual network trust, fresh permissions, application safety and never-dispatched custody.
 //! A pending reservation or reconstructed request never grants permission to repeat a call.
 
+mod fence_acquisition;
+pub use fence_acquisition::AgentFenceAcquisitionProvider;
 mod observation;
 mod reply_evidence;
 pub use observation::AgentObservationProvider;

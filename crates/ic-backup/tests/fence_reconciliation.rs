@@ -1,5 +1,6 @@
 //! Public reserved acquisition reconciliation and late-reply recovery; no IC/fence backend.
 
+mod ready;
 mod support;
 
 use ic_backup::{
@@ -135,28 +136,35 @@ impl FenceReconciliationProvider for LocalEvidenceProvider {
     fn observe_fence_acquisition(
         &mut self,
         request: &FenceReconciliationRequest<'_, '_>,
-    ) -> Result<FenceReconciliationObservation, FenceReconciliationProviderError> {
-        self.requests
-            .push((request.digest(), request.observation_attempt()));
-        let observation =
-            FenceReconciliationObservation::new(FenceReconciliationObservationInput {
-                request: request.digest(),
-                mutation_attempt: request.intent().mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                context: self.original.plan.context().clone(),
-                inventory: self.original.plan.inventory().clone(),
-                selected_targets: self.original.plan.selected_targets().into(),
-                settlement: self.reply.clone(),
-                evidence: hash("ab"),
-                remote_observations: 0,
-            })
-            .unwrap();
-        if let Some(failure) = self.failure {
-            self.late = Some(observation);
-            Err(failure)
-        } else {
-            Ok(observation)
-        }
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl Future<Output = Result<FenceReconciliationObservation, FenceReconciliationProviderError>>
+    {
+        std::future::ready((|| {
+            request
+                .validate_journal(journal)
+                .map_err(|_| FenceReconciliationProviderError::Unsupported)?;
+            self.requests
+                .push((request.digest(), request.observation_attempt()));
+            let observation =
+                FenceReconciliationObservation::new(FenceReconciliationObservationInput {
+                    request: request.digest(),
+                    mutation_attempt: request.intent().mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    context: self.original.plan.context().clone(),
+                    inventory: self.original.plan.inventory().clone(),
+                    selected_targets: self.original.plan.selected_targets().into(),
+                    settlement: self.reply.clone(),
+                    evidence: hash("ab"),
+                    remote_observations: 0,
+                })
+                .unwrap();
+            if let Some(failure) = self.failure {
+                self.late = Some(observation);
+                Err(failure)
+            } else {
+                Ok(observation)
+            }
+        })())
     }
 }
 fn fixture_provider(failure: Option<FenceReconciliationProviderError>) -> LocalEvidenceProvider {
@@ -231,7 +239,8 @@ fn provider_failures_preserve_exact_pending_spending_and_accept_late_reply_witho
         .unwrap();
         let request = FenceReconciliationRequest::new(&intent, journal.record().unwrap()).unwrap();
         assert_eq!(
-            provider.observe_fence_acquisition(&request).unwrap_err(),
+            ready::ready(provider.observe_fence_acquisition(&request, journal.record().unwrap()))
+                .unwrap_err(),
             failure
         );
         assert_eq!(fs::read(journal.path()).unwrap(), before);
@@ -369,7 +378,9 @@ fn every_settled_native_claim_persists_exact_receipt_without_fence_or_source_rel
         )
         .unwrap();
         let request = FenceReconciliationRequest::new(&intent, journal.record().unwrap()).unwrap();
-        let observation = provider.observe_fence_acquisition(&request).unwrap();
+        let observation =
+            ready::ready(provider.observe_fence_acquisition(&request, journal.record().unwrap()))
+                .unwrap();
         persist_native_claim(&request, &mut journal, &observation);
         let expected = journal.record().unwrap().clone();
         let journal_bytes = fs::read(journal.path()).unwrap();
@@ -407,4 +418,76 @@ fn every_settled_native_claim_persists_exact_receipt_without_fence_or_source_rel
         drop(source_layout);
         fs::remove_dir_all(root).unwrap();
     }
+}
+
+#[test]
+fn cancelled_reconciliation_keeps_selected_guard_and_both_pending_originals() {
+    use std::{
+        cell::Cell,
+        future::Future,
+        pin::pin,
+        rc::Rc,
+        task::{Context, Poll, Waker},
+    };
+    struct InterruptedProvider {
+        entered: Rc<Cell<usize>>,
+    }
+    impl FenceReconciliationProvider for InterruptedProvider {
+        async fn observe_fence_acquisition(
+            &mut self,
+            request: &FenceReconciliationRequest<'_, '_>,
+            journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+        ) -> Result<FenceReconciliationObservation, FenceReconciliationProviderError> {
+            request
+                .validate_journal(journal)
+                .map_err(|_| FenceReconciliationProviderError::Unsupported)?;
+            self.entered.set(self.entered.get() + 1);
+            std::future::pending().await
+        }
+    }
+    let original = Originals::new();
+    let root = support::temp_root("interrupted-fence-reconciliation");
+    prepare(&root, &original);
+    let obligation = fs::read(root.join("restore/fence-obligation.json")).unwrap();
+    let source = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
+    let references = source.restore_references().unwrap();
+    let layout = BackupLayoutGuard::acquire(&root.join("restore")).unwrap();
+    let authority = original.plan.attempt_authority(0).unwrap();
+    let journal = AttemptJournalGuard::open(&layout, &authority).unwrap();
+    let before = fs::read(journal.path()).unwrap();
+    let intent = FenceReconciliationIntent::new(
+        &original.plan,
+        &original.obligation,
+        journal.record().unwrap(),
+        hash("34"),
+    )
+    .unwrap();
+    let request = FenceReconciliationRequest::new(&intent, journal.record().unwrap()).unwrap();
+    let entered = Rc::new(Cell::new(0));
+    let mut provider = InterruptedProvider {
+        entered: entered.clone(),
+    };
+    {
+        let mut future =
+            pin!(provider.observe_fence_acquisition(&request, journal.record().unwrap()));
+        assert!(matches!(
+            future
+                .as_mut()
+                .poll(&mut Context::from_waker(Waker::noop())),
+            Poll::Pending
+        ));
+        assert!(AttemptJournalGuard::open(&layout, &authority).is_err());
+    }
+    assert_eq!(entered.get(), 1);
+    assert_eq!(fs::read(journal.path()).unwrap(), before);
+    assert_eq!(
+        fs::read(root.join("restore/fence-obligation.json")).unwrap(),
+        obligation
+    );
+    assert_eq!(source.restore_references().unwrap(), references);
+    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+    assert_eq!(
+        journal.record().unwrap().view().pending_observation,
+        Some(2)
+    );
 }

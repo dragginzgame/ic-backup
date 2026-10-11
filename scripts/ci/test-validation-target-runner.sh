@@ -299,6 +299,74 @@ if rg -F "[ERR:fail-after-caught-panic] thread 'caught-test' panicked at" \
     exit 1
 fi
 
+# Every live diagnostic family must survive retained selection before a long
+# ordinary tail. Exercise actual rg and the grep fallback, with literal-prefix
+# metacharacters and neutral Rust test/context controls in the same log.
+cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
+cat > "$FIXTURE/diagnostics" <<'LOG'
+error: ordinary-error
+error[E0308]: compiler-error
+rustc-LLVM ERROR: llvm-error
+test result: FAILED. test-result
+test error::tests::actual ... FAILED
+fatal: early-fatal
+FAILED: command-failure
+Target failed: target-failure
+No such file or directory: missing-input
+❌ failed-check
+🚨 failed-check
+make[17]: *** nested-failure
+event[unit].*+?: product-failure
+LOG
+# Separate families beyond both neighboring context windows. Otherwise a
+# missing predicate can pass because another diagnostic selects its neighbors.
+# Keep the selected context below the runner's 160-line summary bound.
+awk 'NR > 1 { for (i = 0; i < 9; i++) print "ordinary-gap" } { print }' \
+    "$FIXTURE/diagnostics" > "$FIXTURE/diagnostic-input"
+cat > "$FIXTURE/neutral-context" <<'LOG'
+test error::tests::passing ... ok
+test error::tests::ignored ... ignored
+ordinary event[unit].*+?: not-a-prefix
+eventuZZ: not-a-literal-match
+LOG
+cat "$FIXTURE/neutral-context" >> "$FIXTURE/diagnostic-input"
+cat >> "$FIXTURE/Makefile" <<'MAKE'
+diagnostic-families:
+	@cat diagnostic-input
+	@i=0; while [ $$i -lt 200 ]; do echo ordinary-tail; i=$$((i + 1)); done
+	@exit 7
+MAKE
+mkdir "$FIXTURE/without-rg"
+for tool in bash dirname mktemp cp mv make sed awk grep tail tee date mkdir rm cat printf echo; do
+    ln -s "$(type -P "$tool")" "$FIXTURE/without-rg/$tool"
+done
+for backend in rg grep; do
+    backend_path="$PATH"
+    [[ "$backend" != grep ]] || backend_path="$FIXTURE/without-rg"
+    status=0
+    PATH="$backend_path" VALIDATION_FAILURE_EVENT_PREFIX='event[unit].*+?:' \
+        VALIDATION_FAILURE_LOG_DIR="$FIXTURE/$backend-diagnostics" \
+        GITHUB_STEP_SUMMARY="$FIXTURE/$backend-summary.md" \
+        VALIDATION_RUNNER_DEPTH=0 VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" diagnostic-families \
+        > "$FIXTURE/$backend-output.log" 2>&1 || status=$?
+    [[ "$status" == 2 ]] || exit 1
+    while IFS= read -r line; do
+        for output in "$FIXTURE/$backend-output.log" "$FIXTURE/$backend-summary.md" \
+            "$FIXTURE/$backend-diagnostics/latest-errors.log"; do
+            grep -Fx "[ERR:diagnostic-families] $line" "$output" >/dev/null
+        done
+        grep -Fx "$line" "$FIXTURE/$backend-diagnostics/latest-combined.log" >/dev/null
+    done < "$FIXTURE/diagnostics"
+    for output in "$FIXTURE/$backend-output.log" "$FIXTURE/$backend-summary.md" \
+        "$FIXTURE/$backend-diagnostics/latest-errors.log"; do
+        while IFS= read -r line; do
+            grep -Fx "[diagnostic-families] $line" "$output" >/dev/null
+            if grep -Fx "[ERR:diagnostic-families] $line" "$output" >/dev/null; then exit 1; fi
+        done < "$FIXTURE/neutral-context"
+    done
+done
+
 # Retention failures must keep the original raw log in the temporary directory.
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
 mkdir -p "$FIXTURE/bin"

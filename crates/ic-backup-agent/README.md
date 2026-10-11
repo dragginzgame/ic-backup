@@ -38,8 +38,14 @@ Configure `AgentObservationProvider` for independently reserved status/list/read
 recovery. Await each of the three observation ports with the current guarded journal;
 its mandatory retainer receives the exact reserved request and signed preparation.
 Retain durable original identities and ingress under never-dispatched custody, refusing
-prior dispatch. Cancellation and passive replies keep both attempts pending. Fence
-requests still use explicit `prepare`/`submit`.
+prior dispatch. Cancellation and passive replies keep both attempts pending.
+
+For original opaque application acquisition updates, configure
+`AgentFenceAcquisitionProvider` with both durable signed-ingress and exact raw-reply
+retainers. Await `acquire_fence` with the current guarded journal. Reply-retention
+failure stays Indeterminate; no application outcome or Active fence is inferred.
+Application reconciliation is also async with the current original record; its
+actual read method and whole-unit attribution remain application-owned.
 
 A certificate-verified reply is passive evidence for the existing method-specific
 codec and association checks. `Pending` returns the original ingress ID without

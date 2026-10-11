@@ -93,3 +93,43 @@ pub fn retain<'a>(
     guard.reserve_planned_mutation(&plan.digest()).unwrap();
     guard
 }
+
+/// Retain declared capture obligations before any acquisition reservation; no Active fence is proven.
+pub fn retain_fence_originals(
+    layout: &BackupLayoutGuard,
+    plan: &OperationPlanRecord,
+    sequence: u64,
+) -> ic_backup::model::fence_obligation::FenceObligationRecord {
+    use ic_backup::{
+        model::{
+            consistency::{
+                ApplicationFenceBinding, ConsistencyGuaranteeRecord, ConsistencyRequirementRecord,
+            },
+            fence_obligation::FenceObligationRecord,
+        },
+        ops::persistence::{
+            FenceObligationRequirement, create_consistency_requirement, create_fence_obligation,
+        },
+    };
+    create_operation_plan(layout, plan).unwrap();
+    let requirement =
+        ConsistencyRequirementRecord::new(plan, ConsistencyGuaranteeRecord::ApplicationCoordinated);
+    create_consistency_requirement(layout, plan, &requirement).unwrap();
+    let fence = ApplicationFenceBinding {
+        identity: ArtifactChecksumRecord::from_bytes(b"fixture fence declaration"),
+        membership_revision: ArtifactChecksumRecord::from_bytes(b"fixture membership declaration"),
+    };
+    let obligation =
+        FenceObligationRecord::for_capture(plan, &requirement, sequence, &fence).unwrap();
+    create_fence_obligation(
+        layout,
+        plan,
+        FenceObligationRequirement::Capture {
+            requirement: &requirement,
+            fence: &fence,
+        },
+        &obligation,
+    )
+    .unwrap();
+    obligation
+}
