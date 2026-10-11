@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.18.0]
+## [0.18.0] - 2026-10-11
 
 - **Breaking:** Adopt Metrics 0.6.1. `prepared_chunk_bytes()` now returns the shared
   `MeasurementAggregate` without latest; duration summaries remain ordered.
