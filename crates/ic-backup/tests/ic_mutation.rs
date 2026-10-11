@@ -4,7 +4,6 @@ mod support;
 
 use crate::ready::ready;
 
-#[path = "../src/test_support/ready.rs"]
 mod ready;
 use ic_backup::{
     model::{

@@ -1,5 +1,6 @@
 //! Real local HTTP operations with controlled responses; no simulated management effects.
 mod http_capture;
+mod recovery;
 mod support;
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 use ic_backup::ports::ic_mutation::{IcMutationProvider, IcMutationProviderError};
@@ -11,6 +12,7 @@ use ic_backup::{
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard},
 };
+use ic_backup_agent::AgentSnapshotUploadProvider;
 use ic_backup_agent::{AgentMutationProvider, AgentSnapshotTransferReadProvider, PreparedUpdate};
 use ic_backup_agent::{
     AgentTransport, MAX_HTTP_RESPONSE_BYTES, ReservedUpdate, TransportError, UpdateOutcome,
@@ -169,6 +171,98 @@ use std::{
     thread,
     time::Duration,
 };
+
+#[tokio::test]
+async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pending() {
+    use ic_backup::{
+        model::{
+            artifacts::ArtifactChecksumRecord,
+            ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+            ic_snapshot_upload::{IcSnapshotUploadAttempt, IcSnapshotUploadRequest},
+        },
+        ports::ic_snapshot_upload::IcSnapshotUploadProvider,
+    };
+    use ic_management_canister_types::SnapshotDataKind;
+    let read = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
+    // Exact SDK wire from Backup's existing "upload-source" codec vector. This HTTP
+    // fixture proves transport/refusal, not authentic source or management effects.
+    let metadata =
+        IcSnapshotMetadataReply::decode(&read, include_bytes!("upload-metadata.candid")).unwrap();
+    let source = support::plan(TARGET, &read.digest(), 11);
+    let upload = IcSnapshotUploadRequest::metadata(
+        &source,
+        &metadata,
+        &ArtifactChecksumRecord::from_bytes(b"declared tree"),
+    )
+    .unwrap();
+    let data = IcSnapshotUploadRequest::data(
+        &upload,
+        &[9, 0, 255],
+        SnapshotDataKind::WasmModule { offset: 0, size: 3 },
+        &[7, 8, 9],
+    )
+    .unwrap();
+    for payload in [&upload, &data] {
+        for (label, refuse, discard) in [
+            ("upload-retention-refused", true, false),
+            ("upload-accepted", false, false),
+            ("upload-lost", false, true),
+        ] {
+            let root = support::root(label);
+            let mut server = Server::new(&root, "202 Accepted", vec![], discard, false);
+            let plan = support::plan(TARGET, &payload.binding_digest(), 1);
+            let layout = BackupLayoutGuard::acquire(&root).unwrap();
+            let guard = support::retain(&layout, &plan, 1);
+            let original = fs::read(guard.path()).unwrap();
+            let request =
+                IcSnapshotUploadAttempt::new(&plan, 1, guard.record().unwrap(), payload).unwrap();
+            let transport = AgentTransport::new(
+                plan.context().clone(),
+                &server.endpoint,
+                support::identity(),
+                vec![1],
+                Duration::from_secs(1),
+            )
+            .unwrap();
+            let mut provider = AgentSnapshotUploadProvider::new(
+                &transport,
+                |actual: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+                    assert_eq!(actual.authority().digest(), request.authority().digest());
+                    assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
+                    assert!(server.requests.lock().unwrap().is_empty());
+                    if refuse {
+                        return Err(IcMutationProviderError::Unavailable);
+                    }
+                    support::retain_signed(&root, prepared).unwrap();
+                    Ok(())
+                },
+            );
+            let result = provider
+                .submit_upload(&request, guard.record().unwrap())
+                .await;
+            assert_eq!(
+                result.unwrap_err(),
+                if refuse {
+                    IcMutationProviderError::Unavailable
+                } else {
+                    IcMutationProviderError::Indeterminate
+                }
+            );
+            server.finish().unwrap();
+            assert_eq!(server.requests.lock().unwrap().len(), usize::from(!refuse));
+            assert_eq!(fs::read(guard.path()).unwrap(), original);
+            if !refuse {
+                let requests = server.requests.lock().unwrap();
+                let bytes = requests[0].complete_bytes(&root);
+                let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
+                assert_eq!(
+                    &bytes[end + 4..],
+                    fs::read(root.join("signed-ingress.cbor")).unwrap()
+                );
+            }
+        }
+    }
+}
 
 struct Server {
     endpoint: String,

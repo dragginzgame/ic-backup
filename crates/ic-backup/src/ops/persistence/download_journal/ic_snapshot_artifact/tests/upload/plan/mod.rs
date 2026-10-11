@@ -1,5 +1,6 @@
 //! Real retained-source IO and original journal failures; no IC effect simulation.
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
@@ -111,23 +112,28 @@ impl IcSnapshotUploadProvider for Provider {
     fn submit_upload(
         &mut self,
         request: &IcSnapshotUploadAttempt<'_, '_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        self.calls += 1;
-        if self.failure == Failure::LostSecond && self.calls == 2 {
-            return Err(IcMutationProviderError::Indeterminate);
-        }
-        let reply = crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec();
-        Ok(
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap(),
-        )
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            if self.failure == Failure::LostSecond && self.calls == 2 {
+                return Err(IcMutationProviderError::Indeterminate);
+            }
+            let reply = crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec();
+            Ok(
+                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    context: request.plan().context().clone(),
+                    target: request.payload().target().into(),
+                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                    reply,
+                })
+                .unwrap(),
+            )
+        })())
     }
 }
 #[test]
@@ -141,14 +147,14 @@ fn complete_stage_checkpoints_exact_replies_and_rejects_whole_stage_replay() {
         };
         let mut evidence = b"ic-backup/ic-snapshot-data-upload/v1\0".to_vec();
         evidence.extend_from_slice(stage.plan().digest().hash().as_bytes());
-        let predecessor = upload_snapshot_data(
+        let predecessor = ready(upload_snapshot_data(
             stage,
             data,
             source,
             TOKEN,
             &mut provider,
-            |_| Ok::<_, io::Error>(()),
-            |request, ack| {
+            async |_| Ok::<_, io::Error>(()),
+            async |request, ack| {
                 let digest = IcSnapshotUploadReply::decode(request.payload(), &ack.input().reply)
                     .unwrap()
                     .digest();
@@ -160,7 +166,7 @@ fn complete_stage_checkpoints_exact_replies_and_rejects_whole_stage_replay() {
                     evidence: digest.hash().into(),
                 })
             },
-        )
+        ))
         .unwrap();
         assert_eq!(
             predecessor.learned_evidence(),
@@ -184,17 +190,17 @@ fn complete_stage_checkpoints_exact_replies_and_rejects_whole_stage_replay() {
         assert_eq!(progress.applied_operations, data.kinds().len());
         assert_eq!(progress.attempts.observations_used, 0);
         assert!(matches!(
-            upload_snapshot_data(
+            ready(upload_snapshot_data(
                 stage,
                 data,
                 source,
                 TOKEN,
                 &mut provider,
-                |_| -> Result<(), io::Error> { panic!("Applied cannot reissue") },
-                |_, _| -> Result<MutationReceiptRequest, io::Error> {
+                async |_| -> Result<(), io::Error> { panic!("Applied cannot reissue") },
+                async |_, _| -> Result<MutationReceiptRequest, io::Error> {
                     panic!("Applied cannot resettle")
                 }
-            ),
+            )),
             Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
         ));
         for (i, original) in before.iter().enumerate() {
@@ -214,6 +220,129 @@ fn complete_stage_checkpoints_exact_replies_and_rejects_whole_stage_replay() {
         assert_eq!(
             stage.layout().unwrap().restore_references().unwrap(),
             references
+        );
+    });
+}
+
+#[test]
+#[expect(
+    clippy::too_many_lines,
+    reason = "one original interruption trace retaining source, receipts and exact request/reply evidence"
+)]
+fn cancelled_second_write_qualification_retains_first_receipt_pending_reply_and_source() {
+    use std::{
+        io::Write,
+        task::{Context, Poll, Waker},
+    };
+    with_data_stage(|stage, data, source| {
+        let original_source = fs::read(source.path()).unwrap();
+        let original_references = stage.layout().unwrap().restore_references().unwrap();
+        let before = source
+            .prepare_ic_snapshot_upload_metadata(
+                data.metadata().source_plan(),
+                TOKEN,
+                data.metadata().source(),
+            )
+            .unwrap()
+            .binding_digest();
+        let mut provider = Provider {
+            calls: 0,
+            failure: Failure::None,
+        };
+        let root = stage.layout().unwrap().root().to_path_buf();
+        let mut future = Box::pin(upload_snapshot_data(
+            stage,
+            data,
+            source,
+            TOKEN,
+            &mut provider,
+            async |_| Ok::<(), io::Error>(()),
+            async |request, acknowledgement| {
+                let sequence = request.authority().binding().operation_sequence();
+                for (label, bytes) in [
+                    ("request", request.payload().arguments()),
+                    ("reply", acknowledgement.input().reply.as_slice()),
+                ] {
+                    let mut file = fs::OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .open(root.join(format!("retained-{label}-{sequence}.candid")))?;
+                    file.write_all(bytes)?;
+                    file.sync_all()?;
+                }
+                fs::File::open(&root)?.sync_all()?;
+                if sequence == 1 {
+                    std::future::pending::<()>().await;
+                }
+                Ok(MutationReceiptRequest {
+                    attempt: request.mutation_attempt(),
+                    request: request.payload().binding_digest().hash().into(),
+                    outcome: MutationOutcomeRecord::Applied,
+                    evidence: acknowledgement.input().evidence.hash().into(),
+                })
+            },
+        ));
+        assert!(matches!(
+            future
+                .as_mut()
+                .poll(&mut Context::from_waker(Waker::noop())),
+            Poll::Pending
+        ));
+        let authority = stage.plan().attempt_authority(1).unwrap();
+        assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+        let path = root.join("attempt-1.json");
+        let pending_original = fs::read(&path).unwrap();
+        let retained_reply = fs::read(root.join("retained-reply-1.candid")).unwrap();
+        let retained_request = fs::read(root.join("retained-request-1.candid")).unwrap();
+        drop(future);
+        assert_eq!(provider.calls, 2);
+        let progress =
+            read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
+        assert_eq!(progress.applied_operations, 1);
+        assert_eq!(progress.attempts.mutations_used, 2);
+        let journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+        assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+        drop(journal);
+        assert!(
+            ready(upload_snapshot_data(
+                stage,
+                data,
+                source,
+                TOKEN,
+                &mut provider,
+                async |_| Ok::<(), io::Error>(()),
+                async |_, _| -> Result<MutationReceiptRequest, io::Error> { panic!("no reentry") }
+            ))
+            .is_err()
+        );
+        assert_eq!(provider.calls, 2);
+        assert_eq!(fs::read(path).unwrap(), pending_original);
+        assert_eq!(
+            fs::read(root.join("retained-reply-1.candid")).unwrap(),
+            retained_reply
+        );
+        assert_eq!(
+            fs::read(root.join("retained-request-1.candid")).unwrap(),
+            retained_request
+        );
+        assert_eq!(fs::read(source.path()).unwrap(), original_source);
+        assert_eq!(
+            stage.layout().unwrap().restore_references().unwrap(),
+            original_references
+        );
+        let after = source
+            .prepare_ic_snapshot_upload_metadata(
+                data.metadata().source_plan(),
+                TOKEN,
+                data.metadata().source(),
+            )
+            .unwrap()
+            .binding_digest();
+        assert_eq!(after, before);
+        assert!(
+            stage
+                .checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
+                .is_err()
         );
     });
 }
@@ -247,20 +376,20 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
             }
             let mut provider = Provider { calls: 0, failure };
             let mut qualified = 0;
-            let result = upload_snapshot_data(
+            let result = ready(upload_snapshot_data(
                 stage,
                 data,
                 source,
                 TOKEN,
                 &mut provider,
-                |_| {
+                async |_| {
                     if failure == Failure::Admission {
                         Err(io::Error::other("fresh admission refused"))
                     } else {
                         Ok(())
                     }
                 },
-                |request, ack| {
+                async |request, ack| {
                     qualified += 1;
                     if failure == Failure::QualificationSecond && qualified == 2 {
                         return Err(io::Error::other("original reply retention refused"));
@@ -290,7 +419,7 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
                         evidence: digest.hash().into(),
                     })
                 },
-            );
+            ));
             let (used, applied, calls) = match failure {
                 Failure::LostSecond => {
                     assert!(matches!(result,Err(IcSnapshotDataUploadExecutionError::Upload(crate::workflow::ic_snapshot_upload::IcSnapshotUploadExecutionError::Provider(_)))));
@@ -366,17 +495,17 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
                 })
                 .collect();
             assert!(matches!(
-                upload_snapshot_data(
+                ready(upload_snapshot_data(
                     stage,
                     data,
                     source,
                     TOKEN,
                     &mut provider,
-                    |_| -> Result<(), io::Error> { panic!("consumed stage cannot reissue") },
-                    |_, _| -> Result<MutationReceiptRequest, io::Error> {
+                    async |_| -> Result<(), io::Error> { panic!("consumed stage cannot reissue") },
+                    async |_, _| -> Result<MutationReceiptRequest, io::Error> {
                         panic!("no new settlement")
                     }
-                ),
+                )),
                 Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
             ));
             for (i, original) in before.iter().enumerate() {
@@ -452,17 +581,19 @@ fn missing_original_journal_refuses_without_creating_or_dispatching() {
             failure: Failure::None,
         };
         assert!(
-            upload_snapshot_data(
+            ready(upload_snapshot_data(
                 stage,
                 data,
                 source,
                 TOKEN,
                 &mut provider,
-                |_| -> Result<(), io::Error> { panic!("missing originals grant no admission") },
-                |_, _| -> Result<MutationReceiptRequest, io::Error> {
+                async |_| -> Result<(), io::Error> {
+                    panic!("missing originals grant no admission")
+                },
+                async |_, _| -> Result<MutationReceiptRequest, io::Error> {
                     panic!("missing originals grant no receipt")
                 }
-            )
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, 0);

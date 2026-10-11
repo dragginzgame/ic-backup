@@ -5,12 +5,18 @@
 //! actual network trust, fresh permissions, application safety and never-dispatched custody.
 //! A pending reservation or reconstructed request never grants permission to repeat a call.
 
+mod observation;
+mod reply_evidence;
+pub use observation::AgentObservationProvider;
+
 mod request;
 pub use request::ReservedUpdate;
 mod mutation;
 pub use mutation::AgentMutationProvider;
 mod transfer_read;
 pub use transfer_read::AgentSnapshotTransferReadProvider;
+mod upload;
+pub use upload::AgentSnapshotUploadProvider;
 
 use ic_agent::{
     Agent, Identity, RequestId,

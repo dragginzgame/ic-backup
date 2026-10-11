@@ -1196,6 +1196,7 @@ dependencies = [
 name = "ic-backup-agent"
 version = "0.16.0"
 dependencies = [
+ "candid",
  "ic-agent",
  "ic-backup",
  "ic-management-canister-types 0.11.0",
@@ -1288,9 +1289,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.12.8"
+version = "0.12.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "613e1079912a047f9f036ed73a7d033ea12ff56c35e227a9541ad05fdfdac3cb"
+checksum = "acab7defb778bf872c94833d60a23b208dc10ce9cccedb6762f856ad8cbdf2c8"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
@@ -1300,9 +1301,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.12.8"
+version = "0.12.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1dcc02e397e1f5b1c18c0627867bd7d9b849a67e9205a60f6d6d155b5dbfc81"
+checksum = "e1a660c557db5e6e26fd42d1486b8fae904c7b5c401f0a7c3b98f11688282fd2"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1310,9 +1311,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.12.8"
+version = "0.12.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d70d076423ceb88f6afc28e1ad88e88a66ad580ec4244654c324d876ede38b9"
+checksum = "aa75331ba11798a3124467c0c20b9fb5a6245563a10ad3302bf9ba4e5561d275"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1322,9 +1323,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-tools"
-version = "0.12.8"
+version = "0.12.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3dcf26efc82dab1d6ac93e2b9c9dff2e71e2b28827d7c53031ed64327ea748e"
+checksum = "ce6170c56209b5a48f93219388ae75e99d5101908ae71b6c3d8f55d0a90a7a67"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1357,9 +1358,9 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0d23b0f329106abb2edd7c43891dde085bfc92c51ccdaf5ab3fffba05f53d0b"
+checksum = "13cb67fc18e59e30f328cf86d6d5c579742bc8d37e0f62a7d62160349212e7b3"
 
 [[package]]
 name = "ic-testkit"

@@ -1,5 +1,6 @@
 //! Single reserved IC status/list observation contract; no installed provider.
 
+use crate::model::attempt_journal::AttemptJournalRecord;
 use crate::model::ic_observation::{IcObservationRequest, IcObservationResponse};
 use thiserror::Error;
 
@@ -22,7 +23,11 @@ use thiserror::Error;
 /// automatically produce Applied/NotApplied/Uncertain receipts or fresh control/read
 /// authority. Failure/drop/death retain pending spent observation and mutation,
 /// obligations and source references; an absent reply is not settled uncertainty.
-/// Terminal replay invokes no provider. No default or implementation is installed.
+/// Terminal replay invokes no provider. A configured Agent adapter requires exact signed-ingress retention before
+/// submission; no default provider or recovery qualification is installed.
+/// Await one observation while retaining the current original journal guard.
+/// Providers recheck the supplied record before submission; cancellation preserves
+/// both pending attempts and grants no reissue. No runtime or `Send` bound follows.
 pub trait IcObservationProvider {
     /// Observe once under the exact already reserved original observation.
     /// # Errors
@@ -30,7 +35,8 @@ pub trait IcObservationProvider {
     fn observe(
         &mut self,
         request: &IcObservationRequest<'_>,
-    ) -> Result<IcObservationResponse, IcObservationProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcObservationResponse, IcObservationProviderError>>;
 }
 
 /// Redacted observation failure; no automatic receipt, refund or permission follows.

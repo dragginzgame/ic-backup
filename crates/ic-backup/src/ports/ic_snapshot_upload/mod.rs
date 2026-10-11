@@ -1,7 +1,10 @@
 //! Single reserved source-bound snapshot upload contract; no installed transport.
 
 use crate::{
-    model::{ic_mutation::IcMutationAcknowledgement, ic_snapshot_upload::IcSnapshotUploadAttempt},
+    model::{
+        attempt_journal::AttemptJournalRecord, ic_mutation::IcMutationAcknowledgement,
+        ic_snapshot_upload::IcSnapshotUploadAttempt,
+    },
     ports::ic_mutation::IcMutationProviderError,
 };
 
@@ -38,6 +41,9 @@ use crate::{
 /// Applied/NotApplied/Uncertain receipt. All failures/drop/death retain pending
 /// spending, source references, obligations and recovery evidence without refunds
 /// or automatic retry. Terminal replay invokes no provider. No default exists.
+/// Recheck the supplied currently guarded original journal before submission.
+/// Selected exclusion spans awaits; cancellation retains original spending.
+/// No core executor, runtime dependency or `Send` bound is imposed.
 pub trait IcSnapshotUploadProvider {
     /// Submit one exact original upload update without retry or follow-up calls.
     /// # Errors
@@ -45,7 +51,8 @@ pub trait IcSnapshotUploadProvider {
     fn submit_upload(
         &mut self,
         request: &IcSnapshotUploadAttempt<'_, '_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>;
 }
 
 #[cfg(test)]

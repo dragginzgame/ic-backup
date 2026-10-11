@@ -338,7 +338,8 @@ into an issue tracker or release authority.
   projections and zero/one/multiple snapshots never settle a mutation automatically.
   Lost replies remain pending, not settled Uncertain. Fresh method-specific read
   permissions, chronology, attribution and proof of no prior observation dispatch
-  remain integration-owned. No installed provider, reissue or release permit exists.
+  remain integration-owned. A configured Agent recovery adapter requires durable signed-ingress retention;
+  no default provider, automatic reissue or release permit exists.
 
 - Explicit durable local restore-copy publication now reuses original-source admission
   and canonical descriptor synchronization/checksum/atomic no-replace publication.
@@ -579,8 +580,15 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   The configured Agent transfer adapter requires the same mandatory signed-ingress
   retention before one read. Metadata/data qualification retains replies before
   cancellable work; download cancellation preserves partial bytes, earlier receipts
-  and pending spending. Upload, recovery and fence provider families remain
-  synchronous and separately accounted. No automatic receipt, retry,
+  and pending spending. The upload port and upload/allocation/data-upload coordinators
+  also await fresh admission and qualification under selected journal exclusion.
+  Its configured Agent adapter requires durable signed ingress before one update;
+  cancellation retains exact source, earlier receipts and pending spending. All three
+  IC recovery observation ports also return futures and recheck the supplied current
+  original journal under caller-held exclusion. The configured Agent observation
+  adapter retains exact signed ingress before one independently reserved status/list/
+  readback update. Cancellation retains both pending attempts; retainer-owned original
+  custody refuses prior dispatch. Fence providers remain synchronous and separate. No automatic receipt, retry,
   terminal/fence/reference release follows.
 
 - The provider-driven snapshot capture step accepts only the exact original
@@ -741,8 +749,10 @@ was recorded. Linking provenance or describing implementation status is allowed.
   upload codec bounds, current reservation rechecks and all source references.
   Integrations qualify authentic complete source, new destination attribution,
   fresh controllers/prerequisites, stable byte/command custody and proof of no prior
-  dispatch. Lost replies stay pending; no provider, transport, settlement, complete
-  upload or terminal/reference-release authority is installed.
+  dispatch. Providers recheck the currently guarded original record. The configured
+  Agent upload adapter has mandatory signed-ingress retention and no default
+  application lane. Lost/cancelled replies stay pending; no automatic settlement,
+  complete upload or terminal/reference-release authority is installed.
 
 - Complete snapshot data-upload preparation counts exact metadata extents against
   the original stage ceiling before source IO, then retains canonical payload
@@ -755,7 +765,9 @@ was recorded. Linking provenance or describing implementation status is allowed.
   Stop on every failure; pending spending, returned replies, source bytes/references
   and occupied checkpoints remain. Final ordered reply evidence uses the existing
   all-Applied checkpoint, not backend completeness, partial-upload resume, load/start,
-  terminal or fence/reference release authority. No new record/provider is installed.
+  terminal or fence/reference release authority. Await admission/submission and
+  independent qualification; retain replies before cancellable work. No new record
+  or default provider is installed.
 
 Original singleton load/start coordination rechecks the retained source plan and
 exact safety requirement under both layouts before spending and across effects.

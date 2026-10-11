@@ -49,9 +49,15 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 96-file snapshot selects committed Shared Tooling 0.3.7 at
-`34e5ad7aac3599306c9572bb547f2239d09df1a3`, verified against remote main and
-adopted through canonical clean export. The common baseline now requires routine
+The current 96-file snapshot selects committed Shared Tooling 0.3.8 at
+`67285b28a98b7c4211ad32de726709d4e87edea4`, verified against remote main and
+adopted through canonical clean export. New coordinated-archive guidance matches
+Backup's existing paired-package check: Cargo admits both archives, an isolated
+consumer selects their exact unpacked paths and unchanged normal dependency graph,
+then builds offline/locked and verifies original bytes. Publication retains ordinary
+Cargo admission; versions and product manifests are not patched for this check.
+Only reviewed committed bytes are exported; the dirty sibling changelog is excluded.
+The common baseline requires routine
 CI to cancel superseded runs per workflow/ref; Backup's workflow already preserves
 the complete host matrix under that group. Cancelled jobs supply no qualification.
 The shared runner fixture isolates inherited log/summary paths; formatter fixtures
@@ -68,9 +74,9 @@ Consumer-owned IC pins select Binaryen 133 with exact committed archive hashes.
 An offline test helper retains original/optimized Wasm and optimizer identity;
 both actual simulator suites run that optimized fixture. Earlier tools, server
 installations and failed evidence remain retained. The incoming graph selects
-Host 0.12.6, Testkit 0.33 and Metrics 0.5.4. The 0.15.0 draft is required by the
-independent public async mutation hard cut; package/receipt remain released 0.14.2.
-See [the current qualification](reports/audits/2026/10/10/continuation-0150/01/report.md).
+Host 0.12.8, Testkit 0.33.1 and Metrics 0.5.5. The 0.17.0 draft is required by the
+public async upload hard cut; package/receipt remain released 0.16.0.
+See [the current qualification](reports/audits/2026/10/10/continuation-0170/01/report.md).
 
 ### Prior Shared Tooling 0.3.3 review
 

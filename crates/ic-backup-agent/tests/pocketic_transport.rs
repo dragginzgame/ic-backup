@@ -20,19 +20,14 @@ use ic_backup::{
 };
 use ic_backup_agent::{
     AgentMutationProvider, AgentSnapshotTransferReadProvider, AgentTransport, PreparedUpdate,
-    ReservedUpdate, TransportError, UpdateOutcome,
+    ReservedUpdate, TransportError,
 };
 use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use ic_testkit::{
     pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIcBuilder, nonblocking::PocketIc},
 };
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    sync::Arc,
-    time::Duration,
-};
+use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 
 #[tokio::test(flavor = "multi_thread")]
 #[expect(
@@ -375,42 +370,58 @@ impl Fixture {
         raw
     }
     async fn upload(&mut self, payload: &IcSnapshotUploadRequest<'_>) -> Vec<u8> {
+        use ic_backup::{
+            model::execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
+            ops::persistence::{
+                AttemptJournalGuard, ExecutionStageGuard, create_execution_workflow,
+            },
+            ports::ic_mutation::IcMutationProviderError,
+            workflow::ic_snapshot_upload::upload_snapshot,
+        };
         let (plan, layout, root) = self.original(&payload.binding_digest());
-        let guard = support::retain(&layout, &plan, self.sequence);
-        let request =
-            IcSnapshotUploadAttempt::new(&plan, self.sequence, guard.record().unwrap(), payload)
-                .unwrap();
+        let workflow = ExecutionWorkflowRecord::new(plan.clone());
+        create_execution_workflow(&layout, &workflow).unwrap();
+        let binding =
+            ExecutionStageBindingRecord::new(&workflow, self.sequence, &plan, vec![]).unwrap();
+        let stage = ExecutionStageGuard::prepare(&layout, binding, plan.clone()).unwrap();
         let transport = self.transport(&plan);
-        submit(
+        let mut provider = ic_backup_agent::AgentSnapshotUploadProvider::new(
             &transport,
-            ReservedUpdate::Upload(&request),
-            guard.record().unwrap(),
-            &root,
+            |_: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+                support::retain_signed(&root, prepared)
+                    .map_err(|_| IcMutationProviderError::Unavailable)
+            },
+        );
+        let acknowledgement = upload_snapshot(
+            &stage,
+            self.sequence,
+            payload,
+            &mut provider,
+            async |request| {
+                assert_eq!(request.plan().context(), plan.context());
+                // Only this isolated fixture owns the authenticated complete source,
+                // allocation attribution, controller and never-dispatched ingress custody.
+                tokio::task::yield_now().await;
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
+                        .is_err()
+                );
+                Ok::<(), std::io::Error>(())
+            },
         )
         .await
+        .unwrap();
+        let guard = AttemptJournalGuard::open(
+            stage.layout().unwrap(),
+            &plan.attempt_authority(self.sequence).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+        let raw = acknowledgement.input().reply.clone();
+        fs::write(root.join("reply.candid"), &raw).unwrap();
+        raw
     }
 }
-async fn submit(
-    transport: &AgentTransport,
-    request: ReservedUpdate<'_>,
-    journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    root: &Path,
-) -> Vec<u8> {
-    let prepared = transport.prepare(request, journal).unwrap();
-    let id = *prepared.request_id();
-    support::retain_signed(root, &prepared).unwrap();
-    match prepared.submit().await.unwrap() {
-        UpdateOutcome::Replied { request_id, reply } => {
-            assert_eq!(request_id, id);
-            fs::write(root.join("reply.candid"), &reply).unwrap();
-            reply
-        }
-        UpdateOutcome::Pending { .. } => {
-            panic!("gateway returned pending: no implicit polling allowed")
-        }
-    }
-}
-
 async fn read_complete_regions(
     fixture: &mut Fixture,
     metadata: &IcSnapshotMetadataReply<'_>,
@@ -624,5 +635,288 @@ async fn discarded_actual_stop_reply_halts_with_pending_original_and_no_reissue(
         )
         .unwrap(),
         serde_json::to_value(CanisterStatusType::Stopped).unwrap()
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn reserved_agent_status_after_discarded_stop_reply_retains_both_pending_attempts() {
+    use ic_backup::{
+        model::ic_observation::{IcObservationRequest, IcObservationResponse},
+        policy::ic_observation::{IcObservationReplyView, validate_response},
+        ports::ic_observation::{IcObservationProvider, IcObservationProviderError},
+    };
+    use ic_backup_agent::AgentObservationProvider;
+    let mut fixture = Fixture::new(support::identity()).await;
+    let (plan, _) = fixture.mutation(Method::StopCanister, None, true).await;
+    let root = fixture.root.join("call-1");
+    let layout = BackupLayoutGuard::acquire(&root).unwrap();
+    let authority = plan.attempt_authority(1).unwrap();
+    let mut guard =
+        ic_backup::ops::persistence::AttemptJournalGuard::open(&layout, &authority).unwrap();
+    let mutation = support::payload(Method::StopCanister, &fixture.target, None);
+    let observation = support::payload(Method::CanisterStatus, &fixture.target, None);
+    guard
+        .reserve_observation(1, observation.digest().hash())
+        .unwrap();
+    let before = fs::read(guard.path()).unwrap();
+    let request =
+        IcObservationRequest::new(&plan, 1, guard.record().unwrap(), &mutation, &observation)
+            .unwrap();
+    let retained = root.join("reserved-status");
+    fs::create_dir(&retained).unwrap();
+    let transport = fixture.transport(&plan);
+    let mut provider = AgentObservationProvider::new(
+        &transport,
+        |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+            let ReservedUpdate::Observation(actual) = actual else {
+                panic!("one original status only")
+            };
+            assert_eq!(actual.observation_attempt(), 2);
+            assert!(
+                ic_backup::ops::persistence::AttemptJournalGuard::open(&layout, actual.authority())
+                    .is_err()
+            );
+            support::retain_signed(&retained, prepared)
+                .map_err(|_| IcObservationProviderError::Unavailable)
+        },
+    );
+    let response: IcObservationResponse = provider
+        .observe(&request, guard.record().unwrap())
+        .await
+        .unwrap();
+    let associated = validate_response(&request, guard.record().unwrap(), &response).unwrap();
+    // Actual certified status is passive recovery evidence, never a stop receipt.
+    fs::write(retained.join("reply.candid"), &response.input().reply).unwrap();
+    let IcObservationReplyView::Status(reply) = associated.reply() else {
+        panic!("status projection required")
+    };
+    let ic_backup::model::ic_lifecycle_reply::IcLifecycleReplyKind::Status(status) = reply.kind()
+    else {
+        panic!("decoded status required")
+    };
+    assert_eq!(status.status(), CanisterStatusType::Stopped);
+    assert_eq!(fs::read(guard.path()).unwrap(), before);
+    assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+    assert_eq!(guard.record().unwrap().view().pending_observation, Some(2));
+    assert_eq!(
+        provider
+            .observe(&request, guard.record().unwrap())
+            .await
+            .unwrap_err(),
+        IcObservationProviderError::Unavailable
+    );
+    assert_eq!(fs::read(guard.path()).unwrap(), before);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[expect(
+    clippy::too_many_lines,
+    reason = "one actual source/allocation/full-MiB-write/readback custody trace keeps original reservations and separate reply bounds visible"
+)]
+async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_pending() {
+    use ic_backup::{
+        model::{
+            ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationRequest,
+            ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest,
+        },
+        policy::ic_observation::IcObservationReplyView,
+        ports::{
+            ic_observation::IcObservationProviderError,
+            ic_snapshot_upload::IcSnapshotUploadProvider,
+            ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationProvider,
+            ic_snapshot_upload_observation::IcSnapshotUploadObservationProvider,
+        },
+    };
+    use ic_backup_agent::{AgentObservationProvider, AgentSnapshotUploadProvider};
+    let mut fixture = Fixture::new(support::identity()).await;
+    fixture.mutation(Method::StopCanister, None, false).await;
+    let (source_plan, capture_raw) = fixture
+        .mutation(Method::TakeCanisterSnapshot, None, false)
+        .await;
+    let capture = support::payload(Method::TakeCanisterSnapshot, &fixture.target, None);
+    let source_id = IcSnapshotReply::decode(&capture, &capture_raw)
+        .unwrap()
+        .snapshots()[0]
+        .id()
+        .to_vec();
+    let metadata_request = IcSnapshotMetadataRequest::new(&fixture.target, &source_id).unwrap();
+    let raw = fixture
+        .read(IcSnapshotTransferReadPayload::Metadata(&metadata_request))
+        .await;
+    let metadata = IcSnapshotMetadataReply::decode(&metadata_request, &raw).unwrap();
+    let chunks = read_complete_regions(&mut fixture, &metadata).await;
+    let checksum = ArtifactChecksumRecord::from_bytes(
+        &chunks
+            .iter()
+            .flat_map(|(_, b)| b.iter().copied())
+            .collect::<Vec<_>>(),
+    );
+    let upload = IcSnapshotUploadRequest::metadata(&source_plan, &metadata, &checksum).unwrap();
+    let destination;
+    {
+        let (plan, layout, root) = fixture.original(&upload.binding_digest());
+        let sequence = fixture.sequence;
+        let mut journal = support::retain(&layout, &plan, sequence);
+        let transport = fixture.transport(&plan);
+        let mut mutations = AgentSnapshotUploadProvider::new(
+            &transport,
+            |_: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+                support::retain_signed(&root, prepared)
+                    .map_err(|_| IcMutationProviderError::Unavailable)
+            },
+        );
+        let request =
+            IcSnapshotUploadAttempt::new(&plan, sequence, journal.record().unwrap(), &upload)
+                .unwrap();
+        let ack = mutations
+            .submit_upload(&request, journal.record().unwrap())
+            .await
+            .unwrap();
+        let allocation = IcSnapshotUploadReply::decode(&upload, &ack.input().reply).unwrap();
+        let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = allocation.kind() else {
+            panic!("actual new destination required")
+        };
+        destination = snapshot_id.clone();
+        fs::write(root.join("allocation-reply.candid"), &ack.input().reply).unwrap();
+        let list = support::payload(Method::ListCanisterSnapshots, &fixture.target, None);
+        journal
+            .reserve_observation(1, list.digest().hash())
+            .unwrap();
+        let before = fs::read(journal.path()).unwrap();
+        let request = IcSnapshotUploadObservationRequest::new(
+            &plan,
+            sequence,
+            journal.record().unwrap(),
+            &upload,
+            &list,
+        )
+        .unwrap();
+        let retained = root.join("reserved-list");
+        fs::create_dir(&retained).unwrap();
+        let mut observations = AgentObservationProvider::new(
+            &transport,
+            |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+                assert!(matches!(actual, ReservedUpdate::UploadObservation(_)));
+                support::retain_signed(&retained, prepared)
+                    .map_err(|_| IcObservationProviderError::Unavailable)
+            },
+        );
+        let response = observations
+            .observe_upload(&request, journal.record().unwrap())
+            .await
+            .unwrap();
+        let view = ic_backup::policy::ic_snapshot_upload_observation::validate_response(
+            &request,
+            journal.record().unwrap(),
+            &response,
+        )
+        .unwrap();
+        let IcObservationReplyView::Inventory(inventory) = view.reply() else {
+            panic!("actual inventory required")
+        };
+        assert!(inventory.snapshots().iter().any(|s| s.id() == destination));
+        fs::write(retained.join("reply.candid"), &response.input().reply).unwrap();
+        assert_eq!(fs::read(journal.path()).unwrap(), before);
+        assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+        assert_eq!(
+            journal.record().unwrap().view().pending_observation,
+            Some(2)
+        );
+        assert_eq!(
+            observations
+                .observe_upload(&request, journal.record().unwrap())
+                .await
+                .unwrap_err(),
+            IcObservationProviderError::Unavailable
+        );
+    }
+    // Fresh destination metadata is an independently accounted ordinary read.
+    let destination_request =
+        IcSnapshotMetadataRequest::new(&fixture.target, &destination).unwrap();
+    let raw = fixture
+        .read(IcSnapshotTransferReadPayload::Metadata(
+            &destination_request,
+        ))
+        .await;
+    let destination_metadata = IcSnapshotMetadataReply::decode(&destination_request, &raw).unwrap();
+    let (kind, bytes) = chunks
+        .iter()
+        .find(|(k, _)| matches!(k, SnapshotDataKind::WasmMemory { .. }))
+        .unwrap();
+    assert_eq!(bytes.len(), 1024 * 1024);
+    let data = IcSnapshotUploadRequest::data(&upload, &destination, kind.clone(), bytes).unwrap();
+    let read = IcSnapshotDataRequest::new(&destination_metadata, kind.clone()).unwrap();
+    let (plan, layout, root) = fixture.original(&data.binding_digest());
+    let sequence = fixture.sequence;
+    let mut journal = support::retain(&layout, &plan, sequence);
+    let transport = fixture.transport(&plan);
+    let mut mutations = AgentSnapshotUploadProvider::new(
+        &transport,
+        |_: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+            support::retain_signed(&root, prepared)
+                .map_err(|_| IcMutationProviderError::Unavailable)
+        },
+    );
+    let request =
+        IcSnapshotUploadAttempt::new(&plan, sequence, journal.record().unwrap(), &data).unwrap();
+    let ack = mutations
+        .submit_upload(&request, journal.record().unwrap())
+        .await
+        .unwrap();
+    assert!(matches!(
+        IcSnapshotUploadReply::decode(&data, &ack.input().reply)
+            .unwrap()
+            .kind(),
+        IcSnapshotUploadReplyKind::DataAcknowledgement
+    ));
+    fs::write(root.join("write-reply.candid"), &ack.input().reply).unwrap();
+    journal
+        .reserve_observation(1, read.digest().hash())
+        .unwrap();
+    let before = fs::read(journal.path()).unwrap();
+    let request = IcSnapshotUploadDataObservationRequest::new(
+        &plan,
+        sequence,
+        journal.record().unwrap(),
+        &data,
+        &read,
+    )
+    .unwrap();
+    let retained = root.join("reserved-readback");
+    fs::create_dir(&retained).unwrap();
+    let mut observations = AgentObservationProvider::new(
+        &transport,
+        |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+            assert!(matches!(actual, ReservedUpdate::UploadDataObservation(_)));
+            support::retain_signed(&retained, prepared)
+                .map_err(|_| IcObservationProviderError::Unavailable)
+        },
+    );
+    let response = observations
+        .observe_upload_data(&request, journal.record().unwrap())
+        .await
+        .unwrap();
+    let view = ic_backup::policy::ic_snapshot_upload_data_observation::validate_response(
+        &request,
+        journal.record().unwrap(),
+        &response,
+    )
+    .unwrap();
+    assert_eq!(view.reply().chunk(), bytes);
+    assert!(view.matches_original_chunk());
+    assert!(response.input().reply.len() > 1024 * 1024);
+    fs::write(retained.join("reply.candid"), &response.input().reply).unwrap();
+    assert_eq!(fs::read(journal.path()).unwrap(), before);
+    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
+    assert_eq!(
+        journal.record().unwrap().view().pending_observation,
+        Some(2)
+    );
+    assert_eq!(
+        observations
+            .observe_upload_data(&request, journal.record().unwrap())
+            .await
+            .unwrap_err(),
+        IcObservationProviderError::Unavailable
     );
 }

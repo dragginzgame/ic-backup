@@ -1,6 +1,7 @@
 //! Native interface checks over declared bytes; no management behavior is simulated.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -25,15 +26,20 @@ impl IcSnapshotUploadProvider for RefusingProvider {
     fn submit_upload(
         &mut self,
         request: &IcSnapshotUploadAttempt<'_, '_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        self.calls += 1;
-        assert_eq!(self.calls, 1, "each independent provider refuses once");
-        assert_eq!(request.payload().receiver(), "aaaaa-aa");
-        assert_eq!(request.payload().target(), TARGET);
-        assert_eq!(request.payload().binding_digest(), self.expected_binding);
-        assert_eq!(request.payload().arguments(), self.expected_arguments);
-        assert_eq!(request.mutation_attempt(), 1);
-        Err(self.error)
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready({
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            assert_eq!(self.calls, 1, "each independent provider refuses once");
+            assert_eq!(request.payload().receiver(), "aaaaa-aa");
+            assert_eq!(request.payload().target(), TARGET);
+            assert_eq!(request.payload().binding_digest(), self.expected_binding);
+            assert_eq!(request.payload().arguments(), self.expected_arguments);
+            assert_eq!(request.mutation_attempt(), 1);
+            Err(self.error)
+        })
     }
 }
 
@@ -73,8 +79,10 @@ fn upload_port_returns_shared_failures_without_changing_original_accounting() {
                 expected_binding: payload.binding_digest(),
                 expected_arguments: payload.arguments().to_vec(),
             };
-            let port: &mut dyn IcSnapshotUploadProvider = &mut provider;
-            assert_eq!(port.submit_upload(&attempt).unwrap_err(), error);
+            assert_eq!(
+                ready(provider.submit_upload(&attempt, &journal)).unwrap_err(),
+                error
+            );
             assert_eq!(provider.calls, 1);
             assert_eq!(journal, before);
             assert_eq!(journal.view().pending_mutation, Some(1));

@@ -1,5 +1,6 @@
 //! Single originally accounted exact destination-data observation contract.
 
+use crate::model::attempt_journal::AttemptJournalRecord;
 use crate::{
     model::ic_snapshot_upload_data_observation::{
         IcSnapshotUploadDataObservationRequest, IcSnapshotUploadDataObservationResponse,
@@ -24,6 +25,9 @@ use crate::{
 /// Failures/drop/death retain both pending attempts, source references and application/
 /// fence obligations. A lost observation reply stays pending rather than Uncertain.
 /// No receipt, refund, load/start, terminal or fence/reference-release permit follows.
+/// Await one observation while retaining the current original journal guard.
+/// Providers recheck the supplied record before submission; cancellation preserves
+/// both pending attempts and grants no reissue. No runtime or `Send` bound follows.
 pub trait IcSnapshotUploadDataObservationProvider {
     /// Read one exact original destination extent/hash under its spent observation.
     /// # Errors
@@ -31,7 +35,8 @@ pub trait IcSnapshotUploadDataObservationProvider {
     fn observe_upload_data(
         &mut self,
         request: &IcSnapshotUploadDataObservationRequest<'_, '_, '_>,
-    ) -> Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError>>;
 }
 
 #[cfg(test)]

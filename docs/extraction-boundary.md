@@ -1668,6 +1668,14 @@ Reconstructed pending state supplies no proof of prior nondispatch. Failures/dro
 death retain consumed pending observations and mutations, obligations and source
 references; a lost observation cannot automatically mean settled Uncertain.
 
+All three IC recovery-observation ports return futures and require the currently
+guarded original journal. Callers retain its exclusion across one observation await;
+providers recheck reservations before submission. The configured Agent observation
+adapter requires exact durable signed-envelope/request-ID retention with both original
+attempt identities and never-dispatched custody. Retention must reject prior dispatch.
+Cancellation and passive status/list/readback replies retain both pending attempts;
+no runtime or `Send` bound, automatic settlement or default recovery admission follows.
+
 `IcObservationResponse` owns bounded passive original authority, both chronological
 attempt IDs, exact observation digest, actual claimed context/target, raw Candid
 reply and opaque evidence. Admission preserves the 1,024 total-attempt, 1 MiB raw
@@ -1696,8 +1704,8 @@ source references survive drop/reopen with no reissue or automatic outcome. Thes
 fixtures simulate no IC effects or application fence. See
 [the contract](contracts/ic-observation-port.json) and
 [fresh source inspection](ic-observation-source.json). Canic consumers and its status/
-inventory-to-completion conversions remain unchanged and are not imported. Actual
-providers, authenticated reconciliation, upload/load and transport/runners remain
+inventory-to-completion conversions remain unchanged and are not imported. Configured Agent recovery submission exists; authenticated reconciliation and full
+application runners remain
 independently qualified.
 
 ### Bounded IC snapshot metadata
@@ -1990,7 +1998,8 @@ native public reopen tests qualify declarations/local bytes only, not IC effects
 
 `ports::ic_snapshot_upload::IcSnapshotUploadProvider::submit_upload` accepts the
 existing exact `IcSnapshotUploadAttempt` and returns the existing bounded passive
-`IcMutationAcknowledgement` or canonical `IcMutationProviderError`. No additional
+`IcMutationAcknowledgement` or canonical `IcMutationProviderError` through a future.
+Providers recheck the supplied currently guarded original journal. No additional
 request, receipt, failure enum, journal or accounting owner is introduced.
 Integrations retain source/upload originals and durably reserve each metadata/data
 update before invocation. Qualify authentic complete source, actual fresh controllers
@@ -2008,9 +2017,12 @@ they authenticate no provider and perform no settlement. Errors/drop/death prese
 pending spending, originals, source references and application/fence obligations.
 Lost replies need qualified reconciliation; local reopen invokes no provider.
 
-Native tests exercise refusal at this interface and exact retained local bytes,
-not IC behavior. There is no installed provider, transport, runner, complete-upload
-proof or release authority. See [the port contract](contracts/ic-snapshot-upload-port.json)
+Native refusal tests exercise exact retained local bytes. The configured Agent
+upload adapter additionally exercises metadata/data updates through the public
+single-upload coordinator against the actual simulator. The Testkit driver separately
+qualifies allocation and complete data-stage coordination for its isolated fixture.
+These do not install a default application runner, prove complete production upload
+or grant release authority. See [the port contract](contracts/ic-snapshot-upload-port.json)
 and [source review](ic-snapshot-upload-port-source.json). The released upload codec
 contract and existing v1 records/digests/bounds remain unchanged.
 
@@ -2602,6 +2614,16 @@ release. [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open
 
 ### Original snapshot upload coordination
 
+Upload, allocation and complete data-upload coordinators are async. Admission and
+independent qualification retain selected journal exclusion across awaits. The
+configured `AgentSnapshotUploadProvider` requires durable exact signed-envelope/
+request-ID retention before one metadata/data update. Retain original replies before
+cancellable qualification. Cancellation preserves source bytes/references, earlier
+Applied receipts and pending spending; it grants no allocation or data-stage reentry.
+The core adds no runtime, `Send` bound, record, accounting owner or default application
+lane. Actual Agent simulator uploads use the adapter and single-upload coordinator;
+the Testkit driver separately exercises allocation and complete data-stage loops.
+
 `workflow::ic_snapshot_upload::upload_snapshot` admits exact canonical source/upload
 context and payload binding before spending. Open the existing journal, reserve
 through complete original-plan admission and hold the selected lock through fresh
@@ -2731,7 +2753,7 @@ transport. Passive replies still require independent qualification. Cancellation
 releases the selected lock, retains current pending/Applied spending and denies
 callback/provider reentry; durable reply retention must precede cancellable
 qualification work. The core adds no runtime/Send requirement. The
-upload/recovery/fence provider families remain synchronous; full async product/application
+recovery/fence provider families remain synchronous; full async product/application
 coordination is pending.
 
 ### Original execution settlement checkpoints

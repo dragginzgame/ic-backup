@@ -1,12 +1,14 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
 
+mod ready;
 mod support;
 
 mod upload_data_observation;
 mod upload_observation;
 mod upload_provider;
 
+use crate::ready::ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -139,7 +141,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let mut metadata_provider =
         upload_provider::RefusingProvider::new(IcMutationProviderError::Unavailable);
     assert_eq!(
-        metadata_provider.submit_upload(&attempt).unwrap_err(),
+        ready(metadata_provider.submit_upload(&attempt, attempts.record().unwrap())).unwrap_err(),
         IcMutationProviderError::Unavailable
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);
@@ -193,7 +195,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let mut data_provider =
         upload_provider::RefusingProvider::new(IcMutationProviderError::Indeterminate);
     assert_eq!(
-        data_provider.submit_upload(&attempt).unwrap_err(),
+        ready(data_provider.submit_upload(&attempt, data_attempts.record().unwrap())).unwrap_err(),
         IcMutationProviderError::Indeterminate
     );
     assert_eq!(fs::read(data_attempts.path()).unwrap(), data_attempt_bytes);

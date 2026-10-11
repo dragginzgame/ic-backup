@@ -24,8 +24,22 @@ same mandatory durable signed-ingress retainer. Await core `read_snapshot`,
 `read_snapshot_metadata` or `download_snapshot` with async fresh admission and,
 for metadata/download, independent qualification. Retain replies before awaiting
 cancellable qualification. Download cancellation preserves partial bytes, earlier
-receipts and pending spending. Upload, recovery and fence requests still use the
-original explicit `prepare`/`submit` interface.
+receipts and pending spending.
+
+For source-bound metadata/data uploads, configure `AgentSnapshotUploadProvider`
+with the same mandatory signed-ingress retainer. Await `upload_snapshot`,
+`allocate_snapshot` or `upload_snapshot_data` with async fresh admission and
+independent allocation/data qualification. Integrations own authentic complete
+source, destination attribution and stable bytes. Retain replies before cancellable
+qualification; cancellation preserves source evidence, earlier receipts and pending
+spending.
+
+Configure `AgentObservationProvider` for independently reserved status/list/readback
+recovery. Await each of the three observation ports with the current guarded journal;
+its mandatory retainer receives the exact reserved request and signed preparation.
+Retain durable original identities and ingress under never-dispatched custody, refusing
+prior dispatch. Cancellation and passive replies keep both attempts pending. Fence
+requests still use explicit `prepare`/`submit`.
 
 A certificate-verified reply is passive evidence for the existing method-specific
 codec and association checks. `Pending` returns the original ingress ID without

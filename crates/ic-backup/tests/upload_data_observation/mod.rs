@@ -31,11 +31,16 @@ struct RefusingProvider {
 impl IcSnapshotUploadDataObservationProvider for RefusingProvider {
     fn observe_upload_data(
         &mut self,
-        _request: &IcSnapshotUploadDataObservationRequest<'_, '_, '_>,
-    ) -> Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError> {
-        self.calls += 1;
-        assert_eq!(self.calls, 1, "no hidden retry or local reopen dispatch");
-        Err(IcObservationProviderError::Indeterminate)
+        request: &IcSnapshotUploadDataObservationRequest<'_, '_, '_>,
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError>>
+    {
+        std::future::ready({
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            assert_eq!(self.calls, 1, "no hidden retry or local reopen dispatch");
+            Err(IcObservationProviderError::Indeterminate)
+        })
     }
 }
 
@@ -122,7 +127,8 @@ pub fn retained_readback<'layout>(
     .unwrap();
     let mut provider = RefusingProvider { calls: 0 };
     assert_eq!(
-        provider.observe_upload_data(&request).unwrap_err(),
+        crate::ready::ready(provider.observe_upload_data(&request, attempts.record().unwrap()))
+            .unwrap_err(),
         IcObservationProviderError::Indeterminate
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), before);

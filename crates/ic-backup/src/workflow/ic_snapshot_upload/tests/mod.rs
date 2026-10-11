@@ -1,6 +1,7 @@
 //! Exact original upload spending and one-call custody; no live backend or source proof.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -73,29 +74,32 @@ impl IcSnapshotUploadProvider for Provider {
     fn submit_upload(
         &mut self,
         request: &IcSnapshotUploadAttempt<'_, '_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        self.calls += 1;
-        if let Some(path) = &self.change {
-            fs::write(path, b"{}").unwrap();
-        }
-        let reply = self.reply.clone()?;
-        IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context().clone(),
-            target: self.target.unwrap_or(request.payload().target()).into(),
-            evidence: ArtifactChecksumRecord::from_bytes(&reply),
-            reply,
-        })
-        .map_err(|_| IcMutationProviderError::Indeterminate)
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            if let Some(path) = &self.change {
+                fs::write(path, b"{}").unwrap();
+            }
+            let reply = self.reply.clone()?;
+            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: self.target.unwrap_or(request.payload().target()).into(),
+                evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                reply,
+            })
+            .map_err(|_| IcMutationProviderError::Indeterminate)
+        })())
     }
 }
-#[expect(
-    clippy::unnecessary_wraps,
-    reason = "mandatory fallible integration admission"
-)]
-fn admit(_: &IcSnapshotUploadAttempt<'_, '_>) -> Result<(), Infallible> {
-    Ok(())
+fn admit(
+    _: &IcSnapshotUploadAttempt<'_, '_>,
+) -> impl std::future::Future<Output = Result<(), Infallible>> {
+    std::future::ready(Ok(()))
 }
 fn pending(stage: &ExecutionStageGuard<'_>) {
     let view = read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
@@ -109,6 +113,63 @@ fn pending(stage: &ExecutionStageGuard<'_>) {
     assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
 }
 
+struct SuspendedProvider {
+    calls: usize,
+}
+impl IcSnapshotUploadProvider for SuspendedProvider {
+    async fn submit_upload(
+        &mut self,
+        request: &IcSnapshotUploadAttempt<'_, '_>,
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        self.calls += 1;
+        std::future::pending().await
+    }
+}
+
+#[test]
+fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() {
+    use std::task::{Context, Poll, Waker};
+    with_uploads(|payload, _| {
+        for suspend_admission in [true, false] {
+            let (_, layout, binding) = prepare(upload_plan(payload));
+            let stage =
+                ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
+                    .unwrap();
+            let mut provider = SuspendedProvider { calls: 0 };
+            let mut future = Box::pin(upload_snapshot(
+                &stage,
+                7,
+                payload,
+                &mut provider,
+                async |_| {
+                    if suspend_admission {
+                        std::future::pending::<()>().await;
+                    }
+                    Ok::<(), Infallible>(())
+                },
+            ));
+            assert!(matches!(
+                future
+                    .as_mut()
+                    .poll(&mut Context::from_waker(Waker::noop())),
+                Poll::Pending
+            ));
+            let authority = stage.plan().attempt_authority(7).unwrap();
+            assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+            let path = stage.layout().unwrap().root().join("attempt-7.json");
+            let original = fs::read(&path).unwrap();
+            drop(future);
+            pending(&stage);
+            assert_eq!(provider.calls, usize::from(!suspend_admission));
+            assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
+            assert_eq!(provider.calls, usize::from(!suspend_admission));
+            assert_eq!(fs::read(path).unwrap(), original);
+        }
+    });
+}
+
 #[test]
 fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_success() {
     with_uploads(|payload, raw| {
@@ -116,35 +177,42 @@ fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_suc
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let mut provider = Provider::new(raw.clone());
-        let response = upload_snapshot(&stage, 7, payload, &mut provider, |request| {
-            let record: crate::model::attempt_journal::AttemptJournalRecord =
-                serde_json::from_slice(
-                    &fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap(),
-                )
-                .unwrap();
-            assert_eq!(
-                record.view().pending_mutation,
-                Some(request.mutation_attempt())
-            );
-            assert!(
-                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
-            );
-            assert_eq!(request.payload().binding_digest(), payload.binding_digest());
-            assert_eq!(request.payload().receiver(), "aaaaa-aa");
-            Ok::<_, Infallible>(())
-        })
+        let response = ready(upload_snapshot(
+            &stage,
+            7,
+            payload,
+            &mut provider,
+            async |request| {
+                let record: crate::model::attempt_journal::AttemptJournalRecord =
+                    serde_json::from_slice(
+                        &fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap(),
+                    )
+                    .unwrap();
+                assert_eq!(
+                    record.view().pending_mutation,
+                    Some(request.mutation_attempt())
+                );
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
+                        .is_err()
+                );
+                assert_eq!(request.payload().binding_digest(), payload.binding_digest());
+                assert_eq!(request.payload().receiver(), "aaaaa-aa");
+                Ok::<_, Infallible>(())
+            },
+        ))
         .unwrap();
         assert_eq!(response.input().reply, raw);
         assert_eq!(provider.calls, 1);
         pending(&stage);
         assert!(
-            upload_snapshot(
+            ready(upload_snapshot(
                 &stage,
                 7,
                 payload,
                 &mut provider,
-                |_| -> Result<(), Infallible> { panic!("pending is not new custody") }
-            )
+                async |_| -> Result<(), Infallible> { panic!("pending is not new custody") }
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, 1);
@@ -175,7 +243,7 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
             let mut provider = Provider::new(raw.clone());
             provider.reply = Err(failure);
             assert!(matches!(
-                upload_snapshot(&stage, 7, payload, &mut provider, admit),
+                ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)),
                 Err(IcSnapshotUploadExecutionError::Provider(_))
             ));
             pending(&stage);
@@ -194,13 +262,13 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
                 original
             );
             assert!(
-                upload_snapshot(
+                ready(upload_snapshot(
                     &stage,
                     7,
                     payload,
                     &mut provider,
-                    |_| -> Result<(), Infallible> { panic!("never reissue") }
-                )
+                    async |_| -> Result<(), Infallible> { panic!("never reissue") }
+                ))
                 .is_err()
             );
             assert_eq!(provider.calls, 1);
@@ -223,7 +291,7 @@ fn malformed_or_mismatched_reply_retains_exact_returned_bytes_and_pending_spendi
             }
             let Err(IcSnapshotUploadExecutionError::Association {
                 acknowledgement, ..
-            }) = upload_snapshot(&stage, 7, payload, &mut provider, admit)
+            }) = ready(upload_snapshot(&stage, 7, payload, &mut provider, admit))
             else {
                 panic!("passive association must reject")
             };
@@ -242,8 +310,14 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let mut provider = Provider::new(raw);
         assert!(matches!(
-            upload_snapshot(&stage, 7, payload, &mut provider, |_| Err(
-                io::Error::other("no fresh controller/source/destination custody")
+            ready(upload_snapshot(
+                &stage,
+                7,
+                payload,
+                &mut provider,
+                async |_| Err(io::Error::other(
+                    "no fresh controller/source/destination custody"
+                ))
             )),
             Err(IcSnapshotUploadExecutionError::Admission(_))
         ));
@@ -268,13 +342,13 @@ fn changed_payload_source_network_or_release_reject_before_spending() {
                     .unwrap();
             let mut provider = Provider::new(raw.clone());
             assert!(matches!(
-                upload_snapshot(
+                ready(upload_snapshot(
                     &stage,
                     7,
                     payload,
                     &mut provider,
-                    |_| -> Result<(), Infallible> { panic!("wrong originals") }
-                ),
+                    async |_| -> Result<(), Infallible> { panic!("wrong originals") }
+                )),
                 Err(IcSnapshotUploadExecutionError::Request(_))
             ));
             assert_eq!(
@@ -301,7 +375,7 @@ fn held_missing_and_applied_journals_never_grant_dispatch() {
             &stage.plan().attempt_authority(7).unwrap(),
         )
         .unwrap();
-        assert!(upload_snapshot(&stage, 7, payload, &mut provider, admit).is_err());
+        assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
         journal
             .reserve_planned_mutation(&stage.plan().digest())
             .unwrap();
@@ -317,9 +391,9 @@ fn held_missing_and_applied_journals_never_grant_dispatch() {
             .unwrap();
         let path = journal.path().clone();
         drop(journal);
-        assert!(upload_snapshot(&stage, 7, payload, &mut provider, admit).is_err());
+        assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
         fs::rename(&path, path.with_extension("retained-original")).unwrap();
-        assert!(upload_snapshot(&stage, 7, payload, &mut provider, admit).is_err());
+        assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 0);
     });
 }
@@ -337,12 +411,18 @@ fn changed_stage_before_dispatch_or_after_reply_preserves_original_reservation()
             if after_reply {
                 provider.change = Some(path.clone());
             }
-            let result = upload_snapshot(&stage, 7, payload, &mut provider, |_| {
-                if !after_reply {
-                    fs::write(&path, b"{}").unwrap();
-                }
-                Ok::<_, Infallible>(())
-            });
+            let result = ready(upload_snapshot(
+                &stage,
+                7,
+                payload,
+                &mut provider,
+                async |_| {
+                    if !after_reply {
+                        fs::write(&path, b"{}").unwrap();
+                    }
+                    Ok::<_, Infallible>(())
+                },
+            ));
             if after_reply {
                 let Err(IcSnapshotUploadExecutionError::AfterReplyStage {
                     acknowledgement, ..
@@ -394,9 +474,9 @@ fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowled
         create_execution_workflow(&layout, &workflow).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
         let mut provider = Provider::new(raw);
-        assert!(upload_snapshot(&stage, 8, payload, &mut provider, admit).is_err());
-        upload_snapshot(&stage, 7, payload, &mut provider, admit).unwrap();
-        assert!(upload_snapshot(&stage, 8, payload, &mut provider, admit).is_err());
+        assert!(ready(upload_snapshot(&stage, 8, payload, &mut provider, admit)).is_err());
+        ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).unwrap();
+        assert!(ready(upload_snapshot(&stage, 8, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 1);
         let second = AttemptJournalGuard::open(
             stage.layout().unwrap(),
@@ -421,7 +501,7 @@ fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowled
             })
             .unwrap();
         drop(first);
-        upload_snapshot(&stage, 8, payload, &mut provider, admit).unwrap();
+        ready(upload_snapshot(&stage, 8, payload, &mut provider, admit)).unwrap();
         assert_eq!(provider.calls, 2);
     });
 }

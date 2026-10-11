@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.17.0]
+
+- **Breaking:** Await snapshot upload providers and upload/allocation/data-upload
+  coordinators with async admission and independent qualification. Providers
+  recheck the currently guarded original journal; cancellation preserves spending,
+  earlier receipts and source evidence and denies reentry
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- **Breaking:** Await lifecycle/capture, metadata-allocation and data-write recovery
+  observation providers and supply their currently guarded original journal.
+  Add `AgentObservationProvider` with mandatory signed-ingress retention before
+  one separately reserved status/list/readback update. Cancellation preserves
+  both pending attempts; replies produce no automatic settlement
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Add `AgentSnapshotUploadProvider` with mandatory durable signed-ingress retention
+  before one source-bound metadata/data update. Replies stay passive; accepted/lost
+  updates produce no automatic receipt, observation, retry or allowance reset.
+- Adopt committed Shared Tooling 0.3.8's coordinated-archive qualification rules.
+  The existing paired-package check already follows this ownership; registry
+  publication keeps ordinary Cargo admission
+  ([shared #109](https://github.com/dragginzgame/shared-tooling/issues/109)).
+- Qualify incoming Host 0.12.10 and Metrics 0.5.6 with unchanged Rust source;
+  Testkit remains 0.33.1. Consolidate passive Agent reply-evidence framing while
+  preserving exact existing domain and byte identities.
+
 ## [0.16.0] - 2026-10-10
 
 - **Breaking:** Await snapshot transfer providers and read/metadata/download

@@ -1,5 +1,6 @@
 //! Native reserved-observation recovery evidence; no simulated or live IC effects.
 
+mod ready;
 mod support;
 
 use ic_backup::{
@@ -74,30 +75,34 @@ impl IcObservationProvider for NativeProvider {
     fn observe(
         &mut self,
         request: &IcObservationRequest<'_>,
-    ) -> Result<IcObservationResponse, IcObservationProviderError> {
-        let payload = request.payload();
-        self.calls.push((
-            payload.receiver().into(),
-            payload.target().into(),
-            payload.method().name().into(),
-            payload.arguments().into(),
-            request.mutation_attempt(),
-            request.observation_attempt(),
-        ));
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
-        IcObservationResponse::new(IcObservationResponseInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            observation_attempt: request.observation_attempt(),
-            request: payload.digest(),
-            context: request.plan().context().clone(),
-            target: payload.target().into(),
-            reply: wire(payload.method()),
-            evidence: ArtifactChecksumRecord::from_bytes(b"passive native association"),
-        })
-        .map_err(|_| IcObservationProviderError::Indeterminate)
+        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcObservationResponse, IcObservationProviderError>> {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            let payload = request.payload();
+            self.calls.push((
+                payload.receiver().into(),
+                payload.target().into(),
+                payload.method().name().into(),
+                payload.arguments().into(),
+                request.mutation_attempt(),
+                request.observation_attempt(),
+            ));
+            if let Some(error) = self.failure {
+                return Err(error);
+            }
+            IcObservationResponse::new(IcObservationResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                observation_attempt: request.observation_attempt(),
+                request: payload.digest(),
+                context: request.plan().context().clone(),
+                target: payload.target().into(),
+                reply: wire(payload.method()),
+                evidence: ArtifactChecksumRecord::from_bytes(b"passive native association"),
+            })
+            .map_err(|_| IcObservationProviderError::Indeterminate)
+        })())
     }
 }
 
@@ -182,7 +187,7 @@ fn retained_case(
         failure,
         calls: vec![],
     };
-    let response = match provider.observe(&request) {
+    let response = match ready::ready(provider.observe(&request, journal.record().unwrap())) {
         Ok(response) => {
             validate_response(&request, journal.record().unwrap(), &response).unwrap();
             fs::write(root.join("reply.candid"), &response.input().reply).unwrap();

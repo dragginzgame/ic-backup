@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "kind": "single originally accounted snapshot upload port; no persisted schema or installed provider",
+  "kind": "single originally accounted async snapshot upload port; no persisted schema",
   "owner": "ports::ic_snapshot_upload::IcSnapshotUploadProvider::submit_upload",
   "request_owner": "model::ic_snapshot_upload::IcSnapshotUploadAttempt",
   "reply_owner": "model::ic_mutation::IcMutationAcknowledgement",
@@ -13,7 +13,9 @@
   "reply": "bounded passive actual claims and exact raw bytes; explicit association rechecks current original journal and tighter method-specific wire bounds; no authenticated outcome",
   "failure": "all variants/drop/death retain consumed pending mutation, originals, source references, obligations and recovery evidence; no receipt, retry or refund",
   "replay": "local retained replay invokes no provider; reconstructed pending attempts grant no redispatch",
-  "qualification": "native interface refusal and actual local retained-byte/reopen tests only; no management effect simulation or live/backend qualification",
-  "grants": "no installed provider, transport, runner, fresh permission, outcome, complete upload, load/start safety, terminal proof or fence/reference release",
-  "unchanged": "existing v1 records, codecs, digests, bounds, exhaustive enums, dependencies, allowances, package version and release receipt"
+  "qualification": "Actual Agent simulator metadata/data uploads use the configured adapter and single-upload coordinator. The Testkit fixture separately exercises allocation and complete data-stage loops. Cancellation tests retain original spending, exact replies, earlier receipts and unchanged source evidence; local HTTP cases prove zero/one submission and signed body equality, not management effects.",
+  "grants": "no default provider, full runner, fresh permission, automatic outcome, complete upload, load/start safety, terminal proof or fence/reference release",
+  "unchanged": "existing v1 records, codecs, digests, bounds, exhaustive enums, dependencies, allowances, package version and release receipt",
+  "async_contract": "Providers return futures and recheck the currently guarded original journal. Await upload/allocation/data-stage coordinators with async admission/qualification under selected exclusion; retain replies before cancellable qualification. Cancellation preserves source, earlier receipts and pending spending and denies reentry. No runtime or Send bound follows.",
+  "configured_adapter": "ic-backup-agent::AgentSnapshotUploadProvider requires explicit configured transport and mandatory durable exact signed-envelope/request-ID retention before one source-bound update. No default retainer or application lane."
 }

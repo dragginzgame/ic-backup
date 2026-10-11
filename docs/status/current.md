@@ -23,9 +23,66 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-10
+# Current handoff — 2026-10-11
 
-## Current 0.16.0 async transfer continuation
+## Current 0.17.0 recovery and cleanup extension
+
+The draft remains uncommitted on released 0.16.0. All three IC recovery-observation
+ports now return futures and accept the currently guarded original journal. The
+configured Agent observation adapter requires exact durable signed ingress under
+both original attempt identities before one independently accounted status/list/
+readback update. Caller exclusion spans awaits; cancellation keeps both attempts
+pending and mandatory retention refuses prior dispatch. Canonical passive reply
+hash framing preserves exact prior adapter domains/bytes. Fence providers and full
+application/terminal custody remain separate under #25/#29.
+
+Qualify incoming Host 0.12.10 and Metrics 0.5.6; their published Rust files match
+0.12.8/0.5.5 respectively. Testkit remains 0.33.1. The Agent fixture adds a direct
+workspace-inherited dev-only Candid declaration without changing registry selections.
+All 16 delivery gates pass on frozen inputs. After adding the final actual allocation-
+list/full 1 MiB readback fixture, all eight affected docs/Rust/test/MSRV/package checks
+pass again; unchanged tooling/release/hook checks retain the full-gate proof. Final
+membership is 510 core unit cases, 29 core simulator journeys, 15 Agent HTTP cases,
+six Agent simulator journeys and one Agent reply-evidence golden case. A locked Rust
+1.88 normal consumer compiles all three upload coordinators and three recovery ports
+with the configured adapters, excluding Testkit/PocketIC and Metrics IC features.
+The final graph and technical inputs remain unchanged during qualification.
+Released 0.16.0 CI passes Linux and Apple Silicon; Intel macOS was cancelled. Keep
+native acceptance open; this uncommitted candidate has no matching hosted result.
+The prior proof below retains its actual earlier graph and then-current CI status.
+See [the extension review](../reports/audits/2026/10/11/continuation-0171/01/report.md).
+Package versions and receipt remain 0.16.0; no root Git, release, publication,
+production IC, sibling-edit or recovery-cleanup authority follows.
+
+## Prior 0.17.0 async upload qualification
+
+
+Released local HEAD is 0.16.0 at
+`943ade5afac218d2eeae280111a75f26612ab80f`. Its matching CI passes Linux;
+Apple Silicon passes setup/Bash 3.2 tooling and is validating, while Intel macOS
+remains queued at final inspection. Select uncommitted 0.17.0 for async upload providers
+and upload/allocation/data-stage coordinators. Package/receipt remain 0.16.0.
+The configured Agent upload adapter requires exact signed-ingress retention before
+one source-bound update. Selected exclusion spans admission/submission or independent
+qualification awaits. Cancellation retains original source, earlier receipts and
+pending spending and denies reentry. Recovery/fence ports and full application/
+terminal custody remain separate under #25/#29.
+
+Adopt committed Shared Tooling 0.3.8 at
+`67285b28a98b7c4211ad32de726709d4e87edea4` through canonical clean export,
+retaining all 96 paths and excluding the sibling's dirty changelog. Its coordinated
+archive guidance matches the existing paired-package owner. Preserve Host 0.12.8,
+Testkit 0.33.1 and Metrics 0.5.5. All 16 delivery gates pass: 510 core unit cases,
+29 core simulator journeys, 11 Agent HTTP cases and four Agent simulator journeys.
+A locked Rust 1.88 normal consumer compiles all three async upload coordinators
+with the Agent adapter, excluding Testkit/PocketIC and Metrics IC features. Source
+bytes/modes, manifest, lock and binary fixture inputs stay unchanged during the
+passing gate. The candidate has no matching hosted result; see
+[the current review](../reports/audits/2026/10/10/continuation-0170/01/report.md).
+No root Git write, release, upload, production IC effect, sibling edit or recovery
+cleanup is authorized by ordinary continuation.
+
+## Prior 0.16.0 async transfer continuation
 
 Released local HEAD is 0.15.0 at
 `eae844847e109004eb9427bfd02bd66e16f9e6df`. Select uncommitted 0.16.0 for

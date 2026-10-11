@@ -10,11 +10,16 @@ impl IcSnapshotUploadDataObservationProvider for RefusingProvider {
     fn observe_upload_data(
         &mut self,
         request: &IcSnapshotUploadDataObservationRequest<'_, '_, '_>,
-    ) -> Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError> {
-        self.calls += 1;
-        assert_eq!(self.calls, 1);
-        assert_eq!(request.payload().method(), "read_canister_snapshot_data");
-        Err(self.error)
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError>>
+    {
+        std::future::ready({
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            assert_eq!(self.calls, 1);
+            assert_eq!(request.payload().method(), "read_canister_snapshot_data");
+            Err(self.error)
+        })
     }
 }
 
@@ -34,7 +39,13 @@ fn all_existing_provider_failures_retain_both_original_pending_attempts() {
                     IcSnapshotUploadDataObservationRequest::new(plan, 7, journal, upload, read)
                         .unwrap();
                 let mut provider = RefusingProvider { calls: 0, error };
-                assert_eq!(provider.observe_upload_data(&request).unwrap_err(), error);
+                assert_eq!(
+                    crate::test_support::ready::ready(
+                        provider.observe_upload_data(&request, journal)
+                    )
+                    .unwrap_err(),
+                    error
+                );
                 assert_eq!(provider.calls, 1);
                 assert_eq!(journal, &before);
                 assert_eq!(

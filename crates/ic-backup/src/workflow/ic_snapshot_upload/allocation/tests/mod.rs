@@ -1,6 +1,7 @@
 //! Explicit allocation qualification and retained original spending/checkpoint evidence.
 
 use super::*;
+use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -67,28 +68,31 @@ impl IcSnapshotUploadProvider for Provider {
     fn submit_upload(
         &mut self,
         request: &IcSnapshotUploadAttempt<'_, '_>,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        self.calls += 1;
-        let reply = self.reply.clone()?;
-        Ok(
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap(),
-        )
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
+    {
+        std::future::ready((|| {
+            request.validate_journal(journal).unwrap();
+            self.calls += 1;
+            let reply = self.reply.clone()?;
+            Ok(
+                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    context: request.plan().context().clone(),
+                    target: request.payload().target().into(),
+                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                    reply,
+                })
+                .unwrap(),
+            )
+        })())
     }
 }
-#[expect(
-    clippy::unnecessary_wraps,
-    reason = "mandatory fallible integration admission"
-)]
-fn admit(_: &IcSnapshotUploadAttempt<'_, '_>) -> Result<(), Infallible> {
-    Ok(())
+fn admit(
+    _: &IcSnapshotUploadAttempt<'_, '_>,
+) -> impl std::future::Future<Output = Result<(), Infallible>> {
+    std::future::ready(Ok(()))
 }
 fn receipt(
     request: &IcSnapshotUploadAttempt<'_, '_>,
@@ -114,19 +118,99 @@ fn pending(stage: &ExecutionStageGuard<'_>) {
 }
 
 #[test]
+fn cancelled_allocation_qualification_retains_exact_reply_and_pending_original() {
+    use std::task::{Context, Poll, Waker};
+    with_metadata(|payload| {
+        let (layout, binding) = prepare(payload);
+        let stage =
+            ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
+        let mut provider = Provider::new();
+        let root = stage.layout().unwrap().root().to_path_buf();
+        let mut future = Box::pin(allocate_snapshot(
+            &stage,
+            7,
+            payload,
+            &mut provider,
+            admit,
+            async |request, acknowledgement| {
+                for (name, bytes) in [
+                    (
+                        "retained-allocation.candid",
+                        acknowledgement.input().reply.as_slice(),
+                    ),
+                    (
+                        "retained-allocation-request.candid",
+                        request.payload().arguments(),
+                    ),
+                ] {
+                    let mut file = fs::OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .open(root.join(name))
+                        .unwrap();
+                    file.write_all(bytes).unwrap();
+                    file.sync_all().unwrap();
+                }
+                fs::File::open(&root).unwrap().sync_all().unwrap();
+                std::future::pending::<()>().await;
+                Ok::<_, Infallible>(receipt(request, acknowledgement))
+            },
+        ));
+        assert!(matches!(
+            future
+                .as_mut()
+                .poll(&mut Context::from_waker(Waker::noop())),
+            Poll::Pending
+        ));
+        let authority = stage.plan().attempt_authority(7).unwrap();
+        assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+        let journal_path = root.join("attempt-7.json");
+        let original = fs::read(&journal_path).unwrap();
+        let reply = fs::read(root.join("retained-allocation.candid")).unwrap();
+        drop(future);
+        pending(&stage);
+        assert_eq!(provider.calls, 1);
+        assert!(
+            ready(allocate_snapshot(
+                &stage,
+                7,
+                payload,
+                &mut provider,
+                admit,
+                async |request, acknowledgement| Ok::<_, Infallible>(receipt(
+                    request,
+                    acknowledgement
+                ))
+            ))
+            .is_err()
+        );
+        assert_eq!(provider.calls, 1);
+        assert_eq!(fs::read(journal_path).unwrap(), original);
+        assert_eq!(
+            fs::read(root.join("retained-allocation.candid")).unwrap(),
+            reply
+        );
+        assert_eq!(
+            fs::read(root.join("retained-allocation-request.candid")).unwrap(),
+            payload.arguments()
+        );
+    });
+}
+
+#[test]
 fn qualified_retained_reply_checkpoints_exact_allocation_without_reissue_on_reopen() {
     with_metadata(|payload| {
         let (layout, binding) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let mut provider = Provider::new();
-        let (acknowledgement, predecessor) = allocate_snapshot(
+        let (acknowledgement, predecessor) = ready(allocate_snapshot(
             &stage,
             7,
             payload,
             &mut provider,
             admit,
-            |request, acknowledgement| {
+            async |request, acknowledgement| {
                 assert!(
                     AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
                         .is_err()
@@ -147,7 +231,7 @@ fn qualified_retained_reply_checkpoints_exact_allocation_without_reissue_on_reop
                     .unwrap();
                 Ok::<_, Infallible>(receipt(request, acknowledgement))
             },
-        )
+        ))
         .unwrap();
         assert_eq!(
             predecessor.learned_evidence(),
@@ -168,14 +252,14 @@ fn qualified_retained_reply_checkpoints_exact_allocation_without_reissue_on_reop
         .unwrap();
         assert_eq!(&settlement.digest(), predecessor.settlement());
         assert!(
-            allocate_snapshot(
+            ready(allocate_snapshot(
                 &stage,
                 7,
                 payload,
                 &mut provider,
                 admit,
-                |_, _| -> Result<_, Infallible> { panic!("Applied never reissues") }
-            )
+                async |_, _| -> Result<_, Infallible> { panic!("Applied never reissues") }
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, 1);
@@ -198,14 +282,14 @@ fn data_sequence_and_multi_operation_stages_refuse_before_spending_or_provider()
         let mut provider = Provider::new();
         for (sequence, request) in [(6, payload), (7, &data)] {
             assert!(matches!(
-                allocate_snapshot(
+                ready(allocate_snapshot(
                     &stage,
                     sequence,
                     request,
                     &mut provider,
                     admit,
-                    |_, _| -> Result<_, Infallible> { panic!("not allocation") }
-                ),
+                    async |_, _| -> Result<_, Infallible> { panic!("not allocation") }
+                )),
                 Err(IcSnapshotAllocationExecutionError::OriginalMismatch)
             ));
         }
@@ -237,14 +321,14 @@ fn data_sequence_and_multi_operation_stages_refuse_before_spending_or_provider()
         let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![]).unwrap();
         let multi = ExecutionStageGuard::prepare(&multi_layout, binding, plan).unwrap();
         assert!(matches!(
-            allocate_snapshot(
+            ready(allocate_snapshot(
                 &multi,
                 7,
                 payload,
                 &mut provider,
                 admit,
-                |_, _| -> Result<_, Infallible> { panic!("not singleton") }
-            ),
+                async |_, _| -> Result<_, Infallible> { panic!("not singleton") }
+            )),
             Err(IcSnapshotAllocationExecutionError::OriginalMismatch)
         ));
         assert_eq!(provider.calls, 0);
@@ -266,17 +350,17 @@ fn lost_malformed_or_unqualified_allocation_cannot_checkpoint_or_reissue() {
             if failure == 1 {
                 provider.reply = Ok(vec![]);
             }
-            let result = allocate_snapshot(
+            let result = ready(allocate_snapshot(
                 &stage,
                 7,
                 payload,
                 &mut provider,
-                |_| Ok::<_, io::Error>(()),
-                |_, _| {
+                async |_| Ok::<_, io::Error>(()),
+                async |_, _| {
                     assert_eq!(failure, 2, "unadmitted replies never reach qualification");
                     Err(io::Error::other("no authentic durable originals"))
                 },
-            );
+            ));
             if failure == 2 {
                 let Err(IcSnapshotAllocationExecutionError::AfterReply {
                     source: IcSnapshotAllocationSettlementError::Qualification(_),
@@ -302,14 +386,14 @@ fn lost_malformed_or_unqualified_allocation_cannot_checkpoint_or_reissue() {
                     .unwrap();
             assert_eq!(view.attempts.mutations_used, 1);
             assert!(
-                allocate_snapshot(
+                ready(allocate_snapshot(
                     &stage,
                     7,
                     payload,
                     &mut provider,
                     admit,
-                    |_, _| -> Result<_, Infallible> { panic!("pending never reissues") }
-                )
+                    async |_, _| -> Result<_, Infallible> { panic!("pending never reissues") }
+                ))
                 .is_err()
             );
             assert_eq!(provider.calls, 1);
@@ -326,13 +410,13 @@ fn wrong_or_invalid_receipts_retain_reply_and_original_pending_spending() {
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
             let mut provider = Provider::new();
-            let result = allocate_snapshot(
+            let result = ready(allocate_snapshot(
                 &stage,
                 7,
                 payload,
                 &mut provider,
                 admit,
-                |request, acknowledgement| {
+                async |request, acknowledgement| {
                     let mut receipt = receipt(request, acknowledgement);
                     match field {
                         0 => receipt.outcome = MutationOutcomeRecord::NotApplied,
@@ -342,7 +426,7 @@ fn wrong_or_invalid_receipts_retain_reply_and_original_pending_spending() {
                     }
                     Ok::<_, Infallible>(receipt)
                 },
-            );
+            ));
             let Err(IcSnapshotAllocationExecutionError::AfterReply {
                 source,
                 acknowledgement,
@@ -378,17 +462,17 @@ fn changed_stage_during_qualification_keeps_original_pending_and_returned_reply(
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let root = stage.layout().unwrap().root().to_path_buf();
         let mut provider = Provider::new();
-        let result = allocate_snapshot(
+        let result = ready(allocate_snapshot(
             &stage,
             7,
             payload,
             &mut provider,
             admit,
-            |request, acknowledgement| {
+            async |request, acknowledgement| {
                 fs::write(root.join("stage-binding.json"), b"{}").unwrap();
                 Ok::<_, Infallible>(receipt(request, acknowledgement))
             },
-        );
+        ));
         let Err(IcSnapshotAllocationExecutionError::AfterReply {
             source: IcSnapshotAllocationSettlementError::Stage(_),
             acknowledgement,
@@ -418,17 +502,17 @@ fn occupied_checkpoint_preserves_applied_receipt_reply_and_original_evidence() {
             .root()
             .join("execution-settlement.json");
         let mut provider = Provider::new();
-        let result = allocate_snapshot(
+        let result = ready(allocate_snapshot(
             &stage,
             7,
             payload,
             &mut provider,
             admit,
-            |request, acknowledgement| {
+            async |request, acknowledgement| {
                 fs::write(&path, b"occupied original evidence").unwrap();
                 Ok::<_, Infallible>(receipt(request, acknowledgement))
             },
-        );
+        ));
         let Err(IcSnapshotAllocationExecutionError::AfterReply {
             source: IcSnapshotAllocationSettlementError::Checkpoint(_),
             acknowledgement,
@@ -446,14 +530,14 @@ fn occupied_checkpoint_preserves_applied_receipt_reply_and_original_evidence() {
             ExecutionStageGuard::resume(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         assert_eq!(view.applied_operations, 1);
         assert!(
-            allocate_snapshot(
+            ready(allocate_snapshot(
                 &stage,
                 7,
                 payload,
                 &mut provider,
                 admit,
-                |_, _| -> Result<_, Infallible> { panic!("Applied never reissues") }
-            )
+                async |_, _| -> Result<_, Infallible> { panic!("Applied never reissues") }
+            ))
             .is_err()
         );
         assert_eq!(provider.calls, 1);

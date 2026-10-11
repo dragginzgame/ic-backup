@@ -32,6 +32,10 @@ use thiserror::Error;
 /// original request/reply bytes before returning its exact Applied receipt. Neither a
 /// decoded destination ID nor provider evidence supplies that qualification. Account
 /// any remote qualification independently before its calls; no default is installed.
+/// Admission, submission and qualification are async under their selected journal
+/// guards. Retain exact replies before cancellable qualification work. Cancellation
+/// keeps pending/Applied spending and denies allocation reentry; no runtime or `Send`
+/// bound is imposed by the core.
 ///
 /// Record only that exact qualified receipt through the sole attempt owner, release
 /// the journal lock, then checkpoint the canonical allocation request/raw-reply digest.
@@ -44,13 +48,13 @@ use thiserror::Error;
 /// Rejects non-metadata/non-singleton originals, spending/admission/provider/reply,
 /// qualification, receipt and checkpoint failures. Post-reply failures retain bounded
 /// acknowledgement bytes; spending, recorded outcomes and occupied evidence remain.
-pub fn allocate_snapshot<E: std::error::Error + 'static>(
+pub async fn allocate_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     operation_sequence: u64,
     payload: &IcSnapshotUploadRequest<'_>,
     provider: &mut impl IcSnapshotUploadProvider,
-    admit: impl FnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
-    qualify: impl FnOnce(
+    admit: impl AsyncFnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
+    qualify: impl AsyncFnOnce(
         &IcSnapshotUploadAttempt<'_, '_>,
         &IcMutationAcknowledgement,
     ) -> Result<MutationReceiptRequest, E>,
@@ -66,14 +70,17 @@ pub fn allocate_snapshot<E: std::error::Error + 'static>(
     {
         return Err(IcSnapshotAllocationExecutionError::OriginalMismatch);
     }
-    let acknowledgement = upload_snapshot(stage, operation_sequence, payload, provider, admit)?;
+    let acknowledgement =
+        upload_snapshot(stage, operation_sequence, payload, provider, admit).await?;
     match settle_allocation(
         stage,
         operation_sequence,
         payload,
         &acknowledgement,
         qualify,
-    ) {
+    )
+    .await
+    {
         Ok(predecessor) => Ok((acknowledgement, predecessor)),
         Err(source) => Err(IcSnapshotAllocationExecutionError::AfterReply {
             source,
@@ -82,12 +89,12 @@ pub fn allocate_snapshot<E: std::error::Error + 'static>(
     }
 }
 
-fn settle_allocation<E: std::error::Error + 'static>(
+async fn settle_allocation<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     sequence: u64,
     payload: &IcSnapshotUploadRequest<'_>,
     acknowledgement: &IcMutationAcknowledgement,
-    qualify: impl FnOnce(
+    qualify: impl AsyncFnOnce(
         &IcSnapshotUploadAttempt<'_, '_>,
         &IcMutationAcknowledgement,
     ) -> Result<MutationReceiptRequest, E>,
@@ -100,6 +107,7 @@ fn settle_allocation<E: std::error::Error + 'static>(
     let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
     let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
     let receipt = qualify(&request, acknowledgement)
+        .await
         .map_err(IcSnapshotAllocationSettlementError::Qualification)?;
     if receipt.outcome != MutationOutcomeRecord::Applied
         || receipt.attempt != request.mutation_attempt()

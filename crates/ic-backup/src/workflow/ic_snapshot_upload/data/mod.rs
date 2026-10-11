@@ -36,6 +36,10 @@ use thiserror::Error;
 /// receipt under the selected journal lock. An empty reply never supplies a receipt.
 /// Account remote qualification separately before its calls. Record through the sole
 /// attempt owner before the next dependency can dispatch; failures stop immediately.
+/// Admission, submission and qualification are async under their selected journal
+/// guards. Retain each exact reply before awaiting cancellable qualification work.
+/// Cancellation preserves source bytes/references, earlier Applied receipts and
+/// the current pending reservation, denying whole-stage or single-call reentry.
 ///
 /// After all exact receipts, release journal locks and checkpoint the full original plan
 /// and ordered canonical request/raw-reply evidence through the existing stage owner.
@@ -46,14 +50,14 @@ use thiserror::Error;
 /// Rejects changed originals, consumed attempts, source/preparation failures, spending,
 /// admission/provider/reply/qualification/receipt or checkpoint failure. Bounded returned
 /// replies survive post-reply rejection; spending, recorded receipts and source remain.
-pub fn upload_snapshot_data<E: std::error::Error + 'static>(
+pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     upload: &IcSnapshotDataUploadPlan<'_, '_, '_>,
     source: &DownloadJournalGuard<'_>,
     snapshot: &str,
     provider: &mut impl IcSnapshotUploadProvider,
-    mut admit: impl FnMut(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
-    mut qualify: impl FnMut(
+    mut admit: impl AsyncFnMut(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
+    mut qualify: impl AsyncFnMut(
         &IcSnapshotUploadAttempt<'_, '_>,
         &IcMutationAcknowledgement,
     ) -> Result<MutationReceiptRequest, E>,
@@ -83,8 +87,10 @@ pub fn upload_snapshot_data<E: std::error::Error + 'static>(
             kind.clone(),
         )?;
         // The single-call owner rechecks the exact full source/context/request before spending.
-        let acknowledgement = upload_snapshot(stage, sequence, &payload, provider, &mut admit)?;
+        let acknowledgement =
+            upload_snapshot(stage, sequence, &payload, provider, &mut admit).await?;
         let digest = record_qualified(stage, sequence, &payload, &acknowledgement, &mut qualify)
+            .await
             .map_err(|source| IcSnapshotDataUploadExecutionError::AfterReply {
                 operation_sequence: sequence,
                 source,
@@ -99,12 +105,12 @@ pub fn upload_snapshot_data<E: std::error::Error + 'static>(
     Ok(stage.checkpoint(ArtifactChecksumRecord::from_bytes(&evidence))?)
 }
 
-fn record_qualified<E: std::error::Error + 'static>(
+async fn record_qualified<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     sequence: u64,
     payload: &IcSnapshotUploadRequest<'_>,
     acknowledgement: &IcMutationAcknowledgement,
-    qualify: &mut impl FnMut(
+    qualify: &mut impl AsyncFnMut(
         &IcSnapshotUploadAttempt<'_, '_>,
         &IcMutationAcknowledgement,
     ) -> Result<MutationReceiptRequest, E>,
@@ -117,6 +123,7 @@ fn record_qualified<E: std::error::Error + 'static>(
     let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
     let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
     let receipt = qualify(&request, acknowledgement)
+        .await
         .map_err(IcSnapshotDataUploadReplyError::Qualification)?;
     if receipt.outcome != MutationOutcomeRecord::Applied
         || receipt.attempt != request.mutation_attempt()

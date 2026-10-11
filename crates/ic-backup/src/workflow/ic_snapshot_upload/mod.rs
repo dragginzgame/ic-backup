@@ -47,6 +47,9 @@ use thiserror::Error;
 /// its own prior accounting. Local checks grant no byte fence or allocation authority.
 /// The existing provider sends only the exact accounted replicated update, with no
 /// batching, retries, hidden observations or implicit funding. No default is installed.
+/// Await admission and submission under the selected original guard. Cancellation
+/// releases exclusion without changing spending or permitting reentry. The provider
+/// receives the currently guarded original journal; the core supplies no executor.
 ///
 /// Re-admit original stage/ancestor evidence before and after dispatch and check the
 /// bounded acknowledgement through the canonical upload policy/decoder. Success
@@ -58,12 +61,12 @@ use thiserror::Error;
 /// Rejects changed originals/payload/context, spending, fresh admission, provider or
 /// reply failures. Post-reservation failures retain consumption; post-reply rejections
 /// retain the bounded acknowledgement. No failure grants redispatch/refund/cleanup.
-pub fn upload_snapshot<E: std::error::Error + 'static>(
+pub async fn upload_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
     operation_sequence: u64,
     payload: &IcSnapshotUploadRequest<'_>,
     provider: &mut impl IcSnapshotUploadProvider,
-    admit: impl FnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
+    admit: impl AsyncFnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
 ) -> Result<IcMutationAcknowledgement, IcSnapshotUploadExecutionError<E>> {
     let plan = stage.plan();
     let authority = plan.attempt_authority(operation_sequence)?;
@@ -72,9 +75,11 @@ pub fn upload_snapshot<E: std::error::Error + 'static>(
     journal.reserve_planned_mutation(&plan.digest())?;
     let request =
         IcSnapshotUploadAttempt::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request).map_err(IcSnapshotUploadExecutionError::Admission)?;
+    admit(&request)
+        .await
+        .map_err(IcSnapshotUploadExecutionError::Admission)?;
     stage.layout()?;
-    let acknowledgement = provider.submit_upload(&request)?;
+    let acknowledgement = provider.submit_upload(&request, journal.record()?).await?;
     let association = match journal.record() {
         Ok(record) => record,
         Err(source) => {

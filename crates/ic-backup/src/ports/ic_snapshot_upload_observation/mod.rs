@@ -1,5 +1,6 @@
 //! Single originally reserved metadata-upload inventory observation contract.
 
+use crate::model::attempt_journal::AttemptJournalRecord;
 use crate::{
     model::{
         ic_observation::IcObservationResponse,
@@ -26,6 +27,9 @@ use crate::{
 /// references and application/fence obligations. Lost observation replies stay
 /// pending, not settled Uncertain. No receipt, refund, default provider, data-upload
 /// reconciliation, terminal or reference-release authority is installed.
+/// Await one observation while retaining the current original journal guard.
+/// Providers recheck the supplied record before submission; cancellation preserves
+/// both pending attempts and grants no reissue. No runtime or `Send` bound follows.
 pub trait IcSnapshotUploadObservationProvider {
     /// Observe once under the exact original reserved list request.
     /// # Errors
@@ -33,7 +37,8 @@ pub trait IcSnapshotUploadObservationProvider {
     fn observe_upload(
         &mut self,
         request: &IcSnapshotUploadObservationRequest<'_, '_>,
-    ) -> Result<IcObservationResponse, IcObservationProviderError>;
+        journal: &AttemptJournalRecord,
+    ) -> impl Future<Output = Result<IcObservationResponse, IcObservationProviderError>>;
 }
 
 #[cfg(test)]

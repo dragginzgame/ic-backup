@@ -75,9 +75,26 @@ resume or implicit repeat call. Real Agent simulator reads exercise this adapter
 and the single-read coordinator; the Testkit fixture separately exercises the
 metadata/download loop. Neither supplies a default application qualification lane.
 
-Upload, recovery and fence ports remain separate synchronous contracts;
-their async provider integration and full application runners remain pending. No
-compatibility wrapper or default application safety/retention callback is supplied.
+`AgentSnapshotUploadProvider` implements source-bound metadata/data uploads with
+the same mandatory signed-ingress retention and current guarded record admission.
+Await `upload_snapshot`, `allocate_snapshot` and `upload_snapshot_data`; fresh
+admission and independent qualification are async. Integrations qualify authentic
+complete source, exclusive destination attribution, current controllers and stable
+byte/command custody. Retain exact replies before cancellable qualification work.
+Cancellation preserves source evidence, earlier receipts and pending spending;
+neither allocation nor a partially settled data stage can reenter dispatch. Actual
+Agent simulator metadata/data uploads use the adapter and single-upload coordinator;
+the Testkit fixture separately exercises allocation and complete data-stage loops.
+
+Configure `AgentObservationProvider` for all three separately accounted recovery
+ports. Await `observe`, `observe_upload` or `observe_upload_data` with the currently
+guarded original journal. Its mandatory retainer receives the exact reserved request
+and signed preparation; durably retain both original attempt identities, envelope and
+request ID under exclusive never-dispatched custody before one status/list/readback
+update. Retention must reject prior dispatch. Cancellation and lost replies retain
+both pending attempts; certificate-verified projections do not settle them.
+Fence-provider async integration and full application runners remain pending. No
+default application safety/retention callback is supplied.
 
 ## Results and interruption
 
@@ -111,9 +128,17 @@ management receiver/effective target and certificate verification. A no-external
 effects fixture captures and reads exact metadata, transfers every Wasm/1 MiB heap/
 1 MiB stable byte, uploads metadata/data, loads the same existing ID, and restores
 heap/stable/global/certified state through an actual Ed25519 controller. A discarded actual stop reply halts with unchanged
-pending original accounting and denies a repeat reservation. A wrong root rejects an
+pending original accounting and denies a repeat reservation. A distinct actual
+recovery trace reserves one original status observation after that discarded stop
+reply, awaits the Agent recovery port, decodes Stopped and retains both attempts
+pending without another stop or automatic receipt. A wrong root rejects an
 actual reply while an independent oracle proves the stop applied. Neither path
-writes an automatic receipt. Fixtures retain exact original plans/journals, signed
+writes an automatic receipt. Actual allocation-list and full 1 MiB Wasm readback
+also use the configured recovery provider: both original attempts remain pending,
+exact destination bytes match and retained ingress refuses repeat dispatch. The
+readback wire exceeds 1 MiB and exercises the distinct 2 MiB data-response bound.
+This isolated fixture does not establish generic allocation attribution or settlement.
+Fixtures retain exact original plans/journals, signed
 requests/IDs, raw replies and simulator state. Current Testkit evidence is under
 `target/testkit-adoption-090`; the original released transport evidence stays under
 `target/agent-hard-cut-080`.

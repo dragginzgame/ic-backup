@@ -3,7 +3,6 @@
 use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
 use ic_backup::{
     model::{
-        artifacts::ArtifactChecksumRecord,
         attempt_journal::AttemptJournalRecord,
         ic_snapshot_transfer_read::{
             IcSnapshotTransferReadRequest, IcSnapshotTransferReadResponse,
@@ -64,18 +63,20 @@ where
         let UpdateOutcome::Replied { request_id, reply } = outcome else {
             return Err(IcObservationProviderError::Indeterminate);
         };
-        let mut evidence = b"ic-backup-agent.transfer-read-reply.v1\0".to_vec();
-        evidence.extend_from_slice(request.authority().digest().hash().as_bytes());
-        evidence.extend_from_slice(&request.mutation_attempt().to_le_bytes());
-        evidence.extend_from_slice(request_id.as_ref());
-        evidence.extend_from_slice(ArtifactChecksumRecord::from_bytes(&reply).hash().as_bytes());
+        let evidence = crate::reply_evidence::reply_evidence(
+            b"ic-backup-agent.transfer-read-reply.v1\0",
+            &request.authority().digest(),
+            &[request.mutation_attempt()],
+            &request_id,
+            &reply,
+        );
         IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
             authority: request.authority().digest(),
             mutation_attempt: request.mutation_attempt(),
             context: self.transport.context.clone(),
             target: request.payload().target().into(),
             reply,
-            evidence: ArtifactChecksumRecord::from_bytes(&evidence),
+            evidence,
         })
         .map_err(|_| IcObservationProviderError::Indeterminate)
     }

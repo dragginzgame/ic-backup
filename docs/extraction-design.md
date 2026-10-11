@@ -265,7 +265,7 @@ status/read visibility must never be mistaken for write authority.
 | `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentMutationProvider requires durable signed retention, with no default or automatic settlement |
 | `IcSnapshotTransferReadProvider` | Implemented async exact original metadata/data payload and current guarded pending-update record, bounded passive response and existing decoder association; configured Agent adapter requires durable signed retention, with no automatic receipt or read reissue |
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; no installed provider, automatic outcome or lost-observation reissue |
-| `IcSnapshotUploadProvider` | Implemented single reserved source-bound metadata/data update signature, reusing exact upload attempts, passive acknowledgements and IC update failures; no installed provider, automatic settlement or retry |
+| `IcSnapshotUploadProvider` | Implemented async source-bound metadata/data update and current guarded record, reusing exact attempts, passive acknowledgements and IC update failures; configured Agent adapter requires durable signed retention, with no automatic settlement or retry |
 | `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; no installed provider, allocation outcome, data reconciliation or reissue |
 | `IcSnapshotUploadDataObservationProvider` | Implemented exact original destination/extent/reserved readback observation with passive chunk comparison; no installed provider, write attribution, automatic receipt or reissue |
 | `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
@@ -655,8 +655,12 @@ exclusion; providers recheck the currently guarded record. The configured Agent
 transfer adapter retains signed ingress durably before one submission. Retain
 replies before cancellable qualification work. Cancellation preserves pending or
 Applied spending, earlier download receipts and partial files, denying reentry.
-The core adds no runtime or `Send` bound. Upload/recovery/fence ports remain separate
-synchronous contracts; full application coordination remains incomplete.
+The core adds no runtime or `Send` bound. All three separately reserved IC recovery
+observation ports also return futures and accept the currently guarded original
+journal. The configured Agent observation adapter durably retains signed ingress
+before one status/list/readback submission; both attempts stay pending on cancellation
+or passive replies. Fence-provider async integration and full application coordination
+remain incomplete.
 
 The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
 private exact region/chunk bytes, original raw metadata/request and incremental
@@ -724,6 +728,14 @@ acknowledgement/predecessor feeds explicit learned data binding; no data plan or
 is generated. Lost/unqualified replies, invalid receipts and occupied checkpoints
 retain spending/returned bytes and prevent allocation reissue. The actual Testkit
 upload caller now delegates this metadata assembly to the public coordinator.
+
+The upload provider and upload/allocation/data-stage coordinators are async.
+Providers receive the currently guarded original record; fresh admission and
+independent qualification retain selected exclusion across awaits. The configured
+Agent adapter requires durable signed ingress before one submission. Retain replies
+before cancellable qualification work. Cancellation preserves source bytes/references,
+earlier receipts and current pending spending and denies reentry. No executor,
+`Send` bound, new schema, accounting owner or default application lane is added.
 
 `DownloadJournalGuard::prepare_ic_snapshot_data_upload_plan` counts complete exact
 extents against the original data-stage ceiling before source IO. Guarded canonical
