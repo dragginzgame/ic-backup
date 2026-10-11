@@ -69,11 +69,11 @@ and [IC tool matrix](../ci/ic-tools.tsv), through the shared
 PCRE2, cloc and the five IC executables, followed by Cargo-sort, Cargo-sort-derives
 and Candid-extractor. The ordered Backup extension fetches locked dependencies
 then prepares its selected Testkit CLI/server. Previous sets and failed candidates
-are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and `.tools/rust/bin`.
+are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and `.tools/rust/common/bin`.
 Interactive shells can use:
 
 ```bash
-export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/bin:$PATH"
+export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/common/bin:$PATH"
 ```
 
 See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
@@ -93,7 +93,22 @@ no backend or application qualification.
 
 The shared `make install-rust-tools` and offline `make rust-tools-check` prepare
 and check the mandatory common Cargo-sort, Cargo-sort-derives and Candid-extractor
-set under `.tools/rust/`. Both commands use the reviewed shared pins. The aggregate
+set through verified versioned slots under `.tools/rust/`, activated together at
+`.tools/rust/common/bin`. Both commands use the reviewed shared pins. After adopting
+Shared Tooling 0.4, explicitly run `make install-rust-tools` and
+`make rust-tools-check`, and update any terminal PATH export. Old `.tools/rust/bin`
+installations and failed evidence remain retained; they supply no fallback.
+Partial setup keeps the previous complete common set active. Shared Tooling owns
+[shared executable storage](local-setup.md#shared-executable-storage). Host/IC
+bundles reuse a per-user store; Cargo slots and Testkit storage remain local.
+After adopting Shared Tooling 0.5, run `make install-host-tools` and
+`make install-ic-tools`, then their offline checks. Command paths remain
+`.tools/host/bin` and `.tools/ic/bin`. Existing local bundles and failed attempts
+stay retained; setup activates new references without moving or deleting them.
+An explicit absolute `SHARED_TOOLING_STORE` setting must be shared by setup,
+checks and evidence collection. CI uses one isolated store per native job and
+checks reuse from a second consumer with downloads disabled. Avoid independent
+store owners, sibling PATHs or manual binary relocation. The aggregate
 runs common host, IC and Cargo steps in order, then product targets registered
 through `LOCAL_TOOL_INSTALL_TARGETS`/`LOCAL_TOOL_CHECK_TARGETS`. Backup registers
 locked fetch before Testkit setup, and Testkit admission after common checks.
@@ -967,6 +982,12 @@ CI creates `target/ci-fixtures` before setting `TMPDIR`, then uploads that direc
 retained test directories and validation failure logs on job failure. Hidden fixture
 files include private Git index evidence. These test artifacts have seven-day
 retention; they do not replace durable operator journals or source references.
+The upload contains a local evidence archive and a separate shared-tools archive
+when canonical selection succeeds. Local logs are archived first. Rejected shared
+paths preserve diagnostics and the original collector status; the upload remains
+eligible, with shared collection explicitly incomplete. The shared composite action
+has separate upstream acceptance under
+[#121](https://github.com/dragginzgame/shared-tooling/issues/121).
 Linux and native macOS evidence remain distinct. See
 [the current adoption review](shared-tooling-review.json).
 

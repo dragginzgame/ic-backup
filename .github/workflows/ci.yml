@@ -30,6 +30,7 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/target/ci-fixtures"
           echo "TMPDIR=$GITHUB_WORKSPACE/target/ci-fixtures" >> "$GITHUB_ENV"
+          echo "SHARED_TOOLING_STORE=$RUNNER_TEMP/ic-backup-tool-store" >> "$GITHUB_ENV"
       - name: Install the pinned development toolchain
         run: rustup show active-toolchain
       - name: Install the minimum supported Rust toolchain
@@ -52,8 +53,26 @@ jobs:
         run: |
           make install-tools
           printf '%s\n' "$GITHUB_WORKSPACE/.tools/host/bin" \
-            "$GITHUB_WORKSPACE/.tools/ic/bin" "$GITHUB_WORKSPACE/.tools/rust/bin" >> "$GITHUB_PATH"
+            "$GITHUB_WORKSPACE/.tools/ic/bin" "$GITHUB_WORKSPACE/.tools/rust/common/bin" >> "$GITHUB_PATH"
           make tools-check
+      - name: Verify native shared-tool reuse without downloads
+        run: |
+          sharing="$GITHUB_WORKSPACE/target/ci-fixtures/shared-tools"
+          mkdir -p "$sharing/consumer" "$sharing/bin"
+          printf '#!/bin/sh\necho unexpected-download >&2\nexit 91\n' > "$sharing/bin/curl"
+          chmod +x "$sharing/bin/curl"
+          for kind in host ic; do
+            pins=(--versions "$GITHUB_WORKSPACE/ci/tool-versions.env")
+            if [[ "$kind" == ic ]]; then pins=(--pins "$GITHUB_WORKSPACE/ci/ic-tools.tsv"); fi
+            for mode in install check; do
+              options=()
+              if [[ "$mode" == check ]]; then options=(--check); fi
+              PATH="$sharing/bin:$PATH" bash "scripts/dev/install-$kind-tools.sh" \
+                --consumer "$sharing/consumer" "${pins[@]}" ${options[@]+"${options[@]}"} \
+                > "$sharing/$kind-$mode.log" 2>&1
+            done
+            test "$(cd "$GITHUB_WORKSPACE/.tools/$kind" && pwd -P)" = "$(cd "$sharing/consumer/.tools/$kind" && pwd -P)"
+          done
       - name: Check tooling with macOS system Bash 3.2
         if: runner.os == 'macOS'
         shell: /bin/bash --noprofile --norc -eo pipefail {0}
@@ -96,10 +115,46 @@ jobs:
               fi
             done
           done
+          # Preserve common/selected slots, receipts and failed Cargo attempts.
+          # The archive retains links without following them.
+          if [[ ! -L .tools && ! -L .tools/rust && -d .tools/rust ]]; then
+            inputs+=("$GITHUB_WORKSPACE" .tools/rust)
+          fi
+          # Select only this checkout's retained references and admitted bundles.
+          archive_root="$(mktemp -d "$RUNNER_TEMP/ic-backup-evidence.XXXXXX")"
+          # Publish the retention destination before either collection can fail.
+          printf 'path=%s\n' "$archive_root" >> "$GITHUB_OUTPUT"
           if [[ ${#inputs[@]} != 0 ]]; then
-            archive="$(mktemp -d "$RUNNER_TEMP/ic-backup-evidence.XXXXXX")/evidence.tar.gz"
-            bash scripts/ci/archive-evidence.sh "$archive" "${inputs[@]}"
-            printf 'path=%s\n' "$archive" >> "$GITHUB_OUTPUT"
+            if bash scripts/ci/archive-evidence.sh "$archive_root/local-evidence.tar.gz" "${inputs[@]}" \
+                > "$archive_root/local-archive.log" 2>&1; then
+              :
+            else
+              status=$?
+              printf 'Local evidence collection incomplete (exit %s); retaining diagnostics.\n' "$status" >&2
+              exit "$status"
+            fi
+          fi
+          if bash scripts/ci/select-tool-evidence.sh full "$GITHUB_WORKSPACE" "$archive_root" \
+              > "$archive_root/selections.nul" 2> "$archive_root/shared-selection.log"; then
+            :
+          else
+            status=$?
+            printf 'Shared evidence selection incomplete (exit %s); retaining local evidence and diagnostics.\n' "$status" >&2
+            exit "$status"
+          fi
+          shared_inputs=()
+          while IFS= read -r -d '' selected_root && IFS= read -r -d '' selected_path; do
+            shared_inputs+=("$selected_root" "$selected_path")
+          done < "$archive_root/selections.nul"
+          if [[ ${#shared_inputs[@]} != 0 ]]; then
+            if bash scripts/ci/archive-evidence.sh "$archive_root/shared-tools.tar.gz" "${shared_inputs[@]}" \
+                > "$archive_root/shared-archive.log" 2>&1; then
+              :
+            else
+              status=$?
+              printf 'Shared evidence collection incomplete (exit %s); retaining local evidence and diagnostics.\n' "$status" >&2
+              exit "$status"
+            fi
           fi
       - name: Retain failed validation evidence
         if: failure() && steps.validation-archive.outputs.path != ''

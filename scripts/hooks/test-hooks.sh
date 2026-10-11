@@ -146,8 +146,8 @@ CARGO
 test_checkout_local_tools() {
     local original_tool before sources
     original_tool="$(command -v cargo-sort)"
-    mkdir -p .tools/rust/bin fallback-bin
-    cp "$original_tool" .tools/rust/bin/cargo-sort
+    mkdir -p .tools/rust/common/bin fallback-bin
+    cp "$original_tool" .tools/rust/common/bin/cargo-sort
     export HOOK_TEST_REAL_CARGO
     HOOK_TEST_REAL_CARGO="$(command -v cargo)"
     # Dispatch sort through PATH to expose the checkout/export distinction,
@@ -172,9 +172,9 @@ CARGO
         printf 'pub fn answer()->u32{42}\n' > crates/ic-backup/src/lib.rs
         git add -- crates/ic-backup/src/lib.rs
         if [[ "$state" == missing ]]; then
-            rm .tools/rust/bin/cargo-sort
+            rm .tools/rust/common/bin/cargo-sort
         else
-            cp fallback-bin/cargo-sort .tools/rust/bin/cargo-sort
+            cp fallback-bin/cargo-sort .tools/rust/common/bin/cargo-sort
         fi
         before="$(index_fingerprint)"
         sources="$(sources_fingerprint)"

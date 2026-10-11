@@ -49,7 +49,53 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 96-file snapshot selects committed Shared Tooling 0.3.11 at
+The current 98-file snapshot selects committed Shared Tooling 0.5.0 at
+`a306180ce534227fcb98b882fba9a526d5d747e0`, verified against remote main.
+Clean canonical preview/export excludes the sibling's uncommitted 0.5.1 work.
+It adds the explicit `tool-store.sh` and sourced `test-tool-store.sh` companions;
+12 existing selected files change from 0.4.2.
+
+Host and IC setup now reuse authenticated shared bundle generations, with
+unchanged repository command paths and independent pinned selections. Cargo
+slots and Testkit storage remain local. Old physical local bundles remain
+retained but are not active fallback installations. Local CI selects one isolated
+store consistently, checks actual native reuse without downloads and delegates
+shared evidence selection to the canonical owner. No store is reimplemented,
+no payload is manually moved and no sibling checkout is used for tools.
+The local CI collector archives independent local logs before shared selection,
+retaining diagnostics and the original rejection status when shared collection
+fails. The canonical shared action remains unchanged; its separate retention gap
+is tracked by [upstream #121](https://github.com/dragginzgame/shared-tooling/issues/121).
+
+The library contract is unchanged, so the pending notes remain compatible
+0.18.2. Package versions and Git/release state remain user-owned. See
+[the current review](reports/audits/2026/10/11/shared-050/01/report.md).
+
+### Prior Shared Tooling 0.4.2 review
+
+The prior 96-file snapshot selects committed Shared Tooling 0.4.2 at
+`8db24059613c63ba9be36d4225fb74f598f49df2`, verified against remote main.
+The canonical exporter preview confirms the existing roster needs no companion
+additions; a clean isolated checkout supplies all adopted bytes. Fifteen selected
+files change from released 0.3.11; two policy documents advance from the
+qualified intermediate 0.4.1 export. Common Cargo tools now reuse the selected-tool receipt/byte owner
+and activate only a complete set at `.tools/rust/common/bin`. Local CI, hook
+fixtures, shell guidance and failed-validation archives follow that contract.
+Old installations and failed attempts remain retained. Explicit setup is required;
+offline checks neither provision nor repair tools. Selected Testkit CLI paths and
+product dependencies remain unchanged. The 0.4.2 policy assigns future per-user
+executable storage to Shared Tooling; that store is not implemented. Follow the
+current canonical installers and retained `.tools` paths rather than adding a
+consumer store or relocating binaries.
+
+The clarified baseline keeps Git/release execution user-owned and classifies
+compatibility at the published package boundary. This contributor-only adoption
+selects compatible 0.18.2 notes, without changing package versions or the library
+contract. See [the current review](reports/audits/2026/10/11/shared-042/01/report.md).
+
+### Prior Shared Tooling 0.3.11 review
+
+The prior 96-file snapshot selects committed Shared Tooling 0.3.11 at
 `db143ae9ae140eb66826c413360723d23c078f66`, matching remote main. Canonical
 export from an isolated clean committed checkout preserves all existing paths and
 excludes the sibling's uncommitted 0.3.12 work. Seven selected files change: Cargo

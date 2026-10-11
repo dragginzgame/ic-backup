@@ -25,7 +25,64 @@
 
 # Current handoff — 2026-10-11
 
-## Current 0.18.1 acquisition orchestration
+## Current 0.18.2 Shared Tooling 0.5 adoption
+
+Released HEAD remains 0.18.1 at `7e9eaf2da8a6e89ba790210d895effc1a9b0898d`.
+Adopt committed Shared Tooling 0.5.0
+`a306180ce534227fcb98b882fba9a526d5d747e0` through clean canonical export,
+including the two required shared-store companions (98 selected paths).
+Host/IC bundles now share per-user storage with exact independent pins and
+unchanged command paths. Cargo slots and Testkit storage remain local; retain
+old bundles and failed evidence. Explicit setup precedes offline admission.
+CI uses one isolated store per native job, verifies reuse without downloads and
+archives only this checkout's admitted references/bundles through the shared owner.
+
+Qualify the paused Host 0.13.2, Metrics 0.6.2 and Testkit 0.33.5 locked graph.
+All 16 delivery targets pass on the initial Host 0.13.1 graph; all ten affected
+graph-dependent checks pass again on Host 0.13.2, whose Rust sources are unchanged.
+Technical inputs and the real index remain unchanged within each passing phase.
+Actual Linux native two-checkout reuse refuses any second download. Eight actual
+collector cases verify byte retention, deduplication and link boundaries. Local CI
+archives logs first and retains uploadable diagnostics with the original status
+when shared collection fails; the unchanged shared action's gap remains
+[upstream #121](https://github.com/dragginzgame/shared-tooling/issues/121).
+
+Released 0.18.1 CI passes Linux and Apple Silicon; Intel macOS is still running.
+The uncommitted adoption has no hosted result; its macOS acceptance remains pending.
+Detailed evidence remains under `target/shared-050`; see the compact
+[review](../reports/audits/2026/10/11/shared-050/01/report.md). This contributor-only
+adoption remains compatible 0.18.2 work; package versions stay 0.18.1. No Git/release
+transaction, sibling edit, manual relocation or recovery cleanup is performed.
+
+## Prior 0.18.2 Shared Tooling adoption
+
+Released HEAD is 0.18.1 at `7e9eaf2da8a6e89ba790210d895effc1a9b0898d`.
+Its exact-source push CI passes Linux; Apple Silicon is running and Intel macOS
+is queued at final review. Earlier cancelled runs supply no acceptance for this source.
+
+Adopt committed Shared Tooling 0.4.2
+`8db24059613c63ba9be36d4225fb74f598f49df2` through clean canonical preview/export
+with the same 96 selected paths. Common Cargo tools reuse verified versioned slots
+and activate together at `.tools/rust/common/bin`. Local CI/hook callers, shell
+guidance and failure archives follow that owner. Retain old tools and failed
+attempts; run explicit setup followed by offline admission. Selected Testkit
+CLI/server and library dependencies remain unchanged. Shared Tooling owns future
+per-user executable storage; 0.4.2 establishes the policy only. Keep the current
+canonical `.tools` installation, with no separate consumer store or relocation.
+The package-impact rules
+classify this as contributor-only compatible 0.18.2 work; package versions remain
+0.18.1 and Git/release execution remains user-owned.
+
+The full 16-target delivery gate passes on the 0.4.1 executable adoption with
+unchanged product/graph inputs. The affected 0.4.2 snapshot, documentation and
+consumer-tooling gates also pass. Host Artifact/FS 0.13.1, Testkit 0.33.4 and
+Metrics 0.6.1 are qualified on this exact incoming locked graph.
+Evidence remains under `target/shared-041` and `target/shared-042`; see the compact
+[review](../reports/audits/2026/10/11/shared-042/01/report.md). Native acceptance
+remains separate for the uncommitted 0.18.2 candidate. No Git/release effects,
+package version change, sibling edit or recovery cleanup is performed.
+
+## Prior 0.18.1 acquisition orchestration
 
 Released HEAD is 0.18.0 at `ff7ecbb287dde1e078e55548a9d2814472476d42`.
 The exact-release CI passes Linux; both macOS jobs remain queued at final review.

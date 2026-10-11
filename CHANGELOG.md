@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.18.2]
+
+- Adopt Shared Tooling 0.5.0. Host and IC tools share verified bundles across
+  checkouts while retaining each repository's pins and existing command paths.
+  Contributors must rerun host/IC setup and offline checks. Common Cargo tools
+  use `.tools/rust/common/bin`; earlier installations and failed attempts remain
+  retained. CI checks native reuse with downloads disabled and archives only
+  this checkout's referenced shared bundles and local Rust evidence
+  ([#36](https://github.com/dragginzgame/ic-backup/issues/36)).
+- Retain uploadable local CI logs before shared evidence collection. Rejected
+  shared-store or tool paths preserve diagnostics and the original failure status
+  while leaving local archives available
+  ([shared #121](https://github.com/dragginzgame/shared-tooling/issues/121)).
+
 ## [0.18.1] - 2026-10-11
 
 - Add an async application-fence acquisition step that checks retained stage,
