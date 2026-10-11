@@ -694,19 +694,22 @@ Local IC artifact diagnostics are available through
 `prepared_chunk_bytes_histogram()` returns the canonical shared
 `MeasurementHistogram<4>`, re-exported through the same persistence facade. Its
 inclusive byte bounds are zero, 32 KiB, 256 KiB and 1 MiB, with separate overflow.
-Counts are disjoint and saturate independently. The histogram owns the summary;
+Counts are disjoint and saturate independently. The histogram owns the mergeable
+aggregate;
 there is no separately updated byte aggregate. Empty chunks and repeated work
 remain samples, while rejected calls contribute no bytes. Six duration summaries
 retain their existing owners and inclusive timing.
-Counts, totals, latest and maximum reuse `ic-metrics::MeasurementSummary`, exposed
-as `ic_backup::ops::persistence::MeasurementSummary`. This re-exports the shared type;
-no local summary model or aggregation is maintained. Callers can name returned
-summaries through this path without adding a direct Metrics dependency. Successful
-and rejected calls stay separate. Empty chunks are valid zero samples; repeated
+Durations reuse ordered `ic-metrics::MeasurementSummary`; prepared bytes expose
+`MeasurementAggregate` without latest. Both are re-exported through
+`ic_backup::ops::persistence`, without local arithmetic or a duplicate byte summary.
+Unit conversions outside `u64` are excluded independently, never clipped into
+exact samples. Shared means/intervals reject actual overflow; exactly reached caps
+remain exact. Callers need no direct Metrics dependency to name these types.
+Successful and rejected calls stay separate. Empty chunks are valid zero samples; repeated
 preparation is repeated work. Preparation timings include nested verification and
 must not be added to verification timings as exclusive work. Measurements are empty
 on reopen and never persist into journals or grant progress/spending authority.
-Four bounds add 72 bytes of fixed storage per guard and at most four bound
+Four bounds use fixed storage per guard and at most four bound
 comparisons per admitted chunk. No allocation, clock or reporting task is added.
 This describes storage/work, not a measured speed-up or IC cycle cost.
 

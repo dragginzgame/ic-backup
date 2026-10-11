@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "base_commit": "8433b7a661699c1c5fbf08256d921be8e9ea8ec4",
+  "pending_changelog": "0.18.0",
+  "selected_metrics": "0.6.1",
+  "features": [],
+  "source_revision": "39b357eb4e53051b5ad9afcfcd0a8c147c68a524",
+  "qualification": "All 16 make ci targets pass on frozen Linux inputs; Rust 1.88 public type-identity consumer passes. Native macOS candidate acceptance pending.",
+  "artifacts": {
+    "target/metrics-061/incoming.toml": {
+      "sha256": "841b5f9ef2e6fb8075109d329b27b5b93a0ef00569789f5530657e4c3766cb3d"
+    },
+    "target/metrics-061/incoming.lock": {
+      "sha256": "66eacb1fe41aa40217f6360fa5db1e281a9c3aee169fa9dced90c9157b76d927"
+    },
+    "target/metrics-061/source-proof.json": {
+      "sha256": "d611936fb4c52a328341c709c05a9c0a2afbd2f5da95a3ede85aa5b50056ae17"
+    },
+    "target/metrics-061/workspace.json": {
+      "sha256": "542cab1fb7e8da3eb92cf2130f517706036cc21728b8b6fe29afef751f2b4ec5"
+    },
+    "target/metrics-061/technical-before-ci.json": {
+      "sha256": "e86905aa97a6023d9a93edeb38fb9a8e330d56da1218a12d47c132a078e25744"
+    },
+    "target/metrics-061/technical-after-ci.json": {
+      "sha256": "e86905aa97a6023d9a93edeb38fb9a8e330d56da1218a12d47c132a078e25744"
+    },
+    "target/metrics-061/passed-cases.json": {
+      "sha256": "2a5d89d59342af81bf6196484841b3993e7a88621905f0af83d095c5002c209a"
+    },
+    "target/metrics-061/focused.log": {
+      "sha256": "b0ca8f6f017ef36e03513682df984e6a27d19601370ca673214e6abe66b376c2"
+    },
+    "target/metrics-061/full-ci.log": {
+      "sha256": "ae1bebee0270db0a4b5c9198306b10878677bf2b86126f73c60efc0b3692d19a"
+    },
+    "target/metrics-061/testkit-check.log": {
+      "sha256": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02"
+    },
+    "target/metrics-061/public-consumer/Cargo.toml": {
+      "sha256": "7195304fb2fa75462ef2721e1f33ace045280063a784654d3eaa1e33c4c2b4c2"
+    },
+    "target/metrics-061/public-consumer/Cargo.lock": {
+      "sha256": "02c9661a6bae12f9c11946f3f5c81f572613b3c8eec1b6adbb3c3496cd8177b9"
+    },
+    "target/metrics-061/public-consumer/src/main.rs": {
+      "sha256": "b132b0626bae19583ba828afa1505601d08e99f8cf5125d7d39122ffd4cbed8e"
+    },
+    "target/metrics-061/public-consumer/metadata.json": {
+      "sha256": "54b241bfe4f32ec5173d02d6d312a3aaab049d06957bcdbcd287930f48d8e39c"
+    },
+    "target/metrics-061/public-consumer/check.log": {
+      "sha256": "bc5b651e1915385445bd6e065f78a3c4f760d1028021745e908201e8f1aa38a8"
+    },
+    "target/metrics-061/final-doc-links.log": {
+      "sha256": "c38b2b6df7d5ffee4e760c1f9a9b323b9230413fb1ee80804db5103c6b646492"
+    }
+  }
+}

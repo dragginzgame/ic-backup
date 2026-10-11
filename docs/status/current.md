@@ -25,7 +25,28 @@
 
 # Current handoff — 2026-10-11
 
-## Current 0.18.0 Host and application-fence continuation
+## Current 0.18.0 Metrics hard cut
+
+Extend the existing undated 0.18.0 batch with published Metrics 0.6.1. The public
+`IcSnapshotLocalMetrics::prepared_chunk_bytes()` returns the shared re-exported
+`MeasurementAggregate`; use count/total/maximum or the histogram, without latest.
+The six duration summaries remain ordered. Each unit conversion must fit u64:
+exclude unrepresentable observations independently, preserving valid byte samples
+when elapsed duration cannot fit. Exactly reached caps remain exact; sticky actual
+accumulator overflow makes shared means/intervals unavailable. Diagnostics remain
+volatile and have no journal, spending, completion or receipt authority.
+
+Focused conversion/cap/overflow/distribution/guard tests and the independent
+Rust 1.88 public type-identity consumer pass. All 16 `make ci` delivery targets
+pass on unchanged source/graph inputs, including strict Clippy, real simulator
+journeys, MSRV and exact paired packaging. Detailed evidence is under
+`target/metrics-061`; see [the compact review](../reports/audits/2026/10/11/metrics-061/01/report.md).
+Current candidate native macOS acceptance remains pending. The working base is
+`8433b7a661699c1c5fbf08256d921be8e9ea8ec4`; package versions remain 0.17.0. Retain incoming Host 0.13, Testkit 0.33.3 and Shared Tooling
+0.3.11; Testkit's selected CLI/server admission passes. No package version, Git,
+release, production IC, sibling edit or recovery cleanup is performed.
+
+## Prior 0.18.0 Host and application-fence continuation
 
 Released HEAD is 0.17.0 at `501c438b3d68b88b6942258bd1ec8682ce9e1bb6`.
 Preserve incoming direct Host Artifact/FS 0.13 and Testkit 0.33.2 selections.

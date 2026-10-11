@@ -771,7 +771,9 @@ ports, full runners and terminal/custody proof remain separate. See
 [the maintained coordination boundary](extraction-boundary.md#original-same-id-loadstart-coordination).
 
 Explicit local IC-tree verification and upload preparation now expose per-guard
-`ic-metrics` summaries and a bounded prepared-size histogram. Host durations use nanoseconds, successful prepared data uses
+`ic-metrics` duration summaries and a bounded prepared-size histogram/aggregate.
+Unrepresentable unit conversions are excluded; histogram bytes retain no latest
+value. Host durations use nanoseconds, successful prepared data uses
 bytes, and returned successes/rejections stay separate. Internal verification and
 enclosing preparation overlap; repeated preparation is another sample rather than
 unique transfer progress. These in-memory diagnostics start empty on reopen and

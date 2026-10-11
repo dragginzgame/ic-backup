@@ -2254,9 +2254,10 @@ qualify local binding/persistence only, with no simulated IC behavior. See
 
 `DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
 `IcSnapshotLocalMetrics` view for that guard's lifetime. It reuses registry
-`ic-metrics`'s `MeasurementSummary` arithmetic, re-exported as
-`ic_backup::ops::persistence::MeasurementSummary` so callers can name returned
-summaries without a separate dependency selection. The actual shared type is
+`ic-metrics` 0.6 arithmetic: ordered duration `MeasurementSummary` and mergeable
+prepared-byte `MeasurementAggregate`, re-exported through
+`ic_backup::ops::persistence` so callers can name returned values without a
+separate dependency selection. The actual shared type is
 declared once in the workspace
 catalog and inherited for the Unix-host implementation. Default features are
 disabled and the canister instruction-reader feature is absent. Consumers own
@@ -2266,7 +2267,10 @@ transport metric is introduced.
 The existing explicit `verify_ic_snapshot_artifact`,
 `prepare_ic_snapshot_upload_metadata` and `prepare_ic_snapshot_upload_data` calls
 record their returned successes/rejections separately. Host monotonic elapsed
-durations use nanoseconds and clamp to `u64::MAX` before shared saturating aggregation.
+durations use exact nanoseconds. Durations outside the `u64` range are excluded
+from their duration lane; any independently representable successful byte sample
+is still recorded. Byte conversions outside that range are likewise excluded.
+An exactly reached `u64::MAX` is an admitted observation, never a clipped input.
 Only a successfully returned data payload contributes its actual bounded chunk
 length in bytes. Empty known chunks contribute a measured zero; repeated preparation
 contributes repeated work, not unique or remotely transferred bytes. Internal
@@ -2277,26 +2281,25 @@ sample. No wall-clock threshold, IC instruction/cycle cost or receipt is inferre
 Successful prepared sizes have one `ic_metrics::MeasurementHistogram<4>` owner,
 re-exported through the persistence facade. `prepared_chunk_bytes_histogram()`
 returns its copied distribution; the existing `prepared_chunk_bytes()` reads its
-summary. Inclusive bounds of zero, 32 KiB, 256 KiB and the 1 MiB payload ceiling
+mergeable aggregate, without a latest byte value. Inclusive bounds of zero, 32 KiB, 256 KiB and the 1 MiB payload ceiling
 separate empty, small, larger and maximum-sized local preparation work. Disjoint
 counts and separate overflow are descriptive, not exact percentiles or payload
 admission. The production payload owner rejects oversized chunks; overflow routing
-is tested without granting an oversized upload. Fixed arrays and overflow add
-72 bytes per guard, with at most four comparisons per successful chunk and no
-extra timing sample. The six duration owners remain summaries. No second byte
+is tested without granting an oversized upload. Fixed arrays and overflow use bounded storage, with at most four comparisons
+per successful chunk and no extra timing sample. The six duration owners remain summaries. No second byte
 aggregate, local histogram arithmetic or duration distribution is introduced.
 
 Sampling is empty on create/open. Ordinary retained record access and metric reads
 perform no fresh artifact IO or sampling, even when artifact trees are missing.
 Guard-local synchronization preserves `Send + Sync`; no metric lock spans filesystem
 work or caller code. Diagnostic poison recovery changes no operation result.
-Counts/totals saturate independently, and either at `u64::MAX` is unavailable for
-exact interval arithmetic. There is no persistence, reset API, serialization,
+Counts/totals clip independently with sticky actual-overflow flags. Shared
+means and intervals reject actual overflow; exactly reached caps remain exact. There is no persistence, reset API, serialization,
 identifier label or retained metric history. Existing v1 bytes/hashes, typed failures,
 spending, obligations and source references keep their original owners.
 
 Native tests check exact sample membership and units, error/zero/repeated-byte
-semantics, duration clamping, copied views, guard traits and fresh empty reopen.
+semantics, exact-cap and rejected duration conversion, copied views, guard traits and fresh empty reopen.
 Public source/upload replay retains original record/reference bytes and exhausted
 pending spending while diagnostic samples grow. This qualifies local arithmetic
 and sampling only. [Dependency review](ic-metrics-adoption.json) binds the verified

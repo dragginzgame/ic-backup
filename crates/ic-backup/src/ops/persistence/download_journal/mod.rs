@@ -20,7 +20,9 @@ pub use local_restore_artifact::{
 pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
 #[cfg(unix)]
-pub use metrics::{IcSnapshotLocalMetrics, MeasurementHistogram, MeasurementSummary};
+pub use metrics::{
+    IcSnapshotLocalMetrics, MeasurementAggregate, MeasurementHistogram, MeasurementSummary,
+};
 
 use super::json::check_json_size;
 use super::{

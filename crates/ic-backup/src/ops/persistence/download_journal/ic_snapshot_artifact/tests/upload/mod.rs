@@ -35,7 +35,7 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     let before = fs::read(guard.path()).unwrap();
     let empty = guard.ic_snapshot_metrics();
     assert_eq!(empty.verification_success_ns().samples(), 0);
-    assert_eq!(empty.prepared_chunk_bytes().latest(), None);
+    assert_eq!(empty.prepared_chunk_bytes().maximum(), None);
     let upload = guard
         .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
         .unwrap();
@@ -71,7 +71,6 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     assert_eq!(successful.upload_data_success_ns().samples(), 3);
     assert_eq!(successful.prepared_chunk_bytes().samples(), 3);
     assert_eq!(successful.prepared_chunk_bytes().total(), 6);
-    assert_eq!(successful.prepared_chunk_bytes().latest(), Some(0));
     assert_eq!(successful.prepared_chunk_bytes().maximum(), Some(3));
     assert_eq!(
         successful.prepared_chunk_bytes_histogram().bucket_counts(),

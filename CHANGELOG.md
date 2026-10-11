@@ -2,6 +2,12 @@
 
 ## [0.18.0]
 
+- **Breaking:** Adopt Metrics 0.6.1. `prepared_chunk_bytes()` now returns the shared
+  `MeasurementAggregate` without latest; duration summaries remain ordered.
+  Exclude unrepresentable unit conversions instead of clipping samples, preserving
+  exact-cap versus actual-overflow reporting
+  ([#38](https://github.com/dragginzgame/ic-backup/issues/38)).
+
 - **Breaking:** Select Host Artifact/FS 0.13. Consumers sharing
   `PersistenceError::Publication` must align with the new Host Rust type identity.
   Testkit 0.33.2 retains its separate dev-only Host 0.12 graph; persisted records

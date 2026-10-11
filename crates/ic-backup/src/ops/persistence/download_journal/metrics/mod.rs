@@ -5,7 +5,7 @@ use super::DownloadJournalGuard;
 ///
 /// Re-exported so callers can name returned summaries without selecting a separate
 /// Metrics dependency. This is the shared type, with no local wrapper or arithmetic.
-pub use ic_metrics::{MeasurementHistogram, MeasurementSummary};
+pub use ic_metrics::{MeasurementAggregate, MeasurementHistogram, MeasurementSummary};
 use std::{
     sync::PoisonError,
     time::{Duration, Instant},
@@ -26,8 +26,9 @@ const EMPTY_CHUNK_HISTOGRAM: MeasurementHistogram<4> =
 /// repeated preparation records another sample, not unique or transferred bytes.
 ///
 /// Sampling starts empty on create/open and is never persisted or serialized
-/// or reconstructed from journal evidence. Counts/totals saturate independently;
-/// `u64::MAX` is unavailable for exact interval arithmetic. These values establish
+/// or reconstructed from journal evidence. Samples outside the `u64` unit range are excluded independently.
+/// Counts/totals clip independently with sticky actual-overflow flags; exactly
+/// reached caps remain exact. Inspect the shared aggregate before exact arithmetic. These values establish
 /// no IC cost, complete transfer, spending, receipt, freshness or outcome authority.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct IcSnapshotLocalMetrics {
@@ -86,9 +87,12 @@ impl IcSnapshotLocalMetrics {
         self.upload_data_failure_ns
     }
     /// Read successful prepared chunk sizes in bytes, including zero and repeated work.
+    ///
+    /// This mergeable aggregate retains count, total and maximum, without ordering
+    /// or a latest value. The histogram is its sole owner.
     #[must_use]
-    pub const fn prepared_chunk_bytes(self) -> MeasurementSummary {
-        self.prepared_chunk_bytes.summary()
+    pub const fn prepared_chunk_bytes(self) -> MeasurementAggregate {
+        self.prepared_chunk_bytes.aggregate()
     }
     /// Read the distribution of successful prepared chunk sizes in bytes.
     ///
@@ -97,7 +101,7 @@ impl IcSnapshotLocalMetrics {
     /// supported maximum. Overflow is separate; admitted payloads cannot exceed
     /// 1 MiB. Repeated preparation is another sample, not unique progress.
     /// Counts saturate independently; ranges are not exact percentiles.
-    /// The histogram owns the summary returned by [`Self::prepared_chunk_bytes`].
+    /// The histogram owns the aggregate returned by [`Self::prepared_chunk_bytes`].
     #[must_use]
     pub const fn prepared_chunk_bytes_histogram(self) -> MeasurementHistogram<4> {
         self.prepared_chunk_bytes
@@ -110,7 +114,7 @@ impl IcSnapshotLocalMetrics {
         succeeded: bool,
         chunk_bytes: Option<usize>,
     ) {
-        let duration = u64::try_from(elapsed.as_nanos()).unwrap_or(u64::MAX);
+        let duration = u64::try_from(elapsed.as_nanos());
         let summary = match (operation, succeeded) {
             (LocalOperation::Verification, true) => &mut self.verification_success_ns,
             (LocalOperation::Verification, false) => &mut self.verification_failure_ns,
@@ -119,11 +123,14 @@ impl IcSnapshotLocalMetrics {
             (LocalOperation::UploadData, true) => &mut self.upload_data_success_ns,
             (LocalOperation::UploadData, false) => &mut self.upload_data_failure_ns,
         };
-        summary.record(duration);
+        // Never turn an unrepresentable observation into an exact cap sample.
+        if let Ok(duration) = duration {
+            summary.record(duration);
+        }
         if let (LocalOperation::UploadData, true, Some(bytes)) = (operation, succeeded, chunk_bytes)
+            && let Ok(bytes) = u64::try_from(bytes)
         {
-            self.prepared_chunk_bytes
-                .record(u64::try_from(bytes).unwrap_or(u64::MAX));
+            self.prepared_chunk_bytes.record(bytes);
         }
     }
 }
