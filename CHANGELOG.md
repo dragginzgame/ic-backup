@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.19.1]
+## [0.19.1] - 2026-10-11
 
 - Add explicit guarded fence-observation settlement with independent application
   qualification. Recheck original plans and complete journals before recording
