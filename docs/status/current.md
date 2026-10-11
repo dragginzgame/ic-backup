@@ -25,7 +25,78 @@
 
 # Current handoff — 2026-10-11
 
-## Current 0.18.3 Shared Tooling 0.6 adoption
+## Current 0.18.4 Shared Tooling 0.6.2 adoption
+
+Released HEAD remains 0.18.3 at `9d1433a7c5649c403f06471197175baf122a1707`.
+Shared Tooling 0.6.2 landed during 0.6.1 qualification. Canonically adopt committed
+`7f1ca16b0dfa98021d2671017ecb7de767409b0e` from a clean isolated source, keeping
+the same 99-file roster. Two guides and the release runner/fixture change. Source
+conflicts retain exact plan/phase/version/commit diagnostics and all original
+evidence. Recovery stays maintainer-owned and requires positive consumer no-effect
+proof; no release recovery is executed here. Audit/Machete launcher guidance has no
+local extension caller. Product/Cargo-tool behavior and the incoming graph below
+remain unchanged. All five affected 0.6.2 snapshot/documentation/shell/tooling/
+release checks pass. Host 0.13.5 arrived during that phase, with unchanged Rust
+sources; all nine graph-dependent checks pass again on frozen final inputs.
+Reuse unchanged full-gate checks from 0.6.1. All 16 delivery targets are covered,
+including real simulator suites, Rust 1.88 consumers and paired packages. Final
+source/graph, index and HEAD remain unchanged; candidate macOS acceptance remains
+pending. Released 0.18.3 passes Linux but both macOS jobs fail in the old
+Rust-tool fixture; this adoption includes the padded-count correction and
+regression coverage. Retained failed-step logs are under `target/shared-next`.
+Notes remain 0.18.4;
+package versions, index and refs remain user-owned. See the
+[review](../reports/audits/2026/10/11/shared-062/01/report.md).
+
+## Prior 0.18.4 Shared Tooling 0.6.1 qualification
+
+Released HEAD remains 0.18.3 at `9d1433a7c5649c403f06471197175baf122a1707`.
+Canonically adopt committed Shared Tooling 0.6.1
+`731909525038c58d6f80b498e80f8630b11c685d` from a clean isolated source.
+Four selected files change; the 99-file roster stays intact. Cargo setup explicitly
+propagates preparation, lock, validation/reference and activation failures, retaining
+the primary status, prior common selection, foreign locks and failed candidates.
+This supersedes the preceding phase's unfixed held-lock limitation. Numeric padded
+build-count checks also become portable; unselected tag fixtures stay upstream.
+Explicit setup, offline admission, actual Linux host/IC/common/selected Cargo reuse,
+failure regressions and all 16 delivery targets pass on unchanged technical inputs
+and the incoming Host 0.13.4, Testkit 0.33.7 and Metrics 0.6.4 graph. Real simulator
+suites, strict Clippy, Rust 1.88 consumers and paired archives pass. Testkit and
+three Host packages have unchanged Rust sources; Host FS adds a private sidecar
+opener and shares existing descriptor admission. Candidate macOS acceptance stays
+separate from upstream/released-source CI. Preserve previous tools and recovery
+evidence. The additive fence-observation step below remains in
+this same uncommitted 0.18.4 draft. Package versions stay 0.18.3; Git/release effects
+remain user-owned. Detailed evidence stays under `target/shared-next`; see the
+[review](../reports/audits/2026/10/11/shared-061/01/report.md).
+
+## Prior 0.18.4 fence-acquisition observation qualification
+
+Released HEAD is 0.18.3 at `9d1433a7c5649c403f06471197175baf122a1707`.
+The next additive batch introduces
+`workflow::fence_reconciliation::observe_fence_acquisition`: exact original
+payload/authority and retained-stage admission, one complete-plan observation
+reservation, mandatory fresh application admission and one provider await under
+selected journal exclusion. Both attempts stay pending; cancellation and failures
+preserve spending, obligations, source references and returned observations.
+No default application observation provider or automatic settlement/release follows.
+
+Seven native orchestration cases, strict all-target/all-feature Clippy, an
+independent public Rust 1.88 non-Send consumer and all 16 delivery targets pass
+on unchanged technical inputs, including actual simulator suites and paired
+package archives. Preserve the incoming Host 0.13.3 and Metrics 0.6.4 selections;
+their Rust sources match the preceding patches. Testkit 0.33.6, PocketIC 16.1.0
+and Agent 0.49.2 remain selected. Shared Tooling
+stays at committed 0.6.0 `75180980a0c4e4252d8a915aaecfaefd92bf9a4e`;
+the upstream held-lock false-success fix is not committed. Keep explicit offline
+admission and retained failure evidence. Released 0.18.3 CI passes Linux; both
+macOS jobs remain queued. The uncommitted candidate has no hosted result.
+Detailed evidence remains under `target/continuation-after-0183`; see the
+[review](../reports/audits/2026/10/11/continuation-0184/01/report.md).
+Select compatible 0.18.4 notes; package versions stay 0.18.3 and work stays
+uncommitted. No sibling edits, live IC, Git/release effects or cleanup are performed.
+
+## Prior 0.18.3 Shared Tooling 0.6 adoption
 
 Released HEAD is 0.18.2 at `e2e19b168630cdc808a7477c4a50b18e9b6222d4`.
 Canonically adopt committed Shared Tooling 0.6.0

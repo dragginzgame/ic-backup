@@ -4,6 +4,7 @@
 //! steps do not implement complete backup/restore or terminal/reference release.
 
 pub mod fence_acquisition;
+pub mod fence_reconciliation;
 pub mod ic_snapshot_capture;
 #[cfg(unix)]
 pub mod ic_snapshot_download;

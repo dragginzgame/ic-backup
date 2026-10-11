@@ -26,6 +26,8 @@ use crate::{
 };
 use std::{convert::Infallible, fs, path::PathBuf};
 
+mod reconciliation;
+
 struct Fixture {
     layout: BackupLayoutGuard,
     source_layout: BackupLayoutGuard,

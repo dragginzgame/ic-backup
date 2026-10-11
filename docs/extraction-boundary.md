@@ -1432,6 +1432,23 @@ step for one isolated opaque counter update and failed reply retention after
 application, with no reissue. It proves transport/orchestration and retained pending
 spending, never whole-unit application fence semantics or Active custody.
 
+`workflow::fence_reconciliation::observe_fence_acquisition` joins the same retained
+originals to one already-pending acquisition mutation. Canonical payload/authority
+admission precedes the existing complete-plan observation reservation; no new record
+or accounting owner is added. Selected journal exclusion spans fresh application
+admission and one observation-provider await. Stage/ancestor and purpose-specific
+requirement/obligation checks bracket dispatch, including both source and restore
+layouts/plans. Post-reply typed errors retain the complete returned observation.
+
+Success returns matched passive claims without recording an outcome. Both attempts
+remain pending after success, cancellation and failure; another challenge cannot
+redispatch a pending observation. The guarded journal record supplies existing
+exclusion semantics, not fresh proof of noncooperating journal-byte custody. Native
+provider substitutes qualify both purposes, original coverage/prerequisites,
+cancellation, rejection, reentry and returned-evidence retention. No installed Agent
+application-observation method, whole-unit fence/attribution proof, automatic
+receipt, acquisition retry, Active fence or terminal/fence/reference release follows.
+
 ### Immutable local download manifests
 
 `DownloadJournalGuard::publish_download_manifest` publishes the exact guarded

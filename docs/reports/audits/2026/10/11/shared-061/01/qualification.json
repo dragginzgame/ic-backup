@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "base_commit": "9d1433a7c5649c403f06471197175baf122a1707",
+  "pending_changelog": "0.18.4",
+  "shared_revision": "731909525038c58d6f80b498e80f8630b11c685d",
+  "selected_paths": 99,
+  "qualification": "Canonical setup, offline admission, actual Linux cross-checkout host/IC/common/selected Cargo reuse, Cargo failure regressions and all 16 delivery targets pass on frozen graph and source. Index/HEAD remain unchanged.",
+  "limitations": "Candidate macOS/native hosted acceptance remains separate.",
+  "artifacts": {
+    "target/shared-next/upstream-main.json": "6d3f9d39b7f93d6c7f66779c2990700cbc5c48c634bb5fffc57cc9b2aa296bc0",
+    "target/shared-next/preview.log": "5f2c127b98c1a3e543d215f7a7292f85b28485db9b4bc80e893dad4877edec45",
+    "target/shared-next/refresh.log": "8756f2e2f196d84c08670f5fb4346541d81d9f7a046b6598606f1cb43a3c972a",
+    "target/shared-next/original.lock": "eaa158d03c71465da1b692bde3b8f9f1fe40c17cc059b0e9fe2bba181622d429",
+    "target/shared-next/registry-review.json": "76812cb0236c60b327af41c142cc6f4b06c75ae658861810765bf39b3226a705",
+    "target/shared-next/technical-before-ci.json": "799c1398d7d890d9b4b7dd600751be1197f7c8eef69daea65da1a7c8eaae74f1",
+    "target/shared-next/technical-after-ci.json": "799c1398d7d890d9b4b7dd600751be1197f7c8eef69daea65da1a7c8eaae74f1",
+    "target/shared-next/full-ci.log": "a1969f2d727f4714b2d5df627e962f9b3addeafae06f897faaf66d06486bb2d0",
+    "target/shared-next/passed-cases.json": "ac8bc2b85ae04d9325c262a40bbf8a8b97a021a7948f47f88182771854f57247",
+    "target/shared-next/install-tools.log": "35570ab8e97ca6c5e9cba6c45a82b43b1fceb0675c079d7f69ad2e94bd35de5c",
+    "target/shared-next/tools-check.log": "28f95fa5f3eda0d78504de77707724217c0f76168cab3efc34fc7e753f4e1446",
+    "target/shared-next/cargo-regressions.log": "406d61158131d649b3c396299e490d0e72a769f2b4ad1dec02df96ff401ef0fb",
+    "target/shared-next/native-reuse.sh": "3859edcbe6bbf1cae2322219307000a2233a8d7c797d2f5af55c673ddc0d1278",
+    "target/shared-next/native-reuse-records.json": "297fcdedbac78310363a4d78a57118dd9b7a7ab6b23a0bae268b1a7cceba80ae",
+    "target/shared-next/adoption-input-delta.json": "1007c88389edb83766aadb03f3e350a49f919dedc50bec6c8d120696477c8cb3",
+    "target/shared-next/workspace-metadata.json": "c107919de0804f4b4cb5c66c4312fabbf25c5c11c852a53b59797168d13f6beb",
+    "target/shared-next/index-before": "ee0cdc5a7948ecefe3534c7e03ea451d5d2683345769b3722c90d6f1151bc6bf",
+    "target/shared-next/index-after-ci": "ee0cdc5a7948ecefe3534c7e03ea451d5d2683345769b3722c90d6f1151bc6bf",
+    "target/shared-next/head-before-ci": "bfe35f20afe20662303dd4a91109d9f39463e7efeed1278f7731ae45f092ff7d",
+    "target/shared-next/head-after-ci": "bfe35f20afe20662303dd4a91109d9f39463e7efeed1278f7731ae45f092ff7d",
+    "target/shared-next/upstream-ci-final.json": "d8fcdbd160c182319159a9fd9a26939e4cb66d0dd664d42501da587900343f9a",
+    "target/shared-next/release-ci-final.json": "a6bfb6a6caa2f5f46bd054e026bed15af0a74280df08642d8cdf52b1a78f6697"
+  }
+}

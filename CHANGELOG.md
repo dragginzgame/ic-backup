@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.18.4]
+
+- Adopt Shared Tooling 0.6.2. Cargo setup now stops on lock, validation and
+  activation failures without reporting success or changing the prior common
+  selection; failed candidates and foreign locks remain retained. Interrupted
+  release source conflicts report exact plan, phase and commit identities
+  ([shared #120](https://github.com/dragginzgame/shared-tooling/issues/120),
+  [shared #126](https://github.com/dragginzgame/shared-tooling/issues/126),
+  [#36](https://github.com/dragginzgame/ic-backup/issues/36)).
+- Add a guarded fence-acquisition observation step with fresh application
+  admission and one durable original-plan reservation. Cancellation and failures
+  preserve pending attempts, source references and returned evidence; matching
+  replies never automatically settle acquisition or grant fence release
+  ([#25](https://github.com/dragginzgame/ic-backup/issues/25),
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.18.3] - 2026-10-11
 
 - Adopt Shared Tooling 0.6.0. Common and selected Cargo tools now reuse shared

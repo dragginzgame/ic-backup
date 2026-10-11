@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "base_commit": "9d1433a7c5649c403f06471197175baf122a1707",
+  "pending_changelog": "0.18.4",
+  "shared_revision": "7f1ca16b0dfa98021d2671017ecb7de767409b0e",
+  "selected_paths": 99,
+  "qualification": "All 16 delivery targets covered: passing 0.6.1 full gate, five affected 0.6.2 gates and nine graph-dependent checks rerun on frozen Host 0.13.5. Real simulator, Rust 1.88 and paired archives pass. Final source/graph, real index and HEAD unchanged.",
+  "limitations": "Candidate native macOS acceptance remains pending; no release recovery or transaction executed.",
+  "artifacts": {
+    "target/shared-next/upstream-main-final.json": "45ae2ec44b577e5b8add0f55739284425f0f8a9a53264417b29bc7c3a03fd383",
+    "target/shared-next/preview-062.log": "cf8548822e46cb6b0c96a9964b5fec52eaaedd0d3cae711669f8a5a523e19745",
+    "target/shared-next/refresh-062.log": "bed8d569f4b6fb6542faade300ef42bb669083ebe703b9d7b5b46000ab42e071",
+    "target/shared-next/snapshot-062.log": "a5aaceb0bf19d4e8f561f44f649119447ae96872fae4ca06602475295ea6e286",
+    "target/shared-next/phase-062-delta.json": "4cd8655d62ea4da3acb44e69f4445180b13ee333acd4fb0043e48cd20d6587b4",
+    "target/shared-next/phase-062-running-delta.json": "620b66c38cf63af7da5b3c70bf1c8161321acf9440c1e0a86bca40cb2df664ee",
+    "target/shared-next/technical-before-062.json": "9af3b1e9aaff9d89e8a6222f3b1091d3cad026202585eb2e2c55a339b700b5a6",
+    "target/shared-next/technical-after-062.json": "e9ee4d1011be42d51f3c453390b37e70530eda5656b8d2ef7e186a33f57f5df3",
+    "target/shared-next/affected-062.log": "38c1f65bc1e292d14cdbd8cfaf09a07b29fa218bad8ea533a0a91c5e335827cf",
+    "target/shared-next/candidate-final.lock": "88f4ae5432c27b649fe7c31ef8906deeca83e8c4886055ce725a300171675264",
+    "target/shared-next/registry-review-135.json": "c942af9c804e33cc47bbdc06ce34461982aa3e4423085f2982373678b4a3b172",
+    "target/shared-next/technical-before-final-graph.json": "e9ee4d1011be42d51f3c453390b37e70530eda5656b8d2ef7e186a33f57f5df3",
+    "target/shared-next/technical-after-final-graph.json": "e9ee4d1011be42d51f3c453390b37e70530eda5656b8d2ef7e186a33f57f5df3",
+    "target/shared-next/final-graph-checks.log": "6353bcf6db8fde9b1ff3db445ae1a26a078a240b437446b9018512fdbdfeffd2",
+    "target/shared-next/qualified-targets.json": "6e00639bafacba7dab0b0d91f410e255d92bab75f99a7e71f6ce50e087e5b2f0",
+    "target/shared-next/passed-cases-final.json": "ec0b7e21ae88d161190f1447405baca1ef5b18469b9cc25a95958191e9f9757e",
+    "target/shared-next/index-final": "ee0cdc5a7948ecefe3534c7e03ea451d5d2683345769b3722c90d6f1151bc6bf",
+    "target/shared-next/head-final": "bfe35f20afe20662303dd4a91109d9f39463e7efeed1278f7731ae45f092ff7d",
+    "target/shared-next/upstream-ci-062-final.json": "31fa2a68a6d0ae6313ddadf36ef0011340fa9cdc305cbdf44d621d3c7d127034",
+    "target/shared-next/release-ci-062-final.json": "5bb3c673a81807998c8b728c56a506d7dc49e4531256c0c8d9bd3dcad08452ea",
+    "docs/reports/audits/2026/10/11/shared-061/01/qualification.json": "0932b0f6b67a12a09d727d4e18fe1f8e8b2009a3ddc4a551f29f4be0f7062c19",
+    "target/shared-next/released-macos-failures.log": "e6d27d80bb387533dbfe4eeac185d9f5de45a5149a18e5f20066243c75bdbd90"
+  }
+}

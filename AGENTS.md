@@ -611,6 +611,17 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   receipt, Active fence, implicit reconciliation, refund or release is inferred.
   Application semantics and outside-snapshot restore custody stay integration-owned.
 
+- The provider-driven fence-acquisition observation step admits exact original
+  payload, stage, purpose-specific requirement and obligation before reserving one
+  observation through complete-plan admission. Hold selected journal exclusion
+  across mandatory fresh application read/attribution/custody admission and one
+  provider await. Recheck retained stage/ancestors and obligations around dispatch;
+  retain complete returned observations on post-reply rejection. Both attempts
+  remain pending on success, cancellation and failures; pending observations deny
+  reentry. Guarded records do not prove stable noncooperating byte custody. No
+  default application observation provider, automatic settlement, acquisition retry,
+  refund, Active fence, terminal proof or fence/reference release is introduced.
+
 - The provider-driven snapshot capture step accepts only the exact original
   take payload, opens its existing stage journal and durably reserves through
   complete-plan admission. Hold that journal through mandatory fresh actual

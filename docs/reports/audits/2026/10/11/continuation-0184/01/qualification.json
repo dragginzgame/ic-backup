@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "base_commit": "9d1433a7c5649c403f06471197175baf122a1707",
+  "pending_changelog": "0.18.4",
+  "shared_revision": "75180980a0c4e4252d8a915aaecfaefd92bf9a4e",
+  "qualification": "All 16 delivery targets pass on frozen source and graph, including seven new orchestration cases, maintained actual simulator suites, strict Clippy, Rust 1.88 and paired archives. Independent public non-Send Rust 1.88 consumer passes.",
+  "limitations": "Local application-provider substitutes only; no installed application observation/attribution or terminal/release proof. Candidate macOS acceptance and upstream common setup lock fix remain pending.",
+  "artifacts": {
+    "target/continuation-after-0183/candidate.toml": "71ee01a9d976e817ba733a18ad53d583a1ea96543a4dd7f52bf6c0dc61d183e6",
+    "target/continuation-after-0183/candidate.lock": "521142eb4572cd7cb4fbad6de7bddc810894814a0a6084ade65dfc8e579545e9",
+    "target/continuation-after-0183/registry-review.json": "1e091cd22105f10299be40daabe95b5636248f34acdd56dba4e0726891430123",
+    "target/continuation-after-0183/selected-graph.json": "bb36417000335be43eeb781ee99d0419207c55569cf0d6a73068a6a1d410910e",
+    "target/continuation-after-0183/technical-before-ci.json": "e862f82d96648e009c39ad1105dcf71f9cb8c949ad7344cf3d415d049b098530",
+    "target/continuation-after-0183/technical-after-ci.json": "e862f82d96648e009c39ad1105dcf71f9cb8c949ad7344cf3d415d049b098530",
+    "target/continuation-after-0183/full-ci.log": "5f90702662417f2fbabe7346b859b022f165e9cbff3a2b04265f42826272064e",
+    "target/continuation-after-0183/passed-cases.json": "a25e4e41ef8d65aba2a7ff98f7b1421cf04cc73aaee05564967fe053932bbaa8",
+    "target/continuation-after-0183/public-consumer/src/main.rs": "c55001d77c162551c836885ce3a02601378118a5d8ddae5d77530e70501984a4",
+    "target/continuation-after-0183/public-consumer/Cargo.toml": "2eac7f336b0edf0b75287205f7ed9a62a4625a879c7c4287930282cd7d2e1f6d",
+    "target/continuation-after-0183/public-consumer/Cargo.lock": "a2812996f8b57442678cb0ee62feeb398a64db660890a53c92cd2ece34b9e904",
+    "target/continuation-after-0183/public-consumer/metadata.json": "80804b679bd031131e654c73e8ee2fca6db98eae22b03df29631eac5c80c82db",
+    "target/continuation-after-0183/public-consumer/graph-admission.log": "a17fcf0a2f50e2d495e4f90ce263410edc183add6c62699a2facbccf60410f74",
+    "target/continuation-after-0183/public-consumer/check.log": "964dcb6fa182fcf797296568c798123b5e553d5e7ee06aaee80e7c8866845a71",
+    "target/continuation-after-0183/index-before-ci": "ee0cdc5a7948ecefe3534c7e03ea451d5d2683345769b3722c90d6f1151bc6bf",
+    "target/continuation-after-0183/index-after-ci": "ee0cdc5a7948ecefe3534c7e03ea451d5d2683345769b3722c90d6f1151bc6bf",
+    "target/continuation-after-0183/head-before-ci": "bfe35f20afe20662303dd4a91109d9f39463e7efeed1278f7731ae45f092ff7d",
+    "target/continuation-after-0183/head-after-ci": "bfe35f20afe20662303dd4a91109d9f39463e7efeed1278f7731ae45f092ff7d",
+    "target/continuation-after-0183/release-ci-final.json": "71d0ee26232e95661f7909b5fc21297e93e15042e8562e562cb3fa9964cc82c2"
+  }
+}

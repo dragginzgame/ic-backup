@@ -49,6 +49,39 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
+The current 99-file snapshot selects committed Shared Tooling 0.6.2 at
+`7f1ca16b0dfa98021d2671017ecb7de767409b0e`. Clean canonical preview/export
+updates two guides and the release runner/fixture from qualified 0.6.1. Source
+conflicts now retain exact plan/phase/version/commit diagnostics; guarded recovery
+requires maintainer authority and positive consumer proof that preparation never
+began. Audit/Machete guidance separates standalone arguments and inherited Cargo
+launcher context. Backup has no Audit/Machete extension target. The Cargo lock fix,
+tool identities, product graph and library behavior remain unchanged. Reuse the
+passing 0.6.1 full gate; all five affected 0.6.2 checks pass. A later external
+Host 0.13.5 lock refresh has unchanged Rust sources and receives all nine
+graph-dependent checks on frozen final inputs. The three phases cover all
+16 delivery targets; source, final graph, index and HEAD remain unchanged.
+Pending notes remain compatible 0.18.4 with package versions at 0.18.3.
+See [the current review](reports/audits/2026/10/11/shared-062/01/report.md).
+
+### Prior Shared Tooling 0.6.1 review
+
+The current 99-file snapshot selects committed Shared Tooling 0.6.1 at
+`731909525038c58d6f80b498e80f8630b11c685d`, verified against remote main.
+Clean canonical preview/export updates four selected files with no roster changes.
+Cargo setup explicitly propagates source preparation, lock, validation, reference
+and activation failures, preserving the original status, previous common selection,
+foreign locks and failed evidence. Activation requires acquired checkout/store
+locks. Padded build counts receive portable numeric checks. Existing tool command
+paths, build identities and product contracts remain unchanged. Explicit setup,
+offline admission, actual Linux cross-checkout reuse, the new failure regressions
+and all 16 delivery targets pass on frozen inputs. Candidate macOS acceptance
+remains separate.
+Compatible pending notes remain 0.18.4; package versions remain 0.18.3.
+See [the current review](reports/audits/2026/10/11/shared-061/01/report.md).
+
+### Prior Shared Tooling 0.6.0 review
+
 The current 99-file snapshot selects committed Shared Tooling 0.6.0 at
 `75180980a0c4e4252d8a915aaecfaefd92bf9a4e`, verified against remote main.
 Clean canonical preview/export adds the required `cargo-tool-build.sh` companion;
