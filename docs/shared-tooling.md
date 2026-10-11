@@ -49,6 +49,29 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
+The current 99-file snapshot selects committed Shared Tooling 0.6.3 at
+`4fd979d13c32adb3cb2f51f213ebfc4f98339b3d`, verified against remote main.
+Clean canonical preview/export changes eight selected files, with no roster change.
+Normal direct release retries can archive an unstaged prepare intent after a clean
+descendant commit; current base/candidate metadata determines the next requested
+increment, with fresh preflight and full validation. Backup preparation only changes
+local metadata and retains original backups. Exact resume and later phases keep
+their original identity; no real recovery is executed during adoption.
+
+Delivery reconciliation records exact consumer/Shared commits and required native
+CI before closing adoption issues or updating fleet trackers. Pending or cancelled
+checks leave acceptance open. The incoming Host Artifact/FS 0.14.0 graph retains
+unchanged Rust implementation sources but changes the exposed publication-error
+identity, selecting pending 0.19.0 notes. Packages remain 0.18.4.
+All 16 delivery targets pass on unchanged inputs, including real simulator
+suites, strict Clippy, independent Rust 1.88 consumers and paired archives.
+The external Host 0.14 publication-error consumer also passes without dev
+unification. Source/graph, real index and HEAD remain unchanged. Released 0.18.4
+passes Linux; its macOS checks and candidate native acceptance remain pending.
+See [the current review](reports/audits/2026/10/11/shared-063/01/report.md).
+
+### Prior Shared Tooling 0.6.2 review
+
 The current 99-file snapshot selects committed Shared Tooling 0.6.2 at
 `7f1ca16b0dfa98021d2671017ecb7de767409b0e`. Clean canonical preview/export
 updates two guides and the release runner/fixture from qualified 0.6.1. Source

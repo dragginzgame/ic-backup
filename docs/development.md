@@ -229,10 +229,11 @@ with private parent policy and acknowledged crash barriers in Backup. In the
 cleanup and before/after-publication failures; visible output requires recovery.
 Released 0.8.1 selects the Host 0.7.1 publication-error Rust identity. The
 released 0.9.0 selected Host 0.8. Released 0.11.0, 0.12.0 and 0.13.0 selected
-direct Host 0.9, 0.10 and 0.11 respectively. Pending 0.14.0 selects Host 0.12
-and changes that exposed Rust identity again, preserving library behavior,
-variant shapes and persisted records. Testkit 0.31 keeps its independently
-selected dev-only Host 0.11 graph.
+direct Host 0.9, 0.10 and 0.11 respectively. Released 0.14.0 and 0.18.0
+selected Host 0.12 and 0.13. The pending 0.19.0 draft selects Host Artifact/FS
+0.14, changing that exposed Rust identity while preserving library behavior,
+variant shapes and persisted records. Published Rust sources match 0.13.5.
+Testkit 0.33.7 keeps its independently selected dev-only Host 0.13.5 graph.
 Consumers sharing `NamedWriteError` values or matching through a direct Host
 dependency must select that same compatible line. Production direct Host
 dependencies still disable default features. Testkit enables artifact archive/Wasm

@@ -1,0 +1,27 @@
+{
+  "shared_revision": "4fd979d13c32adb3cb2f51f213ebfc4f98339b3d",
+  "consumer_base": "55f3a80354b3e1afe6bc81634e02363fde835ea0",
+  "snapshot_files": 99,
+  "changed_selected_files": 8,
+  "draft": "0.19.0",
+  "package_versions": "0.18.4",
+  "direct_host": "0.14.0",
+  "testkit": "0.33.7",
+  "metrics": "0.6.4",
+  "result": "Full registered delivery suite and Host identity consumer pass on frozen inputs; native macOS acceptance pending.",
+  "evidence": "target/shared-063",
+  "check_evidence": {
+    "full-ci.log": "f8131599d34185df86841c14c00e2df0282a8f35af038b0c208162a3049fcb37",
+    "consumer-release.log": "b7184bc1eea20ba8338d40a097e2addffa7c6e7769bc6d6888dc748decd21da0",
+    "qualified-targets.json": "9283e080edfdd0f887255fd5e9cec4b54a7f3885f9b87ca95343c35be057dada",
+    "registry-review.json": "71bbccdcfaa80dca815201f80cbdc46e91a28d6e7c86a3e4769b582c3e4124dd",
+    "technical-before-ci.json": "888046b51f505256dc2f465c3ec882c7ca12226f3f2da614e5f1d5f9acd68c0e",
+    "technical-after-ci.json": "888046b51f505256dc2f465c3ec882c7ca12226f3f2da614e5f1d5f9acd68c0e",
+    "host-identity-consumer/check.log": "c8aaa754b5b9ef0f1982c99b61207497a679d4fa6b940b8e25a4ed2bef10188e",
+    "backup-ci-final.json": "c0bb858bb6ff32f41094f5b50d5cf7b8a6a5c52649350032c67bb25f9bc8eaf8",
+    "shared-ci-final.json": "818cdbce1de8261cd3d664c45affac8f7db1944f62bba68be39b10fb892cc901"
+  },
+  "backup_ci": "https://github.com/dragginzgame/ic-backup/actions/runs/38145951245",
+  "shared_ci": "https://github.com/dragginzgame/shared-tooling/actions/runs/38145666246",
+  "effects": "Working-tree adoption and isolated validation only; root package versions, Git index/refs and recovery evidence preserved."
+}

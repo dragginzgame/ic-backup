@@ -219,6 +219,14 @@ release. A failure in the new gate retains the completed older release and both
 attempts' evidence. Dirty source, conflicting payload/history/tag/destination,
 missing original proof and occupied locks stop recovery.
 
+A saved `prepare` intent without staging evidence can also be superseded by
+a newer clean descendant commit through the normal direct target. The runner
+archives the exact old intent, reads current canonical metadata (the saved base
+or candidate), selects the requested increment and repeats preflight/full validation.
+Backup preparation mutates only local metadata; original backups, validation
+sidecars and failure logs remain retained. Dirty, divergent or conflicting states
+still stop. See the [shared restart contract](releases.md#source-changes-after-saved-preparation-intent).
+
 `make release-resume VERSION=X.Y.Z` uses only that saved phase without starting a
 new increment. Completed commit/tag/push identities reconcile rather than repeat.
 Lost push replies can resolve to the exact already-published refs; failed remote

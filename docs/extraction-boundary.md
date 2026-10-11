@@ -176,6 +176,10 @@ one-pass pretty-JSON serialization before filesystem effects. The resulting byte
 buffer is intentional: streaming a generic serializer into staging cannot preserve
 that ordering, and preflight followed by streaming would invoke it twice.
 
+The pending 0.19.0 draft selects direct Host Artifact/FS 0.14. Its public
+publication-error Rust identity changes; sharing consumers must align Host 0.14.
+Published Rust sources match 0.13.5, with unchanged record and custody contracts.
+
 `PersistenceError::Publication` retains Host's original typed producer, cleanup
 and before/after-publication errors. Parent-preparation IO and serialization JSON
 errors keep their own boundaries. The public exhaustive enum changed in
@@ -185,7 +189,7 @@ unchanged. Neither helper grants operation or retry authority.
 
 Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
 released 0.9.0 selected Host 0.8 and released 0.11.0 selected direct Host 0.9.
-Released 0.12.0 selects direct Host 0.10. Pending 0.13.0 selects direct Host 0.11,
+Released 0.12.0 selects direct Host 0.10. Released 0.13.0 selects direct Host 0.11,
 changing that public Rust identity again while preserving variant shapes and v1
 records. Error display includes retained secondary staging cleanup failures. The pathname adapter uses Host's
 canonical `write_with`; the Unix held-parent adapter retains `write_at_with`.

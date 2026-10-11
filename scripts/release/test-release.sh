@@ -195,6 +195,7 @@ dirty() {
     current="$(head)"
     [[ -d "target/commits/$current" ]] || return 1
     for file in Cargo.toml Cargo.lock CHANGELOG.md docs/release.json crates/ic-backup/Cargo.toml; do
+        [[ -e "$file" || -e "target/commits/$current/files/$file" ]] || continue
         cmp -s "$file" "target/commits/$current/files/$file" || return 0
     done
     return 1
@@ -230,6 +231,7 @@ case "$1" in
             printf " M src/changed.rs$ending"
         elif [[ -d "target/commits/$(head)" ]]; then
             for file in Cargo.toml Cargo.lock CHANGELOG.md docs/release.json crates/ic-backup/Cargo.toml; do
+                [[ -e "$file" || -e "target/commits/$(head)/files/$file" ]] || continue
                 if ! cmp -s "$file" "target/commits/$(head)/files/$file"; then
                     printf " M %s$ending" "$file"
                 fi
@@ -667,6 +669,49 @@ test_prepared_normal_retry() {
     assert_cache_retained
 }
 
+test_committed_preparation_retry() {
+    local disposition="$1" fix=ffffffffffffffffffffffffffffffffffffffff next=0.1.1
+    # The real adapter writes metadata, fails its format check, then rolls back.
+    TEST_PREPARED_FORMAT_FAIL=1 expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
+    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == prepare ]] || exit 1
+    [[ "$(perl scripts/release/release-data.pl version)" == 0.1.0 && ! -e docs/release.json ]] || exit 1
+    cp target/release-state/0.1.1.plan target/original-plan
+    cp target/release-state/0.1.1.validation.json target/original-validation.json
+    local backups=(target/release-backup.*/Cargo.toml)
+    [[ "${#backups[@]}" == 1 ]] || exit 1
+    cp "${backups[0]}" target/original-backup
+    if [[ "$disposition" == bumped ]]; then
+        # A maintainer may instead commit the local metadata disposition.
+        perl scripts/release/release-data.pl finalize 0.1.1 2026-10-11 0.1.0
+        perl scripts/release/release-data.pl prepare-version 0.1.1
+        perl scripts/release/release-data.pl receipt "$TEST_SOURCE" 2026-10-11
+        { printf '# Changelog\n\n## [0.1.2]\n\n- Follow-up notes.\n\n'; sed -n '/^## \[0.1.1\]/,$p' CHANGELOG.md; } > target/new-notes
+        cp target/new-notes CHANGELOG.md
+        next=0.1.2
+    fi
+    mkdir -p "target/commits/$fix/files/crates/ic-backup" "target/commits/$fix/files/docs"
+    printf '%s\n' "$TEST_SOURCE" > "target/commits/$fix/parent"
+    cp Cargo.toml Cargo.lock CHANGELOG.md "target/commits/$fix/files/"
+    cp crates/ic-backup/Cargo.toml "target/commits/$fix/files/crates/ic-backup/"
+    if [[ -e docs/release.json ]]; then cp docs/release.json "target/commits/$fix/files/docs/"; fi
+    printf '%s\n' "$fix" > target/mock-head
+    before="$(fingerprint)"
+    : > "$TEST_EFFECTS"
+    TEST_GATE_FAIL=1 expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
+    local archives=(target/release-state/0.1.1.attempt.*/0.1.1.plan)
+    [[ "${#archives[@]}" == 1 && "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'fetch\nvalidate' ]] || exit 1
+    cmp target/original-plan "${archives[0]}"
+    cmp target/original-validation.json target/release-state/0.1.1.validation.json
+    cmp target/original-backup "${backups[0]}"
+    [[ ! -e "target/release-state/$next.plan" ]] || exit 1
+    "$TEST_REAL_MAKE" --no-print-directory release-patch
+    [[ "$(perl scripts/release/release-data.pl version)" == "$next" && "$(perl scripts/release/release-data.pl source)" == "$fix" ]] || exit 1
+    [[ "$(tail -n 1 "target/release-state/$next.plan")" == complete ]] || exit 1
+    cmp target/original-plan "${archives[0]}"
+    cmp target/original-backup "${backups[0]}"
+    assert_cache_retained
+}
+
 test_selected_tool_preflight() {
     local mode="$1"
     perl -pi -e 's/version = "0\.28\.1"/version = "0.28.2"/' Cargo.lock
@@ -961,6 +1006,7 @@ for drift in notes tag head; do run_case "completed-$drift" test_invalid_release
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
 run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-normal-retry test_prepared_normal_retry
+for disposition in unchanged bumped; do run_case "committed-preparation-$disposition" test_committed_preparation_retry "$disposition"; done
 for mode in retry offline network invalid lock common prerequisite; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
 for mode in explicit patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done

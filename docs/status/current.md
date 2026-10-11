@@ -25,6 +25,28 @@
 
 # Current handoff — 2026-10-11
 
+## Current 0.19.0 Shared Tooling 0.6.3 and incoming Host qualification
+
+Released HEAD is 0.18.4 at `55f3a80354b3e1afe6bc81634e02363fde835ea0`.
+Canonically adopt committed Shared Tooling 0.6.3
+`4fd979d13c32adb3cb2f51f213ebfc4f98339b3d` from a clean isolated checkout.
+Eight selected files change; the 99-file roster stays intact. Normal direct retries
+archive eligible preparation after a clean descendant commit and repeat validation
+against current metadata. Exact resume remains source-bound. Backup adapter cases
+cover rolled-back and committed bumped metadata, retained plans/backups and failed
+fresh validation before effects. No real release or recovery is executed.
+
+Preserve incoming direct Host Artifact/FS 0.14.0, whose published Rust sources match
+0.13.5. The exposed publication-error type changes, selecting pending 0.19.0;
+package versions stay 0.18.4. Testkit 0.33.7 retains separate dev-only Host 0.13.5;
+Metrics 0.6.4, Agent 0.49.2 and PocketIC 16.1.0 remain selected. All 16 delivery
+targets pass on unchanged technical/graph inputs, including real simulator suites,
+Rust 1.88 independent consumers and paired packages. An external Host 0.14
+publication-error consumer also compiles on Rust 1.88 without dev unification.
+Index and HEAD remain unchanged. Released 0.18.4 passes Linux; both macOS jobs
+are queued. Upstream 0.6.3 passes Linux/lint; macOS checks remain pending;
+issue acceptance stays separate. See [the review](../reports/audits/2026/10/11/shared-063/01/report.md).
+
 ## Current 0.18.4 Shared Tooling 0.6.2 adoption
 
 Released HEAD remains 0.18.3 at `9d1433a7c5649c403f06471197175baf122a1707`.

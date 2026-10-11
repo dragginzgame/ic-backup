@@ -3,8 +3,8 @@
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
 transport was first released in 0.8.0. Consumers sharing the core
-`PersistenceError::Publication` must align with its selected Host 0.13 Rust error
-identity. The ICP transport/probe is retired; historical evidence and original
+`PersistenceError::Publication` must align with its selected Host 0.14 Rust error
+identity in the 0.19.0 draft. The ICP transport/probe is retired; historical evidence and original
 journals remain retained. Testkit owns explicit simulator selection/admission
 through the [current setup contract](development.md); shared IC executables
 provide no product backend.

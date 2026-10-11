@@ -72,7 +72,8 @@
     "test_completed_evidence_replay": "Local completed replay requires retained validation; malformed selected-commit/read/write arguments refuse without effects",
     "test_dependency_failure_conditional_status": "Cargo substitute cannot produce false-success/cache under conditional errexit semantics",
     "test_conditional_substitute_rejections": "Fixture Git/formatter missing proofs cannot become false-success under supported shell semantics",
-    "test_real_index_boundaries": "Real private Git index distinguishes staged, unstaged, untracked and unusual-name paths, initial phase refusals and observation errors; preserves index, lock, working bytes and HEAD without creating commits"
+    "test_real_index_boundaries": "Real private Git index distinguishes staged, unstaged, untracked and unusual-name paths, initial phase refusals and observation errors; preserves index, lock, working bytes and HEAD without creating commits",
+    "test_committed_preparation_retry": "Actual Backup Make/metadata adapter with Git/Cargo substitutes: rolled-back or committed bumped local preparation, unchanged archived intent/backups, failed fresh gate without effects, current-source validation and next metadata selection."
   },
   "retained_git_substitute": "Still required by actual selected historical receipts: immutable full product file trees, source/member/lock/notes/receipt reads, descendant proofs and remote tag association. Canonical runner fixture models generic version/evidence files, so no new generic fake-Git framework or callback contract is introduced. Unused lost-tag/push injection branches are retired.",
   "evidence": "target/release-fixture-052-review",
@@ -87,7 +88,7 @@
     "commands": "make release-check; targeted syntax/lint and documentation/snapshot checks. No Rust build or full CI gate.",
     "effects": "Actual consumer Make/adapters/private indexes plus command substitutes; no real commit/tag/push or registry effect."
   },
-  "current_fixture_sha256": "03bd55e91fcd58e91e8e130f0ef09d386cf3051d66c2805964dbfee9f61e8181",
+  "current_fixture_sha256": "aafdb63096f63ff78ce69570f0605fd6b36bf240d906a39de1e16df0b276d5db",
   "registered_case_evidence": "target/release-fixture-052-review/registered-case-delta.json",
   "source_loc": {
     "tool": "cloc 2.10; whole shell fixture including generated mock/data here-documents",
@@ -97,7 +98,7 @@
     "meaning": "Maintenance source measurement, not runtime, performance or production artifact cost."
   },
   "previous_snapshot_review": "target/shared-tooling-052-0118-review/previous/docs/release-fixture-ownership.json",
-  "current_snapshot_qualification": "target/continuation-055/release-shell.log reruns the actual direct consumer adapter and exact 0.1.21 canonical direct runner. Original convergence evidence below retains its actual older source.",
+  "current_snapshot_qualification": "docs/reports/audits/2026/10/11/shared-063/01/qualification.json",
   "current_delivery_policy": {
     "mode": "direct",
     "shared_revision": "45e34e92b43edb9543d5b7212774f87f8334079f",

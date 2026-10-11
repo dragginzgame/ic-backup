@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.19.0]
+
+- **Breaking:** Select Host Artifact/FS 0.14. Consumers sharing the public
+  publication-error type must align with Host 0.14; record formats and local
+  custody remain unchanged.
+- Adopt Shared Tooling 0.6.3. A normal release retry can archive failed local
+  preparation after a clean descendant commit and repeat validation against
+  current metadata. Original plans, backups and failed evidence stay retained.
+  Reconcile delivered adoption against exact-source CI
+  ([#36](https://github.com/dragginzgame/ic-backup/issues/36)).
+
 ## [0.18.4] - 2026-10-11
 
 - Adopt Shared Tooling 0.6.2. Cargo setup now stops on lock, validation and
