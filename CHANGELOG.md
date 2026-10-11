@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.19.0]
+## [0.19.0] - 2026-10-11
 
 - **Breaking:** Select Host Artifact/FS 0.14. Consumers sharing the public
   publication-error type must align with Host 0.14; record formats and local
