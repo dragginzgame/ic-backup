@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.18.3]
+## [0.18.3] - 2026-10-11
 
 - Adopt Shared Tooling 0.6.0. Common and selected Cargo tools now reuse shared
   bundles with exact build identities; application flags and wrappers stay local.
