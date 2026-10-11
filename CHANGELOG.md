@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.18.2]
+## [0.18.2] - 2026-10-11
 
 - Adopt Shared Tooling 0.5.0. Host and IC tools share verified bundles across
   checkouts while retaining each repository's pins and existing command paths.
