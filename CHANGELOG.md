@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.18.4]
+## [0.18.4] - 2026-10-11
 
 - Adopt Shared Tooling 0.6.2. Cargo setup now stops on lock, validation and
   activation failures without reporting success or changing the prior common
