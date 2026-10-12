@@ -15,6 +15,7 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
+        read_complete_execution_workflow,
     },
 };
 use serde_json::json;
@@ -102,6 +103,7 @@ fn learned_snapshot_payload_is_bound_once_and_pending_read_retains_original_allo
     let workflow = workflow();
     create_execution_workflow(&layout, &workflow).unwrap();
     let predecessor = retain_capture(&layout, &workflow);
+    assert!(read_complete_execution_workflow(&layout, &workflow.digest()).is_err());
     let metadata = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata_plan = plan(&metadata.digest());
     let binding =

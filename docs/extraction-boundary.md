@@ -2484,6 +2484,18 @@ ancestor admission and returns the same predecessor commitment. It makes no
 remote call, spending transition, authenticated learned-evidence claim or
 terminal/fence/reference-release decision.
 
+`read_complete_execution_workflow` replays every original allocated stage under
+the held workflow layout. Each fixed stage must retain its exact binding/child
+plan, complete original Applied journals and immutable checkpoint; direct
+predecessor binding/settlement identities must match the same complete set.
+Stage locks are held sequentially and every original is checked through its
+existing owner. The returned ordered identities are a read-only local view:
+missing or changed stages, journals, checkpoints and dependency commitments
+reject without repair or new effects. Learned evidence remains opaque; this
+view does not authenticate receipts, transfer, application safety or command/
+byte custody, and cannot establish terminal or fence/reference release.
+No persisted schema, digest, spending owner or allowance changes.
+
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact
 workflow/child identities, stage sequence and canonical predecessor rows; no

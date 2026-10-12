@@ -47,7 +47,8 @@ pub use execution_settlement::{
 };
 pub use execution_workflow::{
     ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionStagePreparationError,
-    ExecutionStageResumeError, ExecutionWorkflowPersistenceError, create_execution_workflow,
+    ExecutionStageResumeError, ExecutionStageSettlementView, ExecutionWorkflowPersistenceError,
+    ExecutionWorkflowSettlementView, create_execution_workflow, read_complete_execution_workflow,
     read_execution_workflow,
 };
 pub use fence_obligation::{

@@ -15,6 +15,7 @@ use std::process::Command;
 
 mod ancestry;
 mod checkpoint;
+mod complete;
 mod preparation;
 mod resume;
 

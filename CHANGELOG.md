@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.20.4]
+
+- Replay the complete original workflow's local stage checkpoints in one
+  read-only view. Every allocated stage must retain its exact bound plan,
+  complete Applied journal history and matching predecessor identities;
+  missing or changed evidence refuses without publication, spending changes or
+  terminal/reference-release authority
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.20.3] - 2026-10-12
 
 - Adopt Shared Tooling 0.9.0. Snapshot refresh and integrity checks now share

@@ -27,6 +27,54 @@ use thiserror::Error;
 const WORKFLOW_FILE: &str = "execution-workflow.json";
 const BINDING_FILE: &str = "stage-binding.json";
 
+/// Exact local identities of every original stage's retained checkpoint.
+///
+/// This is a sequential local projection, not an immutable product completion
+/// receipt. It authenticates no learned evidence, remote effect, application
+/// safety or command/byte custody and grants no terminal or reference release.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExecutionWorkflowSettlementView {
+    workflow: ArtifactChecksumRecord,
+    stages: Vec<ExecutionStageSettlementView>,
+}
+impl ExecutionWorkflowSettlementView {
+    /// Read the exact original workflow declaration identity.
+    #[must_use]
+    pub const fn workflow(&self) -> &ArtifactChecksumRecord {
+        &self.workflow
+    }
+    /// Read one row per original stage in canonical allocation order.
+    #[must_use]
+    pub fn stages(&self) -> &[ExecutionStageSettlementView] {
+        &self.stages
+    }
+}
+
+/// One original stage's bound plan and complete chronological local checkpoint.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExecutionStageSettlementView {
+    stage_sequence: u64,
+    binding: ArtifactChecksumRecord,
+    settlement: ArtifactChecksumRecord,
+}
+impl ExecutionStageSettlementView {
+    /// Read the original opaque stage identity.
+    #[must_use]
+    pub const fn stage_sequence(&self) -> u64 {
+        self.stage_sequence
+    }
+    /// Read the exact retained binding identity.
+    #[must_use]
+    pub const fn binding(&self) -> &ArtifactChecksumRecord {
+        &self.binding
+    }
+    /// Read the complete original journal-history checkpoint identity.
+    #[must_use]
+    pub const fn settlement(&self) -> &ArtifactChecksumRecord {
+        &self.settlement
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum StagePreparationBarrier {
     Plan,
@@ -64,6 +112,63 @@ pub fn read_execution_workflow(
         return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
     }
     Ok(record)
+}
+
+/// Replay every allocated stage's exact retained binding and all-Applied checkpoint.
+///
+/// The original workflow determines the complete stage set. Every fixed stage must
+/// exist with a valid child plan, immutable binding, complete original journal set
+/// and exact published settlement. Every binding's predecessor identities must
+/// match this complete original set. Stage locks are held one at a time under
+/// the caller's workflow layout guard. No absent stage means zero spending, and no
+/// occupied checkpoint is repaired or republished. The resulting digest rows
+/// are local evidence only; integration-owned authenticity, complete transfer,
+/// application safety, command quiescence and terminal/release proof remain separate.
+/// # Errors
+/// Rejects missing, unsafe, changed, held or unsettled original evidence without effects.
+pub fn read_complete_execution_workflow(
+    layout: &BackupLayoutGuard,
+    expected: &ArtifactChecksumRecord,
+) -> Result<ExecutionWorkflowSettlementView, ExecutionStageCheckpointError> {
+    let workflow = read_execution_workflow(layout, expected)?;
+    let mut stages = Vec::with_capacity(workflow.stages().len());
+    let mut bindings = Vec::with_capacity(workflow.stages().len());
+    let mut by_sequence = BTreeMap::new();
+    for allocated in workflow.stages() {
+        let sequence = allocated.operation_sequence();
+        let stage = acquire_stage(layout, sequence)?;
+        let binding: ExecutionStageBindingRecord =
+            read_json(&stage.root().join(BINDING_FILE), MAX_EXECUTION_STAGE_BYTES)
+                .map_err(ExecutionWorkflowPersistenceError::from)?;
+        let (binding, plan) = read_binding(&stage, &workflow, sequence, &binding.digest())?;
+        let settlement = replay_execution_settlement(&stage, &plan.digest())?;
+        read_binding(&stage, &workflow, sequence, &binding.digest())?;
+        by_sequence.insert(sequence, stages.len());
+        stages.push(ExecutionStageSettlementView {
+            stage_sequence: sequence,
+            binding: binding.digest(),
+            settlement: settlement.digest(),
+        });
+        bindings.push(binding);
+    }
+    for binding in &bindings {
+        for predecessor in binding.predecessors() {
+            let Some(&index) = by_sequence.get(&predecessor.stage_sequence()) else {
+                return Err(ExecutionWorkflowPersistenceError::DigestMismatch.into());
+            };
+            let actual = &stages[index];
+            if predecessor.binding() != actual.binding()
+                || predecessor.settlement() != actual.settlement()
+            {
+                return Err(ExecutionWorkflowPersistenceError::DigestMismatch.into());
+            }
+        }
+    }
+    read_execution_workflow(layout, expected)?;
+    Ok(ExecutionWorkflowSettlementView {
+        workflow: expected.clone(),
+        stages,
+    })
 }
 
 /// One original stage's fixed layout, retained under both workflow and child exclusion.

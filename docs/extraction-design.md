@@ -475,6 +475,11 @@ The stage guard now owns checkpoint/predecessor assembly, admitting full origina
 workflow and ancestor history before and after immutable journal-checkpoint
 publication. Failed post-admission retains published evidence; learned-input
 qualification and effect-boundary permission stay integration-owned.
+Complete local workflow replay additionally requires every original stage's
+retained binding, complete Applied journal history and exact checkpoint, and
+cross-checks predecessor identities against that whole set. It returns a
+sequential read-only view, not authentic learned evidence, product completion,
+command quiescence or terminal/reference-release admission.
 
 
 The implemented metadata-derived data planner counts complete region/chunk reads

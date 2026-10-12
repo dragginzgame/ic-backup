@@ -25,12 +25,32 @@
 
 # Current handoff — 2026-10-12
 
-## Current 0.20.3 local checkpoint reconciliation
+## Current 0.20.4 complete local workflow replay
 
-Released Backup 0.20.2 is `e8b1993` at `v0.20.2` and local `origin/main`.
-Keep the next compatible batch as an uncommitted 0.20.3 changelog draft without
-changing own package versions. An independently incoming `Cargo.lock` selects
-Host 0.14.8; preserve it. The new `reconcile_execution_settlement` derives the
+Released Backup 0.20.3 is `72347ef` at `v0.20.3` and local `origin/main`.
+The compatible 0.20.4 draft leaves package versions unchanged. A separate
+incoming `Cargo.lock` change now selects Host 0.14.9, Testkit 0.34.5 and
+Metrics 0.7.3; retain that graph. Its new
+`read_complete_execution_workflow` walks the original stage catalog and requires
+each fixed stage's exact binding/child plan, complete Applied journal history
+and published checkpoint. It cross-checks all direct predecessor identities
+against the same complete set while holding one stage lock at a time. Missing,
+changed or pending evidence refuses without repair, spending changes or provider
+calls. This local view supplies no authenticated learned evidence, product
+completion, command quiescence or terminal/reference-release permit. Full
+`make ci` passed on the current lock graph, including workflow, public-consumer,
+PocketIC, formatting, Clippy, MSRV and package checks. The first sandboxed run
+could not start PocketIC because loopback socket creation was denied; the full
+rerun with loopback access passed. Native hosted qualification remains outstanding under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29). Canic remains
+read-only; its distinct layout/reference owners still require a coordinated
+adoption and terminal proof.
+
+## Released 0.20.3 local checkpoint reconciliation
+
+Released Backup 0.20.2 was `e8b1993` at `v0.20.2`.
+The compatible 0.20.3 batch retained an independently incoming `Cargo.lock`
+selection of Host 0.14.8. `reconcile_execution_settlement` derives the
 exact complete original-journal identity, reads an occupied matching checkpoint
 without replacement, or creates a genuinely absent checkpoint and verifies it
 through the existing replay owner. Stage reconciliation re-admits the workflow
@@ -41,7 +61,7 @@ workflow and public-consumer tests pass on the incoming lock graph. Full CI and
 native hosted qualification remain outstanding under
 [#29](https://github.com/dragginzgame/ic-backup/issues/29).
 
-The same uncommitted draft now adopts clean committed Shared Tooling 0.9.0
+The same released batch adopts clean committed Shared Tooling 0.9.0
 `aec7a149f581a42b9531fc747b46024fc0314fcf`. Its 105-file snapshot updates
 four selected files without roster changes. The shared verifier gains a
 syntax-only manifest reader and NUL rejection; the LOC helper gains JSON output.
