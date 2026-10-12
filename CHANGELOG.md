@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.20.2]
+## [0.20.2] - 2026-10-12
 
 - Reconcile a lost execution-stage checkpoint response from the complete retained
   original journals and existing immutable checkpoint. The read-only replay
