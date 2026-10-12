@@ -249,8 +249,10 @@ implementation determine what has actually been qualified.
   occupied workflow reentry must refuse before invoking a driver. Retained
   continuation requires a complete integration-supplied occupied-stage set and
   replays every settled checkpoint before any new driver callback. Each occupied
-  successor's frozen predecessor learned digest must match the one supplied for
-  that original stage; this coordinator accepts one learned digest per stage.
+  successor's frozen predecessor learned digest must match the integration-
+  qualified commitment supplied for that exact edge. A new driver's pure edge
+  callback defaults to the predecessor checkpoint digest; retained evidence may
+  supply explicit per-successor overrides, which must name original graph edges.
   Partial or pending originals refuse. There is no automatic redispatch, new spending owner,
   complete product terminal proof or
   fence/reference release. The isolated Testkit capture-to-artifact driver does

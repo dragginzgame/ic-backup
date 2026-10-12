@@ -45,6 +45,22 @@ pub trait ExecutionWorkflowStageDriver {
         &mut self,
         stage: &ExecutionStageGuard<'_>,
     ) -> impl Future<Output = Result<ArtifactChecksumRecord, Self::Error>>;
+
+    /// Qualify the learned commitment for one outgoing dependency edge.
+    ///
+    /// The default reuses the stage checkpoint's learned digest. An integration
+    /// may derive a distinct commitment from its retained original evidence;
+    /// this callback must not dispatch effects or change original spending.
+    /// # Errors
+    /// Refuses an unauthenticated or unavailable edge commitment before the
+    /// successor is prepared or its driver callback is invoked.
+    fn learned_for_successor(
+        &mut self,
+        predecessor: &ExecutionStagePredecessorRecord,
+        _successor_sequence: u64,
+    ) -> Result<ArtifactChecksumRecord, Self::Error> {
+        Ok(predecessor.learned_evidence().clone())
+    }
 }
 
 /// Integration-qualified identities for an already settled original stage.
@@ -56,6 +72,7 @@ pub trait ExecutionWorkflowStageDriver {
 pub struct RetainedStageEvidence {
     binding: ArtifactChecksumRecord,
     learned_evidence: ArtifactChecksumRecord,
+    successor_evidence: BTreeMap<u64, ArtifactChecksumRecord>,
 }
 impl RetainedStageEvidence {
     /// Supply an original binding identity and independently qualified learned input.
@@ -67,7 +84,26 @@ impl RetainedStageEvidence {
         Self {
             binding,
             learned_evidence,
+            successor_evidence: BTreeMap::new(),
         }
+    }
+
+    /// Supply integration-qualified commitments for outgoing edges that differ
+    /// from this stage's checkpoint digest. Keys must name original successors;
+    /// occupied successor bindings are checked before any driver callback.
+    #[must_use]
+    pub fn with_successor_evidence(
+        mut self,
+        successor_evidence: BTreeMap<u64, ArtifactChecksumRecord>,
+    ) -> Self {
+        self.successor_evidence = successor_evidence;
+        self
+    }
+
+    fn learned_for_successor(&self, sequence: u64) -> &ArtifactChecksumRecord {
+        self.successor_evidence
+            .get(&sequence)
+            .unwrap_or(&self.learned_evidence)
     }
 }
 
@@ -102,12 +138,21 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
             .depends_on()
             .iter()
             .map(|dependency| {
-                completed
-                    .get(dependency)
-                    .cloned()
-                    .ok_or(ExecutionWorkflowRunError::MissingPredecessor(*dependency))
+                let original =
+                    completed.get(dependency).ok_or(
+                        ExecutionWorkflowRunError::<D::Error>::MissingPredecessor(*dependency),
+                    )?;
+                let learned = driver
+                    .learned_for_successor(original, sequence)
+                    .map_err(ExecutionWorkflowRunError::Driver)?;
+                Ok(ExecutionStagePredecessorRecord::new(
+                    *dependency,
+                    original.binding().clone(),
+                    original.settlement().clone(),
+                    learned,
+                ))
             })
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
         let plan = driver
             .bind_stage(workflow, sequence, &predecessors)
             .map_err(ExecutionWorkflowRunError::Driver)?;
@@ -131,10 +176,9 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
 /// The caller supplies the complete occupied stage set and authenticates each
 /// stage's learned evidence. Before any driver callback, the coordinator checks
 /// that set against the held layout and replays every exact all-Applied original
-/// checkpoint. Already bound successor edges must commit the same learned digest
-/// supplied for their occupied predecessor. This coordinator has one learned
-/// digest per stage; edge-specific learned identities require the lower-level
-/// stage owners. Pending, partially prepared or omitted occupied stages refuse;
+/// checkpoint. Already bound successor edges must commit the qualified digest
+/// supplied for that exact edge; absent overrides use the stage checkpoint's
+/// learned digest. Pending, partially prepared or omitted occupied stages refuse;
 /// none is reissued. Only absent stages may be prepared and executed once, with
 /// fresh authority and external-effect admission remaining with the driver.
 /// This is no terminal receipt, same-ID restore or reference-release permit.
@@ -154,13 +198,21 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
     }
     let mut completed: BTreeMap<u64, ExecutionStagePredecessorRecord> = BTreeMap::new();
     for (&sequence, evidence) in retained {
+        for successor in evidence.successor_evidence.keys() {
+            let Ok(node) = workflow.allocation().graph().node(*successor) else {
+                return Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(sequence));
+            };
+            if !node.depends_on().contains(&sequence) {
+                return Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(sequence));
+            }
+        }
         let stage =
             ExecutionStageGuard::open(layout, expected_workflow, sequence, &evidence.binding)?;
         for predecessor in stage.binding().predecessors() {
             let Some(original) = retained.get(&predecessor.stage_sequence()) else {
                 return Err(ExecutionWorkflowRunError::RetainedStageSetMismatch);
             };
-            if &original.learned_evidence != predecessor.learned_evidence() {
+            if original.learned_for_successor(sequence) != predecessor.learned_evidence() {
                 return Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(sequence));
             }
         }
@@ -181,12 +233,25 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
             .depends_on()
             .iter()
             .map(|dependency| {
-                completed
-                    .get(dependency)
-                    .cloned()
-                    .ok_or(ExecutionWorkflowRunError::MissingPredecessor(*dependency))
+                let original =
+                    completed.get(dependency).ok_or(
+                        ExecutionWorkflowRunError::<D::Error>::MissingPredecessor(*dependency),
+                    )?;
+                let learned = if let Some(evidence) = retained.get(dependency) {
+                    evidence.learned_for_successor(sequence).clone()
+                } else {
+                    driver
+                        .learned_for_successor(original, sequence)
+                        .map_err(ExecutionWorkflowRunError::Driver)?
+                };
+                Ok(ExecutionStagePredecessorRecord::new(
+                    *dependency,
+                    original.binding().clone(),
+                    original.settlement().clone(),
+                    learned,
+                ))
             })
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
         let plan = driver
             .bind_stage(&workflow, sequence, &predecessors)
             .map_err(ExecutionWorkflowRunError::Driver)?;
@@ -211,7 +276,8 @@ pub enum ExecutionWorkflowRunError<E: std::error::Error + 'static> {
     /// Supplied identities do not cover exactly the occupied original stage paths.
     #[error("retained stage identities do not match occupied original stages")]
     RetainedStageSetMismatch,
-    /// An occupied successor froze a different learned predecessor commitment.
+    /// An occupied successor froze a different learned predecessor commitment,
+    /// or supplied edge evidence names a non-successor.
     #[error("retained stage {0} has a different learned predecessor commitment")]
     RetainedLearnedMismatch(u64),
     /// Original allocation could not be published or was already occupied.

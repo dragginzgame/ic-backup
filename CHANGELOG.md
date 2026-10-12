@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.2]
+
+- Allow original-workflow drivers to qualify a distinct learned commitment for
+  each successor edge. Retained continuation checks supplied edge commitments
+  against occupied bindings before callbacks, while existing drivers keep their
+  stage checkpoint digest by default. Original journals, spending and terminal
+  authority are unchanged
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.21.1] - 2026-10-12
 
 - Qualify the Metrics 0.8.1 selection for local snapshot diagnostics and public

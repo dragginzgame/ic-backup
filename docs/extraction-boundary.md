@@ -2503,7 +2503,10 @@ in declared topological order. The integration supplies each learned child plan,
 fresh effect-boundary admission, authenticated request/reply retention, explicit
 original Applied receipts and the opaque learned-evidence digest. Canonical owners
 prepare all original journals before the stage callback and reconcile its exact
-checkpoint afterward. Success rereads the complete local workflow view. Failure
+checkpoint afterward. Before binding a successor, the driver may qualify a
+distinct learned digest for that original edge; the default uses the predecessor
+checkpoint digest. This callback is effect-free and does not grant dispatch
+authority. Success rereads the complete local workflow view. Failure
 or cancellation retains all original stages, pending attempts, artifacts and
 references; a repeated call refuses the occupied workflow before any driver
 callback. Recovery uses the separate exact reopen/reconciliation owners. This
@@ -2517,9 +2520,10 @@ each occupied binding identity and independently qualified learned-evidence
 digest. Every occupied stage must replay its original all-Applied checkpoint
 before a driver callback; missing identities, partial preparation and pending
 attempts refuse. An occupied successor also refuses when its original binding
-commits a different learned digest for a supplied predecessor. This coordinator
-uses one learned digest per stage; edge-specific commitments remain supported by
-the lower-level stage owners. Only genuinely absent successors may be prepared through the
+commits a different learned digest for a supplied predecessor edge. Retained
+evidence may supply distinct qualified commitments per outgoing original edge;
+unknown edges refuse before callbacks. Without an override, the predecessor
+checkpoint digest is used. Only genuinely absent successors may be prepared through the
 same create-only owners. Absence is not proof of no earlier dispatch, and the
 driver remains responsible for fresh effect authority and authenticated custody.
 

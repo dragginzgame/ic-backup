@@ -25,10 +25,31 @@
 
 # Current handoff — 2026-10-12
 
-## Pending 0.21.1 Metrics 0.8.1 qualification
+## Pending 0.21.2 learned commitments per workflow edge
 
-Released Backup 0.21.0 is `86b8ec4` at `v0.21.0` and `origin/main`.
-The compatible 0.21.1 draft preserves an independently incoming `Cargo.lock`
+Released Backup 0.21.1 is `f6a5d04` at `v0.21.1` and local `origin/main`.
+The compatible 0.21.2 draft lets an integration qualify a different learned
+commitment for each original dependency edge before binding a successor. The
+driver's new method defaults to the predecessor checkpoint digest, so existing
+implementations keep their behavior. Retained continuation accepts explicit
+per-successor commitments, checks occupied successor bindings against the exact
+supplied edge, and refuses unknown or non-successor overrides before any driver
+callback. Existing public error variants remain unchanged. Native regressions
+exercise distinct checkpoint/edge identities, two successors with different
+commitments, exact retained replay and forged-edge refusal without journal
+mutation or additional callback. No manifest, lockfile, package-version,
+original spending or terminal-authority change is part of the draft.
+
+Full local `make ci` passed all 16 targets on the final source, including 545
+library tests, both PocketIC suites, strict Clippy, Rust 1.88 independent
+consumers and paired package archives. Hosted native macOS acceptance,
+authenticated production application admission and terminal/reference-release
+proof remain open under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
+## Released 0.21.1 Metrics 0.8.1 qualification
+
+Released Backup 0.21.1 preserves an independently incoming `Cargo.lock`
 selection of registry Metrics 0.8.1, with no manifest or package-version change.
 Its archive checksum matches the locked value
 `5b2d23a378f6dd80661e0a93313ad31170842fe2558e4d8df017061877986d86`;
@@ -47,9 +68,8 @@ at startup. The complete rerun with loopback access passed all 16 targets on the
 unchanged Metrics 0.8.1 graph, including PocketIC, strict Clippy, Rust 1.88
 independent consumers and both package archives. The released 0.21.0
 [exact-source CI run](https://github.com/dragginzgame/ic-backup/actions/runs/38284684091)
-was still queued at inspection. This local draft has no hosted/native-macOS
-result; keep [#41](https://github.com/dragginzgame/ic-backup/issues/41) open
-until delivery acceptance, and keep full runner/terminal work under
+was still queued at inspection. That local qualification had no hosted/native-macOS
+result at inspection; keep full runner/terminal work under
 [#29](https://github.com/dragginzgame/ic-backup/issues/29).
 
 ## Released 0.21.0 retained learned-edge admission

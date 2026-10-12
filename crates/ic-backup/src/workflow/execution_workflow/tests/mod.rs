@@ -1,10 +1,12 @@
 use super::*;
 use crate::{
     model::{
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::{AttemptBudgetRecord, MutationOutcomeRecord, MutationReceiptRequest},
         effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         execution_workflow::tests::{child, workflow},
-        operation_plan::OperationPlanRecord,
+        operation_plan::{
+            OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest,
+        },
     },
     ops::persistence::AttemptJournalGuard,
     test_support::{ready::ready, temp_dir},
@@ -20,6 +22,7 @@ struct Driver {
     fail_at: Option<u64>,
     stop_before: Option<u64>,
     publish_at: Option<u64>,
+    edge_overrides: BTreeMap<(u64, u64), ArtifactChecksumRecord>,
 }
 impl ExecutionWorkflowStageDriver for Driver {
     type Error = io::Error;
@@ -45,7 +48,7 @@ impl ExecutionWorkflowStageDriver for Driver {
                 .map(ExecutionStagePredecessorRecord::stage_sequence)
                 .eq(expected.iter().copied())
         );
-        Ok(child(sequence))
+        Ok(child(if sequence == 9 { 7 } else { sequence }))
     }
 
     fn execute_stage(
@@ -82,6 +85,18 @@ impl ExecutionWorkflowStageDriver for Driver {
         })();
         std::future::ready(result)
     }
+
+    fn learned_for_successor(
+        &mut self,
+        predecessor: &ExecutionStagePredecessorRecord,
+        successor_sequence: u64,
+    ) -> Result<ArtifactChecksumRecord, Self::Error> {
+        Ok(self
+            .edge_overrides
+            .get(&(predecessor.stage_sequence(), successor_sequence))
+            .cloned()
+            .unwrap_or_else(|| predecessor.learned_evidence().clone()))
+    }
 }
 
 fn layout(prefix: &str) -> (PathBuf, BackupLayoutGuard) {
@@ -89,6 +104,34 @@ fn layout(prefix: &str) -> (PathBuf, BackupLayoutGuard) {
     fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     (root, layout)
+}
+
+fn branched_workflow() -> ExecutionWorkflowRecord {
+    let mut request = crate::model::operation_plan::tests::request();
+    request.graph = EffectGraphRecord::new(
+        [(0, vec![]), (7, vec![0]), (9, vec![0])]
+            .into_iter()
+            .map(|(operation_sequence, depends_on)| {
+                EffectNodeRecord::new(EffectNodeRequest {
+                    operation_sequence,
+                    depends_on,
+                })
+                .unwrap()
+            })
+            .collect(),
+    )
+    .unwrap();
+    request.operations.push(
+        PlannedOperationRecord::new(PlannedOperationRequest {
+            operation_sequence: 9,
+            target: request.operations[1].target().into(),
+            request: "01".repeat(32),
+            budget: AttemptBudgetRecord::new(2, 1).unwrap(),
+        })
+        .unwrap(),
+    );
+    request.budget = PlanBudgetRecord::new(5, 3).unwrap();
+    ExecutionWorkflowRecord::new(OperationPlanRecord::new(request).unwrap())
 }
 
 #[test]
@@ -114,6 +157,7 @@ fn dependencies_run_in_topological_order_and_complete_originals_replay() {
         fail_at: None,
         stop_before: None,
         publish_at: Some(7),
+        edge_overrides: BTreeMap::new(),
     };
     let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
     assert_eq!(driver.calls, [7, 0]);
@@ -143,6 +187,7 @@ fn lost_reply_stops_and_reentry_cannot_invoke_the_driver_again() {
         fail_at: Some(0),
         stop_before: None,
         publish_at: None,
+        edge_overrides: BTreeMap::new(),
     };
     assert!(matches!(
         ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
@@ -172,6 +217,7 @@ fn retained_run_replays_settled_stage_before_executing_absent_successor() {
         fail_at: None,
         stop_before: Some(7),
         publish_at: None,
+        edge_overrides: BTreeMap::new(),
     };
     assert!(matches!(
         ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
@@ -212,6 +258,7 @@ fn retained_run_refuses_missing_or_pending_stage_before_driver_callback() {
         fail_at: Some(0),
         stop_before: None,
         publish_at: None,
+        edge_overrides: BTreeMap::new(),
     };
     assert!(matches!(
         ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
@@ -260,6 +307,7 @@ fn occupied_successor_refuses_changed_learned_predecessor_before_callbacks() {
         fail_at: None,
         stop_before: None,
         publish_at: None,
+        edge_overrides: BTreeMap::new(),
     };
     let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
     assert_eq!(driver.calls, [0, 7]);
@@ -322,6 +370,169 @@ fn occupied_successor_refuses_changed_learned_predecessor_before_callbacks() {
         view
     );
     assert_eq!(driver.calls, [0, 7]);
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn retained_run_admits_exact_edge_commitment_distinct_from_stage_checkpoint() {
+    let (root, layout) = layout("ic-backup-retained-edge-evidence");
+    let workflow = workflow();
+    let edge = ArtifactChecksumRecord::from_bytes(b"qualified metadata edge");
+    let checkpoint_learned = ArtifactChecksumRecord::from_bytes(&0_u64.to_be_bytes());
+    assert_ne!(edge, checkpoint_learned);
+    let mut driver = Driver {
+        calls: Vec::new(),
+        fail_at: None,
+        stop_before: None,
+        publish_at: None,
+        edge_overrides: BTreeMap::from([((0, 7), edge.clone())]),
+    };
+    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    assert_eq!(driver.calls, [0, 7]);
+    let binding = |sequence| {
+        view.stages()
+            .iter()
+            .find(|stage| stage.stage_sequence() == sequence)
+            .unwrap()
+            .binding()
+            .clone()
+    };
+    let stage = ExecutionStageGuard::open(&layout, &workflow.digest(), 7, &binding(7)).unwrap();
+    assert_eq!(stage.binding().predecessors()[0].learned_evidence(), &edge);
+    drop(stage);
+
+    let retained = BTreeMap::from([
+        (
+            0,
+            RetainedStageEvidence::new(binding(0), checkpoint_learned)
+                .with_successor_evidence(BTreeMap::from([(7, edge.clone())])),
+        ),
+        (
+            7,
+            RetainedStageEvidence::new(
+                binding(7),
+                ArtifactChecksumRecord::from_bytes(&7_u64.to_be_bytes()),
+            ),
+        ),
+    ]);
+    let journal = root.join("execution-stage-0/attempt-42.json");
+    let original = fs::read(&journal).unwrap();
+    assert_eq!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &retained,
+            &mut driver,
+        ))
+        .unwrap(),
+        view
+    );
+    let mut forged = retained.clone();
+    forged.insert(
+        0,
+        forged[&0].clone().with_successor_evidence(BTreeMap::from([(
+            7,
+            ArtifactChecksumRecord::from_bytes(b"forged edge"),
+        )])),
+    );
+    assert!(matches!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &forged,
+            &mut driver,
+        )),
+        Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
+    ));
+    forged.insert(
+        0,
+        retained[&0]
+            .clone()
+            .with_successor_evidence(BTreeMap::from([(99, edge)])),
+    );
+    assert!(matches!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &forged,
+            &mut driver,
+        )),
+        Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(0))
+    ));
+    assert_eq!(driver.calls, [0, 7]);
+    assert_eq!(fs::read(journal).unwrap(), original);
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn one_original_stage_can_bind_distinct_learned_commitments_to_two_successors() {
+    let (root, layout) = layout("ic-backup-branched-edge-evidence");
+    let workflow = branched_workflow();
+    let edge_7 = ArtifactChecksumRecord::from_bytes(b"metadata identity");
+    let edge_9 = ArtifactChecksumRecord::from_bytes(b"application revision");
+    let mut driver = Driver {
+        calls: Vec::new(),
+        fail_at: None,
+        stop_before: None,
+        publish_at: None,
+        edge_overrides: BTreeMap::from([((0, 7), edge_7.clone()), ((0, 9), edge_9.clone())]),
+    };
+    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    assert_eq!(driver.calls, [0, 7, 9]);
+    let binding = |sequence| {
+        view.stages()
+            .iter()
+            .find(|stage| stage.stage_sequence() == sequence)
+            .unwrap()
+            .binding()
+            .clone()
+    };
+    for (sequence, expected) in [(7, &edge_7), (9, &edge_9)] {
+        let stage =
+            ExecutionStageGuard::open(&layout, &workflow.digest(), sequence, &binding(sequence))
+                .unwrap();
+        assert_eq!(
+            stage.binding().predecessors()[0].learned_evidence(),
+            expected
+        );
+    }
+    let retained = BTreeMap::from([
+        (
+            0,
+            RetainedStageEvidence::new(
+                binding(0),
+                ArtifactChecksumRecord::from_bytes(&0_u64.to_be_bytes()),
+            )
+            .with_successor_evidence(BTreeMap::from([(7, edge_7), (9, edge_9)])),
+        ),
+        (
+            7,
+            RetainedStageEvidence::new(
+                binding(7),
+                ArtifactChecksumRecord::from_bytes(&7_u64.to_be_bytes()),
+            ),
+        ),
+        (
+            9,
+            RetainedStageEvidence::new(
+                binding(9),
+                ArtifactChecksumRecord::from_bytes(&9_u64.to_be_bytes()),
+            ),
+        ),
+    ]);
+    assert_eq!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &retained,
+            &mut driver,
+        ))
+        .unwrap(),
+        view
+    );
+    assert_eq!(driver.calls, [0, 7, 9]);
     drop(layout);
     fs::remove_dir_all(root).unwrap();
 }

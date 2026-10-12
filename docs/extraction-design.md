@@ -490,14 +490,20 @@ coordinator. Reopening uncertain effects, authenticated application adapters,
 full backup/restore terminal evidence and guarded release still need distinct
 owners.
 
+An integration can derive a separate learned commitment for each outgoing edge
+before binding its successor. The default remains the predecessor stage's
+checkpoint digest. The edge callback is effect-free and cannot grant fresh
+dispatch authority; its digest is frozen in the successor binding.
+
 A retained-workflow continuation now matches every occupied original stage to
 integration-qualified binding and learned-evidence identities, then replays all
 complete Applied checkpoints before any callback. Only absent successors may be
 prepared under the original allocation. Pending or partially prepared stages
-refuse without redispatch. An occupied successor now also rejects a conflicting
-supplied learned predecessor digest; this coordinator supports one learned digest
-per stage, while edge-specific learned commitments remain with lower-level stage
-owners. The Testkit fixture rebuilds its driver from retained capture/metadata
+refuse without redispatch. An occupied successor also rejects a conflicting
+supplied learned predecessor digest. Retained evidence may name distinct
+integration-qualified digests for original outgoing edges; unknown edges and
+changed occupied commitments refuse before callbacks. The Testkit fixture
+rebuilds its driver from retained capture/metadata
 bytes before continuing the data stage. The integration still owns authenticity
 and fresh effect admission.
 
