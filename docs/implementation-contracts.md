@@ -248,8 +248,10 @@ implementation determine what has actually been qualified.
   bytes and explicit Applied receipts. Failure and cancellation retain originals;
   occupied workflow reentry must refuse before invoking a driver. Retained
   continuation requires a complete integration-supplied occupied-stage set and
-  replays every settled checkpoint before any new driver callback; partial or
-  pending originals refuse. There is no automatic redispatch, new spending owner,
+  replays every settled checkpoint before any new driver callback. Each occupied
+  successor's frozen predecessor learned digest must match the one supplied for
+  that original stage; this coordinator accepts one learned digest per stage.
+  Partial or pending originals refuse. There is no automatic redispatch, new spending owner,
   complete product terminal proof or
   fence/reference release. The isolated Testkit capture-to-artifact driver does
   not establish a production application adapter or same-ID restore runner.

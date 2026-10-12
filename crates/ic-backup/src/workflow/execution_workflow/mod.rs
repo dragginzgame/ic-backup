@@ -131,7 +131,10 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
 /// The caller supplies the complete occupied stage set and authenticates each
 /// stage's learned evidence. Before any driver callback, the coordinator checks
 /// that set against the held layout and replays every exact all-Applied original
-/// checkpoint. Pending, partially prepared or omitted occupied stages refuse;
+/// checkpoint. Already bound successor edges must commit the same learned digest
+/// supplied for their occupied predecessor. This coordinator has one learned
+/// digest per stage; edge-specific learned identities require the lower-level
+/// stage owners. Pending, partially prepared or omitted occupied stages refuse;
 /// none is reissued. Only absent stages may be prepared and executed once, with
 /// fresh authority and external-effect admission remaining with the driver.
 /// This is no terminal receipt, same-ID restore or reference-release permit.
@@ -153,6 +156,14 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
     for (&sequence, evidence) in retained {
         let stage =
             ExecutionStageGuard::open(layout, expected_workflow, sequence, &evidence.binding)?;
+        for predecessor in stage.binding().predecessors() {
+            let Some(original) = retained.get(&predecessor.stage_sequence()) else {
+                return Err(ExecutionWorkflowRunError::RetainedStageSetMismatch);
+            };
+            if &original.learned_evidence != predecessor.learned_evidence() {
+                return Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(sequence));
+            }
+        }
         let checkpoint = stage.replay_checkpoint(evidence.learned_evidence.clone())?;
         completed.insert(sequence, checkpoint);
     }
@@ -200,6 +211,9 @@ pub enum ExecutionWorkflowRunError<E: std::error::Error + 'static> {
     /// Supplied identities do not cover exactly the occupied original stage paths.
     #[error("retained stage identities do not match occupied original stages")]
     RetainedStageSetMismatch,
+    /// An occupied successor froze a different learned predecessor commitment.
+    #[error("retained stage {0} has a different learned predecessor commitment")]
+    RetainedLearnedMismatch(u64),
     /// Original allocation could not be published or was already occupied.
     #[error(transparent)]
     Workflow(#[from] ExecutionWorkflowPersistenceError),

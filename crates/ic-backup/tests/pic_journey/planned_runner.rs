@@ -15,7 +15,10 @@ use ic_backup::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         download_journal::DownloadArtifactRequest,
-        execution_workflow::{ExecutionStagePredecessorRecord, ExecutionWorkflowRecord},
+        execution_workflow::{
+            ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
+            MAX_EXECUTION_STAGE_BYTES,
+        },
         ic_mutation::{
             IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
         },
@@ -27,13 +30,13 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
-        read_complete_execution_workflow,
+        read_complete_execution_workflow, read_json,
     },
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
     workflow::{
         execution_workflow::{
-            ExecutionWorkflowStageDriver, RetainedStageEvidence, run_new_execution_workflow,
-            run_retained_execution_workflow,
+            ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
+            run_new_execution_workflow, run_retained_execution_workflow,
         },
         ic_snapshot_capture::capture_snapshot,
         ic_snapshot_download::download_snapshot,
@@ -48,6 +51,7 @@ use std::{
     future::Future,
     io::{self, Write},
     os::unix::fs::DirBuilderExt,
+    path::Path,
 };
 
 struct Provider<'a> {
@@ -227,7 +231,6 @@ struct CompleteDriver {
     raw_metadata: Option<Vec<u8>>,
     stages: Vec<u64>,
     stop_before_data: bool,
-    retained: BTreeMap<u64, RetainedStageEvidence>,
 }
 impl CompleteDriver {
     fn capture(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
@@ -436,19 +439,12 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     ) -> impl Future<Output = Result<ArtifactChecksumRecord, Self::Error>> {
         let sequence = stage.binding().stage_sequence();
         self.stages.push(sequence);
-        let result = match sequence {
+        std::future::ready(match sequence {
             0 => self.capture(stage),
             7 => self.metadata(stage),
             9 => self.data(stage),
             _ => panic!("fixed original stage"),
-        };
-        if let Ok(learned) = &result {
-            self.retained.insert(
-                sequence,
-                RetainedStageEvidence::new(stage.binding().digest(), learned.clone()),
-            );
-        }
-        std::future::ready(result)
+        })
     }
 }
 
@@ -484,7 +480,6 @@ pub(crate) fn run_complete(data_failure: ReadFailure) {
         raw_metadata: None,
         stages: Vec::new(),
         stop_before_data: false,
-        retained: BTreeMap::new(),
     };
     let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
     assert_eq!(driver.stages, [0, 7, 9]);
@@ -521,6 +516,44 @@ pub(crate) fn run_complete(data_failure: ReadFailure) {
     );
 }
 
+fn read_retained_prefix(
+    root: &Path,
+    backend: &Backend,
+) -> (
+    BTreeMap<u64, RetainedStageEvidence>,
+    IcSnapshotInfo,
+    Vec<u8>,
+) {
+    let capture_payload = management(backend, Method::TakeCanisterSnapshot, None);
+    let raw_capture = fs::read(root.join("execution-stage-0/capture.candid")).unwrap();
+    let capture_reply = IcSnapshotReply::decode(&capture_payload, &raw_capture).unwrap();
+    assert_eq!(capture_reply.snapshots().len(), 1);
+    let snapshot = capture_reply.snapshots()[0].clone();
+    let metadata_request =
+        IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
+    let raw_metadata = fs::read(root.join("execution-stage-7/metadata.candid")).unwrap();
+    let metadata_reply = IcSnapshotMetadataReply::decode(&metadata_request, &raw_metadata).unwrap();
+    let binding = |sequence| {
+        let record: ExecutionStageBindingRecord = read_json(
+            &root.join(format!("execution-stage-{sequence}/stage-binding.json")),
+            MAX_EXECUTION_STAGE_BYTES,
+        )
+        .unwrap();
+        record.digest()
+    };
+    let retained = BTreeMap::from([
+        (
+            0,
+            RetainedStageEvidence::new(binding(0), capture_reply.digest()),
+        ),
+        (
+            7,
+            RetainedStageEvidence::new(binding(7), metadata_reply.digest()),
+        ),
+    ]);
+    (retained, snapshot, raw_metadata)
+}
+
 pub(crate) fn run_retained() {
     let mut backend = Backend::new();
     assert!(
@@ -546,7 +579,6 @@ pub(crate) fn run_retained() {
         raw_metadata: None,
         stages: Vec::new(),
         stop_before_data: true,
-        retained: BTreeMap::new(),
     };
     assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
     assert_eq!(driver.stages, [0, 7]);
@@ -554,18 +586,53 @@ pub(crate) fn run_retained() {
     let capture = fs::read(root.join("execution-stage-0/attempt-0.json")).unwrap();
     let metadata = fs::read(root.join("execution-stage-7/attempt-7.json")).unwrap();
     let calls = driver.backend.calls;
-    let retained = driver.retained.clone();
-    assert_eq!(retained.len(), 2);
-    driver.stop_before_data = false;
+    let (mut retained, snapshot, raw_metadata) = read_retained_prefix(&root, &driver.backend);
+    let original_capture = retained.get(&0).unwrap().clone();
+    let binding: ExecutionStageBindingRecord = read_json(
+        &root.join("execution-stage-0/stage-binding.json"),
+        MAX_EXECUTION_STAGE_BYTES,
+    )
+    .unwrap();
+    retained.insert(
+        0,
+        RetainedStageEvidence::new(
+            binding.digest(),
+            ArtifactChecksumRecord::from_bytes(b"wrong"),
+        ),
+    );
+    assert!(matches!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &retained,
+            &mut driver,
+        )),
+        Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
+    ));
+    assert_eq!(driver.stages, [0, 7]);
+    assert_eq!(driver.backend.calls, calls);
+    retained.insert(0, original_capture);
+    // Drop the original driver state. Rebuild only from retained raw replies,
+    // exact original bindings and the still-running isolated backend.
+    let backend = driver.backend;
+    let mut resumed = CompleteDriver {
+        backend,
+        workflow: workflow.clone(),
+        data_failure: ReadFailure::None,
+        snapshot: Some(snapshot),
+        raw_metadata: Some(raw_metadata),
+        stages: Vec::new(),
+        stop_before_data: false,
+    };
     let view = ready(run_retained_execution_workflow(
         &layout,
         &workflow.digest(),
         &retained,
-        &mut driver,
+        &mut resumed,
     ))
     .unwrap();
-    assert_eq!(driver.stages, [0, 7, 9]);
-    assert!(driver.backend.calls > calls);
+    assert_eq!(resumed.stages, [9]);
+    assert!(resumed.backend.calls > calls);
     assert_eq!(
         fs::read(root.join("execution-stage-0/attempt-0.json")).unwrap(),
         capture
@@ -581,6 +648,6 @@ pub(crate) fn run_retained() {
     );
     eprintln!(
         "PocketIC retained workflow evidence: {}",
-        driver.backend.root.display()
+        resumed.backend.root.display()
     );
 }

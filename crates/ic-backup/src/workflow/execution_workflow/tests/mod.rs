@@ -251,6 +251,81 @@ fn retained_run_refuses_missing_or_pending_stage_before_driver_callback() {
     fs::remove_dir_all(root).unwrap();
 }
 
+#[test]
+fn occupied_successor_refuses_changed_learned_predecessor_before_callbacks() {
+    let (root, layout) = layout("ic-backup-retained-learned-edge");
+    let workflow = workflow();
+    let mut driver = Driver {
+        calls: Vec::new(),
+        fail_at: None,
+        stop_before: None,
+        publish_at: None,
+    };
+    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    assert_eq!(driver.calls, [0, 7]);
+    let binding = |sequence| {
+        view.stages()
+            .iter()
+            .find(|stage| stage.stage_sequence() == sequence)
+            .unwrap()
+            .binding()
+            .clone()
+    };
+    let mut retained = BTreeMap::from([
+        (
+            0,
+            RetainedStageEvidence::new(
+                binding(0),
+                ArtifactChecksumRecord::from_bytes(&0_u64.to_be_bytes()),
+            ),
+        ),
+        (
+            7,
+            RetainedStageEvidence::new(
+                binding(7),
+                ArtifactChecksumRecord::from_bytes(&7_u64.to_be_bytes()),
+            ),
+        ),
+    ]);
+    let journal = root.join("execution-stage-0/attempt-42.json");
+    let original = fs::read(&journal).unwrap();
+    retained.insert(
+        0,
+        RetainedStageEvidence::new(binding(0), ArtifactChecksumRecord::from_bytes(b"forged")),
+    );
+    assert!(matches!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &retained,
+            &mut driver,
+        )),
+        Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
+    ));
+    assert_eq!(driver.calls, [0, 7]);
+    assert_eq!(fs::read(&journal).unwrap(), original);
+    retained.insert(
+        0,
+        RetainedStageEvidence::new(
+            binding(0),
+            ArtifactChecksumRecord::from_bytes(&0_u64.to_be_bytes()),
+        ),
+    );
+    assert_eq!(
+        ready(run_retained_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &retained,
+            &mut driver,
+        ))
+        .unwrap(),
+        view
+    );
+    assert_eq!(driver.calls, [0, 7]);
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
 struct SuspendedDriver {
     calls: usize,
 }

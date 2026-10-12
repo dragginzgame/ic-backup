@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.21.0]
+
+- **Breaking:** Retained workflow continuation now rejects a supplied learned
+  stage digest that conflicts with an occupied successor's original binding,
+  before invoking the driver. Integrations using distinct learned commitments
+  for different edges must use the lower-level stage owners; this coordinator
+  accepts one learned digest per stage. The PocketIC recovery fixture now rebuilds
+  its driver from retained capture and metadata bytes after interruption
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.20.5] - 2026-10-12
 
 - Add a one-shot original-workflow coordinator that prepares each fixed stage in

@@ -25,9 +25,34 @@
 
 # Current handoff — 2026-10-12
 
-## Pending 0.20.5 workflow coordination and retained continuation
+## Pending 0.21.0 retained learned-edge admission
 
-The compatible uncommitted 0.20.5 draft adds `run_new_execution_workflow` and
+The uncommitted 0.21.0 draft narrows the public retained-workflow coordinator:
+each occupied successor must commit the same learned digest supplied for its
+occupied predecessor before any new driver callback. Workflows with distinct
+learned commitments for different edges continue through the lower-level stage
+owners. This changes observable refusal behavior for an existing public runner,
+so the draft is a pre-1.0 minor. A native regression confirms changed evidence
+refuses without journal mutation or callback. The real PocketIC continuation
+fixture now discards its original driver, decodes retained capture and metadata
+Candid bytes, reads original binding identities, rejects a forged predecessor
+digest before data effects and resumes only the data stage. Focused native and
+simulator tests pass on the released 0.20.5 graph, which selects Host 0.15.0
+and Testkit 0.34.7 alongside retained Host 0.14.10 dependencies. Full
+`make ci` passes all 16 targets on the unchanged 0.21.0 draft, including
+PocketIC, Clippy, Rust 1.88 independent consumers and paired package archives.
+The first full attempt stopped on a Clippy fixture-length lint, which was fixed.
+The next attempt encountered one intermittent unrelated command-lifetime test
+failure; that case and the full 543-test library suite passed on rerun, and the
+subsequent complete gate passed without source or lockfile changes.
+Generic learned-byte authenticity, production application admission and product
+terminal/reference-release proof remain separate under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
+## Released 0.20.5 workflow coordination and retained continuation
+
+Released Backup 0.20.5 is `1cc55c0` at `v0.20.5` and `origin/main`.
+It adds `run_new_execution_workflow` and
 an integration-owned stage driver. It publishes a new original allocation,
 prepares complete child journals in graph dependency order, invokes each driver
 stage once and reconciles exact local checkpoints before returning the complete
@@ -36,11 +61,11 @@ lost replies and failed checkpoints leave originals and spending retained. The
 retained-run entry point requires a complete integration-qualified occupied
 stage set and replays every exact settled original before invoking the driver
 for an absent successor. Pending or omitted originals refuse before callbacks.
-Five local coordinator cases and five actual PocketIC cases pass, including a
+Five local coordinator cases and five actual PocketIC cases passed, including a
 stopped capture/metadata prefix followed by data-stage continuation and discarded
 capture/data replies. The previous full `make ci` pass covered the one-shot
 coordinator on Host 0.14.9/Testkit 0.34.5/Metrics 0.7.3. An independently incoming
-lockfile now selects Host 0.14.10, Testkit 0.34.6, Syn 3.0.9 and AWS-LC
+lockfile selected Host 0.14.10, Testkit 0.34.6, Syn 3.0.9 and AWS-LC
 1.18.2/0.46.0. The first full gate stopped at its input-change guard while
 the lockfile changed. After exact Testkit CLI setup, the second `make ci` pass
 succeeded on all 16 targets, including simulator, Clippy, Rust 1.88 consumers and
@@ -49,6 +74,12 @@ authenticated production application adapter nor full same-ID restore, terminal
 receipt or guarded reference release. Keep
 [#29](https://github.com/dragginzgame/ic-backup/issues/29) open. Canic remains
 read-only.
+
+The later release metadata commit selected Host 0.15.0 and Testkit 0.34.7 in
+the tagged lockfile. The full pass above predates that selection; do not treat
+it as exact-source validation of the tagged graph. The 0.21.0 draft passes
+the full local gate on that graph; the tagged source's hosted result could not
+be inspected because GitHub API access was unavailable in this session.
 
 ## Released 0.20.4 complete local workflow replay
 

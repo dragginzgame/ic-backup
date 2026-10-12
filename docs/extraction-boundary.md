@@ -2514,7 +2514,10 @@ the complete occupied stage set under its held layout. The integration supplies
 each occupied binding identity and independently qualified learned-evidence
 digest. Every occupied stage must replay its original all-Applied checkpoint
 before a driver callback; missing identities, partial preparation and pending
-attempts refuse. Only genuinely absent successors may be prepared through the
+attempts refuse. An occupied successor also refuses when its original binding
+commits a different learned digest for a supplied predecessor. This coordinator
+uses one learned digest per stage; edge-specific commitments remain supported by
+the lower-level stage owners. Only genuinely absent successors may be prepared through the
 same create-only owners. Absence is not proof of no earlier dispatch, and the
 driver remains responsible for fresh effect authority and authenticated custody.
 
@@ -2532,7 +2535,8 @@ journey binds real capture/metadata codec digests with a learned raw snapshot ID
 its native receipt fixtures qualify local admission, not IC effects. A separate
 Testkit driver exercises actual capture, metadata and complete data artifact
 publication through the coordinator, including lost capture/data replies and
-retained continuation after the first two settled stages.
+retained continuation after rebuilding a driver from the first two stages'
+original Candid bytes and bindings.
 Authenticated production adapters, resumable full backup/restore, application
 admission and terminal/fence/reference release remain unimplemented.
 

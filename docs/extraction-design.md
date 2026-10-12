@@ -494,8 +494,12 @@ A retained-workflow continuation now matches every occupied original stage to
 integration-qualified binding and learned-evidence identities, then replays all
 complete Applied checkpoints before any callback. Only absent successors may be
 prepared under the original allocation. Pending or partially prepared stages
-refuse without redispatch; the integration still owns authenticity and fresh
-effect admission.
+refuse without redispatch. An occupied successor now also rejects a conflicting
+supplied learned predecessor digest; this coordinator supports one learned digest
+per stage, while edge-specific learned commitments remain with lower-level stage
+owners. The Testkit fixture rebuilds its driver from retained capture/metadata
+bytes before continuing the data stage. The integration still owns authenticity
+and fresh effect admission.
 
 
 The implemented metadata-derived data planner counts complete region/chunk reads
