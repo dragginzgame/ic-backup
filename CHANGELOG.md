@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.20.3]
+## [0.20.3] - 2026-10-12
 
 - Adopt Shared Tooling 0.9.0. Snapshot refresh and integrity checks now share
   one manifest reader that rejects NUL bytes and exposes a syntax-only
