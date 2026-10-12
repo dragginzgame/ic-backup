@@ -17,6 +17,9 @@ and documentation rewrites; keep consumer guidance in unlisted local documents.
 This file is the product-specific overlay: backup contracts, effect targets,
 numeric bounds, consumer adapters, supported hosts and qualification gates stay local.
 Release entry points follow the common command contract.
+The reviewed `make/consumer.mk` owns common setup, formatting, hook, snapshot and
+release recipes. Backup retains its ordered Testkit extension, delivery admission
+and mandatory exact resume receipt check as local inputs and prerequisites.
 Common engineering rules are mandatory; record maintainer-approved exceptions
 with their scope and reason. GitHub issues also own reusable feedback, with the
 baseline's evidence fields instead of a duplicate feedback file.

@@ -1,4 +1,5 @@
 //! Actual agent HTTP gateway effects on an isolated no-external-effects fixture.
+mod fence_reconciliation;
 mod support;
 use ic_backup::ports::ic_mutation::{IcMutationProvider, IcMutationProviderError};
 use ic_backup::{
@@ -169,6 +170,9 @@ struct Fixture {
 }
 impl Fixture {
     async fn new(identity: Arc<dyn ic_agent::Identity>) -> Self {
+        Self::with_wasm(identity, include_str!("state.wat")).await
+    }
+    async fn with_wasm(identity: Arc<dyn ic_agent::Identity>, wasm_source: &str) -> Self {
         let root = support::root("pocketic");
         let admission = std::process::Command::new("make")
             .current_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
@@ -203,7 +207,7 @@ impl Fixture {
         pic.add_cycles(target, 100_000_000_000_000).await;
         fs::write(
             root.join("original.wasm"),
-            wat::parse_str(include_str!("state.wat")).unwrap(),
+            wat::parse_str(wasm_source).unwrap(),
         )
         .unwrap();
         assert!(

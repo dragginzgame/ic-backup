@@ -25,6 +25,59 @@
 
 # Current handoff — 2026-10-11
 
+## Current 0.19.2 Shared Tooling 0.6.4 adoption
+
+Canonically adopt committed Shared Tooling 0.6.4
+`6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d`, verified against remote main.
+The reviewed 102-file closure adds the common Make entrypoint/release module and
+its guide. Common recipes move to that owner; Backup retains ordered Testkit
+setup/admission, direct-only delivery and mandatory exact resumed-receipt checks.
+All actual isolated exports include the closure. Focused formatting, hook/index,
+Testkit and release/recovery checks pass; Testkit/hook cases pass on genuine Bash
+3.2.57. Every registered full `make ci` target passes on unchanged inputs and the
+preserved Host 0.14.2/Testkit 0.34.0/Metrics 0.6.6/Syn 3.0.8 graph, including both
+simulator suites, Rust 1.88 independent consumers and paired archives.
+The exact released 0.19.1 run was cancelled after Linux success;
+both macOS jobs were cancelled and cannot qualify native acceptance. Shared 0.6.4
+passes Linux/lint with Intel macOS running and Apple Silicon queued. Product APIs,
+pins and tool build identities stay unchanged. Notes remain compatible 0.19.2;
+own versions, index and refs remain user-owned. Original recovery evidence stays
+retained. See [the compact review](../reports/audits/2026/10/11/shared-064/01/report.md)
+and [adoption guidance](../shared-tooling.md).
+
+## Current 0.19.2 capture-only fence qualification
+
+Released HEAD is 0.19.1 at `032066f2079cd2ac93b230c4a32bbcf27ffe0c59`.
+It also selects Testkit 0.34.0 and Metrics 0.6.6 with Host 0.14.1; the previous
+0.19.1 report retains its earlier qualified graph rather than describing these
+later selections. Preserve the released manifest/lock. Metrics Rust sources match
+0.6.4. Testkit's managed probe now explicitly requires successful completion;
+its unused artifact-cache changes do not move Backup's command or artifact owners.
+Shared Tooling remains the committed 0.6.3 snapshot.
+
+The incoming lockfile now selects all four Host crates at 0.14.2. Verified registry
+archives have identical Rust sources to 0.14.1; normalized manifests change only
+package version. The release updates Host's developer tooling/docs, with no new
+Backup API or offload opportunity. Locked all-target/all-feature compilation passes;
+this inspection does not rerun the full suite. The preceding full-gate evidence
+below retains Host 0.14.1. Exact review and build evidence stay in `target/host-next`.
+
+Five actual isolated capture-only cases qualify discarded acquisition replies,
+pending discarded observation replies, explicit retained-late settlement, cancelled
+qualification and rejection of changed retained reply bytes. Exact pending history
+survives and explicit local recovery settles the original observation without
+reacquisition/read/release. Preserve the incoming Syn 3.0.8 lockfile update separately
+from the preceding graph's qualification. Every registered full `make ci` target
+passes on unchanged final inputs, including strict Clippy, both simulator suites,
+Rust 1.88 independent consumers and paired package archives. The fixture
+grants no application or restore default, production observation adapter, full runner or terminal authority.
+Exact released CI supersedes the cancelled 0.19.0 run: Linux passes, Intel macOS
+and Apple Silicon are running. Native acceptance remains separate. Versions
+stay 0.19.1; 0.19.2 notes and work remain uncommitted. See
+[the qualification scope](../pocketic-qualification.md#capture-only-application-fence-qualification)
+and [the continued compact review](../reports/audits/2026/10/11/continuation-0192/02/report.md).
+
+
 ## Current 0.19.1 explicit fence-observation settlement
 
 Released HEAD is 0.19.0 at `b0670330feaadc1d15006bb580d350c2c5a77dc4`.

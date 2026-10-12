@@ -1,0 +1,161 @@
+{
+  "result": "local qualification passed; native/application acceptance remains incomplete",
+  "base": "032066f2079cd2ac93b230c4a32bbcf27ffe0c59",
+  "shared_tooling": {
+    "version": "0.6.3",
+    "revision": "4fd979d13c32adb3cb2f51f213ebfc4f98339b3d"
+  },
+  "graph": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.8.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.11.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.6.6",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.34.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "ic_principal",
+      "version": "0.1.5",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    }
+  ],
+  "qualification": {
+    "focused": "three actual capture-only application cases pass",
+    "strict_clippy": "pass",
+    "full_gate": {
+      "registered_targets": [
+        "shared-tooling-check",
+        "tools-check",
+        "dependency-pins-check",
+        "check-doc-links",
+        "deps",
+        "shell-check",
+        "tooling-check",
+        "release-check",
+        "hooks-check",
+        "fmt-check",
+        "check",
+        "clippy",
+        "test",
+        "doc",
+        "check-msrv",
+        "package"
+      ],
+      "passed_targets": [
+        "shared-tooling-check",
+        "tools-check",
+        "dependency-pins-check",
+        "check-doc-links",
+        "deps",
+        "shell-check",
+        "tooling-check",
+        "release-check",
+        "hooks-check",
+        "fmt-check",
+        "check",
+        "clippy",
+        "test",
+        "doc",
+        "check-msrv",
+        "package"
+      ],
+      "log_sha256": "677ae1d56754407cf056ba027a08c5b4e57c0f6b96b6e1a6186ac0cf4f5f5560"
+    },
+    "technical_inputs_unchanged": true,
+    "manifest_unchanged": true,
+    "lockfile_unchanged": true,
+    "index_unchanged": true,
+    "head_unchanged": true
+  },
+  "evidence": {
+    "target/continuation-0192/incoming-manifest.toml": "15102c9492bfeac2fa659a71f6927d42c5dd42a0a8947a6f551a884b65f59e5b",
+    "target/continuation-0192/incoming.lock": "7874b2a3ed44671f954a89af972e8d83071232b9d4797f5041b41d017ccb7412",
+    "target/continuation-0192/technical-before-ci.json": "705c53a3d6556f329aa6ed2372cd1aeeffc92641831deea26633dc958f1f6b68",
+    "target/continuation-0192/technical-after-ci.json": "705c53a3d6556f329aa6ed2372cd1aeeffc92641831deea26633dc958f1f6b68",
+    "target/continuation-0192/fence-tests.log": "209d07b2bd22773a7cbe1a4fb97ae9ca98ca14e85e7b240ef84758453ddbf6a7",
+    "target/continuation-0192/clippy.log": "585ec7ae5b34f1692a1bf2a564e812387af98069281b544c0d369b33b8f844c0",
+    "target/continuation-0192/testkit-admission.log": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+    "target/continuation-0192/initial-compile.log": "3a66d42e0246dac4ca2736f95f56f12ac2db621517ce32716127cbafb93676f8",
+    "target/continuation-0192/initial-native-path-failure.log": "2194bce7e00705b973b44e8bdd6eaccbf9de851a3f59321983b4ddce65eb0c96",
+    "target/continuation-0192/initial-clippy.log": "cd3d27710637ae469cf17ffd4cd5a506d3cef46ec79105e784870757bdc18181",
+    "target/continuation-0192/sandbox-startup-refusal.log": "4c526e9acb36d9a2dbb9df54c8e213e72a3f1ad3b70cea909dbcde3c4f52aa30",
+    "target/continuation-0192/dependency-review.json": "855192a63bfbeb4ca394a3de245dfcb8a75bbfb68846025669e334a29e1a80dc"
+  },
+  "hosted_release": {
+    "conclusion": "",
+    "headSha": "032066f2079cd2ac93b230c4a32bbcf27ffe0c59",
+    "jobs": [
+      {
+        "name": "library (macos-15)",
+        "status": "queued",
+        "conclusion": ""
+      },
+      {
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "library (macos-15-intel)",
+        "status": "in_progress",
+        "conclusion": ""
+      }
+    ],
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/38153980387"
+  },
+  "limits": [
+    "Actual fixture application/custody is capture-only; no generic application or restore external-obligation qualification.",
+    "Observation provider is test-owned Testkit, not an installed production Agent application-observation adapter.",
+    "No full runner, terminal proof or fence/reference release; Canic #513 remains within Backup #29.",
+    "Uncommitted candidate has no hosted result. Superseded 0.19.0 run was cancelled; exact 0.19.1 native gates remain incomplete."
+  ],
+  "delivery": {
+    "changelog": "0.19.2",
+    "package_versions": "0.19.1",
+    "committed": false
+  }
+}

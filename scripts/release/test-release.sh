@@ -62,7 +62,7 @@ run_case() {
 create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
-    cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
+    cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
     cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$ROOT/scripts/ci/run-formatting.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
@@ -832,6 +832,9 @@ test_completed_evidence_replay() {
     mv target/release-state/0.1.1.validation.json target/retained-proof.json
     : > "$TEST_EFFECTS"
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
+    # The new common resume input cannot disable Backup's mandatory receipt check.
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1 "RELEASE_RESUME_CHECK_COMMAND=:"
     [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     mv target/retained-proof.json target/release-state/0.1.1.validation.json
     "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1

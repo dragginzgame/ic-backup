@@ -11,6 +11,47 @@ Shared 0.2.0's five-tool bundle supplies no PocketIC binary or fallback.
 Qualification for this candidate is recorded in the current handoff; older results
 below retain their actual sources and graphs.
 
+## Capture-only application fence qualification
+
+The Agent simulator target now uses a separate one-member application fixture
+through the public acquisition, observation and explicit settlement coordinators.
+Its immutable acquisition stores the exact fence identity, membership revision
+and original nonce; it has no release endpoint, membership changes, timers,
+outgoing calls or irreversible external work. An actual application rejection
+and unchanged counter qualify its write gate. Exclusive fixture operator custody,
+actual installed Wasm/root/signer and this bounded program qualify attribution
+here; matching fence hashes alone do not supply that proof for an application.
+
+The configured Agent acquisition adapter retains exact signed ingress and its
+certified empty reply before the fixture discards the public acknowledgement.
+An independent original observation reservation precedes one replicated Testkit
+read. Its fixture-owned provider retains exact request identities/challenge and
+raw reply bytes privately and durably. Both attempts stay pending until independent
+qualification checks the retained request/reply under selected journal exclusion.
+Exact stage reopen and Applied settlement consume no new read/acquisition, leave
+original spending unchanged and retain the active obligation. A discarded observation
+reply stays pending rather than becoming Uncertain; a separately retained late
+observation can settle its exact original attempt. Reentry is denied in each lane.
+Cancellation during independent qualification releases journal exclusion while
+retaining both pending attempts and exact original bytes. Changed retained reply
+bytes cause a typed qualification rejection before any receipt. These actual
+simulator cases subsequently settle the original observation without another read;
+the changed-byte fixture explicitly restores its original retained file and keeps
+the changed bytes separately. Production settlement performs no evidence repair.
+
+Focused command:
+
+```bash
+cargo test --offline --locked -p ic-backup-agent --test pocketic_transport fence_reconciliation
+```
+
+This capture-only fixture qualifies orchestration with actual application effects;
+it installs no production observation adapter or generic application permission.
+Restore's rewind-independent external obligations, arbitrary application safety,
+full backup/restore completion, terminal proof and fence/reference release remain
+separate. Original failure logs, raw server output, signed ingress, state/rejections,
+requests/replies, journals and obligations remain retained.
+
 ## Earlier Testkit qualification
 
 Both simulator suites depend on published `ic-testkit` 0.25.1 and its complete

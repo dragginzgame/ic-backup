@@ -234,7 +234,8 @@ inspection permits no repeat push. Current maintained adapters read metadata and
 receipts from `RELEASE_COMMIT`, validate the exact original source/date/version and
 member hashes, and keep the shared runner as the sole tree/history/Git-effect owner.
 
-After runner completion, the local resume wrapper resolves the requested annotated
+After runner completion, the consumer-owned `RELEASE_RESUME_CHECK_COMMAND` supplied
+to [the shared Make entrypoint](make-interface.md) resolves the requested annotated
 tag and checks its original committed receipt and retained validation sidecar.
 It never substitutes HEAD's newer metadata. Completed replay validates local receipt/
 tag evidence and observes the selected destination's exact tag and branch history.

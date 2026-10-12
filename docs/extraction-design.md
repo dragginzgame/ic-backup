@@ -374,8 +374,8 @@ retained originals; restore checks both guarded plans. Recovery joins the exact
 original attempt journal, without inventing another accounting ledger or treating
 missing evidence as unspent. Pending and settled outcomes retain the declaration.
 An Applied projection does not establish current Active custody or authorize
-release. No coordinator implementation, acquisition/release action, release flag
-or terminal admission exists. Original request semantics and whole-selection
+release. Obligation retention supplies no acquisition/release action, release flag
+or terminal admission. Original request semantics and whole-selection
 fence custody remain integration-qualified. See
 [the schema](contracts/fence-obligation.schema.json) and
 [implemented boundary](extraction-boundary.md#original-application-fence-obligation-retention).
@@ -387,7 +387,8 @@ Active fence/revisions; restore also retains whole-unit, rewind-independent cust
 and replay-safety evidence. Current absence/inactivity cannot prove nonapplication.
 Lost provider replies remain pending and spent; settled uncertainty and retained
 late replies are distinct. Pure views create no receipts, redispatch or release.
-Actual authenticated providers, acquisition and controlled release remain pending.
+Application-owned authenticated observation and controlled release remain
+separately qualified; the configured acquisition adapter grants no Active custody.
 See the [typed contract](contracts/fence-reconciliation-port.json).
 
 `workflow::fence_reconciliation::settle_fence_acquisition_observation` now joins
@@ -397,6 +398,12 @@ match exact attempt/request/outcome/evidence before the existing durable transit
 The helper calls no provider or new reservation. Settled uncertainty retains the
 pending mutation; original obligations/references remain. Local settlement grants
 no current Active custody, terminal proof or release.
+Actual capture-only simulator cases also qualify cancellation during receipt
+qualification and rejection of changed retained reply bytes. Exact pending history
+survives; explicit local recovery can settle the original retained observation
+without another read. Production settlement does not repair evidence. Complete
+terminal evidence and original command/byte custody remain prerequisites for the
+proposed source-reference release boundary.
 
 Application acquisition now has a bounded exact host update envelope. Its canonical
 receiver, mode, exact method and opaque arguments are hashed before the plan, avoiding

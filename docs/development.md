@@ -65,7 +65,7 @@ make test
 
 Explicit local setup uses the reviewed [host pins](../ci/tool-versions.env)
 and [IC tool matrix](../ci/ic-tools.tsv), through the shared
-[Make commands](../make/tools.mk). It downloads and verifies jq/yq, ripgrep with
+[common Make entrypoint](../make/consumer.mk). It downloads and verifies jq/yq, ripgrep with
 PCRE2, cloc and the five IC executables, followed by Cargo-sort, Cargo-sort-derives
 and Candid-extractor. The ordered Backup extension fetches locked dependencies
 then prepares its selected Testkit CLI/server. Previous sets and failed candidates
@@ -1028,7 +1028,8 @@ these actual adopted helpers and checks exact status, retained inputs and report
 paths; it runs in the existing Linux/macOS CI selection without adding tool setup.
 
 `fmt`, `fmt-check` and `format-tools-check` come from the selected Shared Tooling
-`make/rust-format.mk` include. `FORMAT_CARGO` may explicitly name the prepared
+`make/consumer.mk` entrypoint and its `make/rust-format.mk` owner.
+`FORMAT_CARGO` may explicitly name the prepared
 Cargo executable; the recipes use portable checkout-local PATH lookup.
 `fmt` and `fmt-check` share `format-tools-check`, which reads the reviewed pin
 from `ci/tool-versions.env`. It requires successful exact cargo-sort and rustfmt

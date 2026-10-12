@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.19.2]
+
+- Adopt Shared Tooling 0.6.4's common Make entrypoint for setup, formatting,
+  hooks, snapshot verification and releases, preserving ordered Testkit setup
+  and Backup's exact resume receipt check
+  ([Shared #130](https://github.com/dragginzgame/shared-tooling/issues/130)).
+
+- Qualify original fence acquisition, observation and explicit settlement against
+  an isolated capture-only application fixture. Discarded replies retain pending
+  spending; retained late observations settle without another read or release.
+  Cancelled qualification and changed retained reply bytes preserve the exact
+  pending journal; explicit local recovery uses the original observation
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29),
+  [#25](https://github.com/dragginzgame/ic-backup/issues/25)).
+
 ## [0.19.1] - 2026-10-11
 
 - Add explicit guarded fence-observation settlement with independent application

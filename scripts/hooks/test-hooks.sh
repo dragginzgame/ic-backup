@@ -30,7 +30,7 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 create_fixture() {
     mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks" "$FIXTURE/make"
     cp "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
+    cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
     cp "$ROOT/ci/tool-versions.env" "$FIXTURE/ci/"
     cp "$ROOT/.githooks/pre-commit" "$FIXTURE/.githooks/"
     cp "$ROOT/scripts/dev/install-git-hooks.sh" "$FIXTURE/scripts/dev/"
@@ -209,7 +209,7 @@ CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
 perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-artifacts\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
-formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/tools.mk make/rust-format.mk make/execution.mk)
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
 while IFS= read -r -d '' path; do
     formatter_inputs[${#formatter_inputs[@]}]="$path"
 done < <(git -C "$ROOT" ls-files -z --cached --others --exclude-standard -- '*.rs')

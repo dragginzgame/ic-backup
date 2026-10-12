@@ -1,0 +1,235 @@
+{
+  "result": "local qualification passed; delivery and native acceptance remain open",
+  "base": "032066f2079cd2ac93b230c4a32bbcf27ffe0c59",
+  "shared_tooling": {
+    "version": "0.6.4",
+    "revision": "6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d",
+    "files": 102,
+    "changed_selected_files": [
+      "docs/local-setup.md",
+      "docs/consuming-snapshots.md",
+      "DRAGGINZGAME.md",
+      "docs/releases.md",
+      "rules/git-hooks.md",
+      "scripts/dev/install-git-hooks.sh",
+      "scripts/distribution/governance-files.txt",
+      "make/rust-format.mk"
+    ],
+    "added_companions": [
+      "make/consumer.mk",
+      "make/release.mk",
+      "docs/make-interface.md"
+    ]
+  },
+  "graph": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea"
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.14.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "9fbe7cf95877b42fe1f029f73606d1704184c80149b5f8b7a822cfc8a67848c0"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.14.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "dff196276a12e0d3efb3bdc736f21ab9669cc6517dd6ba6c5bf76c2877be985b"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.14.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "d017c601e900e09d35ecd72dd4b9fc17f46883f298b3e4328512954f246c2650"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.14.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "96d1f89d1892e88cb73d21008906070e618fceb66f0b6af73f6c44aff83a733b"
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.8.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3"
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.11.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "b3e3162bdfbdbc6ca3b4bfa8145f9ba19cddaf3eb8d1af8dc7be6a39557b76c2"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.6.6",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "65fdc32ce3d16e57750b9b8324a203ec3d7ead289b6ebbdf18cfd955d602229e"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.34.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c7a1daea41a0b39c4004a9a9d02de4350e0eb08050bc37d7ec9dbee47a046111"
+    },
+    {
+      "name": "ic_principal",
+      "version": "0.1.5",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "0c2732829022822ec69021c336d23b32a053e07abdd08553c71407d6e2d1675d"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "85135917c845e8fc132f5eca3a0a8cbab696477a5fee3c2dda168a0797f81e1c"
+    },
+    {
+      "name": "syn",
+      "version": "2.0.119",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+    },
+    {
+      "name": "syn",
+      "version": "3.0.8",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "01016da373cd8f7ef12624f796309f5c31ba8d646dd08856c02cd741d823c622"
+    }
+  ],
+  "full_gate": {
+    "registered_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ],
+    "passed_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ]
+  },
+  "unchanged_inputs": {
+    "technical": true,
+    "index": true,
+    "head": true,
+    "manifest": true,
+    "lockfile": true
+  },
+  "bash32": "Actual consumer Testkit/hook fixtures pass on Bash 3.2.57, Linux x86_64; this is not native macOS qualification.",
+  "actual_fence_cases": [
+    "fence_reconciliation::discarded_observation_reply_stays_pending_and_cannot_become_uncertain_or_repeat",
+    "fence_reconciliation::cancelled_qualification_reopens_pending_and_settles_without_another_call",
+    "fence_reconciliation::retained_late_observation_settles_original_attempt_without_another_read",
+    "fence_reconciliation::changed_retained_reply_refuses_settlement_without_spending_or_reading_again",
+    "fence_reconciliation::discarded_acquisition_reply_is_observed_and_explicitly_settled_without_reacquisition"
+  ],
+  "consumer_description_review": "accurate; unchanged",
+  "evidence": {
+    "target/shared-064/preview.log": "63fe2b4e531303c0cd41f96a56d12e8b4da9158e5bcbb54ac595c3a2649658bc",
+    "target/shared-064/preview-complete.log": "54f62cfd1c8a0cc2f1f2a7bf5630bacac21a50374a96d1a7b8f6b5b4dbf232d3",
+    "target/shared-064/export.log": "0fd1edc5abf1609d067563462bc03f4c619b435cde4223f2134da1d95e49d6d1",
+    "target/shared-064/incoming.lock": "aceaa26b540e4af707d6875d06104dc3304496e5eee712f61e7012f8ac0ea4f9",
+    "target/shared-064/incoming-manifest.toml": "15102c9492bfeac2fa659a71f6927d42c5dd42a0a8947a6f551a884b65f59e5b",
+    "target/shared-064/technical-before-ci.json": "071073f28d7a20cd4ac96b9879dea9b28eb8a652a48ed3506a9de2fa6c36a3ad",
+    "target/shared-064/technical-after-ci.json": "071073f28d7a20cd4ac96b9879dea9b28eb8a652a48ed3506a9de2fa6c36a3ad",
+    "target/shared-064/testkit-routing.log": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901",
+    "target/shared-064/hooks.log": "27ff6f116ca98ae118fcd9e77bf16f3588fc7ca4dd154807ed8eb984796fa0d3",
+    "target/shared-064/release.log": "b2191bd7ef9b4e25cad9759eeb31f8e9e637929b280114aa4ab6cf8a3eeb8aaa",
+    "target/shared-064/bash32-testkit-routing.log": "eb58bd94980ed5d4cfeba206dca25a94fa0a93aa8b6bff3b577d3acc41eeb901",
+    "target/shared-064/bash32-hooks.log": "0695cbc264ec7a643e1f9a39d0f23e56bf5c73587e65bdf905c92cf60475dd70",
+    "target/shared-064/full-ci.log": "81f31ea7ff72594b3eda331798519d0494768b806e4d0ac5244ec9a34506623a"
+  },
+  "released_consumer_ci": {
+    "conclusion": "cancelled",
+    "headSha": "032066f2079cd2ac93b230c4a32bbcf27ffe0c59",
+    "status": "completed",
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/38153980387",
+    "jobs": [
+      {
+        "name": "library (macos-15)",
+        "status": "completed",
+        "conclusion": "cancelled"
+      },
+      {
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "library (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "cancelled"
+      }
+    ]
+  },
+  "upstream_ci": {
+    "conclusion": "",
+    "headSha": "6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d",
+    "status": "queued",
+    "url": "https://github.com/dragginzgame/shared-tooling/actions/runs/38155574308",
+    "jobs": [
+      {
+        "name": "lint-and-security",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "portable-regression (macos-15-intel)",
+        "status": "in_progress",
+        "conclusion": ""
+      },
+      {
+        "name": "portable-regression (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "portable-regression (macos-15)",
+        "status": "queued",
+        "conclusion": ""
+      }
+    ]
+  },
+  "delivery": {
+    "changelog": "0.19.2",
+    "package_versions": "0.19.1",
+    "committed": false
+  },
+  "limits": [
+    "Uncommitted candidate has no hosted result.",
+    "Released 0.19.1 passed Linux but both native macOS jobs were cancelled.",
+    "Upstream 0.6.4 passes Linux/lint; native qualification remains separate.",
+    "No production runner, generic application permission, terminal or fence/reference-release authority."
+  ]
+}

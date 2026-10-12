@@ -1,0 +1,184 @@
+{
+  "result": "local full gate passed; candidate native/application acceptance remains incomplete",
+  "base": "032066f2079cd2ac93b230c4a32bbcf27ffe0c59",
+  "shared_tooling": {
+    "version": "0.6.3",
+    "revision": "4fd979d13c32adb3cb2f51f213ebfc4f98339b3d"
+  },
+  "graph": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea"
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "fe9f4f3b54951520a67e8f99f120baf4cc9d6c37e3a848e20ce9f4d029ba3307"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "59ab765de7d6d9f4d5eaecac6e4c74e1350af4dda7d7cd3d0c7d6a4d89f08672"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "e984c32037da3fefff009a8fdddc80a29838d055cc7bc1a98d4b7434fb817670"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.14.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "18991ec7594c75be4e562b7d774fea581260f37420aaa82a2699e5c105321791"
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.8.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3"
+    },
+    {
+      "name": "ic-management-canister-types",
+      "version": "0.11.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "b3e3162bdfbdbc6ca3b4bfa8145f9ba19cddaf3eb8d1af8dc7be6a39557b76c2"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.6.6",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "65fdc32ce3d16e57750b9b8324a203ec3d7ead289b6ebbdf18cfd955d602229e"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.34.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c7a1daea41a0b39c4004a9a9d02de4350e0eb08050bc37d7ec9dbee47a046111"
+    },
+    {
+      "name": "ic_principal",
+      "version": "0.1.5",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "0c2732829022822ec69021c336d23b32a053e07abdd08553c71407d6e2d1675d"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "85135917c845e8fc132f5eca3a0a8cbab696477a5fee3c2dda168a0797f81e1c"
+    },
+    {
+      "name": "syn",
+      "version": "2.0.119",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+    },
+    {
+      "name": "syn",
+      "version": "3.0.8",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "01016da373cd8f7ef12624f796309f5c31ba8d646dd08856c02cd741d823c622"
+    }
+  ],
+  "actual_fence_cases": [
+    "fence_reconciliation::changed_retained_reply_refuses_settlement_without_spending_or_reading_again",
+    "fence_reconciliation::discarded_acquisition_reply_is_observed_and_explicitly_settled_without_reacquisition",
+    "fence_reconciliation::discarded_observation_reply_stays_pending_and_cannot_become_uncertain_or_repeat",
+    "fence_reconciliation::cancelled_qualification_reopens_pending_and_settles_without_another_call",
+    "fence_reconciliation::retained_late_observation_settles_original_attempt_without_another_read"
+  ],
+  "full_gate": {
+    "registered_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ],
+    "passed_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ]
+  },
+  "unchanged_inputs": {
+    "technical": true,
+    "head": true,
+    "index": true,
+    "manifest": true,
+    "lockfile": true
+  },
+  "evidence": {
+    "target/continuation-0192/02/incoming-Cargo.lock": "f03fd0ebe0dfa685a7aa39a1d669f8317e5ecb1041c62f9f76e02bcadccdde1c",
+    "target/continuation-0192/02/incoming-Cargo.toml": "15102c9492bfeac2fa659a71f6927d42c5dd42a0a8947a6f551a884b65f59e5b",
+    "target/continuation-0192/02/technical-before-ci.json": "00779b76fbf3adbd87a209d79f2d34392cba4d1f833ec2b27d4313661c2cdff7",
+    "target/continuation-0192/02/technical-after-ci.json": "00779b76fbf3adbd87a209d79f2d34392cba4d1f833ec2b27d4313661c2cdff7",
+    "target/continuation-0192/02/fence-tests.log": "1ea6ca8057f8023da545c53d96fc38972224250e0c927825de71d618b124b22d",
+    "target/continuation-0192/02/full-ci.log": "e9eb326376c412d5f3ca73cf60af0d51e9bc3015a44e809c19ca3c2d0c9204c1",
+    "target/continuation-0192/02/initial-compile.log": "71d6bc47809ca1ba9eb56e4f5a17b3e51f0a5d83f0c440c5368f4d06c4f857e7",
+    "target/continuation-0192/02/initial-clippy.log": "db00cac177c6126ac1bf6fd9046bf2a485e9c2de1ec00280ddea58eaa13b593c",
+    "target/continuation-0192/02/syn-review.json": "dcc70483c8328186298a37112f49256b5badcf2c8f0baf1496105ef54faf68b4"
+  },
+  "hosted_release": {
+    "conclusion": "",
+    "headSha": "032066f2079cd2ac93b230c4a32bbcf27ffe0c59",
+    "status": "in_progress",
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/38153980387",
+    "jobs": [
+      {
+        "name": "library (macos-15)",
+        "status": "in_progress",
+        "conclusion": ""
+      },
+      {
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "library (macos-15-intel)",
+        "status": "in_progress",
+        "conclusion": ""
+      }
+    ]
+  },
+  "delivery": {
+    "changelog": "0.19.2",
+    "package_versions": "0.19.1",
+    "committed": false
+  },
+  "limits": [
+    "Isolated capture-only fixture; no generic application, restore outside-snapshot custody or production observation adapter.",
+    "No terminal proof or fence/reference release; Canic #513 remains within Backup #29.",
+    "Native hosted CI is for released 0.19.1, not this uncommitted candidate."
+  ]
+}

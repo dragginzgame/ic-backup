@@ -49,7 +49,27 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 99-file snapshot selects committed Shared Tooling 0.6.3 at
+The current 102-file snapshot selects committed Shared Tooling 0.6.4 at
+`6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d`, verified against remote main.
+Canonical clean preview/export updates eight selected files and adds the reviewed
+`make/consumer.mk`, `make/release.mk` and `docs/make-interface.md` companions.
+The [common Make interface](make-interface.md) replaces separate includes and
+equivalent local hook/snapshot/release recipes. Ordered Testkit setup/admission,
+direct-only delivery and mandatory exact resumed-receipt verification stay local.
+The actual isolated fixture exports include the complete closure. Default help,
+formatting, hooks/index custody, Testkit routing and release/recovery checks pass;
+actual Testkit and hook fixtures also pass on genuine Bash 3.2.57. Every registered
+full `make ci` target passes on unchanged inputs and the incoming Host 0.14.2/
+Testkit 0.34.0/Metrics 0.6.6 graph, including Rust 1.88 consumers and packaging.
+Product APIs, pins and tool build identities stay unchanged; no reinstall is needed.
+Notes remain compatible 0.19.2 and package versions stay 0.19.1.
+Exact released Backup 0.19.1 CI was cancelled after Linux success; both macOS
+jobs were cancelled. Candidate and producer native acceptance remain separate.
+See [the current review](reports/audits/2026/10/11/shared-064/01/report.md).
+
+### Prior Shared Tooling 0.6.3 review
+
+The prior 99-file snapshot selects committed Shared Tooling 0.6.3 at
 `4fd979d13c32adb3cb2f51f213ebfc4f98339b3d`, verified against remote main.
 Clean canonical preview/export changes eight selected files, with no roster change.
 Normal direct release retries can archive an unstaged prepare intent after a clean

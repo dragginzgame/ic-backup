@@ -1,0 +1,38 @@
+;; Isolated capture-only fixture: one immutable acquisition, no release,
+;; membership changes, timers, outgoing calls, or irreversible external work.
+(module
+  (import "ic0" "msg_arg_data_copy" (func $args (param i32 i32 i32)))
+  (import "ic0" "msg_arg_data_size" (func $arg_size (result i32)))
+  (import "ic0" "msg_reply_data_append" (func $append (param i32 i32)))
+  (import "ic0" "msg_reply" (func $reply))
+  (import "ic0" "msg_reject" (func $reject (param i32 i32)))
+  (memory (export "memory") 1)
+  (global $active (mut i32) (i32.const 0))
+  (global $counter (mut i64) (i64.const 0))
+  (data (i32.const 1024) "fenced")
+  (func (export "canister_update write")
+    (if (global.get $active)
+      (then (call $reject (i32.const 1024) (i32.const 6)))
+      (else
+        (call $args (i32.const 512) (i32.const 0) (i32.const 8))
+        (global.set $counter (i64.load (i32.const 512)))
+        (call $reply))))
+  (func (export "canister_update acquire")
+    (if (i32.or (global.get $active) (i32.ne (call $arg_size) (i32.const 192)))
+      (then (call $reject (i32.const 1024) (i32.const 6)))
+      (else
+        (call $args (i32.const 0) (i32.const 0) (i32.const 192))
+        (global.set $active (i32.const 1))
+        (i64.store (i32.const 192) (i64.const 1))
+        (i64.store (i32.const 200) (global.get $counter))
+        (call $reply))))
+  (func (export "canister_update observe")
+    (if (i32.ne (call $arg_size) (i32.const 64))
+      (then (call $reject (i32.const 1024) (i32.const 6)))
+      (else
+        (call $args (i32.const 208) (i32.const 0) (i32.const 64))
+        (call $append (i32.const 0) (i32.const 272))
+        (call $reply))))
+  (func (export "canister_query fence_state")
+    (call $append (i32.const 0) (i32.const 208))
+    (call $reply)))

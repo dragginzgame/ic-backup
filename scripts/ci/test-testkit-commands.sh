@@ -28,7 +28,7 @@ name = "ic-testkit"
 version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 LOCK
-cp "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$fixture/consumer/make/"
+cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$fixture/consumer/make/"
 cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$fixture/consumer/scripts/ci/"
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash

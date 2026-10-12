@@ -3,26 +3,23 @@ SHELL := /bin/bash
 export CARGO_TARGET_DIR := $(CURDIR)/target
 LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server
 LOCAL_TOOL_CHECK_TARGETS := testkit-server-check
-include make/tools.mk
-include make/rust-format.mk
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
 RELEASE_DELIVERY ?= direct
 export RELEASE_DELIVERY
 RELEASE := bash scripts/release/release.sh
+override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
+override SHARED_TOOLING_ROOT := $(CURDIR)
+include make/consumer.mk
 CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
-ifneq ($(word 2,$(filter release-patch release-minor release-major release-resume,$(MAKECMDGOALS))),)
-$(error Select exactly one release target)
-endif
-
 .PHONY: check check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
-        help hooks-check install-hooks package publish publish-dry-run \
-        release-check release-major release-minor release-patch release-plan release-resume \
+        help hooks-check package publish publish-dry-run \
+        release-check release-plan \
         release-version release-preflight release-prepare-version release-prepared-check \
         release-files release-commit-check release-committed-check release-tagged-check \
-        release-push-check release-tag-check release-verify shared-tooling-check shell-check \
+        release-push-check release-tag-check release-verify shell-check \
         tags tasks test tooling-check validate version
 .PHONY: dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 
@@ -112,9 +109,6 @@ ensure-clean:
 hooks-check:
 	bash scripts/hooks/test-hooks.sh
 
-install-hooks:
-	bash scripts/dev/install-git-hooks.sh
-
 dependency-pins-check:
 	+bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
 
@@ -153,13 +147,9 @@ release-check:
 release-delivery-check:
 	@[[ "$${RELEASE_DELIVERY:-direct}" == direct ]] || { echo 'This repository supports direct release delivery; PR delivery needs a qualified consumer adapter.' >&2; exit 2; }
 
-release-patch release-minor release-major: release-delivery-check
-	+@bash scripts/ci/run-release.sh "$(@:release-%=%)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
-
-# Keep this specialized route local: the consumer receipt check follows the runner.
-release-resume: release-delivery-check
-	+@bash scripts/ci/run-release.sh resume "$(VERSION)" "$(RELEASE_REMOTE)" "$(RELEASE_BRANCH)"
-	+@$(RELEASE) resume-check "$(VERSION)"
+# Product delivery admission and exact resumed-receipt verification remain local;
+# the common include owns dispatch and failure propagation.
+release-patch release-minor release-major release-resume: release-delivery-check
 
 release-plan:
 	+@$(RELEASE) plan "$(if $(VERSION),$(VERSION),patch)"
@@ -198,9 +188,6 @@ release-push-check:
 	+@$(RELEASE) push-check
 
 export RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_COMMIT
-
-shared-tooling-check:
-	bash scripts/ci/verify-shared-tooling-snapshot.sh
 
 shell-check:
 	@for script in scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit; do \

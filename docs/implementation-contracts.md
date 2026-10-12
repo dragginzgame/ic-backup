@@ -632,7 +632,18 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   Cancellation/rejection retain spending; write or closing-admission errors may
   leave a retained receipt requiring original-accounting replay. Stable byte custody,
   actual authentication/attribution and whole-unit safety remain integration-owned.
-  No Active custody, checkpoint or fence/reference release is granted.
+  No Active custody, checkpoint or fence/reference release is granted. Actual
+  capture-only simulator qualification joins one original configured Agent acquisition,
+  one separately reserved Testkit observation and explicit retained settlement.
+  Its immutable one-member/no-release/no-external-work program and exclusive fixture
+  custody qualify attribution and write fencing only there; discarded observations
+  remain pending and retained late replies settle without another provider call.
+  Cancellation during qualification and changed retained reply rejection preserve
+  exact pending journal bytes; explicit fixture recovery settles only the original
+  observation without another read. Keep changed-byte evidence; production settlement
+  never repairs retained files.
+  No production observation adapter, restore/external-custody default or full terminal
+  qualification follows.
 
 ## Product contracts
 
