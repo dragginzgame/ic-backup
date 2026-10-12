@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.20.1]
+## [0.20.1] - 2026-10-12
 
 - Adopt Shared Tooling 0.8.1. The snapshot records its intended entrypoints and
   derives their companion payloads, retaining the reviewed 102-file selection.
