@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.20.0]
+## [0.20.0] - 2026-10-12
 
 - Adopt Shared Tooling 0.6.5 and stop CI when the declared manifest or lockfile
   changes between stages, retaining input identities and restart guidance.
