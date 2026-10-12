@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.20.5]
+## [0.20.5] - 2026-10-12
 
 - Add a one-shot original-workflow coordinator that prepares each fixed stage in
   dependency order, delegates fresh admission and effects to an integration
