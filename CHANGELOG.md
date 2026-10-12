@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.21.1]
+## [0.21.1] - 2026-10-12
 
 - Qualify the Metrics 0.8.1 selection for local snapshot diagnostics and public
   summary, aggregate and histogram reexports. Checked scaled means preserve
