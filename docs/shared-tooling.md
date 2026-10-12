@@ -49,7 +49,49 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 102-file snapshot selects committed Shared Tooling 0.6.5 at
+The current 102-file snapshot selects committed Shared Tooling 0.8.1 at
+`c97f9f9c7b7c706fffdcfc5925cf58759b58093f`, verified against remote
+main. A clean canonical export retains all 102 existing entrypoints and updates
+five selected paths without retiring any. Snapshot verification now rejects
+malformed tab-separated fields; Cargo tool installation retains both exact
+build-environment observations when activation refuses a changed identity.
+Future refreshes derive companion files and prove ownership before removing
+obsolete payloads;
+review the intended roots before narrowing this initial selection. The common
+`cargo-sort-derives` selection remains 0.14.1, adopted from 0.6.6, to retain
+literal `$crate` paths in direct and conditional derives. The tool's Rust 1.88
+build floor leaves Backup's library MSRV unchanged. Backup has no affected
+product macros or default derive-sort invocation. Contributors prepare the new
+selection with `make install-rust-tools` and check it with `make tools-check`.
+The incoming Host 0.14.5 archives match the lockfile checksums and committed
+producer source; their Rust files are byte-identical to 0.14.4 and normalized
+manifests differ only by package version. See
+[the current review](reports/audits/2026/10/12/shared-081/01/report.md)
+for focused qualification and native acceptance status. The full consumer gate
+was not rerun for 0.8.1 at the maintainer's request.
+
+### Prior Shared Tooling 0.8.0 review
+
+The earlier uncommitted draft selected committed 0.8.0 at
+`045a6f22a9de497bfb3af90cb2571957384806f2`. Its canonical export recorded
+the 102 reviewed payloads as initial entrypoints and updated four selected
+paths. All 16 registered `make ci` targets passed on the Host 0.14.5, Testkit
+0.34.3 and Metrics 0.7.1 graph. That exact qualification remains in
+[the earlier review](reports/audits/2026/10/12/continuation-0201/02/report.md).
+
+### Prior Shared Tooling 0.6.6 review
+
+The earlier uncommitted 0.20.1 phase canonically selected 0.6.6 at
+`a15eb9d406d287697df9bc8fa96db8cda6721a71`: three changed selected
+paths and the same 102-file roster. Its common formatter pin moved to 0.14.1;
+explicit tool setup, `$crate` probes and the full consumer gate passed with
+Testkit 0.34.2. That phase's [review](reports/audits/2026/10/12/continuation-0201/01/report.md)
+retains the original graph and failed-attempt evidence. A later external lock
+change selected Testkit 0.34.3, followed by the 0.8.0 snapshot adoption.
+
+### Prior Shared Tooling 0.6.5 review
+
+The prior 102-file snapshot selected committed Shared Tooling 0.6.5 at
 `42f2091768b5f71c98a684d3dab563f408ca2dd9`, verified against remote main.
 The clean canonical export updates nine selected paths without changing the roster.
 Backup declares the root manifest and lockfile at the existing CI stage loop;
@@ -64,7 +106,7 @@ Bash 3.2.57 on Linux. The separately requested four Host crates select 0.14.3;
 verified archives match committed producer source, with unchanged Rust and only
 normalized package-version changes. Root package versions stay 0.19.2; existing
 breaking Metrics notes remain 0.20.0. Native/full-gate evidence is owned by
-[the current review](reports/audits/2026/10/12/shared-065/01/report.md).
+[that review](reports/audits/2026/10/12/shared-065/01/report.md).
 
 ### Prior Shared Tooling 0.6.4 review
 

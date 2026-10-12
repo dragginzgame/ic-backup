@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.20.1]
+
+- Adopt Shared Tooling 0.8.1. The snapshot records its intended entrypoints and
+  derives their companion payloads, retaining the reviewed 102-file selection.
+  Snapshot refresh, verification and tooling inventory now reject malformed
+  tab-separated fields while preserving literal spaces in paths. Failed Cargo
+  tool installation retains both build-environment observations and names changed
+  fields without activating a changed selection
+  ([Shared #133](https://github.com/dragginzgame/shared-tooling/issues/133),
+  [Shared #134](https://github.com/dragginzgame/shared-tooling/issues/134)).
+  Its `cargo-sort-derives` 0.14.1 selection preserves literal `$crate` paths in
+  direct and conditional derives. Backup has no affected product macros;
+  contributors should rerun `make install-rust-tools` and `make tools-check`
+  ([#36](https://github.com/dragginzgame/ic-backup/issues/36),
+  [Shared #113](https://github.com/dragginzgame/shared-tooling/issues/113)).
+- Qualify the selected Host 0.14.5 packages. Their published Rust sources are
+  unchanged from 0.14.4; backup behavior and public Host interfaces remain
+  unchanged. Qualify the incoming Testkit 0.34.3 and Metrics 0.7.1 lock graph
+  without changing backup records or effect authority.
+
 ## [0.20.0] - 2026-10-12
 
 - Adopt Shared Tooling 0.6.5 and stop CI when the declared manifest or lockfile

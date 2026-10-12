@@ -25,7 +25,69 @@
 
 # Current handoff — 2026-10-12
 
-## Latest Shared Tooling and Host inspection
+## Current 0.20.1 Shared Tooling 0.8.1 adoption
+
+Released Backup 0.20.0 remains `2e9dbc4ccaae7822d07afcca40e39c1e1ae9c4b2`.
+Canonically export committed Shared Tooling 0.8.1
+`c97f9f9c7b7c706fffdcfc5925cf58759b58093f` from a clean isolated source.
+The existing 102 entrypoints and payloads remain; five selected files update,
+none retire. The update rejects malformed snapshot fields consistently and
+retains exact prior/new Cargo-tool build identities when activation is refused.
+The Host 0.14.5, Testkit 0.34.3 and Metrics 0.7.1 lock graph and tool pins stay
+unchanged. Snapshot, Rust-tool fixture, consumer-tooling, link, shell and
+tools-admission checks pass. The maintainer requested a focused qualification:
+**the full `make ci`
+gate has not been rerun for 0.8.1**. The 0.8.0 full-gate pass below remains
+historical evidence for that exact source. This uncommitted candidate has no
+hosted/native result; [#36](https://github.com/dragginzgame/ic-backup/issues/36)
+remains open. See [the current review](../reports/audits/2026/10/12/shared-081/01/report.md).
+
+## Prior 0.20.1 Shared Tooling 0.8.0 and Host qualification
+
+Released Backup 0.20.0 is `2e9dbc4ccaae7822d07afcca40e39c1e1ae9c4b2`.
+Canonically export committed Shared Tooling 0.8.0
+`045a6f22a9de497bfb3af90cb2571957384806f2` from a clean source. The v1
+manifest records all 102 prior payloads as initial entrypoints; four selected
+files update and none retire. Common `cargo-sort-derives` remains 0.14.1.
+The incoming lock selects Host 0.14.5, Testkit 0.34.3 and Metrics 0.7.1.
+Testkit 0.34.3 matches its checksum and has no Rust-source change from 0.34.2;
+its selected CLI/server passes explicit setup and offline admission. Root package
+versions remain 0.20.0; compatible notes remain 0.20.1. All 16 registered
+`make ci` targets pass on unchanged final inputs, including both real simulator
+suites, strict Clippy, Rust 1.88 independent consumers and paired archives.
+Real index and HEAD remain unchanged. Host 0.14.5 producer CI passes Linux and
+both macOS hosts; Shared 0.8.0 producer macOS jobs were cancelled; Testkit
+0.34.3 macOS jobs remain mostly queued. Released Backup 0.20.0 passes Linux
+with both macOS jobs running. This uncommitted candidate has no hosted result.
+Issue [#36](https://github.com/dragginzgame/ic-backup/issues/36) remains open
+for exact native acceptance. See
+[the final review](../reports/audits/2026/10/12/continuation-0201/02/report.md).
+
+## Prior 0.20.1 Shared Tooling 0.6.6 qualification
+
+Released Backup 0.20.0 and GitHub main are
+`2e9dbc4ccaae7822d07afcca40e39c1e1ae9c4b2`. Canonically adopt Shared
+Tooling 0.6.6 `a15eb9d406d287697df9bc8fa96db8cda6721a71`: three updated
+selected paths, unchanged 102-file roster. Explicit common-tool setup/admission
+selects `cargo-sort-derives` 0.14.1. Literal `$crate` direct and conditional
+derive probes and repeat stability pass; Backup has no affected product macros.
+Preserve the incoming Host 0.14.5, Testkit 0.34.2 and Metrics 0.7.1 lock graph.
+Host published Rust is unchanged from 0.14.4, Metrics library Rust from 0.7.0;
+Testkit's changed Rust is confined to CLI path admission and its test. No new
+product offload or public contract cut follows. Compatible notes are 0.20.1;
+own package versions remain 0.20.0.
+
+All 16 registered `make ci` targets pass on unchanged final inputs after explicit
+tool re-preparation for a concurrent host package update, with loopback access
+for both real simulator suites. Prior failed attempts and evidence stay retained.
+Actual manifest, lock, technical files, real index and HEAD remain unchanged
+through final qualification. Shared 0.6.6 and Host 0.14.5 exact producer CI pass
+Linux and both native macOS hosts. Released Backup 0.20.0 passes Linux; both macOS
+jobs remain queued. This uncommitted candidate has no native hosted result.
+Issue [#36](https://github.com/dragginzgame/ic-backup/issues/36) retains that
+acceptance. See [the compact review](../reports/audits/2026/10/12/continuation-0201/01/report.md).
+
+## Prior Shared Tooling and Host inspection
 
 Inspect committed Shared Tooling 0.6.6
 `a15eb9d406d287697df9bc8fa96db8cda6721a71` and published Host 0.14.4.

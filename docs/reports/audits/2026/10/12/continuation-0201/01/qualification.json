@@ -1,0 +1,112 @@
+{
+  "released_base": {
+    "version": "0.20.0",
+    "commit": "2e9dbc4ccaae7822d07afcca40e39c1e1ae9c4b2"
+  },
+  "draft": "0.20.1",
+  "shared_tooling": {
+    "version": "0.6.6",
+    "revision": "a15eb9d406d287697df9bc8fa96db8cda6721a71",
+    "selected_files": 102,
+    "updated_files": [
+      "ci/tool-versions.env",
+      "docs/local-setup.md",
+      "rules/git-hooks.md"
+    ]
+  },
+  "locked_selection": {
+    "ic-host-artifacts": [
+      "0.14.5"
+    ],
+    "ic-host-fs": [
+      "0.14.5"
+    ],
+    "ic-host-process": [
+      "0.14.5"
+    ],
+    "ic-host-tools": [
+      "0.14.5"
+    ],
+    "ic-testkit": [
+      "0.34.2"
+    ],
+    "ic-metrics": [
+      "0.7.1"
+    ],
+    "ic-agent": [
+      "0.49.2"
+    ],
+    "pocket-ic": [
+      "16.1.0"
+    ],
+    "syn": [
+      "2.0.119",
+      "3.0.8"
+    ]
+  },
+  "qualified_log": "target/continuation-0201/ci-all-prepared.log",
+  "full_gate": {
+    "command": "make ci",
+    "result": "PASS",
+    "registered_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ],
+    "passed_targets": [
+      "shared-tooling-check",
+      "tools-check",
+      "dependency-pins-check",
+      "check-doc-links",
+      "deps",
+      "shell-check",
+      "tooling-check",
+      "release-check",
+      "hooks-check",
+      "fmt-check",
+      "check",
+      "clippy",
+      "test",
+      "doc",
+      "check-msrv",
+      "package"
+    ],
+    "loopback_enabled": true
+  },
+  "technical_input_sha256": {
+    "Cargo.toml": "e022cb059308ba43993e649d7d2b8e0718d9c9622319619b2e890047c94df5b4",
+    "Cargo.lock": "c8a5163f258d1cb87191551c1a7919c844d11dcb6ddd696e1119ad86535fc3a0",
+    ".shared-tooling.snapshot": "9e1852d571af3a4c8b287d10d729c590dbf3378cdf49d1c87e55cafd79578048",
+    "ci/tool-versions.env": "7c1b2849ffce4e4b28fabe5eba2f7608b38dd08dc1478c25505ebd50c4e5d8a2",
+    "docs/local-setup.md": "059216f91c0c97bdc4686934b501cd5eca286d2c30ee9a8ff03e04f86503d989",
+    "rules/git-hooks.md": "ca7e614695b971a7f8c189bf8d394a1c52cd56ce17bb7bd4e2fdc638eac0b5bc",
+    "Makefile": "9a64c8ba7886cb4de9581eeb6150b9a205906e28e842c805f0fa63dee900c009"
+  },
+  "incoming_manifest_and_lock_unchanged": true,
+  "real_index_and_head_unchanged": true,
+  "producer_ci": {
+    "shared_tooling": "https://github.com/dragginzgame/shared-tooling/actions/runs/38220477204",
+    "host": "https://github.com/dragginzgame/ic-host-tooling/actions/runs/38225165549"
+  },
+  "released_consumer_ci": "https://github.com/dragginzgame/ic-backup/actions/runs/38225541731",
+  "candidate_native_ci": "pending delivery",
+  "retained_prior_attempts": [
+    "target/continuation-0201/ci.log",
+    "target/continuation-0201/ci-rerun.log",
+    "target/continuation-0201/ci-loopback.log",
+    "target/continuation-0201/ci-final.log"
+  ]
+}

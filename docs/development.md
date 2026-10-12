@@ -110,6 +110,9 @@ Partial setup keeps the previous complete common set active. Shared Tooling owns
 and Cargo bundles reuse a per-user store with exact build identities. Application
 flags, wrappers and Cargo configuration do not configure tool builds. Testkit's
 selected CLI uses that owner; Testkit still owns local server storage and lifecycle.
+Shared Tooling 0.6.6 selects `cargo-sort-derives` 0.14.1. After refreshing that
+snapshot, rerun `make install-rust-tools` and `make tools-check`; the default
+Backup formatter still uses Cargo manifest sorting and rustfmt only.
 After adopting Shared Tooling 0.6, run `make install-tools`, then
 `make tools-check`. Command paths remain
 `.tools/host/bin` and `.tools/ic/bin`. Existing local bundles and failed attempts
