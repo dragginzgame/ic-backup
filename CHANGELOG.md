@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.20.3]
+
+- Adopt Shared Tooling 0.9.0. Snapshot refresh and integrity checks now share
+  one manifest reader that rejects NUL bytes and exposes a syntax-only
+  `--read-manifest` mode; the local LOC helper can emit complete JSON reports.
+  Existing snapshots and human-readable reports remain supported
+  ([Shared #133](https://github.com/dragginzgame/shared-tooling/issues/133)).
+- Reconcile an uncertain local execution-checkpoint publication using the
+  complete original journals. Replay an exact occupied checkpoint without
+  replacement, create only when the checkpoint is absent, and read back new
+  publication before returning a stage predecessor. Changed or incomplete
+  evidence refuses without provider calls, spending changes or release authority
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
 ## [0.20.2] - 2026-10-12
 
 - Reconcile a lost execution-stage checkpoint response from the complete retained

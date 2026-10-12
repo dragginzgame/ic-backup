@@ -49,15 +49,28 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 105-file snapshot selects clean committed Shared Tooling 0.8.3 at
+The current 105-file snapshot selects clean committed Shared Tooling 0.9.0 at
+`aec7a149f581a42b9531fc747b46024fc0314fcf`. Canonical refresh updates
+four selected files without adding or retiring payloads. Snapshot refresh and
+integrity verification share one manifest reader, which rejects NUL bytes and
+offers a syntax-only `--read-manifest` mode; the local LOC helper adds complete
+JSON output without changing its human-readable report. Existing v1 manifests,
+consumer command routing, product APIs and tool pins remain unchanged. The local
+source's recorded `origin/main` names this commit; remote verification was
+unavailable during this adoption because GitHub DNS did not resolve. See
+[the current review](reports/audits/2026/10/12/shared-090/01/report.md).
+
+### Prior Shared Tooling 0.8.3 review
+
+The released 0.20.2 snapshot selected clean committed Shared Tooling 0.8.3 at
 `8cca7e67b03ce6e701b6e7dcec2e9753eb98337e`, verified against remote
-main. Canonical refresh updates eight selected files without adding or retiring
-payloads. Formatting admission now reads the selected Rust tool catalog;
+main. Canonical refresh updated eight selected files without adding or retiring
+payloads. Formatting admission reads the selected Rust tool catalog;
 Cargo-tool setup rejects redirected build-observation files before writing
 diagnostics, while a successful ripgrep PCRE2 probe stays quiet. The shared
-pin still selects `cargo-sort-derives` 0.14.1. The source commit subject says
+pin selects `cargo-sort-derives` 0.14.1. The source commit subject says
 “0.8.2”; its committed `VERSION`, changelog and canonical export identify
-0.8.3. See [the current review](reports/audits/2026/10/12/shared-083/01/report.md).
+0.8.3. See [that review](reports/audits/2026/10/12/shared-083/01/report.md).
 
 ### Prior Shared Tooling 0.8.2 review
 

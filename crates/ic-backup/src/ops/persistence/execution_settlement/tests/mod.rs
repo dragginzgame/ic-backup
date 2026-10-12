@@ -14,7 +14,7 @@ use crate::{
 };
 use std::{
     fs, io,
-    os::unix::fs::{PermissionsExt, symlink},
+    os::unix::fs::{MetadataExt, PermissionsExt, symlink},
     path::PathBuf,
     process::Command,
 };
@@ -89,6 +89,47 @@ fn derived_checkpoint_preserves_original_histories_and_replays_without_replaceme
             original
         );
     }
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn reconciliation_creates_only_absent_checkpoint_and_replays_exact_occupied_evidence() {
+    let (root, layout, expected) = prepare();
+    let path = root.join("execution-settlement.json");
+    let journal = root.join("attempt-7.json");
+    let original_journal = fs::read(&journal).unwrap();
+    let actual = reconcile_execution_settlement(&layout, expected.plan_intent()).unwrap();
+    assert_eq!(actual, expected);
+    let original_checkpoint = fs::read(&path).unwrap();
+    let inode = fs::metadata(&path).unwrap().ino();
+    assert_eq!(
+        reconcile_execution_settlement(&layout, expected.plan_intent()).unwrap(),
+        actual
+    );
+    assert_eq!(fs::read(&path).unwrap(), original_checkpoint);
+    assert_eq!(fs::metadata(&path).unwrap().ino(), inode);
+    assert_eq!(fs::read(&journal).unwrap(), original_journal);
+
+    fs::write(&path, b"{}").unwrap();
+    assert!(reconcile_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert_eq!(fs::read(&path).unwrap(), b"{}");
+    assert_eq!(fs::read(&journal).unwrap(), original_journal);
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn reconciliation_does_not_fill_missing_original_journals() {
+    let (root, layout, expected) = prepare();
+    let journal = root.join("attempt-7.json");
+    let retained = root.join("retained-attempt-7.json");
+    fs::rename(&journal, &retained).unwrap();
+    let before = fs::read(&retained).unwrap();
+    assert!(reconcile_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert!(!root.join("execution-settlement.json").exists());
+    assert!(!journal.exists());
+    assert_eq!(fs::read(&retained).unwrap(), before);
     drop(layout);
     fs::remove_dir_all(root).unwrap();
 }

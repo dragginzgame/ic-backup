@@ -86,7 +86,11 @@ fn retain_capture(
         .unwrap();
     drop(journal);
     let learned = ArtifactChecksumRecord::from_bytes(b"test-owned learned raw ID [0,255,17]");
-    let predecessor = stage.checkpoint(learned.clone()).unwrap();
+    let predecessor = stage.reconcile_checkpoint(learned.clone()).unwrap();
+    assert_eq!(
+        stage.reconcile_checkpoint(learned.clone()).unwrap(),
+        predecessor
+    );
     assert_eq!(stage.replay_checkpoint(learned).unwrap(), predecessor);
     predecessor
 }

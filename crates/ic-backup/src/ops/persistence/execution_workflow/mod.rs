@@ -6,7 +6,7 @@ use super::{
     JournalLockError, OperationPlanPersistenceError, PersistenceError,
     checkpoint_execution_settlement, create_json_durable, create_operation_plan,
     read_execution_progress, read_execution_settlement, read_json, read_operation_plan,
-    replay_execution_settlement,
+    reconcile_execution_settlement, replay_execution_settlement,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -81,6 +81,28 @@ pub struct ExecutionStageGuard<'a> {
     plan: OperationPlanRecord,
 }
 impl<'a> ExecutionStageGuard<'a> {
+    /// Complete an absent local checkpoint or replay its exact occupied record.
+    ///
+    /// This is local recovery after uncertain checkpoint publication: all original
+    /// journals and ancestor histories must still admit, and an occupied changed
+    /// checkpoint is never replaced. The supplied learned evidence remains opaque
+    /// integration-owned input, not an authenticated response or effect receipt.
+    /// No provider, reservation, refund, terminal or reference release is involved.
+    /// # Errors
+    /// Rejects incomplete originals, unsafe or conflicting checkpoints and IO failures.
+    pub fn reconcile_checkpoint(
+        &self,
+        learned_evidence: ArtifactChecksumRecord,
+    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
+        let settlement = reconcile_execution_settlement(self.layout()?, &self.plan.digest())?;
+        self.layout()?;
+        Ok(ExecutionStagePredecessorRecord::new(
+            self.binding.stage_sequence(),
+            self.binding.digest(),
+            settlement.digest(),
+            learned_evidence,
+        ))
+    }
     /// Reconstruct an exact predecessor after a lost checkpoint response.
     ///
     /// Derives the settlement identity from all retained original journals and

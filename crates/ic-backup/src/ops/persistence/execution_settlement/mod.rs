@@ -18,7 +18,7 @@ use crate::{
     },
     policy::execution_settlement::{ExecutionSettlementPolicyError, validate},
 };
-use std::path::Path;
+use std::{io, path::Path};
 use thiserror::Error;
 
 /// Derive and publish an all-Applied checkpoint from the exact retained original journals.
@@ -57,6 +57,38 @@ pub fn replay_execution_settlement(
         expected_plan,
         &derived.digest(),
     )?)
+}
+
+/// Complete or replay the exact local checkpoint after an uncertain publication response.
+///
+/// Derive the expected identity from the complete retained original journals first.
+/// An existing exact checkpoint is read without replacement. Only a genuinely
+/// absent checkpoint may be created; changed or unsafe entries refuse. A new
+/// publication is read back through the same exact-original replay owner.
+/// This performs no provider call, receipt transition, refund, terminal admission
+/// or reference release. Hold no attempt guards on entry.
+/// # Errors
+/// Rejects incomplete/held originals, changed or unsafe occupied checkpoints and
+/// local publication/readback failures while retaining every original record.
+pub fn reconcile_execution_settlement(
+    layout: &BackupLayoutGuard,
+    expected_plan: &ArtifactChecksumRecord,
+) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
+    let derived = derive_execution_settlement(layout, expected_plan)?;
+    match read_execution_settlement(layout, expected_plan, &derived.digest()) {
+        Ok(existing) => Ok(existing),
+        Err(ExecutionSettlementPersistenceError::Persistence(PersistenceError::Io(error)))
+            if error.kind() == io::ErrorKind::NotFound =>
+        {
+            create_execution_settlement(layout, &derived)?;
+            Ok(read_execution_settlement(
+                layout,
+                expected_plan,
+                &derived.digest(),
+            )?)
+        }
+        Err(error) => Err(error.into()),
+    }
 }
 
 fn derive_execution_settlement(

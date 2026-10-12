@@ -43,7 +43,7 @@ pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_p
 pub use execution_settlement::{
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError,
     checkpoint_execution_settlement, create_execution_settlement, read_execution_settlement,
-    replay_execution_settlement,
+    reconcile_execution_settlement, replay_execution_settlement,
 };
 pub use execution_workflow::{
     ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionStagePreparationError,

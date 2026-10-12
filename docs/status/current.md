@@ -25,7 +25,32 @@
 
 # Current handoff — 2026-10-12
 
-## Current 0.20.2 execution-checkpoint replay
+## Current 0.20.3 local checkpoint reconciliation
+
+Released Backup 0.20.2 is `e8b1993` at `v0.20.2` and local `origin/main`.
+Keep the next compatible batch as an uncommitted 0.20.3 changelog draft without
+changing own package versions. An independently incoming `Cargo.lock` selects
+Host 0.14.8; preserve it. The new `reconcile_execution_settlement` derives the
+exact complete original-journal identity, reads an occupied matching checkpoint
+without replacement, or creates a genuinely absent checkpoint and verifies it
+through the existing replay owner. Stage reconciliation re-admits the workflow
+and ancestors and returns the exact predecessor commitment. Missing/changed
+originals and conflicting checkpoints refuse; no provider call, spending reset,
+receipt, terminal or reference-release authority follows. Focused settlement,
+workflow and public-consumer tests pass on the incoming lock graph. Full CI and
+native hosted qualification remain outstanding under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
+The same uncommitted draft now adopts clean committed Shared Tooling 0.9.0
+`aec7a149f581a42b9531fc747b46024fc0314fcf`. Its 105-file snapshot updates
+four selected files without roster changes. The shared verifier gains a
+syntax-only manifest reader and NUL rejection; the LOC helper gains JSON output.
+The consumer tooling suite passes. GitHub DNS prevented independent remote-tip
+verification; the local source records this commit as `origin/main`. Product
+APIs, package versions and the incoming lock graph remain unchanged. See
+[the adoption review](../reports/audits/2026/10/12/shared-090/01/report.md).
+
+## Released 0.20.2 execution-checkpoint replay
 
 Add a read-only original-plan settlement replay that derives the expected
 checkpoint digest from the complete retained journals, then verifies the already
@@ -39,7 +64,7 @@ current Host 0.14.7, Testkit 0.34.4 and Metrics 0.7.2 lock graph; the full
 `make ci` gate has not been rerun. [Backup #29](https://github.com/dragginzgame/ic-backup/issues/29)
 still owns full runner, authenticated adapters and terminal qualification.
 
-## Current 0.20.2 Shared Tooling 0.8.3 adoption
+## Prior 0.20.2 Shared Tooling 0.8.3 adoption
 
 Released Backup 0.20.1 is `7a8096edd0d1a07b71aa652c1c9a6374695c7e42`.
 Keep the compatible 0.20.2 draft and its own package versions unchanged.

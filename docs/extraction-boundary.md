@@ -2474,6 +2474,16 @@ a lost response. Missing or changed checkpoints/journals reject without repair;
 the caller still owns the opaque learned-evidence meaning. Replay creates no
 receipt, allowance, terminal proof or reference-release authority.
 
+`reconcile_execution_settlement` performs exact local checkpoint completion
+after an uncertain publication response. It first derives the full original
+journal identity, replays an exact occupied checkpoint, or creates one only when
+the checkpoint file is absent and then reads it back. Changed/unsafe occupied
+entries and missing/held/unsettled journals refuse without repair or replacement.
+`ExecutionStageGuard::reconcile_checkpoint` brackets that owner with stage and
+ancestor admission and returns the same predecessor commitment. It makes no
+remote call, spending transition, authenticated learned-evidence claim or
+terminal/fence/reference-release decision.
+
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact
 workflow/child identities, stage sequence and canonical predecessor rows; no

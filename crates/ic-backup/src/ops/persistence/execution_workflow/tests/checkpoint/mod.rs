@@ -227,7 +227,7 @@ fn lost_post_publication_admission_retains_exact_checkpoint_without_republicatio
 }
 
 #[test]
-fn replay_refuses_absent_checkpoint_without_publishing_it() {
+fn replay_refuses_absent_checkpoint_but_reconcile_completes_applied_originals() {
     let (root, layout, workflow) = prepare();
     let plan = child(0);
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
@@ -243,6 +243,16 @@ fn replay_refuses_absent_checkpoint_without_publishing_it() {
     );
     assert!(!checkpoint_path.exists());
     assert_eq!(fs::read(journal_path).unwrap(), before);
+    let learned = ArtifactChecksumRecord::from_bytes(b"input");
+    let row = stage.reconcile_checkpoint(learned.clone()).unwrap();
+    let published = fs::read(&checkpoint_path).unwrap();
+    assert_eq!(stage.reconcile_checkpoint(learned.clone()).unwrap(), row);
+    assert_eq!(stage.replay_checkpoint(learned).unwrap(), row);
+    assert_eq!(fs::read(checkpoint_path).unwrap(), published);
+    assert_eq!(
+        fs::read(stage.stage_layout.root().join("attempt-42.json")).unwrap(),
+        before
+    );
     drop(stage);
     drop(layout);
     fs::remove_dir_all(root).unwrap();
