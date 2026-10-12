@@ -14,7 +14,7 @@ override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
 CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
-.PHONY: check check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
+.PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
         release-check release-plan \
         release-version release-preflight release-prepare-version release-prepared-check \
@@ -25,6 +25,7 @@ CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-l
 
 help:
 	@echo "check                       Compile this library's native targets"
+	@echo "check-cargo-tool-versions   Inspect Cargo tool versions online without installing"
 	@echo "check-doc-links             Check maintained local Markdown targets"
 	@echo "check-msrv                  Check Rust 1.88.0 and independent consumers"
 	@echo "ci                          Fetch dependencies and run the full gate"
@@ -211,6 +212,10 @@ shell-check:
 	perl -c scripts/ci/test-documentation-links.pl
 	perl -c scripts/ci/rewrite-local-lock-versions.pl
 	perl -c scripts/ci/test-local-lock-versions.pl
+	perl -c scripts/dev/check-cargo-tool-versions.pl
+
+check-cargo-tool-versions:
+	@perl scripts/dev/check-cargo-tool-versions.pl --consumer "$(CURDIR)" --versions "$(RUST_TOOL_VERSIONS)"
 
 tags:
 	@git tag --sort=-version:refname
@@ -237,6 +242,7 @@ tooling-check: shared-tooling-check
 	bash scripts/ci/test-testkit-commands.sh
 	bash scripts/ci/test-cloc.sh
 	bash scripts/ci/test-rust-tools.sh
+	bash scripts/ci/test-cargo-tool-versions.sh
 	bash scripts/ci/test-ic-tools.sh
 
 validate: ci

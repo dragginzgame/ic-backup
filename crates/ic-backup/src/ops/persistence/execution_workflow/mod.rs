@@ -6,6 +6,7 @@ use super::{
     JournalLockError, OperationPlanPersistenceError, PersistenceError,
     checkpoint_execution_settlement, create_json_durable, create_operation_plan,
     read_execution_progress, read_execution_settlement, read_json, read_operation_plan,
+    replay_execution_settlement,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -80,6 +81,27 @@ pub struct ExecutionStageGuard<'a> {
     plan: OperationPlanRecord,
 }
 impl<'a> ExecutionStageGuard<'a> {
+    /// Reconstruct an exact predecessor after a lost checkpoint response.
+    ///
+    /// Derives the settlement identity from all retained original journals and
+    /// reads the already published checkpoint. It never creates a checkpoint,
+    /// journal or receipt. The supplied learned evidence remains integration-owned
+    /// and must be independently qualified before a successor is dispatched.
+    /// # Errors
+    /// Rejects missing, held, unsettled or changed originals and checkpoint drift.
+    pub fn replay_checkpoint(
+        &self,
+        learned_evidence: ArtifactChecksumRecord,
+    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
+        let settlement = replay_execution_settlement(self.layout()?, &self.plan.digest())?;
+        self.layout()?;
+        Ok(ExecutionStagePredecessorRecord::new(
+            self.binding.stage_sequence(),
+            self.binding.digest(),
+            settlement.digest(),
+            learned_evidence,
+        ))
+    }
     /// Publish the original all-Applied checkpoint and derive its exact predecessor commitment.
     ///
     /// Re-admits the workflow, stage and complete ancestor histories before and after
@@ -285,7 +307,7 @@ impl<'a> ExecutionStageGuard<'a> {
     }
 }
 
-/// Stage-bound checkpoint refusal; original spending and published evidence remain retained.
+/// Stage-bound checkpoint publication/replay refusal; originals remain retained.
 #[derive(Debug, Error)]
 pub enum ExecutionStageCheckpointError {
     /// Original workflow/stage or complete ancestor history cannot be admitted.

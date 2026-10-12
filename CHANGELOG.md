@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.20.2]
+
+- Reconcile a lost execution-stage checkpoint response from the complete retained
+  original journals and existing immutable checkpoint. The read-only replay
+  reconstructs the exact predecessor commitment without republishing, resetting
+  attempts or granting terminal/reference release
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Adopt Shared Tooling 0.8.3 and add `make check-cargo-tool-versions` for
+  explicit online freshness checks of contributor Cargo tools. It reports
+  missing or unavailable registry evidence without installing tools or changing
+  pins; offline `make rust-tools-check` remains the admission check. Formatting
+  now reads the selected Rust tool catalog, and Cargo installation refuses
+  redirected build-observation files before activation
+  ([Shared #135](https://github.com/dragginzgame/shared-tooling/issues/135),
+  [Shared #136](https://github.com/dragginzgame/shared-tooling/issues/136)).
+
 ## [0.20.1] - 2026-10-12
 
 - Adopt Shared Tooling 0.8.1. The snapshot records its intended entrypoints and

@@ -831,6 +831,15 @@ metadata without changing the workspace. `make tasks` reads the adopted shared
 maintenance catalog. Its runner is qualified only with a substitute CLI; no live
 agent or timer is activated by snapshot adoption.
 
+`make check-cargo-tool-versions` is an explicit online inspection of the shared
+Cargo tool pins, checkout selection and user-installed Cargo packages against
+current non-yanked stable crates.io releases. It retains response evidence and
+reports unavailable observations separately. It does not install a tool or
+change pins; `make rust-tools-check` remains the offline byte/build admission.
+The [Cargo tool freshness task](../tasks/cargo-tool-versions.md) explains its
+prerequisites and result codes. The checker does not add `cargo-modules` or any
+other package to the selected tool set.
+
 Release tooling uses the exact vendored common runner.
 Patch/minor/major share one workflow and explicit branch/remote inputs. Normal
 targets reconcile exact unfinished intent before selecting another increment;

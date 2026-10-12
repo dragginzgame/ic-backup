@@ -34,14 +34,41 @@ pub fn checkpoint_execution_settlement(
     layout: &BackupLayoutGuard,
     expected_plan: &ArtifactChecksumRecord,
 ) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
+    let record = derive_execution_settlement(layout, expected_plan)?;
+    create_execution_settlement(layout, &record)?;
+    Ok(record)
+}
+
+/// Reconcile a lost checkpoint response from complete original journals and the
+/// existing immutable checkpoint, without publishing or changing any evidence.
+///
+/// The derived digest is checked against the retained checkpoint, then its full
+/// original histories are admitted again by the existing reader. This local
+/// sequential replay supplies no authenticated receipt, terminal proof or release.
+/// # Errors
+/// Rejects absent/changed checkpoints, missing/held/unsettled journals and drift.
+pub fn replay_execution_settlement(
+    layout: &BackupLayoutGuard,
+    expected_plan: &ArtifactChecksumRecord,
+) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
+    let derived = derive_execution_settlement(layout, expected_plan)?;
+    Ok(read_execution_settlement(
+        layout,
+        expected_plan,
+        &derived.digest(),
+    )?)
+}
+
+fn derive_execution_settlement(
+    layout: &BackupLayoutGuard,
+    expected_plan: &ArtifactChecksumRecord,
+) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
     let (plan, journals) = read_retained_journals(layout, expected_plan)?;
     let rows = journals
         .iter()
         .map(ExecutionSettlementJournalRecord::from_journal)
         .collect();
-    let record = ExecutionSettlementRecord::new(plan.digest(), rows)?;
-    create_execution_settlement(layout, &record)?;
-    Ok(record)
+    Ok(ExecutionSettlementRecord::new(plan.digest(), rows)?)
 }
 
 /// Publish fixed `execution-settlement.json` under original retained plan/journal evidence.
@@ -114,7 +141,7 @@ fn read_retained_journals(
     let journals = super::attempt_journal::read_original_journals(layout, &authorities, None)?;
     Ok((plan, journals))
 }
-/// Failure deriving or publishing a checkpoint; original records remain retained.
+/// Failure deriving, publishing or replaying a checkpoint; originals remain retained.
 #[derive(Debug, Error)]
 pub enum ExecutionSettlementCheckpointError {
     /// Original local evidence or immutable publication cannot be admitted.

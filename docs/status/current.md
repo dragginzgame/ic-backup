@@ -25,9 +25,92 @@
 
 # Current handoff — 2026-10-12
 
-## Current 0.20.1 Shared Tooling 0.8.1 adoption
+## Current 0.20.2 execution-checkpoint replay
 
-Released Backup 0.20.0 remains `2e9dbc4ccaae7822d07afcca40e39c1e1ae9c4b2`.
+Add a read-only original-plan settlement replay that derives the expected
+checkpoint digest from the complete retained journals, then verifies the already
+published immutable checkpoint. Stage replay re-admits the workflow/binding and
+ancestors and reconstructs the exact predecessor commitment after a lost
+checkpoint response. Absent or changed evidence refuses without publication,
+repair, spending reset, new effect authority or terminal/reference release.
+The opaque learned-evidence meaning remains with the integration. Focused
+workflow/settlement unit tests and the public workflow consumer pass on the
+current Host 0.14.7, Testkit 0.34.4 and Metrics 0.7.2 lock graph; the full
+`make ci` gate has not been rerun. [Backup #29](https://github.com/dragginzgame/ic-backup/issues/29)
+still owns full runner, authenticated adapters and terminal qualification.
+
+## Current 0.20.2 Shared Tooling 0.8.3 adoption
+
+Released Backup 0.20.1 is `7a8096edd0d1a07b71aa652c1c9a6374695c7e42`.
+Keep the compatible 0.20.2 draft and its own package versions unchanged.
+Canonically refresh committed Shared Tooling 0.8.3
+`8cca7e67b03ce6e701b6e7dcec2e9753eb98337e`, verified against GitHub
+main. Its committed `VERSION` and changelog identify 0.8.3 although the commit
+subject says 0.8.2. The reviewed 105-file selection stays exact: eight files
+update, none add or retire. Formatting admission now reads the selected Rust
+tool catalog; installer build-observation destinations reject redirects, and
+successful ripgrep PCRE2 probes are quiet. Root Cargo manifest, lock and tool
+pins stayed unchanged through export. The incoming lock still selects Host
+0.14.7, Testkit 0.34.4 and Metrics 0.7.2. Snapshot, changed host/Rust fixtures,
+format admission and shell checks pass. Initial Testkit 0.34.4 setup attempts
+under workspace sandboxing reported an unavailable shared-store lock. Reviewed
+access to the user tool store allowed the explicit setup to complete; the exact
+aggregate `make tools-check` now passes. The full `make ci` gate has not been
+rerun. See [the current review](../reports/audits/2026/10/12/shared-083/01/report.md).
+
+## Canic integration audit — 2026-10-12
+
+Read-only inspection of Canic's released 0.111.0 source plus its retained dirty
+checkout finds `ic-backup` 0.20.1 selected in the current lockfile. Canic already
+delegates artifact operations, directory publication and journal locking, but its
+backup/restore plans, journals, runners, layout lock and reference release remain
+separate. Backup's original workflow/stage bindings and bounded provider-driven
+steps are available; complete runners, authenticated application adapters and
+terminal/reference-release admission are not. [Backup #29](https://github.com/dragginzgame/ic-backup/issues/29)
+and [Canic #513](https://github.com/dragginzgame/canic/issues/513) retain that
+handoff.
+
+Canic's current CLI rejects live `backup create` before local allocation with
+`LiveCreateUnavailable`; the old post-plan preflight failure in
+[Canic #394](https://github.com/dragginzgame/canic/issues/394) no longer describes
+the present path, although authoritative live preflight remains missing. Its
+current dry-run plan still declares members Relocatable while restore mapping
+rejects remaps only for Fixed members; [Canic #395](https://github.com/dragginzgame/canic/issues/395)
+remains a Canic-owned identity/safety blocker before live restore adoption.
+
+The local layout lock namespaces differ (`.canic-backup-<hash>` versus
+`.ic-backup-layout-<hash>`). Both owners name `restore-references.json`, but
+Backup validates a stricter canonical bounded record and exposes no release
+operation. Replacing Canic's guard directly would not share its exclusion or
+prove that existing retained references are safely released. Keep its lifetime
+owner until a deliberate same-release journal/reference disposition and guarded
+terminal proof are qualified; do not infer release from all-Applied journals.
+The Canic checkout was read-only; no Canic package, issue or release changed.
+
+## Prior 0.20.2 Shared Tooling 0.8.2 adoption
+
+Backup 0.20.1 is released at `7a8096e`. The next compatible tooling draft is
+0.20.2; own package versions remain unchanged. Canonically export clean
+committed Shared Tooling 0.8.2
+`aaf75a37717357dd62f4b0b15001eaa3ba1629cf`. The default preview updates
+three of 102 selected files but omits the new Cargo task and checker. Explicitly
+select the task, checker and fixture: the result is 105 exact payloads without
+retirements. A local `make check-cargo-tool-versions` command performs online,
+read-only freshness inspection; it does not install `cargo-modules` or change
+pins. Snapshot, fixture, shell, link and offline tool-admission checks pass.
+The exact source commit now matches GitHub main, after an initial local-only
+window. During final review a separate `Cargo.lock` update selected Host 0.14.7,
+Testkit 0.34.4 and Metrics 0.7.2 after the initial snapshot checks. Preserve
+that incoming lock change; focused dependency-pin and offline locked-metadata
+checks pass, but the new graph is not compiled or otherwise qualified by this
+tooling batch.
+The full `make ci` gate is not rerun. See
+[the current review](../reports/audits/2026/10/12/shared-082/01/report.md).
+
+## Prior 0.20.1 Shared Tooling 0.8.1 adoption
+
+This review preceded released Backup 0.20.1 at `7a8096e`; its starting release
+was 0.20.0 at `2e9dbc4ccaae7822d07afcca40e39c1e1ae9c4b2`.
 Canonically export committed Shared Tooling 0.8.1
 `c97f9f9c7b7c706fffdcfc5925cf58759b58093f` from a clean isolated source.
 The existing 102 entrypoints and payloads remain; five selected files update,
@@ -38,9 +121,9 @@ unchanged. Snapshot, Rust-tool fixture, consumer-tooling, link, shell and
 tools-admission checks pass. The maintainer requested a focused qualification:
 **the full `make ci`
 gate has not been rerun for 0.8.1**. The 0.8.0 full-gate pass below remains
-historical evidence for that exact source. This uncommitted candidate has no
+historical evidence for that exact source. At review time the candidate had no
 hosted/native result; [#36](https://github.com/dragginzgame/ic-backup/issues/36)
-remains open. See [the current review](../reports/audits/2026/10/12/shared-081/01/report.md).
+tracks exact acceptance. See [that review](../reports/audits/2026/10/12/shared-081/01/report.md).
 
 ## Prior 0.20.1 Shared Tooling 0.8.0 and Host qualification
 

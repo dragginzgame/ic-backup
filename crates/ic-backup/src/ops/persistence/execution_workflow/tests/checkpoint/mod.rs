@@ -51,11 +51,18 @@ fn exact_predecessor_admits_successor_and_retains_original_checkpoint_and_spendi
     let checkpoint_path = stage.stage_layout.root().join("execution-settlement.json");
     let checkpoint = fs::read(&checkpoint_path).unwrap();
     assert!(stage.checkpoint(learned).is_err());
+    let replayed = stage
+        .replay_checkpoint(ArtifactChecksumRecord::from_bytes(
+            b"original learned input",
+        ))
+        .unwrap();
+    assert_eq!(replayed, row);
     assert_eq!(fs::read(&checkpoint_path).unwrap(), checkpoint);
     assert_eq!(fs::read(&journal_path).unwrap(), bytes);
     drop(stage);
     let next = child(7);
-    let next_binding = ExecutionStageBindingRecord::new(&workflow, 7, &next, vec![row]).unwrap();
+    let next_binding =
+        ExecutionStageBindingRecord::new(&workflow, 7, &next, vec![replayed]).unwrap();
     let successor = ExecutionStageGuard::prepare(&layout, next_binding, next).unwrap();
     drop(successor);
     let (resumed, view) =
@@ -204,6 +211,38 @@ fn lost_post_publication_admission_retains_exact_checkpoint_without_republicatio
         fs::read(stage.stage_layout.root().join("attempt-42.json")).unwrap(),
         before
     );
+    fs::rename(root.join("retained-workflow"), root.join(WORKFLOW_FILE)).unwrap();
+    let predecessor = stage
+        .replay_checkpoint(ArtifactChecksumRecord::from_bytes(b"input"))
+        .unwrap();
+    assert_eq!(predecessor.settlement(), &record.digest());
+    assert_eq!(fs::read(&path).unwrap(), bytes);
+    assert_eq!(
+        fs::read(stage.stage_layout.root().join("attempt-42.json")).unwrap(),
+        before
+    );
+    drop(stage);
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn replay_refuses_absent_checkpoint_without_publishing_it() {
+    let (root, layout, workflow) = prepare();
+    let plan = child(0);
+    let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
+    apply(&stage);
+    let journal_path = stage.stage_layout.root().join("attempt-42.json");
+    let before = fs::read(&journal_path).unwrap();
+    let checkpoint_path = stage.stage_layout.root().join("execution-settlement.json");
+    assert!(
+        stage
+            .replay_checkpoint(ArtifactChecksumRecord::from_bytes(b"input"))
+            .is_err()
+    );
+    assert!(!checkpoint_path.exists());
+    assert_eq!(fs::read(journal_path).unwrap(), before);
     drop(stage);
     drop(layout);
     fs::remove_dir_all(root).unwrap();

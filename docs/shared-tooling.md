@@ -49,26 +49,35 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 102-file snapshot selects committed Shared Tooling 0.8.1 at
-`c97f9f9c7b7c706fffdcfc5925cf58759b58093f`, verified against remote
-main. A clean canonical export retains all 102 existing entrypoints and updates
-five selected paths without retiring any. Snapshot verification now rejects
-malformed tab-separated fields; Cargo tool installation retains both exact
-build-environment observations when activation refuses a changed identity.
-Future refreshes derive companion files and prove ownership before removing
-obsolete payloads;
-review the intended roots before narrowing this initial selection. The common
-`cargo-sort-derives` selection remains 0.14.1, adopted from 0.6.6, to retain
-literal `$crate` paths in direct and conditional derives. The tool's Rust 1.88
-build floor leaves Backup's library MSRV unchanged. Backup has no affected
-product macros or default derive-sort invocation. Contributors prepare the new
-selection with `make install-rust-tools` and check it with `make tools-check`.
-The incoming Host 0.14.5 archives match the lockfile checksums and committed
-producer source; their Rust files are byte-identical to 0.14.4 and normalized
-manifests differ only by package version. See
-[the current review](reports/audits/2026/10/12/shared-081/01/report.md)
-for focused qualification and native acceptance status. The full consumer gate
-was not rerun for 0.8.1 at the maintainer's request.
+The current 105-file snapshot selects clean committed Shared Tooling 0.8.3 at
+`8cca7e67b03ce6e701b6e7dcec2e9753eb98337e`, verified against remote
+main. Canonical refresh updates eight selected files without adding or retiring
+payloads. Formatting admission now reads the selected Rust tool catalog;
+Cargo-tool setup rejects redirected build-observation files before writing
+diagnostics, while a successful ripgrep PCRE2 probe stays quiet. The shared
+pin still selects `cargo-sort-derives` 0.14.1. The source commit subject says
+“0.8.2”; its committed `VERSION`, changelog and canonical export identify
+0.8.3. See [the current review](reports/audits/2026/10/12/shared-083/01/report.md).
+
+### Prior Shared Tooling 0.8.2 review
+
+The earlier uncommitted 0.20.2 draft selected 0.8.2 at
+`aaf75a37717357dd62f4b0b15001eaa3ba1629cf`. Its 105-file export retained
+the 102 prior files and explicitly added the Cargo tool freshness task, checker
+and fixture; the default refresh alone would have omitted the linked task.
+The consumer-owned `make check-cargo-tool-versions` is an online read-only
+inspection, not installation or offline byte/build admission. See
+[that review](reports/audits/2026/10/12/shared-082/01/report.md).
+
+### Prior Shared Tooling 0.8.1 review
+
+The released 0.20.1 consumer snapshot selected 0.8.1 at
+`c97f9f9c7b7c706fffdcfc5925cf58759b58093f`, verified against remote main.
+Its 102-file export updated five selected paths without retiring any. Snapshot
+verification rejects malformed tab-separated fields; Cargo tool installation
+retains both exact build-environment observations when activation refuses a
+changed identity. Host 0.14.5, Testkit 0.34.3 and Metrics 0.7.1 remained the
+selected graph. See [the focused review](reports/audits/2026/10/12/shared-081/01/report.md).
 
 ### Prior Shared Tooling 0.8.0 review
 

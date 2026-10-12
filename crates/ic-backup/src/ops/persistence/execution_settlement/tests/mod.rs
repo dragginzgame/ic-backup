@@ -63,8 +63,26 @@ fn derived_checkpoint_preserves_original_histories_and_replays_without_replaceme
         read_execution_settlement(&layout, actual.plan_intent(), &actual.digest()).unwrap(),
         actual
     );
+    assert_eq!(
+        replay_execution_settlement(&layout, expected.plan_intent()).unwrap(),
+        actual
+    );
     assert!(checkpoint_execution_settlement(&layout, expected.plan_intent()).is_err());
     assert_eq!(fs::read(&path).unwrap(), bytes);
+    let journal_path = root.join("attempt-7.json");
+    let retained = root.join("retained-attempt-7.json");
+    fs::rename(&journal_path, &retained).unwrap();
+    assert!(replay_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert_eq!(fs::read(&path).unwrap(), bytes);
+    fs::rename(&retained, &journal_path).unwrap();
+    assert_eq!(
+        replay_execution_settlement(&layout, expected.plan_intent()).unwrap(),
+        actual
+    );
+    fs::write(&path, b"{}").unwrap();
+    assert!(replay_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert_eq!(fs::read(&path).unwrap(), b"{}");
+    fs::write(&path, &bytes).unwrap();
     for (sequence, original) in [0, 7].into_iter().zip(before) {
         assert_eq!(
             fs::read(root.join(format!("attempt-{sequence}.json"))).unwrap(),

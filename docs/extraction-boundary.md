@@ -2466,6 +2466,14 @@ grants no successor dispatch, full completion or fence/reference-release proof.
 The standalone original-plan checkpoint and exact identity-bound replay retain
 their independent local recovery responsibilities.
 
+`replay_execution_settlement` derives the exact checkpoint identity from every
+retained original journal and admits the existing immutable checkpoint without
+publishing. `ExecutionStageGuard::replay_checkpoint` additionally re-admits the
+original stage and ancestors and reconstructs its predecessor commitment after
+a lost response. Missing or changed checkpoints/journals reject without repair;
+the caller still owns the opaque learned-evidence meaning. Replay creates no
+receipt, allowance, terminal proof or reference-release authority.
+
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact
 workflow/child identities, stage sequence and canonical predecessor rows; no
