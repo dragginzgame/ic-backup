@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.21.2]
+## [0.21.2] - 2026-10-12
 
 - Allow original-workflow drivers to qualify a distinct learned commitment for
   each successor edge. Retained continuation checks supplied edge commitments
