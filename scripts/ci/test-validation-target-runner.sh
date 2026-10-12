@@ -26,6 +26,7 @@ trap finish EXIT
 mkdir -p "$FIXTURE/scripts/ci" "$FIXTURE/failure-logs"
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
 cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/scripts/ci/"
+cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/scripts/ci/"
 printf '%s\n' \
     '.PHONY: pass passing-tests mutate-runner fail-one fail-two fail-after-caught-panic fail-with-test-context' \
     'pass:' \
@@ -99,6 +100,7 @@ done
 # has made temporary logs eligible for cleanup. No production test hook is used.
 mkdir -p "$FIXTURE/exit-probe/scripts/ci"
 cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/exit-probe/scripts/ci/"
+cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/exit-probe/scripts/ci/"
 for boundary in snapshot body summary; do
     for failure in nounset zero nonzero command; do
         # shellcheck disable=SC2016 # Expanded only in the copied runner.
@@ -408,7 +410,9 @@ mkdir -p "$parent/scripts/ci" "$parent/child/scripts/ci"
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$parent/scripts/ci/"
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$parent/child/scripts/ci/"
 cp "$ROOT/scripts/ci/check-make-execution.sh" "$parent/scripts/ci/"
+cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$parent/scripts/ci/"
 cp "$ROOT/scripts/ci/check-make-execution.sh" "$parent/child/scripts/ci/"
+cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$parent/child/scripts/ci/"
 cat > "$parent/Makefile" <<'MAKE'
 .PHONY: validate adoption same-checkout selection child-gate ci
 validate:
@@ -570,5 +574,73 @@ interrupted_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/interr
 rg -Fx 'partial raw output' "$interrupted_run/0.log" >/dev/null
 [[ "$(wc -l < "$interrupted_run/timings.tsv" | tr -d ' ')" == 1 ]] || exit 1
 cmp "$FIXTURE/combined-before-failure" "$FIXTURE/failure-logs/latest-combined.log"
+# Opted-in checkpoints stop at the actual stage boundary, including nested
+# same-checkout gates, without leaking a parent's inputs into another checkout.
+checkpoint="$FIXTURE/checkpoint with spaces"
+mkdir -p "$checkpoint/scripts/ci" "$checkpoint/child/scripts/ci" "$checkpoint/nested graph"
+for helper in run-validation-targets check-make-execution verify-file-checksum; do
+    cp "$ROOT/scripts/ci/$helper.sh" "$checkpoint/scripts/ci/"
+    cp "$ROOT/scripts/ci/$helper.sh" "$checkpoint/child/scripts/ci/"
+done
+cat > "$checkpoint/Makefile" <<'MAKE'
+pass:
+	@echo pass >> dispatched
+mutate:
+	@echo changed >> Cargo.lock
+delete:
+	@rm 'nested graph/Cargo.lock'
+redirect:
+	@rm Cargo.lock; ln -s 'nested graph/Cargo.lock' Cargo.lock
+fail-drift:
+	@echo changed >> Cargo.lock; echo original-failure; exit 17
+consume:
+	@echo consume >> dispatched
+nested:
+	+bash scripts/ci/run-validation-targets.sh mutate consume
+foreign:
+	+bash child/scripts/ci/run-validation-targets.sh consume
+MAKE
+printf 'consume:\n\t@echo child >> ../dispatched\n' > "$checkpoint/child/Makefile"
+checkpoint_runner="$checkpoint/scripts/ci/run-validation-targets.sh"
+for scenario in pass mutate delete redirect fail-drift nested foreign; do
+    rm -f "$checkpoint/Cargo.lock"
+    printf 'original\n' > "$checkpoint/Cargo.lock"
+    printf 'independent\n' > "$checkpoint/nested graph/Cargo.lock"
+    : > "$checkpoint/dispatched"
+    status=0
+    VALIDATION_REPOSITORY_ROOT="$checkpoint" VALIDATION_LOG_DIR="$checkpoint/runs" \
+        bash "$checkpoint_runner" --input Cargo.lock --input 'nested graph/Cargo.lock' "$scenario" consume \
+        > "$checkpoint/$scenario.log" 2>&1 || status=$?
+    attempt="$(sed -n 's/^Validation logs and timings: //p' "$checkpoint/$scenario.log" | head -1)"
+    [[ -s "$attempt/inputs.json" && -s "$attempt/0-after-inputs.json" ]]
+    case "$scenario" in
+        pass|foreign)
+            [[ "$status" == 0 ]]
+            grep -Fx consume "$checkpoint/dispatched" >/dev/null ;;
+        *)
+            [[ "$status" != 0 && ! -s "$checkpoint/dispatched" ]]
+            grep -F 'Restart preparation and the full gate' "$checkpoint/$scenario.log" >/dev/null
+            [[ -f "$checkpoint/target/validation-failures/latest-combined.log" ]]
+            if [[ "$scenario" == fail-drift ]]; then
+                [[ "$status" == 2 ]]
+                grep -F original-failure "$checkpoint/target/validation-failures/latest-combined.log" >/dev/null
+            fi ;;
+    esac
+done
+# Observation errors are failures, not an empty/equivalent digest. Also cover
+# refusal before any stage for missing and escaping input paths.
+mkdir "$checkpoint/bin"
+printf '#!/usr/bin/env bash\nexit 73\n' > "$checkpoint/bin/sha256sum"
+chmod +x "$checkpoint/bin/sha256sum"
+for input in Cargo.lock missing ../Cargo.lock; do
+    : > "$checkpoint/dispatched"
+    status=0
+    PATH="$checkpoint/bin:$PATH" VALIDATION_REPOSITORY_ROOT="$checkpoint" \
+        VALIDATION_LOG_DIR="$checkpoint/runs" bash "$checkpoint_runner" --input "$input" consume \
+        > "$checkpoint/observation.log" 2>&1 || status=$?
+    [[ "$status" != 0 && ! -s "$checkpoint/dispatched" ]]
+    attempt="$(sed -n 's/^Validation logs and timings: //p' "$checkpoint/observation.log")"
+    [[ -s "$attempt/inputs-error.log" ]]
+done
 echo "validation target runner test passed"
 fixture_complete=true

@@ -23,9 +23,100 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-11
+# Current handoff — 2026-10-12
 
-## Current 0.19.2 Shared Tooling 0.6.4 adoption
+## Latest Shared Tooling and Host inspection
+
+Inspect committed Shared Tooling 0.6.6
+`a15eb9d406d287697df9bc8fa96db8cda6721a71` and published Host 0.14.4.
+Clean preview updates three selected paths without changing the 102-file roster.
+The new derive formatter preserves literal `$crate` paths and needs explicit
+common-tool preparation/admission on adoption; Backup has no corresponding
+product/default formatter macro migration. No library floor change follows.
+All four Host archives match registry checksums and committed release source
+`f93cd8854d500616a73eda713d215a20ff0617c7`. Rust matches 0.14.3; normalized
+manifests change only version. No new offload or public Host cut is demonstrated.
+This inspection applies no snapshot/pin/lock update, setup or full gate; preserve
+the qualified 0.6.5/0.14.3/Metrics 0.7 work below. Shared 0.6.6 passes Linux/lint,
+with Intel macOS running and Apple Silicon queued. See
+[the inspection](../reports/audits/2026/10/12/shared-066-review/01/report.md).
+
+## Current 0.20.0 Shared Tooling 0.6.5 and Host 0.14.3 adoption
+
+Released base stays 0.19.2 at `2ebf8a2e6ea25061bc9a04a2ecca28ea5b910e54`.
+Canonically adopt Shared Tooling 0.6.5
+`42f2091768b5f71c98a684d3dab563f408ca2dd9`: nine updated paths, unchanged
+102-file roster. The actual CI stage loop declares root Cargo.toml/Cargo.lock;
+shared before/after checkpoints stop later dispatch on drift/observation failure
+and retain original/current identities. The release fixture exports the new
+checksum companion. Product setup/order, resume receipts and recovery owners stay
+intact. Actual consumer manifest/lock mutation tests and tooling/hooks pass on
+Bash 5 and genuine Linux Bash 3.2.57 without recipe overrides.
+
+Select all four Host packages at registry 0.14.3. Archive checksums and published
+source match committed producer `543b137458feba0f6dfd3e458b680fb2be3d9e6d`.
+Rust is unchanged from 0.14.2; normalized manifests change only package version.
+Preserve every non-Host version/dependency edge after Cargo's incidental Windows
+edge changes. No new offload, Host API cut or reinstall is needed. Preserve existing
+Metrics 0.7 work and Testkit 0.34.1; pending notes remain 0.20.0 solely because
+Metrics changes exposed totals/means. Own package versions stay 0.19.2.
+
+Every registered full `make ci` target passes on unchanged final inputs with
+checkpoints enabled, including strict Clippy, both actual simulator suites,
+Rust 1.88 independent consumers and paired archives. Source, final graph, real
+index and HEAD stay unchanged through qualification. Work remains uncommitted;
+prior Metrics/inspection evidence retains its actual original graph/scope.
+Common pins/tool identities stay unchanged. Released 0.19.2 passes Linux and
+Apple Silicon; Intel macOS was cancelled. Shared 0.6.5 passes lint/Linux with
+both macOS jobs cancelled; Host 0.14.3 passes Linux/MSRV with macOS queued.
+Candidate native macOS acceptance remains separate. No root Git/version/release effect, production IC, sibling edit
+or retained-evidence cleanup is performed. See
+[the compact review](../reports/audits/2026/10/12/shared-065/01/report.md).
+
+## Prior Shared Tooling inspection
+
+Remote main now selects committed 0.6.5
+`42f2091768b5f71c98a684d3dab563f408ca2dd9`. Inspection and clean canonical
+preview change nine selected paths with the same 102-file roster. The snapshot
+remains 0.6.4; this check applies no source repair or adoption. Recommended adoption
+opts the existing CI stage loop into root Cargo.toml/Cargo.lock checkpoints and
+adds the checksum helper to the release fixture's runner export. Exact-source
+bounded probes qualify drift refusal before later dispatch on Bash 5/3.2 Linux
+and demonstrate missing-companion refusal. Existing retained fixture logs contain
+no recipe-override warnings. No reinstall or library API cut follows from this
+proposed tooling refresh. Owner 0.6.5 CI passes lint; Linux is running and both
+macOS jobs queued. Preserve the pending Metrics 0.20.0 qualification below.
+See [the inspection](../reports/audits/2026/10/12/shared-065-review/01/report.md).
+
+## Prior 0.20.0 Metrics 0.7 qualification
+
+Released 0.19.2 is `2ebf8a2e6ea25061bc9a04a2ecca28ea5b910e54`, verified
+against remote main. Its Shared Tooling 0.6.4 snapshot remains current. Preserve the
+incoming Metrics 0.7.0 requirement/lock and package versions 0.19.2. Public diagnostic
+summary/aggregate totals and integer means now use u128; individual observations,
+counts/maxima/latest and histogram bounds/buckets remain u64. Select breaking 0.20.0
+notes: consumers must align direct Metrics dependencies and accumulated report fields.
+No local arithmetic shim, second byte owner or diagnostic record conversion follows.
+
+The verified archive matches committed producer source. Focused wide totals, each
+duration lane, distributions, valid zero/repeated work and independent sample exclusion
+pass. Public source/upload recovery retains original pending journals and obligations.
+An independent Rust 1.88 normal consumer checks exact public widths without simulator
+dev unification. Testkit changed externally to 0.34.1 during preparation; the first
+gate refused its missing CLI. Its only Rust change retains primary download errors;
+library Rust is unchanged. Explicit setup and offline admission pass, followed by
+every registered full `make ci` target on frozen Host 0.14.2/Testkit 0.34.1/Metrics
+0.7.0/Syn 3.0.8 inputs, including both simulator suites, strict Clippy, Rust 1.88 and
+paired archives. Preserve original failure/phase evidence. The real manifest, final
+lockfile, index and HEAD stay unchanged; work remains uncommitted.
+
+Exact released 0.19.2 native CI passes Linux; both macOS jobs remain running;
+this candidate has no hosted result. Delivery/native acceptance remains separate.
+Issue #40 owns Metrics adoption; #36 now records delivered 0.19.2 Shared Tooling.
+No production IC, Git/version/release effect, sibling edit or cleanup is performed.
+See [the compact review](../reports/audits/2026/10/12/metrics-070/01/report.md).
+
+## Prior 0.19.2 Shared Tooling 0.6.4 adoption
 
 Canonically adopt committed Shared Tooling 0.6.4
 `6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d`, verified against remote main.

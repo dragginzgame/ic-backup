@@ -1,5 +1,7 @@
 {
   "version": 1,
+  "review_scope": "Historical 0.2 adoption evidence below; current Metrics 0.7 qualification is owned by current_review.",
+  "current_review": "reports/audits/2026/10/12/metrics-070/01/report.md",
   "inspection_date": "2026-10-08",
   "registry_package": "ic-metrics",
   "selected_version": "0.2.11",

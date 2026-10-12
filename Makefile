@@ -89,7 +89,7 @@ check-msrv:
 	+bash scripts/ci/check-msrv-consumers.sh 1.88.0
 
 ci:
-	+@bash scripts/ci/run-validation-targets.sh --fail-fast $(CI_TARGETS)
+	+@bash scripts/ci/run-validation-targets.sh --fail-fast --input Cargo.toml --input Cargo.lock $(CI_TARGETS)
 
 clean:
 	+cargo clean

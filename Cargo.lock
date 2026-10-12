@@ -1289,9 +1289,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.14.2"
+version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fbe7cf95877b42fe1f029f73606d1704184c80149b5f8b7a822cfc8a67848c0"
+checksum = "c7a6c184a023eee78df25c56871682e9434422a9cb3e372132fc93abe8e9dd56"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
@@ -1301,9 +1301,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.14.2"
+version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dff196276a12e0d3efb3bdc736f21ab9669cc6517dd6ba6c5bf76c2877be985b"
+checksum = "e073f68e4db4e9c04527868c43ffc06d602aaf51af64fa0486dea3887f7aec8d"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1311,9 +1311,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.14.2"
+version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d017c601e900e09d35ecd72dd4b9fc17f46883f298b3e4328512954f246c2650"
+checksum = "adf2a48221e839c1f8f0226c71d20f41a66f8a6933bc85b9fe975ad05f6f592c"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1323,9 +1323,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-tools"
-version = "0.14.2"
+version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96d1f89d1892e88cb73d21008906070e618fceb66f0b6af73f6c44aff83a733b"
+checksum = "f3070924053ee5ca08b426ab23969802de9352d123919920eeefd89c81e6cf0d"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1358,15 +1358,15 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.6.6"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65fdc32ce3d16e57750b9b8324a203ec3d7ead289b6ebbdf18cfd955d602229e"
+checksum = "55e42fc5e0ac985e4efcdce9b2a3f2ff11eee5ec2517ba3de9428751595b6d14"
 
 [[package]]
 name = "ic-testkit"
-version = "0.34.0"
+version = "0.34.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7a1daea41a0b39c4004a9a9d02de4350e0eb08050bc37d7ec9dbee47a046111"
+checksum = "97b2fc175d85fb160fb9c3da18725041ad44c63b15d879fa0b01bf8dff228fdc"
 dependencies = [
  "candid",
  "fs2",

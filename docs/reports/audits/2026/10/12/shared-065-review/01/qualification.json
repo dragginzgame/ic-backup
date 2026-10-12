@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "date": "2026-10-12",
+  "scope": "Inspection only; proposed adoption not applied",
+  "adopted_revision": "6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d",
+  "reviewed_revision": "42f2091768b5f71c98a684d3dab563f408ca2dd9",
+  "reviewed_version": "0.6.5",
+  "selected_changes": [
+    ".githooks/pre-commit",
+    "docs/make-interface.md",
+    "docs/supported-hosts.md",
+    "rules/git-hooks.md",
+    "scripts/ci/run-validation-targets.sh",
+    "scripts/ci/test-rust-tools.sh",
+    "scripts/ci/test-tool-commands.sh",
+    "scripts/ci/test-validation-target-runner.sh",
+    "scripts/dev/install-rust-tools.sh"
+  ],
+  "snapshot_files": 102,
+  "required_local_follow_up": [
+    "Opt make ci into root manifest/lock checkpoints",
+    "Copy checksum helper with runner in actual release fixture export"
+  ],
+  "probe_scope": "Custom no-Cargo Make drift/missing-companion fixtures on Bash 5 and genuine Linux Bash 3.2.57; not full upstream/consumer suite or macOS acceptance",
+  "worktree_technical_inputs_unchanged": true,
+  "index_unchanged": true,
+  "evidence": {
+    "target/shared-065-review/preview.log": "41fa3f1a75452a8c76585d2bf597bafe2fa025da7cba74bf8092db04a714216b",
+    "target/shared-065-review/changed-selected.json": "74be4af5190009f14f325b7dc0b088632eb6aadb2348ef438c00fbaf4a385c89",
+    "target/shared-065-review/missing-companion.log": "6635a9999ea977223c1a12cc33a493bdc49ff576da88f6c04ba4c63520390fca",
+    "target/shared-065-review/technical-before.json": "f0a56910966a899f3908446f1131e3151b77630108eb0034114a94d796954c2c",
+    "target/shared-065-review/technical-after.json": "f0a56910966a899f3908446f1131e3151b77630108eb0034114a94d796954c2c"
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "review_date": "2026-10-12",
+  "released_backup": {
+    "version": "0.19.2",
+    "sha": "2ebf8a2e6ea25061bc9a04a2ecca28ea5b910e54"
+  },
+  "pending_notes": "0.20.0",
+  "dependency_graph": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea"
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.14.2",
+      "checksum": "9fbe7cf95877b42fe1f029f73606d1704184c80149b5f8b7a822cfc8a67848c0"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.14.2",
+      "checksum": "dff196276a12e0d3efb3bdc736f21ab9669cc6517dd6ba6c5bf76c2877be985b"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.14.2",
+      "checksum": "d017c601e900e09d35ecd72dd4b9fc17f46883f298b3e4328512954f246c2650"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.14.2",
+      "checksum": "96d1f89d1892e88cb73d21008906070e618fceb66f0b6af73f6c44aff83a733b"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.7.0",
+      "checksum": "d526f945450ce67a517b36673d215809ce6e089e7809c4192db23600fe75d4ca"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.34.1",
+      "checksum": "e7a4447b82233a264d099ccbdfae8c2f18e417126e9cceae77a60336c1176c24"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "checksum": "85135917c845e8fc132f5eca3a0a8cbab696477a5fee3c2dda168a0797f81e1c"
+    }
+  ],
+  "metrics_source": {
+    "archive_sha256": "d526f945450ce67a517b36673d215809ce6e089e7809c4192db23600fe75d4ca",
+    "source_revision": "384046884365e3d73696e0813a43640d3b1f2cb4",
+    "published_files": [
+      {
+        "path": "src/aggregate/mod.rs",
+        "sha256": "eacc1eb89ba0fb0e5261036d93f46c4c5cf2181e4f390bcd52c68647ad6e4527"
+      },
+      {
+        "path": "src/aggregate/tests.rs",
+        "sha256": "5acfc39156e74e0e4c80e22c6a82859b850ba5a81ec2a5e5fe060c887811a079"
+      },
+      {
+        "path": "src/application.md",
+        "sha256": "4ed3f40deaf1592f92cc169ea6f4ee3de3db32e705376f641769980178d90e28"
+      },
+      {
+        "path": "src/histogram/mod.rs",
+        "sha256": "ad03a9a1a91b002884402a5feea9257f8fc78e13877350ac62855eb38c52e7c5"
+      },
+      {
+        "path": "src/histogram/tests.rs",
+        "sha256": "7e9941d9889de718a9f4f20f28b4d69a706828b4ccd4fc32ce0385a90a9fe55a"
+      },
+      {
+        "path": "src/lib.rs",
+        "sha256": "a3cf1f168a7ea56541cf8424119a1e7a6213aaaafd02f16eec25cb65776130f1"
+      },
+      {
+        "path": "src/ratio/mod.rs",
+        "sha256": "eca2bcd48c5390025c6e1871caae67a73336b16eab49dae3a09b8e351b738a29"
+      },
+      {
+        "path": "src/ratio/tests.rs",
+        "sha256": "9e88a1bdc24c31db4ba54e7263de049b5ed9d34f950f12dda268edcb4e2a8ec2"
+      },
+      {
+        "path": "src/state/mod.rs",
+        "sha256": "d68720da888e021b889462241c998415c4772e3cc4715a8ac2100bcc63b62494"
+      },
+      {
+        "path": "src/state/tests.rs",
+        "sha256": "9c058d9938b955d18c208863d809e5602bceb338daea961e91e3f26be29a34fb"
+      },
+      {
+        "path": "src/summary/mod.rs",
+        "sha256": "5ca1a0f4adab7b34b91f299d28a5795e1459ebb1284a6c52b186ea0bc1e5f744"
+      },
+      {
+        "path": "src/summary/tests.rs",
+        "sha256": "fa634be908044fe7f7d8fcc1ffbe0ca1b927b7203baf8314653136be14cbe969"
+      }
+    ]
+  },
+  "testkit_patch": {
+    "changed_rust_files": [
+      "src/bin/native/provisioning.rs"
+    ],
+    "archive_sha256": "e7a4447b82233a264d099ccbdfae8c2f18e417126e9cceae77a60336c1176c24",
+    "vcs": {
+      "git": {
+        "sha1": "4c24ae1762e1c5c1035563fd972ce75f2a70a423"
+      },
+      "path_in_vcs": "crates/ic-testkit"
+    }
+  },
+  "registered_full_gate_targets": [
+    "shared-tooling-check",
+    "tools-check",
+    "dependency-pins-check",
+    "check-doc-links",
+    "deps",
+    "shell-check",
+    "tooling-check",
+    "release-check",
+    "hooks-check",
+    "fmt-check",
+    "check",
+    "clippy",
+    "test",
+    "doc",
+    "check-msrv",
+    "package"
+  ],
+  "passed_full_gate_targets": [
+    "shared-tooling-check",
+    "tools-check",
+    "dependency-pins-check",
+    "check-doc-links",
+    "deps",
+    "shell-check",
+    "tooling-check",
+    "release-check",
+    "hooks-check",
+    "fmt-check",
+    "check",
+    "clippy",
+    "test",
+    "doc",
+    "check-msrv",
+    "package"
+  ],
+  "input_binding": {
+    "final_technical_hashes_unchanged": true,
+    "manifest_unchanged_from_incoming": true,
+    "final_lock_unchanged": true,
+    "head_unchanged": true,
+    "index_unchanged": true
+  },
+  "preparation_failure": "The initial gate stopped at offline tools admission after external Testkit 0.34.0 -> 0.34.1 selection. Retained full-ci.log; reviewed/fetched locked patch and explicitly prepared its CLI before final full gate. Earlier focused results retain Testkit 0.34.0.",
+  "metrics_persistence": "None: no diagnostic codec, generated product report, stored samples or record conversion. Existing backup records remain unchanged.",
+  "native_scope": "Native Linux final full gate including isolated simulators. Candidate is uncommitted and has no hosted macOS acceptance.",
+  "evidence": {
+    "target/metrics-070/focused.log": "bec5b571d34393185d6d0136b8bd0786eefe994479ba3c30337799bb71ae8bbe",
+    "target/metrics-070/public-upload.log": "f09a2238c112edbb6f72f32253ec74e08d4b86ba4137897be2516b7851234918",
+    "target/metrics-070/public-msrv.log": "8fa2f36c9ca4aaf841a11bd8973e697046beafa6fc29c8caf0310c2deea8944c",
+    "target/metrics-070/format-check.log": "2f9e2265171e67daa0fb224ac53f087df43b0e9e36778284a9791f72b0ad1c0e",
+    "target/metrics-070/full-ci.log": "31a28f5bb347df18cc1854ad23a40613a14cb6f633ac18e7c20b6b5f2ba09991",
+    "target/metrics-070/full-ci-final.log": "9c4e07c147447bb1e7b0b5027c6efc0de29a3ce91bcd066c55f17e0f7ffb70ea",
+    "target/metrics-070/fetch-final-graph.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "target/metrics-070/install-testkit-0341.log": "d53e9e4f064831c9844f3a00159af0a40772ded53225fbaddc142659c30b3f27",
+    "target/metrics-070/offline-testkit-check.log": "39223d0c2eee518576d07045f93c310f7e384d9b9322c1ed4d344fd70af4ac02",
+    "target/metrics-070/source-proof.json": "53deda5a5800a1c48a6cda01cf65deaba21748958412828e9868758ee875421a",
+    "target/metrics-070/testkit-0341-review.json": "18f693297e005b207532af54e980085f82208b94fc786f8011bd67abf61b3cd9",
+    "target/metrics-070/technical-final-before-ci.json": "f0a56910966a899f3908446f1131e3151b77630108eb0034114a94d796954c2c",
+    "target/metrics-070/technical-final-after-ci.json": "f0a56910966a899f3908446f1131e3151b77630108eb0034114a94d796954c2c"
+  },
+  "released_ci": {
+    "url": "https://github.com/dragginzgame/ic-backup/actions/runs/38216192856",
+    "sha": "2ebf8a2e6ea25061bc9a04a2ecca28ea5b910e54",
+    "jobs": [
+      {
+        "name": "library (macos-15)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "library (macos-15-intel)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  }
+}

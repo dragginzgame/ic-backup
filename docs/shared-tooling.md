@@ -49,7 +49,26 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 102-file snapshot selects committed Shared Tooling 0.6.4 at
+The current 102-file snapshot selects committed Shared Tooling 0.6.5 at
+`42f2091768b5f71c98a684d3dab563f408ca2dd9`, verified against remote main.
+The clean canonical export updates nine selected paths without changing the roster.
+Backup declares the root manifest and lockfile at the existing CI stage loop;
+changed/unreadable inputs stop subsequent dispatch and retain identities and logs.
+The release fixture exports the runner's required checksum companion. Exact staged
+hook context supports prepared receipt checks while preserving indexed pins/compiler
+and refusing setup in the export. Existing product prerequisites and exact resume
+receipt checks remain. Common tool pins/build identities are unchanged.
+
+Focused consumer checkpoint, tooling and hook tests pass on Bash 5 and genuine
+Bash 3.2.57 on Linux. The separately requested four Host crates select 0.14.3;
+verified archives match committed producer source, with unchanged Rust and only
+normalized package-version changes. Root package versions stay 0.19.2; existing
+breaking Metrics notes remain 0.20.0. Native/full-gate evidence is owned by
+[the current review](reports/audits/2026/10/12/shared-065/01/report.md).
+
+### Prior Shared Tooling 0.6.4 review
+
+The prior 102-file snapshot selects committed Shared Tooling 0.6.4 at
 `6fc8eb9a94f83fb0b9d0a26377d4232508cdbe2d`, verified against remote main.
 Canonical clean preview/export updates eight selected files and adds the reviewed
 `make/consumer.mk`, `make/release.mk` and `docs/make-interface.md` companions.

@@ -281,7 +281,10 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     assert_eq!(measurements.upload_metadata_success_ns().samples(), 1);
     assert_eq!(measurements.upload_data_success_ns().samples(), 1);
     assert_eq!(measurements.verification_success_ns().samples(), 3);
-    assert_eq!(measurements.prepared_chunk_bytes().total(), 2);
+    let total: u128 = measurements.prepared_chunk_bytes().total();
+    let mean: Option<u128> = measurements.prepared_chunk_bytes().mean().unwrap();
+    assert_eq!(total, 2);
+    assert_eq!(mean, Some(2));
     assert_eq!(
         data_attempts.record().unwrap().view().pending_mutation,
         Some(1)

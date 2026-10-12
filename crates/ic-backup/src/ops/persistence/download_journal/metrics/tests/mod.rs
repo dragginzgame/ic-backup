@@ -63,7 +63,7 @@ fn prepared_chunks_use_inclusive_disjoint_bounds_and_one_aggregate_owner() {
 
 #[cfg(target_pointer_width = "64")]
 #[test]
-fn saturated_prepared_total_preserves_unsaturated_distribution() {
+fn wide_prepared_total_preserves_exact_distribution_and_mean() {
     let mut metrics = IcSnapshotLocalMetrics::default();
     for bytes in [usize::MAX, usize::MAX, 0, 1] {
         metrics.record(
@@ -77,20 +77,26 @@ fn saturated_prepared_total_preserves_unsaturated_distribution() {
     assert_eq!(histogram.bucket_counts(), &[1, 1, 0, 0]);
     assert_eq!(histogram.overflow(), 2);
     assert_eq!(histogram.aggregate().samples(), 4);
-    assert_eq!(histogram.aggregate().total(), u64::MAX);
+    let total: u128 = histogram.aggregate().total();
+    assert_eq!(total, 2 * u128::from(u64::MAX) + 1);
     assert_eq!(histogram.aggregate(), metrics.prepared_chunk_bytes());
-    assert_eq!(metrics.upload_data_success_ns().total(), u64::MAX);
+    assert_eq!(
+        metrics.upload_data_success_ns().total(),
+        4 * u128::from(u64::MAX)
+    );
     assert_eq!(metrics.upload_data_success_ns().latest(), Some(u64::MAX));
-    assert!(histogram.aggregate().total_saturated());
+    assert!(!histogram.aggregate().total_saturated());
+    assert!(!histogram.aggregate().samples_saturated());
     assert!(
-        metrics
+        !metrics
             .upload_data_success_ns()
             .aggregate()
             .total_saturated()
     );
+    assert_eq!(histogram.aggregate().mean(), Ok(Some(total / 4)));
     assert_eq!(
-        histogram.aggregate().mean(),
-        Err(ic_metrics::MeasurementMeanError::SaturatedTotal)
+        metrics.upload_data_success_ns().mean(),
+        Ok(Some(u128::from(u64::MAX)))
     );
     assert_eq!(histogram.cumulative_count(1), Ok(2));
 }
@@ -115,31 +121,36 @@ fn unrepresentable_durations_leave_each_lane_unchanged_and_preserve_bytes() {
 }
 
 #[test]
-fn exactly_reached_duration_cap_remains_exact_until_actual_overflow() {
+fn duration_totals_cross_the_sample_cap_without_overflow_in_each_lane() {
     let mut metrics = IcSnapshotLocalMetrics::default();
-    metrics.record(
+    for operation in [
         LocalOperation::Verification,
-        Duration::from_nanos(u64::MAX),
-        true,
-        None,
-    );
-    let exact = metrics.verification_success_ns();
-    assert!(!exact.aggregate().total_saturated());
-    assert_eq!(exact.mean(), Ok(Some(u64::MAX)));
-    metrics.record(LocalOperation::Verification, Duration::ZERO, true, None);
-    assert_eq!(
-        metrics.verification_success_ns().mean(),
-        Ok(Some(u64::MAX / 2))
-    );
-    metrics.record(
-        LocalOperation::Verification,
-        Duration::from_nanos(1),
-        true,
-        None,
-    );
-    assert_eq!(
-        metrics.verification_success_ns().mean(),
-        Err(ic_metrics::MeasurementMeanError::SaturatedTotal)
-    );
-    assert_eq!(exact.mean(), Ok(Some(u64::MAX)));
+        LocalOperation::UploadMetadata,
+        LocalOperation::UploadData,
+    ] {
+        for succeeded in [false, true] {
+            for nanos in [u64::MAX, 0, 1] {
+                metrics.record(operation, Duration::from_nanos(nanos), succeeded, None);
+            }
+        }
+    }
+    for summary in [
+        metrics.verification_success_ns(),
+        metrics.verification_failure_ns(),
+        metrics.upload_metadata_success_ns(),
+        metrics.upload_metadata_failure_ns(),
+        metrics.upload_data_success_ns(),
+        metrics.upload_data_failure_ns(),
+    ] {
+        let total: u128 = summary.total();
+        let mean: Option<u128> = summary.mean().unwrap();
+        assert_eq!(total, u128::from(u64::MAX) + 1);
+        assert_eq!(mean, Some(total / 3));
+        assert_eq!(summary.samples(), 3);
+        assert_eq!(summary.latest(), Some(1));
+        assert_eq!(summary.maximum(), Some(u64::MAX));
+        assert!(!summary.aggregate().samples_saturated());
+        assert!(!summary.aggregate().total_saturated());
+    }
+    assert_eq!(metrics.prepared_chunk_bytes(), MeasurementAggregate::EMPTY);
 }

@@ -787,6 +787,8 @@ ports, full runners and terminal/custody proof remain separate. See
 
 Explicit local IC-tree verification and upload preparation now expose per-guard
 `ic-metrics` duration summaries and a bounded prepared-size histogram/aggregate.
+Totals and integer means use u128; individual samples and counts stay u64.
+These volatile views introduce no record conversion or spending owner.
 Unrepresentable unit conversions are excluded; histogram bytes retain no latest
 value. Host durations use nanoseconds, successful prepared data uses
 bytes, and returned successes/rejections stay separate. Internal verification and

@@ -31,6 +31,13 @@ guide for performing a canister backup or restore.
 
 ## CI source qualification
 
+`make ci` declares the root Cargo.toml and Cargo.lock as validation inputs. The
+shared runner checks them before and after each target, including same-checkout
+nested gates. Changed, missing or unreadable inputs stop later dispatch and retain
+original/observed identities. Pause dependency updates, prepare the selected graph
+and restart the complete gate; earlier stages cannot qualify a changed graph.
+This detects changes at checkpoints rather than isolating files during a target.
+
 Automatic CI runs for main pushes and pull requests. An atomic main/tag release
 selects one complete native matrix for that source; the tag does not repeat it.
 Distinct main commits retain their own runs. Every selected run keeps Linux,
@@ -745,6 +752,10 @@ retain their existing owners and inclusive timing.
 Durations reuse ordered `ic-metrics::MeasurementSummary`; prepared bytes expose
 `MeasurementAggregate` without latest. Both are re-exported through
 `ic_backup::ops::persistence`, without local arithmetic or a duplicate byte summary.
+Metrics 0.7 totals and integer means use `u128`; individual observations, counts,
+latest/maximum values and histogram bounds/buckets use `u64`. Keep accumulated
+report fields wide rather than casting them back to `u64`. Align any direct Metrics
+dependency with the re-exported 0.7 types.
 Unit conversions outside `u64` are excluded independently, never clipped into
 exact samples. Shared means/intervals reject actual overflow; exactly reached caps
 remain exact. Callers need no direct Metrics dependency to name these types.

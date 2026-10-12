@@ -27,8 +27,10 @@ const EMPTY_CHUNK_HISTOGRAM: MeasurementHistogram<4> =
 ///
 /// Sampling starts empty on create/open and is never persisted or serialized
 /// or reconstructed from journal evidence. Samples outside the `u64` unit range are excluded independently.
-/// Counts/totals clip independently with sticky actual-overflow flags; exactly
-/// reached caps remain exact. Inspect the shared aggregate before exact arithmetic. These values establish
+/// Individual observations and counts use `u64`; accumulated totals and integer
+/// means use `u128`. Counts/totals clip independently with sticky actual-overflow
+/// flags; every exactly counted batch of admitted observations fits its total.
+/// Inspect the shared aggregate before exact arithmetic. These values establish
 /// no IC cost, complete transfer, spending, receipt, freshness or outcome authority.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct IcSnapshotLocalMetrics {

@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "date": "2026-10-12",
+  "source_revision": "42f2091768b5f71c98a684d3dab563f408ca2dd9",
+  "shared_version": "0.6.5",
+  "snapshot_files": 102,
+  "updated_selected_files": [
+    ".githooks/pre-commit",
+    "docs/make-interface.md",
+    "docs/supported-hosts.md",
+    "rules/git-hooks.md",
+    "scripts/ci/run-validation-targets.sh",
+    "scripts/ci/test-rust-tools.sh",
+    "scripts/ci/test-tool-commands.sh",
+    "scripts/ci/test-validation-target-runner.sh",
+    "scripts/dev/install-rust-tools.sh"
+  ],
+  "released_backup_sha": "2ebf8a2e6ea25061bc9a04a2ecca28ea5b910e54",
+  "own_versions": "0.19.2 unchanged",
+  "pending_notes": "0.20.0, due to existing Metrics 0.7 public widths",
+  "registry_graph": [
+    {
+      "name": "ic-agent",
+      "version": "0.49.2",
+      "checksum": "1f9086b59107b6d6485a915762a2a3986ef208e80bb40eff22d099bbcd71deea"
+    },
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.14.3",
+      "checksum": "7014b1e97e3d2dc2c278f8f3fd6b57ad8cc6fb1f3356ce1fc521499a6a318ed0"
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.14.3",
+      "checksum": "134b0777ae7d1f8cfd2779ecdce64faeb73526f3a02d739e8546d8e91f6ac821"
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.14.3",
+      "checksum": "24a5255775416119ba26077f9ebe6f1542fb3c56760e9fc5ff9101720a8419c5"
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.14.3",
+      "checksum": "cf44bb3f4c24e9533d9a6789f2e333e40d607cde406c39906e87ddf6e8e8a1ba"
+    },
+    {
+      "name": "ic-metrics",
+      "version": "0.7.0",
+      "checksum": "d526f945450ce67a517b36673d215809ce6e089e7809c4192db23600fe75d4ca"
+    },
+    {
+      "name": "ic-testkit",
+      "version": "0.34.1",
+      "checksum": "e7a4447b82233a264d099ccbdfae8c2f18e417126e9cceae77a60336c1176c24"
+    },
+    {
+      "name": "pocket-ic",
+      "version": "16.1.0",
+      "checksum": "85135917c845e8fc132f5eca3a0a8cbab696477a5fee3c2dda168a0797f81e1c"
+    }
+  ],
+  "host_source": [
+    {
+      "name": "ic-host-artifacts",
+      "version": "0.14.3",
+      "archive_checksum": "7014b1e97e3d2dc2c278f8f3fd6b57ad8cc6fb1f3356ce1fc521499a6a318ed0",
+      "source": {
+        "git": {
+          "sha1": "543b137458feba0f6dfd3e458b680fb2be3d9e6d"
+        },
+        "path_in_vcs": "crates/ic-host-artifacts"
+      },
+      "rust_source_unchanged": true,
+      "normalized_manifest_only_package_version_changed": true
+    },
+    {
+      "name": "ic-host-fs",
+      "version": "0.14.3",
+      "archive_checksum": "134b0777ae7d1f8cfd2779ecdce64faeb73526f3a02d739e8546d8e91f6ac821",
+      "source": {
+        "git": {
+          "sha1": "543b137458feba0f6dfd3e458b680fb2be3d9e6d"
+        },
+        "path_in_vcs": "crates/ic-host-fs"
+      },
+      "rust_source_unchanged": true,
+      "normalized_manifest_only_package_version_changed": true
+    },
+    {
+      "name": "ic-host-process",
+      "version": "0.14.3",
+      "archive_checksum": "24a5255775416119ba26077f9ebe6f1542fb3c56760e9fc5ff9101720a8419c5",
+      "source": {
+        "git": {
+          "sha1": "543b137458feba0f6dfd3e458b680fb2be3d9e6d"
+        },
+        "path_in_vcs": "crates/ic-host-process"
+      },
+      "rust_source_unchanged": true,
+      "normalized_manifest_only_package_version_changed": true
+    },
+    {
+      "name": "ic-host-tools",
+      "version": "0.14.3",
+      "archive_checksum": "cf44bb3f4c24e9533d9a6789f2e333e40d607cde406c39906e87ddf6e8e8a1ba",
+      "source": {
+        "git": {
+          "sha1": "543b137458feba0f6dfd3e458b680fb2be3d9e6d"
+        },
+        "path_in_vcs": "crates/ic-host-tools"
+      },
+      "rust_source_unchanged": true,
+      "normalized_manifest_only_package_version_changed": true
+    }
+  ],
+  "non_host_versions_and_edges_preserved": true,
+  "metrics_features": [],
+  "canonical_declared_gate_inputs": [
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "registered_gate_targets": [
+    "shared-tooling-check",
+    "tools-check",
+    "dependency-pins-check",
+    "check-doc-links",
+    "deps",
+    "shell-check",
+    "tooling-check",
+    "release-check",
+    "hooks-check",
+    "fmt-check",
+    "check",
+    "clippy",
+    "test",
+    "doc",
+    "check-msrv",
+    "package"
+  ],
+  "passed_gate_targets": [
+    "shared-tooling-check",
+    "tools-check",
+    "dependency-pins-check",
+    "check-doc-links",
+    "deps",
+    "shell-check",
+    "tooling-check",
+    "release-check",
+    "hooks-check",
+    "fmt-check",
+    "check",
+    "clippy",
+    "test",
+    "doc",
+    "check-msrv",
+    "package"
+  ],
+  "consumer_regressions": "Actual Make CI recipe refuses manifest/lock drift before later dispatch; expected failure evidence retained. Unique fixture recipes preserve diagnostics. Focused tooling/hooks pass on Bash 5 and genuine Bash 3.2.57 on Linux.",
+  "technical_inputs_unchanged_during_full_gate": true,
+  "index_and_head_unchanged": true,
+  "manifest_unchanged_from_incoming": true,
+  "final_lock_unchanged": true,
+  "qualification_scope": "Full native Linux delivery suite including actual simulator suites, strict Clippy, independent Rust 1.88 consumers and paired archives. Uncommitted candidate has no hosted macOS acceptance.",
+  "evidence": {
+    "target/shared-065/preview.log": "41fa3f1a75452a8c76585d2bf597bafe2fa025da7cba74bf8092db04a714216b",
+    "target/shared-065/export.log": "a580d040ba180b6189f22fe8e512ac32097a72417e73f399e690a46e7d263573",
+    "target/shared-065/host-update.log": "44a926320db5fd60f6f5dd5dbed8d8703d821a1ada8aa53a687c8e2a781eeb96",
+    "target/shared-065/fetch.log": "f8702aa71a77273d855c1cd172df710508bf6f6983a806401e9fe2f558868d37",
+    "target/shared-065/host-source-proof.json": "db692cc2b1109cbcb25c3949b9a8b62d2a7281ce12d2576faa3dbeb0716d2111",
+    "target/shared-065/resolver-edge-review.json": "f31b002980da9ec0363934a51e23440a3bf6b3ad2a50223de9bae55578a4ab0b",
+    "target/shared-065/tooling-focused.log": "19e3cd46bff842573758e5ae6249a8db5e7c41419fb17c6165cf5f8500718e0a",
+    "target/shared-065/hooks-focused.log": "123557064c8ac883bc7e51b543de93bdfe1d8c057fae72ec89eaa3150174c411",
+    "target/shared-065/tooling-bash32.log": "19e3cd46bff842573758e5ae6249a8db5e7c41419fb17c6165cf5f8500718e0a",
+    "target/shared-065/hooks-bash32.log": "74c8fef6fcc12d82c162e9254ad80edbf40aa929adec57339f06942b5a29ed7a",
+    "target/shared-065/full-ci.log": "b557bed38d047ec444add571b7ff581c19488b1309b21a0ab0ce54deda830f12",
+    "target/shared-065/technical-before-ci.json": "8b95f86767df04788146fb881bd49f89e2e091b03ad5047fed923c68a6ee966c",
+    "target/shared-065/technical-after-ci.json": "8b95f86767df04788146fb881bd49f89e2e091b03ad5047fed923c68a6ee966c"
+  },
+  "exact_source_ci": {
+    "released-ci-jobs-final.json": [
+      {
+        "name": "library (macos-15)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "library (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "cancelled"
+      },
+      {
+        "name": "library (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "upstream-ci-jobs-final.json": [
+      {
+        "name": "lint-and-security",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "portable-regression (macos-15)",
+        "status": "completed",
+        "conclusion": "cancelled"
+      },
+      {
+        "name": "portable-regression (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "cancelled"
+      },
+      {
+        "name": "portable-regression (ubuntu-24.04)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "host-ci-jobs-final.json": [
+      {
+        "name": "msrv",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "native (macos-15, Darwin, arm64)",
+        "status": "queued",
+        "conclusion": null
+      },
+      {
+        "name": "native (macos-15-intel, Darwin, x86_64)",
+        "status": "queued",
+        "conclusion": null
+      },
+      {
+        "name": "native (ubuntu-24.04, Linux, x86_64)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  }
+}

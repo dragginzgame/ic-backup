@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.20.0]
+
+- Adopt Shared Tooling 0.6.5 and stop CI when the declared manifest or lockfile
+  changes between stages, retaining input identities and restart guidance.
+  Qualify Host 0.14.3 with unchanged library behavior
+  ([#36](https://github.com/dragginzgame/ic-backup/issues/36),
+  [Shared #129](https://github.com/dragginzgame/shared-tooling/issues/129)).
+
+- **Breaking:** Adopt Metrics 0.7 for public local diagnostic summaries and
+  histogram aggregates. Totals and integer means now use `u128`; callers sharing
+  these types must align their Metrics dependency and report fields. Individual
+  samples, counts and buckets remain `u64`. Diagnostics remain volatile and
+  existing backup records need no conversion
+  ([#40](https://github.com/dragginzgame/ic-backup/issues/40)).
+
 ## [0.19.2] - 2026-10-12
 
 - Adopt Shared Tooling 0.6.4's common Make entrypoint for setup, formatting,

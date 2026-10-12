@@ -34,6 +34,37 @@ GITHUB_STEP_SUMMARY="$FIXTURE/runner-summary.md" \
     bash "$ROOT/scripts/ci/test-validation-target-runner.sh" >"$FIXTURE/runner.log" 2>&1
 cat "$FIXTURE/runner.log"
 
+# Exercise this consumer's actual CI recipe, without compilation or duplicate
+# recipes. Only these unique targets substitute the graph-edit/next-stage effects.
+checkpoint="$FIXTURE/input-checkpoint"
+mkdir -p "$checkpoint/make" "$checkpoint/scripts/ci"
+cp "$ROOT/Makefile" "$checkpoint/"
+cp "$ROOT"/make/{consumer,release,tools,rust-format,execution}.mk "$checkpoint/make/"
+cp "$ROOT/scripts/ci/"{run-validation-targets,check-make-execution,verify-file-checksum}.sh "$checkpoint/scripts/ci/"
+cat >> "$checkpoint/Makefile" <<'MAKE'
+.PHONY: fixture-mutate-input fixture-later-stage
+fixture-mutate-input:
+	@printf 'changed\n' >> "$(FIXTURE_CHANGED_INPUT)"
+fixture-later-stage:
+	@printf 'dispatched\n' >> later-stage
+MAKE
+for changed in Cargo.toml Cargo.lock; do
+    printf 'original manifest\n' > "$checkpoint/Cargo.toml"
+    printf 'original lock\n' > "$checkpoint/Cargo.lock"
+    if env -u MAKEFLAGS -u MFLAGS -u MAKELEVEL -u MAKEFILES \
+        make --no-print-directory -C "$checkpoint" ci \
+        'CI_TARGETS=fixture-mutate-input fixture-later-stage' "FIXTURE_CHANGED_INPUT=$changed" \
+        > "$checkpoint/$changed.log" 2>&1; then
+        echo 'consumer CI accepted changed inputs' >&2; exit 1
+    fi
+    [[ ! -e "$checkpoint/later-stage" ]] || exit 1
+    grep -F "validation input changed: $changed" "$checkpoint/$changed.log" >/dev/null || exit 1
+    grep -F 'Restart preparation and the full gate' "$checkpoint/$changed.log" >/dev/null || exit 1
+    [[ -s "$checkpoint/target/validation-failures/latest-combined.log" ]] || exit 1
+    if grep -E 'overriding recipe|ignoring old recipe' "$checkpoint/$changed.log"; then exit 1; fi
+done
+echo 'Consumer manifest/lock checkpoints: PASS (changed inputs stop later CI dispatch).'
+
 # Contradict a successful local command result: Bash 3.2 must stop at the
 # assertion rather than continue to completion and discard its original inputs.
 assertion="$FIXTURE/assertion"

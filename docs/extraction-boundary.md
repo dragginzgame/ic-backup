@@ -2299,7 +2299,7 @@ qualify local binding/persistence only, with no simulated IC behavior. See
 
 `DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
 `IcSnapshotLocalMetrics` view for that guard's lifetime. It reuses registry
-`ic-metrics` 0.6 arithmetic: ordered duration `MeasurementSummary` and mergeable
+`ic-metrics` 0.7 arithmetic: ordered duration `MeasurementSummary` and mergeable
 prepared-byte `MeasurementAggregate`, re-exported through
 `ic_backup::ops::persistence` so callers can name returned values without a
 separate dependency selection. The actual shared type is
@@ -2338,6 +2338,8 @@ Sampling is empty on create/open. Ordinary retained record access and metric rea
 perform no fresh artifact IO or sampling, even when artifact trees are missing.
 Guard-local synchronization preserves `Send + Sync`; no metric lock spans filesystem
 work or caller code. Diagnostic poison recovery changes no operation result.
+Individual samples/counts use `u64`; totals/integer means use `u128`. Every
+exactly counted batch of admitted `u64` observations fits its total.
 Counts/totals clip independently with sticky actual-overflow flags. Shared
 means and intervals reject actual overflow; exactly reached caps remain exact. There is no persistence, reset API, serialization,
 identifier label or retained metric history. Existing v1 bytes/hashes, typed failures,
@@ -2348,7 +2350,8 @@ semantics, exact-cap and rejected duration conversion, copied views, guard trait
 Public source/upload replay retains original record/reference bytes and exhausted
 pending spending while diagnostic samples grow. This qualifies local arithmetic
 and sampling only. [Dependency review](ic-metrics-adoption.json) binds the verified
-registry archive; real IC effects and transport measurements remain unimplemented.
+registry archive; these diagnostics measure local work rather than IC effects or
+transport activity.
 
 ### Original-plan-bound retained execution admission
 
