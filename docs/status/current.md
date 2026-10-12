@@ -25,9 +25,36 @@
 
 # Current handoff — 2026-10-12
 
-## Pending 0.21.0 retained learned-edge admission
+## Pending 0.21.1 Metrics 0.8.1 qualification
 
-The uncommitted 0.21.0 draft narrows the public retained-workflow coordinator:
+Released Backup 0.21.0 is `86b8ec4` at `v0.21.0` and `origin/main`.
+The compatible 0.21.1 draft preserves an independently incoming `Cargo.lock`
+selection of registry Metrics 0.8.1, with no manifest or package-version change.
+Its archive checksum matches the locked value
+`5b2d23a378f6dd80661e0a93313ad31170842fe2558e4d8df017061877986d86`;
+the selected feature graph has no instruction-reader feature. The 0.8.1 source
+change tightens upstream `MeasurementSummary::from_parts` validation; Backup's
+guard-local recorder uses the existing tracked `record` API, so production code
+needs no adapter. Focused native tests check wide totals, checked scaled means,
+histogram ownership, all six duration lanes and the public shared-type identity.
+Maintained diagnostic guidance now names Metrics 0.8. No persisted format,
+sampling policy, spending or release authority changes.
+
+The first full `make ci` run stopped at hook formatting in the new test, which
+was fixed and passed `fmt-check`/`hooks-check`. The next run reached PocketIC but
+the workspace sandbox denied binding `127.0.0.1:0`; all 34 simulator cases failed
+at startup. The complete rerun with loopback access passed all 16 targets on the
+unchanged Metrics 0.8.1 graph, including PocketIC, strict Clippy, Rust 1.88
+independent consumers and both package archives. The released 0.21.0
+[exact-source CI run](https://github.com/dragginzgame/ic-backup/actions/runs/38284684091)
+was still queued at inspection. This local draft has no hosted/native-macOS
+result; keep [#41](https://github.com/dragginzgame/ic-backup/issues/41) open
+until delivery acceptance, and keep full runner/terminal work under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
+## Released 0.21.0 retained learned-edge admission
+
+Released 0.21.0 narrows the public retained-workflow coordinator:
 each occupied successor must commit the same learned digest supplied for its
 occupied predecessor before any new driver callback. Workflows with distinct
 learned commitments for different edges continue through the lower-level stage
@@ -39,7 +66,7 @@ Candid bytes, reads original binding identities, rejects a forged predecessor
 digest before data effects and resumes only the data stage. Focused native and
 simulator tests pass on the released 0.20.5 graph, which selects Host 0.15.0
 and Testkit 0.34.7 alongside retained Host 0.14.10 dependencies. Full
-`make ci` passes all 16 targets on the unchanged 0.21.0 draft, including
+`make ci` passed all 16 targets on the unchanged 0.21.0 draft, including
 PocketIC, Clippy, Rust 1.88 independent consumers and paired package archives.
 The first full attempt stopped on a Clippy fixture-length lint, which was fixed.
 The next attempt encountered one intermittent unrelated command-lifetime test

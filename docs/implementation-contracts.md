@@ -425,7 +425,9 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   mergeable aggregate from it, without a latest byte value. Reject unit conversions
   outside the u64 range independently rather than recording a clipped sample.
   Individual samples/counts/maxima/latest/bounds/buckets remain u64; accumulated
-  totals and integer means use Metrics 0.7 u128 without downstream truncation.
+  totals and integer means use Metrics 0.8 `u128` without downstream truncation.
+  Checked scaled means preserve fractional reporting precision; they do not
+  turn diagnostic samples into exact accounting.
   These diagnostics have no codec, persisted history or retained-data transition.
   Preserve zero/32 KiB/256 KiB/1 MiB inclusive bounds,
   disjoint independently saturating counts and failure exclusion. Six duration

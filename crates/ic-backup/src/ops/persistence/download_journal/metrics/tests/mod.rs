@@ -95,6 +95,10 @@ fn wide_prepared_total_preserves_exact_distribution_and_mean() {
     );
     assert_eq!(histogram.aggregate().mean(), Ok(Some(total / 4)));
     assert_eq!(
+        histogram.aggregate().scaled_mean(10),
+        Ok(Some(total * 10 / 4))
+    );
+    assert_eq!(
         metrics.upload_data_success_ns().mean(),
         Ok(Some(u128::from(u64::MAX)))
     );
@@ -149,6 +153,7 @@ fn duration_totals_cross_the_sample_cap_without_overflow_in_each_lane() {
         assert_eq!(summary.samples(), 3);
         assert_eq!(summary.latest(), Some(1));
         assert_eq!(summary.maximum(), Some(u64::MAX));
+        assert_eq!(summary.scaled_mean(10), Ok(Some(total * 10 / 3)));
         assert!(!summary.aggregate().samples_saturated());
         assert!(!summary.aggregate().total_saturated());
     }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.1]
+
+- Qualify the Metrics 0.8.1 selection for local snapshot diagnostics and public
+  summary, aggregate and histogram reexports. Checked scaled means preserve
+  fractional report precision; diagnostic sampling, retained records and effect
+  authority are unchanged
+  ([#41](https://github.com/dragginzgame/ic-backup/issues/41)).
+
 ## [0.21.0] - 2026-10-12
 
 - **Breaking:** Retained workflow continuation now rejects a supplied learned

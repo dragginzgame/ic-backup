@@ -2299,7 +2299,7 @@ qualify local binding/persistence only, with no simulated IC behavior. See
 
 `DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
 `IcSnapshotLocalMetrics` view for that guard's lifetime. It reuses registry
-`ic-metrics` 0.7 arithmetic: ordered duration `MeasurementSummary` and mergeable
+`ic-metrics` 0.8 arithmetic: ordered duration `MeasurementSummary` and mergeable
 prepared-byte `MeasurementAggregate`, re-exported through
 `ic_backup::ops::persistence` so callers can name returned values without a
 separate dependency selection. The actual shared type is
@@ -2341,8 +2341,10 @@ work or caller code. Diagnostic poison recovery changes no operation result.
 Individual samples/counts use `u64`; totals/integer means use `u128`. Every
 exactly counted batch of admitted `u64` observations fits its total.
 Counts/totals clip independently with sticky actual-overflow flags. Shared
-means and intervals reject actual overflow; exactly reached caps remain exact. There is no persistence, reset API, serialization,
-identifier label or retained metric history. Existing v1 bytes/hashes, typed failures,
+means, scaled means and intervals reject actual overflow; exactly reached caps
+remain exact. Scaled means are report projections, never effect authority. There
+is no persistence, reset API, serialization, identifier label or retained metric
+history. Existing v1 bytes/hashes, typed failures,
 spending, obligations and source references keep their original owners.
 
 Native tests check exact sample membership and units, error/zero/repeated-byte

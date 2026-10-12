@@ -755,10 +755,11 @@ retain their existing owners and inclusive timing.
 Durations reuse ordered `ic-metrics::MeasurementSummary`; prepared bytes expose
 `MeasurementAggregate` without latest. Both are re-exported through
 `ic_backup::ops::persistence`, without local arithmetic or a duplicate byte summary.
-Metrics 0.7 totals and integer means use `u128`; individual observations, counts,
+Metrics 0.8 totals and integer means use `u128`; individual observations, counts,
 latest/maximum values and histogram bounds/buckets use `u64`. Keep accumulated
 report fields wide rather than casting them back to `u64`. Align any direct Metrics
-dependency with the re-exported 0.7 types.
+dependency with the re-exported 0.8 types. Use checked `scaled_mean` when a
+report needs fractional precision; the host diagnostic views retain exact units.
 Unit conversions outside `u64` are excluded independently, never clipped into
 exact samples. Shared means/intervals reject actual overflow; exactly reached caps
 remain exact. Callers need no direct Metrics dependency to name these types.

@@ -21,7 +21,7 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, MeasurementAggregate,
-        MeasurementHistogram, create_operation_plan, read_operation_plan,
+        MeasurementHistogram, MeasurementSummary, create_operation_plan, read_operation_plan,
     },
     policy::ic_snapshot_upload::validate_acknowledgement,
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
@@ -280,6 +280,9 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     assert_eq!(histogram.overflow(), 0);
     assert_eq!(measurements.upload_metadata_success_ns().samples(), 1);
     assert_eq!(measurements.upload_data_success_ns().samples(), 1);
+    let duration: MeasurementSummary = measurements.upload_data_success_ns();
+    let canonical_duration: ic_metrics::MeasurementSummary = duration;
+    assert_eq!(canonical_duration.scaled_mean(10), duration.scaled_mean(10));
     assert_eq!(measurements.verification_success_ns().samples(), 3);
     let total: u128 = measurements.prepared_chunk_bytes().total();
     let mean: Option<u128> = measurements.prepared_chunk_bytes().mean().unwrap();
