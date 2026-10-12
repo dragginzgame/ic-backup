@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.19.2]
+## [0.19.2] - 2026-10-12
 
 - Adopt Shared Tooling 0.6.4's common Make entrypoint for setup, formatting,
   hooks, snapshot verification and releases, preserving ordered Testkit setup
