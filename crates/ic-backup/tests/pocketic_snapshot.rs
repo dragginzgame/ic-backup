@@ -7,6 +7,31 @@ mod ready;
 mod support;
 
 #[test]
+fn original_workflow_runner_coordinates_real_capture_and_local_replay() {
+    pic_journey::planned_runner::run(false);
+}
+
+#[test]
+fn original_workflow_runner_lost_capture_refuses_redispatch() {
+    pic_journey::planned_runner::run(true);
+}
+
+#[test]
+fn original_workflow_runner_completes_capture_metadata_and_data_artifact() {
+    pic_journey::planned_runner::run_complete(pic_journey::planned_download::ReadFailure::None);
+}
+
+#[test]
+fn original_workflow_runner_lost_data_retains_prefix_and_refuses_redispatch() {
+    pic_journey::planned_runner::run_complete(pic_journey::planned_download::ReadFailure::Lost);
+}
+
+#[test]
+fn original_workflow_runner_replays_retained_prefix_before_data_stage() {
+    pic_journey::planned_runner::run_retained();
+}
+
+#[test]
 fn planned_download_uses_one_original_stage_and_publishes_complete_artifact() {
     pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::None);
 }

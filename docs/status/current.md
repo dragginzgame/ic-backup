@@ -25,12 +25,35 @@
 
 # Current handoff — 2026-10-12
 
-## Current 0.20.4 complete local workflow replay
+## Pending 0.20.5 workflow coordination and retained continuation
 
-Released Backup 0.20.3 is `72347ef` at `v0.20.3` and local `origin/main`.
-The compatible 0.20.4 draft leaves package versions unchanged. A separate
-incoming `Cargo.lock` change now selects Host 0.14.9, Testkit 0.34.5 and
-Metrics 0.7.3; retain that graph. Its new
+The compatible uncommitted 0.20.5 draft adds `run_new_execution_workflow` and
+an integration-owned stage driver. It publishes a new original allocation,
+prepares complete child journals in graph dependency order, invokes each driver
+stage once and reconciles exact local checkpoints before returning the complete
+view. Reentry refuses an occupied workflow before any callback; cancellation,
+lost replies and failed checkpoints leave originals and spending retained. The
+retained-run entry point requires a complete integration-qualified occupied
+stage set and replays every exact settled original before invoking the driver
+for an absent successor. Pending or omitted originals refuse before callbacks.
+Five local coordinator cases and five actual PocketIC cases pass, including a
+stopped capture/metadata prefix followed by data-stage continuation and discarded
+capture/data replies. The previous full `make ci` pass covered the one-shot
+coordinator on Host 0.14.9/Testkit 0.34.5/Metrics 0.7.3. An independently incoming
+lockfile now selects Host 0.14.10, Testkit 0.34.6, Syn 3.0.9 and AWS-LC
+1.18.2/0.46.0. The first full gate stopped at its input-change guard while
+the lockfile changed. After exact Testkit CLI setup, the second `make ci` pass
+succeeded on all 16 targets, including simulator, Clippy, Rust 1.88 consumers and
+package checks. This supplies neither an
+authenticated production application adapter nor full same-ID restore, terminal
+receipt or guarded reference release. Keep
+[#29](https://github.com/dragginzgame/ic-backup/issues/29) open. Canic remains
+read-only.
+
+## Released 0.20.4 complete local workflow replay
+
+Released Backup 0.20.4 is `f76df90` at `v0.20.4` and local `origin/main`.
+It selects Host 0.14.9, Testkit 0.34.5 and Metrics 0.7.3. Its new
 `read_complete_execution_workflow` walks the original stage catalog and requires
 each fixed stage's exact binding/child plan, complete Applied journal history
 and published checkpoint. It cross-checks all direct predecessor identities
@@ -41,8 +64,13 @@ completion, command quiescence or terminal/reference-release permit. Full
 `make ci` passed on the current lock graph, including workflow, public-consumer,
 PocketIC, formatting, Clippy, MSRV and package checks. The first sandboxed run
 could not start PocketIC because loopback socket creation was denied; the full
-rerun with loopback access passed. Native hosted qualification remains outstanding under
-[#29](https://github.com/dragginzgame/ic-backup/issues/29). Canic remains
+rerun with loopback access passed. Its exact-source
+[CI run](https://github.com/dragginzgame/ic-backup/actions/runs/38262873345)
+has Linux in progress and both macOS jobs queued at this inspection. Prior
+release runs were cancelled before the native matrix completed, so hosted
+qualification remains outstanding under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29) and
+[#36](https://github.com/dragginzgame/ic-backup/issues/36). Canic remains
 read-only; its distinct layout/reference owners still require a coordinated
 adoption and terminal proof.
 

@@ -3,6 +3,8 @@
 //! Integrations supply fresh admission and authenticated providers. These bounded
 //! steps do not implement complete backup/restore or terminal/reference release.
 
+#[cfg(unix)]
+pub mod execution_workflow;
 pub mod fence_acquisition;
 pub mod fence_reconciliation;
 pub mod ic_snapshot_capture;

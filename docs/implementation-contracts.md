@@ -242,6 +242,18 @@ implementation determine what has actually been qualified.
   writing. Hold no journal guards; occupied checkpoints remain retained. The
   additive derivation error leaves the existing publication/replay error unchanged.
 
+- The one-shot original-workflow coordinator delegates every child to the existing
+  stage/journal/checkpoint owners in validated topological order. Integrations own
+  learned-input qualification, fresh permissions, actual effects, durable original
+  bytes and explicit Applied receipts. Failure and cancellation retain originals;
+  occupied workflow reentry must refuse before invoking a driver. Retained
+  continuation requires a complete integration-supplied occupied-stage set and
+  replays every settled checkpoint before any new driver callback; partial or
+  pending originals refuse. There is no automatic redispatch, new spending owner,
+  complete product terminal proof or
+  fence/reference release. The isolated Testkit capture-to-artifact driver does
+  not establish a production application adapter or same-ID restore runner.
+
 - Immutable local download manifests now reuse the exact v1 download journal schema
   after original-plan-bound fresh byte verification. Preserve 1 MiB IO, 1,024 artifacts,
   exact tokens/metadata/derived paths/checksums and canonical binary identity. Replay

@@ -18,7 +18,7 @@ use crate::model::{
 };
 use crate::policy::execution_progress::ExecutionProgressView;
 use std::{
-    collections::{BTreeMap, btree_map::Entry},
+    collections::{BTreeMap, BTreeSet, btree_map::Entry},
     fs,
     path::PathBuf,
 };
@@ -112,6 +112,34 @@ pub fn read_execution_workflow(
         return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
     }
     Ok(record)
+}
+
+/// Read which allocated stage paths are already occupied under the held layout.
+///
+/// This is a namespace preflight for a retained run, not evidence that an absent
+/// stage has never dispatched. An occupied partial stage remains occupied and is
+/// never repaired. Derived symlinks and non-directories refuse admission.
+/// # Errors
+/// Rejects changed workflow/layout, unsafe stage entries and IO failures.
+pub(crate) fn read_execution_stage_occupancy(
+    layout: &BackupLayoutGuard,
+    expected: &ArtifactChecksumRecord,
+) -> Result<BTreeSet<u64>, ExecutionWorkflowPersistenceError> {
+    let workflow = read_execution_workflow(layout, expected)?;
+    let mut occupied = BTreeSet::new();
+    for stage in workflow.stages() {
+        let sequence = stage.operation_sequence();
+        match fs::symlink_metadata(stage_path(layout, sequence)) {
+            Ok(metadata) if metadata.is_dir() => {
+                occupied.insert(sequence);
+            }
+            Ok(_) => return Err(ExecutionWorkflowPersistenceError::UnsafeStage),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(PersistenceError::from(error).into()),
+        }
+    }
+    read_execution_workflow(layout, expected)?;
+    Ok(occupied)
 }
 
 /// Replay every allocated stage's exact retained binding and all-Applied checkpoint.

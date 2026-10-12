@@ -2496,6 +2496,28 @@ view does not authenticate receipts, transfer, application safety or command/
 byte custody, and cannot establish terminal or fence/reference release.
 No persisted schema, digest, spending owner or allowance changes.
 
+`run_new_execution_workflow` coordinates a new allocation and exact child stages
+in declared topological order. The integration supplies each learned child plan,
+fresh effect-boundary admission, authenticated request/reply retention, explicit
+original Applied receipts and the opaque learned-evidence digest. Canonical owners
+prepare all original journals before the stage callback and reconcile its exact
+checkpoint afterward. Success rereads the complete local workflow view. Failure
+or cancellation retains all original stages, pending attempts, artifacts and
+references; a repeated call refuses the occupied workflow before any driver
+callback. Recovery uses the separate exact reopen/reconciliation owners. This
+one-shot coordinator grants no automatic retry, product completion, application
+safety, terminal receipt or fence/reference release. It changes no v1 record,
+digest or allowance.
+
+`run_retained_execution_workflow` reads the existing allocation and preflights
+the complete occupied stage set under its held layout. The integration supplies
+each occupied binding identity and independently qualified learned-evidence
+digest. Every occupied stage must replay its original all-Applied checkpoint
+before a driver callback; missing identities, partial preparation and pending
+attempts refuse. Only genuinely absent successors may be prepared through the
+same create-only owners. Absence is not proof of no earlier dispatch, and the
+driver remains responsible for fresh effect authority and authenticated custody.
+
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact
 workflow/child identities, stage sequence and canonical predecessor rows; no
@@ -2507,9 +2529,12 @@ binary goldens. Native tests cover exact/missing/changed evidence, finite origin
 budgets, occupied/unsafe stages, pending reopen and acknowledged process death
 between plan/binding publication and after durable binding completion. The public
 journey binds real capture/metadata codec digests with a learned raw snapshot ID;
-its native receipt fixtures qualify local admission, not IC effects. Full capture/
-download orchestration, authenticated transfer, application adapters and terminal/
-fence/reference release remain unimplemented.
+its native receipt fixtures qualify local admission, not IC effects. A separate
+Testkit driver exercises actual capture, metadata and complete data artifact
+publication through the coordinator, including lost capture/data replies and
+retained continuation after the first two settled stages.
+Authenticated production adapters, resumable full backup/restore, application
+admission and terminal/fence/reference release remain unimplemented.
 
 ### Metadata-derived original download planning
 

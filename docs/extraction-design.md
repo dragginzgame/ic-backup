@@ -468,8 +468,8 @@ Local stage admission checks complete exact chronological settlements and origin
 journals throughout the ancestor DAG, visiting shared ancestors once with sequential
 locks. Missing or changed transitive evidence rejects; no atomic byte-custody claim
 follows. Reopen preserves original journals; interrupted preparation stops with evidence
-retained. No workflow runner, automatic outcome, fresh permission, transfer
-completion or terminal/release authority follows. See
+retained. No complete backup/restore runner, automatic outcome, fresh permission,
+transfer completion or terminal/release authority follows. See
 [the implemented contract](extraction-boundary.md#original-workflow-allocations-and-learned-stage-binding).
 The stage guard now owns checkpoint/predecessor assembly, admitting full original
 workflow and ancestor history before and after immutable journal-checkpoint
@@ -481,13 +481,29 @@ cross-checks predecessor identities against that whole set. It returns a
 sequential read-only view, not authentic learned evidence, product completion,
 command quiescence or terminal/reference-release admission.
 
+A one-shot original-workflow coordinator now publishes a new allocation, prepares
+each exact child in the graph's topological order, invokes an integration-owned
+stage driver once, and reconciles its complete Applied checkpoint. Occupied
+workflow reentry refuses before invoking the driver. The isolated Testkit fixture
+qualifies a capture/metadata/data artifact path and lost data reply through this
+coordinator. Reopening uncertain effects, authenticated application adapters,
+full backup/restore terminal evidence and guarded release still need distinct
+owners.
+
+A retained-workflow continuation now matches every occupied original stage to
+integration-qualified binding and learned-evidence identities, then replays all
+complete Applied checkpoints before any callback. Only absent successors may be
+prepared under the original allocation. Pending or partially prepared stages
+refuse without redispatch; the integration still owns authenticity and fresh
+effect admission.
+
 
 The implemented metadata-derived data planner counts complete region/chunk reads
 before allocation and binds exact requests to an original finite data stage. Every
 request retains one update and zero observation allowance under explicit sequential
 dependencies. Testkit qualifies an isolated complete capture/download/publication
-journey and safe stopping after lost/malformed data replies. This does not install
-the proposed generic runner or qualify a real application's fresh admission.
+journey and safe stopping after lost/malformed data replies. The one-shot stage
+coordinator adds no generic application authority or terminal admission.
 See [the planner contract](extraction-boundary.md#metadata-derived-original-download-planning).
 
 Complete local stage resume now returns the exact retained stage and its canonical

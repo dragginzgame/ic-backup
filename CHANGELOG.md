@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.20.5]
+
+- Add a one-shot original-workflow coordinator that prepares each fixed stage in
+  dependency order, delegates fresh admission and effects to an integration
+  driver, and reconciles the complete local checkpoints. A retained-run entry
+  point preflights the exact occupied stage set and replays its settled originals
+  before dispatching absent successors. Pending or omitted stages refuse without
+  redispatch. An isolated PocketIC capture-to-artifact journey exercises the new
+  coordinator, including a discarded data reply; product terminal and reference
+  release remain separate
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Qualify the incoming Host 0.14.10 and Testkit 0.34.6 lock selections together
+  with Syn 3.0.9 and AWS-LC 1.18.2/0.46.0. The exact Testkit CLI is prepared and
+  the native, simulator, MSRV consumer and package gates pass.
+
 ## [0.20.4] - 2026-10-12
 
 - Replay the complete original workflow's local stage checkpoints in one

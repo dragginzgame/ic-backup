@@ -56,11 +56,11 @@ pub(crate) enum CaptureFailure {
     Malformed,
 }
 
-struct CaptureProvider<'a> {
-    backend: &'a mut Backend,
-    failure: CaptureFailure,
-    oracle: &'a Path,
-    submitted: bool,
+pub(super) struct CaptureProvider<'a> {
+    pub(super) backend: &'a mut Backend,
+    pub(super) failure: CaptureFailure,
+    pub(super) oracle: &'a Path,
+    pub(super) submitted: bool,
 }
 impl IcMutationProvider for CaptureProvider<'_> {
     fn submit_mutation(
@@ -107,12 +107,12 @@ impl IcMutationProvider for CaptureProvider<'_> {
     }
 }
 
-struct ReadProvider<'a> {
-    backend: &'a mut Backend,
-    failure: ReadFailure,
-    oracle: &'a Path,
-    calls: usize,
-    fail_at: usize,
+pub(super) struct ReadProvider<'a> {
+    pub(super) backend: &'a mut Backend,
+    pub(super) failure: ReadFailure,
+    pub(super) oracle: &'a Path,
+    pub(super) calls: usize,
+    pub(super) fail_at: usize,
 }
 impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
     fn read_snapshot(
@@ -142,7 +142,7 @@ impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
     }
 }
 
-fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
+pub(super) fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
     let mut allocation = serde_json::to_value(
         backend.plan(&ArtifactChecksumRecord::from_bytes(b"capture contract"), 0),
     )

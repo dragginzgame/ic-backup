@@ -3,6 +3,7 @@
 mod backend;
 pub(super) mod planned_download;
 mod planned_restore;
+pub(super) mod planned_runner;
 pub(super) mod planned_upload;
 mod recovery;
 
