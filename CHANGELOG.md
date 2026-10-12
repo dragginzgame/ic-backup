@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.21.0]
+## [0.21.0] - 2026-10-12
 
 - **Breaking:** Retained workflow continuation now rejects a supplied learned
   stage digest that conflicts with an occupied successor's original binding,
