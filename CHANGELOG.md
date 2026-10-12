@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.20.4]
+## [0.20.4] - 2026-10-12
 
 - Replay the complete original workflow's local stage checkpoints in one
   read-only view. Every allocated stage must retain its exact bound plan,
