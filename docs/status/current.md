@@ -62,6 +62,21 @@ A separate Rust 1.88 consumer with direct Host FS 0.16.0 compiles a typed
 match on Backup's public `PersistenceError::Publication` variant. Hosted
 native-macOS acceptance and live product admission remain separate.
 
+A subsequent `make ci` library test run reported one failure in the replaced
+command-custody sidecar regression. The focused test and a full 552-test library
+rerun passed. The quiescence guard now checks a regular sidecar's recorded identity
+before attempting its lock, then checks the opened file again after locking.
+This ensures a transient lock on a different inode cannot mask replacement as
+`InFlight`. The regression now holds a lock on the replacement while expecting
+`IdentityChanged`. The next full CI run passed that regression but encountered
+a separate process-death fixture timeout: the retained child wrote its ready
+marker about six seconds after the parent started a five-second wait. The shared
+test-only crash barrier now allows 30 seconds and still fails immediately if the
+child exits before reaching it. A loopback-enabled full `make ci` passed all 16
+targets with both fixes, including 552 library tests, both PocketIC suites,
+strict Clippy, Rust 1.88 consumer checks and both package archives. The earlier
+sandboxed full run could not bind the PocketIC server to `127.0.0.1:0`.
+
 Backup [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open for
 full product runner/admission/terminal qualification. Canic #394/#513 remain
 consumer-owned. The Canic checkout has concurrent edits, so this batch stays in

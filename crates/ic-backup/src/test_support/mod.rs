@@ -31,6 +31,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(unix)]
+const CRASH_BARRIER_TIMEOUT: Duration = Duration::from_secs(30);
+
 // Build a unique temporary directory path for tests that create their own layout.
 pub fn temp_dir(prefix: &str) -> PathBuf {
     std::env::temp_dir()
@@ -101,7 +104,7 @@ pub fn hold_at_acknowledged_barrier(root: &Path) -> ! {
 
 #[cfg(unix)]
 pub fn wait_for_child_path(child: &mut Child, path: &Path, description: &str) {
-    let deadline = Instant::now() + Duration::from_secs(5);
+    let deadline = Instant::now() + CRASH_BARRIER_TIMEOUT;
     while !path.is_file() {
         assert!(
             child.try_wait().expect("inspect crash child").is_none(),
@@ -117,7 +120,7 @@ pub fn wait_for_child_path(child: &mut Child, path: &Path, description: &str) {
 
 #[cfg(unix)]
 pub fn wait_for_path(path: &Path, description: &str) {
-    let deadline = Instant::now() + Duration::from_secs(5);
+    let deadline = Instant::now() + CRASH_BARRIER_TIMEOUT;
     while !path.is_file() {
         assert!(
             Instant::now() < deadline,

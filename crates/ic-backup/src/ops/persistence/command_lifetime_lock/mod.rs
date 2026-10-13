@@ -147,6 +147,13 @@ impl CommandQuiescenceGuard {
     /// Rejects active holders, changed/missing/unsafe identities and filesystem failures.
     pub fn acquire(expected: &CommandCustodyRecord) -> Result<Self, CommandLifetimeLockError> {
         let path = lock_path(expected.journal(), expected.operation_sequence());
+        // Reject an already-replaced sidecar before trying to lock its inode.
+        // A transient holder of that different inode must not mask the mismatch.
+        // Recheck the opened file below because the path can change meanwhile.
+        let metadata = fs::symlink_metadata(&path)?;
+        if metadata.is_file() {
+            require_identity(expected, &metadata, &path)?;
+        }
         let file =
             file_lock::acquire_existing(&path).map_err(|error| project_error(&path, error))?;
         require_identity(expected, &file.metadata()?, &path)?;

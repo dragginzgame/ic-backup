@@ -26,6 +26,12 @@
 - Qualify the incoming Metrics 0.8.3 lock selection. Backup's existing diagnostic
   summary, aggregate and histogram APIs are unchanged.
 
+### Fixed
+
+- Reject a replaced command-custody sidecar by its recorded identity even when
+  another process briefly holds a lock on the replacement. Quiescence still
+  checks the opened sidecar after locking it.
+
 ## [0.21.3] - 2026-10-13
 
 ### Added

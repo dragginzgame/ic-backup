@@ -159,10 +159,17 @@ fn missing_replaced_or_unsafe_sidecars_do_not_prove_quiescence() {
         lock.finish(),
         Err(CommandLifetimeLockError::IdentityChanged { .. })
     ));
-    assert!(matches!(
-        CommandQuiescenceGuard::acquire(&record),
-        Err(CommandLifetimeLockError::IdentityChanged { .. })
-    ));
+    let replacement_lock =
+        file_lock::acquire_existing(&path).expect("hold different sidecar inode");
+    let replaced_result = CommandQuiescenceGuard::acquire(&record);
+    assert!(
+        matches!(
+            &replaced_result,
+            Err(CommandLifetimeLockError::IdentityChanged { .. })
+        ),
+        "replaced sidecar admission: {replaced_result:?}"
+    );
+    drop(replacement_lock);
     assert_eq!(
         fs::read(&path).expect("preserve replacement evidence"),
         b"replacement"
