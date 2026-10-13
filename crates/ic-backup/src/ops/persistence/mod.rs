@@ -16,6 +16,7 @@ mod journal_lock;
 mod json;
 mod layout_lifetime;
 mod operation_plan;
+mod restore_reference_release;
 mod restore_safety;
 
 pub use artifact_commit::{ArtifactCommitOutcome, commit_artifact_directory};
@@ -62,6 +63,10 @@ pub use json::{create_json_durable, read_json, write_json_durable};
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
 pub use operation_plan::{
     OperationPlanPersistenceError, create_operation_plan, read_operation_plan,
+};
+pub use restore_reference_release::{
+    MAX_RESTORE_TERMINAL_BYTES, RestoreReferenceReleaseError, RestoreReferenceReleaseOutcome,
+    RestoreTerminalEvidenceProvider,
 };
 pub use restore_safety::{
     RestoreSafetyPersistenceError, create_restore_safety_requirement,

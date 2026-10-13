@@ -236,11 +236,24 @@ implementation determine what has actually been qualified.
   journal locks and bulk original authority derivation. Replay is local and retains
   all spending, obligations and references. This is not full backup/restore completion,
   authenticated receipts, cross-journal chronology, byte/extent/application qualification,
-  command quiescence or fence/reference release. No release API is implemented.
+  command quiescence or fence/reference release. Reference release has a separate
+  guarded terminal-admission boundary.
   Canonical checkpoint derivation reads every exact retained original journal and
   delegates publication to the existing owner, rechecking full histories before
   writing. Hold no journal guards; occupied checkpoints remain retained. The
   additive derivation error leaves the existing publication/replay error unchanged.
+
+- Guarded restore-reference release requires the actual held layout and journal
+  guards, freshly read bounded terminal bytes, exact original intent and the
+  integration's complete retained command-custody set. The integration authenticates
+  its product journal and qualifies application/effect settlement; all-Applied
+  counters alone are insufficient. The library rejects cross-journal or duplicate
+  command identities, missing/replaced sidecars and active descendants. It holds
+  existing inode-bound quiescence guards through durable reference publication,
+  rechecks journal bytes and layout identity, and synchronizes exact absent-reference
+  replay. Preserve v1 reference records, the 8,192-command bound and 16 MiB terminal
+  read bound. This API performs no IC effect, application fence release or paid retry;
+  provider completeness and production terminal acceptance remain integration-owned.
 
 - The one-shot original-workflow coordinator delegates every child to the existing
   stage/journal/checkpoint owners in validated topological order. Integrations own

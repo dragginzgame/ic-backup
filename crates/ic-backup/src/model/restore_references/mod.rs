@@ -124,6 +124,26 @@ impl RestoreReferencesRecord {
         self.restores.is_empty()
     }
 
+    pub(crate) fn release(
+        &mut self,
+        reference: &RestoreReferenceRecord,
+    ) -> Result<bool, RestoreReferenceError> {
+        let Some(index) = self
+            .restores
+            .iter()
+            .position(|entry| entry.journal == reference.journal)
+        else {
+            return Ok(false);
+        };
+        if self.restores[index] != *reference {
+            return Err(RestoreReferenceError::AuthorityConflict {
+                journal: reference.journal.clone(),
+            });
+        }
+        self.restores.remove(index);
+        Ok(true)
+    }
+
     pub(crate) fn retain(
         &mut self,
         reference: RestoreReferenceRecord,

@@ -2935,6 +2935,18 @@ fixtures perform no IC/application effects. [Fresh Canic inspection](execution-s
 imports no completion counts, terminal flags, runner or release proof; actual backend
 qualification and full product terminal evidence remain pending.
 
+Guarded source-reference release is implemented separately by
+`BackupLayoutGuard::release_restore`. It reads bounded current terminal bytes
+under the actual held journal/layout guards and delegates complete original
+intent, application/effect settlement and command enumeration to the product's
+`RestoreTerminalEvidenceProvider`. Existing inode-bound command quiescence remains
+held through publication; invalid command sets, active descendants, changed bytes
+and missing/replaced sidecars refuse. Exact absent-reference replay synchronizes
+current durable state without effects. The local API has native process/filesystem
+qualification; production terminal providers, application fence release and Canic
+adoption remain separate. Generic journal sidecars may protect file or directory
+publication locations; terminal readers own journal-file admission.
+
 | Canic surface | Extraction disposition |
 | --- | --- |
 | Original all-Applied journal settlement | Adapted immutable full-plan/exact-history local checkpoint and guarded replay; completion counts/flags, command exit, actual terminal proof and release authority are not imported |

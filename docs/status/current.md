@@ -23,12 +23,66 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-12
+# Current handoff — 2026-10-13
 
-## Pending 0.21.2 learned commitments per workflow edge
+## Pending guarded restore-reference release — 2026-10-13
 
-Released Backup 0.21.1 is `f6a5d04` at `v0.21.1` and local `origin/main`.
-The compatible 0.21.2 draft lets an integration qualify a different learned
+The maintainer explicitly authorized the missing API for Canic #394/#513.
+`BackupLayoutGuard::release_restore` joins actual held layout/journal guards,
+fresh bounded product terminal admission, exact retained intent and existing
+inode-bound command quiescence. It preserves references on invalid admission,
+active commands, missing/replaced sidecars or changed journal bytes; exact replay
+synchronizes the durable reference state without dispatch. The product provider
+owns complete original command enumeration and application/effect settlement.
+
+Qualification is complete on the held Host 0.15.2 / Testkit 0.35.1 / Metrics 0.8.1
+lock, including `deranged` 0.5.9. All 16 configured gate targets have passing
+evidence: unchanged tooling/release/hook checks are reused from `ci-prepared.log`,
+while compilation, strict Clippy, all native/PocketIC tests, docs, Rust 1.88
+independent consumers and both package archives pass in `ci-affected.log`.
+The first gate exposed ten artifact failures because generic journal-lock
+normalization also rejected directory-shaped publication locations. Restricting
+normalization to the parent/location preserves generic sidecar use; bounded
+terminal file validation remains in the release reader. All 11 affected artifact
+cases and all 551 library tests pass after that correction. The original failure
+remains retained. These host/API checks do not qualify a product terminal provider.
+
+Evidence is retained in `/tmp/ic-backup-guarded-release/`. Package versions and
+Git effects remain user-owned; another session staged these files before final
+qualification. Its staged copy needs refreshing to include the corrected lock
+code, held lockfile and final documentation; this agent did not alter the index.
+The requested hold has served its qualification purpose; publication is separate.
+Canic still selects published Backup 0.21.1 and has not adopted this unpublished
+API. Full product terminal proof, live Fleet routing and Canic engine adoption
+remain open; neither Canic #394 nor #513 is complete.
+
+## Pending 0.21.3 PocketIC learned-edge qualification
+
+Released Backup 0.21.2 is `c60ebff` at `v0.21.2` and local `origin/main`.
+The compatible 0.21.3 draft exercises its per-successor commitment with actual
+PocketIC capture bytes. The capture checkpoint retains the qualified reply
+digest, while the metadata edge commits the returned snapshot ID. An interrupted
+run reconstructs that edge from retained original Candid bytes; dropping the
+override refuses before later IC effects or child-stage creation and preserves
+both original journals. The five focused PocketIC workflow cases pass. That fixture slice changes no
+library API, record format, package version, spending or terminal authority. An independently incoming `Cargo.lock` update selected IC Host 0.15.2
+while the first full gate ran; its three cached registry packages have the same
+Rust source files as 0.15.1. The first gate stopped at its input-integrity
+check. A second run found a strict Clippy fixture-length error; after splitting
+the refusal assertions into a helper, focused Clippy and all five PocketIC
+workflow cases passed. The complete rerun then passed all 16 `make ci` targets
+on the fixed 0.15.2 graph, including the 545 library tests, both PocketIC
+suites, Rust 1.88 independent consumers and paired package archives.
+
+The released 0.21.2 [exact-source CI run](https://github.com/dragginzgame/ic-backup/actions/runs/38294813438)
+passed Linux; both macOS jobs were cancelled. Authenticated production
+application admission, complete terminal/reference-release proof and native
+acceptance remain open under
+[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
+## Released 0.21.2 learned commitments per workflow edge
+
+Released Backup 0.21.2 lets an integration qualify a different learned
 commitment for each original dependency edge before binding a successor. The
 driver's new method defaults to the predecessor checkpoint digest, so existing
 implementations keep their behavior. Retained continuation accepts explicit
@@ -38,7 +92,7 @@ callback. Existing public error variants remain unchanged. Native regressions
 exercise distinct checkpoint/edge identities, two successors with different
 commitments, exact retained replay and forged-edge refusal without journal
 mutation or additional callback. No manifest, lockfile, package-version,
-original spending or terminal-authority change is part of the draft.
+original spending or terminal-authority change was part of that release.
 
 Full local `make ci` passed all 16 targets on the final source, including 545
 library tests, both PocketIC suites, strict Clippy, Rust 1.88 independent

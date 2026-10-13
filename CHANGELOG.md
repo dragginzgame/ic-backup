@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.21.3]
+
+### Added
+
+- Release an exact restore reference under held layout and journal guards after
+  integration-owned terminal qualification and existing command-custody checks.
+  Active or replaced command sidecars refuse; exact replay synchronizes the
+  current reference state without dispatching effects
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
+### Testing
+
+- Qualify original and retained workflow edge commitments against a real
+  PocketIC snapshot ID. Recovery refuses a missing retained edge before further
+  IC effects, while preserving the original capture and metadata journals
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+- Qualify the incoming IC Host 0.15.2 lock selection; its published Rust sources
+  match 0.15.1 across the three selected Host packages.
+
 ## [0.21.2] - 2026-10-12
 
 - Allow original-workflow drivers to qualify a distinct learned commitment for

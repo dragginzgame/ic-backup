@@ -92,7 +92,7 @@ impl BackupLayoutGuard {
     ///
     /// Resolve the existing journal parent once; the journal itself may be absent.
     /// This binds local custody only and does not establish restore authority.
-    /// No release operation is exposed until terminal/custody contracts are implemented.
+    /// Release requires the separate terminal/custody provider boundary.
     ///
     /// # Errors
     /// Rejects conflicting intent, invalid locations, unsafe records, limits and IO failures.
@@ -124,6 +124,18 @@ impl BackupLayoutGuard {
         Ok(reference)
     }
 
+    pub(super) fn sync_references(&self) -> Result<(), PersistenceError> {
+        self.check_root()?;
+        let path = self.root.join(REFERENCES_FILE);
+        match fs::symlink_metadata(&path) {
+            Ok(_) => sync_reference(&path)?,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
+        self.directory.sync_all()?;
+        Ok(())
+    }
+
     pub(super) fn check_root(&self) -> Result<(), PersistenceError> {
         #[cfg(unix)]
         {
@@ -140,7 +152,7 @@ impl BackupLayoutGuard {
     }
 }
 
-fn journal_identity(path: &Path) -> Result<PathBuf, PersistenceError> {
+pub(super) fn journal_identity(path: &Path) -> Result<PathBuf, PersistenceError> {
     let name = path
         .file_name()
         .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidInput))?;

@@ -403,7 +403,7 @@ qualification and rejection of changed retained reply bytes. Exact pending histo
 survives; explicit local recovery can settle the original retained observation
 without another read. Production settlement does not repair evidence. Complete
 terminal evidence and original command/byte custody remain prerequisites for the
-proposed source-reference release boundary.
+guarded source-reference release boundary.
 
 Application acquisition now has a bounded exact host update envelope. Its canonical
 receiver, mode, exact method and opaque arguments are hashed before the plan, avoiding
@@ -1069,8 +1069,15 @@ consistency and backend qualification remain integration-owned. See
 Layout lifetime exclusion and durable reference retention are implemented with
 the bounded v1 contract in [the maintained boundary](extraction-boundary.md).
 Owned command descriptor custody and exact existing-sidecar quiescence are also
-implemented with native process evidence. Backend-specific custody qualification
-and terminal reference release remain unimplemented.
+implemented with native process evidence. Backend-specific custody and complete product terminal qualification remain
+integration-owned. `BackupLayoutGuard::release_restore` now supplies the local
+release operation: held journal/layout guards, bounded fresh terminal bytes,
+product-owned original intent/settlement admission and all declared existing
+command-custody identities. Quiescence guards remain held through durable reference
+publication; changed bytes, active commands and replaced sidecars refuse. Exact
+replay synchronizes the current reference state without IC effects. The provider
+must enumerate every original command and qualify complete application obligations;
+this generic operation supplies no product terminal or fence-release proof.
 
 Preserve the existing three concrete protections: layout lifetime exclusion,
 operation journal serialization and subprocess lifetime custody. A path-local

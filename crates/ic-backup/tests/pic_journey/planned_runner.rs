@@ -400,6 +400,15 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     ) -> Result<OperationPlanRecord, Self::Error> {
         assert_eq!(workflow, &self.workflow);
         assert_eq!(predecessors.len(), usize::from(sequence != 0));
+        if sequence == 7 {
+            let snapshot = self.snapshot.as_ref().unwrap();
+            if predecessors[0].stage_sequence() != 0
+                || predecessors[0].learned_evidence()
+                    != &ArtifactChecksumRecord::from_bytes(snapshot.id())
+            {
+                return Err(io::Error::other("capture edge commitment mismatch"));
+            }
+        }
         if self.stop_before_data && sequence == 9 {
             return Err(io::Error::other("stop before data stage"));
         }
@@ -445,6 +454,19 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
             9 => self.data(stage),
             _ => panic!("fixed original stage"),
         })
+    }
+
+    fn learned_for_successor(
+        &mut self,
+        predecessor: &ExecutionStagePredecessorRecord,
+        successor_sequence: u64,
+    ) -> Result<ArtifactChecksumRecord, Self::Error> {
+        if (predecessor.stage_sequence(), successor_sequence) == (0, 7) {
+            return Ok(ArtifactChecksumRecord::from_bytes(
+                self.snapshot.as_ref().unwrap().id(),
+            ));
+        }
+        Ok(predecessor.learned_evidence().clone())
     }
 }
 
@@ -533,6 +555,10 @@ fn read_retained_prefix(
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let raw_metadata = fs::read(root.join("execution-stage-7/metadata.candid")).unwrap();
     let metadata_reply = IcSnapshotMetadataReply::decode(&metadata_request, &raw_metadata).unwrap();
+    assert_ne!(
+        capture_reply.digest(),
+        ArtifactChecksumRecord::from_bytes(snapshot.id())
+    );
     let binding = |sequence| {
         let record: ExecutionStageBindingRecord = read_json(
             &root.join(format!("execution-stage-{sequence}/stage-binding.json")),
@@ -544,7 +570,9 @@ fn read_retained_prefix(
     let retained = BTreeMap::from([
         (
             0,
-            RetainedStageEvidence::new(binding(0), capture_reply.digest()),
+            RetainedStageEvidence::new(binding(0), capture_reply.digest()).with_successor_evidence(
+                BTreeMap::from([(7, ArtifactChecksumRecord::from_bytes(snapshot.id()))]),
+            ),
         ),
         (
             7,
@@ -552,6 +580,55 @@ fn read_retained_prefix(
         ),
     ]);
     (retained, snapshot, raw_metadata)
+}
+
+fn refuse_changed_retained_capture_edges(
+    root: &Path,
+    layout: &BackupLayoutGuard,
+    workflow: &ExecutionWorkflowRecord,
+    retained: &BTreeMap<u64, RetainedStageEvidence>,
+    driver: &mut CompleteDriver,
+    capture: &[u8],
+    metadata: &[u8],
+) {
+    let binding: ExecutionStageBindingRecord = read_json(
+        &root.join("execution-stage-0/stage-binding.json"),
+        MAX_EXECUTION_STAGE_BYTES,
+    )
+    .unwrap();
+    let original = retained.get(&0).unwrap();
+    let changed = [
+        RetainedStageEvidence::new(
+            binding.digest(),
+            ArtifactChecksumRecord::from_bytes(b"wrong"),
+        ),
+        original.clone().with_successor_evidence(BTreeMap::new()),
+    ];
+    let calls = driver.backend.calls;
+    for evidence in changed {
+        let mut supplied = retained.clone();
+        supplied.insert(0, evidence);
+        assert!(matches!(
+            ready(run_retained_execution_workflow(
+                layout,
+                &workflow.digest(),
+                &supplied,
+                driver,
+            )),
+            Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
+        ));
+        assert_eq!(driver.stages, [0, 7]);
+        assert_eq!(driver.backend.calls, calls);
+        assert!(!root.join("execution-stage-9").exists());
+        assert_eq!(
+            fs::read(root.join("execution-stage-0/attempt-0.json")).unwrap(),
+            capture
+        );
+        assert_eq!(
+            fs::read(root.join("execution-stage-7/attempt-7.json")).unwrap(),
+            metadata
+        );
+    }
 }
 
 pub(crate) fn run_retained() {
@@ -586,32 +663,17 @@ pub(crate) fn run_retained() {
     let capture = fs::read(root.join("execution-stage-0/attempt-0.json")).unwrap();
     let metadata = fs::read(root.join("execution-stage-7/attempt-7.json")).unwrap();
     let calls = driver.backend.calls;
-    let (mut retained, snapshot, raw_metadata) = read_retained_prefix(&root, &driver.backend);
-    let original_capture = retained.get(&0).unwrap().clone();
-    let binding: ExecutionStageBindingRecord = read_json(
-        &root.join("execution-stage-0/stage-binding.json"),
-        MAX_EXECUTION_STAGE_BYTES,
-    )
-    .unwrap();
-    retained.insert(
-        0,
-        RetainedStageEvidence::new(
-            binding.digest(),
-            ArtifactChecksumRecord::from_bytes(b"wrong"),
-        ),
+    let (retained, snapshot, raw_metadata) = read_retained_prefix(&root, &driver.backend);
+    let capture_edge = ArtifactChecksumRecord::from_bytes(snapshot.id());
+    refuse_changed_retained_capture_edges(
+        &root,
+        &layout,
+        &workflow,
+        &retained,
+        &mut driver,
+        &capture,
+        &metadata,
     );
-    assert!(matches!(
-        ready(run_retained_execution_workflow(
-            &layout,
-            &workflow.digest(),
-            &retained,
-            &mut driver,
-        )),
-        Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
-    ));
-    assert_eq!(driver.stages, [0, 7]);
-    assert_eq!(driver.backend.calls, calls);
-    retained.insert(0, original_capture);
     // Drop the original driver state. Rebuild only from retained raw replies,
     // exact original bindings and the still-running isolated backend.
     let backend = driver.backend;
@@ -642,6 +704,15 @@ pub(crate) fn run_retained() {
         metadata
     );
     assert_eq!(view.stages().len(), 3);
+    let metadata_binding: ExecutionStageBindingRecord = read_json(
+        &root.join("execution-stage-7/stage-binding.json"),
+        MAX_EXECUTION_STAGE_BYTES,
+    )
+    .unwrap();
+    assert_eq!(
+        metadata_binding.predecessors()[0].learned_evidence(),
+        &capture_edge
+    );
     assert_eq!(
         read_complete_execution_workflow(&layout, &workflow.digest()).unwrap(),
         view
