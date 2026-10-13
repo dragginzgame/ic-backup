@@ -44,7 +44,7 @@ Candid evidence against the matching journal receipt. All 16 configured
 reply or qualify application settlement by itself.
 
 The incoming root manifest and lockfile select direct Host Artifacts/FS 0.16.0
-and Metrics 0.8.2. Host Artifacts/FS published Rust sources are identical to
+and Metrics 0.8.3. Host Artifacts/FS published Rust sources are identical to
 0.15.2, while the exposed `NamedWriteError` Rust identity changes. Consumers
 sharing that error type must align direct Host dependencies to 0.16; no stored
 record or effect semantics change. Testkit remains on its dev-only Host 0.15.2
@@ -53,12 +53,14 @@ graph. The reviewed 107-file Shared Tooling snapshot now selects committed
 The sibling's uncommitted 0.9.14 changes were excluded. The new build identity
 required explicit `make install-rust-tools` and `make install-testkit-server`
 before offline admission; the first gate stopped at that missing Testkit
-selection. After setup, all 16 `make ci` targets pass on the held Host 0.16.0 /
-Testkit 0.35.1 / Metrics 0.8.2 graph, including PocketIC, strict Clippy,
-Rust 1.88 independent consumers and both package archives. A separate Rust
-1.88 consumer with direct Host FS 0.16.0 compiles a typed match on Backup's
-public `PersistenceError::Publication` variant. Hosted native-macOS acceptance
-and live product admission remain separate.
+selection. After setup, all 16 `make ci` targets passed on the Host 0.16.0 /
+Testkit 0.35.1 / Metrics 0.8.2 graph. An independently incoming lock update
+then selected Metrics 0.8.3; its published Rust source is byte-identical to
+0.8.2. All 16 targets passed again on the held 0.8.3 graph, including PocketIC,
+strict Clippy, Rust 1.88 independent consumers and both package archives.
+A separate Rust 1.88 consumer with direct Host FS 0.16.0 compiles a typed
+match on Backup's public `PersistenceError::Publication` variant. Hosted
+native-macOS acceptance and live product admission remain separate.
 
 Backup [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open for
 full product runner/admission/terminal qualification. Canic #394/#513 remain

@@ -23,7 +23,7 @@
   guidance, stricter tool setup failure retention and the updated change-reporting
   rules. Reprepare contributor Cargo tools with `make install-rust-tools` before
   offline admission; existing tool generations remain retained.
-- Qualify the incoming Metrics 0.8.2 lock selection. Backup's existing diagnostic
+- Qualify the incoming Metrics 0.8.3 lock selection. Backup's existing diagnostic
   summary, aggregate and histogram APIs are unchanged.
 
 ## [0.21.3] - 2026-10-13
