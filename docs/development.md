@@ -257,7 +257,8 @@ directly. Native codes and existing typed error projections stay intact; no loca
 errno wrapper or retry policy is layered over that upstream implementation.
 Restore dependency records and immutable retention transitions belong to model;
 layout exclusion, canonical journal-parent resolution and durable publication
-belong to persistence ops. No reference release or prune API is exposed.
+belong to persistence ops. Guarded restore-reference release requires fresh
+product terminal admission; no prune API is exposed.
 Local download journal identities/transitions and derived resume views belong to
 model; its guard borrows layout exclusion and owns bounded durable updates,
 byte verification and publication reconciliation. Remote download completeness,
