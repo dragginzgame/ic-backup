@@ -3,6 +3,7 @@
 use super::*;
 use crate::{
     model::inventory::{InventoryTargetRecord, InventoryTargetRequest, MAX_INVENTORY_TARGETS},
+    ops::persistence::JournalLock,
     test_support::temp_dir,
 };
 use std::{

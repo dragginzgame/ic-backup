@@ -3,6 +3,7 @@
 use super::*;
 use crate::{
     model::effect_graph::{EffectNodeRecord, EffectNodeRequest, MAX_EFFECT_DEPENDENCIES},
+    ops::persistence::JournalLock,
     test_support::temp_dir,
 };
 use std::{

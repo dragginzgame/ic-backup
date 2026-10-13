@@ -75,11 +75,9 @@ RUST
         --format-version 1 > "$selected/metadata.json" 2> "$selected/preparation.log"
     # A standalone lock may drop unused packages and add this fixture only.
     # Refuse any selected package/version/source absent from the original graph.
-    jq -e --arg consumer "$consumer" --slurpfile original "$fixture/workspace.json" '
-        all(.packages[] | select(.name != $consumer);
-            . as $package | any($original[0].packages[];
-                .name == $package.name and .version == $package.version and .source == $package.source))
-        and all(.packages[]; .name != "ic-testkit" and .name != "pocket-ic")
+    jq -L "$ROOT/scripts/ci" -e --arg consumer "$consumer" --slurpfile original "$fixture/workspace.json" '
+        include "consumer-graph";
+        original_graph_admitted($original[0]; $consumer)
         or error("Independent consumer changed selected packages or retained simulator dependencies")
     ' "$selected/metadata.json" >/dev/null
     CARGO_TARGET_DIR="$ROOT/target" cargo "+$msrv" check --offline --locked \

@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.24.1]
+
+### Testing
+
+- Run the complete native macOS gate once under system Bash 3.2, including
+  Testkit GNU Make routing, with a 90-minute cold-runner budget
+  ([#37](https://github.com/dragginzgame/ic-backup/issues/37)).
+- Share independent consumer dependency-graph admission between the MSRV and
+  package gates; CI invokes the common ShellCheck installer directly.
+
+### Changed
+
+- Share immutable record publication/admission, mutation and upload single-submit
+  acknowledgement handling, and exact inventory-settlement identity checks.
+- Qualify the Host Artifacts, FS and Process 0.17.3 lock selection. Their
+  published Rust source is unchanged from 0.17.2; Backup's public contracts,
+  retained records and effect authority are unchanged.
+- Consolidate no-follow directory traversal for local artifact checksums and
+  staging while retaining the existing durable publication checks.
+
 ## [0.24.0] - 2026-10-13
 
 ### Breaking

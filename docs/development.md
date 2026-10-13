@@ -188,7 +188,7 @@ Prepare the same pinned Linux x86-64 binary explicitly:
 
 ```bash
 source ci/tool-versions.env
-bash scripts/ci/install-shellcheck.sh \
+bash scripts/ci/install-ci-tool.sh shellcheck \
   --version "$SHARED_TOOLING_SHELLCHECK_VERSION" \
   --sha256 "$SHARED_TOOLING_SHELLCHECK_SHA256_LINUX_X86_64" \
   --install-dir "$PWD/.tools/ci/bin"
@@ -816,8 +816,9 @@ reviewed manifest formatter after `source ci/tool-versions.env` with
 then run `make install-hooks` once per clone or after updating the hook contract.
 Setup is explicit; hooks and validation never install tools. CI installs
 the host-specific tooling and uses the same native validation gate on all three
-hosts, with additional system Bash 3.2 tooling checks on macOS. These setup paths
-and configured jobs are not evidence that the pending native macOS runs passed.
+hosts. On macOS the full gate selects system Bash 3.2, including tooling and
+Testkit GNU Make routing checks. These setup paths and configured jobs are not
+evidence that the pending native macOS runs passed.
 
 ## Commands and build ownership
 

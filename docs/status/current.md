@@ -25,19 +25,69 @@
 
 # Current handoff — 2026-10-13
 
-## Pending 0.24.0 Metrics 0.9 adoption
+## Pending 0.24.1 Host 0.17.3 and native CI qualification
 
-Backup 0.23.0 is released at `522793a` / `v0.23.0`. An incoming, unedited
-manifest and lockfile select published Metrics 0.9.0. The draft aligns five
+The incoming `Cargo.lock` selection of Host Artifacts, FS and Process 0.17.3
+has no published Rust-source changes from 0.17.2. The complete 16-target local
+`make ci` gate passes on manifest SHA-256 `34ee27c4` and lockfile SHA-256
+`94b1c218`, including 552 library tests, actual PocketIC/Agent journeys, strict
+Clippy, Rust 1.88 independent consumers and both package archives. The earlier
+0.17.2 graph also passed its complete gate before the incoming lock update.
+This is a compatible lock update with no Backup record or effect-contract change;
+package versions remain 0.24.0. The 0.24.0 hosted run passed Linux. Its Intel
+macOS job exhausted the 45-minute limit while repeating the tooling fixture
+suite under system Bash 3.2, before `make ci` began; Apple Silicon was still
+running at inspection. The consumer CI draft removes that duplicate suite,
+selects `/bin/bash` for the complete macOS `make ci` gate and allows 90 minutes
+for cold macOS setup and validation. The Make gate retains the native Testkit
+FIFO routing, tooling, release and hook checks. `actionlint` passes; exact-source
+hosted native acceptance remains pending. The likely shared IC-tool fixture
+cleanup stall is tracked in [Shared Tooling #164](https://github.com/dragginzgame/shared-tooling/issues/164);
+the exact cause still needs native timing. This compatible workflow change does
+not alter the package contract or authorize a release.
+
+The consolidation shares no-follow Unix entry inspection and
+opened-descriptor type checks between staging/checksum and artifact commit.
+Checksum and copy now use one directory walk; commit still owns fsync order,
+atomic no-replace publication and recovery. The two independent Cargo consumer
+gates share their original-graph/simulator exclusion predicate while retaining
+distinct MSRV and exact unpacked-archive proof. Linux CI calls the existing
+common ShellCheck installer directly; the snapshot-owned forwarding wrapper
+remains selected until Shared Tooling's reviewed 0.11 retirement. Focused
+artifact and artifact-commit tests pass. The complete 16-target `make ci` gate
+passed on that earlier consolidation source and its held 0.17.2 graph,
+including actual PocketIC/Agent journeys, strict Clippy, Rust 1.88 independent
+consumers and both package archives. Hosted native macOS acceptance remains
+pending for this source.
+
+The next consolidation shares the bounded immutable-record filesystem sequence
+for inventory, effect graph and operation plan while preserving their filenames,
+bounds and public errors. Agent mutation and upload providers now share exactly
+one retained single-update acknowledgement sequence, with distinct evidence
+domains and retainer callbacks. Capture and allocation settlements share pure
+identity and explicit new-candidate checks; allocation still checks its separate
+destination rule before admitting an Applied ID. All 552 library tests and strict
+Clippy pass on the current graph. The complete 16-target gate passes with both
+package archives and actual PocketIC/Agent tests. Hosted native macOS acceptance
+remains pending for this source.
+
+## Released 0.24.0 Metrics 0.9 adoption and issue follow-up
+
+Backup 0.24.0 is released at `6227268` / `v0.24.0`. Its manifest and lockfile
+select published Metrics 0.9.0. The release aligns five
 consumer tests with its renamed actual-overflow accessors. Backup reexports
 Metrics summaries, aggregates and histograms, so their Rust type identity changes
-and the pending release is a pre-1.0 minor. These guard-local diagnostics remain
+and this release is a pre-1.0 minor. These guard-local diagnostics remain
 transient and never grant receipt, spending or terminal authority. All six focused
 diagnostics tests and the complete 16-target local `make ci` gate pass on manifest
 SHA-256 `1342c9d7` and lockfile SHA-256 `b312e293`, including strict Clippy,
 Rust 1.88 independent consumers, both package archives and actual PocketIC/Agent
-journeys. The released-source 0.23.0 hosted CI is queued; matching native-macOS
-acceptance for this draft remains separate.
+journeys. The exact 0.24.0 [hosted run](https://github.com/dragginzgame/ic-backup/actions/runs/38396225540)
+passed Linux; the later native-job state is recorded above. Earlier main-push runs
+were cancelled by the required workflow/ref concurrency policy, so they do not
+establish exact-source native acceptance for the still-open host issues. The
+later Host 0.17.2 local qualification is described above and is separate from
+the delivered 0.24.0 gate.
 
 ## Released 0.23.0 Host 0.17.1 and Shared Tooling 0.10.0 adoption
 

@@ -61,12 +61,11 @@ cp "$fixture/original.lock" "$fixture/consumer/Cargo.lock"
 # Strict admission forbids registry fallback or any new dependency selection.
 cargo metadata --offline --manifest-path "$fixture/consumer/Cargo.toml" \
     --format-version 1 > "$fixture/consumer/metadata.json"
-jq -e --arg unpacked "$fixture/unpacked" --arg version "$version" \
+jq -L "$ROOT/scripts/ci" -e --arg consumer ic-backup-package-consumer \
+    --arg unpacked "$fixture/unpacked" --arg version "$version" \
     --slurpfile original "$fixture/original.json" '
-    all(.packages[] | select(.name != "ic-backup-package-consumer");
-        . as $p | any($original[0].packages[];
-            .name == $p.name and .version == $p.version and .source == $p.source))
-    and all(.packages[]; .name != "ic-testkit" and .name != "pocket-ic")
+    include "consumer-graph";
+    original_graph_admitted($original[0]; $consumer)
     and ([.packages[] | select(.name == "ic-backup" or .name == "ic-backup-agent")]
         | length == 2 and all(.[];
             .source == null and .version == $version

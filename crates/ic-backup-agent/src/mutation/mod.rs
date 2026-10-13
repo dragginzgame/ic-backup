@@ -1,12 +1,13 @@
 //! Async mutation port over the existing exact single-update transport.
 
-use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
+use crate::{
+    AgentTransport, PreparedUpdate, ReservedUpdate,
+    acknowledgement::{self, AcknowledgementIdentity},
+};
 use ic_backup::{
     model::{
         attempt_journal::AttemptJournalRecord,
-        ic_mutation::{
-            IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
-        },
+        ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
     },
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
 };
@@ -46,35 +47,18 @@ where
         request: &IcMutationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        let prepared = self
-            .transport
-            .prepare(ReservedUpdate::Mutation(request), journal)
-            .map_err(|_| IcMutationProviderError::Unsupported)?;
-        (self.retain)(request, &prepared)?;
-        let outcome = prepared
-            .submit()
-            .await
-            .map_err(|_| IcMutationProviderError::Indeterminate)?;
-        let UpdateOutcome::Replied { request_id, reply } = outcome else {
-            return Err(IcMutationProviderError::Indeterminate);
-        };
-        // Fixed-size passive evidence binds original authority, ingress and raw reply.
-        // It is not an Applied receipt or independent application attribution.
-        let evidence = crate::reply_evidence::reply_evidence(
-            b"ic-backup-agent.mutation-reply.v1\0",
-            &request.authority().digest(),
-            &[request.mutation_attempt()],
-            &request_id,
-            &reply,
-        );
-        IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: self.transport.context.clone(),
-            target: request.payload().target().into(),
-            reply,
-            evidence,
-        })
-        .map_err(|_| IcMutationProviderError::Indeterminate)
+        acknowledgement::submit_acknowledged(
+            self.transport,
+            ReservedUpdate::Mutation(request),
+            journal,
+            |prepared| (self.retain)(request, prepared),
+            AcknowledgementIdentity {
+                domain: b"ic-backup-agent.mutation-reply.v1\0",
+                authority: &request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                target: request.payload().target(),
+            },
+        )
+        .await
     }
 }

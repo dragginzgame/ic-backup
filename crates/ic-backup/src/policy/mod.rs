@@ -15,6 +15,7 @@ pub mod ic_snapshot_transfer_read;
 pub mod ic_snapshot_upload;
 pub mod ic_snapshot_upload_data_observation;
 pub mod ic_snapshot_upload_observation;
+mod inventory_settlement;
 pub mod local_restore_source;
 pub mod membership;
 pub mod restore_safety;

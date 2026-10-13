@@ -14,7 +14,12 @@ use crate::{
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
     },
-    policy::snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories},
+    policy::{
+        inventory_settlement::{
+            InventorySettlementIdentity, InventorySettlementMismatch, new_candidate_index,
+        },
+        snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories},
+    },
 };
 use thiserror::Error;
 
@@ -93,38 +98,31 @@ pub fn validate_capture_settlement<'a>(
         return Err(IcCaptureSettlementError::UnsupportedMethod);
     };
     let candidates = compare_inventories(request.mutation().target(), baseline, inventory)?;
-    if settlement.authority != request.authority().digest() {
-        return Err(IcCaptureSettlementError::AuthorityMismatch);
+    let authority = request.authority().digest();
+    let baseline_digest = baseline.digest();
+    let inventory_digest = inventory.digest();
+    InventorySettlementIdentity {
+        authority: &settlement.authority,
+        mutation_attempt: settlement.mutation_attempt,
+        observation_attempt: settlement.observation_attempt,
+        challenge: &settlement.challenge,
+        baseline: &settlement.baseline,
+        inventory: &settlement.inventory,
+        observation_evidence: &settlement.observation_evidence,
     }
-    if settlement.mutation_attempt != request.mutation_attempt()
-        || settlement.observation_attempt != request.observation_attempt()
-    {
-        return Err(IcCaptureSettlementError::AttemptMismatch);
-    }
-    if &settlement.challenge != challenge {
-        return Err(IcCaptureSettlementError::ChallengeMismatch);
-    }
-    if settlement.baseline != baseline.digest() {
-        return Err(IcCaptureSettlementError::BaselineMismatch);
-    }
-    if settlement.inventory != inventory.digest() {
-        return Err(IcCaptureSettlementError::InventoryMismatch);
-    }
-    if settlement.observation_evidence != response.input().evidence {
-        return Err(IcCaptureSettlementError::ObservationEvidenceMismatch);
-    }
+    .compare(&InventorySettlementIdentity {
+        authority: &authority,
+        mutation_attempt: request.mutation_attempt(),
+        observation_attempt: request.observation_attempt(),
+        challenge,
+        baseline: &baseline_digest,
+        inventory: &inventory_digest,
+        observation_evidence: &response.input().evidence,
+    })?;
     let (outcome, captured_snapshot) = match &settlement.attribution {
         IcCaptureAttribution::Applied { snapshot_id, .. } => {
-            if !candidates
-                .iter()
-                .any(|snapshot| snapshot.id() == snapshot_id)
-            {
-                return Err(IcCaptureSettlementError::NotNewCandidate);
-            }
-            let index = inventory
-                .snapshots()
-                .binary_search_by(|snapshot| snapshot.id().cmp(snapshot_id.as_slice()))
-                .map_err(|_| IcCaptureSettlementError::NotNewCandidate)?;
+            let index = new_candidate_index(inventory, &candidates, snapshot_id)
+                .ok_or(IcCaptureSettlementError::NotNewCandidate)?;
             (ObservationOutcomeRecord::Applied, Some(index))
         }
         IcCaptureAttribution::NotApplied { .. } => (ObservationOutcomeRecord::NotApplied, None),
@@ -172,6 +170,19 @@ pub enum IcCaptureSettlementError {
     /// The attributed raw ID is not a bounded new candidate in the current inventory.
     #[error("capture settlement ID is not a new candidate")]
     NotNewCandidate,
+}
+
+impl From<InventorySettlementMismatch> for IcCaptureSettlementError {
+    fn from(value: InventorySettlementMismatch) -> Self {
+        match value {
+            InventorySettlementMismatch::Authority => Self::AuthorityMismatch,
+            InventorySettlementMismatch::Attempt => Self::AttemptMismatch,
+            InventorySettlementMismatch::Challenge => Self::ChallengeMismatch,
+            InventorySettlementMismatch::Baseline => Self::BaselineMismatch,
+            InventorySettlementMismatch::Inventory => Self::InventoryMismatch,
+            InventorySettlementMismatch::ObservationEvidence => Self::ObservationEvidenceMismatch,
+        }
+    }
 }
 
 #[cfg(test)]

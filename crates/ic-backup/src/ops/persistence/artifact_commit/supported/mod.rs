@@ -4,7 +4,7 @@ use super::ArtifactCommitOutcome;
 use crate::{
     model::artifacts::ArtifactChecksumRecord,
     ops::{
-        artifacts::{ArtifactError, checksum_reader, checksum_relative_files},
+        artifacts::{ArtifactError, checksum_reader, checksum_relative_files, descriptor},
         persistence::PersistenceError,
     },
 };
@@ -19,7 +19,7 @@ use std::{
 
 use rustix::{
     fd::{AsFd, OwnedFd},
-    fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags, RenameFlags},
+    fs::{self as unix_fs, Dir, FileType, Mode, OFlags, RenameFlags},
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -166,12 +166,10 @@ fn sync_directory(
         }
         let relative_path = relative_directory.join(name);
         let display_path = display_root.join(&relative_path);
-        let observed = unix_fs::statat(directory_fd, entry.file_name(), AtFlags::SYMLINK_NOFOLLOW)
-            .map_err(io::Error::from)?;
-        let observed_type = FileType::from_raw_mode(observed.st_mode);
+        let observed_type = descriptor::entry_type(directory_fd, entry.file_name())?;
         match observed_type {
             FileType::RegularFile => {
-                let child_fd = open_child(directory_fd, entry.file_name())?;
+                let child_fd = descriptor::open_child(directory_fd, entry.file_name(), false)?;
                 ensure_opened_type(&child_fd, FileType::RegularFile, &display_path)?;
                 let mut file = File::from(child_fd);
                 at_step(ArtifactCommitStep::RegularFileSync, &display_path)?;
@@ -180,7 +178,7 @@ fn sync_directory(
                 checksums.push((relative_path, checksum_reader(&mut file)?));
             }
             FileType::Directory => {
-                let child_fd = open_child(directory_fd, entry.file_name())?;
+                let child_fd = descriptor::open_child(directory_fd, entry.file_name(), false)?;
                 ensure_opened_type(&child_fd, FileType::Directory, &display_path)?;
                 sync_directory(&child_fd, &relative_path, display_root, checksums, at_step)?;
             }
@@ -204,23 +202,12 @@ fn sync_directory(
     Ok(())
 }
 
-fn open_child(parent: &impl AsFd, name: &std::ffi::CStr) -> io::Result<OwnedFd> {
-    unix_fs::openat(
-        parent,
-        name,
-        OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
-        Mode::empty(),
-    )
-    .map_err(io::Error::from)
-}
-
 fn ensure_opened_type(
     fd: &impl AsFd,
     expected: FileType,
     path: &Path,
 ) -> Result<(), PersistenceError> {
-    let opened = unix_fs::fstat(fd).map_err(io::Error::from)?;
-    let actual = FileType::from_raw_mode(opened.st_mode);
+    let actual = descriptor::opened_type(fd)?;
     if actual == expected {
         Ok(())
     } else {

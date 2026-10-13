@@ -11,6 +11,7 @@ use crate::{
             PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest, tests::request,
         },
     },
+    ops::persistence::JournalLock,
     test_support::temp_dir,
 };
 use std::{

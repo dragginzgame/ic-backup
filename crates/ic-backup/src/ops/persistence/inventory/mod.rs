@@ -1,10 +1,6 @@
 //! Immutable bounded inventory publication and exact local declared-identity admission.
 
-use super::json::check_json_size;
-use super::{
-    BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
-    read_json,
-};
+use super::{BackupLayoutGuard, JournalLockError, PersistenceError, immutable_record};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     inventory::{InventoryRecord, MAX_INVENTORY_BYTES},
@@ -19,12 +15,7 @@ pub fn create_inventory(
     layout: &BackupLayoutGuard,
     record: &InventoryRecord,
 ) -> Result<(), InventoryError> {
-    layout.check_root()?;
-    let path = layout.root().join("inventory.json");
-    let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_INVENTORY_BYTES)?;
-    create_json_durable(&path, record)?;
-    Ok(())
+    immutable_record::create(layout, "inventory.json", MAX_INVENTORY_BYTES, record)
 }
 
 /// Read bounded validated local inventory under its original expected canonical digest.
@@ -38,15 +29,13 @@ pub fn read_inventory(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<InventoryRecord, InventoryError> {
-    layout.check_root()?;
-    let path = layout.root().join("inventory.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: InventoryRecord = read_json(&path, MAX_INVENTORY_BYTES)?;
-    check_json_size(&record, MAX_INVENTORY_BYTES)?;
-    if &record.digest() != expected {
-        return Err(InventoryError::DigestMismatch);
-    }
-    Ok(record)
+    immutable_record::read(
+        layout,
+        "inventory.json",
+        MAX_INVENTORY_BYTES,
+        |record: &InventoryRecord| &record.digest() == expected,
+        || InventoryError::DigestMismatch,
+    )
 }
 
 /// Typed exact declared-identity or durable local inventory admission failure.

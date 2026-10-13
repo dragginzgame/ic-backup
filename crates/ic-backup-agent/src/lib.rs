@@ -7,6 +7,7 @@
 
 mod fence_acquisition;
 pub use fence_acquisition::AgentFenceAcquisitionProvider;
+mod acknowledgement;
 mod observation;
 mod reply_evidence;
 pub use observation::AgentObservationProvider;

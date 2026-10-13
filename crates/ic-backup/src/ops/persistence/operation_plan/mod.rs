@@ -1,10 +1,6 @@
 //! Immutable bounded operation plan publication and original local intent admission.
 
-use super::json::check_json_size;
-use super::{
-    BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
-    read_json,
-};
+use super::{BackupLayoutGuard, JournalLockError, PersistenceError, immutable_record};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     operation_plan::{MAX_OPERATION_PLAN_BYTES, OperationPlanRecord},
@@ -22,12 +18,12 @@ pub fn create_operation_plan(
     layout: &BackupLayoutGuard,
     record: &OperationPlanRecord,
 ) -> Result<(), OperationPlanPersistenceError> {
-    layout.check_root()?;
-    let path = layout.root().join("operation-plan.json");
-    let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_OPERATION_PLAN_BYTES)?;
-    create_json_durable(&path, record)?;
-    Ok(())
+    immutable_record::create(
+        layout,
+        "operation-plan.json",
+        MAX_OPERATION_PLAN_BYTES,
+        record,
+    )
 }
 
 /// Admit bounded validated local plan under its exact original expected intent digest.
@@ -41,15 +37,13 @@ pub fn read_operation_plan(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<OperationPlanRecord, OperationPlanPersistenceError> {
-    layout.check_root()?;
-    let path = layout.root().join("operation-plan.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: OperationPlanRecord = read_json(&path, MAX_OPERATION_PLAN_BYTES)?;
-    check_json_size(&record, MAX_OPERATION_PLAN_BYTES)?;
-    if &record.digest() != expected {
-        return Err(OperationPlanPersistenceError::DigestMismatch);
-    }
-    Ok(record)
+    immutable_record::read(
+        layout,
+        "operation-plan.json",
+        MAX_OPERATION_PLAN_BYTES,
+        |record: &OperationPlanRecord| &record.digest() == expected,
+        || OperationPlanPersistenceError::DigestMismatch,
+    )
 }
 
 /// Typed original operation-plan identity or bounded immutable local admission failure.

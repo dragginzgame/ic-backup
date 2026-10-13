@@ -1,10 +1,6 @@
 //! Immutable bounded graph publication and exact original local graph admission.
 
-use super::json::check_json_size;
-use super::{
-    BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
-    read_json,
-};
+use super::{BackupLayoutGuard, JournalLockError, PersistenceError, immutable_record};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     effect_graph::{EffectGraphRecord, MAX_EFFECT_GRAPH_BYTES},
@@ -19,12 +15,7 @@ pub fn create_effect_graph(
     layout: &BackupLayoutGuard,
     record: &EffectGraphRecord,
 ) -> Result<(), EffectGraphPersistenceError> {
-    layout.check_root()?;
-    let path = layout.root().join("effect-graph.json");
-    let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_EFFECT_GRAPH_BYTES)?;
-    create_json_durable(&path, record)?;
-    Ok(())
+    immutable_record::create(layout, "effect-graph.json", MAX_EFFECT_GRAPH_BYTES, record)
 }
 
 /// Admit retained bounded graph under its original exact expected digest, using local IO only.
@@ -38,15 +29,13 @@ pub fn read_effect_graph(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<EffectGraphRecord, EffectGraphPersistenceError> {
-    layout.check_root()?;
-    let path = layout.root().join("effect-graph.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: EffectGraphRecord = read_json(&path, MAX_EFFECT_GRAPH_BYTES)?;
-    check_json_size(&record, MAX_EFFECT_GRAPH_BYTES)?;
-    if &record.digest() != expected {
-        return Err(EffectGraphPersistenceError::DigestMismatch);
-    }
-    Ok(record)
+    immutable_record::read(
+        layout,
+        "effect-graph.json",
+        MAX_EFFECT_GRAPH_BYTES,
+        |record: &EffectGraphRecord| &record.digest() == expected,
+        || EffectGraphPersistenceError::DigestMismatch,
+    )
 }
 
 /// Typed declared graph identity or immutable local persistence rejection.

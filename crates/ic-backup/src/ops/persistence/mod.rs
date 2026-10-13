@@ -11,6 +11,7 @@ mod execution_settlement;
 mod execution_workflow;
 mod fence_obligation;
 mod file_lock;
+mod immutable_record;
 mod inventory;
 mod journal_lock;
 mod json;

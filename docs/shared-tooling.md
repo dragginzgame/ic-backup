@@ -1385,7 +1385,7 @@ fixture failures do not alter the parent's retained logs or reported results.
 These native tool checks establish no IC behavior. The shared host matrix
 describes upstream evidence; [the consumer matrix](development.md#supported-host-scope)
 requires macOS 15 on Apple Silicon and Intel alongside Linux. CI covers those
-three hosts and separately invokes consumer checks with macOS system Bash 3.2.
+three hosts and runs the full consumer gate with macOS system Bash 3.2.
 Passing native macOS evidence remains pending; Linux checks and configured jobs
 alone cannot qualify it. Local release/hook regressions use portable SHA-256
 selection and Perl editing; the refreshed verifier handles empty Bash 3.2 arrays.

@@ -2,7 +2,7 @@
 
 use super::{ArtifactChecksumRecord, ArtifactError, ExpectedArtifactType};
 use crate::ops::artifacts::{
-    checksum_reader, checksum_relative_files, copy_from_reader, require_utf8_tree_name,
+    checksum_reader, checksum_relative_files, copy_from_reader, descriptor, require_utf8_tree_name,
 };
 
 use std::{
@@ -17,7 +17,7 @@ use std::{
 
 use rustix::{
     fd::{AsFd, OwnedFd},
-    fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags},
+    fs::{self as unix_fs, Dir, FileType, Mode, OFlags},
 };
 
 pub(super) fn checksum_path(
@@ -62,7 +62,12 @@ pub(super) fn stage_relative_path(
         FileType::RegularFile => copy_file(&artifact, destination),
         FileType::Directory => {
             create_private_directory(destination)?;
-            copy_directory(&artifact, Path::new(""), relative, destination)
+            directory_checksum(
+                &artifact,
+                Path::new(""),
+                relative,
+                DirectoryAction::CopyTo(destination),
+            )
         }
         kind => Err(unsupported_entry(relative, kind)),
     }
@@ -112,30 +117,44 @@ fn checksum_opened(
             let mut file = File::from(artifact.try_clone()?);
             checksum_reader(&mut file)
         }
-        FileType::Directory => checksum_directory(artifact, Path::new(""), display_path),
+        FileType::Directory => directory_checksum(
+            artifact,
+            Path::new(""),
+            display_path,
+            DirectoryAction::Checksum,
+        ),
         kind => Err(unsupported_entry(display_path, kind)),
     }
 }
 
-fn checksum_directory(
+#[derive(Clone, Copy)]
+enum DirectoryAction<'a> {
+    Checksum,
+    CopyTo(&'a Path),
+}
+
+fn directory_checksum(
     directory_fd: &OwnedFd,
     relative_directory: &Path,
     display_root: &Path,
+    action: DirectoryAction<'_>,
 ) -> Result<ArtifactChecksumRecord, ArtifactError> {
     let mut checksums = Vec::new();
-    collect_directory_checksums(
+    collect_directory_entries(
         directory_fd,
         relative_directory,
         display_root,
+        action,
         &mut checksums,
     )?;
     checksum_relative_files(checksums).map_err(ArtifactError::from)
 }
 
-fn collect_directory_checksums(
+fn collect_directory_entries(
     directory_fd: &OwnedFd,
     relative_directory: &Path,
     display_root: &Path,
+    action: DirectoryAction<'_>,
     checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
 ) -> Result<(), ArtifactError> {
     let mut directory = Dir::read_from(directory_fd).map_err(std::io::Error::from)?;
@@ -149,79 +168,26 @@ fn collect_directory_checksums(
         require_utf8_tree_name(name, display_root)?;
         let relative_path = relative_directory.join(name);
         let display_path = display_root.join(&relative_path);
-        let kind = entry_type(directory_fd, entry.file_name())?;
+        let kind = descriptor::entry_type(directory_fd, entry.file_name())?;
         match kind {
             FileType::RegularFile => {
-                let child = open_child(directory_fd, entry.file_name(), false)?;
+                let child = descriptor::open_child(directory_fd, entry.file_name(), false)?;
                 ensure_opened_type(&child, FileType::RegularFile, &display_path)?;
-                let mut file = File::from(child);
-                checksums.push((relative_path, checksum_reader(&mut file)?));
+                let checksum = match action {
+                    DirectoryAction::Checksum => checksum_reader(&mut File::from(child))?,
+                    DirectoryAction::CopyTo(destination_root) => {
+                        copy_file(&child, &destination_root.join(&relative_path))?
+                    }
+                };
+                checksums.push((relative_path, checksum));
             }
             FileType::Directory => {
-                let child = open_child(directory_fd, entry.file_name(), true)?;
+                let child = descriptor::open_child(directory_fd, entry.file_name(), true)?;
                 ensure_opened_type(&child, FileType::Directory, &display_path)?;
-                collect_directory_checksums(&child, &relative_path, display_root, checksums)?;
-            }
-            kind => return Err(unsupported_entry(&display_path, kind)),
-        }
-    }
-    Ok(())
-}
-
-fn copy_directory(
-    directory_fd: &OwnedFd,
-    relative_directory: &Path,
-    display_root: &Path,
-    destination_root: &Path,
-) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    let mut checksums = Vec::new();
-    copy_directory_entries(
-        directory_fd,
-        relative_directory,
-        display_root,
-        destination_root,
-        &mut checksums,
-    )?;
-    checksum_relative_files(checksums).map_err(ArtifactError::from)
-}
-
-fn copy_directory_entries(
-    directory_fd: &OwnedFd,
-    relative_directory: &Path,
-    display_root: &Path,
-    destination_root: &Path,
-    checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
-) -> Result<(), ArtifactError> {
-    let mut directory = Dir::read_from(directory_fd).map_err(std::io::Error::from)?;
-    while let Some(entry) = directory.read() {
-        let entry = entry.map_err(std::io::Error::from)?;
-        let name_bytes = entry.file_name().to_bytes();
-        if matches!(name_bytes, b"." | b"..") {
-            continue;
-        }
-        let name = OsStr::from_bytes(name_bytes);
-        require_utf8_tree_name(name, display_root)?;
-        let relative_path = relative_directory.join(name);
-        let display_path = display_root.join(&relative_path);
-        let destination = destination_root.join(&relative_path);
-        let kind = entry_type(directory_fd, entry.file_name())?;
-        match kind {
-            FileType::RegularFile => {
-                let child = open_child(directory_fd, entry.file_name(), false)?;
-                ensure_opened_type(&child, FileType::RegularFile, &display_path)?;
-                checksums.push((relative_path, copy_file(&child, &destination)?));
-            }
-            FileType::Directory => {
-                let child = open_child(directory_fd, entry.file_name(), true)?;
-                ensure_opened_type(&child, FileType::Directory, &display_path)?;
-                create_private_directory(&destination)?;
-                copy_directory_entries(
-                    &child,
-                    &relative_path,
-                    display_root,
-                    destination_root,
-                    checksums,
-                )?;
+                if let DirectoryAction::CopyTo(destination_root) = action {
+                    create_private_directory(&destination_root.join(&relative_path))?;
+                }
+                collect_directory_entries(&child, &relative_path, display_root, action, checksums)?;
             }
             kind => return Err(unsupported_entry(&display_path, kind)),
         }
@@ -247,33 +213,12 @@ fn create_private_directory(path: &Path) -> Result<(), ArtifactError> {
     Ok(())
 }
 
-fn entry_type(parent: &impl AsFd, name: &std::ffi::CStr) -> Result<FileType, ArtifactError> {
-    let metadata =
-        unix_fs::statat(parent, name, AtFlags::SYMLINK_NOFOLLOW).map_err(std::io::Error::from)?;
-    Ok(FileType::from_raw_mode(metadata.st_mode))
-}
-
-fn open_child(
-    parent: &impl AsFd,
-    name: &std::ffi::CStr,
-    directory: bool,
-) -> Result<OwnedFd, ArtifactError> {
-    let mut flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
-    if directory {
-        flags |= OFlags::DIRECTORY;
-    }
-    unix_fs::openat(parent, name, flags, Mode::empty())
-        .map_err(std::io::Error::from)
-        .map_err(ArtifactError::from)
-}
-
 fn ensure_opened_type(
     fd: &impl AsFd,
     expected: FileType,
     path: &Path,
 ) -> Result<(), ArtifactError> {
-    let metadata = unix_fs::fstat(fd).map_err(std::io::Error::from)?;
-    let actual = FileType::from_raw_mode(metadata.st_mode);
+    let actual = descriptor::opened_type(fd)?;
     if actual == expected {
         Ok(())
     } else {
