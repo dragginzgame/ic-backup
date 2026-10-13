@@ -30,9 +30,11 @@ CLOCK
 chmod +x "$FIXTURE/bin/date"
 export PATH="$FIXTURE/bin:$PATH"
 export MAINTENANCE_TEST_TRACE="$FIXTURE/trace"
+export MAINTENANCE_TEST_CALLS="$FIXTURE/calls"
 cat > "$FIXTURE/codex" <<'CLI'
 #!/usr/bin/env bash
 set -euo pipefail
+printf '%s\n' "$*" >> "$MAINTENANCE_TEST_CALLS"
 case "$*" in
     --version) echo 'codex-cli fixture'; exit 0 ;;
     'exec --help') echo '--approve-for-me'; exit 0 ;;
@@ -55,6 +57,40 @@ projects="$FIXTURE/projects with spaces"
 state="$FIXTURE/state with spaces"
 bash "$runner" --check "$projects" "$state" > "$FIXTURE/check.log"
 [[ ! -e "$MAINTENANCE_TEST_TRACE" && ! -e "$state/runs" ]] || exit 1
+# Bad literal or physical directory names must not probe the CLI, consume an
+# interval or create state, even when a future state root does not exist yet.
+cp "$MAINTENANCE_TEST_CALLS" "$FIXTURE/expected-calls"
+for suffix in $'\n' $'\r'; do
+    bad="$FIXTURE/bad$suffix"
+    mkdir "$bad"
+    printf 'preserved timestamp\n' > "$bad/last-attempt"
+    printf 'preserved report\n' > "$bad/report.md"
+    ln -s "$bad" "$FIXTURE/alias"
+    for mode in --check --run --if-due; do
+        for input in "$bad" "$FIXTURE/alias"; do
+            if bash "$runner" "$mode" "$input" "$state" > "$FIXTURE/path.log" 2>&1; then exit 1; fi
+            grep -F 'contains CR/LF' "$FIXTURE/path.log"
+            for target in "$input" "$input/new/nested"; do
+                if bash "$runner" "$mode" "$projects" "$target" > "$FIXTURE/path.log" 2>&1; then exit 1; fi
+                grep -F 'contains CR/LF' "$FIXTURE/path.log"
+            done
+        done
+    done
+    # Also reject an invalid runner checkout reached through an ordinary alias.
+    mkdir -p "$bad/scripts/dev"
+    cp "$runner" "$bad/scripts/dev/run-maintenance.sh"
+    if bash "$FIXTURE/alias/scripts/dev/run-maintenance.sh" --check "$projects" "$state" > "$FIXTURE/path.log" 2>&1; then exit 1; fi
+    grep -F 'contains CR/LF' "$FIXTURE/path.log"
+    cmp "$MAINTENANCE_TEST_CALLS" "$FIXTURE/expected-calls"
+    [[ ! -e "$state/runs" && ! -e "$state/last-attempt" && ! -e "$bad/runs" && ! -e "$bad/new" &&
+        "$(cat "$bad/last-attempt")" == 'preserved timestamp' && "$(cat "$bad/report.md")" == 'preserved report' ]] || exit 1
+    rm "$FIXTURE/alias"
+done
+# Normal aliases and spaces remain supported, including new state descendants.
+ln -s "$projects" "$FIXTURE/projects-alias"
+ln -s "$state" "$FIXTURE/state-alias"
+bash "$runner" --check "$FIXTURE/projects-alias" "$FIXTURE/state-alias/new/nested" > "$FIXTURE/alias-check.log"
+[[ ! -e "$state/new" ]] || exit 1
 bash "$runner" --if-due "$projects" "$state" > "$FIXTURE/first.log"
 set -- "$state"/runs/*
 first="$1"

@@ -25,14 +25,43 @@
 
 # Current handoff — 2026-10-13
 
-## Pending 0.22.0 Host 0.16 and Shared Tooling 0.9.13 adoption
+## Pending 0.23.0 terminal-byte recheck and incoming dependency graph
 
-Released Backup 0.21.3 is `150ef87` at `v0.21.3` and local `origin/main`.
-It includes guarded restore-reference release and the PocketIC learned-edge
-qualification. The released source still needs matching hosted native-macOS
-acceptance, and Canic needs its own product terminal provider and adapter.
+Backup 0.22.0 is released at `d7e93c9` / `v0.22.0`. The pending 0.23.0
+draft replaces the guarded restore-reference release's journal digest comparison
+with direct byte-for-byte comparison of the fresh bounded read against the exact
+bytes admitted by the product validator. Changed bytes still refuse before
+reference publication; original command custody and effect authority are unchanged.
+All six focused guarded-release tests passed on the earlier Metrics 0.8.4
+graph. Full CI on the current graph is pending.
 
-The draft retains the read-only projection of the exact Applied
+Incoming, unedited manifest and lockfile changes select Host Artifacts/FS 0.17.1,
+Testkit 0.37, Metrics 0.8.4 and `rustls-native-certs` 0.8.5. Host's public
+publication-error type identity makes this a pre-1.0 minor draft. Metrics moves
+a private mean helper without changing public arithmetic; the TLS package
+deduplicates Unix certificate directory entries by file identity. Full CI
+stopped when the manifest and lockfile changed during its input check; the
+selected Testkit CLI also needs explicit local setup. This exact graph remains
+unqualified. Canic's product adapter, complete runner and hosted native-macOS
+acceptance remain separate.
+Host 0.17.1 changes only upstream test fixture code relative to 0.17.0;
+the previously reviewed 0.17 production implementation is unchanged.
+
+The reviewed Shared Tooling 0.10.0 snapshot at `ed9c26f` now owns the unchanged
+common host/Cargo and IC executable catalogs. Its 108-file canonical export
+passed integrity verification. Local catalog duplication in the tooling fixture
+is removed. `make tooling-check`, `make shell-check`, `make fmt-check`,
+`make check-doc-links` and the offline common host/IC/Rust tool checks pass.
+The full product gate on the incoming Host/Testkit graph remains pending.
+
+## Released 0.22.0 Host 0.16 and Shared Tooling 0.9.13 adoption
+
+The 0.22.0 release builds on Backup 0.21.3 at `150ef87` / `v0.21.3`, which
+introduced guarded restore-reference release and PocketIC learned-edge
+qualification. Matching hosted native-macOS acceptance remains separate, and
+Canic needs its own product terminal provider and adapter.
+
+The release retains the read-only projection of the exact Applied
 attempt receipt. It identifies direct mutation versus separately budgeted
 observation evidence, including the receipt attempt and observation request.
 Pending, NotApplied and Uncertain history yield no Applied receipt. The v1

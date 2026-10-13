@@ -2,7 +2,8 @@
 
 use super::*;
 use crate::{
-    model::command_custody::CommandCustodyRecord, ops::persistence::CommandLifetimeLock,
+    model::{artifacts::ArtifactChecksumRecord, command_custody::CommandCustodyRecord},
+    ops::persistence::CommandLifetimeLock,
     test_support::temp_dir,
 };
 use serde::{Deserialize, Serialize};

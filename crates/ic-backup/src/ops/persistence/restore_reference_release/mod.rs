@@ -1,10 +1,7 @@
 //! Release exact source dependencies under terminal journal and command custody.
 
 use crate::{
-    model::{
-        artifacts::ArtifactChecksumRecord, effect_graph::MAX_EFFECT_OPERATIONS,
-        restore_references::RestoreReferenceRecord,
-    },
+    model::{effect_graph::MAX_EFFECT_OPERATIONS, restore_references::RestoreReferenceRecord},
     ops::persistence::{
         BackupLayoutGuard, CommandLifetimeLockError, CommandQuiescenceGuard, JournalLock,
         PersistenceError, write_json_durable,
@@ -89,9 +86,7 @@ impl BackupLayoutGuard {
             .release(&reference)
             .map_err(PersistenceError::from)?;
         // The validator may perform product reads; preserve the exact bytes it admitted.
-        if ArtifactChecksumRecord::from_bytes(&read_terminal(journal)?)
-            != ArtifactChecksumRecord::from_bytes(&bytes)
-        {
+        if read_terminal(journal)? != bytes {
             return Err(RestoreReferenceReleaseError::JournalChanged);
         }
         self.check_root()?;

@@ -70,7 +70,7 @@ make check
 make test
 ```
 
-Explicit local setup uses the reviewed [host pins](../ci/tool-versions.env)
+Explicit local setup uses the snapshot-owned [host and Cargo pins](../ci/tool-versions.env)
 and [IC tool matrix](../ci/ic-tools.tsv), through the shared
 [common Make entrypoint](../make/consumer.mk). It downloads and verifies jq/yq, ripgrep with
 PCRE2, cloc and the five IC executables, followed by Cargo-sort, Cargo-sort-derives

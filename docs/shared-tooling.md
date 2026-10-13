@@ -49,7 +49,19 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 107-file snapshot selects clean committed Shared Tooling 0.9.13 at
+The current 108-file snapshot selects clean committed Shared Tooling 0.10.0 at
+`ed9c26f015691859f67b50b512a94709dcdc0c6c`, matching the sibling's
+`origin/main`. The reviewed common host/Cargo and five IC executable selections
+match Backup's former local catalogs exactly. Both catalogs are now immutable
+snapshot companions, and common Make, standalone installers, formatter checks,
+freshness inspection and the evidence action select those files. Backup retains
+compiler, product dependencies and Testkit/PocketIC selection locally. No tool
+version or digest changed; explicit setup and native consumer qualification remain
+separate from the snapshot refresh.
+
+### Prior Shared Tooling 0.9.13 review
+
+The earlier 107-file snapshot selected clean committed Shared Tooling 0.9.13 at
 `35cad65677ff989b5fb24a88d947fda37d2366e8`. The canonical preview
 adds the directly referenced `rules/change-reporting.md` and the required
 Cargo-tool cache-key helper. The new baseline requires scoped change metrics
@@ -692,10 +704,10 @@ its existing collection roots, pinned uploader and retention policy.
 [The repair review](reports/audits/2026/10/08/tooling-companions/01/report.md)
 keeps the failure and corrected results separate from earlier focused evidence.
 
-## Consumer-owned IC pins
+## Shared IC pin history
 
-The current matrix is consumer-owned and outside the immutable snapshot. It
-contains exactly the five shared executables. Binaryen now selects the committed
+Before 0.10.0, the matrix was consumer-owned and outside the immutable snapshot. It
+contained exactly the five shared executables. Binaryen selected the committed
 133 archive hashes across Linux x86-64, Intel macOS and Apple Silicon macOS; the
 other four tool rows retain their earlier pins. Testkit owns
 PocketIC pins and assets; no server row or duplicate client/server policy remains.

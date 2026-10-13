@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.23.0]
+
+### Breaking
+
+- Select IC Host Artifacts and FS 0.17.1. `PersistenceError::Publication`
+  contains Host FS 0.17's `NamedWriteError` Rust type; consumers with direct
+  Host dependencies or typed error matches must align to 0.17. Persisted
+  backup records are unchanged.
+
+### Fixed
+
+- Recheck the exact terminal journal bytes before guarded restore-reference
+  release. Changed bytes keep the original reference and command evidence
+  retained ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
+### Changed
+
+- Select Testkit 0.37.0, Metrics 0.8.4 and `rustls-native-certs` 0.8.5.
+  Backup's public metrics types and transport configuration are unchanged.
+- Adopt Shared Tooling 0.10.0's snapshot-owned common tool catalogs. Existing
+  executable versions and digests remain selected; contributor setup now reads
+  those catalogs from the reviewed snapshot.
+
 ## [0.22.0] - 2026-10-13
 
 ### Breaking

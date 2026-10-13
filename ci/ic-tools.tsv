@@ -1,6 +1,6 @@
 # tool	version	host	archive_sha256
-# Consumer-owned matrix. Original official digests reviewed 2026-10-06. PocketIC is owned by Testkit.
-# See docs/shared-tooling.md#consumer-owned-ic-pins and docs/ic-tools.md.
+# Official GitHub release asset digests, reviewed 2026-10-06. See docs/ic-tools.md.
+# Binaryen 133 archives verified on all three host mappings, 2026-10-10.
 quill	0.5.4	linux-x86_64	73105578372086e349a45e9dfd67cfe05f005ff8024449d35969aaa9cff4a357
 quill	0.5.4	darwin-x86_64	cd69f32e2cb24babe344491eb42cc0c00fc29870dfdb6e2661eaaecf6dd8b1c3
 quill	0.5.4	darwin-arm64	70cc62bef97e813eb828e82a71299036536d3fec57c1428adbca3f83d363235b
