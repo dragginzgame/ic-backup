@@ -61,12 +61,11 @@ set -euo pipefail
 [[ "${PR_TEST_API_FAIL:-}" != yes ]] || exit 29
 [[ "$1" == api && "$2" == --hostname && "$3" == github.com ]] || exit 1
 shift 3
-method=GET; input=''; endpoint=''; selection=''; pages=no
+method=GET; input=''; endpoint=''; pages=no
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --method) method="$2"; shift 2 ;;
         --input) input="$2"; shift 2 ;;
-        --jq) selection="$2"; shift 2 ;;
         --paginate) pages=yes; shift ;;
         --include) shift ;;
         -f) case "$2" in state=all|head=example:release/v0.1.1|base=main) ;; *) exit 86 ;; esac; shift 2 ;;
@@ -76,7 +75,8 @@ while [[ $# -gt 0 ]]; do
 done
 case "$method:$endpoint" in
     GET:repos/example/project)
-        [[ "$selection" == .full_name ]] || exit 1; echo example/project ;;
+        if [[ -n "${PR_TEST_REPOSITORY_RESPONSE:-}" ]]; then cat "$PR_TEST_REPOSITORY_RESPONSE"
+        else echo '{"full_name":"example/project"}'; fi ;;
     GET:repos/example/project/pulls)
         [[ "$pages" == yes ]] || exit 1
         case "${PR_TEST_QUERY_RESPONSE:-valid}" in
@@ -194,6 +194,33 @@ merge_pr() {
     mv "$PR_TEST_DATA/merged.json" "$PR_TEST_DATA/pr.json"
 }
 
+new_fixture repository-admission
+for response in newline double-newline wrong-type wrong-name array empty multiple malformed; do
+    case "$response" in
+        newline) printf '{"full_name":"example/project\\n"}\n' ;;
+        double-newline) printf '{"full_name":"example/project\\n\\n"}\n' ;;
+        wrong-type) echo '{"full_name":42}' ;;
+        wrong-name) echo '{"full_name":"example/other"}' ;;
+        array) echo '[{"full_name":"example/project"}]' ;;
+        empty) printf '' ;;
+        multiple) printf '{"full_name":"example/project"}\n{"full_name":"example/project"}\n' ;;
+        malformed) printf '{\n' ;;
+    esac > "$PR_TEST_DATA/response-$response"
+    PR_TEST_REPOSITORY_RESPONSE="$PR_TEST_DATA/response-$response" run_release 1
+    [[ ! -s "$PR_TEST_EVENTS" && "$(cat VERSION)" == 0.1.0 && "$(git rev-parse HEAD)" == "$source_commit" ]] || exit 1
+    [[ -z "$(git status --porcelain)$(git tag)" && ! -e .git/release-state/0.1.1.plan && ! -d .git/release-state/lock ]] || exit 1
+    [[ "$(git for-each-ref --format='%(refname)' refs/heads)" == refs/heads/main ]] || exit 1
+done
+# Each refusal retains the original JSON, including after a successful retry.
+run_release 75
+for response in newline double-newline wrong-type wrong-name array empty multiple malformed; do
+    found=false
+    for observation in .git/release-state/pr-repository.*; do
+        if cmp -s "$observation" "$PR_TEST_DATA/response-$response"; then found=true; break; fi
+    done
+    [[ "$found" == true ]] || exit 1
+done
+
 for shape in merge squash rebase; do
     new_fixture "$shape"
     run_release 75
@@ -304,6 +331,70 @@ PR_TEST_PAGINATED=yes run_release 75
 cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-paginated-query"
 PR_TEST_PAGINATED=yes run_release 75
 cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-paginated-query"
+
+new_fixture malformed-pr-identity
+run_release 75
+cp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/original-state"
+cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-identity"
+for field in prepared merged; do
+    for width in 39 41 63 65; do
+        identity="$(printf "%0${width}d" 1)"
+        jq --arg field "$field" --arg identity "$identity" '.[$field]=$identity' \
+            "$PR_TEST_DATA/original-state" > .git/release-state/0.1.1.plan.pr.json
+        cp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/bad-state"
+        run_release 1
+        cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-identity"
+        cmp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/bad-state"
+        [[ -z "$(git tag)" ]] || exit 1
+    done
+done
+cp "$PR_TEST_DATA/original-state" .git/release-state/0.1.1.plan.pr.json
+run_release 75
+
+# A trailing LF can match a regex dollar anchor and then disappear during Bash
+# command substitution. Reject the original JSON bytes before rewriting state.
+cp .git/release-state/0.1.1.plan "$PR_TEST_DATA/before-plan"
+for field in prepared merged number; do
+    jq --arg field "$field" '
+        .[$field] = ((if $field == "merged" then .prepared else .[$field] end) + "\n")
+    ' "$PR_TEST_DATA/original-state" > .git/release-state/0.1.1.plan.pr.json
+    cp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/bad-state"
+    run_release 1
+    cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-identity"
+    cmp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/bad-state"
+    cmp .git/release-state/0.1.1.plan "$PR_TEST_DATA/before-plan"
+    [[ -z "$(git tag)" && ! -d .git/release-state/lock ]] || exit 1
+done
+cp "$PR_TEST_DATA/original-state" .git/release-state/0.1.1.plan.pr.json
+run_release 75
+
+new_fixture malformed-merge-response
+run_release 75
+merge_pr squash
+cp "$PR_TEST_DATA/pr.json" "$PR_TEST_DATA/valid-merge"
+cp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/original-state"
+cp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-merge"
+for phase in pr-review pr-validate; do
+    # Exercise initial observation and reconciliation of an already saved merge.
+    if [[ "$phase" == pr-validate ]]; then
+        jq --arg merged "$merged" '.merged=$merged' "$PR_TEST_DATA/original-state" > "$PR_TEST_DATA/next-state"
+        mv "$PR_TEST_DATA/next-state" "$PR_TEST_DATA/original-state"
+        sed '$s/.*/pr-validate/' .git/release-state/0.1.1.plan > "$PR_TEST_DATA/next-plan"
+        mv "$PR_TEST_DATA/next-plan" .git/release-state/0.1.1.plan
+    fi
+    cp .git/release-state/0.1.1.plan "$PR_TEST_DATA/before-plan"
+    for suffix in $'\n' $'\n\n' $'\r\n'; do
+        cp "$PR_TEST_DATA/original-state" .git/release-state/0.1.1.plan.pr.json
+        jq --arg suffix "$suffix" '.merge_commit_sha += $suffix' "$PR_TEST_DATA/valid-merge" > "$PR_TEST_DATA/pr.json"
+        run_release 1
+        cmp "$PR_TEST_EVENTS" "$PR_TEST_DATA/before-merge"
+        cmp .git/release-state/0.1.1.plan.pr.json "$PR_TEST_DATA/original-state"
+        cmp .git/release-state/0.1.1.plan "$PR_TEST_DATA/before-plan"
+        [[ -z "$(git tag)" && ! -d .git/release-state/lock ]] || exit 1
+    done
+done
+cp "$PR_TEST_DATA/valid-merge" "$PR_TEST_DATA/pr.json"
+run_release 0
 
 new_fixture changed-push-input
 run_release 75

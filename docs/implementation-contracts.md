@@ -80,7 +80,9 @@ implementation determine what has actually been qualified.
   Preserve the 1,024 total-attempt, 2,048 event and 1 MiB input/output bounds.
   A persisted reservation grants no fresh authority or backend dispatch permit.
   Uncertain means a qualified settled observation cannot resolve its mutation;
-  a lost observation reply stays pending. No allowance is refunded or replenished.
+  a lost observation reply stays pending. The read-only Applied receipt projection
+  distinguishes direct and observation evidence without authenticating either.
+  No allowance is refunded or replenished.
 - Physical inventories now retain a bounded, canonical, closed parent forest.
   Preserve unique normalized principals, required nullable fields, acyclic edges,
   the 1,024 target/selector limits, 256 UTF-8 role-byte bound and 1 MiB IO bounds.

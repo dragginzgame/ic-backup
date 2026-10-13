@@ -184,6 +184,64 @@ fn observation_resolves_an_exhausted_mutation_without_authorizing_another_call()
 }
 
 #[test]
+fn applied_receipt_identifies_direct_or_observation_evidence_after_replay() {
+    let mut direct_record = AttemptJournalRecord::new(authority(1, 0));
+    assert_eq!(direct_record.applied_receipt(), None);
+    direct_record
+        .reserve_mutation()
+        .expect("mutation reservation");
+    assert_eq!(direct_record.applied_receipt(), None);
+    direct_record
+        .record_mutation(direct(1, MutationOutcomeRecord::Applied))
+        .expect("direct applied receipt");
+    let direct_digest = direct_record.digest();
+    let direct_bytes = serde_json::to_vec(&direct_record).expect("encode direct history");
+    let direct_replay: AttemptJournalRecord =
+        serde_json::from_slice(&direct_bytes).expect("replay direct history");
+    assert_eq!(direct_replay.digest(), direct_digest);
+    assert_eq!(
+        direct_replay.applied_receipt(),
+        Some(AppliedReceiptEvidence::Mutation {
+            attempt: 1,
+            evidence: &"23".repeat(32),
+        })
+    );
+
+    let mut observed = AttemptJournalRecord::new(authority(1, 1));
+    observed.reserve_mutation().expect("mutation reservation");
+    observed
+        .reserve_observation(1, &"45".repeat(32))
+        .expect("observation reservation");
+    assert_eq!(observed.applied_receipt(), None);
+    observed
+        .record_observation(observation(2, ObservationOutcomeRecord::Applied))
+        .expect("observation applied receipt");
+    let observed_digest = observed.digest();
+    let observed_bytes = serde_json::to_vec(&observed).expect("encode observed history");
+    let observed_replay: AttemptJournalRecord =
+        serde_json::from_slice(&observed_bytes).expect("replay observed history");
+    assert_eq!(observed_replay.digest(), observed_digest);
+    assert_eq!(
+        observed_replay.applied_receipt(),
+        Some(AppliedReceiptEvidence::Observation {
+            attempt: 2,
+            request: &"45".repeat(32),
+            evidence: &"67".repeat(32),
+        })
+    );
+
+    let mut not_applied = AttemptJournalRecord::new(authority(1, 0));
+    not_applied
+        .reserve_mutation()
+        .expect("mutation reservation");
+    not_applied
+        .record_mutation(direct(1, MutationOutcomeRecord::NotApplied))
+        .expect("qualified nonapplication");
+    assert_eq!(not_applied.applied_receipt(), None);
+    assert_eq!(not_applied.view().mutations_remaining, 0);
+}
+
+#[test]
 fn wrong_receipt_identities_and_stale_observations_preserve_all_evidence() {
     let mut record = AttemptJournalRecord::new(authority(2, 2));
     assert!(matches!(

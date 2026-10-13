@@ -13,7 +13,10 @@ use crate::ready::ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::{
+            AppliedReceiptEvidence, AttemptJournalRecord, MAX_ATTEMPT_JOURNAL_BYTES,
+            MutationOutcomeRecord, MutationReceiptRequest,
+        },
         download_journal::DownloadArtifactRequest,
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
@@ -555,6 +558,32 @@ fn read_retained_prefix(
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let raw_metadata = fs::read(root.join("execution-stage-7/metadata.candid")).unwrap();
     let metadata_reply = IcSnapshotMetadataReply::decode(&metadata_request, &raw_metadata).unwrap();
+    let capture_journal: AttemptJournalRecord = read_json(
+        &root.join("execution-stage-0/attempt-0.json"),
+        MAX_ATTEMPT_JOURNAL_BYTES,
+    )
+    .unwrap();
+    assert_eq!(
+        capture_journal.applied_receipt(),
+        Some(AppliedReceiptEvidence::Mutation {
+            attempt: 1,
+            evidence: capture_reply.digest().hash(),
+        })
+    );
+    let metadata_journal: AttemptJournalRecord = read_json(
+        &root.join("execution-stage-7/attempt-7.json"),
+        MAX_ATTEMPT_JOURNAL_BYTES,
+    )
+    .unwrap();
+    let metadata_wire_checksum = ArtifactChecksumRecord::from_bytes(&raw_metadata);
+    assert_eq!(
+        metadata_journal.applied_receipt(),
+        Some(AppliedReceiptEvidence::Mutation {
+            attempt: 1,
+            evidence: metadata_wire_checksum.hash(),
+        })
+    );
+    assert_ne!(metadata_wire_checksum, metadata_reply.digest());
     assert_ne!(
         capture_reply.digest(),
         ArtifactChecksumRecord::from_bytes(snapshot.id())

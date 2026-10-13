@@ -25,60 +25,38 @@
 
 # Current handoff — 2026-10-13
 
-## Pending guarded restore-reference release — 2026-10-13
+## Pending 0.22.0 Host 0.16 and Shared Tooling 0.9.13 adoption
 
-The maintainer explicitly authorized the missing API for Canic #394/#513.
-`BackupLayoutGuard::release_restore` joins actual held layout/journal guards,
-fresh bounded product terminal admission, exact retained intent and existing
-inode-bound command quiescence. It preserves references on invalid admission,
-active commands, missing/replaced sidecars or changed journal bytes; exact replay
-synchronizes the durable reference state without dispatch. The product provider
-owns complete original command enumeration and application/effect settlement.
+Released Backup 0.21.3 is `150ef87` at `v0.21.3` and local `origin/main`.
+It includes guarded restore-reference release and the PocketIC learned-edge
+qualification. The released source still needs matching hosted native-macOS
+acceptance, and Canic needs its own product terminal provider and adapter.
 
-Qualification is complete on the held Host 0.15.2 / Testkit 0.35.1 / Metrics 0.8.1
-lock, including `deranged` 0.5.9. All 16 configured gate targets have passing
-evidence: unchanged tooling/release/hook checks are reused from `ci-prepared.log`,
-while compilation, strict Clippy, all native/PocketIC tests, docs, Rust 1.88
-independent consumers and both package archives pass in `ci-affected.log`.
-The first gate exposed ten artifact failures because generic journal-lock
-normalization also rejected directory-shaped publication locations. Restricting
-normalization to the parent/location preserves generic sidecar use; bounded
-terminal file validation remains in the release reader. All 11 affected artifact
-cases and all 551 library tests pass after that correction. The original failure
-remains retained. These host/API checks do not qualify a product terminal provider.
+The draft retains the read-only projection of the exact Applied
+attempt receipt. It identifies direct mutation versus separately budgeted
+observation evidence, including the receipt attempt and observation request.
+Pending, NotApplied and Uncertain history yield no Applied receipt. The v1
+record, hash, spending and effect authority are unchanged. A focused replay
+regression and an actual PocketIC retained-prefix fixture compare original
+Candid evidence against the matching journal receipt. All 16 configured
+`make ci` targets passed before this adoption on the Host 0.15.2 / Testkit
+0.35.1 / Metrics 0.8.1 graph. This projection does not authenticate the retained
+reply or qualify application settlement by itself.
 
-Evidence is retained in `/tmp/ic-backup-guarded-release/`. Package versions and
-Git effects remain user-owned; another session staged these files before final
-qualification. Its staged copy needs refreshing to include the corrected lock
-code, held lockfile and final documentation; this agent did not alter the index.
-The requested hold has served its qualification purpose; publication is separate.
-Canic still selects published Backup 0.21.1 and has not adopted this unpublished
-API. Full product terminal proof, live Fleet routing and Canic engine adoption
-remain open; neither Canic #394 nor #513 is complete.
+The incoming root manifest and lockfile select direct Host Artifacts/FS 0.16.0
+and Metrics 0.8.2. Host Artifacts/FS published Rust sources are identical to
+0.15.2, while the exposed `NamedWriteError` Rust identity changes. Consumers
+sharing that error type must align direct Host dependencies to 0.16; no stored
+record or effect semantics change. Testkit remains on its dev-only Host 0.15.2
+graph. The reviewed 107-file Shared Tooling snapshot now selects committed
+0.9.13 and adds its change-reporting rule and Cargo-tool cache-key helper.
+The sibling's uncommitted 0.9.14 changes were excluded. Qualification of the
+combined graph is pending.
 
-## Pending 0.21.3 PocketIC learned-edge qualification
-
-Released Backup 0.21.2 is `c60ebff` at `v0.21.2` and local `origin/main`.
-The compatible 0.21.3 draft exercises its per-successor commitment with actual
-PocketIC capture bytes. The capture checkpoint retains the qualified reply
-digest, while the metadata edge commits the returned snapshot ID. An interrupted
-run reconstructs that edge from retained original Candid bytes; dropping the
-override refuses before later IC effects or child-stage creation and preserves
-both original journals. The five focused PocketIC workflow cases pass. That fixture slice changes no
-library API, record format, package version, spending or terminal authority. An independently incoming `Cargo.lock` update selected IC Host 0.15.2
-while the first full gate ran; its three cached registry packages have the same
-Rust source files as 0.15.1. The first gate stopped at its input-integrity
-check. A second run found a strict Clippy fixture-length error; after splitting
-the refusal assertions into a helper, focused Clippy and all five PocketIC
-workflow cases passed. The complete rerun then passed all 16 `make ci` targets
-on the fixed 0.15.2 graph, including the 545 library tests, both PocketIC
-suites, Rust 1.88 independent consumers and paired package archives.
-
-The released 0.21.2 [exact-source CI run](https://github.com/dragginzgame/ic-backup/actions/runs/38294813438)
-passed Linux; both macOS jobs were cancelled. Authenticated production
-application admission, complete terminal/reference-release proof and native
-acceptance remain open under
-[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+Backup [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open for
+full product runner/admission/terminal qualification. Canic #394/#513 remain
+consumer-owned. The Canic checkout has concurrent edits, so this batch stays in
+Backup and makes no downstream migration claim.
 
 ## Released 0.21.2 learned commitments per workflow edge
 

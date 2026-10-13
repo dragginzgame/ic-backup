@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.22.0]
+
+### Breaking
+
+- Select IC Host Artifacts and FS 0.16.0. `PersistenceError::Publication`
+  now contains Host FS 0.16's `NamedWriteError` Rust type; consumers with
+  direct Host dependencies or typed error matches must align to 0.16.
+  The owning Host source and Backup's persisted records are unchanged.
+
+### Added
+
+- Expose the exact Applied attempt receipt as a read-only direct-mutation or
+  reconciliation-observation view, so integrations can match retained evidence
+  without treating observation settlement as the original reply. Original
+  journals, attempt spending and effect authority are unchanged
+  ([#29](https://github.com/dragginzgame/ic-backup/issues/29)).
+
+### Changed
+
+- Adopt Shared Tooling 0.9.13, including locked Cargo-source preparation
+  guidance, stricter tool setup failure retention and the updated change-reporting
+  rules. Reprepare contributor Cargo tools with `make install-rust-tools` before
+  offline admission; existing tool generations remain retained.
+- Qualify the incoming Metrics 0.8.2 lock selection. Backup's existing diagnostic
+  summary, aggregate and histogram APIs are unchanged.
+
 ## [0.21.3] - 2026-10-13
 
 ### Added

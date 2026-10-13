@@ -93,6 +93,30 @@ pub struct AttemptJournalView {
     pub history_len: usize,
 }
 
+/// Exact locally retained evidence for an Applied operation.
+///
+/// The integration owns the evidence's meaning and qualification. In particular,
+/// observation evidence is not the original mutation reply or retry authority.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AppliedReceiptEvidence<'a> {
+    /// The original mutation was settled by its direct qualified receipt.
+    Mutation {
+        /// Original mutation attempt number.
+        attempt: u32,
+        /// Digest of the retained integration-qualified direct evidence.
+        evidence: &'a str,
+    },
+    /// A separately budgeted observation settled the original mutation.
+    Observation {
+        /// Separately reserved observation attempt number.
+        attempt: u32,
+        /// Exact observation request digest from its reservation.
+        request: &'a str,
+        /// Digest of retained integration-qualified observation evidence.
+        evidence: &'a str,
+    },
+}
+
 /// Maintained v1 append-only local reservations and receipts for one exact operation.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(try_from = "JournalFields")]
@@ -162,9 +186,37 @@ impl AttemptJournalRecord {
             .as_ref()
             .map(|pending| pending.request.as_str())
     }
+    /// Read the terminal Applied receipt from validated original history.
+    ///
+    /// This does not authenticate evidence or grant dispatch, retry or release.
+    #[must_use]
+    pub fn applied_receipt(&self) -> Option<AppliedReceiptEvidence<'_>> {
+        match self.events.last()? {
+            AttemptEventRecord::MutationResolved {
+                mutation,
+                outcome: MutationOutcomeRecord::Applied,
+                evidence,
+            } => Some(AppliedReceiptEvidence::Mutation {
+                attempt: *mutation,
+                evidence,
+            }),
+            AttemptEventRecord::ObservationRecorded {
+                observation,
+                request,
+                outcome: ObservationOutcomeRecord::Applied,
+                evidence,
+            } => Some(AppliedReceiptEvidence::Observation {
+                attempt: *observation,
+                request,
+                evidence,
+            }),
+            _ => None,
+        }
+    }
     /// Project local evidence without IO or replenishing authority.
     ///
-    /// This excludes individual receipt evidence; use `Self::digest` for exact history identity.
+    /// Use `Self::applied_receipt` for the terminal receipt or `Self::digest`
+    /// for exact full-history identity.
     #[must_use]
     pub fn view(&self) -> AttemptJournalView {
         AttemptJournalView {

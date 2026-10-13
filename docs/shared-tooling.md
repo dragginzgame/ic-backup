@@ -49,7 +49,20 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 105-file snapshot selects clean committed Shared Tooling 0.9.0 at
+The current 107-file snapshot selects clean committed Shared Tooling 0.9.13 at
+`35cad65677ff989b5fb24a88d947fda37d2366e8`. The canonical preview
+adds the directly referenced `rules/change-reporting.md` and the required
+Cargo-tool cache-key helper. The new baseline requires scoped change metrics
+and permits separate `cargo fetch --locked` preparation for existing locked
+sources; tool installation and release effects retain their own authority.
+Installer failures retain their native status and evidence. The committed
+source was isolated in a clean local clone because the sibling checkout has
+uncommitted 0.9.14 work. Its recorded `origin/main` matches the selected
+commit; live GitHub verification was unavailable during adoption.
+
+### Prior Shared Tooling 0.9.0 review
+
+The earlier 105-file snapshot selected clean committed Shared Tooling 0.9.0 at
 `aec7a149f581a42b9531fc747b46024fc0314fcf`. Canonical refresh updates
 four selected files without adding or retiring payloads. Snapshot refresh and
 integrity verification share one manifest reader, which rejects NUL bytes and

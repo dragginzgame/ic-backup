@@ -1168,8 +1168,8 @@ version = "0.21.3"
 dependencies = [
  "candid",
  "command-fds",
- "ic-host-artifacts",
- "ic-host-fs",
+ "ic-host-artifacts 0.16.0",
+ "ic-host-fs 0.16.0",
  "ic-management-canister-types 0.11.0",
  "ic-metrics",
  "ic-testkit",
@@ -1290,12 +1290,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "ic-host-artifacts"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d63b33ca7b0b24c916e8b2958d34273e7398c91519722c497b85a5878aa1b97"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "ic-host-fs"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14037f412d18ccdb5f20196062e2394a6679cd29c9dfeafb39edb767501460d0"
 dependencies = [
- "ic-host-artifacts",
+ "ic-host-artifacts 0.15.2",
+ "rustix",
+]
+
+[[package]]
+name = "ic-host-fs"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04fe4cbd191bc10a03a1741f0bd8848f4caccbd8293860086038ab65a7d0f0d0"
+dependencies = [
+ "ic-host-artifacts 0.16.0",
  "rustix",
 ]
 
@@ -1305,8 +1324,8 @@ version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2a45d376cb5b20f0dc67d40217a2d55e1bcde078f5be9612daff9bc53c4526a"
 dependencies = [
- "ic-host-artifacts",
- "ic-host-fs",
+ "ic-host-artifacts 0.15.2",
+ "ic-host-fs 0.15.2",
  "libc",
  "rustix",
 ]
@@ -1335,9 +1354,9 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b2d23a378f6dd80661e0a93313ad31170842fe2558e4d8df017061877986d86"
+checksum = "b61bee701f158d171b6347339d4ef40df7cff882e2e85ddeb7eee5ec79c3d5ba"
 
 [[package]]
 name = "ic-testkit"
@@ -1347,8 +1366,8 @@ checksum = "beaa65a95ba89f8e1fe19e985c501c43a5de7a98120cc03204fbcc7629cc9586"
 dependencies = [
  "candid",
  "ic-cdk",
- "ic-host-artifacts",
- "ic-host-fs",
+ "ic-host-artifacts 0.15.2",
+ "ic-host-fs 0.15.2",
  "ic-host-process",
  "libc",
  "pocket-ic",

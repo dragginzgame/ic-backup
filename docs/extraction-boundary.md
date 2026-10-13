@@ -465,6 +465,9 @@ response stays pending until qualified settlement; invocation failure alone cann
 produce Uncertain or NotApplied. Integrations own retained evidence, current
 authority, command quiescence and external-effect settlement. Receipt hashes do
 not prove those facts. A new paid observation always consumes separate allowance.
+`applied_receipt` projects the exact terminal Applied evidence and its source from
+validated history. Direct mutation evidence and observation evidence remain
+distinct; this passive view authenticates neither and grants no retry authority.
 
 `ops::persistence::AttemptJournalGuard` borrows stable layout exclusion, exclusively
 locks `attempt-<operation_sequence>.json` and creates without replacing evidence.
