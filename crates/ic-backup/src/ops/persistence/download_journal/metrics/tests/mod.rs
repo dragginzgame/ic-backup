@@ -85,13 +85,13 @@ fn wide_prepared_total_preserves_exact_distribution_and_mean() {
         4 * u128::from(u64::MAX)
     );
     assert_eq!(metrics.upload_data_success_ns().latest(), Some(u64::MAX));
-    assert!(!histogram.aggregate().total_saturated());
-    assert!(!histogram.aggregate().samples_saturated());
+    assert!(!histogram.aggregate().total_overflowed());
+    assert!(!histogram.aggregate().samples_overflowed());
     assert!(
         !metrics
             .upload_data_success_ns()
             .aggregate()
-            .total_saturated()
+            .total_overflowed()
     );
     assert_eq!(histogram.aggregate().mean(), Ok(Some(total / 4)));
     assert_eq!(
@@ -154,8 +154,8 @@ fn duration_totals_cross_the_sample_cap_without_overflow_in_each_lane() {
         assert_eq!(summary.latest(), Some(1));
         assert_eq!(summary.maximum(), Some(u64::MAX));
         assert_eq!(summary.scaled_mean(10), Ok(Some(total * 10 / 3)));
-        assert!(!summary.aggregate().samples_saturated());
-        assert!(!summary.aggregate().total_saturated());
+        assert!(!summary.aggregate().samples_overflowed());
+        assert!(!summary.aggregate().total_overflowed());
     }
     assert_eq!(metrics.prepared_chunk_bytes(), MeasurementAggregate::EMPTY);
 }

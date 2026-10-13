@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.24.0]
+
+### Breaking
+
+- Adopt Metrics 0.9.0 for Backup's public `MeasurementSummary`,
+  `MeasurementAggregate` and `MeasurementHistogram` reexports. Consumers with
+  a direct Metrics dependency must align to 0.9 and use the renamed
+  `*_overflowed` accessors and current typed errors. Local diagnostics remain
+  transient; backup records and spending authority are unchanged.
+
 ## [0.23.0] - 2026-10-13
 
 ### Breaking
