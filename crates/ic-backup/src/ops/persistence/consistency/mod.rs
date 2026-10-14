@@ -1,9 +1,8 @@
 //! Bounded immutable original-plan consistency requirement retention; no fence authority.
 
-use super::json::check_json_size;
 use super::{
-    BackupLayoutGuard, JournalLock, JournalLockError, OperationPlanPersistenceError,
-    PersistenceError, create_json_durable, read_json, read_operation_plan,
+    BackupLayoutGuard, JournalLockError, OperationPlanPersistenceError, PersistenceError,
+    immutable_record, read_operation_plan,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -28,11 +27,12 @@ pub fn create_consistency_requirement(
 ) -> Result<(), ConsistencyPersistenceError> {
     record.validate_plan(plan)?;
     read_operation_plan(layout, &plan.digest())?;
-    let path = layout.root().join("consistency-requirement.json");
-    let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_CONSISTENCY_REQUIREMENT_BYTES)?;
-    create_json_durable(&path, record)?;
-    Ok(())
+    immutable_record::create(
+        layout,
+        "consistency-requirement.json",
+        MAX_CONSISTENCY_REQUIREMENT_BYTES,
+        record,
+    )
 }
 /// Read bounded validated original requirement under its exact expected digest and retained plan.
 ///
@@ -46,15 +46,18 @@ pub fn read_consistency_requirement(
     expected: &ArtifactChecksumRecord,
 ) -> Result<ConsistencyRequirementRecord, ConsistencyPersistenceError> {
     read_operation_plan(layout, &plan.digest())?;
-    let path = layout.root().join("consistency-requirement.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: ConsistencyRequirementRecord = read_json(&path, MAX_CONSISTENCY_REQUIREMENT_BYTES)?;
-    check_json_size(&record, MAX_CONSISTENCY_REQUIREMENT_BYTES)?;
-    record.validate_plan(plan)?;
-    if &record.digest() != expected {
-        return Err(ConsistencyPersistenceError::DigestMismatch);
-    }
-    Ok(record)
+    immutable_record::read_with(
+        layout,
+        "consistency-requirement.json",
+        MAX_CONSISTENCY_REQUIREMENT_BYTES,
+        |record: &ConsistencyRequirementRecord| {
+            record.validate_plan(plan)?;
+            if &record.digest() != expected {
+                return Err(ConsistencyPersistenceError::DigestMismatch);
+            }
+            Ok(())
+        },
+    )
 }
 /// Typed exact retained requirement or bounded local storage denial.
 #[derive(Debug, Error)]

@@ -3,6 +3,7 @@
 use super::*;
 use crate::{
     model::consistency::ConsistencyGuaranteeRecord,
+    ops::persistence::JournalLock,
     test_support::{membership::plan, temp_dir},
 };
 use std::{

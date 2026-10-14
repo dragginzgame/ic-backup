@@ -1,6 +1,7 @@
 use super::*;
 use crate::{
     model::consistency::ConsistencyGuaranteeRecord,
+    ops::persistence::JournalLock,
     test_support::{
         membership::{hash, plan},
         restore_safety, temp_dir,

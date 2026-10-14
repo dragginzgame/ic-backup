@@ -3,6 +3,7 @@ use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
 use ic_agent::RequestId;
 use ic_backup::{
     model::{
+        artifacts::ArtifactChecksumRecord,
         attempt_journal::AttemptJournalRecord,
         ic_observation::{IcObservationRequest, IcObservationResponse, IcObservationResponseInput},
         ic_snapshot_upload_data_observation::{
@@ -36,10 +37,44 @@ pub struct AgentObservationProvider<'a, R> {
     retain: R,
 }
 
+struct ObservationReplyBinding<'a> {
+    domain: &'static [u8],
+    authority: ArtifactChecksumRecord,
+    mutation_attempt: u32,
+    observation_attempt: u32,
+    request: ArtifactChecksumRecord,
+    target: &'a str,
+}
+
 impl<'a, R> AgentObservationProvider<'a, R> {
     /// Configure exact transport and integration-owned durable retention; no effects occur.
     pub const fn new(transport: &'a AgentTransport, retain: R) -> Self {
         Self { transport, retain }
+    }
+
+    fn response_input(
+        &self,
+        binding: ObservationReplyBinding<'_>,
+        id: &RequestId,
+        reply: Vec<u8>,
+    ) -> IcObservationResponseInput {
+        let evidence = crate::reply_evidence::reply_evidence(
+            binding.domain,
+            &binding.authority,
+            &[binding.mutation_attempt, binding.observation_attempt],
+            id,
+            &reply,
+        );
+        IcObservationResponseInput {
+            authority: binding.authority,
+            mutation_attempt: binding.mutation_attempt,
+            observation_attempt: binding.observation_attempt,
+            request: binding.request,
+            context: self.transport.context.clone(),
+            target: binding.target.to_owned(),
+            reply,
+            evidence,
+        }
     }
 }
 
@@ -80,24 +115,19 @@ where
         let (id, reply) = self
             .submit_once(ReservedUpdate::Observation(request), journal)
             .await?;
-        let evidence = crate::reply_evidence::reply_evidence(
-            b"ic-backup-agent.observation-reply.v1\0",
-            &request.authority().digest(),
-            &[request.mutation_attempt(), request.observation_attempt()],
+        let input = self.response_input(
+            ObservationReplyBinding {
+                domain: b"ic-backup-agent.observation-reply.v1\0",
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                observation_attempt: request.observation_attempt(),
+                request: request.payload().digest(),
+                target: request.payload().target(),
+            },
             &id,
-            &reply,
-        );
-        IcObservationResponse::new(IcObservationResponseInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            observation_attempt: request.observation_attempt(),
-            request: request.payload().digest(),
-            context: self.transport.context.clone(),
-            target: request.payload().target().into(),
             reply,
-            evidence,
-        })
-        .map_err(|_| IcObservationProviderError::Indeterminate)
+        );
+        IcObservationResponse::new(input).map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }
 
@@ -113,24 +143,19 @@ where
         let (id, reply) = self
             .submit_once(ReservedUpdate::UploadObservation(request), journal)
             .await?;
-        let evidence = crate::reply_evidence::reply_evidence(
-            b"ic-backup-agent.upload-observation-reply.v1\0",
-            &request.authority().digest(),
-            &[request.mutation_attempt(), request.observation_attempt()],
+        let input = self.response_input(
+            ObservationReplyBinding {
+                domain: b"ic-backup-agent.upload-observation-reply.v1\0",
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                observation_attempt: request.observation_attempt(),
+                request: request.payload().digest(),
+                target: request.payload().target(),
+            },
             &id,
-            &reply,
-        );
-        IcObservationResponse::new(IcObservationResponseInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            observation_attempt: request.observation_attempt(),
-            request: request.payload().digest(),
-            context: self.transport.context.clone(),
-            target: request.payload().target().into(),
             reply,
-            evidence,
-        })
-        .map_err(|_| IcObservationProviderError::Indeterminate)
+        );
+        IcObservationResponse::new(input).map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }
 
@@ -146,23 +171,19 @@ where
         let (id, reply) = self
             .submit_once(ReservedUpdate::UploadDataObservation(request), journal)
             .await?;
-        let evidence = crate::reply_evidence::reply_evidence(
-            b"ic-backup-agent.upload-data-observation-reply.v1\0",
-            &request.authority().digest(),
-            &[request.mutation_attempt(), request.observation_attempt()],
+        let input = self.response_input(
+            ObservationReplyBinding {
+                domain: b"ic-backup-agent.upload-data-observation-reply.v1\0",
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                observation_attempt: request.observation_attempt(),
+                request: request.payload().digest(),
+                target: request.payload().target(),
+            },
             &id,
-            &reply,
-        );
-        IcSnapshotUploadDataObservationResponse::new(IcObservationResponseInput {
-            authority: request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            observation_attempt: request.observation_attempt(),
-            request: request.payload().digest(),
-            context: self.transport.context.clone(),
-            target: request.payload().target().into(),
             reply,
-            evidence,
-        })
-        .map_err(|_| IcObservationProviderError::Indeterminate)
+        );
+        IcSnapshotUploadDataObservationResponse::new(input)
+            .map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }

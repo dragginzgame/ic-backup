@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.24.2]
+
+### Fixed
+
+- Reject written dot-segment and backslash paths, whitespace and control
+  characters in Agent endpoints before URL normalization can admit them.
+
+### Changed
+
+- Adopt the reviewed Shared Tooling 0.11.2 snapshot, including its shared release-tag
+  check and fixture failure retention. Contributor ShellCheck setup continues through
+  `install-ci-tool.sh`; shared tool selections are unchanged.
+- Qualify the Host Artifacts, FS and Process 0.17.7 lock selection. Backup retains
+  its existing publication and recovery contracts; the new Host retained-file APIs
+  now create the private IC snapshot files, synchronizing their directory as each
+  file is named while retaining incomplete bytes for recovery.
+- Qualify the Metrics 0.9.2 and Testkit 0.38.0 lock selections. Backup's
+  diagnostic arithmetic and retained record contracts are unchanged.
+- Share bounded immutable requirement/obligation persistence and Agent observation
+  response assembly. Original plan checks, typed mismatches and the three distinct
+  reply-evidence domains remain unchanged.
+
+### Testing
+
+- Keep the isolated release adapter fixture aligned with Shared Tooling's
+  exact annotated-tag check.
+
 ## [0.24.1] - 2026-10-13
 
 ### Testing

@@ -23,9 +23,70 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-13
+# Current handoff — 2026-10-14
 
-## Pending 0.24.1 Host 0.17.3 and native CI qualification
+## Pending 0.24.2 Metrics 0.9.2 and Agent origin admission
+
+The current lockfile selects published Metrics 0.9.2, Host 0.17.7 and Testkit
+0.38.0. Metrics 0.9.2 changes stable-store internals; Backup uses its public
+measurement arithmetic, whose API and V1 bytes are unchanged. No Backup Metrics
+wrapper, record or spending authority changed. Agent endpoint admission now
+rejects written dot-segment and backslash paths plus literal whitespace/control
+characters before URL normalization. The whitespace regression failed before the
+new check and passed afterward. The transport guide names the selected Host 0.17
+public error boundary. All 16 local `make ci` targets passed on manifest SHA-256
+`4d7856cf` and lockfile SHA-256 `0c7a0dea`, including 552 core unit tests,
+Agent HTTP and real PocketIC suites, strict Clippy, Rust 1.88 independent
+consumers and both package archives. The prior 0.9.1 lock selection also passed
+its full local gate. This closes two written-origin admission gaps under
+[#25](https://github.com/dragginzgame/ic-backup/issues/25); application-owned
+permission, byte custody and reconciliation remain open there. Hosted native
+qualification for this unreleased draft remains separate.
+
+## Pending 0.24.2 Shared Tooling 0.11.2 and Host 0.17 adoption
+
+Backup 0.24.1 is live at `2b8b40e` / `v0.24.1`. The pending compatible
+0.24.2 draft refreshes the reviewed Shared Tooling snapshot from 0.10.0 to
+0.11.2: 109 selected files, including the release-tag and fixture-lifecycle
+helpers, with the obsolete ShellCheck forwarding wrapper retired. Backup's
+existing CI already calls the common installer directly. The incoming lockfile
+first selected Host Artifacts, FS and Process 0.17.4; the earlier draft selected
+published 0.17.5 and the current graph selects 0.17.7 within the same 0.17
+requirement. Host 0.17.5 has no crate-source delta from 0.17.4. Host adds
+retained-file and post-sync validation
+primitives; Backup retains its artifact-directory publication and recovery
+semantics. The local release adapter fixture now exports the new
+tag checker and models Git's exact commit peel. All 16 local `make ci` targets
+passed before the consolidation on the manifest SHA-256 `af55f505` and lockfile
+SHA-256 `7ee7a94c`, including strict Clippy, 552 library tests, actual
+PocketIC/Agent journeys, Rust 1.88 independent consumers and both package
+archives. The earlier
+0.11.1/Host 0.17.4 graph also passed its complete gate. The restricted sandbox
+cannot bind the PocketIC server to `127.0.0.1:0`; complete simulator
+qualification uses local loopback access. Native hosted acceptance for this
+unreleased draft and Canic product integration remain separate.
+
+The subsequent 0.24.2 consolidation shares the bounded immutable-file sequence
+for consistency requirements, restore safety and fence obligations while keeping
+their original plan and requirement checks local. The Agent observation adapter
+uses one response assembler with the same three distinct evidence domains. IC
+snapshot fixed and chunk files now use Host FS retained creation, which syncs the
+staging directory after each named file; byte synchronization, checksum admission,
+journal transitions and directory publication remain with their existing owners.
+Focused persistence and Agent evidence tests pass on this source. The complete
+16-target `make ci` gate also passes on the consolidated source and unchanged
+manifest/lockfile hashes, including both simulator suites, strict Clippy, Rust
+1.88 independent consumers and both package archives.
+
+The tagged `v0.24.1` source at `2b8b40e` passed its exact
+[three-host CI matrix](https://github.com/dragginzgame/ic-backup/actions/runs/38419732851):
+Ubuntu 24.04, Apple Silicon macOS 15 and Intel macOS 15 each completed the full
+native gate. Intel passed the Testkit routing fixture, both PocketIC suites and
+all 16 validation targets. This qualifies the released Shared Tooling 0.10.0,
+Testkit 0.37.0 and Host 0.17.3 selections on those hosts; it does not qualify
+the pending 0.24.2 Shared Tooling 0.11.2/Host 0.17.5 source on macOS.
+
+## Released 0.24.1 Host 0.17.3 and native CI qualification
 
 The incoming `Cargo.lock` selection of Host Artifacts, FS and Process 0.17.3
 has no published Rust-source changes from 0.17.2. The complete 16-target local

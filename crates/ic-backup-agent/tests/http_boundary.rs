@@ -507,8 +507,12 @@ async fn context_and_stale_reservations_reject_before_network() {
     ));
     for endpoint in [
         "http://example.com/",
+        " https://example.com/",
+        "https://example.com ",
         "https://user:secret@example.com/",
         "https://example.com/path",
+        "https://example.com/path/..",
+        "https://example.com\\path\\..",
         "https://example.com/?query",
         "https://example.com/#fragment",
     ] {

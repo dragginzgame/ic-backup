@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared companions: scripts/ci/release-pr.sh scripts/ci/run-release.sh
+# Shared companions: scripts/ci/release-pr.sh scripts/ci/run-release.sh scripts/ci/fixture-lifecycle.sh
 set -euo pipefail
 
 # Synthetic Git histories and bare destinations under one disposable root;
@@ -11,17 +11,12 @@ ROOT="$0"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/release-pr-test.XXXXXX")"
-fixture="$(cd "$fixture" && pwd -P)"
-# Bash 3.2 can enter EXIT with status zero after nounset; require completion too.
+fixture="$(CDPATH="" cd -P -- "$fixture" && printf '%s/.' "$PWD")"
+fixture="${fixture%/.}"
+# shellcheck source=scripts/ci/fixture-lifecycle.sh
+source "$ROOT/scripts/ci/fixture-lifecycle.sh"
 fixture_complete=false
-finish() {
-    local status=$?
-    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
-    if [[ "$status" == 0 ]]; then rm -rf -- "$fixture"
-    else echo "PR release fixtures retained: $fixture" >&2; fi
-    exit "$status"
-}
-trap finish EXIT
+trap 'fixture_finish "$?" "$fixture" "PR release fixtures retained"' EXIT
 mkdir "$fixture/bin" "$fixture/templates"
 export PR_TEST_GIT
 PR_TEST_GIT="$(command -v git)"

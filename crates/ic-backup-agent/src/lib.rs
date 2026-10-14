@@ -64,6 +64,14 @@ impl AgentTransport {
         timeout: Duration,
     ) -> Result<Self, TransportError> {
         let url = reqwest::Url::parse(endpoint).map_err(|_| TransportError::Configuration)?;
+        // URL parsing removes dot segments, so inspect the written path before
+        // accepting a root origin. A normalized `/path/..` is still a path input.
+        let raw_origin_path = endpoint.split_once("://").is_some_and(|(_, authority)| {
+            !authority.contains('\\')
+                && authority
+                    .find('/')
+                    .is_none_or(|path_start| &authority[path_start..] == "/")
+        });
         let local = url.host_str().is_some_and(|host| {
             host.trim_matches(['[', ']'])
                 .parse::<std::net::IpAddr>()
@@ -71,6 +79,10 @@ impl AgentTransport {
         });
         if !(url.scheme() == "https" || (url.scheme() == "http" && local))
             || url.host_str().is_none()
+            || endpoint
+                .chars()
+                .any(|character| character.is_whitespace() || character.is_control())
+            || !raw_origin_path
             || !url.username().is_empty()
             || url.password().is_some()
             || url.path() != "/"

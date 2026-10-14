@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared companions: scripts/dev/run-maintenance.sh
+# Shared companions: scripts/dev/run-maintenance.sh scripts/ci/fixture-lifecycle.sh
 set -euo pipefail
 
 ROOT="$0"
@@ -7,16 +7,12 @@ ROOT="$0"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/maintenance-task-test.XXXXXX")"
-# Bash 3.2 can enter EXIT with status zero after nounset; require completion too.
+FIXTURE="$(CDPATH="" cd -P -- "$FIXTURE" && printf '%s/.' "$PWD")"
+FIXTURE="${FIXTURE%/.}"
+# shellcheck source=scripts/ci/fixture-lifecycle.sh
+source "$ROOT/scripts/ci/fixture-lifecycle.sh"
 fixture_complete=false
-finish() {
-    local status=$?
-    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
-    if [[ "$status" == 0 ]]; then rm -rf "$FIXTURE"
-    else printf "Maintenance fixture retained: %s\n" "$FIXTURE" >&2; fi
-    exit "$status"
-}
-trap finish EXIT
+trap 'fixture_finish "$?" "$FIXTURE" "Maintenance fixture retained"' EXIT
 mkdir -p "$FIXTURE/projects with spaces" "$FIXTURE/state with spaces"
 mkdir "$FIXTURE/bin"
 MAINTENANCE_REAL_DATE="$(command -v date)"

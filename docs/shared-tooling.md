@@ -49,7 +49,26 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 108-file snapshot selects clean committed Shared Tooling 0.10.0 at
+The current 109-file snapshot selects clean committed Shared Tooling 0.11.2 at
+`81bdf144482b21f146acf542f8013eefe1dfeba8`. It hardens fixture cleanup
+failure reporting and anchors temporary roots to their physical location. The
+selected fixture callers were refreshed with the common lifecycle helper; tool
+pins and Backup's product commands are unchanged.
+
+### Prior Shared Tooling 0.11.1 review
+
+The earlier 109-file snapshot selected clean committed Shared Tooling 0.11.1 at
+`7a7430bd30902dc655a025be61696ce19417c54a`. The canonical refresh adds
+the shared release-tag checker and fixture lifecycle helper and retires the
+ShellCheck forwarding wrapper. Backup already invokes the common CI-tool
+installer directly, so no local command migration is needed. Shared release
+recovery and standalone fixtures now use the common helpers. The reviewed tool
+catalogs, executable versions and digests are unchanged. Backup's local release
+adapter, product Testkit extension and exact resume receipt check remain local.
+
+### Prior Shared Tooling 0.10.0 review
+
+The earlier 108-file snapshot selected clean committed Shared Tooling 0.10.0 at
 `ed9c26f015691859f67b50b512a94709dcdc0c6c`, matching the sibling's
 `origin/main`. The reviewed common host/Cargo and five IC executable selections
 match Backup's former local catalogs exactly. Both catalogs are now immutable

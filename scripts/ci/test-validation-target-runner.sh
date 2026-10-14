@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/fixture-lifecycle.sh
 set -euo pipefail
 
 # Fixtures below supply their own Make selections and logger identities.
@@ -12,16 +13,12 @@ ROOT="$0"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/validation-runner-test.XXXXXX")"
-# Bash 3.2 can enter EXIT with status zero after nounset; require completion too.
+FIXTURE="$(CDPATH="" cd -P -- "$FIXTURE" && printf '%s/.' "$PWD")"
+FIXTURE="${FIXTURE%/.}"
+# shellcheck source=scripts/ci/fixture-lifecycle.sh
+source "$ROOT/scripts/ci/fixture-lifecycle.sh"
 fixture_complete=false
-finish() {
-    local status=$?
-    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
-    if [[ "$status" == 0 ]]; then rm -rf "$FIXTURE"
-    else printf "Failed validation-target-runner fixture retained: %s\n" "$FIXTURE" >&2; fi
-    exit "$status"
-}
-trap finish EXIT
+trap 'fixture_finish "$?" "$FIXTURE" "Failed validation-target-runner fixture retained"' EXIT
 
 mkdir -p "$FIXTURE/scripts/ci" "$FIXTURE/failure-logs"
 cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"

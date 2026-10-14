@@ -24,9 +24,11 @@ use rustix::fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags};
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
+    ffi::OsStr,
     fmt,
     fs::{self, File},
     io::{self, Write},
+    os::fd::AsFd,
     os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
 };
@@ -175,8 +177,10 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
     /// Append one exact admitted reply without retaining its memory buffer.
     ///
     /// Regions may interleave; each region must remain contiguous from zero. Chunk files
-    /// use exact metadata hash names and exclusive creation. No fsync or journal transition
-    /// occurs until explicit finish. Any error consumes this owner and retains all bytes.
+    /// use exact metadata hash names and exclusive creation. Host synchronizes the
+    /// staging directory after each new file; content synchronization and journal
+    /// transition wait for explicit finish. Any error consumes this owner and retains
+    /// all bytes.
     /// Before writing, all region names must still select the held regular files at
     /// their exact already-covered lengths. This sequential check is not a byte fence.
     /// # Errors
@@ -379,14 +383,7 @@ fn check_directory_identity(path: &Path, held: &File) -> Result<(), IcSnapshotAr
 }
 
 fn create_file(directory: &File, name: &str) -> io::Result<File> {
-    unix_fs::openat(
-        directory,
-        name,
-        OFlags::WRONLY | OFlags::CREATE | OFlags::EXCL | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Mode::from_bits_truncate(0o600),
-    )
-    .map(File::from)
-    .map_err(io::Error::from)
+    ic_host_fs::durable::create_retained_at(directory.as_fd(), OsStr::new(name), 0o600)
 }
 
 /// Typed local artifact failures; no wire payload or raw snapshot identity is retained.

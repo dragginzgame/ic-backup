@@ -36,13 +36,30 @@ where
     T: DeserializeOwned + Serialize,
     E: From<JournalLockError> + From<PersistenceError>,
 {
+    read_with(layout, name, limit, |record| {
+        if matches_original(record) {
+            Ok(())
+        } else {
+            Err(mismatch())
+        }
+    })
+}
+
+pub(super) fn read_with<T, E>(
+    layout: &BackupLayoutGuard,
+    name: &str,
+    limit: u64,
+    validate: impl FnOnce(&T) -> Result<(), E>,
+) -> Result<T, E>
+where
+    T: DeserializeOwned + Serialize,
+    E: From<JournalLockError> + From<PersistenceError>,
+{
     layout.check_root()?;
     let path = layout.root().join(name);
     let _lock = JournalLock::acquire(&path)?;
     let record: T = read_json(&path, limit)?;
     check_json_size(&record, limit)?;
-    if !matches_original(&record) {
-        return Err(mismatch());
-    }
+    validate(&record)?;
     Ok(record)
 }

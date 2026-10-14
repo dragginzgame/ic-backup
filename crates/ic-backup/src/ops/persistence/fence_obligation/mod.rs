@@ -1,10 +1,9 @@
 //! Bounded no-replace original fence obligations under retained plan/requirement custody.
 
-use super::json::check_json_size;
 use super::{
-    BackupLayoutGuard, ConsistencyPersistenceError, JournalLock, JournalLockError,
-    PersistenceError, RestoreSafetyPersistenceError, create_json_durable,
-    read_consistency_requirement, read_json, read_restore_safety_requirement,
+    BackupLayoutGuard, ConsistencyPersistenceError, JournalLockError, PersistenceError,
+    RestoreSafetyPersistenceError, immutable_record, read_consistency_requirement,
+    read_restore_safety_requirement,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -81,11 +80,12 @@ pub fn create_fence_obligation(
     record: &FenceObligationRecord,
 ) -> Result<(), FenceObligationPersistenceError> {
     requirement.validate(layout, plan, record)?;
-    let path = layout.root().join("fence-obligation.json");
-    let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_FENCE_OBLIGATION_BYTES)?;
-    create_json_durable(&path, record)?;
-    Ok(())
+    immutable_record::create(
+        layout,
+        "fence-obligation.json",
+        MAX_FENCE_OBLIGATION_BYTES,
+        record,
+    )
 }
 /// Read the exact bounded retained obligation; absence never recreates or releases it.
 ///
@@ -102,15 +102,18 @@ pub fn read_fence_obligation(
 ) -> Result<FenceObligationRecord, FenceObligationPersistenceError> {
     // Validate retained plans before following a location derived from the held layout.
     super::read_operation_plan(layout, &plan.digest())?;
-    let path = layout.root().join("fence-obligation.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: FenceObligationRecord = read_json(&path, MAX_FENCE_OBLIGATION_BYTES)?;
-    check_json_size(&record, MAX_FENCE_OBLIGATION_BYTES)?;
-    requirement.validate(layout, plan, &record)?;
-    if &record.digest() != expected {
-        return Err(FenceObligationPersistenceError::DigestMismatch);
-    }
-    Ok(record)
+    immutable_record::read_with(
+        layout,
+        "fence-obligation.json",
+        MAX_FENCE_OBLIGATION_BYTES,
+        |record: &FenceObligationRecord| {
+            requirement.validate(layout, plan, record)?;
+            if &record.digest() != expected {
+                return Err(FenceObligationPersistenceError::DigestMismatch);
+            }
+            Ok(())
+        },
+    )
 }
 /// Typed denial preserving original obligation bytes and acquisition spending.
 #[derive(Debug, Error)]

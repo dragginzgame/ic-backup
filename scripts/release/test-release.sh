@@ -63,7 +63,7 @@ create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
     cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
-    cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$ROOT/scripts/ci/run-formatting.sh" "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$ROOT/scripts/ci/check-release-tag.sh" "$ROOT/scripts/ci/run-formatting.sh" "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
@@ -218,6 +218,10 @@ case "$1" in
                 [[ -f target/mock-tag ]] || exit 1
                 name="${value#refs/tags/}"; name="${name%\^\{commit\}}"
                 cat "target/tags/$name.commit" ;;
+            *'^{commit}')
+                name="${value%\^\{commit\}}"
+                [[ "$name" =~ ^[0-9a-f]{40}$ && -d "target/commits/$name" ]] || exit 1
+                echo "$name" ;;
             refs/tags/*) [[ -f target/mock-tag ]] || exit 1; cat "target/tags/${value#refs/tags/}.object" ;;
             *) [[ "$value" =~ ^[0-9a-f]{40}$ && -d "target/commits/$value" ]] || exit 1; echo "$value" ;;
         esac ;;

@@ -1,9 +1,8 @@
 //! Immutable original restore/source safety retention under both layout guards.
 
-use super::json::check_json_size;
 use super::{
-    BackupLayoutGuard, JournalLock, JournalLockError, OperationPlanPersistenceError,
-    PersistenceError, create_json_durable, read_json, read_operation_plan,
+    BackupLayoutGuard, JournalLockError, OperationPlanPersistenceError, PersistenceError,
+    immutable_record, read_operation_plan,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -32,11 +31,12 @@ pub fn create_restore_safety_requirement(
     record.validate_plans(plan, source)?;
     read_operation_plan(layout, &plan.digest())?;
     read_operation_plan(source_layout, &source.digest())?;
-    let path = layout.root().join("restore-safety-requirement.json");
-    let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)?;
-    create_json_durable(&path, record)?;
-    Ok(())
+    immutable_record::create(
+        layout,
+        "restore-safety-requirement.json",
+        MAX_RESTORE_SAFETY_REQUIREMENT_BYTES,
+        record,
+    )
 }
 /// Read bounded exact original requirement under both unchanged retained plans.
 ///
@@ -53,16 +53,18 @@ pub fn read_restore_safety_requirement(
 ) -> Result<RestoreSafetyRequirementRecord, RestoreSafetyPersistenceError> {
     read_operation_plan(layout, &plan.digest())?;
     read_operation_plan(source_layout, &source.digest())?;
-    let path = layout.root().join("restore-safety-requirement.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: RestoreSafetyRequirementRecord =
-        read_json(&path, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)?;
-    check_json_size(&record, MAX_RESTORE_SAFETY_REQUIREMENT_BYTES)?;
-    record.validate_plans(plan, source)?;
-    if &record.digest() != expected {
-        return Err(RestoreSafetyPersistenceError::DigestMismatch);
-    }
-    Ok(record)
+    immutable_record::read_with(
+        layout,
+        "restore-safety-requirement.json",
+        MAX_RESTORE_SAFETY_REQUIREMENT_BYTES,
+        |record: &RestoreSafetyRequirementRecord| {
+            record.validate_plans(plan, source)?;
+            if &record.digest() != expected {
+                return Err(RestoreSafetyPersistenceError::DigestMismatch);
+            }
+            Ok(())
+        },
+    )
 }
 /// Typed original restore/source safety persistence denial.
 #[derive(Debug, Error)]

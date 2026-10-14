@@ -389,6 +389,9 @@ The IC local artifact writer now joins exact original metadata/data coverage to 
 existing download journal and durable publisher. Preserve 1 MiB per data chunk,
 three incremental region hashes, 1,024 chunk rows and existing metadata/journal bounds.
 Its distinct v1 tree retains exact metadata wire/request bytes and fixed private files.
+Host FS creates each named file without following a final symlink and synchronizes
+the staging directory before returning it. This does not synchronize written content
+or mark the transfer complete; interrupted and failed files remain retained.
 Appends consume the writer on any error; partial bytes remain Created and occupied
 staging rejects recreation. Full fresh byte checks retain the expected checksum
 atomically before publication; recovery uses the existing ChecksumVerified owner.
