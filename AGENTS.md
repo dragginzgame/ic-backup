@@ -119,13 +119,9 @@ Product transport/runtime qualification stays separate from executable version c
 
 ## Validation and delivery
 
-- Run focused checks during development and the documented full `make ci` suite
-  before delivering completed code as ready, under the shared standing validation
-  authority. Reuse unchanged passing evidence; rerun affected checks after edits.
-  Documentation-only and inspection-only work follow the baseline's narrower
-  validation scope. Release, publication and deployment still require explicit
-  authorization. [Development](docs/development.md) describes local commands
-  and target-directory ownership.
+- [Development](docs/development.md) describes focused commands, the full
+  `make ci` release gate and target-directory ownership. Follow the validation
+  cadence below.
 - Before compilation, check for an active command using this repository's
   target directory. Do not alter source or locks beneath active validation.
 - Unit tests live beside code; integration tests live in `tests/`. Canister
@@ -151,3 +147,20 @@ Product transport/runtime qualification stays separate from executable version c
   `fmt-check`; prepared release metadata must also pass it before staging.
 - Report complete-batch readiness and material limitations. Passing one test
   does not prove a finished extraction or independently usable product.
+
+## Validation cadence during shared-policy adoption
+
+Shared Tooling owns the [validation policy](DRAGGINZGAME.md#validation-and-evidence);
+local guidance supplies commands and product qualification requirements only.
+Maintainer-approved exception (2026-10-14): until this snapshot adopts Shared
+Tooling's focused-handoff policy, replace its full-suite-before-handoff requirement
+with focused checks of changed behavior and directly affected callers, including
+relevant failure/recovery paths. Reuse unchanged passing evidence. Documentation
+changes need link, consistency and diff checks only. Run local full suites only
+for an explicitly authorized release or an explicit request for those checks;
+implementation, continuation, PR preparation and readiness requests do not qualify.
+Report tested scope; an unrun full suite alone is not a handoff blocker. Configured
+CI, required branch checks, release gates and separate effect authority remain
+unchanged. This exception avoids redundant local testing; it does not claim a
+snapshot refresh. On reviewed adoption, remove this exception and retain only the
+link to the canonical policy and repository-specific commands.
