@@ -5,6 +5,7 @@ mod upload;
 mod verification;
 
 use super::*;
+use crate::hash::hex_bytes;
 use crate::{
     model::{
         download_journal::DownloadArtifactRequest,
@@ -15,7 +16,7 @@ use crate::{
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use ic_management_canister_types::{
-    ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult,
+    ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
 use std::{
     os::unix::fs::{PermissionsExt, symlink},

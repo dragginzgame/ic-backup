@@ -18,6 +18,7 @@ pub mod ic_snapshot_upload_observation;
 mod inventory_settlement;
 pub mod local_restore_source;
 pub mod membership;
+mod observed_context;
 pub mod restore_safety;
 pub mod selection;
 pub mod snapshot_inventory_delta;

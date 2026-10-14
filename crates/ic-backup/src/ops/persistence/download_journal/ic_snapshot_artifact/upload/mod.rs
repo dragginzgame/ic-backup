@@ -6,7 +6,7 @@ pub use plan::IcSnapshotDataUploadPreparationError;
 use super::super::metrics::LocalOperation;
 use super::{
     DownloadJournalGuard, File, IcSnapshotArtifactError, Mode, OFlags, REGIONS,
-    check_directory_identity, hex_bytes, open_directory, unix_fs, verification::open_regular_child,
+    check_directory_identity, member, open_directory, unix_fs, verification::open_regular_child,
 };
 use crate::model::{
     ic_snapshot_data::{MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
@@ -135,28 +135,25 @@ fn read_chunk(
     kind: &SnapshotDataKind,
 ) -> Result<Vec<u8>, IcSnapshotArtifactError> {
     let values = metadata.metadata();
-    let (name, length, offset, size) = match kind {
-        SnapshotDataKind::WasmModule { offset, size } => (
-            REGIONS[0].to_owned(),
-            Some(values.wasm_module_size),
-            *offset,
-            Some(*size),
-        ),
-        SnapshotDataKind::WasmMemory { offset, size } => (
-            REGIONS[1].to_owned(),
-            Some(values.wasm_memory_size),
-            *offset,
-            Some(*size),
-        ),
-        SnapshotDataKind::StableMemory { offset, size } => (
-            REGIONS[2].to_owned(),
-            Some(values.stable_memory_size),
-            *offset,
-            Some(*size),
-        ),
-        SnapshotDataKind::WasmChunk { hash } => {
-            (format!("chunk-{}.bin", hex_bytes(hash)), None, 0, None)
+    let (name, length, offset, size) = match member::select(kind) {
+        member::Member::Region {
+            index,
+            offset,
+            size,
+        } => {
+            let sizes = [
+                values.wasm_module_size,
+                values.wasm_memory_size,
+                values.stable_memory_size,
+            ];
+            (
+                REGIONS[index].to_owned(),
+                Some(sizes[index]),
+                offset,
+                Some(size),
+            )
         }
+        member::Member::Chunk { name } => (name, None, 0, None),
     };
     let maximum = length.unwrap_or(MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64);
     let (mut file, original) = open_regular_child(directory, &name, length, maximum)?;

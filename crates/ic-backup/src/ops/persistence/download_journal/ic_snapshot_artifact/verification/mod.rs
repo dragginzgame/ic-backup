@@ -4,8 +4,8 @@ use super::super::metrics::LocalOperation;
 use super::{
     ArtifactChecksumRecord, DownloadJournalGuard, FORMAT, File, IcSnapshotArtifactError,
     IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES, Mode, OFlags, REGIONS,
-    check_closed_tree, check_directory_identity, checksum_relative_files, hex_bytes,
-    open_directory, unix_fs,
+    check_closed_tree, check_directory_identity, checksum_relative_files, member, open_directory,
+    unix_fs,
 };
 use crate::{
     model::{
@@ -131,7 +131,7 @@ fn checksum_ic_tree(
     checksums.extend(REGIONS.map(|name| (name.into(), empty.clone())));
     for chunk in &values.wasm_chunk_store {
         checksums.push((
-            format!("chunk-{}.bin", hex_bytes(&chunk.hash)).into(),
+            member::chunk_name(&chunk.hash).into(),
             ArtifactChecksumRecord::from_digest(
                 chunk
                     .hash

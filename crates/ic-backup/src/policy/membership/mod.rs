@@ -67,14 +67,8 @@ pub fn validate<'a>(
         return Err(MembershipError::RequestMismatch);
     }
     let binding = request.binding();
-    if observation.context.network() != binding.network() {
-        return Err(MembershipError::ContextMismatch("network"));
-    }
-    if observation.context.caller() != binding.caller() {
-        return Err(MembershipError::ContextMismatch("caller"));
-    }
-    if observation.context.release() != binding.release() {
-        return Err(MembershipError::ContextMismatch("release"));
+    if let Some(field) = super::observed_context::first_mismatch(binding, &observation.context) {
+        return Err(MembershipError::ContextMismatch(field));
     }
     if observation.inventory != *request.inventory() {
         return Err(MembershipError::InventoryMismatch);

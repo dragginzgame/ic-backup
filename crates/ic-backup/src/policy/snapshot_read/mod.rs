@@ -73,22 +73,8 @@ pub fn validate<'a>(
         return Err(SnapshotReadError::RequestMismatch);
     }
     let binding = request.binding();
-    for (field, expected, actual) in [
-        (
-            "network",
-            binding.network(),
-            observation.context().network(),
-        ),
-        ("caller", binding.caller(), observation.context().caller()),
-        (
-            "release",
-            binding.release(),
-            observation.context().release(),
-        ),
-    ] {
-        if actual != expected {
-            return Err(SnapshotReadError::ContextMismatch(field));
-        }
+    if let Some(field) = super::observed_context::first_mismatch(binding, observation.context()) {
+        return Err(SnapshotReadError::ContextMismatch(field));
     }
     if observation.target() != binding.target() {
         return Err(SnapshotReadError::TargetMismatch);

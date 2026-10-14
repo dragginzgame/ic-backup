@@ -1,5 +1,6 @@
 //! Bounded local snapshot streaming joined to the existing durable download owner.
 
+mod member;
 mod upload;
 mod verification;
 pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactError};
@@ -7,7 +8,6 @@ pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactE
 use super::{DownloadJournalError, DownloadJournalGuard};
 use crate::ops::persistence::directory_custody::{open_directory, same_directory};
 use crate::{
-    hash::hex_bytes,
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
         download_journal::ArtifactStateRecord,
@@ -20,7 +20,6 @@ use crate::{
         persistence::write_json_durable,
     },
 };
-use ic_management_canister_types::SnapshotDataKind;
 use rustix::fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags};
 use sha2::{Digest, Sha256};
 use std::{
@@ -192,12 +191,9 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
         self.check_custody()?;
         self.check_region_custody()?;
         self.coverage.admit(reply)?;
-        let index = match reply.request().kind() {
-            SnapshotDataKind::WasmModule { .. } => 0,
-            SnapshotDataKind::WasmMemory { .. } => 1,
-            SnapshotDataKind::StableMemory { .. } => 2,
-            SnapshotDataKind::WasmChunk { hash } => {
-                let name = format!("chunk-{}.bin", hex_bytes(hash));
+        let index = match member::select(reply.request().kind()) {
+            member::Member::Region { index, .. } => index,
+            member::Member::Chunk { name } => {
                 create_file(&self.directory, &name)?.write_all(reply.chunk())?;
                 self.checksums
                     .push((name.into(), reply.chunk_checksum().clone()));

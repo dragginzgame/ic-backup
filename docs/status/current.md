@@ -25,9 +25,25 @@
 
 # Current handoff — 2026-10-14
 
-## Pending 0.24.4 local consolidation
+## Pending 0.24.5 local consolidation
 
-The next patch draft shares the identical bounded Serde sequence loop for
+The five current-context policy gates now share one ordered network, caller and
+release matcher; each retains its own typed mismatch. IC snapshot artifact
+writing, upload reading and verification share one v1 region/chunk member map,
+with the original file names and limits. Focused policy (110) and artifact (24)
+tests pass. The complete 16-target `make ci` gate passes on Host 0.18.1,
+Metrics 0.9.6 and Testkit 0.41.0, including 552 library tests, 34 core
+PocketIC tests, 16 Agent HTTP tests, 12 Agent PocketIC tests, strict Clippy,
+Rust 1.88 consumer checks and both package archives. An earlier sandboxed run
+lacked PocketIC loopback; the next run correctly stopped when `Cargo.lock`
+changed. The final run qualified the current lock hash with loopback access. Testkit
+[PR #92](https://github.com/dragginzgame/ic-testkit/pull/92) proposes the
+evidence-preserving HTTP capture hard cut. Backup's Agent capture remains local
+until that API is published and separately qualified here.
+
+## Released 0.24.4 local consolidation
+
+The 0.24.4 release shares the identical bounded Serde sequence loop for
 inventory, operation plans and attempt journals, preserving their original
 limits, excess-entry probe and field errors. Backup now has one local no-follow
 directory-open and held-inode comparison primitive for layout and IC snapshot

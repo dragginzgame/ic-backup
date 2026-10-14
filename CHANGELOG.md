@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.24.5]
+
+### Changed
+
+- Share ordered observed network, caller and release matching across policy
+  gates, and one v1 snapshot member mapping across artifact write, read and
+  verification paths. Typed mismatches and on-disk names stay unchanged.
+
 ## [0.24.4] - 2026-10-14
 
 ### Changed

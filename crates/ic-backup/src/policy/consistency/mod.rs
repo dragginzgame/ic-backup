@@ -70,22 +70,8 @@ pub fn validate<'a>(
         return Err(ConsistencyError::RequestMismatch);
     }
     let binding = request.binding();
-    for (field, expected, actual) in [
-        (
-            "network",
-            binding.network(),
-            observation.context().network(),
-        ),
-        ("caller", binding.caller(), observation.context().caller()),
-        (
-            "release",
-            binding.release(),
-            observation.context().release(),
-        ),
-    ] {
-        if actual != expected {
-            return Err(ConsistencyError::ContextMismatch(field));
-        }
+    if let Some(field) = super::observed_context::first_mismatch(binding, observation.context()) {
+        return Err(ConsistencyError::ContextMismatch(field));
     }
     if observation.inventory() != request.inventory() {
         return Err(ConsistencyError::InventoryMismatch);
