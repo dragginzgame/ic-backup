@@ -61,32 +61,55 @@ pub async fn capture_snapshot<E: std::error::Error + 'static>(
     let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
     journal.reserve_planned_mutation(&plan.digest())?;
     let request = IcMutationRequest::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request)
-        .await
-        .map_err(IcSnapshotCaptureExecutionError::Admission)?;
-    stage.layout()?;
-    let acknowledgement = provider
-        .submit_mutation(&request, journal.record()?)
-        .await?;
-    let association = match journal.record() {
-        Ok(record) => record,
-        Err(source) => {
-            return Err(IcSnapshotCaptureExecutionError::AfterReplyJournal {
-                source,
-                acknowledgement: Box::new(acknowledgement),
-            });
-        }
-    };
-    if let Err(source) = validate_acknowledgement(&request, association, &acknowledgement) {
-        return Err(IcSnapshotCaptureExecutionError::Association {
-            source,
-            acknowledgement: Box::new(acknowledgement),
-        });
-    }
-    if let Err(source) = stage.layout() {
-        return Err(IcSnapshotCaptureExecutionError::AfterReplyStage {
-            source,
-            acknowledgement: Box::new(acknowledgement),
+    let acknowledgement = super::reserved_effect::submit_once(
+        &journal,
+        &request,
+        async |request| {
+            admit(request)
+                .await
+                .map_err(IcSnapshotCaptureExecutionError::Admission)
+        },
+        || {
+            stage
+                .layout()
+                .map(|_| ())
+                .map_err(IcSnapshotCaptureExecutionError::Stage)
+        },
+        async |request, record| {
+            provider
+                .submit_mutation(request, record)
+                .await
+                .map_err(IcSnapshotCaptureExecutionError::Provider)
+        },
+        IcSnapshotCaptureExecutionError::Journal,
+    )
+    .await?;
+    if let Err(error) = super::reserved_effect::check_returned(
+        stage,
+        &journal,
+        &request,
+        &acknowledgement,
+        |request, record, reply| validate_acknowledgement(request, record, reply).map(|_| ()),
+    ) {
+        return Err(match error {
+            super::reserved_effect::ReturnedError::Journal(source) => {
+                IcSnapshotCaptureExecutionError::AfterReplyJournal {
+                    source,
+                    acknowledgement: Box::new(acknowledgement),
+                }
+            }
+            super::reserved_effect::ReturnedError::Association(source) => {
+                IcSnapshotCaptureExecutionError::Association {
+                    source,
+                    acknowledgement: Box::new(acknowledgement),
+                }
+            }
+            super::reserved_effect::ReturnedError::Stage(source) => {
+                IcSnapshotCaptureExecutionError::AfterReplyStage {
+                    source,
+                    acknowledgement: Box::new(acknowledgement),
+                }
+            }
         });
     }
     Ok(acknowledgement)

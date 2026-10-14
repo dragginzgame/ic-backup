@@ -2,7 +2,7 @@
 
 use crate::{
     model::{
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::MutationReceiptRequest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
         ic_snapshot_transfer_read::{
@@ -114,22 +114,28 @@ async fn settle_metadata<E: std::error::Error + 'static>(
         IcSnapshotTransferReadPayload::Metadata(payload),
     )?;
     let admitted = validate_response(&request, journal.record()?, response)?;
-    let receipt = qualify(&request, response)
-        .await
-        .map_err(IcSnapshotMetadataSettlementError::Qualification)?;
-    if receipt.outcome != MutationOutcomeRecord::Applied
-        || receipt.attempt != request.mutation_attempt()
-        || receipt.request != payload.digest().hash()
-    {
-        return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
+    let metadata_digest = super::qualified_receipt::AppliedReceiptRecorder {
+        stage,
+        journal: &mut journal,
+        expected_attempt: request.mutation_attempt(),
+        expected_request: payload.digest().hash(),
     }
-    let IcSnapshotTransferReadReply::Metadata(metadata) = admitted.reply() else {
-        return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
-    };
-    stage.layout()?;
-    journal.record_mutation(receipt)?;
+    .record_applied(
+        &request,
+        response,
+        async |request, reply| qualify(request, reply).await,
+        IcSnapshotMetadataSettlementError::Qualification,
+        || IcSnapshotMetadataSettlementError::ReceiptRequired,
+        || match admitted.reply() {
+            IcSnapshotTransferReadReply::Metadata(metadata) => Ok(metadata.digest()),
+            IcSnapshotTransferReadReply::Data(_) => {
+                Err(IcSnapshotMetadataSettlementError::ReceiptRequired)
+            }
+        },
+    )
+    .await?;
     drop(journal);
-    Ok(stage.checkpoint(metadata.digest())?)
+    Ok(stage.checkpoint(metadata_digest)?)
 }
 
 /// Metadata coordination failures retain exact original spending and returned evidence.

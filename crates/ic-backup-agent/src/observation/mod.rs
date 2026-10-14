@@ -1,5 +1,5 @@
 //! Three separately accounted async recovery ports over one retained submission owner.
-use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
+use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
 use ic_agent::RequestId;
 use ic_backup::{
     model::{
@@ -87,19 +87,16 @@ where
         request: ReservedUpdate<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<(RequestId, Vec<u8>), IcObservationProviderError> {
-        let prepared = self
-            .transport
-            .prepare(request, journal)
-            .map_err(|_| IcObservationProviderError::Unsupported)?;
-        (self.retain)(&prepared.request, &prepared)?;
-        let outcome = prepared
-            .submit()
-            .await
-            .map_err(|_| IcObservationProviderError::Indeterminate)?;
-        match outcome {
-            UpdateOutcome::Replied { request_id, reply } => Ok((request_id, reply)),
-            UpdateOutcome::Pending { .. } => Err(IcObservationProviderError::Indeterminate),
-        }
+        crate::submission::submit_once(
+            self.transport,
+            request,
+            journal,
+            |prepared| (self.retain)(&prepared.request, prepared),
+            |_, _| Ok(()),
+            || IcObservationProviderError::Unsupported,
+            || IcObservationProviderError::Indeterminate,
+        )
+        .await
     }
 }
 

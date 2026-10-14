@@ -4,7 +4,7 @@ use super::{IcSnapshotUploadExecutionError, upload_snapshot};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::MutationReceiptRequest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
@@ -122,17 +122,21 @@ async fn record_qualified<E: std::error::Error + 'static>(
     let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
     let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
     let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
-    let receipt = qualify(&request, acknowledgement)
-        .await
-        .map_err(IcSnapshotDataUploadReplyError::Qualification)?;
-    if receipt.outcome != MutationOutcomeRecord::Applied
-        || receipt.attempt != request.mutation_attempt()
-        || receipt.request != payload.binding_digest().hash()
-    {
-        return Err(IcSnapshotDataUploadReplyError::ReceiptRequired);
+    super::super::qualified_receipt::AppliedReceiptRecorder {
+        stage,
+        journal: &mut journal,
+        expected_attempt: request.mutation_attempt(),
+        expected_request: payload.binding_digest().hash(),
     }
-    stage.layout()?;
-    journal.record_mutation(receipt)?;
+    .record_applied(
+        &request,
+        acknowledgement,
+        async |request, reply| qualify(request, reply).await,
+        IcSnapshotDataUploadReplyError::Qualification,
+        || IcSnapshotDataUploadReplyError::ReceiptRequired,
+        || Ok(()),
+    )
+    .await?;
     stage.layout()?;
     Ok(admitted.reply().digest())
 }

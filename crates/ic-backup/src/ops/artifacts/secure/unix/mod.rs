@@ -2,22 +2,18 @@
 
 use super::{ArtifactChecksumRecord, ArtifactError, ExpectedArtifactType};
 use crate::ops::artifacts::{
-    checksum_reader, checksum_relative_files, copy_from_reader, descriptor, require_utf8_tree_name,
+    checksum_reader, checksum_relative_files, copy_from_reader, descriptor,
 };
 
 use std::{
-    ffi::OsStr,
     fs::{DirBuilder, File, OpenOptions},
-    os::unix::{
-        ffi::OsStrExt,
-        fs::{DirBuilderExt, OpenOptionsExt},
-    },
+    os::unix::fs::{DirBuilderExt, OpenOptionsExt},
     path::{Component, Path, PathBuf},
 };
 
 use rustix::{
     fd::{AsFd, OwnedFd},
-    fs::{self as unix_fs, Dir, FileType, Mode, OFlags},
+    fs::{self as unix_fs, FileType, Mode, OFlags},
 };
 
 pub(super) fn checksum_path(
@@ -139,60 +135,67 @@ fn directory_checksum(
     display_root: &Path,
     action: DirectoryAction<'_>,
 ) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    let mut checksums = Vec::new();
-    collect_directory_entries(
-        directory_fd,
-        relative_directory,
-        display_root,
+    let mut visitor = ChecksumVisitor {
         action,
-        &mut checksums,
-    )?;
-    checksum_relative_files(checksums).map_err(ArtifactError::from)
+        checksums: Vec::new(),
+    };
+    descriptor::walk_tree(directory_fd, relative_directory, display_root, &mut visitor)?;
+    checksum_relative_files(visitor.checksums).map_err(ArtifactError::from)
 }
 
-fn collect_directory_entries(
-    directory_fd: &OwnedFd,
-    relative_directory: &Path,
-    display_root: &Path,
-    action: DirectoryAction<'_>,
-    checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
-) -> Result<(), ArtifactError> {
-    let mut directory = Dir::read_from(directory_fd).map_err(std::io::Error::from)?;
-    while let Some(entry) = directory.read() {
-        let entry = entry.map_err(std::io::Error::from)?;
-        let name_bytes = entry.file_name().to_bytes();
-        if matches!(name_bytes, b"." | b"..") {
-            continue;
+struct ChecksumVisitor<'a> {
+    action: DirectoryAction<'a>,
+    checksums: Vec<(PathBuf, ArtifactChecksumRecord)>,
+}
+
+impl descriptor::TreeVisitor for ChecksumVisitor<'_> {
+    type Error = ArtifactError;
+
+    fn directory_open_requires_type(&self) -> bool {
+        true
+    }
+
+    fn file(
+        &mut self,
+        fd: &OwnedFd,
+        relative: &Path,
+        _display: &Path,
+    ) -> Result<(), ArtifactError> {
+        let checksum = match self.action {
+            DirectoryAction::Checksum => checksum_reader(&mut File::from(fd.try_clone()?))?,
+            DirectoryAction::CopyTo(destination_root) => {
+                copy_file(fd, &destination_root.join(relative))?
+            }
+        };
+        self.checksums.push((relative.to_path_buf(), checksum));
+        Ok(())
+    }
+
+    fn enter_directory(&mut self, relative: &Path, _display: &Path) -> Result<(), ArtifactError> {
+        if let DirectoryAction::CopyTo(destination_root) = self.action {
+            create_private_directory(&destination_root.join(relative))?;
         }
-        let name = OsStr::from_bytes(name_bytes);
-        require_utf8_tree_name(name, display_root)?;
-        let relative_path = relative_directory.join(name);
-        let display_path = display_root.join(&relative_path);
-        let kind = descriptor::entry_type(directory_fd, entry.file_name())?;
-        match kind {
-            FileType::RegularFile => {
-                let child = descriptor::open_child(directory_fd, entry.file_name(), false)?;
-                ensure_opened_type(&child, FileType::RegularFile, &display_path)?;
-                let checksum = match action {
-                    DirectoryAction::Checksum => checksum_reader(&mut File::from(child))?,
-                    DirectoryAction::CopyTo(destination_root) => {
-                        copy_file(&child, &destination_root.join(&relative_path))?
-                    }
-                };
-                checksums.push((relative_path, checksum));
-            }
-            FileType::Directory => {
-                let child = descriptor::open_child(directory_fd, entry.file_name(), true)?;
-                ensure_opened_type(&child, FileType::Directory, &display_path)?;
-                if let DirectoryAction::CopyTo(destination_root) = action {
-                    create_private_directory(&destination_root.join(&relative_path))?;
-                }
-                collect_directory_entries(&child, &relative_path, display_root, action, checksums)?;
-            }
-            kind => return Err(unsupported_entry(&display_path, kind)),
+        Ok(())
+    }
+
+    fn leave_directory(
+        &mut self,
+        _fd: &OwnedFd,
+        _relative: &Path,
+        _display: &Path,
+    ) -> Result<(), ArtifactError> {
+        Ok(())
+    }
+
+    fn unsupported(&self, display: &Path, kind: FileType) -> ArtifactError {
+        unsupported_entry(display, kind)
+    }
+
+    fn non_utf8(&self, display: &Path) -> ArtifactError {
+        ArtifactError::NonUtf8Path {
+            path: display.to_path_buf(),
         }
     }
-    Ok(())
 }
 
 fn copy_file(

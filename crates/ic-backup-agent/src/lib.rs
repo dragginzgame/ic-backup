@@ -10,6 +10,7 @@ pub use fence_acquisition::AgentFenceAcquisitionProvider;
 mod acknowledgement;
 mod observation;
 mod reply_evidence;
+mod submission;
 pub use observation::AgentObservationProvider;
 
 mod request;

@@ -181,6 +181,15 @@ pub struct TargetCaptureEvidence {
     /// Required integration-qualified stopped/drained-work evidence; digest alone is no proof.
     pub stopped_and_drained: ArtifactChecksumRecord,
 }
+impl super::observed_targets::ObservedTargetRow for TargetCaptureEvidence {
+    fn target(&self) -> &str {
+        &self.target
+    }
+
+    fn target_mut(&mut self) -> &mut String {
+        &mut self.target
+    }
+}
 /// Actually observed application fence state; not a serialized accepted/proven flag.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ApplicationFenceState {
@@ -253,24 +262,14 @@ impl ConsistencyObservation {
     pub fn new(
         mut input: ConsistencyObservationInput,
     ) -> Result<Self, ConsistencyObservationError> {
-        if input.targets.is_empty() || input.targets.len() > MAX_INVENTORY_TARGETS {
-            return Err(ConsistencyObservationError::InvalidTargetCount);
-        }
-        for target in &mut input.targets {
-            target.target = super::principal::canonical_text(&target.target)
-                .ok_or(ConsistencyObservationError::InvalidPrincipal)?;
-            if input.inventory.target(&target.target).is_err() {
-                return Err(ConsistencyObservationError::TargetAbsentFromInventory);
-            }
-        }
-        input.targets.sort_by(|a, b| a.target.cmp(&b.target));
-        if input
-            .targets
-            .windows(2)
-            .any(|pair| pair[0].target == pair[1].target)
-        {
-            return Err(ConsistencyObservationError::DuplicateTarget);
-        }
+        input.targets = super::observed_targets::canonicalize(
+            input.targets,
+            &input.inventory,
+            || ConsistencyObservationError::InvalidTargetCount,
+            || ConsistencyObservationError::InvalidPrincipal,
+            || ConsistencyObservationError::TargetAbsentFromInventory,
+            || ConsistencyObservationError::DuplicateTarget,
+        )?;
         Ok(Self { input })
     }
     /// Read current request identity.

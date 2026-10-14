@@ -23,18 +23,14 @@ impl SnapshotViewerSet {
     /// Normalize and sort a bounded exact principal set, including known empty.
     /// # Errors
     /// Rejects excessive counts, invalid principals and canonical duplicates.
-    pub fn new(mut principals: Vec<String>) -> Result<Self, SnapshotReadObservationError> {
-        if principals.len() > MAX_SNAPSHOT_VIEWERS {
-            return Err(SnapshotReadObservationError::TooManyViewers);
-        }
-        for principal in &mut principals {
-            *principal = super::principal::canonical_text(principal)
-                .ok_or(SnapshotReadObservationError::InvalidPrincipal)?;
-        }
-        principals.sort();
-        if principals.windows(2).any(|pair| pair[0] == pair[1]) {
-            return Err(SnapshotReadObservationError::DuplicateViewer);
-        }
+    pub fn new(principals: Vec<String>) -> Result<Self, SnapshotReadObservationError> {
+        let principals = super::principal::canonical_set(
+            principals,
+            MAX_SNAPSHOT_VIEWERS,
+            || SnapshotReadObservationError::TooManyViewers,
+            || SnapshotReadObservationError::InvalidPrincipal,
+            || SnapshotReadObservationError::DuplicateViewer,
+        )?;
         Ok(Self { principals })
     }
     /// Read canonical viewers; ordering confers no control routing.

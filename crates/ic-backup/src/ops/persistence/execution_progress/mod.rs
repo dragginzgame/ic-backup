@@ -1,8 +1,6 @@
 //! Original retained plan/journal admission for local progress and guarded reservations.
 
-use super::{
-    AttemptJournalError, BackupLayoutGuard, OperationPlanPersistenceError, read_operation_plan,
-};
+use super::{AttemptJournalError, BackupLayoutGuard, OperationPlanPersistenceError};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord, attempt_journal::AttemptJournalRecord,
@@ -35,9 +33,9 @@ pub(super) fn read_with_current(
     expected_plan: &ArtifactChecksumRecord,
     current: Option<&AttemptJournalRecord>,
 ) -> Result<ExecutionProgressView, ExecutionProgressPersistenceError> {
-    let plan = read_operation_plan(layout, expected_plan)?;
-    let authorities = plan.attempt_authorities()?;
-    let journals = super::attempt_journal::read_original_journals(layout, &authorities, current)?;
+    let (plan, journals) = super::attempt_journal::read_original_plan_journals::<
+        ExecutionProgressPersistenceError,
+    >(layout, expected_plan, current)?;
     let references: Vec<_> = journals.iter().collect();
     Ok(progress(&ExecutionProgressRequest {
         plan: &plan,

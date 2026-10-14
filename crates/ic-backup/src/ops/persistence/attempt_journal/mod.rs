@@ -3,13 +3,15 @@
 use super::json::check_json_size;
 use super::{
     BackupLayoutGuard, ExecutionProgressPersistenceError, JournalLock, JournalLockError,
-    PersistenceError, create_json_durable, read_json, write_json_durable,
+    OperationPlanPersistenceError, PersistenceError, create_json_durable, read_json,
+    read_operation_plan, write_json_durable,
 };
 use crate::model::artifacts::ArtifactChecksumRecord;
 use crate::model::attempt_journal::{
     AttemptAuthorityRecord, AttemptJournalRecord, AttemptJournalRecordError,
     MAX_ATTEMPT_JOURNAL_BYTES, MutationReceiptRequest, ObservationReceiptRequest,
 };
+use crate::model::operation_plan::{OperationPlanError, OperationPlanRecord};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -260,6 +262,20 @@ pub(super) fn read_original_journals(
     }
     layout.check_root()?;
     Ok(journals)
+}
+
+pub(super) fn read_original_plan_journals<E>(
+    layout: &BackupLayoutGuard,
+    expected_plan: &ArtifactChecksumRecord,
+    current: Option<&AttemptJournalRecord>,
+) -> Result<(OperationPlanRecord, Vec<AttemptJournalRecord>), E>
+where
+    E: From<OperationPlanPersistenceError> + From<OperationPlanError> + From<AttemptJournalError>,
+{
+    let plan = read_operation_plan(layout, expected_plan)?;
+    let authorities = plan.attempt_authorities()?;
+    let journals = read_original_journals(layout, &authorities, current)?;
+    Ok((plan, journals))
 }
 
 fn journal_path(layout: &BackupLayoutGuard, authority: &AttemptAuthorityRecord) -> PathBuf {

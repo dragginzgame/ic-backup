@@ -4,17 +4,14 @@ use super::json::check_json_size;
 use super::{
     AttemptJournalError, BackupLayoutGuard, JournalLock, JournalLockError,
     OperationPlanPersistenceError, PersistenceError, create_json_durable, read_json,
-    read_operation_plan,
 };
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::AttemptJournalRecord,
         execution_settlement::{
             ExecutionSettlementError, ExecutionSettlementJournalRecord, ExecutionSettlementRecord,
             MAX_EXECUTION_SETTLEMENT_BYTES,
         },
-        operation_plan::OperationPlanRecord,
     },
     policy::execution_settlement::{ExecutionSettlementPolicyError, validate},
 };
@@ -95,7 +92,9 @@ fn derive_execution_settlement(
     layout: &BackupLayoutGuard,
     expected_plan: &ArtifactChecksumRecord,
 ) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
-    let (plan, journals) = read_retained_journals(layout, expected_plan)?;
+    let (plan, journals) = super::attempt_journal::read_original_plan_journals::<
+        ExecutionSettlementPersistenceError,
+    >(layout, expected_plan, None)?;
     let rows = journals
         .iter()
         .map(ExecutionSettlementJournalRecord::from_journal)
@@ -158,20 +157,13 @@ fn validate_retained(
     layout: &BackupLayoutGuard,
     record: &ExecutionSettlementRecord,
 ) -> Result<(), ExecutionSettlementPersistenceError> {
-    let (plan, journals) = read_retained_journals(layout, record.plan_intent())?;
+    let (plan, journals) = super::attempt_journal::read_original_plan_journals::<
+        ExecutionSettlementPersistenceError,
+    >(layout, record.plan_intent(), None)?;
     let references: Vec<_> = journals.iter().collect();
     validate(&plan, &references, record)?;
     layout.check_root()?;
     Ok(())
-}
-fn read_retained_journals(
-    layout: &BackupLayoutGuard,
-    expected_plan: &ArtifactChecksumRecord,
-) -> Result<(OperationPlanRecord, Vec<AttemptJournalRecord>), ExecutionSettlementPersistenceError> {
-    let plan = read_operation_plan(layout, expected_plan)?;
-    let authorities = plan.attempt_authorities()?;
-    let journals = super::attempt_journal::read_original_journals(layout, &authorities, None)?;
-    Ok((plan, journals))
 }
 /// Failure deriving, publishing or replaying a checkpoint; originals remain retained.
 #[derive(Debug, Error)]

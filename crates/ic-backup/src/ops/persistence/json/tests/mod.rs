@@ -1,6 +1,7 @@
 use super::*;
 use crate::test_support::temp_dir;
 use serde::Serializer;
+use std::fs;
 
 struct FailingSerialize;
 

@@ -1,6 +1,6 @@
 //! Exact async metadata/data reads through the existing single-update transport.
 
-use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
+use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
 use ic_backup::{
     model::{
         attempt_journal::AttemptJournalRecord,
@@ -51,18 +51,16 @@ where
         request: &IcSnapshotTransferReadRequest<'_, '_>,
         journal: &AttemptJournalRecord,
     ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
-        let prepared = self
-            .transport
-            .prepare(ReservedUpdate::TransferRead(request), journal)
-            .map_err(|_| IcObservationProviderError::Unsupported)?;
-        (self.retain)(request, &prepared)?;
-        let outcome = prepared
-            .submit()
-            .await
-            .map_err(|_| IcObservationProviderError::Indeterminate)?;
-        let UpdateOutcome::Replied { request_id, reply } = outcome else {
-            return Err(IcObservationProviderError::Indeterminate);
-        };
+        let (request_id, reply) = crate::submission::submit_once(
+            self.transport,
+            ReservedUpdate::TransferRead(request),
+            journal,
+            |prepared| (self.retain)(request, prepared),
+            |_, _| Ok(()),
+            || IcObservationProviderError::Unsupported,
+            || IcObservationProviderError::Indeterminate,
+        )
+        .await?;
         let evidence = crate::reply_evidence::reply_evidence(
             b"ic-backup-agent.transfer-read-reply.v1\0",
             &request.authority().digest(),

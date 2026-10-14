@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.24.3]
+
+### Changed
+
+- Share inventory-backed current-target admission between consistency and restore
+  safety, and original plan/journal reads between progress and settlement, while
+  preserving their distinct errors and selected-journal custody.
+- Use Host FS 0.17.11 for durable private parent preparation, retiring Backup's
+  duplicate directory walk while preserving owner-only modes and crash barriers.
+- Share bounded canonical principal-set admission, the reserved single-submit
+  workflow sequence, and exact Applied-receipt recording across snapshot stages.
+  Their existing typed errors, authority checks and reply retention remain local.
+- Share the Agent adapters' retained single-update sequence while preserving each
+  port's reply evidence and fence reply-retention requirement.
+- Use one no-follow artifact-tree walk for checksum, staging and commit; commit
+  still owns file/directory sync order, no-replace publication and recovery.
+
+### Testing
+
+- Share offline Testkit admission, server checksum and Wasm optimization setup
+  between the core and Agent PocketIC fixtures, retaining each fixture's own
+  server output, canister state and evidence.
+
 ## [0.24.2] - 2026-10-14
 
 ### Fixed

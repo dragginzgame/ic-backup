@@ -13,13 +13,12 @@ use std::{
     ffi::OsStr,
     fs::{self, File},
     io::{self, Seek, SeekFrom},
-    os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
 };
 
 use rustix::{
     fd::{AsFd, OwnedFd},
-    fs::{self as unix_fs, Dir, FileType, Mode, OFlags, RenameFlags},
+    fs::{self as unix_fs, FileType, Mode, OFlags, RenameFlags},
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -129,89 +128,80 @@ fn sync_tree(
         Mode::empty(),
     )
     .map_err(io::Error::from)?;
-    let mut checksums = Vec::new();
-    sync_directory(
-        &directory_fd,
-        Path::new(""),
-        display_root,
-        &mut checksums,
+    let mut visitor = SyncVisitor {
+        checksums: Vec::new(),
         at_step,
-    )?;
-    checksum_relative_files(checksums)
+    };
+    descriptor::walk_tree(&directory_fd, Path::new(""), display_root, &mut visitor)?;
+    checksum_relative_files(visitor.checksums)
         .map_err(ArtifactError::from)
         .map_err(PersistenceError::from)
 }
 
-fn sync_directory(
-    directory_fd: &OwnedFd,
-    relative_directory: &Path,
-    display_root: &Path,
-    checksums: &mut Vec<(PathBuf, ArtifactChecksumRecord)>,
-    at_step: &mut impl FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
-) -> Result<(), PersistenceError> {
-    let mut directory = Dir::read_from(directory_fd).map_err(io::Error::from)?;
-    while let Some(entry) = directory.read() {
-        let entry = entry.map_err(io::Error::from)?;
-        let name_bytes = entry.file_name().to_bytes();
-        if matches!(name_bytes, b"." | b"..") {
-            continue;
-        }
-
-        let name = OsStr::from_bytes(name_bytes);
-        if name.to_str().is_none() {
-            return Err(crate::ops::artifacts::ArtifactError::NonUtf8Path {
-                path: display_root.join(name),
-            }
-            .into());
-        }
-        let relative_path = relative_directory.join(name);
-        let display_path = display_root.join(&relative_path);
-        let observed_type = descriptor::entry_type(directory_fd, entry.file_name())?;
-        match observed_type {
-            FileType::RegularFile => {
-                let child_fd = descriptor::open_child(directory_fd, entry.file_name(), false)?;
-                ensure_opened_type(&child_fd, FileType::RegularFile, &display_path)?;
-                let mut file = File::from(child_fd);
-                at_step(ArtifactCommitStep::RegularFileSync, &display_path)?;
-                file.sync_all()?;
-                file.seek(SeekFrom::Start(0))?;
-                checksums.push((relative_path, checksum_reader(&mut file)?));
-            }
-            FileType::Directory => {
-                let child_fd = descriptor::open_child(directory_fd, entry.file_name(), false)?;
-                ensure_opened_type(&child_fd, FileType::Directory, &display_path)?;
-                sync_directory(&child_fd, &relative_path, display_root, checksums, at_step)?;
-            }
-            kind => return Err(unsupported_entry(&display_path, kind)),
-        }
-    }
-
-    let (step, display_path) = if relative_directory.as_os_str().is_empty() {
-        (
-            ArtifactCommitStep::RootDirectorySync,
-            display_root.to_path_buf(),
-        )
-    } else {
-        (
-            ArtifactCommitStep::NestedDirectorySync,
-            display_root.join(relative_directory),
-        )
-    };
-    at_step(step, &display_path)?;
-    unix_fs::fsync(directory_fd).map_err(io::Error::from)?;
-    Ok(())
+struct SyncVisitor<'a, F> {
+    checksums: Vec<(PathBuf, ArtifactChecksumRecord)>,
+    at_step: &'a mut F,
 }
 
-fn ensure_opened_type(
-    fd: &impl AsFd,
-    expected: FileType,
-    path: &Path,
-) -> Result<(), PersistenceError> {
-    let actual = descriptor::opened_type(fd)?;
-    if actual == expected {
+impl<F> descriptor::TreeVisitor for SyncVisitor<'_, F>
+where
+    F: FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
+{
+    type Error = PersistenceError;
+
+    fn directory_open_requires_type(&self) -> bool {
+        false
+    }
+
+    fn file(
+        &mut self,
+        fd: &OwnedFd,
+        relative: &Path,
+        display: &Path,
+    ) -> Result<(), PersistenceError> {
+        let mut file = File::from(fd.try_clone()?);
+        (self.at_step)(ArtifactCommitStep::RegularFileSync, display)?;
+        file.sync_all()?;
+        file.seek(SeekFrom::Start(0))?;
+        self.checksums
+            .push((relative.to_path_buf(), checksum_reader(&mut file)?));
         Ok(())
-    } else {
-        Err(unsupported_entry(path, actual))
+    }
+
+    fn enter_directory(
+        &mut self,
+        _relative: &Path,
+        _display: &Path,
+    ) -> Result<(), PersistenceError> {
+        Ok(())
+    }
+
+    fn leave_directory(
+        &mut self,
+        fd: &OwnedFd,
+        relative: &Path,
+        display: &Path,
+    ) -> Result<(), PersistenceError> {
+        let step = if relative.as_os_str().is_empty() {
+            ArtifactCommitStep::RootDirectorySync
+        } else {
+            ArtifactCommitStep::NestedDirectorySync
+        };
+        (self.at_step)(step, display)?;
+        // Keep the same descriptor open during the walk and sync that precedes publication.
+        unix_fs::fsync(fd).map_err(io::Error::from)?;
+        Ok(())
+    }
+
+    fn unsupported(&self, display: &Path, kind: FileType) -> PersistenceError {
+        unsupported_entry(display, kind)
+    }
+
+    fn non_utf8(&self, display: &Path) -> PersistenceError {
+        ArtifactError::NonUtf8Path {
+            path: display.to_path_buf(),
+        }
+        .into()
     }
 }
 

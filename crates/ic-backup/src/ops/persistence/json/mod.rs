@@ -7,7 +7,7 @@
 use crate::ops::persistence::PersistenceError;
 
 use std::{
-    fs::{self, File},
+    fs::File,
     io::{self, Write},
     path::Path,
 };
@@ -118,7 +118,7 @@ fn publish_bytes_at_barriers(
         .parent()
         .filter(|parent| !parent.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
-    create_private_parents(parent)?;
+    ic_host_fs::durable::prepare_private_parents(parent)?;
     let options = WriteOptions {
         mode,
         permissions: 0o600,
@@ -194,33 +194,3 @@ where
 mod regressions;
 #[cfg(test)]
 mod tests;
-
-fn create_private_parents(parent: &Path) -> io::Result<()> {
-    let mut missing = Vec::new();
-    let mut current = parent;
-    while !current.try_exists()? {
-        missing.push(current.to_path_buf());
-        current = current
-            .parent()
-            .filter(|path| !path.as_os_str().is_empty())
-            .unwrap_or_else(|| Path::new("."));
-    }
-    let mut builder = fs::DirBuilder::new();
-    builder.recursive(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::DirBuilderExt;
-        builder.mode(0o700);
-    }
-    builder.create(parent)?;
-    // Persist each newly created directory and its link from the existing root.
-    for directory in missing {
-        File::open(&directory)?.sync_all()?;
-        let ancestor = directory
-            .parent()
-            .filter(|path| !path.as_os_str().is_empty())
-            .unwrap_or_else(|| Path::new("."));
-        File::open(ancestor)?.sync_all()?;
-    }
-    Ok(())
-}

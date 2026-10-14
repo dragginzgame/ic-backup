@@ -25,7 +25,54 @@
 
 # Current handoff — 2026-10-14
 
-## Pending 0.24.2 Metrics 0.9.2 and Agent origin admission
+## Pending 0.24.3 local consolidation
+
+The latest compatible slice shares canonical inventory-backed target-row
+admission between consistency and restore safety and reads original plans and
+journals through one sequential-lock owner for progress and settlement. Their
+distinct typed errors, existing selected-journal override and policy decisions
+remain intact. All 16 local `make ci` targets pass against the current Host
+0.17.11 / Testkit 0.39.0 graph, including 552 library tests, 34 core PocketIC
+tests, 12 Agent PocketIC tests, strict Clippy, Rust 1.88 consumers and both
+package archives.
+Published Host FS 0.17.11 now owns durable private-parent preparation; Backup
+retired its duplicate directory walk while retaining serialize-before-effect,
+0600 file modes and its original pre/post-publication crash barriers. All 14
+JSON persistence tests pass against the published crate. The Host API's
+already-existing ancestor-symlink admission needs the correction in
+[Host PR #90](https://github.com/dragginzgame/ic-host-tooling/pull/90);
+Backup's prior local traversal had the same behavior. The final consumer
+adoption passes the complete local gate on this exact lock selection.
+
+The next local consolidation shares canonical principal-set admission for
+controllers and snapshot viewers, reserved single-submit sequencing for four
+effect workflows, and exact Applied-receipt recording for metadata, allocation
+and data upload. Effect-specific authority checks, typed errors, reply custody
+and checkpoint decisions remain with their workflows. All 16 local `make ci`
+targets pass on the current Host 0.17.8 / Metrics 0.9.3 lock selection,
+including 552 library tests, 34 core PocketIC tests, 12 Agent PocketIC tests,
+strict Clippy, Rust 1.88 independent consumers and both package archives.
+
+Backup 0.24.2 is tagged at `bf41994` / `v0.24.2`. The pending 0.24.3 draft
+shares one internal Agent prepare/retain/submit/reply sequence across mutation,
+upload, observation, transfer-read and fence-acquisition adapters. Port-specific
+evidence domains and the fence's mandatory post-dispatch reply retention remain
+separate. Both PocketIC fixtures now use one local, offline preparation script
+for Testkit admission, exact server digest and Wasm optimization; they continue
+to own their distinct server lifetimes, application setup and retained evidence.
+Artifact checksum/staging and durable commit now use one no-follow descriptor
+walk. Commit still owns per-file and post-order directory sync, checksum
+verification, no-replace publication and recovery. No public API, persisted
+record, spending authority or dependency selection changed.
+
+The complete 16-target `make ci` gate passed on this code with local loopback
+access: strict Clippy, 552 core unit tests, 34 core PocketIC tests, 12 Agent
+PocketIC tests, Rust 1.88 independent consumers and both package archives.
+The sandboxed first run passed through Clippy but could not bind the PocketIC
+server to `127.0.0.1`; the loopback-enabled rerun passed every target. Hosted
+macOS qualification and Canic application integration remain separate.
+
+## 0.24.2 pre-release Metrics 0.9.2 and Agent origin admission
 
 The current lockfile selects published Metrics 0.9.2, Host 0.17.7 and Testkit
 0.38.0. Metrics 0.9.2 changes stable-store internals; Backup uses its public
@@ -43,7 +90,7 @@ its full local gate. This closes two written-origin admission gaps under
 permission, byte custody and reconciliation remain open there. Hosted native
 qualification for this unreleased draft remains separate.
 
-## Pending 0.24.2 Shared Tooling 0.11.2 and Host 0.17 adoption
+## 0.24.2 pre-release Shared Tooling 0.11.2 and Host 0.17 adoption
 
 Backup 0.24.1 is live at `2b8b40e` / `v0.24.1`. The pending compatible
 0.24.2 draft refreshes the reviewed Shared Tooling snapshot from 0.10.0 to

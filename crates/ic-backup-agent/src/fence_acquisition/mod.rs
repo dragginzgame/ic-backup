@@ -1,5 +1,5 @@
 //! Exact application update over the existing single-submit transport.
-use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
+use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
 use ic_agent::RequestId;
 use ic_backup::{
     model::{
@@ -56,21 +56,16 @@ where
         request: &FenceAcquisitionRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<FenceAcquisitionAcknowledgement, FenceAcquisitionProviderError> {
-        let prepared = self
-            .transport
-            .prepare(ReservedUpdate::FenceAcquisition(request), journal)
-            .map_err(|_| FenceAcquisitionProviderError::Unsupported)?;
-        (self.retain_ingress)(request, &prepared)?;
-        let outcome = prepared
-            .submit()
-            .await
-            .map_err(|_| FenceAcquisitionProviderError::Indeterminate)?;
-        let UpdateOutcome::Replied { request_id, reply } = outcome else {
-            return Err(FenceAcquisitionProviderError::Indeterminate);
-        };
-        // A failed reply retainer cannot convert an already dispatched update into nonapplication.
-        (self.retain_reply)(request, &request_id, &reply)
-            .map_err(|_| FenceAcquisitionProviderError::Indeterminate)?;
+        let (request_id, reply) = crate::submission::submit_once(
+            self.transport,
+            ReservedUpdate::FenceAcquisition(request),
+            journal,
+            |prepared| (self.retain_ingress)(request, prepared),
+            |request_id, reply| (self.retain_reply)(request, request_id, reply),
+            || FenceAcquisitionProviderError::Unsupported,
+            || FenceAcquisitionProviderError::Indeterminate,
+        )
+        .await?;
         let evidence = crate::reply_evidence::reply_evidence(
             b"ic-backup-agent.fence-acquisition-reply.v1\0",
             &request.authority().digest(),

@@ -5,6 +5,7 @@ use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
+        attempt_journal::MutationOutcomeRecord,
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_snapshot_download::{
             IcSnapshotDownloadPlan,

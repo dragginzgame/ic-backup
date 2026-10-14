@@ -3,7 +3,7 @@
 use super::{IcSnapshotUploadExecutionError, upload_snapshot};
 use crate::{
     model::{
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::MutationReceiptRequest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
@@ -106,17 +106,21 @@ async fn settle_allocation<E: std::error::Error + 'static>(
     let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
     let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
     let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
-    let receipt = qualify(&request, acknowledgement)
-        .await
-        .map_err(IcSnapshotAllocationSettlementError::Qualification)?;
-    if receipt.outcome != MutationOutcomeRecord::Applied
-        || receipt.attempt != request.mutation_attempt()
-        || receipt.request != payload.binding_digest().hash()
-    {
-        return Err(IcSnapshotAllocationSettlementError::ReceiptRequired);
+    super::super::qualified_receipt::AppliedReceiptRecorder {
+        stage,
+        journal: &mut journal,
+        expected_attempt: request.mutation_attempt(),
+        expected_request: payload.binding_digest().hash(),
     }
-    stage.layout()?;
-    journal.record_mutation(receipt)?;
+    .record_applied(
+        &request,
+        acknowledgement,
+        async |request, reply| qualify(request, reply).await,
+        IcSnapshotAllocationSettlementError::Qualification,
+        || IcSnapshotAllocationSettlementError::ReceiptRequired,
+        || Ok(()),
+    )
+    .await?;
     drop(journal);
     Ok(stage.checkpoint(admitted.reply().digest())?)
 }

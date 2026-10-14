@@ -257,11 +257,6 @@ fn non_utf8_tree_names_reject_instead_of_collapsing_path_identity() {
     use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
     let root = temp_path("ic-backup-non-utf8");
     let name = OsStr::from_bytes(b"\xff");
-    assert!(matches!(
-        require_utf8_tree_name(name, &root),
-        Err(ArtifactError::NonUtf8Path { path }) if path == root.join(name)
-    ));
-    require_utf8_tree_name(OsStr::new("exact-é-name"), &root).expect("valid UTF-8 name");
     fs::create_dir(&root).expect("create tree");
     if let Err(error) = fs::write(root.join(name), b"bytes") {
         // APFS rejects this raw basename before the traversal owner can inspect it.

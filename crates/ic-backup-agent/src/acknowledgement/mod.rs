@@ -1,6 +1,6 @@
 //! One retained submission and passive acknowledgement for mutation and upload lanes.
 
-use crate::{AgentTransport, PreparedUpdate, ReservedUpdate, UpdateOutcome};
+use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -24,17 +24,16 @@ pub(crate) async fn submit_acknowledged<'a>(
     mut retain: impl FnMut(&PreparedUpdate<'_>) -> Result<(), IcMutationProviderError>,
     identity: AcknowledgementIdentity<'_>,
 ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-    let prepared = transport
-        .prepare(request, journal)
-        .map_err(|_| IcMutationProviderError::Unsupported)?;
-    retain(&prepared)?;
-    let outcome = prepared
-        .submit()
-        .await
-        .map_err(|_| IcMutationProviderError::Indeterminate)?;
-    let UpdateOutcome::Replied { request_id, reply } = outcome else {
-        return Err(IcMutationProviderError::Indeterminate);
-    };
+    let (request_id, reply) = crate::submission::submit_once(
+        transport,
+        request,
+        journal,
+        |prepared| retain(prepared),
+        |_, _| Ok(()),
+        || IcMutationProviderError::Unsupported,
+        || IcMutationProviderError::Indeterminate,
+    )
+    .await?;
     let evidence = crate::reply_evidence::reply_evidence(
         identity.domain,
         identity.authority,

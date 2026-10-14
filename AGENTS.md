@@ -145,8 +145,9 @@ Product transport/runtime qualification stays separate from executable version c
   for its selected repository and destination. All delegate to the shared
   runner; consumer adapters own metadata and validation, never Git effects.
 - Use `make install-hooks` once per clone for the exact shared pre-commit formatter.
-  Install cargo-sort 2.1.4 explicitly with `--locked`; `fmt` sorts Cargo manifests
-  before formatting Rust. The hook refreshes only selected files, rejects partial
+  Use `make install-rust-tools` for the snapshot-selected formatter tools;
+  `fmt` sorts Cargo manifests before formatting Rust. The hook refreshes only
+  selected files, rejects partial
   staging and preserves unrelated edits. CI/release use matching non-mutating
   `fmt-check`; prepared release metadata must also pass it before staging.
 - Report complete-batch readiness and material limitations. Passing one test

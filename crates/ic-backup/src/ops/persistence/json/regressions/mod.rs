@@ -1,5 +1,6 @@
 use super::*;
 use crate::test_support::temp_dir;
+use std::fs;
 use std::path::PathBuf;
 
 #[test]

@@ -53,9 +53,17 @@ pub(super) struct Backend {
 impl Backend {
     pub fn new() -> Self {
         let root = crate::support::temp_root("ic-backup-pocketic");
-        let admission = std::process::Command::new("make")
-            .current_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
-            .args(["--silent", "--no-print-directory", "testkit-server-check"])
+        fs::write(
+            root.join("original.wasm"),
+            wat::parse_str(include_str!("../state.wat")).unwrap(),
+        )
+        .unwrap();
+        let admission = std::process::Command::new("bash")
+            .arg(
+                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../scripts/ci/prepare-pocketic-fixture.sh"),
+            )
+            .arg(&root)
             .output()
             .expect("run offline Testkit admission; prepare with make install-testkit-server");
         assert!(
@@ -68,8 +76,6 @@ impl Backend {
             binary.is_absolute(),
             "Testkit must admit an absolute server path"
         );
-        let server_digest = ArtifactChecksumRecord::from_bytes(&fs::read(&binary).unwrap());
-        fs::write(root.join("server.sha256"), server_digest.hash()).unwrap();
         let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
             .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
             .start_managed_server()
@@ -84,22 +90,6 @@ impl Backend {
                 Duration::from_secs(60),
             ))
             .unwrap();
-        fs::write(
-            root.join("original.wasm"),
-            wat::parse_str(include_str!("../state.wat")).unwrap(),
-        )
-        .unwrap();
-        assert!(
-            std::process::Command::new("bash")
-                .arg(
-                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                        .join("../../scripts/ci/optimize-test-wasm.sh")
-                )
-                .arg(&root)
-                .status()
-                .unwrap()
-                .success()
-        );
         let wasm = fs::read(root.join("optimized.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
