@@ -197,18 +197,18 @@ impl Fixture {
             binary.is_absolute(),
             "Testkit must admit an absolute server path"
         );
-        let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
-            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
-            .start_managed_server()
-            .unwrap();
-        let mut pic = PocketIcBuilder::new()
-            .with_server_url(server.url().parse().unwrap())
+        let builder = PocketIcBuilder::new()
             .with_application_subnet()
             .with_nns_subnet()
             .with_state_dir(root.join("simulator"))
-            .with_max_request_time_ms(Some(60_000))
-            .build_async()
-            .await;
+            .with_max_request_time_ms(Some(60_000));
+        let owned = PocketIcStartupConfig::spawn(binary, Duration::from_secs(120))
+            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
+            .build_instance_async(builder)
+            .await
+            .unwrap();
+        let mut pic = owned.instance;
+        let server = owned.server.expect("spawn mode owns the managed server");
         let target = pic.create_canister().await;
         pic.add_cycles(target, 100_000_000_000_000).await;
         let wasm = fs::read(root.join("optimized.wasm")).unwrap();

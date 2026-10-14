@@ -2,11 +2,11 @@
 
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
+    bounded_sequence,
     effect_graph::MAX_EFFECT_DEPENDENCIES,
     operation_plan::{OperationPlanError, OperationPlanRecord, PlannedOperationRecord},
 };
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 
 /// Maximum raw and canonical workflow declaration bytes.
@@ -298,32 +298,11 @@ fn canonical_predecessors(
 fn bounded_predecessors<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<ExecutionStagePredecessorRecord>, D::Error> {
-    struct Rows;
-    impl<'de> de::Visitor<'de> for Rows {
-        type Value = Vec<ExecutionStagePredecessorRecord>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("at most 1,024 exact stage predecessors")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut rows = Vec::new();
-            while rows.len() < MAX_EFFECT_DEPENDENCIES {
-                match sequence.next_element()? {
-                    Some(row) => rows.push(row),
-                    None => return Ok(rows),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(
-                    ExecutionWorkflowError::PredecessorMismatch,
-                ));
-            }
-            Ok(rows)
-        }
-    }
-    deserializer.deserialize_seq(Rows)
+    bounded_sequence::deserialize::<_, _, MAX_EFFECT_DEPENDENCIES>(
+        deserializer,
+        "at most 1,024 exact stage predecessors",
+        ExecutionWorkflowError::PredecessorMismatch,
+    )
 }
 /// Typed rejection without changing original records or spending.
 #[derive(Debug, Error, Eq, PartialEq)]

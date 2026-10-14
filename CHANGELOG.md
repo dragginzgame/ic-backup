@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.24.4]
+
+### Changed
+
+- Share bounded persisted-sequence decoding and local directory custody checks
+  while preserving each record's limits, errors and no-follow behavior.
+- Reuse the bounded sequence reader for execution predecessors and download
+  artifacts, and one Candid decoder setup for IC replies while preserving each
+  method's wire limits and rejection behavior.
+- Share the bounded Candid sequence reader for snapshot inventory, metadata and
+  data replies, retaining each field's limit, error and typed excess probe.
+- Isolate Agent endpoint admission as a pure written-origin check while keeping
+  trust, signer and timeout policy in the transport constructor.
+
+### Testing
+
+- Share the independent Candid golden generators' encoding primitives without
+  changing the checked-in metadata, data or upload vectors.
+- Build both PocketIC fixtures through Testkit's managed sync/async constructors,
+  retaining their separate simulator state, server output and application setup.
+
 ## [0.24.3] - 2026-10-14
 
 ### Changed

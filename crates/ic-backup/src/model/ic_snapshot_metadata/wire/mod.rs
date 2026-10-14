@@ -1,10 +1,8 @@
 //! Decode-only pinned wire fields with bounded allocation and no skipped work.
 
 use super::{IcSnapshotMetadataError, MAX_IC_SNAPSHOT_CHUNKS, MAX_IC_SNAPSHOT_GLOBALS};
-use candid::{
-    CandidType,
-    de::{DecoderConfig, IDLDeserialize},
-};
+use crate::model::ic_wire::{self, DecoderLimits};
+use candid::CandidType;
 use ic_management_canister_types::{
     CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotMetadataResult,
     SnapshotMetadataGlobal, SnapshotSource,
@@ -99,53 +97,26 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    struct SequenceVisitor<T, const LIMIT: usize>(std::marker::PhantomData<T>);
-    impl<'de, T: Deserialize<'de>, const LIMIT: usize> de::Visitor<'de> for SequenceVisitor<T, LIMIT> {
-        type Value = Vec<T>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "at most {LIMIT} metadata elements")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-            if seq.size_hint().is_some_and(|n| n > LIMIT) {
-                return Err(de::Error::custom("metadata sequence exceeds bound"));
-            }
-            let mut values = Vec::new();
-            while values.len() < LIMIT {
-                match seq.next_element()? {
-                    Some(value) => values.push(value),
-                    None => return Ok(values),
-                }
-            }
-            if seq.next_element::<T>()?.is_some() {
-                return Err(de::Error::custom("metadata sequence exceeds bound"));
-            }
-            Ok(values)
-        }
-    }
-    d.deserialize_seq(SequenceVisitor::<T, LIMIT>(std::marker::PhantomData))
+    ic_wire::bounded_sequence::deserialize::<_, T, LIMIT>(
+        d,
+        |f, limit| write!(f, "at most {limit} metadata elements"),
+        "metadata sequence exceeds bound",
+    )
 }
 
 pub(super) fn decode(
     bytes: &[u8],
 ) -> Result<ReadCanisterSnapshotMetadataResult, IcSnapshotMetadataError> {
-    let mut config = DecoderConfig::new();
-    config
-        .set_decoding_quota(2 * 1024 * 1024)
-        .set_skipping_quota(0)
-        .set_max_type_len(64)
-        .set_max_header_len(16 * 1024)
-        .set_full_error_message(false);
-    let mut decoder = IDLDeserialize::new_with_config(bytes, &config)
-        .map_err(|_| IcSnapshotMetadataError::InvalidReply)?;
-    let value = decoder
-        .get_value::<WireMetadata>()
-        .map_err(|_| IcSnapshotMetadataError::InvalidReply)?;
-    if !decoder.is_done() {
-        return Err(IcSnapshotMetadataError::InvalidReply);
-    }
-    decoder
-        .done()
-        .map_err(|_| IcSnapshotMetadataError::InvalidReply)?;
+    let value: WireMetadata = ic_wire::decode_one(
+        bytes,
+        DecoderLimits {
+            decoding: 2 * 1024 * 1024,
+            skipping: 0,
+            type_table: 64,
+            header: Some(16 * 1024),
+        },
+    )
+    .map_err(|()| IcSnapshotMetadataError::InvalidReply)?;
     if value
         .globals
         .iter()

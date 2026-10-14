@@ -5,6 +5,7 @@ mod verification;
 pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactError};
 
 use super::{DownloadJournalError, DownloadJournalGuard};
+use crate::ops::persistence::directory_custody::{open_directory, same_directory};
 use crate::{
     hash::hex_bytes,
     model::{
@@ -29,7 +30,6 @@ use std::{
     fs::{self, File},
     io::{self, Write},
     os::fd::AsFd,
-    os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
 };
 use thiserror::Error;
@@ -363,20 +363,8 @@ impl fmt::Debug for IcSnapshotArtifactWriter<'_, '_, '_> {
     }
 }
 
-fn open_directory(path: &Path) -> io::Result<File> {
-    unix_fs::open(
-        path,
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Mode::empty(),
-    )
-    .map(File::from)
-    .map_err(io::Error::from)
-}
-
 fn check_directory_identity(path: &Path, held: &File) -> Result<(), IcSnapshotArtifactError> {
-    let current = fs::symlink_metadata(path)?;
-    let original = held.metadata()?;
-    if !current.is_dir() || current.dev() != original.dev() || current.ino() != original.ino() {
+    if !same_directory(path, held)? {
         return Err(IcSnapshotArtifactError::CustodyChanged);
     }
     Ok(())

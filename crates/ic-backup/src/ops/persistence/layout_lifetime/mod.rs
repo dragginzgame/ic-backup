@@ -1,5 +1,6 @@
 //! Stable parent-side layout locks and durable unfinished restore dependencies.
 
+use super::directory_custody::{open_directory, same_directory};
 use crate::{
     model::restore_references::{RestoreReferenceRecord, RestoreReferencesRecord},
     ops::persistence::{
@@ -137,14 +138,8 @@ impl BackupLayoutGuard {
     }
 
     pub(super) fn check_root(&self) -> Result<(), PersistenceError> {
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::MetadataExt;
-            let current = fs::symlink_metadata(&self.root)?;
-            let held = self.directory.metadata()?;
-            if current.is_dir() && current.dev() == held.dev() && current.ino() == held.ino() {
-                return Ok(());
-            }
+        if same_directory(&self.root, &self.directory)? {
+            return Ok(());
         }
         Err(PersistenceError::LayoutChanged {
             path: self.root.clone(),
@@ -173,25 +168,6 @@ pub(super) fn journal_identity(path: &Path) -> Result<PathBuf, PersistenceError>
         _ => {}
     }
     Ok(journal)
-}
-
-fn open_directory(path: &Path) -> io::Result<File> {
-    #[cfg(unix)]
-    {
-        use rustix::fs::{Mode, OFlags, open};
-        let fd = open(
-            path,
-            OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-            Mode::empty(),
-        )
-        .map_err(io::Error::from)?;
-        Ok(File::from(fd))
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = path;
-        Err(io::Error::from(io::ErrorKind::Unsupported))
-    }
 }
 
 fn sync_reference(path: &Path) -> io::Result<()> {

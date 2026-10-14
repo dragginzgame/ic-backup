@@ -3,9 +3,12 @@
 mod view;
 pub use view::{DownloadArtifactView, DownloadJournalView, ResumeAction};
 
-use super::artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash};
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::{collections::BTreeSet, fmt};
+use super::{
+    artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
+    bounded_sequence,
+};
+use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum artifact entries in a local download journal.
@@ -372,32 +375,11 @@ fn validate_entries(entries: &[DownloadArtifactRecord]) -> Result<(), DownloadJo
 fn read_bounded_artifacts<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<DownloadArtifactRecord>, D::Error> {
-    struct ArtifactsVisitor;
-    impl<'de> de::Visitor<'de> for ArtifactsVisitor {
-        type Value = Vec<DownloadArtifactRecord>;
-        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-            formatter.write_str("a bounded artifact list")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut entries = Vec::new();
-            while entries.len() < MAX_DOWNLOAD_ARTIFACTS {
-                match sequence.next_element()? {
-                    Some(entry) => entries.push(entry),
-                    None => return Ok(entries),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(
-                    DownloadJournalRecordError::TooManyArtifacts,
-                ));
-            }
-            Ok(entries)
-        }
-    }
-    deserializer.deserialize_seq(ArtifactsVisitor)
+    bounded_sequence::deserialize::<_, _, MAX_DOWNLOAD_ARTIFACTS>(
+        deserializer,
+        "a bounded artifact list",
+        DownloadJournalRecordError::TooManyArtifacts,
+    )
 }
 
 /// Typed local journal identity, schema or transition rejection.

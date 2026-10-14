@@ -5,13 +5,12 @@ use super::{
     MAX_IC_SNAPSHOT_UPLOAD_REPLY_BYTES, validate_destination,
 };
 use crate::model::{
-    artifacts::ArtifactChecksumRecord, ic_lifecycle_reply::EMPTY_CANDID_REPLY,
+    artifacts::ArtifactChecksumRecord,
+    ic_lifecycle_reply::EMPTY_CANDID_REPLY,
     ic_snapshot_reply::snapshot_id,
+    ic_wire::{self, DecoderLimits},
 };
-use candid::{
-    CandidType,
-    de::{DecoderConfig, IDLDeserialize},
-};
+use candid::CandidType;
 use serde::Deserialize;
 use std::fmt;
 
@@ -57,24 +56,16 @@ impl<'request, 'source> IcSnapshotUploadReply<'request, 'source> {
         }
         let kind = match request.kind() {
             IcSnapshotUploadKind::Metadata => {
-                let mut config = DecoderConfig::new();
-                config
-                    .set_decoding_quota(64 * 1024)
-                    .set_skipping_quota(0)
-                    .set_max_type_len(16)
-                    .set_max_header_len(4096)
-                    .set_full_error_message(false);
-                let mut decoder = IDLDeserialize::new_with_config(bytes, &config)
-                    .map_err(|_| IcSnapshotUploadError::InvalidReply)?;
-                let reply = decoder
-                    .get_value::<WireMetadataReply>()
-                    .map_err(|_| IcSnapshotUploadError::InvalidReply)?;
-                if !decoder.is_done() {
-                    return Err(IcSnapshotUploadError::InvalidReply);
-                }
-                decoder
-                    .done()
-                    .map_err(|_| IcSnapshotUploadError::InvalidReply)?;
+                let reply: WireMetadataReply = ic_wire::decode_one(
+                    bytes,
+                    DecoderLimits {
+                        decoding: 64 * 1024,
+                        skipping: 0,
+                        type_table: 16,
+                        header: Some(4096),
+                    },
+                )
+                .map_err(|()| IcSnapshotUploadError::InvalidReply)?;
                 validate_destination(request.source(), &reply.snapshot_id)?;
                 IcSnapshotUploadReplyKind::Metadata {
                     snapshot_id: reply.snapshot_id,

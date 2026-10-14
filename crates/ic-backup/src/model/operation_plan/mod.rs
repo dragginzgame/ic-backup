@@ -13,11 +13,12 @@ use crate::model::{
         AttemptAuthorityRecord, AttemptJournalRecordError, OperationBindingRecord,
         OperationBindingRequest,
     },
+    bounded_sequence,
     effect_graph::{EffectGraphRecord, MAX_EFFECT_OPERATIONS},
     inventory::{InventoryRecord, InventoryRecordError, MAX_INVENTORY_TARGETS},
 };
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::{collections::BTreeSet, fmt};
+use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum encoded input and canonical output bytes admitted by plan persistence.
@@ -318,32 +319,11 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    struct Visitor<T, const LIMIT: usize>(std::marker::PhantomData<T>);
-    impl<'de, T: Deserialize<'de>, const LIMIT: usize> de::Visitor<'de> for Visitor<T, LIMIT> {
-        type Value = Vec<T>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "at most {LIMIT} plan entries")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut entries = Vec::new();
-            while entries.len() < LIMIT {
-                match sequence.next_element()? {
-                    Some(entry) => entries.push(entry),
-                    None => return Ok(entries),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(format!(
-                    "plan list exceeds {LIMIT} entries"
-                )));
-            }
-            Ok(entries)
-        }
-    }
-    deserializer.deserialize_seq(Visitor::<T, LIMIT>(std::marker::PhantomData))
+    bounded_sequence::deserialize::<_, _, LIMIT>(
+        deserializer,
+        format!("at most {LIMIT} plan entries"),
+        format!("plan list exceeds {LIMIT} entries"),
+    )
 }
 
 /// Typed original plan identity, structural binding or finite allowance rejection.

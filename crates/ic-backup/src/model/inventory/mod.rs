@@ -3,12 +3,12 @@
 mod target;
 pub use target::{InventoryTargetRecord, InventoryTargetRequest, MAX_INVENTORY_ROLE_BYTES};
 
-use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError};
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fmt,
+use crate::model::{
+    artifacts::{ArtifactChecksumRecord, ChecksumError},
+    bounded_sequence,
 };
+use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 use thiserror::Error;
 
 /// Maximum exact physical targets in one declared inventory.
@@ -169,30 +169,11 @@ pub(super) fn check_count(count: usize) -> Result<(), InventoryRecordError> {
 fn bounded_targets<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<InventoryTargetRecord>, D::Error> {
-    struct TargetsVisitor;
-    impl<'de> de::Visitor<'de> for TargetsVisitor {
-        type Value = Vec<InventoryTargetRecord>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("a bounded physical target list")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut targets = Vec::new();
-            while targets.len() < MAX_INVENTORY_TARGETS {
-                match sequence.next_element()? {
-                    Some(target) => targets.push(target),
-                    None => return Ok(targets),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(InventoryRecordError::TooManyTargets));
-            }
-            Ok(targets)
-        }
-    }
-    deserializer.deserialize_seq(TargetsVisitor)
+    bounded_sequence::deserialize::<_, _, MAX_INVENTORY_TARGETS>(
+        deserializer,
+        "a bounded physical target list",
+        InventoryRecordError::TooManyTargets,
+    )
 }
 
 /// Typed declared identity, graph or resource-bound rejection.

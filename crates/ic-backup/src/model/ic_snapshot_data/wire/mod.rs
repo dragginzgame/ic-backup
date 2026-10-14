@@ -1,12 +1,9 @@
 //! Bounded data vector decoding; no skipped extensions or untrusted allocation.
 
 use super::{IcSnapshotDataError, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
-use candid::{
-    CandidType,
-    de::{DecoderConfig, IDLDeserialize},
-};
-use serde::{Deserialize, Deserializer, de};
-use std::fmt;
+use crate::model::ic_wire::{self, DecoderLimits};
+use candid::CandidType;
+use serde::{Deserialize, Deserializer};
 
 #[derive(CandidType, Deserialize)]
 struct WireData {
@@ -15,53 +12,23 @@ struct WireData {
 }
 
 fn chunk<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<u8>, D::Error> {
-    struct ChunkVisitor;
-    impl<'de> de::Visitor<'de> for ChunkVisitor {
-        type Value = Vec<u8>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("at most 1 MiB of snapshot data")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-            if seq
-                .size_hint()
-                .is_some_and(|n| n > MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
-            {
-                return Err(de::Error::custom("snapshot chunk exceeds bound"));
-            }
-            let mut bytes = Vec::new();
-            while bytes.len() < MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES {
-                match seq.next_element()? {
-                    Some(byte) => bytes.push(byte),
-                    None => return Ok(bytes),
-                }
-            }
-            if seq.next_element::<u8>()?.is_some() {
-                return Err(de::Error::custom("snapshot chunk exceeds bound"));
-            }
-            Ok(bytes)
-        }
-    }
-    d.deserialize_seq(ChunkVisitor)
+    ic_wire::bounded_sequence::deserialize::<_, u8, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES>(
+        d,
+        |f, _| f.write_str("at most 1 MiB of snapshot data"),
+        "snapshot chunk exceeds bound",
+    )
 }
 
 pub(super) fn decode(bytes: &[u8]) -> Result<Vec<u8>, IcSnapshotDataError> {
-    let mut config = DecoderConfig::new();
-    config
-        .set_decoding_quota(8 * 1024 * 1024)
-        .set_skipping_quota(0)
-        .set_max_type_len(16)
-        .set_max_header_len(4096)
-        .set_full_error_message(false);
-    let mut decoder = IDLDeserialize::new_with_config(bytes, &config)
-        .map_err(|_| IcSnapshotDataError::InvalidReply)?;
-    let value = decoder
-        .get_value::<WireData>()
-        .map_err(|_| IcSnapshotDataError::InvalidReply)?;
-    if !decoder.is_done() {
-        return Err(IcSnapshotDataError::InvalidReply);
-    }
-    decoder
-        .done()
-        .map_err(|_| IcSnapshotDataError::InvalidReply)?;
+    let value: WireData = ic_wire::decode_one(
+        bytes,
+        DecoderLimits {
+            decoding: 8 * 1024 * 1024,
+            skipping: 0,
+            type_table: 16,
+            header: Some(4096),
+        },
+    )
+    .map_err(|()| IcSnapshotDataError::InvalidReply)?;
     Ok(value.chunk)
 }

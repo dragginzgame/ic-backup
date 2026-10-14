@@ -7,10 +7,12 @@ pub use authority::{
     OperationBindingRequest,
 };
 
-use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash};
+use crate::model::{
+    artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
+    bounded_sequence,
+};
 use history::{AttemptEventRecord, Projection};
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 
 /// Maximum retained reservation/receipt events in one operation journal.
@@ -310,32 +312,11 @@ impl AttemptJournalRecord {
 fn bounded_events<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<AttemptEventRecord>, D::Error> {
-    struct EventsVisitor;
-    impl<'de> de::Visitor<'de> for EventsVisitor {
-        type Value = Vec<AttemptEventRecord>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("a bounded chronological attempt event list")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut events = Vec::new();
-            while events.len() < MAX_ATTEMPT_EVENTS {
-                match sequence.next_element()? {
-                    Some(event) => events.push(event),
-                    None => return Ok(events),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(
-                    AttemptJournalRecordError::HistoryTooLarge,
-                ));
-            }
-            Ok(events)
-        }
-    }
-    deserializer.deserialize_seq(EventsVisitor)
+    bounded_sequence::deserialize::<_, _, MAX_ATTEMPT_EVENTS>(
+        deserializer,
+        "a bounded chronological attempt event list",
+        AttemptJournalRecordError::HistoryTooLarge,
+    )
 }
 
 /// Typed exact identity, finite accounting or chronological state rejection.

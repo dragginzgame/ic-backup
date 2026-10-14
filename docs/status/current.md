@@ -25,7 +25,68 @@
 
 # Current handoff — 2026-10-14
 
-## Pending 0.24.3 local consolidation
+## Pending 0.24.4 local consolidation
+
+The next patch draft shares the identical bounded Serde sequence loop for
+inventory, operation plans and attempt journals, preserving their original
+limits, excess-entry probe and field errors. Backup now has one local no-follow
+directory-open and held-inode comparison primitive for layout and IC snapshot
+artifact custody; a future Host FS API can own that narrow primitive after
+separate upstream qualification. The three independent Candid golden generators
+share only their Perl encoding and JSON-output primitives. Their checked-in
+metadata, data and upload vectors reproduce byte for byte. All 16 local
+`make ci` targets pass on the selected Host 0.17.12 / Metrics 0.9.4 /
+Testkit 0.39.0 graph, including 552 library tests, 34 core PocketIC tests,
+12 Agent PocketIC tests, strict Clippy, Rust 1.88 consumers and both package
+archives. The sandboxed first run could not bind the PocketIC server to
+`127.0.0.1`; the loopback-enabled rerun passed. The pre-existing
+`Cargo.lock` update is outside this batch's edits.
+
+The same bounded sequence reader now covers execution predecessors and download
+artifacts with their original error labels and excess probes. Five IC reply
+decoders share setup and exact trailing-argument checks, retaining separate
+method quotas, wire DTOs and typed errors. An isolated local Host FS branch
+adds the narrow no-follow directory opener and held-inode comparison for future
+published adoption; Backup still uses its local copy on the current registry
+graph. The complete 16-target `make ci` gate passes for these follow-up edits
+on Host 0.17.13 / Metrics 0.9.4 / Testkit 0.40.0, including 552 library tests,
+34 core PocketIC tests, 12 Agent PocketIC tests, strict Clippy, independent
+Rust 1.88 consumers and both package archives. The first run stopped at a
+missing selected Testkit CLI, which explicit setup supplied; the next run found
+strict Clippy style errors in the new helper, corrected before this full pass.
+Native macOS and upstream Host FS publication/adoption remain separate.
+
+0.24.4 is a compatible patch: public APIs, persisted records, IC wire bytes,
+recovery authority and package versions are unchanged.
+
+Both PocketIC fixtures now pass their existing builders to Testkit's managed
+sync/async constructors. The combined startup deadline is 120 seconds, matching
+the prior two 60-second phases; simulator paths, raw server output, subnet
+topology, signed Agent trust and instance-before-server teardown stay local.
+The complete 16-target local `make ci` gate passes for this fixture change,
+including 34 core and 12 Agent real PocketIC tests. Application-owned transport
+qualification (#25), the complete runner and terminal provider (#29), and
+native macOS acceptance remain separate.
+
+The snapshot inventory, metadata and data wire adapters now use one bounded
+Serde sequence reader with their original size-hint checks, typed excess probe,
+quotas and error text. Raw snapshot IDs retain their separate nonempty rule.
+Agent endpoint admission has a pure local owner for its written-origin rule;
+timeout, trusted root and signer admission remain in the transport constructor.
+Focused snapshot tests (164 cases) and Agent unit/HTTP/real PocketIC suites
+(3/16/12 cases) pass against the current Host 0.18.0, Metrics 0.9.5 and
+Testkit 0.41.0 lock selection. Testkit's exact CLI was installed through the
+explicit setup target before the Agent simulator rerun.
+
+Host [fixture PR #103](https://github.com/dragginzgame/ic-host-tooling/pull/103)
+defines the small opt-in allocator needed to remove Backup's two fixture-root
+loops, but it remains open and is absent from published Host 0.18.0. Consumer
+adoption must use the published API, without a sibling source override. Host's
+current four-crate extraction boundary has no network/origin owner; moving the
+pure Agent rule upstream needs a reviewed destination and policy shape because
+IC Crates' canonical-origin rule differs from Backup's accepted spellings.
+
+## Released 0.24.3 local consolidation
 
 The latest compatible slice shares canonical inventory-backed target-row
 admission between consistency and restore safety and reads original plans and
@@ -44,7 +105,7 @@ already-existing ancestor-symlink admission needs the correction in
 Backup's prior local traversal had the same behavior. The final consumer
 adoption passes the complete local gate on this exact lock selection.
 
-The next local consolidation shares canonical principal-set admission for
+The 0.24.3 consolidation shares canonical principal-set admission for
 controllers and snapshot viewers, reserved single-submit sequencing for four
 effect workflows, and exact Applied-receipt recording for metadata, allocation
 and data upload. Effect-specific authority checks, typed errors, reply custody
@@ -53,7 +114,7 @@ targets pass on the current Host 0.17.8 / Metrics 0.9.3 lock selection,
 including 552 library tests, 34 core PocketIC tests, 12 Agent PocketIC tests,
 strict Clippy, Rust 1.88 independent consumers and both package archives.
 
-Backup 0.24.2 is tagged at `bf41994` / `v0.24.2`. The pending 0.24.3 draft
+Backup 0.24.3 is tagged at `dcb3069` / `v0.24.3`. That release
 shares one internal Agent prepare/retain/submit/reply sequence across mutation,
 upload, observation, transfer-read and fence-acquisition adapters. Port-specific
 evidence domains and the fence's mandatory post-dispatch reply retention remain

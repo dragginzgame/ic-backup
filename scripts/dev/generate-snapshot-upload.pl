@@ -2,47 +2,12 @@
 # Independent DIDL/field-hash/LEB128/float-bit/SHA-256 upload vectors. No Rust encoder.
 use strict;
 use warnings;
-use JSON::PP;
+use JSON::PP qw(decode_json);
 use Digest::SHA qw(sha256_hex);
-use Math::BigInt;
+use FindBin;
+use lib $FindBin::Bin;
+use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json);
 
-sub uleb {
-    my $n = Math::BigInt->new("$_[0]"); my $bytes = '';
-    do { my $b = $n->copy()->band(127)->numify(); $n->brsft(7);
-        $bytes .= chr($b | ($n->is_zero() ? 0 : 128)); } until ($n->is_zero());
-    return $bytes;
-}
-sub sleb {
-    my $n = shift; my $bytes = '';
-    while (1) { my $b = $n & 127; $n = int(($n - $b) / 128);
-        my $done = ($n == 0 && !($b & 64)) || ($n == -1 && ($b & 64));
-        $bytes .= chr($b | ($done ? 0 : 128)); last if $done; }
-    return $bytes;
-}
-sub field_hash { my $h = 0; $h = ($h * 223 + $_) % 4294967296 for unpack('C*', $_[0]); return $h; }
-sub labels { return sort { field_hash($a) <=> field_hash($b) } keys %{$_[0]}; }
-sub fields {
-    my ($tag, $fields) = @_;
-    return sleb($tag) . uleb(scalar keys %$fields) . join('',
-        map { uleb(field_hash($_)) . sleb($fields->{$_}) } labels($fields));
-}
-sub variant {
-    my ($fields, $name, $value) = @_; my @labels = labels($fields);
-    my ($index) = grep { $labels[$_] eq $name } 0..$#labels;
-    return uleb($index) . $value;
-}
-sub argument {
-    my ($types, $fields, $values) = @_;
-    return 'DIDL' . uleb(scalar @$types) . join('', @$types) . uleb(1) . sleb(0)
-        . join('', map { $values->{$_} } labels($fields));
-}
-sub write_json {
-    my ($path, $value) = @_; my $bytes = JSON::PP->new->canonical->pretty->encode($value);
-    if (@ARGV && $ARGV[0] eq '--check') {
-        open my $in, '<', $path or die "$path: $!"; local $/;
-        die "generated content differs: $path\n" if <$in> ne $bytes;
-    } else { open my $out, '>', $path or die "$path: $!"; print {$out} $bytes; }
-}
 die "usage: perl scripts/dev/generate-snapshot-upload.pl [--check]\n"
     if @ARGV > 1 || (@ARGV && $ARGV[0] ne '--check');
 open my $in, '<', 'crates/ic-backup/src/model/ic_snapshot_metadata/tests/golden.json' or die $!;

@@ -4,6 +4,7 @@ mod artifact_commit;
 mod attempt_journal;
 mod command_lifetime_lock;
 mod consistency;
+mod directory_custody;
 mod download_journal;
 mod effect_graph;
 mod execution_progress;

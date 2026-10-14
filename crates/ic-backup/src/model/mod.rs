@@ -2,6 +2,7 @@
 
 pub mod artifacts;
 pub mod attempt_journal;
+mod bounded_sequence;
 pub mod command_custody;
 pub mod consistency;
 pub mod control_authority;
@@ -25,6 +26,7 @@ pub mod ic_snapshot_transfer_read;
 pub mod ic_snapshot_upload;
 pub mod ic_snapshot_upload_data_observation;
 pub mod ic_snapshot_upload_observation;
+mod ic_wire;
 pub mod inventory;
 mod journal_path;
 pub mod membership;

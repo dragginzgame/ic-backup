@@ -25,7 +25,7 @@ use ic_backup::{
     },
 };
 use ic_testkit::{
-    pic::{PocketIcBuilderExt, PocketIcManagedServer, PocketIcStartupConfig},
+    pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal},
 };
 use serde_json::json;
@@ -76,20 +76,16 @@ impl Backend {
             binary.is_absolute(),
             "Testkit must admit an absolute server path"
         );
-        let server = PocketIcStartupConfig::spawn(binary, Duration::from_secs(60))
-            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
-            .start_managed_server()
-            .unwrap();
         let builder = PocketIcBuilder::new()
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
-        let pic = builder
-            .try_build(PocketIcStartupConfig::connect(
-                server.url(),
-                Duration::from_secs(60),
-            ))
+        let owned = PocketIcStartupConfig::spawn(binary, Duration::from_secs(120))
+            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
+            .build_instance(builder)
             .unwrap();
+        let pic = owned.instance;
+        let server = owned.server.expect("spawn mode owns the managed server");
         let wasm = fs::read(root.join("optimized.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();

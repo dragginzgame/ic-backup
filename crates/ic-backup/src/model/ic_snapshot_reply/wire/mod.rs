@@ -1,11 +1,11 @@
 //! Decode-only wire adapters with bounded Serde sequences and upstream Candid types.
 
 use super::{IcSnapshotInfo, IcSnapshotReplyError, MAX_IC_SNAPSHOT_REPLY_ENTRIES};
-use crate::model::ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES};
-use candid::{
-    CandidType,
-    de::{DecoderConfig, IDLDeserialize},
+use crate::model::{
+    ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES},
+    ic_wire::{self, DecoderLimits},
 };
+use candid::CandidType;
 use serde::{Deserialize, Deserializer, de};
 use std::fmt;
 
@@ -37,42 +37,12 @@ struct WireInventory(Vec<WireSnapshot>);
 
 impl<'de> Deserialize<'de> for WireInventory {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct InventoryVisitor;
-        impl<'de> de::Visitor<'de> for InventoryVisitor {
-            type Value = WireInventory;
-
-            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("at most 1024 snapshot descriptors")
-            }
-
-            fn visit_seq<A: de::SeqAccess<'de>>(
-                self,
-                mut sequence: A,
-            ) -> Result<Self::Value, A::Error> {
-                if sequence
-                    .size_hint()
-                    .is_some_and(|size| size > MAX_IC_SNAPSHOT_REPLY_ENTRIES)
-                {
-                    return Err(de::Error::custom(
-                        "snapshot inventory exceeds its entry bound",
-                    ));
-                }
-                let mut snapshots = Vec::new();
-                while snapshots.len() < MAX_IC_SNAPSHOT_REPLY_ENTRIES {
-                    match sequence.next_element::<WireSnapshot>()? {
-                        Some(snapshot) => snapshots.push(snapshot),
-                        None => return Ok(WireInventory(snapshots)),
-                    }
-                }
-                if sequence.next_element::<WireSnapshot>()?.is_some() {
-                    return Err(de::Error::custom(
-                        "snapshot inventory exceeds its entry bound",
-                    ));
-                }
-                Ok(WireInventory(snapshots))
-            }
-        }
-        deserializer.deserialize_seq(InventoryVisitor)
+        ic_wire::bounded_sequence::deserialize::<_, WireSnapshot, MAX_IC_SNAPSHOT_REPLY_ENTRIES>(
+            deserializer,
+            |f, _| f.write_str("at most 1024 snapshot descriptors"),
+            "snapshot inventory exceeds its entry bound",
+        )
+        .map(Self)
     }
 }
 
@@ -118,14 +88,16 @@ pub(super) fn decode(
     method: IcManagementMethodRecord,
     bytes: &[u8],
 ) -> Result<Vec<IcSnapshotInfo>, IcSnapshotReplyError> {
-    let mut config = DecoderConfig::new();
-    config
-        .set_decoding_quota(DECODING_QUOTA)
-        .set_skipping_quota(0)
-        .set_max_type_len(MAX_TYPE_TABLE_ENTRIES)
-        .set_full_error_message(false);
-    let mut decoder = IDLDeserialize::new_with_config(bytes, &config)
-        .map_err(|_| IcSnapshotReplyError::InvalidReply)?;
+    let mut decoder = ic_wire::decoder(
+        bytes,
+        DecoderLimits {
+            decoding: DECODING_QUOTA,
+            skipping: 0,
+            type_table: MAX_TYPE_TABLE_ENTRIES,
+            header: None,
+        },
+    )
+    .map_err(|()| IcSnapshotReplyError::InvalidReply)?;
     let snapshots = match method {
         IcManagementMethodRecord::TakeCanisterSnapshot => vec![
             decoder
@@ -140,11 +112,6 @@ pub(super) fn decode(
         }
         _ => return Err(IcSnapshotReplyError::UnsupportedMethod { method }),
     };
-    if !decoder.is_done() {
-        return Err(IcSnapshotReplyError::InvalidReply);
-    }
-    decoder
-        .done()
-        .map_err(|_| IcSnapshotReplyError::InvalidReply)?;
+    ic_wire::finish(&mut decoder).map_err(|()| IcSnapshotReplyError::InvalidReply)?;
     Ok(snapshots.into_iter().map(IcSnapshotInfo::from).collect())
 }
