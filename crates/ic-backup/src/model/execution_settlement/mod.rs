@@ -1,11 +1,10 @@
 //! Immutable exact original journal fingerprints; not a backup/restore terminal receipt.
 
 use crate::model::{
-    artifacts::ArtifactChecksumRecord, attempt_journal::AttemptJournalRecord,
+    artifacts::ArtifactChecksumRecord, attempt_journal::AttemptJournalRecord, bounded_sequence,
     effect_graph::MAX_EFFECT_OPERATIONS,
 };
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 
 /// Maximum raw and canonical checkpoint bytes, including all 8,192 possible journal rows.
@@ -123,30 +122,11 @@ impl ExecutionSettlementRecord {
 fn bounded_journals<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<ExecutionSettlementJournalRecord>, D::Error> {
-    struct Rows;
-    impl<'de> de::Visitor<'de> for Rows {
-        type Value = Vec<ExecutionSettlementJournalRecord>;
-        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(
-                formatter,
-                "at most {MAX_EFFECT_OPERATIONS} original journal fingerprints"
-            )
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut rows = Vec::new();
-            while let Some(row) = sequence.next_element()? {
-                if rows.len() == MAX_EFFECT_OPERATIONS {
-                    return Err(de::Error::custom("too many journal fingerprints"));
-                }
-                rows.push(row);
-            }
-            Ok(rows)
-        }
-    }
-    deserializer.deserialize_seq(Rows)
+    bounded_sequence::deserialize::<_, _, MAX_EFFECT_OPERATIONS>(
+        deserializer,
+        format!("at most {MAX_EFFECT_OPERATIONS} original journal fingerprints"),
+        "too many journal fingerprints",
+    )
 }
 /// Typed strict declaration rejection; original journals remain the only spending owners.
 #[derive(Debug, Eq, Error, PartialEq)]

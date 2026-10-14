@@ -16,6 +16,7 @@ thiserror.workspace = true
 
 [dev-dependencies]
 candid.workspace = true
+ic-host-fs = { workspace = true, features = ["test-support"] }
 ic-management-canister-types.workspace = true
 ic-testkit.workspace = true
 serde_json.workspace = true

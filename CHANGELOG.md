@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.24.6]
+
+### Changed
+
+- Use one stage preparation, execution and checkpoint sequence for new and retained
+  workflows, preserving their original evidence and spending rules.
+- Reuse the bounded persisted-sequence decoder for effect dependencies and
+  settlement journals, preserving their limits and error labels.
+
+### Testing
+
+- Use Host FS's published private fixture allocator for Core and Agent integration
+  roots. Retire the duplicate collision loops and their redundant allocation tests;
+  each journey still owns its retained evidence and cleanup.
+
 ## [0.24.5] - 2026-10-14
 
 ### Changed

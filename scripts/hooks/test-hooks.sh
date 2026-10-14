@@ -211,6 +211,8 @@ perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-artifacts\.workspace[^\n]
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
 formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
 while IFS= read -r -d '' path; do
+    # The index may still name an intentionally deleted Rust test before commit.
+    [[ -e "$ROOT/$path" || -L "$ROOT/$path" ]] || continue
     formatter_inputs[${#formatter_inputs[@]}]="$path"
 done < <(git -C "$ROOT" ls-files -z --cached --others --exclude-standard -- '*.rs')
 bash "$ROOT/scripts/ci/check-formatting-hooks.sh" "$ROOT" \

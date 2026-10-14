@@ -25,7 +25,64 @@
 
 # Current handoff — 2026-10-14
 
-## Pending 0.24.5 local consolidation
+## Pending 0.24.6 bounded-record cleanup and Host proposals
+
+Effect dependencies and settlement journals now use the existing bounded
+persisted-sequence decoder. Their entry ceilings and rejection labels remain;
+the effect graph's aggregate edge decoder remains specialized. Focused graph
+and settlement suites pass on the current locked graph. Full `make ci` also
+passes: 552 Core library tests, 34 Core PocketIC tests, 16 Agent HTTP tests,
+12 Agent PocketIC tests, strict Clippy, Rust 1.88 independent consumers and
+both package archives. No persisted schema, hash framing, authority or public
+API changed.
+
+An isolated Host Tooling copy at `/tmp/ic-host-moves.CTt0hl/repo` proposes
+generic no-follow descriptor tree traversal in Host FS and opt-in acknowledged
+direct-child crash barriers in Host Process. Backup retains both local helpers
+until upstream publication and registry qualification. Host's real pending
+checkout and Backup's existing unrelated work are preserved. The isolated and
+combined Host trees pass full Linux `make ci msrv-workspace`; native macOS and
+upstream publication remain separate.
+
+## Pending 0.24.6 fixture ownership and upstream moves
+
+Core and Agent integration roots now use published Host FS 0.18.1's opt-in
+`testing::create_fixture_directory`; Backup's two allocation loops and its
+duplicated allocator regression file are removed. Host retains collision, parent
+and private-mode admission; each Backup journey still retains or cleans its own
+evidence. The new test-support feature is development-only. The complete
+16-target `make ci` gate passes on the selected Testkit 0.42.0 / Host 0.18.1
+graph, including 552 Core library cases, 16 Agent HTTP cases, both PocketIC
+suites, strict Clippy, Rust 1.88 consumers and both package archives. The first
+full run stopped at hook formatting because a deleted tracked test file was
+still enumerated and the new dev dependencies needed Cargo sorting; the hook
+fixture and formatting passed before the complete rerun.
+
+Host FS [PR #112](https://github.com/dragginzgame/ic-host-tooling/pull/112)
+adds the generic no-follow directory opener and held-inode comparison. Testkit
+[PR #92](https://github.com/dragginzgame/ic-testkit/pull/92) now includes 0.42's
+phased HTTP reader and the evidence-retaining whole-request hard cut for a
+pending 0.43.0. Both isolated Linux contributions pass focused tests, strict
+lint/docs and Rust 1.88 checking; native macOS and publication remain upstream.
+Backup retains its local directory custody and Agent HTTP capture until those
+APIs are published and qualified on a registry graph. No sibling-source Cargo
+patches or release effects were used.
+
+## Pending 0.24.6 workflow consolidation
+
+The fresh and retained execution-workflow coordinators now use one internal
+sequence to bind a child plan, prepare its complete original journal set, call
+the integration driver once and reconcile its exact checkpoint. The distinct
+predecessor and occupied-stage admissions remain in their original coordinators.
+All eight focused workflow tests pass, including lost replies, cancellation,
+retained continuation and distinct edge evidence. The complete 16-target
+`make ci` gate also passes with loopback access, including 552 library tests,
+34 core PocketIC tests, strict Clippy, Rust 1.88 independent consumers and both
+package archives. A first sandboxed run passed earlier gates but could not bind
+the simulator to `127.0.0.1`; it does not qualify PocketIC behavior. This is a
+compatible internal change; no public API, record or dispatch authority changes.
+
+## Released 0.24.5 local consolidation
 
 The five current-context policy gates now share one ordered network, caller and
 release matcher; each retains its own typed mismatch. IC snapshot artifact

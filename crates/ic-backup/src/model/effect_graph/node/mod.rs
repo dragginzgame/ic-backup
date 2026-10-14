@@ -1,8 +1,8 @@
 //! Passive exact operation identity and bounded explicit prerequisite admission.
 
 use super::EffectGraphError;
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::fmt;
+use crate::model::bounded_sequence;
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// Maximum direct prerequisites on one operation, independently of total graph bounds.
 pub const MAX_EFFECT_DEPENDENCIES: usize = 1024;
@@ -75,28 +75,9 @@ impl EffectNodeRecord {
 }
 
 fn bounded_dependencies<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u64>, D::Error> {
-    struct DependenciesVisitor;
-    impl<'de> de::Visitor<'de> for DependenciesVisitor {
-        type Value = Vec<u64>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("bounded exact effect dependencies")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut dependencies = Vec::new();
-            while dependencies.len() < MAX_EFFECT_DEPENDENCIES {
-                match sequence.next_element()? {
-                    Some(dependency) => dependencies.push(dependency),
-                    None => return Ok(dependencies),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(EffectGraphError::TooManyDependencies));
-            }
-            Ok(dependencies)
-        }
-    }
-    deserializer.deserialize_seq(DependenciesVisitor)
+    bounded_sequence::deserialize::<_, _, MAX_EFFECT_DEPENDENCIES>(
+        deserializer,
+        "bounded exact effect dependencies",
+        EffectGraphError::TooManyDependencies,
+    )
 }

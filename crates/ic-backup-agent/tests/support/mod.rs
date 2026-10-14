@@ -8,29 +8,14 @@ use ic_backup::{
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_operation_plan},
 };
 use serde_json::json;
-use std::{
-    fs,
-    path::PathBuf,
-    sync::{
-        Arc,
-        atomic::{AtomicU64, Ordering},
-    },
-};
+use std::{fs, path::PathBuf, sync::Arc};
 
-static NEXT: AtomicU64 = AtomicU64::new(0);
 pub fn root(label: &str) -> PathBuf {
-    let p = std::env::temp_dir().join(format!(
-        "ic-backup-agent-{label}-{}-{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    fs::create_dir(&p).unwrap();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&p, fs::Permissions::from_mode(0o700)).unwrap();
-    }
-    p
+    ic_host_fs::testing::create_fixture_directory(
+        &std::env::temp_dir(),
+        &format!("ic-backup-agent-{label}"),
+    )
+    .unwrap()
 }
 
 /// Retain exact original signed ingress privately and durably before test dispatch.

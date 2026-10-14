@@ -153,16 +153,8 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
                 ))
             })
             .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
-        let plan = driver
-            .bind_stage(workflow, sequence, &predecessors)
-            .map_err(ExecutionWorkflowRunError::Driver)?;
-        let binding = ExecutionStageBindingRecord::new(workflow, sequence, &plan, predecessors)?;
-        let stage = ExecutionStageGuard::prepare(layout, binding, plan)?;
-        let learned = driver
-            .execute_stage(&stage)
-            .await
-            .map_err(ExecutionWorkflowRunError::Driver)?;
-        let checkpoint = stage.reconcile_checkpoint(learned)?;
+        let checkpoint =
+            execute_absent_stage(layout, workflow, sequence, predecessors, driver).await?;
         completed.insert(sequence, checkpoint);
     }
     Ok(read_complete_execution_workflow(
@@ -252,19 +244,30 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
                 ))
             })
             .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
-        let plan = driver
-            .bind_stage(&workflow, sequence, &predecessors)
-            .map_err(ExecutionWorkflowRunError::Driver)?;
-        let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, predecessors)?;
-        let stage = ExecutionStageGuard::prepare(layout, binding, plan)?;
-        let learned = driver
-            .execute_stage(&stage)
-            .await
-            .map_err(ExecutionWorkflowRunError::Driver)?;
-        let checkpoint = stage.reconcile_checkpoint(learned)?;
+        let checkpoint =
+            execute_absent_stage(layout, &workflow, sequence, predecessors, driver).await?;
         completed.insert(sequence, checkpoint);
     }
     Ok(read_complete_execution_workflow(layout, expected_workflow)?)
+}
+
+async fn execute_absent_stage<D: ExecutionWorkflowStageDriver>(
+    layout: &BackupLayoutGuard,
+    workflow: &ExecutionWorkflowRecord,
+    sequence: u64,
+    predecessors: Vec<ExecutionStagePredecessorRecord>,
+    driver: &mut D,
+) -> Result<ExecutionStagePredecessorRecord, ExecutionWorkflowRunError<D::Error>> {
+    let plan = driver
+        .bind_stage(workflow, sequence, &predecessors)
+        .map_err(ExecutionWorkflowRunError::Driver)?;
+    let binding = ExecutionStageBindingRecord::new(workflow, sequence, &plan, predecessors)?;
+    let stage = ExecutionStageGuard::prepare(layout, binding, plan)?;
+    let learned = driver
+        .execute_stage(&stage)
+        .await
+        .map_err(ExecutionWorkflowRunError::Driver)?;
+    Ok(stage.reconcile_checkpoint(learned)?)
 }
 
 /// Failure of new original-workflow coordination; all originals remain retained.
