@@ -145,7 +145,9 @@ fn publish_bytes_at_barriers(
     };
     #[cfg(not(unix))]
     let result = ic_host_fs::durable::write_with(path, options, produce);
-    result.map_err(PersistenceError::Publication)?;
+    result.map_err(|error| {
+        PersistenceError::Publication(super::PublicationError::from_host(error))
+    })?;
     // Successful Host completion includes publication and the held-parent sync.
     barrier(DurableWriteBarrier::AfterDirectorySync);
     Ok(())

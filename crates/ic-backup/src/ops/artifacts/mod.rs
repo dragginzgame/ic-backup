@@ -1,7 +1,5 @@
 //! Stream artifact bytes through descriptor-based no-follow traversal.
 
-#[cfg(unix)]
-pub(crate) mod descriptor;
 #[cfg(test)]
 mod regressions;
 mod secure;

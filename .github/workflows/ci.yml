@@ -34,7 +34,7 @@ jobs:
       - name: Install the pinned development toolchain
         run: rustup show active-toolchain
       - name: Install the minimum supported Rust toolchain
-        run: rustup toolchain install 1.88.0 --profile minimal
+        run: rustup toolchain install 1.91.0 --profile minimal
       - name: Install the reviewed Linux ShellCheck
         if: runner.os == 'Linux'
         run: |

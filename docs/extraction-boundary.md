@@ -180,9 +180,10 @@ The pending 0.19.0 draft selects direct Host Artifact/FS 0.14. Its public
 publication-error Rust identity changes; sharing consumers must align Host 0.14.
 Published Rust sources match 0.13.5, with unchanged record and custody contracts.
 
-`PersistenceError::Publication` retains Host's original typed producer, cleanup
-and before/after-publication errors. Parent-preparation IO and serialization JSON
-errors keep their own boundaries. The public exhaustive enum changed in
+`PersistenceError::Publication` now carries Backup's own `PublicationError`,
+retaining the original typed producer, cleanup and before/after-publication
+errors independently of Host's Rust type identity. Parent-preparation IO and
+serialization JSON errors keep their own boundaries. The public exhaustive enum changed in
 0.6.0; callers must update matches and reconcile visible output after failed
 completion. All v1 bytes, original limits, spending and journal transitions remain
 unchanged. Neither helper grants operation or retry authority.

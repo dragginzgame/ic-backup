@@ -18,6 +18,7 @@ mod journal_lock;
 mod json;
 mod layout_lifetime;
 mod operation_plan;
+mod publication_error;
 mod restore_reference_release;
 mod restore_safety;
 
@@ -66,6 +67,7 @@ pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
 pub use operation_plan::{
     OperationPlanPersistenceError, create_operation_plan, read_operation_plan,
 };
+pub use publication_error::PublicationError;
 pub use restore_reference_release::{
     MAX_RESTORE_TERMINAL_BYTES, RestoreReferenceReleaseError, RestoreReferenceReleaseOutcome,
     RestoreTerminalEvidenceProvider,
@@ -101,10 +103,10 @@ pub enum PersistenceError {
     /// Shared JSON publication failures retain their separate structured boundary.
     #[error(transparent)]
     Io(#[from] io::Error),
-    /// Shared file publication failed, retaining producer/cleanup causes and visibility.
+    /// File publication failed, retaining producer/cleanup causes and visibility.
     /// An after-publication failure leaves output visible and requires reconciliation.
     #[error(transparent)]
-    Publication(#[from] ic_host_fs::durable::NamedWriteError<io::Error>),
+    Publication(#[from] PublicationError),
     /// JSON encoding or decoding failed.
     #[error(transparent)]
     Json(#[from] serde_json::Error),

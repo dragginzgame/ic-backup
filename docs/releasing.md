@@ -283,5 +283,6 @@ production guard.
 `make shell-check`, `make shared-tooling-check` and `make tooling-check` cover syntax,
 lints, pinned bytes/modes and rejection/evidence behavior. These are focused tooling
 checks, not actual releases, native macOS qualification or real registry publication.
-Completed code delivery requires the full `make ci` suite under standing validation
-authority. Release execution retains separate explicit authorization.
+Ordinary handoff follows the [shared focused-check cadence](../DRAGGINZGAME.md).
+The full `make ci` suite is reserved for explicitly authorized release work or
+an explicit request for that suite. Release execution retains separate authority.

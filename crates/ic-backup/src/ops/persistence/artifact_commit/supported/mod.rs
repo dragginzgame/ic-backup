@@ -4,7 +4,7 @@ use super::ArtifactCommitOutcome;
 use crate::{
     model::artifacts::ArtifactChecksumRecord,
     ops::{
-        artifacts::{ArtifactError, checksum_reader, checksum_relative_files, descriptor},
+        artifacts::{ArtifactError, checksum_reader, checksum_relative_files},
         persistence::PersistenceError,
     },
 };
@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use ic_host_fs::read::tree::{TreeVisitor, walk_tree};
 use rustix::{
     fd::{AsFd, OwnedFd},
     fs::{self as unix_fs, FileType, Mode, OFlags, RenameFlags},
@@ -132,7 +133,7 @@ fn sync_tree(
         checksums: Vec::new(),
         at_step,
     };
-    descriptor::walk_tree(&directory_fd, Path::new(""), display_root, &mut visitor)?;
+    walk_tree(&directory_fd, Path::new(""), display_root, &mut visitor)?;
     checksum_relative_files(visitor.checksums)
         .map_err(ArtifactError::from)
         .map_err(PersistenceError::from)
@@ -143,15 +144,11 @@ struct SyncVisitor<'a, F> {
     at_step: &'a mut F,
 }
 
-impl<F> descriptor::TreeVisitor for SyncVisitor<'_, F>
+impl<F> TreeVisitor for SyncVisitor<'_, F>
 where
     F: FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
 {
     type Error = PersistenceError;
-
-    fn directory_open_requires_type(&self) -> bool {
-        false
-    }
 
     fn file(
         &mut self,

@@ -241,11 +241,14 @@ Released 0.8.1 selects the Host 0.7.1 publication-error Rust identity. The
 released 0.9.0 selected Host 0.8. Released 0.11.0, 0.12.0 and 0.13.0 selected
 direct Host 0.9, 0.10 and 0.11 respectively. Released 0.14.0 and 0.18.0
 selected Host 0.12 and 0.13. Released 0.19.0 selected Host Artifact/FS 0.14.
-The pending 0.22.0 draft selects direct Host Artifact/FS 0.16.0; their published
+Released 0.22.0 selected direct Host Artifact/FS 0.16.0; their published
 Rust sources match 0.15.2, but the exposed `NamedWriteError` identity changes.
 Testkit 0.35.1 keeps its independently selected dev-only Host 0.15.2 graph.
-Consumers sharing `NamedWriteError` values or matching through a direct Host
-dependency must select that same compatible line. Production direct Host
+Consumers of that release sharing `NamedWriteError` values or matching through
+a direct Host dependency had to select that same compatible line. The pending
+0.25.0 hard cut instead exposes Backup's own `PublicationError`; consumers
+matching `PersistenceError::Publication` use that type, independent of their
+direct Host dependency. Production direct Host
 dependencies still disable default features. Testkit enables artifact archive/Wasm
 and Candid-extraction features in the dev graph, and owns dev-only Host process
 startup/cleanup. No new production inspection, installation-limit or process
@@ -478,16 +481,17 @@ is installed. See [the reply contract](contracts/ic-lifecycle-reply.json) and
 `cargo test --offline --locked -p ic-backup --test ic_lifecycle_reply`.
 
 Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
-minimum supported version is 1.88.0. The selected Host and Agent dependencies
-declare that floor; both libraries compile on the actual compiler. Install it
-separately for `make check-msrv`, which records Cargo/rustc versions, compiles
+minimum supported version is 1.91.0. Both libraries are checked on that
+compiler. Install it separately for `make check-msrv`, which records Cargo/rustc
+versions, compiles
 all targets/features and checks each public library in an independent consumer
 without Testkit feature unification. Those fixtures seed the unchanged workspace
 lock, prepare only their own standalone locks offline and refuse any different
 selected package/version/source. No dependency downgrade or ignored Rust floor
-is used. The retained isolated candidate passed before the support claim changed.
-Current native macOS qualification remains separate. Native builds are the supported product lane; the toolkit
-runs on an operator host.
+is used. The actual toolchain, locked graph and independent consumers passed
+on Linux for the 1.91.0 support floor. Native macOS qualification remains
+separate. Native builds are the supported product lane; the toolkit runs on
+an operator host.
 
 `policy::download_integrity::validate` checks retained plan/journal declarations
 without IO. `DownloadJournalGuard::verify_durable_artifacts` separately re-admits
@@ -796,7 +800,7 @@ entries do not establish IC Backup qualification.
 | Windows and non-Bash shells | No supported product lane |
 | Complete backup/restore | Unimplemented; no host has end-to-end product qualification |
 
-The pinned Rust 1.99.0 development toolchain, Rust 1.88.0 minimum compiler,
+The pinned Rust 1.99.0 development toolchain, Rust 1.91.0 minimum compiler,
 rustfmt and Clippy are required on
 each native host. Repository tooling requires Git, GNU Make, Bash, Perl with core
 JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck, cargo-sort 2.1.4 and either `sha256sum` or
@@ -810,7 +814,7 @@ tools and Homebrew, then run `brew install flock make ripgrep shellcheck`; provi
 Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
 `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through
 rustup, then run `rustup show active-toolchain` and
-`rustup toolchain install 1.88.0 --profile minimal` in this checkout. Install the
+`rustup toolchain install 1.91.0 --profile minimal` in this checkout. Install the
 reviewed manifest formatter after `source ci/tool-versions.env` with
 `cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked`,
 then run `make install-hooks` once per clone or after updating the hook contract.
@@ -889,10 +893,11 @@ copies the maintained root MIT notice exactly, preserving contributor attributio
 in the standalone crate archive. Update both copies together; a tracked symlink
 would violate the shared index-snapshot formatting contract.
 
-Run focused checks during development, then the full `make ci` suite before
-delivering completed code as ready, under the shared standing validation authority.
-Reuse passing evidence for unchanged inputs. Documentation-only and inspection-only
-work retain the baseline's narrower scope; release effects need explicit authority. `make ci`, `make validate` and
+Follow the [shared validation cadence](../DRAGGINZGAME.md): run meaningful focused
+checks for affected boundaries before handoff and reuse passing evidence for
+unchanged inputs. Run the local full suite for an explicitly authorized release
+or explicit request for those checks. Configured CI retains its own gates;
+release effects need separate authority. `make ci`, `make validate` and
 `make release-verify` run the full configured gate: snapshot verification,
 offline local-tool and pin checks, dependency fetch, tooling, formatting,
 native compilation, Clippy, tests, docs,
@@ -1019,8 +1024,21 @@ workspace discovery does not authorize a new graph or sibling path.
 yq, offline. Follow [local setup](local-setup.md) first; this command installs nothing
 and neither resolves dependencies nor compiles. The release adapter owns selected
 Git metadata, numeric release bounds and all record/recovery transformations.
-`make tooling-check` includes shared Cargo metadata regressions; `make release-check`
-retains focused consumer source/version/recovery checks using isolated fixtures.
+`make tooling-check` exercises this repository's actual CI dispatch, snapshot
+adoption, retained evidence and Testkit command routing. Its proof owners are:
+
+| Obligation | Consumer check |
+| --- | --- |
+| Exact snapshot bytes/modes and tamper refusal | `shared-tooling-check`, `scripts/ci/test-tooling.sh` |
+| Input-change stop, later-stage refusal and original failure retention | `scripts/ci/test-tooling.sh`, `make release-check` |
+| Local documentation, pins and package graph | `check-doc-links`, `dependency-pins-check`, `check`, `package` |
+| Prepared host/IC/Cargo/Testkit tools and formatting | `tools-check`, `testkit-server-check`, `fmt-check`, `hooks-check` |
+| Evidence checksum/archive behavior and Testkit CLI routing | `tooling-check`'s three retained focused fixtures |
+
+Shared Tooling's generic implementation regressions remain in its own CI; this
+consumer no longer dispatches their entire fixture matrix on every local gate.
+`make release-check` retains focused consumer source/version/recovery checks
+using isolated fixtures. Native CI remains the host acceptance owner.
 
 CI creates `target/ci-fixtures` before setting `TMPDIR`, then uploads that directory,
 retained test directories and validation failure logs on job failure. Hidden fixture

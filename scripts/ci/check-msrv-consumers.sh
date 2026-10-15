@@ -11,6 +11,7 @@ ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
+source "$ROOT/scripts/ci/consumer-fixture.sh"
 mkdir -p "$ROOT/target"
 fixture="$(mktemp -d "${TMPDIR:-$ROOT/target}/msrv-consumers.XXXXXX")"
 finish() {
@@ -19,14 +20,12 @@ finish() {
     exit "$status"
 }
 trap finish EXIT
-cp "$ROOT/Cargo.lock" "$fixture/original.lock"
 export RUSTUP_AUTO_INSTALL=0
-cargo "+$msrv" metadata --offline --locked --manifest-path "$ROOT/Cargo.toml" \
-    --format-version 1 > "$fixture/workspace.json"
+consumer_fixture_snapshot "$ROOT" "$fixture" "$msrv"
 jq -e --arg floor "$msrv" '
     . as $metadata | [.packages[] | select(.id as $id | $metadata.workspace_members | index($id))]
     | all(.rust_version == $floor) or error("MSRV selection does not match the workspace packages")
-' "$fixture/workspace.json" >/dev/null
+' "$fixture/original.json" >/dev/null
 for package in ic-backup ic-backup-agent; do
     consumer="$package-msrv-consumer"
     selected="$fixture/$package"
@@ -68,19 +67,7 @@ RUST
     else
         printf 'use %s as _;\nfn main() {}\n' "${package//-/_}" > "$selected/src/main.rs"
     fi
-    cp "$fixture/original.lock" "$selected/Cargo.lock"
-    # Initial fixture preparation may add its root and drop unused packages.
-    # Cargo metadata preserves the copied selections; generate-lockfile would
-    # reselect compatible versions from the cache. Admission below checks this.
-    cargo "+$msrv" metadata --offline --manifest-path "$selected/Cargo.toml" \
-        --format-version 1 > "$selected/metadata.json" 2> "$selected/preparation.log"
-    # A standalone lock may drop unused packages and add this fixture only.
-    # Refuse any selected package/version/source absent from the original graph.
-    jq -L "$ROOT/scripts/ci" -e --arg consumer "$consumer" --slurpfile original "$fixture/workspace.json" '
-        include "consumer-graph";
-        original_graph_admitted($original[0]; $consumer)
-        or error("Independent consumer changed selected packages or retained simulator dependencies")
-    ' "$selected/metadata.json" >/dev/null
+    consumer_fixture_prepare "$ROOT" "$fixture" "$selected" "$consumer" "$msrv"
     CARGO_TARGET_DIR="$ROOT/target" cargo "+$msrv" check --offline --locked \
         --manifest-path "$selected/Cargo.toml" --all-features > "$selected/check.log" 2>&1
     cat "$selected/check.log"

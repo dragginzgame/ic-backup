@@ -49,7 +49,18 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 109-file snapshot selects clean committed Shared Tooling 0.11.2 at
+The current 118-file snapshot selects clean committed Shared Tooling 0.15.0 at
+`3bef3f2daec7f64f875397ed4d53d5b9e2e68a08`. The canonical refresh adds
+release-input, Rust-source selection, tool-evidence and catalog readers with their
+documentation companions. The common baseline now reserves local full suites for
+explicit release or validation requests; Backup's active guidance uses focused
+checks for ordinary handoff. Common host and IC tool selections are unchanged.
+[The current review](shared-tooling-review.json) records all 33 updated and nine
+new snapshot paths with focused consumer qualification.
+
+### Prior Shared Tooling 0.11.2 review
+
+The earlier 109-file snapshot selected clean committed Shared Tooling 0.11.2 at
 `81bdf144482b21f146acf542f8013eefe1dfeba8`. It hardens fixture cleanup
 failure reporting and anchors temporary roots to their physical location. The
 selected fixture callers were refreshed with the common lifecycle helper; tool

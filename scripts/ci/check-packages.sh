@@ -8,6 +8,7 @@ ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
+source "$ROOT/scripts/ci/consumer-fixture.sh"
 cd "$ROOT"
 export CARGO_TARGET_DIR="$ROOT/target"
 export PATH="$ROOT/.tools/host/bin:$PATH"
@@ -21,10 +22,9 @@ finish() {
     exit "$status"
 }
 trap finish EXIT
-cp Cargo.lock "$fixture/original.lock"
 cp Cargo.toml "$fixture/original.toml"
 version="$(bash scripts/ci/read-cargo-workspace-version.sh Cargo.toml)"
-cargo metadata --offline --locked --format-version 1 > "$fixture/original.json"
+consumer_fixture_snapshot "$ROOT" "$fixture" ""
 # Cargo still performs archive/manifest/lockfile admission. Verification below
 # is mandatory and compiles the unpacked archives, never the live source paths.
 cargo package --offline --locked --allow-dirty --no-verify \
@@ -56,20 +56,13 @@ ic-backup-agent = { path = $agent }
 ic-backup = { path = $core }
 TOML
 printf 'use ic_backup as _;\nuse ic_backup_agent as _;\n' > "$fixture/consumer/src/lib.rs"
-cp "$fixture/original.lock" "$fixture/consumer/Cargo.lock"
-# Fixture preparation may prune the copied graph and add only its own root.
-# Strict admission forbids registry fallback or any new dependency selection.
-cargo metadata --offline --manifest-path "$fixture/consumer/Cargo.toml" \
-    --format-version 1 > "$fixture/consumer/metadata.json"
-jq -L "$ROOT/scripts/ci" -e --arg consumer ic-backup-package-consumer \
-    --arg unpacked "$fixture/unpacked" --arg version "$version" \
-    --slurpfile original "$fixture/original.json" '
-    include "consumer-graph";
-    original_graph_admitted($original[0]; $consumer)
-    and ([.packages[] | select(.name == "ic-backup" or .name == "ic-backup-agent")]
-        | length == 2 and all(.[];
-            .source == null and .version == $version
-            and .manifest_path == ($unpacked + "/" + .name + "-" + $version + "/Cargo.toml")))
+consumer_fixture_prepare "$ROOT" "$fixture" "$fixture/consumer" \
+    ic-backup-package-consumer ""
+jq -e --arg unpacked "$fixture/unpacked" --arg version "$version" '
+    [.packages[] | select(.name == "ic-backup" or .name == "ic-backup-agent")]
+    | length == 2 and all(.[];
+        .source == null and .version == $version
+        and .manifest_path == ($unpacked + "/" + .name + "-" + $version + "/Cargo.toml"))
     or error("Archive consumer changed the graph or selected a different package owner")
 ' "$fixture/consumer/metadata.json" >/dev/null
 cargo build --offline --locked --manifest-path "$fixture/consumer/Cargo.toml" --all-features
