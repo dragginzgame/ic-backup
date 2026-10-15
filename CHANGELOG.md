@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.7]
+
+- Include MIT license text in published crates and align package declarations
+  with the repository license.
+
 ## [0.24.6] - 2026-10-14
 
 ### Changed
