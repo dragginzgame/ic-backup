@@ -278,7 +278,6 @@ fn download_manifest_acknowledged_death_on_both_publication_sides_recovers_origi
         drop(journal);
         drop(layout);
         let handshake = temp_dir("ic-backup-download-manifest-handshake");
-        fs::create_dir(&handshake).unwrap();
         let mut child=Command::new(std::env::current_exe().unwrap())
             .args(["--exact","ops::persistence::download_journal::manifest::tests::download_manifest_acknowledged_death_on_both_publication_sides_recovers_originals","--nocapture"])
             .env(ROOT,&root).env(PLAN,serde_json::to_string(&plan).unwrap())

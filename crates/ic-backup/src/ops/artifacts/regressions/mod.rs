@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_support::temp_path;
+use crate::test_support::temp_dir;
 use std::fs;
 
 #[test]
@@ -208,7 +208,7 @@ fn staging_copy_rejects_impossible_stream_counts_without_panicking_or_discarding
 #[test]
 fn staging_preserves_exact_bytes_checksums_and_private_permissions() {
     use std::os::unix::fs::PermissionsExt;
-    let root = temp_path("ic-backup-stage");
+    let root = temp_dir("ic-backup-stage");
     fs::create_dir_all(root.join("source/nested")).expect("create source");
     fs::write(root.join("source/nested/state.bin"), b"state bytes").expect("write source");
     let destination = root.join("staged");
@@ -255,9 +255,8 @@ fn staging_preserves_exact_bytes_checksums_and_private_permissions() {
 #[test]
 fn non_utf8_tree_names_reject_instead_of_collapsing_path_identity() {
     use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
-    let root = temp_path("ic-backup-non-utf8");
+    let root = temp_dir("ic-backup-non-utf8");
     let name = OsStr::from_bytes(b"\xff");
-    fs::create_dir(&root).expect("create tree");
     if let Err(error) = fs::write(root.join(name), b"bytes") {
         // APFS rejects this raw basename before the traversal owner can inspect it.
         // Other hosts and other IO failures must still fail the real fixture.

@@ -15,7 +15,6 @@ use std::{
 
 fn layout() -> (PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-fence-obligation");
-    fs::create_dir(&root).unwrap();
     let guard = BackupLayoutGuard::acquire(&root).unwrap();
     (root, guard)
 }

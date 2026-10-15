@@ -101,7 +101,6 @@ impl ExecutionWorkflowStageDriver for Driver {
 
 fn layout(prefix: &str) -> (PathBuf, BackupLayoutGuard) {
     let root = temp_dir(prefix);
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     (root, layout)
 }

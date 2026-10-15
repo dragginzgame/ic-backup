@@ -13,7 +13,6 @@ use std::{
 
 fn layout() -> (std::path::PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-consistency-requirement");
-    fs::create_dir(&root).unwrap();
     let guard = BackupLayoutGuard::acquire(&root).unwrap();
     (root, guard)
 }

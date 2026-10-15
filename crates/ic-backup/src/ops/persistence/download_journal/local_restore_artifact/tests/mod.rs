@@ -345,7 +345,6 @@ fn local_restore_artifact_acknowledged_death_before_or_after_copy_recovers_witho
         let original = fs::read(root.join("source/download-journal.json")).unwrap();
         drop(f);
         let handshake = temp_dir("ic-backup-restore-artifact-handshake");
-        fs::create_dir(&handshake).unwrap();
         let mut child=Command::new(std::env::current_exe().unwrap())
             .args(["--exact","ops::persistence::download_journal::local_restore_artifact::tests::local_restore_artifact_acknowledged_death_before_or_after_copy_recovers_without_cleanup","--nocapture"])
             .env(ROOT,&root).env(AFTER,if after {"yes"} else {"no"}).env(HANDSHAKE,&handshake).spawn().unwrap();

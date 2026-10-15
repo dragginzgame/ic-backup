@@ -16,7 +16,6 @@ use std::{
 #[test]
 fn canonical_digest_retains_exact_layout_lock_names_and_existing_contention() {
     let parent = temp_dir("ic-backup-layout-lock-golden");
-    fs::create_dir(&parent).unwrap();
     let parent = parent.canonicalize().unwrap();
     for (name, hash) in [
         (

@@ -1,6 +1,6 @@
 use super::*;
 use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError};
-use crate::test_support::temp_path;
+use crate::test_support::temp_dir;
 use std::fs;
 
 const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -17,21 +17,23 @@ fn byte_checksum_matches_sha256_vector() {
 // Ensure file checksums use the same implementation as byte checksums.
 #[test]
 fn file_checksum_matches_byte_checksum() {
-    let path = temp_path("canic-backup-checksum");
+    let root = temp_dir("canic-backup-checksum");
+    let path = root.join("artifact");
     fs::write(&path, b"canic backup artifact").expect("write temp artifact");
 
     let from_file = checksum_file(&path).expect("checksum file");
     let from_bytes = ArtifactChecksumRecord::from_bytes(b"canic backup artifact");
 
     fs::remove_file(&path).expect("remove temp artifact");
+    fs::remove_dir(root).expect("remove fixture root");
     assert_eq!(from_file, from_bytes);
 }
 
 // Ensure directory checksums are stable regardless of file creation order.
 #[test]
 fn directory_checksum_is_order_independent() {
-    let first = temp_path("canic-backup-dir-a");
-    let second = temp_path("canic-backup-dir-b");
+    let first = temp_dir("canic-backup-dir-a");
+    let second = temp_dir("canic-backup-dir-b");
     fs::create_dir_all(first.join("nested")).expect("create first");
     fs::create_dir_all(second.join("nested")).expect("create second");
 
@@ -87,7 +89,7 @@ fn checksum_verification_accepts_equivalent_hex_case() {
 #[cfg(unix)]
 #[test]
 fn filesystem_checksums_reject_symlinked_files_and_entries() {
-    let root = temp_path("canic-backup-checksum-symlink");
+    let root = temp_dir("canic-backup-checksum-symlink");
     fs::create_dir_all(root.join("tree")).expect("create checksum tree");
     fs::write(root.join("source"), b"source").expect("write source");
     std::os::unix::fs::symlink(root.join("source"), root.join("linked-file"))

@@ -22,7 +22,6 @@ fn graph() -> EffectGraphRecord {
 }
 fn layout() -> (std::path::PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-effect-graph");
-    fs::create_dir(&root).expect("layout");
     let guard = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     (root, guard)
 }

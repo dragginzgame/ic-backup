@@ -363,7 +363,6 @@ fn acknowledged_owner_death_before_or_after_publication_recovers_exact_original_
         let root = f.root.clone();
         drop(f);
         let handshake = temp_dir("ic-backup-restore-publication-handshake");
-        fs::create_dir(&handshake).unwrap();
         let mut child = Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "ops::persistence::download_journal::local_restore_artifact::publication::tests::acknowledged_owner_death_before_or_after_publication_recovers_exact_original_copy", "--nocapture"])
             .env(ROOT, &root).env(AFTER, if after { "yes" } else { "no" }).env(HANDSHAKE, &handshake).spawn().unwrap();

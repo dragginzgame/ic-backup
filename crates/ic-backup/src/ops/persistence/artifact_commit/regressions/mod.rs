@@ -12,7 +12,6 @@ use std::{
 #[test]
 fn missing_or_non_sibling_paths_reject_without_publication() {
     let root = temp_dir("ic-backup-publication-paths");
-    fs::create_dir(&root).expect("create parent");
     let temporary = root.join("staging");
     let canonical = root.join("snapshot");
     let digest = crate::model::artifacts::ArtifactChecksumRecord::from_bytes(b"");

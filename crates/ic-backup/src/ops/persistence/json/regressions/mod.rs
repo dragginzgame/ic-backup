@@ -54,7 +54,6 @@ fn record_reads_enforce_exact_byte_limits_and_reject_symlinks() {
 #[test]
 fn shared_record_reads_preserve_extreme_limits_missing_files_and_parent_aliases() {
     let root = temp_dir("ic-backup-shared-record-read");
-    fs::create_dir_all(&root).expect("create fixture root");
     let path = root.join("record.json");
     fs::write(&path, b"null").expect("write exact JSON");
     assert_eq!(
@@ -97,7 +96,6 @@ fn shared_record_reads_preserve_extreme_limits_missing_files_and_parent_aliases(
 fn shared_record_reads_reject_real_fifo_and_device_without_waiting_for_a_writer() {
     use std::{process::Command, sync::mpsc, thread, time::Duration};
     let root = temp_dir("ic-backup-shared-record-fifo");
-    fs::create_dir_all(&root).expect("create fixture root");
     let path = root.join("record.fifo");
     assert!(
         Command::new("/usr/bin/mkfifo")
@@ -203,7 +201,6 @@ fn process_death_preserves_exact_publication_sides() {
     for operation in ["create", "replace"] {
         for side in ["before", "after"] {
             let root = temp_dir("ic-backup-json-crash");
-            fs::create_dir(&root).expect("create crash fixture");
             let path = root.join("journal.json");
             let previous = serde_json::json!({"previous": true});
             if operation == "replace" {

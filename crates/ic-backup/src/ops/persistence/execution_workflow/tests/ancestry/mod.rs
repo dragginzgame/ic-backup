@@ -63,7 +63,6 @@ fn retained_chain() -> (
     ExecutionStageBindingRecord,
 ) {
     let root = temp_dir("ic-backup-stage-ancestry");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = catalog();
     create_execution_workflow(&layout, &workflow).unwrap();
@@ -135,7 +134,6 @@ fn shared_ancestor_admits_both_branches_with_distinct_learned_evidence() {
     allocation["budget"] = json!({"mutations":7,"observations":4});
     let workflow: ExecutionWorkflowRecord = serde_json::from_value(value).unwrap();
     let root = temp_dir("ic-backup-stage-shared-ancestor");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, &workflow).unwrap();
     let first = settled_stage(&layout, &workflow, 0, vec![]);

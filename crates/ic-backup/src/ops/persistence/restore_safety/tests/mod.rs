@@ -16,7 +16,6 @@ use std::{
 
 fn layouts() -> (std::path::PathBuf, BackupLayoutGuard, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-restore-safety");
-    fs::create_dir(&root).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
     fs::create_dir(root.join("source")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root.join("restore")).unwrap();

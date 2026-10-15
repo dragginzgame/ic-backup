@@ -21,7 +21,6 @@ mod resume;
 
 fn prepare() -> (PathBuf, BackupLayoutGuard, ExecutionWorkflowRecord) {
     let root = temp_dir("ic-backup-execution-workflow");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = workflow();
     create_execution_workflow(&layout, &workflow).unwrap();
@@ -259,7 +258,6 @@ fn acknowledged_process_death_retains_partial_stage_or_reopens_complete_binding(
         let (root, layout, workflow) = prepare();
         drop(layout);
         let handshake = temp_dir("ic-backup-stage-handshake");
-        fs::create_dir(&handshake).unwrap();
         let mut child_process = Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "ops::persistence::execution_workflow::tests::acknowledged_process_death_retains_partial_stage_or_reopens_complete_binding", "--nocapture"])
             .env(ROOT, &root).env(HANDSHAKE, &handshake)

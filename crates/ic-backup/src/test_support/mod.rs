@@ -25,37 +25,15 @@ use std::{
     time::{Duration, Instant},
 };
 
-use std::{
-    path::PathBuf,
-    sync::atomic::{AtomicU64, Ordering},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::path::PathBuf;
 
 #[cfg(unix)]
 const CRASH_BARRIER_TIMEOUT: Duration = Duration::from_secs(30);
 
-// Build a unique temporary directory path for tests that create their own layout.
+// Allocate one private test root without reclaiming an existing entry.
 pub fn temp_dir(prefix: &str) -> PathBuf {
-    std::env::temp_dir()
-        .canonicalize()
-        .unwrap()
-        .join(unique_name(prefix))
-}
-
-// Build a unique temporary file path for tests that only need one artifact.
-pub fn temp_path(prefix: &str) -> PathBuf {
-    temp_dir(prefix)
-}
-
-// The counter separates callers when the host clock returns equal timestamps.
-fn unique_name(prefix: &str) -> String {
-    static NEXT_TEMP_ID: AtomicU64 = AtomicU64::new(0);
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("system time after epoch")
-        .as_nanos();
-    let sequence = NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed);
-    format!("{prefix}-{}-{nanos}-{sequence}", std::process::id())
+    ic_host_fs::testing::create_fixture_directory(&std::env::temp_dir(), prefix)
+        .expect("allocate fixture directory")
 }
 
 /// Create and verify a private real FIFO using the host's portable Unix utility.

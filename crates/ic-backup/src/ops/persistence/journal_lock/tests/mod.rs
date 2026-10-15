@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_support::temp_path;
+use crate::test_support::temp_dir;
 
 #[cfg(unix)]
 use rustix::io::{FdFlags, fcntl_getfd};
@@ -12,7 +12,8 @@ const CHILD_READY_ENV: &str = "IC_BACKUP_TEST_JOURNAL_LOCK_CHILD_READY";
 #[cfg(unix)]
 #[test]
 fn lock_excludes_a_second_owner_and_reacquires_after_drop() {
-    let journal_path = temp_path("canic-backup-journal-lock");
+    let root = temp_dir("canic-backup-journal-lock");
+    let journal_path = root.join("journal");
     let lock_path = journal_lock_path(&journal_path);
     let lock = JournalLock::acquire(&journal_path).expect("acquire lock");
 
@@ -33,14 +34,16 @@ fn lock_excludes_a_second_owner_and_reacquires_after_drop() {
     let reacquired = JournalLock::acquire(&journal_path).expect("reacquire lock");
     drop(reacquired);
     fs::remove_file(lock_path).expect("remove lock path");
+    fs::remove_dir(root).expect("remove fixture root");
 }
 
 #[cfg(unix)]
 #[test]
 fn lock_rejects_symlink_and_special_entry_substitution() {
-    let journal_path = temp_path("canic-backup-journal-lock-unsafe");
+    let root = temp_dir("canic-backup-journal-lock-unsafe");
+    let journal_path = root.join("journal");
     let lock_path = journal_lock_path(&journal_path);
-    let target = temp_path("canic-backup-journal-lock-target");
+    let target = root.join("target");
     symlink(&target, &lock_path).expect("create lock symlink");
 
     assert!(matches!(
@@ -56,13 +59,15 @@ fn lock_rejects_symlink_and_special_entry_substitution() {
             if actual == lock_path.to_string_lossy() && kind == "Directory"
     ));
     fs::remove_dir(lock_path).expect("remove lock directory");
+    fs::remove_dir(root).expect("remove fixture root");
 }
 
 #[cfg(unix)]
 #[test]
 fn process_death_releases_lock_without_sidecar_removal() {
-    let journal_path = temp_path("canic-backup-journal-lock-process-death");
-    let ready_path = temp_path("canic-backup-journal-lock-ready");
+    let root = temp_dir("canic-backup-journal-lock-process-death");
+    let journal_path = root.join("journal");
+    let ready_path = root.join("ready");
     let mut child = Command::new(std::env::current_exe().expect("resolve test executable"))
         .args([
             "--exact",
@@ -97,6 +102,7 @@ fn process_death_releases_lock_without_sidecar_removal() {
     drop(lock);
     fs::remove_file(journal_lock_path(&journal_path)).expect("remove lock path");
     fs::remove_file(ready_path).expect("remove ready marker");
+    fs::remove_dir(root).expect("remove fixture root");
 }
 
 #[cfg(unix)]

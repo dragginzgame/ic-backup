@@ -30,7 +30,6 @@ fn prepare(
     payload: &IcSnapshotMetadataRequest,
 ) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
     let root = temp_dir("ic-backup-metadata-stage");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, workflow).unwrap();
     let plan = source_plan(payload);
@@ -533,7 +532,6 @@ fn multi_operation_stage_rejects_before_any_original_spending() {
     let plan = serde_json::from_value(child).unwrap();
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
     let root = temp_dir("ic-backup-singleton-metadata");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, &workflow).unwrap();
     let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();

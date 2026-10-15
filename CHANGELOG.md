@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.24.7]
+
+### Testing
+
+- Use Host FS's published fixture allocator for Core unit-test roots as well as
+  integration roots, retiring the local timestamp/counter naming and redundant
+  root creation. Tests that need an absent artifact use a child of an allocated
+  fixture directory.
+
 ## [0.24.6] - 2026-10-14
 
 ### Changed

@@ -30,9 +30,7 @@ fn authority() -> AttemptAuthorityRecord {
     )
 }
 fn root() -> PathBuf {
-    let root = temp_dir("ic-backup-attempt-journal");
-    fs::create_dir(&root).expect("native layout");
-    root
+    temp_dir("ic-backup-attempt-journal")
 }
 
 #[test]

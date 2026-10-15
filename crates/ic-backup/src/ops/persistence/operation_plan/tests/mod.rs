@@ -23,7 +23,6 @@ fn plan() -> OperationPlanRecord {
 }
 fn layout() -> (std::path::PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-operation-plan");
-    fs::create_dir(&root).expect("layout");
     let guard = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     (root, guard)
 }

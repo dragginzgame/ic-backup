@@ -25,7 +25,6 @@ fn record() -> InventoryRecord {
 }
 fn layout() -> (std::path::PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-inventory");
-    fs::create_dir(&root).expect("layout");
     let guard = BackupLayoutGuard::acquire(&root).expect("exclude other owners");
     (root, guard)
 }
