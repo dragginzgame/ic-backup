@@ -46,7 +46,6 @@ fn with_uploads(mut check: impl FnMut(&IcSnapshotUploadRequest<'_>, Vec<u8>)) {
 }
 fn prepare(plan: OperationPlanRecord) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
     let root = temp_dir("ic-backup-upload-step");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
     create_execution_workflow(&layout, &workflow).unwrap();
@@ -469,7 +468,6 @@ fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowled
         let plan = serde_json::from_value(child).unwrap();
         let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![]).unwrap();
         let root = temp_dir("ic-backup-upload-prerequisite");
-        fs::create_dir(&root).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         create_execution_workflow(&layout, &workflow).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();

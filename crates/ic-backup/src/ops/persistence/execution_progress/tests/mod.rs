@@ -18,7 +18,6 @@ use std::{fs, path::PathBuf};
 
 fn prepare() -> (PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-retained-progress");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = plan();
     create_operation_plan(&layout, &plan).unwrap();

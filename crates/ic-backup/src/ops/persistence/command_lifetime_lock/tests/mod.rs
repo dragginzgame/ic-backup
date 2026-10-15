@@ -18,7 +18,6 @@ use std::{
 #[test]
 fn one_spawn_inherits_custody_without_parent_or_command_descriptor_leaks() {
     let root = temp_dir("ic-backup-command-custody-spawn");
-    fs::create_dir_all(&root).expect("create fixture");
     let mut lock =
         CommandLifetimeLock::acquire(&root.join("journal.json"), 7).expect("acquire custody");
     let record = lock.record().clone();
@@ -83,7 +82,6 @@ print(json.dumps({'device':stat.st_dev,'inode':stat.st_ino,'cloexec':bool(fcntl.
 #[test]
 fn quiescence_drop_releases_exclusion_with_a_retained_descriptor_copy() {
     let root = temp_dir("ic-backup-command-quiescence-copy");
-    fs::create_dir_all(&root).expect("create fixture");
     let lock = CommandLifetimeLock::acquire(&root.join("journal.json"), 7)
         .expect("acquire original custody");
     let record = lock.record().clone();
@@ -126,7 +124,6 @@ fn quiescence_drop_releases_exclusion_with_a_retained_descriptor_copy() {
 #[test]
 fn failed_spawn_consumes_the_allowance_without_leaking_custody() {
     let root = temp_dir("ic-backup-command-custody-failed-spawn");
-    fs::create_dir_all(&root).expect("create fixture");
     let mut lock = CommandLifetimeLock::acquire(&root.join("journal.json"), 0).expect("acquire");
     assert!(
         matches!(lock.spawn(Command::new(root.join("absent-binary"))),Err(CommandLifetimeLockError::Io(error)) if error.kind()==io::ErrorKind::NotFound)
@@ -145,7 +142,6 @@ fn failed_spawn_consumes_the_allowance_without_leaking_custody() {
 #[test]
 fn missing_replaced_or_unsafe_sidecars_do_not_prove_quiescence() {
     let root = temp_dir("ic-backup-command-custody-identity");
-    fs::create_dir_all(&root).expect("create fixture");
     let mut lock = CommandLifetimeLock::acquire(&root.join("journal.json"), 3).expect("acquire");
     let record = lock.record().clone();
     let path = lock.path().to_path_buf();
@@ -266,7 +262,6 @@ fn owner_death_keeps_custody_through_direct_child_and_descendant_exit() {
         hold_at_acknowledged_barrier(&root);
     }
     let root = temp_dir("ic-backup-command-custody-owner-death");
-    fs::create_dir_all(&root).expect("create fixture");
     let mut owner=Command::new(std::env::current_exe().expect("test executable"))
         .args(["--exact","ops::persistence::command_lifetime_lock::tests::owner_death_keeps_custody_through_direct_child_and_descendant_exit","--nocapture"])
         .env(ROOT_ENV,&root).spawn().expect("spawn owner");
@@ -327,7 +322,6 @@ fn finish_is_bounded_while_a_dispatched_command_still_holds_custody() {
         hold_at_acknowledged_barrier(Path::new(&child_root));
     }
     let root = temp_dir("ic-backup-command-custody-finish");
-    fs::create_dir_all(&root).expect("create fixture");
     let mut lock = CommandLifetimeLock::acquire(&root.join("journal.json"), 1).expect("acquire");
     let record = lock.record().clone();
     let mut command = Command::new(std::env::current_exe().expect("test executable"));

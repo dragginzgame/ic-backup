@@ -84,7 +84,6 @@ fn receipt(
 fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
     for method in [Method::LoadCanisterSnapshot, Method::StartCanister] {
         let root = temp_dir("ic-backup-restore-step");
-        fs::create_dir(&root).unwrap();
         fs::create_dir(root.join("source")).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
@@ -217,7 +216,6 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
 fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() {
     use std::{future::Future, task::Context};
     let root = temp_dir("ic-backup-restore-cancel");
-    fs::create_dir(&root).unwrap();
     fs::create_dir(root.join("source")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
@@ -323,7 +321,6 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
 fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
     for failure in 0..12 {
         let root = temp_dir("ic-backup-restore-rejection");
-        fs::create_dir(&root).unwrap();
         fs::create_dir(root.join("source")).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();

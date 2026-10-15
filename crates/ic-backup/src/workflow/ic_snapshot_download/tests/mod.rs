@@ -25,7 +25,6 @@ fn prepare(
     download: &IcSnapshotDownloadPlan<'_, '_>,
 ) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
     let root = temp_dir("ic-backup-complete-download");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, workflow).unwrap();
     let original = source_plan(metadata.request());

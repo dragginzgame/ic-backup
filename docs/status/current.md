@@ -23,7 +23,39 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-14
+# Current handoff — 2026-10-15
+
+## Pending 0.24.7 Metrics 0.10 qualification
+
+The locked Metrics 0.10 graph moves summary count, total, maximum and mean
+queries through `MeasurementSummary::aggregate()`; `latest()` remains on the
+ordered summary. Local diagnostic regressions and the independent Rust 1.88
+consumer fixture now use that public API. All 552 Core library tests, both
+independent MSRV consumers and both package archives pass on this graph.
+The complete loopback-enabled `make ci` gate passes all 16 targets after the
+fixture correction: product and PocketIC tests, strict Clippy, rustdoc, Rust
+1.88 consumers and both package archives. No production diagnostic arithmetic
+or persisted record changed.
+
+## Pending 0.24.7 Core fixture ownership
+
+Core unit-test roots now use the published Host FS fixture allocator. The local
+clock/counter name generator and absent-path helper are retired; tests that need
+an absent artifact use a child of a privately allocated root. Redundant root
+creation is removed, while each test's intentional file and recovery evidence
+remains local. Full `make ci` passes on the selected Host 0.18.2/Testkit 0.42.0
+graph: 552 Core library tests, 34 Core PocketIC tests, Agent suites, strict
+Clippy, Rust 1.88 consumers and both package archives. A first run found one
+Clippy `let_and_return` cleanup, corrected before the final gate. A sandboxed
+rerun then could not bind PocketIC to loopback; the loopback-enabled full gate
+passed without changing source or locks.
+
+An isolated Host FS 0.18.3-based contribution adds no-create existing-sidecar
+admission, one-shot exclusive descriptor locking and a generic no-replace
+directory commit around caller-owned tree verification. Its affected package
+passes 100 tests, strict Clippy/rustdoc and Rust 1.88 checking on Linux. Backup
+retains local lock/publication mechanics until a published Host API is selected
+and qualified; no sibling-source patch or product contract change was made.
 
 ## Pending 0.24.6 bounded-record cleanup and Host proposals
 

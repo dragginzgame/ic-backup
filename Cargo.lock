@@ -1164,7 +1164,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.24.6"
+version = "0.24.7"
 dependencies = [
  "candid",
  "command-fds",
@@ -1184,7 +1184,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup-agent"
-version = "0.24.6"
+version = "0.24.7"
 dependencies = [
  "candid",
  "ic-agent",
@@ -1280,9 +1280,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.18.2"
+version = "0.18.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31b28d7e2d78a59977320625394e533850516e3f1c2b671a5909d833d73d6cdf"
+checksum = "5d9ca6143657b00488bb386faf1a5f5e3afdbc85cf202d317a5473fdcf7fc315"
 dependencies = [
  "flate2",
  "leb128",
@@ -1293,9 +1293,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.18.2"
+version = "0.18.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a5c93188fbfb88e22dd1d7938b84a6f68d8ace2e3881935d13d73c3055fa0ce"
+checksum = "02ecbf11c7f207bc41b654fd6fe46f749eff2ab965be2fe046629a8655cc21d9"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1303,9 +1303,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.18.2"
+version = "0.18.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "277e18f76a599425c828995d5c13a118fabc93344663e6c206d32a6081a451fc"
+checksum = "c3b23fb2df923b7bdaea9f8d69c8fd292f2e25ec46a803a83d5125b2a657e660"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1337,15 +1337,15 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.9.6"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2e743e0e40b8bb69b6807b18c767e51625ce711bc7f672fb30c0460c9b07f76"
+checksum = "bad10fc3636b40ed249ecc24057ab2fb1967b9dca5e67ffa9e7563fab2a06bb8"
 
 [[package]]
 name = "ic-testkit"
-version = "0.42.0"
+version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bdb7fb04e3a78bad29b19b1198a48ab7e69679f75f1fd3c3cf62a7768a8a484"
+checksum = "b16f197bc1fc53fdc45f5c865fbca08262df64eb6c98338f00aa606d7dc33fe7"
 dependencies = [
  "candid",
  "ic-cdk",

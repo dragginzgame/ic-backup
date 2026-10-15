@@ -21,7 +21,6 @@ use std::{
 
 fn prepare() -> (PathBuf, BackupLayoutGuard, ExecutionSettlementRecord) {
     let root = temp_dir("ic-backup-execution-settlement");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = plan();
     super::super::create_operation_plan(&layout, &plan).unwrap();
@@ -391,7 +390,6 @@ fn acknowledged_process_death_before_publication_or_after_sync_replays_locally()
         let original = fs::read(root.join("attempt-0.json")).unwrap();
         drop(layout);
         let handshake = temp_dir("ic-backup-settlement-handshake");
-        fs::create_dir(&handshake).unwrap();
         let mut child = Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "ops::persistence::execution_settlement::tests::acknowledged_process_death_before_publication_or_after_sync_replays_locally", "--nocapture"])
             .env(ROOT, &root).env(BARRIER, if published {"yes"} else {"no"}).env(HANDSHAKE, &handshake)

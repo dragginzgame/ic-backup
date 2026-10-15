@@ -47,7 +47,6 @@ pub(super) fn plan() -> OperationPlanRecord {
 }
 pub(super) fn retained_catalog() -> (PathBuf, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-prepared-stage");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, &catalog()).unwrap();
     eprintln!("Prepared-stage evidence retained: {}", root.display());
@@ -177,7 +176,6 @@ fn acknowledged_death_retains_partial_journals_or_complete_original_set() {
         let (root, layout) = retained_catalog();
         drop(layout);
         let handshake = temp_dir("ic-backup-preparation-handshake");
-        fs::create_dir(&handshake).unwrap();
         let mut process = Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "ops::persistence::execution_workflow::tests::preparation::acknowledged_death_retains_partial_journals_or_complete_original_set", "--nocapture"])
             .env(ROOT, &root).env(HANDSHAKE, &handshake)

@@ -99,7 +99,6 @@ fn prepare(
     OperationPlanRecord,
 ) {
     let root = temp_dir("ic-backup-capture-step");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = workflow();
     create_execution_workflow(&layout, &workflow).unwrap();

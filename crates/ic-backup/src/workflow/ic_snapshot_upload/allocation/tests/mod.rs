@@ -44,7 +44,6 @@ fn prepare(
     payload: &IcSnapshotUploadRequest<'_>,
 ) -> (BackupLayoutGuard, ExecutionStageBindingRecord) {
     let root = temp_dir("ic-backup-allocation-stage");
-    fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = upload_plan(payload);
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
@@ -302,7 +301,6 @@ fn data_sequence_and_multi_operation_stages_refuse_before_spending_or_provider()
             0
         );
         let root = temp_dir("ic-backup-multi-allocation");
-        fs::create_dir(&root).unwrap();
         let multi_layout = BackupLayoutGuard::acquire(&root).unwrap();
         let mut value = serde_json::to_value(upload_plan(payload)).unwrap();
         let mut op = value["operations"][0].clone();

@@ -1,9 +1,20 @@
 # Changelog
 
-## [0.24.7]
+## [0.24.8]
 
 - Include MIT license text in published crates and align package declarations
   with the repository license.
+
+## [0.24.7] - 2026-10-15
+
+### Testing
+
+- Use Host FS's published fixture allocator for Core unit-test roots as well as
+  integration roots, retiring the local timestamp/counter naming and redundant
+  root creation. Tests that need an absent artifact use a child of an allocated
+  fixture directory.
+- Qualify local diagnostic assertions and the independent MSRV consumer against
+  Metrics 0.10's summary aggregate projection.
 
 ## [0.24.6] - 2026-10-14
 

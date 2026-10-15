@@ -125,7 +125,6 @@ fn serialization_runs_once_before_parent_creation_even_when_it_fails() {
     for create in [false, true] {
         for reject in [false, true] {
             let root = temp_dir("ic-backup-json-preflight");
-            fs::create_dir(&root).unwrap();
             let parent = root.join("private/nested");
             let path = parent.join("record.json");
             let calls = Cell::new(0);
@@ -169,7 +168,6 @@ fn foreign_staging_replacement_retains_typed_cleanup_evidence() {
 
     for mode in [PublicationMode::Replace, PublicationMode::CreateNew] {
         let root = temp_dir("ic-backup-json-stage-custody");
-        fs::create_dir(&root).unwrap();
         let path = root.join("record.json");
         let displaced = root.join("displaced");
         if mode == PublicationMode::Replace {
@@ -208,7 +206,6 @@ fn foreign_staging_replacement_retains_typed_cleanup_evidence() {
 #[test]
 fn held_parent_publication_does_not_switch_to_a_replaced_path() {
     let root = temp_dir("ic-backup-json-parent-custody");
-    fs::create_dir(&root).unwrap();
     let parent = root.join("parent");
     let moved = root.join("moved");
     let path = parent.join("record.json");

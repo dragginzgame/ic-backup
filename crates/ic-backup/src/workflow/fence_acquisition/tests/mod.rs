@@ -44,7 +44,6 @@ struct Fixture {
 impl Fixture {
     fn new(restore: bool, dependency: bool) -> Self {
         let root = temp_dir("ic-backup-fence-step");
-        fs::create_dir(&root).unwrap();
         fs::create_dir(root.join("source")).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
