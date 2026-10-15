@@ -1,8 +1,12 @@
 //! Common exact identity and explicit new-candidate checks for inventory settlements.
 
+use super::snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
+    attempt_journal::ObservationOutcomeRecord,
+    ic_observation::IcCaptureAttribution,
     ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
+    ic_snapshot_upload_observation::IcSnapshotUploadAttribution,
 };
 
 pub(crate) struct InventorySettlementIdentity<'a> {
@@ -48,6 +52,64 @@ pub(crate) enum InventorySettlementMismatch {
     Baseline,
     Inventory,
     ObservationEvidence,
+}
+
+pub(crate) fn validate_pair<'a, E>(
+    target: &str,
+    baseline: &IcSnapshotReply<'_>,
+    inventory: &'a IcSnapshotReply<'_>,
+    claimed: &InventorySettlementIdentity<'_>,
+    expected: &InventorySettlementIdentity<'_>,
+) -> Result<Vec<&'a IcSnapshotInfo>, E>
+where
+    E: From<SnapshotInventoryDeltaError> + From<InventorySettlementMismatch>,
+{
+    let candidates = compare_inventories(target, baseline, inventory)?;
+    claimed.compare(expected)?;
+    Ok(candidates)
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum InventoryAttribution<'a> {
+    Applied(&'a [u8]),
+    NotApplied,
+    Unresolved,
+}
+
+impl<'a> From<&'a IcCaptureAttribution> for InventoryAttribution<'a> {
+    fn from(value: &'a IcCaptureAttribution) -> Self {
+        match value {
+            IcCaptureAttribution::Applied { snapshot_id, .. } => Self::Applied(snapshot_id),
+            IcCaptureAttribution::NotApplied { .. } => Self::NotApplied,
+            IcCaptureAttribution::Unresolved { .. } => Self::Unresolved,
+        }
+    }
+}
+
+impl<'a> From<&'a IcSnapshotUploadAttribution> for InventoryAttribution<'a> {
+    fn from(value: &'a IcSnapshotUploadAttribution) -> Self {
+        match value {
+            IcSnapshotUploadAttribution::Applied { snapshot_id, .. } => Self::Applied(snapshot_id),
+            IcSnapshotUploadAttribution::NotApplied { .. } => Self::NotApplied,
+            IcSnapshotUploadAttribution::Unresolved { .. } => Self::Unresolved,
+        }
+    }
+}
+
+pub(crate) fn admitted_outcome(
+    inventory: &IcSnapshotReply<'_>,
+    candidates: &[&IcSnapshotInfo],
+    attribution: InventoryAttribution<'_>,
+) -> Result<(ObservationOutcomeRecord, Option<usize>), ()> {
+    match attribution {
+        InventoryAttribution::Applied(snapshot_id) => {
+            new_candidate_index(inventory, candidates, snapshot_id)
+                .map(|index| (ObservationOutcomeRecord::Applied, Some(index)))
+                .ok_or(())
+        }
+        InventoryAttribution::NotApplied => Ok((ObservationOutcomeRecord::NotApplied, None)),
+        InventoryAttribution::Unresolved => Ok((ObservationOutcomeRecord::Uncertain, None)),
+    }
 }
 
 pub(crate) fn new_candidate_index(

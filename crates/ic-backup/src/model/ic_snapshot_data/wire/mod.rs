@@ -1,7 +1,10 @@
 //! Bounded data vector decoding; no skipped extensions or untrusted allocation.
 
 use super::{IcSnapshotDataError, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
-use crate::model::ic_wire::{self, DecoderLimits};
+use crate::model::{
+    bounded_sequence,
+    ic_wire::{self, DecoderLimits},
+};
 use candid::CandidType;
 use serde::{Deserialize, Deserializer};
 
@@ -12,9 +15,9 @@ struct WireData {
 }
 
 fn chunk<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<u8>, D::Error> {
-    ic_wire::bounded_sequence::deserialize::<_, u8, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES>(
+    bounded_sequence::deserialize_wire::<_, u8, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES>(
         d,
-        |f, _| f.write_str("at most 1 MiB of snapshot data"),
+        "at most 1 MiB of snapshot data",
         "snapshot chunk exceeds bound",
     )
 }

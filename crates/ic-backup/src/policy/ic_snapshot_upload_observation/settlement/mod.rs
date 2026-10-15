@@ -17,9 +17,10 @@ use crate::{
             IcObservationAssociationError, IcObservationReplyView, IcObservationResponseView,
         },
         inventory_settlement::{
-            InventorySettlementIdentity, InventorySettlementMismatch, new_candidate_index,
+            InventoryAttribution, InventorySettlementIdentity, InventorySettlementMismatch,
+            admitted_outcome, validate_pair,
         },
-        snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories},
+        snapshot_inventory_delta::SnapshotInventoryDeltaError,
     },
 };
 use thiserror::Error;
@@ -90,42 +91,41 @@ pub fn validate_settlement<'a>(
     let IcObservationReplyView::Inventory(inventory) = observation.reply() else {
         return Err(IcSnapshotUploadSettlementError::WrongInventory);
     };
-    let candidates = compare_inventories(request.payload().target(), baseline, inventory)?;
     let authority = request.authority().digest();
     let baseline_digest = baseline.digest();
     let inventory_digest = inventory.digest();
-    InventorySettlementIdentity {
-        authority: &settlement.authority,
-        mutation_attempt: settlement.mutation_attempt,
-        observation_attempt: settlement.observation_attempt,
-        challenge: &settlement.challenge,
-        baseline: &settlement.baseline,
-        inventory: &settlement.inventory,
-        observation_evidence: &settlement.observation_evidence,
+    let candidates = validate_pair::<IcSnapshotUploadSettlementError>(
+        request.payload().target(),
+        baseline,
+        inventory,
+        &InventorySettlementIdentity {
+            authority: &settlement.authority,
+            mutation_attempt: settlement.mutation_attempt,
+            observation_attempt: settlement.observation_attempt,
+            challenge: &settlement.challenge,
+            baseline: &settlement.baseline,
+            inventory: &settlement.inventory,
+            observation_evidence: &settlement.observation_evidence,
+        },
+        &InventorySettlementIdentity {
+            authority: &authority,
+            mutation_attempt: request.mutation_attempt(),
+            observation_attempt: request.observation_attempt(),
+            challenge,
+            baseline: &baseline_digest,
+            inventory: &inventory_digest,
+            observation_evidence: &response.input().evidence,
+        },
+    )?;
+    if let IcSnapshotUploadAttribution::Applied { snapshot_id, .. } = &settlement.attribution {
+        request.mutation().validate_data_destination(snapshot_id)?;
     }
-    .compare(&InventorySettlementIdentity {
-        authority: &authority,
-        mutation_attempt: request.mutation_attempt(),
-        observation_attempt: request.observation_attempt(),
-        challenge,
-        baseline: &baseline_digest,
-        inventory: &inventory_digest,
-        observation_evidence: &response.input().evidence,
-    })?;
-    let (outcome, allocated_snapshot) = match &settlement.attribution {
-        IcSnapshotUploadAttribution::Applied { snapshot_id, .. } => {
-            request.mutation().validate_data_destination(snapshot_id)?;
-            let index = new_candidate_index(inventory, &candidates, snapshot_id)
-                .ok_or(IcSnapshotUploadSettlementError::NotNewCandidate)?;
-            (ObservationOutcomeRecord::Applied, Some(index))
-        }
-        IcSnapshotUploadAttribution::NotApplied { .. } => {
-            (ObservationOutcomeRecord::NotApplied, None)
-        }
-        IcSnapshotUploadAttribution::Unresolved { .. } => {
-            (ObservationOutcomeRecord::Uncertain, None)
-        }
-    };
+    let (outcome, allocated_snapshot) = admitted_outcome(
+        inventory,
+        &candidates,
+        InventoryAttribution::from(&settlement.attribution),
+    )
+    .map_err(|()| IcSnapshotUploadSettlementError::NotNewCandidate)?;
     Ok(IcSnapshotUploadSettlementView {
         observation,
         baseline,

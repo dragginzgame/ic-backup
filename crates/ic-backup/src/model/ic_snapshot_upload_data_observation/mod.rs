@@ -5,7 +5,7 @@ use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_observation::{
         IcObservationRequestError, IcObservationResponseError, IcObservationResponseInput,
-        ObservationReservation, fmt_response_input, validate_response_input,
+        ObservationReservation, fmt_response_input, pending_attempts, validate_response_input,
     },
     ic_snapshot_data::{IcSnapshotDataRequest, MAX_IC_SNAPSHOT_DATA_REPLY_BYTES},
     ic_snapshot_upload::{
@@ -88,18 +88,14 @@ impl<'request, 'source, 'metadata>
         {
             return Err(IcSnapshotUploadDataObservationError::DestinationMetadataMismatch);
         }
-        let current = journal.view();
+        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
         let request = Self {
             plan,
             mutation,
             payload,
             authority,
-            mutation_attempt: current
-                .pending_mutation
-                .ok_or(IcObservationRequestError::NoPendingMutation)?,
-            observation_attempt: current
-                .pending_observation
-                .ok_or(IcObservationRequestError::NoPendingObservation)?,
+            mutation_attempt,
+            observation_attempt,
             original_chunk_checksum: chunk_checksum,
         };
         request.validate_journal(journal)?;

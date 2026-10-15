@@ -1,8 +1,9 @@
 //! Bounded metadata-derived exact download plans; no calls, spending or transfer proof.
 
 use crate::model::{
-    attempt_journal::{AttemptBudgetRecord, AttemptJournalRecordError},
-    effect_graph::{EffectGraphError, EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
+    attempt_journal::AttemptJournalRecordError,
+    data_stage_plan::{self, DataStagePlanError},
+    effect_graph::EffectGraphError,
     execution_workflow::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
         ExecutionWorkflowRecord,
@@ -11,12 +12,15 @@ use crate::model::{
         ExtentPlanningError, IcSnapshotDataError, IcSnapshotDataRequest, planned_extents,
     },
     ic_snapshot_metadata::IcSnapshotMetadataReply,
-    operation_plan::{
-        OperationPlanError, OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord,
-        PlannedOperationRecord, PlannedOperationRequest,
-    },
+    operation_plan::{OperationPlanError, OperationPlanRecord},
 };
 use thiserror::Error;
+
+#[cfg(test)]
+use crate::model::{
+    attempt_journal::AttemptBudgetRecord,
+    operation_plan::{PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest},
+};
 
 /// Exact finite data requests and their original allocation-bound ordinary child plan.
 ///
@@ -56,43 +60,15 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
         }
         let kinds = planned_extents(metadata, chunk_bytes, stage.budget().mutations())
             .map_err(IcSnapshotDownloadPlanningError::from)?;
-        let capacity = kinds.len();
         let requests = kinds
             .into_iter()
             .map(|kind| IcSnapshotDataRequest::new(metadata, kind))
             .collect::<Result<Vec<_>, _>>()?;
-        let plan = if requests.is_empty() {
-            None
-        } else {
-            let mut nodes = Vec::with_capacity(capacity);
-            let mut operations = Vec::with_capacity(capacity);
-            for (index, request) in requests.iter().enumerate() {
-                let sequence = u64::try_from(index)
-                    .map_err(|_| IcSnapshotDownloadPlanningError::CountOverflow)?;
-                nodes.push(EffectNodeRecord::new(EffectNodeRequest {
-                    operation_sequence: sequence,
-                    depends_on: sequence.checked_sub(1).into_iter().collect(),
-                })?);
-                operations.push(PlannedOperationRecord::new(PlannedOperationRequest {
-                    operation_sequence: sequence,
-                    target: stage.target().into(),
-                    request: request.digest().hash().into(),
-                    budget: AttemptBudgetRecord::new(1, 0)?,
-                })?);
-            }
-            let original = workflow.allocation();
-            Some(OperationPlanRecord::new(OperationPlanRequest {
-                context: original.context().clone(),
-                inventory: original.inventory().clone(),
-                selected_targets: vec![stage.target().into()],
-                graph: EffectGraphRecord::new(nodes)?,
-                operations,
-                budget: PlanBudgetRecord::new(
-                    stage.budget().mutations(),
-                    stage.budget().observations(),
-                )?,
-            })?)
-        };
+        let plan = data_stage_plan::build(
+            workflow.allocation(),
+            stage,
+            requests.iter().map(IcSnapshotDataRequest::digest),
+        )?;
         Ok(Self {
             workflow,
             sequence,
@@ -224,6 +200,17 @@ impl From<ExtentPlanningError> for IcSnapshotDownloadPlanningError {
             ExtentPlanningError::InsufficientAllowance { required, original } => {
                 Self::InsufficientAllowance { required, original }
             }
+        }
+    }
+}
+
+impl From<DataStagePlanError> for IcSnapshotDownloadPlanningError {
+    fn from(error: DataStagePlanError) -> Self {
+        match error {
+            DataStagePlanError::CountOverflow => Self::CountOverflow,
+            DataStagePlanError::Graph(error) => Self::Graph(error),
+            DataStagePlanError::Plan(error) => Self::Plan(error),
+            DataStagePlanError::Budget(error) => Self::Budget(error),
         }
     }
 }

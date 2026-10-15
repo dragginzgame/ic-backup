@@ -12,13 +12,46 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    struct Visitor<T, X, E, const LIMIT: usize> {
+    deserialize_with::<D, T, _, _, LIMIT, false>(deserializer, expected, overflow)
+}
+
+/// IC wire values reject excessive hints and decode the one excess value by type.
+pub(crate) fn deserialize_wire<'de, D, T, const LIMIT: usize>(
+    deserializer: D,
+    expected: impl fmt::Display,
+    overflow: impl fmt::Display,
+) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    deserialize_with::<D, T, _, _, LIMIT, true>(deserializer, expected, overflow)
+}
+
+fn deserialize_with<'de, D, T, X, E, const LIMIT: usize, const WIRE: bool>(
+    deserializer: D,
+    expected: X,
+    overflow: E,
+) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+    X: fmt::Display,
+    E: fmt::Display,
+{
+    struct Visitor<T, X, E, const LIMIT: usize, const WIRE: bool> {
         expected: X,
         overflow: E,
         item: PhantomData<T>,
     }
-    impl<'de, T: Deserialize<'de>, X: fmt::Display, E: fmt::Display, const LIMIT: usize>
-        de::Visitor<'de> for Visitor<T, X, E, LIMIT>
+    impl<
+        'de,
+        T: Deserialize<'de>,
+        X: fmt::Display,
+        E: fmt::Display,
+        const LIMIT: usize,
+        const WIRE: bool,
+    > de::Visitor<'de> for Visitor<T, X, E, LIMIT, WIRE>
     {
         type Value = Vec<T>;
 
@@ -30,6 +63,9 @@ where
             self,
             mut sequence: A,
         ) -> Result<Self::Value, A::Error> {
+            if WIRE && sequence.size_hint().is_some_and(|size| size > LIMIT) {
+                return Err(de::Error::custom(self.overflow));
+            }
             let mut entries = Vec::new();
             while entries.len() < LIMIT {
                 match sequence.next_element()? {
@@ -37,13 +73,18 @@ where
                     None => return Ok(entries),
                 }
             }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
+            let excess = if WIRE {
+                sequence.next_element::<T>()?.is_some()
+            } else {
+                sequence.next_element::<de::IgnoredAny>()?.is_some()
+            };
+            if excess {
                 return Err(de::Error::custom(self.overflow));
             }
             Ok(entries)
         }
     }
-    deserializer.deserialize_seq(Visitor::<T, _, _, LIMIT> {
+    deserializer.deserialize_seq(Visitor::<T, _, _, LIMIT, WIRE> {
         expected,
         overflow,
         item: PhantomData,

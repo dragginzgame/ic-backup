@@ -102,10 +102,10 @@ impl<'request, 'source> IcSnapshotUploadReply<'request, 'source> {
     /// Bind exact original source/wire association and raw bytes as local evidence.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/ic-snapshot-upload-reply/v1\0".to_vec();
-        bytes.extend_from_slice(self.request.binding_digest().hash().as_bytes());
-        bytes.extend_from_slice(self.payload_checksum.hash().as_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        crate::model::evidence_digest::reply(
+            b"ic-backup/ic-snapshot-upload-reply/v1\0",
+            [&self.request.binding_digest(), &self.payload_checksum],
+        )
     }
 }
 

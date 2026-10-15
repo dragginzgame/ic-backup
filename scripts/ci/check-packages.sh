@@ -13,6 +13,7 @@ cd "$ROOT"
 export CARGO_TARGET_DIR="$ROOT/target"
 export PATH="$ROOT/.tools/host/bin:$PATH"
 umask 077
+mkdir -p "$ROOT/target"
 fixture="$(mktemp -d "${TMPDIR:-$ROOT/target}/package-check.XXXXXX")"
 complete=false
 finish() {

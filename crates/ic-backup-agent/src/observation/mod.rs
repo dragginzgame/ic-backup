@@ -1,6 +1,5 @@
 //! Three separately accounted async recovery ports over one retained submission owner.
 use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
-use ic_agent::RequestId;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -51,43 +50,19 @@ impl<'a, R> AgentObservationProvider<'a, R> {
     pub const fn new(transport: &'a AgentTransport, retain: R) -> Self {
         Self { transport, retain }
     }
-
-    fn response_input(
-        &self,
-        binding: ObservationReplyBinding<'_>,
-        id: &RequestId,
-        reply: Vec<u8>,
-    ) -> IcObservationResponseInput {
-        let evidence = crate::reply_evidence::reply_evidence(
-            binding.domain,
-            &binding.authority,
-            &[binding.mutation_attempt, binding.observation_attempt],
-            id,
-            &reply,
-        );
-        IcObservationResponseInput {
-            authority: binding.authority,
-            mutation_attempt: binding.mutation_attempt,
-            observation_attempt: binding.observation_attempt,
-            request: binding.request,
-            context: self.transport.context.clone(),
-            target: binding.target.to_owned(),
-            reply,
-            evidence,
-        }
-    }
 }
 
 impl<R> AgentObservationProvider<'_, R>
 where
     R: FnMut(&ReservedUpdate<'_>, &PreparedUpdate<'_>) -> Result<(), IcObservationProviderError>,
 {
-    async fn submit_once(
+    async fn submit_response(
         &mut self,
         request: ReservedUpdate<'_>,
         journal: &AttemptJournalRecord,
-    ) -> Result<(RequestId, Vec<u8>), IcObservationProviderError> {
-        crate::submission::submit_once(
+        binding: ObservationReplyBinding<'_>,
+    ) -> Result<IcObservationResponseInput, IcObservationProviderError> {
+        let (id, reply) = crate::submission::submit_once(
             self.transport,
             request,
             journal,
@@ -96,7 +71,24 @@ where
             || IcObservationProviderError::Unsupported,
             || IcObservationProviderError::Indeterminate,
         )
-        .await
+        .await?;
+        let evidence = crate::reply_evidence::reply_evidence(
+            binding.domain,
+            &binding.authority,
+            &[binding.mutation_attempt, binding.observation_attempt],
+            &id,
+            &reply,
+        );
+        Ok(IcObservationResponseInput {
+            authority: binding.authority,
+            mutation_attempt: binding.mutation_attempt,
+            observation_attempt: binding.observation_attempt,
+            request: binding.request,
+            context: self.transport.context.clone(),
+            target: binding.target.to_owned(),
+            reply,
+            evidence,
+        })
     }
 }
 
@@ -109,21 +101,20 @@ where
         request: &IcObservationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<IcObservationResponse, IcObservationProviderError> {
-        let (id, reply) = self
-            .submit_once(ReservedUpdate::Observation(request), journal)
+        let input = self
+            .submit_response(
+                ReservedUpdate::Observation(request),
+                journal,
+                ObservationReplyBinding {
+                    domain: b"ic-backup-agent.observation-reply.v1\0",
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    request: request.payload().digest(),
+                    target: request.payload().target(),
+                },
+            )
             .await?;
-        let input = self.response_input(
-            ObservationReplyBinding {
-                domain: b"ic-backup-agent.observation-reply.v1\0",
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                request: request.payload().digest(),
-                target: request.payload().target(),
-            },
-            &id,
-            reply,
-        );
         IcObservationResponse::new(input).map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }
@@ -137,21 +128,20 @@ where
         request: &IcSnapshotUploadObservationRequest<'_, '_>,
         journal: &AttemptJournalRecord,
     ) -> Result<IcObservationResponse, IcObservationProviderError> {
-        let (id, reply) = self
-            .submit_once(ReservedUpdate::UploadObservation(request), journal)
+        let input = self
+            .submit_response(
+                ReservedUpdate::UploadObservation(request),
+                journal,
+                ObservationReplyBinding {
+                    domain: b"ic-backup-agent.upload-observation-reply.v1\0",
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    request: request.payload().digest(),
+                    target: request.payload().target(),
+                },
+            )
             .await?;
-        let input = self.response_input(
-            ObservationReplyBinding {
-                domain: b"ic-backup-agent.upload-observation-reply.v1\0",
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                request: request.payload().digest(),
-                target: request.payload().target(),
-            },
-            &id,
-            reply,
-        );
         IcObservationResponse::new(input).map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }
@@ -165,21 +155,20 @@ where
         request: &IcSnapshotUploadDataObservationRequest<'_, '_, '_>,
         journal: &AttemptJournalRecord,
     ) -> Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError> {
-        let (id, reply) = self
-            .submit_once(ReservedUpdate::UploadDataObservation(request), journal)
+        let input = self
+            .submit_response(
+                ReservedUpdate::UploadDataObservation(request),
+                journal,
+                ObservationReplyBinding {
+                    domain: b"ic-backup-agent.upload-data-observation-reply.v1\0",
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    request: request.payload().digest(),
+                    target: request.payload().target(),
+                },
+            )
             .await?;
-        let input = self.response_input(
-            ObservationReplyBinding {
-                domain: b"ic-backup-agent.upload-data-observation-reply.v1\0",
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                request: request.payload().digest(),
-                target: request.payload().target(),
-            },
-            &id,
-            reply,
-        );
         IcSnapshotUploadDataObservationResponse::new(input)
             .map_err(|_| IcObservationProviderError::Indeterminate)
     }

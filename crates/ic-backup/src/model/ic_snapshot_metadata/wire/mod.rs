@@ -1,7 +1,10 @@
 //! Decode-only pinned wire fields with bounded allocation and no skipped work.
 
 use super::{IcSnapshotMetadataError, MAX_IC_SNAPSHOT_CHUNKS, MAX_IC_SNAPSHOT_GLOBALS};
-use crate::model::ic_wire::{self, DecoderLimits};
+use crate::model::{
+    bounded_sequence,
+    ic_wire::{self, DecoderLimits},
+};
 use candid::CandidType;
 use ic_management_canister_types::{
     CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotMetadataResult,
@@ -97,9 +100,9 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    ic_wire::bounded_sequence::deserialize::<_, T, LIMIT>(
+    bounded_sequence::deserialize_wire::<_, T, LIMIT>(
         d,
-        |f, limit| write!(f, "at most {limit} metadata elements"),
+        format_args!("at most {LIMIT} metadata elements"),
         "metadata sequence exceeds bound",
     )
 }

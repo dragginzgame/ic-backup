@@ -2,7 +2,7 @@
 
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
-    ic_observation::{IcObservationRequestError, ObservationReservation},
+    ic_observation::{IcObservationRequestError, ObservationReservation, pending_attempts},
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
     ic_snapshot_upload::{
         IcSnapshotUploadAttemptError, IcSnapshotUploadKind, IcSnapshotUploadRequest,
@@ -55,18 +55,14 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
         payload
             .validate_observation_binding(authority.binding(), &payload.digest())
             .map_err(IcObservationRequestError::from)?;
-        let current = journal.view();
+        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
         let request = Self {
             plan,
             mutation,
             payload,
             authority,
-            mutation_attempt: current
-                .pending_mutation
-                .ok_or(IcObservationRequestError::NoPendingMutation)?,
-            observation_attempt: current
-                .pending_observation
-                .ok_or(IcObservationRequestError::NoPendingObservation)?,
+            mutation_attempt,
+            observation_attempt,
         };
         request.validate_journal(journal)?;
         Ok(request)

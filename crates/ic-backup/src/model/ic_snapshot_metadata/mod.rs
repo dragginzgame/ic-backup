@@ -165,10 +165,10 @@ impl<'request> IcSnapshotMetadataReply<'request> {
     /// Bind original request and raw reply checksums in the metadata evidence domain.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/ic-snapshot-metadata-reply/v1\0".to_vec();
-        bytes.extend_from_slice(self.request.digest().hash().as_bytes());
-        bytes.extend_from_slice(self.payload_checksum.hash().as_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        super::evidence_digest::reply(
+            b"ic-backup/ic-snapshot-metadata-reply/v1\0",
+            [&self.request.digest(), &self.payload_checksum],
+        )
     }
 }
 

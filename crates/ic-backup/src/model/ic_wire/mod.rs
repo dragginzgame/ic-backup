@@ -1,7 +1,5 @@
 //! Shared bounded Candid decoder setup; each method owns its exact limits.
 
-pub(super) mod bounded_sequence;
-
 use candid::{
     CandidType,
     de::{DecoderConfig, IDLDeserialize},

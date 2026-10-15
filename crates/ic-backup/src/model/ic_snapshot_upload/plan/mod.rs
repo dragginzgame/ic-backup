@@ -6,17 +6,15 @@ use super::{
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
-    attempt_journal::{AttemptBudgetRecord, AttemptJournalRecordError},
-    effect_graph::{EffectGraphError, EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
+    attempt_journal::AttemptJournalRecordError,
+    data_stage_plan::{self, DataStagePlanError},
+    effect_graph::EffectGraphError,
     execution_workflow::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
         ExecutionWorkflowRecord,
     },
     ic_snapshot_data::{ExtentPlanningError, planned_extents},
-    operation_plan::{
-        OperationPlanError, OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord,
-        PlannedOperationRecord, PlannedOperationRequest,
-    },
+    operation_plan::{OperationPlanError, OperationPlanRecord},
 };
 use ic_management_canister_types::SnapshotDataKind;
 use thiserror::Error;
@@ -77,38 +75,7 @@ impl<'workflow, 'request, 'source> IcSnapshotDataUploadPlan<'workflow, 'request,
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
         };
         let stage = workflow.stage(sequence)?;
-        let plan = if kinds.is_empty() {
-            None
-        } else {
-            let mut nodes = Vec::with_capacity(kinds.len());
-            let mut operations = Vec::with_capacity(kinds.len());
-            for (index, request) in bindings.iter().enumerate() {
-                let operation_sequence = u64::try_from(index)
-                    .map_err(|_| IcSnapshotDataUploadPlanningError::CountOverflow)?;
-                nodes.push(EffectNodeRecord::new(EffectNodeRequest {
-                    operation_sequence,
-                    depends_on: operation_sequence.checked_sub(1).into_iter().collect(),
-                })?);
-                operations.push(PlannedOperationRecord::new(PlannedOperationRequest {
-                    operation_sequence,
-                    target: stage.target().into(),
-                    request: request.hash().into(),
-                    budget: AttemptBudgetRecord::new(1, 0)?,
-                })?);
-            }
-            let original = workflow.allocation();
-            Some(OperationPlanRecord::new(OperationPlanRequest {
-                context: original.context().clone(),
-                inventory: original.inventory().clone(),
-                selected_targets: vec![stage.target().into()],
-                graph: EffectGraphRecord::new(nodes)?,
-                operations,
-                budget: PlanBudgetRecord::new(
-                    stage.budget().mutations(),
-                    stage.budget().observations(),
-                )?,
-            })?)
-        };
+        let plan = data_stage_plan::build(workflow.allocation(), stage, bindings.iter().cloned())?;
         Ok(Self {
             workflow,
             sequence,
@@ -244,6 +211,17 @@ impl From<ExtentPlanningError> for IcSnapshotDataUploadPlanningError {
             ExtentPlanningError::InsufficientAllowance { required, original } => {
                 Self::InsufficientAllowance { required, original }
             }
+        }
+    }
+}
+
+impl From<DataStagePlanError> for IcSnapshotDataUploadPlanningError {
+    fn from(error: DataStagePlanError) -> Self {
+        match error {
+            DataStagePlanError::CountOverflow => Self::CountOverflow,
+            DataStagePlanError::Graph(error) => Self::Graph(error),
+            DataStagePlanError::Plan(error) => Self::Plan(error),
+            DataStagePlanError::Budget(error) => Self::Budget(error),
         }
     }
 }

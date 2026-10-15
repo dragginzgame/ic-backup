@@ -8,20 +8,22 @@ use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{AttemptJournalRecord, ObservationOutcomeRecord},
-        ic_observation::{
-            IcCaptureAttribution, IcCaptureSettlement, IcObservationRequest, IcObservationResponse,
-        },
+        ic_observation::{IcCaptureSettlement, IcObservationRequest, IcObservationResponse},
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
     },
     policy::{
         inventory_settlement::{
-            InventorySettlementIdentity, InventorySettlementMismatch, new_candidate_index,
+            InventoryAttribution, InventorySettlementIdentity, InventorySettlementMismatch,
+            admitted_outcome, validate_pair,
         },
-        snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories},
+        snapshot_inventory_delta::SnapshotInventoryDeltaError,
     },
 };
 use thiserror::Error;
+
+#[cfg(test)]
+use crate::model::ic_observation::IcCaptureAttribution;
 
 /// Matched passive capture claim and exact inventories; never an authenticated receipt.
 #[derive(Debug)]
@@ -97,37 +99,38 @@ pub fn validate_capture_settlement<'a>(
     let IcObservationReplyView::Inventory(inventory) = observation.reply() else {
         return Err(IcCaptureSettlementError::UnsupportedMethod);
     };
-    let candidates = compare_inventories(request.mutation().target(), baseline, inventory)?;
     let authority = request.authority().digest();
     let baseline_digest = baseline.digest();
     let inventory_digest = inventory.digest();
-    InventorySettlementIdentity {
-        authority: &settlement.authority,
-        mutation_attempt: settlement.mutation_attempt,
-        observation_attempt: settlement.observation_attempt,
-        challenge: &settlement.challenge,
-        baseline: &settlement.baseline,
-        inventory: &settlement.inventory,
-        observation_evidence: &settlement.observation_evidence,
-    }
-    .compare(&InventorySettlementIdentity {
-        authority: &authority,
-        mutation_attempt: request.mutation_attempt(),
-        observation_attempt: request.observation_attempt(),
-        challenge,
-        baseline: &baseline_digest,
-        inventory: &inventory_digest,
-        observation_evidence: &response.input().evidence,
-    })?;
-    let (outcome, captured_snapshot) = match &settlement.attribution {
-        IcCaptureAttribution::Applied { snapshot_id, .. } => {
-            let index = new_candidate_index(inventory, &candidates, snapshot_id)
-                .ok_or(IcCaptureSettlementError::NotNewCandidate)?;
-            (ObservationOutcomeRecord::Applied, Some(index))
-        }
-        IcCaptureAttribution::NotApplied { .. } => (ObservationOutcomeRecord::NotApplied, None),
-        IcCaptureAttribution::Unresolved { .. } => (ObservationOutcomeRecord::Uncertain, None),
-    };
+    let candidates = validate_pair::<IcCaptureSettlementError>(
+        request.mutation().target(),
+        baseline,
+        inventory,
+        &InventorySettlementIdentity {
+            authority: &settlement.authority,
+            mutation_attempt: settlement.mutation_attempt,
+            observation_attempt: settlement.observation_attempt,
+            challenge: &settlement.challenge,
+            baseline: &settlement.baseline,
+            inventory: &settlement.inventory,
+            observation_evidence: &settlement.observation_evidence,
+        },
+        &InventorySettlementIdentity {
+            authority: &authority,
+            mutation_attempt: request.mutation_attempt(),
+            observation_attempt: request.observation_attempt(),
+            challenge,
+            baseline: &baseline_digest,
+            inventory: &inventory_digest,
+            observation_evidence: &response.input().evidence,
+        },
+    )?;
+    let (outcome, captured_snapshot) = admitted_outcome(
+        inventory,
+        &candidates,
+        InventoryAttribution::from(&settlement.attribution),
+    )
+    .map_err(|()| IcCaptureSettlementError::NotNewCandidate)?;
     Ok(IcCaptureSettlementView {
         observation,
         baseline,

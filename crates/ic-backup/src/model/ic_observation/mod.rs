@@ -54,18 +54,14 @@ impl<'a> IcObservationRequest<'a> {
         }
         mutation.validate_mutation_binding(authority.binding())?;
         payload.validate_observation_binding(authority.binding(), &payload.digest())?;
-        let current = journal.view();
+        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
         let request = Self {
             plan,
             mutation,
             payload,
             authority,
-            mutation_attempt: current
-                .pending_mutation
-                .ok_or(IcObservationRequestError::NoPendingMutation)?,
-            observation_attempt: current
-                .pending_observation
-                .ok_or(IcObservationRequestError::NoPendingObservation)?,
+            mutation_attempt,
+            observation_attempt,
         };
         request.validate_journal(journal)?;
         Ok(request)
@@ -122,6 +118,21 @@ pub(crate) struct ObservationReservation<'a> {
     pub mutation_attempt: u32,
     pub observation_attempt: u32,
     pub request: ArtifactChecksumRecord,
+}
+
+/// Read only the already consumed original attempt IDs, in mutation-first order.
+pub(crate) fn pending_attempts(
+    journal: &AttemptJournalRecord,
+) -> Result<(u32, u32), IcObservationRequestError> {
+    let current = journal.view();
+    Ok((
+        current
+            .pending_mutation
+            .ok_or(IcObservationRequestError::NoPendingMutation)?,
+        current
+            .pending_observation
+            .ok_or(IcObservationRequestError::NoPendingObservation)?,
+    ))
 }
 
 impl ObservationReservation<'_> {

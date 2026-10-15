@@ -2,6 +2,7 @@
 
 use super::{IcSnapshotInfo, IcSnapshotReplyError, MAX_IC_SNAPSHOT_REPLY_ENTRIES};
 use crate::model::{
+    bounded_sequence,
     ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES},
     ic_wire::{self, DecoderLimits},
 };
@@ -37,9 +38,9 @@ struct WireInventory(Vec<WireSnapshot>);
 
 impl<'de> Deserialize<'de> for WireInventory {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        ic_wire::bounded_sequence::deserialize::<_, WireSnapshot, MAX_IC_SNAPSHOT_REPLY_ENTRIES>(
+        bounded_sequence::deserialize_wire::<_, WireSnapshot, MAX_IC_SNAPSHOT_REPLY_ENTRIES>(
             deserializer,
-            |f, _| f.write_str("at most 1024 snapshot descriptors"),
+            "at most 1024 snapshot descriptors",
             "snapshot inventory exceeds its entry bound",
         )
         .map(Self)

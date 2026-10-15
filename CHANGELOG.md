@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.25.1]
+
+### Changed
+
+- Use one bounded sequence decoder for persisted records and IC replies while
+  retaining the IC wire decoder's size-hint and typed excess-value checks.
+- Share capture and upload inventory-settlement admission and metadata-derived
+  data-stage plan construction while retaining each method's original authority,
+  attempt limits and outcome requirements.
+- Frame admitted IC reply evidence through one local digest helper without
+  changing the existing domain-separated hashes.
+- Share pending observation-attempt admission and Agent reply projection across
+  the three recovery readback lanes, retaining their method-specific checks and
+  evidence domains.
+
+### Fixed
+
+- Include the repository's MIT license text in the published Agent package,
+  matching the Core package's distribution.
+- Create the package-check fixture root in fresh checkouts before validating
+  both archives and their independent consumer.
+
 ## [0.25.0] - 2026-10-15
 
 ### Breaking
