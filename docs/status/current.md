@@ -23,7 +23,19 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-14
+# Current handoff — 2026-10-15
+
+## Pending 0.24.7 Metrics 0.10 qualification
+
+The locked Metrics 0.10 graph moves summary count, total, maximum and mean
+queries through `MeasurementSummary::aggregate()`; `latest()` remains on the
+ordered summary. Local diagnostic regressions and the independent Rust 1.88
+consumer fixture now use that public API. All 552 Core library tests, both
+independent MSRV consumers and both package archives pass on this graph.
+The complete loopback-enabled `make ci` gate passes all 16 targets after the
+fixture correction: product and PocketIC tests, strict Clippy, rustdoc, Rust
+1.88 consumers and both package archives. No production diagnostic arithmetic
+or persisted record changed.
 
 ## Pending 0.24.7 Core fixture ownership
 

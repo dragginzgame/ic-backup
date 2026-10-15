@@ -58,7 +58,7 @@ fn prepared_chunks_use_inclusive_disjoint_bounds_and_one_aggregate_owner() {
         metrics.record(operation, Duration::ZERO, succeeded, bytes);
     }
     assert_eq!(metrics.prepared_chunk_bytes_histogram(), histogram);
-    assert_eq!(metrics.upload_data_failure_ns().samples(), 1);
+    assert_eq!(metrics.upload_data_failure_ns().aggregate().samples(), 1);
 }
 
 #[cfg(target_pointer_width = "64")]
@@ -81,7 +81,7 @@ fn wide_prepared_total_preserves_exact_distribution_and_mean() {
     assert_eq!(total, 2 * u128::from(u64::MAX) + 1);
     assert_eq!(histogram.aggregate(), metrics.prepared_chunk_bytes());
     assert_eq!(
-        metrics.upload_data_success_ns().total(),
+        metrics.upload_data_success_ns().aggregate().total(),
         4 * u128::from(u64::MAX)
     );
     assert_eq!(metrics.upload_data_success_ns().latest(), Some(u64::MAX));
@@ -99,7 +99,7 @@ fn wide_prepared_total_preserves_exact_distribution_and_mean() {
         Ok(Some(total * 10 / 4))
     );
     assert_eq!(
-        metrics.upload_data_success_ns().mean(),
+        metrics.upload_data_success_ns().aggregate().mean(),
         Ok(Some(u128::from(u64::MAX)))
     );
     assert_eq!(histogram.cumulative_count(1), Ok(2));
@@ -146,16 +146,17 @@ fn duration_totals_cross_the_sample_cap_without_overflow_in_each_lane() {
         metrics.upload_data_success_ns(),
         metrics.upload_data_failure_ns(),
     ] {
-        let total: u128 = summary.total();
-        let mean: Option<u128> = summary.mean().unwrap();
+        let aggregate = summary.aggregate();
+        let total: u128 = aggregate.total();
+        let mean: Option<u128> = aggregate.mean().unwrap();
         assert_eq!(total, u128::from(u64::MAX) + 1);
         assert_eq!(mean, Some(total / 3));
-        assert_eq!(summary.samples(), 3);
+        assert_eq!(aggregate.samples(), 3);
         assert_eq!(summary.latest(), Some(1));
-        assert_eq!(summary.maximum(), Some(u64::MAX));
-        assert_eq!(summary.scaled_mean(10), Ok(Some(total * 10 / 3)));
-        assert!(!summary.aggregate().samples_overflowed());
-        assert!(!summary.aggregate().total_overflowed());
+        assert_eq!(aggregate.maximum(), Some(u64::MAX));
+        assert_eq!(aggregate.scaled_mean(10), Ok(Some(total * 10 / 3)));
+        assert!(!aggregate.samples_overflowed());
+        assert!(!aggregate.total_overflowed());
     }
     assert_eq!(metrics.prepared_chunk_bytes(), MeasurementAggregate::EMPTY);
 }

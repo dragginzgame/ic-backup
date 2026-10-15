@@ -8,6 +8,8 @@
   integration roots, retiring the local timestamp/counter naming and redundant
   root creation. Tests that need an absent artifact use a child of an allocated
   fixture directory.
+- Qualify local diagnostic assertions and the independent MSRV consumer against
+  Metrics 0.10's summary aggregate projection.
 
 ## [0.24.6] - 2026-10-14
 

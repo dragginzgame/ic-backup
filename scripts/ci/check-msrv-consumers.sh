@@ -51,14 +51,15 @@ use ic_backup::ops::persistence::{
 fn main() {
     let diagnostics = IcSnapshotLocalMetrics::default();
     let summary: MeasurementSummary = diagnostics.verification_success_ns();
+    let duration_aggregate: MeasurementAggregate = summary.aggregate();
     let aggregate: MeasurementAggregate = diagnostics.prepared_chunk_bytes();
     let histogram: MeasurementHistogram<4> = diagnostics.prepared_chunk_bytes_histogram();
-    let _: u128 = summary.total();
-    let _: Option<u128> = summary.mean().unwrap();
+    let _: u128 = duration_aggregate.total();
+    let _: Option<u128> = duration_aggregate.mean().unwrap();
     let _: u128 = aggregate.total();
     let _: Option<u128> = aggregate.mean().unwrap();
     let _: u128 = histogram.aggregate().total();
-    let _: u64 = summary.samples();
+    let _: u64 = duration_aggregate.samples();
     let _: Option<u64> = summary.latest();
     let _: Option<u64> = aggregate.maximum();
     let _: &[u64; 4] = histogram.bucket_counts();

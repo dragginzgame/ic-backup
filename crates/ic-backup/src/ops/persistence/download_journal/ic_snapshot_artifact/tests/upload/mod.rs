@@ -22,6 +22,10 @@ fn upload_values() -> ReadCanisterSnapshotMetadataResult {
     values
 }
 
+fn duration_count(summary: crate::ops::persistence::MeasurementSummary) -> u64 {
+    summary.aggregate().samples()
+}
+
 #[test]
 fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_samples() {
     let root = root();
@@ -34,7 +38,7 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
     poison_diagnostics(&guard);
     let before = fs::read(guard.path()).unwrap();
     let empty = guard.ic_snapshot_metrics();
-    assert_eq!(empty.verification_success_ns().samples(), 0);
+    assert_eq!(duration_count(empty.verification_success_ns()), 0);
     assert_eq!(empty.prepared_chunk_bytes().maximum(), None);
     let upload = guard
         .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
@@ -65,10 +69,10 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
         )
         .unwrap();
     let successful = guard.ic_snapshot_metrics();
-    assert_eq!(successful.verification_success_ns().samples(), 8);
-    assert_eq!(successful.verification_failure_ns().samples(), 0);
-    assert_eq!(successful.upload_metadata_success_ns().samples(), 1);
-    assert_eq!(successful.upload_data_success_ns().samples(), 3);
+    assert_eq!(duration_count(successful.verification_success_ns()), 8);
+    assert_eq!(duration_count(successful.verification_failure_ns()), 0);
+    assert_eq!(duration_count(successful.upload_metadata_success_ns()), 1);
+    assert_eq!(duration_count(successful.upload_data_success_ns()), 3);
     assert_eq!(successful.prepared_chunk_bytes().samples(), 3);
     assert_eq!(successful.prepared_chunk_bytes().total(), 6);
     assert_eq!(successful.prepared_chunk_bytes().maximum(), Some(3));
@@ -99,14 +103,14 @@ fn local_metrics_count_returned_work_without_writes_unique_progress_or_replay_sa
         rejected.verification_success_ns(),
         successful.verification_success_ns()
     );
-    assert_eq!(rejected.verification_failure_ns().samples(), 1);
-    assert_eq!(rejected.upload_metadata_failure_ns().samples(), 1);
-    assert_eq!(rejected.upload_data_failure_ns().samples(), 1);
+    assert_eq!(duration_count(rejected.verification_failure_ns()), 1);
+    assert_eq!(duration_count(rejected.upload_metadata_failure_ns()), 1);
+    assert_eq!(duration_count(rejected.upload_data_failure_ns()), 1);
     assert_eq!(
         rejected.prepared_chunk_bytes_histogram(),
         successful.prepared_chunk_bytes_histogram()
     );
-    assert_eq!(successful.upload_data_failure_ns().samples(), 0);
+    assert_eq!(duration_count(successful.upload_data_failure_ns()), 0);
     assert_eq!(guard.ic_snapshot_metrics(), rejected);
     assert_eq!(fs::read(guard.path()).unwrap(), before);
     fs::rename(
@@ -151,8 +155,8 @@ fn assert_missing_source_records_failure_only(
         Err(IcSnapshotUploadArtifactError::Artifact(_))
     ));
     let missing = guard.ic_snapshot_metrics();
-    assert_eq!(missing.verification_failure_ns().samples(), 2);
-    assert_eq!(missing.upload_data_failure_ns().samples(), 2);
+    assert_eq!(duration_count(missing.verification_failure_ns()), 2);
+    assert_eq!(duration_count(missing.upload_data_failure_ns()), 2);
     assert_eq!(
         missing.verification_success_ns(),
         rejected.verification_success_ns()
