@@ -12,7 +12,7 @@ fn create_only_publication_preserves_an_existing_record() {
     let error = create_json_durable(&path, &serde_json::json!({"intent": "different"}))
         .expect_err("existing record must not be replaced");
     assert!(
-        matches!(error, PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }) if error.kind() == io::ErrorKind::AlreadyExists)
+        matches!(error, PersistenceError::Publication(crate::ops::persistence::PublicationError::BeforePublication { source: ref error, .. }) if error.kind() == io::ErrorKind::AlreadyExists)
     );
     assert_eq!(fs::read(&path).expect("read retained bytes"), bytes);
     fs::remove_dir_all(root).expect("remove successful fixture");

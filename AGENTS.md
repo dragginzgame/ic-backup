@@ -119,13 +119,13 @@ Product transport/runtime qualification stays separate from executable version c
 
 ## Validation and delivery
 
-- Run focused checks during development and the documented full `make ci` suite
-  before delivering completed code as ready, under the shared standing validation
-  authority. Reuse unchanged passing evidence; rerun affected checks after edits.
-  Documentation-only and inspection-only work follow the baseline's narrower
-  validation scope. Release, publication and deployment still require explicit
-  authorization. [Development](docs/development.md) describes local commands
-  and target-directory ownership.
+- Follow the shared baseline's validation cadence: run meaningful focused checks
+  for changed product and tooling boundaries and reuse unchanged passing evidence.
+  Run the local full `make ci` suite only for an explicitly authorized release or
+  explicit request for that suite; configured CI remains separate. Release,
+  publication and deployment still require explicit authorization.
+  [Development](docs/development.md) describes local commands and target-directory
+  ownership.
 - Before compilation, check for an active command using this repository's
   target directory. Do not alter source or locks beneath active validation.
 - Unit tests live beside code; integration tests live in `tests/`. Canister

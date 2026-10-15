@@ -40,6 +40,14 @@ implementation determine what has actually been qualified.
   Local bounded capture retains its direct-child semantics. Group cleanup does not
   replace inherited descriptor custody or prove descendant quiescence; bounded
   test capture retains its separate direct-child semantics.
+  The pending 0.25.0 selection moves the direct Host Artifact/FS dependency to
+  0.19 and replaces the exposed Host publication error with Backup's own
+  `PublicationError`. Its producer, cleanup and before/after-publication
+  evidence remain typed; consumers must update exhaustive error matches.
+  Private-parent preparation now refuses observed symlink ancestors and `..`
+  before creation;
+  callers selecting an intentional alias must resolve that root at input
+  admission. This does not grant root confinement or remove namespace races.
 
 - Pure directory checksum composition accepts exact canonical relative UTF-8 file
   identities and validated checksums through the same owner as local artifact

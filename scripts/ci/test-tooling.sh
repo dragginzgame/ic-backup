@@ -28,12 +28,6 @@ finish() {
 }
 trap finish EXIT
 
-# Run the unchanged upstream cases against the actual vendored runner, while
-# retaining its output if qualification fails.
-GITHUB_STEP_SUMMARY="$FIXTURE/runner-summary.md" \
-    bash "$ROOT/scripts/ci/test-validation-target-runner.sh" >"$FIXTURE/runner.log" 2>&1
-cat "$FIXTURE/runner.log"
-
 # Exercise this consumer's actual CI recipe, without compilation or duplicate
 # recipes. Only these unique targets substitute the graph-edit/next-stage effects.
 checkpoint="$FIXTURE/input-checkpoint"

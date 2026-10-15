@@ -21,8 +21,7 @@ use std::{
     os::unix::fs::{FileTypeExt, PermissionsExt},
     path::Path,
     process::{Child, Command},
-    thread,
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 use std::path::PathBuf;
@@ -32,7 +31,10 @@ const CRASH_BARRIER_TIMEOUT: Duration = Duration::from_secs(30);
 
 // Allocate one private test root without reclaiming an existing entry.
 pub fn temp_dir(prefix: &str) -> PathBuf {
-    ic_host_fs::testing::create_fixture_directory(&std::env::temp_dir(), prefix)
+    let selected_temp = std::env::temp_dir()
+        .canonicalize()
+        .expect("resolve selected fixture parent");
+    ic_host_fs::testing::create_fixture_directory(&selected_temp, prefix)
         .expect("allocate fixture directory")
 }
 
@@ -56,54 +58,40 @@ pub fn create_private_fifo(path: &Path) {
 /// Kill one test child only after both sides acknowledge the named crash barrier.
 #[cfg(unix)]
 pub fn kill_child_at_acknowledged_barrier(child: &mut Child, root: &Path) {
-    let ready_path = root.join("barrier-ready");
-    let acknowledge_path = root.join("barrier-acknowledged");
-    let armed_path = root.join("barrier-armed");
-    wait_for_child_path(child, &ready_path, "child barrier");
-    fs::write(&acknowledge_path, b"acknowledged\n").expect("acknowledge child barrier");
-    wait_for_child_path(child, &armed_path, "armed child barrier");
-    child.kill().expect("kill child at acknowledged barrier");
-    child.wait().expect("reap killed child");
+    ic_host_process::testing::crash_barrier::kill_child_at_acknowledged_barrier(
+        child,
+        root,
+        CRASH_BARRIER_TIMEOUT,
+    )
+    .expect("kill and reap child at acknowledged barrier");
 }
 
 /// Signal that a test child reached its barrier, then wait to be killed.
 #[cfg(unix)]
 pub fn hold_at_acknowledged_barrier(root: &Path) -> ! {
-    let ready_path = root.join("barrier-ready");
-    let acknowledge_path = root.join("barrier-acknowledged");
-    let armed_path = root.join("barrier-armed");
-    fs::write(&ready_path, b"ready\n").expect("signal child barrier");
-    wait_for_path(&acknowledge_path, "parent barrier acknowledgement");
-    fs::write(&armed_path, b"armed\n").expect("arm child crash");
-    loop {
-        thread::sleep(Duration::from_secs(1));
-    }
+    ic_host_process::testing::crash_barrier::hold_at_acknowledged_barrier(
+        root,
+        CRASH_BARRIER_TIMEOUT,
+    )
 }
 
 #[cfg(unix)]
 pub fn wait_for_child_path(child: &mut Child, path: &Path, description: &str) {
-    let deadline = Instant::now() + CRASH_BARRIER_TIMEOUT;
-    while !path.is_file() {
-        assert!(
-            child.try_wait().expect("inspect crash child").is_none(),
-            "crash child exited before {description}"
-        );
-        assert!(
-            Instant::now() < deadline,
-            "timed out waiting for {description}"
-        );
-        thread::sleep(Duration::from_millis(10));
-    }
+    ic_host_process::testing::crash_barrier::wait_for_child_path(
+        child,
+        path,
+        description,
+        CRASH_BARRIER_TIMEOUT,
+    )
+    .expect("wait for direct child marker");
 }
 
 #[cfg(unix)]
 pub fn wait_for_path(path: &Path, description: &str) {
-    let deadline = Instant::now() + CRASH_BARRIER_TIMEOUT;
-    while !path.is_file() {
-        assert!(
-            Instant::now() < deadline,
-            "timed out waiting for {description}"
-        );
-        thread::sleep(Duration::from_millis(10));
-    }
+    ic_host_process::testing::crash_barrier::wait_for_path(
+        path,
+        description,
+        CRASH_BARRIER_TIMEOUT,
+    )
+    .expect("wait for parent marker");
 }

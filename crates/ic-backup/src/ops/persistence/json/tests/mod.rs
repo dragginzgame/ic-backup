@@ -93,7 +93,7 @@ fn rename_failure_removes_the_staging_file() {
     assert!(matches!(
         error,
         PersistenceError::Publication(
-            ic_host_fs::durable::NamedWriteError::BeforePublication { .. }
+            crate::ops::persistence::PublicationError::BeforePublication { .. }
         )
     ));
     assert!(path.is_dir());
@@ -163,8 +163,75 @@ fn serialization_runs_once_before_parent_creation_even_when_it_fails() {
 
 #[cfg(unix)]
 #[test]
+fn private_json_parents_refuse_aliases_and_traversal_before_effects() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    let root = temp_dir("ic-backup-json-private-parents");
+    let physical = root.join("physical");
+    fs::create_dir(&physical).unwrap();
+    fs::create_dir(physical.join("existing")).unwrap();
+    let original = physical.join("record.json");
+    fs::write(&original, b"original bytes").unwrap();
+    fs::set_permissions(&original, fs::Permissions::from_mode(0o600)).unwrap();
+
+    let alias = root.join("alias");
+    symlink(&physical, &alias).unwrap();
+    let value = serde_json::json!({"state": "new"});
+    for path in [
+        alias.join("record.json"),
+        alias.join("existing/record.json"),
+        alias.join("missing/record.json"),
+    ] {
+        for create in [false, true] {
+            let result = if create {
+                create_json_durable(&path, &value)
+            } else {
+                write_json_durable(&path, &value)
+            };
+            assert!(matches!(
+                result,
+                Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::NotADirectory
+            ));
+        }
+    }
+    assert!(!physical.join("missing").exists());
+    assert!(!physical.join("existing/record.json").exists());
+    assert_eq!(fs::read(&original).unwrap(), b"original bytes");
+    assert_eq!(
+        fs::metadata(&original).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+
+    let missing = root.join("missing");
+    assert!(matches!(
+        create_json_durable(&missing.join("../physical/new.json"), &value),
+        Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    assert!(!missing.exists());
+    assert!(!physical.join("new.json").exists());
+
+    // An explicitly selected root is resolved by its owning boundary once.
+    let selected = alias.canonicalize().unwrap();
+    create_json_durable(&selected.join("existing/new.json"), &value).unwrap();
+    assert_eq!(
+        fs::read(selected.join("existing/new.json")).unwrap(),
+        serde_json::to_vec_pretty(&value).unwrap()
+    );
+    assert_eq!(
+        fs::metadata(selected.join("existing/new.json"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
 fn foreign_staging_replacement_retains_typed_cleanup_evidence() {
-    use ic_host_fs::durable::NamedWriteError;
+    use crate::ops::persistence::PublicationError;
 
     for mode in [PublicationMode::Replace, PublicationMode::CreateNew] {
         let root = temp_dir("ic-backup-json-stage-custody");
@@ -189,7 +256,7 @@ fn foreign_staging_replacement_retains_typed_cleanup_evidence() {
         })
         .unwrap_err();
         assert!(matches!(error, PersistenceError::Publication(
-            NamedWriteError::BeforePublication { source, cleanup_error: Some(cleanup) }
+            PublicationError::BeforePublication { source, cleanup_error: Some(cleanup) }
         ) if source.kind() == io::ErrorKind::InvalidData && cleanup.kind() == io::ErrorKind::InvalidData));
         assert_eq!(fs::read(displaced).unwrap(), b"new");
         assert_eq!(fs::read(foreign.unwrap()).unwrap(), b"foreign");

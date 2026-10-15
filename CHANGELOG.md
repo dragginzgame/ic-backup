@@ -1,9 +1,46 @@
 # Changelog
 
-## [0.24.8]
+## [0.25.1]
 
-- Include MIT license text in published crates and align package declarations
-  with the repository license.
+### Fixed
+
+- Include the repository's MIT license text in the published Agent package,
+  matching the Core package's distribution.
+- Create the package-check fixture root in fresh checkouts before validating
+  both archives and their independent consumer.
+
+## [0.25.0] - 2026-10-15
+
+### Breaking
+
+- Raise the minimum supported Rust version to 1.91.0. Library consumers must
+  build with Rust 1.91.0 or newer.
+- Replace the Host error inside `PersistenceError::Publication` with Backup's
+  `PublicationError`. Consumers matching that variant must switch to the new
+  type; producer, cleanup and before/after-publication evidence remain available.
+- Select Host FS, Process and Artifacts 0.19.0. JSON publication now rejects
+  symlink ancestors and `..` in output parents before creating directories;
+  intentionally selected aliases must be resolved at the owning input boundary
+  ([#50 — Qualify Host private-parent refusal](https://github.com/dragginzgame/ic-backup/issues/50)).
+
+### Changed
+
+- Use the published Host descriptor walker and test-only crash barrier in place
+  of local copies, retaining Backup's artifact and recovery policy
+  ([#48 — Adopt published Host descriptor walks and test-only crash barriers](https://github.com/dragginzgame/ic-backup/issues/48)).
+- Adopt reviewed Shared Tooling 0.15.0, including its release and fixture helpers
+  and focused local validation cadence.
+
+### Testing
+
+- Qualify the published Testkit 0.45.0 dev dependency and exact managed-server
+  CLI across the Agent HTTP and both PocketIC suites. Testkit's pending typed
+  HTTP capture remains upstream; Agent evidence retention stays local.
+- Keep consumer CI, snapshot, evidence and Testkit command fixtures while moving
+  generic Shared Tooling implementation regressions back to their upstream gate
+  ([#51 — Trim repeated upstream tooling regression](https://github.com/dragginzgame/ic-backup/issues/51)).
+- Share offline lockfile preparation and graph admission between independent
+  MSRV consumers and the paired package archive consumer.
 
 ## [0.24.7] - 2026-10-15
 

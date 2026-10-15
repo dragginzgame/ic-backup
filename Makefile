@@ -27,7 +27,7 @@ help:
 	@echo "check                       Compile this library's native targets"
 	@echo "check-cargo-tool-versions   Inspect Cargo tool versions online without installing"
 	@echo "check-doc-links             Check maintained local Markdown targets"
-	@echo "check-msrv                  Check Rust 1.88.0 and independent consumers"
+	@echo "check-msrv                  Check Rust 1.91.0 and independent consumers"
 	@echo "ci                          Fetch dependencies and run the full gate"
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
@@ -68,7 +68,7 @@ help:
 	@echo "tasks                       Read the shared maintenance catalog"
 	@echo "test                        Run native library tests and doctests"
 	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
-	@echo "tooling-check               Test snapshot integrity and CI diagnostics"
+	@echo "tooling-check               Test consumer CI wiring and retained evidence"
 	@echo "tools-check                 Verify common and locked Testkit tools offline in order"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
@@ -84,10 +84,10 @@ check-doc-links:
 	bash scripts/ci/check-doc-links.sh
 
 check-msrv:
-	RUSTUP_AUTO_INSTALL=0 rustc +1.88.0 --version
-	+RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 --version
-	+RUSTUP_AUTO_INSTALL=0 cargo +1.88.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
-	+bash scripts/ci/check-msrv-consumers.sh 1.88.0
+	RUSTUP_AUTO_INSTALL=0 rustc +1.91.0 --version
+	+RUSTUP_AUTO_INSTALL=0 cargo +1.91.0 --version
+	+RUSTUP_AUTO_INSTALL=0 cargo +1.91.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
+	+bash scripts/ci/check-msrv-consumers.sh 1.91.0
 
 ci:
 	+@bash scripts/ci/run-validation-targets.sh --fail-fast --input Cargo.toml --input Cargo.lock $(CI_TARGETS)
@@ -228,22 +228,9 @@ tasks:
 
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
-	bash scripts/ci/test-maintenance-task.sh
-	perl scripts/ci/test-documentation-links.pl
-	perl scripts/ci/test-local-lock-versions.pl
-	bash scripts/ci/test-file-digests.sh
-	bash scripts/ci/test-dependency-pins.sh
-	bash scripts/ci/test-cargo-metadata.sh
-	bash scripts/ci/test-format-tools.sh
 	bash scripts/ci/test-evidence-checksums.sh
 	bash scripts/ci/test-evidence-archive.sh
-	bash scripts/ci/test-host-tools.sh
-	bash scripts/ci/test-tool-commands.sh
 	bash scripts/ci/test-testkit-commands.sh
-	bash scripts/ci/test-cloc.sh
-	bash scripts/ci/test-rust-tools.sh
-	bash scripts/ci/test-cargo-tool-versions.sh
-	bash scripts/ci/test-ic-tools.sh
 
 validate: ci
 

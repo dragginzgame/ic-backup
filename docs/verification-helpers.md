@@ -6,6 +6,42 @@ policy. They require Perl core modules or Bash 3.2+, as noted below, and run on
 Linux and macOS. The portable regression suite includes offline fixtures;
 native CI qualifies each supported host separately.
 
+## Complete release-change paths
+
+```bash
+bash scripts/ci/collect-release-changes.sh v0.3.8 > changed-paths.nul
+```
+
+The optional Bash 3.2 helper emits NUL-separated tracked changes from the selected
+base commit to the current worktree, followed by nonignored untracked paths.
+Without a base, it selects the most recent reachable canonical `vX.Y.Z` tag.
+Explicit bases must resolve to commits. The verified commit ID, rather than its
+mutable ref spelling, is used for the comparison even if the tag moves afterwards.
+It anchors Git observation at the checkout
+root, disables optional index writes, and publishes no paths until both Git
+producers succeed. Failed observations preserve their status and clean the
+scratch file; its own newly allocated file is excluded if scratch storage is
+inside the worktree. Empty output after success means no changed paths. Output order is
+not a classification contract. Consumers own package/repository path policy,
+release authority and how they use the complete observation. This does not replace
+index/worktree admission or commit-to-commit CI selection.
+
+## Release-prose advisory
+
+```bash
+bash scripts/ci/warn-release-prose.sh 0.3.7 docs/status/current.md
+```
+
+This optional Bash 3.2/awk helper warns when the selected status file describes
+its target version as a candidate, or its `Next action` section contains release
+instructions likely to become stale. The caller supplies the version and file;
+the default file is `docs/status/current.md`, resolved from the caller's directory.
+It does not parse package identity or decide release readiness. Missing inputs
+and reader failures remain advisory, and the command always returns success.
+Run it before release metadata mutation; never turn interpreted prose into a
+post-mutation blocker. Consumers retain invocation timing and their own status
+layout. The owner fixture qualifies heuristics and failure behavior.
+
 ## Evidence archives
 
 ```bash
@@ -300,6 +336,28 @@ call to this helper, and keep the shared runner's own fixtures upstream.
 Shared Tooling exercises its own Makefile in the portable suite; the focused
 `make check-release-commands` target offers the same adoption check.
 
+## Read-only Cargo publication admission
+
+Run `bash scripts/ci/check-publication.sh PACKAGE REMOTE` at the consumer checkout
+root. It requires clean source, a stable workspace version, an annotated release
+tag at HEAD, exactly one push destination and the same tag object at that
+destination. It then requires confirmed absence of that package/version on
+crates.io and rechecks local HEAD, tag and source after the network observations.
+Unknown registry state, failed observations with plausible output, identity
+changes and CR/LF directory paths (including physical aliases) stop admission.
+
+The command does not upload, retry, install tools, stage changes or write Git refs.
+It uses the selected snapshot's version, source, tag, registry and Make-execution
+helpers; selecting it through the exporter includes those companions. Select
+`scripts/ci/test-publication.sh` only when the consumer wants its optional fixture.
+
+Consumers still admit the package's workspace membership, features, credentials,
+verification policy and registry selection, and own exclusive execution and the
+separately authorized upload. This check only supports crates.io and coordinated
+stable workspace versions. It is a point-in-time observation, not a lock or an
+upload receipt. Existing versions require consumer reconciliation; workspace
+ordering, partial uploads and recovery do not move into this helper.
+
 ## Exact crates.io version observation
 
 ```sh
@@ -554,6 +612,17 @@ configuration or Make includes). The checker exports existing HEAD, overlays
 the named inputs plus the Makefile, hook, installer and Make execution check,
 and stages them only in temporary repositories. It never creates commits or
 activates the real checkout's hook.
+Pass `--rust-sources` immediately after the fourth argument to discover current
+Git-maintained Rust files and Cargo manifests, including unignored additions.
+The checker applies their edits/additions and tracked deletions only to its
+disposable checkout. Keep selected perturbation inputs and additional Make,
+configuration or tooling files explicit. This option avoids maintaining a
+second per-module source roster; it does not change formatter or workspace policy.
+The companion `scripts/ci/select-rust-formatting-sources.sh ROOT` publishes a
+complete NUL-separated relative-path selection only after Git and path admission
+succeed. It rejects symlinks, nonregular current files and physical escapes;
+tracked missing paths represent deletions. Ignored untracked files and unrelated
+extensions are omitted. Neither command stages or edits the real source checkout.
 README.md must exist as an unrelated-edit preservation input. Tracked files must
 be regular files, matching the shared hook's support contract.
 This includes unrelated historical symlinks: the checker rejects them before
@@ -582,3 +651,71 @@ retain evidence; existing nonzero statuses are preserved.
 Consumer-specific formatter stages and runtime obligations still need their local
 tests. Shared Tooling exercises this helper against its real nested Cargo fixture;
 that does not qualify a consumer's formatter or establish native macOS adoption.
+
+## Coordinated Cargo graph admission
+
+`cargo-release-metadata.sh check-graph PRIMARY_PACKAGE` validates regular root
+Cargo inputs, locked/offline resolution and the complete coordinated workspace/
+local-lock roster without requiring release notes or dates. It performs no
+version writes, fetching or compilation. The existing `check` operation adds
+release-note/date admission; both retain selected-commit and failed-evidence
+semantics. Consumers can project a successful Cargo member document through
+`cargo-workspace-members.jq` after a literal manifest bump; use full locked
+resolution for the final graph check rather than treating `--no-deps` as proof.
+
+`compare-stable-versions.pl VERSION BASELINE` prints -1, 0 or 1 using exact
+canonical decimal component ordering. It rejects malformed stable identities
+before output and uses no floating-point or shell-integer arithmetic. The release
+finalizer rejects non-increasing previous/target pairs itself.
+
+## Downloaded failure-evidence verification
+
+The optional host-side `failure_evidence.py` provides non-extracting archive
+indexing/regular reads and independent compact Shared tool receipt verification.
+Consumers keep source/job/run identity and product assertions. The Python helper
+is selected only by download-verification consumers, not native shell setup.
+Run `python3 scripts/ci/test-failure-evidence.py` on the download-verification
+host; the portable shell suite does not introduce a Python prerequisite.
+
+`qualify-hosted-failure.sh early|late CONSUMER EVIDENCE_PARENT HOST_CATALOG
+FAILURE_LOG_ROOT` requires explicit workflow dispatch and matching checkout
+identity. It creates a new isolated scenario/store, drives the canonical installer
+or logger, checks preserved inputs and deliberately returns the verified original
+failure status. Callers own evidence selection, upload/download and supported
+host gates; the command activates no workflow and changes no active tool selection.
+
+### Fixture allocation
+
+Source `scripts/ci/fixture-lifecycle.sh` and call `fixture_create TEMPLATE` to
+allocate one directory and return its absolute physical path before changing cwd.
+The caller selects the template/prefix and retains its EXIT trap, completion flag
+and evidence policy. Relative templates, ordinary spaces and directory aliases
+are supported; CDPATH cannot redirect anchoring or add output. Empty templates,
+leading options and CR/LF in templates are rejected before allocation. A resolved
+physical path containing CR/LF is refused, retaining the allocation for inspection.
+Allocation errors preserve their status; normalization failures retain and report
+the created directory without attempting cleanup from an unanchored path.
+
+For example, after sourcing the helper:
+
+```bash
+fixture="$(fixture_create "${TMPDIR:-/tmp}/consumer-check.XXXXXX")"
+fixture_complete=false
+trap 'fixture_finish "$?" "$fixture" "Consumer fixture retained"' EXIT
+# Run the caller-owned checks, then mark successful completion.
+fixture_complete=true
+```
+
+The allocation helper is additive and does not change existing cleanup callers.
+Its focused fixture is `scripts/ci/test-fixture-allocation.sh`; selecting that
+fixture through the snapshot exporter includes the lifecycle helper.
+
+### Completion admission without cleanup
+
+`fixture_completion_status STATUS COMPLETE` returns the original nonzero status,
+or returns 1 for zero-status execution unless COMPLETE is `true`. STATUS must be
+a canonical decimal shell exit status from 0 through 255; invalid arguments
+return 2 rather than wrapping an invalid status to success. The helper performs
+no cleanup, reporting or process exit. Capture refusal in an explicit conditional
+under errexit. `fixture_finish` uses this admission before its existing cleanup
+policy; qualification runners can instead retain all success and failure evidence.

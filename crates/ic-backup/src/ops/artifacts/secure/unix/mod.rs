@@ -1,9 +1,8 @@
 //! Unix descriptor-based artifact traversal and staging.
 
 use super::{ArtifactChecksumRecord, ArtifactError, ExpectedArtifactType};
-use crate::ops::artifacts::{
-    checksum_reader, checksum_relative_files, copy_from_reader, descriptor,
-};
+use crate::ops::artifacts::{checksum_reader, checksum_relative_files, copy_from_reader};
+use ic_host_fs::read::tree::{TreeVisitor, walk_tree};
 
 use std::{
     fs::{DirBuilder, File, OpenOptions},
@@ -139,7 +138,7 @@ fn directory_checksum(
         action,
         checksums: Vec::new(),
     };
-    descriptor::walk_tree(directory_fd, relative_directory, display_root, &mut visitor)?;
+    walk_tree(directory_fd, relative_directory, display_root, &mut visitor)?;
     checksum_relative_files(visitor.checksums).map_err(ArtifactError::from)
 }
 
@@ -148,12 +147,8 @@ struct ChecksumVisitor<'a> {
     checksums: Vec<(PathBuf, ArtifactChecksumRecord)>,
 }
 
-impl descriptor::TreeVisitor for ChecksumVisitor<'_> {
+impl TreeVisitor for ChecksumVisitor<'_> {
     type Error = ArtifactError;
-
-    fn directory_open_requires_type(&self) -> bool {
-        true
-    }
 
     fn file(
         &mut self,
@@ -221,7 +216,8 @@ fn ensure_opened_type(
     expected: FileType,
     path: &Path,
 ) -> Result<(), ArtifactError> {
-    let actual = descriptor::opened_type(fd)?;
+    let metadata = unix_fs::fstat(fd).map_err(std::io::Error::from)?;
+    let actual = FileType::from_raw_mode(metadata.st_mode);
     if actual == expected {
         Ok(())
     } else {

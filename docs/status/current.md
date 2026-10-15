@@ -25,6 +25,123 @@
 
 # Current handoff — 2026-10-15
 
+## Pending 0.25.0 Rust support floor
+
+The workspace libraries now declare Rust 1.91.0 as their minimum supported
+compiler. The MSRV target, CI installation and contributor setup select that
+exact toolchain; independent public consumers use the same floor. This is a
+consumer build requirement in the pending 0.25.0 hard cut. Focused qualification
+passed on Linux: both libraries compile across all targets and features with
+Rust 1.91.0, and both independent public consumers compile against the locked
+graph. Package archives and their paired consumer also pass. The normal
+`make check-msrv` target stopped at its Testkit prerequisite because the
+selected 0.46.0 CLI is not installed and this sandbox could not reach
+crates.io for explicit setup. Native macOS acceptance remains separate.
+
+## Pending 0.25.0 Host and publication-error hard cut
+
+The lockfile now selects published Host FS, Process and Artifacts 0.19.0.
+Backup's public `PersistenceError::Publication` now carries a Backup-owned
+`PublicationError` with the original producer, cleanup and before/after-rename
+evidence. Consumers matching that error must adopt this type; later Host
+versions no longer change the variant's Rust type identity. The complete
+pending batch remains 0.25.0 under the pre-1.0 compatibility rule, while the
+workspace package version stays with the user's release flow. Host's
+private-parent check rejects observed symlink ancestors and `..`
+before directory creation. Backup's JSON writer passes the selected parent
+directly, while layout and journal input boundaries already resolve intentional
+root aliases. The three fixture-root owners now resolve the operator-selected
+temporary parent before allocating descendants, which matters on hosts with
+system directory aliases. On Linux, 554 Core unit tests, six directory-checksum
+cases, 16 Agent HTTP cases, strict Clippy, formatting, dependency pins,
+documentation links and paired package archives pass on the Host 0.19 graph.
+Before the floor increase, Rust 1.88 all-target checks and both independent
+consumers passed on that graph.
+The JSON suite covers create-only and replacement refusals, original-byte/mode
+retention and physical-root success; the error-boundary regression retains all
+three phases and original sources. This does not prove root confinement or a
+race-free namespace. Native macOS acceptance and the full release gate remain
+pending.
+
+## Pending 0.25.0 consumer tooling gate
+
+The `tooling-check` target now retains Backup's CI/snapshot failure-injection
+fixture, evidence checksum/archive fixtures and Testkit CLI routing fixture.
+Generic Shared Tooling implementation matrices are no longer dispatched here;
+the actual snapshot, pins, docs, tools, formatting, hooks, package and release
+checks keep their separate CI targets. A same-host, same-graph Linux comparison
+passed before and after this selection: 140.69 seconds versus 28.44 seconds
+for `make tooling-check`. This single observation is not a native macOS timing
+claim. Focused release, tool, pin, documentation, shell, formatting, strict
+Clippy and paired-package checks also pass. The proof mapping is in
+[development](../development.md).
+
+## Pending upstream deduplication for 0.25.0
+
+The locked graph selects published Testkit 0.45.0, and its exact CLI/server is
+admitted locally. Both crates compile; 16 Agent HTTP, 12 Agent PocketIC and 34
+Core PocketIC cases pass on Linux. This release does not include typed partial
+HTTP capture. Testkit [PR #92](https://github.com/dragginzgame/ic-testkit/pull/92)
+now merges with released 0.45.0 at `ab43d3f`; its pending 0.46.0 hard cut
+provides that capture API. On the merged Testkit tree, seven focused capture
+cases, 80 active library cases and six teardown cases pass, along with strict
+all-target Clippy, warning-denied crate docs and formatting. Publication and
+Backup's capture migration remain pending; native macOS acceptance is separate.
+
+Host FS [PR #112](https://github.com/dragginzgame/ic-host-tooling/pull/112)
+still owns the proposed directory opener and held-inode comparison; Host FS
+[PR #127](https://github.com/dragginzgame/ic-host-tooling/pull/127) still owns
+the no-create existing-file lock admission. Both are unpublished. Backup keeps
+its local directory custody, journal lock and HTTP capture until those APIs
+are released and their replacements pass product qualification. The Host PRs
+remain with their existing owner; no sibling checkout or Backup dependency was
+changed by this upstream reconciliation.
+
+## Pending 0.25.0 Shared Tooling and earlier Host selection
+
+The reviewed Shared Tooling snapshot now selects committed 0.15.0 with 118 files.
+Backup's active validation guidance follows the shared focused-check cadence;
+local full-suite execution is reserved for explicit release or validation requests.
+The earlier lockfile selected published Host FS, Process and Artifacts 0.18.6. This Host
+patch changes contributor tooling only; library sources are unchanged from
+0.18.5. Explicit tool setup and offline admission pass, along with snapshot,
+shell, tooling and release-adapter checks;
+both crates compile across all targets and features, all 552 Core library tests
+and six directory-checksum integration cases pass. The isolated release fixture
+now includes Shared's required release-input validator. Native macOS CI and the
+full local gate remain separate; previous full `make ci` evidence below applies
+to the prior snapshot and Host selection. The [review](../shared-tooling-review.json)
+records the adopted paths and focused evidence.
+
+## Pending 0.25.0 published Host traversal adoption
+
+The previously qualified Host FS/Process 0.18.5 graph supplies the no-follow descriptor
+walker and opt-in acknowledged direct-child crash barrier. Backup's duplicate
+descriptor walker is removed; checksum/copy and publication visitors keep their
+local byte framing, sync, error projection and custody policy. Test crash helpers
+delegate the three-marker handshake and reap behavior to Host Process while
+retaining Backup's 30-second fixture deadline and original journey assertions.
+Full `make ci` passed on the prior Host 0.18.5/Metrics 0.10.1 graph: 552
+Core library tests, PocketIC and Agent transport suites, strict Clippy,
+Rust 1.88 consumers and paired package archives. Native macOS acceptance
+remains pending for
+[#48](https://github.com/dragginzgame/ic-backup/issues/48). That earlier slice
+changed no public API, persisted record, IC effect or package version; the
+later Host 0.19 selection changes the public Rust error identity.
+
+## Pending 0.25.0 consumer qualification cleanup
+
+The independent Rust 1.88 and package-archive consumers now share one local
+offline fixture owner for original lock/metadata capture and graph admission.
+MSRV API probes, exact archive source checks, checksum evidence and retention
+remain with their respective callers. Full `make ci` passed on the previous
+Host 0.18.5 lock graph, including shell checks, both independent Rust 1.88
+consumers, the paired archive consumer, product and PocketIC tests, strict
+Clippy and rustdoc. The Host FS extraction continues in
+[PR #127](https://github.com/dragginzgame/ic-host-tooling/pull/127) on its
+released 0.18.5 base; superseded PR #118 is closed. Backup keeps its local
+lock and directory-commit mechanics until a published Host API is qualified.
+
 ## Pending 0.24.7 Metrics 0.10 qualification
 
 The locked Metrics 0.10 graph moves summary count, total, maximum and mean

@@ -11,8 +11,11 @@ use serde_json::json;
 use std::{fs, path::PathBuf, sync::Arc};
 
 pub fn root(label: &str) -> PathBuf {
+    let selected_temp = std::env::temp_dir()
+        .canonicalize()
+        .expect("resolve selected fixture parent");
     ic_host_fs::testing::create_fixture_directory(
-        &std::env::temp_dir(),
+        &selected_temp,
         &format!("ic-backup-agent-{label}"),
     )
     .unwrap()
