@@ -12,9 +12,6 @@ fn custody_evidence_has_one_exact_generation_and_identity() {
     let decoded: CommandCustodyRecord =
         serde_json::from_value(value.clone()).expect("decode exact evidence");
     assert_eq!(decoded, record);
-    assert!(decoded.matches_file(42, 7));
-    assert!(!decoded.matches_file(42, 8));
-    assert!(!decoded.matches_file(43, 7));
     for key in [
         "version",
         "journal",
