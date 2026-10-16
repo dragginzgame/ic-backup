@@ -1,6 +1,7 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
+use crate::model::attempt_journal::MutationOutcomeRecord;
 use crate::test_support::ready::ready;
 use crate::{
     model::{

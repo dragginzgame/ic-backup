@@ -12,6 +12,7 @@ use crate::model::{
     },
     ic_request::IcManagementMethodRecord as Method,
 };
+use crate::policy::settlement_identity::{SettlementIdentity, SettlementIdentityMismatch};
 use thiserror::Error;
 
 /// Matched passive original attribution, never an authenticated receipt.
@@ -69,17 +70,18 @@ pub fn validate_lifecycle_settlement<'a>(
         return Err(IcLifecycleSettlementError::UnsupportedMethod);
     }
     let observation = validate_response(request, journal, response)?;
-    if settlement.authority != request.authority().digest() {
-        return Err(IcLifecycleSettlementError::AuthorityMismatch);
+    SettlementIdentity {
+        authority: &settlement.authority,
+        mutation_attempt: settlement.mutation_attempt,
+        observation_attempt: settlement.observation_attempt,
+        challenge: &settlement.challenge,
     }
-    if settlement.mutation_attempt != request.mutation_attempt()
-        || settlement.observation_attempt != request.observation_attempt()
-    {
-        return Err(IcLifecycleSettlementError::AttemptMismatch);
-    }
-    if &settlement.challenge != challenge {
-        return Err(IcLifecycleSettlementError::ChallengeMismatch);
-    }
+    .compare(&SettlementIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        observation_attempt: request.observation_attempt(),
+        challenge,
+    })?;
     let IcObservationReplyView::Status(status) = observation.reply() else {
         return Err(IcLifecycleSettlementError::UnsupportedMethod);
     };
@@ -125,6 +127,16 @@ pub enum IcLifecycleSettlementError {
     /// Retained opaque observation evidence differs even if reply bytes match.
     #[error("lifecycle settlement observation evidence differs")]
     ObservationEvidenceMismatch,
+}
+
+impl From<SettlementIdentityMismatch> for IcLifecycleSettlementError {
+    fn from(value: SettlementIdentityMismatch) -> Self {
+        match value {
+            SettlementIdentityMismatch::Authority => Self::AuthorityMismatch,
+            SettlementIdentityMismatch::Attempt => Self::AttemptMismatch,
+            SettlementIdentityMismatch::Challenge => Self::ChallengeMismatch,
+        }
+    }
 }
 
 #[cfg(test)]

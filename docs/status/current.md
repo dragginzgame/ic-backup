@@ -25,7 +25,109 @@
 
 # Current handoff — 2026-10-16
 
-## Pending 0.26.0 Intel command-custody regression
+## Pending 0.27.0 settlement identity and upstream copy/fixture preparation
+
+Lifecycle, capture, allocation and upload-data settlement share a private pure
+identity checker for authority, original attempts and challenge. Association and
+inventory admission retain their original ordering; domain evidence checks and
+public typed errors stay with each caller. All 57 focused settlement cases,
+including simultaneous identity/evidence denials without spending changes, pass.
+Strict all-target Core Clippy, actual Rust 1.91 library checking, formatting and
+Cargo inheritance pass.
+
+[Host PR #165](https://github.com/dragginzgame/ic-host-tooling/pull/165) at
+`9ac7503` extracts create-new descriptor copying into Host FS while Backup keeps
+directory digest framing. [Testkit PR #109](https://github.com/dragginzgame/ic-testkit/pull/109)
+at `47e21f5` exposes the existing authenticated server assets owner to Rust;
+the CLI delegates and owns signals. Both contributions are isolated, committed
+and submitted; package versions and normal sibling checkouts are unchanged.
+Host's three copy cases pass on current Rust and actual Rust 1.88. Testkit's
+seven provisioning, one CLI unit and three focused CLI setup cases pass, as do
+Rust 1.91 checking, selected strict Clippy and warning-denied rustdoc for both.
+
+The isolated `/tmp/backup-next-consumer` adapter passes ten artifact cases, the
+complete Core allocation/upload/load/start and Agent capture/transfer/upload/
+restore journeys on managed PocketIC 16.1.0, and strict all-target Core/Agent
+Clippy. It retains server digests, original/optimized Wasm, private logs and app
+safety. Path-free adoption patches are retained under
+`/tmp/backup-three-next.0z997hto/`; both pass apply-check. The normal Backup
+manifest and lock keep published selections until the APIs are published.
+[Backup #54](https://github.com/dragginzgame/ic-backup/issues/54) and
+[#55](https://github.com/dragginzgame/ic-backup/issues/55) own consumer adoption.
+Canic's existing public staging adapter remains valid. Upstream native CI is
+running; native Backup macOS acceptance and full local `make ci` remain separate.
+
+## Pending 0.27.0 simplification
+
+The generic operation-bound restore-copy staging, publication and verification APIs
+and their exports/tests are removed. No Rust caller was found in the inspected
+sibling source repositories. IC upload preparation continues reading verified
+original snapshot artifacts directly. Existing copies, contracts and provenance
+remain evidence; settle unfinished copy-based restores with the original released
+tool before adoption or obtain explicit safe disposition from the integration owner.
+The public API cut promotes the combined pending notes to 0.27.0; package versions
+and release metadata remain unchanged.
+
+Download and restore now use the existing qualified Applied receipt owner alongside
+metadata and uploads. The owner no longer imposes stage admission: each caller
+retains its original domain-check ordering, including download append before receipt
+recording and restore source/requirement checks before and after recording.
+The 112 workflow-related unit cases, the remaining public local-source recovery case,
+one actual PocketIC allocation/data-upload/load/start journey and all four
+lost/malformed load/start journeys pass. Strict all-target Core Clippy,
+warning-denied Core rustdoc, formatting, Cargo inheritance and doc links pass.
+No full `make ci` or native macOS qualification was run.
+
+The Host Process custody contribution is committed at `c692826` in the isolated
+`/tmp/ic-host-backup-custody` checkout. It passes all 118 all-feature Process tests,
+its doctest, seven custody cases on Rust 1.88, strict all-target/all-feature Process
+Clippy, warning-denied rustdoc, formatting, Cargo inheritance and doc links.
+The isolated Backup adapter at `/tmp/backup-custody-consumer` passes ten
+custody/model/reference-release cases and strict all-target Core Clippy.
+The reviewable adoption patch is retained at
+`/tmp/backup-simplify.ok9k0m7r/custody-adoption.patch`; it contains no temporary
+path or lockfile overrides. Backup keeps the published registry graph and local
+custody implementation until Host publishes the new API. Native macOS acceptance
+remains separate. The contribution merged as `2307c39` through
+[Host PR #164 — Share inherited command custody with Backup](https://github.com/dragginzgame/ic-host-tooling/pull/164).
+[Exact-source Host CI](https://github.com/dragginzgame/ic-host-tooling/actions/runs/38903068634)
+passes Linux, Intel macOS, Apple Silicon and MSRV for `c692826`.
+[Backup #53 — Adopt published Host Process inherited command custody](https://github.com/dragginzgame/ic-backup/issues/53)
+owns the remaining published-package selection and native consumer acceptance.
+
+Fresh follow-up qualification on the incoming Testkit 0.49.0 locked graph passes
+all 112 workflow-related cases, public local-source recovery, the complete planned
+allocation/data-upload/load/start journey and all four lost/malformed load/start
+journeys. Strict all-target Core Clippy, formatting and Cargo inheritance pass.
+Explicit `make install-testkit-server` prepared the missing selected 0.49.0 CLI;
+the authenticated 16.1.0 server and prior bundles remain retained. The isolated
+custody adapter also passes its ten cases and strict all-target Core Clippy on
+this Testkit selection. Backup's manifest/lock edits remain incoming user work.
+No full Backup `make ci` or native Backup macOS qualification was run.
+
+## Pending 0.27.0 Host consumer cleanup
+
+Released Backup 0.26.0 already selects published Host FS and Process 0.22.1.
+The pending 0.27.0 draft replaces Backup's duplicate no-follow directory opener
+with Host FS at layout and IC snapshot artifact callers. Eight layout and 26
+snapshot artifact tests pass, as does strict all-target Core Clippy. The Agent
+fixture now delegates bounded, required-Content-Length HTTP capture to Host
+Process while retaining raw request and JSON error evidence. Its 14 live HTTP
+boundary tests, 12 PocketIC transport cases, strict all-target Agent Clippy,
+formatting, doc links and Testkit server admission pass. IC snapshot checksum
+and upload slice readers now use Host Artifacts' exact-length APIs, retaining
+Backup's file-shape and original I/O projections. All 26 snapshot artifact
+tests and strict all-target Core Clippy pass after that change. The full release
+gate and native macOS consumer checks remain separate. Issues #45 and #46 remain
+open for that acceptance; #52 awaits a published Host release containing #127.
+The artifact checksum and staging path now also use Host FS's published
+root-relative entry opener instead of a local component walk. All 13 focused
+artifact tests and strict all-target Core Clippy pass. Backup still owns UTF-8
+path admission and artifact error projection. Existing-only sidecar locking and
+directory publication remain local until the corresponding Host primitives are
+available in a selected published package.
+
+## Released 0.26.0 Intel command-custody regression
 
 The current release already includes the license and package-fixture changes
 from now-closed Backup PR #49. Its older Intel macOS CI run failed because a
@@ -34,7 +136,7 @@ the live sidecar still correctly returned `InFlight`. The current test now
 retries only that refusal for at most five seconds, checks unchanged reference
 bytes on each refusal, and fails if custody never settles. The focused Linux
 test passes on the locked graph. Native Intel macOS and the full release gate
-remain unqualified for this pending test change.
+were still unqualified at the time of that focused test change.
 
 ## Host contribution handoff
 
@@ -42,11 +144,11 @@ Host PRs #152, #114, #125 and #127 merged after their Linux, Intel macOS,
 Apple Silicon and MSRV checks passed. PR #112 closed because #114 includes
 the Unix no-follow directory opener. Host 0.22.1 is tagged; #127 belongs to
 the 0.22.2 draft. [Backup #52](https://github.com/dragginzgame/ic-backup/issues/52)
-tracks lock and directory-commit adoption. Backup's directory and HTTP
-replacements still require published Host packages and their own consumer
-qualification.
+tracks lock and directory-commit adoption. Backup now selects published Host
+0.22.1 for its directory and HTTP consumer cleanup; native and release-gate
+qualification remain separate.
 
-## Pending 0.26.0 graph and observation admission
+## Released 0.26.0 graph and observation admission
 
 Effect-graph decoding now uses the shared persisted-sequence visitor with an
 aggregate edge check before each node is stored. The node, per-node dependency
@@ -61,10 +163,11 @@ adds short-EOF and excess-byte admission to the generic bounded readers. Its
 35 default-feature Artifacts tests, nine minimal-feature artifact cases and
 strict all-feature/all-target Clippy pass in an isolated clean checkout. Backup's
 IC snapshot verification and upload readers keep their existing local length
-checks until a Host package containing the PR is published and selected. Full
-release and native macOS qualification remain separate.
+checks in the released code; the pending 0.27.0 draft replaces their local
+exact-length checks with selected Host stream APIs. The focused evidence above
+was recorded before release and native macOS qualification.
 
-## Pending 0.26.0 stream and fixture consolidation
+## Released 0.26.0 stream and fixture consolidation
 
 Framed evidence digests now stream through the published Host Artifacts hashing
 writer instead of allocating the complete framing buffer. The checksum record
@@ -80,7 +183,7 @@ Its compile check, both selected lost-reply journeys and one complete planned
 download journey pass. Strict all-target Core Clippy passes. The full `make ci`
 gate and native macOS acceptance remain separate.
 
-## Pending 0.26.0 bounded-model and Host-primitive cleanup
+## Released 0.26.0 bounded-model and Host-primitive cleanup
 
 Artifact staging and workflow stages now use published Host FS 0.21.0
 private-directory creation in place of their local `0700` helpers. The Host
@@ -101,9 +204,9 @@ decoders now use the existing bounded sequence reader. Fence-acquisition, IC
 request and snapshot-metadata constructors obtain canonical target text and raw
 principal bytes from one parse. Layout and artifact custody checks use the
 published Host FS directory-admission primitive with the existing typed
-replacement errors. The local no-follow opener remains because the published
-Host FS 0.21.0 package does not include the opener now merged through
-[Host PR #114 — Open files and directories beneath an explicit root](https://github.com/dragginzgame/ic-host-tooling/pull/114).
+replacement errors. The then-selected Host FS 0.21.0 package lacked the opener
+from [Host PR #114 — Open files and directories beneath an explicit root](https://github.com/dragginzgame/ic-host-tooling/pull/114);
+the pending 0.27.0 cleanup now adopts it from Host FS 0.22.1.
 On the present lockfile, all-target Core checking, 554 Core unit tests, nine
 selected native integration tests, strict all-target Clippy, formatting, doc
 links and the explicit CR/LF directory-staging regression pass. This is focused
@@ -126,8 +229,8 @@ Host source and passed 13 artifact tests, 7 directory-commit tests, 11 Agent
 HTTP boundary tests, all-target checking and strict all-target Clippy. This
 was consumer rehearsal, not published dependency qualification. Published Host
 FS 0.21.0 now supplies directory identity admission; the root-relative no-follow
-opener from #114 is still absent. Backup-specific checksum, evidence and recovery
-policy stays here.
+opener from #114 was still absent from that earlier package. Backup-specific
+checksum, evidence and recovery policy stays here.
 
 ## Observation recovery and handoff consolidation
 

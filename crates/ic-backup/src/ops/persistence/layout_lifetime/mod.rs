@@ -1,6 +1,5 @@
 //! Stable parent-side layout locks and durable unfinished restore dependencies.
 
-use super::directory_custody::open_directory;
 use crate::{
     model::restore_references::{RestoreReferenceRecord, RestoreReferencesRecord},
     ops::persistence::{
@@ -8,6 +7,8 @@ use crate::{
     },
 };
 use ic_host_artifacts::artifact::Sha256Digest;
+#[cfg(unix)]
+use ic_host_fs::read::open_directory_no_follow;
 use std::{
     fs::{self, File},
     io,
@@ -47,7 +48,7 @@ impl BackupLayoutGuard {
             .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidInput))?;
         let key = Sha256Digest::compute(name.as_encoded_bytes()).to_string();
         let lock = JournalLock::acquire(&parent.join(format!(".ic-backup-layout-{key}")))?;
-        let directory = open_directory(&root)?;
+        let directory = open_directory_no_follow(&root)?;
         Ok(Self {
             root,
             directory,
@@ -148,6 +149,11 @@ impl BackupLayoutGuard {
             Err(error) => Err(error.into()),
         }
     }
+}
+
+#[cfg(not(unix))]
+fn open_directory_no_follow(_path: &Path) -> io::Result<File> {
+    Err(io::Error::from(io::ErrorKind::Unsupported))
 }
 
 pub(super) fn journal_identity(path: &Path) -> Result<PathBuf, PersistenceError> {

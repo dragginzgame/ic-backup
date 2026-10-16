@@ -115,7 +115,6 @@ async fn settle_metadata<E: std::error::Error + 'static>(
     )?;
     let admitted = validate_response(&request, journal.record()?, response)?;
     let metadata_digest = super::qualified_receipt::AppliedReceiptRecorder {
-        stage,
         journal: &mut journal,
         expected_attempt: request.mutation_attempt(),
         expected_request: payload.digest().hash(),
@@ -126,11 +125,15 @@ async fn settle_metadata<E: std::error::Error + 'static>(
         async |request, reply| qualify(request, reply).await,
         IcSnapshotMetadataSettlementError::Qualification,
         || IcSnapshotMetadataSettlementError::ReceiptRequired,
-        || match admitted.reply() {
-            IcSnapshotTransferReadReply::Metadata(metadata) => Ok(metadata.digest()),
-            IcSnapshotTransferReadReply::Data(_) => {
-                Err(IcSnapshotMetadataSettlementError::ReceiptRequired)
-            }
+        || {
+            let digest = match admitted.reply() {
+                IcSnapshotTransferReadReply::Metadata(metadata) => metadata.digest(),
+                IcSnapshotTransferReadReply::Data(_) => {
+                    return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
+                }
+            };
+            stage.layout()?;
+            Ok(digest)
         },
     )
     .await?;

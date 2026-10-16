@@ -4,8 +4,8 @@ use super::super::metrics::LocalOperation;
 use super::{
     ArtifactChecksumRecord, DownloadJournalGuard, FORMAT, File, IcSnapshotArtifactError,
     IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES, Mode, OFlags, REGIONS,
-    check_closed_tree, check_directory_identity, checksum_relative_files, member, open_directory,
-    unix_fs,
+    check_closed_tree, check_directory_identity, checksum_relative_files, member,
+    open_directory_no_follow, unix_fs,
 };
 use crate::{
     model::{
@@ -17,7 +17,7 @@ use crate::{
     },
     policy::download_integrity::validate,
 };
-use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_reader};
+use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_exact_reader};
 use std::time::Instant;
 use std::{
     io::{self, Read},
@@ -65,7 +65,7 @@ impl DownloadJournalGuard<'_> {
                 .ok_or(IcSnapshotArtifactError::OriginalMismatch)?;
             self.check_artifact_parent()?;
             let parent_path = self.layout.root().join("artifacts");
-            let parent = open_directory(&parent_path)?;
+            let parent = open_directory_no_follow(&parent_path)?;
             let path = self.layout.root().join(entry.artifact_path());
             let directory = File::from(
                 unix_fs::openat(
@@ -200,15 +200,12 @@ fn checksum_exact_reader(
     reader: impl Read,
     length: u64,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
-    // The shared stream owner probes at most one excess byte. Exact length remains
-    // a local artifact requirement, including rejection of premature EOF.
-    let identity = hash_reader(reader, length).map_err(|error| match error {
-        InputError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
+    let identity = hash_exact_reader(reader, length).map_err(|error| match error {
+        InputError::LimitExceeded { .. } | InputError::LengthMismatch { .. } => {
+            IcSnapshotArtifactError::FileShape
+        }
         error => ArtifactError::Io(error.into()).into(),
     })?;
-    if identity.bytes != length {
-        return Err(IcSnapshotArtifactError::FileShape);
-    }
     Ok(ArtifactChecksumRecord::from_digest(
         *identity.sha256.as_bytes(),
     ))

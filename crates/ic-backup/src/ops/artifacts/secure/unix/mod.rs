@@ -2,7 +2,10 @@
 
 use super::{ArtifactChecksumRecord, ArtifactError, ExpectedArtifactType};
 use crate::ops::artifacts::{checksum_reader, checksum_relative_files, copy_from_reader};
-use ic_host_fs::read::tree::{TreeVisitor, walk_tree};
+use ic_host_fs::read::{
+    OpenEntryError, OpenedEntry, open_directory_no_follow, open_entry_beneath,
+    tree::{TreeVisitor, walk_tree},
+};
 
 use std::{
     fs::{File, OpenOptions},
@@ -12,7 +15,7 @@ use std::{
 
 use rustix::{
     fd::{AsFd, OwnedFd},
-    fs::{self as unix_fs, FileType, Mode, OFlags},
+    fs::FileType,
 };
 
 pub(super) fn checksum_path(
@@ -69,37 +72,24 @@ pub(super) fn stage_relative_path(
 }
 
 fn open_relative(root: &Path, relative: &Path) -> Result<(OwnedFd, FileType), ArtifactError> {
-    let components = relative
-        .components()
-        .map(|component| match component {
-            Component::Normal(name) if name.to_str().is_some() => Ok(name),
-            _ => Err(unsupported_entry(relative, FileType::Unknown)),
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    if components.is_empty() {
+    let mut has_component = false;
+    for component in relative.components() {
+        if !matches!(component, Component::Normal(name) if name.to_str().is_some()) {
+            return Err(unsupported_entry(relative, FileType::Unknown));
+        }
+        has_component = true;
+    }
+    if !has_component {
         return Err(unsupported_entry(relative, FileType::Unknown));
     }
 
-    let mut current = unix_fs::open(
-        root,
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Mode::empty(),
-    )
-    .map_err(std::io::Error::from)?;
-    for (index, component) in components.iter().enumerate() {
-        let is_leaf = index + 1 == components.len();
-        let mut flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
-        if !is_leaf {
-            flags |= OFlags::DIRECTORY;
-        }
-        current = unix_fs::openat(&current, *component, flags, Mode::empty())
-            .map_err(std::io::Error::from)?;
-        if !is_leaf {
-            ensure_opened_type(&current, FileType::Directory, relative)?;
-        }
+    let root = open_directory_no_follow(root)?;
+    match open_entry_beneath(root.as_fd(), relative) {
+        Ok(OpenedEntry::RegularFile(file)) => Ok((file.into(), FileType::RegularFile)),
+        Ok(OpenedEntry::Directory(file)) => Ok((file.into(), FileType::Directory)),
+        Err(OpenEntryError::UnsupportedEntry { kind }) => Err(unsupported_entry(relative, kind)),
+        Err(OpenEntryError::Io(error)) => Err(error.into()),
     }
-    let metadata = unix_fs::fstat(&current).map_err(std::io::Error::from)?;
-    Ok((current, FileType::from_raw_mode(metadata.st_mode)))
 }
 
 fn checksum_opened(
@@ -210,20 +200,6 @@ fn private_directory(path: &Path) -> Result<(), ArtifactError> {
     ic_host_fs::durable::create_private_directory(path)
         .map(|_| ())
         .map_err(|error| ArtifactError::Io(crate::ops::directory_creation_io(error)))
-}
-
-fn ensure_opened_type(
-    fd: &impl AsFd,
-    expected: FileType,
-    path: &Path,
-) -> Result<(), ArtifactError> {
-    let metadata = unix_fs::fstat(fd).map_err(std::io::Error::from)?;
-    let actual = FileType::from_raw_mode(metadata.st_mode);
-    if actual == expected {
-        Ok(())
-    } else {
-        Err(unsupported_entry(path, actual))
-    }
 }
 
 fn unsupported_entry(path: &Path, kind: FileType) -> ArtifactError {

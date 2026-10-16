@@ -21,5 +21,6 @@ pub mod membership;
 mod observed_context;
 pub mod restore_safety;
 pub mod selection;
+mod settlement_identity;
 pub mod snapshot_inventory_delta;
 pub mod snapshot_read;

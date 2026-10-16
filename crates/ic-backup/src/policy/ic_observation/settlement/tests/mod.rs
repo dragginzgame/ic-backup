@@ -185,6 +185,47 @@ fn changed_settlement_identity_challenge_and_exact_evidence_reject() {
     let request = request(&original);
     let response = IcObservationResponse::new(input(&request, Status::Stopped, 42)).unwrap();
     let initial = settlement(&request, &response);
+    let before = original.journal.clone();
+    // Simultaneous mismatches preserve authority, attempts, challenge, then evidence order.
+    let mut combined = initial.clone();
+    combined.authority = hash("12");
+    combined.mutation_attempt = 3;
+    combined.observation_attempt = 4;
+    combined.challenge = hash("12");
+    combined.status = hash("12");
+    for expected in 0..4 {
+        let error = validate_lifecycle_settlement(
+            &request,
+            &original.journal,
+            &response,
+            &hash("56"),
+            &combined,
+        )
+        .unwrap_err();
+        match expected {
+            0 => {
+                assert!(matches!(
+                    error,
+                    IcLifecycleSettlementError::AuthorityMismatch
+                ));
+                combined.authority = initial.authority.clone();
+            }
+            1 => {
+                assert!(matches!(error, IcLifecycleSettlementError::AttemptMismatch));
+                combined.mutation_attempt = initial.mutation_attempt;
+                combined.observation_attempt = initial.observation_attempt;
+            }
+            2 => {
+                assert!(matches!(
+                    error,
+                    IcLifecycleSettlementError::ChallengeMismatch
+                ));
+                combined.challenge = initial.challenge.clone();
+            }
+            _ => assert!(matches!(error, IcLifecycleSettlementError::StatusMismatch)),
+        }
+        assert_eq!(original.journal, before);
+    }
     for change in 0..6 {
         let mut claim = initial.clone();
         match change {

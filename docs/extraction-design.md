@@ -978,26 +978,11 @@ lifetimes. Generic integration source digests are not reinterpreted. Local repla
 performs no fresh verification; no transfer, upload/load/start, current authority,
 application safety, terminal or reference/fence release proof follows from this join.
 
-Private operation-bound local restore artifact staging is also implemented. Complete
-fresh original-source admission precedes a no-follow descriptor copy into a new private
-direct child of the held restore layout. Copied and freshly checked destination hashes
-must match the exact original artifact checksum. Retained declarations are re-admitted
-before returning; original accounting/fences/references remain unchanged. Occupied
-destinations reject and failures/drop retain unfinished bytes. Explicit retained-copy
-verification needs exact original metadata and copy bytes, without reading source trees
-or recreating a copy. Staging is not durable publication; future byte custody, backend
-upload/extent completeness and current dispatch/application safety remain separate.
-See [the maintained boundary](extraction-boundary.md#private-original-operation-restore-artifacts).
-
-Separate durable restore-copy publication now reuses exact retained original-source
-admission, the selected checksum and canonical descriptor synchronization/atomic
-no-replace publication. Recovery verifies/synchronizes the matching canonical tree
-without rereading source trees or repeating a copy. Original records are re-admitted
-before/after; all accounting, obligations and references remain unchanged. Published-
-copy verification is a distinct fresh local check, not durability inferred from a
-path. Failures retain conflicting/partial/published evidence without repair or cleanup.
-Backend completeness, application safety and effect/release authority remain separate.
-See [the maintained boundary](extraction-boundary.md#durable-original-operation-restore-artifacts).
+Generic operation-bound restore-copy staging/publication is retired in the pending
+0.27.0 cut. The implemented IC upload source path reads bounded extents directly
+from verified original snapshot artifacts. Preserve retained copies, journals and
+obligations; settle unfinished copy-based restores with their original released
+tool before adoption. See [the retirement boundary](extraction-boundary.md#retired-generic-restore-artifact-copies).
 
 Exact originally reserved IC capture/load/start/stop requests now join the full
 original plan, immutable attempt authority and existing canonical IC payloads.

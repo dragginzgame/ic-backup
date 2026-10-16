@@ -1,6 +1,9 @@
 //! Common exact identity and explicit new-candidate checks for inventory settlements.
 
-use super::snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories};
+use super::{
+    settlement_identity::{SettlementIdentity, SettlementIdentityMismatch},
+    snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories},
+};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::ObservationOutcomeRecord,
@@ -21,17 +24,18 @@ pub(crate) struct InventorySettlementIdentity<'a> {
 
 impl InventorySettlementIdentity<'_> {
     pub fn compare(&self, expected: &Self) -> Result<(), InventorySettlementMismatch> {
-        if self.authority != expected.authority {
-            return Err(InventorySettlementMismatch::Authority);
+        SettlementIdentity {
+            authority: self.authority,
+            mutation_attempt: self.mutation_attempt,
+            observation_attempt: self.observation_attempt,
+            challenge: self.challenge,
         }
-        if self.mutation_attempt != expected.mutation_attempt
-            || self.observation_attempt != expected.observation_attempt
-        {
-            return Err(InventorySettlementMismatch::Attempt);
-        }
-        if self.challenge != expected.challenge {
-            return Err(InventorySettlementMismatch::Challenge);
-        }
+        .compare(&SettlementIdentity {
+            authority: expected.authority,
+            mutation_attempt: expected.mutation_attempt,
+            observation_attempt: expected.observation_attempt,
+            challenge: expected.challenge,
+        })?;
         if self.baseline != expected.baseline {
             return Err(InventorySettlementMismatch::Baseline);
         }
@@ -52,6 +56,16 @@ pub(crate) enum InventorySettlementMismatch {
     Baseline,
     Inventory,
     ObservationEvidence,
+}
+
+impl From<SettlementIdentityMismatch> for InventorySettlementMismatch {
+    fn from(value: SettlementIdentityMismatch) -> Self {
+        match value {
+            SettlementIdentityMismatch::Authority => Self::Authority,
+            SettlementIdentityMismatch::Attempt => Self::Attempt,
+            SettlementIdentityMismatch::Challenge => Self::Challenge,
+        }
+    }
 }
 
 pub(crate) fn validate_pair<'a, E>(

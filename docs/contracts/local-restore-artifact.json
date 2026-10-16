@@ -1,4 +1,5 @@
 {
+   "status" : "historical: generic restore-copy APIs retired in pending 0.27.0; retained evidence is not a current executable contract",
    "bounds" : {
       "copy_buffer_bytes" : 65536,
       "journal_io_bytes" : 1048576,

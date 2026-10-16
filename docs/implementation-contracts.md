@@ -300,15 +300,13 @@ implementation determine what has actually been qualified.
   introduced. Integrations own authentic capture/complete transfer, stable noncooperating
   bytes, application subset safety and effect-boundary permissions/custody.
 
-- Private local restore artifact staging now binds an original opaque operation
-  sequence to its exact selected source artifact and retained checksum. Reuse the
-  original-source admission and safe descriptor-copy owners under both layout
-  lifetimes. Create fixed direct children with 0700/0600 permissions; preserve
-  partial copies and reject occupied destinations without replacement or cleanup.
-  Explicit retained-copy verification checks exact retained originals and copy bytes
-  without re-reading source trees or creating an artifact. This staging has no fsync/
-  durable publication, spending transition, upload/load/start permit or release
-  admission. Integrations own stable noncooperating destination/byte custody.
+- Generic operation-bound restore-copy staging, publication and retained-copy
+  verification are retired. IC upload preparation reads verified original snapshot
+  artifacts directly; source/safety admission, references and all original accounting
+  remain mandatory. Preserve old copies and their metadata; settle unfinished
+  copy-based restores using the original released tool before adopting the hard cut
+  or obtain explicit safe disposition. Historical contracts/provenance are evidence,
+  never another current reader or cleanup authorization.
 
 - Metadata-stage coordination now joins one exact singleton original metadata read
   to mandatory integration-qualified byte retention/attribution, the sole receipt

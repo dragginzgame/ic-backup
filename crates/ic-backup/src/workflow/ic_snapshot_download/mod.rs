@@ -3,7 +3,7 @@
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::MutationReceiptRequest,
         ic_snapshot_download::{IcSnapshotDownloadPlan, IcSnapshotDownloadPlanningError},
         ic_snapshot_transfer_read::{
             IcSnapshotTransferReadError, IcSnapshotTransferReadPayload,
@@ -138,21 +138,26 @@ async fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + '
         IcSnapshotTransferReadPayload::Data(payload),
     )?;
     let admitted = validate_response(&request, journal.record()?, response)?;
-    let receipt = qualify(&request, response)
-        .await
-        .map_err(IcSnapshotDownloadReplyError::Qualification)?;
-    if receipt.outcome != MutationOutcomeRecord::Applied
-        || receipt.attempt != request.mutation_attempt()
-        || receipt.request != request.payload().digest().hash()
-    {
-        return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
+    let writer = super::qualified_receipt::AppliedReceiptRecorder {
+        journal: &mut journal,
+        expected_attempt: request.mutation_attempt(),
+        expected_request: request.payload().digest().hash(),
     }
-    writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
-    let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
-        return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
-    };
-    let writer = writer.append(reply)?;
-    journal.record_mutation(receipt)?;
+    .record_applied(
+        &request,
+        response,
+        async |request, reply| qualify(request, reply).await,
+        IcSnapshotDownloadReplyError::Qualification,
+        || IcSnapshotDownloadReplyError::ReceiptRequired,
+        || {
+            writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
+            let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
+                return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
+            };
+            Ok(writer.append(reply)?)
+        },
+    )
+    .await?;
     stage.layout()?;
     Ok(writer)
 }

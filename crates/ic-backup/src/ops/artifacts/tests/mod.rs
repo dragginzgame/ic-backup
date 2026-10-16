@@ -91,18 +91,25 @@ fn checksum_verification_accepts_equivalent_hex_case() {
 fn filesystem_checksums_reject_symlinked_files_and_entries() {
     let root = temp_dir("canic-backup-checksum-symlink");
     fs::create_dir_all(root.join("tree")).expect("create checksum tree");
+    fs::create_dir(root.join("real-directory")).expect("create nested source");
     fs::write(root.join("source"), b"source").expect("write source");
+    fs::write(root.join("real-directory/source"), b"nested").expect("write nested source");
     std::os::unix::fs::symlink(root.join("source"), root.join("linked-file"))
         .expect("create file symlink");
     std::os::unix::fs::symlink(root.join("source"), root.join("tree/linked-entry"))
         .expect("create tree symlink");
+    std::os::unix::fs::symlink(root.join("real-directory"), root.join("linked-directory"))
+        .expect("create intermediate symlink");
 
     let file_error =
         checksum_file(&root.join("linked-file")).expect_err("symlinked file must reject");
     let tree_error =
         checksum_directory(&root.join("tree")).expect_err("symlinked directory entry must reject");
+    let nested_error = checksum_file(&root.join("linked-directory/source"))
+        .expect_err("symlinked intermediate directory must reject");
 
     assert!(matches!(file_error, ArtifactError::Io(_)));
     assert!(matches!(tree_error, ArtifactError::UnsupportedEntry { .. }));
+    assert!(matches!(nested_error, ArtifactError::Io(_)));
     fs::remove_dir_all(root).expect("remove fixture");
 }

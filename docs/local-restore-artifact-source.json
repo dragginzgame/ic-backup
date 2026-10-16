@@ -1,4 +1,5 @@
 {
+   "status" : "historical: generic restore-copy APIs retired in pending 0.27.0; retained evidence is not a current executable contract",
    "adaptation" : "Reuse exact original-source admission, opaque operation identity, existing safe descriptor-copy/checksum and JournalLock owners. Add fixed direct-child private staging and explicit retained-copy verification; source absence is allowed only for copy verification with exact retained metadata. No new records/digests/accounting or authority flags.",
    "consumer_disposition" : "Canic consumers remain read only/unchanged. Exact reference excerpts identify callers without claiming behavioral inspection outside stated ranges. Existing source provenance/licenses remain unchanged.",
    "consumer_references" : [

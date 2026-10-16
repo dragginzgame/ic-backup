@@ -3,7 +3,6 @@
 #[cfg(unix)]
 mod ic_snapshot_artifact;
 mod integrity;
-mod local_restore_artifact;
 mod local_restore_source;
 mod manifest;
 #[cfg(unix)]
@@ -14,9 +13,6 @@ pub use ic_snapshot_artifact::{
     IcSnapshotUploadArtifactError,
 };
 pub use integrity::DownloadIntegrityError;
-pub use local_restore_artifact::{
-    LocalRestoreArtifactError, LocalRestoreArtifactPublicationError, LocalRestoreArtifactView,
-};
 pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
 #[cfg(unix)]

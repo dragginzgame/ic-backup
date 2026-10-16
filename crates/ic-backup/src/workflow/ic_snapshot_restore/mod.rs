@@ -2,7 +2,7 @@
 
 use crate::{
     model::{
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::MutationReceiptRequest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::{IcMutationAcknowledgement, IcMutationRequest, IcMutationRequestError},
         operation_plan::OperationPlanRecord,
@@ -108,17 +108,20 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
     let settle = async || {
         let admitted = validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
         retain()?;
-        let receipt = qualify(&request, &acknowledgement)
-            .await
-            .map_err(IcRestoreReplyError::Qualification)?;
-        if receipt.outcome != MutationOutcomeRecord::Applied
-            || receipt.attempt != request.mutation_attempt()
-            || receipt.request != safety.wire().digest().hash()
-        {
-            return Err(IcRestoreReplyError::ReceiptRequired);
+        super::qualified_receipt::AppliedReceiptRecorder {
+            journal: &mut journal,
+            expected_attempt: request.mutation_attempt(),
+            expected_request: safety.wire().digest().hash(),
         }
-        retain()?;
-        journal.record_mutation(receipt)?;
+        .record_applied(
+            &request,
+            &acknowledgement,
+            qualify,
+            IcRestoreReplyError::Qualification,
+            || IcRestoreReplyError::ReceiptRequired,
+            retain,
+        )
+        .await?;
         retain()?;
         let IcMutationReplyView::Lifecycle(reply) = admitted.reply() else {
             return Err(IcRestoreReplyError::ReceiptRequired);

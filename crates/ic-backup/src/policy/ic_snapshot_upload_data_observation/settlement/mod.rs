@@ -12,6 +12,7 @@ use crate::model::{
         IcSnapshotUploadDataObservationResponse, IcSnapshotUploadDataSettlement,
     },
 };
+use crate::policy::settlement_identity::{SettlementIdentity, SettlementIdentityMismatch};
 use thiserror::Error;
 
 /// Matched passive attribution and exact readback; never an authenticated receipt.
@@ -63,17 +64,18 @@ pub fn validate_settlement<'request, 'metadata>(
     IcSnapshotUploadDataSettlementError,
 > {
     let observation = validate_response(request, journal, response)?;
-    if settlement.authority != request.authority().digest() {
-        return Err(IcSnapshotUploadDataSettlementError::AuthorityMismatch);
+    SettlementIdentity {
+        authority: &settlement.authority,
+        mutation_attempt: settlement.mutation_attempt,
+        observation_attempt: settlement.observation_attempt,
+        challenge: &settlement.challenge,
     }
-    if settlement.mutation_attempt != request.mutation_attempt()
-        || settlement.observation_attempt != request.observation_attempt()
-    {
-        return Err(IcSnapshotUploadDataSettlementError::AttemptMismatch);
-    }
-    if &settlement.challenge != challenge {
-        return Err(IcSnapshotUploadDataSettlementError::ChallengeMismatch);
-    }
+    .compare(&SettlementIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        observation_attempt: request.observation_attempt(),
+        challenge,
+    })?;
     if settlement.readback != observation.reply().digest() {
         return Err(IcSnapshotUploadDataSettlementError::ReadbackMismatch);
     }
@@ -121,6 +123,16 @@ pub enum IcSnapshotUploadDataSettlementError {
     /// Applied cannot admit a current extent different from the original encoded write.
     #[error("data upload settlement applied bytes differ from original intent")]
     AppliedBytesMismatch,
+}
+
+impl From<SettlementIdentityMismatch> for IcSnapshotUploadDataSettlementError {
+    fn from(value: SettlementIdentityMismatch) -> Self {
+        match value {
+            SettlementIdentityMismatch::Authority => Self::AuthorityMismatch,
+            SettlementIdentityMismatch::Attempt => Self::AttemptMismatch,
+            SettlementIdentityMismatch::Challenge => Self::ChallengeMismatch,
+        }
+    }
 }
 
 #[cfg(test)]

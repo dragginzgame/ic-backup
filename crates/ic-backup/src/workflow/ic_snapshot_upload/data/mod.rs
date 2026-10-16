@@ -123,7 +123,6 @@ async fn record_qualified<E: std::error::Error + 'static>(
     let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
     let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
     super::super::qualified_receipt::AppliedReceiptRecorder {
-        stage,
         journal: &mut journal,
         expected_attempt: request.mutation_attempt(),
         expected_request: payload.binding_digest().hash(),
@@ -134,7 +133,12 @@ async fn record_qualified<E: std::error::Error + 'static>(
         async |request, reply| qualify(request, reply).await,
         IcSnapshotDataUploadReplyError::Qualification,
         || IcSnapshotDataUploadReplyError::ReceiptRequired,
-        || Ok(()),
+        || {
+            stage
+                .layout()
+                .map(|_| ())
+                .map_err(IcSnapshotDataUploadReplyError::Stage)
+        },
     )
     .await?;
     stage.layout()?;

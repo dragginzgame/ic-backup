@@ -1,6 +1,7 @@
 //! Complete original streaming, explicit receipts and retained failed transfer evidence.
 
 use super::*;
+use crate::model::attempt_journal::MutationOutcomeRecord;
 use crate::test_support::ready::ready;
 use crate::{
     model::{

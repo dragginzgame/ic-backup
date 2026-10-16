@@ -107,7 +107,6 @@ async fn settle_allocation<E: std::error::Error + 'static>(
     let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
     let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
     super::super::qualified_receipt::AppliedReceiptRecorder {
-        stage,
         journal: &mut journal,
         expected_attempt: request.mutation_attempt(),
         expected_request: payload.binding_digest().hash(),
@@ -118,7 +117,12 @@ async fn settle_allocation<E: std::error::Error + 'static>(
         async |request, reply| qualify(request, reply).await,
         IcSnapshotAllocationSettlementError::Qualification,
         || IcSnapshotAllocationSettlementError::ReceiptRequired,
-        || Ok(()),
+        || {
+            stage
+                .layout()
+                .map(|_| ())
+                .map_err(IcSnapshotAllocationSettlementError::Stage)
+        },
     )
     .await?;
     drop(journal);

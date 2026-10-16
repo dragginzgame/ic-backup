@@ -1,4 +1,5 @@
 {
+   "status" : "historical: generic restore-copy APIs retired in pending 0.27.0; retained evidence is not a current executable contract",
    "adaptation" : "Reuse exact retained original-source and operation/artifact owners, shared operation exclusion, canonical durable artifact commit and existing checked view. Add explicit publication/recovery and fresh published-copy verification without new records/schemas/hashes/accounting or authority flags.",
    "consumer_baseline" : "target/restore-artifact-publication-review/consumer-head.txt",
    "consumers" : [

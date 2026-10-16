@@ -534,34 +534,12 @@ integration-owned. See [the contract](contracts/local-restore-source.json) and
 `cargo test --offline --locked -p ic-backup --lib local_restore_source` and
 `cargo test --offline --locked -p ic-backup --test local_restore_source`.
 
-`DownloadJournalGuard::stage_local_restore_artifact` binds a private copy to an
-original operation and checksum after complete fresh source verification. Existing
-destinations reject, and failures/drop preserve unfinished bytes. Explicit
-`verify_staged_local_restore_artifact` re-admits retained originals and hashes the
-copy without re-reading source trees or repeating a copy. Both views borrow the
-original guards; no records, references, spending or fences change. Staging is
-not durable publication or upload/load authority. Destination custody and actual
-backend/application qualification remain integration-owned. See
-[the contract](contracts/local-restore-artifact.json) and
-[fresh inspection](local-restore-artifact-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal`,
-`cargo test --offline --locked -p ic-backup --lib ops::artifacts` and
-`cargo test --offline --locked -p ic-backup --test local_restore_source`.
-
-`publish_staged_local_restore_artifact` is the separate explicit durable operation.
-It checks retained original metadata and the exact selected checksum, synchronizes
-the staged tree, publishes without replacement to `restore-artifact-{sequence}` and
-re-admits the originals/canonical bytes before returning the view plus Published or
-Recovered outcome. Recovery synchronizes an existing matching canonical tree without
-source-tree reads or recopying. It shares staging's operation lock; both/neither paths,
-changed bytes, unsafe entries, replaced custody and original drift reject while
-retaining evidence. `verify_published_local_restore_artifact` freshly checks canonical
-bytes without synchronization or a publication attestation. No journals, attempts,
-fences or references change; actual backend/application/dispatch qualification remains
-separate. See [fresh publication inspection](local-restore-artifact-publication-source.json).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib local_restore_artifact`,
-`cargo test --offline --locked -p ic-backup --lib artifact_commit` and
-`cargo test --offline --locked -p ic-backup --test local_restore_source`.
+Generic operation-bound restore-copy APIs are retired. Current IC upload preparation
+reads exact bounded extents from verified original snapshot artifacts, retaining
+source references and safety requirements. Existing restore copies and original
+journals remain evidence: finish an unfinished copy-based restore with its original
+released tool before adopting the cut, or obtain explicit safe disposition from
+the integration owner. See [the retirement boundary](extraction-boundary.md#retired-generic-restore-artifact-copies).
 
 `model::restore_safety` retains an immutable original restore/source/artifact/safety
 requirement. Persistence requires both original plans under unchanged layout guards

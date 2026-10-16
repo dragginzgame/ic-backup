@@ -6,7 +6,8 @@ pub use plan::IcSnapshotDataUploadPreparationError;
 use super::super::metrics::LocalOperation;
 use super::{
     DownloadJournalGuard, File, IcSnapshotArtifactError, Mode, OFlags, REGIONS,
-    check_directory_identity, member, open_directory, unix_fs, verification::open_regular_child,
+    check_directory_identity, member, open_directory_no_follow, unix_fs,
+    verification::open_regular_child,
 };
 use crate::model::{
     ic_snapshot_data::{MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
@@ -82,7 +83,8 @@ impl DownloadJournalGuard<'_> {
                 .map_err(super::DownloadJournalError::from)
                 .map_err(IcSnapshotArtifactError::from)?;
             let parent_path = self.layout.root().join("artifacts");
-            let parent = open_directory(&parent_path).map_err(IcSnapshotArtifactError::from)?;
+            let parent =
+                open_directory_no_follow(&parent_path).map_err(IcSnapshotArtifactError::from)?;
             let path = self.layout.root().join(entry.artifact_path());
             let directory = File::from(
                 unix_fs::openat(
@@ -163,18 +165,15 @@ fn read_chunk(
         .ok()
         .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
         .ok_or(IcSnapshotArtifactError::FileShape)?;
-    let bytes =
-        ic_host_artifacts::artifact::read_reader(file.take(size), limit).map_err(|error| {
-            use ic_host_artifacts::artifact::ArtifactError;
-            match error {
-                ArtifactError::LimitExceeded { .. } => IcSnapshotArtifactError::FileShape,
-                error => IcSnapshotArtifactError::Io(error.into()),
+    ic_host_artifacts::artifact::read_exact_reader(file.take(size), limit).map_err(|error| {
+        use ic_host_artifacts::artifact::ArtifactError;
+        match error {
+            ArtifactError::LimitExceeded { .. } | ArtifactError::LengthMismatch { .. } => {
+                IcSnapshotArtifactError::FileShape
             }
-        })?;
-    if u64::try_from(bytes.len()).ok() != Some(size) {
-        return Err(IcSnapshotArtifactError::FileShape);
-    }
-    Ok(bytes)
+            error => IcSnapshotArtifactError::Io(error.into()),
+        }
+    })
 }
 
 /// Typed local preparation failure; all original bytes, spending and references survive.

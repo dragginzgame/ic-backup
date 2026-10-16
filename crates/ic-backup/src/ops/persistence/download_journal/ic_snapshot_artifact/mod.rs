@@ -6,7 +6,6 @@ mod verification;
 pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactError};
 
 use super::{DownloadJournalError, DownloadJournalGuard};
-use crate::ops::persistence::directory_custody::open_directory;
 use crate::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
@@ -20,6 +19,7 @@ use crate::{
         persistence::write_json_durable,
     },
 };
+use ic_host_fs::read::open_directory_no_follow;
 use rustix::fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags};
 use sha2::{Digest, Sha256};
 use std::{
@@ -100,7 +100,7 @@ impl<'layout> DownloadJournalGuard<'layout> {
             Err(error) => return Err(error.into()),
             Ok(_) => return Err(io::Error::from(io::ErrorKind::AlreadyExists).into()),
         }
-        let parent = open_directory(&self.layout.root().join("artifacts"))?;
+        let parent = open_directory_no_follow(&self.layout.root().join("artifacts"))?;
         let name = path
             .file_name()
             .ok_or(IcSnapshotArtifactError::CustodyChanged)?;

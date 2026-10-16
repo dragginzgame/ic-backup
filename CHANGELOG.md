@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.27.0]
+
+### Breaking
+
+- Remove generic restore-artifact staging, publication and copy-verification APIs,
+  `LocalRestoreArtifactView` and their error types. Use IC snapshot upload preparation
+  from verified original artifacts. Retain old copies and settle unfinished copy-based
+  restores with the original released tool before adopting this cut; no automatic
+  import or cleanup is provided.
+
+### Changed
+
+- Share ordered passive settlement identity checks across lifecycle, capture,
+  allocation and upload-data recovery, preserving typed denials and pending spending.
+- Share exact qualified Applied receipt handling across metadata, download, upload
+  and restore while preserving append-before-receipt and source-retention ordering.
+- Use published Host FS for no-follow layout and snapshot-artifact directory
+  selection, retiring the duplicate local opener while preserving custody checks.
+- Use Host FS for no-follow root-relative artifact selection, retiring Backup's
+  duplicate component walker while preserving path and artifact admission.
+- Use published Host Process for bounded Agent test-server HTTP capture, retiring
+  duplicate framing and read-loop code while retaining raw request diagnostics.
+- Use Host Artifacts' exact-length hash and read APIs for IC snapshot verification
+  and upload source slices, preserving Backup's file-shape and I/O error mapping.
+
 ## [0.26.0] - 2026-10-16
 
 ### Breaking
