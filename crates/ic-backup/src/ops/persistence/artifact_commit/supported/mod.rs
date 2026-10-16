@@ -10,17 +10,23 @@ use crate::{
 };
 
 use std::{
-    ffi::OsStr,
-    fs::{self, File},
+    fs::File,
     io::{self, Seek, SeekFrom},
     path::{Path, PathBuf},
 };
 
-use ic_host_fs::read::tree::{TreeVisitor, walk_tree};
+use ic_host_fs::{
+    durable::{
+        DirectoryCommitError, DirectoryCommitOutcome, DirectoryCommitStep,
+        commit_existing_directory_with,
+    },
+    read::tree::{TreeVisitor, walk_tree},
+};
 use rustix::{
     fd::{AsFd, OwnedFd},
-    fs::{self as unix_fs, FileType, Mode, OFlags, RenameFlags},
+    fs::{self as unix_fs, FileType},
 };
+use std::cell::RefCell;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum ArtifactCommitStep {
@@ -36,99 +42,57 @@ pub(super) fn commit_with_hook(
     temporary: &Path,
     canonical: &Path,
     expected_checksum: &str,
-    mut at_step: impl FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
+    at_step: impl FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
 ) -> Result<ArtifactCommitOutcome, PersistenceError> {
-    let (parent, temporary_name, canonical_name) = sibling_paths(temporary, canonical)?;
-    let temporary_exists = path_exists_without_following(temporary)?;
-    let canonical_exists = path_exists_without_following(canonical)?;
-    let parent_fd = open_parent_directory(parent)?;
-
-    match (temporary_exists, canonical_exists) {
-        (true, false) => {
-            let checksum = sync_tree(&parent_fd, temporary_name, temporary, &mut at_step)?;
+    // The shared engine invokes preparation and publication hooks sequentially.
+    // Both retain this caller's single ordered crash/failure observer.
+    let at_step = RefCell::new(at_step);
+    commit_existing_directory_with(
+        temporary,
+        canonical,
+        |directory, display| {
+            let checksum = sync_tree(directory, display, &mut *at_step.borrow_mut())?;
             checksum.verify(expected_checksum)?;
-            at_step(ArtifactCommitStep::Publication, canonical)?;
-            unix_fs::renameat_with(
-                &parent_fd,
-                temporary_name,
-                &parent_fd,
-                canonical_name,
-                RenameFlags::NOREPLACE,
-            )
-            .map_err(io::Error::from)?;
-            at_step(ArtifactCommitStep::ParentDirectorySync, parent)?;
-            unix_fs::fsync(&parent_fd).map_err(io::Error::from)?;
-            at_step(ArtifactCommitStep::PublicationDurable, canonical)?;
-            Ok(ArtifactCommitOutcome::Published)
-        }
-        (false, true) => {
-            let checksum = sync_tree(&parent_fd, canonical_name, canonical, &mut at_step)?;
-            checksum.verify(expected_checksum)?;
-            at_step(ArtifactCommitStep::ParentDirectorySync, parent)?;
-            unix_fs::fsync(&parent_fd).map_err(io::Error::from)?;
-            at_step(ArtifactCommitStep::PublicationDurable, canonical)?;
-            Ok(ArtifactCommitOutcome::Recovered)
-        }
-        (true, true) => Err(PersistenceError::ArtifactCommitPathConflict {
-            temporary: temporary.display().to_string(),
-            canonical: canonical.display().to_string(),
-        }),
-        (false, false) => Err(PersistenceError::ArtifactCommitPathMissing {
-            temporary: temporary.display().to_string(),
-            canonical: canonical.display().to_string(),
-        }),
-    }
-}
-
-fn sibling_paths<'a>(
-    temporary: &'a Path,
-    canonical: &'a Path,
-) -> Result<(&'a Path, &'a OsStr, &'a OsStr), PersistenceError> {
-    let invalid_paths = || PersistenceError::ArtifactCommitPathMismatch {
-        temporary: temporary.display().to_string(),
-        canonical: canonical.display().to_string(),
-    };
-    let temporary_parent = temporary.parent().ok_or_else(invalid_paths)?;
-    let canonical_parent = canonical.parent().ok_or_else(invalid_paths)?;
-    let temporary_name = temporary.file_name().ok_or_else(invalid_paths)?;
-    let canonical_name = canonical.file_name().ok_or_else(invalid_paths)?;
-    if temporary == canonical || temporary_parent != canonical_parent {
-        return Err(invalid_paths());
-    }
-
-    Ok((temporary_parent, temporary_name, canonical_name))
-}
-
-fn path_exists_without_following(path: &Path) -> io::Result<bool> {
-    match fs::symlink_metadata(path) {
-        Ok(_) => Ok(true),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(false),
-        Err(error) => Err(error),
-    }
-}
-
-fn open_parent_directory(path: &Path) -> io::Result<OwnedFd> {
-    unix_fs::open(
-        path,
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
-        Mode::empty(),
+            Ok::<(), PersistenceError>(())
+        },
+        |step, path| {
+            let step = match step {
+                DirectoryCommitStep::BeforePublication => ArtifactCommitStep::Publication,
+                DirectoryCommitStep::BeforeParentSync => ArtifactCommitStep::ParentDirectorySync,
+                DirectoryCommitStep::PublicationDurable => ArtifactCommitStep::PublicationDurable,
+            };
+            at_step.borrow_mut()(step, path)
+        },
     )
-    .map_err(io::Error::from)
+    .map(|outcome| match outcome {
+        DirectoryCommitOutcome::Published => ArtifactCommitOutcome::Published,
+        DirectoryCommitOutcome::Recovered => ArtifactCommitOutcome::Recovered,
+    })
+    .map_err(|error| match error {
+        DirectoryCommitError::InvalidPaths => PersistenceError::ArtifactCommitPathMismatch {
+            temporary: temporary.display().to_string(),
+            canonical: canonical.display().to_string(),
+        },
+        DirectoryCommitError::Conflict => PersistenceError::ArtifactCommitPathConflict {
+            temporary: temporary.display().to_string(),
+            canonical: canonical.display().to_string(),
+        },
+        DirectoryCommitError::Missing => PersistenceError::ArtifactCommitPathMissing {
+            temporary: temporary.display().to_string(),
+            canonical: canonical.display().to_string(),
+        },
+        DirectoryCommitError::Prepare(error) => error,
+        DirectoryCommitError::BeforePublication(error)
+        | DirectoryCommitError::AfterPublication(error) => error.into(),
+    })
 }
 
 fn sync_tree(
-    parent_fd: &impl AsFd,
-    directory_name: &OsStr,
+    directory: &File,
     display_root: &Path,
     at_step: &mut impl FnMut(ArtifactCommitStep, &Path) -> io::Result<()>,
 ) -> Result<ArtifactChecksumRecord, PersistenceError> {
-    let directory_fd = unix_fs::openat(
-        parent_fd,
-        directory_name,
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Mode::empty(),
-    )
-    .map_err(io::Error::from)?;
+    let directory_fd = directory.as_fd().try_clone_to_owned()?;
     let mut visitor = SyncVisitor {
         checksums: Vec::new(),
         at_step,

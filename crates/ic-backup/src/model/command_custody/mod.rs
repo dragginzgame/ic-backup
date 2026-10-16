@@ -90,10 +90,6 @@ impl CommandCustodyRecord {
     pub const fn inode(&self) -> u64 {
         self.inode
     }
-
-    pub(crate) const fn matches_file(&self, device: u64, inode: u64) -> bool {
-        self.device == device && self.inode == inode
-    }
 }
 
 /// Invalid maintained-generation local custody evidence.

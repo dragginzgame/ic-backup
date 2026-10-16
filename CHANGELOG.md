@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.27.1]
+
+### Changed
+
+- Delegate inherited command custody and exact existing-sidecar quiescence to
+  published Host Process, retaining original records, bounded grace and spending
+  ([#53 — Adopt published Host Process inherited command custody](https://github.com/dragginzgame/ic-backup/issues/53)).
+- Delegate sidecar acquisition and verified directory publication to Host FS,
+  preserving ordered crash barriers, checksum verification and retained recovery
+  ([#52 — Adopt published Host lock and directory commit primitives](https://github.com/dragginzgame/ic-backup/issues/52)).
+
 ## [0.27.0] - 2026-10-16
 
 ### Breaking

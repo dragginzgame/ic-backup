@@ -25,6 +25,25 @@
 
 # Current handoff — 2026-10-16
 
+## Published Host custody, locks and directory publication
+
+Backup delegates inherited command custody and exact existing-sidecar quiescence
+to published Host Process 0.23.1. Host FS owns private regular sidecar admission,
+one-shot exclusion and verified no-replace directory publication. Backup retains
+operation/journal binding, original record identities, the descriptor environment
+name, 250 ms/5 ms grace, typed errors, tree synchronization/checksums and ordered
+crash barriers. Direct command-fds and its local pin exception are removed;
+original journals, sidecars, artifacts and spending remain retained. Public APIs
+and persisted bytes are unchanged, so the pending notes target compatible 0.27.1.
+
+On the isolated contribution's registry graph, all 166 persistence cases, three
+custody/model-selected cases and three public recovery cases pass. Complete Core
+and Agent PocketIC capture/download/upload/same-ID restore journeys pass with
+managed PocketIC 16.1.0. Strict Core/Agent all-target/all-feature Clippy, actual
+Rust 1.91 checking, warning-denied rustdoc, formatting, Cargo inheritance and
+documentation links pass. Native consumer macOS qualification remains with the
+new hosted matrix. No full local make ci, package version change or release ran.
+
 ## Pending 0.27.0 settlement identity and upstream copy/fixture preparation
 
 Lifecycle, capture, allocation and upload-data settlement share a private pure

@@ -80,9 +80,6 @@ The maintainer-authorized tooling adoption retains these existing exact registry
 requirements without changing locked selections. Machine-readable exceptions in
 `ci/dependency-pinning-exceptions.json` match only these root declarations:
 
-- `command-fds =0.3.3` owns the qualified safe descriptor-inheritance API used for
-  command custody. Changing it requires focused process/descriptor qualification
-  on Linux and both macOS architectures; lock reproducibility alone is not the reason.
 - `ic-management-canister-types =0.11.0` owns the qualified management wire DTOs,
   upstream status variants and public Rust type identity. Changing it requires exact
   codec/golden/bounds review and public compatibility assessment, then native checks

@@ -1,102 +1,90 @@
-//! One-command descriptor custody and exact existing-sidecar quiescence admission.
+//! Backup-owned journal binding over Host Process's inherited descriptor custody.
 
-use super::file_lock::{self, FileLockError};
 use crate::model::command_custody::{CommandCustodyRecord, CommandCustodyRecordError};
+#[cfg(unix)]
+use ic_host_process::custody::{CommandCustody, CustodyError, FileIdentity, QuiescenceGuard};
+#[cfg(unix)]
+use std::time::Duration;
 use std::{
-    fs::{self, File},
-    io,
+    fs, io,
     path::{Path, PathBuf},
     process::{Child, Command},
-    thread,
-    time::{Duration, Instant},
 };
 use thiserror::Error;
 
-const QUIESCENCE_GRACE: Duration = Duration::from_millis(250);
 /// Child environment variable containing its inherited custody descriptor number.
 pub const COMMAND_CUSTODY_DESCRIPTOR_ENV: &str = "IC_BACKUP_COMMAND_CUSTODY_FD";
 
-/// Exclusive custody for one journal operation's local command attempt.
+/// Exclusive custody bound to one exact journal operation.
 ///
-/// Persist [`Self::record`] and dispatch intent before spawning. This primitive
-/// does not consume durable paid-call authority or qualify a backend's retry policy.
+/// Persist the record and dispatch intent before spawning; paid-call authority,
+/// argv, output bounds, deadlines and reaping remain integration-owned.
 #[derive(Debug)]
 pub struct CommandLifetimeLock {
-    file: File,
+    #[cfg(unix)]
+    custody: CommandCustody,
     path: PathBuf,
     record: CommandCustodyRecord,
-    dispatched: bool,
 }
 
 impl CommandLifetimeLock {
-    /// Acquire an operation's regular no-follow sidecar without waiting.
-    ///
-    /// The journal parent must already exist. The journal leaf may be absent;
-    /// aliases of an explicitly selected parent resolve to one location.
-    ///
+    /// Acquire the operation's regular no-follow sidecar without waiting.
     /// # Errors
-    /// Rejects unsafe journal/sidecar entries, contention, invalid identity and IO failures.
+    /// Rejects unsafe journals, contention, invalid identity and native I/O failures.
     pub fn acquire(
         journal: &Path,
         operation_sequence: u64,
     ) -> Result<Self, CommandLifetimeLockError> {
         let journal = resolve_journal(journal)?;
         let path = lock_path(&journal, operation_sequence);
-        let file = file_lock::acquire(&path).map_err(|error| project_error(&path, error))?;
-        let (device, inode) = file_identity(&file.metadata()?)?;
-        let record = CommandCustodyRecord::new(journal, operation_sequence, device, inode)?;
-        Ok(Self {
-            file,
-            path,
-            record,
-            dispatched: false,
-        })
+        #[cfg(unix)]
+        {
+            let custody =
+                CommandCustody::acquire(&path).map_err(|error| project_error(&path, error))?;
+            let identity = custody.identity();
+            let record = CommandCustodyRecord::new(
+                journal,
+                operation_sequence,
+                identity.device,
+                identity.inode,
+            )?;
+            Ok(Self {
+                custody,
+                path,
+                record,
+            })
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = path;
+            Err(io::Error::from(io::ErrorKind::Unsupported).into())
+        }
     }
 
-    /// Return exact custody evidence for durable retention before dispatch.
+    /// Read exact Backup-owned evidence to retain before dispatch.
     #[must_use]
     pub fn record(&self) -> &CommandCustodyRecord {
         &self.record
     }
 
-    /// Return the retained sidecar path; dropping custody never removes it.
+    /// Read the retained sidecar path; dropping custody never removes it.
     #[must_use]
     pub fn path(&self) -> &Path {
         &self.path
     }
 
-    /// Attempt one trusted command with owned descriptor inheritance.
+    /// Attempt one command with Host-owned descriptor inheritance and no retry.
     ///
-    /// Consumes this guard's single spawn allowance before the spawn attempt.
-    /// The command value is consumed and dropped, so its parent-side descriptor
-    /// copy cannot outlive spawn. The owner descriptor remains close-on-exec.
-    /// The selected backend must preserve inherited custody in its descendants.
-    /// Caller code owns argv admission, output/deadline limits and child reaping.
-    ///
+    /// A failed spawn consumes the single allowance. Descendants must preserve
+    /// the inherited descriptor; callers retain admission, deadlines and reaping.
     /// # Errors
-    /// Rejects repeated dispatch, replaced sidecars, unsupported hosts and spawn failures.
-    pub fn spawn(&mut self, mut command: Command) -> Result<Child, CommandLifetimeLockError> {
-        if self.dispatched {
-            return Err(CommandLifetimeLockError::AlreadyDispatched {
-                path: self.path.clone(),
-            });
-        }
-        require_identity(&self.record, &fs::symlink_metadata(&self.path)?, &self.path)?;
-        self.dispatched = true;
+    /// Rejects repeated dispatch, replaced sidecars and native spawn failures.
+    pub fn spawn(&mut self, command: Command) -> Result<Child, CommandLifetimeLockError> {
         #[cfg(unix)]
         {
-            use command_fds::CommandFdExt;
-            use std::os::fd::AsRawFd;
-            let descriptor =
-                rustix::io::fcntl_dupfd_cloexec(&self.file, 3).map_err(io::Error::from)?;
-            command.env(
-                COMMAND_CUSTODY_DESCRIPTOR_ENV,
-                descriptor.as_raw_fd().to_string(),
-            );
-            command.preserved_fds(vec![descriptor]);
-            let child = command.spawn();
-            drop(command);
-            child.map_err(CommandLifetimeLockError::from)
+            self.custody
+                .spawn(command, COMMAND_CUSTODY_DESCRIPTOR_ENV)
+                .map_err(|error| project_error(&self.path, error))
         }
         #[cfg(not(unix))]
         {
@@ -105,78 +93,72 @@ impl CommandLifetimeLock {
         }
     }
 
-    /// Close owner custody and admit exact quiescence within a bounded grace period.
+    /// Close owner custody and probe exact quiescence with Backup's bounded grace.
     ///
-    /// Success returns an exclusive non-spawning guard. Contention means another
-    /// inherited holder remains; command exit alone is insufficient. Failures
-    /// retain the sidecar and do not establish that a remote effect failed.
-    ///
+    /// Only contention is retried for 250 ms at 5 ms intervals. Failure preserves
+    /// the sidecar and establishes no remote effect outcome or retry authority.
     /// # Errors
-    /// Returns in-flight custody, changed/missing/unsafe sidecars and IO failures.
+    /// Rejects active inherited holders, changed identities and native I/O failures.
     pub fn finish(self) -> Result<CommandQuiescenceGuard, CommandLifetimeLockError> {
-        let Self { file, record, .. } = self;
-        drop(file);
-        let deadline = Instant::now() + QUIESCENCE_GRACE;
-        loop {
-            match CommandQuiescenceGuard::acquire(&record) {
-                Err(CommandLifetimeLockError::InFlight { .. }) if Instant::now() < deadline => {
-                    thread::sleep(Duration::from_millis(5));
-                }
-                result => return result,
-            }
+        #[cfg(unix)]
+        {
+            let guard = self
+                .custody
+                .finish(Duration::from_millis(250), Duration::from_millis(5))
+                .map_err(|error| project_error(&self.path, error))?;
+            Ok(CommandQuiescenceGuard {
+                _guard: guard,
+                record: self.record,
+            })
+        }
+        #[cfg(not(unix))]
+        {
+            Err(io::Error::from(io::ErrorKind::Unsupported).into())
         }
     }
 }
 
-/// Fresh exclusive local quiescence for retained exact custody evidence.
+/// Fresh exclusive quiescence bound to Backup's retained original journal record.
 ///
-/// This guard cannot spawn commands. It excludes cooperating holders of the same
-/// sidecar until dropped. Drop explicitly releases this non-spawning exclusion,
-/// even if an unrelated fork temporarily retained a descriptor copy. Terminal
-/// completion still requires its own journal proof.
+/// Host owns descriptor exclusion and explicit unlock on drop. This guard cannot
+/// spawn; terminal settlement and reference-release admission remain separate.
 #[derive(Debug)]
 pub struct CommandQuiescenceGuard {
-    file: File,
+    #[cfg(unix)]
+    _guard: QuiescenceGuard,
     record: CommandCustodyRecord,
 }
 
 impl CommandQuiescenceGuard {
-    /// Observe an existing sidecar and hold exact local custody without creating it.
-    ///
+    /// Admit the exact retained existing sidecar without creating it.
     /// # Errors
-    /// Rejects active holders, changed/missing/unsafe identities and filesystem failures.
+    /// Rejects active holders, replaced/missing/unsafe sidecars and I/O failures.
     pub fn acquire(expected: &CommandCustodyRecord) -> Result<Self, CommandLifetimeLockError> {
-        let path = lock_path(expected.journal(), expected.operation_sequence());
-        // Reject an already-replaced sidecar before trying to lock its inode.
-        // A transient holder of that different inode must not mask the mismatch.
-        // Recheck the opened file below because the path can change meanwhile.
-        let metadata = fs::symlink_metadata(&path)?;
-        if metadata.is_file() {
-            require_identity(expected, &metadata, &path)?;
+        #[cfg(unix)]
+        {
+            let path = lock_path(expected.journal(), expected.operation_sequence());
+            let identity = FileIdentity {
+                device: expected.device(),
+                inode: expected.inode(),
+            };
+            let guard = QuiescenceGuard::acquire(&path, identity)
+                .map_err(|error| project_error(&path, error))?;
+            Ok(Self {
+                _guard: guard,
+                record: expected.clone(),
+            })
         }
-        let file =
-            file_lock::acquire_existing(&path).map_err(|error| project_error(&path, error))?;
-        require_identity(expected, &file.metadata()?, &path)?;
-        Ok(Self {
-            file,
-            record: expected.clone(),
-        })
+        #[cfg(not(unix))]
+        {
+            let _ = expected;
+            Err(io::Error::from(io::ErrorKind::Unsupported).into())
+        }
     }
 
-    /// Return the exact retained evidence freshly admitted by this guard.
+    /// Read the exact retained evidence freshly admitted by this guard.
     #[must_use]
     pub fn record(&self) -> &CommandCustodyRecord {
         &self.record
-    }
-}
-
-impl Drop for CommandQuiescenceGuard {
-    fn drop(&mut self) {
-        // Unlike dispatched command custody, this guard cannot intentionally
-        // transfer its lock to a descendant. Closing alone would keep exclusion
-        // alive until all transient fork/dup references also close.
-        #[cfg(unix)]
-        let _ = ic_host_fs::durable::unlock(&self.file);
     }
 }
 
@@ -211,51 +193,30 @@ fn lock_path(journal: &Path, operation_sequence: u64) -> PathBuf {
     PathBuf::from(path)
 }
 
-fn file_identity(metadata: &fs::Metadata) -> io::Result<(u64, u64)> {
-    if !metadata.is_file() {
-        return Err(io::Error::from(io::ErrorKind::InvalidInput));
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::MetadataExt;
-        Ok((metadata.dev(), metadata.ino()))
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = metadata;
-        Err(io::Error::from(io::ErrorKind::Unsupported))
-    }
-}
-
-fn require_identity(
-    expected: &CommandCustodyRecord,
-    metadata: &fs::Metadata,
-    path: &Path,
-) -> Result<(), CommandLifetimeLockError> {
-    if !metadata.is_file() {
-        return Err(CommandLifetimeLockError::IdentityChanged {
-            path: path.to_path_buf(),
-        });
-    }
-    let (device, inode) = file_identity(metadata)?;
-    if expected.matches_file(device, inode) {
-        return Ok(());
-    }
-    Err(CommandLifetimeLockError::IdentityChanged {
-        path: path.to_path_buf(),
-    })
-}
-
-fn project_error(path: &Path, error: FileLockError) -> CommandLifetimeLockError {
+#[cfg(unix)]
+fn project_error(path: &Path, error: CustodyError) -> CommandLifetimeLockError {
+    use ic_host_fs::durable::RegularFileLockError;
     match error {
-        FileLockError::Locked => CommandLifetimeLockError::InFlight {
-            path: path.to_path_buf(),
-        },
-        FileLockError::UnsafeEntry { kind } => CommandLifetimeLockError::UnsafeEntry {
-            path: path.to_path_buf(),
-            kind,
-        },
-        FileLockError::Io(error) => CommandLifetimeLockError::Io(error),
+        CustodyError::InFlight { path } => CommandLifetimeLockError::InFlight { path },
+        CustodyError::IdentityChanged { path } => {
+            CommandLifetimeLockError::IdentityChanged { path }
+        }
+        CustodyError::AlreadyDispatched { path } => {
+            CommandLifetimeLockError::AlreadyDispatched { path }
+        }
+        CustodyError::Io(error) => CommandLifetimeLockError::Io(error),
+        CustodyError::Lock(RegularFileLockError::NotRegular) => {
+            let kind = match fs::symlink_metadata(path) {
+                Ok(metadata) if metadata.file_type().is_symlink() => "Symlink",
+                Ok(metadata) if metadata.is_dir() => "Directory",
+                _ => "Special",
+            };
+            CommandLifetimeLockError::UnsafeEntry {
+                path: path.to_path_buf(),
+                kind: kind.into(),
+            }
+        }
+        CustodyError::Lock(error) => CommandLifetimeLockError::Io(error.into()),
     }
 }
 

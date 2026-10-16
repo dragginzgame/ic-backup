@@ -74,8 +74,15 @@ implementation determine what has actually been qualified.
   [the implemented boundary](extraction-boundary.md). No reference release
   or prune operation is implemented; terminal proof and command custody must own
   release admission before that API is added.
-- Command custody now uses owned descriptor inheritance, exact v1 filesystem
-  identity records and fresh non-spawning quiescence guards. Preserve the
+- Command custody delegates owned descriptor inheritance and exact existing-sidecar
+  quiescence to published Host Process. Backup retains exact v1 filesystem identity
+  records, journal/operation binding, the descriptor environment name and 250 ms/5 ms
+  grace/polling. Non-spawning guards retain Host's explicit unlock on drop. Sidecar
+  open/create and one-shot locking use Host FS; native IO and unsafe-entry denials
+  retain Backup's public error projections. Directory publication uses Host's held
+  descriptor engine with Backup's ordered file/directory sync, checksum admission and
+  crash hooks before rename and parent sync. Retain original partial/canonical trees
+  on every failure; recovery never recreates evidence or resets spending. Preserve the
   unsafe-code prohibition. These local contracts do not qualify an authenticated IC backend
   or grant terminal/reference-release or paid-call authority.
 - Local download journals now retain immutable snapshot identity, model-owned
