@@ -123,14 +123,7 @@ fn publish_bytes_at_barriers(
         mode,
         permissions: 0o600,
     };
-    let produce = |file: &mut File| -> io::Result<()> {
-        file.write_all(bytes)?;
-        // Acknowledged pre-publication death must leave synchronized staging.
-        // Host repeats this sync as part of its own identity/publication admission.
-        file.sync_all()?;
-        barrier(DurableWriteBarrier::BeforeRename);
-        Ok(())
-    };
+    let produce = |file: &mut File| file.write_all(bytes);
     #[cfg(unix)]
     let result = {
         use std::os::fd::AsFd;
@@ -141,10 +134,22 @@ fn publish_bytes_at_barriers(
             )
         })?;
         let directory = File::open(parent)?;
-        ic_host_fs::durable::write_at_with(directory.as_fd(), name, options, produce)
+        ic_host_fs::durable::write_at_validated_with(
+            directory.as_fd(),
+            name,
+            options,
+            produce,
+            |()| {
+                barrier(DurableWriteBarrier::BeforeRename);
+                Ok(())
+            },
+        )
     };
     #[cfg(not(unix))]
-    let result = ic_host_fs::durable::write_with(path, options, produce);
+    let result = ic_host_fs::durable::write_validated_with(path, options, produce, |_, ()| {
+        barrier(DurableWriteBarrier::BeforeRename);
+        Ok(())
+    });
     result.map_err(|error| {
         PersistenceError::Publication(super::PublicationError::from_host(error))
     })?;

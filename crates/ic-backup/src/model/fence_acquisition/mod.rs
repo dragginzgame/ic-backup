@@ -6,7 +6,6 @@ use crate::model::{
     fence_obligation::{FenceObligationError, FenceObligationRecord},
     operation_plan::{OperationPlanError, OperationPlanRecord},
 };
-use ic_principal::Principal;
 use std::fmt;
 use thiserror::Error;
 
@@ -47,10 +46,8 @@ impl FenceAcquisitionPayload {
         {
             return Err(FenceAcquisitionError::InvalidMethod);
         }
-        let target = crate::model::principal::canonical_text(target)
+        let (target, principal) = crate::model::principal::canonical_parts(target)
             .ok_or(FenceAcquisitionError::InvalidTarget)?;
-        let principal =
-            Principal::from_text(&target).map_err(|_| FenceAcquisitionError::InvalidTarget)?;
         if principal.as_slice().is_empty() {
             return Err(FenceAcquisitionError::ManagementReceiver);
         }

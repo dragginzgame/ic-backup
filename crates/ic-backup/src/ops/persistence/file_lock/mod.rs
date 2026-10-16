@@ -45,11 +45,6 @@ pub(super) fn acquire_existing(path: &Path) -> Result<fs::File, FileLockError> {
 }
 
 #[cfg(unix)]
-pub(super) fn unlock(file: &fs::File) {
-    let _ = flock(file, FlockOperation::Unlock);
-}
-
-#[cfg(unix)]
 fn acquire_supported(path: &Path, create: bool) -> Result<fs::File, FileLockError> {
     reject_existing_unsafe_entry(path)?;
 

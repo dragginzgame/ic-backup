@@ -5,8 +5,8 @@ use crate::ops::artifacts::{checksum_reader, checksum_relative_files, copy_from_
 use ic_host_fs::read::tree::{TreeVisitor, walk_tree};
 
 use std::{
-    fs::{DirBuilder, File, OpenOptions},
-    os::unix::fs::{DirBuilderExt, OpenOptionsExt},
+    fs::{File, OpenOptions},
+    os::unix::fs::OpenOptionsExt,
     path::{Component, Path, PathBuf},
 };
 
@@ -56,7 +56,7 @@ pub(super) fn stage_relative_path(
     match kind {
         FileType::RegularFile => copy_file(&artifact, destination),
         FileType::Directory => {
-            create_private_directory(destination)?;
+            private_directory(destination)?;
             directory_checksum(
                 &artifact,
                 Path::new(""),
@@ -168,7 +168,7 @@ impl TreeVisitor for ChecksumVisitor<'_> {
 
     fn enter_directory(&mut self, relative: &Path, _display: &Path) -> Result<(), ArtifactError> {
         if let DirectoryAction::CopyTo(destination_root) = self.action {
-            create_private_directory(&destination_root.join(relative))?;
+            private_directory(&destination_root.join(relative))?;
         }
         Ok(())
     }
@@ -206,9 +206,10 @@ fn copy_file(
     copy_from_reader(&mut source, &mut destination)
 }
 
-fn create_private_directory(path: &Path) -> Result<(), ArtifactError> {
-    DirBuilder::new().mode(0o700).create(path)?;
-    Ok(())
+fn private_directory(path: &Path) -> Result<(), ArtifactError> {
+    ic_host_fs::durable::create_private_directory(path)
+        .map(|_| ())
+        .map_err(|error| ArtifactError::Io(crate::ops::directory_creation_io(error)))
 }
 
 fn ensure_opened_type(

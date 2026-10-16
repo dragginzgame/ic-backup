@@ -95,7 +95,7 @@ impl JournalLock {
 #[cfg(unix)]
 impl Drop for JournalLock {
     fn drop(&mut self) {
-        file_lock::unlock(&self.file);
+        let _ = ic_host_fs::durable::unlock(&self.file);
     }
 }
 

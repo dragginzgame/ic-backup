@@ -7,7 +7,13 @@ use crate::{
     test_support::temp_dir,
 };
 use serde::{Deserialize, Serialize};
-use std::{fs, io, path::PathBuf, process::Command};
+use std::{
+    fs, io,
+    path::PathBuf,
+    process::Command,
+    thread,
+    time::{Duration, Instant},
+};
 
 #[derive(Deserialize, Serialize)]
 struct Terminal {
@@ -141,10 +147,22 @@ fn live_command_custody_refuses_until_its_real_holder_exits() {
     assert_eq!(f.references(), references);
     child.kill().unwrap();
     child.wait().unwrap();
-    assert_eq!(
-        f.layout.release_restore(&f.lock, &Validator).unwrap(),
-        RestoreReferenceReleaseOutcome::Released
-    );
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        match f.layout.release_restore(&f.lock, &Validator) {
+            Ok(outcome) => {
+                assert_eq!(outcome, RestoreReferenceReleaseOutcome::Released);
+                break;
+            }
+            Err(RestoreReferenceReleaseError::Custody(CommandLifetimeLockError::InFlight {
+                ..
+            })) if Instant::now() < deadline => {
+                assert_eq!(f.references(), references);
+                thread::sleep(Duration::from_millis(5));
+            }
+            result => panic!("command custody did not settle after child exit: {result:?}"),
+        }
+    }
 }
 
 #[test]

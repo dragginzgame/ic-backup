@@ -6,7 +6,7 @@ mod verification;
 pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactError};
 
 use super::{DownloadJournalError, DownloadJournalGuard};
-use crate::ops::persistence::directory_custody::{open_directory, same_directory};
+use crate::ops::persistence::directory_custody::open_directory;
 use crate::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
@@ -360,10 +360,13 @@ impl fmt::Debug for IcSnapshotArtifactWriter<'_, '_, '_> {
 }
 
 fn check_directory_identity(path: &Path, held: &File) -> Result<(), IcSnapshotArtifactError> {
-    if !same_directory(path, held)? {
-        return Err(IcSnapshotArtifactError::CustodyChanged);
+    match ic_host_fs::durable::admit_directory(path, held) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::InvalidInput => {
+            Err(IcSnapshotArtifactError::CustodyChanged)
+        }
+        Err(error) => Err(error.into()),
     }
-    Ok(())
 }
 
 fn create_file(directory: &File, name: &str) -> io::Result<File> {

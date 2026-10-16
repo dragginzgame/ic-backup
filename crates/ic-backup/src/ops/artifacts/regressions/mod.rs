@@ -238,6 +238,20 @@ fn staging_preserves_exact_bytes_checksums_and_private_permissions() {
     assert!(
         matches!(stage_relative_path(&root, Path::new("source"), &destination), Err(ArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::AlreadyExists)
     );
+    let invalid_destination = root.join("staged\nrejected");
+    assert!(matches!(
+        stage_relative_path(&root, Path::new("source"), &invalid_destination),
+        Err(ArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    assert!(!invalid_destination.exists());
+    let invalid_parent = root.join("line\nparent");
+    fs::create_dir(&invalid_parent).expect("select existing parent with newline");
+    let invalid_child = invalid_parent.join("staged");
+    assert!(matches!(
+        stage_relative_path(&root, Path::new("source"), &invalid_child),
+        Err(ArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    assert!(!invalid_child.exists());
     let escaped = root.join("escaped");
     assert!(matches!(
         stage_relative_path(&root, Path::new("../source"), &escaped),
@@ -248,6 +262,14 @@ fn staging_preserves_exact_bytes_checksums_and_private_permissions() {
         checksum_relative_path(&root, Path::new("source")).expect("relative checksum"),
         expected
     );
+    fs::create_dir(root.join("source/line\nchild")).expect("source child with newline");
+    let partial_destination = root.join("partial-staged");
+    assert!(matches!(
+        stage_relative_path(&root, Path::new("source"), &partial_destination),
+        Err(ArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    assert!(partial_destination.is_dir());
+    assert!(!partial_destination.join("line\nchild").exists());
     fs::remove_dir_all(root).expect("remove successful fixture");
 }
 

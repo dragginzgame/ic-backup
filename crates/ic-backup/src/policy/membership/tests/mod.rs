@@ -176,6 +176,28 @@ fn rejects_full_inventory_drift_including_unselected_parent_and_metadata() {
 }
 
 #[test]
+fn inventory_mismatch_precedes_excess_remote_call_reporting() {
+    let plan = plan();
+    let request = MembershipObservationRequest::new(
+        &plan,
+        7,
+        hash("12"),
+        MembershipBoundary::BeforeEffect,
+        0,
+    )
+    .unwrap();
+    let mut observed = observation(&request);
+    let mut value = serde_json::to_value(&observed.inventory).unwrap();
+    value["targets"][0]["role"] = serde_json::json!("changed");
+    observed.inventory = serde_json::from_value(value).unwrap();
+    assert_eq!(observed.remote_observations, 1);
+    assert_eq!(
+        validate(&request, &observed).unwrap_err(),
+        MembershipError::InventoryMismatch
+    );
+}
+
+#[test]
 fn accepts_canonical_aliases_without_inventing_revision_continuity_or_extra_calls() {
     let plan = plan();
     let request = MembershipObservationRequest::new(

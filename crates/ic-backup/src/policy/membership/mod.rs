@@ -63,22 +63,23 @@ pub fn validate<'a>(
     observation: &'a MembershipObservation,
 ) -> Result<MembershipView<'a>, MembershipError> {
     let digest = request.digest();
-    if observation.request != digest {
-        return Err(MembershipError::RequestMismatch);
-    }
     let binding = request.binding();
-    if let Some(field) = super::observed_context::first_mismatch(binding, &observation.context) {
-        return Err(MembershipError::ContextMismatch(field));
-    }
+    super::observed_context::admit_request_context(
+        &digest,
+        &observation.request,
+        binding,
+        &observation.context,
+        MembershipError::RequestMismatch,
+        MembershipError::ContextMismatch,
+    )?;
     if observation.inventory != *request.inventory() {
         return Err(MembershipError::InventoryMismatch);
     }
-    if observation.remote_observations > request.max_remote_observations() {
-        return Err(MembershipError::ObservationLimitExceeded {
-            limit: request.max_remote_observations(),
-            reported: observation.remote_observations,
-        });
-    }
+    super::observed_context::admit_limit(
+        request.max_remote_observations(),
+        observation.remote_observations,
+        |limit, reported| MembershipError::ObservationLimitExceeded { limit, reported },
+    )?;
     Ok(MembershipView {
         request: digest,
         inventory: &observation.inventory,

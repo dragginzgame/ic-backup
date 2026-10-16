@@ -9,6 +9,7 @@ pub use requirement::{
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::OperationBindingRecord,
+    evidence_digest::EvidenceDigest,
     inventory::{InventoryRecord, MAX_INVENTORY_TARGETS},
     operation_plan::{OperationPlanError, OperationPlanRecord, PlanContextRecord},
 };
@@ -141,24 +142,24 @@ impl<'a> ConsistencyRequest<'a> {
     /// membership-revision bytes, then u32 BE ceiling.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/consistency-request/v1\0".to_vec();
-        bytes.extend_from_slice(self.requirement.digest().hash().as_bytes());
-        bytes.extend_from_slice(&self.binding.operation_sequence().to_be_bytes());
-        bytes.extend_from_slice(self.challenge().hash().as_bytes());
-        bytes.push(match self.boundary() {
+        let mut framing = EvidenceDigest::new(b"ic-backup/consistency-request/v1\0");
+        framing.checksum(&self.requirement.digest());
+        framing.u64_be(self.binding.operation_sequence());
+        framing.checksum(self.challenge());
+        framing.byte(match self.boundary() {
             ConsistencyBoundary::BeforeCapture => 0,
             ConsistencyBoundary::AfterCapture => 1,
         });
         match self.expected_fence() {
-            None => bytes.push(0),
+            None => framing.byte(0),
             Some(fence) => {
-                bytes.push(1);
-                bytes.extend_from_slice(fence.identity.hash().as_bytes());
-                bytes.extend_from_slice(fence.membership_revision.hash().as_bytes());
+                framing.byte(1);
+                framing.checksum(&fence.identity);
+                framing.checksum(&fence.membership_revision);
             }
         }
-        bytes.extend_from_slice(&self.max_remote_observations().to_be_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        framing.u32_be(self.max_remote_observations());
+        framing.finish()
     }
 }
 /// Actual observed lifecycle at the capture boundary; not a management reply codec.

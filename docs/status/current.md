@@ -23,26 +23,111 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-15
+# Current handoff — 2026-10-16
 
-## Host primitive extraction pending publication
+## Pending 0.26.0 Intel command-custody regression
 
-Three existing Host Tooling PRs now merge cleanly with Host main:
+The current release already includes the license and package-fixture changes
+from now-closed Backup PR #49. Its older Intel macOS CI run failed because a
+restore-reference test expected quiescence immediately after reaping a child;
+the live sidecar still correctly returned `InFlight`. The current test now
+retries only that refusal for at most five seconds, checks unchanged reference
+bytes on each refusal, and fails if custody never settles. The focused Linux
+test passes on the locked graph. Native Intel macOS and the full release gate
+remain unqualified for this pending test change.
+
+## Host contribution handoff
+
+Host PRs #152, #114, #125 and #127 merged after their Linux, Intel macOS,
+Apple Silicon and MSRV checks passed. PR #112 closed because #114 includes
+the Unix no-follow directory opener. Host 0.22.1 is tagged; #127 belongs to
+the 0.22.2 draft. [Backup #52](https://github.com/dragginzgame/ic-backup/issues/52)
+tracks lock and directory-commit adoption. Backup's directory and HTTP
+replacements still require published Host packages and their own consumer
+qualification.
+
+## Pending 0.26.0 graph and observation admission
+
+Effect-graph decoding now uses the shared persisted-sequence visitor with an
+aggregate edge check before each node is stored. The node, per-node dependency
+and total-edge bounds are unchanged. Membership, controller and snapshot-read
+admission share ordered request/context and target/call checks; membership still
+checks the full inventory before the call ceiling. All 555 Core unit tests,
+including the new combined-denial regression, formatting and strict Core
+Clippy pass on the present lockfile.
+
+[Merged Host Tooling PR #152 — Add exact-length artifact stream readers](https://github.com/dragginzgame/ic-host-tooling/pull/152)
+adds short-EOF and excess-byte admission to the generic bounded readers. Its
+35 default-feature Artifacts tests, nine minimal-feature artifact cases and
+strict all-feature/all-target Clippy pass in an isolated clean checkout. Backup's
+IC snapshot verification and upload readers keep their existing local length
+checks until a Host package containing the PR is published and selected. Full
+release and native macOS qualification remain separate.
+
+## Pending 0.26.0 stream and fixture consolidation
+
+Framed evidence digests now stream through the published Host Artifacts hashing
+writer instead of allocating the complete framing buffer. The checksum record
+and its JSON schema remain Backup-owned under Host Tooling's consumer-schema
+boundary. The independent digest goldens and all 554 Core unit tests pass.
+JSON publication uses Host FS's existing post-sync, pre-publication admission
+callback for crash qualification, removing Backup's duplicate file sync while
+retaining one production/test publication adapter and both crash barriers. All
+15 JSON tests, including acknowledged process-death cases, pass. The PocketIC
+fixture shares original call setup and lost/settled reply bookkeeping between
+mutation and transfer-read paths; their distinct passive validation remains.
+Its compile check, both selected lost-reply journeys and one complete planned
+download journey pass. Strict all-target Core Clippy passes. The full `make ci`
+gate and native macOS acceptance remain separate.
+
+## Pending 0.26.0 bounded-model and Host-primitive cleanup
+
+Artifact staging and workflow stages now use published Host FS 0.21.0
+private-directory creation in place of their local `0700` helpers. The Host
+primitive synchronizes the parent link and retains a created directory after a
+failed final admission; Backup preserves the underlying IO kind and phase in
+its existing error path. Its CR/LF path refusal applies to selected and nested
+directory paths, changing public directory-staging behavior, so the whole pending
+batch is selected as 0.26.0. Partial trees remain retained; no journal is reset.
+Consistency, restore-safety and fence-reconciliation request
+digests now use one local framing builder; independent binary goldens remain
+unchanged. Journal and command-custody drops delegate descriptor unlock to
+Host FS. Existing-only sidecar admission and one-shot locking remain local
+until [Host PR #127 — Add existing lock admission and directory commit primitives](https://github.com/dragginzgame/ic-host-tooling/pull/127)
+is published. Backup's distinct lifetime and command-spending policies stay local.
+
+The remaining controller, snapshot-ID, request snapshot-byte and restore-reference
+decoders now use the existing bounded sequence reader. Fence-acquisition, IC
+request and snapshot-metadata constructors obtain canonical target text and raw
+principal bytes from one parse. Layout and artifact custody checks use the
+published Host FS directory-admission primitive with the existing typed
+replacement errors. The local no-follow opener remains because the published
+Host FS 0.21.0 package does not include the opener now merged through
+[Host PR #114 — Open files and directories beneath an explicit root](https://github.com/dragginzgame/ic-host-tooling/pull/114).
+On the present lockfile, all-target Core checking, 554 Core unit tests, nine
+selected native integration tests, strict all-target Clippy, formatting, doc
+links and the explicit CR/LF directory-staging regression pass. This is focused
+local qualification; the full `make ci` gate and native macOS acceptance have
+not been run for this batch. The manifest and lockfile already had separate
+incoming edits and were left untouched.
+
+## Earlier Host primitive rehearsal
+
+The earlier Host Tooling rehearsal covered three PRs:
 [#114](https://github.com/dragginzgame/ic-host-tooling/pull/114) admits
 root-relative file and directory descriptors,
 [#125](https://github.com/dragginzgame/ic-host-tooling/pull/125) owns bounded
 synthetic HTTP request capture, and
 [#127](https://github.com/dragginzgame/ic-host-tooling/pull/127) owns existing
-lock admission and directory commit mechanics. Their notes select pending
-Host 0.20.2 after tagged 0.20.1. Their refreshed heads have focused local
-Host qualification; current hosted native/macOS/MSRV checks are
-pending. An isolated Backup copy compiled against the combined unpublished
+lock admission and directory commit mechanics. Their notes selected pending
+Host 0.20.2 after tagged 0.20.1. Their refreshed heads had focused local
+Host qualification. An isolated Backup copy compiled against the combined unpublished
 Host source and passed 13 artifact tests, 7 directory-commit tests, 11 Agent
 HTTP boundary tests, all-target checking and strict all-target Clippy. This
-is consumer rehearsal, not published dependency qualification. Backup's
-production manifests, lockfile and local implementations retain their current
-state until the Host APIs are published and adopted from the registry; the
-Backup-specific checksum, evidence and recovery policy stays here.
+was consumer rehearsal, not published dependency qualification. Published Host
+FS 0.21.0 now supplies directory identity admission; the root-relative no-follow
+opener from #114 is still absent. Backup-specific checksum, evidence and recovery
+policy stays here.
 
 ## Observation recovery and handoff consolidation
 
@@ -75,7 +160,7 @@ both packaged-crate archives. The ordinary sandbox denied PocketIC's local bind;
 the same complete gate passed with loopback access. Native macOS acceptance
 remains separate.
 
-## Pending 0.25.1 Agent package license
+## Released 0.25.1 Agent package license
 
 The tagged 0.25.0 release is at `e258832`. Its [exact-source CI run](https://github.com/dragginzgame/ic-backup/actions/runs/38732636669)
 passes Linux, Apple Silicon and Intel macOS. Delivered-source acceptance for
@@ -84,13 +169,11 @@ gate is complete; issues #48, #50 and #51 are closed against that run.
 The Agent crate now includes the same MIT license text as Core, with existing
 copyright notices retained. This addresses the packaging gap described in
 [PR #49 — Include MIT license text in published packages](https://github.com/dragginzgame/ic-backup/pull/49).
-PR #49 now merges cleanly with released 0.25.0 and carries the pending 0.25.1
-note. Its fresh-checkout package check creates `target/` before allocating a
-retained fixture; the same one-line fix is present locally.
+Released 0.25.1 already contains the license and the fresh-checkout package
+fixture correction. PR #49 duplicated those exact changes and is closed.
 The locked offline package check passed: both archives compiled together,
 and the Agent archive's `LICENSE` exactly matches the repository text.
-Formatting, documentation links and diff checks pass. The package version
-remains with the maintainer's release flow.
+Formatting, documentation links and diff checks passed for that batch.
 The earlier [focused-validation PR #44](https://github.com/dragginzgame/ic-backup/pull/44)
 is closed because released 0.25.0 already includes the Shared Tooling cadence.
 

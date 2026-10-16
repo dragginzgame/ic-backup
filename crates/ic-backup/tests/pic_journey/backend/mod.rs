@@ -32,7 +32,7 @@ use serde_json::json;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     time::{Duration, Instant},
 };
 
@@ -168,15 +168,7 @@ impl Backend {
         decode: impl FnOnce(&[u8]) -> ArtifactChecksumRecord,
         lose_reply: bool,
     ) -> (u64, Option<Vec<u8>>) {
-        let index = self.calls + 1;
-        let path = self.root.join("calls").join(index.to_string());
-        fs::create_dir(&path).unwrap();
-        let layout = BackupLayoutGuard::acquire(&path).unwrap();
-        let plan = self.plan(digest, index);
-        create_operation_plan(&layout, &plan).unwrap();
-        assert!(self.plans.insert(index, plan.digest()).is_none());
-        fs::write(path.join("arguments.candid"), arguments).unwrap();
-        fs::write(path.join("method.txt"), method).unwrap();
+        let (index, layout, plan) = self.begin_call(method, arguments, digest);
         let mut journal =
             AttemptJournalGuard::create(&layout, plan.attempt_authority(index).unwrap()).unwrap();
         let attempt = journal.reserve_mutation().unwrap();
@@ -184,24 +176,18 @@ impl Backend {
         if lose_reply {
             // Test oracle retains the actually executed reply separately. Recovery
             // code sees no reply and cannot use this file to settle the mutation.
-            fs::write(path.join("discarded-oracle-reply.candid"), &raw).unwrap();
-            assert_eq!(
-                journal.record().unwrap().view().pending_mutation,
-                Some(attempt)
-            );
+            Self::retain_lost_reply(layout.root(), &journal, attempt, &raw);
             return (index, None);
         }
         let evidence = decode(&raw);
-        fs::write(path.join("reply.candid"), &raw).unwrap();
-        journal
-            .record_mutation(MutationReceiptRequest {
-                attempt,
-                request: digest.hash().into(),
-                outcome: MutationOutcomeRecord::Applied,
-                evidence: evidence.hash().into(),
-            })
-            .unwrap();
-        assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
+        Self::retain_settled_reply(
+            layout.root(),
+            &mut journal,
+            attempt,
+            digest,
+            &evidence,
+            &raw,
+        );
         (index, Some(raw))
     }
 
@@ -210,15 +196,8 @@ impl Backend {
         payload: IcSnapshotTransferReadPayload<'_, '_>,
         lose_reply: bool,
     ) -> (u64, Option<Vec<u8>>) {
-        let index = self.calls + 1;
-        let path = self.root.join("calls").join(index.to_string());
-        fs::create_dir(&path).unwrap();
-        let layout = BackupLayoutGuard::acquire(&path).unwrap();
-        let plan = self.plan(&payload.digest(), index);
-        create_operation_plan(&layout, &plan).unwrap();
-        assert!(self.plans.insert(index, plan.digest()).is_none());
-        fs::write(path.join("arguments.candid"), payload.arguments()).unwrap();
-        fs::write(path.join("method.txt"), payload.method()).unwrap();
+        let digest = payload.digest();
+        let (index, layout, plan) = self.begin_call(payload.method(), payload.arguments(), &digest);
         let mut journal =
             AttemptJournalGuard::create(&layout, plan.attempt_authority(index).unwrap()).unwrap();
         let attempt = journal.reserve_mutation().unwrap();
@@ -228,15 +207,7 @@ impl Backend {
         let response = ready(self.read_snapshot(&request, journal.record().unwrap())).unwrap();
         if lose_reply {
             // Oracle bytes never enter passive association or a success receipt.
-            fs::write(
-                path.join("discarded-oracle-reply.candid"),
-                &response.input().reply,
-            )
-            .unwrap();
-            assert_eq!(
-                journal.record().unwrap().view().pending_mutation,
-                Some(attempt)
-            );
+            Self::retain_lost_reply(layout.root(), &journal, attempt, &response.input().reply);
             return (index, None);
         }
         let view = validate_response(&request, journal.record().unwrap(), &response).unwrap();
@@ -245,18 +216,62 @@ impl Backend {
             IcSnapshotTransferReadReply::Data(reply) => reply.digest(),
         };
         let raw = response.input().reply.clone();
-        fs::write(path.join("reply.candid"), &raw).unwrap();
         // Explicit isolated-instance qualification, not an automatic policy receipt.
+        Self::retain_settled_reply(
+            layout.root(),
+            &mut journal,
+            attempt,
+            &digest,
+            &evidence,
+            &raw,
+        );
+        (index, Some(raw))
+    }
+
+    fn begin_call(
+        &mut self,
+        method: &str,
+        arguments: &[u8],
+        digest: &ArtifactChecksumRecord,
+    ) -> (u64, BackupLayoutGuard, OperationPlanRecord) {
+        let index = self.calls + 1;
+        let path = self.root.join("calls").join(index.to_string());
+        fs::create_dir(&path).unwrap();
+        let layout = BackupLayoutGuard::acquire(&path).unwrap();
+        let plan = self.plan(digest, index);
+        create_operation_plan(&layout, &plan).unwrap();
+        assert!(self.plans.insert(index, plan.digest()).is_none());
+        fs::write(path.join("arguments.candid"), arguments).unwrap();
+        fs::write(path.join("method.txt"), method).unwrap();
+        (index, layout, plan)
+    }
+
+    fn retain_lost_reply(root: &Path, journal: &AttemptJournalGuard<'_>, attempt: u32, raw: &[u8]) {
+        fs::write(root.join("discarded-oracle-reply.candid"), raw).unwrap();
+        assert_eq!(
+            journal.record().unwrap().view().pending_mutation,
+            Some(attempt)
+        );
+    }
+
+    fn retain_settled_reply(
+        root: &Path,
+        journal: &mut AttemptJournalGuard<'_>,
+        attempt: u32,
+        request: &ArtifactChecksumRecord,
+        evidence: &ArtifactChecksumRecord,
+        raw: &[u8],
+    ) {
+        fs::write(root.join("reply.candid"), raw).unwrap();
         journal
             .record_mutation(MutationReceiptRequest {
                 attempt,
-                request: payload.digest().hash().into(),
+                request: request.hash().into(),
                 outcome: MutationOutcomeRecord::Applied,
                 evidence: evidence.hash().into(),
             })
             .unwrap();
         assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
-        (index, Some(raw))
     }
 
     pub fn assert_pending_read_replay(&self, sequence: u64) {

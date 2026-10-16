@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.26.0]
+
+### Breaking
+
+- Directory artifact staging now refuses carriage returns or newlines in the
+  destination or any nested directory path. Choose directory paths without
+  those bytes; an already-created partial staging tree is retained for inspection
+  rather than removed or retried.
+
+### Changed
+
+- Share aggregate-bound sequence decoding for effect graphs and ordered
+  observation admission across membership, controller and snapshot-read policy.
+  The existing bounds and denial order remain intact.
+- Reuse bounded sequence decoding for the remaining controller, snapshot-ID and
+  restore-reference boundaries while retaining their byte and count limits.
+- Parse principal text once when constructing IC requests, snapshot metadata
+  reads and application-fence payloads; canonical target and wire bytes still
+  bind to the same principal.
+- Use Host FS directory identity admission for layout and snapshot-artifact
+  custody checks, preserving their typed replacement errors. The local
+  no-follow opener remains until its Host replacement is published.
+- Use Host FS private-directory creation for artifact staging and workflow
+  stages, including durable parent-link synchronization and explicit
+  interrupted-creation errors.
+- Share exact hash and big-endian integer framing across consistency,
+  restore-safety and fence-reconciliation request digests without changing
+  their domain tags or bytes. Use Host FS for descriptor unlock; existing-only
+  sidecar admission remains local pending the upstream lock primitive.
+- Stream framed evidence into Host Artifacts' SHA-256 writer without retaining
+  a second copy of the framing bytes; checksum records and digests are unchanged.
+- Use Host FS's post-sync admission callback for JSON crash qualification,
+  removing Backup's duplicate pre-publication file sync.
+
+### Testing
+
+- Wait a bounded interval for a reaped command's inherited sidecar to become
+  quiescent in the restore-reference regression, while checking that in-flight
+  attempts leave the original reference bytes intact.
+- Share simulator call setup and lost/settled reply bookkeeping across mutation
+  and transfer-read journeys while retaining their distinct reply validation.
+
 ## [0.25.1] - 2026-10-15
 
 ### Changed

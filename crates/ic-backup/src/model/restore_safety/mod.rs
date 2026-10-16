@@ -10,6 +10,7 @@ use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::OperationBindingRecord,
     consistency::ApplicationFenceState,
+    evidence_digest::EvidenceDigest,
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord, IcRequestError},
     inventory::{InventoryRecord, MAX_INVENTORY_TARGETS},
     operation_plan::{OperationPlanError, OperationPlanRecord, PlanContextRecord},
@@ -117,13 +118,13 @@ impl<'a> RestoreSafetyRequest<'a> {
     /// u32 BE descriptive ceiling. Wire digest distinguishes load from start.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/restore-safety-request/v1\0".to_vec();
-        bytes.extend_from_slice(self.requirement.digest().hash().as_bytes());
-        bytes.extend_from_slice(&self.binding.operation_sequence().to_be_bytes());
-        bytes.extend_from_slice(self.wire.digest().hash().as_bytes());
-        bytes.extend_from_slice(self.challenge().hash().as_bytes());
-        bytes.extend_from_slice(&self.max_remote_observations().to_be_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        let mut framing = EvidenceDigest::new(b"ic-backup/restore-safety-request/v1\0");
+        framing.checksum(&self.requirement.digest());
+        framing.u64_be(self.binding.operation_sequence());
+        framing.checksum(&self.wire.digest());
+        framing.checksum(self.challenge());
+        framing.u32_be(self.max_remote_observations());
+        framing.finish()
     }
 }
 /// Passive actual lifecycle and integration-qualified source-specific restored acceptance.

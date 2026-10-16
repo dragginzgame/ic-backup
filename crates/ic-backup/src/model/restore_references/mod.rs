@@ -1,10 +1,12 @@
 //! Maintained v1 restore dependencies and model-owned retention transitions.
 
-use crate::model::artifacts::{ChecksumError, canonical_hash};
-use serde::{Deserialize, Deserializer, Serialize, de};
+use crate::model::{
+    artifacts::{ChecksumError, canonical_hash},
+    bounded_sequence,
+};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{
     collections::BTreeSet,
-    fmt,
     path::{Path, PathBuf},
 };
 use thiserror::Error;
@@ -175,27 +177,11 @@ impl RestoreReferencesRecord {
 fn read_bounded_references<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<RestoreReferenceRecord>, D::Error> {
-    struct ReferencesVisitor;
-    impl<'de> de::Visitor<'de> for ReferencesVisitor {
-        type Value = Vec<RestoreReferenceRecord>;
-        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-            formatter.write_str("a bounded list of restore references")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut entries = Vec::new();
-            while let Some(entry) = sequence.next_element()? {
-                if entries.len() == MAX_RESTORE_REFERENCES {
-                    return Err(de::Error::custom("restore reference count exceeds limit"));
-                }
-                entries.push(entry);
-            }
-            Ok(entries)
-        }
-    }
-    deserializer.deserialize_seq(ReferencesVisitor)
+    bounded_sequence::deserialize::<_, RestoreReferenceRecord, MAX_RESTORE_REFERENCES>(
+        deserializer,
+        "a bounded list of restore references",
+        "restore reference count exceeds limit",
+    )
 }
 
 /// Typed schema or immutable-reference transition failure.

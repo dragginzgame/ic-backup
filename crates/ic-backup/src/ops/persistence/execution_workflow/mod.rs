@@ -387,10 +387,8 @@ impl<'a> ExecutionStageGuard<'a> {
         )?;
         validate_predecessors(workflow_layout, &workflow, &binding)?;
         let path = stage_path(workflow_layout, binding.stage_sequence());
-        create_private_directory(&path)?;
-        fs::File::open(workflow_layout.root())
-            .and_then(|directory| directory.sync_all())
-            .map_err(PersistenceError::from)?;
+        ic_host_fs::durable::create_private_directory(&path)
+            .map_err(|error| PersistenceError::Io(crate::ops::directory_creation_io(error)))?;
         let stage_layout = acquire_stage(workflow_layout, binding.stage_sequence())?;
         create_operation_plan(&stage_layout, &plan)?;
         barrier(StagePreparationBarrier::Plan);
@@ -578,25 +576,6 @@ fn acquire_stage(
     layout.check_root()?;
     Ok(stage)
 }
-fn create_private_directory(
-    path: &std::path::Path,
-) -> Result<(), ExecutionWorkflowPersistenceError> {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::DirBuilderExt;
-        fs::DirBuilder::new()
-            .mode(0o700)
-            .create(path)
-            .map_err(PersistenceError::from)?;
-        Ok(())
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = path;
-        Err(PersistenceError::Io(std::io::Error::from(std::io::ErrorKind::Unsupported)).into())
-    }
-}
-
 /// Typed immutable workflow/stage admission failure; no recovery evidence is removed.
 #[derive(Debug, Error)]
 pub enum ExecutionWorkflowPersistenceError {

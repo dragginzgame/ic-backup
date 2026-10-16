@@ -69,22 +69,23 @@ pub fn validate<'a>(
     observation: &'a SnapshotReadObservation,
 ) -> Result<SnapshotReadView<'a>, SnapshotReadError> {
     let digest = request.digest();
-    if *observation.request() != digest {
-        return Err(SnapshotReadError::RequestMismatch);
-    }
     let binding = request.binding();
-    if let Some(field) = super::observed_context::first_mismatch(binding, observation.context()) {
-        return Err(SnapshotReadError::ContextMismatch(field));
-    }
-    if observation.target() != binding.target() {
-        return Err(SnapshotReadError::TargetMismatch);
-    }
-    if observation.remote_observations() > request.max_remote_observations() {
-        return Err(SnapshotReadError::ObservationLimitExceeded {
-            limit: request.max_remote_observations(),
-            reported: observation.remote_observations(),
-        });
-    }
+    super::observed_context::admit_request_context(
+        &digest,
+        observation.request(),
+        binding,
+        observation.context(),
+        SnapshotReadError::RequestMismatch,
+        SnapshotReadError::ContextMismatch,
+    )?;
+    super::observed_context::admit_target_limit(
+        binding,
+        observation.target(),
+        request.max_remote_observations(),
+        observation.remote_observations(),
+        SnapshotReadError::TargetMismatch,
+        |limit, reported| SnapshotReadError::ObservationLimitExceeded { limit, reported },
+    )?;
     let controller = observation
         .controllers()
         .is_some_and(|set| set.contains_caller(binding));

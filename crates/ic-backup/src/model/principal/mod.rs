@@ -1,12 +1,16 @@
 //! Pure bounded principal text admission shared by owning record boundaries.
 
-pub(super) fn canonical_text(value: &str) -> Option<String> {
+pub(super) fn canonical_parts(value: &str) -> Option<(String, ic_principal::Principal)> {
     if value.len() > 63 {
         return None;
     }
     ic_principal::Principal::from_text(value)
         .ok()
-        .map(|principal| principal.to_text())
+        .map(|principal| (principal.to_text(), principal))
+}
+
+pub(super) fn canonical_text(value: &str) -> Option<String> {
+    canonical_parts(value).map(|(text, _)| text)
 }
 
 pub(super) fn canonical_set<E>(

@@ -4,6 +4,7 @@ use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord, MAX_OPERATION_ATTEMPTS},
     consistency::ApplicationFenceEvidence,
+    evidence_digest::EvidenceDigest,
     fence_obligation::{FenceObligationError, FenceObligationRecord},
     inventory::{InventoryRecord, InventoryRecordError, MAX_INVENTORY_TARGETS},
     operation_plan::{OperationPlanError, OperationPlanRecord, PlanContextRecord},
@@ -118,12 +119,12 @@ fn observation_digest(
     mutation: u32,
     challenge: &ArtifactChecksumRecord,
 ) -> ArtifactChecksumRecord {
-    let mut bytes = b"ic-backup/fence-reconciliation/v1\0".to_vec();
-    bytes.extend_from_slice(obligation.hash().as_bytes());
-    bytes.extend_from_slice(authority.hash().as_bytes());
-    bytes.extend_from_slice(&mutation.to_be_bytes());
-    bytes.extend_from_slice(challenge.hash().as_bytes());
-    ArtifactChecksumRecord::from_bytes(&bytes)
+    let mut framing = EvidenceDigest::new(b"ic-backup/fence-reconciliation/v1\0");
+    framing.checksum(obligation);
+    framing.checksum(authority);
+    framing.u32_be(mutation);
+    framing.checksum(challenge);
+    framing.finish()
 }
 
 /// Ephemeral observation request bound to the exact already-reserved original journal event.

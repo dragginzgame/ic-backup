@@ -8,7 +8,6 @@ use crate::model::{
 };
 use candid::CandidType;
 use serde::{Deserialize, Deserializer, de};
-use std::fmt;
 
 // These quotas bound decoder work and type-table retention independently of raw
 // input and model sequence bounds. Zero skipped work rejects record extensions.
@@ -48,41 +47,15 @@ impl<'de> Deserialize<'de> for WireInventory {
 }
 
 pub(crate) fn snapshot_id<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-    struct IdVisitor;
-    impl<'de> de::Visitor<'de> for IdVisitor {
-        type Value = Vec<u8>;
-
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("1..=256 raw snapshot bytes")
-        }
-
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            if sequence
-                .size_hint()
-                .is_some_and(|size| size == 0 || size > MAX_IC_SNAPSHOT_ID_BYTES)
-            {
-                return Err(de::Error::custom("snapshot identifier exceeds its bounds"));
-            }
-            let mut bytes = Vec::new();
-            while bytes.len() < MAX_IC_SNAPSHOT_ID_BYTES {
-                match sequence.next_element::<u8>()? {
-                    Some(byte) => bytes.push(byte),
-                    None if bytes.is_empty() => {
-                        return Err(de::Error::custom("empty snapshot identifier"));
-                    }
-                    None => return Ok(bytes),
-                }
-            }
-            if sequence.next_element::<u8>()?.is_some() {
-                return Err(de::Error::custom("snapshot identifier exceeds its bounds"));
-            }
-            Ok(bytes)
-        }
+    let bytes = bounded_sequence::deserialize_wire::<_, u8, MAX_IC_SNAPSHOT_ID_BYTES>(
+        deserializer,
+        "1..=256 raw snapshot bytes",
+        "snapshot identifier exceeds its bounds",
+    )?;
+    if bytes.is_empty() {
+        return Err(de::Error::custom("empty snapshot identifier"));
     }
-    deserializer.deserialize_seq(IdVisitor)
+    Ok(bytes)
 }
 
 pub(super) fn decode(

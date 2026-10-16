@@ -1,6 +1,6 @@
 //! Stable parent-side layout locks and durable unfinished restore dependencies.
 
-use super::directory_custody::{open_directory, same_directory};
+use super::directory_custody::open_directory;
 use crate::{
     model::restore_references::{RestoreReferenceRecord, RestoreReferencesRecord},
     ops::persistence::{
@@ -138,12 +138,15 @@ impl BackupLayoutGuard {
     }
 
     pub(super) fn check_root(&self) -> Result<(), PersistenceError> {
-        if same_directory(&self.root, &self.directory)? {
-            return Ok(());
+        match ic_host_fs::durable::admit_directory(&self.root, &self.directory) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == io::ErrorKind::InvalidInput => {
+                Err(PersistenceError::LayoutChanged {
+                    path: self.root.clone(),
+                })
+            }
+            Err(error) => Err(error.into()),
         }
-        Err(PersistenceError::LayoutChanged {
-            path: self.root.clone(),
-        })
     }
 }
 

@@ -2,13 +2,13 @@
 
 use super::{IcCanisterStatusInfo, IcLifecycleReplyError};
 use crate::model::{
+    bounded_sequence,
     control_authority::{ControllerSet, MAX_CONTROLLERS},
     ic_wire::{self, DecoderLimits},
 };
 use candid::{CandidType, Principal};
 use ic_management_canister_types::CanisterStatusType;
-use serde::{Deserialize, Deserializer, de};
-use std::fmt;
+use serde::{Deserialize, Deserializer};
 
 const DECODING_QUOTA: usize = 2 * 1024 * 1024;
 const SKIPPING_QUOTA: usize = 64 * 1024;
@@ -27,27 +27,11 @@ struct WireSettings {
 }
 
 fn controllers<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<Principal>, D::Error> {
-    struct ControllersVisitor;
-    impl<'de> de::Visitor<'de> for ControllersVisitor {
-        type Value = Vec<Principal>;
-        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-            formatter.write_str("a bounded controller principal sequence")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut principals = Vec::new();
-            while let Some(principal) = sequence.next_element::<Principal>()? {
-                if principals.len() == MAX_CONTROLLERS {
-                    return Err(de::Error::custom("controller sequence exceeds bound"));
-                }
-                principals.push(principal);
-            }
-            Ok(principals)
-        }
-    }
-    deserializer.deserialize_seq(ControllersVisitor)
+    bounded_sequence::deserialize_wire::<_, Principal, MAX_CONTROLLERS>(
+        deserializer,
+        "a bounded controller principal sequence",
+        "controller sequence exceeds bound",
+    )
 }
 
 pub(super) fn status(bytes: &[u8]) -> Result<IcCanisterStatusInfo, IcLifecycleReplyError> {

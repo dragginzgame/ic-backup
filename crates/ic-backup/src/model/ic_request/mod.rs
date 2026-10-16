@@ -3,13 +3,13 @@
 mod method;
 pub use method::{IcManagementMethodRecord, IcRequestEffect};
 
-use crate::model::{artifacts::ArtifactChecksumRecord, attempt_journal::OperationBindingRecord};
-use candid::Principal;
+use crate::model::{
+    artifacts::ArtifactChecksumRecord, attempt_journal::OperationBindingRecord, bounded_sequence,
+};
 use ic_management_canister_types::{
     CanisterIdRecord, LoadCanisterSnapshotArgs, TakeCanisterSnapshotArgs,
 };
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 
 /// Maximum raw snapshot identifier bytes, distinct from any backend's rendered token.
@@ -79,9 +79,8 @@ impl IcManagementRequestRecord {
     /// Rejects malformed principals, missing/unexpected/oversized snapshot IDs,
     /// Candid encoding failure and excessive derived argument bytes.
     pub fn new(request: IcManagementRequest) -> Result<Self, IcRequestError> {
-        let target = crate::model::principal::canonical_text(&request.target)
+        let (target, principal) = crate::model::principal::canonical_parts(&request.target)
             .ok_or(IcRequestError::InvalidTarget)?;
-        let principal = Principal::from_text(&target).map_err(|_| IcRequestError::InvalidTarget)?;
         match (request.method, request.snapshot_id.as_deref()) {
             (IcManagementMethodRecord::LoadCanisterSnapshot, None) => {
                 return Err(IcRequestError::SnapshotRequired);
@@ -247,30 +246,12 @@ fn required_snapshot<'de, D: Deserializer<'de>>(
 struct SnapshotBytes(Vec<u8>);
 impl<'de> Deserialize<'de> for SnapshotBytes {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct BytesVisitor;
-        impl<'de> de::Visitor<'de> for BytesVisitor {
-            type Value = SnapshotBytes;
-            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("at most 256 exact snapshot bytes")
-            }
-            fn visit_seq<A: de::SeqAccess<'de>>(
-                self,
-                mut sequence: A,
-            ) -> Result<Self::Value, A::Error> {
-                let mut bytes = Vec::new();
-                while bytes.len() < MAX_IC_SNAPSHOT_ID_BYTES {
-                    match sequence.next_element::<u8>()? {
-                        Some(byte) => bytes.push(byte),
-                        None => return Ok(SnapshotBytes(bytes)),
-                    }
-                }
-                if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                    return Err(de::Error::custom(IcRequestError::InvalidSnapshotId));
-                }
-                Ok(SnapshotBytes(bytes))
-            }
-        }
-        deserializer.deserialize_seq(BytesVisitor)
+        bounded_sequence::deserialize::<_, u8, MAX_IC_SNAPSHOT_ID_BYTES>(
+            deserializer,
+            "at most 256 exact snapshot bytes",
+            IcRequestError::InvalidSnapshotId,
+        )
+        .map(Self)
     }
 }
 

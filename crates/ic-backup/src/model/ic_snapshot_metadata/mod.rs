@@ -8,7 +8,6 @@ use super::{
         IcRequestError, MAX_IC_ARGUMENT_BYTES, MAX_IC_SNAPSHOT_ID_BYTES, management_request_digest,
     },
 };
-use candid::Principal;
 use ic_management_canister_types::{
     ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult,
 };
@@ -45,9 +44,8 @@ impl IcSnapshotMetadataRequest {
         if snapshot_id.is_empty() || snapshot_id.len() > MAX_IC_SNAPSHOT_ID_BYTES {
             return Err(IcRequestError::InvalidSnapshotId);
         }
-        let target =
-            super::principal::canonical_text(target).ok_or(IcRequestError::InvalidTarget)?;
-        let principal = Principal::from_text(&target).map_err(|_| IcRequestError::InvalidTarget)?;
+        let (target, principal) =
+            super::principal::canonical_parts(target).ok_or(IcRequestError::InvalidTarget)?;
         let arguments = candid::encode_one(ReadCanisterSnapshotMetadataArgs {
             canister_id: principal,
             snapshot_id: snapshot_id.to_vec(),

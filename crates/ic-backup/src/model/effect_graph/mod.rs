@@ -3,12 +3,9 @@
 mod node;
 pub use node::{EffectNodeRecord, EffectNodeRequest, MAX_EFFECT_DEPENDENCIES};
 
-use crate::model::artifacts::ArtifactChecksumRecord;
-use serde::{Deserialize, Deserializer, Serialize, de};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fmt,
-};
+use crate::model::{artifacts::ArtifactChecksumRecord, bounded_sequence};
+use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 use thiserror::Error;
 
 /// Maximum operation identities in a declared dependency graph.
@@ -177,35 +174,16 @@ fn add_edges(current: usize, additional: usize) -> Result<usize, EffectGraphErro
 fn bounded_nodes<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<EffectNodeRecord>, D::Error> {
-    struct NodesVisitor;
-    impl<'de> de::Visitor<'de> for NodesVisitor {
-        type Value = Vec<EffectNodeRecord>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("bounded explicit effect nodes and total edges")
-        }
-        fn visit_seq<A: de::SeqAccess<'de>>(
-            self,
-            mut sequence: A,
-        ) -> Result<Self::Value, A::Error> {
-            let mut nodes = Vec::new();
-            let mut edges = 0;
-            while nodes.len() < MAX_EFFECT_OPERATIONS {
-                match sequence.next_element::<EffectNodeRecord>()? {
-                    Some(node) => {
-                        edges =
-                            add_edges(edges, node.depends_on().len()).map_err(de::Error::custom)?;
-                        nodes.push(node);
-                    }
-                    None => return Ok(nodes),
-                }
-            }
-            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom(EffectGraphError::TooManyOperations));
-            }
-            Ok(nodes)
-        }
-    }
-    deserializer.deserialize_seq(NodesVisitor)
+    let mut edges = 0;
+    bounded_sequence::deserialize_checked::<D, EffectNodeRecord, _, _, MAX_EFFECT_OPERATIONS>(
+        deserializer,
+        "bounded explicit effect nodes and total edges",
+        EffectGraphError::TooManyOperations,
+        |node| {
+            edges = add_edges(edges, node.depends_on().len())?;
+            Ok::<(), EffectGraphError>(())
+        },
+    )
 }
 
 /// Typed declared graph identity, dependency or resource-bound rejection.

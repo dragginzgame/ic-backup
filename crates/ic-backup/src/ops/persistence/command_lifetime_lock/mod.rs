@@ -176,7 +176,7 @@ impl Drop for CommandQuiescenceGuard {
         // transfer its lock to a descendant. Closing alone would keep exclusion
         // alive until all transient fork/dup references also close.
         #[cfg(unix)]
-        file_lock::unlock(&self.file);
+        let _ = ic_host_fs::durable::unlock(&self.file);
     }
 }
 
