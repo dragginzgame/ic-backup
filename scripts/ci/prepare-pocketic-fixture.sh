@@ -16,5 +16,4 @@ binary="$(make --silent --no-print-directory -C "$repo_root" testkit-server-chec
 umask 077
 digest="$(bash "$repo_root/scripts/ci/verify-file-checksum.sh" --print sha256 "$binary")"
 printf '%s' "$digest" > "$1/server.sha256"
-bash "$script_dir/optimize-test-wasm.sh" "$1"
 printf '%s\n' "$binary"

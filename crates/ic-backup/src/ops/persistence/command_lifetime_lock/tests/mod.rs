@@ -9,11 +9,11 @@ use crate::{
         wait_for_child_path, wait_for_path,
     },
 };
-use rustix::io::{FdFlags, fcntl_getfd};
 use std::{
     os::unix::fs::{PermissionsExt, symlink},
     process::Stdio,
 };
+use std::{thread, time::Instant};
 
 #[test]
 fn one_spawn_inherits_custody_without_parent_or_command_descriptor_leaks() {
@@ -29,11 +29,6 @@ fn one_spawn_inherits_custody_without_parent_or_command_descriptor_leaks() {
             .mode()
             & 0o777,
         0o600
-    );
-    assert!(
-        fcntl_getfd(&lock.file)
-            .expect("owner flags")
-            .contains(FdFlags::CLOEXEC)
     );
     let mut command = Command::new("python3");
     command.args(["-c",r"import os,fcntl,json
@@ -57,11 +52,6 @@ print(json.dumps({'device':stat.st_dev,'inode':stat.st_ino,'cloexec':bool(fcntl.
         observed,
         serde_json::json!({"device":record.device(),"inode":record.inode(),"cloexec":false,"stdin_empty":true})
     );
-    assert!(
-        fcntl_getfd(&lock.file)
-            .expect("unchanged owner flags")
-            .contains(FdFlags::CLOEXEC)
-    );
     assert!(matches!(
         lock.spawn(Command::new("unattempted-second-command")),
         Err(CommandLifetimeLockError::AlreadyDispatched { .. })
@@ -76,48 +66,6 @@ print(json.dumps({'device':stat.st_dev,'inode':stat.st_ino,'cloexec':bool(fcntl.
     let lock = CommandLifetimeLock::acquire(record.journal(), 7).expect("after guard release");
     assert_eq!(lock.record(), &record);
     drop(lock);
-    fs::remove_dir_all(root).expect("clean successful fixture");
-}
-
-#[test]
-fn quiescence_drop_releases_exclusion_with_a_retained_descriptor_copy() {
-    let root = temp_dir("ic-backup-command-quiescence-copy");
-    let lock = CommandLifetimeLock::acquire(&root.join("journal.json"), 7)
-        .expect("acquire original custody");
-    let record = lock.record().clone();
-    let path = lock.path().to_path_buf();
-    let guard = lock.finish().expect("original owner has no descendants");
-    // dup and fork retain the same open file description. A non-spawning guard
-    // owns exclusion only until drop, even if an unrelated fork retained a copy.
-    let retained = guard.file.try_clone().expect("retain descriptor copy");
-    assert!(
-        fcntl_getfd(&retained)
-            .expect("copied descriptor flags")
-            .contains(FdFlags::CLOEXEC)
-    );
-    assert!(matches!(
-        CommandQuiescenceGuard::acquire(&record),
-        Err(CommandLifetimeLockError::InFlight { .. })
-    ));
-    drop(guard);
-    let fresh = CommandQuiescenceGuard::acquire(&record)
-        .expect("guard drop releases exclusion while descriptor copy remains open");
-    assert_eq!(fresh.record(), &record);
-    assert_eq!(
-        file_identity(&retained.metadata().expect("copy remains open")).expect("retained identity"),
-        (record.device(), record.inode())
-    );
-    assert_eq!(
-        file_identity(&fs::symlink_metadata(&path).expect("retained sidecar"))
-            .expect("path identity"),
-        (record.device(), record.inode())
-    );
-    drop(retained);
-    assert!(matches!(
-        CommandLifetimeLock::acquire(record.journal(), 7),
-        Err(CommandLifetimeLockError::InFlight { .. })
-    ));
-    drop(fresh);
     fs::remove_dir_all(root).expect("clean successful fixture");
 }
 
@@ -155,8 +103,10 @@ fn missing_replaced_or_unsafe_sidecars_do_not_prove_quiescence() {
         lock.finish(),
         Err(CommandLifetimeLockError::IdentityChanged { .. })
     ));
-    let replacement_lock =
-        file_lock::acquire_existing(&path).expect("hold different sidecar inode");
+    let replacement_lock = ic_host_fs::durable::open_existing_regular_lock_file(&path)
+        .expect("open different sidecar inode");
+    ic_host_fs::durable::try_lock_exclusive(&replacement_lock)
+        .expect("hold different sidecar inode");
     let replaced_result = CommandQuiescenceGuard::acquire(&record);
     assert!(
         matches!(

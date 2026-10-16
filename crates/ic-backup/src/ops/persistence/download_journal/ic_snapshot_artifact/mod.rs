@@ -16,7 +16,7 @@ use crate::{
     },
     ops::{
         artifacts::{ArtifactError, checksum_directory, checksum_relative_files},
-        persistence::write_json_durable,
+        persistence::json::write_encoded,
     },
 };
 use ic_host_fs::read::open_directory_no_follow;
@@ -265,7 +265,7 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
             Some(expected.clone()),
         )
         .map_err(DownloadJournalError::from)?;
-        self.journal.store(next, write_json_durable)?;
+        self.journal.store(next, write_encoded)?;
         publish(self.journal, target, &self.snapshot)?;
         self.journal.check_usable()?;
         check_directory_identity(

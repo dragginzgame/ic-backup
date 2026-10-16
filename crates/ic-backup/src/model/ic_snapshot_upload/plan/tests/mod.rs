@@ -63,7 +63,8 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
             .map(|i| ArtifactChecksumRecord::from_bytes(&i.to_le_bytes()))
             .collect();
         let data =
-            IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, 4, &bindings).unwrap();
+            IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, kinds.clone(), &bindings)
+                .unwrap();
         assert_eq!(data.destination(), &[21, 0, 255]);
         let plan = data.plan().unwrap();
         assert_eq!(plan.budget().mutations(), 12);
@@ -105,8 +106,14 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
             Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
         ));
         assert!(
-            IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, 4, &bindings[..4])
-                .is_err()
+            IcSnapshotDataUploadPlan::from_bindings(
+                &workflow,
+                7,
+                &reply,
+                kinds.clone(),
+                &bindings[..4]
+            )
+            .is_err()
         );
     });
 }
@@ -173,8 +180,8 @@ fn empty_regions_make_no_placeholder_but_known_empty_chunk_requires_a_write() {
     with_values(input.clone(), |metadata| {
         let reply = allocation(metadata);
         let workflow = data_workflow(metadata, 1);
-        let plan = IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, 1024 * 1024, &[])
-            .unwrap();
+        let plan =
+            IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, Vec::new(), &[]).unwrap();
         assert!(plan.kinds().is_empty());
         assert!(plan.plan().is_none());
     });

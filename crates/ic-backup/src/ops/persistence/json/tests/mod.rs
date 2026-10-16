@@ -82,6 +82,53 @@ fn serialization_failure_preserves_the_previous_document() {
 }
 
 #[test]
+fn bounded_encoding_publishes_its_exact_single_pass_and_refuses_before_effects() {
+    use std::cell::Cell;
+
+    struct Probe<'a>(&'a Cell<u8>);
+    impl Serialize for Probe<'_> {
+        fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            self.0.set(self.0.get() + 1);
+            serializer.serialize_str(if self.0.get() == 1 {
+                "first"
+            } else {
+                "changed"
+            })
+        }
+    }
+
+    for create in [false, true] {
+        for limit in [6, 7] {
+            let root = temp_dir("ic-backup-bounded-encoding");
+            let parent = root.join("private/nested");
+            let path = parent.join("record.json");
+            let calls = Cell::new(0);
+            let encoded = encode_json(&Probe(&calls), limit);
+            assert_eq!(calls.get(), 1);
+            assert!(!parent.exists());
+            if limit == 6 {
+                assert!(matches!(
+                    encoded,
+                    Err(PersistenceError::RecordTooLarge { limit: 6 })
+                ));
+            } else {
+                let bytes = encoded.unwrap();
+                assert_eq!(bytes, b"\"first\"");
+                if create {
+                    create_encoded(&path, &bytes)
+                } else {
+                    write_encoded(&path, &bytes)
+                }
+                .unwrap();
+                assert_eq!(fs::read(&path).unwrap(), bytes);
+                assert_eq!(calls.get(), 1);
+            }
+            fs::remove_dir_all(root).unwrap();
+        }
+    }
+}
+
+#[test]
 fn rename_failure_removes_the_staging_file() {
     let root = temp_dir("canic-backup-durable-json-rename");
     let path = root.join("journal.json");

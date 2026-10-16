@@ -261,7 +261,7 @@ fn lost_publication_response_before_or_after_write_reconciles_exact_local_eviden
         let original = fs::read(root.join("attempt-0.json")).unwrap();
         let error = create_with(&layout, &record, |path, record| {
             if published {
-                create_json_durable(path, record)?;
+                create_encoded(path, record)?;
             }
             Err(io::Error::other("lost local publication response").into())
         })
@@ -367,16 +367,17 @@ fn acknowledged_process_death_before_publication_or_after_sync_replays_locally()
         let record = record(&plan, &applied(&plan));
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         create_with(&layout, &record, |path, record| {
-            super::super::json::create_json_durable_at_barriers(
+            super::super::json::publish_bytes_at_barriers(
                 path,
                 record,
-                || {
-                    if !published {
-                        hold_at_acknowledged_barrier(&handshake);
-                    }
-                },
-                || {
-                    if published {
+                ic_host_fs::durable::PublicationMode::CreateNew,
+                |barrier| {
+                    use super::super::json::DurableWriteBarrier;
+                    if matches!(
+                        (published, barrier),
+                        (false, DurableWriteBarrier::BeforeRename)
+                            | (true, DurableWriteBarrier::AfterDirectorySync)
+                    ) {
                         hold_at_acknowledged_barrier(&handshake);
                     }
                 },

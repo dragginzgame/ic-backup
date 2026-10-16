@@ -21,13 +21,37 @@ pub(super) fn check_json_size(
     value: &impl Serialize,
     max_bytes: u64,
 ) -> Result<(), PersistenceError> {
-    let mut writer = ic_host_artifacts::artifact::BoundedWriter::new(io::sink(), max_bytes);
+    encode_into(value, io::sink(), max_bytes).map(|_| ())
+}
+
+/// Encode and admit the exact publication bytes before any filesystem effect.
+pub(super) fn encode_json(
+    value: &impl Serialize,
+    max_bytes: u64,
+) -> Result<Vec<u8>, PersistenceError> {
+    encode_into(value, Vec::new(), max_bytes)
+}
+
+fn encode_into<W: Write>(
+    value: &impl Serialize,
+    sink: W,
+    max_bytes: u64,
+) -> Result<W, PersistenceError> {
+    let mut writer = ic_host_artifacts::artifact::BoundedWriter::new(sink, max_bytes);
     let result = serde_json::to_writer_pretty(&mut writer, value);
     if writer.limit_exceeded() {
         return Err(PersistenceError::RecordTooLarge { limit: max_bytes });
     }
     result?;
-    Ok(())
+    Ok(writer.into_inner())
+}
+
+pub(super) fn write_encoded(path: &Path, bytes: &[u8]) -> Result<(), PersistenceError> {
+    publish_bytes_at_barriers(path, bytes, PublicationMode::Replace, |_| {})
+}
+
+pub(super) fn create_encoded(path: &Path, bytes: &[u8]) -> Result<(), PersistenceError> {
+    publish_bytes_at_barriers(path, bytes, PublicationMode::CreateNew, |_| {})
 }
 
 /// Durably replace a machine record using a sibling temporary and rename.
@@ -39,8 +63,8 @@ pub fn write_json_durable<T>(path: &Path, value: &T) -> Result<(), PersistenceEr
 where
     T: Serialize,
 {
-    let bytes = serde_json::to_vec_pretty(value)?;
-    publish_bytes_at_barriers(path, &bytes, PublicationMode::Replace, |_| {})
+    let bytes = encode_json(value, u64::MAX)?;
+    write_encoded(path, &bytes)
 }
 
 /// Publish a new machine record without replacing an existing entry.
@@ -52,8 +76,8 @@ pub fn create_json_durable<T>(path: &Path, value: &T) -> Result<(), PersistenceE
 where
     T: Serialize,
 {
-    let bytes = serde_json::to_vec_pretty(value)?;
-    publish_bytes_at_barriers(path, &bytes, PublicationMode::CreateNew, |_| {})
+    let bytes = encode_json(value, u64::MAX)?;
+    create_encoded(path, &bytes)
 }
 
 /// Read one regular no-follow JSON file within an explicit byte limit.
@@ -108,7 +132,7 @@ pub(crate) enum DurableWriteBarrier {
 }
 
 // Keep one shared publication engine for ordinary writes and crash qualification.
-fn publish_bytes_at_barriers(
+pub(super) fn publish_bytes_at_barriers(
     path: &Path,
     bytes: &[u8],
     mode: PublicationMode,

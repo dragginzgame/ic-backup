@@ -2,9 +2,7 @@
 
 use crate::{
     model::restore_references::{RestoreReferenceRecord, RestoreReferencesRecord},
-    ops::persistence::{
-        JournalLock, JournalLockError, PersistenceError, read_json, write_json_durable,
-    },
+    ops::persistence::{JournalLock, JournalLockError, PersistenceError, read_json},
 };
 use ic_host_artifacts::artifact::Sha256Digest;
 #[cfg(unix)]
@@ -103,21 +101,21 @@ impl BackupLayoutGuard {
         journal: &Path,
         authority: &str,
     ) -> Result<RestoreReferenceRecord, PersistenceError> {
-        self.retain_with(journal, authority, write_json_durable)
+        self.retain_with(journal, authority, super::json::write_encoded)
     }
 
     fn retain_with(
         &self,
         journal: &Path,
         authority: &str,
-        write: impl FnOnce(&Path, &RestoreReferencesRecord) -> Result<(), PersistenceError>,
+        write: impl FnOnce(&Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<RestoreReferenceRecord, PersistenceError> {
         let mut references = self.restore_references()?;
         let reference = RestoreReferenceRecord::new(journal_identity(journal)?, authority)?;
         let path = self.root.join(REFERENCES_FILE);
         if references.retain(reference.clone())? {
-            super::json::check_json_size(&references, MAX_RESTORE_REFERENCE_BYTES)?;
-            write(&path, &references)?;
+            let bytes = super::json::encode_json(&references, MAX_RESTORE_REFERENCE_BYTES)?;
+            write(&path, &bytes)?;
         } else {
             // Complete durability after a rename whose response was lost.
             sync_reference(&path)?;

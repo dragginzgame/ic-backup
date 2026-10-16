@@ -50,6 +50,15 @@ fn raw_digest_projection_preserves_leading_zero_bytes_and_exact_record_fields() 
         serde_json::json!({"algorithm":"sha256", "hash":hash})
     );
     assert_eq!(record, ArtifactChecksumRecord::from_hash(hash).unwrap());
+    assert_eq!(record.clone().algorithm(), "sha256");
+    assert_eq!(
+        serde_json::to_string(&record).unwrap(),
+        format!(r#"{{"algorithm":"sha256","hash":"{hash}"}}"#)
+    );
+    assert_eq!(
+        serde_json::to_string_pretty(&record).unwrap(),
+        format!("{{\n  \"algorithm\": \"sha256\",\n  \"hash\": \"{hash}\"\n}}")
+    );
 }
 
 #[test]

@@ -16,10 +16,13 @@ use crate::{
         IcSnapshotArtifactWriter, read_execution_progress,
     },
     policy::ic_snapshot_transfer_read::{
-        IcSnapshotTransferReadAssociationError, IcSnapshotTransferReadReply, validate_response,
+        IcSnapshotTransferReadAssociationError, IcSnapshotTransferReadReply,
+        IcSnapshotTransferReadView,
     },
     ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
-    workflow::ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
+    workflow::ic_snapshot_transfer_read::{
+        IcSnapshotTransferReadExecutionError, read_snapshot_with,
+    },
 };
 use thiserror::Error;
 
@@ -35,7 +38,8 @@ use thiserror::Error;
 /// application requirements under the existing single-read coordinator. `qualify`
 /// must independently authenticate exact original response attribution and return an
 /// explicit original Applied receipt. Wire shape alone cannot qualify that receipt.
-/// It runs under the selected original journal lock. Append exact decoded bytes before
+/// It runs under the same original journal lock held through dispatch and reuses
+/// that read's decoded reply. Append exact decoded bytes before
 /// the sole journal owner records that receipt; only then may the next dependent read
 /// run. Failed qualification, append or persistence stops without another provider call.
 /// Admission, submission and qualification are awaited under their selected journal
@@ -86,21 +90,22 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
         // Planning already bounded the ordinal by the original stage allowance.
         let sequence =
             u64::try_from(index).map_err(|_| IcSnapshotDownloadPlanningError::CountOverflow)?;
-        let response = read_snapshot(
+        let (response, result) = read_snapshot_with(
             stage,
             sequence,
             IcSnapshotTransferReadPayload::Data(payload),
             provider,
             &mut admit,
+            async |journal, request, admitted| {
+                append_qualified(stage, journal, request, admitted, writer, &mut qualify).await
+            },
         )
         .await?;
-        writer = append_qualified(stage, sequence, payload, writer, &response, &mut qualify)
-            .await
-            .map_err(|source| IcSnapshotDownloadExecutionError::AfterReply {
-                operation_sequence: sequence,
-                source,
-                response: Box::new(response),
-            })?;
+        writer = result.map_err(|source| IcSnapshotDownloadExecutionError::AfterReply {
+            operation_sequence: sequence,
+            source,
+            response: Box::new(response),
+        })?;
     }
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
     if progress.applied_operations != download.requests().len() {
@@ -116,10 +121,10 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
 
 async fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
-    sequence: u64,
-    payload: &crate::model::ic_snapshot_data::IcSnapshotDataRequest<'_>,
+    journal: &mut AttemptJournalGuard<'_>,
+    request: &IcSnapshotTransferReadRequest<'_, '_>,
+    admitted: &IcSnapshotTransferReadView<'_, '_>,
     writer: IcSnapshotArtifactWriter<'journal, 'layout, 'metadata>,
-    response: &IcSnapshotTransferReadResponse,
     qualify: &mut impl AsyncFnMut(
         &IcSnapshotTransferReadRequest<'_, '_>,
         &IcSnapshotTransferReadResponse,
@@ -127,25 +132,14 @@ async fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + '
 ) -> Result<IcSnapshotArtifactWriter<'journal, 'layout, 'metadata>, IcSnapshotDownloadReplyError<E>>
 {
     let plan = stage.plan();
-    let authority = plan
-        .attempt_authority(sequence)
-        .map_err(IcSnapshotTransferReadError::from)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    let request = IcSnapshotTransferReadRequest::new(
-        plan,
-        sequence,
-        journal.record()?,
-        IcSnapshotTransferReadPayload::Data(payload),
-    )?;
-    let admitted = validate_response(&request, journal.record()?, response)?;
     let writer = super::qualified_receipt::AppliedReceiptRecorder {
-        journal: &mut journal,
+        journal,
         expected_attempt: request.mutation_attempt(),
         expected_request: request.payload().digest().hash(),
     }
     .record_applied(
-        &request,
-        response,
+        request,
+        admitted.response(),
         async |request, reply| qualify(request, reply).await,
         IcSnapshotDownloadReplyError::Qualification,
         || IcSnapshotDownloadReplyError::ReceiptRequired,

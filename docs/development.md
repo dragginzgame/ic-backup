@@ -849,8 +849,8 @@ publication eligibility; receipt/tag checks belong to repository release command
 
 Native custody regressions require Python 3 on the selected Unix host. They use
 real inherited descriptors and acknowledged owner/direct-child/descendant exit
-with bounded fixture waits. The production library uses the pinned `command-fds`
-dependency for owned child descriptor setup and contains no Rust unsafe code.
+with bounded fixture waits. The production library delegates owned child descriptor
+setup and custody to published Host Process and contains no Rust unsafe code.
 It does not invoke Python; those commands are local test fixtures. A transport
 still needs its own output/deadline/retry and inherited-descriptor qualification.
 
@@ -862,7 +862,7 @@ commands must use the same local directory.
 
 Compilation uses `--offline --locked`. `make deps` fetches the committed lockfile's
 dependencies when needed; it does not select new versions. Serde/JSON, SHA-256,
-thiserror, pinned `ic_principal` conversion and Unix rustix/command-fds
+thiserror, pinned `ic_principal` conversion and Unix rustix/Host Process
 declarations belong in `[workspace.dependencies]`,
 with package-level entries inheriting them. There are no Canic dependencies or
 sibling checkout patches.

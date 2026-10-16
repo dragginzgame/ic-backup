@@ -1,9 +1,9 @@
 //! Immutable original all-Applied journal checkpoint publication and local replay.
 
-use super::json::check_json_size;
+use super::json::{check_json_size, create_encoded, encode_json};
 use super::{
     AttemptJournalError, BackupLayoutGuard, JournalLock, JournalLockError,
-    OperationPlanPersistenceError, PersistenceError, create_json_durable, read_json,
+    OperationPlanPersistenceError, PersistenceError, read_json,
 };
 use crate::{
     model::{
@@ -115,19 +115,19 @@ pub fn create_execution_settlement(
     layout: &BackupLayoutGuard,
     record: &ExecutionSettlementRecord,
 ) -> Result<(), ExecutionSettlementPersistenceError> {
-    create_with(layout, record, create_json_durable)
+    create_with(layout, record, create_encoded)
 }
 fn create_with(
     layout: &BackupLayoutGuard,
     record: &ExecutionSettlementRecord,
-    writer: impl FnOnce(&Path, &ExecutionSettlementRecord) -> Result<(), PersistenceError>,
+    writer: impl FnOnce(&Path, &[u8]) -> Result<(), PersistenceError>,
 ) -> Result<(), ExecutionSettlementPersistenceError> {
     layout.check_root()?;
     let path = layout.root().join("execution-settlement.json");
     let _lock = JournalLock::acquire(&path)?;
-    check_json_size(record, MAX_EXECUTION_SETTLEMENT_BYTES)?;
+    let bytes = encode_json(record, MAX_EXECUTION_SETTLEMENT_BYTES)?;
     validate_retained(layout, record)?;
-    writer(&path, record)?;
+    writer(&path, &bytes)?;
     Ok(())
 }
 /// Reopen exact checkpoint and validate complete retained original evidence using local IO only.

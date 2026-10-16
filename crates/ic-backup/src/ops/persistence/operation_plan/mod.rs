@@ -26,6 +26,13 @@ pub fn create_operation_plan(
     )
 }
 
+pub(super) fn create_encoded(
+    layout: &BackupLayoutGuard,
+    bytes: &[u8],
+) -> Result<(), OperationPlanPersistenceError> {
+    immutable_record::create_encoded_record(layout, "operation-plan.json", bytes)
+}
+
 /// Admit bounded validated local plan under its exact original expected intent digest.
 ///
 /// Lost creation responses reconcile through this exact local read. This observes

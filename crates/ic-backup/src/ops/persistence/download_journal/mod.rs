@@ -20,10 +20,10 @@ pub use metrics::{
     IcSnapshotLocalMetrics, MeasurementAggregate, MeasurementHistogram, MeasurementSummary,
 };
 
-use super::json::check_json_size;
+use super::json::{check_json_size, create_encoded, encode_json, write_encoded};
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,
-    create_json_durable, read_json, write_json_durable,
+    read_json,
 };
 use crate::{
     model::{
@@ -68,8 +68,8 @@ impl<'a> DownloadJournalGuard<'a> {
         let path = layout.root().join(JOURNAL_FILE);
         let lock = JournalLock::acquire(&path)?;
         let record = DownloadJournalRecord::new(intent, artifacts)?;
-        check_json_size(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
-        create_json_durable(&path, &record)?;
+        let bytes = encode_json(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        create_encoded(&path, &bytes)?;
         Ok(Self {
             layout,
             _lock: lock,
@@ -139,7 +139,7 @@ impl<'a> DownloadJournalGuard<'a> {
         self.check_artifact_parent()?;
         let entry = next.artifact(canister, snapshot)?;
         checksum_directory(&self.layout.root().join(entry.staging_path()))?;
-        self.store(next, write_json_durable)
+        self.store(next, write_encoded)
     }
 
     /// Verify staged bytes and durably retain their canonical checksum.
@@ -168,7 +168,7 @@ impl<'a> DownloadJournalGuard<'a> {
             ArtifactStateRecord::ChecksumVerified,
             Some(checksum),
         )?;
-        self.store(next, write_json_durable)
+        self.store(next, write_encoded)
     }
 
     /// Publish exact verified bytes or adopt a matching tree after a lost response.
@@ -182,17 +182,17 @@ impl<'a> DownloadJournalGuard<'a> {
         canister: &str,
         snapshot: &str,
     ) -> Result<(), DownloadJournalError> {
-        self.finalize_with(canister, snapshot, write_json_durable)
+        self.finalize_with(canister, snapshot, write_encoded)
     }
 
     fn finalize_with(
         &mut self,
         canister: &str,
         snapshot: &str,
-        write: impl FnOnce(&std::path::Path, &DownloadJournalRecord) -> Result<(), PersistenceError>,
+        write: impl FnOnce(&std::path::Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<(), DownloadJournalError> {
         let next = self.next(canister, snapshot, ArtifactStateRecord::Durable, None)?;
-        check_json_size(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        let bytes = encode_json(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         self.check_artifact_parent()?;
         let entry = next.artifact(canister, snapshot)?;
         let checksum = entry
@@ -208,7 +208,7 @@ impl<'a> DownloadJournalGuard<'a> {
             &self.layout.root().join(entry.artifact_path()),
             checksum.hash(),
         )?;
-        self.store(next, write)
+        self.store_encoded(next, &bytes, write)
     }
 
     fn next(
@@ -243,12 +243,21 @@ impl<'a> DownloadJournalGuard<'a> {
     fn store(
         &mut self,
         next: DownloadJournalRecord,
-        write: impl FnOnce(&std::path::Path, &DownloadJournalRecord) -> Result<(), PersistenceError>,
+        write: impl FnOnce(&std::path::Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<(), DownloadJournalError> {
-        check_json_size(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        let bytes = encode_json(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        self.store_encoded(next, &bytes, write)
+    }
+
+    fn store_encoded(
+        &mut self,
+        next: DownloadJournalRecord,
+        bytes: &[u8],
+        write: impl FnOnce(&std::path::Path, &[u8]) -> Result<(), PersistenceError>,
+    ) -> Result<(), DownloadJournalError> {
         self.layout.check_root()?;
         self.usable = false;
-        write(&self.path(), &next)?;
+        write(&self.path(), bytes)?;
         self.record = next;
         self.usable = true;
         Ok(())

@@ -88,7 +88,7 @@ pub async fn acquire_fence<E: std::error::Error + 'static>(
         &acknowledgement,
         |request, record, reply| validate_acknowledgement(request, record, reply).map(|_| ()),
     ) {
-        Ok(layout) => layout,
+        Ok((layout, ())) => layout,
         Err(error) => {
             return Err(match error {
                 super::reserved_effect::ReturnedError::Journal(source) => {

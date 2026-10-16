@@ -366,8 +366,9 @@ Testkit, hook and release fixtures. A contradicted local command result verifies
 failure status and retained original evidence through the actual fixture.
 
 Consumer-owned IC pins select Binaryen 133 with exact committed archive hashes.
-An offline test helper retains original/optimized Wasm and optimizer identity;
-both actual simulator suites run that optimized fixture. Earlier tools, server
+That adoption qualified original/optimized Wasm and optimizer identity through
+both simulator suites. Current suites install WAT-generated fixture bytes directly;
+Shared Tooling owns generic optimizer qualification. Earlier tools, server
 installations and failed evidence remain retained. The incoming graph selects
 Host 0.12.8, Testkit 0.33.1 and Metrics 0.5.5. The 0.17.0 draft is required by the
 public async upload hard cut; package/receipt remain released 0.16.0.

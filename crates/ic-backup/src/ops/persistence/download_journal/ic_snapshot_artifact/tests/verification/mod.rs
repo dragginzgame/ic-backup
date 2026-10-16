@@ -311,7 +311,7 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         record["artifacts"][0]["checksum"] = serde_json::to_value(&checksum).unwrap();
         guard.record = serde_json::from_value(record).unwrap();
         // Deliberately corrupt both retained declarations; shape/evidence remains independent.
-        write_json_durable(&guard.path(), &guard.record).unwrap();
+        crate::ops::persistence::write_json_durable(&guard.path(), &guard.record).unwrap();
         let bytes = fs::read(guard.path()).unwrap();
         let result = guard.verify_ic_snapshot_artifact(&plan, TOKEN, &metadata);
         match case {

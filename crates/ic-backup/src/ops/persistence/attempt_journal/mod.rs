@@ -1,10 +1,9 @@
 //! Exclusive durable attempt reservations and exact receipt retention; no transport.
 
-use super::json::check_json_size;
+use super::json::{check_json_size, create_encoded, encode_json, write_encoded};
 use super::{
     BackupLayoutGuard, ExecutionProgressPersistenceError, JournalLock, JournalLockError,
-    OperationPlanPersistenceError, PersistenceError, create_json_durable, read_json,
-    read_operation_plan, write_json_durable,
+    OperationPlanPersistenceError, PersistenceError, read_json, read_operation_plan,
 };
 use crate::model::artifacts::ArtifactChecksumRecord;
 use crate::model::attempt_journal::{
@@ -40,8 +39,8 @@ impl<'a> AttemptJournalGuard<'a> {
         let path = journal_path(layout, &authority);
         let lock = JournalLock::acquire(&path)?;
         let record = AttemptJournalRecord::new(authority);
-        check_json_size(&record, MAX_ATTEMPT_JOURNAL_BYTES)?;
-        create_json_durable(&path, &record)?;
+        let bytes = encode_json(&record, MAX_ATTEMPT_JOURNAL_BYTES)?;
+        create_encoded(&path, &bytes)?;
         Ok(Self {
             layout,
             _lock: lock,
@@ -90,7 +89,7 @@ impl<'a> AttemptJournalGuard<'a> {
     /// # Errors
     /// Rejects unresolved attempts, exhaustion, applied operations and persistence failures.
     pub fn reserve_mutation(&mut self) -> Result<u32, AttemptJournalError> {
-        self.reserve_with(AttemptJournalRecord::reserve_mutation, write_json_durable)
+        self.reserve_with(AttemptJournalRecord::reserve_mutation, write_encoded)
     }
     /// Reserve only after admitting the exact persisted plan and all original journals.
     ///
@@ -133,7 +132,7 @@ impl<'a> AttemptJournalGuard<'a> {
     ) -> Result<u32, AttemptJournalError> {
         self.reserve_with(
             |record| record.reserve_observation(mutation, request),
-            write_json_durable,
+            write_encoded,
         )
     }
     /// Reserve one original reconciliation observation after complete retained-plan admission.
@@ -166,7 +165,7 @@ impl<'a> AttemptJournalGuard<'a> {
         &mut self,
         receipt: MutationReceiptRequest,
     ) -> Result<(), AttemptJournalError> {
-        self.reserve_with(|record| record.record_mutation(receipt), write_json_durable)
+        self.reserve_with(|record| record.record_mutation(receipt), write_encoded)
     }
     /// Retain an exact observation; unresolved evidence never authorizes another mutation.
     ///
@@ -179,10 +178,7 @@ impl<'a> AttemptJournalGuard<'a> {
         &mut self,
         receipt: ObservationReceiptRequest,
     ) -> Result<(), AttemptJournalError> {
-        self.reserve_with(
-            |record| record.record_observation(receipt),
-            write_json_durable,
-        )
+        self.reserve_with(|record| record.record_observation(receipt), write_encoded)
     }
 
     /// Record an independently qualified observation after complete original-plan admission.
@@ -217,14 +213,14 @@ impl<'a> AttemptJournalGuard<'a> {
     fn reserve_with<T>(
         &mut self,
         transition: impl FnOnce(&mut AttemptJournalRecord) -> Result<T, AttemptJournalRecordError>,
-        write: impl FnOnce(&Path, &AttemptJournalRecord) -> Result<(), PersistenceError>,
+        write: impl FnOnce(&Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<T, AttemptJournalError> {
         self.check_usable()?;
         let mut next = self.record.clone();
         let result = transition(&mut next)?;
-        check_json_size(&next, MAX_ATTEMPT_JOURNAL_BYTES)?;
+        let bytes = encode_json(&next, MAX_ATTEMPT_JOURNAL_BYTES)?;
         self.usable = false;
-        write(&self.path(), &next)?;
+        write(&self.path(), &bytes)?;
         self.record = next;
         self.usable = true;
         Ok(result)

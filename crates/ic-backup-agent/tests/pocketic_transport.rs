@@ -211,7 +211,7 @@ impl Fixture {
         let server = owned.server.expect("spawn mode owns the managed server");
         let target = pic.create_canister().await;
         pic.add_cycles(target, 100_000_000_000_000).await;
-        let wasm = fs::read(root.join("optimized.wasm")).unwrap();
+        let wasm = fs::read(root.join("original.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
         pic.install_canister(target, wasm, vec![], None).await;

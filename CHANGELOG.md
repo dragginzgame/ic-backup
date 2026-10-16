@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.27.1]
+
+### Changed
+
+- Delegate inherited command custody and exact existing-sidecar quiescence to
+  published Host Process, retaining original records, bounded grace and spending
+  ([#53 — Adopt published Host Process inherited command custody](https://github.com/dragginzgame/ic-backup/issues/53)).
+- Delegate sidecar acquisition and verified directory publication to Host FS,
+  preserving ordered crash barriers, checksum verification and retained recovery
+  ([#52 — Adopt published Host lock and directory commit primitives](https://github.com/dragginzgame/ic-backup/issues/52)).
+- Decode snapshot read replies once through qualification and append/receipt
+  handling under the same original journal guard, retaining interruption recovery.
+- Store only the checksum hash in memory; JSON still emits and validates the
+  required SHA-256 algorithm with unchanged canonical bytes.
+
+- Encode bounded journal and declaration publication bytes once before effects,
+  preserving exact pretty-JSON limits, public value writers and crash recovery.
+- Reuse the admitted upload extent list during final plan assembly, retaining
+  original allowance checks before source IO and fresh source verification.
+
+### Testing
+
+- Run handwritten simulator fixtures directly from WAT-generated Wasm, removing
+  the fixture-only optimizer step. Generic optimizer qualification stays upstream
+  with Shared Tooling; existing fixture and optimizer evidence remains retained.
+
 ## [0.27.0] - 2026-10-16
 
 ### Breaking

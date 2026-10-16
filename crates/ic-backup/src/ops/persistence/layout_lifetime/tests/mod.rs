@@ -310,7 +310,7 @@ fn publication_byte_bound_preserves_existing_dependencies() {
 
 #[test]
 fn process_death_before_or_after_reference_publication_retains_exact_evidence() {
-    use crate::ops::persistence::json::{DurableWriteBarrier, write_json_durable_at_barriers};
+    use crate::ops::persistence::json::{DurableWriteBarrier, publish_bytes_at_barriers};
     const ROOT_ENV: &str = "IC_BACKUP_LAYOUT_CRASH_ROOT";
     const SIDE_ENV: &str = "IC_BACKUP_LAYOUT_CRASH_SIDE";
     let hash = "ab".repeat(32);
@@ -320,15 +320,20 @@ fn process_death_before_or_after_reference_publication_retains_exact_evidence() 
         let guard = BackupLayoutGuard::acquire(&parent.join("backup")).expect("child guard");
         guard
             .retain_with(&parent.join("external.json"), &hash, |path, references| {
-                write_json_durable_at_barriers(path, references, |barrier| {
-                    if matches!(
-                        (side.as_str(), barrier),
-                        ("before", DurableWriteBarrier::BeforeRename)
-                            | ("after", DurableWriteBarrier::AfterDirectorySync)
-                    ) {
-                        hold_at_acknowledged_barrier(&parent);
-                    }
-                })
+                publish_bytes_at_barriers(
+                    path,
+                    references,
+                    ic_host_fs::durable::PublicationMode::Replace,
+                    |barrier| {
+                        if matches!(
+                            (side.as_str(), barrier),
+                            ("before", DurableWriteBarrier::BeforeRename)
+                                | ("after", DurableWriteBarrier::AfterDirectorySync)
+                        ) {
+                            hold_at_acknowledged_barrier(&parent);
+                        }
+                    },
+                )
             })
             .expect("child retain");
         panic!("crash barrier did not run");

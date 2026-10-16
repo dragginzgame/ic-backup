@@ -286,7 +286,7 @@ fn post_write_error_requires_reopen_and_adopts_exact_retained_state() {
         .next(CANISTER, SNAPSHOT, ArtifactStateRecord::Downloaded, None)
         .expect("transition");
     let error = guard.store(next, |path, record| {
-        write_json_durable(path, record)?;
+        write_encoded(path, record)?;
         Err(io::Error::other("lost local response").into())
     });
     assert!(matches!(

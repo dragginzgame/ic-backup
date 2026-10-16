@@ -1,14 +1,13 @@
 //! Canonical SHA-256 artifact metadata; filesystem effects belong to ops.
 
 use ic_host_artifacts::artifact::Sha256Digest;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
 use thiserror::Error;
 
 /// Maintained checksum record with a lowercase, validated SHA-256 digest.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(try_from = "ChecksumFields")]
 pub struct ArtifactChecksumRecord {
-    algorithm: String,
     hash: String,
 }
 
@@ -30,12 +29,20 @@ impl TryFrom<ChecksumFields> for ArtifactChecksumRecord {
     }
 }
 
+impl Serialize for ArtifactChecksumRecord {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut record = serializer.serialize_struct("ArtifactChecksumRecord", 2)?;
+        record.serialize_field("algorithm", self.algorithm())?;
+        record.serialize_field("hash", self.hash())?;
+        record.end()
+    }
+}
+
 impl ArtifactChecksumRecord {
     /// Compute checksum metadata from exact bytes.
     #[must_use]
     pub fn from_bytes(bytes: &[u8]) -> Self {
         Self {
-            algorithm: "sha256".to_owned(),
             hash: Sha256Digest::compute(bytes).to_string(),
         }
     }
@@ -46,22 +53,24 @@ impl ArtifactChecksumRecord {
     /// Returns [`ChecksumError::InvalidHash`] unless the input has 64 hex digits.
     pub fn from_hash(hash: &str) -> Result<Self, ChecksumError> {
         Ok(Self {
-            algorithm: "sha256".to_owned(),
             hash: canonical_hash(hash)?,
         })
     }
 
     pub(crate) fn from_digest(digest: [u8; 32]) -> Self {
         Self {
-            algorithm: "sha256".to_owned(),
             hash: Sha256Digest::from_bytes(digest).to_string(),
         }
     }
 
     /// Return the maintained algorithm identifier.
     #[must_use]
+    #[expect(
+        clippy::unnecessary_literal_bound,
+        reason = "preserve the public accessor signature while removing stored constant data"
+    )]
     pub fn algorithm(&self) -> &str {
-        &self.algorithm
+        "sha256"
     }
 
     /// Return the canonical lowercase hexadecimal digest.

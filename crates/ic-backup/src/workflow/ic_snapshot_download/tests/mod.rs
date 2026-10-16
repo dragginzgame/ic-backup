@@ -3,6 +3,7 @@
 use super::*;
 use crate::model::attempt_journal::MutationOutcomeRecord;
 use crate::test_support::ready::ready;
+use crate::workflow::ic_snapshot_transfer_read::read_snapshot;
 use crate::{
     model::{
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},

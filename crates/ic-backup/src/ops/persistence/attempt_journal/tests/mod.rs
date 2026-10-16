@@ -109,7 +109,7 @@ fn failed_reservation_never_returns_a_slot_and_forces_exact_recovery() {
         let original = fs::read(&path).expect("initial bytes");
         let result = guard.reserve_with(AttemptJournalRecord::reserve_mutation, |path, next| {
             if published {
-                write_json_durable(path, next)?;
+                write_encoded(path, next)?;
             }
             Err(io::Error::other("lost local reservation response").into())
         });
@@ -231,7 +231,7 @@ fn acknowledged_owner_death_selects_exact_reservation_recovery() {
                 if side == "before_write" {
                     hold_at_acknowledged_barrier(&root);
                 }
-                write_json_durable(path, next)?;
+                write_encoded(path, next)?;
                 if side == "after_write" {
                     hold_at_acknowledged_barrier(&root);
                 }

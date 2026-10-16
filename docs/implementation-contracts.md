@@ -8,10 +8,24 @@ implementation determine what has actually been qualified.
 
 ## Current implementation scope
 
+- Snapshot metadata and data coordinators retain the selected original journal
+  guard continuously through dispatch, one bounded decode, independent qualification
+  and append/receipt handling. Checkpoints still follow journal-lock release;
+  cancellation and post-reply failures retain spending, raw replies and partial bytes.
+- Checksum records retain only their normalized hash in memory. Serde continues to
+  require and emit the exact `algorithm: "sha256"` field, in the original field order.
+- Simulator suites install the original bytes generated from their handwritten WAT.
+  Fixture roots retain those exact installed bytes and server evidence; no product
+  fixture optimization runs. Shared Tooling owns generic optimizer qualification.
+
 - JSON publication delegates allocation, atomic create-only/replace, staging
   identity/cleanup and final parent sync to the published typed Host descriptor
   engine. Retain Backup's 0700 parents, 0600 files, serialize-once-before-effects
   byte buffer, original record bounds and one adapter for production/crash tests.
+  Mutable guards encode within their original bounds before invalidating the guard,
+  then publish those exact bytes without another serializer pass. Stage creation
+  prepares both plan and binding buffers before allocating paths. Canonical-size
+  admission of reopened records still uses a counting sink without an encoded buffer.
   Preserve synchronized pre-publication and durable-completion barriers. The
   public `PersistenceError::Publication` retains original producer, cleanup and
   visibility evidence; no local-write error grants paid retry or resets spending.
@@ -74,8 +88,15 @@ implementation determine what has actually been qualified.
   [the implemented boundary](extraction-boundary.md). No reference release
   or prune operation is implemented; terminal proof and command custody must own
   release admission before that API is added.
-- Command custody now uses owned descriptor inheritance, exact v1 filesystem
-  identity records and fresh non-spawning quiescence guards. Preserve the
+- Command custody delegates owned descriptor inheritance and exact existing-sidecar
+  quiescence to published Host Process. Backup retains exact v1 filesystem identity
+  records, journal/operation binding, the descriptor environment name and 250 ms/5 ms
+  grace/polling. Non-spawning guards retain Host's explicit unlock on drop. Sidecar
+  open/create and one-shot locking use Host FS; native IO and unsafe-entry denials
+  retain Backup's public error projections. Directory publication uses Host's held
+  descriptor engine with Backup's ordered file/directory sync, checksum admission and
+  crash hooks before rename and parent sync. Retain original partial/canonical trees
+  on every failure; recovery never recreates evidence or resets spending. Preserve the
   unsafe-code prohibition. These local contracts do not qualify an authenticated IC backend
   or grant terminal/reference-release or paid-call authority.
 - Local download journals now retain immutable snapshot identity, model-owned

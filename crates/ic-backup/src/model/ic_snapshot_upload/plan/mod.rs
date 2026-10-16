@@ -64,10 +64,11 @@ impl<'workflow, 'request, 'source> IcSnapshotDataUploadPlan<'workflow, 'request,
         workflow: &'workflow ExecutionWorkflowRecord,
         sequence: u64,
         allocation: &IcSnapshotUploadReply<'request, 'source>,
-        chunk_bytes: u64,
+        kinds: Vec<SnapshotDataKind>,
         bindings: &[ArtifactChecksumRecord],
     ) -> Result<Self, IcSnapshotDataUploadPlanningError> {
-        let kinds = Self::derive_kinds(workflow, sequence, allocation, chunk_bytes)?;
+        // Consume the unchanged extents admitted before source IO. Workflow and
+        // allocation are the same immutable owners used by `derive_kinds`.
         if bindings.len() != kinds.len() {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
         }

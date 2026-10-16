@@ -27,14 +27,14 @@ pub(super) enum ReturnedError<E> {
     Stage(ExecutionWorkflowPersistenceError),
 }
 
-pub(super) fn check_returned<'stage, R, A, E>(
+pub(super) fn check_returned<'stage, 'request, 'reply, R, A, E, T>(
     stage: &'stage ExecutionStageGuard<'_>,
     journal: &AttemptJournalGuard<'_>,
-    request: &R,
-    reply: &A,
-    associate: impl FnOnce(&R, &AttemptJournalRecord, &A) -> Result<(), E>,
-) -> Result<&'stage BackupLayoutGuard, ReturnedError<E>> {
+    request: &'request R,
+    reply: &'reply A,
+    associate: impl FnOnce(&'request R, &AttemptJournalRecord, &'reply A) -> Result<T, E>,
+) -> Result<(&'stage BackupLayoutGuard, T), ReturnedError<E>> {
     let record = journal.record().map_err(ReturnedError::Journal)?;
-    associate(request, record, reply).map_err(ReturnedError::Association)?;
-    stage.layout().map_err(ReturnedError::Stage)
+    let admitted = associate(request, record, reply).map_err(ReturnedError::Association)?;
+    Ok((stage.layout().map_err(ReturnedError::Stage)?, admitted))
 }

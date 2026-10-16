@@ -1157,7 +1157,6 @@ name = "ic-backup"
 version = "0.27.0"
 dependencies = [
  "candid",
- "command-fds",
  "ic-host-artifacts 0.23.1",
  "ic-host-fs 0.23.1",
  "ic-host-process 0.23.1",
@@ -1360,9 +1359,9 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.11.6"
+version = "0.11.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17c632ef8715ef18f74eaf3586a4eb8fe314fc3d80d325de586896d24a661535"
+checksum = "3aa440238acf049dc652b9cd9a932b79b19e5562f8e80d6994d3eb92523221a4"
 
 [[package]]
 name = "ic-testkit"

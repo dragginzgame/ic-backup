@@ -6,7 +6,9 @@
 use std::{fs, io, path::Path};
 
 #[cfg(unix)]
-use rustix::fs::{CWD, FileType, FlockOperation, Mode, OFlags, flock, fstat, openat};
+use ic_host_fs::durable::{
+    RegularFileLockError, open_private_regular_lock_file, try_lock_exclusive,
+};
 
 #[derive(Debug)]
 pub(super) enum FileLockError {
@@ -18,7 +20,7 @@ pub(super) enum FileLockError {
 pub(super) fn acquire(path: &Path) -> Result<fs::File, FileLockError> {
     #[cfg(unix)]
     {
-        acquire_supported(path, true)
+        acquire_supported(path)
     }
 
     #[cfg(not(unix))]
@@ -33,63 +35,25 @@ pub(super) fn acquire(path: &Path) -> Result<fs::File, FileLockError> {
     }
 }
 
-pub(super) fn acquire_existing(path: &Path) -> Result<fs::File, FileLockError> {
-    #[cfg(unix)]
-    {
-        acquire_supported(path, false)
-    }
-    #[cfg(not(unix))]
-    {
-        acquire(path)
-    }
-}
-
 #[cfg(unix)]
-fn acquire_supported(path: &Path, create: bool) -> Result<fs::File, FileLockError> {
-    reject_existing_unsafe_entry(path)?;
-
-    let mut flags = OFlags::RDWR | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
-    if create {
-        flags |= OFlags::CREATE;
-    }
-    let fd = openat(CWD, path, flags, Mode::RUSR | Mode::WUSR)
-        .map_err(io::Error::from)
-        .map_err(FileLockError::Io)?;
-    let metadata = fstat(&fd)
-        .map_err(io::Error::from)
-        .map_err(FileLockError::Io)?;
-    let kind = FileType::from_raw_mode(metadata.st_mode);
-    if !kind.is_file() {
-        return Err(FileLockError::UnsafeEntry {
-            kind: format!("{kind:?}"),
-        });
-    }
-
-    let file = fs::File::from(fd);
-    match flock(&file, FlockOperation::NonBlockingLockExclusive) {
-        Ok(()) => {}
-        Err(error) if error == rustix::io::Errno::WOULDBLOCK => {
-            return Err(FileLockError::Locked);
+fn acquire_supported(path: &Path) -> Result<fs::File, FileLockError> {
+    let file = open_private_regular_lock_file(path).map_err(|error| match error {
+        RegularFileLockError::NotRegular => FileLockError::UnsafeEntry {
+            kind: match fs::symlink_metadata(path) {
+                Ok(metadata) if metadata.file_type().is_symlink() => "Symlink",
+                Ok(metadata) if metadata.is_dir() => "Directory",
+                _ => "Special",
+            }
+            .to_owned(),
+        },
+        error => FileLockError::Io(error.into()),
+    })?;
+    try_lock_exclusive(&file).map_err(|error| {
+        if error.kind() == io::ErrorKind::WouldBlock {
+            FileLockError::Locked
+        } else {
+            FileLockError::Io(error)
         }
-        Err(error) => return Err(FileLockError::Io(io::Error::from(error))),
-    }
+    })?;
     Ok(file)
-}
-
-#[cfg(unix)]
-fn reject_existing_unsafe_entry(path: &Path) -> Result<(), FileLockError> {
-    match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_file() => Ok(()),
-        Ok(metadata) => Err(FileLockError::UnsafeEntry {
-            kind: if metadata.file_type().is_symlink() {
-                "Symlink".to_string()
-            } else if metadata.file_type().is_dir() {
-                "Directory".to_string()
-            } else {
-                "Special".to_string()
-            },
-        }),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(FileLockError::Io(error)),
-    }
 }

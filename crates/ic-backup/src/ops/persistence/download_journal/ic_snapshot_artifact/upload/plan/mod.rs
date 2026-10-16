@@ -46,23 +46,19 @@ impl DownloadJournalGuard<'_> {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch.into());
         };
         let mut bindings = Vec::with_capacity(kinds.len());
-        for kind in kinds {
+        for kind in &kinds {
             let payload = self.prepare_ic_snapshot_upload_data(
                 metadata.source_plan(),
                 snapshot,
                 metadata,
                 snapshot_id,
-                kind,
+                kind.clone(),
             )?;
             bindings.push(payload.binding_digest());
         }
         self.require_upload_source(metadata.source_plan(), snapshot, metadata)?;
         Ok(IcSnapshotDataUploadPlan::from_bindings(
-            workflow,
-            sequence,
-            allocation,
-            chunk_bytes,
-            &bindings,
+            workflow, sequence, allocation, kinds, &bindings,
         )?)
     }
 }

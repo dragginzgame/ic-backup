@@ -2,6 +2,7 @@
 
 use crate::{
     model::{
+        artifacts::ArtifactChecksumRecord,
         attempt_journal::MutationReceiptRequest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
@@ -15,10 +16,13 @@ use crate::{
         ExecutionStageGuard, ExecutionWorkflowPersistenceError,
     },
     policy::ic_snapshot_transfer_read::{
-        IcSnapshotTransferReadAssociationError, IcSnapshotTransferReadReply, validate_response,
+        IcSnapshotTransferReadAssociationError, IcSnapshotTransferReadReply,
+        IcSnapshotTransferReadView,
     },
     ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
-    workflow::ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
+    workflow::ic_snapshot_transfer_read::{
+        IcSnapshotTransferReadExecutionError, read_snapshot_with,
+    },
 };
 use thiserror::Error;
 
@@ -36,7 +40,8 @@ use thiserror::Error;
 /// store. Opaque provider evidence and valid wire shape cannot substitute for it.
 /// Account any remote qualification separately before its calls.
 /// Admission, submission and independent qualification are async. Qualification
-/// holds the selected original journal and must retain the reply durably before
+/// holds the same original journal continuously from dispatch, reuses its decoded
+/// reply, and must retain the reply durably before
 /// awaiting cancellable work. Cancellation keeps pending/Applied spending and denies
 /// reentry; no executor or `Send` bound is imposed by the core.
 ///
@@ -75,15 +80,18 @@ pub async fn read_snapshot_metadata<E: std::error::Error + 'static>(
     {
         return Err(IcSnapshotMetadataExecutionError::OriginalMismatch);
     }
-    let response = read_snapshot(
+    let (response, settlement) = read_snapshot_with(
         stage,
         operation_sequence,
         IcSnapshotTransferReadPayload::Metadata(payload),
         provider,
         admit,
+        async |journal, request, admitted| {
+            settle_metadata(stage, journal, request, admitted, qualify).await
+        },
     )
     .await?;
-    match settle_metadata(stage, operation_sequence, payload, &response, qualify).await {
+    match settlement.and_then(|digest| Ok(stage.checkpoint(digest)?)) {
         Ok(predecessor) => Ok((response, predecessor)),
         Err(source) => Err(IcSnapshotMetadataExecutionError::AfterReply {
             source,
@@ -94,34 +102,22 @@ pub async fn read_snapshot_metadata<E: std::error::Error + 'static>(
 
 async fn settle_metadata<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
-    sequence: u64,
-    payload: &IcSnapshotMetadataRequest,
-    response: &IcSnapshotTransferReadResponse,
+    journal: &mut AttemptJournalGuard<'_>,
+    request: &IcSnapshotTransferReadRequest<'_, '_>,
+    admitted: &IcSnapshotTransferReadView<'_, '_>,
     qualify: impl AsyncFnOnce(
         &IcSnapshotTransferReadRequest<'_, '_>,
         &IcSnapshotTransferReadResponse,
     ) -> Result<MutationReceiptRequest, E>,
-) -> Result<ExecutionStagePredecessorRecord, IcSnapshotMetadataSettlementError<E>> {
-    let plan = stage.plan();
-    let authority = plan
-        .attempt_authority(sequence)
-        .map_err(IcSnapshotTransferReadError::from)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    let request = IcSnapshotTransferReadRequest::new(
-        plan,
-        sequence,
-        journal.record()?,
-        IcSnapshotTransferReadPayload::Metadata(payload),
-    )?;
-    let admitted = validate_response(&request, journal.record()?, response)?;
-    let metadata_digest = super::qualified_receipt::AppliedReceiptRecorder {
-        journal: &mut journal,
+) -> Result<ArtifactChecksumRecord, IcSnapshotMetadataSettlementError<E>> {
+    super::qualified_receipt::AppliedReceiptRecorder {
+        journal,
         expected_attempt: request.mutation_attempt(),
-        expected_request: payload.digest().hash(),
+        expected_request: request.payload().digest().hash(),
     }
     .record_applied(
-        &request,
-        response,
+        request,
+        admitted.response(),
         async |request, reply| qualify(request, reply).await,
         IcSnapshotMetadataSettlementError::Qualification,
         || IcSnapshotMetadataSettlementError::ReceiptRequired,
@@ -136,9 +132,7 @@ async fn settle_metadata<E: std::error::Error + 'static>(
             Ok(digest)
         },
     )
-    .await?;
-    drop(journal);
-    Ok(stage.checkpoint(metadata_digest)?)
+    .await
 }
 
 /// Metadata coordination failures retain exact original spending and returned evidence.

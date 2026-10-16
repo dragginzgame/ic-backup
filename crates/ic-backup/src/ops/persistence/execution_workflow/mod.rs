@@ -4,9 +4,8 @@ use super::{
     AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, ExecutionProgressPersistenceError,
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError, JournalLock,
     JournalLockError, OperationPlanPersistenceError, PersistenceError,
-    checkpoint_execution_settlement, create_json_durable, create_operation_plan,
-    read_execution_progress, read_execution_settlement, read_json, read_operation_plan,
-    reconcile_execution_settlement, replay_execution_settlement,
+    checkpoint_execution_settlement, read_execution_progress, read_execution_settlement, read_json,
+    read_operation_plan, reconcile_execution_settlement, replay_execution_settlement,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -90,10 +89,10 @@ pub fn create_execution_workflow(
     record: &ExecutionWorkflowRecord,
 ) -> Result<(), ExecutionWorkflowPersistenceError> {
     layout.check_root()?;
-    super::json::check_json_size(record, MAX_EXECUTION_WORKFLOW_BYTES)?;
+    let bytes = super::json::encode_json(record, MAX_EXECUTION_WORKFLOW_BYTES)?;
     let path = layout.root().join(WORKFLOW_FILE);
     let _lock = JournalLock::acquire(&path)?;
-    create_json_durable(&path, record)?;
+    super::json::create_encoded(&path, &bytes)?;
     Ok(())
 }
 /// Read exact original workflow allocation; missing evidence never supplies a new budget.
@@ -379,9 +378,9 @@ impl<'a> ExecutionStageGuard<'a> {
     ) -> Result<Self, ExecutionWorkflowPersistenceError> {
         let workflow = read_execution_workflow(workflow_layout, binding.workflow())?;
         binding.validate(&workflow, &plan)?;
-        super::json::check_json_size(&binding, MAX_EXECUTION_STAGE_BYTES)?;
-        // Validate both documents before allocating any stage paths.
-        super::json::check_json_size(
+        let binding_bytes = super::json::encode_json(&binding, MAX_EXECUTION_STAGE_BYTES)?;
+        // Encode both documents before allocating any stage paths.
+        let plan_bytes = super::json::encode_json(
             &plan,
             crate::model::operation_plan::MAX_OPERATION_PLAN_BYTES,
         )?;
@@ -390,9 +389,9 @@ impl<'a> ExecutionStageGuard<'a> {
         ic_host_fs::durable::create_private_directory(&path)
             .map_err(|error| PersistenceError::Io(crate::ops::directory_creation_io(error)))?;
         let stage_layout = acquire_stage(workflow_layout, binding.stage_sequence())?;
-        create_operation_plan(&stage_layout, &plan)?;
+        super::operation_plan::create_encoded(&stage_layout, &plan_bytes)?;
         barrier(StagePreparationBarrier::Plan);
-        create_json_durable(&stage_layout.root().join(BINDING_FILE), &binding)?;
+        super::json::create_encoded(&stage_layout.root().join(BINDING_FILE), &binding_bytes)?;
         barrier(StagePreparationBarrier::Binding);
         workflow_layout.check_root()?;
         Ok(Self {
