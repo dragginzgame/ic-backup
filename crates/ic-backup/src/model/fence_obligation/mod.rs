@@ -1,5 +1,6 @@
 //! Immutable original application fence obligations; spending belongs to attempt journals.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     consistency::{
@@ -209,9 +210,9 @@ impl FenceObligationRecord {
     /// external-obligations revision. No mutable status, receipts or release flag exists.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/fence-obligation/v1\0".to_vec();
-        bytes.extend_from_slice(self.plan_intent.hash().as_bytes());
-        bytes.extend_from_slice(&self.acquisition_operation.to_be_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/fence-obligation/v1\0");
+        bytes.append(self.plan_intent.hash().as_bytes());
+        bytes.append(&self.acquisition_operation.to_be_bytes());
         let (tag, hashes) = match &self.scope {
             FenceObligationScopeRecord::Capture {
                 requirement,
@@ -228,11 +229,11 @@ impl FenceObligationRecord {
                 ],
             ),
         };
-        bytes.push(tag);
+        bytes.byte(tag);
         for hash in hashes {
-            bytes.extend_from_slice(hash.hash().as_bytes());
+            bytes.append(hash.hash().as_bytes());
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
 /// Typed original obligation rejection; never releases a fence or resets attempts.

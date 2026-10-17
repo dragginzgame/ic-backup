@@ -25,7 +25,7 @@ pub(super) fn check_json_size(
 }
 
 /// Encode and admit the exact publication bytes before any filesystem effect.
-pub(super) fn encode_json(
+pub(crate) fn encode_json(
     value: &impl Serialize,
     max_bytes: u64,
 ) -> Result<Vec<u8>, PersistenceError> {
@@ -46,38 +46,12 @@ fn encode_into<W: Write>(
     Ok(writer.into_inner())
 }
 
-pub(super) fn write_encoded(path: &Path, bytes: &[u8]) -> Result<(), PersistenceError> {
+pub(crate) fn write_encoded(path: &Path, bytes: &[u8]) -> Result<(), PersistenceError> {
     publish_bytes_at_barriers(path, bytes, PublicationMode::Replace, |_| {})
 }
 
-pub(super) fn create_encoded(path: &Path, bytes: &[u8]) -> Result<(), PersistenceError> {
+pub(crate) fn create_encoded(path: &Path, bytes: &[u8]) -> Result<(), PersistenceError> {
     publish_bytes_at_barriers(path, bytes, PublicationMode::CreateNew, |_| {})
-}
-
-/// Durably replace a machine record using a sibling temporary and rename.
-///
-/// # Errors
-/// Returns encoding/parent IO failures or structured shared publication failures.
-/// An after-publication failure or lost response requires reconciliation.
-pub fn write_json_durable<T>(path: &Path, value: &T) -> Result<(), PersistenceError>
-where
-    T: Serialize,
-{
-    let bytes = encode_json(value, u64::MAX)?;
-    write_encoded(path, &bytes)
-}
-
-/// Publish a new machine record without replacing an existing entry.
-///
-/// # Errors
-/// Returns encoding/parent IO failures or structured shared publication failures,
-/// including create-only conflicts and visible output after failed completion.
-pub fn create_json_durable<T>(path: &Path, value: &T) -> Result<(), PersistenceError>
-where
-    T: Serialize,
-{
-    let bytes = encode_json(value, u64::MAX)?;
-    create_encoded(path, &bytes)
 }
 
 /// Read one regular no-follow JSON file within an explicit byte limit.
@@ -87,7 +61,7 @@ where
 ///
 /// # Errors
 /// Rejects unsafe files, excessive bytes, invalid JSON and filesystem failures.
-pub fn read_json<T>(path: &Path, max_bytes: u64) -> Result<T, PersistenceError>
+pub(crate) fn read_json<T>(path: &Path, max_bytes: u64) -> Result<T, PersistenceError>
 where
     T: DeserializeOwned,
 {
@@ -174,9 +148,7 @@ pub(super) fn publish_bytes_at_barriers(
         barrier(DurableWriteBarrier::BeforeRename);
         Ok(())
     });
-    result.map_err(|error| {
-        PersistenceError::Publication(super::PublicationError::from_host(error))
-    })?;
+    result?;
     // Successful Host completion includes publication and the held-parent sync.
     barrier(DurableWriteBarrier::AfterDirectorySync);
     Ok(())
@@ -191,7 +163,7 @@ pub(crate) fn write_json_durable_at_barriers<T>(
 where
     T: Serialize,
 {
-    let bytes = serde_json::to_vec_pretty(value)?;
+    let bytes = encode_json(value, 16 * 1024 * 1024)?;
     publish_bytes_at_barriers(path, &bytes, PublicationMode::Replace, barrier)
 }
 
@@ -205,7 +177,7 @@ pub(crate) fn create_json_durable_at_barriers<T>(
 where
     T: Serialize,
 {
-    let bytes = serde_json::to_vec_pretty(value)?;
+    let bytes = encode_json(value, 16 * 1024 * 1024)?;
     publish_bytes_at_barriers(
         path,
         &bytes,

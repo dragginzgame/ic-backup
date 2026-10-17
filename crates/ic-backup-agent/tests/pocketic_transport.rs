@@ -21,7 +21,7 @@ use ic_backup::{
 };
 use ic_backup_agent::{
     AgentMutationProvider, AgentSnapshotTransferReadProvider, AgentTransport, PreparedUpdate,
-    ReservedUpdate, TransportError,
+    ReservedUpdate,
 };
 use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use ic_testkit::{
@@ -579,13 +579,18 @@ async fn wrong_trusted_root_rejects_actual_reply_without_settling_applied_stop()
         Duration::from_secs(30),
     )
     .unwrap();
-    let prepared = transport
-        .prepare(ReservedUpdate::Mutation(&request), guard.record().unwrap())
-        .unwrap();
-    fs::write(root.join("signed-ingress.cbor"), prepared.envelope()).unwrap();
+    let mut provider = AgentMutationProvider::new(
+        &transport,
+        |_: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+            support::retain_signed(&root, prepared)
+                .map_err(|_| IcMutationProviderError::Indeterminate)
+        },
+    );
     assert!(matches!(
-        prepared.submit().await,
-        Err(TransportError::Indeterminate)
+        provider
+            .submit_mutation(&request, guard.record().unwrap())
+            .await,
+        Err(IcMutationProviderError::Indeterminate)
     ));
     assert_eq!(fs::read(guard.path()).unwrap(), before);
     assert_eq!(

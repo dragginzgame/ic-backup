@@ -9,7 +9,7 @@ pub mod control_authority;
 mod data_stage_plan;
 pub mod download_journal;
 pub mod effect_graph;
-mod evidence_digest;
+pub(crate) mod evidence_digest;
 pub mod execution_settlement;
 pub mod execution_workflow;
 pub mod fence_acquisition;

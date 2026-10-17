@@ -8,6 +8,40 @@ implementation determine what has actually been qualified.
 
 ## Current implementation scope
 
+- `PersistenceError::Publication` directly carries Host FS's
+  `NamedWriteError<std::io::Error>` in the 0.28 hard cut. The local mirror is removed
+  without an alias. Consumers update imports/matches and align direct Host FS with
+  the selected 0.24 line. Producer, cleanup, before/after-publication evidence and
+  reconciliation requirements remain unchanged.
+- Command custody and restore retention share journal-parent resolution. Resolve
+  existing parents, admit absent or regular leaves and reject leaf aliases. Preserve
+  each caller's missing-name, unsafe-leaf and native IO error projections.
+- Mutation, snapshot transfer-read and upload reply association share ordered
+  authority/attempt/context/target checks. Original reservation validation precedes
+  identity; existing method-specific bounded decoding follows it. Keep typed errors,
+  pending spending and raw evidence unchanged.
+
+- Agent signing and dispatch are internal to its single-retention submission owner.
+  Public providers invoke the mandatory durable ingress callback before effects;
+  passive prepared-envelope access remains available to that callback. Preserve
+  no-retry/no-polling behavior and pending reservations after accepted/lost calls.
+- Generic filesystem copying and file/path checksum selectors are removed. Product
+  staging belongs to the journal-bound IC snapshot writer. Directory traversal and
+  pure declared-file checksum composition retain their exact UTF-8 framing, no-follow
+  admission and publication/recovery checks. Preserve old copied and partial trees.
+- Generic JSON decoding and raw stream checksum adapters are internal. External
+  product consumers use guarded record operations; independent documents/files use
+  Host FS admission and Host Artifacts with their own bounds and validation.
+- Public generic JSON value writers are removed. Product writes use guarded,
+  record-specific operations; manifest publication and restore-reference release
+  admit their exact pretty-JSON bytes under the existing record limit before
+  publication. Finite generic value writers are test fixtures only. Independent
+  documents use caller-bounded encoding and Host FS byte publication.
+- Canonical record, upload-stage and Agent reply framing streams through Host Artifacts
+  hashing.
+  Preserve every original domain, field order, length prefix and integer byte order,
+  including Agent's little-endian attempt IDs. Chunk digests use Host's typed SHA-256
+  value for comparison and lowercase filenames; persisted v1 identities stay exact.
 - Snapshot metadata and data coordinators retain the selected original journal
   guard continuously through dispatch, one bounded decode, independent qualification
   and append/receipt handling. Checkpoints still follow journal-lock release;
@@ -463,25 +497,10 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   uses original replay; no allocation reissue, automatic receipt, byte store,
   replacement, default Agent bridge or terminal/fence/reference release follows.
 
-- Local IC artifact diagnostics reuse registry `ic-metrics` arithmetic under a
-  guard-local synchronized owner. Preserve explicit nanosecond/byte units, separate
-  returned success/rejection samples, valid zero and repeated preparation semantics.
-  Preparation timings include nested verification and are not exclusive totals.
-  Metrics start empty on create/open, retain no IDs/history and write no records.
-  Successful prepared sizes have one shared four-bound histogram; derive the
-  mergeable aggregate from it, without a latest byte value. Reject unit conversions
-  outside the u64 range independently rather than recording a clipped sample.
-  Individual samples/counts/maxima/latest/bounds/buckets remain u64; accumulated
-  totals and integer means use Metrics 0.9 `u128` without downstream truncation.
-  Checked scaled means preserve fractional reporting precision; they do not
-  turn diagnostic samples into exact accounting.
-  These diagnostics have no codec, persisted history or retained-data transition.
-  Preserve zero/32 KiB/256 KiB/1 MiB inclusive bounds,
-  disjoint independently saturating counts and failure exclusion. Six duration
-  summaries remain separate; distributions grant no payload admission.
-  Never feed saturated summaries or diagnostic samples into exact spending,
-  completion, receipt, retry, fresh-authority or terminal/release admission. Keep
-  the IC instruction-reader feature absent from the host implementation.
+- Persistence guards retain no metrics or diagnostic synchronization. Caller-owned
+  instrumentation may measure returned verification/preparation work, but cannot
+  alter operation results, original bounds, cancellation, receipts or recovery.
+  The former Metrics reexports and per-guard getter are removed in 0.28.
 - Bounded Unix JSON record reads reuse registry `ic-host-fs` regular-file
   admission. Preserve existing record limits, JSON decoding and typed persistence
   errors, including nonblocking FIFO rejection and final-component no-follow.
@@ -490,7 +509,7 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   This dependency provides no IC effect, paid retry or fresh authority. Qualify the
   actual locked graph and reader on supported hosts; no sibling path patch exists.
   Raw identities, hashing/copying and record output limits use `ic-host-artifacts`.
-  Public `checksum_reader` retries Interrupted locally; callers own blocking and
+  The internal `checksum_reader` retries Interrupted locally; callers own blocking and
   timeouts. Preserve other original IO errors, invalid-count refusal, canonical
   checksum records and local directory digest framing/private publication owners.
 

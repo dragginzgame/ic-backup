@@ -1,5 +1,6 @@
 //! Pure original IC update reply association using the existing bounded codecs.
 
+use super::response_identity::{ResponseIdentity, ResponseIdentityMismatch};
 use crate::model::{
     attempt_journal::AttemptJournalRecord,
     ic_lifecycle_reply::{IcLifecycleReply, IcLifecycleReplyError},
@@ -54,18 +55,24 @@ pub fn validate_acknowledgement<'a>(
 ) -> Result<IcMutationAcknowledgementView<'a>, IcMutationAssociationError> {
     request.validate_journal(journal)?;
     let input = acknowledgement.input();
-    if input.authority != request.authority().digest() {
-        return Err(IcMutationAssociationError::AuthorityMismatch);
+    ResponseIdentity {
+        authority: &input.authority,
+        mutation_attempt: input.mutation_attempt,
+        context: &input.context,
+        target: &input.target,
     }
-    if input.mutation_attempt != request.mutation_attempt() {
-        return Err(IcMutationAssociationError::AttemptMismatch);
-    }
-    if &input.context != request.plan().context() {
-        return Err(IcMutationAssociationError::ContextMismatch);
-    }
-    if input.target != request.payload().target() {
-        return Err(IcMutationAssociationError::TargetMismatch);
-    }
+    .compare(&ResponseIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        context: request.plan().context(),
+        target: request.payload().target(),
+    })
+    .map_err(|mismatch| match mismatch {
+        ResponseIdentityMismatch::Authority => IcMutationAssociationError::AuthorityMismatch,
+        ResponseIdentityMismatch::Attempt => IcMutationAssociationError::AttemptMismatch,
+        ResponseIdentityMismatch::Context => IcMutationAssociationError::ContextMismatch,
+        ResponseIdentityMismatch::Target => IcMutationAssociationError::TargetMismatch,
+    })?;
     let reply = match request.payload().method() {
         IcManagementMethodRecord::TakeCanisterSnapshot => {
             IcMutationReplyView::Capture(IcSnapshotReply::decode(request.payload(), &input.reply)?)

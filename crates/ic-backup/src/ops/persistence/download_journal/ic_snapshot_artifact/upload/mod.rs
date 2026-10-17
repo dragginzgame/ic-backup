@@ -3,7 +3,6 @@
 mod plan;
 pub use plan::IcSnapshotDataUploadPreparationError;
 
-use super::super::metrics::LocalOperation;
 use super::{
     DownloadJournalGuard, File, IcSnapshotArtifactError, Mode, OFlags, REGIONS,
     check_directory_identity, member, open_directory_no_follow, unix_fs,
@@ -17,7 +16,6 @@ use crate::model::{
 };
 use ic_management_canister_types::SnapshotDataKind;
 use std::io::{self, Read, Seek, SeekFrom};
-use std::time::Instant;
 use thiserror::Error;
 
 impl DownloadJournalGuard<'_> {
@@ -36,20 +34,10 @@ impl DownloadJournalGuard<'_> {
         snapshot: &str,
         metadata: &'source IcSnapshotMetadataReply<'source>,
     ) -> Result<IcSnapshotUploadRequest<'source>, IcSnapshotUploadArtifactError> {
-        let started = Instant::now();
-        let result = (|| {
-            let checksum = self.verify_ic_snapshot_artifact(plan, snapshot, metadata)?;
-            Ok(IcSnapshotUploadRequest::metadata(
-                plan, metadata, &checksum,
-            )?)
-        })();
-        self.record_ic_snapshot_metrics(
-            LocalOperation::UploadMetadata,
-            started,
-            result.is_ok(),
-            None,
-        );
-        result
+        let checksum = self.verify_ic_snapshot_artifact(plan, snapshot, metadata)?;
+        Ok(IcSnapshotUploadRequest::metadata(
+            plan, metadata, &checksum,
+        )?)
     }
 
     /// Read one bounded exact source extent/chunk and encode a distinct destination ID.
@@ -71,47 +59,37 @@ impl DownloadJournalGuard<'_> {
         snapshot_id: &[u8],
         source_kind: SnapshotDataKind,
     ) -> Result<IcSnapshotUploadRequest<'source>, IcSnapshotUploadArtifactError> {
-        let started = Instant::now();
-        let result = (|| {
-            let metadata = metadata_upload.source();
-            metadata_upload.validate_data_destination(snapshot_id)?;
-            validate_kind(metadata, &source_kind).map_err(IcSnapshotUploadError::from)?;
-            self.require_upload_source(plan, snapshot, metadata_upload)?;
-            let entry = self
-                .record
-                .artifact(metadata.request().target(), snapshot)
-                .map_err(super::DownloadJournalError::from)
-                .map_err(IcSnapshotArtifactError::from)?;
-            let parent_path = self.layout.root().join("artifacts");
-            let parent =
-                open_directory_no_follow(&parent_path).map_err(IcSnapshotArtifactError::from)?;
-            let path = self.layout.root().join(entry.artifact_path());
-            let directory = File::from(
-                unix_fs::openat(
-                    &parent,
-                    path.file_name()
-                        .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
-                    OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-                    Mode::empty(),
-                )
-                .map_err(io::Error::from)
-                .map_err(IcSnapshotArtifactError::from)?,
-            );
-            let chunk = read_chunk(&directory, metadata, &source_kind)?;
-            let payload =
-                IcSnapshotUploadRequest::data(metadata_upload, snapshot_id, source_kind, &chunk)?;
-            check_directory_identity(&parent_path, &parent)?;
-            check_directory_identity(&path, &directory)?;
-            self.require_upload_source(plan, snapshot, metadata_upload)?;
-            Ok((payload, chunk.len()))
-        })();
-        self.record_ic_snapshot_metrics(
-            LocalOperation::UploadData,
-            started,
-            result.is_ok(),
-            result.as_ref().ok().map(|(_, bytes)| *bytes),
+        let metadata = metadata_upload.source();
+        metadata_upload.validate_data_destination(snapshot_id)?;
+        validate_kind(metadata, &source_kind).map_err(IcSnapshotUploadError::from)?;
+        self.require_upload_source(plan, snapshot, metadata_upload)?;
+        let entry = self
+            .record
+            .artifact(metadata.request().target(), snapshot)
+            .map_err(super::DownloadJournalError::from)
+            .map_err(IcSnapshotArtifactError::from)?;
+        let parent_path = self.layout.root().join("artifacts");
+        let parent =
+            open_directory_no_follow(&parent_path).map_err(IcSnapshotArtifactError::from)?;
+        let path = self.layout.root().join(entry.artifact_path());
+        let directory = File::from(
+            unix_fs::openat(
+                &parent,
+                path.file_name()
+                    .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
+                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                Mode::empty(),
+            )
+            .map_err(io::Error::from)
+            .map_err(IcSnapshotArtifactError::from)?,
         );
-        result.map(|(payload, _)| payload)
+        let chunk = read_chunk(&directory, metadata, &source_kind)?;
+        let payload =
+            IcSnapshotUploadRequest::data(metadata_upload, snapshot_id, source_kind, &chunk)?;
+        check_directory_identity(&parent_path, &parent)?;
+        check_directory_identity(&path, &directory)?;
+        self.require_upload_source(plan, snapshot, metadata_upload)?;
+        Ok(payload)
     }
 
     fn require_upload_source(
@@ -137,7 +115,7 @@ fn read_chunk(
     kind: &SnapshotDataKind,
 ) -> Result<Vec<u8>, IcSnapshotArtifactError> {
     let values = metadata.metadata();
-    let (name, length, offset, size) = match member::select(kind) {
+    let (name, length, offset, size) = match member::select(kind)? {
         member::Member::Region {
             index,
             offset,

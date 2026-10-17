@@ -1,5 +1,6 @@
 //! Public original-guarantee and retained-obligation recovery; no application/IC backend.
 
+use crate::support::create_json_durable;
 mod support;
 
 use ic_backup::{
@@ -8,8 +9,8 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, ConsistencyPersistenceError,
-        create_consistency_requirement, create_json_durable, create_operation_plan,
-        read_consistency_requirement, read_operation_plan,
+        create_consistency_requirement, create_operation_plan, read_consistency_requirement,
+        read_operation_plan,
     },
     policy::consistency::{ConsistencyError, validate},
     ports::consistency::{ConsistencyProvider, ConsistencyProviderError},

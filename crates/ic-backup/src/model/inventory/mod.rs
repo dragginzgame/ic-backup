@@ -1,5 +1,6 @@
 //! Canonical bounded physical inventories; declarations do not establish live membership.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod target;
 pub use target::{InventoryTargetRecord, InventoryTargetRequest, MAX_INVENTORY_ROLE_BYTES};
 
@@ -120,13 +121,13 @@ impl InventoryRecord {
     /// proves declared equality only, without fresh membership or authority.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/inventory/v1\0".to_vec();
+        let mut bytes = EvidenceDigest::new(b"ic-backup/inventory/v1\0");
         #[expect(
             clippy::cast_possible_truncation,
             reason = "validated target count is at most 1024"
         )]
         let count = self.targets.len() as u32;
-        bytes.extend_from_slice(&count.to_be_bytes());
+        bytes.append(&count.to_be_bytes());
         for target in &self.targets {
             append_text(&mut bytes, target.canister_id());
             for field in [
@@ -135,15 +136,15 @@ impl InventoryRecord {
                 target.module_hash(),
             ] {
                 match field {
-                    None => bytes.push(0),
+                    None => bytes.byte(0),
                     Some(value) => {
-                        bytes.push(1);
+                        bytes.byte(1);
                         append_text(&mut bytes, value);
                     }
                 }
             }
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
 
@@ -151,9 +152,9 @@ impl InventoryRecord {
     clippy::cast_possible_truncation,
     reason = "all admitted text is bounded to at most 256 UTF-8 bytes"
 )]
-fn append_text(bytes: &mut Vec<u8>, value: &str) {
-    bytes.extend_from_slice(&(value.len() as u32).to_be_bytes());
-    bytes.extend_from_slice(value.as_bytes());
+fn append_text(bytes: &mut EvidenceDigest, value: &str) {
+    bytes.append(&(value.len() as u32).to_be_bytes());
+    bytes.append(value.as_bytes());
 }
 
 pub(super) fn check_count(count: usize) -> Result<(), InventoryRecordError> {

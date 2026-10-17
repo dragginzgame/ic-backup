@@ -1,5 +1,6 @@
 //! Ephemeral membership checks bound to original intent; no persisted fresh-authority flags.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::OperationBindingRecord,
@@ -103,16 +104,16 @@ impl<'a> MembershipObservationRequest<'a> {
     /// original intent. Observation results, revision and evidence are excluded.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/membership-request/v1\0".to_vec();
-        bytes.extend_from_slice(self.binding.intent().as_bytes());
-        bytes.extend_from_slice(&self.binding.operation_sequence().to_be_bytes());
-        bytes.extend_from_slice(self.challenge.hash().as_bytes());
-        bytes.push(match self.boundary {
+        let mut bytes = EvidenceDigest::new(b"ic-backup/membership-request/v1\0");
+        bytes.append(self.binding.intent().as_bytes());
+        bytes.append(&self.binding.operation_sequence().to_be_bytes());
+        bytes.append(self.challenge.hash().as_bytes());
+        bytes.byte(match self.boundary {
             MembershipBoundary::BeforeEffect => 0,
             MembershipBoundary::AfterEffect => 1,
         });
-        bytes.extend_from_slice(&self.max_remote_observations.to_be_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.append(&self.max_remote_observations.to_be_bytes());
+        bytes.finish()
     }
 }
 

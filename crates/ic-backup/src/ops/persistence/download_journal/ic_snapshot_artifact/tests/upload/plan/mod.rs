@@ -549,7 +549,6 @@ fn insufficient_allocation_refuses_before_any_source_verification_or_journal_cha
     .unwrap();
     let workflow: ExecutionWorkflowRecord = data_workflow(&payload, 1);
     let before = fs::read(source.path()).unwrap();
-    let metrics = source.ic_snapshot_metrics();
     fs::rename(
         root.join(format!("artifacts/{TARGET}")),
         root.join("retained-missing-tree"),
@@ -564,7 +563,6 @@ fn insufficient_allocation_refuses_before_any_source_verification_or_journal_cha
             }
         ))
     ));
-    assert_eq!(source.ic_snapshot_metrics(), metrics);
     assert_eq!(fs::read(source.path()).unwrap(), before);
 }
 

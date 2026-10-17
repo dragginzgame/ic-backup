@@ -10,6 +10,7 @@ use super::{
     status,
 };
 use crate::ready::ready;
+use crate::support::read_json;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -33,7 +34,7 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
-        read_complete_execution_workflow, read_json,
+        read_complete_execution_workflow,
     },
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
     workflow::{

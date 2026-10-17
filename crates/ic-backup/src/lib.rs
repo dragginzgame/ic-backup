@@ -1,6 +1,6 @@
 //! Host-side snapshot backup and same-release recovery for Internet Computer canisters.
 //!
-//! The library provides artifact checksums, no-follow traversal and staging,
+//! The library provides directory checksums, no-follow traversal and IC snapshot staging,
 //! verified durable directory publication, bounded JSON persistence and journal
 //! locking, layout lifetime exclusion, durable restore dependencies and
 //! inherited command custody. Local download journals retain exact snapshot
@@ -18,9 +18,6 @@
 //! Explicit local restore-source verification joins both original plans, retained
 //! safety requirement and exact local manifest before checking every source tree.
 //! Borrowed same-ID selection views grant no upload/load, application or release authority.
-//! Private operation-bound artifact copies check original and copied checksums;
-//! explicit retained-copy verification recovers without re-reading source trees.
-//! Failed copies and drop retain evidence, spending and source references without cleanup.
 //! Bounded physical inventories retain canonical declared parent forests; pure
 //! selection policy expands exact principals without live discovery or authority.
 //! Explicit effect graphs retain validated operation dependencies and project
@@ -47,9 +44,6 @@
 //! source bytes; passive original-attempt reply admission supplies no dispatch,
 //! settlement, complete upload or new spending. A single-update upload provider
 //! contract reuses original accounting and passive replies; no provider is installed.
-//! Local verification/upload preparation expose per-guard host duration and chunk-size
-//! summaries using registry ic-metrics arithmetic. Metrics are diagnostic in-memory
-//! samples, start empty on reopen and change no retained progress or spending.
 //! Pure inventory comparison exposes new candidates and rejects baseline drift;
 //! candidate cardinality never attributes or settles a lost capture.
 //! Bounded lifecycle replies retain exact empty acknowledgements and required
@@ -57,8 +51,6 @@
 //! Exact IC mutation envelopes bind already reserved original updates; a single-call
 //! provider contract and bounded passive reply association preserve pending spending.
 //! Existing codecs decode replies without automatic settlement, retries or release.
-//! Exact staged restore copies have separate durable publication/recovery and fresh
-//! canonical-copy verification, retaining original accounting and source references.
 //! Exact reserved status/list observations also retain both original attempt identities;
 //! passive association leaves lost observations pending and proves no effect outcome.
 //! A separate membership port binds ephemeral provider results to original intent,
@@ -94,14 +86,13 @@
 //! request and explicit sequential dependencies. Planning grants no fresh access.
 //!
 //! Applications own membership, release identity, control routing, quiescence
-//! and external-effect settlement. Capture/restore runners remain unimplemented;
+//! and external-effect settlement. Complete application backup/restore remains integration-owned;
 //! the direct Agent transport lives in the separate `ic-backup-agent` crate.
 //! Filesystem access and credentials remain on the
 //! operator host.
 //! Bounded Unix record reads reuse ic-host-fs regular-file admission while
 //! publication, record validation, confinement and command custody remain local.
 
-mod hash;
 pub mod model;
 pub mod ops;
 pub mod policy;

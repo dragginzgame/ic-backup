@@ -151,6 +151,12 @@ own qualified same-release procedure before changing the executable contract.
 
 ## 4. Extraction ownership
 
+The implemented library keeps directory checksum composition and journal-bound
+IC snapshot staging. Generic filesystem copying, file/path checksum selectors and
+public generic JSON IO are removed for 0.28. Independent IO uses Host FS and Host
+Artifacts with caller-selected bounds and custody; existing trees and unfinished
+evidence are retained. Product record access remains guarded by Backup owners.
+
 | Surface | Destination and treatment |
 | --- | --- |
 | Artifact hashing and safe IO | `ic-backup`; preserve streamed verification and secure path handling |
@@ -607,6 +613,10 @@ reviewed operation; unsettled prior effects remain an explicit prerequisite.
 Canonical hashes bind exact machine-relevant fields using a specified unambiguous
 encoding with domain separation. Specify integer widths, null representation,
 principal encoding, sorted-set versus ordered-list semantics and hash exclusions.
+The implemented record and Agent reply digests stream their original framing
+through Host Artifacts hashing rather than allocating the entire framed payload.
+Chunk comparison and naming use Host's typed SHA-256 digest. These implementation
+choices preserve the original v1 domains, field order and bytes.
 Do not hash pretty-printed JSON or explanatory messages. Structural identifiers
 must reject duplicates and cycles rather than rely on overwrite order.
 
@@ -816,17 +826,10 @@ port. Retain replies before cancellable qualification work. Other async provider
 ports, full runners and terminal/custody proof remain separate. See
 [the maintained coordination boundary](extraction-boundary.md#original-same-id-loadstart-coordination).
 
-Explicit local IC-tree verification and upload preparation now expose per-guard
-`ic-metrics` duration summaries and a bounded prepared-size histogram/aggregate.
-Totals and integer means use u128; individual samples and counts stay u64.
-These volatile views introduce no record conversion or spending owner.
-Unrepresentable unit conversions are excluded; histogram bytes retain no latest
-value. Host durations use nanoseconds, successful prepared data uses
-bytes, and returned successes/rejections stay separate. Internal verification and
-enclosing preparation overlap; repeated preparation is another sample rather than
-unique transfer progress. These in-memory diagnostics start empty on reopen and
-never enter records, hashes, policy admission, spending or terminal evidence.
-See [the diagnostic boundary](extraction-boundary.md#local-ic-snapshot-diagnostics).
+Local IC-tree verification and upload preparation no longer retain per-guard
+metrics. Callers own timing/reporting around returned operations and may select
+`ic-metrics` directly. Observations supply no progress, spending or terminal
+evidence; persistence retains no diagnostic lock or clock.
 
 Original-plan-bound local execution admission now joins persisted plans and every
 retained attempt journal through a sequential-lock reader shared with settlement.
@@ -1139,6 +1142,16 @@ ICP subprocess extraction/probing. Historical routing evidence remains in
 [the qualification history](pocketic-qualification.md#pinned-cli-capability-probe).
 No compatibility backend or fallback is retained. The common shared IC tool
 inventory remains canonical; installation does not select a product backend.
+
+IC management arguments and replies retain Candid encoding, as defined by the
+[management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
+This includes snapshot capture/transfer/upload/load and canister status/lifecycle
+calls. IC Wire's Postcard contracts apply to application endpoints whose producers
+and consumers select that contract; they do not replace the platform's management
+protocol. Shared Candid decoding mechanics belong in the independent
+`ic-testkit-candid` crate. Backup retains method-specific quotas, bounded wire
+projections, exact-result admission and typed domain errors; production use of that
+codec must not introduce a PocketIC dependency.
 
 A public acquisition step now joins exact retained stage/requirement/obligation
 admission to the original journal reservation, mandatory fresh application callback

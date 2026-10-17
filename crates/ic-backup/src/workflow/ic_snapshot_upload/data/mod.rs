@@ -5,6 +5,7 @@ use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::MutationReceiptRequest,
+        evidence_digest::EvidenceDigest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
@@ -73,8 +74,8 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     if progress.attempts.mutations_used != 0 || progress.attempts.observations_used != 0 {
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);
     }
-    let mut evidence = b"ic-backup/ic-snapshot-data-upload/v1\0".to_vec();
-    evidence.extend_from_slice(plan.digest().hash().as_bytes());
+    let mut evidence = EvidenceDigest::new(b"ic-backup/ic-snapshot-data-upload/v1\0");
+    evidence.append(plan.digest().hash().as_bytes());
     for (index, kind) in upload.kinds().iter().enumerate() {
         let sequence =
             u64::try_from(index).map_err(|_| IcSnapshotDataUploadPlanningError::CountOverflow)?;
@@ -96,13 +97,13 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
                 source,
                 acknowledgement: Box::new(acknowledgement),
             })?;
-        evidence.extend_from_slice(digest.hash().as_bytes());
+        evidence.append(digest.hash().as_bytes());
     }
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
     if progress.applied_operations != upload.kinds().len() {
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);
     }
-    Ok(stage.checkpoint(ArtifactChecksumRecord::from_bytes(&evidence))?)
+    Ok(stage.checkpoint(evidence.finish())?)
 }
 
 async fn record_qualified<E: std::error::Error + 'static>(

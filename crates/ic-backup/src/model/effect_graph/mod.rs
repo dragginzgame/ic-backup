@@ -1,5 +1,6 @@
 //! Immutable explicit operation dependencies; no universal application ordering or authority.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod node;
 pub use node::{EffectNodeRecord, EffectNodeRequest, MAX_EFFECT_DEPENDENCIES};
 
@@ -103,16 +104,16 @@ impl EffectGraphRecord {
     /// Hash canonical explicit identities/edges using the documented v1 binary encoding.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/effect-graph/v1\0".to_vec();
+        let mut bytes = EvidenceDigest::new(b"ic-backup/effect-graph/v1\0");
         append_count(&mut bytes, self.nodes.len());
         for node in &self.nodes {
-            bytes.extend_from_slice(&node.operation_sequence().to_be_bytes());
+            bytes.append(&node.operation_sequence().to_be_bytes());
             append_count(&mut bytes, node.depends_on().len());
             for dependency in node.depends_on() {
-                bytes.extend_from_slice(&dependency.to_be_bytes());
+                bytes.append(&dependency.to_be_bytes());
             }
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
 
@@ -120,8 +121,8 @@ impl EffectGraphRecord {
     clippy::cast_possible_truncation,
     reason = "validated operation/dependency counts are at most 8192"
 )]
-fn append_count(bytes: &mut Vec<u8>, count: usize) {
-    bytes.extend_from_slice(&(count as u32).to_be_bytes());
+fn append_count(bytes: &mut EvidenceDigest, count: usize) {
+    bytes.append(&(count as u32).to_be_bytes());
 }
 
 fn topological_order(nodes: &[EffectNodeRecord]) -> Result<Vec<usize>, EffectGraphError> {

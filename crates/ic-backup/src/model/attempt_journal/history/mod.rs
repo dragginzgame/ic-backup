@@ -31,34 +31,37 @@ pub(super) enum AttemptEventRecord {
 }
 
 impl AttemptEventRecord {
-    pub(super) fn append_digest_bytes(&self, bytes: &mut Vec<u8>) {
+    pub(super) fn append_digest_bytes(
+        &self,
+        bytes: &mut crate::model::evidence_digest::EvidenceDigest,
+    ) {
         match self {
             Self::MutationReserved { attempt } => {
-                bytes.push(0);
-                bytes.extend_from_slice(&attempt.to_be_bytes());
+                bytes.byte(0);
+                bytes.append(&attempt.to_be_bytes());
             }
             Self::ObservationReserved {
                 attempt,
                 mutation,
                 request,
             } => {
-                bytes.push(1);
-                bytes.extend_from_slice(&attempt.to_be_bytes());
-                bytes.extend_from_slice(&mutation.to_be_bytes());
-                bytes.extend_from_slice(request.as_bytes());
+                bytes.byte(1);
+                bytes.append(&attempt.to_be_bytes());
+                bytes.append(&mutation.to_be_bytes());
+                bytes.append(request.as_bytes());
             }
             Self::MutationResolved {
                 mutation,
                 outcome,
                 evidence,
             } => {
-                bytes.push(2);
-                bytes.extend_from_slice(&mutation.to_be_bytes());
-                bytes.push(match outcome {
+                bytes.byte(2);
+                bytes.append(&mutation.to_be_bytes());
+                bytes.byte(match outcome {
                     MutationOutcomeRecord::Applied => 0,
                     MutationOutcomeRecord::NotApplied => 1,
                 });
-                bytes.extend_from_slice(evidence.as_bytes());
+                bytes.append(evidence.as_bytes());
             }
             Self::ObservationRecorded {
                 observation,
@@ -66,15 +69,15 @@ impl AttemptEventRecord {
                 outcome,
                 evidence,
             } => {
-                bytes.push(3);
-                bytes.extend_from_slice(&observation.to_be_bytes());
-                bytes.extend_from_slice(request.as_bytes());
-                bytes.push(match outcome {
+                bytes.byte(3);
+                bytes.append(&observation.to_be_bytes());
+                bytes.append(request.as_bytes());
+                bytes.byte(match outcome {
                     ObservationOutcomeRecord::Applied => 0,
                     ObservationOutcomeRecord::NotApplied => 1,
                     ObservationOutcomeRecord::Uncertain => 2,
                 });
-                bytes.extend_from_slice(evidence.as_bytes());
+                bytes.append(evidence.as_bytes());
             }
         }
     }

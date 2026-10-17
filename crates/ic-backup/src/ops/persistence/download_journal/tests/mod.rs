@@ -120,7 +120,7 @@ fn exact_guarded_lifecycle_and_local_terminal_replay_preserve_bytes() {
     ));
     drop(guard);
     assert!(
-        matches!(DownloadJournalGuard::create(&layout,INTENT,vec![request()]),Err(DownloadJournalError::Persistence(PersistenceError::Publication(crate::ops::persistence::PublicationError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(DownloadJournalGuard::create(&layout,INTENT,vec![request()]),Err(DownloadJournalError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: ref error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         DownloadJournalGuard::open(&layout, &"cd".repeat(32)),
@@ -455,4 +455,10 @@ fn owner_death_after_directory_publication_reconciles_without_download_retry() {
     drop(guard);
     drop(layout);
     fs::remove_dir_all(root).expect("clean successful acknowledged fixture");
+}
+
+#[test]
+fn guard_preserves_send_sync_contract() {
+    fn require_send_sync<T: Send + Sync>() {}
+    require_send_sync::<DownloadJournalGuard<'_>>();
 }

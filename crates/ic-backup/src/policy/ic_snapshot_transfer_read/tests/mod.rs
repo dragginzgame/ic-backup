@@ -121,7 +121,9 @@ fn changed_original_payload_authority_and_current_reservations_reject() {
     let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
     journal.reserve_mutation().unwrap();
     let request = IcSnapshotTransferReadRequest::new(&plan, 7, &journal, payload).unwrap();
-    let response = IcSnapshotTransferReadResponse::new(fields(&request, metadata_wire())).unwrap();
+    let mut stale_fields = fields(&request, b"invalid wire".to_vec());
+    stale_fields.authority = hash("12");
+    let response = IcSnapshotTransferReadResponse::new(stale_fields).unwrap();
     for (target, id) in [
         (metadata_request.target(), vec![1]),
         ("aaaaa-aa", vec![0, 255, 128]),
@@ -194,6 +196,21 @@ fn actual_claims_attempt_and_bounded_wire_fail_without_settlement() {
             5 => input.target = "aaaaa-aa".into(),
             6 => input.reply = b"DIDL\0\0".to_vec(),
             _ => input.reply = vec![0; MAX_IC_SNAPSHOT_METADATA_BYTES + 1],
+        }
+        // Later failures coexist so the original denial priority is observable.
+        if change == 0 {
+            input.mutation_attempt = 2;
+        }
+        if change < 2 {
+            let mut context = serde_json::to_value(&input.context).unwrap();
+            context["release"] = serde_json::json!("12".repeat(32));
+            input.context = serde_json::from_value(context).unwrap();
+        }
+        if change < 5 {
+            input.target = "aaaaa-aa".into();
+        }
+        if change < 6 {
+            input.reply = b"invalid wire".to_vec();
         }
         let response = IcSnapshotTransferReadResponse::new(input).unwrap();
         let error = validate_response(&request, &journal, &response).unwrap_err();

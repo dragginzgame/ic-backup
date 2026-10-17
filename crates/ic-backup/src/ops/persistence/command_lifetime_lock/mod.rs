@@ -35,7 +35,13 @@ impl CommandLifetimeLock {
         journal: &Path,
         operation_sequence: u64,
     ) -> Result<Self, CommandLifetimeLockError> {
-        let journal = resolve_journal(journal)?;
+        let journal = super::journal_path::resolve_journal(
+            journal,
+            || CommandLifetimeLockError::InvalidJournal {
+                path: journal.to_path_buf(),
+            },
+            |path| CommandLifetimeLockError::InvalidJournal { path },
+        )?;
         let path = lock_path(&journal, operation_sequence);
         #[cfg(unix)]
         {
@@ -160,31 +166,6 @@ impl CommandQuiescenceGuard {
     pub fn record(&self) -> &CommandCustodyRecord {
         &self.record
     }
-}
-
-fn resolve_journal(path: &Path) -> Result<PathBuf, CommandLifetimeLockError> {
-    let name = path
-        .file_name()
-        .ok_or_else(|| CommandLifetimeLockError::InvalidJournal {
-            path: path.to_path_buf(),
-        })?;
-    let parent = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-    let parent = parent.canonicalize()?;
-    if !parent.is_dir() {
-        return Err(io::Error::from(io::ErrorKind::NotADirectory).into());
-    }
-    let journal = parent.join(name);
-    match fs::symlink_metadata(&journal) {
-        Ok(metadata) if !metadata.is_file() => {
-            return Err(CommandLifetimeLockError::InvalidJournal { path: journal });
-        }
-        Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error.into()),
-        _ => {}
-    }
-    Ok(journal)
 }
 
 fn lock_path(journal: &Path, operation_sequence: u64) -> PathBuf {

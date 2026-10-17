@@ -6,10 +6,11 @@ receiver/effective target, explicit endpoint, caller, trusted root and deadline.
 It disables redirects, HTTP/TCP retries, automatic polling and root-key fetching.
 
 Create `AgentTransport` with the exact plan context and an integration-owned
-identity/root key. Bind an existing request using `ReservedUpdate`, then call
-`prepare` with the currently guarded original journal. Retain its exact signed
-`envelope` and `request_id` durably with original intent before consuming the
-preparation through `submit().await`. An async network/timer executor is required.
+identity/root key, then configure the appropriate provider below. Providers sign,
+invoke mandatory durable ingress retention, and submit once. Signing and dispatch
+are internal; the former public `prepare`, `submit` and `UpdateOutcome` API is
+removed in 0.28. Retention callbacks receive a passive `PreparedUpdate` view with
+exact `envelope()` and `request_id()` access. An async network/timer executor is required.
 
 For capture/load/start coordination, configure `AgentMutationProvider` with that
 transport and a mandatory fallible callback retaining the exact signed envelope
@@ -48,8 +49,9 @@ Application reconciliation is also async with the current original record; its
 actual read method and whole-unit attribution remain application-owned.
 
 A certificate-verified reply is passive evidence for the existing method-specific
-codec and association checks. `Pending` returns the original ingress ID without
-polling. Errors, cancellation and lost replies leave original reservations pending;
+codec and association checks. Accepted/processing responses return the provider's
+Indeterminate result without polling; the retainer already owns the ingress ID.
+Errors, cancellation and lost replies leave original reservations pending;
 none authorizes repetition, refunds spending or proves nonapplication. There is
 no signed-envelope re-import/reissue API or automatic journal settlement.
 

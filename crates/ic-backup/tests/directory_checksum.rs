@@ -118,7 +118,7 @@ fn non_utf8_identity_rejects_without_lossy_substitution() {
 #[cfg(unix)]
 #[test]
 fn filesystem_and_retained_declared_files_share_one_framing() {
-    use ic_backup::ops::artifacts::{checksum_directory, checksum_file};
+    use ic_backup::ops::artifacts::checksum_directory;
     use std::fs;
 
     let root = support::temp_root("ic-backup-directory-framing");
@@ -126,10 +126,10 @@ fn filesystem_and_retained_declared_files_share_one_framing() {
     fs::write(root.join("a.txt"), b"a").unwrap();
     fs::write(root.join("nested/b.txt"), b"b").unwrap();
     let files = vec![
-        ("a.txt".into(), checksum_file(&root.join("a.txt")).unwrap()),
+        ("a.txt".into(), ArtifactChecksumRecord::from_bytes(b"a")),
         (
             "nested/b.txt".into(),
-            checksum_file(&root.join("nested/b.txt")).unwrap(),
+            ArtifactChecksumRecord::from_bytes(b"b"),
         ),
     ];
     let tree = checksum_directory(&root).unwrap();

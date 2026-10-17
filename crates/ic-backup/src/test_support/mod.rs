@@ -95,3 +95,21 @@ pub fn wait_for_path(path: &Path, description: &str) {
     )
     .expect("wait for parent marker");
 }
+
+/// Encode a bounded test fixture before publishing through the production owner.
+pub(crate) fn create_json_durable(
+    path: &std::path::Path,
+    value: &impl serde::Serialize,
+) -> Result<(), crate::ops::persistence::PersistenceError> {
+    let bytes = crate::ops::persistence::json::encode_json(value, 16 * 1024 * 1024)?;
+    crate::ops::persistence::json::create_encoded(path, &bytes)
+}
+
+/// Replace a bounded test fixture through the production publication owner.
+pub(crate) fn write_json_durable(
+    path: &std::path::Path,
+    value: &impl serde::Serialize,
+) -> Result<(), crate::ops::persistence::PersistenceError> {
+    let bytes = crate::ops::persistence::json::encode_json(value, 16 * 1024 * 1024)?;
+    crate::ops::persistence::json::write_encoded(path, &bytes)
+}

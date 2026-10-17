@@ -1,5 +1,6 @@
 //! Immutable original restore/source declarations; no current safety or fence authority.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
     operation_plan::OperationPlanRecord,
@@ -194,20 +195,20 @@ impl RestoreSafetyRequirementRecord {
     /// external-obligations revision. Version is bound through the domain.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/restore-safety-requirement/v1\0".to_vec();
-        bytes.extend_from_slice(self.plan_intent.as_bytes());
-        bytes.extend_from_slice(self.source_plan_intent.as_bytes());
-        bytes.extend_from_slice(self.source_artifacts.hash().as_bytes());
-        bytes.push(match self.safety {
+        let mut bytes = EvidenceDigest::new(b"ic-backup/restore-safety-requirement/v1\0");
+        bytes.append(self.plan_intent.as_bytes());
+        bytes.append(self.source_plan_intent.as_bytes());
+        bytes.append(self.source_artifacts.hash().as_bytes());
+        bytes.byte(match self.safety {
             RestoreSafetyLaneRecord::NoIrreversibleEffects => 0,
             RestoreSafetyLaneRecord::ApplicationFenced => 1,
         });
         if let Some(fence) = &self.expected_fence {
-            bytes.extend_from_slice(fence.identity.hash().as_bytes());
-            bytes.extend_from_slice(fence.membership_revision.hash().as_bytes());
-            bytes.extend_from_slice(fence.external_obligations_revision.hash().as_bytes());
+            bytes.append(fence.identity.hash().as_bytes());
+            bytes.append(fence.membership_revision.hash().as_bytes());
+            bytes.append(fence.external_obligations_revision.hash().as_bytes());
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
 /// Typed original source/safety declaration denial; retains all existing obligations.

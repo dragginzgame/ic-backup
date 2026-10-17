@@ -1,6 +1,5 @@
 //! Explicit fresh local checks of retained opt-in IC trees; no upload permission.
 
-use super::super::metrics::LocalOperation;
 use super::{
     ArtifactChecksumRecord, DownloadJournalGuard, FORMAT, File, IcSnapshotArtifactError,
     IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES, Mode, OFlags, REGIONS,
@@ -18,7 +17,6 @@ use crate::{
     policy::download_integrity::validate,
 };
 use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_exact_reader};
-use std::time::Instant;
 use std::{
     io::{self, Read},
     os::unix::fs::MetadataExt,
@@ -50,46 +48,36 @@ impl DownloadJournalGuard<'_> {
         snapshot: &str,
         metadata: &IcSnapshotMetadataReply<'_>,
     ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
-        let started = Instant::now();
-        let result = (|| {
-            self.admit_ic_artifact_original(plan)?;
-            let entry = self
-                .record
-                .artifact(metadata.request().target(), snapshot)
-                .map_err(super::DownloadJournalError::from)?;
-            if entry.snapshot_taken_at_timestamp() != metadata.metadata().taken_at_timestamp {
-                return Err(IcSnapshotArtifactError::OriginalMismatch);
-            }
-            let expected = entry
-                .checksum()
-                .ok_or(IcSnapshotArtifactError::OriginalMismatch)?;
-            self.check_artifact_parent()?;
-            let parent_path = self.layout.root().join("artifacts");
-            let parent = open_directory_no_follow(&parent_path)?;
-            let path = self.layout.root().join(entry.artifact_path());
-            let directory = File::from(
-                unix_fs::openat(
-                    &parent,
-                    path.file_name()
-                        .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
-                    OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-                    Mode::empty(),
-                )
-                .map_err(io::Error::from)?,
-            );
-            checksum_ic_tree(&directory, metadata)?.verify(expected.hash())?;
-            check_directory_identity(&parent_path, &parent)?;
-            check_directory_identity(&path, &directory)?;
-            self.admit_ic_artifact_original(plan)?;
-            Ok(expected.clone())
-        })();
-        self.record_ic_snapshot_metrics(
-            LocalOperation::Verification,
-            started,
-            result.is_ok(),
-            None,
+        self.admit_ic_artifact_original(plan)?;
+        let entry = self
+            .record
+            .artifact(metadata.request().target(), snapshot)
+            .map_err(super::DownloadJournalError::from)?;
+        if entry.snapshot_taken_at_timestamp() != metadata.metadata().taken_at_timestamp {
+            return Err(IcSnapshotArtifactError::OriginalMismatch);
+        }
+        let expected = entry
+            .checksum()
+            .ok_or(IcSnapshotArtifactError::OriginalMismatch)?;
+        self.check_artifact_parent()?;
+        let parent_path = self.layout.root().join("artifacts");
+        let parent = open_directory_no_follow(&parent_path)?;
+        let path = self.layout.root().join(entry.artifact_path());
+        let directory = File::from(
+            unix_fs::openat(
+                &parent,
+                path.file_name()
+                    .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
+                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                Mode::empty(),
+            )
+            .map_err(io::Error::from)?,
         );
-        result
+        checksum_ic_tree(&directory, metadata)?.verify(expected.hash())?;
+        check_directory_identity(&parent_path, &parent)?;
+        check_directory_identity(&path, &directory)?;
+        self.admit_ic_artifact_original(plan)?;
+        Ok(expected.clone())
     }
 
     fn admit_ic_artifact_original(
@@ -130,15 +118,16 @@ fn checksum_ic_tree(
     let empty = ArtifactChecksumRecord::from_bytes(&[]);
     checksums.extend(REGIONS.map(|name| (name.into(), empty.clone())));
     for chunk in &values.wasm_chunk_store {
+        let digest = ic_host_artifacts::artifact::Sha256Digest::from_bytes(
+            chunk
+                .hash
+                .as_slice()
+                .try_into()
+                .map_err(|_| IcSnapshotArtifactError::OriginalMismatch)?,
+        );
         checksums.push((
-            member::chunk_name(&chunk.hash).into(),
-            ArtifactChecksumRecord::from_digest(
-                chunk
-                    .hash
-                    .as_slice()
-                    .try_into()
-                    .map_err(|_| IcSnapshotArtifactError::OriginalMismatch)?,
-            ),
+            member::chunk_name(digest).into(),
+            ArtifactChecksumRecord::from_digest(*digest.as_bytes()),
         ));
     }
     check_closed_tree(directory, &checksums)?;

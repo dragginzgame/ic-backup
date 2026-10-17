@@ -19,6 +19,7 @@ mod inventory_settlement;
 pub mod local_restore_source;
 pub mod membership;
 mod observed_context;
+mod response_identity;
 pub mod restore_safety;
 pub mod selection;
 mod settlement_identity;

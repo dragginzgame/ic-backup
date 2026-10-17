@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.28.0]
+
+### Breaking
+
+- Remove `ops::persistence::PublicationError` without an alias.
+  `PersistenceError::Publication` carries
+  `ic_host_fs::durable::NamedWriteError<std::io::Error>` directly. Update imports
+  and exhaustive matches to Host's enum and align a direct `ic-host-fs` dependency
+  with Backup's selected 0.24 line. Producer, cleanup and publication-phase evidence
+  remain unchanged; visible output after failed completion still needs reconciliation.
+
+- Remove the generic public `ops::persistence::write_json_durable` and
+  `create_json_durable` APIs. Use Backup's guarded record operations for product
+  persistence. For independent documents, encode with an explicit size limit and
+  publish the admitted bytes through `ic_host_fs::durable::write_bytes`.
+
+- Remove generic `ops::artifacts::stage_relative_path` copying and the unused
+  `checksum_file`, `checksum_path` and `checksum_relative_path` selectors. IC
+  snapshot staging remains with `DownloadJournalGuard::stage_ic_snapshot_artifact`.
+  Independent file hashing/copying belongs to Host FS and Host Artifacts with
+  caller-selected custody, bounds and publication; retain existing partial trees.
+- Make `ops::artifacts::checksum_reader` and `ops::persistence::read_json` internal.
+  Use guarded Backup record readers for product evidence. Independent JSON callers
+  can use Host FS bounded regular-file reads followed by their own decoding.
+
+- Remove `IcSnapshotLocalMetrics`, `DownloadJournalGuard::ic_snapshot_metrics` and
+  Metrics type reexports, along with Core's direct Metrics dependency. Measure work
+  in caller instrumentation or performance fixtures; choose `ic-metrics` directly
+  for report arithmetic. Retained records and recovery are unchanged.
+- Remove public `AgentTransport::prepare`, `PreparedUpdate::submit` and
+  `UpdateOutcome`. Use the configured Agent providers and their mandatory durable
+  ingress retainer. `PreparedUpdate` still exposes signed bytes/request IDs to the
+  retainer; accepted, lost and failed calls remain pending and grant no retry.
+
+### Changed
+
+- Update the independent MSRV consumer to verify the canonical publication-error
+  type against the selected Host FS dependency, replacing the removed diagnostics
+  imports without changing the locked dependency graph.
+
+- Share journal-parent resolution between command custody and restore retention,
+  preserving absent-leaf admission, alias rejection and caller-specific errors.
+- Share ordered update response identity checks across mutation, transfer read and
+  upload policy. Original reservation checks run first, followed by authority,
+  attempt, context and target checks, then the original bounded method decoder.
+
+- Share directory checksum framing with the existing Host-backed digest owner,
+  preserving exact component ordering and original path/digest/NUL/newline bytes.
+- Stream remaining canonical record, upload-stage and Agent reply digest framing
+  through Host Artifacts instead of allocating whole framing buffers. Original domains, field
+  order, integer encoding and v1 identities remain unchanged.
+- Use Host Artifacts' typed SHA-256 digest for chunk comparisons and filenames,
+  removing the private generic hex encoder without changing retained artifact names.
+- Bound manifest and restore-reference release encoding before publication using
+  their existing record limits, retaining guarded verification and crash recovery.
+- Expose `ArtifactChecksumRecord::from_digest` for already-computed raw SHA-256
+  bytes; this wraps a digest without hashing it again or granting byte custody.
+
 ## [0.27.1] - 2026-10-16
 
 ### Changed

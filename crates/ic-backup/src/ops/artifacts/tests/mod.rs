@@ -14,21 +14,6 @@ fn byte_checksum_matches_sha256_vector() {
     assert_eq!(checksum.hash(), EMPTY_SHA256);
 }
 
-// Ensure file checksums use the same implementation as byte checksums.
-#[test]
-fn file_checksum_matches_byte_checksum() {
-    let root = temp_dir("canic-backup-checksum");
-    let path = root.join("artifact");
-    fs::write(&path, b"canic backup artifact").expect("write temp artifact");
-
-    let from_file = checksum_file(&path).expect("checksum file");
-    let from_bytes = ArtifactChecksumRecord::from_bytes(b"canic backup artifact");
-
-    fs::remove_file(&path).expect("remove temp artifact");
-    fs::remove_dir(root).expect("remove fixture root");
-    assert_eq!(from_file, from_bytes);
-}
-
 // Ensure directory checksums are stable regardless of file creation order.
 #[test]
 fn directory_checksum_is_order_independent() {
@@ -101,11 +86,15 @@ fn filesystem_checksums_reject_symlinked_files_and_entries() {
     std::os::unix::fs::symlink(root.join("real-directory"), root.join("linked-directory"))
         .expect("create intermediate symlink");
 
+    assert!(matches!(
+        checksum_directory(&root.join("source")),
+        Err(ArtifactError::UnsupportedEntry { .. })
+    ));
     let file_error =
-        checksum_file(&root.join("linked-file")).expect_err("symlinked file must reject");
+        checksum_directory(&root.join("linked-file")).expect_err("symlinked file must reject");
     let tree_error =
         checksum_directory(&root.join("tree")).expect_err("symlinked directory entry must reject");
-    let nested_error = checksum_file(&root.join("linked-directory/source"))
+    let nested_error = checksum_directory(&root.join("linked-directory/source"))
         .expect_err("symlinked intermediate directory must reject");
 
     assert!(matches!(file_error, ArtifactError::Io(_)));

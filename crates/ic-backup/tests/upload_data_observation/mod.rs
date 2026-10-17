@@ -1,5 +1,7 @@
 //! Native retained readback/refusal only; no management effect simulation.
 
+use crate::support::create_json_durable;
+use crate::support::read_json;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -16,7 +18,7 @@ use ic_backup::{
         },
         operation_plan::OperationPlanRecord,
     },
-    ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_json_durable, read_json},
+    ops::persistence::{AttemptJournalGuard, BackupLayoutGuard},
     policy::ic_snapshot_upload_data_observation::{validate_response, validate_settlement},
     ports::{
         ic_observation::IcObservationProviderError,

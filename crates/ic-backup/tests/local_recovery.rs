@@ -1,5 +1,7 @@
 //! Public local persistence journey; this test performs no IC effects.
 
+use crate::support::create_json_durable;
+use crate::support::read_json;
 mod support;
 
 use ic_backup::{
@@ -9,21 +11,19 @@ use ic_backup::{
         download_journal::{DownloadArtifactRequest, ResumeAction},
     },
     ops::{
-        artifacts::stage_relative_path,
+        artifacts::checksum_directory,
         persistence::{
             ArtifactCommitOutcome, BackupLayoutGuard, CommandLifetimeLock, CommandQuiescenceGuard,
             DownloadJournalGuard, JournalLock, JournalLockError, PersistenceError,
-            commit_artifact_directory, create_json_durable, read_json,
+            commit_artifact_directory,
         },
     },
 };
-use std::{fs, path::Path};
+use std::fs;
 
 #[test]
 fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
     let root = support::temp_root("ic-backup-public-recovery");
-    fs::create_dir_all(root.join("source")).expect("create source");
-    fs::write(root.join("source/state.bin"), b"exact snapshot bytes").expect("write source");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclude other layout users");
     let journal = root.join("intent.json");
     let guard = JournalLock::acquire(&journal).expect("acquire journal authority");
@@ -33,8 +33,9 @@ fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
     ));
     let temporary = root.join("staging");
     let canonical = root.join("snapshot");
-    let checksum =
-        stage_relative_path(&root, Path::new("source"), &temporary).expect("stage exact source");
+    fs::create_dir(&temporary).expect("create fixture staging");
+    fs::write(temporary.join("state.bin"), b"exact snapshot bytes").expect("write fixture bytes");
+    let checksum = checksum_directory(&temporary).expect("checksum exact fixture");
     create_json_durable(&journal, &checksum).expect("persist exact intent");
     assert_eq!(
         commit_artifact_directory(&temporary, &canonical, checksum.hash())
@@ -107,13 +108,7 @@ fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
 #[test]
 fn public_download_journal_adopts_publication_before_retained_progress() {
     let root = support::temp_root("ic-backup-public-download");
-    fs::create_dir_all(root.join("source")).expect("source");
     fs::create_dir(root.join("artifacts")).expect("artifact parent");
-    fs::write(
-        root.join("source/stable.bin"),
-        b"opaque complete transfer fixture",
-    )
-    .expect("source bytes");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");
     let intent = ArtifactChecksumRecord::from_bytes(b"caller-owned exact transfer intent");
     let mut guard = DownloadJournalGuard::create(
@@ -128,9 +123,14 @@ fn public_download_journal_adopts_publication_before_retained_progress() {
     )
     .expect("retain exact snapshot before transfer");
     let entry = guard.record().expect("retained record").artifacts()[0].clone();
-    let checksum =
-        stage_relative_path(&root, Path::new("source"), &root.join(entry.staging_path()))
-            .expect("stage native fixture");
+    let temporary = root.join(entry.staging_path());
+    fs::create_dir(&temporary).expect("create fixture staging");
+    fs::write(
+        temporary.join("stable.bin"),
+        b"opaque complete transfer fixture",
+    )
+    .expect("fixture bytes");
+    let checksum = checksum_directory(&temporary).expect("checksum native fixture");
     guard
         .record_downloaded(entry.canister_id(), entry.snapshot_id())
         .expect("caller attests completed transfer");

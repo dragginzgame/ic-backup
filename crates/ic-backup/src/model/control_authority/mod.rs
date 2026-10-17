@@ -1,5 +1,6 @@
 //! Ephemeral direct-controller observations for exact IC mutation payloads; no dispatch permits.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::OperationBindingRecord,
@@ -111,13 +112,13 @@ impl<'a> ControlObservationRequest<'a> {
     /// then u32 big-endian ceiling. Observed evidence/controllers are excluded.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/control-observation/v1\0".to_vec();
-        bytes.extend_from_slice(self.binding.intent().as_bytes());
-        bytes.extend_from_slice(&self.binding.operation_sequence().to_be_bytes());
-        bytes.extend_from_slice(self.wire.digest().hash().as_bytes());
-        bytes.extend_from_slice(self.challenge.hash().as_bytes());
-        bytes.extend_from_slice(&self.max_remote_observations.to_be_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        let mut bytes = EvidenceDigest::new(b"ic-backup/control-observation/v1\0");
+        bytes.append(self.binding.intent().as_bytes());
+        bytes.append(&self.binding.operation_sequence().to_be_bytes());
+        bytes.append(self.wire.digest().hash().as_bytes());
+        bytes.append(self.challenge.hash().as_bytes());
+        bytes.append(&self.max_remote_observations.to_be_bytes());
+        bytes.finish()
     }
 }
 

@@ -111,7 +111,14 @@ impl BackupLayoutGuard {
         write: impl FnOnce(&Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<RestoreReferenceRecord, PersistenceError> {
         let mut references = self.restore_references()?;
-        let reference = RestoreReferenceRecord::new(journal_identity(journal)?, authority)?;
+        let reference = RestoreReferenceRecord::new(
+            super::journal_path::resolve_journal(
+                journal,
+                || io::Error::from(io::ErrorKind::InvalidInput).into(),
+                |path| PersistenceError::InvalidRestoreReferences { path },
+            )?,
+            authority,
+        )?;
         let path = self.root.join(REFERENCES_FILE);
         if references.retain(reference.clone())? {
             let bytes = super::json::encode_json(&references, MAX_RESTORE_REFERENCE_BYTES)?;
@@ -152,29 +159,6 @@ impl BackupLayoutGuard {
 #[cfg(not(unix))]
 fn open_directory_no_follow(_path: &Path) -> io::Result<File> {
     Err(io::Error::from(io::ErrorKind::Unsupported))
-}
-
-pub(super) fn journal_identity(path: &Path) -> Result<PathBuf, PersistenceError> {
-    let name = path
-        .file_name()
-        .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidInput))?;
-    let parent = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-    let parent = parent.canonicalize()?;
-    if !parent.is_dir() {
-        return Err(io::Error::from(io::ErrorKind::NotADirectory).into());
-    }
-    let journal = parent.join(name);
-    match fs::symlink_metadata(&journal) {
-        Ok(metadata) if !metadata.is_file() => {
-            return Err(PersistenceError::InvalidRestoreReferences { path: journal });
-        }
-        Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error.into()),
-        _ => {}
-    }
-    Ok(journal)
 }
 
 fn sync_reference(path: &Path) -> io::Result<()> {

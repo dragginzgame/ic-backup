@@ -1,6 +1,7 @@
 //! Exact v1 snapshot member names and data-kind mapping.
 
-use crate::hash::hex_bytes;
+use super::IcSnapshotArtifactError;
+use ic_host_artifacts::artifact::Sha256Digest;
 use ic_management_canister_types::SnapshotDataKind;
 
 pub(super) enum Member {
@@ -14,8 +15,8 @@ pub(super) enum Member {
     },
 }
 
-pub(super) fn select(kind: &SnapshotDataKind) -> Member {
-    match kind {
+pub(super) fn select(kind: &SnapshotDataKind) -> Result<Member, IcSnapshotArtifactError> {
+    Ok(match kind {
         SnapshotDataKind::WasmModule { offset, size } => Member::Region {
             index: 0,
             offset: *offset,
@@ -32,11 +33,15 @@ pub(super) fn select(kind: &SnapshotDataKind) -> Member {
             size: *size,
         },
         SnapshotDataKind::WasmChunk { hash } => Member::Chunk {
-            name: chunk_name(hash),
+            name: chunk_name(Sha256Digest::from_bytes(
+                hash.as_slice()
+                    .try_into()
+                    .map_err(|_| IcSnapshotArtifactError::OriginalMismatch)?,
+            )),
         },
-    }
+    })
 }
 
-pub(super) fn chunk_name(hash: &[u8]) -> String {
-    format!("chunk-{}.bin", hex_bytes(hash))
+pub(super) fn chunk_name(hash: Sha256Digest) -> String {
+    format!("chunk-{hash}.bin")
 }

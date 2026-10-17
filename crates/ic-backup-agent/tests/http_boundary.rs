@@ -15,9 +15,7 @@ use ic_backup::{
 };
 use ic_backup_agent::AgentSnapshotUploadProvider;
 use ic_backup_agent::{AgentMutationProvider, AgentSnapshotTransferReadProvider, PreparedUpdate};
-use ic_backup_agent::{
-    AgentTransport, MAX_HTTP_RESPONSE_BYTES, ReservedUpdate, TransportError, UpdateOutcome,
-};
+use ic_backup_agent::{AgentTransport, MAX_HTTP_RESPONSE_BYTES, TransportError};
 
 #[tokio::test]
 async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or_lost_pending() {
@@ -364,43 +362,27 @@ impl Drop for Server {
 
 #[tokio::test]
 async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep_spending() {
-    for (label, status, body, discard, delay, pending) in [
-        ("accepted", "202 Accepted", vec![], false, false, true),
-        (
-            "throttled",
-            "429 Too Many Requests",
-            vec![],
-            false,
-            false,
-            false,
-        ),
+    for (label, status, body, discard, delay) in [
+        ("accepted", "202 Accepted", vec![], false, false),
+        ("throttled", "429 Too Many Requests", vec![], false, false),
         (
             "unavailable",
             "503 Service Unavailable",
             vec![],
             false,
             false,
-            false,
         ),
-        (
-            "redirect",
-            "307 Temporary Redirect",
-            vec![],
-            false,
-            false,
-            false,
-        ),
-        ("malformed", "200 OK", vec![255], false, false, false),
+        ("redirect", "307 Temporary Redirect", vec![], false, false),
+        ("malformed", "200 OK", vec![255], false, false),
         (
             "oversize",
             "200 OK",
             vec![0; MAX_HTTP_RESPONSE_BYTES + 1],
             false,
             false,
-            false,
         ),
-        ("lost", "200 OK", vec![], true, false, false),
-        ("timeout", "200 OK", vec![], false, true, false),
+        ("lost", "200 OK", vec![], true, false),
+        ("timeout", "200 OK", vec![], false, true),
     ] {
         let root = support::root(label);
         let mut server = Server::new(&root, status, body, discard, delay);
@@ -419,23 +401,28 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
             Duration::from_secs(1),
         )
         .unwrap();
-        let prepared = transport
-            .prepare(ReservedUpdate::Mutation(&request), guard.record().unwrap())
-            .unwrap();
-        assert!(server.requests.lock().unwrap().is_empty());
-        let envelope = prepared.envelope().to_vec();
-        let id = *prepared.request_id();
-        support::retain_signed(&root, &prepared).unwrap();
-        let result = prepared.submit().await;
-        server.finish().unwrap();
-        if pending {
-            assert!(matches!(result,Ok(UpdateOutcome::Pending{request_id}) if request_id==id));
-        } else {
-            assert!(
-                matches!(result, Err(TransportError::Indeterminate)),
-                "{label}"
+        let mut envelope = None;
+        let result = {
+            let mut provider = AgentMutationProvider::new(
+                &transport,
+                |_: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+                    assert!(server.requests.lock().unwrap().is_empty());
+                    support::retain_signed(&root, prepared)
+                        .map_err(|_| IcMutationProviderError::Indeterminate)?;
+                    envelope = Some(prepared.envelope().to_vec());
+                    Ok(())
+                },
             );
-        }
+            provider
+                .submit_mutation(&request, guard.record().unwrap())
+                .await
+        };
+        let envelope = envelope.unwrap();
+        server.finish().unwrap();
+        assert!(
+            matches!(result, Err(IcMutationProviderError::Indeterminate)),
+            "{label}"
+        );
         assert_eq!(fs::read(guard.path()).unwrap(), before);
         let view = guard.record().unwrap().view();
         assert_eq!(
@@ -486,9 +473,19 @@ async fn context_and_stale_reservations_reject_before_network() {
         Duration::from_secs(1),
     )
     .unwrap();
+    let mut provider = AgentMutationProvider::new(
+        &transport,
+        |_: &IcMutationRequest<'_>,
+         _: &PreparedUpdate<'_>|
+         -> Result<(), IcMutationProviderError> {
+            panic!("changed context must reject before retention")
+        },
+    );
     assert!(matches!(
-        transport.prepare(ReservedUpdate::Mutation(&request), guard.record().unwrap()),
-        Err(TransportError::Context)
+        provider
+            .submit_mutation(&request, guard.record().unwrap())
+            .await,
+        Err(IcMutationProviderError::Unsupported)
     ));
     let transport = AgentTransport::new(
         plan.context().clone(),
@@ -501,9 +498,17 @@ async fn context_and_stale_reservations_reject_before_network() {
     let untouched = ic_backup::model::attempt_journal::AttemptJournalRecord::new(
         plan.attempt_authority(1).unwrap(),
     );
+    let mut provider = AgentMutationProvider::new(
+        &transport,
+        |_: &IcMutationRequest<'_>,
+         _: &PreparedUpdate<'_>|
+         -> Result<(), IcMutationProviderError> {
+            panic!("stale reservation must reject before retention")
+        },
+    );
     assert!(matches!(
-        transport.prepare(ReservedUpdate::Mutation(&request), &untouched),
-        Err(TransportError::Reservation)
+        provider.submit_mutation(&request, &untouched).await,
+        Err(IcMutationProviderError::Unsupported)
     ));
     for endpoint in [
         "http://example.com/",

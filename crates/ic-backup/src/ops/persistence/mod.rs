@@ -14,10 +14,10 @@ mod file_lock;
 mod immutable_record;
 mod inventory;
 mod journal_lock;
-mod json;
+mod journal_path;
+pub(crate) mod json;
 mod layout_lifetime;
 mod operation_plan;
-mod publication_error;
 mod restore_reference_release;
 mod restore_safety;
 
@@ -37,8 +37,7 @@ pub use download_journal::{
 #[cfg(unix)]
 pub use download_journal::{
     IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotDataUploadPreparationError,
-    IcSnapshotLocalMetrics, IcSnapshotUploadArtifactError, MeasurementAggregate,
-    MeasurementHistogram, MeasurementSummary,
+    IcSnapshotUploadArtifactError,
 };
 pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};
@@ -60,12 +59,11 @@ pub use fence_obligation::{
 };
 pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};
-pub use json::{create_json_durable, read_json, write_json_durable};
+pub(crate) use json::read_json;
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
 pub use operation_plan::{
     OperationPlanPersistenceError, create_operation_plan, read_operation_plan,
 };
-pub use publication_error::PublicationError;
 pub use restore_reference_release::{
     MAX_RESTORE_TERMINAL_BYTES, RestoreReferenceReleaseError, RestoreReferenceReleaseOutcome,
     RestoreTerminalEvidenceProvider,
@@ -104,7 +102,7 @@ pub enum PersistenceError {
     /// File publication failed, retaining producer/cleanup causes and visibility.
     /// An after-publication failure leaves output visible and requires reconciliation.
     #[error(transparent)]
-    Publication(#[from] PublicationError),
+    Publication(#[from] ic_host_fs::durable::NamedWriteError<io::Error>),
     /// JSON encoding or decoding failed.
     #[error(transparent)]
     Json(#[from] serde_json::Error),

@@ -1,5 +1,6 @@
 //! Original stage allocations and exact learned-plan bindings; no second spending ledger.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     bounded_sequence,
@@ -70,9 +71,9 @@ impl ExecutionWorkflowRecord {
     /// Bind the full original allocation under a distinct NUL-terminated v1 domain.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/execution-workflow/v1\0".to_vec();
-        bytes.extend_from_slice(self.allocation.digest().hash().as_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        let mut bytes = EvidenceDigest::new(b"ic-backup/execution-workflow/v1\0");
+        bytes.append(self.allocation.digest().hash().as_bytes());
+        bytes.finish()
     }
 }
 
@@ -266,18 +267,18 @@ impl ExecutionStageBindingRecord {
     /// then canonical predecessor u64 identities and binding/settlement/evidence hashes.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/execution-stage/v1\0".to_vec();
-        bytes.extend_from_slice(self.workflow.hash().as_bytes());
-        bytes.extend_from_slice(&self.stage_sequence.to_be_bytes());
-        bytes.extend_from_slice(self.plan.hash().as_bytes());
-        bytes.extend_from_slice(&(self.predecessors.len() as u64).to_be_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/execution-stage/v1\0");
+        bytes.append(self.workflow.hash().as_bytes());
+        bytes.append(&self.stage_sequence.to_be_bytes());
+        bytes.append(self.plan.hash().as_bytes());
+        bytes.append(&(self.predecessors.len() as u64).to_be_bytes());
         for row in &self.predecessors {
-            bytes.extend_from_slice(&row.stage_sequence.to_be_bytes());
+            bytes.append(&row.stage_sequence.to_be_bytes());
             for digest in [&row.binding, &row.settlement, &row.learned_evidence] {
-                bytes.extend_from_slice(digest.hash().as_bytes());
+                bytes.append(digest.hash().as_bytes());
             }
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
 fn canonical_predecessors(

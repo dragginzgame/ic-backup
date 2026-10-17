@@ -204,7 +204,8 @@ impl<'request, 'metadata> IcSnapshotDataReply<'request, 'metadata> {
             return Err(IcSnapshotDataError::ReplyTooLarge);
         }
         let chunk = wire::decode(bytes)?;
-        let chunk_checksum = ArtifactChecksumRecord::from_bytes(&chunk);
+        let chunk_digest = ic_host_artifacts::artifact::Sha256Digest::compute(&chunk);
+        let chunk_checksum = ArtifactChecksumRecord::from_digest(*chunk_digest.as_bytes());
         match request.kind() {
             SnapshotDataKind::WasmModule { size, .. }
             | SnapshotDataKind::WasmMemory { size, .. }
@@ -214,7 +215,7 @@ impl<'request, 'metadata> IcSnapshotDataReply<'request, 'metadata> {
                 }
             }
             SnapshotDataKind::WasmChunk { hash } => {
-                if chunk_checksum.hash() != crate::hash::hex_bytes(hash) {
+                if chunk_digest.as_bytes().as_slice() != hash.as_slice() {
                     return Err(IcSnapshotDataError::ChunkHashMismatch);
                 }
             }

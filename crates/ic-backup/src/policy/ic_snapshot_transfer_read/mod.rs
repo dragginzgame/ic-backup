@@ -1,5 +1,6 @@
 //! Pure current-reservation association using the original metadata/data decoder owners.
 
+use super::response_identity::{ResponseIdentity, ResponseIdentityMismatch};
 use crate::model::{
     attempt_journal::AttemptJournalRecord,
     ic_snapshot_data::{IcSnapshotDataError, IcSnapshotDataReply},
@@ -56,18 +57,30 @@ pub fn validate_response<'request, 'metadata>(
 {
     request.validate_journal(journal)?;
     let input = response.input();
-    if input.authority != request.authority().digest() {
-        return Err(IcSnapshotTransferReadAssociationError::AuthorityMismatch);
+    ResponseIdentity {
+        authority: &input.authority,
+        mutation_attempt: input.mutation_attempt,
+        context: &input.context,
+        target: &input.target,
     }
-    if input.mutation_attempt != request.mutation_attempt() {
-        return Err(IcSnapshotTransferReadAssociationError::AttemptMismatch);
-    }
-    if &input.context != request.plan().context() {
-        return Err(IcSnapshotTransferReadAssociationError::ContextMismatch);
-    }
-    if input.target != request.payload().target() {
-        return Err(IcSnapshotTransferReadAssociationError::TargetMismatch);
-    }
+    .compare(&ResponseIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        context: request.plan().context(),
+        target: request.payload().target(),
+    })
+    .map_err(|mismatch| match mismatch {
+        ResponseIdentityMismatch::Authority => {
+            IcSnapshotTransferReadAssociationError::AuthorityMismatch
+        }
+        ResponseIdentityMismatch::Attempt => {
+            IcSnapshotTransferReadAssociationError::AttemptMismatch
+        }
+        ResponseIdentityMismatch::Context => {
+            IcSnapshotTransferReadAssociationError::ContextMismatch
+        }
+        ResponseIdentityMismatch::Target => IcSnapshotTransferReadAssociationError::TargetMismatch,
+    })?;
     let reply = match request.payload() {
         IcSnapshotTransferReadPayload::Metadata(payload) => IcSnapshotTransferReadReply::Metadata(
             IcSnapshotMetadataReply::decode(payload, &input.reply)?,

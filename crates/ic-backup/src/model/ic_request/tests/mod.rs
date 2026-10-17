@@ -45,12 +45,15 @@ fn binding(record: &IcManagementRequestRecord) -> OperationBindingRecord {
 fn matches_independent_candid_bytes_and_domain_separated_wire_goldens() {
     for case in cases() {
         let record = request(case.method, &case.target, case.snapshot_id.clone());
-        assert_eq!(
-            crate::hash::hex_bytes(record.arguments()),
-            case.arguments_hex,
-            "{}",
-            case.method.name()
-        );
+        let expected = case
+            .arguments_hex
+            .as_bytes()
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(record.arguments(), expected, "{}", case.method.name());
         assert_eq!(
             record.digest().hash(),
             case.digest,

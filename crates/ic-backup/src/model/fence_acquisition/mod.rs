@@ -1,5 +1,6 @@
 //! Exact application update bytes and original fence acquisition reservation binding.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord, MAX_OPERATION_ATTEMPTS},
@@ -77,17 +78,17 @@ impl FenceAcquisitionPayload {
     /// big-endian u32 method length/exact bytes and u64 argument length/exact bytes.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/application-fence-acquisition/v1\0".to_vec();
+        let mut bytes = EvidenceDigest::new(b"ic-backup/application-fence-acquisition/v1\0");
         // Principal's canonical raw representation is at most 29 bytes.
-        bytes.push(self.target_bytes.len().to_le_bytes()[0]);
-        bytes.extend_from_slice(&self.target_bytes);
-        bytes.push(1); // Exactly one host replicated update, never a query.
+        bytes.byte(self.target_bytes.len().to_le_bytes()[0]);
+        bytes.append(&self.target_bytes);
+        bytes.byte(1); // Exactly one host replicated update, never a query.
         // Visible ASCII methods are admitted at <=128 bytes, so their low byte is exact.
-        bytes.extend_from_slice(&u32::from(self.method.len().to_le_bytes()[0]).to_be_bytes());
-        bytes.extend_from_slice(self.method.as_bytes());
-        bytes.extend_from_slice(&(self.arguments.len() as u64).to_be_bytes());
-        bytes.extend_from_slice(&self.arguments);
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.append(&u32::from(self.method.len().to_le_bytes()[0]).to_be_bytes());
+        bytes.append(self.method.as_bytes());
+        bytes.append(&(self.arguments.len() as u64).to_be_bytes());
+        bytes.append(&self.arguments);
+        bytes.finish()
     }
 }
 impl fmt::Debug for FenceAcquisitionPayload {

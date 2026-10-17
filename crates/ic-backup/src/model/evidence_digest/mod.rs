@@ -1,4 +1,4 @@
-//! Exact domain-prefixed evidence framing for admitted IC replies.
+//! Exact domain-prefixed framing for canonical records and IC evidence.
 
 use crate::model::artifacts::ArtifactChecksumRecord;
 use ic_host_artifacts::artifact::HashingWriter;
@@ -33,7 +33,7 @@ impl EvidenceDigest {
         self.append(&[value]);
     }
 
-    fn append(&mut self, bytes: &[u8]) {
+    pub(crate) fn append(&mut self, bytes: &[u8]) {
         self.writer
             .write_all(bytes)
             .expect("sink-backed evidence digest writes cannot fail");

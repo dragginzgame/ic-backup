@@ -1,5 +1,7 @@
 use super::*;
 use crate::test_support::temp_dir;
+use crate::test_support::{create_json_durable, write_json_durable};
+use ic_host_fs::durable::NamedWriteError;
 use serde::Serializer;
 use std::fs;
 
@@ -140,7 +142,7 @@ fn rename_failure_removes_the_staging_file() {
     assert!(matches!(
         error,
         PersistenceError::Publication(
-            crate::ops::persistence::PublicationError::BeforePublication { .. }
+            ic_host_fs::durable::NamedWriteError::BeforePublication { .. }
         )
     ));
     assert!(path.is_dir());
@@ -278,8 +280,6 @@ fn private_json_parents_refuse_aliases_and_traversal_before_effects() {
 #[cfg(unix)]
 #[test]
 fn foreign_staging_replacement_retains_typed_cleanup_evidence() {
-    use crate::ops::persistence::PublicationError;
-
     for mode in [PublicationMode::Replace, PublicationMode::CreateNew] {
         let root = temp_dir("ic-backup-json-stage-custody");
         let path = root.join("record.json");
@@ -303,7 +303,7 @@ fn foreign_staging_replacement_retains_typed_cleanup_evidence() {
         })
         .unwrap_err();
         assert!(matches!(error, PersistenceError::Publication(
-            PublicationError::BeforePublication { source, cleanup_error: Some(cleanup) }
+            NamedWriteError::BeforePublication { source, cleanup_error: Some(cleanup) }
         ) if source.kind() == io::ErrorKind::InvalidData && cleanup.kind() == io::ErrorKind::InvalidData));
         assert_eq!(fs::read(displaced).unwrap(), b"new");
         assert_eq!(fs::read(foreign.unwrap()).unwrap(), b"foreign");
@@ -350,4 +350,62 @@ fn assert_no_staging_file(root: &Path, target_name: &str) {
         .filter(|entry| entry.file_name() != target_name)
         .collect::<Vec<_>>();
     assert!(staging_files.is_empty(), "staging files remain");
+}
+
+#[test]
+fn host_publication_failures_keep_exact_phase_source_and_cleanup_evidence() {
+    use std::error::Error;
+    let producer = PersistenceError::from(NamedWriteError::Producer {
+        source: io::Error::new(io::ErrorKind::BrokenPipe, "producer failed"),
+        cleanup_error: Some(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "stage held",
+        )),
+    });
+    assert!(matches!(
+        &producer,
+        PersistenceError::Publication(NamedWriteError::Producer { source, cleanup_error: Some(cleanup) })
+            if source.kind() == io::ErrorKind::BrokenPipe
+                && cleanup.kind() == io::ErrorKind::PermissionDenied
+    ));
+    assert!(
+        producer
+            .to_string()
+            .contains("staging cleanup failed: stage held")
+    );
+    assert_eq!(producer.source().unwrap().to_string(), "producer failed");
+
+    let before = PersistenceError::from(NamedWriteError::<io::Error>::BeforePublication {
+        source: io::Error::new(io::ErrorKind::AlreadyExists, "original remains"),
+        cleanup_error: Some(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "stage held",
+        )),
+    });
+    assert!(matches!(
+        &before,
+        PersistenceError::Publication(NamedWriteError::BeforePublication { source, cleanup_error: Some(cleanup) })
+            if source.kind() == io::ErrorKind::AlreadyExists
+                && cleanup.kind() == io::ErrorKind::PermissionDenied
+    ));
+    assert!(
+        before
+            .to_string()
+            .contains("staging cleanup failed: stage held")
+    );
+    assert_eq!(before.source().unwrap().to_string(), "original remains");
+
+    let after = PersistenceError::from(NamedWriteError::<io::Error>::AfterPublication {
+        source: io::Error::other("sync uncertain"),
+    });
+    assert!(matches!(
+        &after,
+        PersistenceError::Publication(NamedWriteError::AfterPublication { source }) if source.to_string() == "sync uncertain"
+    ));
+    assert!(
+        after
+            .to_string()
+            .contains("output published but completion failed")
+    );
+    assert_eq!(after.source().unwrap().to_string(), "sync uncertain");
 }

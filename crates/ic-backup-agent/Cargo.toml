@@ -12,6 +12,7 @@ readme = "README.md"
 [dependencies]
 ic-agent.workspace = true
 ic-backup.workspace = true
+ic-host-artifacts.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

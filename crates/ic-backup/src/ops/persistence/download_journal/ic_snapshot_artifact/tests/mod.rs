@@ -5,7 +5,6 @@ mod upload;
 mod verification;
 
 use super::*;
-use crate::hash::hex_bytes;
 use crate::{
     model::{
         download_journal::DownloadArtifactRequest,
@@ -15,6 +14,7 @@ use crate::{
     ops::persistence::{BackupLayoutGuard, commit_artifact_directory},
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
+use ic_host_artifacts::artifact::Sha256Digest;
 use ic_management_canister_types::{
     ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
@@ -348,7 +348,10 @@ fn changed_unsafe_extra_and_missing_files_reject_before_any_journal_transition()
         if action == "occupied-chunk" {
             let hash = &metadata.metadata().wasm_chunk_store[0].hash;
             fs::write(
-                path.join(format!("chunk-{}.bin", hex_bytes(hash))),
+                path.join(format!(
+                    "chunk-{}.bin",
+                    Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap())
+                )),
                 b"original occupied bytes",
             )
             .unwrap();

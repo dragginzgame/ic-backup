@@ -111,10 +111,9 @@ fn changed_unsafe_missing_extra_and_unbounded_children_reject_without_repair() {
         let journal_bytes = fs::read(guard.path()).unwrap();
         let directory = root.join(format!("artifacts/{TARGET}"));
         let module = directory.join(REGIONS[0]);
-        let chunk = directory.join(format!(
-            "chunk-{}.bin",
-            hex_bytes(&metadata.metadata().wasm_chunk_store[0].hash)
-        ));
+        let hash = &metadata.metadata().wasm_chunk_store[0].hash;
+        let hash = Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap());
+        let chunk = directory.join(format!("chunk-{hash}.bin"));
         match case {
             "changed" => fs::write(&module, [11; 5]).unwrap(),
             "truncated" => fs::write(&module, [8; 4]).unwrap(),
@@ -282,15 +281,14 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut guard = retained(&layout, &plan, &metadata, &raw);
         let directory = root.join(format!("artifacts/{TARGET}"));
+        let hash = &metadata.metadata().wasm_chunk_store[0].hash;
+        let hash = Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap());
         let path = match case {
             "extent" => directory.join(REGIONS[0]),
             "format" => directory.join("format"),
             "metadata" => directory.join("metadata.candid"),
             "arguments" => directory.join("metadata-arguments.candid"),
-            "chunk" => directory.join(format!(
-                "chunk-{}.bin",
-                hex_bytes(&metadata.metadata().wasm_chunk_store[0].hash)
-            )),
+            "chunk" => directory.join(format!("chunk-{hash}.bin")),
             _ => directory.join("extra-empty"),
         };
         if case == "extra-directory" {
@@ -311,7 +309,7 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         record["artifacts"][0]["checksum"] = serde_json::to_value(&checksum).unwrap();
         guard.record = serde_json::from_value(record).unwrap();
         // Deliberately corrupt both retained declarations; shape/evidence remains independent.
-        crate::ops::persistence::write_json_durable(&guard.path(), &guard.record).unwrap();
+        crate::test_support::write_json_durable(&guard.path(), &guard.record).unwrap();
         let bytes = fs::read(guard.path()).unwrap();
         let result = guard.verify_ic_snapshot_artifact(&plan, TOKEN, &metadata);
         match case {

@@ -20,8 +20,8 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, MeasurementAggregate,
-        MeasurementHistogram, MeasurementSummary, create_operation_plan, read_operation_plan,
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, create_operation_plan,
+        read_operation_plan,
     },
     policy::ic_snapshot_upload::validate_acknowledgement,
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
@@ -237,21 +237,6 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let source_layout = BackupLayoutGuard::acquire(&source_root).unwrap();
     let retained = read_operation_plan(&source_layout, &original.digest()).unwrap();
     let downloads = DownloadJournalGuard::open(&source_layout, retained.digest().hash()).unwrap();
-    assert_eq!(
-        downloads
-            .ic_snapshot_metrics()
-            .upload_metadata_success_ns()
-            .aggregate()
-            .samples(),
-        0
-    );
-    assert_eq!(
-        downloads
-            .ic_snapshot_metrics()
-            .prepared_chunk_bytes()
-            .maximum(),
-        None
-    );
     let data_layout = BackupLayoutGuard::acquire(&data_root).unwrap();
     let retained_data = read_operation_plan(&data_layout, &data_plan.digest()).unwrap();
     let mut data_attempts =
@@ -270,40 +255,6 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         )
         .unwrap();
     assert_eq!(data.binding_digest(), payload_digest);
-    let measurements = downloads.ic_snapshot_metrics();
-    let prepared: MeasurementAggregate = measurements.prepared_chunk_bytes();
-    let canonical: ic_metrics::MeasurementAggregate = prepared;
-    assert_eq!(canonical, measurements.prepared_chunk_bytes());
-    let histogram: MeasurementHistogram<4> = measurements.prepared_chunk_bytes_histogram();
-    let canonical_histogram: ic_metrics::MeasurementHistogram<4> = histogram;
-    assert_eq!(canonical_histogram.aggregate(), canonical);
-    assert_eq!(histogram.bucket_counts(), &[0, 1, 0, 0]);
-    assert_eq!(histogram.overflow(), 0);
-    assert_eq!(
-        measurements
-            .upload_metadata_success_ns()
-            .aggregate()
-            .samples(),
-        1
-    );
-    assert_eq!(
-        measurements.upload_data_success_ns().aggregate().samples(),
-        1
-    );
-    let duration: MeasurementSummary = measurements.upload_data_success_ns();
-    let canonical_duration: ic_metrics::MeasurementSummary = duration;
-    assert_eq!(
-        canonical_duration.aggregate().scaled_mean(10),
-        duration.aggregate().scaled_mean(10)
-    );
-    assert_eq!(
-        measurements.verification_success_ns().aggregate().samples(),
-        3
-    );
-    let total: u128 = measurements.prepared_chunk_bytes().total();
-    let mean: Option<u128> = measurements.prepared_chunk_bytes().mean().unwrap();
-    assert_eq!(total, 2);
-    assert_eq!(mean, Some(2));
     assert_eq!(
         data_attempts.record().unwrap().view().pending_mutation,
         Some(1)
@@ -351,7 +302,6 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     .unwrap();
     assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);
     assert_eq!(attempts.record().unwrap().view().pending_mutation, Some(1));
-    assert_eq!(downloads.ic_snapshot_metrics(), measurements);
     assert_eq!(metadata_provider.calls, 1);
     assert_eq!(data_provider.calls, 1);
     upload_observation::retained_inventory_observation(
@@ -369,7 +319,6 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         fs::read(source_root.join("restore-references.json")).unwrap(),
         references
     );
-    assert_eq!(downloads.ic_snapshot_metrics(), measurements);
     upload_data_observation::retained_settled_readback(
         &retained_data,
         &data,
@@ -381,5 +330,4 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         fs::read(source_root.join("restore-references.json")).unwrap(),
         references
     );
-    assert_eq!(downloads.ic_snapshot_metrics(), measurements);
 }

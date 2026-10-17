@@ -42,26 +42,28 @@ rust-version = "$msrv"
 $package = { path = $dependency }
 TOML
     if [[ "$package" == ic-backup ]]; then
+        host_fs_requirement="$(jq -er '
+            .packages[] | select(.name == "ic-backup") | .dependencies[]
+            | select(.name == "ic-host-fs" and .kind == null) | .req | @json
+        ' "$fixture/original.json")"
+        printf 'ic-host-fs = { version = %s, default-features = false }\n' \
+            "$host_fs_requirement" >> "$selected/Cargo.toml"
         cat > "$selected/src/main.rs" <<'RUST'
-use ic_backup::ops::persistence::{
-    IcSnapshotLocalMetrics, MeasurementAggregate, MeasurementHistogram, MeasurementSummary,
-};
+use ic_backup::ops::persistence::PersistenceError;
+use ic_host_fs::durable::NamedWriteError;
+use std::io;
 
 fn main() {
-    let diagnostics = IcSnapshotLocalMetrics::default();
-    let summary: MeasurementSummary = diagnostics.verification_success_ns();
-    let duration_aggregate: MeasurementAggregate = summary.aggregate();
-    let aggregate: MeasurementAggregate = diagnostics.prepared_chunk_bytes();
-    let histogram: MeasurementHistogram<4> = diagnostics.prepared_chunk_bytes_histogram();
-    let _: u128 = duration_aggregate.total();
-    let _: Option<u128> = duration_aggregate.mean().unwrap();
-    let _: u128 = aggregate.total();
-    let _: Option<u128> = aggregate.mean().unwrap();
-    let _: u128 = histogram.aggregate().total();
-    let _: u64 = duration_aggregate.samples();
-    let _: Option<u64> = summary.latest();
-    let _: Option<u64> = aggregate.maximum();
-    let _: &[u64; 4] = histogram.bucket_counts();
+    let publication: NamedWriteError<io::Error> = NamedWriteError::AfterPublication {
+        source: io::Error::other("completion uncertain"),
+    };
+    let error = PersistenceError::from(publication);
+    match error {
+        PersistenceError::Publication(publication) => {
+            let _: NamedWriteError<io::Error> = publication;
+        }
+        _ => panic!("publication errors retain Host's canonical type"),
+    }
 }
 RUST
     else

@@ -57,7 +57,11 @@ impl ArtifactChecksumRecord {
         })
     }
 
-    pub(crate) fn from_digest(digest: [u8; 32]) -> Self {
+    /// Wrap an already-computed raw SHA-256 digest without hashing it again.
+    ///
+    /// The bytes identify content; this does not authenticate its source or custody.
+    #[must_use]
+    pub fn from_digest(digest: [u8; 32]) -> Self {
         Self {
             hash: Sha256Digest::from_bytes(digest).to_string(),
         }

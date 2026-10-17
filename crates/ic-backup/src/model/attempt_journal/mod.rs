@@ -1,5 +1,6 @@
 //! Durable finite local attempt accounting adapted from Canic's pending/receipt contracts.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod authority;
 mod history;
 pub use authority::{
@@ -246,13 +247,13 @@ impl AttemptJournalRecord {
     /// JSON formatting and filesystem paths are excluded. This authenticates no receipt.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/attempt-journal-history/v1\0".to_vec();
-        bytes.extend_from_slice(self.authority.digest().hash().as_bytes());
-        bytes.extend_from_slice(&(self.events.len() as u64).to_be_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/attempt-journal-history/v1\0");
+        bytes.append(self.authority.digest().hash().as_bytes());
+        bytes.append(&(self.events.len() as u64).to_be_bytes());
         for event in &self.events {
             event.append_digest_bytes(&mut bytes);
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
     pub(crate) fn reserve_mutation(&mut self) -> Result<u32, AttemptJournalRecordError> {
         let attempt = self.projection.next_attempt;

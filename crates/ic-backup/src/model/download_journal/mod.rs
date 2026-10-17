@@ -1,5 +1,6 @@
 //! Exact local artifact identity and model-owned download lifecycle transitions.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod view;
 pub use view::{DownloadArtifactView, DownloadJournalView, ResumeAction};
 
@@ -276,9 +277,9 @@ impl DownloadJournalRecord {
         reason = "record admission bounds principals, snapshot tokens and identity-derived paths below u32"
     )]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/download-journal/v1\0".to_vec();
-        bytes.extend_from_slice(self.intent.as_bytes());
-        bytes.extend_from_slice(&(self.artifacts.len() as u64).to_be_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/download-journal/v1\0");
+        bytes.append(self.intent.as_bytes());
+        bytes.append(&(self.artifacts.len() as u64).to_be_bytes());
         for entry in &self.artifacts {
             for value in [
                 entry.canister_id(),
@@ -286,23 +287,23 @@ impl DownloadJournalRecord {
                 entry.staging_path(),
                 entry.artifact_path(),
             ] {
-                bytes.extend_from_slice(&(value.len() as u32).to_be_bytes());
-                bytes.extend_from_slice(value.as_bytes());
+                bytes.append(&(value.len() as u32).to_be_bytes());
+                bytes.append(value.as_bytes());
             }
-            bytes.extend_from_slice(&entry.snapshot_taken_at_timestamp.to_be_bytes());
-            bytes.extend_from_slice(&entry.snapshot_total_size_bytes.to_be_bytes());
-            bytes.push(match entry.state {
+            bytes.append(&entry.snapshot_taken_at_timestamp.to_be_bytes());
+            bytes.append(&entry.snapshot_total_size_bytes.to_be_bytes());
+            bytes.byte(match entry.state {
                 ArtifactStateRecord::Created => 0,
                 ArtifactStateRecord::Downloaded => 1,
                 ArtifactStateRecord::ChecksumVerified => 2,
                 ArtifactStateRecord::Durable => 3,
             });
-            bytes.push(u8::from(entry.checksum.is_some()));
+            bytes.byte(u8::from(entry.checksum.is_some()));
             if let Some(checksum) = &entry.checksum {
-                bytes.extend_from_slice(checksum.hash().as_bytes());
+                bytes.append(checksum.hash().as_bytes());
             }
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 
     pub(crate) fn artifact(

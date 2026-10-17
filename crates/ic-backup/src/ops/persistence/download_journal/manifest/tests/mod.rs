@@ -3,7 +3,10 @@
 use super::*;
 use crate::{
     model::{artifacts::ChecksumError, download_journal::DownloadArtifactRequest},
-    ops::persistence::{create_operation_plan, json::create_json_durable_at_barriers},
+    ops::persistence::{
+        create_operation_plan,
+        json::{DurableWriteBarrier, publish_bytes_at_barriers},
+    },
     test_support::{
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
         membership::{hash, plan},
@@ -69,7 +72,7 @@ fn download_manifest_publishes_private_exact_records_and_replays_without_artifac
         0o600
     );
     assert!(
-        matches!(journal.publish_download_manifest(&plan),Err(DownloadManifestError::Persistence(PersistenceError::Publication(crate::ops::persistence::PublicationError::BeforePublication { source: error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
+        matches!(journal.publish_download_manifest(&plan),Err(DownloadManifestError::Persistence(PersistenceError::Publication(ic_host_fs::durable::NamedWriteError::BeforePublication { source: error, .. }))) if error.kind()==io::ErrorKind::AlreadyExists)
     );
     assert!(matches!(
         read_download_manifest(&layout, &plan, &digest),
@@ -136,11 +139,13 @@ fn download_manifest_lost_reply_preserves_originals_and_requires_exact_local_rep
         let journal = DownloadJournalGuard::open(&layout, plan.digest().hash()).unwrap();
         let original = fs::read(journal.path()).unwrap();
         let record = journal.record().unwrap().clone();
+        let expected_bytes = serde_json::to_vec_pretty(&record).unwrap();
         assert!(
             journal
-                .publish_manifest_with(&plan, |path, record| {
+                .publish_manifest_with(&plan, |path, encoded| {
+                    assert_eq!(encoded, expected_bytes);
                     if published {
-                        create_json_durable(path, record)?;
+                        create_encoded(path, encoded)?;
                     }
                     Err(io::Error::other("lost local publication response").into())
                 })
@@ -252,18 +257,18 @@ fn download_manifest_acknowledged_death_on_both_publication_sides_recovers_origi
         let published = std::env::var(PUBLISHED).unwrap() == "yes";
         journal
             .publish_manifest_with(&plan, |path, record| {
-                create_json_durable_at_barriers(
+                publish_bytes_at_barriers(
                     path,
                     record,
-                    || {
-                        if !published {
-                            hold_at_acknowledged_barrier(&handshake);
+                    ic_host_fs::durable::PublicationMode::CreateNew,
+                    |barrier| match barrier {
+                        DurableWriteBarrier::BeforeRename if !published => {
+                            hold_at_acknowledged_barrier(&handshake)
                         }
-                    },
-                    || {
-                        if published {
-                            hold_at_acknowledged_barrier(&handshake);
+                        DurableWriteBarrier::AfterDirectorySync if published => {
+                            hold_at_acknowledged_barrier(&handshake)
                         }
+                        _ => (),
                     },
                 )
             })

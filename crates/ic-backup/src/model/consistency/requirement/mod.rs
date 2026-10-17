@@ -1,5 +1,6 @@
 //! Immutable declared consistency choice; never current fence evidence.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
     operation_plan::OperationPlanRecord,
@@ -94,10 +95,10 @@ impl ConsistencyRequirementRecord {
     /// timestamps or editable derived hashes are included or retained in this record.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/consistency-requirement/v1\0".to_vec();
-        bytes.extend_from_slice(self.plan_intent.as_bytes());
-        bytes.push(self.guarantee.tag());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        let mut bytes = EvidenceDigest::new(b"ic-backup/consistency-requirement/v1\0");
+        bytes.append(self.plan_intent.as_bytes());
+        bytes.byte(self.guarantee.tag());
+        bytes.finish()
     }
 }
 /// Typed immutable declaration rejection; no error changes original authority.

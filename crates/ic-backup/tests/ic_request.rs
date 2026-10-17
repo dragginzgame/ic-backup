@@ -1,5 +1,7 @@
 //! Public typed byte binding and local recovery; no remote snapshot effect is claimed.
 
+use crate::support::create_json_durable;
+use crate::support::read_json;
 mod support;
 
 use ic_backup::{
@@ -14,8 +16,8 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, create_json_durable,
-        create_operation_plan, read_json, read_operation_plan,
+        AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, create_operation_plan,
+        read_operation_plan,
     },
 };
 use serde_json::json;

@@ -1,5 +1,6 @@
 //! Exact same-target snapshot upload codecs and passive original-reservation binding.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod attempt;
 mod plan;
 mod reply;
@@ -149,7 +150,12 @@ impl<'source> IcSnapshotUploadRequest<'source> {
                 SnapshotDataOffset::StableMemory { offset: *offset }
             }
             SnapshotDataKind::WasmChunk { hash } => {
-                checksum.verify(&crate::hash::hex_bytes(hash))?;
+                let digest = ic_host_artifacts::artifact::Sha256Digest::from_bytes(
+                    hash.as_slice()
+                        .try_into()
+                        .map_err(|_| IcSnapshotDataError::InvalidChunkHash)?,
+                );
+                checksum.verify(&digest.to_string())?;
                 SnapshotDataOffset::WasmChunk
             }
         };
@@ -260,21 +266,21 @@ impl<'source> IcSnapshotUploadRequest<'source> {
     /// Bind original source evidence/tree and metadata origin separately from wire intent.
     #[must_use]
     pub fn binding_digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/ic-snapshot-upload-binding/v1\0".to_vec();
-        bytes.extend_from_slice(self.source_plan.digest().hash().as_bytes());
-        bytes.extend_from_slice(self.source.digest().hash().as_bytes());
-        bytes.extend_from_slice(self.source_checksum.hash().as_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/ic-snapshot-upload-binding/v1\0");
+        bytes.append(self.source_plan.digest().hash().as_bytes());
+        bytes.append(self.source.digest().hash().as_bytes());
+        bytes.append(self.source_checksum.hash().as_bytes());
         if let IcSnapshotUploadKind::Data {
             metadata_request, ..
         } = &self.kind
         {
-            bytes.push(1);
-            bytes.extend_from_slice(metadata_request.hash().as_bytes());
+            bytes.byte(1);
+            bytes.append(metadata_request.hash().as_bytes());
         } else {
-            bytes.push(0);
+            bytes.byte(0);
         }
-        bytes.extend_from_slice(self.digest().hash().as_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.append(self.digest().hash().as_bytes());
+        bytes.finish()
     }
 }
 

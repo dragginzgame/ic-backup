@@ -1,5 +1,6 @@
 //! Immutable exact original journal fingerprints; not a backup/restore terminal receipt.
 
+use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord, attempt_journal::AttemptJournalRecord, bounded_sequence,
     effect_graph::MAX_EFFECT_OPERATIONS,
@@ -109,14 +110,14 @@ impl ExecutionSettlementRecord {
     /// ascending u64 operation identity/64 ASCII history hash pairs, all integers big-endian.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/execution-settlement/v1\0".to_vec();
-        bytes.extend_from_slice(self.plan_intent.hash().as_bytes());
-        bytes.extend_from_slice(&(self.journals.len() as u64).to_be_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/execution-settlement/v1\0");
+        bytes.append(self.plan_intent.hash().as_bytes());
+        bytes.append(&(self.journals.len() as u64).to_be_bytes());
         for row in &self.journals {
-            bytes.extend_from_slice(&row.operation_sequence.to_be_bytes());
-            bytes.extend_from_slice(row.history.hash().as_bytes());
+            bytes.append(&row.operation_sequence.to_be_bytes());
+            bytes.append(row.history.hash().as_bytes());
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
 fn bounded_journals<'de, D: Deserializer<'de>>(

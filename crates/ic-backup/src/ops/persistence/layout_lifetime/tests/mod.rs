@@ -168,6 +168,23 @@ fn root_and_journal_parent_aliases_resolve_to_one_identity() {
     assert!(
         matches!(guard.retain_restore(&linked_journal, &"ab".repeat(32)), Err(PersistenceError::InvalidRestoreReferences { path }) if path == linked_journal)
     );
+    let retained_bytes = fs::read(root.join(REFERENCES_FILE)).unwrap();
+    assert!(matches!(
+        guard.retain_restore(Path::new("/"), &"ab".repeat(32)),
+        Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::InvalidInput
+    ));
+    assert!(matches!(
+        guard.retain_restore(&root, &"ab".repeat(32)),
+        Err(PersistenceError::InvalidRestoreReferences { path }) if path == root
+    ));
+    assert!(matches!(
+        guard.retain_restore(&parent.join("missing/journal.json"), &"ab".repeat(32)),
+        Err(PersistenceError::Io(error)) if error.kind() == io::ErrorKind::NotFound
+    ));
+    assert_eq!(
+        fs::read(root.join(REFERENCES_FILE)).unwrap(),
+        retained_bytes
+    );
     drop(guard);
     fs::remove_dir_all(parent).expect("clean successful fixture");
 }

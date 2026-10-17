@@ -23,7 +23,182 @@
 <!-- helper-navigation:end -->
 
 
-# Current handoff — 2026-10-16
+# Current handoff — 2026-10-17
+
+## Pending 0.28.0 journal paths and response identity
+
+Command custody and restore retention now share canonical journal-parent resolution
+under persistence, preserving absent/regular leaf admission, leaf alias refusal and
+each public error projection. Mutation, transfer-read and upload association share
+ordered authority/attempt/context/target checks between original reservation
+validation and the existing method-specific bounded decoder. Combined-denial
+regressions retain the original priority and pending obligations.
+
+The local publication-error mirror is removed without an alias.
+`PersistenceError::Publication` directly carries Host FS's
+`NamedWriteError<std::io::Error>`. Consumers update imports/exhaustive matches and
+align direct Host FS with the selected 0.24 line. Original producer, cleanup,
+visibility and source evidence remain. The independent MSRV consumer now proves
+that canonical public type instead of importing the already-removed diagnostics.
+
+All 533 Core and three Agent unit cases, 13 focused public cases, 14 HTTP cases,
+34 Core and 12 Agent PocketIC cases pass. Strict all-target/all-feature Core/Agent
+Clippy, actual Rust 1.91 checks and both independent consumers, warning-denied
+docs, formatting, Cargo inheritance, local links and focused shell checks pass.
+The sandbox refused PocketIC's localhost bind; native reruns pass and the failed
+fixtures remain retained. Before-images and logs are under
+`/tmp/backup-28-identities-fwog2czr/`; independent consumer evidence is retained at
+`target/msrv-consumers.uKtLuf/`. Incoming edits remain; package versions, manifests,
+lock, index and refs are unchanged by this batch. No full local `make ci`, native
+macOS qualification, commit, release or publication ran.
+
+## Pending 0.28.0 diagnostics and single-dispatch cuts
+
+Core's guard-local diagnostics, timing wrappers, mutex/poison recovery and public
+Metrics reexports are removed. Callers own instrumentation and any direct Metrics
+selection. The direct 0.12 dependency and locked package are removed; Testkit keeps
+its existing 0.11.8 selection. Guard Send/Sync and all record, byte, spending and
+recovery checks remain. Directory checksum framing uses the existing Host-backed
+digest owner with exact original component order and bytes.
+
+Agent signing and dispatch now live privately in the single-retention submission
+owner. Providers retain ingress before effects; callbacks still receive exact
+signed bytes/request IDs. Public prepare/submit/outcome access is removed. HTTP
+regressions exercise these providers and preserve original pending spending,
+retained ingress, one-call limits and wrong-trust effect evidence.
+
+The normal registry graph passes all 533 Core unit cases, seven focused public
+cases, 14 HTTP cases, 34 Core/12 Agent PocketIC cases, strict all-target/all-feature
+Clippy, actual Rust 1.91 checking, warning-denied docs, formatting, Cargo inheritance
+and local links. No package versions, index or refs change; no full local `make ci`,
+native macOS qualification, release or publication ran.
+
+The isolated Host contribution adds sink inspection and non-consuming hashing
+identity snapshots. All 68 artifact unit and six consumer cases, seven hashing
+cases on actual Rust 1.88, strict Clippy, docs and formatting pass. The prepared
+Backup adapter replaces parallel File/SHA states with hashing file writers and
+keeps sha2 only as an independent test oracle. It passes all 533 Core unit cases,
+seven public cases, 34 Core/12 Agent PocketIC cases, strict Core/Agent Clippy,
+actual Rust 1.91 and docs against that isolated source. No registry release yet
+contains this contribution. Its path-free adapter needs the actual API-containing
+published minimum and fresh registry-lock qualification before activation.
+
+Before-images, raw logs and both patches are retained at
+`/tmp/backup-28-diagnostics-dispatch.b6yy_0ra/`. Its rehearsal-only source override
+points to the isolated Host contribution, not a normal sibling checkout.
+[Host PR #175 — Hashing-writer inspection](https://github.com/dragginzgame/ic-host-tooling/pull/175)
+at `9fb55c1` now delivers the qualified contribution after explicit maintainer
+approval. Publication and published-package Backup adoption remain separate;
+no merge, release or publication ran. Earlier incoming edits and fixture bundles
+remain retained.
+
+## Pending 0.28.0 generic IO hard cuts
+
+Generic filesystem copy staging and file/path/root-relative checksum selectors
+are removed. The directory-only traversal no longer has file/any selection or a
+copy-action branch. Product staging stays with the original journal-bound IC
+snapshot writer. Generic raw-stream checksums and bounded JSON readers are now
+internal; external product consumers use guarded record operations, while
+independent IO uses Host FS and Host Artifacts with caller-selected bounds and
+custody. Native fixture setup constructs its exact bytes directly. Existing trees,
+unfinished journals, publication recovery and canonical directory digests remain.
+
+This cut supersedes the proposed Backup Host-copy adapter below; Backup no longer
+needs generic copy adoption. Its earlier upstream source/qualification evidence
+remains historical. Testkit admission and codec adoption remain separate work.
+Pending notes stay at 0.28.0; versions, dependencies, lock, index and refs are unchanged.
+
+All 539 remaining Core unit cases, 15 affected native integration cases, 34 Core
+and 12 Agent PocketIC cases pass. Strict Core/Agent all-target/all-feature Clippy,
+actual Rust 1.91 checking, warning-denied docs, formatting, Cargo inheritance and
+local documentation links pass. Raw logs and this batch's before-images are under
+`/tmp/backup-hard-cuts-28.l4v_nxvb/`. No full local `make ci`, native macOS
+qualification, commit, release or publication ran. Prior incoming work is preserved.
+
+## Pending 0.28.0 local persistence and digest simplification
+
+Public generic JSON value writers are removed. Product callers use the existing
+bounded encoder and byte publisher; manifests retain fresh artifact verification,
+create-only publication and original crash barriers. Restore-reference release
+retains terminal rereads and all quiescence guards through publication and sync.
+Generic finite JSON helpers remain confined to unit/integration fixture support.
+Consumers must use guarded Backup record operations or explicitly bounded encoding
+with Host FS byte publication. This public cut selects pending 0.28.0 notes;
+workspace/package versions remain unchanged.
+
+Canonical record, upload-stage and Agent reply digests stream their original
+framing through Host Artifacts. Original domains, lengths, field order and byte
+order remain exact. Typed Host SHA-256 values replace the private generic hex
+encoder for chunk checks and names. Agent uses the existing published Host
+Artifacts dependency directly; no locked package selection changes.
+
+All 544 Core and three Agent unit cases, nine affected native integration cases,
+all 34 Core and 12 Agent PocketIC cases pass. The final upload-stage change also
+passes its independent exact-byte checkpoint case and all eight selected upload
+simulator journeys. Strict all-target/all-feature Core/Agent Clippy, actual Rust
+1.91 checking, warning-denied docs, formatting, Cargo inheritance and documentation
+links pass. Explicit setup prepared the incoming lock-selected Testkit 0.50 CLI
+and authenticated PocketIC 16.1.0 server; prior bundles remain retained. Raw logs
+are under `/tmp/backup-local-simplify.o66yprvl/`. No full local `make ci`, native
+macOS qualification, commit, release or publication ran; incoming edits remain.
+
+Earlier upstream adoption patches and their passing evidence below predate this
+local batch. Preserve them as evidence; regenerate the adapters against these
+sources before future published-package adoption. This batch does not activate
+unpublished APIs or change their separate release/adoption authority.
+
+## Prepared upstream simplifications on the incoming published graph
+
+Host integration now has a current-main refresh at `2de898d` in
+[Host PR #172 — Result admission and shared primitives for 0.25](https://github.com/dragginzgame/ic-host-tooling/pull/172).
+A concurrent owner published that update before this task's duplicate push;
+the rejected push changed no remote ref. All Rust sources, manifests, lock and
+Shared snapshot match the independently tested isolated candidate. Host's pending
+notes correctly target 0.25.0; published 0.24 bytes and package versions remain.
+All 125 FS unit cases, 16 gzip cases, six framing and two status cases pass,
+with strict affected Clippy, actual Rust 1.88 checking and warning-denied docs.
+Backup's combined adapter additionally passes ten artifact and 167 persistence
+cases, all 34 Core/12 Agent PocketIC cases, and strict Core/Agent Clippy on that
+Host candidate. Fresh native CI is running; no merge or publication ran.
+The official registry index still selects Host FS 0.24.0 and Testkit 0.50.0.
+Activation therefore remains separate from this source qualification.
+
+The three consumer adapters are regenerated under
+`/tmp/backup-upstream-adapters.g5isqig6/`, with separate and combined path-free
+adoption patches, before-images and raw logs. Their combined patch passes
+apply-check against this checkout. The source rehearsal uses isolated released
+Host 0.24.0 and Testkit 0.50.0 sources plus the existing copy, library-admission
+and compact-codec contributions. It removes the copy-action visitor, shell fixture
+admission and private Candid decoder while retaining original public APIs, bytes,
+bounds, error projections and recovery. These APIs are absent from the published
+packages; the normal checkout keeps its current implementations. Select actual
+API-containing published minima and qualify their registry lock before activation.
+
+All 77 focused model/codec cases, ten artifact cases, 15 selected public boundary/
+recovery cases, 34 Core and 12 Agent PocketIC cases pass on the combined rehearsal.
+Strict all-target/all-feature workspace Clippy, actual Rust 1.91 checking,
+warning-denied docs and formatting pass. The first sandboxed simulator runs could
+not bind localhost; their retained logs are separate from passing native reruns.
+Four Host copy, seven Testkit asset and six shared-codec cases also pass.
+
+[Testkit PR #109 — Rust server admission](https://github.com/dragginzgame/ic-testkit/pull/109)
+at `0b16589` and
+[Testkit PR #110 — Compact Candid diagnostics](https://github.com/dragginzgame/ic-testkit/pull/110)
+at `8308985` now incorporate released main. Admission retains explicit test-child
+cleanup and passes all 87 non-ignored library cases, its CLI case and two changed
+driver cases. Codec retains argument-list decoding and passes six cases, strict
+Clippy and actual Rust 1.91 native/Wasm checking. Host copying continues through
+[Host PR #172 — Queued Host contributions](https://github.com/dragginzgame/ic-host-tooling/pull/172).
+Native macOS, fresh hosted checks, publication and published-package Backup
+acceptance remain separate at
+[#54 — Adopt published Host descriptor tree copying](https://github.com/dragginzgame/ic-backup/issues/54),
+[#55 — Adopt Testkit library server asset admission in both fixtures](https://github.com/dragginzgame/ic-backup/issues/55)
+and [#56 — Adopt independent Testkit Candid codec with compact diagnostics](https://github.com/dragginzgame/ic-backup/issues/56).
+
+Candid remains required for IC management calls. IC Wire applies to controlled
+application endpoints, not the platform management protocol. The extraction design
+records this boundary. Incoming manifest/lock edits, index, refs and package
+versions remain unchanged; no full local `make ci`, merge, release or publication ran.
 
 ## Published Host custody, locks and directory publication
 

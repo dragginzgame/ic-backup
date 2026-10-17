@@ -82,6 +82,21 @@ fn different_authority_attempt_actual_context_and_target_reject() {
             }
             _ => fields.target = "aaaaa-aa".into(),
         }
+        // Later failures coexist so the original denial priority is observable.
+        if change == 0 {
+            fields.mutation_attempt = 2;
+        }
+        if change < 2 {
+            let mut context = serde_json::to_value(&fields.context).unwrap();
+            context["release"] = serde_json::json!("12".repeat(32));
+            fields.context = serde_json::from_value(context).unwrap();
+        }
+        if change < 5 {
+            fields.target = "aaaaa-aa".into();
+        }
+        if change < 6 {
+            fields.reply = b"invalid wire".to_vec();
+        }
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error =
             validate_acknowledgement(&request, &original.journal, &acknowledgement).unwrap_err();
@@ -119,7 +134,10 @@ fn method_specific_invalid_wire_and_stale_recovery_journal_reject() {
                 _ => matches!(error, IcMutationAssociationError::Lifecycle(_)),
             });
         }
-        let acknowledgement = IcMutationAcknowledgement::new(input(&request)).unwrap();
+        let mut stale_fields = input(&request);
+        stale_fields.authority = hash("12");
+        stale_fields.reply = b"invalid wire".to_vec();
+        let acknowledgement = IcMutationAcknowledgement::new(stale_fields).unwrap();
         original
             .journal
             .reserve_observation(1, hash("56").hash())

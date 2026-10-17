@@ -7,39 +7,24 @@ mod secure;
 mod tests;
 
 use crate::model::artifacts::ArtifactChecksumRecord;
-use sha2::{Digest, Sha256};
-#[cfg(unix)]
-use std::io::Write;
+use crate::model::evidence_digest::EvidenceDigest;
+#[cfg(any(unix, test))]
+use std::io::Read;
 use std::{
-    io::{self, Read},
+    io,
     path::{Component, Path, PathBuf},
 };
 use thiserror::Error;
-
-/// Checksum one regular filesystem file without following path symlinks.
-///
-/// # Errors
-/// Rejects unsafe entry types, unsupported platforms and filesystem failures.
-pub fn checksum_file(path: &Path) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    secure::checksum_path(path, secure::ExpectedArtifactType::File)
-}
-
-/// Checksum one file or a deterministic directory listing.
-///
-/// # Errors
-/// Rejects unsafe entry types, unsupported platforms and filesystem failures.
-pub fn checksum_path(path: &Path) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    secure::checksum_path(path, secure::ExpectedArtifactType::Any)
-}
 
 /// Checksum a directory using sorted relative-path/file-digest pairs.
 ///
 /// # Errors
 /// Rejects unsafe entry types, unsupported platforms and filesystem failures.
 pub fn checksum_directory(path: &Path) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    secure::checksum_path(path, secure::ExpectedArtifactType::Directory)
+    secure::checksum_directory(path)
 }
 
+#[cfg(any(unix, test))]
 /// Stream an already-open reader using a bounded transfer buffer.
 ///
 /// Interrupted reads retry internally. The caller owns blocking and timeouts;
@@ -48,30 +33,11 @@ pub fn checksum_directory(path: &Path) -> Result<ArtifactChecksumRecord, Artifac
 /// # Errors
 /// Returns other reader IO failures unchanged; impossible byte counts reject as
 /// [`io::ErrorKind::InvalidData`] rather than indexing outside the transfer buffer.
-pub fn checksum_reader(reader: &mut impl Read) -> Result<ArtifactChecksumRecord, ArtifactError> {
+pub(crate) fn checksum_reader(
+    reader: &mut impl Read,
+) -> Result<ArtifactChecksumRecord, ArtifactError> {
     let identity =
         ic_host_artifacts::artifact::hash_reader(reader, u64::MAX).map_err(io::Error::from)?;
-    Ok(ArtifactChecksumRecord::from_digest(
-        *identity.sha256.as_bytes(),
-    ))
-}
-
-#[cfg(unix)]
-pub(crate) fn copy_from_reader(
-    reader: &mut impl Read,
-    writer: &mut impl Write,
-) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    use ic_host_artifacts::artifact::CopyError;
-
-    // Artifacts have no total-size ceiling here. Descriptor admission, private
-    // staging, retained checksum comparison and publication remain local.
-    let identity =
-        ic_host_artifacts::artifact::copy_reader(reader, writer, u64::MAX).map_err(|error| {
-            match error {
-                CopyError::Input(error) => ArtifactError::Io(error.into()),
-                CopyError::Output(error) => ArtifactError::Io(error),
-            }
-        })?;
     Ok(ArtifactChecksumRecord::from_digest(
         *identity.sha256.as_bytes(),
     ))
@@ -114,7 +80,7 @@ pub fn checksum_relative_files(
     mut files: Vec<(PathBuf, ArtifactChecksumRecord)>,
 ) -> Result<ArtifactChecksumRecord, DirectoryChecksumError> {
     files.sort_by(|left, right| left.0.cmp(&right.0));
-    let mut hasher = Sha256::new();
+    let mut hasher = EvidenceDigest::new(&[]);
     let mut previous = None;
     for (relative, checksum) in &files {
         let name = relative
@@ -138,14 +104,12 @@ pub fn checksum_relative_files(
             });
         }
         previous = Some(relative);
-        hasher.update(name.as_bytes());
-        hasher.update([0]);
-        hasher.update(checksum.hash().as_bytes());
-        hasher.update(*b"\n");
+        hasher.append(name.as_bytes());
+        hasher.byte(0);
+        hasher.append(checksum.hash().as_bytes());
+        hasher.append(b"\n");
     }
-    Ok(ArtifactChecksumRecord::from_digest(
-        hasher.finalize().into(),
-    ))
+    Ok(hasher.finish())
 }
 
 /// Invalid declared file identities at the I/O-free directory checksum boundary.
@@ -178,33 +142,6 @@ impl From<DirectoryChecksumError> for ArtifactError {
             error => Self::Io(io::Error::new(io::ErrorKind::InvalidData, error)),
         }
     }
-}
-
-#[cfg(unix)]
-/// Checksum a normal relative path beneath an operator-selected root.
-///
-/// # Errors
-/// Rejects traversal, symlinks, special entries and IO failures.
-pub fn checksum_relative_path(
-    root: &Path,
-    relative: &Path,
-) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    secure::checksum_relative_path(root, relative)
-}
-
-/// Stage exact source bytes in a new private file or directory and checksum them.
-///
-/// The caller owns a trusted destination parent. This copy is not durable
-/// publication; use the persistence operation after verifying its digest.
-///
-/// # Errors
-/// Rejects source traversal/symlinks, existing destinations and IO failures.
-pub fn stage_relative_path(
-    root: &Path,
-    relative: &Path,
-    destination: &Path,
-) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    secure::stage_relative_path(root, relative, destination)
 }
 
 /// Typed artifact traversal or IO failure.

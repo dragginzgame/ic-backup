@@ -1,10 +1,14 @@
 //! Release exact source dependencies under terminal journal and command custody.
 
+use super::{
+    json::{encode_json, write_encoded},
+    layout_lifetime::MAX_RESTORE_REFERENCE_BYTES,
+};
 use crate::{
     model::{effect_graph::MAX_EFFECT_OPERATIONS, restore_references::RestoreReferenceRecord},
     ops::persistence::{
         BackupLayoutGuard, CommandLifetimeLockError, CommandQuiescenceGuard, JournalLock,
-        PersistenceError, write_json_durable,
+        PersistenceError,
     },
     view::restore_reference_release::TerminalRestoreEvidence,
 };
@@ -91,7 +95,8 @@ impl BackupLayoutGuard {
         }
         self.check_root()?;
         if released {
-            write_json_durable(&self.root().join("restore-references.json"), &references)?;
+            let encoded = encode_json(&references, MAX_RESTORE_REFERENCE_BYTES)?;
+            write_encoded(&self.root().join("restore-references.json"), &encoded)?;
         }
         self.sync_references()?;
         drop(quiescence);

@@ -25,7 +25,6 @@ pub use upload::AgentSnapshotUploadProvider;
 
 use ic_agent::{
     Agent, Identity, RequestId,
-    agent::CallResponse,
     export::{Principal, reqwest},
 };
 use ic_backup::model::{attempt_journal::AttemptJournalRecord, operation_plan::PlanContextRecord};
@@ -102,55 +101,6 @@ impl AgentTransport {
         agent.set_root_key(trusted_root_key);
         Ok(Self { agent, context })
     }
-
-    /// Sign an exact existing request after rechecking its original pending journal.
-    ///
-    /// No network call occurs. Retain the returned exact envelope/request ID with
-    /// original plan, reservation and exclusive command custody before submission.
-    /// Holding the original journal guard prevents cooperating record changes.
-    /// Fresh authority and proof of no prior dispatch remain integration prerequisites.
-    /// # Errors
-    /// Rejects changed reservations/context, signing failures or oversized envelopes.
-    pub fn prepare<'a>(
-        &'a self,
-        request: ReservedUpdate<'a>,
-        journal: &'a AttemptJournalRecord,
-    ) -> Result<PreparedUpdate<'a>, TransportError> {
-        if !request.validate(journal) {
-            return Err(TransportError::Reservation);
-        }
-        let wire = request.wire();
-        if wire.context != &self.context {
-            return Err(TransportError::Context);
-        }
-        let receiver =
-            Principal::from_text(wire.receiver).map_err(|_| TransportError::Configuration)?;
-        let target =
-            Principal::from_text(wire.target).map_err(|_| TransportError::Configuration)?;
-        let signed = self
-            .agent
-            .update(&receiver, wire.method)
-            .with_effective_canister_id(target)
-            .with_arg(wire.arguments)
-            .sign()
-            .map_err(|_| TransportError::Signing)?;
-        if signed.sender.to_text() != self.context.caller() {
-            return Err(TransportError::Context);
-        }
-        if signed.signed_update.len() > MAX_SIGNED_UPDATE_BYTES {
-            return Err(TransportError::EnvelopeTooLarge);
-        }
-        let reply_limit = wire.reply_limit;
-        Ok(PreparedUpdate {
-            transport: self,
-            request,
-            journal,
-            target,
-            envelope: signed.signed_update,
-            request_id: signed.request_id,
-            reply_limit,
-        })
-    }
 }
 
 /// Non-cloneable signed update tied to its fixed transport and borrowed original evidence.
@@ -178,58 +128,6 @@ impl PreparedUpdate<'_> {
     pub const fn request_id(&self) -> &RequestId {
         &self.request_id
     }
-
-    /// Consume this preparation for one update HTTP request, without automatic wait or observation.
-    ///
-    /// A verified certificate reply is still passive method evidence, never an
-    /// automatic Applied receipt. Accepted/processing results return Pending; callers
-    /// must account separate recovery observations. Every error, cancellation or lost
-    /// reply leaves original spending pending; no error establishes nonapplication.
-    /// # Errors
-    /// Rejects stale reservations before dispatch; transport/authentication failures
-    /// and over-limit replies retain indeterminate original evidence.
-    pub async fn submit(self) -> Result<UpdateOutcome, TransportError> {
-        if !self.request.validate(self.journal) {
-            return Err(TransportError::Reservation);
-        }
-        let response = self
-            .transport
-            .agent
-            .update_signed(self.target, self.envelope)
-            .await
-            .map_err(|_| TransportError::Indeterminate)?;
-        match response {
-            CallResponse::Response(reply) => {
-                if reply.len() > self.reply_limit {
-                    return Err(TransportError::ReplyTooLarge);
-                }
-                Ok(UpdateOutcome::Replied {
-                    request_id: self.request_id,
-                    reply,
-                })
-            }
-            CallResponse::Poll(id) if id == self.request_id => {
-                Ok(UpdateOutcome::Pending { request_id: id })
-            }
-            CallResponse::Poll(_) => Err(TransportError::Indeterminate),
-        }
-    }
-}
-
-/// Passive single-update result; neither branch mutates or settles original journals.
-pub enum UpdateOutcome {
-    /// Locally certificate-verified exact request reply; method decoding/attribution remain separate.
-    Replied {
-        /// Exact original signed ingress identity.
-        request_id: RequestId,
-        /// Bounded raw method reply; use the existing method-specific decoder.
-        reply: Vec<u8>,
-    },
-    /// Accepted/processing without a settled reply; no follow-up call was made.
-    Pending {
-        /// Retained original ingress identity, never a redispatch permit.
-        request_id: RequestId,
-    },
 }
 
 /// Redacted transport denial; no variant authorizes retry, refund or nonapplication.

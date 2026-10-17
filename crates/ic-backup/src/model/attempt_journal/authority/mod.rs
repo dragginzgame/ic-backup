@@ -2,6 +2,7 @@
 
 use super::AttemptJournalRecordError;
 use crate::model::artifacts::{ArtifactChecksumRecord, canonical_hash};
+use crate::model::evidence_digest::EvidenceDigest;
 use serde::{Deserialize, Serialize};
 
 /// Maximum total mutation and reconciliation-observation attempts per journal.
@@ -206,23 +207,23 @@ impl AttemptAuthorityRecord {
     /// text, then big-endian u32 mutation/observation limits. Mutable events are excluded.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/attempt-authority/v1\0".to_vec();
+        let mut bytes = EvidenceDigest::new(b"ic-backup/attempt-authority/v1\0");
         for digest in [
             &self.binding.intent,
             &self.binding.network,
             &self.binding.release,
             &self.binding.request,
         ] {
-            bytes.extend_from_slice(digest.as_bytes());
+            bytes.append(digest.as_bytes());
         }
-        bytes.extend_from_slice(&self.binding.operation_sequence.to_be_bytes());
+        bytes.append(&self.binding.operation_sequence.to_be_bytes());
         for principal in [&self.binding.caller, &self.binding.target] {
             // Admission bounds canonical ASCII text to at most 63 bytes.
-            bytes.push(principal.len().to_le_bytes()[0]);
-            bytes.extend_from_slice(principal.as_bytes());
+            bytes.byte(principal.len().to_le_bytes()[0]);
+            bytes.append(principal.as_bytes());
         }
-        bytes.extend_from_slice(&self.budget.mutations.to_be_bytes());
-        bytes.extend_from_slice(&self.budget.observations.to_be_bytes());
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.append(&self.budget.mutations.to_be_bytes());
+        bytes.append(&self.budget.observations.to_be_bytes());
+        bytes.finish()
     }
 }

@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod tests;
 
+use super::response_identity::{ResponseIdentity, ResponseIdentityMismatch};
 use crate::model::{
     attempt_journal::AttemptJournalRecord,
     ic_mutation::IcMutationAcknowledgement,
@@ -50,18 +51,24 @@ pub fn validate_acknowledgement<'request, 'source>(
 {
     request.validate_journal(journal)?;
     let input = acknowledgement.input();
-    if input.authority != request.authority().digest() {
-        return Err(IcSnapshotUploadAssociationError::AuthorityMismatch);
+    ResponseIdentity {
+        authority: &input.authority,
+        mutation_attempt: input.mutation_attempt,
+        context: &input.context,
+        target: &input.target,
     }
-    if input.mutation_attempt != request.mutation_attempt() {
-        return Err(IcSnapshotUploadAssociationError::AttemptMismatch);
-    }
-    if &input.context != request.plan().context() {
-        return Err(IcSnapshotUploadAssociationError::ContextMismatch);
-    }
-    if input.target != request.payload().target() {
-        return Err(IcSnapshotUploadAssociationError::TargetMismatch);
-    }
+    .compare(&ResponseIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        context: request.plan().context(),
+        target: request.payload().target(),
+    })
+    .map_err(|mismatch| match mismatch {
+        ResponseIdentityMismatch::Authority => IcSnapshotUploadAssociationError::AuthorityMismatch,
+        ResponseIdentityMismatch::Attempt => IcSnapshotUploadAssociationError::AttemptMismatch,
+        ResponseIdentityMismatch::Context => IcSnapshotUploadAssociationError::ContextMismatch,
+        ResponseIdentityMismatch::Target => IcSnapshotUploadAssociationError::TargetMismatch,
+    })?;
     let reply = IcSnapshotUploadReply::decode(request.payload(), &input.reply)?;
     Ok(IcSnapshotUploadAcknowledgementView {
         acknowledgement,

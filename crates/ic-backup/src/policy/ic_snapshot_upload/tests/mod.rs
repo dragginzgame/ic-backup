@@ -135,6 +135,21 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
             5 => fields.target = "aaaaa-aa".into(),
             _ => fields.reply = b"DIDL\0\0".to_vec(),
         }
+        // Later failures coexist so the original denial priority is observable.
+        if change == 0 {
+            fields.mutation_attempt = 2;
+        }
+        if change < 2 {
+            let mut context = serde_json::to_value(&fields.context).unwrap();
+            context["release"] = serde_json::json!("12".repeat(32));
+            fields.context = serde_json::from_value(context).unwrap();
+        }
+        if change < 5 {
+            fields.target = "aaaaa-aa".into();
+        }
+        if change < 6 {
+            fields.reply = b"invalid wire".to_vec();
+        }
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error = validate_acknowledgement(&request, &journal, &acknowledgement).unwrap_err();
         assert!(match change {
@@ -146,7 +161,9 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
         });
         assert_eq!(journal, before);
     }
-    let acknowledgement = IcMutationAcknowledgement::new(input(&request, reply)).unwrap();
+    let mut stale_fields = input(&request, b"invalid wire".to_vec());
+    stale_fields.authority = ArtifactChecksumRecord::from_bytes(b"wrong");
+    let acknowledgement = IcMutationAcknowledgement::new(stale_fields).unwrap();
     journal
         .reserve_observation(
             1,

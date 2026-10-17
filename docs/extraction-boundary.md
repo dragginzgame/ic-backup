@@ -114,14 +114,16 @@ inventory, requirement, download and restore-reference boundaries retain their
 original typed errors, validation order and canonical bytes. Journal reopen still
 admits caller-supplied intent before locking/reading retained evidence.
 
-`ops::artifacts` delegates raw stream checksums and private staging copies to
-`ic-host-artifacts` using constant working memory. Both helpers retry interrupted
-reads. Copying retains partial output on input or sink failure; neither helper
-returns a complete checksum on failure.
+`ops::artifacts` exposes directory checksums and pure declared-file composition.
+Its internal raw stream adapter delegates to `ic-host-artifacts` using constant
+working memory and retries interrupted reads; failures return no complete checksum.
+Generic file/path selectors, root-relative copying and the public stream adapter
+are removed. Independent file hashing/copying belongs to Host FS and Host Artifacts
+with caller-selected limits and custody. The IC snapshot writer owns product staging.
 The IC artifact verifier supplies its admitted descriptor length to the shared
 bounded hash owner and checks the returned byte count; short and excess streams
 reject as `FileShape`. Descriptor/path identity checks remain independent.
-The copy has no new total artifact-size ceiling. Unix traversal opens
+Unix directory traversal opens
 descriptors without following artifact symlinks, checks actual entry types and
 rejects traversal components and special entries. Directory digests preserve
 the source recipe: sort relative UTF-8 paths, then hash each path, NUL, its
@@ -132,7 +134,7 @@ this primitive does not implement an operation-wide resource budget.
 
 The public I/O-free `ops::artifacts::checksum_relative_files` consumes owned
 `(PathBuf, ArtifactChecksumRecord)` rows under the same framing owner used by
-traversal, staging, durable directory sync and exact IC-tree verification. It
+directory traversal, durable directory sync and exact IC-tree verification. It
 sorts by the original path-component order, which differs from complete-string
 ordering. Exact UTF-8 relative names must have nonempty normal components, no
 NUL, dot/parent/trailing/repeated separators or duplicate identity. Newline and
@@ -154,10 +156,10 @@ bytes reject under the declaration, retaining their actual paths and bytes witho
 publishing or recopying. This is Backup's public integration proof; downstream
 Canic descriptor custody and crash barriers still need their own qualification.
 
-Staging copies exact descriptor-read bytes into a new destination, using 0700
-directories and 0600 files. The caller owns the trusted destination parent.
-It does not overwrite occupied destinations. A failure may leave partial staging
-evidence. Staging is separate from durable publication.
+IC snapshot staging writes exact admitted metadata/data into private 0700
+directories and 0600 files through its original journal-bound writer. Generic
+filesystem copying is no longer a Backup operation. Existing copied/partial trees
+remain retained; no import, reinterpretation or cleanup accompanies the API cut.
 
 `ops::persistence::commit_artifact_directory` accepts distinct staging/canonical
 siblings and an exact expected digest. It synchronizes files and directories,
@@ -168,25 +170,30 @@ unsafe-entry cases reject without overwriting evidence. Publication uses the
 source's Linux/Android/Apple implementation; the fresh evidence here is Linux.
 The caller excludes other writers and owns the sibling parent.
 
-`create_json_durable` and `write_json_durable` delegate sibling allocation, identity
+Generic public JSON value readers and writers are removed. Guarded record owners
+use internal bounded decoding and exact bounded pretty-JSON encoding before
+filesystem effects. Internal publication delegates sibling allocation, identity
 checks, cleanup, atomic create-only/replacement and final parent synchronization
-to published `ic-host-fs::durable::write_at_with` beneath a held syncable directory.
-Backup retains explicit 0600 files, private 0700 parent creation/link syncs and
-one-pass pretty-JSON serialization before filesystem effects. The resulting byte
-buffer is intentional: streaming a generic serializer into staging cannot preserve
-that ordering, and preflight followed by streaming would invoke it twice.
+to published Host FS beneath a held syncable directory. Backup retains explicit
+0600 files, private 0700 parent creation/link syncs and one serializer pass before
+effects. The admitted byte buffer preserves that ordering; streaming after a
+preflight would invoke the serializer twice. Independent documents use caller-
+bounded Host FS reads/byte publication and their own encoding/decoding.
 
 The pending 0.19.0 draft selects direct Host Artifact/FS 0.14. Its public
 publication-error Rust identity changes; sharing consumers must align Host 0.14.
 Published Rust sources match 0.13.5, with unchanged record and custody contracts.
 
-`PersistenceError::Publication` now carries Backup's own `PublicationError`,
-retaining the original typed producer, cleanup and before/after-publication
-errors independently of Host's Rust type identity. Parent-preparation IO and
+The 0.28 hard cut removes Backup's local publication-error mirror.
+`PersistenceError::Publication` directly carries
+`ic_host_fs::durable::NamedWriteError<std::io::Error>`, retaining the original typed
+producer, cleanup and before/after-publication errors. Consumers update imports
+and exhaustive matches to Host's enum and align direct Host FS with the selected
+0.24 line; no compatibility alias remains. Parent-preparation IO and
 serialization JSON errors keep their own boundaries. The public exhaustive enum changed in
 0.6.0; callers must update matches and reconcile visible output after failed
 completion. All v1 bytes, original limits, spending and journal transitions remain
-unchanged. Neither helper grants operation or retry authority.
+unchanged. Internal publication grants no operation or retry authority.
 
 Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
 released 0.9.0 selected Host 0.8 and released 0.11.0 selected direct Host 0.9.
@@ -219,7 +226,7 @@ original meaning; other serialization errors remain JSON failures. Schema and
 transition owners choose the existing budgets, and durable encoding/publication
 remains separate. See [the shared-tool adoption review](ic-host-tools-adoption.json).
 
-`read_json` requires an explicit byte limit, reads at most that limit plus one,
+The internal `read_json` requires an explicit byte limit, reads at most that limit plus one,
 and rejects excess bytes before decoding. Unix reads delegate to registry
 `ic-host-fs::read::read_file_no_follow`, using final-component no-follow,
 nonblocking descriptor admission and bounded, fallibly allocated regular-file
@@ -2234,63 +2241,13 @@ qualify local binding/persistence only, with no simulated IC behavior. See
 
 ### Local IC snapshot diagnostics
 
-`DownloadJournalGuard::ic_snapshot_metrics` returns a copied, read-only
-`IcSnapshotLocalMetrics` view for that guard's lifetime. It reuses registry
-`ic-metrics` 0.8 arithmetic: ordered duration `MeasurementSummary` and mergeable
-prepared-byte `MeasurementAggregate`, re-exported through
-`ic_backup::ops::persistence` so callers can name returned values without a
-separate dependency selection. The actual shared type is
-declared once in the workspace
-catalog and inherited for the Unix-host implementation. Default features are
-disabled and the canister instruction-reader feature is absent. Consumers own
-sampling/reporting; no sibling path, global registry, telemetry endpoint or
-transport metric is introduced.
-
-The existing explicit `verify_ic_snapshot_artifact`,
-`prepare_ic_snapshot_upload_metadata` and `prepare_ic_snapshot_upload_data` calls
-record their returned successes/rejections separately. Host monotonic elapsed
-durations use exact nanoseconds. Durations outside the `u64` range are excluded
-from their duration lane; any independently representable successful byte sample
-is still recorded. Byte conversions outside that range are likewise excluded.
-An exactly reached `u64::MAX` is an admitted observation, never a clipped input.
-Only a successfully returned data payload contributes its actual bounded chunk
-length in bytes. Empty known chunks contribute a measured zero; repeated preparation
-contributes repeated work, not unique or remotely transferred bytes. Internal
-verification samples are included, so enclosing preparation durations overlap those
-checks and must not be added as exclusive work. Calls that do not return supply no
-sample. No wall-clock threshold, IC instruction/cycle cost or receipt is inferred.
-
-Successful prepared sizes have one `ic_metrics::MeasurementHistogram<4>` owner,
-re-exported through the persistence facade. `prepared_chunk_bytes_histogram()`
-returns its copied distribution; the existing `prepared_chunk_bytes()` reads its
-mergeable aggregate, without a latest byte value. Inclusive bounds of zero, 32 KiB, 256 KiB and the 1 MiB payload ceiling
-separate empty, small, larger and maximum-sized local preparation work. Disjoint
-counts and separate overflow are descriptive, not exact percentiles or payload
-admission. The production payload owner rejects oversized chunks; overflow routing
-is tested without granting an oversized upload. Fixed arrays and overflow use bounded storage, with at most four comparisons
-per successful chunk and no extra timing sample. The six duration owners remain summaries. No second byte
-aggregate, local histogram arithmetic or duration distribution is introduced.
-
-Sampling is empty on create/open. Ordinary retained record access and metric reads
-perform no fresh artifact IO or sampling, even when artifact trees are missing.
-Guard-local synchronization preserves `Send + Sync`; no metric lock spans filesystem
-work or caller code. Diagnostic poison recovery changes no operation result.
-Individual samples/counts use `u64`; totals/integer means use `u128`. Every
-exactly counted batch of admitted `u64` observations fits its total.
-Counts/totals clip independently with sticky actual-overflow flags. Shared
-means, scaled means and intervals reject actual overflow; exactly reached caps
-remain exact. Scaled means are report projections, never effect authority. There
-is no persistence, reset API, serialization, identifier label or retained metric
-history. Existing v1 bytes/hashes, typed failures,
-spending, obligations and source references keep their original owners.
-
-Native tests check exact sample membership and units, error/zero/repeated-byte
-semantics, exact-cap and rejected duration conversion, copied views, guard traits and fresh empty reopen.
-Public source/upload replay retains original record/reference bytes and exhausted
-pending spending while diagnostic samples grow. This qualifies local arithmetic
-and sampling only. [Dependency review](ic-metrics-adoption.json) binds the verified
-registry archive; these diagnostics measure local work rather than IC effects or
-transport activity.
+Guard-local diagnostics and their public Metrics reexports are removed in 0.28.
+Persistence operations have no sampling mutex, clock or histogram. Callers may
+measure returned verification/preparation calls using their own instrumentation
+and direct `ic-metrics` selection. Cancellation, repeated work and overlapping
+checks still cannot establish unique progress, IC cost or effect authority.
+This cut changes no retained records, original bounds, checks or recovery.
+The [earlier dependency review](ic-metrics-adoption.json) remains provenance.
 
 ### Original-plan-bound retained execution admission
 

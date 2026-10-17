@@ -1,6 +1,6 @@
 //! Immutable local download declarations using the existing v1 journal schema.
 
-use super::super::json::check_json_size;
+use super::super::json::{check_json_size, create_encoded, encode_json};
 use super::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard};
 use crate::{
     model::{
@@ -9,8 +9,8 @@ use crate::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, create_json_durable,
-        read_json, read_operation_plan,
+        BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, read_json,
+        read_operation_plan,
     },
     policy::download_integrity::validate,
 };
@@ -59,19 +59,20 @@ impl DownloadJournalGuard<'_> {
         &self,
         plan: &OperationPlanRecord,
     ) -> Result<ArtifactChecksumRecord, DownloadManifestError> {
-        self.publish_manifest_with(plan, create_json_durable)
+        self.publish_manifest_with(plan, create_encoded)
     }
 
     fn publish_manifest_with(
         &self,
         plan: &OperationPlanRecord,
-        writer: impl FnOnce(&Path, &DownloadJournalRecord) -> Result<(), PersistenceError>,
+        writer: impl FnOnce(&Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<ArtifactChecksumRecord, DownloadManifestError> {
         self.check_usable()?;
         let path = self.layout.root().join(MANIFEST_FILE);
         let _lock = JournalLock::acquire(&path)?;
         self.verify_durable_artifacts(plan)?;
-        writer(&path, self.record()?)?;
+        let bytes = encode_json(self.record()?, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        writer(&path, &bytes)?;
         Ok(self.record()?.digest())
     }
 }

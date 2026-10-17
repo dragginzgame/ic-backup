@@ -2,9 +2,10 @@
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
 `ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
-transport was first released in 0.8.0. The pending core 0.25.0 hard cut owns
-`PersistenceError::Publication` through `PublicationError`; consumers matching
-that variant must use Backup's type. The ICP transport/probe is retired;
+transport was first released in 0.8.0. The core 0.28 hard cut removes the local
+`PublicationError` mirror: `PersistenceError::Publication` directly carries
+`ic_host_fs::durable::NamedWriteError<std::io::Error>`. Consumers matching that
+variant use Host's enum and align direct Host FS with the selected 0.24 line. The ICP transport/probe is retired;
 historical evidence and original journals remain retained. Testkit owns explicit simulator selection/admission
 through the [current setup contract](development.md); shared IC executables
 provide no product backend.

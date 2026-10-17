@@ -2,8 +2,9 @@
 
 use super::*;
 use crate::model::command_custody::MAX_COMMAND_CUSTODY_RECORD_BYTES;
+use crate::test_support::create_json_durable;
 use crate::{
-    ops::persistence::{create_json_durable, read_json},
+    ops::persistence::read_json,
     test_support::{
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir,
         wait_for_child_path, wait_for_path,
@@ -154,6 +155,18 @@ fn parent_aliases_share_custody_and_unsafe_journal_leaves_reject() {
     assert!(matches!(
         CommandLifetimeLock::acquire(&root.join("linked.json"), 0),
         Err(CommandLifetimeLockError::InvalidJournal { .. })
+    ));
+    assert!(matches!(
+        CommandLifetimeLock::acquire(Path::new("/"), 0),
+        Err(CommandLifetimeLockError::InvalidJournal { path }) if path == Path::new("/")
+    ));
+    assert!(matches!(
+        CommandLifetimeLock::acquire(&root.join("real"), 0),
+        Err(CommandLifetimeLockError::InvalidJournal { path }) if path == root.join("real")
+    ));
+    assert!(matches!(
+        CommandLifetimeLock::acquire(&root.join("missing/journal.json"), 0),
+        Err(CommandLifetimeLockError::Io(error)) if error.kind() == io::ErrorKind::NotFound
     ));
     drop(lock);
     fs::remove_dir_all(root).expect("clean successful fixture");

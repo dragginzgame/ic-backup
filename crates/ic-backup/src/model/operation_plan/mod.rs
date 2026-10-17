@@ -1,5 +1,6 @@
 //! Immutable local binding of declarations to graph operations and original attempt authority.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod budget;
 mod context;
 mod operation;
@@ -271,40 +272,40 @@ impl OperationPlanRecord {
     /// Derived intent/authority, allocated views and local progress are excluded.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        let mut bytes = b"ic-backup/operation-plan/v1\0".to_vec();
-        bytes.extend_from_slice(self.context.network().as_bytes());
+        let mut bytes = EvidenceDigest::new(b"ic-backup/operation-plan/v1\0");
+        bytes.append(self.context.network().as_bytes());
         append_principal(&mut bytes, self.context.caller());
-        bytes.extend_from_slice(self.context.release().as_bytes());
-        bytes.extend_from_slice(self.inventory.digest().hash().as_bytes());
-        bytes.extend_from_slice(self.graph.digest().hash().as_bytes());
+        bytes.append(self.context.release().as_bytes());
+        bytes.append(self.inventory.digest().hash().as_bytes());
+        bytes.append(self.graph.digest().hash().as_bytes());
         append_count(&mut bytes, self.selected_targets.len());
         for target in &self.selected_targets {
             append_principal(&mut bytes, target);
         }
-        bytes.extend_from_slice(&self.budget.mutations().to_be_bytes());
-        bytes.extend_from_slice(&self.budget.observations().to_be_bytes());
+        bytes.append(&self.budget.mutations().to_be_bytes());
+        bytes.append(&self.budget.observations().to_be_bytes());
         append_count(&mut bytes, self.operations.len());
         for operation in &self.operations {
-            bytes.extend_from_slice(&operation.operation_sequence().to_be_bytes());
+            bytes.append(&operation.operation_sequence().to_be_bytes());
             append_principal(&mut bytes, operation.target());
-            bytes.extend_from_slice(operation.request().as_bytes());
-            bytes.extend_from_slice(&operation.budget().mutations().to_be_bytes());
-            bytes.extend_from_slice(&operation.budget().observations().to_be_bytes());
+            bytes.append(operation.request().as_bytes());
+            bytes.append(&operation.budget().mutations().to_be_bytes());
+            bytes.append(&operation.budget().observations().to_be_bytes());
         }
-        ArtifactChecksumRecord::from_bytes(&bytes)
+        bytes.finish()
     }
 }
-fn append_principal(bytes: &mut Vec<u8>, text: &str) {
+fn append_principal(bytes: &mut EvidenceDigest, text: &str) {
     // Owning boundaries admit at most 63 canonical ASCII bytes, so the low byte is exact.
-    bytes.push(text.len().to_le_bytes()[0]);
-    bytes.extend_from_slice(text.as_bytes());
+    bytes.byte(text.len().to_le_bytes()[0]);
+    bytes.append(text.as_bytes());
 }
 #[expect(
     clippy::cast_possible_truncation,
     reason = "validated selection/operation counts are at most 8192"
 )]
-fn append_count(bytes: &mut Vec<u8>, count: usize) {
-    bytes.extend_from_slice(&(count as u32).to_be_bytes());
+fn append_count(bytes: &mut EvidenceDigest, count: usize) {
+    bytes.append(&(count as u32).to_be_bytes());
 }
 fn bounded_selected<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<String>, D::Error> {
     bounded::<D, String, MAX_INVENTORY_TARGETS>(deserializer)

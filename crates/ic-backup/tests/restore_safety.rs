@@ -1,5 +1,6 @@
 //! Public local obligation, source-reference and spent-attempt recovery; no IC/fence backend.
 
+use crate::support::create_json_durable;
 mod support;
 
 use ic_backup::{
@@ -11,7 +12,7 @@ use ic_backup::{
         restore_safety::*,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, RestoreSafetyPersistenceError, create_json_durable,
+        AttemptJournalGuard, BackupLayoutGuard, RestoreSafetyPersistenceError,
         create_operation_plan, create_restore_safety_requirement, read_operation_plan,
         read_restore_safety_requirement,
     },

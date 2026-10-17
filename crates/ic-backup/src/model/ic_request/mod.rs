@@ -1,5 +1,6 @@
 //! Closed host-ingress IC request codec; no transport, authority or effect admission.
 
+use crate::model::evidence_digest::EvidenceDigest;
 mod method;
 pub use method::{IcManagementMethodRecord, IcRequestEffect};
 
@@ -218,24 +219,24 @@ pub(super) fn management_request_digest(
     method: &str,
     arguments: &[u8],
 ) -> ArtifactChecksumRecord {
-    let mut bytes = b"ic-backup/ic-management-request/v1\0".to_vec();
-    bytes.push(0); // Management receiver principal has zero raw bytes.
-    bytes.push(target_bytes.len().to_le_bytes()[0]); // Principal <=29 raw bytes.
-    bytes.extend_from_slice(target_bytes);
-    bytes.push(1); // Replicated update ingress.
-    bytes.push(method.len().to_le_bytes()[0]); // Fixed names fit one byte.
-    bytes.extend_from_slice(method.as_bytes());
+    let mut bytes = EvidenceDigest::new(b"ic-backup/ic-management-request/v1\0");
+    bytes.byte(0); // Management receiver principal has zero raw bytes.
+    bytes.byte(target_bytes.len().to_le_bytes()[0]); // Principal <=29 raw bytes.
+    bytes.append(target_bytes);
+    bytes.byte(1); // Replicated update ingress.
+    bytes.byte(method.len().to_le_bytes()[0]); // Fixed names fit one byte.
+    bytes.append(method.as_bytes());
     append_argument_length(&mut bytes, arguments.len());
-    bytes.extend_from_slice(arguments);
-    ArtifactChecksumRecord::from_bytes(&bytes)
+    bytes.append(arguments);
+    bytes.finish()
 }
 
 #[expect(
     clippy::cast_possible_truncation,
     reason = "admitted argument byte length is at most 4096"
 )]
-fn append_argument_length(bytes: &mut Vec<u8>, length: usize) {
-    bytes.extend_from_slice(&(length as u32).to_be_bytes());
+fn append_argument_length(bytes: &mut EvidenceDigest, length: usize) {
+    bytes.append(&(length as u32).to_be_bytes());
 }
 
 fn required_snapshot<'de, D: Deserializer<'de>>(

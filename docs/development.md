@@ -228,7 +228,7 @@ model; filesystem operations belong to ops.
 owned `(PathBuf, ArtifactChecksumRecord)` entries without filesystem IO. It accepts
 exact canonical relative UTF-8 names, rejects duplicates and malformed identities
 through `DirectoryChecksumError`, and retains the existing path ordering/framing.
-Traversal, staging, synchronized publication and IC-tree verification use this same
+Directory traversal, synchronized publication and IC-tree verification use this same
 owner. Consumer descriptor sync, byte custody and publication remain independent.
 The focused public check is
 `cargo test --offline --locked -p ic-backup --test directory_checksum`.
@@ -246,9 +246,12 @@ Rust sources match 0.15.2, but the exposed `NamedWriteError` identity changes.
 Testkit 0.35.1 keeps its independently selected dev-only Host 0.15.2 graph.
 Consumers of that release sharing `NamedWriteError` values or matching through
 a direct Host dependency had to select that same compatible line. The pending
-0.25.0 hard cut instead exposes Backup's own `PublicationError`; consumers
-matching `PersistenceError::Publication` use that type, independent of their
-direct Host dependency. Production direct Host
+0.25.0 hard cut introduced Backup's own `PublicationError`. The 0.28 hard cut
+removes that mirror without an alias: `PersistenceError::Publication` directly
+carries `ic_host_fs::durable::NamedWriteError<std::io::Error>`. Update imports and
+exhaustive matches to Host's enum and align a direct `ic-host-fs` dependency with
+Backup's selected 0.24 line. Publication phases and retained cleanup evidence remain
+unchanged. Production direct Host
 dependencies still disable default features. Testkit enables artifact archive/Wasm
 and Candid-extraction features in the dev graph, and owns dev-only Host process
 startup/cleanup. No new production inspection, installation-limit or process
@@ -724,44 +727,13 @@ cover source drift, invalid receipts, missing journals and occupied checkpoints.
 
 ## Local IC artifact diagnostics
 
-Local IC artifact diagnostics are available through
-`DownloadJournalGuard::ic_snapshot_metrics()`. Its duration summaries use nanoseconds;
-`prepared_chunk_bytes()` summarizes successfully returned local data payload sizes.
-`prepared_chunk_bytes_histogram()` returns the canonical shared
-`MeasurementHistogram<4>`, re-exported through the same persistence facade. Its
-inclusive byte bounds are zero, 32 KiB, 256 KiB and 1 MiB, with separate overflow.
-Counts are disjoint and saturate independently. The histogram owns the mergeable
-aggregate;
-there is no separately updated byte aggregate. Empty chunks and repeated work
-remain samples, while rejected calls contribute no bytes. Six duration summaries
-retain their existing owners and inclusive timing.
-Durations reuse ordered `ic-metrics::MeasurementSummary`; prepared bytes expose
-`MeasurementAggregate` without latest. Both are re-exported through
-`ic_backup::ops::persistence`, without local arithmetic or a duplicate byte summary.
-Metrics 0.9 totals and integer means use `u128`; individual observations, counts,
-latest/maximum values and histogram bounds/buckets use `u64`. Keep accumulated
-report fields wide rather than casting them back to `u64`. Align any direct Metrics
-dependency with the re-exported 0.9 types and use `*_overflowed` accessors for
-actual-overflow checks. Use checked `scaled_mean` when a
-report needs fractional precision; the host diagnostic views retain exact units.
-Unit conversions outside `u64` are excluded independently, never clipped into
-exact samples. Shared means/intervals reject actual overflow; exactly reached caps
-remain exact. Callers need no direct Metrics dependency to name these types.
-Successful and rejected calls stay separate. Empty chunks are valid zero samples; repeated
-preparation is repeated work. Preparation timings include nested verification and
-must not be added to verification timings as exclusive work. Measurements are empty
-on reopen and never persist into journals or grant progress/spending authority.
-Four bounds use fixed storage per guard and at most four bound
-comparisons per admitted chunk. No allocation, clock or reporting task is added.
-This describes storage/work, not a measured speed-up or IC cycle cost.
-
-The workspace catalog declares registry `ic-metrics` with default features disabled;
-the Unix member inherits it without feature `ic`. It installs no host IC instruction
-counter, network telemetry or transport measurement. Focused sampling tests are
-`cargo test --offline --locked -p ic-backup --lib metrics`, followed by the existing
-download-journal and public upload journeys when those operations change. See
-[diagnostic semantics](extraction-boundary.md#local-ic-snapshot-diagnostics) and
-[dependency review](ic-metrics-adoption.json).
+Persistence guards no longer retain diagnostic metrics, mutexes or timing samples.
+The `ic_snapshot_metrics` API and Metrics type reexports are removed in 0.28.
+Measure returned verification/preparation calls in the caller or performance
+fixtures; select `ic-metrics` directly if a report needs its arithmetic. Such
+measurements never supply progress, spending, receipts or recovery authority.
+The [prior dependency review](ic-metrics-adoption.json) remains provenance for
+older releases rather than a current dependency requirement.
 
 ## Supported host scope
 
@@ -937,23 +909,27 @@ Focused tests select `upload`, `snapshot_inventory_delta` and `ic_observation` w
 `ic_snapshot_upload` target. Native synthetic settled claims qualify only local
 admission/accounting/reopen; actual authenticated providers remain integration-owned.
 
-## The 0.4 hard cut
+## Dependency and retained-evidence cuts
 
-The public local-metrics getters now return the shared Metrics 0.2 type. Import
-`ic_backup::ops::persistence::MeasurementSummary` to name those results through this
-library. An application that also uses Metrics directly must update its own
-`ic-metrics` dependency to the 0.2 line; arithmetic, units and empty/saturated sample
-semantics are unchanged. There is no Metrics 0.1 adapter, local arithmetic wrapper
-or dual API. Host Artifacts and Host FS 0.3 remain private to the existing adapters.
+The former Metrics getter/reexport contract is removed in 0.28. Applications own
+reporting and select their own Metrics dependency where needed; no compatibility
+adapter or per-guard diagnostic state remains.
 
 The maintained v1 records, digests, retained source artifacts, spending reservations,
 fence obligations and restore references retain their exact formats and owners.
 Do not reset or discard unfinished evidence as part of this dependency hard cut.
 Package version changes, release execution and publication remain maintainer-owned.
 
-## The 0.5 stream hashing contract
+## Stream hashing and generic IO ownership
 
-`ops::artifacts::checksum_reader` delegates raw hashing to `ic-host-artifacts` and
+Backup exposes directory hashing and pure declared-file composition. Generic
+file/path hashing and copying use Host FS and Host Artifacts directly, with caller-
+selected custody and bounds. Product staging uses the journal-bound IC snapshot
+writer. Generic JSON reading is also internal; product consumers use guarded
+record operations, while independent documents use bounded Host FS reads and
+caller-owned decoding. These 0.28 cuts retain original artifacts and partial trees.
+
+The internal `ops::artifacts::checksum_reader` delegates raw hashing to `ic-host-artifacts` and
 retries `Interrupted` reads internally. Callers must own blocking/timeouts instead
 of treating the first interruption as termination. Other reader IO errors retain
 their kind and source; impossible byte counts reject as `InvalidData` without a
@@ -975,7 +951,7 @@ the opened file's admitted length to shared bounded hashing, checks the returned
 byte count and rejects short/excess input as `FileShape`. Original IO errors and
 independent descriptor/path identity checks remain intact. These consolidate
 existing contracts without another public checksum API or retained-data reset.
-The generic hex helper remains for IC wire byte fields. Bounded copies/collection
+IC chunk hash comparison and names use Host's typed SHA-256 value. Bounded copies/collection
 and output counting use Host Artifacts; no-follow record reads use Host FS. Unused
 archive/compression/Wasm features are disabled and their lockfile entries removed.
 Directory digest framing, 0700/0600 staging, synchronization/crash barriers,
