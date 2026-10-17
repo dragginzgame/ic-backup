@@ -67,6 +67,12 @@ impl ArtifactChecksumRecord {
         }
     }
 
+    pub(crate) fn sha256(&self) -> Sha256Digest {
+        self.hash
+            .parse()
+            .expect("checksum records contain validated SHA-256 text")
+    }
+
     /// Return the maintained algorithm identifier.
     #[must_use]
     #[expect(

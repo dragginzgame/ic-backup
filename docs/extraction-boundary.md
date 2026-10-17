@@ -123,7 +123,7 @@ with caller-selected limits and custody. The IC snapshot writer owns product sta
 The IC artifact verifier supplies its admitted descriptor length to the shared
 bounded hash owner and checks the returned byte count; short and excess streams
 reject as `FileShape`. Descriptor/path identity checks remain independent.
-Unix directory traversal opens
+Host FS directory traversal opens
 descriptors without following artifact symlinks, checks actual entry types and
 rejects traversal components and special entries. Directory digests preserve
 the source recipe: sort relative UTF-8 paths, then hash each path, NUL, its
@@ -132,25 +132,29 @@ not participate. Non-UTF-8 entry names reject rather than collapse into the
 same lossy path representation. The list of file digests is collected in memory;
 this primitive does not implement an operation-wide resource budget.
 
-The public I/O-free `ops::artifacts::checksum_relative_files` consumes owned
-`(PathBuf, ArtifactChecksumRecord)` rows under the same framing owner used by
-directory traversal, durable directory sync and exact IC-tree verification. It
-sorts by the original path-component order, which differs from complete-string
-ordering. Exact UTF-8 relative names must have nonempty normal components, no
-NUL, dot/parent/trailing/repeated separators or duplicate identity. Newline and
-literal Unix backslash filename bytes remain exact; Unicode is not normalized.
-Empty file sets retain the empty SHA-256. Declared rows do not prove a materialized
-tree, byte custody, completeness, synchronization or publication.
+Host Artifacts' I/O-free `artifact::tree::checksum_relative_files` consumes
+owned `(PathBuf, Sha256Digest)` rows. Host FS `read::tree::checksum` uses the same
+framing owner as Backup's private record adapters for durable directory sync and
+exact IC-tree verification. The former public Backup directory hashing/composition
+APIs and local error type are removed for 0.30 without reexports. Independent
+callers use Host with their own bounds and convert digests into product records.
 
-`DirectoryChecksumError` owns non-UTF-8, malformed and duplicate input refusals.
-The existing exhaustive `ArtifactError` keeps its variants: internal non-UTF-8
-conversion retains `NonUtf8Path`, while other impossible internal row refusals
-retain their typed cause under `Io(InvalidData)`. Valid records and digest bytes
-do not change. Public goldens distinguish path ordering from string ordering,
-retain nested/Unicode/control-byte identities and reject aliases/duplicate rows.
+Composition sorts by original path-component order, which differs from
+complete-string ordering. Exact UTF-8 relative names must have nonempty normal
+components, no NUL, dot/parent/trailing/repeated separators or duplicate identity.
+Newline and literal Unix backslash filename bytes remain exact; Unicode is not
+normalized. Empty file sets retain the empty SHA-256. Declared rows do not prove a
+materialized tree, byte custody, completeness, synchronization or publication.
+
+Host Artifacts' `DirectoryChecksumError` owns non-UTF-8, malformed and duplicate
+input refusals. Backup's exhaustive `ArtifactError` keeps its variants: internal
+non-UTF-8 conversion retains `NonUtf8Path`, while other impossible internal row
+refusals retain their typed cause under `Io(InvalidData)`. Valid records and digest
+bytes do not change. Original framing/path goldens are retained and rerun at the
+Host owners; Backup qualifies its record/error projections and product callers.
 A real file tree matches composition; retained declared rows still compose after
 the original tree is removed, without granting fresh integrity or custody.
-The public composed identity also passes through durable publication and canonical
+The Host composed identity also passes through durable publication and canonical
 recovery with component-order-sensitive filenames. Changed staging or canonical
 bytes reject under the declaration, retaining their actual paths and bytes without
 publishing or recopying. This is Backup's public integration proof; downstream

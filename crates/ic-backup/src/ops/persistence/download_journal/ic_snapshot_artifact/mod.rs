@@ -303,7 +303,10 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
     }
 
     fn check_closed_tree(&self) -> Result<(), IcSnapshotArtifactError> {
-        check_closed_tree(&self.directory, &self.checksums)
+        check_closed_tree(
+            &self.directory,
+            self.checksums.iter().map(|(path, _)| path.as_os_str()),
+        )
     }
 
     fn check_region_custody(&self) -> Result<(), IcSnapshotArtifactError> {
@@ -326,13 +329,13 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
     }
 }
 
-fn check_closed_tree(
+fn check_closed_tree<'a>(
     directory: &File,
-    checksums: &[(PathBuf, ArtifactChecksumRecord)],
+    names: impl IntoIterator<Item = &'a std::ffi::OsStr>,
 ) -> Result<(), IcSnapshotArtifactError> {
-    let mut expected = checksums
-        .iter()
-        .map(|(path, _)| path.as_os_str().as_encoded_bytes().to_vec())
+    let mut expected = names
+        .into_iter()
+        .map(|name| name.as_encoded_bytes().to_vec())
         .collect::<BTreeSet<_>>();
     let mut directory = Dir::read_from(directory).map_err(io::Error::from)?;
     while let Some(entry) = directory.read() {

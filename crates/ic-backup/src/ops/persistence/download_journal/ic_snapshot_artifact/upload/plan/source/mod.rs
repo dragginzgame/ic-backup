@@ -24,23 +24,25 @@ pub(super) fn bindings(
 ) -> Result<Vec<ArtifactChecksumRecord>, IcSnapshotUploadArtifactError> {
     let mut remaining = kinds.iter().peekable();
     let mut bindings = Vec::with_capacity(kinds.len());
-    let checksum = checksum_ic_tree_with(
-        directory,
-        metadata.source(),
-        |directory, name, length, maximum| {
-            checksum_child_with(directory, name, length, maximum, |file, length| {
+    let checksum = checksum_ic_tree_with(directory, metadata.source(), |directory, member| {
+        checksum_child_with(
+            directory,
+            &member.name,
+            member.length,
+            member.maximum,
+            |file, length| {
                 member_checksum(
                     file,
-                    name,
+                    member,
                     length,
                     metadata,
                     destination,
                     &mut remaining,
                     &mut bindings,
                 )
-            })
-        },
-    )?;
+            },
+        )
+    })?;
     if remaining.next().is_some() {
         return Err(IcSnapshotArtifactError::IncompleteCoverage.into());
     }
@@ -52,7 +54,7 @@ pub(super) fn bindings(
 
 fn member_checksum(
     file: &mut impl Read,
-    name: &str,
+    member: &member::ExpectedMember,
     length: u64,
     metadata: &IcSnapshotUploadRequest<'_>,
     destination: &[u8],
@@ -60,7 +62,7 @@ fn member_checksum(
     bindings: &mut Vec<ArtifactChecksumRecord>,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotUploadArtifactError> {
     // Fixed metadata members have no payloads; zero-length regions still hash exactly.
-    if !REGIONS.contains(&name) && !name.starts_with("chunk-") {
+    if !member.is_payload {
         return Ok(checksum_exact_reader(file, length)?);
     }
     let mut digest = HashingWriter::new(io::sink(), length);
@@ -73,7 +75,7 @@ fn member_checksum(
             } => (REGIONS[index].to_owned(), offset, size),
             member::Member::Chunk { name } => (name, 0, length),
         };
-        if member_name != name {
+        if member_name != member.name {
             break;
         }
         if offset != digest.bytes_written() || size > length - digest.bytes_written() {

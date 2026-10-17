@@ -129,7 +129,7 @@ impl PreparedUpdate<'_> {
     }
 }
 
-/// Redacted transport denial; no variant authorizes retry, refund or nonapplication.
+/// Redacted transport construction denial; provider errors own submission outcomes.
 #[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
 pub enum TransportError {
     /// Endpoint, timeout, trust or HTTP client configuration is invalid.
@@ -138,19 +138,7 @@ pub enum TransportError {
     /// Actual signer or exact declared network/release context differs.
     #[error("agent transport context mismatch")]
     Context,
-    /// Original reservation is absent, replaced, settled or already recovering.
-    #[error("agent transport reservation mismatch")]
-    Reservation,
     /// Trusted identity could not sign the exact original request.
     #[error("agent transport signing failed")]
     Signing,
-    /// Signed envelope exceeded its finite limit; no dispatch.
-    #[error("agent transport envelope too large")]
-    EnvelopeTooLarge,
-    /// Submission, authentication or reply outcome is unknown; preserve pending evidence.
-    #[error("agent update indeterminate")]
-    Indeterminate,
-    /// Reply exceeded its method owner bound after submission; preserve pending evidence.
-    #[error("agent update reply too large")]
-    ReplyTooLarge,
 }

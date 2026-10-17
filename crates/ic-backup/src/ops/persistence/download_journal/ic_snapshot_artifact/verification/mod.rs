@@ -1,15 +1,12 @@
 //! Explicit fresh local checks of retained opt-in IC trees; no upload permission.
 
 use super::{
-    ArtifactChecksumRecord, DownloadJournalGuard, FORMAT, File, IcSnapshotArtifactError,
-    IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES, Mode, OFlags, REGIONS,
-    check_closed_tree, check_directory_identity, checksum_relative_files, member,
-    open_directory_no_follow, unix_fs,
+    ArtifactChecksumRecord, DownloadJournalGuard, File, IcSnapshotArtifactError,
+    IcSnapshotMetadataReply, Mode, OFlags, check_closed_tree, check_directory_identity,
+    checksum_relative_files, member, open_directory_no_follow, unix_fs,
 };
 use crate::{
-    model::{
-        ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, operation_plan::OperationPlanRecord,
-    },
+    model::operation_plan::OperationPlanRecord,
     ops::{
         artifacts::ArtifactError,
         persistence::{DownloadIntegrityError, read_operation_plan},
@@ -102,69 +99,31 @@ fn checksum_ic_tree(
 pub(super) fn checksum_ic_tree_with<E: From<IcSnapshotArtifactError>>(
     directory: &File,
     metadata: &IcSnapshotMetadataReply<'_>,
-    mut read_child: impl FnMut(&File, &str, Option<u64>, u64) -> Result<ArtifactChecksumRecord, E>,
+    mut read_child: impl FnMut(&File, &member::ExpectedMember) -> Result<ArtifactChecksumRecord, E>,
 ) -> Result<ArtifactChecksumRecord, E> {
-    let mut checksums = vec![
-        ("format".into(), ArtifactChecksumRecord::from_bytes(FORMAT)),
-        (
-            "metadata.candid".into(),
-            metadata.payload_checksum().clone(),
-        ),
-        (
-            "metadata-arguments.candid".into(),
-            ArtifactChecksumRecord::from_bytes(metadata.request().arguments()),
-        ),
-    ];
-    let values = metadata.metadata();
-    let sizes = [
-        values.wasm_module_size,
-        values.wasm_memory_size,
-        values.stable_memory_size,
-    ];
-    // Empty expected digests here name the closed tree; the actual region hashes
-    // below are admitted by the existing retained whole-tree checksum owner.
-    let empty = ArtifactChecksumRecord::from_bytes(&[]);
-    checksums.extend(REGIONS.map(|name| (name.into(), empty.clone())));
-    for chunk in &values.wasm_chunk_store {
-        let digest = ic_host_artifacts::artifact::Sha256Digest::from_bytes(
-            chunk
-                .hash
-                .as_slice()
-                .try_into()
-                .map_err(|_| IcSnapshotArtifactError::OriginalMismatch)?,
-        );
-        checksums.push((
-            member::chunk_name(digest).into(),
-            ArtifactChecksumRecord::from_digest(*digest.as_bytes()),
-        ));
-    }
-    check_closed_tree(directory, &checksums)?;
-    for (index, (name, checksum)) in checksums.iter_mut().enumerate() {
-        let (length, maximum) = match index {
-            0 => (Some(FORMAT.len() as u64), FORMAT.len() as u64),
-            1 => (None, MAX_IC_SNAPSHOT_METADATA_BYTES as u64),
-            2 => {
-                let length = metadata.request().arguments().len() as u64;
-                (Some(length), length)
-            }
-            3..=5 => (Some(sizes[index - 3]), sizes[index - 3]),
-            _ => (None, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64),
-        };
-        let actual = read_child(
-            directory,
-            name.to_str()
-                .ok_or(IcSnapshotArtifactError::UnexpectedEntry)?,
-            length,
-            maximum,
-        )?;
-        if !(3..=5).contains(&index) {
+    let members = member::expected(metadata)?;
+    check_closed_tree(
+        directory,
+        members
+            .iter()
+            .map(|member| std::ffi::OsStr::new(&member.name)),
+    )?;
+    let mut checksums = Vec::with_capacity(members.len());
+    for member in members {
+        let actual = read_child(directory, &member)?;
+        if let Some(expected) = &member.checksum {
             actual
-                .verify(checksum.hash())
+                .verify(expected.hash())
                 .map_err(IcSnapshotArtifactError::from)?;
         }
-        *checksum = actual;
+        checksums.push((member.name.into(), actual));
     }
-    check_closed_tree(directory, &checksums)?;
+    check_closed_tree(
+        directory,
+        checksums
+            .iter()
+            .map(|(path, _): &(std::path::PathBuf, _)| path.as_os_str()),
+    )?;
     checksum_relative_files(checksums)
         .map_err(ArtifactError::from)
         .map_err(IcSnapshotArtifactError::from)
@@ -173,13 +132,15 @@ pub(super) fn checksum_ic_tree_with<E: From<IcSnapshotArtifactError>>(
 
 fn checksum_child(
     directory: &File,
-    name: &str,
-    length: Option<u64>,
-    maximum: u64,
+    member: &member::ExpectedMember,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
-    checksum_child_with(directory, name, length, maximum, |file, length| {
-        checksum_exact_reader(file, length)
-    })
+    checksum_child_with(
+        directory,
+        &member.name,
+        member.length,
+        member.maximum,
+        |file, length| checksum_exact_reader(file, length),
+    )
 }
 
 pub(super) fn checksum_child_with<E: From<IcSnapshotArtifactError>>(

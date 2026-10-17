@@ -92,3 +92,24 @@ fn non_utf8_tree_names_reject_instead_of_collapsing_path_identity() {
     ));
     fs::remove_dir_all(root).expect("remove successful fixture");
 }
+
+#[test]
+fn host_declaration_refusals_keep_product_error_kinds_and_typed_causes() {
+    let path = PathBuf::from("duplicate");
+    let refused = DirectoryChecksumError::DuplicatePath { path: path.clone() };
+    let ArtifactError::Io(error) = ArtifactError::from(refused.clone()) else {
+        panic!("declaration refusal must retain the IO boundary");
+    };
+    assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+    assert_eq!(
+        error
+            .get_ref()
+            .unwrap()
+            .downcast_ref::<DirectoryChecksumError>(),
+        Some(&refused)
+    );
+    assert!(matches!(
+        ArtifactError::from(DirectoryChecksumError::NonUtf8Path { path: path.clone() }),
+        ArtifactError::NonUtf8Path { path: actual } if actual == path
+    ));
+}

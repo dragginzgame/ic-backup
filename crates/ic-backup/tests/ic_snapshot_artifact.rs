@@ -12,14 +12,12 @@ use ic_backup::{
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         operation_plan::OperationPlanRecord,
     },
-    ops::{
-        artifacts::checksum_directory,
-        persistence::{
-            AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, IcSnapshotArtifactError,
-            create_operation_plan, read_operation_plan,
-        },
+    ops::persistence::{
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, IcSnapshotArtifactError,
+        create_operation_plan, read_operation_plan,
     },
 };
+use ic_host_fs::read::tree::checksum::checksum_directory;
 use ic_management_canister_types::{
     ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
@@ -130,7 +128,12 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
         checksum
     );
     let canonical = root.join(downloads.record().unwrap().artifacts()[0].artifact_path());
-    assert_eq!(checksum_directory(&canonical).unwrap(), checksum);
+    assert_eq!(
+        checksum_directory(&canonical, u64::MAX)
+            .unwrap()
+            .to_string(),
+        checksum.hash()
+    );
     assert_eq!(
         fs::read(canonical.join("wasm-module.bin")).unwrap(),
         [42; 3]

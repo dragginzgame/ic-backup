@@ -56,6 +56,12 @@ fresh effect authority or proof that a reconstructed pending request was never s
 
 ## Async mutation coordination
 
+`TransportError` describes transport construction only: configuration, context
+and identity failures. The former runtime variants are removed without aliases
+for 0.30. Provider errors own pre-dispatch refusal and indeterminate outcomes;
+private preparation no longer constructs an intermediate transport error.
+Signed-ingress retention still precedes the sole network submission.
+
 `AgentMutationProvider` implements the core async `IcMutationProvider` for exact
 capture/stop/load/start mutations. Configure it with `AgentTransport` and a mandatory
 fallible callback that durably retains the exact prepared envelope and request ID

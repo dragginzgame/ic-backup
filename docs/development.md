@@ -225,13 +225,14 @@ artifact and persistence mechanisms described in
 runners remain unimplemented; [Agent transport](agent-transport.md) owns bounded
 async submission. Pure checksum records belong to
 model; filesystem operations belong to ops.
-`ops::artifacts::checksum_relative_files` also composes a directory checksum from
-owned `(PathBuf, ArtifactChecksumRecord)` entries without filesystem IO. It accepts
-exact canonical relative UTF-8 names, rejects duplicates and malformed identities
-through `DirectoryChecksumError`, and retains the existing path ordering/framing.
-Directory traversal, synchronized publication and IC-tree verification use this same
-owner. Consumer descriptor sync, byte custody and publication remain independent.
-The focused public check is
+Host Artifacts `artifact::tree::checksum_relative_files` composes directory
+checksums from owned `(PathBuf, Sha256Digest)` entries without filesystem IO.
+Host FS `read::tree::checksum` owns no-follow directory hashing with an explicit
+per-file byte bound. Backup's adapters are private; independent callers use Host
+and convert raw digests with `ArtifactChecksumRecord::from_digest` where needed.
+Directory traversal, synchronized publication and IC-tree verification share the
+Host framing owner. Consumer descriptor sync, byte custody and publication remain
+independent. The focused product publication/recovery check is
 `cargo test --offline --locked -p ic-backup --test directory_checksum`.
 JSON serializers run once before parent/staging effects; their byte buffer retains
 that contract. Host's typed descriptor publisher owns staging/atomic publication,

@@ -31,6 +31,11 @@ fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_
     values.wasm_module_size = length as u64;
     let raw = candid::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+    let members = member::expected(&metadata).unwrap();
+    let module = members
+        .iter()
+        .find(|member| member.name == REGIONS[0])
+        .unwrap();
     let checksum = ArtifactChecksumRecord::from_bytes(b"declared original source");
     let upload = IcSnapshotUploadRequest::metadata(&plan, &metadata, &checksum).unwrap();
     let kinds = [
@@ -62,7 +67,7 @@ fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_
         let mut bindings = vec![];
         let result = member_checksum(
             &mut reader,
-            REGIONS[0],
+            module,
             length as u64,
             &upload,
             DESTINATION_ID,

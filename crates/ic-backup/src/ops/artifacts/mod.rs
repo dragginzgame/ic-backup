@@ -2,26 +2,44 @@
 
 #[cfg(test)]
 mod regressions;
-mod secure;
 #[cfg(test)]
 mod tests;
 
 use crate::model::artifacts::ArtifactChecksumRecord;
-use crate::model::evidence_digest::EvidenceDigest;
+use ic_host_artifacts::artifact::tree::DirectoryChecksumError;
 #[cfg(any(unix, test))]
 use std::io::Read;
 use std::{
     io,
-    path::{Component, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 use thiserror::Error;
 
-/// Checksum a directory using sorted relative-path/file-digest pairs.
-///
-/// # Errors
-/// Rejects unsafe entry types, unsupported platforms and filesystem failures.
-pub fn checksum_directory(path: &Path) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    secure::checksum_directory(path)
+pub(crate) fn checksum_directory(path: &Path) -> Result<ArtifactChecksumRecord, ArtifactError> {
+    #[cfg(unix)]
+    {
+        use ic_host_fs::read::tree::checksum::{TreeChecksumError, checksum_directory};
+        let digest = checksum_directory(path, u64::MAX).map_err(|error| match error {
+            TreeChecksumError::Io(error) => ArtifactError::Io(error),
+            TreeChecksumError::Input(error) => ArtifactError::Io(error.into()),
+            TreeChecksumError::Declaration(error) => ArtifactError::from(error),
+            TreeChecksumError::NonUtf8Path { path } => ArtifactError::NonUtf8Path { path },
+            TreeChecksumError::InvalidPath { path } => ArtifactError::UnsupportedEntry {
+                path: path.display().to_string(),
+                kind: "Unknown".into(),
+            },
+            TreeChecksumError::UnsupportedEntry { path, kind } => ArtifactError::UnsupportedEntry {
+                path: path.display().to_string(),
+                kind: format!("{kind:?}"),
+            },
+        })?;
+        Ok(ArtifactChecksumRecord::from_digest(*digest.as_bytes()))
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        Err(ArtifactError::UnsupportedPlatform(std::env::consts::OS))
+    }
 }
 
 #[cfg(any(unix, test))]
@@ -43,96 +61,16 @@ pub(crate) fn checksum_reader(
     ))
 }
 
-/// Compose the maintained directory checksum from already-admitted file checksums.
-///
-/// Names must be exact UTF-8 relative paths with nonempty normal components,
-/// separated by `/`, without NUL bytes, normalization aliases or duplicates.
-/// Unix filename bytes such as newlines and backslashes retain their exact meaning.
-/// Entries sort by [`PathBuf`] ordering, then hash UTF-8 path bytes, NUL,
-/// the canonical lowercase file digest and newline. An empty set hashes empty bytes.
-///
-/// Performs no filesystem IO. The caller owns descriptor/byte custody, completeness,
-/// synchronization and publication; declared checksums prove none of these.
-///
-/// The checksums below stand for bytes already admitted by the caller. A
-/// descriptor-owning consumer may supply its retained records instead.
-///
-/// ```
-/// use ic_backup::{
-///     model::artifacts::ArtifactChecksumRecord,
-///     ops::artifacts::{DirectoryChecksumError, checksum_relative_files},
-/// };
-///
-/// let checksum = checksum_relative_files(vec![
-///     ("a.txt".into(), ArtifactChecksumRecord::from_bytes(b"a")),
-///     ("nested/b.txt".into(), ArtifactChecksumRecord::from_bytes(b"b")),
-/// ])?;
-/// assert_eq!(
-///     checksum.hash(),
-///     "e4d330f138b8f1b3044e84b5dcbe4fd1cb7e043d0c20810c083d791b6de01266",
-/// );
-/// # Ok::<(), DirectoryChecksumError>(())
-/// ```
-///
-/// # Errors
-/// Returns a typed refusal for non-UTF-8, malformed or duplicate identities.
-pub fn checksum_relative_files(
-    mut files: Vec<(PathBuf, ArtifactChecksumRecord)>,
+pub(crate) fn checksum_relative_files(
+    files: Vec<(PathBuf, ArtifactChecksumRecord)>,
 ) -> Result<ArtifactChecksumRecord, DirectoryChecksumError> {
-    files.sort_by(|left, right| left.0.cmp(&right.0));
-    let mut hasher = EvidenceDigest::new(&[]);
-    let mut previous = None;
-    for (relative, checksum) in &files {
-        let name = relative
-            .to_str()
-            .ok_or_else(|| DirectoryChecksumError::NonUtf8Path {
-                path: relative.clone(),
-            })?;
-        if name.contains('\0')
-            || name.split('/').any(|part| matches!(part, "" | "." | ".."))
-            || !relative
-                .components()
-                .all(|part| matches!(part, Component::Normal(_)))
-        {
-            return Err(DirectoryChecksumError::InvalidRelativePath {
-                path: relative.clone(),
-            });
-        }
-        if previous == Some(relative) {
-            return Err(DirectoryChecksumError::DuplicatePath {
-                path: relative.clone(),
-            });
-        }
-        previous = Some(relative);
-        hasher.append(name.as_bytes());
-        hasher.byte(0);
-        hasher.append(checksum.hash().as_bytes());
-        hasher.append(b"\n");
-    }
-    Ok(hasher.finish())
-}
-
-/// Invalid declared file identities at the I/O-free directory checksum boundary.
-#[derive(Clone, Debug, Eq, Error, PartialEq)]
-pub enum DirectoryChecksumError {
-    /// The supplied path cannot retain exact UTF-8 identity.
-    #[error("directory checksum path is not UTF-8: {path:?}")]
-    NonUtf8Path {
-        /// Exact rejected path.
-        path: PathBuf,
-    },
-    /// The path contains invalid bytes or noncanonical/unnormalized components.
-    #[error("directory checksum path is not canonical and relative: {path:?}")]
-    InvalidRelativePath {
-        /// Exact rejected path, without normalization.
-        path: PathBuf,
-    },
-    /// Two entries declare the same canonical path, even if their digests agree.
-    #[error("duplicate directory checksum path: {path:?}")]
-    DuplicatePath {
-        /// Exact repeated path.
-        path: PathBuf,
-    },
+    let digest = ic_host_artifacts::artifact::tree::checksum_relative_files(
+        files
+            .into_iter()
+            .map(|(path, record)| (path, record.sha256()))
+            .collect(),
+    )?;
+    Ok(ArtifactChecksumRecord::from_digest(*digest.as_bytes()))
 }
 
 impl From<DirectoryChecksumError> for ArtifactError {

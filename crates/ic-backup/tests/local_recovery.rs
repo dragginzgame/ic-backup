@@ -10,15 +10,13 @@ use ic_backup::{
         command_custody::{CommandCustodyRecord, MAX_COMMAND_CUSTODY_RECORD_BYTES},
         download_journal::{DownloadArtifactRequest, ResumeAction},
     },
-    ops::{
-        artifacts::checksum_directory,
-        persistence::{
-            ArtifactCommitOutcome, BackupLayoutGuard, CommandLifetimeLock, CommandQuiescenceGuard,
-            DownloadJournalGuard, JournalLock, JournalLockError, PersistenceError,
-            commit_artifact_directory,
-        },
+    ops::persistence::{
+        ArtifactCommitOutcome, BackupLayoutGuard, CommandLifetimeLock, CommandQuiescenceGuard,
+        DownloadJournalGuard, JournalLock, JournalLockError, PersistenceError,
+        commit_artifact_directory,
     },
 };
+use ic_host_fs::read::tree::checksum::checksum_directory;
 use std::fs;
 
 #[test]
@@ -35,7 +33,11 @@ fn public_primitives_preserve_intent_and_reconcile_only_matching_bytes() {
     let canonical = root.join("snapshot");
     fs::create_dir(&temporary).expect("create fixture staging");
     fs::write(temporary.join("state.bin"), b"exact snapshot bytes").expect("write fixture bytes");
-    let checksum = checksum_directory(&temporary).expect("checksum exact fixture");
+    let checksum = ArtifactChecksumRecord::from_digest(
+        *checksum_directory(&temporary, u64::MAX)
+            .expect("checksum exact fixture")
+            .as_bytes(),
+    );
     create_json_durable(&journal, &checksum).expect("persist exact intent");
     assert_eq!(
         commit_artifact_directory(&temporary, &canonical, checksum.hash())
@@ -130,7 +132,11 @@ fn public_download_journal_adopts_publication_before_retained_progress() {
         b"opaque complete transfer fixture",
     )
     .expect("fixture bytes");
-    let checksum = checksum_directory(&temporary).expect("checksum native fixture");
+    let checksum = ArtifactChecksumRecord::from_digest(
+        *checksum_directory(&temporary, u64::MAX)
+            .expect("checksum native fixture")
+            .as_bytes(),
+    );
     guard
         .record_downloaded(entry.canister_id(), entry.snapshot_id())
         .expect("caller attests completed transfer");

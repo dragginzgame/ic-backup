@@ -61,14 +61,23 @@ implementation determine what has actually been qualified.
   the same immutable original borrowed through the callback; rereading that same
   value is not a fresh filesystem observation. Preserve reply ceilings, original
   request identity, fallible reply retention and pending spending on every failure.
+- Agent `TransportError` owns construction failures only. Submission admission
+  returns each port's existing pre-dispatch error directly; failed/oversized/lost
+  replies retain the existing indeterminate provider boundary and pending spending.
+- Snapshot member expectations carry exact names, length ceilings, optional known
+  hashes and payload roles from the private member owner. Regions have no invented
+  expected digest; the retained whole-tree checksum admits their actual hashes.
+  Keep both closed-tree checks and fresh descriptor/path/length admission. Upload
+  preparation consumes the same member roles without inferring them from names.
 - Agent signing and dispatch are internal to its single-retention submission owner.
   Public providers invoke the mandatory durable ingress callback before effects;
   passive prepared-envelope access remains available to that callback. Preserve
   no-retry/no-polling behavior and pending reservations after accepted/lost calls.
 - Generic filesystem copying and file/path checksum selectors are removed. Product
-  staging belongs to the journal-bound IC snapshot writer. Directory traversal and
-  pure declared-file checksum composition retain their exact UTF-8 framing, no-follow
-  admission and publication/recovery checks. Preserve old copied and partial trees.
+  staging belongs to the journal-bound IC snapshot writer. Host FS directory
+  traversal and Host Artifacts declared-file checksum composition retain exact
+  UTF-8 framing and no-follow admission; Backup retains publication/recovery checks.
+  Preserve old copied and partial trees.
 - Generic JSON decoding and raw stream checksum adapters are internal. External
   product consumers use guarded record operations; independent documents/files use
   Host FS admission and Host Artifacts with their own bounds and validation.
@@ -138,10 +147,11 @@ implementation determine what has actually been qualified.
   admission. This does not grant root confinement or remove namespace races.
 
 - Pure directory checksum composition accepts exact canonical relative UTF-8 file
-  identities and validated checksums through the same owner as local artifact
-  traversal/publication. Preserve original path-component ordering and path/NUL/
-  lowercase-digest/newline framing. Reject malformed and duplicate rows through
-  `DirectoryChecksumError` without expanding `ArtifactError` or reopening paths.
+  identities and typed digests through Host Artifacts; Host FS owns directory
+  traversal, while Backup owns publication. Preserve original path-component
+  ordering and path/NUL/lowercase-digest/newline framing. Reject malformed and
+  duplicate rows through Host Artifacts' `DirectoryChecksumError` without reopening
+  paths. Backup's private record adapters preserve its `ArtifactError` projection.
   Declaration hashing proves no byte custody, sync, completeness or publication.
 - The maintainer authorized Rust repository setup following `ic-delegated-auth`
   and `ic-blob-storage`. The root is workspace-only under the
@@ -551,7 +561,7 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   Raw identities, hashing/copying and record output limits use `ic-host-artifacts`.
   The internal `checksum_reader` retries Interrupted locally; callers own blocking and
   timeouts. Preserve other original IO errors, invalid-count refusal, canonical
-  checksum records and local directory digest framing/private publication owners.
+  checksum records, Host directory digest framing and local publication owners.
 
 - Metadata-upload inventory observations bind the full original source/upload plan,
   exact list bytes and both already pending attempt IDs. Reuse canonical observation

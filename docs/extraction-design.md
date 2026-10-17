@@ -151,15 +151,16 @@ own qualified same-release procedure before changing the executable contract.
 
 ## 4. Extraction ownership
 
-The implemented library keeps directory checksum composition and journal-bound
-IC snapshot staging. Generic filesystem copying, file/path checksum selectors and
+The library keeps journal-bound IC snapshot staging and product-record adapters.
+Host Artifacts owns pure directory checksum composition; Host FS owns no-follow
+directory hashing. Generic filesystem copying, file/path checksum selectors and
 public generic JSON IO are removed for 0.28. Independent IO uses Host FS and Host
 Artifacts with caller-selected bounds and custody; existing trees and unfinished
 evidence are retained. Product record access remains guarded by Backup owners.
 
 | Surface | Destination and treatment |
 | --- | --- |
-| Artifact hashing and safe IO | `ic-backup`; preserve streamed verification and secure path handling |
+| Artifact hashing and safe IO | Host Artifacts/FS; Backup retains exact record framing, snapshot layouts and journal custody |
 | Download and execution journals | `ic-backup`; normalize current contracts, keep interruption evidence |
 | Durable writes, locks, restore references | `ic-backup`; preserve concrete custody invariants |
 | Manifest and topology validation | Generic structure in `ic-backup`; Fleet/Root meaning in Canic adapter |

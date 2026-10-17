@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.30.0]
+
+### Breaking
+
+- Remove Agent `TransportError::{Reservation, EnvelopeTooLarge, Indeterminate,
+  ReplyTooLarge}` without aliases. Construction retains configuration/context/
+  identity errors; provider errors own dispatch outcomes. Private signing/admission
+  now returns the existing provider refusal directly before ingress retention.
+- Remove public `ops::artifacts::checksum_directory`, `checksum_relative_files`
+  and the local `DirectoryChecksumError` without compatibility reexports. Use
+  Host FS `read::tree::checksum` and Host Artifacts `artifact::tree`; convert raw
+  SHA-256 identities into product records at the caller boundary. Exact retained
+  tree framing, snapshot layout admission and publication/recovery checks remain.
+
+### Changed
+
+- Carry IC snapshot member names, length bounds, expected digests and payload roles
+  from one product owner into verification and upload preparation. Remove dummy
+  region hashes, positional classification and filename-prefix interpretation;
+  retain exact v1 bytes, closed-tree admission and descriptor identity checks.
+- Adopt published Host Artifacts, FS and Process 0.26.1. Host owns pure directory
+  checksum composition and no-follow directory hashing; Backup retains private
+  record/error projections and journal-bound snapshot custody.
+
 ## [0.29.0] - 2026-10-17
 
 ### Breaking
