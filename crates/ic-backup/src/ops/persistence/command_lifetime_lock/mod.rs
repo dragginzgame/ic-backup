@@ -2,7 +2,9 @@
 
 use crate::model::command_custody::{CommandCustodyRecord, CommandCustodyRecordError};
 #[cfg(unix)]
-use ic_host_process::custody::{CommandCustody, CustodyError, FileIdentity, QuiescenceGuard};
+use ic_host_fs::identity::FileIdentity;
+#[cfg(unix)]
+use ic_host_process::custody::{CommandCustody, CustodyError, QuiescenceGuard};
 #[cfg(unix)]
 use std::time::Duration;
 use std::{

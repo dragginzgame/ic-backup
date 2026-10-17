@@ -7,8 +7,6 @@ mod tests;
 
 use crate::model::artifacts::ArtifactChecksumRecord;
 use ic_host_artifacts::artifact::tree::DirectoryChecksumError;
-#[cfg(any(unix, test))]
-use std::io::Read;
 use std::{
     io,
     path::{Path, PathBuf},
@@ -40,25 +38,6 @@ pub(crate) fn checksum_directory(path: &Path) -> Result<ArtifactChecksumRecord, 
         let _ = path;
         Err(ArtifactError::UnsupportedPlatform(std::env::consts::OS))
     }
-}
-
-#[cfg(any(unix, test))]
-/// Stream an already-open reader using a bounded transfer buffer.
-///
-/// Interrupted reads retry internally. The caller owns blocking and timeouts;
-/// no network or paid-operation retry is performed.
-///
-/// # Errors
-/// Returns other reader IO failures unchanged; impossible byte counts reject as
-/// [`io::ErrorKind::InvalidData`] rather than indexing outside the transfer buffer.
-pub(crate) fn checksum_reader(
-    reader: &mut impl Read,
-) -> Result<ArtifactChecksumRecord, ArtifactError> {
-    let identity =
-        ic_host_artifacts::artifact::hash_reader(reader, u64::MAX).map_err(io::Error::from)?;
-    Ok(ArtifactChecksumRecord::from_digest(
-        *identity.sha256.as_bytes(),
-    ))
 }
 
 pub(crate) fn checksum_relative_files(

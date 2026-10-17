@@ -62,7 +62,7 @@ for 0.30. Provider errors own pre-dispatch refusal and indeterminate outcomes;
 private preparation no longer constructs an intermediate transport error.
 Signed-ingress retention still precedes the sole network submission.
 
-`AgentMutationProvider` implements the core async `IcMutationProvider` for exact
+`AgentUpdateProvider` implements the core async `IcMutationProvider` for exact
 capture/stop/load/start mutations. Configure it with `AgentTransport` and a mandatory
 fallible callback that durably retains the exact prepared envelope and request ID
 with original plan/attempt and exclusive never-dispatched custody. It rechecks the
@@ -89,7 +89,7 @@ resume or implicit repeat call. Real Agent simulator reads exercise this adapter
 and the single-read coordinator; the Testkit fixture separately exercises the
 metadata/download loop. Neither supplies a default application qualification lane.
 
-`AgentSnapshotUploadProvider` implements source-bound metadata/data uploads with
+`AgentUpdateProvider` implements source-bound metadata/data uploads with
 the same mandatory signed-ingress retention and current guarded record admission.
 Await `upload_snapshot`, `allocate_snapshot` and `upload_snapshot_data`; fresh
 admission and independent qualification are async. Integrations qualify authentic
@@ -184,3 +184,9 @@ authenticated application providers, production identities/endpoints, exclusive
 never-dispatched custody, complete installed product and terminal/fence/reference
 release remain independently qualified. [Transport acceptance #25](https://github.com/dragginzgame/ic-backup/issues/25)
 owns that boundary; historical ICP routing acceptance no longer blocks this transport.
+
+Agent 0.31 uses one `AgentUpdateProvider` for mutation and source-bound upload
+ports. Replace both former provider names and change retention callbacks to
+accept `&ReservedUpdate<'_>`. Match `Mutation` or `Upload` when accessing the typed
+request; the callback receives the exact borrowed request selected for dispatch.
+Both ports preserve their own admission, reply limits and evidence domains.

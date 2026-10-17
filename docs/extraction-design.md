@@ -153,7 +153,7 @@ own qualified same-release procedure before changing the executable contract.
 
 The library keeps journal-bound IC snapshot staging and product-record adapters.
 Host Artifacts owns pure directory checksum composition; Host FS owns no-follow
-directory hashing. Generic filesystem copying, file/path checksum selectors and
+directory hashing and ordered directory sync/checksum traversal. Generic filesystem copying, file/path checksum selectors and
 public generic JSON IO are removed for 0.28. Independent IO uses Host FS and Host
 Artifacts with caller-selected bounds and custody; existing trees and unfinished
 evidence are retained. Product record access remains guarded by Backup owners.
@@ -269,7 +269,7 @@ status/read visibility must never be mistaken for write authority.
 | Port | Owned contract |
 | --- | --- |
 | `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
-| `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentMutationProvider requires durable signed retention, with no default or automatic settlement |
+| `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentUpdateProvider requires durable signed retention, with no default or automatic settlement |
 | `IcSnapshotTransferReadProvider` | Implemented async exact original metadata/data payload and current guarded pending-update record, bounded passive response and existing decoder association; configured Agent adapter requires durable signed retention, with no automatic receipt or read reissue |
 | `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; configured async Agent observation adapter with durable ingress; no automatic outcome or lost-observation reissue |
 | `IcSnapshotUploadProvider` | Implemented async source-bound metadata/data update and current guarded record, reusing exact attempts, passive acknowledgements and IC update failures; configured Agent adapter requires durable signed retention, with no automatic settlement or retry |

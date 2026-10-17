@@ -17,5 +17,5 @@
   "grants": "no default provider, full runner, fresh permission, automatic outcome, complete upload, load/start safety, terminal proof or fence/reference release",
   "unchanged": "existing v1 records, codecs, digests, bounds, exhaustive enums, dependencies, allowances, package version and release receipt",
   "async_contract": "Providers return futures and recheck the currently guarded original journal. Await upload/allocation/data-stage coordinators with async admission/qualification under selected exclusion; retain replies before cancellable qualification. Cancellation preserves source, earlier receipts and pending spending and denies reentry. No runtime or Send bound follows.",
-  "configured_adapter": "ic-backup-agent::AgentSnapshotUploadProvider requires explicit configured transport and mandatory durable exact signed-envelope/request-ID retention before one source-bound update. No default retainer or application lane."
+  "configured_adapter": "ic-backup-agent::AgentUpdateProvider requires explicit configured transport and mandatory durable exact signed-envelope/request-ID retention before one source-bound update. No default retainer or application lane."
 }

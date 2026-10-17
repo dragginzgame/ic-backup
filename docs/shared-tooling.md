@@ -49,7 +49,31 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 123-file snapshot selects clean committed Shared Tooling 0.20.0 at
+The current 124-file snapshot selects committed Shared Tooling 0.23.0 at
+`0b351cd2ba2bcd8927b783a5fec89afc8013f708`, verified against GitHub's `main`
+on 2026-10-17. The canonical exporter ran from an isolated clean clone, retaining
+all existing entrypoints. [The review](shared-tooling-review.json) records 21
+updated payloads and one new host-platform observer, with no retirements. A second
+preview retains all 124 unchanged; uncommitted sibling work is excluded.
+
+The common host/Cargo catalog is unchanged. The IC catalog selects ICP CLI 1.7.0
+with reviewed native-host digests; explicit setup precedes offline admission.
+Shared owns normalized host observations, validated installer catalog projections,
+bounded CI download retries and the pinned 7.0.2 evidence uploader. Backup keeps
+its host/Cargo/IC/Testkit setup order, local release policy and exact resume receipt
+check. Removed product-specific commands and the separate Make-fixture copier
+were not selected or called here, so this closure needs no replacement for them.
+
+Direct Host Artifacts, FS and Process select registry 0.27.1; native file identity
+comes from Host FS. The incoming locked Testkit/Candid 0.52 selection is retained,
+and simulator startup uses the explicit Spawn variant with the original timeout,
+TTL choices and output files. Product record bytes, bounds and recovery custody
+remain local. Qualification is recorded in the current review; native macOS and
+hosted consumer evidence remain separate.
+
+### Prior Shared Tooling 0.20.0 review
+
+The earlier 123-file snapshot selects clean committed Shared Tooling 0.20.0 at
 `3f87ddc1a0c1616775b2114c42a4adee7376c9b1`, verified against GitHub's
 `main` on 2026-10-17. The canonical exporter ran from an isolated committed copy;
 uncommitted sibling work was excluded. Existing entrypoints are retained.

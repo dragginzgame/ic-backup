@@ -20,7 +20,7 @@ use ic_backup::{
     ops::persistence::BackupLayoutGuard,
 };
 use ic_backup_agent::{
-    AgentMutationProvider, AgentSnapshotTransferReadProvider, AgentTransport, PreparedUpdate,
+    AgentSnapshotTransferReadProvider, AgentTransport, AgentUpdateProvider, PreparedUpdate,
     ReservedUpdate,
 };
 use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
@@ -65,9 +65,12 @@ async fn original_capture_stage_awaits_accounted_fresh_admission_then_retains_on
     let caller = fixture.caller();
     let retained = Cell::new(0);
     let observed = Cell::new(0);
-    let mut provider = AgentMutationProvider::new(
+    let mut provider = AgentUpdateProvider::new(
         &transport,
-        |request: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+        |request: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+            let ReservedUpdate::Mutation(request) = request else {
+                panic!("expected mutation retention")
+            };
             assert_eq!(request.payload().digest(), payload.digest());
             assert!(
                 AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
@@ -202,11 +205,16 @@ impl Fixture {
             .with_nns_subnet()
             .with_state_dir(root.join("simulator"))
             .with_max_request_time_ms(Some(60_000));
-        let owned = PocketIcStartupConfig::spawn(binary, Duration::from_secs(120))
-            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
-            .build_instance_async(builder)
-            .await
-            .unwrap();
+        let owned = PocketIcStartupConfig::Spawn {
+            server_binary: binary,
+            timeout: Duration::from_secs(120),
+            server_hard_ttl: None,
+            server_idle_ttl: None,
+            server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
+        }
+        .build_instance_async(builder)
+        .await
+        .unwrap();
         let mut pic = owned.instance;
         let server = owned.server.expect("spawn mode owns the managed server");
         let target = pic.create_canister().await;
@@ -291,9 +299,9 @@ impl Fixture {
             IcMutationRequest::new(&plan, self.sequence, guard.record().unwrap(), &payload)
                 .unwrap();
         let transport = self.transport(&plan);
-        let mut provider = AgentMutationProvider::new(
+        let mut provider = AgentUpdateProvider::new(
             &transport,
-            |_: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+            |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
                 support::retain_signed(&root, prepared)
                     .map_err(|_| IcMutationProviderError::Unavailable)
             },
@@ -379,9 +387,9 @@ impl Fixture {
             ExecutionStageBindingRecord::new(&workflow, self.sequence, &plan, vec![]).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan.clone()).unwrap();
         let transport = self.transport(&plan);
-        let mut provider = ic_backup_agent::AgentSnapshotUploadProvider::new(
+        let mut provider = ic_backup_agent::AgentUpdateProvider::new(
             &transport,
-            |_: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+            |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
                 support::retain_signed(&root, prepared)
                     .map_err(|_| IcMutationProviderError::Unavailable)
             },
@@ -579,9 +587,9 @@ async fn wrong_trusted_root_rejects_actual_reply_without_settling_applied_stop()
         Duration::from_secs(30),
     )
     .unwrap();
-    let mut provider = AgentMutationProvider::new(
+    let mut provider = AgentUpdateProvider::new(
         &transport,
-        |_: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+        |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
             support::retain_signed(&root, prepared)
                 .map_err(|_| IcMutationProviderError::Indeterminate)
         },
@@ -726,7 +734,7 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
             ic_snapshot_upload_observation::IcSnapshotUploadObservationProvider,
         },
     };
-    use ic_backup_agent::{AgentObservationProvider, AgentSnapshotUploadProvider};
+    use ic_backup_agent::AgentObservationProvider;
     let mut fixture = Fixture::new(support::identity()).await;
     fixture.mutation(Method::StopCanister, None, false).await;
     let (source_plan, capture_raw) = fixture
@@ -757,9 +765,9 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
         let sequence = fixture.sequence;
         let mut journal = support::retain(&layout, &plan, sequence);
         let transport = fixture.transport(&plan);
-        let mut mutations = AgentSnapshotUploadProvider::new(
+        let mut mutations = AgentUpdateProvider::new(
             &transport,
-            |_: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+            |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
                 support::retain_signed(&root, prepared)
                     .map_err(|_| IcMutationProviderError::Unavailable)
             },
@@ -849,9 +857,9 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
     let sequence = fixture.sequence;
     let mut journal = support::retain(&layout, &plan, sequence);
     let transport = fixture.transport(&plan);
-    let mut mutations = AgentSnapshotUploadProvider::new(
+    let mut mutations = AgentUpdateProvider::new(
         &transport,
-        |_: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+        |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
             support::retain_signed(&root, prepared)
                 .map_err(|_| IcMutationProviderError::Unavailable)
         },

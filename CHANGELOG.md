@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.31.0]
+
+### Breaking
+
+- Adopt Host Artifacts, FS and Process 0.27.1. Consumers sharing exposed Host FS
+  error types must align direct Host dependencies with 0.27. Native command file
+  identity now comes from Host FS; persisted identities and custody stay exact.
+
+- Replace AgentMutationProvider and AgentSnapshotUploadProvider with
+  AgentUpdateProvider, implementing both existing write ports. Retention callbacks
+  accept a borrowed ReservedUpdate and handle its Mutation or Upload variant.
+  Exact signed retention, request admission, distinct reply domains and pending
+  spending remain unchanged. No compatibility aliases are retained.
+
+### Changed
+
+- Refresh the reviewed Shared Tooling snapshot to 0.23.0, retaining consumer
+  setup/check ordering and explicit Testkit ownership. Prepare ICP CLI 1.7.0 with
+  `make install-ic-tools` before offline tool admission; other tool pins stay fixed.
+- Qualify the selected Testkit/Candid 0.52 graph; simulator startup uses explicit
+  Spawn configuration with the original timeout, output files and TTL settings.
+
+- Directory publication delegates ordered sync/checksum traversal to Host FS,
+  removing the local visitor
+  and unused raw stream adapter. Preserve exact checksum framing, native error
+  projections, crash boundaries and original publication/recovery custody.
+
 ## [0.30.0] - 2026-10-17
 
 ### Breaking

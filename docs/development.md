@@ -681,7 +681,7 @@ create an absent checkpoint. The 0.29 hard cut removes fresh-only checkpoint
 shortcuts and direct public record publication without aliases.
 
 Management reply decoding delegates exact-result and compact decoder setup to
-standalone `ic-testkit-candid` 0.51. Product DTO bounds, raw limits, per-method quotas
+standalone `ic-testkit-candid` 0.52. Product DTO bounds, raw limits, per-method quotas
 and redacted outer errors remain in Backup. Independent consumer qualification
 rejects simulator packages in the production graph. Run existing codec goldens and
 bounds against the extracted production decoder when changing this selection.
@@ -753,6 +753,14 @@ fixtures; select `ic-metrics` directly if a report needs its arithmetic. Such
 measurements never supply progress, spending, receipts or recovery authority.
 The [prior dependency review](ic-metrics-adoption.json) remains provenance for
 older releases rather than a current dependency requirement.
+
+## Current shared tool selection
+
+The reviewed Shared Tooling 0.23.0 snapshot selects ICP CLI 1.7.0. Run
+`make install-ic-tools` to prepare the authenticated selection before offline
+`make tools-check`. Common host/Cargo tools and Testkit keep their existing
+owners and ordered setup. This contributor setup does not change management
+wire DTOs or grant live backup/restore authority.
 
 ## Supported host scope
 
@@ -941,20 +949,20 @@ Package version changes, release execution and publication remain maintainer-own
 
 ## Stream hashing and generic IO ownership
 
-Backup exposes directory hashing and pure declared-file composition. Generic
+Backup keeps private directory checksum record adapters. Independent directory,
 file/path hashing and copying use Host FS and Host Artifacts directly, with caller-
 selected custody and bounds. Product staging uses the journal-bound IC snapshot
 writer. Generic JSON reading is also internal; product consumers use guarded
 record operations, while independent documents use bounded Host FS reads and
 caller-owned decoding. These 0.28 cuts retain original artifacts and partial trees.
 
-The internal `ops::artifacts::checksum_reader` delegates raw hashing to `ic-host-artifacts` and
-retries `Interrupted` reads internally. Callers must own blocking/timeouts instead
-of treating the first interruption as termination. Other reader IO errors retain
-their kind and source; impossible byte counts reject as `InvalidData` without a
-checksum. This observable change selects a 0.5.0 draft from released 0.4.2; package
-versions remain maintainer-owned. The earlier fixture allocation fix shares that
-draft.
+Stream hashing uses Host Artifacts directly. Host FS
+`durable::tree::sync_checksum_directory_at` synchronizes files before hashing and
+directories after children. Backup projects the original step/error identities,
+admits its expected checksum and retains publication/recovery custody. The unused
+private stream adapter is removed. Interrupted reads retry within the shared
+reader; callers own blocking/timeouts. Other IO kinds/causes and invalid-count
+refusal remain unchanged.
 
 Raw checksum construction and digest formatting use the shared `Sha256Digest`,
 while Backup owns its normalized v1 record and permissive equivalent hex casing.
@@ -973,8 +981,9 @@ existing contracts without another public checksum API or retained-data reset.
 IC chunk hash comparison and names use Host's typed SHA-256 value. Bounded copies/collection
 and output counting use Host Artifacts; no-follow record reads use Host FS. Unused
 archive/compression/Wasm features are disabled and their lockfile entries removed.
-Directory digest framing, 0700/0600 staging, synchronization/crash barriers,
-no-replace multi-file publication, journals and spending stay local. Existing
+Host owns directory digest framing and ordered sync traversal. Backup retains
+0700/0600 staging, product crash hooks, expected-checksum admission, guarded
+publication/recovery, journals and spending. Existing
 records/artifacts need no reset. See [the adoption review](ic-host-tools-adoption.json).
 The published 0.3.0 archives' recorded source commit is available locally but was
 not retrievable from their declared GitHub repository at inspection; the upstream

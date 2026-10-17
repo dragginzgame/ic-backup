@@ -8,7 +8,19 @@ implementation determine what has actually been qualified.
 
 ## Current implementation scope
 
-- The standalone published `ic-testkit-candid` 0.51 codec owns exact single-result
+- Direct Host Artifacts, FS and Process select published 0.27.1. Native file
+  identity comes from `ic_host_fs::identity::FileIdentity`; command custody keeps
+  regular-sidecar admission, inherited exclusion and bounded quiescence. Exposed
+  Host FS errors now have the 0.27 Rust identity; consumers sharing those types
+  align direct Host dependencies. Persisted device/inode values do not change.
+
+- `AgentUpdateProvider` implements both mutation and source-bound upload ports.
+  Retention receives the exact borrowed `ReservedUpdate::Mutation` or `Upload`.
+  Preserve each original request validator, reply limit and evidence domain;
+  mandatory signed retention precedes the single dispatch under the same journal.
+  The two previous provider types are removed without aliases for 0.31.
+
+- The standalone published `ic-testkit-candid` 0.52 codec owns exact single-result
   decoding and compact decoder setup. Backup retains raw reply ceilings, bounded
   DTOs, every method-specific work/skip/type/header quota and redacted outer errors.
   Explicit 64 KiB status/snapshot headers preserve the selected Candid default;
@@ -178,8 +190,9 @@ implementation determine what has actually been qualified.
   grace/polling. Non-spawning guards retain Host's explicit unlock on drop. Sidecar
   open/create and one-shot locking use Host FS; native IO and unsafe-entry denials
   retain Backup's public error projections. Directory publication uses Host's held
-  descriptor engine with Backup's ordered file/directory sync, checksum admission and
-  crash hooks before rename and parent sync. Retain original partial/canonical trees
+  descriptor engine and ordered sync/checksum traversal. Backup admits the expected
+  digest and projects original error/step identities, retaining crash hooks before
+  rename and parent sync. Retain original partial/canonical trees
   on every failure; recovery never recreates evidence or resets spending. Preserve the
   unsafe-code prohibition. These local contracts do not qualify an authenticated IC backend
   or grant terminal/reference-release or paid-call authority.
@@ -559,9 +572,10 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   This dependency provides no IC effect, paid retry or fresh authority. Qualify the
   actual locked graph and reader on supported hosts; no sibling path patch exists.
   Raw identities, hashing/copying and record output limits use `ic-host-artifacts`.
-  The internal `checksum_reader` retries Interrupted locally; callers own blocking and
-  timeouts. Preserve other original IO errors, invalid-count refusal, canonical
-  checksum records, Host directory digest framing and local publication owners.
+  Stream hashing and ordered directory sync/checksum use the published Host owners;
+  the unused private stream adapter is removed. Callers own blocking and timeouts.
+  Preserve interrupted-read handling, original IO kinds/causes, invalid-count refusal,
+  canonical records and local expected-checksum/publication/recovery admission.
 
 - Metadata-upload inventory observations bind the full original source/upload plan,
   exact list bytes and both already pending attempt IDs. Reuse canonical observation

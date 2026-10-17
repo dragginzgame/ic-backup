@@ -147,12 +147,12 @@ fn injected_commit_failures_never_expose_a_partial_tree() {
         let error = commit_with_hook(&temporary, &canonical, &expected, |current, _| {
             if current == step && !failed {
                 failed = true;
-                return Err(io::Error::other("injected commit failure"));
+                return Err(io::Error::from_raw_os_error(13));
             }
             Ok(())
         })
         .expect_err("injected step must fail");
-        assert!(matches!(error, PersistenceError::Io(_)));
+        assert!(matches!(error, PersistenceError::Io(source) if source.raw_os_error() == Some(13)));
 
         if matches!(
             step,

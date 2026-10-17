@@ -166,9 +166,10 @@ filesystem copying is no longer a Backup operation. Existing copied/partial tree
 remain retained; no import, reinterpretation or cleanup accompanies the API cut.
 
 `ops::persistence::commit_artifact_directory` accepts distinct staging/canonical
-siblings and an exact expected digest. It synchronizes files and directories,
-verifies their bytes, uses atomic no-replace publication and synchronizes the
-parent. If only the canonical tree exists, it verifies and synchronizes that
+siblings and an exact expected digest. Host FS performs ordered file-before-hash
+and post-order directory synchronization through `durable::tree`; Backup projects
+step/error identities and admits the expected checksum before atomic no-replace
+publication. Host's existing publication engine synchronizes the parent. If only the canonical tree exists, it verifies and synchronizes that
 tree before reporting recovery. Both-present, both-absent, changed-byte and
 unsafe-entry cases reject without overwriting evidence. Publication uses the
 source's Linux/Android/Apple implementation; the fresh evidence here is Linux.
@@ -2630,7 +2631,7 @@ release. [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open
 
 Upload, allocation and complete data-upload coordinators are async. Admission and
 independent qualification retain selected journal exclusion across awaits. The
-configured `AgentSnapshotUploadProvider` requires durable exact signed-envelope/
+configured `AgentUpdateProvider` requires durable exact signed-envelope/
 request-ID retention before one metadata/data update. Retain original replies before
 cancellable qualification. Cancellation preserves source bytes/references, earlier
 Applied receipts and pending spending; it grants no allocation or data-stage reentry.
@@ -2764,7 +2765,7 @@ release or prune. Existing uncertain-effect reconciliation remains maintained.
 
 The mutation port and capture/load/start coordinators now return futures; admission
 and restore qualification callbacks are async. Providers receive the currently
-guarded original journal. `AgentMutationProvider` signs, requires durable exact
+guarded original journal. `AgentUpdateProvider` signs, requires durable exact
 signed-envelope/request-ID retention, then submits once through the existing
 transport. Passive replies still require independent qualification. Cancellation
 releases the selected lock, retains current pending/Applied spending and denies

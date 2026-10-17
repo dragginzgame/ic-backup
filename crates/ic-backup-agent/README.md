@@ -12,7 +12,7 @@ are internal; the former public `prepare`, `submit` and `UpdateOutcome` API is
 removed in 0.28. Retention callbacks receive a passive `PreparedUpdate` view with
 exact `envelope()` and `request_id()` access. An async network/timer executor is required.
 
-For capture/load/start coordination, configure `AgentMutationProvider` with that
+For capture/load/start coordination, configure `AgentUpdateProvider` with that
 transport and a mandatory fallible callback retaining the exact signed envelope
 and request ID privately and durably under the original plan/attempt. Retention
 failure stops before submission. Await the core `capture_snapshot` or
@@ -27,7 +27,7 @@ for metadata/download, independent qualification. Retain replies before awaiting
 cancellable qualification. Download cancellation preserves partial bytes, earlier
 receipts and pending spending.
 
-For source-bound metadata/data uploads, configure `AgentSnapshotUploadProvider`
+For source-bound metadata/data uploads, configure `AgentUpdateProvider`
 with the same mandatory signed-ingress retainer. Await `upload_snapshot`,
 `allocate_snapshot` or `upload_snapshot_data` with async fresh admission and
 independent allocation/data qualification. Integrations own authentic complete
@@ -60,3 +60,9 @@ never-dispatched custody, stable source bytes, complete transfer and application
 restore/fence safety. Matching context declarations and a pending journal are
 insufficient. Retain all original obligations and source references. This package
 supplies transport, not a complete backup/restore runner or Canic adapter.
+
+Agent 0.31 uses one `AgentUpdateProvider` for mutation and source-bound upload
+ports. Replace both former provider names and change retention callbacks to
+accept `&ReservedUpdate<'_>`. Match `Mutation` or `Upload` when accessing the typed
+request; the callback receives the exact borrowed request selected for dispatch.
+Both ports preserve their own admission, reply limits and evidence domains.

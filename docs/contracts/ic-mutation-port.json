@@ -15,7 +15,7 @@
    "capture_step" : {
       "admission" : "Hold the selected journal through mandatory fallible integration-owned fresh control, capture consistency, quiescence/fence and never-dispatched command custody admission, one existing provider call and bounded passive association. Remote preflight needs separate prior accounting. Recheck stage/ancestors around dispatch. Admission and submission are async; journal exclusion remains held across awaits. Cancellation preserves pending spending and denies callback/provider reentry.",
       "entry" : "workflow::ic_snapshot_capture::capture_snapshot accepts only TakeCanisterSnapshot under an exact retained ExecutionStageGuard. Validate canonical original binding before spending; open the existing journal and delegate durable reservation to complete-plan admission.",
-      "qualification" : "The isolated Testkit driver and configured AgentMutationProvider exercise this step. Mandatory retention durably binds exact signed envelope/request ID before one update. Lost, accepted and malformed replies deny recapture; no default application lane, full runner or terminal custody is installed.",
+      "qualification" : "The isolated Testkit driver and configured AgentUpdateProvider exercise this step. Mandatory retention durably binds exact signed envelope/request ID before one update. Lost, accepted and malformed replies deny recapture; no default application lane, full runner or terminal custody is installed.",
       "retention" : "Successful acknowledgement and all post-reservation failures remain pending. Pending/Applied or missing/held originals cannot authorize another callback/provider call. Typed association and post-reply errors retain exact bounded returned acknowledgement. No new schema, allowance, automatic receipt, refund or release follows."
    },
    "effects" : [
@@ -23,7 +23,7 @@
       "Reconstruction never proves no previous dispatch. Lost replies require original-effect reconciliation, not another mutation invocation; a pending reservation supplies no retry permission.",
       "Unavailable, Unsupported, Indeterminate, drop and death retain consumed pending mutations, obligations/source references and original evidence. No automatic NotApplied, Applied, Uncertain, retry, refund, terminal proof or release.",
       "Passive association can admit retained late reply bytes while the exact mutation remains pending and no recovery observation is pending. It writes no receipt. Recovery observations retain their existing independent owner.",
-      "Terminal replay invokes no provider. Configured AgentMutationProvider requires explicit transport and durable retention; no default application admission or complete runner follows. Core adds no runtime or Send bound."
+      "Terminal replay invokes no provider. Configured AgentUpdateProvider requires explicit transport and durable retention; no default application admission or complete runner follows. Core adds no runtime or Send bound."
    ],
    "kind" : "ephemeral exact originally reserved IC mutation port; no persisted authority schema",
    "methods" : [

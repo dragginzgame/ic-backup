@@ -81,10 +81,15 @@ impl Backend {
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
-        let owned = PocketIcStartupConfig::spawn(binary, Duration::from_secs(120))
-            .with_server_output_files(root.join("server.stdout"), root.join("server.stderr"))
-            .build_instance(builder)
-            .unwrap();
+        let owned = PocketIcStartupConfig::Spawn {
+            server_binary: binary,
+            timeout: Duration::from_secs(120),
+            server_hard_ttl: None,
+            server_idle_ttl: None,
+            server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
+        }
+        .build_instance(builder)
+        .unwrap();
         let pic = owned.instance;
         let server = owned.server.expect("spawn mode owns the managed server");
         let wasm = fs::read(root.join("original.wasm")).unwrap();

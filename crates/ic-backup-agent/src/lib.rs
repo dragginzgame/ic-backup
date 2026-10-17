@@ -16,12 +16,10 @@ pub use observation::AgentObservationProvider;
 
 mod request;
 pub use request::ReservedUpdate;
-mod mutation;
-pub use mutation::AgentMutationProvider;
+mod update;
+pub use update::AgentUpdateProvider;
 mod transfer_read;
 pub use transfer_read::AgentSnapshotTransferReadProvider;
-mod upload;
-pub use upload::AgentSnapshotUploadProvider;
 
 use ic_agent::{
     Agent, Identity, RequestId,

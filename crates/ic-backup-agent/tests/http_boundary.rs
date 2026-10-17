@@ -13,8 +13,9 @@ use ic_backup::{
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard},
 };
-use ic_backup_agent::AgentSnapshotUploadProvider;
-use ic_backup_agent::{AgentMutationProvider, AgentSnapshotTransferReadProvider, PreparedUpdate};
+use ic_backup_agent::{
+    AgentSnapshotTransferReadProvider, AgentUpdateProvider, PreparedUpdate, ReservedUpdate,
+};
 use ic_backup_agent::{AgentTransport, MAX_HTTP_RESPONSE_BYTES, TransportError};
 
 #[tokio::test]
@@ -40,9 +41,12 @@ async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or
             Duration::from_secs(1),
         )
         .unwrap();
-        let mut provider = AgentMutationProvider::new(
+        let mut provider = AgentUpdateProvider::new(
             &transport,
-            |actual: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+            |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+                let ReservedUpdate::Mutation(actual) = actual else {
+                    panic!("expected mutation retention")
+                };
                 assert_eq!(actual.authority().digest(), request.authority().digest());
                 assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
                 assert!(server.requests.lock().unwrap().is_empty());
@@ -223,9 +227,12 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
                 Duration::from_secs(1),
             )
             .unwrap();
-            let mut provider = AgentSnapshotUploadProvider::new(
+            let mut provider = AgentUpdateProvider::new(
                 &transport,
-                |actual: &IcSnapshotUploadAttempt<'_, '_>, prepared: &PreparedUpdate<'_>| {
+                |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+                    let ReservedUpdate::Upload(actual) = actual else {
+                        panic!("expected upload retention")
+                    };
                     assert_eq!(actual.authority().digest(), request.authority().digest());
                     assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
                     assert!(server.requests.lock().unwrap().is_empty());
@@ -403,9 +410,9 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
         .unwrap();
         let mut envelope = None;
         let result = {
-            let mut provider = AgentMutationProvider::new(
+            let mut provider = AgentUpdateProvider::new(
                 &transport,
-                |_: &IcMutationRequest<'_>, prepared: &PreparedUpdate<'_>| {
+                |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
                     assert!(server.requests.lock().unwrap().is_empty());
                     support::retain_signed(&root, prepared)
                         .map_err(|_| IcMutationProviderError::Indeterminate)?;
@@ -473,11 +480,9 @@ async fn context_and_stale_reservations_reject_before_network() {
         Duration::from_secs(1),
     )
     .unwrap();
-    let mut provider = AgentMutationProvider::new(
+    let mut provider = AgentUpdateProvider::new(
         &transport,
-        |_: &IcMutationRequest<'_>,
-         _: &PreparedUpdate<'_>|
-         -> Result<(), IcMutationProviderError> {
+        |_: &ReservedUpdate<'_>, _: &PreparedUpdate<'_>| -> Result<(), IcMutationProviderError> {
             panic!("changed context must reject before retention")
         },
     );
@@ -498,11 +503,9 @@ async fn context_and_stale_reservations_reject_before_network() {
     let untouched = ic_backup::model::attempt_journal::AttemptJournalRecord::new(
         plan.attempt_authority(1).unwrap(),
     );
-    let mut provider = AgentMutationProvider::new(
+    let mut provider = AgentUpdateProvider::new(
         &transport,
-        |_: &IcMutationRequest<'_>,
-         _: &PreparedUpdate<'_>|
-         -> Result<(), IcMutationProviderError> {
+        |_: &ReservedUpdate<'_>, _: &PreparedUpdate<'_>| -> Result<(), IcMutationProviderError> {
             panic!("stale reservation must reject before retention")
         },
     );

@@ -25,7 +25,129 @@
 
 # Current handoff — 2026-10-17
 
-## Pending 0.30.0 Agent errors and snapshot member expectations
+## Pending 0.31.0 Host 0.27.1 and Shared Tooling 0.23.0 adoption
+
+Direct Host Artifacts, FS and Process select published 0.27.1. The manifest minimum
+is 0.27.1 because 0.27.0 lacks the required tree APIs. All three downloaded registry
+archives match their locked checksums. Native command file identity now imports
+from Host FS; device/inode values, regular-sidecar checks, inherited custody and
+bounded quiescence remain unchanged. Consumers sharing exposed Host FS errors
+must align direct Host dependencies with 0.27. This public Rust identity change
+joins the existing provider hard cut under pending 0.31.0; package versions remain
+0.30.0.
+
+The canonical exporter refreshed Shared Tooling to committed 0.23.0 at
+`0b351cd2ba2bcd8927b783a5fec89afc8013f708`, verified against GitHub `main`.
+The existing entrypoint closure has 124 payloads: 21 updated and one added, with
+none retired. A second preview retains all 124 unchanged. Common engineering
+rules and the host/Cargo catalog are byte-identical to the prior snapshot; the IC
+catalog advances ICP CLI to 1.7.0. Canonical setup and offline host/Cargo/IC/Testkit
+admission pass. [The adoption review](../shared-tooling-review.json) records source,
+consumer scope and qualification; no vendored payload was locally patched.
+
+The incoming locked Testkit/Candid 0.52 graph is retained. Both simulator fixtures
+use explicit Spawn configuration with their original 120-second startup bound,
+TTL choices and retained stdout/stderr. No baseline reuse, hidden retry, receipt
+inference or source/plan/journal custody change is adopted. The earlier Candid
+helper extraction remains a separate prepared migration; this update does not
+merge or publish its Testkit contribution.
+
+On the published graph, six command-custody, seven publication/crash, seven artifact,
+eight download-model, 55 download-persistence, five public recovery/artifact,
+34 Core PocketIC, three Agent unit, 14 HTTP and 12 Agent PocketIC cases pass
+(151 selected cases). Strict all-target/all-feature Clippy, actual Rust 1.91
+workspace and independent consumers, and warning-denied docs pass. Independent
+consumer evidence is retained at `target/msrv-consumers.zfWGHE/`.
+Snapshot integrity, dependency declarations, canonical formatting, local links,
+consumer tooling, isolated release/recovery fixtures, hooks, ShellCheck/syntax and
+delivery admission also pass. These fixture checks perform no real release.
+
+Evidence and exact incoming before-images are retained at
+`/tmp/backup-host-tooling-15cvvaeq/`. The dependency lock is unchanged from the
+incoming selection. Provider consolidation, earlier Host work, normal sibling
+checkouts and Backup's index/refs remain preserved. No Backup commit, package
+version edit, release, publication, full local `make ci` or live IC effects ran.
+Native macOS consumer acceptance remains separate from local Linux qualification.
+The earlier handoffs below retain their original qualification graphs.
+
+## Pending 0.31.0 Agent write provider and Candid extraction
+
+`AgentUpdateProvider` now implements the existing mutation and source-bound upload
+ports. The two previous provider names are removed without aliases. Integrations
+update construction and accept a borrowed `ReservedUpdate` in retention callbacks,
+matching `Mutation` or `Upload` when using typed requests. Each port retains its
+original admission, reply ceiling, evidence domain and pending spending. Mandatory
+durable signed-envelope/request-ID retention still precedes the sole dispatch
+under the original journal guard. Package versions remain 0.30.0; this public API
+cut selects pending 0.31.0 and carries the incoming compatible Host adoption notes.
+
+The normal published graph passes three Agent units, 14 HTTP cases and 12 managed
+Agent PocketIC journeys, strict Agent all-target/all-feature Clippy, actual Rust
+1.91 workspace/independent consumer checks and warning-denied docs. Snapshot,
+dependency declarations, formatting and local links pass. Independent consumer
+evidence is retained at `target/msrv-consumers.0pJdzy/`.
+
+[Testkit PR #123](https://github.com/dragginzgame/ic-testkit/pull/123), commit
+`97df333`, extracts bounded typed Candid sequences and strict reserved markers into
+standalone `ic-testkit-candid`. Caller-selected diagnostics, element ceilings and
+zero-skipping semantics remain exact; application DTOs and persisted aggregate
+bounds stay in Backup. All 12 codec tests pass on current Rust and actual Rust
+1.91, with strict selected Clippy, actual MSRV Wasm compilation, warning-denied
+docs and focused static checks. The compatible producer candidate is 0.52.1.
+
+An isolated Backup migration removes the wire/persisted visitor switch and local
+reserved visitor. Its 168 model cases, 34 Core PocketIC journeys, three Agent
+units, 14 HTTP cases and 12 Agent PocketIC journeys pass against the extracted
+production owners (231 selected cases), with strict all-target Clippy, actual Rust
+1.91 all-target checks and warning-denied docs. It uses its own checkout/target
+and direct workspace paths without Cargo patches. The apply-checked
+`backup-codec-adoption.patch` and complete evidence are retained at
+`/tmp/backup-31-candid-update-5vazrp44/`.
+
+Normal Backup still selects the published 0.51 codec and retains both local wire
+helpers until the new API is published. The PR is open; merge, selected release,
+publication and final registry adoption await explicit authority. Incoming Host
+adoption, normal sibling checkouts and Backup's index/refs remain preserved. No
+Backup commit, package version edit, full local release suite, release, publication
+or live IC effects ran. Native macOS consumer qualification remains separate.
+
+## Pending 0.30.1 published Host sync/checksum adoption
+
+[Host PR #182](https://github.com/dragginzgame/ic-host-tooling/pull/182) merged at
+`156d53d`; the approved standard Host 0.26.2 release is tagged at
+`d1f098da98358f621d538e0f08c204787ea310cd`. All six packages are published, and
+downloaded registry archive hashes match the prepared release archives. The
+producer full release gate and exact-source Linux/Intel macOS/Apple Silicon/MSRV
+PR checks passed.
+
+Backup now selects registry Host Artifacts, FS and Process 0.26.2. Publication
+uses Host FS's ordered sync/checksum visitor: files sync before hashing and
+directories sync after children. Backup retains expected-checksum admission,
+original typed error/step projections, crash hooks and publication/recovery custody.
+The local visitor, unused private stream adapter and redundant adapter stream tests
+are removed. Existing failure fixtures now also assert exact native errno identity.
+No record, digest framing, spending or recovery contract changes.
+
+On the published graph, seven publication/crash cases, 55 download-journal units,
+seven artifact-adapter units, five public directory/artifact/recovery cases,
+34 Core PocketIC journeys, three Agent units, 14 HTTP cases and 12 Agent PocketIC
+journeys pass (137 selected cases). Strict all-target/all-feature Clippy, actual
+Rust 1.91 workspace and independent consumers, warning-denied docs, snapshot,
+dependency declarations, formatting and local links pass. Independent consumer
+evidence is retained at `target/msrv-consumers.J7XV8l/`.
+
+Release, publication, registry hash and consumer evidence remains at
+`/tmp/backup-30-members-sync-n1_bvf7k/`; `adoption-before` captures released Backup
+0.30.0 at `3992e15` before this activation. Backup stays version 0.30.0; this
+private implementation change is pending 0.30.1. Normal sibling checkouts and
+Backup's index/refs remain preserved. No Backup release, publication, full local
+`make ci` or live IC effects ran. Native Backup macOS acceptance remains separate
+from the passed Host producer matrix.
+
+## Released 0.30.0 Agent errors and snapshot member expectations
+
+The following receipt predates the release and published sync/checksum adoption;
+the entry above supersedes its pending Host delivery statements.
 
 Agent submission directly admits and signs the original request before mandatory
 signed-ingress retention. The private preparation error round-trip is removed;
@@ -62,7 +184,10 @@ remain preserved. Host PR contribution is delivered; merge/release/publication
 requires its separate explicit authority. No Backup commit or full local release
 gate ran; native consumer macOS acceptance remains separate.
 
-## Pending 0.30.0 published Host directory hashing adoption
+## Released 0.30.0 directory hashing adoption receipt
+
+This receipt records qualification before Backup's 0.30.0 release. The current
+sync/checksum adoption above retains its boundaries and advances the Host packages.
 
 [Host Tooling PR #181](https://github.com/dragginzgame/ic-host-tooling/pull/181)
 is merged. The approved Host 0.26.1 release is tagged at
