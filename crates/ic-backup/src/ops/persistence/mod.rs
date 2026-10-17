@@ -10,7 +10,6 @@ mod execution_progress;
 mod execution_settlement;
 mod execution_workflow;
 mod fence_obligation;
-mod file_lock;
 mod immutable_record;
 mod inventory;
 mod journal_lock;
@@ -43,8 +42,7 @@ pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_ef
 pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};
 pub use execution_settlement::{
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError,
-    checkpoint_execution_settlement, create_execution_settlement, read_execution_settlement,
-    reconcile_execution_settlement, replay_execution_settlement,
+    read_execution_settlement, reconcile_execution_settlement, replay_execution_settlement,
 };
 pub(crate) use execution_workflow::read_execution_stage_occupancy;
 pub use execution_workflow::{

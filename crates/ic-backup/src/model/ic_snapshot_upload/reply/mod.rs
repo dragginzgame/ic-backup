@@ -5,12 +5,11 @@ use super::{
     MAX_IC_SNAPSHOT_UPLOAD_REPLY_BYTES, validate_destination,
 };
 use crate::model::{
-    artifacts::ArtifactChecksumRecord,
-    ic_lifecycle_reply::EMPTY_CANDID_REPLY,
+    artifacts::ArtifactChecksumRecord, ic_lifecycle_reply::EMPTY_CANDID_REPLY,
     ic_snapshot_reply::snapshot_id,
-    ic_wire::{self, DecoderLimits},
 };
 use candid::CandidType;
+use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
 use serde::Deserialize;
 use std::fmt;
 
@@ -56,16 +55,17 @@ impl<'request, 'source> IcSnapshotUploadReply<'request, 'source> {
         }
         let kind = match request.kind() {
             IcSnapshotUploadKind::Metadata => {
-                let reply: WireMetadataReply = ic_wire::decode_one(
+                let reply: WireMetadataReply = decode_exactly_one(
                     bytes,
-                    DecoderLimits {
-                        decoding: 64 * 1024,
-                        skipping: 0,
-                        type_table: 16,
-                        header: Some(4096),
+                    DecodeLimits {
+                        reply_bytes: MAX_IC_SNAPSHOT_UPLOAD_REPLY_BYTES,
+                        decoding_quota: 64 * 1024,
+                        skipping_quota: 0,
+                        type_entries: 16,
+                        header_bytes: 4096,
                     },
                 )
-                .map_err(|()| IcSnapshotUploadError::InvalidReply)?;
+                .map_err(|_| IcSnapshotUploadError::InvalidReply)?;
                 validate_destination(request.source(), &reply.snapshot_id)?;
                 IcSnapshotUploadReplyKind::Metadata {
                     snapshot_id: reply.snapshot_id,

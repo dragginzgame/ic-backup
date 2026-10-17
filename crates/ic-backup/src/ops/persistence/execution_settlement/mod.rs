@@ -18,24 +18,6 @@ use crate::{
 use std::{io, path::Path};
 use thiserror::Error;
 
-/// Derive and publish an all-Applied checkpoint from the exact retained original journals.
-///
-/// Reads every original journal sequentially, then delegates immutable publication
-/// to [`create_execution_settlement`], which rechecks the complete original histories.
-/// Hold no journal guards at admission. This creates no receipts, spending allowance,
-/// product terminal proof or release permission. An occupied checkpoint is never replaced;
-/// use [`read_execution_settlement`] with its retained identity for local replay.
-/// # Errors
-/// Rejects missing, held, changed or unsettled originals and publication failures.
-pub fn checkpoint_execution_settlement(
-    layout: &BackupLayoutGuard,
-    expected_plan: &ArtifactChecksumRecord,
-) -> Result<ExecutionSettlementRecord, ExecutionSettlementCheckpointError> {
-    let record = derive_execution_settlement(layout, expected_plan)?;
-    create_execution_settlement(layout, &record)?;
-    Ok(record)
-}
-
 /// Reconcile a lost checkpoint response from complete original journals and the
 /// existing immutable checkpoint, without publishing or changing any evidence.
 ///
@@ -111,7 +93,7 @@ fn derive_execution_settlement(
 /// integration-owned. This creates no journal, budget, product terminal or release permit.
 /// # Errors
 /// Rejects missing/unsafe/oversized originals, contention, unsettled/changed evidence or existing publication.
-pub fn create_execution_settlement(
+fn create_execution_settlement(
     layout: &BackupLayoutGuard,
     record: &ExecutionSettlementRecord,
 ) -> Result<(), ExecutionSettlementPersistenceError> {

@@ -2,9 +2,9 @@ use super::*;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        ic_mutation::IcMutationAcknowledgementInput,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_upload::{IcSnapshotUploadReplyKind, IcSnapshotUploadRequest},
+        ic_update_response::IcUpdateResponseInput,
     },
     test_support::ic_snapshot_upload::{
         DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, upload_plan,
@@ -12,11 +12,8 @@ use crate::{
 };
 use ic_management_canister_types::{SnapshotDataKind, UploadCanisterSnapshotMetadataResult};
 
-fn input(
-    request: &IcSnapshotUploadAttempt<'_, '_>,
-    reply: Vec<u8>,
-) -> IcMutationAcknowledgementInput {
-    IcMutationAcknowledgementInput {
+fn input(request: &IcSnapshotUploadAttempt<'_, '_>, reply: Vec<u8>) -> IcUpdateResponseInput {
+    IcUpdateResponseInput {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         context: request.plan().context().clone(),

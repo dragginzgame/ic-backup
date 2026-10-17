@@ -8,8 +8,8 @@ use crate::{
         artifacts::ArtifactChecksumRecord,
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_lifecycle_reply::IcLifecycleReply,
-        ic_mutation::IcMutationAcknowledgementInput,
         ic_request::IcManagementMethodRecord as Method,
+        ic_update_response::IcUpdateResponseInput,
         restore_safety::{RestoreSafetyLaneRecord, RestoreSafetyRequestInput},
     },
     ops::persistence::{
@@ -51,17 +51,15 @@ impl IcMutationProvider for Provider {
             request.validate_journal(journal).unwrap();
             self.calls += 1;
             let reply = self.reply.clone()?;
-            Ok(
-                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                    authority: request.authority().digest(),
-                    mutation_attempt: request.mutation_attempt(),
-                    context: request.plan().context().clone(),
-                    target: request.payload().target().into(),
-                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                    reply,
-                })
-                .unwrap(),
-            )
+            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: request.payload().target().into(),
+                evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                reply,
+            })
+            .unwrap())
         })())
     }
 }

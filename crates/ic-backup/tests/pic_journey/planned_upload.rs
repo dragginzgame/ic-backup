@@ -2,12 +2,13 @@
 
 use super::{Backend, Fault, capture, download, extents, lifecycle, status, verify_destination};
 use crate::ready::ready;
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_mutation::{IcMutationAcknowledgement, IcMutationAcknowledgementInput},
+        ic_mutation::IcMutationAcknowledgement,
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_transfer_read::IcSnapshotTransferReadPayload,
@@ -103,7 +104,7 @@ impl IcSnapshotUploadProvider for Provider<'_> {
                 return Err(IcMutationProviderError::Indeterminate);
             }
             let reply = if malformed { vec![] } else { raw };
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: actual.context().clone(),
@@ -166,7 +167,7 @@ fn assert_failed(
     let references = stage.layout().unwrap().restore_references().unwrap();
     assert!(
         stage
-            .checkpoint(ArtifactChecksumRecord::from_bytes(b"not an outcome"))
+            .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not an outcome"))
             .is_err()
     );
     drop(stage);
@@ -492,7 +493,7 @@ fn assert_data_failed(
     let references = stage.layout().unwrap().restore_references().unwrap();
     assert!(
         stage
-            .checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
+            .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
             .is_err()
     );
     drop(stage);

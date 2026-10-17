@@ -49,14 +49,39 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 118-file snapshot selects clean committed Shared Tooling 0.15.0 at
+The current 123-file snapshot selects clean committed Shared Tooling 0.20.0 at
+`3f87ddc1a0c1616775b2114c42a4adee7376c9b1`, verified against GitHub's
+`main` on 2026-10-17. The canonical exporter ran from an isolated committed copy;
+uncommitted sibling work was excluded. Existing entrypoints are retained.
+[The current review](shared-tooling-review.json) records 44 updated and five new
+payloads, with no retirements. Host/Cargo and IC catalogs are unchanged.
+
+Common setup/checks now cover host and Cargo tools. Backup explicitly selects IC
+setup/admission in its ordered local lists and publishes the prepared IC PATH.
+The order is host, Cargo, IC, then locked fetch and Testkit setup; offline checks
+follow host, Cargo, IC and Testkit admission. Consumer routing and release fixtures
+use that order, and release fixtures retain the shared stable-version companion.
+The consumer include no longer exposes the fleet `cloc-tooling` command.
+
+The baseline adds stable-memory allocation governance; Backup remains a host-side
+operator library with no production stable-memory manager or store. No new runtime
+dependency or product storage change is needed. Shared Tooling owns general helper
+regressions; Backup's existing consumer, release and recovery checks remain selected.
+The GitHub description matches implemented host libraries and direct Agent transport,
+with full runners still pending. Product versions, dependency selections, license
+texts, original artifacts and Git index/refs are unchanged by adoption. Linux
+qualification is recorded in the review; native macOS and hosted CI remain separate.
+
+### Prior Shared Tooling 0.15.0 review
+
+The earlier 118-file snapshot selects clean committed Shared Tooling 0.15.0 at
 `3bef3f2daec7f64f875397ed4d53d5b9e2e68a08`. The canonical refresh adds
 release-input, Rust-source selection, tool-evidence and catalog readers with their
 documentation companions. The common baseline now reserves local full suites for
 explicit release or validation requests; Backup's active guidance uses focused
 checks for ordinary handoff. Common host and IC tool selections are unchanged.
-[The current review](shared-tooling-review.json) records all 33 updated and nine
-new snapshot paths with focused consumer qualification.
+The review recorded 33 updated and nine new snapshot paths with focused
+consumer qualification.
 
 ### Prior Shared Tooling 0.11.2 review
 

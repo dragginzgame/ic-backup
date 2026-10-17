@@ -79,7 +79,7 @@ impl ExecutionWorkflowStageDriver for Driver {
             drop(journal);
             let learned = ArtifactChecksumRecord::from_bytes(&sequence.to_be_bytes());
             if self.publish_at == Some(sequence) {
-                stage.checkpoint(learned.clone()).unwrap();
+                stage.reconcile_checkpoint(learned.clone()).unwrap();
             }
             Ok(learned)
         })();

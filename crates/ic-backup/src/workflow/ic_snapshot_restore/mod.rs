@@ -138,7 +138,7 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
         }
     };
     drop(journal);
-    match stage.checkpoint(evidence) {
+    match stage.reconcile_checkpoint(evidence) {
         Ok(predecessor) => Ok((acknowledgement, predecessor)),
         Err(source) => Err(IcRestoreExecutionError::AfterReply {
             source: IcRestoreReplyError::Checkpoint(source),

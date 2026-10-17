@@ -1,15 +1,14 @@
 //! Decode-only pinned wire fields with bounded allocation and no skipped work.
 
+use super::MAX_IC_SNAPSHOT_METADATA_BYTES;
 use super::{IcSnapshotMetadataError, MAX_IC_SNAPSHOT_CHUNKS, MAX_IC_SNAPSHOT_GLOBALS};
-use crate::model::{
-    bounded_sequence,
-    ic_wire::{self, DecoderLimits},
-};
+use crate::model::bounded_sequence;
 use candid::CandidType;
 use ic_management_canister_types::{
     CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotMetadataResult,
     SnapshotMetadataGlobal, SnapshotSource,
 };
+use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer, de};
 use std::{collections::BTreeSet, fmt};
 
@@ -110,16 +109,17 @@ where
 pub(super) fn decode(
     bytes: &[u8],
 ) -> Result<ReadCanisterSnapshotMetadataResult, IcSnapshotMetadataError> {
-    let value: WireMetadata = ic_wire::decode_one(
+    let value: WireMetadata = decode_exactly_one(
         bytes,
-        DecoderLimits {
-            decoding: 2 * 1024 * 1024,
-            skipping: 0,
-            type_table: 64,
-            header: Some(16 * 1024),
+        DecodeLimits {
+            reply_bytes: MAX_IC_SNAPSHOT_METADATA_BYTES,
+            decoding_quota: 2 * 1024 * 1024,
+            skipping_quota: 0,
+            type_entries: 64,
+            header_bytes: 16 * 1024,
         },
     )
-    .map_err(|()| IcSnapshotMetadataError::InvalidReply)?;
+    .map_err(|_| IcSnapshotMetadataError::InvalidReply)?;
     if value
         .globals
         .iter()

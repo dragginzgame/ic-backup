@@ -1,11 +1,12 @@
 //! Exact originally reserved metadata/data reads; no dispatch or transfer attestation.
 
+use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
-    attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord, MAX_OPERATION_ATTEMPTS},
+    attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_snapshot_data::{IcSnapshotDataRequest, MAX_IC_SNAPSHOT_DATA_REPLY_BYTES},
     ic_snapshot_metadata::IcSnapshotMetadataRequest,
-    operation_plan::{OperationPlanError, OperationPlanRecord, PlanContextRecord},
+    operation_plan::{OperationPlanError, OperationPlanRecord},
 };
 use std::fmt;
 use thiserror::Error;
@@ -156,61 +157,36 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
     }
 }
 
-/// Passive provider association claims; integrations authenticate these independently.
-#[derive(Clone)]
-pub struct IcSnapshotTransferReadResponseInput {
-    /// Full original plan/context/operation/request/allowance authority digest.
-    pub authority: ArtifactChecksumRecord,
-    /// Already reserved replicated-update number.
-    pub mutation_attempt: u32,
-    /// Actual claimed network/caller/release, without credentials.
-    pub context: PlanContextRecord,
-    /// Actual claimed routing target; normalized on admission.
-    pub target: String,
-    /// Exact raw reply. Data is capped at 2 MiB; metadata decoding retains 1 MiB.
-    pub reply: Vec<u8>,
-    /// Opaque evidence binding the original read and actual response claims.
-    pub evidence: ArtifactChecksumRecord,
-}
-
 /// Bounded immutable raw reply, with no receipt, persisted authority or default.
 #[derive(Clone)]
 pub struct IcSnapshotTransferReadResponse {
-    input: IcSnapshotTransferReadResponseInput,
+    input: IcUpdateResponseInput,
 }
 
 impl IcSnapshotTransferReadResponse {
     /// Admit the existing finite raw-data ceiling and original attempt range.
     /// # Errors
     /// Rejects invalid attempt, excessive bytes and invalid target principals.
-    pub fn new(
-        mut input: IcSnapshotTransferReadResponseInput,
-    ) -> Result<Self, IcSnapshotTransferReadError> {
-        if input.mutation_attempt == 0 || input.mutation_attempt > MAX_OPERATION_ATTEMPTS {
-            return Err(IcSnapshotTransferReadError::InvalidAttempt);
-        }
-        if input.reply.len() > MAX_IC_SNAPSHOT_DATA_REPLY_BYTES {
-            return Err(IcSnapshotTransferReadError::ReplyTooLarge);
-        }
-        input.target = crate::model::principal::canonical_text(&input.target)
-            .ok_or(IcSnapshotTransferReadError::InvalidTarget)?;
+    pub fn new(mut input: IcUpdateResponseInput) -> Result<Self, IcSnapshotTransferReadError> {
+        input.admit(
+            MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
+            IcSnapshotTransferReadError::InvalidAttempt,
+            IcSnapshotTransferReadError::ReplyTooLarge,
+            IcSnapshotTransferReadError::InvalidTarget,
+        )?;
         Ok(Self { input })
     }
     /// Read exact retained claims and raw bytes; no mutable access is exposed.
     #[must_use]
-    pub const fn input(&self) -> &IcSnapshotTransferReadResponseInput {
+    pub const fn input(&self) -> &IcUpdateResponseInput {
         &self.input
     }
 }
 
 impl fmt::Debug for IcSnapshotTransferReadResponse {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IcSnapshotTransferReadResponse")
-            .field("authority", &self.input.authority)
-            .field("mutation_attempt", &self.input.mutation_attempt)
-            .field("target", &self.input.target)
-            .field("reply_bytes", &self.input.reply.len())
-            .finish_non_exhaustive()
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.input
+            .fmt_redacted(formatter, "IcSnapshotTransferReadResponse")
     }
 }
 

@@ -1,11 +1,11 @@
 //! One retained submission and passive acknowledgement for mutation and upload lanes.
 
 use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
-        artifacts::ArtifactChecksumRecord,
-        attempt_journal::AttemptJournalRecord,
-        ic_mutation::{IcMutationAcknowledgement, IcMutationAcknowledgementInput},
+        artifacts::ArtifactChecksumRecord, attempt_journal::AttemptJournalRecord,
+        ic_mutation::IcMutationAcknowledgement,
     },
     ports::ic_mutation::IcMutationProviderError,
 };
@@ -41,7 +41,7 @@ pub(crate) async fn submit_acknowledged<'a>(
         &request_id,
         &reply,
     );
-    IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+    IcMutationAcknowledgement::new(IcUpdateResponseInput {
         authority: identity.authority.clone(),
         mutation_attempt: identity.mutation_attempt,
         context: transport.context.clone(),

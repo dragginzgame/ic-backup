@@ -27,7 +27,7 @@ use ic_agent::{
     Agent, Identity, RequestId,
     export::{Principal, reqwest},
 };
-use ic_backup::model::{attempt_journal::AttemptJournalRecord, operation_plan::PlanContextRecord};
+use ic_backup::model::operation_plan::PlanContextRecord;
 use std::{sync::Arc, time::Duration};
 use thiserror::Error;
 
@@ -111,7 +111,6 @@ impl AgentTransport {
 pub struct PreparedUpdate<'a> {
     transport: &'a AgentTransport,
     request: ReservedUpdate<'a>,
-    journal: &'a AttemptJournalRecord,
     target: Principal,
     envelope: Vec<u8>,
     request_id: RequestId,

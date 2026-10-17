@@ -8,8 +8,8 @@ use crate::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_lifecycle_reply::EMPTY_CANDID_REPLY,
-        ic_mutation::IcMutationAcknowledgementInput,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+        ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
@@ -83,7 +83,7 @@ impl IcSnapshotUploadProvider for Provider {
                 fs::write(path, b"{}").unwrap();
             }
             let reply = self.reply.clone()?;
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: request.plan().context().clone(),

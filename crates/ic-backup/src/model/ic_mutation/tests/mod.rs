@@ -1,4 +1,5 @@
 use super::*;
+use crate::model::attempt_journal::MAX_OPERATION_ATTEMPTS;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},

@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     model::{
-        ic_mutation::IcMutationAcknowledgementInput, ic_request::IcManagementMethodRecord as Method,
+        ic_request::IcManagementMethodRecord as Method, ic_update_response::IcUpdateResponseInput,
     },
     test_support::{
         ic_mutation::{input, original},
@@ -121,7 +121,7 @@ fn method_specific_invalid_wire_and_stale_recovery_journal_reject() {
             b"DIDL\0\0trailing".to_vec(),
             b"unbounded invalid reply".to_vec(),
         ] {
-            let acknowledgement = IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            let acknowledgement = IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 reply: bytes,
                 ..input(&request)
             })

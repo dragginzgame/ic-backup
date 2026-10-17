@@ -1,9 +1,10 @@
 //! Exact original IC reservations and passive bounded wire fixtures; no IC backend.
 
+use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::{
     model::{
         attempt_journal::AttemptJournalRecord,
-        ic_mutation::{IcMutationAcknowledgementInput, IcMutationRequest},
+        ic_mutation::IcMutationRequest,
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
         operation_plan::OperationPlanRecord,
     },
@@ -47,8 +48,8 @@ pub fn reply(method: IcManagementMethodRecord) -> Vec<u8> {
         b"DIDL\0\0".to_vec()
     }
 }
-pub fn input(request: &IcMutationRequest<'_>) -> IcMutationAcknowledgementInput {
-    IcMutationAcknowledgementInput {
+pub fn input(request: &IcMutationRequest<'_>) -> IcUpdateResponseInput {
+    IcUpdateResponseInput {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         context: request.plan().context().clone(),

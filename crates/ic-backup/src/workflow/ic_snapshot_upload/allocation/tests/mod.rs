@@ -7,9 +7,9 @@ use crate::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::MutationOutcomeRecord,
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_mutation::IcMutationAcknowledgementInput,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_upload::IcSnapshotUploadReply,
+        ic_update_response::IcUpdateResponseInput,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
     ports::ic_mutation::IcMutationProviderError,
@@ -75,17 +75,15 @@ impl IcSnapshotUploadProvider for Provider {
             request.validate_journal(journal).unwrap();
             self.calls += 1;
             let reply = self.reply.clone()?;
-            Ok(
-                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                    authority: request.authority().digest(),
-                    mutation_attempt: request.mutation_attempt(),
-                    context: request.plan().context().clone(),
-                    target: request.payload().target().into(),
-                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                    reply,
-                })
-                .unwrap(),
-            )
+            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: request.payload().target().into(),
+                evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                reply,
+            })
+            .unwrap())
         })())
     }
 }
@@ -112,7 +110,7 @@ fn pending(stage: &ExecutionStageGuard<'_>) {
     assert_eq!(progress.applied_operations, 0);
     assert!(
         stage
-            .checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
+            .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
             .is_err()
     );
 }

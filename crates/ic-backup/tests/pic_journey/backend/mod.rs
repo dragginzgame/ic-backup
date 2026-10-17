@@ -2,6 +2,7 @@
 
 use crate::ready::ready;
 use candid::Principal;
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -10,7 +11,7 @@ use ic_backup::{
         },
         ic_snapshot_transfer_read::{
             IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
-            IcSnapshotTransferReadResponse, IcSnapshotTransferReadResponseInput,
+            IcSnapshotTransferReadResponse,
         },
         operation_plan::OperationPlanRecord,
     },
@@ -547,7 +548,7 @@ impl IcSnapshotTransferReadProvider for Backend {
                 request.mutation_attempt()
             )));
             let raw = self.management(payload.method(), payload.arguments());
-            IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+            IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: actual.context().clone(),

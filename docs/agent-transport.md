@@ -18,6 +18,11 @@ release identity, stable source bytes and restore/fence safety. Full runners and
 installed Canic adapters remain separate work in
 [#29](https://github.com/dragginzgame/ic-backup/issues/29).
 
+Mutation and transfer-read adapters construct the shared
+`ic_backup::model::ic_update_response::IcUpdateResponseInput`. The previous input
+names are removed in the 0.29 hard cut. Response wrappers keep their distinct byte
+ceilings and errors; transport reply limits and evidence domains remain unchanged.
+
 ## Configuration and admission
 
 Configure `AgentTransport` with exact original `PlanContextRecord`, fixed HTTPS
@@ -115,11 +120,14 @@ without establishing an Active application fence.
 
 ## Results and interruption
 
-`UpdateOutcome::Replied` contains the exact original request ID and bounded raw
-reply after Agent verifies its certificate against the configured trust root and
-effective target. Use canonical method decoding and association. This is passive
-reply evidence, never an automatic Applied/NotApplied receipt or application proof.
-`UpdateOutcome::Pending` returns the same ingress ID without issuing another call.
+Provider success carries bounded raw reply bytes after Agent verifies the
+certificate against the configured trust root and effective target. The original
+request ID is retained before dispatch and bound into passive reply evidence.
+Canonical method decoding and association remain separate; a reply grants no
+Applied/NotApplied receipt or application proof. Accepted/processing responses
+return Indeterminate without polling or another call, leaving spending pending.
+The single submission owner directly handles Agent's response and performs reply
+retention before returning. It does not introduce another submission result enum.
 
 Every error, timeout, cancellation or lost reply leaves original spending pending.
 Even authenticated rejection is conservatively returned as indeterminate rather

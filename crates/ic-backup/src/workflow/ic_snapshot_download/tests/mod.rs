@@ -10,7 +10,7 @@ use crate::{
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_snapshot_download::tests::{source, source_plan, values, workflow},
         ic_snapshot_metadata::IcSnapshotMetadataReply,
-        ic_snapshot_transfer_read::IcSnapshotTransferReadResponseInput,
+        ic_update_response::IcUpdateResponseInput,
     },
     ops::persistence::{BackupLayoutGuard, DownloadJournalGuard, create_execution_workflow},
     ports::ic_observation::IcObservationProviderError,
@@ -50,7 +50,9 @@ fn prepare(
         })
         .unwrap();
     drop(journal);
-    let predecessor = metadata_stage.checkpoint(metadata.digest()).unwrap();
+    let predecessor = metadata_stage
+        .reconcile_checkpoint(metadata.digest())
+        .unwrap();
     drop(metadata_stage);
     let binding = download
         .bind(&binding, &original, vec![predecessor])
@@ -126,17 +128,15 @@ impl IcSnapshotTransferReadProvider for Provider {
                 Some((failed, true)) if failed == index => vec![],
                 _ => candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
             };
-            Ok(
-                IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
-                    authority: request.authority().digest(),
-                    mutation_attempt: request.mutation_attempt(),
-                    context: request.plan().context().clone(),
-                    target: payload.target().into(),
-                    evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                    reply: raw,
-                })
-                .unwrap(),
-            )
+            Ok(IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: payload.target().into(),
+                evidence: ArtifactChecksumRecord::from_bytes(&raw),
+                reply: raw,
+            })
+            .unwrap())
         })())
     }
 }
@@ -307,7 +307,7 @@ fn streams_every_exact_region_and_known_chunk_with_explicit_receipts_then_publis
     );
     let manifest = artifacts.publish_download_manifest(stage.plan()).unwrap();
     drop(artifacts);
-    let checkpoint = stage.checkpoint(manifest.clone()).unwrap();
+    let checkpoint = stage.reconcile_checkpoint(manifest.clone()).unwrap();
     let progress =
         read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
     assert_eq!(progress.applied_operations, download.requests().len());
@@ -392,7 +392,7 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
         let original = fs::read(stage.layout().unwrap().root().join("attempt-1.json")).unwrap();
         assert!(
             stage
-                .checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
+                .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
                 .is_err()
         );
         drop(artifacts);

@@ -49,11 +49,22 @@ TOML
         printf 'ic-host-fs = { version = %s, default-features = false }\n' \
             "$host_fs_requirement" >> "$selected/Cargo.toml"
         cat > "$selected/src/main.rs" <<'RUST'
-use ic_backup::ops::persistence::PersistenceError;
+use ic_backup::{
+    model::{
+        ic_mutation::{IcMutationAcknowledgement, IcMutationAcknowledgementError},
+        ic_snapshot_transfer_read::{IcSnapshotTransferReadError, IcSnapshotTransferReadResponse},
+        ic_update_response::IcUpdateResponseInput,
+    },
+    ops::persistence::PersistenceError,
+};
 use ic_host_fs::durable::NamedWriteError;
 use std::io;
 
 fn main() {
+    let _: fn(IcUpdateResponseInput) -> Result<IcMutationAcknowledgement, IcMutationAcknowledgementError>
+        = IcMutationAcknowledgement::new;
+    let _: fn(IcUpdateResponseInput) -> Result<IcSnapshotTransferReadResponse, IcSnapshotTransferReadError>
+        = IcSnapshotTransferReadResponse::new;
     let publication: NamedWriteError<io::Error> = NamedWriteError::AfterPublication {
         source: io::Error::other("completion uncertain"),
     };

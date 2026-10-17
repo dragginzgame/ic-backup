@@ -91,7 +91,7 @@ pub async fn read_snapshot_metadata<E: std::error::Error + 'static>(
         },
     )
     .await?;
-    match settlement.and_then(|digest| Ok(stage.checkpoint(digest)?)) {
+    match settlement.and_then(|digest| Ok(stage.reconcile_checkpoint(digest)?)) {
         Ok(predecessor) => Ok((response, predecessor)),
         Err(source) => Err(IcSnapshotMetadataExecutionError::AfterReply {
             source,

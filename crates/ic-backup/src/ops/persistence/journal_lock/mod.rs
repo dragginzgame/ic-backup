@@ -5,7 +5,6 @@
 
 use std::{fs, io, path::Path, path::PathBuf};
 
-use super::file_lock::{self, FileLockError};
 use thiserror::Error as ThisError;
 
 ///
@@ -101,17 +100,31 @@ impl Drop for JournalLock {
 
 #[cfg(unix)]
 fn acquire_supported(path: &Path, journal: PathBuf) -> Result<JournalLock, JournalLockError> {
-    match file_lock::acquire(path) {
-        Ok(file) => Ok(JournalLock { journal, file }),
-        Err(FileLockError::Locked) => Err(JournalLockError::Locked {
+    use ic_host_fs::durable::{
+        RegularFileLockError, open_private_regular_lock_file, try_lock_exclusive,
+    };
+    let file = open_private_regular_lock_file(path).map_err(|error| match error {
+        RegularFileLockError::NotRegular => JournalLockError::UnsafeEntry {
             lock_path: path.to_string_lossy().to_string(),
-        }),
-        Err(FileLockError::UnsafeEntry { kind }) => Err(JournalLockError::UnsafeEntry {
-            lock_path: path.to_string_lossy().to_string(),
-            kind,
-        }),
-        Err(FileLockError::Io(error)) => Err(JournalLockError::Io(error)),
-    }
+            kind: match fs::symlink_metadata(path) {
+                Ok(metadata) if metadata.file_type().is_symlink() => "Symlink",
+                Ok(metadata) if metadata.is_dir() => "Directory",
+                _ => "Special",
+            }
+            .to_owned(),
+        },
+        error => JournalLockError::Io(error.into()),
+    })?;
+    try_lock_exclusive(&file).map_err(|error| {
+        if error.kind() == io::ErrorKind::WouldBlock {
+            JournalLockError::Locked {
+                lock_path: path.to_string_lossy().to_string(),
+            }
+        } else {
+            JournalLockError::Io(error)
+        }
+    })?;
+    Ok(JournalLock { journal, file })
 }
 
 fn journal_lock_path(path: &Path) -> PathBuf {

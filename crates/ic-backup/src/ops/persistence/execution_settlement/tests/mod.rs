@@ -50,7 +50,7 @@ fn derived_checkpoint_preserves_original_histories_and_replays_without_replaceme
     let before: Vec<_> = [0, 7]
         .map(|sequence| fs::read(root.join(format!("attempt-{sequence}.json"))).unwrap())
         .into();
-    let actual = checkpoint_execution_settlement(&layout, expected.plan_intent()).unwrap();
+    let actual = reconcile_execution_settlement(&layout, expected.plan_intent()).unwrap();
     assert_eq!(actual, expected);
     let path = root.join("execution-settlement.json");
     let bytes = fs::read(&path).unwrap();
@@ -66,7 +66,10 @@ fn derived_checkpoint_preserves_original_histories_and_replays_without_replaceme
         replay_execution_settlement(&layout, expected.plan_intent()).unwrap(),
         actual
     );
-    assert!(checkpoint_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert_eq!(
+        reconcile_execution_settlement(&layout, expected.plan_intent()).unwrap(),
+        actual
+    );
     assert_eq!(fs::read(&path).unwrap(), bytes);
     let journal_path = root.join("attempt-7.json");
     let retained = root.join("retained-attempt-7.json");
@@ -98,6 +101,9 @@ fn reconciliation_creates_only_absent_checkpoint_and_replays_exact_occupied_evid
     let path = root.join("execution-settlement.json");
     let journal = root.join("attempt-7.json");
     let original_journal = fs::read(&journal).unwrap();
+    assert!(replay_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert!(!path.exists());
+    assert_eq!(fs::read(&journal).unwrap(), original_journal);
     let actual = reconcile_execution_settlement(&layout, expected.plan_intent()).unwrap();
     assert_eq!(actual, expected);
     let original_checkpoint = fs::read(&path).unwrap();
@@ -113,6 +119,17 @@ fn reconciliation_creates_only_absent_checkpoint_and_replays_exact_occupied_evid
     fs::write(&path, b"{}").unwrap();
     assert!(reconcile_execution_settlement(&layout, expected.plan_intent()).is_err());
     assert_eq!(fs::read(&path).unwrap(), b"{}");
+    assert_eq!(fs::read(&journal).unwrap(), original_journal);
+    fs::rename(&path, root.join("retained-corrupt-checkpoint")).unwrap();
+    let absent = root.join("absent-target");
+    symlink(&absent, &path).unwrap();
+    assert!(reconcile_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert_eq!(fs::read_link(&path).unwrap(), absent);
+    assert!(!absent.exists());
+    fs::remove_file(&path).unwrap();
+    fs::create_dir(&path).unwrap();
+    assert!(reconcile_execution_settlement(&layout, expected.plan_intent()).is_err());
+    assert!(path.is_dir());
     assert_eq!(fs::read(&journal).unwrap(), original_journal);
     drop(layout);
     fs::remove_dir_all(root).unwrap();
@@ -138,7 +155,7 @@ fn derivation_requires_complete_unheld_originals_and_exact_plan_identity() {
     let plan = plan();
     let held = AttemptJournalGuard::open(&layout, &plan.attempt_authority(7).unwrap()).unwrap();
     assert!(matches!(
-        checkpoint_execution_settlement(&layout, expected.plan_intent()),
+        reconcile_execution_settlement(&layout, expected.plan_intent()),
         Err(ExecutionSettlementCheckpointError::Persistence(
             ExecutionSettlementPersistenceError::Journal(AttemptJournalError::Lock(_))
         ))
@@ -146,16 +163,13 @@ fn derivation_requires_complete_unheld_originals_and_exact_plan_identity() {
     drop(held);
     fs::rename(root.join("attempt-7.json"), root.join("retained-journal")).unwrap();
     assert!(matches!(
-        checkpoint_execution_settlement(&layout, expected.plan_intent()),
+        reconcile_execution_settlement(&layout, expected.plan_intent()),
         Err(ExecutionSettlementCheckpointError::Persistence(
             ExecutionSettlementPersistenceError::Journal(_)
         ))
     ));
     assert!(matches!(
-        checkpoint_execution_settlement(
-            &layout,
-            &ArtifactChecksumRecord::from_bytes(b"other plan")
-        ),
+        reconcile_execution_settlement(&layout, &ArtifactChecksumRecord::from_bytes(b"other plan")),
         Err(ExecutionSettlementCheckpointError::Persistence(
             ExecutionSettlementPersistenceError::Plan(_)
         ))
@@ -208,7 +222,7 @@ fn pending_negative_and_uncertain_histories_cannot_be_checkpointed_or_reset() {
         let original = fs::read(root.join("attempt-7.json")).unwrap();
         assert!(
             matches!(
-                checkpoint_execution_settlement(&layout, expected.plan_intent()),
+                reconcile_execution_settlement(&layout, expected.plan_intent()),
                 Err(ExecutionSettlementCheckpointError::Persistence(
                     ExecutionSettlementPersistenceError::Policy(
                         ExecutionSettlementPolicyError::UnsettledOperation(7)

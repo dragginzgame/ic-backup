@@ -25,6 +25,155 @@
 
 # Current handoff — 2026-10-17
 
+## Pending 0.29.0 returned-evidence and Agent submission cuts
+
+Capture, transfer-read, upload and fence acquisition now directly re-admit the
+held journal, associate the returned evidence and recheck the retained stage in
+that order. Caller-specific errors retain exact replies. Fence obligation checks
+still follow stage admission, and transfer completion still runs under the journal
+lock. The intermediate generic post-reply helper/error layer is removed.
+
+Agent's single submission owner directly handles certificate replies, reply bounds
+and accepted/processing responses after mandatory signed-ingress retention. The
+private second outcome layer and repeat validation of the same immutable journal
+are removed; the passive prepared-envelope view and observation request binding
+remain. Accepted, oversized, lost and failed replies remain indeterminate with
+pending spending; no polling, retry, receipt or refund is introduced.
+
+The 112 workflow cases, three Agent units, 14 HTTP cases and 12 managed Agent
+PocketIC cases pass on the normal registry graph. Strict all-target/all-feature
+Clippy, actual Rust 1.91 all-target checks, formatting, dependency declarations,
+snapshot integrity and local links pass. Raw logs and incoming before-images are
+retained at `/tmp/backup-29-flow-tree-oh9bcfcd/`.
+
+The directory-hashing extraction is delivered separately in
+[Host Tooling PR #181](https://github.com/dragginzgame/ic-host-tooling/pull/181),
+commit `96a10878737fd773f26d2eb4387b1b8254579cc5`. Host Artifacts owns pure
+path/NUL/lowercase-digest/newline composition; Host FS owns no-follow descriptor
+hashing. Backup's closed snapshot layout, record projections, publication and
+recovery stay local. Original framing/provenance is retained and rerun upstream.
+All 56 default Artifact and 125 FS units pass on current Rust and actual Rust 1.88,
+with strict Clippy, warning-denied docs and focused static checks.
+
+An isolated Backup adoption rehearsal uses those production owners through direct
+workspace paths in its own checkout/target, without Cargo patches. All 538 Core
+units, two directory/publication cases, three public recovery/artifact cases,
+34 Core and 12 Agent PocketIC journeys pass, along with strict Clippy, actual
+Rust 1.91 all-target checks and warning-denied docs. The tested migration is
+retained as `backup-host-adoption.patch` under the evidence root; its future
+registry requirements need the actual published Host release and a refreshed lock.
+Canic's compositor caller is identified; its small migration patch is prepared
+there against captured sibling bytes but is not applied or qualified.
+
+The normal Backup graph still uses published Host packages and retains its generic
+checksum APIs until those new APIs are published. The upstream PR is not merged;
+publication and final Backup adoption remain separate. Native macOS/hosted CI,
+full local `make ci`, real release/publication and live IC effects are not claimed.
+Incoming product/tooling edits, normal sibling checkouts, Backup's package versions,
+Cargo selections and Git index/refs remain preserved. Only the isolated Host topic
+branch was committed/pushed for its authorized contribution PR.
+
+## Pending 0.29.0 Shared Tooling 0.20.0 adoption
+
+The canonical exporter refreshed the existing entrypoints from an isolated clean
+copy of committed Shared Tooling 0.20.0 at
+`3f87ddc1a0c1616775b2114c42a4adee7376c9b1`, verified against GitHub `main`
+on 2026-10-17. The snapshot contains 123 payloads: 44 updated, five added, none
+retired. A second canonical preview retains all 123 unchanged. Uncommitted sibling
+work was excluded. [The adoption review](../shared-tooling-review.json) records the
+source, path delta, consumer changes and qualification.
+
+Backup explicitly selects IC setup/checks after common host/Cargo steps and
+publishes its prepared IC PATH. Ordered setup continues through locked fetch and
+Testkit setup; offline checks admit IC and Testkit after common tools. Actual Make
+routing fixtures cover the new order and stop before later effects on Cargo/IC
+failure. Release fixtures copy the canonical stable-version companion and use the
+same order. The common include retires the consumer fleet `cloc-tooling` command;
+run it in Shared Tooling. Product release delivery/resume authority stays local.
+
+The baseline's new stable-memory governance needs no production adaptation in this
+host-side library. Existing consumer/recovery/product gates remain selected; no
+producer-wide test matrix was added. The GitHub description remains accurate for
+implemented libraries/direct Agent transport and pending full runners.
+
+Snapshot integrity, offline host/Cargo/IC/Testkit admission, dependency declarations,
+formatting, consumer tooling, release/recovery and hook checks, local links, and
+changed-tooling syntax and ShellCheck pass on Linux. The review records the checks.
+Native macOS and hosted workflow qualification remain separate; no full local
+`make ci` was run. Exact before-images and logs are retained at
+`/tmp/backup-shared-tooling-_hsum93n/`. Incoming product edits, executable catalogs,
+Cargo manifests/lock selections, package versions, license texts and Git index/refs
+are preserved. No commit, release, publication or live IC effects ran.
+
+## Pending 0.29.0 published codec and checkpoint consolidation
+
+Core now uses the published standalone `ic-testkit-candid` 0.51.0 exact-result
+codec. The private decoder module is removed; Backup retains bounded DTOs, raw
+reply ceilings, work/skip/type/header limits and redacted outer errors. Explicit
+64 KiB status/snapshot headers preserve the selected Candid default, with original
+16/4/4 KiB metadata/data/upload headers and canonical empty reply comparisons.
+This activates the published codec adoption prepared below. The already-locked
+package gains a production edge; selected versions, sources and checksums do not
+change. Independent consumers prove simulator packages stay outside production.
+
+Journal sidecars call Host FS directly and project once into `JournalLockError`.
+The intermediate private lock enum/module is removed; no-follow regular-file
+admission, 0600/CLOEXEC, no-wait contention, diagnostics and explicit unlock remain.
+
+Fresh checkpoint shortcuts and direct public record publication are removed
+without aliases. Callers use `reconcile_execution_settlement` or the stage's
+`reconcile_checkpoint` for absent creation or exact occupied replay. Read-only
+replay remains separate and refuses absence without creating a checkpoint. Private
+bounded publication, original journals/spending and post-reconciliation ancestor
+checks remain. Existing fault seams now exercise the consolidated path. Regressions
+check unchanged exact checkpoint bytes/inodes, read-only absence and refusal of
+corrupt, dangling-link and directory entries without replacement or journal repair.
+
+All 538 Core and three Agent unit cases, 13 focused public cases, 14 HTTP cases,
+34 Core and 12 Agent PocketIC cases pass. Strict all-target/all-feature Clippy,
+actual Rust 1.91 workspace/independent consumers, warning-denied docs, formatting,
+Cargo inheritance and local links pass. Before-images and raw logs are retained at
+`/tmp/backup-29-codec-lock-checkpoint-u11gbjoq/`; consumer evidence is retained at
+`target/msrv-consumers.cqxsHZ/`. Incoming edits remain preserved. Package versions,
+index and refs are unchanged; the lock adds only Core's codec dependency edge.
+No full local `make ci`, native macOS qualification, commit, release or publication
+ran. Published-package adoption is qualified here on Linux; native host acceptance
+remains separate.
+
+## Pending 0.29.0 reply inputs and bounded upload planning
+
+Mutation acknowledgements and transfer-read responses now use the neutral
+`model::ic_update_response::IcUpdateResponseInput`, with shared admission and
+redacted formatting. The old input names are removed without aliases. Callers
+update imports and construction; original wrapper errors, distinct reply limits,
+method codecs, evidence framing and persisted bytes remain unchanged.
+
+Capture, transfer-read, upload and fence acquisition directly sequence admission,
+original-evidence rechecks and one provider call under the same journal guard.
+Returned-reply admission, reservations and cancellation/recovery behavior remain.
+
+Data-upload planning preflights original capacity before IO, then uses a bounded
+batch reader inside the existing guarded source interval. The batch hashes exactly
+the bytes used for payload bindings and admits the canonical retained tree checksum
+before returning. Closed-tree, exact-length and file-identity checks share ordinary
+verification. Three source passes replace the prior 2N + 2 full verifications plus
+payload reads for N extents. This is an algorithmic IO bound, not a benchmark claim.
+Actual writes retain fresh per-payload source checks and original spending/custody.
+
+All 538 Core and three Agent unit cases, six focused public cases, 14 HTTP cases,
+34 Core and 12 Agent PocketIC cases pass on the locked registry graph. New cases
+cover distinct reply ceilings and denial order, exact batch/canonical bindings,
+empty regions/chunks, bounded single-pass payload hashing, short/excess input and
+same-length file replacement. Strict all-target/all-feature Clippy, actual Rust
+1.91 workspace and independent consumer checks, warning-denied docs, formatting,
+Cargo inheritance, local links and focused shell checks pass. The independent Core
+consumer also proves both public constructors accept the shared input DTO.
+
+Before-images and logs are retained at `/tmp/backup-29-cuts-obfmpgs4/`; independent
+consumer evidence is at `target/msrv-consumers.4lU8xR/`. Package versions, manifests,
+lock, index and refs are unchanged. No full local `make ci`, native macOS
+qualification, commit, release or publication ran. Existing evidence remains.
+
 ## Pending 0.28.0 journal paths and response identity
 
 Command custody and restore retention now share canonical journal-parent resolution

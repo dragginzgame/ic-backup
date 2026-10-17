@@ -11,6 +11,7 @@ use super::{
 };
 use crate::ready::ready;
 use crate::support::read_json;
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -23,9 +24,7 @@ use ic_backup::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
             MAX_EXECUTION_STAGE_BYTES,
         },
-        ic_mutation::{
-            IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
-        },
+        ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
@@ -87,7 +86,7 @@ impl IcMutationProvider for Provider<'_> {
             if self.lose_reply {
                 return Err(IcMutationProviderError::Indeterminate);
             }
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: request.plan().context().clone(),

@@ -8,6 +8,37 @@ implementation determine what has actually been qualified.
 
 ## Current implementation scope
 
+- The standalone published `ic-testkit-candid` 0.51 codec owns exact single-result
+  decoding and compact decoder setup. Backup retains raw reply ceilings, bounded
+  DTOs, every method-specific work/skip/type/header quota and redacted outer errors.
+  Explicit 64 KiB status/snapshot headers preserve the selected Candid default;
+  metadata/data/upload headers remain 16/4/4 KiB. Canonical empty replies still use
+  their original exact six-byte comparison. No simulator enters production.
+- Journal sidecars call Host FS directly and project once into `JournalLockError`.
+  Preserve 0600/no-follow regular-file admission, no-wait contention, unsafe-entry
+  classification, close-on-exec and explicit unlock on drop.
+- Checkpoint creation and writable recovery use `reconcile_execution_settlement`
+  and `ExecutionStageGuard::reconcile_checkpoint`. Fresh-only public shortcuts and
+  direct record publication are removed without aliases for 0.29. Exact occupied
+  records replay without replacement; absent checkpoints require complete original
+  Applied histories. Read-only replay never creates a checkpoint. Preserve bounded
+  publication, post-reconciliation ancestor checks, failure evidence and spending.
+
+- Mutation acknowledgements and transfer-read responses accept the neutral
+  `model::ic_update_response::IcUpdateResponseInput`. Its owning module shares
+  ordered attempt/byte/target admission and redacted formatting; wrappers preserve
+  their original limits, errors and decoders. The prior input names are removed
+  without aliases for 0.29; consumers update imports and constructors.
+- Capture, transfer-read, upload and fence acquisition workflows directly sequence
+  fresh admission, original evidence rechecks and one provider call under the same
+  journal guard. Keep every reservation and post-reply evidence check.
+- Data-upload planning preflights all extents against original capacity before IO.
+  One bounded batch hashes the exact bytes used for payload bindings, checks the
+  canonical retained tree checksum and shares closed-tree/file-identity admission
+  with ordinary verification. Full source checks surround that batch. No plan is
+  returned on failure; source records and bytes stay retained. Actual writes retain
+  fresh per-payload verification and all original custody/accounting requirements.
+
 - `PersistenceError::Publication` directly carries Host FS's
   `NamedWriteError<std::io::Error>` in the 0.28 hard cut. The local mirror is removed
   without an alias. Consumers update imports/matches and align direct Host FS with
@@ -21,6 +52,15 @@ implementation determine what has actually been qualified.
   identity; existing method-specific bounded decoding follows it. Keep typed errors,
   pending spending and raw evidence unchanged.
 
+- Capture, transfer-read, upload and fence-acquisition workflows directly re-admit
+  the held journal, associate returned evidence and recheck the stage in that order.
+  Keep exact replies in caller-specific post-reply errors; no intermediate generic
+  result/error owner is needed. Fence obligations are rechecked after stage admission.
+- Agent submission handles certificate replies and accepted/processing responses
+  directly after mandatory ingress retention. Journal admission before signing uses
+  the same immutable original borrowed through the callback; rereading that same
+  value is not a fresh filesystem observation. Preserve reply ceilings, original
+  request identity, fallible reply retention and pending spending on every failure.
 - Agent signing and dispatch are internal to its single-retention submission owner.
   Public providers invoke the mandatory durable ingress callback before effects;
   passive prepared-envelope access remains available to that callback. Preserve

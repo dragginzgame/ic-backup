@@ -18,9 +18,16 @@ pub(crate) async fn submit_once<E>(
         .prepare(request, journal)
         .map_err(|_| unsupported())?;
     retain_ingress(&prepared)?;
-    let outcome = prepared.submit().await.map_err(|_| indeterminate())?;
-    let UpdateOutcome::Replied { request_id, reply } = outcome else {
-        return Err(indeterminate());
+    let request_id = prepared.request_id;
+    let response = prepared
+        .transport
+        .agent
+        .update_signed(prepared.target, prepared.envelope)
+        .await
+        .map_err(|_| indeterminate())?;
+    let reply = match response {
+        CallResponse::Response(reply) if reply.len() <= prepared.reply_limit => reply,
+        CallResponse::Response(_) | CallResponse::Poll(_) => return Err(indeterminate()),
     };
     // A failed post-dispatch retainer must never turn an uncertain effect into a retry.
     retain_reply(&request_id, &reply).map_err(|_| indeterminate())?;
@@ -69,60 +76,10 @@ impl AgentTransport {
         Ok(PreparedUpdate {
             transport: self,
             request,
-            journal,
             target,
             envelope: signed.signed_update,
             request_id: signed.request_id,
             reply_limit,
         })
     }
-}
-
-impl PreparedUpdate<'_> {
-    /// Consume this preparation for one update HTTP request, without automatic wait or observation.
-    ///
-    /// A verified certificate reply is still passive method evidence, never an
-    /// automatic Applied receipt. Accepted/processing results return Pending; callers
-    /// must account separate recovery observations. Every error, cancellation or lost
-    /// reply leaves original spending pending; no error establishes nonapplication.
-    /// # Errors
-    /// Rejects stale reservations before dispatch; transport/authentication failures
-    /// and over-limit replies retain indeterminate original evidence.
-    async fn submit(self) -> Result<UpdateOutcome, TransportError> {
-        if !self.request.validate(self.journal) {
-            return Err(TransportError::Reservation);
-        }
-        let response = self
-            .transport
-            .agent
-            .update_signed(self.target, self.envelope)
-            .await
-            .map_err(|_| TransportError::Indeterminate)?;
-        match response {
-            CallResponse::Response(reply) => {
-                if reply.len() > self.reply_limit {
-                    return Err(TransportError::ReplyTooLarge);
-                }
-                Ok(UpdateOutcome::Replied {
-                    request_id: self.request_id,
-                    reply,
-                })
-            }
-            CallResponse::Poll(id) if id == self.request_id => Ok(UpdateOutcome::Pending),
-            CallResponse::Poll(_) => Err(TransportError::Indeterminate),
-        }
-    }
-}
-
-/// Passive single-update result; neither branch mutates or settles original journals.
-enum UpdateOutcome {
-    /// Locally certificate-verified exact request reply; method decoding/attribution remain separate.
-    Replied {
-        /// Exact original signed ingress identity.
-        request_id: RequestId,
-        /// Bounded raw method reply; use the existing method-specific decoder.
-        reply: Vec<u8>,
-    },
-    /// Accepted/processing without a settled reply; no follow-up call was made.
-    Pending,
 }

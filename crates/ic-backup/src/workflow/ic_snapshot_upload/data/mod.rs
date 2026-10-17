@@ -103,7 +103,7 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     if progress.applied_operations != upload.kinds().len() {
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);
     }
-    Ok(stage.checkpoint(evidence.finish())?)
+    Ok(stage.reconcile_checkpoint(evidence.finish())?)
 }
 
 async fn record_qualified<E: std::error::Error + 'static>(

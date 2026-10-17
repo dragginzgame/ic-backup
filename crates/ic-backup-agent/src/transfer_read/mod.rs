@@ -1,12 +1,12 @@
 //! Exact async metadata/data reads through the existing single-update transport.
 
 use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         attempt_journal::AttemptJournalRecord,
         ic_snapshot_transfer_read::{
             IcSnapshotTransferReadRequest, IcSnapshotTransferReadResponse,
-            IcSnapshotTransferReadResponseInput,
         },
     },
     ports::{
@@ -68,7 +68,7 @@ where
             &request_id,
             &reply,
         );
-        IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+        IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
             authority: request.authority().digest(),
             mutation_attempt: request.mutation_attempt(),
             context: self.transport.context.clone(),

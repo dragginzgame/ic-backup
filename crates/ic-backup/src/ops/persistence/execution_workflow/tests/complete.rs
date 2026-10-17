@@ -35,7 +35,7 @@ fn every_original_stage_is_required_and_exact_checkpoint_rows_are_replayed() {
         .unwrap();
     drop(journal);
     let second_row = stage
-        .checkpoint(ArtifactChecksumRecord::from_bytes(
+        .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"second learned evidence",
         ))
         .unwrap();

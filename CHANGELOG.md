@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.29.0]
+
+### Breaking
+
+- Remove `checkpoint_execution_settlement`, public `create_execution_settlement`
+  and `ExecutionStageGuard::checkpoint` without aliases. Use
+  `reconcile_execution_settlement` or `ExecutionStageGuard::reconcile_checkpoint`
+  to create an absent checkpoint or replay an exact occupied one. Read-only replay
+  remains separate and refuses absent evidence; original journals are never recreated.
+
+- Replace `IcMutationAcknowledgementInput` and `IcSnapshotTransferReadResponseInput`
+  with `model::ic_update_response::IcUpdateResponseInput`, without compatibility
+  aliases. Update imports and input construction; each response wrapper retains its
+  existing byte limit, typed errors and method-specific decoding.
+
+### Changed
+
+- Re-admit returned evidence directly in capture, transfer-read, upload and fence
+  workflows, preserving journal/association/stage order and exact replies in errors.
+- Handle Agent responses directly in the retained single-submission owner, removing
+  the private intermediate outcome and repeat validation of the immutable journal.
+  Signed ingress retention, bounded replies and indeterminate pending outcomes remain.
+
+- Adopt committed Shared Tooling 0.20.0 through the canonical snapshot exporter.
+  Preserve Backup's IC tools through explicit ordered setup/check selection and
+  PATH publication after the common host/Cargo steps. Update consumer qualification
+  and release fixtures; reviewed executable pins and product dependencies stay unchanged.
+
+- Use the published standalone `ic-testkit-candid` codec for bounded exact-result
+  decoding, preserving method quotas, bounded DTOs, wire bytes and redacted errors.
+  The existing locked 0.51.0 package becomes a direct production dependency;
+  simulator dependencies remain confined to qualification.
+- Map Host filesystem locking failures directly into journal lock errors, removing
+  the intermediate private error layer while preserving custody and contention.
+
+- Prepare data-upload plans with a bounded batch reader. Payload bindings and the
+  canonical source checksum use the same bytes, with full source checks before and
+  after the batch. Source passes no longer grow with the number of planned extents;
+  actual writes retain fresh per-payload source verification and original spending.
+- Make admission, retained-evidence rechecks and single provider invocation explicit
+  at capture, transfer-read, upload and fence acquisition workflow boundaries.
+
+
 ## [0.28.0] - 2026-10-17
 
 ### Breaking

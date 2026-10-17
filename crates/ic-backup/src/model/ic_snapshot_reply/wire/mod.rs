@@ -4,9 +4,9 @@ use super::{IcSnapshotInfo, IcSnapshotReplyError, MAX_IC_SNAPSHOT_REPLY_ENTRIES}
 use crate::model::{
     bounded_sequence,
     ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES},
-    ic_wire::{self, DecoderLimits},
 };
 use candid::CandidType;
+use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer, de};
 
 // These quotas bound decoder work and type-table retention independently of raw
@@ -62,30 +62,24 @@ pub(super) fn decode(
     method: IcManagementMethodRecord,
     bytes: &[u8],
 ) -> Result<Vec<IcSnapshotInfo>, IcSnapshotReplyError> {
-    let mut decoder = ic_wire::decoder(
-        bytes,
-        DecoderLimits {
-            decoding: DECODING_QUOTA,
-            skipping: 0,
-            type_table: MAX_TYPE_TABLE_ENTRIES,
-            header: None,
-        },
-    )
-    .map_err(|()| IcSnapshotReplyError::InvalidReply)?;
+    let limits = DecodeLimits {
+        reply_bytes: super::MAX_IC_SNAPSHOT_REPLY_BYTES,
+        decoding_quota: DECODING_QUOTA,
+        skipping_quota: 0,
+        type_entries: MAX_TYPE_TABLE_ENTRIES,
+        header_bytes: 64 * 1024,
+    };
     let snapshots = match method {
         IcManagementMethodRecord::TakeCanisterSnapshot => vec![
-            decoder
-                .get_value::<WireSnapshot>()
+            decode_exactly_one::<WireSnapshot>(bytes, limits)
                 .map_err(|_| IcSnapshotReplyError::InvalidReply)?,
         ],
         IcManagementMethodRecord::ListCanisterSnapshots => {
-            decoder
-                .get_value::<WireInventory>()
+            decode_exactly_one::<WireInventory>(bytes, limits)
                 .map_err(|_| IcSnapshotReplyError::InvalidReply)?
                 .0
         }
         _ => return Err(IcSnapshotReplyError::UnsupportedMethod { method }),
     };
-    ic_wire::finish(&mut decoder).map_err(|()| IcSnapshotReplyError::InvalidReply)?;
     Ok(snapshots.into_iter().map(IcSnapshotInfo::from).collect())
 }

@@ -800,7 +800,10 @@ earlier receipts and current pending spending and denies reentry. No executor,
 
 `DownloadJournalGuard::prepare_ic_snapshot_data_upload_plan` counts complete exact
 extents against the original data-stage ceiling before source IO. Guarded canonical
-preparation retains each request digest while buffering one payload at a time.
+batch preparation hashes the same bytes used for payload bindings, admitting the
+canonical source checksum before returning. Full source checks surround the batch;
+closed-tree, file identity and length checks use the existing verification owner.
+Only one bounded payload and its framing are retained at a time.
 The ephemeral plan binds the exact allocation reply and Applied predecessor, with
 one update and zero observations per ordered write; spare headroom stays unassigned.
 `workflow::ic_snapshot_upload::upload_snapshot_data` refuses any prior spending,
@@ -959,8 +962,9 @@ evidence still requires qualified effects, manifests/transfer, application safet
 and command custody before reference or fence release; these are not inferred from
 the local ledger checkpoint. Callers can now derive and publish that checkpoint
 from the retained original plan and complete journals with
-`checkpoint_execution_settlement`; the existing publisher rechecks exact histories
-before writing, and the existing reader owns identity-bound replay.
+`reconcile_execution_settlement`; the private publisher rechecks exact histories
+before writing and an exact occupied checkpoint replays without replacement.
+Identity-bound read-only replay remains separate and never creates absent evidence.
 
 Immutable local download manifest publication now reuses the existing v1 download
 journal record after guarded original-plan-bound fresh verification. Its canonical

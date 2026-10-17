@@ -1,11 +1,10 @@
 //! Bounded data vector decoding; no skipped extensions or untrusted allocation.
 
+use super::MAX_IC_SNAPSHOT_DATA_REPLY_BYTES;
 use super::{IcSnapshotDataError, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
-use crate::model::{
-    bounded_sequence,
-    ic_wire::{self, DecoderLimits},
-};
+use crate::model::bounded_sequence;
 use candid::CandidType;
+use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer};
 
 #[derive(CandidType, Deserialize)]
@@ -23,15 +22,16 @@ fn chunk<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<u8>, D::Error> {
 }
 
 pub(super) fn decode(bytes: &[u8]) -> Result<Vec<u8>, IcSnapshotDataError> {
-    let value: WireData = ic_wire::decode_one(
+    let value: WireData = decode_exactly_one(
         bytes,
-        DecoderLimits {
-            decoding: 8 * 1024 * 1024,
-            skipping: 0,
-            type_table: 16,
-            header: Some(4096),
+        DecodeLimits {
+            reply_bytes: MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
+            decoding_quota: 8 * 1024 * 1024,
+            skipping_quota: 0,
+            type_entries: 16,
+            header_bytes: 4096,
         },
     )
-    .map_err(|()| IcSnapshotDataError::InvalidReply)?;
+    .map_err(|_| IcSnapshotDataError::InvalidReply)?;
     Ok(value.chunk)
 }

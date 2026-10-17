@@ -12,7 +12,7 @@ use crate::{
             tests::{source, source_plan, values, workflow},
         },
         ic_snapshot_metadata::IcSnapshotMetadataReply,
-        ic_snapshot_transfer_read::IcSnapshotTransferReadResponseInput,
+        ic_update_response::IcUpdateResponseInput,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
     ports::ic_observation::IcObservationProviderError,
@@ -61,17 +61,15 @@ impl IcSnapshotTransferReadProvider for Provider {
             request.validate_journal(journal).unwrap();
             self.calls += 1;
             let raw = self.reply.clone()?;
-            Ok(
-                IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
-                    authority: request.authority().digest(),
-                    mutation_attempt: request.mutation_attempt(),
-                    context: request.plan().context().clone(),
-                    target: request.payload().target().into(),
-                    evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                    reply: raw,
-                })
-                .unwrap(),
-            )
+            Ok(IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: request.payload().target().into(),
+                evidence: ArtifactChecksumRecord::from_bytes(&raw),
+                reply: raw,
+            })
+            .unwrap())
         })())
     }
 }
@@ -254,7 +252,7 @@ fn lost_and_malformed_metadata_stop_pending_without_checkpoint_or_data_stage() {
         assert!(!layout.root().join("execution-stage-7").exists());
         assert!(
             stage
-                .checkpoint(ArtifactChecksumRecord::from_bytes(b"no outcome"))
+                .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"no outcome"))
                 .is_err()
         );
     }

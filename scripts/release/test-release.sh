@@ -66,7 +66,7 @@ create_fixture() {
     cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$ROOT/scripts/ci/check-release-tag.sh" "$ROOT/scripts/ci/run-formatting.sh" "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
-    cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/validate-release-inputs.pl" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/validate-release-inputs.pl" "$ROOT/scripts/ci/StableVersion.pm" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/scripts/ci/rewrite-local-lock-versions.pl" "$ROOT/scripts/ci/read-cargo-workspace-version.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/scripts/ci/finalize-release-changelog.awk" "$FIXTURE/scripts/ci/"
     cd "$FIXTURE"
@@ -737,7 +737,7 @@ test_selected_tool_preflight() {
         [[ "$(cat target/tool-effects.log)" == $'build 0.28.2\nsetup\ncheck' ]] || exit 1
         # First original-source preflight fetched before setup/admission/gate.
         awk '/^cargo fetch/{fetch=NR} /^cli setup/{setup=NR} /^cli check/{check=NR} /^make .*release-verify/{gate=NR} END {exit !(fetch < setup && setup < check && check < gate)}' "$TEST_LOG"
-        awk '/^common install-host-tools$/{host=NR} /^common install-ic-tools$/{ic=NR} /^common install-rust-tools$/{rust=NR} /^cargo fetch/{fetch=NR} /^cli setup/{exit !(host < ic && ic < rust && rust < fetch)}' "$TEST_LOG"
+        awk '/^common install-host-tools$/{host=NR} /^common install-ic-tools$/{ic=NR} /^common install-rust-tools$/{rust=NR} /^cargo fetch/{fetch=NR} /^cli setup/{exit !(host < rust && rust < ic && ic < fetch)}' "$TEST_LOG"
         unset TEST_GATE_FAIL
         "$TEST_REAL_MAKE" --no-print-directory release-patch
         [[ "$(grep -c '^build ' target/tool-effects.log)" == 1 ]] || exit 1

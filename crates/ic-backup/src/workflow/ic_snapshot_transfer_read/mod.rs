@@ -87,60 +87,35 @@ pub(super) async fn read_snapshot_with<E: std::error::Error + 'static, T>(
     journal.reserve_planned_mutation(&plan.digest())?;
     let request =
         IcSnapshotTransferReadRequest::new(plan, operation_sequence, journal.record()?, payload)?;
-    let response = super::reserved_effect::submit_once(
-        &journal,
-        &request,
-        async |request| {
-            admit(request)
-                .await
-                .map_err(IcSnapshotTransferReadExecutionError::Admission)
-        },
-        || {
-            stage
-                .layout()
-                .map(|_| ())
-                .map_err(IcSnapshotTransferReadExecutionError::Stage)
-        },
-        async |request, record| {
-            provider
-                .read_snapshot(request, record)
-                .await
-                .map_err(IcSnapshotTransferReadExecutionError::Provider)
-        },
-        IcSnapshotTransferReadExecutionError::Journal,
-    )
-    .await?;
-    let admitted = match super::reserved_effect::check_returned(
-        stage,
-        &journal,
-        &request,
-        &response,
-        validate_response,
-    ) {
-        Ok((_, admitted)) => admitted,
-        Err(error) => {
-            return Err(match error {
-                super::reserved_effect::ReturnedError::Journal(source) => {
-                    IcSnapshotTransferReadExecutionError::AfterReplyJournal {
-                        source,
-                        response: Box::new(response),
-                    }
-                }
-                super::reserved_effect::ReturnedError::Association(source) => {
-                    IcSnapshotTransferReadExecutionError::Association {
-                        source,
-                        response: Box::new(response),
-                    }
-                }
-                super::reserved_effect::ReturnedError::Stage(source) => {
-                    IcSnapshotTransferReadExecutionError::AfterReplyStage {
-                        source,
-                        response: Box::new(response),
-                    }
-                }
+    admit(&request)
+        .await
+        .map_err(IcSnapshotTransferReadExecutionError::Admission)?;
+    stage.layout()?;
+    let response = provider.read_snapshot(&request, journal.record()?).await?;
+    let record = match journal.record() {
+        Ok(record) => record,
+        Err(source) => {
+            return Err(IcSnapshotTransferReadExecutionError::AfterReplyJournal {
+                source,
+                response: Box::new(response),
             });
         }
     };
+    let admitted = match validate_response(&request, record, &response) {
+        Ok(admitted) => admitted,
+        Err(source) => {
+            return Err(IcSnapshotTransferReadExecutionError::Association {
+                source,
+                response: Box::new(response),
+            });
+        }
+    };
+    if let Err(source) = stage.layout() {
+        return Err(IcSnapshotTransferReadExecutionError::AfterReplyStage {
+            source,
+            response: Box::new(response),
+        });
+    }
     let result = complete(&mut journal, &request, &admitted).await;
     Ok((response, result))
 }

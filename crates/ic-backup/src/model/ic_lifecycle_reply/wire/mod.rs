@@ -1,13 +1,14 @@
 //! Decode-only status projection; other upstream values are bounded skipped work.
 
+use super::MAX_IC_LIFECYCLE_REPLY_BYTES;
 use super::{IcCanisterStatusInfo, IcLifecycleReplyError};
 use crate::model::{
     bounded_sequence,
     control_authority::{ControllerSet, MAX_CONTROLLERS},
-    ic_wire::{self, DecoderLimits},
 };
 use candid::{CandidType, Principal};
 use ic_management_canister_types::CanisterStatusType;
+use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer};
 
 const DECODING_QUOTA: usize = 2 * 1024 * 1024;
@@ -35,16 +36,17 @@ fn controllers<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<Princip
 }
 
 pub(super) fn status(bytes: &[u8]) -> Result<IcCanisterStatusInfo, IcLifecycleReplyError> {
-    let value: WireStatus = ic_wire::decode_one(
+    let value: WireStatus = decode_exactly_one(
         bytes,
-        DecoderLimits {
-            decoding: DECODING_QUOTA,
-            skipping: SKIPPING_QUOTA,
-            type_table: MAX_TYPE_TABLE_ENTRIES,
-            header: None,
+        DecodeLimits {
+            reply_bytes: MAX_IC_LIFECYCLE_REPLY_BYTES,
+            decoding_quota: DECODING_QUOTA,
+            skipping_quota: SKIPPING_QUOTA,
+            type_entries: MAX_TYPE_TABLE_ENTRIES,
+            header_bytes: 64 * 1024,
         },
     )
-    .map_err(|()| IcLifecycleReplyError::InvalidReply)?;
+    .map_err(|_| IcLifecycleReplyError::InvalidReply)?;
     let controllers = ControllerSet::new(
         value
             .settings

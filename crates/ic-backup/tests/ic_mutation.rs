@@ -1,5 +1,6 @@
 //! Native original reservation/reply recovery qualification; no live IC management effects.
 
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 mod support;
 
 use crate::ready::ready;
@@ -8,9 +9,7 @@ mod ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        ic_mutation::{
-            IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
-        },
+        ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
         ic_request::{
             IcManagementMethodRecord as Method, IcManagementRequest, IcManagementRequestRecord,
         },
@@ -90,7 +89,7 @@ impl IcMutationProvider for NativeProvider {
             } else {
                 b"DIDL\0\0".to_vec()
             };
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: request.plan().context().clone(),

@@ -10,8 +10,8 @@ use crate::{
             ExecutionStageBindingRecord,
             tests::{child_request, workflow},
         },
-        ic_mutation::IcMutationAcknowledgementInput,
         ic_request::IcManagementRequest,
+        ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow},
@@ -160,7 +160,7 @@ impl IcMutationProvider for Provider {
                 fs::rename(path, path.with_extension("retained-original")).unwrap();
                 fs::create_dir(path).unwrap();
             }
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: request.plan().context().clone(),
@@ -253,7 +253,7 @@ fn one_durably_reserved_capture_holds_exclusion_and_leaves_receipt_qualification
     assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 1);
     stage
-        .checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
+        .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
         .unwrap();
     drop(stage);
     drop(layout);

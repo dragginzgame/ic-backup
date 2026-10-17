@@ -64,7 +64,9 @@ output in each caller-owned fixture directory. No baseline reuse/reset, funding
 policy, hidden snapshot retry or receipt inference is adopted. Preserve original
 plans, journals, byte evidence and fixture-specific application safety.
 
-The snapshot-owned `ci/ic-tools.tsv` selects the five shared IC executables only. Testkit owns
+The snapshot-owned `ci/ic-tools.tsv` selects the five shared IC executables only.
+Backup explicitly registers their setup/check targets after common host/Cargo
+steps and publishes its prepared IC PATH. Testkit owns
 PocketIC release selection, authenticated assets, explicit setup and offline
 admission. The unique locked Testkit package also selects the exact CLI through
 Shared Tooling's Cargo installer; no second server catalog, version equality

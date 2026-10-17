@@ -58,7 +58,7 @@ fn settle_first(
         .unwrap();
     drop(journal);
     stage
-        .checkpoint(ArtifactChecksumRecord::from_bytes(
+        .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"snapshot ID and metadata evidence",
         ))
         .unwrap()

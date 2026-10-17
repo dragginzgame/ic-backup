@@ -143,26 +143,29 @@ TESTKIT_COMMAND_JOBSERVER=1 run_make -j4 check clippy > "$fixture/parallel-succe
 [[ "$(grep -c '^server ' "$TESTKIT_COMMAND_ORDER")" == 1 ]] || exit 1
 [[ "$(grep -c '^build ' "$TESTKIT_COMMAND_ORDER")" == 2 ]] || exit 1
 # The actual consumer aggregate includes locked fetch before Testkit setup;
-# parallel Make must preserve common host/IC/Cargo order and stop on failure.
+# parallel Make must preserve common host/Cargo order, explicit IC selection and stop on failure.
 : > "$TESTKIT_COMMAND_ORDER"
 TESTKIT_COMMAND_JOBSERVER=1 run_make -j4 install-tools > "$fixture/aggregate-install.log" 2>&1
-printf '%s\n' 'common install-host-tools.sh' 'common install-ic-tools.sh' 'common install-rust-tools.sh' fetch 'server setup' > "$fixture/expected-order"
+printf '%s\n' 'common install-host-tools.sh' 'common install-rust-tools.sh' 'common install-ic-tools.sh' fetch 'server setup' > "$fixture/expected-order"
 cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
 : > "$TESTKIT_COMMAND_ORDER"
 run_make -j4 tools-check > "$fixture/aggregate-check.log" 2>&1
-printf '%s\n' 'common install-host-tools.sh' 'common install-ic-tools.sh' 'common install-rust-tools.sh' 'server check' > "$fixture/expected-order"
+printf '%s\n' 'common install-host-tools.sh' 'common install-rust-tools.sh' 'common install-ic-tools.sh' 'server check' > "$fixture/expected-order"
 cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
 for target in install-tools tools-check; do
-    : > "$TESTKIT_COMMAND_ORDER"
-    if TESTKIT_COMMAND_COMMON_FAILURE=install-rust-tools.sh run_make -j4 "$target" > "$fixture/aggregate-$target-failure.log" 2>&1; then exit 1; fi
-    printf '%s\n' 'common install-host-tools.sh' 'common install-ic-tools.sh' 'common install-rust-tools.sh' > "$fixture/expected-order"
-    cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
+    for tool in install-rust-tools.sh install-ic-tools.sh; do
+        : > "$TESTKIT_COMMAND_ORDER"
+        if TESTKIT_COMMAND_COMMON_FAILURE="$tool" run_make -j4 "$target" > "$fixture/aggregate-$target-$tool-failure.log" 2>&1; then exit 1; fi
+        printf '%s\n' 'common install-host-tools.sh' 'common install-rust-tools.sh' > "$fixture/expected-order"
+        if [[ "$tool" == install-ic-tools.sh ]]; then
+            printf '%s\n' 'common install-ic-tools.sh' >> "$fixture/expected-order"
+        fi
+        cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
+    done
 done
-for tool in install-ic-tools.sh install-rust-tools.sh; do
-    : > "$TESTKIT_COMMAND_ORDER"
-    if TESTKIT_COMMAND_PREFLIGHT_FAILURE="$tool" run_make -j4 install-tools > "$fixture/preflight-$tool.log" 2>&1; then exit 1; fi
-    [[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
-done
+: > "$TESTKIT_COMMAND_ORDER"
+if TESTKIT_COMMAND_PREFLIGHT_FAILURE=install-rust-tools.sh run_make -j4 install-tools > "$fixture/preflight-rust.log" 2>&1; then exit 1; fi
+[[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
 [[ "$(cat "$fixture/retained")" == 'retained original evidence' ]] || exit 1
 printf '%s\n' 'Testkit setup/check routing, original selection and refusal fixtures passed'
 fixture_complete=true

@@ -3,9 +3,9 @@
 use super::{
     AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, ExecutionProgressPersistenceError,
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError, JournalLock,
-    JournalLockError, OperationPlanPersistenceError, PersistenceError,
-    checkpoint_execution_settlement, read_execution_progress, read_execution_settlement, read_json,
-    read_operation_plan, reconcile_execution_settlement, replay_execution_settlement,
+    JournalLockError, OperationPlanPersistenceError, PersistenceError, read_execution_progress,
+    read_execution_settlement, read_json, read_operation_plan, reconcile_execution_settlement,
+    replay_execution_settlement,
 };
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -226,7 +226,15 @@ impl<'a> ExecutionStageGuard<'a> {
         &self,
         learned_evidence: ArtifactChecksumRecord,
     ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
+        self.reconcile_checkpoint_with(learned_evidence, || {})
+    }
+    fn reconcile_checkpoint_with(
+        &self,
+        learned_evidence: ArtifactChecksumRecord,
+        after_reconciliation: impl FnOnce(),
+    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
         let settlement = reconcile_execution_settlement(self.layout()?, &self.plan.digest())?;
+        after_reconciliation();
         self.layout()?;
         Ok(ExecutionStagePredecessorRecord::new(
             self.binding.stage_sequence(),
@@ -248,39 +256,6 @@ impl<'a> ExecutionStageGuard<'a> {
         learned_evidence: ArtifactChecksumRecord,
     ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
         let settlement = replay_execution_settlement(self.layout()?, &self.plan.digest())?;
-        self.layout()?;
-        Ok(ExecutionStagePredecessorRecord::new(
-            self.binding.stage_sequence(),
-            self.binding.digest(),
-            settlement.digest(),
-            learned_evidence,
-        ))
-    }
-    /// Publish the original all-Applied checkpoint and derive its exact predecessor commitment.
-    ///
-    /// Re-admits the workflow, stage and complete ancestor histories before and after
-    /// delegating to the canonical original-journal checkpoint owner. Hold no attempt
-    /// guards. Failed post-publication admission retains the checkpoint and all originals;
-    /// an occupied checkpoint is never replaced. Identity-bound local replay remains
-    /// owned by `read_execution_settlement`.
-    ///
-    /// The supplied learned evidence stays integration-owned: this authenticates no
-    /// learned input, receipt or effect, and grants no dispatch or terminal/release proof.
-    /// # Errors
-    /// Rejects changed/missing/held originals, unsettled journals and publication failures.
-    pub fn checkpoint(
-        &self,
-        learned_evidence: ArtifactChecksumRecord,
-    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
-        self.checkpoint_with(learned_evidence, || {})
-    }
-    fn checkpoint_with(
-        &self,
-        learned_evidence: ArtifactChecksumRecord,
-        after_publication: impl FnOnce(),
-    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
-        let settlement = checkpoint_execution_settlement(self.layout()?, &self.plan.digest())?;
-        after_publication();
         self.layout()?;
         Ok(ExecutionStagePredecessorRecord::new(
             self.binding.stage_sequence(),

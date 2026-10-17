@@ -28,7 +28,7 @@ pub mod ic_snapshot_transfer_read;
 pub mod ic_snapshot_upload;
 pub mod ic_snapshot_upload_data_observation;
 pub mod ic_snapshot_upload_observation;
-mod ic_wire;
+pub mod ic_update_response;
 pub mod inventory;
 mod journal_path;
 pub mod membership;

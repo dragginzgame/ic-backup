@@ -1,12 +1,12 @@
 //! Exact reserved IC mutation identity and bounded passive reply association.
 
+use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
-    artifacts::ArtifactChecksumRecord,
-    attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord, MAX_OPERATION_ATTEMPTS},
+    attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_lifecycle_reply::MAX_IC_LIFECYCLE_REPLY_BYTES,
     ic_request::{IcManagementRequestRecord, IcRequestError},
     ic_snapshot_reply::MAX_IC_SNAPSHOT_REPLY_BYTES,
-    operation_plan::{OperationPlanError, OperationPlanRecord, PlanContextRecord},
+    operation_plan::{OperationPlanError, OperationPlanRecord},
 };
 use std::fmt;
 use thiserror::Error;
@@ -106,23 +106,6 @@ impl<'a> IcMutationRequest<'a> {
     }
 }
 
-/// Passive provider fields; actual authentication and association are integration-owned.
-#[derive(Clone)]
-pub struct IcMutationAcknowledgementInput {
-    /// Full original authority digest, including plan/context/operation/limits.
-    pub authority: ArtifactChecksumRecord,
-    /// Original already reserved mutation attempt, never a new call number.
-    pub mutation_attempt: u32,
-    /// Actual authenticated network/caller/release claimed by the provider.
-    pub context: PlanContextRecord,
-    /// Actual response routing target claimed by the provider; canonicalized on admission.
-    pub target: String,
-    /// Exact raw Candid reply, retained under the existing codec byte ceilings.
-    pub reply: Vec<u8>,
-    /// Opaque provider evidence binding original request/attempt and all actual fields.
-    pub evidence: ArtifactChecksumRecord,
-}
-
 /// Immutable bounded passive acknowledgement; not a receipt or authenticated outcome.
 ///
 /// No Serde or default admission exists. Raw bytes are hidden from Debug; explicit
@@ -130,42 +113,33 @@ pub struct IcMutationAcknowledgementInput {
 /// reply owners during pure association, never in a second codec.
 #[derive(Clone)]
 pub struct IcMutationAcknowledgement {
-    input: IcMutationAcknowledgementInput,
+    input: IcUpdateResponseInput,
 }
 
 impl IcMutationAcknowledgement {
     /// Admit finite attempt/raw-byte bounds and normalize the actual target identity.
     /// # Errors
     /// Rejects zero/excessive attempts, oversized raw replies and invalid principals.
-    pub fn new(
-        mut input: IcMutationAcknowledgementInput,
-    ) -> Result<Self, IcMutationAcknowledgementError> {
-        if input.mutation_attempt == 0 || input.mutation_attempt > MAX_OPERATION_ATTEMPTS {
-            return Err(IcMutationAcknowledgementError::InvalidAttempt);
-        }
-        if input.reply.len() > MAX_IC_MUTATION_REPLY_BYTES {
-            return Err(IcMutationAcknowledgementError::ReplyTooLarge);
-        }
-        input.target = crate::model::principal::canonical_text(&input.target)
-            .ok_or(IcMutationAcknowledgementError::InvalidTarget)?;
+    pub fn new(mut input: IcUpdateResponseInput) -> Result<Self, IcMutationAcknowledgementError> {
+        input.admit(
+            MAX_IC_MUTATION_REPLY_BYTES,
+            IcMutationAcknowledgementError::InvalidAttempt,
+            IcMutationAcknowledgementError::ReplyTooLarge,
+            IcMutationAcknowledgementError::InvalidTarget,
+        )?;
         Ok(Self { input })
     }
     /// Read canonical passive association fields and exact raw reply, without mutation access.
     #[must_use]
-    pub const fn input(&self) -> &IcMutationAcknowledgementInput {
+    pub const fn input(&self) -> &IcUpdateResponseInput {
         &self.input
     }
 }
 
 impl fmt::Debug for IcMutationAcknowledgement {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("IcMutationAcknowledgement")
-            .field("authority", &self.input.authority)
-            .field("mutation_attempt", &self.input.mutation_attempt)
-            .field("target", &self.input.target)
-            .field("reply_bytes", &self.input.reply.len())
-            .finish_non_exhaustive()
+        self.input
+            .fmt_redacted(formatter, "IcMutationAcknowledgement")
     }
 }
 

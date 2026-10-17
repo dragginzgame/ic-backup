@@ -203,7 +203,9 @@ if rg -F 'second-failure-marker' "$FIXTURE/fail-fast.log" >/dev/null; then
 fi
 fast_combined="$(sed -n 's/^Combined failure log retained at: //p' "$FIXTURE/fail-fast.log")"
 fast_raw=("$FIXTURE/failure-logs/"*-0-fail-one.log)
-cmp "${fast_raw[${#fast_raw[@]}-1]}" "$fast_combined"
+first_retained_log="${fast_raw[${#fast_raw[@]}-1]}"
+cmp "$first_retained_log" "$fast_combined"
+cp "$first_retained_log" "$FIXTURE/first-failure-before-retry.log"
 
 status=0
 VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
@@ -218,6 +220,7 @@ VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" \
     echo "validation target runner test failed: expected Make failure status 2, got $status" >&2
     exit 1
 }
+cmp "$FIXTURE/first-failure-before-retry.log" "$first_retained_log"
 for expected in \
     'pass-marker' \
     'mutation-marker' \
@@ -387,18 +390,30 @@ for failure in mkdir copy; do
     else
         mkdir -p "$failure_root"
     fi
-    status=0
-    TMPDIR="$fallback_tmp" PATH="$FIXTURE/bin:$PATH" \
-        VALIDATION_FAILURE_LOG_DIR="$failure_root" \
-        VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
-        VALIDATION_RUNNER_DEPTH=0 VALIDATION_RUNNER_SNAPSHOT_PATH='' \
-        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
-        > "$FIXTURE/fallback-$failure.log" 2>&1 || status=$?
-    [[ "$status" == 2 ]] || exit 1
-    fallback_logs=("$fallback_tmp"/validation.*/0.log)
-    [[ "${#fallback_logs[@]}" == 1 && -f "${fallback_logs[0]}" ]] || exit 1
-    rg -F first-failure-marker "${fallback_logs[0]}" >/dev/null
-    rg -F "${fallback_logs[0]}" "$FIXTURE/fallback-$failure.log" >/dev/null
+    # Repeated fallback failures keep distinct readable logs; earlier bytes
+    # remain available even when the durable failure destination is unusable.
+    for attempt in 1 2; do
+        status=0
+        TMPDIR="$fallback_tmp" PATH="$FIXTURE/bin:$PATH" \
+            VALIDATION_FAILURE_LOG_DIR="$failure_root" \
+            VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+            VALIDATION_RUNNER_DEPTH=0 VALIDATION_RUNNER_SNAPSHOT_PATH='' \
+            bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
+            > "$FIXTURE/fallback-$failure-$attempt.log" 2>&1 || status=$?
+        [[ "$status" == 2 ]] || exit 1
+        fallback_logs=("$fallback_tmp"/validation.*/0.log)
+        [[ "${#fallback_logs[@]}" == "$attempt" ]] || exit 1
+        for log in "${fallback_logs[@]}"; do rg -F first-failure-marker "$log" >/dev/null; done
+        if [[ "$attempt" == 1 ]]; then
+            first_fallback_log="${fallback_logs[0]}"
+            cp "$first_fallback_log" "$FIXTURE/fallback-$failure-before-retry.log"
+        else
+            cmp "$FIXTURE/fallback-$failure-before-retry.log" "$first_fallback_log"
+        fi
+        reported="$(sed -n 's/^Validation logs retained at: //p' "$FIXTURE/fallback-$failure-$attempt.log")"
+        [[ -n "$reported" && -f "$reported/0.log" ]] || exit 1
+        if [[ "$attempt" == 2 ]]; then [[ "$reported/0.log" != "$first_fallback_log" ]] || exit 1; fi
+    done
 done
 
 # Exercise real Make overrides and logger dispatch across checkout boundaries.

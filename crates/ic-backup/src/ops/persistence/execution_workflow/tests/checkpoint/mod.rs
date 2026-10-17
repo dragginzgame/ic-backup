@@ -5,6 +5,7 @@ use crate::ops::persistence::{
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError,
     read_execution_settlement,
 };
+use std::os::unix::fs::MetadataExt;
 
 fn apply(stage: &ExecutionStageGuard<'_>) {
     let mut journal = AttemptJournalGuard::open(
@@ -34,7 +35,11 @@ fn exact_predecessor_admits_successor_and_retains_original_checkpoint_and_spendi
     let journal_path = stage.stage_layout.root().join("attempt-42.json");
     let bytes = fs::read(&journal_path).unwrap();
     let learned = ArtifactChecksumRecord::from_bytes(b"original learned input");
-    let row = stage.checkpoint(learned.clone()).unwrap();
+    let checkpoint_path = stage.stage_layout.root().join("execution-settlement.json");
+    assert!(stage.replay_checkpoint(learned.clone()).is_err());
+    assert!(!checkpoint_path.exists());
+    assert_eq!(fs::read(&journal_path).unwrap(), bytes);
+    let row = stage.reconcile_checkpoint(learned.clone()).unwrap();
     assert_eq!(row.stage_sequence(), 0);
     assert_eq!(row.binding(), &binding.digest());
     assert_eq!(row.learned_evidence(), &learned);
@@ -48,9 +53,10 @@ fn exact_predecessor_admits_successor_and_retains_original_checkpoint_and_spendi
         .plan_intent(),
         &stage.plan().digest()
     );
-    let checkpoint_path = stage.stage_layout.root().join("execution-settlement.json");
     let checkpoint = fs::read(&checkpoint_path).unwrap();
-    assert!(stage.checkpoint(learned).is_err());
+    let inode = fs::metadata(&checkpoint_path).unwrap().ino();
+    assert_eq!(stage.reconcile_checkpoint(learned).unwrap(), row);
+    assert_eq!(fs::metadata(&checkpoint_path).unwrap().ino(), inode);
     let replayed = stage
         .replay_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"original learned input",
@@ -86,7 +92,7 @@ fn held_pending_and_missing_journals_cannot_publish_a_predecessor() {
     .unwrap();
     let learned = ArtifactChecksumRecord::from_bytes(b"unqualified learned input");
     assert!(matches!(
-        stage.checkpoint(learned.clone()),
+        stage.reconcile_checkpoint(learned.clone()),
         Err(ExecutionStageCheckpointError::Settlement(
             ExecutionSettlementCheckpointError::Persistence(
                 ExecutionSettlementPersistenceError::Journal(AttemptJournalError::Lock(_))
@@ -99,7 +105,7 @@ fn held_pending_and_missing_journals_cannot_publish_a_predecessor() {
     let path = stage.stage_layout.root().join("attempt-42.json");
     let original = fs::read(&path).unwrap();
     assert!(matches!(
-        stage.checkpoint(learned.clone()),
+        stage.reconcile_checkpoint(learned.clone()),
         Err(ExecutionStageCheckpointError::Settlement(
             ExecutionSettlementCheckpointError::Persistence(
                 ExecutionSettlementPersistenceError::Policy(_)
@@ -109,7 +115,7 @@ fn held_pending_and_missing_journals_cannot_publish_a_predecessor() {
     assert_eq!(fs::read(&path).unwrap(), original);
     fs::rename(&path, root.join("retained-pending-journal")).unwrap();
     assert!(matches!(
-        stage.checkpoint(learned),
+        stage.reconcile_checkpoint(learned),
         Err(ExecutionStageCheckpointError::Settlement(
             ExecutionSettlementCheckpointError::Persistence(
                 ExecutionSettlementPersistenceError::Journal(_)
@@ -155,7 +161,7 @@ fn changed_workflow_or_binding_refuses_before_checkpoint_publication() {
         fs::write(&path, serde_json::to_vec_pretty(&changed).unwrap()).unwrap();
         let changed_bytes = fs::read(&path).unwrap();
         assert!(matches!(
-            stage.checkpoint(ArtifactChecksumRecord::from_bytes(b"input")),
+            stage.reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"input")),
             Err(ExecutionStageCheckpointError::Stage(
                 ExecutionWorkflowPersistenceError::DigestMismatch
             ))
@@ -183,7 +189,7 @@ fn lost_post_publication_admission_retains_exact_checkpoint_without_republicatio
     apply(&stage);
     let before = fs::read(stage.stage_layout.root().join("attempt-42.json")).unwrap();
     let error = stage
-        .checkpoint_with(ArtifactChecksumRecord::from_bytes(b"input"), || {
+        .reconcile_checkpoint_with(ArtifactChecksumRecord::from_bytes(b"input"), || {
             fs::rename(root.join(WORKFLOW_FILE), root.join("retained-workflow")).unwrap();
         })
         .unwrap_err();
@@ -203,7 +209,7 @@ fn lost_post_publication_admission_retains_exact_checkpoint_without_republicatio
     );
     assert!(
         stage
-            .checkpoint(ArtifactChecksumRecord::from_bytes(b"input"))
+            .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"input"))
             .is_err()
     );
     assert_eq!(fs::read(&path).unwrap(), bytes);

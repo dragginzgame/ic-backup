@@ -1,5 +1,6 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 
 mod ready;
 mod support;
@@ -13,7 +14,7 @@ use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         download_journal::DownloadArtifactRequest,
-        ic_mutation::{IcMutationAcknowledgement, IcMutationAcknowledgementInput},
+        ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_data::{IcSnapshotDataReply, IcSnapshotDataRequest},
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_upload::{IcSnapshotUploadAttempt, IcSnapshotUploadReplyKind},
@@ -146,7 +147,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);
     // Associate separately retained bytes, without invoking or retrying the provider.
-    let acknowledgement = IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+    let acknowledgement = IcMutationAcknowledgement::new(IcUpdateResponseInput {
         authority: attempt.authority().digest(),
         mutation_attempt: 1,
         context: upload_plan.context().clone(),
@@ -199,7 +200,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         IcMutationProviderError::Indeterminate
     );
     assert_eq!(fs::read(data_attempts.path()).unwrap(), data_attempt_bytes);
-    let acknowledgement = IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+    let acknowledgement = IcMutationAcknowledgement::new(IcUpdateResponseInput {
         authority: attempt.authority().digest(),
         mutation_attempt: 1,
         context: data_plan.context().clone(),

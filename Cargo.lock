@@ -1162,6 +1162,7 @@ dependencies = [
  "ic-host-process",
  "ic-management-canister-types 0.11.0",
  "ic-testkit",
+ "ic-testkit-candid",
  "ic_principal",
  "rustix",
  "serde",

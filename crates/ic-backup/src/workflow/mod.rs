@@ -16,4 +16,3 @@ pub mod ic_snapshot_restore;
 pub mod ic_snapshot_transfer_read;
 pub mod ic_snapshot_upload;
 mod qualified_receipt;
-mod reserved_effect;

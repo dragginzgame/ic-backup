@@ -75,55 +75,30 @@ pub async fn upload_snapshot<E: std::error::Error + 'static>(
     journal.reserve_planned_mutation(&plan.digest())?;
     let request =
         IcSnapshotUploadAttempt::new(plan, operation_sequence, journal.record()?, payload)?;
-    let acknowledgement = super::reserved_effect::submit_once(
-        &journal,
-        &request,
-        async |request| {
-            admit(request)
-                .await
-                .map_err(IcSnapshotUploadExecutionError::Admission)
-        },
-        || {
-            stage
-                .layout()
-                .map(|_| ())
-                .map_err(IcSnapshotUploadExecutionError::Stage)
-        },
-        async |request, record| {
-            provider
-                .submit_upload(request, record)
-                .await
-                .map_err(IcSnapshotUploadExecutionError::Provider)
-        },
-        IcSnapshotUploadExecutionError::Journal,
-    )
-    .await?;
-    if let Err(error) = super::reserved_effect::check_returned(
-        stage,
-        &journal,
-        &request,
-        &acknowledgement,
-        |request, record, reply| validate_acknowledgement(request, record, reply).map(|_| ()),
-    ) {
-        return Err(match error {
-            super::reserved_effect::ReturnedError::Journal(source) => {
-                IcSnapshotUploadExecutionError::AfterReplyJournal {
-                    source,
-                    acknowledgement: Box::new(acknowledgement),
-                }
-            }
-            super::reserved_effect::ReturnedError::Association(source) => {
-                IcSnapshotUploadExecutionError::Association {
-                    source,
-                    acknowledgement: Box::new(acknowledgement),
-                }
-            }
-            super::reserved_effect::ReturnedError::Stage(source) => {
-                IcSnapshotUploadExecutionError::AfterReplyStage {
-                    source,
-                    acknowledgement: Box::new(acknowledgement),
-                }
-            }
+    admit(&request)
+        .await
+        .map_err(IcSnapshotUploadExecutionError::Admission)?;
+    stage.layout()?;
+    let acknowledgement = provider.submit_upload(&request, journal.record()?).await?;
+    let record = match journal.record() {
+        Ok(record) => record,
+        Err(source) => {
+            return Err(IcSnapshotUploadExecutionError::AfterReplyJournal {
+                source,
+                acknowledgement: Box::new(acknowledgement),
+            });
+        }
+    };
+    if let Err(source) = validate_acknowledgement(&request, record, &acknowledgement) {
+        return Err(IcSnapshotUploadExecutionError::Association {
+            source,
+            acknowledgement: Box::new(acknowledgement),
+        });
+    }
+    if let Err(source) = stage.layout() {
+        return Err(IcSnapshotUploadExecutionError::AfterReplyStage {
+            source,
+            acknowledgement: Box::new(acknowledgement),
         });
     }
     Ok(acknowledgement)

@@ -1,8 +1,10 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
-LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server
-LOCAL_TOOL_CHECK_TARGETS := testkit-server-check
+LOCAL_TOOL_INSTALL_TARGETS := install-ic-tools deps install-testkit-server
+LOCAL_TOOL_CHECK_TARGETS := ic-tools-check testkit-server-check
+# IC executables remain an explicit Backup selection; common includes add host/Cargo.
+export PATH := $(CURDIR)/.tools/ic/bin:$(PATH)
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
@@ -48,7 +50,7 @@ help:
 	@echo "install-ic-tools            Prepare the pinned local IC executables"
 	@echo "install-rust-tools          Prepare the complete shared Cargo tool set"
 	@echo "install-testkit-server       Prepare the locked Testkit CLI and its PocketIC server"
-	@echo "install-tools               Prepare host, IC, Cargo and locked Testkit tools in order"
+	@echo "install-tools               Prepare host, Cargo, IC and locked Testkit tools in order"
 	@echo "package                     Verify both library packages locally"
 	@echo "publish                     Publish both libraries to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
@@ -69,7 +71,7 @@ help:
 	@echo "test                        Run native library tests and doctests"
 	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
 	@echo "tooling-check               Test consumer CI wiring and retained evidence"
-	@echo "tools-check                 Verify common and locked Testkit tools offline in order"
+	@echo "tools-check                 Verify host, Cargo, IC and locked Testkit tools offline"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 

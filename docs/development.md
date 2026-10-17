@@ -73,9 +73,9 @@ make test
 Explicit local setup uses the snapshot-owned [host and Cargo pins](../ci/tool-versions.env)
 and [IC tool matrix](../ci/ic-tools.tsv), through the shared
 [common Make entrypoint](../make/consumer.mk). It downloads and verifies jq/yq, ripgrep with
-PCRE2, cloc and the five IC executables, followed by Cargo-sort, Cargo-sort-derives
-and Candid-extractor. The ordered Backup extension fetches locked dependencies
-then prepares its selected Testkit CLI/server. Previous sets and failed candidates
+PCRE2, cloc, Cargo-sort, Cargo-sort-derives and Candid-extractor. The ordered
+Backup extension explicitly prepares the five IC executables, fetches locked
+dependencies, then prepares its selected Testkit CLI/server. Previous sets and failed candidates
 are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and `.tools/rust/common/bin`.
 Interactive shells can use:
 
@@ -122,9 +122,10 @@ checks and evidence collection. CI uses one isolated store per native job and
 checks actual host/IC/common/selected Cargo reuse from a second consumer offline.
 Avoid independent
 store owners, sibling PATHs or manual binary relocation. The aggregate
-runs common host, IC and Cargo steps in order, then product targets registered
+runs common host and Cargo steps in order, then product targets registered
 through `LOCAL_TOOL_INSTALL_TARGETS`/`LOCAL_TOOL_CHECK_TARGETS`. Backup registers
-locked fetch before Testkit setup, and Testkit admission after common checks.
+IC setup before locked fetch and Testkit setup, and IC admission before Testkit
+admission after common checks.
 Do not attach unordered aggregate prerequisites or call the aggregate from an
 extension target.
 The pre-commit hook and formatting-adoption checker find prepared checkout-local
@@ -143,7 +144,7 @@ explicitly with `make install-testkit-server`; ordinary validation never install
 `make cloc` reports source/test LOC from this root workspace and excludes Cargo's
 selected build outputs. Run fleet tooling/LOC reports from Shared Tooling; this
 consumer no longer selects those reporters or their regression suite. The shared
-`cloc-tooling` entry point explains that optional ownership when invoked here.
+consumer include no longer exposes `cloc-tooling`; run that command at its owner.
 Local setup, offline checks and workspace LOC retain their prepared tools and
 perform no implicit installation.
 
@@ -670,6 +671,20 @@ See the [schema and goldens](contracts/execution-settlement.schema.json),
 Focused checks are `cargo test --offline --locked -p ic-backup --lib execution_settlement`
 and `cargo test --offline --locked -p ic-backup --test execution_settlement`.
 
+For checkpoint creation and recovery after lost local publication replies, use
+`reconcile_execution_settlement` or `ExecutionStageGuard::reconcile_checkpoint`.
+An exact occupied checkpoint replays without replacement; changed or unsafe evidence
+refuses. For read-only inspection use `replay_execution_settlement`,
+`read_execution_settlement` or `ExecutionStageGuard::replay_checkpoint`; these never
+create an absent checkpoint. The 0.29 hard cut removes fresh-only checkpoint
+shortcuts and direct public record publication without aliases.
+
+Management reply decoding delegates exact-result and compact decoder setup to
+standalone `ic-testkit-candid` 0.51. Product DTO bounds, raw limits, per-method quotas
+and redacted outer errors remain in Backup. Independent consumer qualification
+rejects simulator packages in the production graph. Run existing codec goldens and
+bounds against the extracted production decoder when changing this selection.
+
 ## Snapshot upload payloads
 
 `model::ic_snapshot_upload` owns same-target metadata/data arguments and bounded
@@ -717,8 +732,11 @@ qualification callbacks for each write. Qualification must durably retain origin
 request/reply bytes before returning its explicit exact Applied receipt.
 
 The coordinator buffers one freshly verified payload at a time, stops on every
-failure and refuses any consumed stage on reentry. Source preparation still verifies
-the full tree for each payload; reduced aggregate buffering is not an IO speed claim.
+failure and refuses any consumed stage on reentry. Plan preparation reads and hashes
+exact payload bytes in one bounded batch,
+with full-tree verification before and after it. These three source passes do not
+grow with the number of extents. Actual writes still freshly verify each payload's
+source before and after preparation; no benchmark speed-up is claimed.
 Empty data has no child plan. Checkpointed writes need independent destination and
 application qualification before load/start. Focused actual simulator checks are
 `cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_upload`;

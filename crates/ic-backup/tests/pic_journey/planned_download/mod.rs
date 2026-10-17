@@ -2,6 +2,7 @@
 
 use super::{Fault, backend::Backend, lifecycle, management, status};
 use crate::ready::ready;
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -10,9 +11,7 @@ use ic_backup::{
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
         },
-        ic_mutation::{
-            IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
-        },
+        ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
@@ -94,7 +93,7 @@ impl IcMutationProvider for CaptureProvider<'_> {
             } else {
                 raw
             };
-            IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
+            IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: actual.context().clone(),
@@ -239,7 +238,7 @@ fn capture(
         drop(journal);
         assert!(
             stage
-                .checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
+                .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
                 .is_err()
         );
         drop(stage);
@@ -280,7 +279,7 @@ fn capture(
     drop(journal);
     Some((
         reply.snapshots()[0].clone(),
-        stage.checkpoint(reply.digest()).unwrap(),
+        stage.reconcile_checkpoint(reply.digest()).unwrap(),
     ))
 }
 
@@ -513,7 +512,7 @@ pub(crate) fn run(failure: ReadFailure) {
     let manifest = artifacts.publish_download_manifest(plan).unwrap();
     let retained = artifacts.record().unwrap().clone();
     drop(artifacts);
-    stage.checkpoint(manifest.clone()).unwrap();
+    stage.reconcile_checkpoint(manifest.clone()).unwrap();
     let view = read_execution_progress(stage_layout, &plan.digest()).unwrap();
     assert_eq!(view.applied_operations, download.requests().len());
     assert_eq!(view.attempts.mutations_remaining, 0); // Original spare headroom is unassigned.
@@ -601,7 +600,7 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
     let original = fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap();
     assert!(
         stage
-            .checkpoint(ArtifactChecksumRecord::from_bytes(b"no metadata outcome"))
+            .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"no metadata outcome"))
             .is_err()
     );
     drop(stage);

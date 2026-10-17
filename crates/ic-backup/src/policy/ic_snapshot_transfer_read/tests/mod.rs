@@ -6,7 +6,7 @@ use crate::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         ic_snapshot_data::{IcSnapshotDataRequest, MAX_IC_SNAPSHOT_DATA_REPLY_BYTES},
         ic_snapshot_metadata::{IcSnapshotMetadataRequest, MAX_IC_SNAPSHOT_METADATA_BYTES},
-        ic_snapshot_transfer_read::IcSnapshotTransferReadResponseInput,
+        ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
     },
     test_support::{control_authority, membership::hash},
@@ -43,8 +43,8 @@ fn plan(payload: IcSnapshotTransferReadPayload<'_, '_>) -> OperationPlanRecord {
 fn fields(
     request: &IcSnapshotTransferReadRequest<'_, '_>,
     reply: Vec<u8>,
-) -> IcSnapshotTransferReadResponseInput {
-    IcSnapshotTransferReadResponseInput {
+) -> IcUpdateResponseInput {
+    IcUpdateResponseInput {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         context: request.plan().context().clone(),

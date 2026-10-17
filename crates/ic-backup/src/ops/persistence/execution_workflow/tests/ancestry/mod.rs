@@ -51,7 +51,7 @@ fn settled_stage(
         .unwrap();
     drop(journal);
     stage
-        .checkpoint(ArtifactChecksumRecord::from_bytes(
+        .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"fixture learned evidence",
         ))
         .unwrap()
@@ -202,10 +202,10 @@ fn ancestor_drift_before_or_after_checkpoint_retains_child_and_refuses_predecess
         };
         let learned = ArtifactChecksumRecord::from_bytes(b"fixture input");
         let result = if after_publication {
-            stage.checkpoint_with(learned, change)
+            stage.reconcile_checkpoint_with(learned, change)
         } else {
             change();
-            stage.checkpoint(learned)
+            stage.reconcile_checkpoint(learned)
         };
         assert!(matches!(
             result,

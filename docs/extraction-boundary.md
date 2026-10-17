@@ -2349,9 +2349,9 @@ retains its distinct record-only inspection purpose for incomplete preparation.
 The returned sequential view is no atomic custody, fresh authority, receipt,
 transfer completion or terminal/fence/reference-release proof.
 
-`ExecutionStageGuard::checkpoint` publishes the existing all-Applied journal
-checkpoint and returns the exact original stage/binding/settlement predecessor
-commitment. The guard re-admits the retained workflow, binding, child plan and
+`ExecutionStageGuard::reconcile_checkpoint` creates an absent all-Applied journal
+checkpoint or replays an exact occupied one, returning the original stage/binding/
+settlement predecessor commitment. The guard re-admits the retained workflow, binding, child plan and
 complete ancestor histories before and after canonical checkpoint publication.
 Post-publication failure keeps the checkpoint and all original spending; an
 occupied checkpoint is never replaced. Missing/held/pending originals or changed
@@ -2687,9 +2687,12 @@ extents followed by known chunks in metadata order before source IO or allocatio
 Chunk sizes are 1..=1 MiB; checked nat64 counts must fit the original stage mutation
 ceiling. Empty regions require no calls; known empty chunks require their hash-bound
 write. All-empty data returns no placeholder child plan. Reuse the download owner's
-extent arithmetic and guarded upload source owner. Verify each exact payload while
-retaining only its binding digest, then recheck the full original source. Preparation
-changes no journal, bytes, references or allowance; it grants no future byte custody.
+extent arithmetic and guarded upload source owner. Between full source checks,
+a bounded batch hashes the exact bytes used to produce each payload binding and
+compares the canonical tree checksum with the retained source. Closed-tree, exact
+length and held/reopened file identities share the existing verification owner.
+Retain only binding digests; preparation changes no journal, bytes, references or
+allowance and grants no future byte custody.
 
 The ordinary child plan binds the selected source/destination, original network and
 release, current workflow caller, one update and zero observations per operation,
@@ -2794,7 +2797,7 @@ evidence cannot seal. Checkpoint coverage and every full history must match. Pol
 performs no IO, serialization, mutation or scheduling and returns the existing view.
 Original unused assigned allowances remain unchanged and confer no future authority.
 
-Guarded `create_execution_settlement` and `read_execution_settlement` use fixed
+Guarded `reconcile_execution_settlement` and `read_execution_settlement` use fixed
 `execution-settlement.json`, the original retained plan and every original journal
 under layout exclusion. Sequential journal locks bound descriptor use, while Applied
 owners prohibit subsequent transitions; drop active guards before invoking these
@@ -2804,15 +2807,16 @@ new cache or accounting owner. Existing no-follow bounded readers and durable pr
 no-replace publication retain prior bytes on conflict. Lost publication replies and
 process death reopen exact local evidence, without paid calls or rewriting originals.
 
-`checkpoint_execution_settlement` derives the existing record from the exact
+`reconcile_execution_settlement` derives the existing record from the exact
 expected retained plan and every original journal through the same sequential
-reader. It then delegates to the existing immutable publisher, which re-admits
-the plan and complete histories before writing. Its separate typed derivation
-error preserves the existing publication/replay error contract. Pending,
-NotApplied, Uncertain, missing or held originals cannot produce a checkpoint;
-an occupied checkpoint is retained without replacement. Independent callers may
-still construct a record for exact publication or retain its digest for replay.
-No new schema, budget or outcome is introduced.
+reader. An exact occupied checkpoint replays; an absent checkpoint delegates to
+the private immutable publisher, which re-admits the complete histories, then reads
+back the publication. The fresh-only shortcuts and direct public record publisher
+are removed without aliases for 0.29. Its typed derivation error preserves original
+publication/replay failures. Pending, NotApplied, Uncertain, missing or held originals
+cannot produce a checkpoint; changed or unsafe occupied evidence is never replaced.
+Callers requiring read-only replay use `replay_execution_settlement` or an expected
+identity with `read_execution_settlement`. No schema, budget or outcome changes.
 
 The checkpoint qualifies local ledger binding only. Authentication, cross-journal
 dispatch chronology, stable noncooperating byte custody, transfer completeness,

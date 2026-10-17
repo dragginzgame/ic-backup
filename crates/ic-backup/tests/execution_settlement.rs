@@ -17,9 +17,9 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, FenceObligationRequirement,
-        create_execution_settlement, create_fence_obligation, create_operation_plan,
-        create_restore_safety_requirement, read_download_manifest, read_execution_progress,
-        read_execution_settlement,
+        create_fence_obligation, create_operation_plan, create_restore_safety_requirement,
+        read_download_manifest, read_execution_progress, read_execution_settlement,
+        reconcile_execution_settlement,
     },
 };
 use serde_json::json;
@@ -87,7 +87,10 @@ fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fres
     assert_eq!(progress.attempts.mutations_used, 2);
     assert_eq!(progress.attempts.mutations_remaining, 1);
     let record = ExecutionSettlementRecord::new(plan.digest(), rows).unwrap();
-    create_execution_settlement(&layout, &record).unwrap();
+    assert_eq!(
+        reconcile_execution_settlement(&layout, &plan.digest()).unwrap(),
+        record
+    );
     let bytes = fs::read(root.join("restore/execution-settlement.json")).unwrap();
     assert_eq!(source_layout.restore_references().unwrap(), references);
     assert_eq!(

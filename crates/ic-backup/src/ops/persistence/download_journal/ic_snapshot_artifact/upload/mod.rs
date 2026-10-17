@@ -62,6 +62,25 @@ impl DownloadJournalGuard<'_> {
         let metadata = metadata_upload.source();
         metadata_upload.validate_data_destination(snapshot_id)?;
         validate_kind(metadata, &source_kind).map_err(IcSnapshotUploadError::from)?;
+        self.with_upload_source(plan, snapshot, metadata_upload, |directory| {
+            let chunk = read_chunk(directory, metadata, &source_kind)?;
+            Ok(IcSnapshotUploadRequest::data(
+                metadata_upload,
+                snapshot_id,
+                source_kind,
+                &chunk,
+            )?)
+        })
+    }
+
+    fn with_upload_source<T>(
+        &self,
+        plan: &OperationPlanRecord,
+        snapshot: &str,
+        metadata_upload: &IcSnapshotUploadRequest<'_>,
+        read: impl FnOnce(&File) -> Result<T, IcSnapshotUploadArtifactError>,
+    ) -> Result<T, IcSnapshotUploadArtifactError> {
+        let metadata = metadata_upload.source();
         self.require_upload_source(plan, snapshot, metadata_upload)?;
         let entry = self
             .record
@@ -83,13 +102,11 @@ impl DownloadJournalGuard<'_> {
             .map_err(io::Error::from)
             .map_err(IcSnapshotArtifactError::from)?,
         );
-        let chunk = read_chunk(&directory, metadata, &source_kind)?;
-        let payload =
-            IcSnapshotUploadRequest::data(metadata_upload, snapshot_id, source_kind, &chunk)?;
+        let result = read(&directory)?;
         check_directory_identity(&parent_path, &parent)?;
         check_directory_identity(&path, &directory)?;
         self.require_upload_source(plan, snapshot, metadata_upload)?;
-        Ok(payload)
+        Ok(result)
     }
 
     fn require_upload_source(

@@ -1,11 +1,12 @@
 //! Real retained-source IO and original journal failures; no IC effect simulation.
 use super::*;
+use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::test_support::ready::ready;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_mutation::{IcMutationAcknowledgement, IcMutationAcknowledgementInput},
+        ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
             IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadAttempt,
             IcSnapshotUploadReply,
@@ -73,7 +74,7 @@ fn with_data_stage(
         })
         .unwrap();
     drop(journal);
-    let predecessor = stage.checkpoint(allocation.digest()).unwrap();
+    let predecessor = stage.reconcile_checkpoint(allocation.digest()).unwrap();
     let data = source
         .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, 4)
         .unwrap();
@@ -122,17 +123,15 @@ impl IcSnapshotUploadProvider for Provider {
                 return Err(IcMutationProviderError::Indeterminate);
             }
             let reply = crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec();
-            Ok(
-                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                    authority: request.authority().digest(),
-                    mutation_attempt: request.mutation_attempt(),
-                    context: request.plan().context().clone(),
-                    target: request.payload().target().into(),
-                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                    reply,
-                })
-                .unwrap(),
-            )
+            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: request.plan().context().clone(),
+                target: request.payload().target().into(),
+                evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                reply,
+            })
+            .unwrap())
         })())
     }
 }
@@ -341,7 +340,7 @@ fn cancelled_second_write_qualification_retains_first_receipt_pending_reply_and_
         assert_eq!(after, before);
         assert!(
             stage
-                .checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
+                .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not complete"))
                 .is_err()
         );
     });
@@ -599,4 +598,107 @@ fn missing_original_journal_refuses_without_creating_or_dispatching() {
         assert_eq!(fs::read(retained).unwrap(), bytes);
         assert!(source.record().unwrap().resume_view().is_complete);
     });
+}
+
+#[test]
+fn batch_bindings_match_canonical_payloads_and_preserve_retained_records() {
+    with_data_stage(|_stage, data, source| {
+        let before = fs::read(source.path()).unwrap();
+        let bindings: Vec<_> = data
+            .kinds()
+            .iter()
+            .map(|kind| {
+                source
+                    .prepare_ic_snapshot_upload_data(
+                        data.metadata().source_plan(),
+                        TOKEN,
+                        data.metadata(),
+                        data.destination(),
+                        kind.clone(),
+                    )
+                    .unwrap()
+                    .binding_digest()
+            })
+            .collect();
+        // Each original operation names the exact separately prepared payload.
+        assert_eq!(data.plan().unwrap().operations().len(), bindings.len());
+        for (operation, binding) in data.plan().unwrap().operations().iter().zip(&bindings) {
+            assert_eq!(operation.request(), binding.hash());
+        }
+        assert_eq!(fs::read(source.path()).unwrap(), before);
+    });
+}
+
+#[test]
+fn batch_plans_empty_regions_and_known_empty_chunks_without_placeholder_writes() {
+    for known_empty in [false, true] {
+        let root = root();
+        let layout = BackupLayoutGuard::acquire(&root).unwrap();
+        let plan = source_plan();
+        create_operation_plan(&layout, &plan).unwrap();
+        let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
+        let mut values = upload_values();
+        values.wasm_module_size = 0;
+        values.wasm_memory_size = 0;
+        values.stable_memory_size = 0;
+        let empty = values.wasm_chunk_store.pop().unwrap();
+        values.wasm_chunk_store = if known_empty { vec![empty] } else { vec![] };
+        let raw = candid::encode_one(values).unwrap();
+        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+        let mut source = DownloadJournalGuard::create(
+            &layout,
+            plan.digest().hash(),
+            vec![DownloadArtifactRequest {
+                canister_id: TARGET.into(),
+                snapshot_id: TOKEN.into(),
+                snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
+                snapshot_total_size_bytes: u64::MAX,
+            }],
+        )
+        .unwrap();
+        let writer = source
+            .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
+            .unwrap();
+        let writer = if known_empty {
+            append(
+                writer,
+                SnapshotDataKind::WasmChunk {
+                    hash: metadata.metadata().wasm_chunk_store[0].hash.clone(),
+                },
+                vec![],
+            )
+            .unwrap()
+        } else {
+            writer
+        };
+        writer.finish().unwrap();
+        let before = fs::read(source.path()).unwrap();
+        let upload = source
+            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
+            .unwrap();
+        let workflow = data_workflow(&upload, 12);
+        let wire = unhex("4449444c026c01b6b897890f016d7b0100031500ff");
+        let allocation = IcSnapshotUploadReply::decode(&upload, &wire).unwrap();
+        let data = source
+            .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, 4)
+            .unwrap();
+        assert_eq!(data.kinds().len(), usize::from(known_empty));
+        assert_eq!(data.plan().is_some(), known_empty);
+        if let Some(plan) = data.plan() {
+            let payload = source
+                .prepare_ic_snapshot_upload_data(
+                    upload.source_plan(),
+                    TOKEN,
+                    &upload,
+                    DESTINATION_ID,
+                    data.kinds()[0].clone(),
+                )
+                .unwrap();
+            assert_eq!(
+                plan.operations()[0].request(),
+                payload.binding_digest().hash()
+            );
+        }
+        assert_eq!(fs::read(source.path()).unwrap(), before);
+    }
 }

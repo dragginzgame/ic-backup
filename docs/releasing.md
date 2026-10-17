@@ -153,10 +153,10 @@ single push URL before mutation. Preflight admits pending notes and rejects unre
 staged/unstaged/untracked work and changed original manifest/lock/receipt. Staged
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
-the snapshot and runs `make install-tools`: common host, IC and Cargo setup,
-then the local ordered root-workspace `cargo fetch --locked` and Testkit setup
-targets. Offline `make tools-check` runs the same common order followed by Testkit
-admission before the full gate. Recheck original source/manifest/lock/receipt afterward. The standard
+the snapshot and runs `make install-tools`: common host and Cargo setup,
+then the local ordered IC setup, root-workspace `cargo fetch --locked` and Testkit
+setup targets. Offline `make tools-check` runs common checks followed by IC and
+Testkit admission before the full gate. Recheck original source/manifest/lock/receipt afterward. The standard
 release includes this required selected-CLI preparation; explicit offline Cargo
 settings remain authoritative and missing inputs fail without switching online.
 Setup reuses an admitted selection, preserves earlier tools and refuses invalid

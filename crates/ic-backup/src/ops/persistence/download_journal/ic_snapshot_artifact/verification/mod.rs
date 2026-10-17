@@ -96,6 +96,14 @@ fn checksum_ic_tree(
     directory: &File,
     metadata: &IcSnapshotMetadataReply<'_>,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
+    checksum_ic_tree_with(directory, metadata, checksum_child)
+}
+
+pub(super) fn checksum_ic_tree_with<E: From<IcSnapshotArtifactError>>(
+    directory: &File,
+    metadata: &IcSnapshotMetadataReply<'_>,
+    mut read_child: impl FnMut(&File, &str, Option<u64>, u64) -> Result<ArtifactChecksumRecord, E>,
+) -> Result<ArtifactChecksumRecord, E> {
     let mut checksums = vec![
         ("format".into(), ArtifactChecksumRecord::from_bytes(FORMAT)),
         (
@@ -142,7 +150,7 @@ fn checksum_ic_tree(
             3..=5 => (Some(sizes[index - 3]), sizes[index - 3]),
             _ => (None, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64),
         };
-        let actual = checksum_child(
+        let actual = read_child(
             directory,
             name.to_str()
                 .ok_or(IcSnapshotArtifactError::UnexpectedEntry)?,
@@ -150,7 +158,9 @@ fn checksum_ic_tree(
             maximum,
         )?;
         if !(3..=5).contains(&index) {
-            actual.verify(checksum.hash())?;
+            actual
+                .verify(checksum.hash())
+                .map_err(IcSnapshotArtifactError::from)?;
         }
         *checksum = actual;
     }
@@ -158,6 +168,7 @@ fn checksum_ic_tree(
     checksum_relative_files(checksums)
         .map_err(ArtifactError::from)
         .map_err(IcSnapshotArtifactError::from)
+        .map_err(E::from)
 }
 
 fn checksum_child(
@@ -166,27 +177,42 @@ fn checksum_child(
     length: Option<u64>,
     maximum: u64,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
+    checksum_child_with(directory, name, length, maximum, |file, length| {
+        checksum_exact_reader(file, length)
+    })
+}
+
+pub(super) fn checksum_child_with<E: From<IcSnapshotArtifactError>>(
+    directory: &File,
+    name: &str,
+    length: Option<u64>,
+    maximum: u64,
+    read: impl FnOnce(&mut File, u64) -> Result<ArtifactChecksumRecord, E>,
+) -> Result<ArtifactChecksumRecord, E> {
     let flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
     let (mut file, original) = open_regular_child(directory, name, length, maximum)?;
-    let checksum = checksum_exact_reader(&mut file, original.len())?;
-    let held = file.metadata()?;
+    let checksum = read(&mut file, original.len())?;
+    let held = file.metadata().map_err(IcSnapshotArtifactError::from)?;
     let current = File::from(
-        unix_fs::openat(directory, name, flags, Mode::empty()).map_err(io::Error::from)?,
+        unix_fs::openat(directory, name, flags, Mode::empty())
+            .map_err(io::Error::from)
+            .map_err(IcSnapshotArtifactError::from)?,
     )
-    .metadata()?;
+    .metadata()
+    .map_err(IcSnapshotArtifactError::from)?;
     if !current.is_file()
         || original.dev() != current.dev()
         || original.ino() != current.ino()
         || original.len() != current.len()
         || original.len() != held.len()
     {
-        return Err(IcSnapshotArtifactError::CustodyChanged);
+        return Err(IcSnapshotArtifactError::CustodyChanged.into());
     }
     Ok(checksum)
 }
 
-fn checksum_exact_reader(
-    reader: impl Read,
+pub(super) fn checksum_exact_reader<R: Read>(
+    reader: R,
     length: u64,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
     let identity = hash_exact_reader(reader, length).map_err(|error| match error {

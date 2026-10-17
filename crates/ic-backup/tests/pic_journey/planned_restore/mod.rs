@@ -5,14 +5,13 @@ use super::{
     verify_loaded,
 };
 use crate::ready::ready;
+use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_mutation::{
-            IcMutationAcknowledgement, IcMutationAcknowledgementInput, IcMutationRequest,
-        },
+        ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
         ic_request::{IcManagementMethodRecord as Method, IcManagementRequestRecord},
         ic_snapshot_metadata::IcSnapshotMetadataReply,
         operation_plan::OperationPlanRecord,
@@ -78,17 +77,15 @@ impl IcMutationProvider for Provider<'_, '_> {
                 return Err(IcMutationProviderError::Indeterminate);
             }
             let reply = if malformed { vec![] } else { raw };
-            Ok(
-                IcMutationAcknowledgement::new(IcMutationAcknowledgementInput {
-                    authority: request.authority().digest(),
-                    mutation_attempt: request.mutation_attempt(),
-                    context: actual.context().clone(),
-                    target: backend.target.to_text(),
-                    evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                    reply,
-                })
-                .unwrap(),
-            )
+            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
+                authority: request.authority().digest(),
+                mutation_attempt: request.mutation_attempt(),
+                context: actual.context().clone(),
+                target: backend.target.to_text(),
+                evidence: ArtifactChecksumRecord::from_bytes(&reply),
+                reply,
+            })
+            .unwrap())
         })())
     }
 }

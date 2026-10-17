@@ -12,7 +12,7 @@ use crate::{
         },
         ic_snapshot_data::IcSnapshotDataRequest,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-        ic_snapshot_transfer_read::IcSnapshotTransferReadResponseInput,
+        ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow},
@@ -111,7 +111,7 @@ impl IcSnapshotTransferReadProvider for Provider {
                 fs::rename(path, path.with_extension("retained-original")).unwrap();
                 fs::create_dir(path).unwrap();
             }
-            IcSnapshotTransferReadResponse::new(IcSnapshotTransferReadResponseInput {
+            IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
                 context: request.plan().context().clone(),
@@ -292,7 +292,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 1);
         stage
-            .checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
+            .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
             .unwrap();
         drop(stage);
         drop(layout);

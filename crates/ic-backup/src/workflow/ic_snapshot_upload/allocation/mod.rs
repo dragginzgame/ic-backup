@@ -126,7 +126,7 @@ async fn settle_allocation<E: std::error::Error + 'static>(
     )
     .await?;
     drop(journal);
-    Ok(stage.checkpoint(admitted.reply().digest())?)
+    Ok(stage.reconcile_checkpoint(admitted.reply().digest())?)
 }
 
 /// Allocation coordination failures retain original spending and bounded returned bytes.

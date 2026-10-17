@@ -60,55 +60,32 @@ pub async fn acquire_fence<E: std::error::Error + 'static>(
     original_authority(plan, obligation, journal.record()?, payload)?;
     journal.reserve_planned_mutation(&plan.digest())?;
     let request = FenceAcquisitionRequest::new(plan, obligation, journal.record()?, payload)?;
-    let acknowledgement = super::reserved_effect::submit_once(
-        &journal,
-        &request,
-        async |request| {
-            admit(request)
-                .await
-                .map_err(FenceAcquisitionExecutionError::Admission)
-        },
-        || {
-            read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
-            Ok(())
-        },
-        async |request, record| {
-            provider
-                .acquire_fence(request, record)
-                .await
-                .map_err(FenceAcquisitionExecutionError::Provider)
-        },
-        FenceAcquisitionExecutionError::Journal,
-    )
-    .await?;
-    let layout = match super::reserved_effect::check_returned(
-        stage,
-        &journal,
-        &request,
-        &acknowledgement,
-        |request, record, reply| validate_acknowledgement(request, record, reply).map(|_| ()),
-    ) {
-        Ok((layout, ())) => layout,
-        Err(error) => {
-            return Err(match error {
-                super::reserved_effect::ReturnedError::Journal(source) => {
-                    FenceAcquisitionExecutionError::AfterReplyJournal {
-                        source,
-                        acknowledgement: Box::new(acknowledgement),
-                    }
-                }
-                super::reserved_effect::ReturnedError::Association(source) => {
-                    FenceAcquisitionExecutionError::Association {
-                        source,
-                        acknowledgement: Box::new(acknowledgement),
-                    }
-                }
-                super::reserved_effect::ReturnedError::Stage(source) => {
-                    FenceAcquisitionExecutionError::AfterReplyStage {
-                        source,
-                        acknowledgement: Box::new(acknowledgement),
-                    }
-                }
+    admit(&request)
+        .await
+        .map_err(FenceAcquisitionExecutionError::Admission)?;
+    read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
+    let acknowledgement = provider.acquire_fence(&request, journal.record()?).await?;
+    let record = match journal.record() {
+        Ok(record) => record,
+        Err(source) => {
+            return Err(FenceAcquisitionExecutionError::AfterReplyJournal {
+                source,
+                acknowledgement: Box::new(acknowledgement),
+            });
+        }
+    };
+    if let Err(source) = validate_acknowledgement(&request, record, &acknowledgement) {
+        return Err(FenceAcquisitionExecutionError::Association {
+            source,
+            acknowledgement: Box::new(acknowledgement),
+        });
+    }
+    let layout = match stage.layout() {
+        Ok(layout) => layout,
+        Err(source) => {
+            return Err(FenceAcquisitionExecutionError::AfterReplyStage {
+                source,
+                acknowledgement: Box::new(acknowledgement),
             });
         }
     };
