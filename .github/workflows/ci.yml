@@ -86,8 +86,9 @@ jobs:
                 --bin ic-testkit-server --profile release ${options[@]+"${options[@]}"} \
                 > "$sharing/testkit-$mode.log" 2>&1
           done
-          for tool in cargo-sort cargo-sort-derives candid-extractor; do
-            original="$(perl -MCwd=abs_path -e 'print abs_path($ARGV[0])' "$GITHUB_WORKSPACE/.tools/rust/common/bin/$tool")"
+          for selected in "$GITHUB_WORKSPACE/.tools/rust/common/bin/"*; do
+            tool="${selected##*/}"
+            original="$(perl -MCwd=abs_path -e 'print abs_path($ARGV[0])' "$selected")"
             reused="$(perl -MCwd=abs_path -e 'print abs_path($ARGV[0])' "$sharing/consumer/.tools/rust/common/bin/$tool")"
             test -n "$original"
             test "$original" = "$reused"

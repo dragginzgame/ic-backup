@@ -73,7 +73,7 @@ make test
 Explicit local setup uses the snapshot-owned [host and Cargo pins](../ci/tool-versions.env)
 and [IC tool matrix](../ci/ic-tools.tsv), through the shared
 [common Make entrypoint](../make/consumer.mk). It downloads and verifies jq/yq, ripgrep with
-PCRE2, cloc, Cargo-sort, Cargo-sort-derives and Candid-extractor. The ordered
+PCRE2, cloc, Cargo-sort and Cargo-sort-derives. The ordered
 Backup extension explicitly prepares the five IC executables, fetches locked
 dependencies, then prepares its selected Testkit CLI/server. Previous sets and failed candidates
 are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and `.tools/rust/common/bin`.
@@ -99,22 +99,20 @@ Installing tools alone establishes
 no backend or application qualification.
 
 The shared `make install-rust-tools` and offline `make rust-tools-check` prepare
-and check the mandatory common Cargo-sort, Cargo-sort-derives and Candid-extractor
-set through verified shared generations referenced under `.tools/rust/`, activated together at
-`.tools/rust/common/bin`. Both commands use the reviewed shared pins. After adopting
-Shared Tooling 0.6, explicitly run `make install-rust-tools` and
-`make rust-tools-check`, and update any terminal PATH export. Old `.tools/rust/bin`
+and check the common Cargo formatters selected by the reviewed catalog through
+verified generations referenced under `.tools/rust/`, activated together at
+`.tools/rust/common/bin`. Both commands use the reviewed shared pins. A compiler
+change selects new build identities even when those pins stay fixed. Explicitly
+run `make install-rust-tools` and `make install-testkit-server` after changing
+the development compiler, then check them with `make tools-check`. Prior
 installations and failed evidence remain retained; they supply no fallback.
 Partial setup keeps the previous complete common set active. Shared Tooling owns
 [shared executable storage](local-setup.md#shared-executable-storage). Host/IC
 and Cargo bundles reuse a per-user store with exact build identities. Application
 flags, wrappers and Cargo configuration do not configure tool builds. Testkit's
 selected CLI uses that owner; Testkit still owns local server storage and lifecycle.
-Shared Tooling 0.6.6 selects `cargo-sort-derives` 0.14.1. After refreshing that
-snapshot, rerun `make install-rust-tools` and `make tools-check`; the default
-Backup formatter still uses Cargo manifest sorting and rustfmt only.
-After adopting Shared Tooling 0.6, run `make install-tools`, then
-`make tools-check`. Command paths remain
+The default Backup formatter uses Cargo manifest sorting and rustfmt. Initial
+setup uses `make install-tools`, then `make tools-check`. Command paths remain
 `.tools/host/bin` and `.tools/ic/bin`. Existing local bundles and failed attempts
 stay retained; setup activates new references without moving or deleting them.
 An explicit absolute `SHARED_TOOLING_STORE` setting must be shared by setup,
@@ -490,7 +488,7 @@ is installed. See [the reply contract](contracts/ic-lifecycle-reply.json) and
 `cargo test --offline --locked -p ic-backup --lib model::ic_lifecycle_reply` and
 `cargo test --offline --locked -p ic-backup --test ic_lifecycle_reply`.
 
-Rust 1.99.0 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
+Rust 1.99.1 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
 minimum supported version is 1.91.0. Both libraries are checked on that
 compiler. Install it separately for `make check-msrv`, which records Cargo/rustc
 versions, compiles
@@ -782,7 +780,7 @@ entries do not establish IC Backup qualification.
 | Windows and non-Bash shells | No supported product lane |
 | Complete backup/restore | Unimplemented; no host has end-to-end product qualification |
 
-The pinned Rust 1.99.0 development toolchain, Rust 1.91.0 minimum compiler,
+The pinned Rust 1.99.1 development toolchain, Rust 1.91.0 minimum compiler,
 rustfmt and Clippy are required on
 each native host. Repository tooling requires Git, GNU Make, Bash, Perl with core
 JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck, cargo-sort 2.1.4 and either `sha256sum` or

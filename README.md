@@ -236,8 +236,8 @@ will be added only when their implementation is required.
 
 ## Development
 
-Development uses Rust 1.99.0, edition 2024 and a minimum supported Rust version
-of 1.88.0. The workspace owns package metadata, dependency declarations and
+Development uses Rust 1.99.1, edition 2024 and a minimum supported Rust version
+of 1.91.0. The workspace owns package metadata, dependency declarations and
 lints. Builds stay in this repository's `target/` directory.
 Prepare the declared Rust toolchain before running tool setup.
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.31.2]
+
+### Changed
+
+- Select Rust 1.99.1 for development, retaining the Rust 1.91.0 consumer minimum.
+  Prepare its tool receipts with `make install-rust-tools` and
+  `make install-testkit-server` before offline qualification.
+  Addresses [#58 — Qualify Rust 1.99.1 as the development compiler](https://github.com/dragginzgame/ic-backup/issues/58).
+
+### Fixed
+
+- Align the README compiler floor with the existing manifests and qualification.
+  Addresses [#59 — Reconcile the advisory root README compiler-floor statement](https://github.com/dragginzgame/ic-backup/issues/59).
+- Compare the admitted common Rust tool set during native CI reuse instead of
+  requiring the retired Candid extractor. Preserve exact resolved-path checks.
+  Align local setup guidance with the same reviewed catalog.
+  Addresses [#60 — Compare admitted Rust tools in native reuse qualification](https://github.com/dragginzgame/ic-backup/issues/60).
+
 ## [0.31.1] - 2026-10-18
 
 ### Changed
