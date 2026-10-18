@@ -2,7 +2,7 @@
 
 The repository’s Platform migration was completed with published
 [ic-platform 0.1.8](https://crates.io/crates/ic-platform/0.1.8). Released Backup
-0.31.2 selects Platform 0.1.10; the current lock selects 0.1.13. Their qualification
+0.31.2 selects Platform 0.1.10; the current lock selects 0.1.14. Their qualification
 boundaries are recorded in the [current handoff](status/current.md); the provenance
 below describes the original adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
@@ -58,7 +58,20 @@ do not enter the libraries’ production graphs. Deployment admission belongs to
 consuming application’s exact target/features, successful locked build and artifact
 identity.
 
-## Provenance and qualification
+## Current graph qualification
+
+Platform 0.1.14's registry archive matches the locked SHA-256
+`03c2300b6d347bc1c19ba35fcf4c31069134aefe1d4ec5bf7b5a8dfbc411285f`.
+Its Candid, Agent and management module sources are unchanged from 0.1.10 and
+0.1.13. The current graph passes all-target/all-feature compilation, strict Clippy,
+actual Rust 1.91 checks and independent Core/Agent consumers, 78 IC codec/model
+cases, three Agent unit cases, 14 HTTP cases and 46 Core/Agent PocketIC cases on
+Linux. Declaration checks and production-tree inspection preserve Core/Agent
+isolation without parser, CDK or simulator reachability. These focused results
+do not qualify native macOS, installed-IC or complete application acceptance.
+The [current handoff](status/current.md) records the selected graph and evidence.
+
+## Original adoption provenance and qualification
 
 The published archive SHA-256 matches the registry index:
 `4a3adb6d9785133587b854b66b37dfdd8f7945555bdc59b6d0be26995187484d`.

@@ -47,14 +47,31 @@ application acceptance. Application transport authority and full runner/terminal
 proof remain [#25 — Reserved Agent transport qualification](https://github.com/dragginzgame/ic-backup/issues/25)
 and [#29 — Original-plan runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
 
-## Pending dependency graph
+## Current dependency qualification
 
 The local manifest and lock update is preserved: the Platform requirement is
-`0.1`, with Platform 0.1.13 and Testkit 0.54.1 selected. The lock also changes
+`0.1`, with Platform 0.1.14 and Testkit 0.54.1 selected. The lock also changes
 crypto-common/generic-array selections. The 0.31.2 native receipt selects Platform
-0.1.10 and Testkit 0.54.0 and does not qualify this pending graph. This conflict
-resolution changes no manifest, lockfile, tool selection, public API or persisted
-schema.
+0.1.10 and Testkit 0.54.0 and retains its original scope. Compatible pending notes
+select 0.31.3; own package versions remain 0.31.2.
+
+The current graph passes focused Linux all-target/all-feature compilation, strict
+Clippy, actual Rust 1.91 compilation and both independent public consumers. All 78
+IC codec/model, three Agent unit, 14 HTTP, 34 Core PocketIC and 12 Agent PocketIC
+cases pass. The exact locked Testkit CLI and authenticated server are prepared and
+admitted through their canonical owners. Boundary/inheritance checks pass; Core
+remains Agent-free and both production graphs exclude parser, CDK and simulator
+packages. Platform's published archive matches its locked checksum and the used
+Candid/Agent/management module sources are unchanged from 0.1.10 and 0.1.13.
+
+Original inputs and hashes, per-command logs/results, production trees, archive
+provenance and source comparisons are retained under
+`/tmp/backup-dependency-qualification-wf8emamv/`; independent Rust 1.91 consumers
+retain `target/msrv-consumers.3bBhRh/`. Both actual package archives compile together
+on the original normal graph; archive/unpacked checksums and source identities
+pass, with evidence at `target/package-check.tCYU4z/`. The focused build/test sequence
+verifies unchanged manifest/lock identities. These are focused Linux results, not a full local suite,
+fresh native macOS evidence, installed-IC or complete application qualification.
 
 ## Remaining acceptance and evidence
 
@@ -76,6 +93,14 @@ retained-plan capture-to-restore qualification with interruption, reconciliation
 and effect-free terminal replay. It does not require a second terminal API or
 Canic control-plane dependencies in Backup.
 
+The isolated [Canic checkpoint follow-up #607](https://github.com/dragginzgame/canic/pull/607)
+adds an actual two-participant capture/restore case; both it and the original
+single-participant case pass through the governed PocketIC runner. It targets
+[adoption PR #592](https://github.com/dragginzgame/canic/pull/592), whose hosted
+acceptance remains pending. These fixtures retain Root records and sender authority
+in the driver; they do not complete production Root orchestration or application
+acceptance and do not enable live creation.
+
 Exact 0.31.2 hosted job metadata and all three raw native logs are retained at
 `/tmp/backup-issue-reconcile-0wqan5nq/`. Earlier focused Linux receipts remain at
 `/tmp/backup-issue-pass-mlttf_tl/`, `/tmp/backup-native-followup-wafn4qmr/`,
@@ -84,6 +109,6 @@ Exact 0.31.2 hosted job metadata and all three raw native logs are retained at
 dependency selections. The earlier 0.1.8 adoption has separate provenance in the
 Platform contract.
 
-This documentation reconciliation changes no library behavior, dependency, public
-API, persisted schema or tool selection. No new local full-suite run, live IC
+This qualification preserves the incoming dependency update and changes no library
+behavior, public API or persisted schema. No new local full-suite run, live IC
 operation, release, publication, deployment or artifact cleanup is part of it.

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.31.3]
+
+### Changed
+
+- Qualify the selected published Platform 0.1.14 and Testkit 0.54.1 graph.
+  Preserve Candid/Principal/management identities, decoder limits and one-dispatch
+  Agent behavior. Focused Linux checks include Rust 1.91 independent consumers and
+  actual Core/Agent PocketIC journeys; native macOS acceptance remains separate.
+
 ## [0.31.2] - 2026-10-18
 
 ### Changed
