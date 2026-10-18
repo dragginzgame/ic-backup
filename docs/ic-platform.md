@@ -1,7 +1,10 @@
 # Platform dependency boundary
 
-The repository’s Platform migration is complete at published
-[ic-platform 0.1.8](https://crates.io/crates/ic-platform/0.1.8). All production and
+The repository’s Platform migration was completed with published
+[ic-platform 0.1.8](https://crates.io/crates/ic-platform/0.1.8). Released Backup
+0.31.2 selects Platform 0.1.10. Its native qualification is recorded in the
+[current handoff](status/current.md); the provenance below describes the original
+adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
 direct declarations of those upstream packages, CDK-family packages or the old
 Testkit codec, and no local compatibility re-exports or pin exceptions.
@@ -46,14 +49,14 @@ paths, discover independent workspaces or automatically recognize new package
 names. Review those separately when dependencies or features change. This
 repository has two maintained packages, no independent workspace, production Rust generator,
 deployed canister or CDK runtime integration. Consumer-fixture generators emit no
-old Candid/CDK paths. The shared Candid-extractor executable is separate tooling.
+old Candid/CDK paths.
 
 Candid and SDK remain necessary production transitives. The complete development
-lock also contains Testkit’s codec/CDK and PocketIC’s management DTO 0.8.0; these
-do not enter the libraries’ production graphs. Testkit’s producer coordination is
-[Platform #2](https://github.com/dragginzgame/ic-platform/issues/2), not a remaining
-local migration. Deployment admission belongs to the consuming application’s
-exact target/features, successful locked build and artifact identity.
+lock retains PocketIC’s management DTO 0.8.0 alongside Platform’s 0.11.0. Testkit
+0.54 no longer introduces the standalone codec or CDK family. Simulator packages
+do not enter the libraries’ production graphs. Deployment admission belongs to the
+consuming application’s exact target/features, successful locked build and artifact
+identity.
 
 ## Provenance and qualification
 
