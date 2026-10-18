@@ -29,7 +29,7 @@ fn canonical_viewer_sets_reject_alias_duplicates_invalid_and_excessive_entries()
         );
     }
     let principals: Vec<_> = (0_u32..10)
-        .map(|id| ic_principal::Principal::from_slice(&id.to_be_bytes()).to_text())
+        .map(|id| ic_platform::Principal::from_slice(&id.to_be_bytes()).to_text())
         .collect();
     assert_eq!(
         SnapshotViewerSet::new(principals.clone())

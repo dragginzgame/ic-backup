@@ -6,7 +6,8 @@ use crate::{
     },
     test_support::ic_snapshot_upload::{SOURCE_ID, TARGET, observation_input, with_observation},
 };
-use ic_management_canister_types::Snapshot;
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::Snapshot;
 
 fn snapshot(id: &[u8]) -> Snapshot {
     Snapshot {
@@ -20,7 +21,7 @@ fn response(
     snapshots: Vec<Snapshot>,
 ) -> IcObservationResponse {
     let mut input = observation_input(request);
-    input.reply = candid::encode_one(snapshots).unwrap();
+    input.reply = contract::encode_one(snapshots).unwrap();
     IcObservationResponse::new(input).unwrap()
 }
 fn claims(
@@ -62,7 +63,7 @@ fn explicit_attribution_selects_one_of_several_new_ids_and_retains_exact_origina
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let bytes = candid::encode_one(vec![snapshot(&[1])]).unwrap();
+        let bytes = contract::encode_one(vec![snapshot(&[1])]).unwrap();
         let baseline = IcSnapshotReply::decode(list, &bytes).unwrap();
         let response = response(
             &request,
@@ -98,7 +99,7 @@ fn zero_one_many_candidates_require_claims_and_explicit_transitions_never_refund
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let bytes = candid::encode_one(Vec::<Snapshot>::new()).unwrap();
+        let bytes = contract::encode_one(Vec::<Snapshot>::new()).unwrap();
         let baseline = IcSnapshotReply::decode(list, &bytes).unwrap();
         for count in 0..=3_u8 {
             let response = response(&request, (1..=count).map(|id| snapshot(&[id])).collect());
@@ -171,7 +172,7 @@ fn applied_requires_new_candidate_and_canonical_destination_bounds() {
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let bytes = candid::encode_one(vec![snapshot(&[1])]).unwrap();
+        let bytes = contract::encode_one(vec![snapshot(&[1])]).unwrap();
         let baseline = IcSnapshotReply::decode(list, &bytes).unwrap();
         let response = response(
             &request,
@@ -234,7 +235,7 @@ fn missing_or_changed_baseline_cannot_support_any_claim() {
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let bytes = candid::encode_one(vec![snapshot(&[1])]).unwrap();
+        let bytes = contract::encode_one(vec![snapshot(&[1])]).unwrap();
         let baseline = IcSnapshotReply::decode(list, &bytes).unwrap();
         let mut changed = snapshot(&[1]);
         changed.total_size += 1;
@@ -275,9 +276,9 @@ fn missing_or_changed_baseline_cannot_support_any_claim() {
             })
             .unwrap();
             let raw = if method == IcManagementMethodRecord::TakeCanisterSnapshot {
-                candid::encode_one(&rows[0]).unwrap()
+                contract::encode_one(&rows[0]).unwrap()
             } else {
-                candid::encode_one(rows).unwrap()
+                contract::encode_one(rows).unwrap()
             };
             let baseline = IcSnapshotReply::decode(&original, &raw).unwrap();
             let response = response(&request, vec![snapshot(&[1])]);
@@ -294,7 +295,7 @@ fn every_settlement_identity_and_exact_raw_evidence_is_bound() {
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let bytes = candid::encode_one(Vec::<Snapshot>::new()).unwrap();
+        let bytes = contract::encode_one(Vec::<Snapshot>::new()).unwrap();
         let baseline = IcSnapshotReply::decode(list, &bytes).unwrap();
         let response = response(&request, vec![snapshot(&[2]), snapshot(&[1])]);
         let original = claims(&request, &baseline, &response, unresolved());
@@ -370,7 +371,7 @@ fn malformed_or_lost_observation_cannot_become_settled_uncertainty() {
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let bytes = candid::encode_one(Vec::<Snapshot>::new()).unwrap();
+        let bytes = contract::encode_one(Vec::<Snapshot>::new()).unwrap();
         let baseline = IcSnapshotReply::decode(list, &bytes).unwrap();
         let valid = response(&request, vec![]);
         let claims = claims(&request, &baseline, &valid, unresolved());
@@ -378,7 +379,7 @@ fn malformed_or_lost_observation_cannot_become_settled_uncertainty() {
         for raw in [
             vec![],
             b"lost reply".to_vec(),
-            candid::encode_one(vec![snapshot(&[1]), snapshot(&[1])]).unwrap(),
+            contract::encode_one(vec![snapshot(&[1]), snapshot(&[1])]).unwrap(),
         ] {
             let mut input = observation_input(&request);
             input.reply = raw;

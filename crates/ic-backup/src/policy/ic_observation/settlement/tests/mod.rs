@@ -12,7 +12,8 @@ use crate::{
         membership::hash,
     },
 };
-use ic_management_canister_types::CanisterStatusType as Status;
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::CanisterStatusType as Status;
 
 fn original(method: Method, observation: Method) -> Original {
     let mut original = ic_mutation::original(method);
@@ -43,11 +44,13 @@ fn request(original: &Original) -> IcObservationRequest<'_> {
     )
     .unwrap()
 }
-#[derive(candid::CandidType)]
+#[derive(contract::CandidType)]
+#[candid_path("ic_platform::candid::contract")]
 struct Settings {
-    controllers: Vec<candid::Principal>,
+    controllers: Vec<ic_platform::Principal>,
 }
-#[derive(candid::CandidType)]
+#[derive(contract::CandidType)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireStatus {
     status: Status,
     settings: Settings,
@@ -59,10 +62,10 @@ fn input(
     marker: u64,
 ) -> IcObservationResponseInput {
     let mut input = ic_observation::input(request);
-    input.reply = candid::encode_one(WireStatus {
+    input.reply = contract::encode_one(WireStatus {
         status,
         settings: Settings {
-            controllers: vec![candid::Principal::anonymous()],
+            controllers: vec![ic_platform::Principal::anonymous()],
         },
         marker,
     })

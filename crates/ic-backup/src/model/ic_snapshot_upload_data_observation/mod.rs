@@ -83,7 +83,7 @@ impl<'request, 'source, 'metadata>
         ];
         if !matches!(
             actual.source,
-            Some(ic_management_canister_types::SnapshotSource::MetadataUpload(_))
+            Some(ic_platform::management_canister_types::SnapshotSource::MetadataUpload(_))
         ) || actual_sizes != original_sizes
         {
             return Err(IcSnapshotUploadDataObservationError::DestinationMetadataMismatch);

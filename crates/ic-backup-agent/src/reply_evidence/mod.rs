@@ -1,8 +1,8 @@
 //! One passive reply-evidence framing owner; distinct adapter domains stay distinct.
 
-use ic_agent::RequestId;
 use ic_backup::model::artifacts::ArtifactChecksumRecord;
 use ic_host_artifacts::artifact::HashingWriter;
+use ic_platform::agent::RequestId;
 use std::io::{self, Write};
 
 pub(super) fn reply_evidence(

@@ -1,5 +1,6 @@
 //! Native metadata/data replay preserves exact original spending and retention.
 
+use ic_platform::candid::contract;
 mod support;
 
 use ic_backup::{
@@ -14,7 +15,7 @@ use ic_backup::{
         AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
     },
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 use serde::Deserialize;
 use serde_json::json;
 use std::fs;
@@ -193,7 +194,7 @@ fn retained_case(case: Case, raw_metadata: &[u8]) {
 
 #[test]
 fn complete_coverage_streams_without_a_persisted_or_retained_byte_claim() {
-    use ic_management_canister_types::{
+    use ic_platform::management_canister_types::{
         ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult,
     };
     let sources: Vec<serde_json::Value> = serde_json::from_str(include_str!(
@@ -204,22 +205,25 @@ fn complete_coverage_streams_without_a_persisted_or_retained_byte_claim() {
         .iter()
         .find(|source| source["name"] == "data-source")
         .unwrap();
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&bytes(source["reply_hex"].as_str().unwrap())).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
+        &bytes(source["reply_hex"].as_str().unwrap()),
+        support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     values.wasm_module_size = 3;
     values.wasm_memory_size = 0;
     values.stable_memory_size = 0;
     values.wasm_chunk_store.clear();
     let request =
         IcSnapshotMetadataRequest::new("renrk-eyaaa-aaaaa-aaada-cai", &[0, 255, 17]).unwrap();
-    let raw_metadata = candid::encode_one(values).unwrap();
+    let raw_metadata = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
     let mut coverage = IcSnapshotDataCoverage::new(&metadata);
     for offset in 0..3 {
         let data =
             IcSnapshotDataRequest::new(&metadata, SnapshotDataKind::WasmModule { offset, size: 1 })
                 .unwrap();
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![42] }).unwrap();
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![42] }).unwrap();
         let reply = IcSnapshotDataReply::decode(&data, &raw).unwrap();
         coverage.admit(&reply).unwrap();
     }

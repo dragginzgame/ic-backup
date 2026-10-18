@@ -1,7 +1,7 @@
 //! Fresh declaration regressions adapted from Canic topology and graph inputs.
 
 use super::*;
-use ic_principal::Principal;
+use ic_platform::Principal;
 
 const ROOT: &str = "aaaaa-aa";
 const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";

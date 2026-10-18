@@ -122,7 +122,7 @@ fn rejects_each_non_durable_state_including_a_later_selected_artifact() {
 #[test]
 fn admits_maximum_selected_artifacts_and_snapshot_token_bytes() {
     let targets = (0..crate::model::download_journal::MAX_DOWNLOAD_ARTIFACTS)
-        .map(|i| candid::Principal::from_slice(&i.to_be_bytes()).to_text())
+        .map(|i| ic_platform::Principal::from_slice(&i.to_be_bytes()).to_text())
         .collect::<Vec<_>>();
     let plan = plan(&targets);
     let references = targets.iter().map(String::as_str).collect::<Vec<_>>();

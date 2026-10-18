@@ -1,13 +1,14 @@
 //! Closed host-ingress IC request codec; no transport, authority or effect admission.
 
 use crate::model::evidence_digest::EvidenceDigest;
+use ic_platform::candid::contract;
 mod method;
 pub use method::{IcManagementMethodRecord, IcRequestEffect};
 
 use crate::model::{
     artifacts::ArtifactChecksumRecord, attempt_journal::OperationBindingRecord, bounded_sequence,
 };
-use ic_management_canister_types::{
+use ic_platform::management_canister_types::{
     CanisterIdRecord, LoadCanisterSnapshotArgs, TakeCanisterSnapshotArgs,
 };
 use serde::{Deserialize, Deserializer, Serialize};
@@ -96,7 +97,7 @@ impl IcManagementRequestRecord {
         }
         let arguments = match request.method {
             IcManagementMethodRecord::TakeCanisterSnapshot => {
-                candid::encode_one(TakeCanisterSnapshotArgs {
+                contract::encode_one(TakeCanisterSnapshotArgs {
                     canister_id: principal,
                     replace_snapshot: None,
                     uninstall_code: Some(false),
@@ -104,7 +105,7 @@ impl IcManagementRequestRecord {
                 })
             }
             IcManagementMethodRecord::LoadCanisterSnapshot => {
-                candid::encode_one(LoadCanisterSnapshotArgs {
+                contract::encode_one(LoadCanisterSnapshotArgs {
                     canister_id: principal,
                     snapshot_id: request
                         .snapshot_id
@@ -116,7 +117,7 @@ impl IcManagementRequestRecord {
             IcManagementMethodRecord::CanisterStatus
             | IcManagementMethodRecord::ListCanisterSnapshots
             | IcManagementMethodRecord::StartCanister
-            | IcManagementMethodRecord::StopCanister => candid::encode_one(CanisterIdRecord {
+            | IcManagementMethodRecord::StopCanister => contract::encode_one(CanisterIdRecord {
                 canister_id: principal,
             }),
         }

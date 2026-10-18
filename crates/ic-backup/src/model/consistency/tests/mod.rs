@@ -219,7 +219,7 @@ fn admits_maximum_canonical_actual_target_set_in_reordered_input() {
         ConsistencyRequest::new(&plan, &requirement, parameters(requirement.guarantee())).unwrap();
     let mut data = input(&request);
     let ids: Vec<_> = (0_u32..1024)
-        .map(|id| ic_principal::Principal::from_slice(&id.to_be_bytes()).to_text())
+        .map(|id| ic_platform::Principal::from_slice(&id.to_be_bytes()).to_text())
         .collect();
     data.inventory = InventoryRecord::new(
         ids.iter()

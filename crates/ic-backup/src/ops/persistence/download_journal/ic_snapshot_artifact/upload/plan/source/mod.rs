@@ -9,7 +9,7 @@ use crate::model::{
     ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, ic_snapshot_upload::IcSnapshotUploadRequest,
 };
 use ic_host_artifacts::artifact::HashingWriter;
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 use std::{
     io::{self, Read, Write},
     iter::Peekable,

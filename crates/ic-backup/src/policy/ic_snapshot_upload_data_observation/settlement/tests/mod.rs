@@ -3,7 +3,8 @@ use crate::{
     model::attempt_journal::ObservationReceiptRequest,
     test_support::ic_snapshot_upload_data_observation::{input, with_original},
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::SnapshotDataKind;
 
 fn settlement(
     request: &IcSnapshotUploadDataObservationRequest<'_, '_, '_>,
@@ -136,7 +137,7 @@ fn changed_destination_metadata_cannot_reuse_identical_read_arguments_and_raw_da
             let actual = settlement(&request, &response, &challenge, attributions()[0].0.clone());
             let mut values = read.metadata().metadata().clone();
             values.taken_at_timestamp ^= 1;
-            let bytes = candid::encode_one(values).unwrap();
+            let bytes = contract::encode_one(values).unwrap();
             let metadata = crate::model::ic_snapshot_metadata::IcSnapshotMetadataReply::decode(
                 read.metadata().request(),
                 &bytes,

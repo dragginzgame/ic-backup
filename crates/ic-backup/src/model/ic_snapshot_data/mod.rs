@@ -1,5 +1,6 @@
 //! Metadata-bound snapshot data codecs, without dispatch or transfer completion.
 
+use ic_platform::candid::contract;
 mod extents;
 mod wire;
 pub(crate) use extents::{ExtentPlanningError, planned_extents};
@@ -9,8 +10,8 @@ use super::{
     ic_request::{IcRequestError, MAX_IC_ARGUMENT_BYTES, management_request_digest},
     ic_snapshot_metadata::IcSnapshotMetadataReply,
 };
-use candid::Principal;
-use ic_management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind};
+use ic_platform::Principal;
+use ic_platform::management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind};
 use std::fmt;
 use thiserror::Error;
 
@@ -44,7 +45,7 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         validate_kind(metadata, &kind)?;
         let target = Principal::from_text(metadata.request().target())
             .map_err(|_| IcRequestError::InvalidTarget)?;
-        let arguments = candid::encode_one(ReadCanisterSnapshotDataArgs {
+        let arguments = contract::encode_one(ReadCanisterSnapshotDataArgs {
             canister_id: target,
             snapshot_id: metadata.request().snapshot_id().to_vec(),
             kind: kind.clone(),

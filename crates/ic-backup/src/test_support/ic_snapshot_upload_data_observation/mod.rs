@@ -15,7 +15,8 @@ use crate::{
         DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, upload_plan,
     },
 };
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{
     ReadCanisterSnapshotMetadataResult, SnapshotDataKind, SnapshotSource,
 };
 
@@ -31,8 +32,11 @@ pub fn with_original(
 ) {
     let source = source_plan();
     let source_request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&raw("upload-source")).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
+        &raw("upload-source"),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     values.wasm_module_size = 1024 * 1024;
     values.wasm_memory_size = 1024 * 1024;
     values.stable_memory_size = 1024 * 1024;
@@ -40,9 +44,9 @@ pub fn with_original(
         values.wasm_chunk_store.clear();
         values
             .wasm_chunk_store
-            .push(ic_management_canister_types::ChunkHash { hash: hash.clone() });
+            .push(ic_platform::management_canister_types::ChunkHash { hash: hash.clone() });
     }
-    let bytes = candid::encode_one(values.clone()).unwrap();
+    let bytes = contract::encode_one(values.clone()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&source_request, &bytes).unwrap();
     let checksum = ArtifactChecksumRecord::from_bytes(b"retained source declaration");
     let metadata_upload = IcSnapshotUploadRequest::metadata(&source, &metadata, &checksum).unwrap();
@@ -51,8 +55,8 @@ pub fn with_original(
             .unwrap();
     let plan = upload_plan(&upload);
     let destination_request = IcSnapshotMetadataRequest::new(TARGET, DESTINATION_ID).unwrap();
-    values.source = Some(SnapshotSource::MetadataUpload(candid::Reserved));
-    let destination_bytes = candid::encode_one(values).unwrap();
+    values.source = Some(SnapshotSource::MetadataUpload(contract::Reserved));
+    let destination_bytes = contract::encode_one(values).unwrap();
     let destination =
         IcSnapshotMetadataReply::decode(&destination_request, &destination_bytes).unwrap();
     let read = IcSnapshotDataRequest::new(&destination, kind).unwrap();
@@ -75,8 +79,8 @@ pub fn input(
         request: request.payload().digest(),
         context: request.plan().context().clone(),
         target: request.payload().target().into(),
-        reply: candid::encode_one(
-            ic_management_canister_types::ReadCanisterSnapshotDataResult {
+        reply: contract::encode_one(
+            ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
                 chunk: chunk.to_vec(),
             },
         )

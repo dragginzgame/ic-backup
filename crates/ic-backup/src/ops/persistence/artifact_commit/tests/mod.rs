@@ -8,7 +8,7 @@ use std::{fs, io};
 
 #[test]
 fn publishes_and_recovers_the_exact_verified_tree() {
-    let root = temp_dir("canic-backup-artifact-commit");
+    let root = temp_dir("ic-backup-artifact-commit");
     let temporary = root.join("snapshot.tmp");
     let canonical = root.join("snapshot");
     write_tree(&temporary);
@@ -30,7 +30,7 @@ fn publishes_and_recovers_the_exact_verified_tree() {
 
 #[test]
 fn rejects_existing_destinations_and_unsupported_entries() {
-    let conflict_root = temp_dir("canic-backup-artifact-conflict");
+    let conflict_root = temp_dir("ic-backup-artifact-conflict");
     let conflict_temporary = conflict_root.join("snapshot.tmp");
     let conflict_canonical = conflict_root.join("snapshot");
     write_tree(&conflict_temporary);
@@ -49,7 +49,7 @@ fn rejects_existing_destinations_and_unsupported_entries() {
         PersistenceError::ArtifactCommitPathConflict { .. }
     ));
 
-    let symlink_root = temp_dir("canic-backup-artifact-symlink");
+    let symlink_root = temp_dir("ic-backup-artifact-symlink");
     let symlink_temporary = symlink_root.join("snapshot.tmp");
     let symlink_canonical = symlink_root.join("snapshot");
     write_tree(&symlink_temporary);
@@ -74,7 +74,7 @@ fn rejects_existing_destinations_and_unsupported_entries() {
 
 #[test]
 fn publication_race_cannot_replace_a_new_destination() {
-    let root = temp_dir("canic-backup-artifact-publication-race");
+    let root = temp_dir("ic-backup-artifact-publication-race");
     let temporary = root.join("snapshot.tmp");
     let canonical = root.join("snapshot");
     write_tree(&temporary);
@@ -105,7 +105,7 @@ fn publication_race_cannot_replace_a_new_destination() {
 
 #[test]
 fn changed_temporary_tree_cannot_be_published_under_an_old_checksum() {
-    let root = temp_dir("canic-backup-artifact-changed-before-publication");
+    let root = temp_dir("ic-backup-artifact-changed-before-publication");
     let temporary = root.join("snapshot.tmp");
     let canonical = root.join("snapshot");
     write_tree(&temporary);
@@ -137,7 +137,7 @@ fn injected_commit_failures_never_expose_a_partial_tree() {
     ];
 
     for step in steps {
-        let root = temp_dir(&format!("canic-backup-artifact-failure-{step:?}"));
+        let root = temp_dir(&format!("ic-backup-artifact-failure-{step:?}"));
         let temporary = root.join("snapshot.tmp");
         let canonical = root.join("snapshot");
         write_tree(&temporary);

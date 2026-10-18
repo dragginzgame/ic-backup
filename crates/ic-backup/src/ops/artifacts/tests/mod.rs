@@ -1,24 +1,12 @@
 use super::*;
-use crate::model::artifacts::{ArtifactChecksumRecord, ChecksumError};
 use crate::test_support::temp_dir;
 use std::fs;
-
-const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-
-// Ensure empty-byte checksums match the standard SHA-256 vector.
-#[test]
-fn byte_checksum_matches_sha256_vector() {
-    let checksum = ArtifactChecksumRecord::from_bytes(&[]);
-
-    assert_eq!(checksum.algorithm(), "sha256");
-    assert_eq!(checksum.hash(), EMPTY_SHA256);
-}
 
 // Ensure directory checksums are stable regardless of file creation order.
 #[test]
 fn directory_checksum_is_order_independent() {
-    let first = temp_dir("canic-backup-dir-a");
-    let second = temp_dir("canic-backup-dir-b");
+    let first = temp_dir("ic-backup-dir-a");
+    let second = temp_dir("ic-backup-dir-b");
     fs::create_dir_all(first.join("nested")).expect("create first");
     fs::create_dir_all(second.join("nested")).expect("create second");
 
@@ -35,46 +23,10 @@ fn directory_checksum_is_order_independent() {
     assert_eq!(first_checksum, second_checksum);
 }
 
-// Ensure checksum verification reports mismatches.
-#[test]
-fn checksum_verify_rejects_mismatch() {
-    let checksum = ArtifactChecksumRecord::from_bytes(b"actual");
-
-    let err = checksum
-        .verify(EMPTY_SHA256)
-        .expect_err("different hash should fail");
-
-    assert!(matches!(err, ChecksumError::ChecksumMismatch { .. }));
-}
-
-#[test]
-fn checksum_verification_accepts_equivalent_hex_case() {
-    let lower = ArtifactChecksumRecord::from_bytes(&[]);
-    let upper = ArtifactChecksumRecord::from_hash(&lower.hash().to_ascii_uppercase())
-        .expect("normalize uppercase checksum");
-    assert_eq!(lower, upper);
-    lower
-        .verify(&upper.hash().to_ascii_uppercase())
-        .expect("uppercase expected hash");
-    upper.verify(lower.hash()).expect("uppercase observed hash");
-    assert!(matches!(
-        lower.verify(
-            &ArtifactChecksumRecord::from_bytes(b"different")
-                .hash()
-                .to_ascii_uppercase()
-        ),
-        Err(ChecksumError::ChecksumMismatch { .. })
-    ));
-    assert!(matches!(
-        lower.verify("invalid"),
-        Err(ChecksumError::InvalidHash(_))
-    ));
-}
-
 #[cfg(unix)]
 #[test]
 fn filesystem_checksums_reject_symlinked_files_and_entries() {
-    let root = temp_dir("canic-backup-checksum-symlink");
+    let root = temp_dir("ic-backup-checksum-symlink");
     fs::create_dir_all(root.join("tree")).expect("create checksum tree");
     fs::create_dir(root.join("real-directory")).expect("create nested source");
     fs::write(root.join("source"), b"source").expect("write source");

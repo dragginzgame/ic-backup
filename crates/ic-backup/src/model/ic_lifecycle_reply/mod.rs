@@ -7,7 +7,7 @@ use super::{
     control_authority::{ControlObservationError, ControllerSet},
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use thiserror::Error;
 
 /// Maximum raw reply bytes, checked before any status decoding.

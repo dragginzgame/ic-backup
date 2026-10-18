@@ -3,11 +3,12 @@
 use super::MAX_IC_SNAPSHOT_DATA_REPLY_BYTES;
 use super::{IcSnapshotDataError, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
 use crate::model::bounded_sequence;
-use candid::CandidType;
-use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::candid::contract::CandidType;
+use ic_platform::candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer};
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireData {
     #[serde(deserialize_with = "chunk")]
     chunk: Vec<u8>,

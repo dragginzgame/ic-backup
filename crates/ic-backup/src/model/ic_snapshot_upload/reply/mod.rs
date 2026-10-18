@@ -8,12 +8,13 @@ use crate::model::{
     artifacts::ArtifactChecksumRecord, ic_lifecycle_reply::EMPTY_CANDID_REPLY,
     ic_snapshot_reply::snapshot_id,
 };
-use candid::CandidType;
-use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::candid::contract::CandidType;
+use ic_platform::candid::{DecodeLimits, decode_exactly_one};
 use serde::Deserialize;
 use std::fmt;
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireMetadataReply {
     #[serde(deserialize_with = "snapshot_id")]
     snapshot_id: Vec<u8>,

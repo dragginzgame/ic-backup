@@ -18,7 +18,8 @@ use crate::{
     ops::persistence::{BackupLayoutGuard, create_execution_workflow},
     test_support::temp_dir,
 };
-use ic_management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
 use std::{convert::Infallible, fs, path::PathBuf};
 
 fn metadata_wire() -> Vec<u8> {
@@ -225,7 +226,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         ),
         (
             IcSnapshotTransferReadPayload::Data(&data),
-            candid::encode_one(ReadCanisterSnapshotDataResult {
+            contract::encode_one(ReadCanisterSnapshotDataResult {
                 chunk: vec![7, 8, 9],
             })
             .unwrap(),

@@ -1,4 +1,3 @@
-use ic_agent::{Identity, identity::AnonymousIdentity};
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -7,6 +6,7 @@ use ic_backup::{
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_operation_plan},
 };
+use ic_platform::agent::{AnonymousIdentity, Identity};
 use serde_json::json;
 use std::{fs, path::PathBuf, sync::Arc};
 

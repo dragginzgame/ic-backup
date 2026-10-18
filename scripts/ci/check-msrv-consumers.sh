@@ -81,6 +81,11 @@ RUST
         printf 'use %s as _;\nfn main() {}\n' "${package//-/_}" > "$selected/src/main.rs"
     fi
     consumer_fixture_prepare "$ROOT" "$fixture" "$selected" "$consumer" "$msrv"
+    if [[ "$package" == ic-backup ]]; then
+        jq -e 'all(.packages[]; .name != "ic-agent")
+            or error("Core consumer unexpectedly enables the native Agent boundary")' \
+            "$selected/metadata.json" > /dev/null
+    fi
     CARGO_TARGET_DIR="$ROOT/target" cargo "+$msrv" check --offline --locked \
         --manifest-path "$selected/Cargo.toml" --all-features > "$selected/check.log" 2>&1
     cat "$selected/check.log"

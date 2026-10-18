@@ -3,16 +3,18 @@
 use super::MAX_IC_SNAPSHOT_METADATA_BYTES;
 use super::{IcSnapshotMetadataError, MAX_IC_SNAPSHOT_CHUNKS, MAX_IC_SNAPSHOT_GLOBALS};
 use crate::model::bounded_sequence;
-use candid::CandidType;
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::candid::contract::CandidType;
+use ic_platform::candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::management_canister_types::{
     CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotMetadataResult,
     SnapshotMetadataGlobal, SnapshotSource,
 };
-use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer, de};
 use std::{collections::BTreeSet, fmt};
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireMetadata {
     source: Option<WireSource>,
     taken_at_timestamp: u64,
@@ -31,12 +33,14 @@ struct WireMetadata {
 }
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireChunk {
     #[serde(deserialize_with = "bytes32")]
     hash: Vec<u8>,
 }
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 enum WireSource {
     #[serde(rename = "taken_from_canister")]
     TakenFromCanister(WireReserved),
@@ -50,10 +54,10 @@ enum WireSource {
 struct WireReserved;
 
 impl CandidType for WireReserved {
-    fn _ty() -> candid::types::Type {
-        candid::types::TypeInner::Reserved.into()
+    fn _ty() -> contract::types::Type {
+        contract::types::TypeInner::Reserved.into()
     }
-    fn idl_serialize<S: candid::types::Serializer>(&self, serializer: S) -> Result<(), S::Error> {
+    fn idl_serialize<S: contract::types::Serializer>(&self, serializer: S) -> Result<(), S::Error> {
         serializer.serialize_null(())
     }
 }
@@ -136,8 +140,10 @@ pub(super) fn decode(
     }
     Ok(ReadCanisterSnapshotMetadataResult {
         source: value.source.map(|source| match source {
-            WireSource::TakenFromCanister(_) => SnapshotSource::TakenFromCanister(candid::Reserved),
-            WireSource::MetadataUpload(_) => SnapshotSource::MetadataUpload(candid::Reserved),
+            WireSource::TakenFromCanister(_) => {
+                SnapshotSource::TakenFromCanister(contract::Reserved)
+            }
+            WireSource::MetadataUpload(_) => SnapshotSource::MetadataUpload(contract::Reserved),
         }),
         taken_at_timestamp: value.taken_at_timestamp,
         wasm_module_size: value.wasm_module_size,

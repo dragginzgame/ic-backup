@@ -20,7 +20,8 @@ use ic_backup::{
     },
 };
 use ic_backup_agent::{AgentObservationProvider, AgentTransport, PreparedUpdate, ReservedUpdate};
-use ic_management_canister_types::{SnapshotDataKind, SnapshotSource};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{SnapshotDataKind, SnapshotSource};
 use std::{fs, time::Duration};
 
 enum RecoveryRequest<'a> {
@@ -72,11 +73,13 @@ async fn exercise(lane: u8, mode: u8) {
     let data =
         IcSnapshotUploadRequest::data(&upload, &[9, 0, 255], kind.clone(), &[7, 8, 9]).unwrap();
     let mut values = metadata.metadata().clone();
-    values.source = Some(SnapshotSource::MetadataUpload(candid::Reserved));
+    values.source = Some(SnapshotSource::MetadataUpload(contract::Reserved));
     let destination_request = IcSnapshotMetadataRequest::new(TARGET, &[9, 0, 255]).unwrap();
-    let destination =
-        IcSnapshotMetadataReply::decode(&destination_request, &candid::encode_one(values).unwrap())
-            .unwrap();
+    let destination = IcSnapshotMetadataReply::decode(
+        &destination_request,
+        &contract::encode_one(values).unwrap(),
+    )
+    .unwrap();
     let read = IcSnapshotDataRequest::new(&destination, kind).unwrap();
     let mutation = support::payload(
         if lane == 0 {

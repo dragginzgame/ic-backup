@@ -12,7 +12,7 @@ use ic_backup::{
     ops::persistence::BackupLayoutGuard,
     policy::ic_observation::validate_lifecycle_settlement,
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 
 pub(in crate::pic_journey) fn lifecycle(
     backend: &mut Backend,
@@ -125,7 +125,7 @@ fn assert_status(request: &IcManagementRequestRecord, raw: &[u8], expected: Cani
     assert_eq!(info.status(), expected);
     assert_eq!(
         info.controllers().principals(),
-        [candid::Principal::anonymous().to_text()]
+        [ic_platform::Principal::anonymous().to_text()]
     );
 }
 

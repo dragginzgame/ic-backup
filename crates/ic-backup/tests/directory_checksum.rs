@@ -10,27 +10,6 @@ fn entry(name: &str, bytes: &[u8]) -> (PathBuf, Sha256Digest) {
     (name.into(), Sha256Digest::compute(bytes))
 }
 
-#[cfg(unix)]
-#[test]
-fn filesystem_and_retained_declared_files_share_one_framing() {
-    use ic_host_fs::read::tree::checksum::checksum_directory;
-    use std::fs;
-
-    let root = support::temp_root("ic-backup-directory-framing");
-    fs::create_dir(root.join("nested")).unwrap();
-    fs::write(root.join("a.txt"), b"a").unwrap();
-    fs::write(root.join("nested/b.txt"), b"b").unwrap();
-    let files = vec![
-        ("a.txt".into(), Sha256Digest::compute(b"a")),
-        ("nested/b.txt".into(), Sha256Digest::compute(b"b")),
-    ];
-    let tree = checksum_directory(&root, u64::MAX).unwrap();
-    assert_eq!(checksum_relative_files(files.clone()).unwrap(), tree);
-    fs::remove_dir_all(root).unwrap();
-    // Composition consumes declared identities, without reopening the removed tree.
-    assert_eq!(checksum_relative_files(files).unwrap(), tree);
-}
-
 #[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
 #[test]
 fn declared_checksum_requires_fresh_bytes_before_publication_and_recovery() {

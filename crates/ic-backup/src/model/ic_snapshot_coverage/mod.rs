@@ -1,7 +1,7 @@
 //! Incremental coverage of admitted snapshot replies, without IO or durable progress.
 
 use super::{ic_snapshot_data::IcSnapshotDataReply, ic_snapshot_metadata::IcSnapshotMetadataReply};
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 use std::fmt;
 use thiserror::Error;
 

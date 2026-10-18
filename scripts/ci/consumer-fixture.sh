@@ -30,6 +30,6 @@ consumer_fixture_prepare() {
         --slurpfile original "$fixture/original.json" '
         include "consumer-graph";
         original_graph_admitted($original[0]; $consumer)
-        or error("Independent consumer changed selected packages or retained simulator dependencies")
+        or error("Independent consumer changed selected packages or retained test/tooling dependencies")
     ' "$selected/metadata.json" >/dev/null
 }

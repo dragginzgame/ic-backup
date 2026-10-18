@@ -12,7 +12,7 @@ const CHILD_READY_ENV: &str = "IC_BACKUP_TEST_JOURNAL_LOCK_CHILD_READY";
 #[cfg(unix)]
 #[test]
 fn lock_excludes_a_second_owner_and_reacquires_after_drop() {
-    let root = temp_dir("canic-backup-journal-lock");
+    let root = temp_dir("ic-backup-journal-lock");
     let journal_path = root.join("journal");
     let lock_path = journal_lock_path(&journal_path);
     let lock = JournalLock::acquire(&journal_path).expect("acquire lock");
@@ -40,7 +40,7 @@ fn lock_excludes_a_second_owner_and_reacquires_after_drop() {
 #[cfg(unix)]
 #[test]
 fn lock_rejects_symlink_and_special_entry_substitution() {
-    let root = temp_dir("canic-backup-journal-lock-unsafe");
+    let root = temp_dir("ic-backup-journal-lock-unsafe");
     let journal_path = root.join("journal");
     let lock_path = journal_lock_path(&journal_path);
     let target = root.join("target");
@@ -65,7 +65,7 @@ fn lock_rejects_symlink_and_special_entry_substitution() {
 #[cfg(unix)]
 #[test]
 fn process_death_releases_lock_without_sidecar_removal() {
-    let root = temp_dir("canic-backup-journal-lock-process-death");
+    let root = temp_dir("ic-backup-journal-lock-process-death");
     let journal_path = root.join("journal");
     let ready_path = root.join("ready");
     let mut child = Command::new(std::env::current_exe().expect("resolve test executable"))

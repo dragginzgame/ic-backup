@@ -201,7 +201,7 @@ fn admits_exact_inventory_ceiling_in_canonical_order_without_dispatch_authority(
     .unwrap();
     let request = FenceReconciliationRequest::new(&intent, &original.journal).unwrap();
     let targets: Vec<_> = (0..MAX_INVENTORY_TARGETS).map(|index| {
-        let principal = ic_principal::Principal::from_slice(&index.to_be_bytes()).to_text();
+        let principal = ic_platform::Principal::from_slice(&index.to_be_bytes()).to_text();
         json!({"canister_id":principal,"parent_canister_id":null,"role":null,"module_hash":null})
     }).collect();
     let mut actual = input(&request);

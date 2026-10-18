@@ -49,7 +49,34 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 124-file snapshot selects committed Shared Tooling 0.23.0 at
+The current 114-file snapshot selects committed Shared Tooling 0.24.0 at
+`cab12cd3dfa4fdb34846b25397f0d72881bb9ae0`, matching remote `main` on 2026-10-18.
+The canonical exporter ran from an isolated clean checkout, retaining every old
+entrypoint and adding Shared's selected-source Cargo release metadata checker.
+The initial closure updated 26 payloads and added four, with no retirements; the
+Platform boundary extension below initially added two unchanged upstream helpers.
+The subsequent selection review retires unused producer fixtures without changing
+the retained payloads. Pending sibling
+edits were excluded. [The review](shared-tooling-review.json) records consumer
+qualification separately from snapshot provenance.
+
+The root catalog now carries canonical dependency roles. Grouped sorting is used
+by write/check formatting, the tracked hook and prepared release formatting.
+Committed release admission uses the same grouped ordering on its selected source;
+product receipts and exact resume evidence remain local. Shared owns the sorter
+and metadata mechanics, not dependency-role decisions or deployment policy.
+
+[The production graph review](development.md#dependency-roles-and-production-graphs)
+covers both host libraries on all supported target triples. The existing
+independent-consumer admission also rejects `wat` alongside simulator packages.
+No application deployment gate or artifact-to-deployment binding exists here;
+those remain required at the consuming application's build/deployment owner.
+Role comments, snapshot hashes and formatting do not establish that enforcement.
+Package versions, the selected lockfile and prior implementation work are retained.
+
+### Prior Shared Tooling 0.23.0 review
+
+The earlier 124-file snapshot selects committed Shared Tooling 0.23.0 at
 `0b351cd2ba2bcd8927b783a5fec89afc8013f708`, verified against GitHub's `main`
 on 2026-10-17. The canonical exporter ran from an isolated clean clone, retaining
 all existing entrypoints. [The review](shared-tooling-review.json) records 21
@@ -1574,3 +1601,41 @@ substitute cannot run. This is evidence for an unused test's fixture-generation
 failure, not a failed consumer helper or compiler-cache requirement. The reviewed
 adoption is source-bound; consumer native CI remains independently pending.
 The complete compatible batch keeps 0.4.1 without package or dependency changes.
+
+## Platform dependency boundary
+
+The same committed 0.24.0 exporter additionally selects
+`scripts/ci/check-cargo-dependency-boundaries.sh` and its regression fixture.
+The preview added only those two payloads; none of the preceding 128 changed.
+`make dependency-boundaries-check` reads Backup's explicit package-identity policy
+in `ci/cargo-dependency-boundaries.json`; CI and therefore release validation run
+it. The generic real-Cargo alias/build/dev/target and failed-observation matrix
+remains with Shared Tooling. Backup runs the canonical checker against its actual
+workspace and policy. No shared payload was patched locally.
+
+This gate checks workspace direct declarations, including inactive target and dev
+edges. It does not restrict transitive dependencies, interpret feature selections,
+inspect generated Rust paths or automatically recognize future CDK package names.
+The [Platform adoption review](ic-platform.md) records those separate inspections.
+
+
+### Consumer qualification selection
+
+The repeat architecture review traces all selected test entrypoints through local
+Make, CI, release, hook and fixture callers. Fourteen producer test roots supply
+no distinct consumer proof: thirteen have no executable local caller, and the
+generic boundary-checker suite duplicates its producer's qualification. The
+canonical exporter retires those roots and two unused companions, reducing the
+closure from 130 to 114 unchanged payloads at the same 0.24.0 revision. The
+[selection receipt](shared-tooling-review.json) records every retired path. Earlier
+adoption sections describe their original selections, not the current roster.
+
+Backup retains snapshot integrity, its real dependency policy check, independent
+production consumers, prepared native tools and product qualification. It also
+retains the shared fixtures called by its local failure-retention checks and
+release adapter; their source names are selected dynamically in `test-tooling.sh`.
+The actual Make/Testkit routing, hooks, exact release resume and evidence tests
+remain local obligations. This follows the
+[consumer qualification contract](consuming-snapshots.md#consumer-qualification-selection);
+no helper implementation, tool pin or product dependency changes. No gate-duration
+improvement is claimed.

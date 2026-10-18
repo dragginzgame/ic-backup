@@ -13,8 +13,10 @@ export RELEASE_DELIVERY
 RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
+FORMAT_WRITE_COMMAND = bash -ec '"$$1" sort --workspace --grouped; "$$1" fmt --all' -- "$(FORMAT_CARGO)"
+FORMAT_CHECK_COMMAND = bash -ec '"$$1" sort --workspace --grouped --check; "$$1" fmt --all -- --check' -- "$(FORMAT_CARGO)"
 include make/consumer.mk
-CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check dependency-pins-check dependency-boundaries-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
@@ -23,7 +25,7 @@ CI_TARGETS := shared-tooling-check tools-check dependency-pins-check check-doc-l
         release-files release-commit-check release-committed-check release-tagged-check \
         release-push-check release-tag-check release-verify shell-check \
         tags tasks test tooling-check validate version
-.PHONY: dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
+.PHONY: dependency-boundaries-check dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 
 help:
 	@echo "check                       Compile this library's native targets"
@@ -34,6 +36,7 @@ help:
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
 	@echo "cloc                        Report Rust workspace source and test LOC"
+	@echo "dependency-boundaries-check Check Platform ownership of direct Candid/CDK dependencies"
 	@echo "dependency-pins-check       Check dependency declarations and exceptions"
 	@echo "deps                        Fetch locked dependencies"
 	@echo "doc                         Build documentation with warnings denied"
@@ -111,6 +114,9 @@ ensure-clean:
 
 hooks-check:
 	bash scripts/hooks/test-hooks.sh
+
+dependency-boundaries-check:
+	+bash scripts/ci/check-cargo-dependency-boundaries.sh --consumer "$(CURDIR)"
 
 dependency-pins-check:
 	+bash scripts/ci/check-dependency-pins.sh --cargo-inheritance

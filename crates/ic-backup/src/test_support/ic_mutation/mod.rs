@@ -13,6 +13,7 @@ use crate::{
         membership::{APP, hash},
     },
 };
+use ic_platform::candid::contract;
 
 pub struct Original {
     pub payload: IcManagementRequestRecord,
@@ -38,7 +39,7 @@ pub fn original(method: IcManagementMethodRecord) -> Original {
 }
 pub fn reply(method: IcManagementMethodRecord) -> Vec<u8> {
     if method == IcManagementMethodRecord::TakeCanisterSnapshot {
-        candid::encode_one(ic_management_canister_types::Snapshot {
+        contract::encode_one(ic_platform::management_canister_types::Snapshot {
             id: vec![0, 255, 128],
             taken_at_timestamp: u64::MAX,
             total_size: 42,

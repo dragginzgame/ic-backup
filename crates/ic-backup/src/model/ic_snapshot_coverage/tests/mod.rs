@@ -4,7 +4,8 @@ use super::*;
 use crate::model::{
     ic_snapshot_data::IcSnapshotDataRequest, ic_snapshot_metadata::IcSnapshotMetadataRequest,
 };
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{
     ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult,
 };
 use sha2::{Digest, Sha256};
@@ -25,7 +26,7 @@ fn source() -> ReadCanisterSnapshotMetadataResult {
         .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect::<Vec<_>>();
-    candid::decode_one(&raw).unwrap()
+    ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap()
 }
 
 fn region(index: usize, offset: u64, size: u64) -> SnapshotDataKind {
@@ -43,7 +44,7 @@ fn admit(
     chunk: Vec<u8>,
 ) -> Result<(), IcSnapshotDataCoverageError> {
     let request = IcSnapshotDataRequest::new(coverage.metadata(), kind).unwrap();
-    let raw = candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap();
+    let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap();
     let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
     coverage.admit(&reply)
 }
@@ -56,7 +57,7 @@ fn interleaved_regions_and_unordered_chunks_complete_only_after_exact_coverage()
     values.wasm_module_size = 5;
     values.wasm_memory_size = 3;
     values.stable_memory_size = 1;
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut coverage = IcSnapshotDataCoverage::new(&metadata);
     assert!(coverage.complete().is_none());
@@ -106,7 +107,7 @@ fn gaps_overlaps_duplicates_and_failed_admission_leave_every_region_unchanged() 
     values.wasm_memory_size = 5;
     values.stable_memory_size = 5;
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     let mut coverage = IcSnapshotDataCoverage::new(&metadata);
     for index in 0..3 {
         let before = coverage.covered_region_bytes();
@@ -147,7 +148,7 @@ fn gaps_overlaps_duplicates_and_failed_admission_leave_every_region_unchanged() 
 fn changed_target_id_or_raw_metadata_cannot_mix_but_exact_redecode_can() {
     let request = IcSnapshotMetadataRequest::new("renrk-eyaaa-aaaaa-aaada-cai", &[0]).unwrap();
     let original = source();
-    let raw = candid::encode_one(&original).unwrap();
+    let raw = contract::encode_one(&original).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut coverage = IcSnapshotDataCoverage::new(&metadata);
     for (target, id, timestamp) in [
@@ -164,13 +165,13 @@ fn changed_target_id_or_raw_metadata_cannot_mix_but_exact_redecode_can() {
         changed.taken_at_timestamp = timestamp;
         let changed_metadata = IcSnapshotMetadataReply::decode(
             &changed_request,
-            &candid::encode_one(changed).unwrap(),
+            &contract::encode_one(changed).unwrap(),
         )
         .unwrap();
         let data = IcSnapshotDataRequest::new(&changed_metadata, region(0, 0, 1)).unwrap();
         let reply = IcSnapshotDataReply::decode(
             &data,
-            &candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![0] }).unwrap(),
+            &contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![0] }).unwrap(),
         )
         .unwrap();
         assert_eq!(
@@ -184,7 +185,7 @@ fn changed_target_id_or_raw_metadata_cannot_mix_but_exact_redecode_can() {
     let data = IcSnapshotDataRequest::new(&same, region(0, 0, 1)).unwrap();
     let reply = IcSnapshotDataReply::decode(
         &data,
-        &candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![0] }).unwrap(),
+        &contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![0] }).unwrap(),
     )
     .unwrap();
     coverage.admit(&reply).unwrap();
@@ -196,13 +197,13 @@ fn changed_target_id_or_raw_metadata_cannot_mix_but_exact_redecode_can() {
     alternate.splice(4..5, [raw[4] | 128, 0]);
     let equivalent = IcSnapshotMetadataReply::decode(&request, &alternate).unwrap();
     assert_eq!(
-        candid::encode_one(equivalent.metadata()).unwrap(),
-        candid::encode_one(metadata.metadata()).unwrap()
+        contract::encode_one(equivalent.metadata()).unwrap(),
+        contract::encode_one(metadata.metadata()).unwrap()
     );
     let data = IcSnapshotDataRequest::new(&equivalent, region(0, 1, 1)).unwrap();
     let reply = IcSnapshotDataReply::decode(
         &data,
-        &candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![0] }).unwrap(),
+        &contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![0] }).unwrap(),
     )
     .unwrap();
     assert_eq!(
@@ -221,7 +222,7 @@ fn empty_regions_require_no_reads_but_all_maximum_chunk_identities_need_replies(
     values.stable_memory_size = 0;
     values.wasm_chunk_store.clear();
     let empty =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(&values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(&values).unwrap()).unwrap();
     assert!(IcSnapshotDataCoverage::new(&empty).complete().is_some());
     let chunks = (0_u16..1024)
         .map(|index| index.to_be_bytes().to_vec())
@@ -233,7 +234,7 @@ fn empty_regions_require_no_reads_but_all_maximum_chunk_identities_need_replies(
         })
         .collect();
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     let mut coverage = IcSnapshotDataCoverage::new(&metadata);
     for (index, chunk) in chunks.into_iter().enumerate().rev() {
         assert!(coverage.complete().is_none());
@@ -259,7 +260,7 @@ fn maximum_nat64_regions_stay_independent_and_streamed_maximum_replies_drop() {
     values.stable_memory_size = u64::MAX;
     values.wasm_chunk_store.clear();
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     let mut coverage = IcSnapshotDataCoverage::new(&metadata);
     for index in 0..3 {
         for offset in [0, 1024 * 1024] {

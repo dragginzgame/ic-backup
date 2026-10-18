@@ -1,6 +1,7 @@
 //! Exact same-target snapshot upload codecs and passive original-reservation binding.
 
 use crate::model::evidence_digest::EvidenceDigest;
+use ic_platform::candid::contract;
 mod attempt;
 mod plan;
 mod reply;
@@ -16,8 +17,8 @@ use super::{
     ic_snapshot_metadata::IcSnapshotMetadataReply,
     operation_plan::OperationPlanRecord,
 };
-use candid::Principal;
-use ic_management_canister_types::{
+use ic_platform::Principal;
+use ic_platform::management_canister_types::{
     SnapshotDataKind, SnapshotDataOffset, UploadCanisterSnapshotDataArgs,
     UploadCanisterSnapshotMetadataArgs,
 };
@@ -93,7 +94,7 @@ impl<'source> IcSnapshotUploadRequest<'source> {
             .ok_or(IcSnapshotUploadError::UnavailableGlobal)?;
         let target = Principal::from_text(source.request().target())
             .map_err(|_| IcRequestError::InvalidTarget)?;
-        let arguments = candid::encode_one(UploadCanisterSnapshotMetadataArgs {
+        let arguments = contract::encode_one(UploadCanisterSnapshotMetadataArgs {
             canister_id: target,
             replace_snapshot: None,
             wasm_module_size: values.wasm_module_size,
@@ -161,7 +162,7 @@ impl<'source> IcSnapshotUploadRequest<'source> {
         };
         let target =
             Principal::from_text(metadata.target()).map_err(|_| IcRequestError::InvalidTarget)?;
-        let arguments = candid::encode_one(UploadCanisterSnapshotDataArgs {
+        let arguments = contract::encode_one(UploadCanisterSnapshotDataArgs {
             canister_id: target,
             snapshot_id: snapshot_id.to_vec(),
             kind,

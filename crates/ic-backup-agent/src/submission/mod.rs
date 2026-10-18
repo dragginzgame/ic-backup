@@ -2,8 +2,9 @@
 
 use crate::MAX_SIGNED_UPDATE_BYTES;
 use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
-use ic_agent::{RequestId, agent::CallResponse, export::Principal};
 use ic_backup::model::attempt_journal::AttemptJournalRecord;
+use ic_platform::Principal;
+use ic_platform::agent::{CallResponse, RequestId};
 
 pub(crate) async fn submit_once<E>(
     transport: &AgentTransport,

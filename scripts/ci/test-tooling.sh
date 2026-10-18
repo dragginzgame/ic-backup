@@ -59,6 +59,28 @@ for changed in Cargo.toml Cargo.lock; do
 done
 echo 'Consumer manifest/lock checkpoints: PASS (changed inputs stop later CI dispatch).'
 
+# Independent consumers contain only their selected production graph. Check
+# package identities, including a renamed transitive test/tool dependency.
+graph="$FIXTURE/graph"
+mkdir "$graph"
+jq -n '{packages: [{name:"runtime", version:"1.0.0", source:"registry"}]}' > "$graph/original.json"
+cp "$graph/original.json" "$graph/selected.json"
+jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/original.json" '
+    include "consumer-graph"; original_graph_admitted($original[0]; "consumer")
+' "$graph/selected.json" > /dev/null
+for dependency in ic-testkit pocket-ic wat; do
+    jq --arg name "$dependency" '
+        .packages += [{name:$name, version:"1.0.0", source:"registry"}]
+        | .resolve = {nodes:[{id:"runtime", deps:[{name:"renamed_tool", pkg:$name}]}]}
+    ' "$graph/selected.json" > "$graph/forbidden.json"
+    if jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/forbidden.json" '
+        include "consumer-graph"; original_graph_admitted($original[0]; "consumer")
+    ' "$graph/forbidden.json" > /dev/null; then
+        echo "consumer graph accepted test/tool package: $dependency" >&2; exit 1
+    fi
+done
+echo 'Consumer production graph: PASS (simulator and WAT packages refuse by identity).'
+
 # Contradict a successful local command result: Bash 3.2 must stop at the
 # assertion rather than continue to completion and discard its original inputs.
 assertion="$FIXTURE/assertion"
@@ -117,7 +139,7 @@ for owner in dependency-pins validation-target-runner release-runner; do
     case "$owner" in
         dependency-pins)
             helper=check-dependency-pins.sh; child_status=23; expected_status=1
-            prefix=dependency-pins-test; original=consumer/Cargo.toml ;;
+            prefix='dependency-pins-test'; original=consumer/Cargo.toml ;;
         validation-target-runner)
             helper=run-validation-targets.sh; child_status=31; expected_status=31
             prefix=validation-runner-test; original=Makefile ;;
@@ -155,6 +177,9 @@ done
 
 reset_consumer() {
     mkdir -p "$CONSUMER"
+    # Shared documents may link the consumer's own README. It is a local input,
+    # not a payload to import from Shared Tooling or add to its snapshot.
+    cp "$ROOT/README.md" "$CONSUMER/README.md"
     cp "$ROOT/.shared-tooling.snapshot" "$CONSUMER/"
     while IFS=$'\t' read -r record _digest _mode path; do
         [[ "$record" == file ]] || continue

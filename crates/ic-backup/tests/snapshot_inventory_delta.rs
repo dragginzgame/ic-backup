@@ -2,6 +2,7 @@
 
 use crate::support::create_json_durable;
 use crate::support::read_json;
+use ic_platform::candid::contract;
 mod support;
 
 use ic_backup::{
@@ -17,7 +18,7 @@ use ic_backup::{
     },
     policy::snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare},
 };
-use ic_management_canister_types::Snapshot;
+use ic_platform::management_canister_types::Snapshot;
 use serde_json::json;
 use std::fs;
 
@@ -31,7 +32,7 @@ fn request(method: IcManagementMethodRecord, target: &str) -> IcManagementReques
 }
 
 fn wire(ids: &[u8]) -> Vec<u8> {
-    candid::encode_one(
+    contract::encode_one(
         ids.iter()
             .map(|id| Snapshot {
                 id: vec![*id],

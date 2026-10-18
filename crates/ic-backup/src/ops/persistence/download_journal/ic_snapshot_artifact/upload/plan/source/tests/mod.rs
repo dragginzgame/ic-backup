@@ -5,6 +5,7 @@ use crate::{
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
     test_support::ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan},
 };
+use ic_platform::candid::contract;
 use std::io::Cursor;
 
 struct Counted<'a> {
@@ -25,11 +26,15 @@ impl Read for Counted<'_> {
 fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_input() {
     let plan = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let mut values: ic_management_canister_types::ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&raw("upload-source")).unwrap();
+    let mut values: ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(
+            &raw("upload-source"),
+            crate::test_support::WIRE_ORACLE_LIMITS,
+        )
+        .unwrap();
     let length = MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES + 1;
     values.wasm_module_size = length as u64;
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let members = member::expected(&metadata).unwrap();
     let module = members

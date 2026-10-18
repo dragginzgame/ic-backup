@@ -2,9 +2,9 @@
 
 use crate::support::create_json_durable;
 use crate::support::read_json;
+use ic_platform::candid::contract;
 mod support;
 
-use candid::{CandidType, Principal};
 use ic_backup::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
@@ -18,15 +18,18 @@ use ic_backup::{
         read_operation_plan,
     },
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
+use ic_platform::{Principal, candid::contract::CandidType};
 use serde_json::json;
 use std::fs;
 
 #[derive(CandidType)]
+#[candid_path("ic_platform::candid::contract")]
 struct Settings {
     controllers: Vec<Principal>,
 }
 #[derive(CandidType)]
+#[candid_path("ic_platform::candid::contract")]
 struct Status {
     status: CanisterStatusType,
     settings: Settings,
@@ -86,7 +89,7 @@ fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
         .expect("consume original observation allowance");
     // Local immutable integration fixtures, not authenticated replies or receipts.
     let load_wire = b"DIDL\0\0".to_vec();
-    let status_wire = candid::encode_one(Status {
+    let status_wire = contract::encode_one(Status {
         status: CanisterStatusType::Stopped,
         settings: Settings {
             controllers: vec![Principal::anonymous()],

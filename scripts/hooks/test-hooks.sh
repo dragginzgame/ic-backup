@@ -105,6 +105,32 @@ CARGO
     rg -q 'Error 13' rejection.log
 }
 
+test_dependency_role_groups() {
+    cat >> Cargo.toml <<'TOML'
+
+# Production dependencies
+[workspace.dependencies]
+zzz = "1"
+aaa = "1"
+
+# Tests and tooling only
+yyy = "1"
+bbb = "1"
+TOML
+    make --no-print-directory fmt > write.log 2>&1
+    rg -U '# Production dependencies\n\[workspace.dependencies\]\naaa = "1"\nzzz = "1"\n\n# Tests and tooling only\nbbb = "1"\nyyy = "1"' Cargo.toml
+    cp Cargo.toml sorted.toml
+    make --no-print-directory fmt > second-write.log 2>&1
+    cmp Cargo.toml sorted.toml
+    make --no-print-directory fmt-check > check.log 2>&1
+    perl -0777 -i -pe 's/aaa = "1"\nzzz = "1"/zzz = "1"\naaa = "1"/ or die "missing role fixture\n"' Cargo.toml
+    cp Cargo.toml unsorted.toml
+    if make --no-print-directory fmt-check > rejection.log 2>&1; then
+        echo 'grouped check accepted unsorted production dependencies' >&2; exit 1
+    fi
+    cmp Cargo.toml unsorted.toml
+}
+
 test_formatting_output() {
     make --no-print-directory fmt > write.log 2>&1
     [[ "$(cat write.log)" == 'Formatting... ok' ]] || exit 1
@@ -120,7 +146,7 @@ test_formatting_output() {
     HOOK_TEST_REAL_CARGO="$(command -v cargo)"
     cat > failing-bin/cargo <<'CARGO'
 #!/usr/bin/env bash
-if [[ "$*" == 'sort --workspace --check' ]]; then
+if [[ "$*" == 'sort --workspace --grouped --check' ]]; then
     echo 'sorter stdout diagnosis'
     echo 'sorter stderr diagnosis' >&2
     exit 17
@@ -220,6 +246,7 @@ bash "$ROOT/scripts/ci/check-formatting-hooks.sh" "$ROOT" \
     "$TEMPORARY/unsorted-Cargo.toml" "${formatter_inputs[@]}" > "$CASE_LOG" 2>&1
 
 run_case formatter-failure test_formatter_failure
+run_case dependency-role-groups test_dependency_role_groups
 run_case formatting-output test_formatting_output
 run_case checkout-local-tools test_checkout_local_tools
 echo 'Hook tests: PASS (selected auto-formatting, index refresh, partial-stage rejection, unrelated edit preservation, formatter failure and local installation).'

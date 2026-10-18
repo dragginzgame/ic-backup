@@ -215,7 +215,7 @@ fn encoded_output_bound_preserves_previous_progress() {
             let mut bytes = [0u8; 29];
             bytes[..8].copy_from_slice(&u64::try_from(index).expect("bounded index").to_be_bytes());
             DownloadArtifactRequest {
-                canister_id: ic_principal::Principal::from_slice(&bytes).to_text(),
+                canister_id: ic_platform::Principal::from_slice(&bytes).to_text(),
                 snapshot_id: "\"".repeat(crate::model::download_journal::MAX_SNAPSHOT_ID_BYTES),
                 snapshot_taken_at_timestamp: u64::MAX,
                 snapshot_total_size_bytes: u64::MAX,

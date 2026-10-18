@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::ic_snapshot_upload_data_observation::with_original;
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 
 struct RefusingProvider {
     calls: usize,

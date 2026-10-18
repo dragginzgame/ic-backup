@@ -127,7 +127,7 @@ for auth in '' "--jobserver-auth=fifo:$fixture/missing-fifo" "--jobserver-auth=f
     if TESTKIT_COMMAND_JOBSERVER=1 MAKEFLAGS="$auth" "$fixture/bin/cargo" check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features > "$fixture/invalid-jobserver.log" 2>&1; then exit 1; fi
     [[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
 done
-# Canonical lockfile identity, source and drift cases belong to test-rust-tools.sh.
+# Canonical lockfile identity, source and drift cases belong to Shared Tooling.
 # This consumer fixture qualifies routing and fail-closed command ordering.
 # Exercise real prerequisite edges under parallel Make. Refusal must precede
 # every dependent compiler/test invocation without installing anything.

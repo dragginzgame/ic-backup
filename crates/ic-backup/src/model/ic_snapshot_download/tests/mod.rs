@@ -3,7 +3,8 @@ use crate::model::{
     artifacts::ArtifactChecksumRecord,
     ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
 };
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{
     ChunkHash, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
 use sha2::Digest;
@@ -24,7 +25,8 @@ pub(crate) fn values() -> ReadCanisterSnapshotMetadataResult {
         .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect();
-    let mut values: ReadCanisterSnapshotMetadataResult = candid::decode_one(&bytes).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(&bytes, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 64;
     values.wasm_memory_size = 64;
     values.stable_memory_size = 64;
@@ -90,7 +92,7 @@ fn exact_complete_payloads_reuse_original_allocation_and_chain_before_calls() {
         ChunkHash { hash: vec![2; 32] },
     ];
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     let download = IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 4).unwrap();
     let expected = [
         SnapshotDataKind::WasmModule { offset: 0, size: 4 },
@@ -107,8 +109,8 @@ fn exact_complete_payloads_reuse_original_allocation_and_chain_before_calls() {
     assert_eq!(plan.allocated_attempts().observations, 0);
     for (index, (payload, kind)) in download.requests().iter().zip(expected).enumerate() {
         assert_eq!(
-            candid::encode_one(payload.kind()).unwrap(),
-            candid::encode_one(kind).unwrap()
+            contract::encode_one(payload.kind()).unwrap(),
+            contract::encode_one(kind).unwrap()
         );
         let sequence = u64::try_from(index).unwrap();
         assert_eq!(
@@ -144,7 +146,7 @@ fn exact_budget_thresholds_and_extreme_nat64_reject_before_request_allocation() 
     values.wasm_memory_size = 0;
     values.stable_memory_size = 0;
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(&values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(&values).unwrap()).unwrap();
     let admitted = workflow(2);
     assert_eq!(
         IcSnapshotDownloadPlan::new(&admitted, 7, &metadata, 4)
@@ -170,7 +172,7 @@ fn exact_budget_thresholds_and_extreme_nat64_reject_before_request_allocation() 
     values.wasm_module_size = u64::MAX;
     values.wasm_memory_size = u64::MAX;
     let huge =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&admitted, 7, &huge, 1),
         Err(IcSnapshotDownloadPlanningError::CountOverflow)
@@ -191,7 +193,7 @@ fn empty_regions_need_no_placeholder_but_known_empty_chunks_still_need_reads() {
     values.stable_memory_size = 0;
     values.wasm_chunk_store.clear();
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(&values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(&values).unwrap()).unwrap();
     let empty = IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 1024 * 1024).unwrap();
     assert!(empty.requests().is_empty());
     assert!(empty.plan().is_none());
@@ -205,7 +207,7 @@ fn empty_regions_need_no_placeholder_but_known_empty_chunks_still_need_reads() {
         hash: sha2::Digest::finalize(sha2::Sha256::new()).to_vec(),
     });
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     assert_eq!(
         IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 1024 * 1024)
             .unwrap()
@@ -220,7 +222,8 @@ fn changed_metadata_input_or_source_request_cannot_bind_the_same_download() {
     let workflow = workflow(12);
     let request = source();
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values()).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values()).unwrap())
+            .unwrap();
     let download = IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 1024 * 1024).unwrap();
     let original = source_plan(&request);
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &original, vec![]).unwrap();
@@ -252,7 +255,7 @@ fn changed_metadata_input_or_source_request_cannot_bind_the_same_download() {
 fn wrong_target_unknown_stage_and_missing_original_predecessor_reject() {
     let workflow = workflow(12);
     let request = source();
-    let raw = candid::encode_one(values()).unwrap();
+    let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&workflow, 99, &metadata, 1024 * 1024),

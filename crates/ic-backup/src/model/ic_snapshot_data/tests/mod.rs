@@ -2,8 +2,9 @@
 
 use super::*;
 use crate::model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest};
-use candid::CandidType;
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::candid::contract::CandidType;
+use ic_platform::management_canister_types::{
     ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult,
 };
 use serde::Deserialize;
@@ -59,12 +60,16 @@ fn admits_every_registered_exact_argument_reply_and_metadata_evidence_digest() {
             "{}",
             case.name
         );
-        let args: ReadCanisterSnapshotDataArgs = candid::decode_one(request.arguments()).unwrap();
+        let args: ReadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+            request.arguments(),
+            crate::test_support::WIRE_ORACLE_LIMITS,
+        )
+        .unwrap();
         assert_eq!(args.canister_id.to_text(), source.target());
         assert_eq!(args.snapshot_id, source.snapshot_id());
         assert_eq!(
-            candid::encode_one(args.kind).unwrap(),
-            candid::encode_one(request.kind()).unwrap()
+            contract::encode_one(args.kind).unwrap(),
+            contract::encode_one(request.kind()).unwrap()
         );
         assert_eq!(request.receiver(), "aaaaa-aa");
         assert_eq!(request.method(), "read_canister_snapshot_data");
@@ -74,7 +79,8 @@ fn admits_every_registered_exact_argument_reply_and_metadata_evidence_digest() {
         assert_eq!(request.metadata().digest().hash(), case.metadata_digest);
         let raw = hex_bytes(&case.reply_hex);
         let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
-        let official: ReadCanisterSnapshotDataResult = candid::decode_one(&raw).unwrap();
+        let official: ReadCanisterSnapshotDataResult =
+            ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
         assert_eq!(official.chunk, case.chunk);
         assert_eq!(reply.chunk(), case.chunk);
         assert_eq!(reply.chunk_checksum().hash(), case.chunk_checksum);
@@ -97,12 +103,13 @@ fn region(index: usize, offset: u64, size: u64) -> SnapshotDataKind {
 fn checked_ranges_reject_zero_excess_overflow_and_wrong_metadata_region() {
     let source = metadata_request();
     let mut values: ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&metadata_bytes()).unwrap();
+        ic_platform::candid::decode_one(&metadata_bytes(), crate::test_support::WIRE_ORACLE_LIMITS)
+            .unwrap();
     values.wasm_module_size = 0;
     values.wasm_memory_size = 64;
     values.stable_memory_size = u64::MAX;
     let metadata =
-        IcSnapshotMetadataReply::decode(&source, &candid::encode_one(&values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&source, &contract::encode_one(&values).unwrap()).unwrap();
     for index in 0..3 {
         for size in [0, 1024 * 1024 + 1, u64::MAX] {
             assert_eq!(
@@ -137,13 +144,13 @@ fn exact_lengths_and_actual_chunk_hashes_admit_no_missing_extra_or_substitute_by
     for index in 0..3 {
         let request = IcSnapshotDataRequest::new(&metadata, region(index, 0, 3)).unwrap();
         for chunk in [vec![], vec![0; 2], vec![0; 4]] {
-            let raw = candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap();
+            let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap();
             assert_eq!(
                 IcSnapshotDataReply::decode(&request, &raw).unwrap_err(),
                 IcSnapshotDataError::LengthMismatch
             );
         }
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
             chunk: vec![0, 255, 17],
         })
         .unwrap();
@@ -172,7 +179,7 @@ fn exact_lengths_and_actual_chunk_hashes_admit_no_missing_extra_or_substitute_by
             },
         )
         .unwrap();
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
             chunk: chunk.clone(),
         })
         .unwrap();
@@ -180,7 +187,7 @@ fn exact_lengths_and_actual_chunk_hashes_admit_no_missing_extra_or_substitute_by
             IcSnapshotDataReply::decode(&request, &raw).unwrap().chunk(),
             chunk
         );
-        let wrong = candid::encode_one(ReadCanisterSnapshotDataResult {
+        let wrong = contract::encode_one(ReadCanisterSnapshotDataResult {
             chunk: vec![17, 255, 0],
         })
         .unwrap();
@@ -197,13 +204,14 @@ fn actual_chunk_and_raw_bounds_include_valid_maximum_ranges_and_stored_chunks() 
     let chunk = vec![19; MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES];
     let checksum = sha2::Sha256::digest(&chunk);
     let mut values: ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&metadata_bytes()).unwrap();
+        ic_platform::candid::decode_one(&metadata_bytes(), crate::test_support::WIRE_ORACLE_LIMITS)
+            .unwrap();
     values.wasm_module_size = 1024 * 1024;
     values.wasm_chunk_store = vec![ChunkHash {
         hash: checksum.to_vec(),
     }];
     let metadata =
-        IcSnapshotMetadataReply::decode(&source, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&source, &contract::encode_one(values).unwrap()).unwrap();
     for kind in [
         region(0, 0, 1024 * 1024),
         SnapshotDataKind::WasmChunk {
@@ -211,7 +219,7 @@ fn actual_chunk_and_raw_bounds_include_valid_maximum_ranges_and_stored_chunks() 
         },
     ] {
         let request = IcSnapshotDataRequest::new(&metadata, kind).unwrap();
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
             chunk: chunk.clone(),
         })
         .unwrap();
@@ -221,7 +229,7 @@ fn actual_chunk_and_raw_bounds_include_valid_maximum_ranges_and_stored_chunks() 
             reply.chunk_checksum(),
             &ArtifactChecksumRecord::from_bytes(&chunk)
         );
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
             chunk: vec![19; MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES + 1],
         })
         .unwrap();
@@ -242,15 +250,17 @@ fn retains_metadata_and_raw_wire_identity_separately_from_matching_data_bytes() 
     let source = metadata_request();
     let raw_metadata = metadata_bytes();
     let original = IcSnapshotMetadataReply::decode(&source, &raw_metadata).unwrap();
-    let mut values: ReadCanisterSnapshotMetadataResult = candid::decode_one(&raw_metadata).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(&raw_metadata, crate::test_support::WIRE_ORACLE_LIMITS)
+            .unwrap();
     values.taken_at_timestamp -= 1;
     let changed =
-        IcSnapshotMetadataReply::decode(&source, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&source, &contract::encode_one(values).unwrap()).unwrap();
     let request = IcSnapshotDataRequest::new(&original, region(0, 0, 3)).unwrap();
     let other = IcSnapshotDataRequest::new(&changed, region(0, 0, 3)).unwrap();
     assert_eq!(request.arguments(), other.arguments());
     assert_eq!(request.digest(), other.digest());
-    let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+    let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
         chunk: vec![0, 255, 17],
     })
     .unwrap();
@@ -305,18 +315,20 @@ fn retains_metadata_and_raw_wire_identity_separately_from_matching_data_bytes() 
 #[test]
 fn rejects_truncated_missing_extra_skipped_wrong_type_and_hostile_header_values() {
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct Extra {
         chunk: Vec<u8>,
         extra: u64,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct Wrong {
         chunk: Option<Vec<u8>>,
     }
     let source = metadata_request();
     let metadata = IcSnapshotMetadataReply::decode(&source, &metadata_bytes()).unwrap();
     let request = IcSnapshotDataRequest::new(&metadata, region(0, 0, 3)).unwrap();
-    let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+    let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
         chunk: vec![0, 255, 17],
     })
     .unwrap();
@@ -328,8 +340,8 @@ fn rejects_truncated_missing_extra_skipped_wrong_type_and_hostile_header_values(
     }
     let invalid = [
         b"bad wire".to_vec(),
-        candid::encode_args(()).unwrap(),
-        candid::encode_args((
+        contract::encode_args(()).unwrap(),
+        contract::encode_args((
             ReadCanisterSnapshotDataResult {
                 chunk: vec![0, 255, 17],
             },
@@ -337,13 +349,13 @@ fn rejects_truncated_missing_extra_skipped_wrong_type_and_hostile_header_values(
         ))
         .unwrap(),
         [raw.as_slice(), &[0]].concat(),
-        candid::encode_one(Extra {
+        contract::encode_one(Extra {
             chunk: vec![0, 255, 17],
             extra: 0,
         })
         .unwrap(),
-        candid::encode_one(Wrong { chunk: None }).unwrap(),
-        candid::encode_one(12_u64).unwrap(),
+        contract::encode_one(Wrong { chunk: None }).unwrap(),
+        contract::encode_one(12_u64).unwrap(),
         [
             b"DIDL".as_slice(),
             &[17],

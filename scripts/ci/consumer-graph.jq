@@ -4,4 +4,4 @@ def original_graph_admitted($original; $consumer):
     all(.packages[] | select(.name != $consumer);
         . as $package | any($original.packages[];
             .name == $package.name and .version == $package.version and .source == $package.source))
-    and all(.packages[]; .name != "ic-testkit" and .name != "pocket-ic");
+    and all(.packages[]; .name != "ic-testkit" and .name != "pocket-ic" and .name != "wat");

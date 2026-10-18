@@ -34,7 +34,10 @@ fn unsupported_data_status_and_changed_list_target_are_typed_denials() {
         let data = IcSnapshotUploadRequest::data(
             upload,
             DESTINATION_ID,
-            ic_management_canister_types::SnapshotDataKind::WasmModule { offset: 0, size: 1 },
+            ic_platform::management_canister_types::SnapshotDataKind::WasmModule {
+                offset: 0,
+                size: 1,
+            },
             &[42],
         )
         .unwrap();

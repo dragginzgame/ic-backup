@@ -1,6 +1,7 @@
 //! Changed original region files stop further writes without repairing evidence.
 
 use super::*;
+use ic_platform::candid::contract;
 
 #[test]
 fn changed_region_identity_or_extent_stops_an_unrelated_append_without_writes() {
@@ -15,7 +16,7 @@ fn changed_region_identity_or_extent_stops_an_unrelated_append_without_writes() 
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
         let original = fs::read(journal.path()).unwrap();

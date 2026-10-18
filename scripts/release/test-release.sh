@@ -69,6 +69,8 @@ create_fixture() {
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/validate-release-inputs.pl" "$ROOT/scripts/ci/StableVersion.pm" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/scripts/ci/rewrite-local-lock-versions.pl" "$ROOT/scripts/ci/read-cargo-workspace-version.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/scripts/ci/finalize-release-changelog.awk" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/cargo-release-metadata.sh" "$ROOT/scripts/ci/cargo-workspace-members.jq" \
+        "$ROOT/scripts/ci/compare-stable-versions.pl" "$ROOT/scripts/ci/render-cargo-workspace-version.pl" "$FIXTURE/scripts/ci/"
     cd "$FIXTURE"
     cat > Cargo.toml <<'TOML'
 [workspace]
@@ -86,7 +88,7 @@ edition.workspace = true
 publish.workspace = true
 TOML
     printf '// Native metadata fixture target; no canister behavior.\n' > crates/ic-backup/src/lib.rs
-    printf 'version = 4\n\n[[package]]\nname = "ic-backup"\nversion = "0.1.0"\n\n[[package]]\nname = "retained-dependency"\nversion = "9.8.7"\n' > Cargo.lock
+    printf 'version = 4\n\n[[package]]\nname = "ic-backup"\nversion = "0.1.0"\n\n[[package]]\nname = "retained-dependency"\nversion = "9.8.7"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\n' > Cargo.lock
     printf '\n[[package]]\nname = "ic-testkit"\nversion = "0.28.1"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\n' >> Cargo.lock
     printf '# Changelog\n\n## [0.1.1]\n\n- Completed notes.\n\n## [0.1.0] - 2026-10-01\n\n- Retained history.\n\n## [0.0.9]\n\n- Imported undated history.\n' > CHANGELOG.md
     sed -n '/^## \[0.1.0\]/,$p' CHANGELOG.md > target/history
@@ -276,7 +278,13 @@ case "$1" in
                 ;;
             *) exit 97 ;;
         esac ;;
-    cat-file) [[ -f target/mock-tag && -f "target/tags/${3#refs/tags/}.object" ]] || exit 1; echo tag ;;
+    cat-file)
+        if [[ "$3" =~ ^[0-9a-f]{40}$ && -d "target/commits/$3" ]]; then echo commit
+        else [[ -f target/mock-tag && -f "target/tags/${3#refs/tags/}.object" ]] || exit 1; echo tag; fi ;;
+    archive)
+        selected="${*: -1}"
+        [[ "$selected" =~ ^[0-9a-f]{40}$ && -d "target/commits/$selected/files" ]] || exit 1
+        tar -cf - -C "target/commits/$selected/files" . ;;
     ls-remote)
         [[ "${TEST_REMOTE_FAIL:-0}" != 1 ]] || exit 9
         for ref in "$@"; do
@@ -353,6 +361,10 @@ set -euo pipefail
 printf 'cargo %s\n' "$*" >> "$TEST_LOG"
 case "$*" in
     'locate-project --workspace --message-format plain --manifest-path '*) exec "$TEST_REAL_CARGO" "$@" ;;
+    'sort --workspace --check --grouped') exec "$TEST_REAL_CARGO" "$@" ;;
+    'metadata --locked --offline --format-version 1')
+        version="$(yq -p toml -o json '.workspace.package.version' Cargo.toml | jq -r .)"
+        jq -n --arg version "$version" '{workspace_members:["fixture"],packages:[{id:"fixture",name:"ic-backup",version:$version,source:null}]}' ;;
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
     'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
@@ -778,14 +790,28 @@ test_older_release_recovery() {
     unset TEST_PUSH_FAIL
     cp target/release-state/0.1.1.validation.json target/original-proof.json
     record_reviewed_fix "$next"
+    if [[ "$mode" == explicit-unsorted ]]; then
+        # Current HEAD is deliberately unsorted but clean in the Git substitute.
+        # Resuming the earlier release must sort-check its selected original tree.
+        printf '\n[workspace.dependencies]\n# Production dependencies\nzzz = "1"\naaa = "1"\n' >> Cargo.toml
+        cp Cargo.toml "target/commits/ffffffffffffffffffffffffffffffffffffffff/files/Cargo.toml"
+        if "$TEST_REAL_CARGO" sort --workspace --check --grouped > target/current-order.log 2>&1; then
+            echo 'selected-source fixture must have an unsorted current manifest' >&2; exit 1
+        fi
+        cp Cargo.toml target/unsorted-current.toml
+    fi
     expect_failure perl scripts/release/release-data.pl verify
     : > "$TEST_EFFECTS"
-    if [[ "$mode" == explicit ]]; then
+    if [[ "$mode" == explicit || "$mode" == explicit-unsorted ]]; then
         "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
         [[ "$(cat "$TEST_EFFECTS")" == push ]] || exit 1
         [[ "$(cat target/remote-head)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]] || exit 1
         [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1
         [[ ! -e "target/release-state/$next.plan" ]] || exit 1
+        if [[ "$mode" == explicit-unsorted ]]; then
+            cmp Cargo.toml target/unsorted-current.toml
+            rg -F 'cargo sort --workspace --check --grouped' "$TEST_LOG" > /dev/null
+        fi
     else
         if [[ "$mode" == gate-failure ]]; then
             export TEST_GATE_FAIL=1
@@ -1015,7 +1041,7 @@ run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-normal-retry test_prepared_normal_retry
 for disposition in unchanged bumped; do run_case "committed-preparation-$disposition" test_committed_preparation_retry "$disposition"; done
 for mode in retry offline network invalid lock common prerequisite; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
-for mode in explicit patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
+for mode in explicit explicit-unsorted patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
 run_case completed-evidence-replay test_completed_evidence_replay
 run_case dependency-failure-conditional-status test_dependency_failure_conditional_status

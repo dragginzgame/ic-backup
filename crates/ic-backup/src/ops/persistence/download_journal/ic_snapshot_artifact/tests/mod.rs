@@ -1,5 +1,6 @@
 //! Actual private filesystem streaming and durable interruption recovery; no IC backend.
 
+use ic_platform::candid::contract;
 mod custody;
 mod upload;
 mod verification;
@@ -15,9 +16,10 @@ use crate::{
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use ic_host_artifacts::artifact::Sha256Digest;
-use ic_management_canister_types::{
+use ic_platform::management_canister_types::{
     ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
+use sha2::{Digest, Sha256};
 use std::{
     os::unix::fs::{PermissionsExt, symlink},
     process::Command,
@@ -45,7 +47,8 @@ fn values() -> ReadCanisterSnapshotMetadataResult {
         .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect::<Vec<_>>();
-    let mut values: ReadCanisterSnapshotMetadataResult = candid::decode_one(&raw).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 5;
     values.wasm_memory_size = 3;
     values.stable_memory_size = 1;
@@ -79,7 +82,7 @@ fn append<'a, 'b, 'c>(
 ) -> Result<IcSnapshotArtifactWriter<'a, 'b, 'c>, IcSnapshotArtifactError> {
     let metadata = writer.coverage.metadata();
     let request = IcSnapshotDataRequest::new(metadata, kind).unwrap();
-    let raw = candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap();
+    let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap();
     let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
     writer.append(&reply)
 }
@@ -142,7 +145,7 @@ fn interleaved_bytes_metadata_and_empty_chunks_publish_under_the_original_journa
     let root = root();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(values()).unwrap();
+    let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
     let writer = journal
@@ -224,7 +227,7 @@ fn partial_drop_and_coverage_rejections_retain_bytes_without_completion_or_recre
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
         let original = fs::read(journal.path()).unwrap();
@@ -272,8 +275,8 @@ fn partial_drop_and_coverage_rejections_retain_bytes_without_completion_or_recre
                     SnapshotDataKind::StableMemory { offset: 0, size: 1 },
                 )
                 .unwrap();
-                let raw =
-                    candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![1] }).unwrap();
+                let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![1] })
+                    .unwrap();
                 let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
                 assert!(matches!(
                     writer.append(&reply),
@@ -300,7 +303,8 @@ fn partial_drop_and_coverage_rejections_retain_bytes_without_completion_or_recre
             "io" => {
                 // A real read-only descriptor makes the next write fail on every Unix host.
                 let mut writer = writer;
-                writer.regions[0] = File::open(path.join("wasm-module.bin")).unwrap();
+                writer.regions[0] =
+                    HashingWriter::new(File::open(path.join("wasm-module.bin")).unwrap(), u64::MAX);
                 assert!(matches!(
                     append(
                         writer,
@@ -337,7 +341,7 @@ fn changed_unsafe_extra_and_missing_files_reject_before_any_journal_transition()
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
         let original = fs::read(journal.path()).unwrap();
@@ -408,7 +412,7 @@ fn original_mismatches_reject_before_creation_and_replaced_custody_receives_no_w
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let timestamp = if action == "timestamp" {
             1
@@ -509,7 +513,7 @@ fn zero_regions_maximum_chunks_and_streamed_maximum_replies_keep_exact_bytes() {
                 hash: Sha256::digest(chunk).to_vec(),
             })
             .collect();
-        let raw = candid::encode_one(values).unwrap();
+        let raw = contract::encode_one(values).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
         let mut writer = journal
@@ -566,7 +570,7 @@ fn closing_publication_custody_drift_rejects_and_retains_the_completed_local_evi
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
         let writer = journal
@@ -626,7 +630,7 @@ fn acknowledged_process_death_retains_partial_or_exact_verified_publication_reco
         let root = PathBuf::from(std::env::var_os(ROOT).unwrap());
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
         let writer = journal

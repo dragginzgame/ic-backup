@@ -104,6 +104,7 @@ committed_check() {
     context
     [[ "${RELEASE_COMMIT:-}" =~ ^[0-9a-f]{40,64}$ ]] || fail 'missing exact selected release commit'
     ensure_clean
+    bash "$ROOT/scripts/ci/cargo-release-metadata.sh" check ic-backup --manifest-order-grouped
     [[ "$(perl "$DATA" version --commit "$RELEASE_COMMIT")" == "$RELEASE_VERSION" ]] || fail 'committed version differs from plan'
     validation_check prepared --commit "$RELEASE_COMMIT"
     perl "$DATA" verify "$RELEASE_SOURCE" "$RELEASE_DATE" "$RELEASE_VERSION" --commit "$RELEASE_COMMIT"

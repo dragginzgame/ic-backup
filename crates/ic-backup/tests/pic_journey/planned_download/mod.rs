@@ -37,7 +37,7 @@ use ic_backup::{
         ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
     },
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
 use std::{convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt, path::Path};
 

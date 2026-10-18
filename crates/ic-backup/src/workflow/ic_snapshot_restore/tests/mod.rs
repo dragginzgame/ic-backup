@@ -410,7 +410,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
                 let mut actual = input(safety);
                 if failure == 1 {
                     actual.targets[0].state =
-                        ic_management_canister_types::CanisterStatusType::Running;
+                        ic_platform::management_canister_types::CanisterStatusType::Running;
                 }
                 if failure == 6 {
                     fs::write(&requirement_path, b"{}")?;

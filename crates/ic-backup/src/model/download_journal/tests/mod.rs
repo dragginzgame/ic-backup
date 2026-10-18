@@ -1,7 +1,7 @@
 //! Adapted Canic state/validation cases and exact local identity regressions.
 
 use super::*;
-use ic_principal::Principal;
+use ic_platform::Principal;
 
 const HASH: &str = "abababababababababababababababababababababababababababababababab";
 const CANISTER: &str = "aaaaa-aa";

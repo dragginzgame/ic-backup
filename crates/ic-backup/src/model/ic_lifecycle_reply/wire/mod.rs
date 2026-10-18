@@ -6,9 +6,9 @@ use crate::model::{
     bounded_sequence,
     control_authority::{ControllerSet, MAX_CONTROLLERS},
 };
-use candid::{CandidType, Principal};
-use ic_management_canister_types::CanisterStatusType;
-use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::management_canister_types::CanisterStatusType;
+use ic_platform::{Principal, candid::contract::CandidType};
 use serde::{Deserialize, Deserializer};
 
 const DECODING_QUOTA: usize = 2 * 1024 * 1024;
@@ -16,12 +16,14 @@ const SKIPPING_QUOTA: usize = 64 * 1024;
 const MAX_TYPE_TABLE_ENTRIES: usize = 64;
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireStatus {
     status: CanisterStatusType,
     settings: WireSettings,
 }
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireSettings {
     #[serde(deserialize_with = "controllers")]
     controllers: Vec<Principal>,

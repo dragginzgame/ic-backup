@@ -1,6 +1,7 @@
 //! Exact SDK fields, source/wire identity, bounds and original pending spending.
 
 use super::*;
+use ic_platform::candid::contract;
 
 #[test]
 fn independently_registered_upload_wire_and_hash_goldens_match_every_case() {
@@ -83,9 +84,10 @@ use crate::{
         DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, unhex, upload_plan,
     },
 };
-use ic_management_canister_types::UploadCanisterSnapshotMetadataResult;
+use ic_platform::management_canister_types::UploadCanisterSnapshotMetadataResult;
 
-#[derive(candid::CandidType, serde::Deserialize)]
+#[derive(contract::CandidType, serde::Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct ExtendedUploadReply {
     snapshot_id: Vec<u8>,
     extra: u64,
@@ -100,7 +102,7 @@ fn maximum_globals_and_exact_source_evidence_bind_without_optional_coercion_or_d
     let metadata = IcSnapshotMetadataReply::decode(&request, &bytes).unwrap();
     let checksum = ArtifactChecksumRecord::from_bytes(b"tree");
     let upload = IcSnapshotUploadRequest::metadata(&source_plan, &metadata, &checksum).unwrap();
-    let alternate_raw = candid::encode_one(metadata.metadata()).unwrap();
+    let alternate_raw = contract::encode_one(metadata.metadata()).unwrap();
     let alternate = IcSnapshotMetadataReply::decode(&request, &alternate_raw).unwrap();
     let alternate_upload =
         IcSnapshotUploadRequest::metadata(&source_plan, &alternate, &checksum).unwrap();
@@ -113,13 +115,17 @@ fn maximum_globals_and_exact_source_evidence_bind_without_optional_coercion_or_d
     assert_ne!(upload.binding_digest(), other.binding_digest());
     let mut values = metadata.metadata().clone();
     values.globals = vec![values.globals[4].clone(); 4096];
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let maximum = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let maximum = IcSnapshotUploadRequest::metadata(&source_plan, &maximum, &checksum).unwrap();
-    let args: UploadCanisterSnapshotMetadataArgs = candid::decode_one(maximum.arguments()).unwrap();
+    let args: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
+        maximum.arguments(),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     assert_eq!(args.globals.len(), 4096);
     assert!(maximum.arguments().len() <= MAX_IC_SNAPSHOT_UPLOAD_ARGUMENT_BYTES);
-    let extra = candid::encode_one(ExtendedUploadReply {
+    let extra = contract::encode_one(ExtendedUploadReply {
         snapshot_id: DESTINATION_ID.to_vec(),
         extra: u64::MAX,
     })
@@ -150,8 +156,11 @@ fn exact_sdk_metadata_globals_bits_options_and_source_bound_intent() {
         let bytes = raw(name);
         let metadata = IcSnapshotMetadataReply::decode(&request, &bytes).unwrap();
         let upload = IcSnapshotUploadRequest::metadata(&plan, &metadata, &checksum).unwrap();
-        let values: UploadCanisterSnapshotMetadataArgs =
-            candid::decode_one(upload.arguments()).unwrap();
+        let values: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
+            upload.arguments(),
+            crate::test_support::WIRE_ORACLE_LIMITS,
+        )
+        .unwrap();
         let original = metadata.metadata();
         assert_eq!(values.canister_id.to_text(), TARGET);
         assert!(values.replace_snapshot.is_none());
@@ -168,8 +177,8 @@ fn exact_sdk_metadata_globals_bits_options_and_source_bound_intent() {
             )
         );
         assert_eq!(
-            candid::encode_one(values.globals).unwrap(),
-            candid::encode_one(
+            contract::encode_one(values.globals).unwrap(),
+            contract::encode_one(
                 original
                     .globals
                     .iter()
@@ -180,12 +189,12 @@ fn exact_sdk_metadata_globals_bits_options_and_source_bound_intent() {
             .unwrap()
         );
         assert_eq!(
-            candid::encode_one(values.global_timer).unwrap(),
-            candid::encode_one(&original.global_timer).unwrap()
+            contract::encode_one(values.global_timer).unwrap(),
+            contract::encode_one(&original.global_timer).unwrap()
         );
         assert_eq!(
-            candid::encode_one(values.on_low_wasm_memory_hook_status).unwrap(),
-            candid::encode_one(&original.on_low_wasm_memory_hook_status).unwrap()
+            contract::encode_one(values.on_low_wasm_memory_hook_status).unwrap(),
+            contract::encode_one(&original.on_low_wasm_memory_hook_status).unwrap()
         );
         assert_eq!(values.certified_data, original.certified_data);
         assert_eq!(upload.receiver(), "aaaaa-aa");
@@ -235,7 +244,11 @@ fn every_region_known_chunks_zero_chunks_and_maximum_arguments_keep_exact_bytes(
         },
     ] {
         let data = IcSnapshotUploadRequest::data(&upload, DESTINATION_ID, kind, SOURCE_ID).unwrap();
-        let args: UploadCanisterSnapshotDataArgs = candid::decode_one(data.arguments()).unwrap();
+        let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+            data.arguments(),
+            crate::test_support::WIRE_ORACLE_LIMITS,
+        )
+        .unwrap();
         assert_eq!(args.chunk, SOURCE_ID);
         assert_eq!(args.snapshot_id, DESTINATION_ID);
         assert_eq!(args.canister_id.to_text(), TARGET);
@@ -254,7 +267,9 @@ fn every_region_known_chunks_zero_chunks_and_maximum_arguments_keep_exact_bytes(
         &[],
     )
     .unwrap();
-    let args: UploadCanisterSnapshotDataArgs = candid::decode_one(empty.arguments()).unwrap();
+    let args: UploadCanisterSnapshotDataArgs =
+        ic_platform::candid::decode_one(empty.arguments(), crate::test_support::WIRE_ORACLE_LIMITS)
+            .unwrap();
     assert_eq!(args.chunk, [] as [u8; 0]);
     assert!(matches!(
         IcSnapshotUploadRequest::data(
@@ -278,7 +293,9 @@ fn every_region_known_chunks_zero_chunks_and_maximum_arguments_keep_exact_bytes(
     .unwrap();
     assert!(data.arguments().len() > MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES);
     assert!(data.arguments().len() <= MAX_IC_SNAPSHOT_UPLOAD_ARGUMENT_BYTES);
-    let args: UploadCanisterSnapshotDataArgs = candid::decode_one(data.arguments()).unwrap();
+    let args: UploadCanisterSnapshotDataArgs =
+        ic_platform::candid::decode_one(data.arguments(), crate::test_support::WIRE_ORACLE_LIMITS)
+            .unwrap();
     assert_eq!(args.chunk, large);
 }
 
@@ -381,7 +398,7 @@ fn bounded_reply_identity_exact_empty_tuple_and_wire_extensions_reject() {
     )
     .unwrap();
     for id in [DESTINATION_ID.to_vec(), vec![21; 256]] {
-        let raw = candid::encode_one(UploadCanisterSnapshotMetadataResult {
+        let raw = contract::encode_one(UploadCanisterSnapshotMetadataResult {
             snapshot_id: id.clone(),
         })
         .unwrap();
@@ -398,7 +415,7 @@ fn bounded_reply_identity_exact_empty_tuple_and_wire_extensions_reject() {
     }
     for id in [vec![], vec![1; 257], SOURCE_ID.to_vec()] {
         let raw =
-            candid::encode_one(UploadCanisterSnapshotMetadataResult { snapshot_id: id }).unwrap();
+            contract::encode_one(UploadCanisterSnapshotMetadataResult { snapshot_id: id }).unwrap();
         assert!(IcSnapshotUploadReply::decode(&upload, &raw).is_err());
     }
     let data = IcSnapshotUploadRequest::data(
@@ -416,12 +433,12 @@ fn bounded_reply_identity_exact_empty_tuple_and_wire_extensions_reject() {
     );
     for raw in [
         b"DIDL\0\0\0".to_vec(),
-        candid::encode_one(()).unwrap(),
+        contract::encode_one(()).unwrap(),
         vec![0; 4097],
     ] {
         assert!(IcSnapshotUploadReply::decode(&data, &raw).is_err());
     }
-    let raw = candid::encode_one(UploadCanisterSnapshotMetadataResult {
+    let raw = contract::encode_one(UploadCanisterSnapshotMetadataResult {
         snapshot_id: DESTINATION_ID.to_vec(),
     })
     .unwrap();
@@ -429,7 +446,7 @@ fn bounded_reply_identity_exact_empty_tuple_and_wire_extensions_reject() {
     assert!(
         IcSnapshotUploadReply::decode(
             &upload,
-            &candid::encode_args((
+            &contract::encode_args((
                 UploadCanisterSnapshotMetadataResult {
                     snapshot_id: DESTINATION_ID.to_vec()
                 },

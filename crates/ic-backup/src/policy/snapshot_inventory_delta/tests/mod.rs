@@ -2,7 +2,8 @@ use super::*;
 use crate::model::{
     ic_request::IcManagementRequest, ic_snapshot_reply::MAX_IC_SNAPSHOT_REPLY_ENTRIES,
 };
-use ic_management_canister_types::Snapshot;
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::Snapshot;
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 
@@ -26,7 +27,7 @@ fn snapshot(id: &[u8]) -> Snapshot {
 fn inventory(request: &IcManagementRequestRecord, snapshots: Vec<Snapshot>) -> IcSnapshotReply<'_> {
     IcSnapshotReply::decode(
         request,
-        &candid::encode_one(snapshots).expect("fixture wire"),
+        &contract::encode_one(snapshots).expect("fixture wire"),
     )
     .expect("admitted inventory")
 }
@@ -149,7 +150,7 @@ fn rejects_wrong_capture_inventory_methods_and_either_target() {
     }
     let captured = IcSnapshotReply::decode(
         &capture,
-        &candid::encode_one(snapshot(&[1])).expect("fixture wire"),
+        &contract::encode_one(snapshot(&[1])).expect("fixture wire"),
     )
     .expect("capture reply");
     for (before, after) in [(&captured, &baseline), (&baseline, &captured)] {

@@ -31,6 +31,9 @@ and planned product work. Start with the [project overview](../README.md) for th
 plain-language product concept or [current status](status/current.md) for the
 active implementation baseline.
 
+For the current package/dependency ownership map and retained adapter rationale,
+see [ownership boundaries](ownership.md).
+
 ## At a glance
 
 | Area | Implemented here | Does not yet establish |
@@ -40,10 +43,11 @@ active implementation baseline.
 | Inventory and plans | Exact targets, dependency graphs, request bindings and finite attempt limits | Current membership, control or application consistency |
 | IC request/reply codecs | Typed bytes and bounded decoding for selected snapshot and lifecycle calls | Authenticated transport or trustworthy reply association |
 | Integration ports | Explicit contracts for membership, control, read access and consistency evidence | Installed live providers or application-specific safety |
-| End-to-end product | Local foundations only | Capture/restore runners, transport, CLI or a qualified backup journey |
+| Direct transport | Configured single-update Agent providers, with HTTP/gateway qualification | Fresh application authority, automatic settlement or complete runners |
+| End-to-end product | Local foundations and individual coordinated workflows | Complete capture/restore runners, CLI or general application qualification |
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-implementation-boundary.svg" alt="Implementation boundary showing locally tested models, policy and persistence, application-supplied integration contracts, and the planned IC transport, runners and CLI" width="800">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-implementation-boundary.svg" alt="Implementation boundary showing locally tested models, policy and persistence, application-supplied integration contracts, and application integration responsibilities alongside implemented Agent transport and planned full runners/CLI" width="800">
 </p>
 
 ## Terms used in this reference
@@ -114,14 +118,14 @@ inventory, requirement, download and restore-reference boundaries retain their
 original typed errors, validation order and canonical bytes. Journal reopen still
 admits caller-supplied intent before locking/reading retained evidence.
 
-`ops::artifacts` exposes directory checksums and pure declared-file composition.
-Its internal raw stream adapter delegates to `ic-host-artifacts` using constant
-working memory and retries interrupted reads; failures return no complete checksum.
+`ops::artifacts` keeps crate-private directory checksum and declared-file
+composition adapters over Host FS and Host Artifacts, returning Backup records
+and errors. There is no local raw stream adapter.
 Generic file/path selectors, root-relative copying and the public stream adapter
 are removed. Independent file hashing/copying belongs to Host FS and Host Artifacts
 with caller-selected limits and custody. The IC snapshot writer owns product staging.
-The IC artifact verifier supplies its admitted descriptor length to the shared
-bounded hash owner and checks the returned byte count; short and excess streams
+The IC artifact verifier supplies its admitted descriptor length to Host Artifacts'
+`hash_exact_reader`; short and excess streams
 reject as `FileShape`. Descriptor/path identity checks remain independent.
 Host FS directory traversal opens
 descriptors without following artifact symlinks, checks actual entry types and
@@ -185,31 +189,21 @@ effects. The admitted byte buffer preserves that ordering; streaming after a
 preflight would invoke the serializer twice. Independent documents use caller-
 bounded Host FS reads/byte publication and their own encoding/decoding.
 
-The pending 0.19.0 draft selects direct Host Artifact/FS 0.14. Its public
-publication-error Rust identity changes; sharing consumers must align Host 0.14.
-Published Rust sources match 0.13.5, with unchanged record and custody contracts.
-
-The 0.28 hard cut removes Backup's local publication-error mirror.
+Backup's local publication-error mirror was removed in 0.28.
 `PersistenceError::Publication` directly carries
 `ic_host_fs::durable::NamedWriteError<std::io::Error>`, retaining the original typed
 producer, cleanup and before/after-publication errors. Consumers update imports
 and exhaustive matches to Host's enum and align direct Host FS with the selected
-0.24 line; no compatibility alias remains. Parent-preparation IO and
-serialization JSON errors keep their own boundaries. The public exhaustive enum changed in
-0.6.0; callers must update matches and reconcile visible output after failed
-completion. All v1 bytes, original limits, spending and journal transitions remain
+0.27 line; no compatibility alias remains. Parent-preparation IO and
+serialization JSON errors keep their own boundaries. Callers reconcile visible
+output after failed completion. All v1 bytes, original limits, spending and journal transitions remain
 unchanged. Internal publication grants no operation or retry authority.
 
-Released 0.8.1 selects the Host 0.7.1 `NamedWriteError` Rust type identity. The
-released 0.9.0 selected Host 0.8 and released 0.11.0 selected direct Host 0.9.
-Released 0.12.0 selects direct Host 0.10. Released 0.13.0 selects direct Host 0.11,
-changing that public Rust identity again while preserving variant shapes and v1
-records. Error display includes retained secondary staging cleanup failures. The pathname adapter uses Host's
-canonical `write_with`; the Unix held-parent adapter retains `write_at_with`.
-The selected Testkit 0.29 test-only graph also uses published Host 0.11.
-Direct Host dependencies sharing that value must use the same compatible line.
-The new closed-writer executable-admission API has no record-writing purpose;
-JSON publication keeps this single held-parent adapter and preflight contract.
+Error display includes retained secondary staging cleanup failures. Unix JSON
+publication uses Host's `write_at_validated_with` beneath its held parent; the
+non-Unix path uses `write_validated_with`. Both preserve the same
+preflight and publication barriers. The [release ledger](../CHANGELOG.md) retains
+earlier dependency transitions; those versions are not current integration guidance.
 
 Native artifact, publication and lock syscall failures use Rustix's canonical
 conversion into `io::Error`, retaining the original OS code before the existing
@@ -768,8 +762,8 @@ backend tokens and are not implicitly converted, folded or adopted here.
 Unknown/missing/duplicate fields, unsupported methods/generations and injected
 argument/digest/receiver/authority fields reject. Decode bounds raw byte retention.
 
-The model derives cached Candid arguments with the existing lockfile-selected
-`candid` (currently 0.10.37) and `ic-management-canister-types = 0.11.0`. Original
+The model derives cached Candid arguments through published Platform’s codec and
+management exports, preserving selected Candid 0.10.38 and management DTO 0.11.0. Original
 0.10.35 Candid and 0.8.0 SDK source evidence remain historical; the request/reply
 wire goldens have also been rerun against the current selection. See
 [SDK upgrade evidence](management-types-upgrade.json). Receiver is fixed to the management principal

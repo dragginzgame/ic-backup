@@ -12,7 +12,7 @@ use crate::{
         membership::{APP, hash},
     },
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
 
 pub fn wire(method: IcManagementMethodRecord) -> IcManagementRequestRecord {

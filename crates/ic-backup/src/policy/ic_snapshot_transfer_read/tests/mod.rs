@@ -11,7 +11,8 @@ use crate::{
     },
     test_support::{control_authority, membership::hash},
 };
-use ic_management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
 use sha2::{Digest, Sha256};
 
 fn metadata_wire() -> Vec<u8> {
@@ -72,7 +73,7 @@ fn original_metadata_and_data_associate_without_receipts_or_new_spending() {
         ),
         (
             IcSnapshotTransferReadPayload::Data(&data),
-            candid::encode_one(ReadCanisterSnapshotDataResult {
+            contract::encode_one(ReadCanisterSnapshotDataResult {
                 chunk: vec![7, 8, 9],
             })
             .unwrap(),
@@ -289,7 +290,8 @@ fn data_length_hash_and_method_mismatch_use_existing_decoder_errors() {
             Err(IcSnapshotTransferReadError::PayloadMismatch)
         ));
         let request = IcSnapshotTransferReadRequest::new(&plan, 7, &journal, payload).unwrap();
-        let bytes = candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![99] }).unwrap();
+        let bytes =
+            contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![99] }).unwrap();
         let response = IcSnapshotTransferReadResponse::new(fields(&request, bytes)).unwrap();
         let error = validate_response(&request, &journal, &response).unwrap_err();
         assert!(match kind {
@@ -312,14 +314,15 @@ fn data_length_hash_and_method_mismatch_use_existing_decoder_errors() {
 fn full_bounded_data_and_empty_known_chunks_keep_original_byte_and_hash_limits() {
     let metadata_request =
         IcSnapshotMetadataRequest::new(control_authority::stop().target(), &[0, 255, 128]).unwrap();
-    let mut values: ic_management_canister_types::ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&metadata_wire()).unwrap();
+    let mut values: ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(&metadata_wire(), crate::test_support::WIRE_ORACLE_LIMITS)
+            .unwrap();
     values.wasm_module_size =
         crate::model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64;
-    values.wasm_chunk_store = vec![ic_management_canister_types::ChunkHash {
+    values.wasm_chunk_store = vec![ic_platform::management_canister_types::ChunkHash {
         hash: Sha256::digest([]).to_vec(),
     }];
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, &raw).unwrap();
     for (kind, bytes) in [
         (
@@ -342,7 +345,7 @@ fn full_bounded_data_and_empty_known_chunks_keep_original_byte_and_hash_limits()
         let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
         journal.reserve_mutation().unwrap();
         let request = IcSnapshotTransferReadRequest::new(&plan, 7, &journal, payload).unwrap();
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult {
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult {
             chunk: bytes.clone(),
         })
         .unwrap();

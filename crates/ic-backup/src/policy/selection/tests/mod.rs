@@ -116,7 +116,7 @@ fn empty_excessive_role_and_unknown_selectors_fail_with_typed_errors() {
             InventoryRecordError::InvalidPrincipal("canister_id")
         ))
     ));
-    let absent = ic_principal::Principal::from_slice(&[99]).to_text();
+    let absent = ic_platform::Principal::from_slice(&[99]).to_text();
     assert!(
         matches!(select(&inventory,&request(&[&absent],SelectionExpansion::Descendants)),Err(SelectionError::Inventory(InventoryRecordError::UnknownTarget(id))) if id==absent)
     );

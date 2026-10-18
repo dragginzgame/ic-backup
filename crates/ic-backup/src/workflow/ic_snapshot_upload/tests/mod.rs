@@ -20,7 +20,7 @@ use crate::{
         temp_dir,
     },
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 use std::{convert::Infallible, fs, io, path::PathBuf};
 
 fn with_uploads(mut check: impl FnMut(&IcSnapshotUploadRequest<'_>, Vec<u8>)) {

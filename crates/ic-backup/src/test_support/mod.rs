@@ -113,3 +113,13 @@ pub(crate) fn write_json_durable(
     let bytes = crate::ops::persistence::json::encode_json(value, 16 * 1024 * 1024)?;
     crate::ops::persistence::json::write_encoded(path, &bytes)
 }
+
+/// Broad finite admission for trusted fixture oracles, independent of product limits.
+pub(crate) const WIRE_ORACLE_LIMITS: ic_platform::candid::DecodeLimits =
+    ic_platform::candid::DecodeLimits {
+        reply_bytes: 64 * 1024 * 1024,
+        decoding_quota: 512 * 1024 * 1024,
+        skipping_quota: 64 * 1024 * 1024,
+        type_entries: 4096,
+        header_bytes: 64 * 1024,
+    };

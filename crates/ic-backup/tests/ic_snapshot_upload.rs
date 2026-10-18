@@ -1,6 +1,8 @@
 //! Public retained-source preparation and passive upload recovery; no IC simulation.
 #![cfg(unix)]
+
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
+use ic_platform::candid::contract;
 
 mod ready;
 mod support;
@@ -27,7 +29,7 @@ use ic_backup::{
     policy::ic_snapshot_upload::validate_acknowledgement,
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
 };
-use ic_management_canister_types::{
+use ic_platform::management_canister_types::{
     ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
     UploadCanisterSnapshotDataArgs, UploadCanisterSnapshotMetadataResult,
 };
@@ -82,12 +84,13 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect::<Vec<_>>();
-    let mut values: ReadCanisterSnapshotMetadataResult = candid::decode_one(&bytes).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(&bytes, support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 3;
     values.wasm_memory_size = 0;
     values.stable_memory_size = 0;
     values.wasm_chunk_store.clear();
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let metadata_request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, &raw).unwrap();
     let mut downloads = DownloadJournalGuard::create(
@@ -111,7 +114,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     .unwrap();
     let reply = IcSnapshotDataReply::decode(
         &read,
-        &candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![42; 3] }).unwrap(),
+        &contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![42; 3] }).unwrap(),
     )
     .unwrap();
     writer.append(&reply).unwrap().finish().unwrap();
@@ -152,7 +155,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         mutation_attempt: 1,
         context: upload_plan.context().clone(),
         target: TARGET.into(),
-        reply: candid::encode_one(UploadCanisterSnapshotMetadataResult {
+        reply: contract::encode_one(UploadCanisterSnapshotMetadataResult {
             snapshot_id: DESTINATION.to_vec(),
         })
         .unwrap(),
@@ -180,7 +183,8 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
             SnapshotDataKind::WasmModule { offset: 1, size: 2 },
         )
         .unwrap();
-    let args: UploadCanisterSnapshotDataArgs = candid::decode_one(data.arguments()).unwrap();
+    let args: UploadCanisterSnapshotDataArgs =
+        ic_platform::candid::decode_one(data.arguments(), support::WIRE_ORACLE_LIMITS).unwrap();
     assert_eq!(args.chunk, [42; 2]);
     assert_eq!(args.snapshot_id, DESTINATION);
     assert!(IcSnapshotUploadAttempt::new(&upload_plan, 7, &retained_attempt, &data).is_err());

@@ -6,7 +6,8 @@ use crate::{
         SOURCE_ID, TARGET, data_workflow, raw, source_plan, unhex, upload_plan,
     },
 };
-use ic_management_canister_types::{ChunkHash, ReadCanisterSnapshotMetadataResult};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{ChunkHash, ReadCanisterSnapshotMetadataResult};
 
 fn with_values(
     values: ReadCanisterSnapshotMetadataResult,
@@ -15,7 +16,7 @@ fn with_values(
     let source = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
     let metadata =
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(values).unwrap()).unwrap();
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     let upload = IcSnapshotUploadRequest::metadata(
         &source,
         &metadata,
@@ -25,7 +26,11 @@ fn with_values(
     check(&upload);
 }
 fn values() -> ReadCanisterSnapshotMetadataResult {
-    candid::decode_one(&raw("upload-source")).unwrap()
+    ic_platform::candid::decode_one(
+        &raw("upload-source"),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap()
 }
 fn allocation<'a, 'b>(payload: &'a IcSnapshotUploadRequest<'b>) -> IcSnapshotUploadReply<'a, 'b> {
     IcSnapshotUploadReply::decode(
@@ -56,8 +61,8 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
             SnapshotDataKind::WasmChunk { hash: vec![2; 32] },
         ];
         assert_eq!(
-            candid::encode_one(&kinds).unwrap(),
-            candid::encode_one(expected).unwrap()
+            contract::encode_one(&kinds).unwrap(),
+            contract::encode_one(expected).unwrap()
         );
         let bindings: Vec<_> = (0..kinds.len())
             .map(|i| ArtifactChecksumRecord::from_bytes(&i.to_le_bytes()))

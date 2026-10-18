@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.31.1]
+
+### Changed
+
+- Adopt published `ic-platform` 0.1.8 as the Candid boundary for management
+  encoders, bounded decoders, derives and test oracles. Remove direct Candid and
+  standalone Testkit codec dependencies; retain exact wire bytes, decoder limits,
+  public upstream identities and redacted errors. Enforce direct dependency
+  ownership with Shared Tooling’s canonical boundary check.
+- Source every principal through Platform’s root export, preserving upstream
+  0.1.5 identity, normalization and hashes. Remove the direct principal dependency
+  and exact-pin exception, and enforce the ownership boundary.
+- Adopt Platform’s native Agent feature for supported transport/signing identities.
+  Keep Reqwest client policy explicit. Published `CallResponse` and
+  `AnonymousIdentity` exports complete the SDK migration; remove its direct
+  dependency and policy exception. Migrate all 24 snapshot/status DTOs through
+  Platform too, removing the direct management dependency and final pin exception
+  while preserving upstream 0.11.0 identities. Completes
+  [Platform #13](https://github.com/dragginzgame/ic-platform/issues/13).
+  Preserve single dispatch, durable retention, bounds and pending spending.
+
+- Adopt reviewed Shared Tooling 0.24.0 with dependency-role groups and matching
+  grouped formatting in hooks, CI and selected-source release checks. Keep
+  current package versions and dependency selections unchanged by this adoption.
+- Extend independent consumer admission to reject WAT tooling alongside simulator
+  packages, including transitive and renamed identities. Document the separate
+  downstream deployment artifact/evidence obligation.
+
+- Adopt published Testkit and standalone Candid codec 0.53.0, aligning their
+  transitive Host dependencies with the already-selected 0.27.1 packages.
+  Keep simulator qualification in development dependencies and management
+  decoder limits and product contracts unchanged.
+
+- Call published Testkit library server admission directly in both simulator
+  fixtures and remove the shell/Make/CLI bridge. Keep explicit setup, offline
+  admission, private server digests and managed logs. Resolves #55 after native
+  consumer qualification and delivery.
+
+- Remove stranded test-only JSON publication wrappers; crash and parent-custody
+  regressions use the bounded encoder and publication engine directly. Reuse the
+  verified private FIFO fixture helper for record-admission qualification.
+
+- Use Host Artifacts hashing writers for snapshot region streams, removing the
+  parallel local hash-state array and moving direct `sha2` use to test dependencies.
+  Preserve coverage, descriptor/extent checks, exact retained bytes and publication.
+- Retire the producer-only Host checksum regression and duplicate record checks;
+  keep record vectors with the model and publication/recovery and projection
+  checks with their adapters. Use local names for test roots.
+- Retire unused exported producer fixtures through the canonical Shared Tooling
+  exporter. Keep real dependency-policy admission and consumer, hook, release and
+  evidence qualification; correct stale active ownership and Host API guidance.
+- Correct active ownership and transport guidance, and archive the pre-release
+  handoff while retaining all historical receipts and source attribution.
+
 ## [0.31.0] - 2026-10-17
 
 ### Breaking

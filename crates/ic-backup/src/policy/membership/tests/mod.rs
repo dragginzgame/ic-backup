@@ -254,7 +254,7 @@ fn admits_the_full_inventory_bound_and_rejects_one_missing_unselected_target() {
     let rows = value["inventory"]["targets"].as_array_mut().unwrap();
     for id in 0_u32..1022 {
         rows.push(serde_json::json!({
-            "canister_id": ic_principal::Principal::from_slice(&id.to_be_bytes()).to_text(),
+            "canister_id": ic_platform::Principal::from_slice(&id.to_be_bytes()).to_text(),
             "parent_canister_id": null, "role": null, "module_hash": null,
         }));
     }
@@ -277,7 +277,7 @@ fn admits_the_full_inventory_bound_and_rejects_one_missing_unselected_target() {
             .len(),
         1024
     );
-    let missing = ic_principal::Principal::from_slice(&0_u32.to_be_bytes()).to_text();
+    let missing = ic_platform::Principal::from_slice(&0_u32.to_be_bytes()).to_text();
     let smaller = InventoryRecord::new(
         observed
             .inventory

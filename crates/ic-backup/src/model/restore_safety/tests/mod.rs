@@ -379,7 +379,7 @@ fn admits_only_canonical_nonempty_bounded_unique_inventory_backed_rows() {
         assert_eq!(RestoreSafetyObservation::new(data).unwrap_err(), error);
     }
     let ids: Vec<_> = (0_u32..1024)
-        .map(|id| ic_principal::Principal::from_slice(&id.to_be_bytes()).to_text())
+        .map(|id| ic_platform::Principal::from_slice(&id.to_be_bytes()).to_text())
         .collect();
     let inventory=serde_json::from_value(json!({"version":1,"targets":ids.iter().map(|id|json!({"canister_id":id,"parent_canister_id":null,"role":null,"module_hash":null})).collect::<Vec<_>>()})).unwrap();
     let mut data = input(&request);

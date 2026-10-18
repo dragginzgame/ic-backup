@@ -1,5 +1,6 @@
 //! Native reserved-observation recovery evidence; no simulated or live IC effects.
 
+use ic_platform::candid::contract;
 mod ready;
 mod support;
 
@@ -159,7 +160,8 @@ fn retained_case(
         // Retain the synthetic original list before reserving any mutation. This
         // proves local retention order only, never authenticated IC chronology.
         let baseline =
-            candid::encode_one(Vec::<ic_management_canister_types::Snapshot>::new()).unwrap();
+            contract::encode_one(Vec::<ic_platform::management_canister_types::Snapshot>::new())
+                .unwrap();
         fs::write(root.join("baseline.candid"), baseline).unwrap();
     }
     let authority = plan.attempt_authority(42).unwrap();

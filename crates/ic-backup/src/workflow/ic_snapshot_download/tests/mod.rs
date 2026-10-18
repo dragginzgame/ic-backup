@@ -16,7 +16,8 @@ use crate::{
     ports::ic_observation::IcObservationProviderError,
     test_support::temp_dir,
 };
-use ic_management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
 use std::{convert::Infallible, fs, io, path::PathBuf};
 
 const TOKEN: &str = "qualified-original";
@@ -126,7 +127,7 @@ impl IcSnapshotTransferReadProvider for Provider {
                     return Err(IcObservationProviderError::Indeterminate);
                 }
                 Some((failed, true)) if failed == index => vec![],
-                _ => candid::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
+                _ => contract::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
             };
             Ok(IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
@@ -161,7 +162,7 @@ fn qualify(
     })
 }
 fn raw_metadata() -> Vec<u8> {
-    candid::encode_one(values()).unwrap()
+    contract::encode_one(values()).unwrap()
 }
 
 #[test]
@@ -659,7 +660,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
             ExecutionStageGuard::open(&layout, &workflow.digest(), 7, &binding.digest()).unwrap();
         let mut other = values();
         other.wasm_module_size += 1;
-        let other_raw = candid::encode_one(other).unwrap();
+        let other_raw = contract::encode_one(other).unwrap();
         let other_metadata = IcSnapshotMetadataReply::decode(&request, &other_raw).unwrap();
         let (selected_metadata, selected_raw) = if variant == 0 {
             (&other_metadata, &other_raw)
@@ -676,8 +677,8 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
             .stage_ic_snapshot_artifact(TOKEN, selected_metadata, selected_raw)
             .unwrap();
         if variant == 2 {
-            let raw =
-                candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![7; 32] }).unwrap();
+            let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![7; 32] })
+                .unwrap();
             let reply = crate::model::ic_snapshot_data::IcSnapshotDataReply::decode(
                 &download.requests()[0],
                 &raw,
@@ -690,7 +691,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
         empty.wasm_memory_size = 0;
         empty.stable_memory_size = 0;
         empty.wasm_chunk_store.clear();
-        let empty_raw = candid::encode_one(empty).unwrap();
+        let empty_raw = contract::encode_one(empty).unwrap();
         let empty_metadata = IcSnapshotMetadataReply::decode(&request, &empty_raw).unwrap();
         let empty_download =
             IcSnapshotDownloadPlan::new(&workflow, 7, &empty_metadata, 32).unwrap();

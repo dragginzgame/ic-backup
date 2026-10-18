@@ -21,11 +21,9 @@ pub use update::AgentUpdateProvider;
 mod transfer_read;
 pub use transfer_read::AgentSnapshotTransferReadProvider;
 
-use ic_agent::{
-    Agent, Identity, RequestId,
-    export::{Principal, reqwest},
-};
 use ic_backup::model::operation_plan::PlanContextRecord;
+use ic_platform::Principal;
+use ic_platform::agent::{Agent, Identity, RequestId};
 use std::{sync::Arc, time::Duration};
 use thiserror::Error;
 

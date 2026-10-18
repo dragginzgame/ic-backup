@@ -19,7 +19,7 @@ use ic_backup::{
     policy::restore_safety::{RestoreSafetyError, validate},
     ports::restore_safety::{RestoreSafetyProvider, RestoreSafetyProviderError},
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
 use std::fs;
 const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";

@@ -31,7 +31,7 @@ fn normalizes_known_sets_and_rejects_duplicates_malformed_and_excessive_entries(
         );
     }
     let principals: Vec<_> = (0_u32..10)
-        .map(|id| ic_principal::Principal::from_slice(&id.to_be_bytes()).to_text())
+        .map(|id| ic_platform::Principal::from_slice(&id.to_be_bytes()).to_text())
         .collect();
     assert_eq!(
         ControllerSet::new(principals.clone())

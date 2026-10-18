@@ -1,11 +1,15 @@
 # Direct Agent transport
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
-`ic-agent` 0.49.2. The maintainer selected this hard cut on 2026-10-08; the complete
+Platform 0.1.8’s native `agent` feature over the unchanged `ic-agent` 0.49.2
+identity. Reqwest is an explicit consumer dependency for the bounded HTTP client.
+All SDK imports, including `CallResponse` and `AnonymousIdentity`, use Platform;
+there is no direct SDK declaration. The maintainer selected the transport hard cut on 2026-10-08; the complete
 transport was first released in 0.8.0. The core 0.28 hard cut removes the local
 `PublicationError` mirror: `PersistenceError::Publication` directly carries
 `ic_host_fs::durable::NamedWriteError<std::io::Error>`. Consumers matching that
-variant use Host's enum and align direct Host FS with the selected 0.24 line. The ICP transport/probe is retired;
+variant use Host's enum and align direct Host FS with the
+[workspace selection](../Cargo.toml). The ICP transport/probe is retired;
 historical evidence and original journals remain retained. Testkit owns explicit simulator selection/admission
 through the [current setup contract](development.md); shared IC executables
 provide no product backend.
@@ -47,12 +51,15 @@ or a hard cycle cap. Trusted signing providers own their own resource/custody li
 
 `ReservedUpdate` accepts exact original mutation, recovery observation, transfer
 read, upload, allocation observation, data readback or fence-acquisition requests.
-`prepare` rechecks their original current journal and signs canonical receiver,
-effective target, method and argument bytes without IO. Hold the original guarded
-journal; retain exact `envelope()` and `request_id()` privately and durably with
-original intent/reservation before calling the consuming `submit().await`.
-An async executor with network/timer support is required. Preparation grants no
-fresh effect authority or proof that a reconstructed pending request was never sent.
+The configured provider rechecks the original current journal and signs canonical
+receiver, effective target, method and argument bytes. Hold the original guarded
+journal across its await. The mandatory retention callback receives a passive
+`PreparedUpdate` view; retain exact `envelope()` and `request_id()` privately and
+durably with original intent/reservation before returning success. Only then does
+the provider submit once. Signing and dispatch are internal; there is no public
+prepare/submit or envelope reissue API. An async network/timer executor is required.
+Reconstructing a pending request proves neither fresh effect authority nor that
+its original was never sent.
 
 ## Async mutation coordination
 

@@ -1,7 +1,7 @@
 //! Pure admission of a written root origin before URL normalization hides paths.
 
 use crate::TransportError;
-use ic_agent::export::reqwest::Url;
+use reqwest::Url;
 use std::net::IpAddr;
 
 pub(super) fn admit_written_origin(endpoint: &str) -> Result<Url, TransportError> {

@@ -10,7 +10,7 @@ use crate::model::{
         TargetRestoreEvidence,
     },
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use thiserror::Error;
 
 /// Read-only matched current safety; never a load/start, spending or release permit.

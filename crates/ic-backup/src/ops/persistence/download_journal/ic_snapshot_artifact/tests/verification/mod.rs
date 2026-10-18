@@ -6,6 +6,7 @@ use crate::{
     ops::persistence::{DownloadIntegrityError, create_operation_plan},
     test_support::create_private_fifo,
 };
+use ic_platform::candid::contract;
 use serde_json::json;
 
 fn plan() -> OperationPlanRecord {
@@ -54,7 +55,7 @@ fn explicit_retained_verification_keeps_exact_metadata_journal_and_plan_bytes() 
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(values()).unwrap();
+    let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = retained(&layout, &plan, &metadata, &raw);
     let bytes = fs::read(guard.path()).unwrap();
@@ -105,7 +106,7 @@ fn changed_unsafe_missing_extra_and_unbounded_children_reject_without_repair() {
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let plan = plan();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let guard = retained(&layout, &plan, &metadata, &raw);
         let journal_bytes = fs::read(guard.path()).unwrap();
@@ -197,7 +198,7 @@ fn maximum_chunks_and_region_bytes_verify_without_an_aggregate_buffer() {
             hash: Sha256::digest(value.to_be_bytes()).to_vec(),
         })
         .collect();
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut guard = DownloadJournalGuard::create(
@@ -241,9 +242,13 @@ fn maximum_chunks_and_region_bytes_verify_without_an_aggregate_buffer() {
             .unwrap(),
         checksum
     );
-    let mut extreme = candid::decode_one::<ReadCanisterSnapshotMetadataResult>(&raw).unwrap();
+    let mut extreme = ic_platform::candid::decode_one::<ReadCanisterSnapshotMetadataResult>(
+        &raw,
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     extreme.stable_memory_size = u64::MAX;
-    let extreme_raw = candid::encode_one(extreme).unwrap();
+    let extreme_raw = contract::encode_one(extreme).unwrap();
     let extreme_metadata = IcSnapshotMetadataReply::decode(&request, &extreme_raw).unwrap();
     let canonical = root.join(format!("artifacts/{TARGET}"));
     fs::write(canonical.join("metadata.candid"), &extreme_raw).unwrap();
@@ -277,7 +282,7 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let plan = plan();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(values()).unwrap();
+        let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut guard = retained(&layout, &plan, &metadata, &raw);
         let directory = root.join(format!("artifacts/{TARGET}"));
@@ -344,7 +349,7 @@ fn non_durable_originals_and_replaced_layout_reject_before_artifact_reads() {
     let plan = plan();
     create_operation_plan(&layout, &plan).unwrap();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(values()).unwrap();
+    let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = DownloadJournalGuard::create(
         &layout,
@@ -382,7 +387,7 @@ fn exact_original_metadata_request_and_retained_declarations_are_required() {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(values()).unwrap();
+    let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = retained(&layout, &plan, &metadata, &raw);
     let wrong_request = IcSnapshotMetadataRequest::new(TARGET, &[17, 255, 0]).unwrap();
@@ -393,7 +398,7 @@ fn exact_original_metadata_request_and_retained_declarations_are_required() {
     ));
     let mut different = values();
     different.taken_at_timestamp -= 1;
-    let different_raw = candid::encode_one(different).unwrap();
+    let different_raw = contract::encode_one(different).unwrap();
     let different_metadata = IcSnapshotMetadataReply::decode(&request, &different_raw).unwrap();
     assert!(matches!(
         guard.verify_ic_snapshot_artifact(&plan, TOKEN, &different_metadata),

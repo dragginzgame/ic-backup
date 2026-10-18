@@ -71,7 +71,7 @@ fn canonical_output_bound_rejects_escaped_roles_before_creating_a_record() {
     let rows = (0..MAX_INVENTORY_TARGETS)
         .map(|index| {
             InventoryTargetRecord::new(&InventoryTargetRequest {
-                canister_id: ic_principal::Principal::from_slice(&index.to_be_bytes()).to_text(),
+                canister_id: ic_platform::Principal::from_slice(&index.to_be_bytes()).to_text(),
                 parent_canister_id: None,
                 role: Some("\0".repeat(256)),
                 module_hash: None,

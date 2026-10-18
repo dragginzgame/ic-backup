@@ -128,7 +128,9 @@ async fn run(reply: Reply) {
             support::retain_signed(&root, prepared)
                 .map_err(|_| FenceAcquisitionProviderError::Unavailable)
         },
-        |_request: &FenceAcquisitionRequest<'_>, _id: &ic_agent::RequestId, bytes: &[u8]| {
+        |_request: &FenceAcquisitionRequest<'_>,
+         _id: &ic_platform::agent::RequestId,
+         bytes: &[u8]| {
             assert_eq!(bytes, b"");
             super::retain_reply(&root, bytes).unwrap();
             // Discard the public acknowledgement after an actual certified empty reply.

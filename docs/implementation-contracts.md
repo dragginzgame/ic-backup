@@ -8,6 +8,12 @@ implementation determine what has actually been qualified.
 
 ## Current implementation scope
 
+- Snapshot region writes use Host Artifacts `HashingWriter<File>`. Coverage owns
+  region order/ceilings; Backup keeps held-descriptor identity and exact extents,
+  complete coverage, fresh byte verification, journal custody and publication.
+  Generic accepted-byte hashing has one owner; `sha2` is a direct test dependency
+  for independent expectations. Retained v1 bytes, errors and public APIs stay exact.
+
 - Direct Host Artifacts, FS and Process select published 0.27.1. Native file
   identity comes from `ic_host_fs::identity::FileIdentity`; command custody keeps
   regular-sidecar admission, inherited exclusion and bounded quiescence. Exposed
@@ -20,12 +26,23 @@ implementation determine what has actually been qualified.
   mandatory signed retention precedes the single dispatch under the same journal.
   The two previous provider types are removed without aliases for 0.31.
 
-- The standalone published `ic-testkit-candid` 0.52 codec owns exact single-result
+- Published `ic-platform` 0.1.8 with Core’s `candid` feature owns exact single-result
   decoding and compact decoder setup. Backup retains raw reply ceilings, bounded
   DTOs, every method-specific work/skip/type/header quota and redacted outer errors.
   Explicit 64 KiB status/snapshot headers preserve the selected Candid default;
   metadata/data/upload headers remain 16/4/4 KiB. Canonical empty replies still use
   their original exact six-byte comparison. No simulator enters production.
+- Agent alone adds Platform’s native `agent` feature. SDK version 0.49.2 stays
+  selected; Platform enables PEM support without selecting transport policy.
+  All SDK imports, including `CallResponse` and test `AnonymousIdentity`, use
+  Platform. Reqwest is explicit consumer-owned HTTP configuration;
+  preserve custom middleware, zero retries, original ingress and reply custody.
+- Management imports use Platform’s `management-canister-types` feature, which
+  preserves exact upstream 0.11.0 identities. Direct DTO declarations and the
+  local pin exception are removed; the dependency boundary rejects reintroduction.
+- Principal imports use Platform’s root `Principal` export, preserving the selected
+  upstream 0.1.5 identity, normalized text and hashes. No direct principal dependency
+  or exact-pin exception remains.
 - Journal sidecars call Host FS directly and project once into `JournalLockError`.
   Preserve 0600/no-follow regular-file admission, no-wait contention, unsafe-entry
   classification, close-on-exec and explicit unlock on drop.
@@ -54,7 +71,8 @@ implementation determine what has actually been qualified.
 - `PersistenceError::Publication` directly carries Host FS's
   `NamedWriteError<std::io::Error>` in the 0.28 hard cut. The local mirror is removed
   without an alias. Consumers update imports/matches and align direct Host FS with
-  the selected 0.24 line. Producer, cleanup, before/after-publication evidence and
+  the current workspace requirement. Producer, cleanup, before/after-publication
+  evidence and
   reconciliation requirements remain unchanged.
 - Command custody and restore retention share journal-parent resolution. Resolve
   existing parents, admit absent or regular leaves and reject leaf aliases. Preserve
@@ -658,6 +676,10 @@ Ordinary resume remains artifact-free; no rewriting, accounting or release follo
   explicit original per-ingress plans, unique operation sequences, prior bounded reservations, independent original attribution,
   complete byte/metadata checks and local replay with retained references. The selected
   server is explicitly prepared and checksum/version checked; missing tools reject.
+  Core and Agent call the locked Testkit library’s offline server-asset check
+  directly, retain a bounded exact server digest privately, and then start the
+  managed process with fixture-owned output files. Tool setup stays explicit;
+  Make retains the standalone CLI/tool admission gate.
   Fixture setup, pre-load chunk-store changes/assertions and application calls are
   separate from backup accounting. Its inspected no-external-effects/stopped-drain
   admission is fixture-specific, never a generic

@@ -6,7 +6,8 @@ use crate::{
         ic_snapshot_upload_data_observation::{input, with_original},
     },
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::SnapshotDataKind;
 
 #[test]
 fn equal_preexisting_zero_bytes_and_different_regions_produce_no_write_outcome() {
@@ -143,20 +144,20 @@ fn malformed_inexact_excess_and_stale_data_evidence_cannot_bypass_existing_owner
                 vec![],
                 b"DIDL\0\0".to_vec(),
                 b"invalid".to_vec(),
-                candid::encode_one(
-                    ic_management_canister_types::ReadCanisterSnapshotDataResult {
+                contract::encode_one(
+                    ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
                         chunk: vec![42],
                     },
                 )
                 .unwrap(),
-                candid::encode_one(
-                    ic_management_canister_types::ReadCanisterSnapshotDataResult {
+                contract::encode_one(
+                    ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
                         chunk: vec![42; 3],
                     },
                 )
                 .unwrap(),
-                candid::encode_one(
-                    ic_management_canister_types::ReadCanisterSnapshotDataResult {
+                contract::encode_one(
+                    ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
                         chunk: vec![42; 1024 * 1024 + 1],
                     },
                 )

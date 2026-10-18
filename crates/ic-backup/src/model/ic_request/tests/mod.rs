@@ -78,8 +78,11 @@ fn decodes_exact_host_ingress_shapes_using_pinned_official_types() {
         let record = request(case.method, &case.target, case.snapshot_id.clone());
         match case.method {
             IcManagementMethodRecord::TakeCanisterSnapshot => {
-                let decoded: TakeCanisterSnapshotArgs =
-                    candid::decode_one(record.arguments()).expect("official capture argument type");
+                let decoded: TakeCanisterSnapshotArgs = ic_platform::candid::decode_one(
+                    record.arguments(),
+                    crate::test_support::WIRE_ORACLE_LIMITS,
+                )
+                .expect("official capture argument type");
                 assert_eq!(decoded.canister_id.to_text(), record.target());
                 assert_eq!(decoded.replace_snapshot, None);
                 assert_eq!(decoded.uninstall_code, Some(false));
@@ -87,16 +90,22 @@ fn decodes_exact_host_ingress_shapes_using_pinned_official_types() {
                 assert_eq!(case.method.effect(), IcRequestEffect::Mutation);
             }
             IcManagementMethodRecord::LoadCanisterSnapshot => {
-                let decoded: LoadCanisterSnapshotArgs =
-                    candid::decode_one(record.arguments()).expect("official load argument type");
+                let decoded: LoadCanisterSnapshotArgs = ic_platform::candid::decode_one(
+                    record.arguments(),
+                    crate::test_support::WIRE_ORACLE_LIMITS,
+                )
+                .expect("official load argument type");
                 assert_eq!(decoded.canister_id.to_text(), record.target());
                 assert_eq!(Some(decoded.snapshot_id), case.snapshot_id);
                 assert_eq!(decoded.sender_canister_version, None);
                 assert_eq!(case.method.effect(), IcRequestEffect::Mutation);
             }
             _ => {
-                let decoded: CanisterIdRecord =
-                    candid::decode_one(record.arguments()).expect("official target argument type");
+                let decoded: CanisterIdRecord = ic_platform::candid::decode_one(
+                    record.arguments(),
+                    crate::test_support::WIRE_ORACLE_LIMITS,
+                )
+                .expect("official target argument type");
                 assert_eq!(decoded.canister_id.to_text(), record.target());
                 assert_eq!(record.snapshot_id(), None);
             }

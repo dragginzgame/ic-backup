@@ -2,6 +2,7 @@
 
 use crate::support::create_json_durable;
 use crate::support::read_json;
+use ic_platform::candid::contract;
 mod support;
 
 use ic_backup::{
@@ -17,7 +18,7 @@ use ic_backup::{
         read_operation_plan,
     },
 };
-use ic_management_canister_types::Snapshot;
+use ic_platform::management_canister_types::Snapshot;
 use serde_json::json;
 use std::fs;
 
@@ -78,7 +79,7 @@ fn retains_original_spending_and_reply_bytes_across_reopen_and_decode_failures()
     let journal_path = journal.path();
     let retained_journal = fs::read(&journal_path).expect("retained exact bytes");
     let retained_view = journal.record().expect("original spending").view();
-    let raw = candid::encode_one(Snapshot {
+    let raw = contract::encode_one(Snapshot {
         id: vec![0, 255, 17],
         taken_at_timestamp: 123,
         total_size: 456,
@@ -123,7 +124,7 @@ fn retains_original_spending_and_reply_bytes_across_reopen_and_decode_failures()
         IcSnapshotReply::decode(&capture, b"lost or malformed reply").unwrap_err(),
         IcSnapshotReplyError::InvalidReply
     );
-    let duplicate = candid::encode_one(vec![
+    let duplicate = contract::encode_one(vec![
         Snapshot {
             id: vec![1],
             taken_at_timestamp: 0,

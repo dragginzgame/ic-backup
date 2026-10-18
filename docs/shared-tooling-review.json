@@ -1,95 +1,210 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-17",
+  "inspection_date": "2026-10-18",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "0b351cd2ba2bcd8927b783a5fec89afc8013f708",
-  "label": "0.23.0",
+  "revision": "cab12cd3dfa4fdb34846b25397f0d72881bb9ae0",
+  "label": "0.24.0",
   "manifest": ".shared-tooling.snapshot",
-  "selected_files": 124,
+  "selected_files": 114,
   "changed_paths": [
     "docs/verification-helpers.md",
+    "docs/provenance.md",
     "docs/ic-tools.md",
     "docs/local-setup.md",
-    "scripts/dev/install-host-tools.sh",
+    "ci/tool-versions.env",
     "scripts/dev/install-ic-tools.sh",
     "scripts/ci/test-host-tools.sh",
     "scripts/ci/test-ic-tools.sh",
+    "docs/consuming-snapshots.md",
     "docs/supported-hosts.md",
+    "DRAGGINZGAME.md",
     "docs/releases.md",
-    "scripts/ci/check-formatting-hooks.sh",
+    "scripts/ci/run-release.sh",
+    "scripts/ci/next-release-version.sh",
+    "scripts/ci/test-release-runner.sh",
+    "rules/cargo-dependencies.md",
+    "rules/git-hooks.md",
     "scripts/ci/test-tool-commands.sh",
     "scripts/dev/install-rust-tools.sh",
     "scripts/ci/test-rust-tools.sh",
-    ".github/actions/retain-failure-evidence/action.yml",
-    "scripts/ci/install-ci-tool.sh",
-    "scripts/dev/tool-store.sh",
-    "docs/make-interface.md",
+    "scripts/ci/ic-tool-pins.awk",
+    "scripts/ci/test-cargo-tool-versions.sh",
     "scripts/ci/tool-catalog-records.pl",
-    "ci/ic-tools.tsv",
-    "docs/rust-toolchains.md",
+    "scripts/ci/validate-release-inputs.pl",
+    "scripts/ci/cargo-tool-cache-key.sh",
     "docs/tool-catalog-bindings.md"
   ],
   "added_paths": [
-    "scripts/dev/host-platform.sh"
+    "scripts/ci/cargo-release-metadata.sh",
+    "scripts/ci/cargo-workspace-members.jq",
+    "scripts/ci/compare-stable-versions.pl",
+    "scripts/ci/render-cargo-workspace-version.pl",
+    "scripts/ci/check-cargo-dependency-boundaries.sh",
+    "scripts/ci/test-cargo-dependency-boundaries.sh"
   ],
   "retired_paths": [],
-  "baseline_changed": false,
+  "baseline_changed": true,
   "canonical_refresh": true,
-  "previous_revision": "3f87ddc1a0c1616775b2114c42a4adee7376c9b1",
+  "previous_revision": "0b351cd2ba2bcd8927b783a5fec89afc8013f708",
   "source_verification": {
     "remote_ref": "refs/heads/main",
-    "remote_revision": "0b351cd2ba2bcd8927b783a5fec89afc8013f708",
+    "remote_revision": "cab12cd3dfa4fdb34846b25397f0d72881bb9ae0",
     "isolated_clean_checkout": true,
-    "existing_entrypoints_retained": true
+    "existing_entrypoints_retained": true,
+    "added_entrypoints": [
+      "scripts/ci/cargo-release-metadata.sh",
+      "scripts/ci/check-cargo-dependency-boundaries.sh",
+      "scripts/ci/test-cargo-dependency-boundaries.sh"
+    ],
+    "dirty_sibling_inputs_excluded": true
+  },
+  "previous_review": {
+    "commit": "3317b4e6e49c0fe59e343069f68eb539324c0612",
+    "path": "docs/shared-tooling-review.json"
   },
   "consumer_changes": [
-    "Migrate native FileIdentity import to Host FS 0.27; declare minimum Host 0.27.1 for required tree APIs.",
-    "Retain the incoming locked Testkit/Candid 0.52 graph and migrate simulator Spawn configuration without changing timeout, TTLs or retained output.",
-    "Prepare authenticated ICP CLI 1.7.0 through the canonical IC installer before offline admission.",
-    "Retain existing Make setup/check order, local release admission, exact resume receipts and consumer qualification owners."
+    "Classify both published host libraries and the single root dependency catalog; retain production roles for transitive SHA-256 and Agent Tokio.",
+    "Use grouped write/check formatting in Make and hooks; committed admission uses canonical grouped metadata on RELEASE_COMMIT.",
+    "Preserve consumer receipt, source, delivery and exact resume checks.",
+    "Reject wat alongside ic-testkit and pocket-ic in existing independent consumer/package graph admission, by resolved package identity."
   ],
+  "production_graph_review": [
+    {
+      "package": "ic-backup",
+      "target": "x86_64-unknown-linux-gnu",
+      "features": "default (no package features declared)",
+      "status": 0,
+      "excluded_present": [],
+      "sha2_present": true,
+      "tokio_present": false
+    },
+    {
+      "package": "ic-backup-agent",
+      "target": "x86_64-unknown-linux-gnu",
+      "features": "default (no package features declared)",
+      "status": 0,
+      "excluded_present": [],
+      "sha2_present": true,
+      "tokio_present": true
+    },
+    {
+      "package": "ic-backup",
+      "target": "x86_64-apple-darwin",
+      "features": "default (no package features declared)",
+      "status": 0,
+      "excluded_present": [],
+      "sha2_present": true,
+      "tokio_present": false
+    },
+    {
+      "package": "ic-backup-agent",
+      "target": "x86_64-apple-darwin",
+      "features": "default (no package features declared)",
+      "status": 0,
+      "excluded_present": [],
+      "sha2_present": true,
+      "tokio_present": true
+    },
+    {
+      "package": "ic-backup",
+      "target": "aarch64-apple-darwin",
+      "features": "default (no package features declared)",
+      "status": 0,
+      "excluded_present": [],
+      "sha2_present": true,
+      "tokio_present": false
+    },
+    {
+      "package": "ic-backup-agent",
+      "target": "aarch64-apple-darwin",
+      "features": "default (no package features declared)",
+      "status": 0,
+      "excluded_present": [],
+      "sha2_present": true,
+      "tokio_present": true
+    }
+  ],
+  "deployment_enforcement": {
+    "automated": [
+      "Independent MSRV and unpacked-archive consumers reject simulator and WAT packages, including transitive and renamed identities."
+    ],
+    "not_enforced_here": [
+      "Role comments do not automatically update or validate the exclusion policy for future catalog changes.",
+      "There is no application deployment entrypoint binding target/features, a successful locked build and final artifact digest to deployed bytes."
+    ],
+    "scope": "Production host libraries, default features; no package-defined feature switches. Six target/package trees are graph inspection, not native macOS execution."
+  },
   "qualification": {
     "passed": [
-      "shared-tooling-check",
-      "tools-check",
-      "dependency-pins-check",
-      "fmt-check",
-      "check-doc-links (933 maintained local references)",
-      "tooling-check",
-      "release-check (isolated adapters and shared runner substitutes)",
-      "hooks-check",
-      "shell-check",
-      "release-delivery-check",
-      "canonical refresh preview (124 KEEP; no further changes)",
-      "151 selected Host custody/publication/artifact/download/recovery and Core/Agent PocketIC/HTTP cases",
-      "strict all-target/all-feature Clippy",
-      "actual Rust 1.91 workspace and independent consumer checks",
-      "warning-denied public API docs"
+      "shared-tooling snapshot: 128 exact files",
+      "grouped formatting and role-heading retention/idempotence/unsorted refusal",
+      "shared and consumer hook qualification",
+      "consumer tooling, snapshot refusal, evidence retention and graph exclusions",
+      "consumer release-adapter suite including older selected-source grouped order",
+      "actual Git selected-source cargo metadata at delivered 3317b4e",
+      "independent Core/Agent Rust 1.91 normal consumers",
+      "all six locked target/package normal/build trees",
+      "offline tools-check after explicit canonical Rust set preparation",
+      "dependency pins and inheritance",
+      "shell syntax, ShellCheck and Perl syntax",
+      "local documentation links",
+      "manifest meaning, lockfile, index, HEAD and incoming Rust preservation"
     ],
-    "pending": [
-      "native macOS consumer qualification",
-      "hosted GitHub Actions evidence upload",
-      "full local make ci (explicit release or validation request only)"
+    "not_run": [
+      "full local make ci",
+      "new native macOS consumer execution",
+      "live deployment",
+      "release or publication"
     ]
   },
-  "consumer_pins": {
-    "common_catalog": "ci/tool-versions.env",
-    "ic_catalog": "ci/ic-tools.tsv",
-    "common_catalog_changed": false,
-    "ic_catalog_changed": true,
-    "icp_version": "1.7.0 (previously 1.6.0; reviewed upstream host digests)",
-    "testkit_package": "ic-testkit 0.52.0 (incoming Cargo.lock selection retained)",
-    "pocket_ic_version": "16.1.0 (Testkit-owned selection)",
-    "host_packages": "ic-host-artifacts, ic-host-fs, ic-host-process 0.27.1 (incoming Cargo.lock selections retained)",
-    "reason": "Adopt the requested Host/tooling graph without resolving unrelated dependency upgrades or changing Backup package versions."
-  },
-  "review_notes": [
-    "Common baseline and contribution/validation rules are byte-identical to the previous snapshot.",
-    "Read-only normalized host observations, validated catalog records and bounded CI download retries remain Shared-owned.",
-    "The retired publication-preflight, separate Make-fixture copier, public-documentation debt checker and semantic Wasm/Blob assessment commands were not selected or called by Backup; their separate product-owner integrations are outside this closure.",
-    "Canonical manifest ownership is complete; no local edits to vendored payloads or ownership records.",
-    "Original plans, journals, byte evidence, source custody and pending spending are unchanged.",
-    "Incoming provider consolidation and codec extraction contribution remain preserved; this adoption does not authorize its pending Testkit PR merge/publication."
+  "evidence_directory": "/tmp/backup-shared-024-f2wrmjm9",
+  "consumer_msrv_evidence": "target/msrv-consumers.cpP999",
+  "limitations": [
+    "Current uncommitted adoption has no hosted native CI result.",
+    "Initial intermediate-export snapshot check refused; the final stable snapshot verifies.",
+    "Initial role-heading and snapshot README fixtures failed and were corrected locally; original logs retained.",
+    "The old common Rust set receipt refused the new catalog identity; canonical explicit setup succeeded without removing prior sets."
   ],
-  "evidence_root": "/tmp/backup-host-tooling-15cvvaeq"
+  "platform_boundary_extension": {
+    "date": "2026-10-18",
+    "source_revision": "cab12cd3dfa4fdb34846b25397f0d72881bb9ae0",
+    "previous_payloads": 128,
+    "unchanged_previous_payloads": 128,
+    "canonical_preview_and_export": true,
+    "policy": "ci/cargo-dependency-boundaries.json",
+    "validation": "See docs/ic-platform.md; task evidence /tmp/backup-platform-task/"
+  },
+  "selection_review": {
+    "date": "2026-10-18",
+    "source_revision": "cab12cd3dfa4fdb34846b25397f0d72881bb9ae0",
+    "previous_payloads": 130,
+    "selected_payloads": 114,
+    "unchanged_retained_payloads": 114,
+    "canonical_preview_and_export": true,
+    "retired_paths": [
+      "scripts/ci/test-file-digests.sh",
+      "scripts/ci/test-host-tools.sh",
+      "scripts/ci/test-ic-tools.sh",
+      "scripts/ci/test-cargo-metadata.sh",
+      "scripts/ci/test-format-tools.sh",
+      "scripts/ci/test-tool-commands.sh",
+      "scripts/ci/test-cloc.sh",
+      "scripts/ci/test-rust-tools.sh",
+      "scripts/ci/test-release-pr.sh",
+      "scripts/ci/test-tool-evidence.sh",
+      "scripts/ci/test-maintenance-task.sh",
+      "scripts/ci/test-tool-store.sh",
+      "scripts/ci/test-cargo-tool-versions.sh",
+      "scripts/ci/test-cargo-dependency-boundaries.sh",
+      "scripts/ci/check-pipe-jobserver.pl",
+      "scripts/ci/cargo-tool-cache-key.sh"
+    ],
+    "reason": "Generic producer matrices without maintained consumer callers stay in Shared Tooling; the active generic boundary-checker matrix is replaced by the existing real-workspace policy gate. Required Make/release/hook/evidence and failure-retention qualification remains selected.",
+    "consumer_changes": [
+      "Remove the generic dependency-checker regression dispatch from tooling-check; retain dependency-boundaries-check in CI_TARGETS.",
+      "Preserve the exact source revision, tool pins, library manifests, lockfile and all remaining snapshot bytes/modes."
+    ],
+    "evidence_directory": "/tmp/backup-audit-49lj1dvx",
+    "validation": "See docs/status/current.md; native macOS and hosted CI remain separate."
+  }
 }

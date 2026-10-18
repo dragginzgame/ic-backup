@@ -22,6 +22,7 @@ use crate::{
         IcSnapshotDataUploadExecutionError, IcSnapshotDataUploadReplyError, upload_snapshot_data,
     },
 };
+use ic_platform::candid::contract;
 use std::io;
 
 fn with_data_stage(
@@ -35,7 +36,7 @@ fn with_data_stage(
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let original = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(upload_values()).unwrap();
+    let raw = contract::encode_one(upload_values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let source = retained(&layout, &original, &metadata, &raw);
     let payload = source
@@ -535,7 +536,7 @@ fn insufficient_allocation_refuses_before_any_source_verification_or_journal_cha
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let original = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(upload_values()).unwrap();
+    let raw = contract::encode_one(upload_values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let source = retained(&layout, &original, &metadata, &raw);
     let payload = source
@@ -643,7 +644,7 @@ fn batch_plans_empty_regions_and_known_empty_chunks_without_placeholder_writes()
         values.stable_memory_size = 0;
         let empty = values.wasm_chunk_store.pop().unwrap();
         values.wasm_chunk_store = if known_empty { vec![empty] } else { vec![] };
-        let raw = candid::encode_one(values).unwrap();
+        let raw = contract::encode_one(values).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let mut source = DownloadJournalGuard::create(
             &layout,

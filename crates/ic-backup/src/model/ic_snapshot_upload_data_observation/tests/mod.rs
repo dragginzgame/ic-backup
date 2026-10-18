@@ -9,7 +9,10 @@ use crate::{
         ic_snapshot_upload_data_observation::{input, with_original},
     },
 };
-use ic_management_canister_types::{ReadCanisterSnapshotMetadataResult, SnapshotDataKind};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{
+    ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
+};
 
 #[test]
 fn exact_original_destination_regions_and_chunks_bind_both_spent_attempts() {
@@ -83,7 +86,7 @@ fn metadata_intent_and_changed_target_id_region_offset_size_or_hash_reject() {
             }
             for (target, id) in [("aaaaa-aa", read.snapshot_id()), (TARGET, SOURCE_ID)] {
                 let original = IcSnapshotMetadataRequest::new(target, id).unwrap();
-                let bytes = candid::encode_one(read.metadata().metadata()).unwrap();
+                let bytes = contract::encode_one(read.metadata().metadata()).unwrap();
                 let metadata = IcSnapshotMetadataReply::decode(&original, &bytes).unwrap();
                 let other = IcSnapshotDataRequest::new(&metadata, read.kind().clone()).unwrap();
                 assert!(matches!(
@@ -103,8 +106,8 @@ fn metadata_intent_and_changed_target_id_region_offset_size_or_hash_reject() {
             let hash = unhex(ArtifactChecksumRecord::from_bytes(b"other chunk").hash());
             values
                 .wasm_chunk_store
-                .push(ic_management_canister_types::ChunkHash { hash: hash.clone() });
-            let bytes = candid::encode_one(values).unwrap();
+                .push(ic_platform::management_canister_types::ChunkHash { hash: hash.clone() });
+            let bytes = contract::encode_one(values).unwrap();
             let metadata =
                 IcSnapshotMetadataReply::decode(read.metadata().request(), &bytes).unwrap();
             let other = IcSnapshotDataRequest::new(&metadata, SnapshotDataKind::WasmChunk { hash })
@@ -130,8 +133,8 @@ fn absent_taken_and_changed_size_destination_metadata_cannot_supply_defaults() {
                     0 => values.source = None,
                     1 => {
                         values.source = Some(
-                            ic_management_canister_types::SnapshotSource::TakenFromCanister(
-                                candid::Reserved,
+                            ic_platform::management_canister_types::SnapshotSource::TakenFromCanister(
+                                contract::Reserved,
                             ),
                         );
                     }
@@ -139,7 +142,7 @@ fn absent_taken_and_changed_size_destination_metadata_cannot_supply_defaults() {
                     3 => values.wasm_memory_size += 1,
                     _ => values.stable_memory_size += 1,
                 }
-                let bytes = candid::encode_one(values).unwrap();
+                let bytes = contract::encode_one(values).unwrap();
                 let metadata =
                     IcSnapshotMetadataReply::decode(read.metadata().request(), &bytes).unwrap();
                 let other = IcSnapshotDataRequest::new(&metadata, read.kind().clone()).unwrap();

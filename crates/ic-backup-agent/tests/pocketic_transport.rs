@@ -23,7 +23,7 @@ use ic_backup_agent::{
     AgentSnapshotTransferReadProvider, AgentTransport, AgentUpdateProvider, PreparedUpdate,
     ReservedUpdate,
 };
-use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
+use ic_platform::management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use ic_testkit::{
     pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIcBuilder, nonblocking::PocketIc},
@@ -169,37 +169,42 @@ struct Fixture {
     key: Vec<u8>,
     sequence: u64,
     release: ArtifactChecksumRecord,
-    identity: Arc<dyn ic_agent::Identity>,
+    identity: Arc<dyn ic_platform::agent::Identity>,
 }
 impl Fixture {
-    async fn new(identity: Arc<dyn ic_agent::Identity>) -> Self {
+    async fn new(identity: Arc<dyn ic_platform::agent::Identity>) -> Self {
         Self::with_wasm(identity, include_str!("state.wat")).await
     }
-    async fn with_wasm(identity: Arc<dyn ic_agent::Identity>, wasm_source: &str) -> Self {
+    async fn with_wasm(identity: Arc<dyn ic_platform::agent::Identity>, wasm_source: &str) -> Self {
         let root = support::root("pocketic");
         fs::write(
             root.join("original.wasm"),
             wat::parse_str(wasm_source).unwrap(),
         )
         .unwrap();
-        let admission = std::process::Command::new("bash")
-            .arg(
-                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../scripts/ci/prepare-pocketic-fixture.sh"),
-            )
-            .arg(&root)
-            .output()
-            .expect("run offline Testkit admission; prepare with make install-testkit-server");
-        assert!(
-            admission.status.success(),
-            "Testkit admission failed: {}",
-            String::from_utf8_lossy(&admission.stderr)
-        );
-        let binary = PathBuf::from(String::from_utf8(admission.stdout).unwrap().trim());
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let bundle = manifest
+            .ancestors()
+            .nth(2)
+            .expect("fixture package belongs to this workspace")
+            .join(".tools/testkit-server");
+        let binary = ic_testkit::pic::server_assets::check(&bundle)
+            .expect("offline Testkit admission; prepare with make install-testkit-server");
         assert!(
             binary.is_absolute(),
             "Testkit must admit an absolute server path"
         );
+        let digest = ic_host_fs::read::hash_file_no_follow(&binary, 512 * 1024 * 1024)
+            .expect("retain admitted server digest");
+        ic_host_fs::durable::write_bytes(
+            &root.join("server.sha256"),
+            ic_host_fs::durable::WriteOptions {
+                mode: ic_host_fs::durable::PublicationMode::CreateNew,
+                permissions: 0o600,
+            },
+            digest.sha256.to_string().as_bytes(),
+        )
+        .expect("retain private original server identity");
         let builder = PocketIcBuilder::new()
             .with_application_subnet()
             .with_nns_subnet()
@@ -225,7 +230,7 @@ impl Fixture {
         pic.install_canister(target, wasm, vec![], None).await;
         pic.update_call(
             target,
-            ic_agent::export::Principal::anonymous(),
+            ic_platform::Principal::anonymous(),
             "write",
             42_u64.to_le_bytes().to_vec(),
         )
@@ -252,11 +257,11 @@ impl Fixture {
             identity,
         }
     }
-    fn caller(&self) -> ic_agent::export::Principal {
+    fn caller(&self) -> ic_platform::Principal {
         self.identity.sender().unwrap()
     }
-    fn principal(&self) -> ic_agent::export::Principal {
-        ic_agent::export::Principal::from_text(&self.target).unwrap()
+    fn principal(&self) -> ic_platform::Principal {
+        ic_platform::Principal::from_text(&self.target).unwrap()
     }
     fn original(
         &mut self,
@@ -463,14 +468,14 @@ async fn read_complete_regions(
     }
     assert_eq!(
         metadata.metadata().wasm_chunk_store,
-        Vec::<ic_management_canister_types::ChunkHash>::new()
+        Vec::<ic_platform::management_canister_types::ChunkHash>::new()
     );
     chunks
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserve_originals() {
-    let mut fixture = Fixture::new(Arc::new(ic_agent::identity::BasicIdentity::from_raw_key(
+    let mut fixture = Fixture::new(Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(
         &[7; 32],
     )))
     .await;
@@ -531,7 +536,7 @@ async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserv
         .pic
         .update_call(
             fixture.principal(),
-            ic_agent::export::Principal::anonymous(),
+            ic_platform::Principal::anonymous(),
             "write",
             99_u64.to_le_bytes().to_vec(),
         )
@@ -558,7 +563,7 @@ async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserv
         .pic
         .query_call(
             fixture.principal(),
-            ic_agent::export::Principal::anonymous(),
+            ic_platform::Principal::anonymous(),
             "read",
             vec![],
         )
@@ -1001,7 +1006,9 @@ async fn configured_application_update_retains_empty_reply_without_claiming_acti
                 support::retain_signed(&root, prepared)
                     .map_err(|_| FenceAcquisitionProviderError::Unavailable)
             },
-            |actual: &FenceAcquisitionRequest<'_>, id: &ic_agent::RequestId, reply: &[u8]| {
+            |actual: &FenceAcquisitionRequest<'_>,
+             id: &ic_platform::agent::RequestId,
+             reply: &[u8]| {
                 assert!(
                     AttemptJournalGuard::open(stage.layout().unwrap(), actual.authority()).is_err()
                 );

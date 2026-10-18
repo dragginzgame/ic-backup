@@ -13,7 +13,7 @@ use crate::{
         DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, upload_plan,
     },
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 
 struct RefusingProvider {
     error: IcMutationProviderError,

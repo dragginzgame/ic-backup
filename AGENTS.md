@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.24.0's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
@@ -72,23 +72,27 @@ admission. The unique locked Testkit package also selects the exact CLI through
 Shared Tooling's Cargo installer; no second server catalog, version equality
 policy or shared-bundle fallback exists. `make install-testkit-server` prepares it;
 `make testkit-server-check` prints the admitted absolute server path without setup.
-Both simulator suites invoke that check before managed startup. Keep product
+Both simulator suites call the locked Testkit library’s offline
+`pic::server_assets::check` before managed startup; the Make check remains the
+standalone CLI/tool gate. Keep product
 fixture custody, digests/logs and original journals local, and retain old/failed
 bundles. Native consumer acceptance remains required; owner CI is separate.
 
 ## Qualified dependency constraints
 
-The maintainer-authorized tooling adoption retains these existing exact registry
-requirements without changing locked selections. Machine-readable exceptions in
-`ci/dependency-pinning-exceptions.json` match only these root declarations:
+Platform owns the registry declarations for external IC types; no local exact-pin
+exceptions remain. Its `management-canister-types` feature selects exactly 0.11.0
+and exports the qualified management wire DTOs, status variants and public Rust
+identities. Changes to that selection require exact codec/golden/bounds review,
+public compatibility assessment, native checks and separately applicable
+authenticated IC qualification. Core and Agent consume those identities only
+through Platform; direct management DTO declarations are forbidden.
 
-- `ic-management-canister-types =0.11.0` owns the qualified management wire DTOs,
-  upstream status variants and public Rust type identity. Changing it requires exact
-  codec/golden/bounds review and public compatibility assessment, then native checks
-  and separately applicable authenticated IC qualification.
-- `ic_principal =0.1.5` owns the qualified normalized principal boundary and exposed
-  Rust identity. Changing it requires normalization/identity/hash regression checks
-  and public compatibility assessment, followed by relevant native qualification.
+`ic-platform::Principal` owns the principal dependency boundary. Platform supplies
+the same selected upstream 0.1.5 identity; no direct principal pin or exception
+remains. Changes to that selected identity require normalization, identity/hash
+regression checks and public compatibility assessment, followed by relevant native
+qualification.
 
 These are reviewed compatibility constraints, not universal exact-pin policy.
 Shared tools use the vendored version/checksum owners under `ci/`; local setup is

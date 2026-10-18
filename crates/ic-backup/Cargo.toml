@@ -14,24 +14,21 @@ ic-host-process.workspace = true
 rustix.workspace = true
 
 [dependencies]
-candid.workspace = true
 ic-host-artifacts.workspace = true
 ic-host-fs.workspace = true
-ic-management-canister-types.workspace = true
-ic-testkit-candid.workspace = true
-ic_principal.workspace = true
+ic-platform.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-sha2.workspace = true
 thiserror.workspace = true
-
-[dev-dependencies]
-ic-host-fs = { workspace = true, features = ["test-support"] }
 
 [target.'cfg(unix)'.dev-dependencies]
 ic-host-process = { workspace = true, features = ["test-support"] }
 ic-testkit.workspace = true
 wat.workspace = true
+
+[dev-dependencies]
+ic-host-fs = { workspace = true, features = ["test-support"] }
+sha2.workspace = true
 
 [lints]
 workspace = true

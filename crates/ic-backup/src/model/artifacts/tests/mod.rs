@@ -1,5 +1,16 @@
 use super::*;
 
+const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+// Ensure empty-byte checksums match the standard SHA-256 vector.
+#[test]
+fn byte_checksum_matches_sha256_vector() {
+    let checksum = ArtifactChecksumRecord::from_bytes(&[]);
+
+    assert_eq!(checksum.algorithm(), "sha256");
+    assert_eq!(checksum.hash(), EMPTY_SHA256);
+}
+
 #[test]
 fn digest_ingress_preserves_equivalent_case_exact_records_and_original_errors() {
     let hash = "0123456789abcdef".repeat(4);

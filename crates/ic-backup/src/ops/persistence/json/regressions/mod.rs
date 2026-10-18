@@ -95,18 +95,10 @@ fn shared_record_reads_preserve_extreme_limits_missing_files_and_parent_aliases(
 #[cfg(unix)]
 #[test]
 fn shared_record_reads_reject_real_fifo_and_device_without_waiting_for_a_writer() {
-    use std::{process::Command, sync::mpsc, thread, time::Duration};
+    use std::{sync::mpsc, thread, time::Duration};
     let root = temp_dir("ic-backup-shared-record-fifo");
     let path = root.join("record.fifo");
-    assert!(
-        Command::new("/usr/bin/mkfifo")
-            .args(["-m", "600"])
-            .arg(&path)
-            .env_clear()
-            .status()
-            .expect("create native FIFO")
-            .success()
-    );
+    crate::test_support::create_private_fifo(&path);
     let (send, receive) = mpsc::channel();
     let reader = thread::spawn(move || {
         send.send(read_json::<serde_json::Value>(&path, 1024))
@@ -169,34 +161,22 @@ fn process_death_preserves_exact_publication_sides() {
         let path = root.join("journal.json");
         let operation = std::env::var(OP_ENV).expect("child operation");
         let side = std::env::var(SIDE_ENV).expect("child barrier");
-        if operation == "create" {
-            create_json_durable_at_barriers(
-                &path,
-                &new,
-                || {
-                    if side == "before" {
-                        hold_at_acknowledged_barrier(&root);
-                    }
-                },
-                || {
-                    if side == "after" {
-                        hold_at_acknowledged_barrier(&root);
-                    }
-                },
-            )
-            .expect("create at crash barrier");
-        } else {
-            write_json_durable_at_barriers(&path, &new, |barrier| {
-                if matches!(
-                    (side.as_str(), barrier),
-                    ("before", DurableWriteBarrier::BeforeRename)
-                        | ("after", DurableWriteBarrier::AfterDirectorySync)
-                ) {
-                    hold_at_acknowledged_barrier(&root);
-                }
-            })
-            .expect("replace at crash barrier");
-        }
+        let bytes = encode_json(&new, 16 * 1024 * 1024).expect("encode bounded record");
+        let mode = match operation.as_str() {
+            "create" => PublicationMode::CreateNew,
+            "replace" => PublicationMode::Replace,
+            _ => panic!("unknown child operation"),
+        };
+        publish_bytes_at_barriers(&path, &bytes, mode, |barrier| {
+            if matches!(
+                (side.as_str(), barrier),
+                ("before", DurableWriteBarrier::BeforeRename)
+                    | ("after", DurableWriteBarrier::AfterDirectorySync)
+            ) {
+                hold_at_acknowledged_barrier(&root);
+            }
+        })
+        .expect("publish at crash barrier");
         panic!("child passed acknowledged crash barrier");
     }
     for operation in ["create", "replace"] {

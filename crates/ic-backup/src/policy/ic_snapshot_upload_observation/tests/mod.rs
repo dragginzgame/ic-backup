@@ -8,6 +8,7 @@ use crate::{
     policy::ic_observation::IcObservationReplyView,
     test_support::ic_snapshot_upload::{observation_input, with_observation},
 };
+use ic_platform::candid::contract;
 
 #[test]
 fn zero_one_many_inventory_entries_retain_exact_evidence_and_pending_spending() {
@@ -17,10 +18,10 @@ fn zero_one_many_inventory_entries_retain_exact_evidence_and_pending_spending() 
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
         for count in 0..=2 {
             let mut input = observation_input(&request);
-            input.reply = candid::encode_one(
+            input.reply = contract::encode_one(
                 (0..count)
                     .rev()
-                    .map(|id| ic_management_canister_types::Snapshot {
+                    .map(|id| ic_platform::management_canister_types::Snapshot {
                         id: vec![id, 0, 255],
                         taken_at_timestamp: u64::MAX,
                         total_size: u64::MAX,
@@ -98,7 +99,7 @@ fn malformed_duplicate_and_excess_inventory_replies_reuse_bounded_decoder() {
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        let snapshot = ic_management_canister_types::Snapshot {
+        let snapshot = ic_platform::management_canister_types::Snapshot {
             id: vec![0, 255],
             taken_at_timestamp: 0,
             total_size: 0,
@@ -107,10 +108,10 @@ fn malformed_duplicate_and_excess_inventory_replies_reuse_bounded_decoder() {
             vec![],
             b"DIDL\0\0".to_vec(),
             b"invalid".to_vec(),
-            candid::encode_one(vec![snapshot.clone(), snapshot]).unwrap(),
-            candid::encode_one(
+            contract::encode_one(vec![snapshot.clone(), snapshot]).unwrap(),
+            contract::encode_one(
                 (0u64..1025)
-                    .map(|id| ic_management_canister_types::Snapshot {
+                    .map(|id| ic_platform::management_canister_types::Snapshot {
                         id: id.to_be_bytes().to_vec(),
                         taken_at_timestamp: 0,
                         total_size: 0,
@@ -118,7 +119,7 @@ fn malformed_duplicate_and_excess_inventory_replies_reuse_bounded_decoder() {
                     .collect::<Vec<_>>(),
             )
             .unwrap(),
-            candid::encode_one(vec![ic_management_canister_types::Snapshot {
+            contract::encode_one(vec![ic_platform::management_canister_types::Snapshot {
                 id: vec![0; 257],
                 taken_at_timestamp: 0,
                 total_size: 0,

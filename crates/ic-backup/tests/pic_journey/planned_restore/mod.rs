@@ -28,7 +28,7 @@ use ic_backup::{
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
     workflow::ic_snapshot_restore::{IcRestoreExecutionError, restore_snapshot},
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
 use std::{
     cell::RefCell,

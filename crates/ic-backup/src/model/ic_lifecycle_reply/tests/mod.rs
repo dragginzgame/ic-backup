@@ -2,10 +2,11 @@
 
 use super::*;
 use crate::model::{control_authority::MAX_CONTROLLERS, ic_request::IcManagementRequest};
-use candid::{CandidType, Principal};
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{
     CanisterStatusResult, DefiniteCanisterSettings, MemoryMetrics, QueryStats, StatusVisibility,
 };
+use ic_platform::{Principal, candid::contract::CandidType};
 use serde::Deserialize;
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
@@ -25,10 +26,12 @@ struct GoldenCase {
 }
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct Settings {
     controllers: Vec<Principal>,
 }
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct Status {
     status: CanisterStatusType,
     settings: Settings,
@@ -91,7 +94,8 @@ fn every_registered_independent_wire_and_hash_fixture_uses_production_admission(
         assert_eq!(reply.request(), &request);
         if let Some(expected_status) = case.status {
             let official: Status =
-                candid::decode_one(&raw).expect("upstream status enum/projection");
+                ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS)
+                    .expect("upstream status enum/projection");
             assert_eq!(official.status, expected_status);
             let IcLifecycleReplyKind::Status(info) = reply.kind() else {
                 panic!("status shape")
@@ -109,7 +113,8 @@ fn every_registered_independent_wire_and_hash_fixture_uses_production_admission(
             official.sort();
             assert_eq!(official, expected);
         } else {
-            candid::decode_args::<()>(&raw).expect("official empty tuple");
+            ic_platform::candid::decode_args::<()>(&raw, crate::test_support::WIRE_ORACLE_LIMITS)
+                .expect("official empty tuple");
             assert_eq!(reply.kind(), &IcLifecycleReplyKind::Acknowledgement);
         }
     }
@@ -152,9 +157,13 @@ fn accepts_complete_pinned_sdk_status_without_claiming_unprojected_metadata() {
         },
     };
     let request = request(IcManagementMethodRecord::CanisterStatus, TARGET);
-    let raw = candid::encode_one(&value).expect("SDK result");
+    let raw = contract::encode_one(&value).expect("SDK result");
     assert_eq!(
-        candid::decode_one::<CanisterStatusResult>(&raw).expect("official full result"),
+        ic_platform::candid::decode_one::<CanisterStatusResult>(
+            &raw,
+            crate::test_support::WIRE_ORACLE_LIMITS
+        )
+        .expect("official full result"),
         value
     );
     let reply = IcLifecycleReply::decode(&request, &raw).expect("required projection");
@@ -172,7 +181,7 @@ fn retains_explicit_empty_and_maximum_controllers_and_rejects_excess_or_duplicat
         let controllers = (0..count)
             .map(|i| Principal::from_slice(&i.to_be_bytes()))
             .collect();
-        let raw = candid::encode_one(status(controllers)).expect("bounded controllers");
+        let raw = contract::encode_one(status(controllers)).expect("bounded controllers");
         let reply = IcLifecycleReply::decode(&request, &raw).expect("bounded projection");
         let IcLifecycleReplyKind::Status(info) = reply.kind() else {
             panic!("status")
@@ -182,12 +191,12 @@ fn retains_explicit_empty_and_maximum_controllers_and_rejects_excess_or_duplicat
     let too_many = (0..=MAX_CONTROLLERS)
         .map(|i| Principal::from_slice(&i.to_be_bytes()))
         .collect();
-    let raw = candid::encode_one(status(too_many)).expect("excess controllers");
+    let raw = contract::encode_one(status(too_many)).expect("excess controllers");
     assert_eq!(
         IcLifecycleReply::decode(&request, &raw).unwrap_err(),
         IcLifecycleReplyError::InvalidReply
     );
-    let raw = candid::encode_one(status(vec![Principal::anonymous(); 2])).expect("duplicates");
+    let raw = contract::encode_one(status(vec![Principal::anonymous(); 2])).expect("duplicates");
     assert_eq!(
         IcLifecycleReply::decode(&request, &raw).unwrap_err(),
         IcLifecycleReplyError::Controllers(ControlObservationError::DuplicateController)
@@ -220,7 +229,7 @@ fn acknowledgements_require_exact_empty_tuple_for_each_supported_mutation() {
             b"DIDL\0\x01\x7f".to_vec(),
             b"DIDL\x01\x6d\x7b\0".to_vec(),
             b"DIDL\0\0\0".to_vec(),
-            candid::encode_one(0_u8).expect("extra argument"),
+            contract::encode_one(0_u8).expect("extra argument"),
         ] {
             assert_eq!(
                 IcLifecycleReply::decode(&request, &invalid).unwrap_err(),
@@ -263,74 +272,83 @@ fn rejects_unsupported_methods_oversize_input_and_wrong_reply_shapes() {
 #[test]
 fn requires_status_settings_and_nonoptional_controller_fields() {
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct MissingSettings {
         status: CanisterStatusType,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct MissingStatus {
         settings: Settings,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct EmptySettings {}
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct MissingControllers {
         status: CanisterStatusType,
         settings: EmptySettings,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct OptionalSettings {
         controllers: Option<Vec<Principal>>,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct OptionalControllers {
         status: CanisterStatusType,
         settings: OptionalSettings,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct WrongStatus {
         status: String,
         settings: Settings,
     }
     #[derive(CandidType, Deserialize)]
+    #[candid_path("ic_platform::candid::contract")]
     enum UnknownStatus {
         #[serde(rename = "deleted")]
         Deleted,
     }
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct Unknown {
         status: UnknownStatus,
         settings: Settings,
     }
     let request = request(IcManagementMethodRecord::CanisterStatus, TARGET);
     for invalid in [
-        candid::encode_one(MissingSettings {
+        contract::encode_one(MissingSettings {
             status: CanisterStatusType::Running,
         })
         .expect("missing settings"),
-        candid::encode_one(MissingStatus {
+        contract::encode_one(MissingStatus {
             settings: Settings {
                 controllers: vec![],
             },
         })
         .expect("missing status"),
-        candid::encode_one(MissingControllers {
+        contract::encode_one(MissingControllers {
             status: CanisterStatusType::Running,
             settings: EmptySettings {},
         })
         .expect("missing controllers"),
-        candid::encode_one(OptionalControllers {
+        contract::encode_one(OptionalControllers {
             status: CanisterStatusType::Running,
             settings: OptionalSettings { controllers: None },
         })
         .expect("optional controllers"),
-        candid::encode_one(WrongStatus {
+        contract::encode_one(WrongStatus {
             status: "running".into(),
             settings: Settings {
                 controllers: vec![],
             },
         })
         .expect("string status"),
-        candid::encode_one(Unknown {
+        contract::encode_one(Unknown {
             status: UnknownStatus::Deleted,
             settings: Settings {
                 controllers: vec![],
@@ -349,14 +367,14 @@ fn requires_status_settings_and_nonoptional_controller_fields() {
 fn rejects_status_truncations_extra_arguments_and_trailing_bytes() {
     let request = request(IcManagementMethodRecord::CanisterStatus, TARGET);
     let value = status(vec![Principal::anonymous()]);
-    let raw = candid::encode_one(&value).expect("fixture");
+    let raw = contract::encode_one(&value).expect("fixture");
     for end in 0..raw.len() {
         assert_eq!(
             IcLifecycleReply::decode(&request, &raw[..end]).unwrap_err(),
             IcLifecycleReplyError::InvalidReply
         );
     }
-    let extra = candid::encode_args((&value, 0_u8)).expect("extra argument");
+    let extra = contract::encode_args((&value, 0_u8)).expect("extra argument");
     let mut trailing = raw.clone();
     trailing.push(0);
     for invalid in [extra, trailing] {
@@ -370,14 +388,15 @@ fn rejects_status_truncations_extra_arguments_and_trailing_bytes() {
 #[test]
 fn skips_unprojected_fields_with_finite_work_and_preserves_exact_raw_evidence() {
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct Extended {
         status: CanisterStatusType,
         settings: Settings,
         padding: Vec<u8>,
     }
     let request = request(IcManagementMethodRecord::CanisterStatus, TARGET);
-    let base = candid::encode_one(status(vec![])).expect("minimal projection");
-    let extended = candid::encode_one(Extended {
+    let base = contract::encode_one(status(vec![])).expect("minimal projection");
+    let extended = contract::encode_one(Extended {
         status: CanisterStatusType::Stopping,
         settings: Settings {
             controllers: vec![],
@@ -390,7 +409,7 @@ fn skips_unprojected_fields_with_finite_work_and_preserves_exact_raw_evidence() 
     assert_eq!(left.kind(), right.kind());
     assert_ne!(left.payload_checksum(), right.payload_checksum());
     assert_ne!(left.digest(), right.digest());
-    let excessive = candid::encode_one(Extended {
+    let excessive = contract::encode_one(Extended {
         status: CanisterStatusType::Stopping,
         settings: Settings {
             controllers: vec![],
@@ -436,7 +455,7 @@ fn acknowledgement_hashes_bind_exact_target_method_and_load_snapshot_bytes() {
 #[test]
 fn rejects_excess_type_tables_and_huge_declared_controller_count() {
     let request = request(IcManagementMethodRecord::CanisterStatus, TARGET);
-    let raw = candid::encode_one(status(vec![])).expect("minimal status projection");
+    let raw = contract::encode_one(status(vec![])).expect("minimal status projection");
     // Four definitions, two one-byte argument declarations and a two-byte body:
     // status variant index and empty controller count. Added definitions leave
     // existing references intact and are valid Candid, but exceed the local cap.
@@ -449,9 +468,12 @@ fn rejects_excess_type_tables_and_huge_declared_controller_count() {
     }
     excessive.extend_from_slice(&raw[definitions_end..]);
     assert_eq!(
-        candid::decode_one::<Status>(&excessive)
-            .expect("valid unused types")
-            .status,
+        ic_platform::candid::decode_one::<Status>(
+            &excessive,
+            crate::test_support::WIRE_ORACLE_LIMITS
+        )
+        .expect("valid unused types")
+        .status,
         CanisterStatusType::Stopping
     );
     assert_eq!(

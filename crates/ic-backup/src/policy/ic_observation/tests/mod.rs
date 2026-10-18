@@ -6,6 +6,7 @@ use crate::{
         membership::hash,
     },
 };
+use ic_platform::candid::contract;
 
 #[test]
 fn existing_status_and_inventory_wire_evidence_never_settles_attempts() {
@@ -34,7 +35,7 @@ fn existing_status_and_inventory_wire_evidence_never_settles_attempts() {
                 };
                 assert_eq!(
                     info.status(),
-                    ic_management_canister_types::CanisterStatusType::Stopped
+                    ic_platform::management_canister_types::CanisterStatusType::Stopped
                 );
                 assert_eq!(reply.payload_checksum(), &checksum);
             }
@@ -49,14 +50,14 @@ fn existing_status_and_inventory_wire_evidence_never_settles_attempts() {
                 // Cardinality is wire evidence, never exclusive capture attribution.
                 for count in 0..=2 {
                     let snapshots = (0..count)
-                        .map(|id| ic_management_canister_types::Snapshot {
+                        .map(|id| ic_platform::management_canister_types::Snapshot {
                             id: vec![id],
                             taken_at_timestamp: 42,
                             total_size: 128,
                         })
                         .collect::<Vec<_>>();
                     let mut fields = input(&request);
-                    fields.reply = candid::encode_one(snapshots).unwrap();
+                    fields.reply = contract::encode_one(snapshots).unwrap();
                     let response = IcObservationResponse::new(fields).unwrap();
                     let associated =
                         validate_response(&request, &original.journal, &response).unwrap();

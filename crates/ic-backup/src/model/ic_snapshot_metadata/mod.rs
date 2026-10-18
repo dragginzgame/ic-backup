@@ -1,5 +1,6 @@
 //! Bounded snapshot metadata reads; decoded declarations do not prove transfer.
 
+use ic_platform::candid::contract;
 mod wire;
 
 use super::{
@@ -8,7 +9,7 @@ use super::{
         IcRequestError, MAX_IC_ARGUMENT_BYTES, MAX_IC_SNAPSHOT_ID_BYTES, management_request_digest,
     },
 };
-use ic_management_canister_types::{
+use ic_platform::management_canister_types::{
     ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult,
 };
 use std::fmt;
@@ -46,7 +47,7 @@ impl IcSnapshotMetadataRequest {
         }
         let (target, principal) =
             super::principal::canonical_parts(target).ok_or(IcRequestError::InvalidTarget)?;
-        let arguments = candid::encode_one(ReadCanisterSnapshotMetadataArgs {
+        let arguments = contract::encode_one(ReadCanisterSnapshotMetadataArgs {
             canister_id: principal,
             snapshot_id: snapshot_id.to_vec(),
         })

@@ -54,7 +54,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
                 support::retain_signed(&root, prepared)
                     .map_err(|_| FenceAcquisitionProviderError::Unavailable)
             },
-            |_: &FenceAcquisitionRequest<'_>, _: &ic_agent::RequestId, _: &[u8]| {
+            |_: &FenceAcquisitionRequest<'_>, _: &ic_platform::agent::RequestId, _: &[u8]| {
                 panic!("accepted/lost/cancelled replies cannot reach reply retention")
             },
         );

@@ -2,6 +2,8 @@
 
 #![cfg(unix)]
 
+use ic_platform::candid::contract;
+
 mod support;
 
 use ic_backup::{
@@ -18,7 +20,7 @@ use ic_backup::{
     },
 };
 use ic_host_fs::read::tree::checksum::checksum_directory;
-use ic_management_canister_types::{
+use ic_platform::management_canister_types::{
     ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
 use serde_json::json;
@@ -90,12 +92,13 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
         .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect::<Vec<_>>();
-    let mut values: ReadCanisterSnapshotMetadataResult = candid::decode_one(&raw).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult =
+        ic_platform::candid::decode_one(&raw, support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 3;
     values.wasm_memory_size = 0;
     values.stable_memory_size = 0;
     values.wasm_chunk_store.clear();
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut downloads = DownloadJournalGuard::create(
@@ -116,7 +119,7 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
         let data =
             IcSnapshotDataRequest::new(&metadata, SnapshotDataKind::WasmModule { offset, size: 1 })
                 .unwrap();
-        let raw = candid::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![42] }).unwrap();
+        let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![42] }).unwrap();
         let reply = IcSnapshotDataReply::decode(&data, &raw).unwrap();
         writer = writer.append(&reply).unwrap();
     }

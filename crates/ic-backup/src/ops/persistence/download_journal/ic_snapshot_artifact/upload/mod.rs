@@ -14,7 +14,7 @@ use crate::model::{
     ic_snapshot_upload::{IcSnapshotUploadError, IcSnapshotUploadRequest},
     operation_plan::OperationPlanRecord,
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 use std::io::{self, Read, Seek, SeekFrom};
 use thiserror::Error;
 

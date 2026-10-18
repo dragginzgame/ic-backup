@@ -154,41 +154,6 @@ pub(super) fn publish_bytes_at_barriers(
     Ok(())
 }
 
-#[cfg(test)]
-pub(crate) fn write_json_durable_at_barriers<T>(
-    path: &Path,
-    value: &T,
-    barrier: impl FnMut(DurableWriteBarrier),
-) -> Result<(), PersistenceError>
-where
-    T: Serialize,
-{
-    let bytes = encode_json(value, 16 * 1024 * 1024)?;
-    publish_bytes_at_barriers(path, &bytes, PublicationMode::Replace, barrier)
-}
-
-#[cfg(test)]
-pub(crate) fn create_json_durable_at_barriers<T>(
-    path: &Path,
-    value: &T,
-    mut before_publication: impl FnMut(),
-    mut after_directory_sync: impl FnMut(),
-) -> Result<(), PersistenceError>
-where
-    T: Serialize,
-{
-    let bytes = encode_json(value, 16 * 1024 * 1024)?;
-    publish_bytes_at_barriers(
-        path,
-        &bytes,
-        PublicationMode::CreateNew,
-        |barrier| match barrier {
-            DurableWriteBarrier::BeforeRename => before_publication(),
-            DurableWriteBarrier::AfterDirectorySync => after_directory_sync(),
-        },
-    )
-}
-
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------

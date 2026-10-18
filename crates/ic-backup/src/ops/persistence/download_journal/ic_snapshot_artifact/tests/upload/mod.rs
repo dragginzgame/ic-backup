@@ -1,4 +1,5 @@
 //! Real guarded source descriptors, unchanged journals and exact SDK upload bytes.
+use ic_platform::candid::contract;
 mod plan;
 use super::*;
 use crate::{
@@ -9,13 +10,16 @@ use crate::{
         ic_snapshot_upload::{DESTINATION_ID, raw as upload_raw, source_plan},
     },
 };
-use ic_management_canister_types::{
+use ic_platform::management_canister_types::{
     UploadCanisterSnapshotDataArgs, UploadCanisterSnapshotMetadataArgs,
 };
 
 fn upload_values() -> ReadCanisterSnapshotMetadataResult {
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        candid::decode_one(&upload_raw("upload-source")).unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
+        &upload_raw("upload-source"),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     values.wasm_module_size = 5;
     values.wasm_memory_size = 3;
     values.stable_memory_size = 1;
@@ -56,7 +60,7 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(upload_values()).unwrap();
+    let raw = contract::encode_one(upload_values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = retained(&layout, &plan, &metadata, &raw);
     let journal_bytes = fs::read(guard.path()).unwrap();
@@ -64,7 +68,11 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
     let upload = guard
         .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
         .unwrap();
-    let args: UploadCanisterSnapshotMetadataArgs = candid::decode_one(upload.arguments()).unwrap();
+    let args: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
+        upload.arguments(),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     assert_eq!(args.replace_snapshot, None);
     assert_eq!(args.globals.len(), metadata.metadata().globals.len());
     assert_eq!(
@@ -101,7 +109,11 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
         let payload = guard
             .prepare_ic_snapshot_upload_data(&plan, TOKEN, &upload, DESTINATION_ID, kind)
             .unwrap();
-        let args: UploadCanisterSnapshotDataArgs = candid::decode_one(payload.arguments()).unwrap();
+        let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+            payload.arguments(),
+            crate::test_support::WIRE_ORACLE_LIMITS,
+        )
+        .unwrap();
         assert_eq!(args.chunk, expected);
         assert_eq!(args.snapshot_id, DESTINATION_ID);
         assert_eq!(args.canister_id.to_text(), TARGET);
@@ -141,7 +153,7 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let plan = source_plan();
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = candid::encode_one(upload_values()).unwrap();
+        let raw = contract::encode_one(upload_values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let guard = retained(&layout, &plan, &metadata, &raw);
         let upload = guard
@@ -204,7 +216,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = candid::encode_one(upload_values()).unwrap();
+    let raw = contract::encode_one(upload_values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = retained(&layout, &plan, &metadata, &raw);
     let before = fs::read(guard.path()).unwrap();
@@ -270,7 +282,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
 
     let root = super::root();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let raw = candid::encode_one(values()).unwrap();
+    let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let guard = retained(&layout, &plan, &metadata, &raw);
     let before = fs::read(guard.path()).unwrap();
@@ -295,7 +307,7 @@ fn maximum_bounded_descriptor_slice_does_not_buffer_the_whole_region() {
     values.wasm_memory_size = 0;
     values.stable_memory_size = 0;
     values.wasm_chunk_store.clear();
-    let raw = candid::encode_one(values).unwrap();
+    let raw = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut guard = DownloadJournalGuard::create(
         &layout,
@@ -338,7 +350,11 @@ fn maximum_bounded_descriptor_slice_does_not_buffer_the_whole_region() {
             },
         )
         .unwrap();
-    let args: UploadCanisterSnapshotDataArgs = candid::decode_one(payload.arguments()).unwrap();
+    let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+        payload.arguments(),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     assert_eq!(args.chunk, vec![43; MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES]);
     assert!(payload.arguments().len() > MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES);
 }

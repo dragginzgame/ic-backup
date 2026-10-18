@@ -54,6 +54,13 @@ another lane. Ordinary contributions continue through authorized PRs.
 | `make publish-dry-run` | Run Cargo registry admission without uploading | Maintainer |
 | `make publish` | Upload the current package to crates.io | Maintainer |
 
+Release preparation runs the same grouped `make fmt-check` used by CI. Committed
+admission additionally invokes Shared's Cargo metadata checker with
+`--manifest-order-grouped` against `RELEASE_COMMIT`, rather than current working
+manifests. Product receipt/source validation remains independent. Consumer
+fixtures prove an earlier sorted release can be checked while a later current
+manifest is unsorted, without formatting either source or changing real Git refs.
+
 ## Release fixture ownership
 
 `make release-check` runs both the consumer adapter fixture and the unchanged

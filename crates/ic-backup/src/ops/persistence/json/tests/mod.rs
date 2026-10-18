@@ -50,7 +50,7 @@ fn bounded_json_size_preserves_serializer_errors() {
 
 #[test]
 fn durable_json_replaces_the_complete_document() {
-    let root = temp_dir("canic-backup-durable-json-replace");
+    let root = temp_dir("ic-backup-durable-json-replace");
     let path = root.join("journal.json");
     fs::create_dir_all(&root).expect("create temp root");
     fs::write(&path, b"previous-document-with-more-bytes").expect("write previous document");
@@ -66,7 +66,7 @@ fn durable_json_replaces_the_complete_document() {
 
 #[test]
 fn serialization_failure_preserves_the_previous_document() {
-    let root = temp_dir("canic-backup-durable-json-serialize");
+    let root = temp_dir("ic-backup-durable-json-serialize");
     let path = root.join("journal.json");
     fs::create_dir_all(&root).expect("create temp root");
     fs::write(&path, b"previous-document").expect("write previous document");
@@ -132,7 +132,7 @@ fn bounded_encoding_publishes_its_exact_single_pass_and_refuses_before_effects()
 
 #[test]
 fn rename_failure_removes_the_staging_file() {
-    let root = temp_dir("canic-backup-durable-json-rename");
+    let root = temp_dir("ic-backup-durable-json-rename");
     let path = root.join("journal.json");
     fs::create_dir_all(&path).expect("create conflicting target directory");
 
@@ -324,7 +324,8 @@ fn held_parent_publication_does_not_switch_to_a_replaced_path() {
     let moved = root.join("moved");
     let path = parent.join("record.json");
     let mut durable = false;
-    write_json_durable_at_barriers(&path, &serde_json::json!({"new": true}), |barrier| {
+    let bytes = encode_json(&serde_json::json!({"new": true}), 16 * 1024 * 1024).unwrap();
+    publish_bytes_at_barriers(&path, &bytes, PublicationMode::Replace, |barrier| {
         if barrier == DurableWriteBarrier::BeforeRename {
             fs::rename(&parent, &moved).unwrap();
             fs::create_dir(&parent).unwrap();

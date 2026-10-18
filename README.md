@@ -214,8 +214,12 @@ The following product components are still missing:
 ## Project boundaries
 
 The implementation began by extracting generic backup mechanisms from Canic's
-`canic-backup` crate. Generic snapshot, artifact, planning and recovery behavior
-belongs here. Canic continues to own its Fleet discovery, authorization and
+`canic-backup` crate. Snapshot layouts, planning and same-release recovery contracts
+belong here; generic hashing, descriptor IO and process custody use Host packages.
+Published `ic-platform` supplies the Candid dependency boundary for external
+management protocols. Backup owns the method-specific limits and domain errors;
+[the adoption contract](docs/ic-platform.md) records features and graph limits.
+Canic continues to own its Fleet discovery, authorization and
 application-consistency integration. Other applications can provide their own
 adapters without depending on Canic.
 
@@ -265,6 +269,7 @@ the separately authorized release workflow.
 | [Current handoff](docs/status/current.md) | Current implementation state, evidence and next work |
 | [Extraction and implementation design](docs/extraction-design.md) | Complete proposed product behavior and safety design |
 | [Implemented extraction boundary](docs/extraction-boundary.md) | Exact behavior currently provided by the library |
+| [Ownership boundary](docs/ownership.md) | Current dependency owners, retained adapters and extraction cleanup |
 | [Development commands](docs/development.md) | Local development and validation workflow |
 | [Release workflow](docs/releasing.md) | Maintainer release process |
 | [Agent and contributor instructions](AGENTS.md) | Repository-specific engineering and safety rules |

@@ -29,6 +29,7 @@ use ic_backup::{
         ic_snapshot_upload_observation::IcSnapshotUploadObservationProvider,
     },
 };
+use ic_platform::candid::contract;
 use std::fs;
 
 struct RefusingProvider {
@@ -60,9 +61,9 @@ fn passive_inventory(
         request: request.payload().digest(),
         context: request.plan().context().clone(),
         target: request.payload().target().into(),
-        reply: candid::encode_one(
+        reply: contract::encode_one(
             (0..count)
-                .map(|id| ic_management_canister_types::Snapshot {
+                .map(|id| ic_platform::management_canister_types::Snapshot {
                     id: vec![id, 0, 255],
                     taken_at_timestamp: 42,
                     total_size: u64::MAX,
@@ -164,7 +165,8 @@ pub fn retain_original_inventory(layout: &BackupLayoutGuard, upload: &IcSnapshot
     })
     .unwrap();
     create_json_durable(&layout.root().join("original-upload-list.json"), &list).unwrap();
-    let raw = candid::encode_one(Vec::<ic_management_canister_types::Snapshot>::new()).unwrap();
+    let raw = contract::encode_one(Vec::<ic_platform::management_canister_types::Snapshot>::new())
+        .unwrap();
     create_json_durable(&layout.root().join("original-upload-baseline.json"), &raw).unwrap();
 }
 

@@ -1,7 +1,7 @@
 //! One bounded declaration owner for complete ordered snapshot extents.
 
 use super::{IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 
 pub(crate) enum ExtentPlanningError {
     InvalidChunkSize,

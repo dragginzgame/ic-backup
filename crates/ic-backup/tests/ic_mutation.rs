@@ -1,6 +1,7 @@
 //! Native original reservation/reply recovery qualification; no live IC management effects.
 
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
+use ic_platform::candid::contract;
 mod support;
 
 use crate::ready::ready;
@@ -80,7 +81,7 @@ impl IcMutationProvider for NativeProvider {
                 return Err(error);
             }
             let reply = if payload.method() == Method::TakeCanisterSnapshot {
-                candid::encode_one(ic_management_canister_types::Snapshot {
+                contract::encode_one(ic_platform::management_canister_types::Snapshot {
                     id: vec![0, 255, 128],
                     taken_at_timestamp: 42,
                     total_size: 128,

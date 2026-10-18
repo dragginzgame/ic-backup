@@ -3,6 +3,7 @@
 use crate::model::{
     ic_snapshot_upload::IcSnapshotUploadRequest, operation_plan::OperationPlanRecord,
 };
+use ic_platform::candid::contract;
 use serde_json::json;
 
 pub const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
@@ -96,7 +97,8 @@ pub fn observation_input(
         request: request.payload().digest(),
         context: request.plan().context().clone(),
         target: request.payload().target().into(),
-        reply: candid::encode_one(Vec::<ic_management_canister_types::Snapshot>::new()).unwrap(),
+        reply: contract::encode_one(Vec::<ic_platform::management_canister_types::Snapshot>::new())
+            .unwrap(),
         evidence: crate::model::artifacts::ArtifactChecksumRecord::from_bytes(
             b"passive list evidence",
         ),

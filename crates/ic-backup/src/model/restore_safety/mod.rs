@@ -15,7 +15,7 @@ use crate::model::{
     inventory::{InventoryRecord, MAX_INVENTORY_TARGETS},
     operation_plan::{OperationPlanError, OperationPlanRecord, PlanContextRecord},
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use thiserror::Error;
 
 /// Maximum descriptive remote observations per invocation; no spending allowance.

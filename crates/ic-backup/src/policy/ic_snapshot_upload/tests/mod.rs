@@ -10,7 +10,10 @@ use crate::{
         DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, upload_plan,
     },
 };
-use ic_management_canister_types::{SnapshotDataKind, UploadCanisterSnapshotMetadataResult};
+use ic_platform::candid::contract;
+use ic_platform::management_canister_types::{
+    SnapshotDataKind, UploadCanisterSnapshotMetadataResult,
+};
 
 fn input(request: &IcSnapshotUploadAttempt<'_, '_>, reply: Vec<u8>) -> IcUpdateResponseInput {
     IcUpdateResponseInput {
@@ -48,7 +51,7 @@ fn metadata_and_data_association_preserve_pending_spending_and_original_evidence
             payload.kind(),
             crate::model::ic_snapshot_upload::IcSnapshotUploadKind::Metadata
         ) {
-            candid::encode_one(UploadCanisterSnapshotMetadataResult {
+            contract::encode_one(UploadCanisterSnapshotMetadataResult {
                 snapshot_id: DESTINATION_ID.to_vec(),
             })
             .unwrap()
@@ -109,7 +112,7 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
     let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
     journal.reserve_mutation().unwrap();
     let request = IcSnapshotUploadAttempt::new(&plan, 7, &journal, &upload).unwrap();
-    let reply = candid::encode_one(UploadCanisterSnapshotMetadataResult {
+    let reply = contract::encode_one(UploadCanisterSnapshotMetadataResult {
         snapshot_id: DESTINATION_ID.to_vec(),
     })
     .unwrap();

@@ -51,3 +51,17 @@ pub(crate) fn read_json<T: serde::de::DeserializeOwned>(
     let bytes = ic_host_fs::read::read_file_no_follow(path, usize::try_from(max_bytes)?)?;
     Ok(serde_json::from_slice(&bytes)?)
 }
+
+/// Broad finite admission for trusted fixture oracles, independent of product limits.
+#[allow(
+    dead_code,
+    reason = "shared support also compiles without Candid fixture oracles"
+)]
+pub(crate) const WIRE_ORACLE_LIMITS: ic_platform::candid::DecodeLimits =
+    ic_platform::candid::DecodeLimits {
+        reply_bytes: 64 * 1024 * 1024,
+        decoding_quota: 512 * 1024 * 1024,
+        skipping_quota: 64 * 1024 * 1024,
+        type_entries: 4096,
+        header_bytes: 64 * 1024,
+    };

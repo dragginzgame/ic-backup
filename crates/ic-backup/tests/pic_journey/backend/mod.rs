@@ -1,7 +1,6 @@
 //! Explicit local simulator custody/accounting. No mainnet provider or retry loop.
 
 use crate::ready::ready;
-use candid::Principal;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
@@ -25,6 +24,7 @@ use ic_backup::{
         ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     },
 };
+use ic_platform::Principal;
 use ic_testkit::{
     pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal},
@@ -59,24 +59,29 @@ impl Backend {
             wat::parse_str(include_str!("../state.wat")).unwrap(),
         )
         .unwrap();
-        let admission = std::process::Command::new("bash")
-            .arg(
-                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../scripts/ci/prepare-pocketic-fixture.sh"),
-            )
-            .arg(&root)
-            .output()
-            .expect("run offline Testkit admission; prepare with make install-testkit-server");
-        assert!(
-            admission.status.success(),
-            "Testkit admission failed: {}",
-            String::from_utf8_lossy(&admission.stderr)
-        );
-        let binary = PathBuf::from(String::from_utf8(admission.stdout).unwrap().trim());
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let bundle = manifest
+            .ancestors()
+            .nth(2)
+            .expect("fixture package belongs to this workspace")
+            .join(".tools/testkit-server");
+        let binary = ic_testkit::pic::server_assets::check(&bundle)
+            .expect("offline Testkit admission; prepare with make install-testkit-server");
         assert!(
             binary.is_absolute(),
             "Testkit must admit an absolute server path"
         );
+        let digest = ic_host_fs::read::hash_file_no_follow(&binary, 512 * 1024 * 1024)
+            .expect("retain admitted server digest");
+        ic_host_fs::durable::write_bytes(
+            &root.join("server.sha256"),
+            ic_host_fs::durable::WriteOptions {
+                mode: ic_host_fs::durable::PublicationMode::CreateNew,
+                permissions: 0o600,
+            },
+            digest.sha256.to_string().as_bytes(),
+        )
+        .expect("retain private original server identity");
         let builder = PocketIcBuilder::new()
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))

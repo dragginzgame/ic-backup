@@ -171,6 +171,11 @@ through Shared Tooling before invoking Testkit's offline server check. No separa
 server pin, cache scan, version equality check or shared-bundle fallback exists.
 The normal gate runs it after `deps`; it installs nothing and qualifies no product
 permissions. Missing/changed selections refuse before server startup.
+The Core and Agent fixtures call the locked library’s offline
+`pic::server_assets::check` directly against the prepared physical bundle, then
+retain a bounded server digest privately before managed startup. They do not
+spawn Make, the Cargo installer or the CLI. Their application-specific evidence
+and original WAT bytes remain local.
 After a locked Testkit version update, repeat `make install-testkit-server`; the
 older retained CLI cannot satisfy the updated selection. Admission failures name
 the selected version and the explicit setup command.
@@ -317,8 +322,8 @@ See [progress provenance](execution-progress-source.json) and
 `model::ic_request` is the IC-specific host-ingress codec boundary. It owns closed
 method/target/raw-snapshot declarations, pinned upstream Candid argument encoding,
 exact wire digests and mutation/observation payload checks. Generic plan/journal
-owners remain independent of the codec. SDK DTOs and Candid are registry dependencies,
-not Canic runtime imports. Native tests compare independent wire vectors, decode
+owners remain independent of the codec. SDK DTOs and the Platform Candid boundary
+are registry dependencies, not Canic runtime imports. Native tests compare independent wire vectors, decode
 official argument types and reopen byte-bound local journals; they perform no IC
 effects. Callers retaining these declarations use the existing bounded JSON ops
 with the codec's 8 KiB bound under their own custody; no runner request layout or
@@ -681,7 +686,7 @@ create an absent checkpoint. The 0.29 hard cut removes fresh-only checkpoint
 shortcuts and direct public record publication without aliases.
 
 Management reply decoding delegates exact-result and compact decoder setup to
-standalone `ic-testkit-candid` 0.52. Product DTO bounds, raw limits, per-method quotas
+`ic-platform` 0.1.8 with explicit `candid` and `management-canister-types` features. Product DTO bounds, raw limits, per-method quotas
 and redacted outer errors remain in Backup. Independent consumer qualification
 rejects simulator packages in the production graph. Run existing codec goldens and
 bounds against the extracted production decoder when changing this selection.
@@ -861,7 +866,7 @@ commands must use the same local directory.
 
 Compilation uses `--offline --locked`. `make deps` fetches the committed lockfile's
 dependencies when needed; it does not select new versions. Serde/JSON, SHA-256,
-thiserror, pinned `ic_principal` conversion and Unix rustix/Host Process
+thiserror, Platform principal conversion and Unix rustix/Host Process
 declarations belong in `[workspace.dependencies]`,
 with package-level entries inheriting them. There are no Canic dependencies or
 sibling checkout patches.
@@ -898,7 +903,43 @@ both exact archive paths; archive/source hashes and root manifest/lock remain
 unchanged. This adds no root/sibling patch or version transaction. Registry
 publication continues to use Cargo's ordinary admission.
 
+## Dependency roles and production graphs
+
+Both workspace members, `ic-backup` and `ic-backup-agent`, are production host
+libraries. Their supported targets are Linux x86-64 and macOS on Intel and Apple
+Silicon; neither package declares feature switches. The root Cargo catalog uses
+`Production dependencies` and `Tests and tooling only` groups. Entries used by
+both production and tests remain in production. In particular, direct `sha2` and
+`tokio` uses are test-only, but production graphs need SHA-256 through Host/Agent
+and Tokio through Agent. `ic-platform` is the production Candid and native Agent
+boundary; direct Agent declarations are prohibited. Reqwest
+owns the consumer’s HTTP client configuration;
+`ic-testkit` and `wat` are test/tooling packages. Names do not determine roles.
+
+Independent MSRV and unpacked-package consumers reuse `consumer-graph.jq` to
+reject `ic-testkit`, `pocket-ic` and `wat` anywhere in their normal graph by resolved
+package identity, so renaming an edge does not evade admission. Adding another
+test-only catalog entry requires reviewing and updating that explicit policy;
+comments are not an automatically interpreted exclusion list. The dependency-pin
+check enforces source/version declarations and inheritance, not these roles.
+
+This adoption inspected locked normal/build graphs for both libraries with default
+features across all three supported target triples. None contained the excluded
+packages. Cross-target Cargo trees are source/graph inspection, not native macOS
+build evidence. This repository publishes libraries and has no application
+deployment entrypoint or deployable canister artifact. A consuming application's
+build/deployment owner must still enforce its actual target/features and bind the
+locked successful build and final artifact digest to the bytes deployed. Passing
+formatting, snapshot integrity or these library fixtures is not deployment admission.
+
 ## Formatting and evidence
+
+Both `make fmt` and `make fmt-check` select Cargo sort's `--grouped` policy before
+Rust formatting. The first role heading decorates the dependency table itself,
+so the pinned sorter retains it when repairing the first group's order. Hooks
+call the same write command; release preparation calls the same check command.
+Committed release checks use Shared's `--manifest-order-grouped` against the exact
+selected Git source, preserving independent receipt and resume checks.
 
 Install the exact shared pre-commit formatter with `make install-hooks`. It formats
 an isolated export of the selected index, copies back and automatically refreshes

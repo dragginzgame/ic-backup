@@ -1,6 +1,7 @@
 use super::*;
-use candid::{CandidType, Nat, Reserved};
-use ic_management_canister_types::{
+use ic_platform::candid::contract;
+use ic_platform::candid::contract::{CandidType, Nat, Reserved};
+use ic_platform::management_canister_types::{
     CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, SnapshotMetadataGlobal, SnapshotSource,
 };
 use serde::Deserialize;
@@ -47,10 +48,11 @@ fn admits_every_registered_independent_wire_and_evidence_digest() {
         );
         let raw = hex_bytes(&case.reply_hex);
         let reply = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let official: ReadCanisterSnapshotMetadataResult = candid::decode_one(&raw).unwrap();
+        let official: ReadCanisterSnapshotMetadataResult =
+            ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
         assert_eq!(
-            candid::encode_one(reply.metadata()).unwrap(),
-            candid::encode_one(official).unwrap()
+            contract::encode_one(reply.metadata()).unwrap(),
+            contract::encode_one(official).unwrap()
         );
         assert_eq!(reply.payload_checksum().hash(), case.payload_checksum);
         assert_eq!(reply.digest().hash(), case.digest);
@@ -94,7 +96,11 @@ fn metadata() -> ReadCanisterSnapshotMetadataResult {
 #[test]
 fn exact_arguments_normalization_and_independent_digests() {
     let request = request();
-    let args: ReadCanisterSnapshotMetadataArgs = candid::decode_one(request.arguments()).unwrap();
+    let args: ReadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
+        request.arguments(),
+        crate::test_support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     assert_eq!(args.canister_id.to_text(), request.target());
     assert_eq!(args.snapshot_id, request.snapshot_id());
     assert_eq!(request.receiver(), "aaaaa-aa");
@@ -125,7 +131,7 @@ fn exact_arguments_normalization_and_independent_digests() {
     assert_ne!(different.digest(), request.digest());
     let other_target = IcSnapshotMetadataRequest::new("2vxsx-fae", request.snapshot_id()).unwrap();
     assert_ne!(other_target.digest(), request.digest());
-    let raw = candid::encode_one(metadata()).unwrap();
+    let raw = contract::encode_one(metadata()).unwrap();
     let reply = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let mut expected = b"ic-backup/ic-snapshot-metadata-reply/v1\0".to_vec();
     expected.extend(request.digest().hash().as_bytes());
@@ -150,7 +156,7 @@ fn exact_arguments_normalization_and_independent_digests() {
 #[test]
 fn preserves_order_optional_values_and_float_bits_without_completeness_claims() {
     let request = request();
-    let raw = candid::encode_one(metadata()).unwrap();
+    let raw = contract::encode_one(metadata()).unwrap();
     let reply = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let value = reply.metadata();
     assert_eq!(value.taken_at_timestamp, u64::MAX);
@@ -204,13 +210,15 @@ fn preserves_order_optional_values_and_float_bits_without_completeness_claims() 
                 value.globals = vec![None];
                 value.certified_data.clear();
                 value.wasm_chunk_store.clear();
-                let reply =
-                    IcSnapshotMetadataReply::decode(&request, &candid::encode_one(&value).unwrap())
-                        .unwrap();
+                let reply = IcSnapshotMetadataReply::decode(
+                    &request,
+                    &contract::encode_one(&value).unwrap(),
+                )
+                .unwrap();
                 assert_eq!(reply.metadata().source, source);
                 assert_eq!(
-                    candid::encode_one(reply.metadata()).unwrap(),
-                    candid::encode_one(value).unwrap()
+                    contract::encode_one(reply.metadata()).unwrap(),
+                    contract::encode_one(value).unwrap()
                 );
             }
         }
@@ -241,7 +249,7 @@ fn enforces_request_raw_sequence_hash_and_global_bounds() {
         IcSnapshotMetadataError::ReplyTooLarge
     );
     let check = |value: &ReadCanisterSnapshotMetadataResult| {
-        IcSnapshotMetadataReply::decode(&request, &candid::encode_one(value).unwrap()).map(|_| ())
+        IcSnapshotMetadataReply::decode(&request, &contract::encode_one(value).unwrap()).map(|_| ())
     };
     let mut value = metadata();
     value.globals = vec![None; MAX_IC_SNAPSHOT_GLOBALS];
@@ -285,12 +293,13 @@ fn enforces_request_raw_sequence_hash_and_global_bounds() {
 #[test]
 fn rejects_malformed_truncated_extra_and_skipped_wire_without_payload_diagnostics() {
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     struct Extra {
         value: ReadCanisterSnapshotMetadataResult,
         extra: u64,
     }
     let request = request();
-    let raw = candid::encode_one(metadata()).unwrap();
+    let raw = contract::encode_one(metadata()).unwrap();
     for length in 0..raw.len() {
         assert_eq!(
             IcSnapshotMetadataReply::decode(&request, &raw[..length]).unwrap_err(),
@@ -299,10 +308,10 @@ fn rejects_malformed_truncated_extra_and_skipped_wire_without_payload_diagnostic
     }
     for invalid in [
         b"bad wire".to_vec(),
-        candid::encode_args(()).unwrap(),
-        candid::encode_args((metadata(), 1_u64)).unwrap(),
+        contract::encode_args(()).unwrap(),
+        contract::encode_args((metadata(), 1_u64)).unwrap(),
         [raw.as_slice(), &[0]].concat(),
-        candid::encode_one(123_u64).unwrap(),
+        contract::encode_one(123_u64).unwrap(),
     ] {
         let error = IcSnapshotMetadataReply::decode(&request, &invalid).unwrap_err();
         assert_eq!(error, IcSnapshotMetadataError::InvalidReply);
@@ -312,7 +321,7 @@ fn rejects_malformed_truncated_extra_and_skipped_wire_without_payload_diagnostic
         );
     }
     // A nested unexpected record must reject, rather than default missing fields.
-    let bytes = candid::encode_one(Extra {
+    let bytes = contract::encode_one(Extra {
         value: metadata(),
         extra: 0,
     })
@@ -324,6 +333,7 @@ fn rejects_malformed_truncated_extra_and_skipped_wire_without_payload_diagnostic
 }
 
 #[derive(CandidType)]
+#[candid_path("ic_platform::candid::contract")]
 struct MetadataShape<S, G, T> {
     source: S,
     taken_at_timestamp: u64,
@@ -357,35 +367,37 @@ fn shape<S, G, T>(source: S, globals: Vec<G>, timer: T) -> MetadataShape<S, G, T
 #[test]
 fn rejects_unknown_optional_variants_reserved_payloads_and_type_header_work() {
     #[derive(CandidType)]
+    #[candid_path("ic_platform::candid::contract")]
     enum Unknown {
         Future(u64),
     }
     #[derive(CandidType, Deserialize)]
+    #[candid_path("ic_platform::candid::contract")]
     enum BadSource {
         #[serde(rename = "taken_from_canister")]
         Taken(u64),
     }
     let request = request();
     let invalid = [
-        candid::encode_one(shape(
+        contract::encode_one(shape(
             Some(Unknown::Future(0)),
             vec![None::<SnapshotMetadataGlobal>],
             None::<CanisterTimer>,
         ))
         .unwrap(),
-        candid::encode_one(shape(
+        contract::encode_one(shape(
             None::<SnapshotSource>,
             vec![Some(Unknown::Future(0))],
             None::<CanisterTimer>,
         ))
         .unwrap(),
-        candid::encode_one(shape(
+        contract::encode_one(shape(
             None::<SnapshotSource>,
             vec![None::<SnapshotMetadataGlobal>],
             Some(Unknown::Future(0)),
         ))
         .unwrap(),
-        candid::encode_one(shape(
+        contract::encode_one(shape(
             Some(BadSource::Taken(0)),
             vec![None::<SnapshotMetadataGlobal>],
             None::<CanisterTimer>,
@@ -409,7 +421,7 @@ fn rejects_unknown_optional_variants_reserved_payloads_and_type_header_work() {
         );
     }
     // Valid optional fields can disappear from the wire without becoming defaults.
-    let raw = candid::encode_one(shape(
+    let raw = contract::encode_one(shape(
         None::<SnapshotSource>,
         vec![None::<SnapshotMetadataGlobal>],
         None::<CanisterTimer>,

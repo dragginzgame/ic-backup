@@ -46,7 +46,7 @@ use ic_backup::{
         ic_snapshot_metadata::read_snapshot_metadata,
     },
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use std::{
     collections::BTreeMap,
     convert::Infallible,

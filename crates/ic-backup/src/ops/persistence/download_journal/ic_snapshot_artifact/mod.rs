@@ -19,9 +19,9 @@ use crate::{
         persistence::json::write_encoded,
     },
 };
+use ic_host_artifacts::artifact::HashingWriter;
 use ic_host_fs::read::open_directory_no_follow;
 use rustix::fs::{self as unix_fs, AtFlags, Dir, FileType, Mode, OFlags};
-use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
     ffi::OsStr,
@@ -56,8 +56,7 @@ pub struct IcSnapshotArtifactWriter<'journal, 'layout, 'metadata> {
     path: PathBuf,
     parent: File,
     directory: File,
-    regions: [File; 3],
-    hashes: [Sha256; 3],
+    regions: [HashingWriter<File>; 3],
     checksums: Vec<(PathBuf, ArtifactChecksumRecord)>,
 }
 
@@ -128,7 +127,8 @@ impl<'layout> DownloadJournalGuard<'layout> {
             create_file(&directory, REGIONS[0])?,
             create_file(&directory, REGIONS[1])?,
             create_file(&directory, REGIONS[2])?,
-        ];
+        ]
+        .map(|file| HashingWriter::new(file, u64::MAX));
         let writer = IcSnapshotArtifactWriter {
             journal: self,
             coverage: IcSnapshotDataCoverage::new(metadata),
@@ -137,7 +137,6 @@ impl<'layout> DownloadJournalGuard<'layout> {
             parent,
             directory,
             regions,
-            hashes: std::array::from_fn(|_| Sha256::new()),
             checksums,
         };
         writer.check_custody()?;
@@ -202,7 +201,6 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
             }
         };
         self.regions[index].write_all(reply.chunk())?;
-        self.hashes[index].update(reply.chunk());
         self.check_custody()?;
         Ok(self)
     }
@@ -240,10 +238,10 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
             return Err(IcSnapshotArtifactError::IncompleteCoverage);
         }
         self.check_custody()?;
-        for (name, hash) in REGIONS.into_iter().zip(self.hashes.iter()) {
+        for (name, region) in REGIONS.into_iter().zip(&self.regions) {
             self.checksums.push((
                 name.into(),
-                ArtifactChecksumRecord::from_digest(hash.clone().finalize().into()),
+                ArtifactChecksumRecord::from_digest(*region.identity().sha256.as_bytes()),
             ));
         }
         self.check_closed_tree()?;
@@ -315,7 +313,7 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
             .zip(&self.regions)
             .zip(self.coverage.covered_region_bytes())
         {
-            let held = unix_fs::fstat(file).map_err(io::Error::from)?;
+            let held = unix_fs::fstat(file.get_ref()).map_err(io::Error::from)?;
             let current = unix_fs::statat(&self.directory, *name, AtFlags::SYMLINK_NOFOLLOW)
                 .map_err(io::Error::from)?;
             let same_file = (current.st_dev, current.st_ino) == (held.st_dev, held.st_ino);

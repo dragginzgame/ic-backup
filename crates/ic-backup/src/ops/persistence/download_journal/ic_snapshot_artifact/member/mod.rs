@@ -6,7 +6,7 @@ use super::{
 };
 use crate::model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES;
 use ic_host_artifacts::artifact::Sha256Digest;
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 
 pub(super) enum Member {
     Region {

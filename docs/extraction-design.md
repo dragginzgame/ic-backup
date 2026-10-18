@@ -1154,7 +1154,7 @@ This includes snapshot capture/transfer/upload/load and canister status/lifecycl
 calls. IC Wire's Postcard contracts apply to application endpoints whose producers
 and consumers select that contract; they do not replace the platform's management
 protocol. Shared Candid decoding mechanics belong in the independent
-`ic-testkit-candid` crate. Backup retains method-specific quotas, bounded wire
+published `ic-platform` crate with its `candid` feature. Backup retains method-specific quotas, bounded wire
 projections, exact-result admission and typed domain errors; production use of that
 codec must not introduce a PocketIC dependency.
 
@@ -1179,11 +1179,14 @@ and bypasses Agent's default 429/503 retry middleware. HTTP bodies are bounded a
 No root fetch, query substitution, background polling or additional management call
 is performed. Transport timeout alone does not bound a complete workflow.
 
-Preparation signs without network traffic. Retain the exact signed bytes and
-request ID with original plan/reservation before consuming preparation in one
-submission. There is no envelope re-import/reissue API. A successful certificate
+The configured provider signs without network traffic, then passes a passive
+prepared-envelope view to mandatory durable retention. The callback retains exact
+signed bytes and request ID with the original plan/reservation before returning
+success; the provider then submits once. Signing and dispatch are internal, with
+no public prepare/submit or envelope re-import/reissue API. A successful certificate
 reply is passive evidence for canonical decoding/association, not an automatic
-Applied/NotApplied receipt. Accepted/processing returns Pending without waiting;
+Applied/NotApplied receipt. Accepted/processing returns the port's Indeterminate
+error without waiting;
 errors, cancellation and lost replies keep original spending and obligations.
 Recovery is independently admitted and accounted, never a blind repeat call.
 

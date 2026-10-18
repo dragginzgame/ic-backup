@@ -1,6 +1,5 @@
 //! Exact application update over the existing single-submit transport.
 use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
-use ic_agent::RequestId;
 use ic_backup::{
     model::{
         attempt_journal::AttemptJournalRecord,
@@ -8,6 +7,7 @@ use ic_backup::{
     },
     ports::fence_acquisition::{FenceAcquisitionProvider, FenceAcquisitionProviderError},
 };
+use ic_platform::agent::RequestId;
 
 /// One original application acquisition update with mandatory durable ingress/reply retention.
 ///

@@ -5,8 +5,8 @@ use crate::model::{
     bounded_sequence,
     ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES},
 };
-use candid::CandidType;
-use ic_testkit_candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::candid::contract::CandidType;
+use ic_platform::candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer, de};
 
 // These quotas bound decoder work and type-table retention independently of raw
@@ -15,6 +15,7 @@ const DECODING_QUOTA: usize = 2 * 1024 * 1024;
 const MAX_TYPE_TABLE_ENTRIES: usize = 16;
 
 #[derive(CandidType, Deserialize)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireSnapshot {
     #[serde(deserialize_with = "snapshot_id")]
     id: Vec<u8>,
@@ -33,6 +34,7 @@ impl From<WireSnapshot> for IcSnapshotInfo {
 }
 
 #[derive(CandidType)]
+#[candid_path("ic_platform::candid::contract")]
 struct WireInventory(Vec<WireSnapshot>);
 
 impl<'de> Deserialize<'de> for WireInventory {

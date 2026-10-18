@@ -90,8 +90,9 @@
 //! the direct Agent transport lives in the separate `ic-backup-agent` crate.
 //! Filesystem access and credentials remain on the
 //! operator host.
-//! Bounded Unix record reads reuse ic-host-fs regular-file admission while
-//! publication, record validation, confinement and command custody remain local.
+//! Bounded Unix record reads and publication use Host FS; generic accepted-byte
+//! hashing uses Host Artifacts. Product record validation, confinement, original
+//! journal binding and recovery policy remain local.
 
 pub mod model;
 pub mod ops;

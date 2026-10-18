@@ -16,7 +16,7 @@ use crate::model::{
     ic_snapshot_data::{ExtentPlanningError, planned_extents},
     operation_plan::{OperationPlanError, OperationPlanRecord},
 };
-use ic_management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::SnapshotDataKind;
 use thiserror::Error;
 
 /// Complete ordered extents and source-bound request digests for one original data stage.

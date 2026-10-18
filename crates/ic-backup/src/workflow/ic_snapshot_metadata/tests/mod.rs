@@ -18,6 +18,7 @@ use crate::{
     ports::ic_observation::IcObservationProviderError,
     test_support::temp_dir,
 };
+use ic_platform::candid::contract;
 use std::{
     convert::Infallible,
     fs,
@@ -45,7 +46,7 @@ impl Provider {
     fn new() -> Self {
         Self {
             calls: 0,
-            reply: Ok(candid::encode_one(values()).unwrap()),
+            reply: Ok(contract::encode_one(values()).unwrap()),
         }
     }
 }
@@ -146,7 +147,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
     assert_eq!(provider.calls, 1);
     assert_eq!(
         fs::read(&retained).unwrap(),
-        candid::encode_one(values()).unwrap()
+        contract::encode_one(values()).unwrap()
     );
     assert!(
         ready(read_snapshot_metadata(

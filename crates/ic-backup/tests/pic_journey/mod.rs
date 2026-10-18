@@ -1,5 +1,6 @@
 //! First real management-service journey; product terminal/release remains separate.
 
+use ic_platform::candid::contract;
 mod backend;
 pub(super) mod planned_download;
 mod planned_restore;
@@ -24,7 +25,7 @@ use ic_backup::{
     },
     ops::persistence::{BackupLayoutGuard, DownloadJournalGuard, create_operation_plan},
 };
-use ic_management_canister_types::{CanisterStatusType, SnapshotDataKind};
+use ic_platform::management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use std::fs;
 
 fn management(backend: &Backend, method: Method, id: Option<Vec<u8>>) -> IcManagementRequestRecord {
@@ -425,8 +426,8 @@ fn verify_destination(
         metadata.metadata().certified_data
     );
     assert_eq!(
-        candid::encode_one(&destination_metadata.metadata().globals).unwrap(),
-        candid::encode_one(&metadata.metadata().globals).unwrap()
+        contract::encode_one(&destination_metadata.metadata().globals).unwrap(),
+        contract::encode_one(&metadata.metadata().globals).unwrap()
     );
     let source = metadata.metadata();
     let actual = destination_metadata.metadata();
@@ -443,16 +444,16 @@ fn verify_destination(
         ]
     );
     assert_eq!(
-        candid::encode_one(&actual.wasm_chunk_store).unwrap(),
-        candid::encode_one(&source.wasm_chunk_store).unwrap()
+        contract::encode_one(&actual.wasm_chunk_store).unwrap(),
+        contract::encode_one(&source.wasm_chunk_store).unwrap()
     );
     assert_eq!(
-        candid::encode_one(&actual.global_timer).unwrap(),
-        candid::encode_one(&source.global_timer).unwrap()
+        contract::encode_one(&actual.global_timer).unwrap(),
+        contract::encode_one(&source.global_timer).unwrap()
     );
     assert_eq!(
-        candid::encode_one(&actual.on_low_wasm_memory_hook_status).unwrap(),
-        candid::encode_one(&source.on_low_wasm_memory_hook_status).unwrap()
+        contract::encode_one(&actual.on_low_wasm_memory_hook_status).unwrap(),
+        contract::encode_one(&source.on_low_wasm_memory_hook_status).unwrap()
     );
     let mut evidence = vec![metadata.digest(), destination_metadata.digest()];
     for (kind, expected) in extents(metadata).iter().zip(original_chunks) {
@@ -526,7 +527,7 @@ fn status(backend: &mut Backend, expected: CanisterStatusType) {
     assert_eq!(info.status(), expected);
     assert_eq!(
         info.controllers().principals(),
-        [candid::Principal::anonymous().to_text()]
+        [ic_platform::Principal::anonymous().to_text()]
     );
 }
 

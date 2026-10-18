@@ -185,7 +185,7 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
         },
         ports::ic_snapshot_upload::IcSnapshotUploadProvider,
     };
-    use ic_management_canister_types::SnapshotDataKind;
+    use ic_platform::management_canister_types::SnapshotDataKind;
     let read = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     // Exact SDK wire from Backup's existing "upload-source" codec vector. This HTTP
     // fixture proves transport/refusal, not authentic source or management effects.

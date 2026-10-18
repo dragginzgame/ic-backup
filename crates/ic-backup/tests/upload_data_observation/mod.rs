@@ -25,6 +25,7 @@ use ic_backup::{
         ic_snapshot_upload_data_observation::IcSnapshotUploadDataObservationProvider,
     },
 };
+use ic_platform::candid::contract;
 use std::fs;
 
 struct RefusingProvider {
@@ -57,8 +58,8 @@ fn readback_response(
         request: request.payload().digest(),
         context: request.plan().context().clone(),
         target: request.payload().target().into(),
-        reply: candid::encode_one(
-            ic_management_canister_types::ReadCanisterSnapshotDataResult {
+        reply: contract::encode_one(
+            ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
                 chunk: chunk.to_vec(),
             },
         )
@@ -100,9 +101,10 @@ pub fn retained_readback<'layout>(
     let original = IcSnapshotMetadataRequest::new(upload.target(), snapshot_id).unwrap();
     let mut values = upload.source().metadata().clone();
     // Independently declared original destination metadata; this is no allocation proof.
-    values.source =
-        Some(ic_management_canister_types::SnapshotSource::MetadataUpload(candid::Reserved));
-    let raw = candid::encode_one(values).unwrap();
+    values.source = Some(
+        ic_platform::management_canister_types::SnapshotSource::MetadataUpload(contract::Reserved),
+    );
+    let raw = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&original, &raw).unwrap();
     let read = IcSnapshotDataRequest::new(&metadata, source_kind.clone()).unwrap();
     let metadata_path = layout.root().join("original-upload-data-metadata.json");

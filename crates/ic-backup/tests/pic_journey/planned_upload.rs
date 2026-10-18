@@ -27,7 +27,7 @@ use ic_backup::{
         IcSnapshotUploadExecutionError, allocate_snapshot, upload_snapshot, upload_snapshot_data,
     },
 };
-use ic_management_canister_types::CanisterStatusType;
+use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
 use std::{collections::BTreeSet, convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt};
 
