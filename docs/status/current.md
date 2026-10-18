@@ -1,21 +1,19 @@
 # Current handoff — 2026-10-18
 
-Released baseline: `ic-backup` and `ic-backup-agent` 0.31.1 at
-`8a768650dd89c1cdb1ea6132dfe7c82fd55a224c` (`v0.31.1`). Package versions remain
-0.31.1; compatible pending notes select 0.31.2. No public API or persisted schema
-change is selected. Earlier receipts remain in the
+Released baseline: `ic-backup` and `ic-backup-agent` **0.31.2**, commit
+`db9c5d99c00657b1fda6a766a256599bc195f235` (`v0.31.2`). The tag resolves to the
+same source as the [successful native CI matrix](https://github.com/dragginzgame/ic-backup/actions/runs/39130374520).
+Release metadata retains authority. Earlier receipts remain in the
 [October 18 archive](archive-2026-10-18.md),
 [October 17 archive](archive-2026-10-17.md) and
-[repeat ownership review](../reports/audits/2026/10/18/architectural-sediment/03/report.md).
-Release metadata retains authority.
+[ownership review](../reports/audits/2026/10/18/architectural-sediment/03/report.md).
 
 ## Current boundary
 
 Core owns backup records, bounds, guarded persistence and coordination. Agent owns
-one reserved update's signing, retention and transport. Platform owns the Candid,
-Principal, management DTO and SDK dependency boundary. Core selects `candid` and
-`management-canister-types`; only Agent adds `agent`. Direct upstream declarations,
-compatibility reexports and pin exceptions are removed. The
+one reserved update's signing, retention and transport. Platform owns Candid,
+Principal, management DTO and SDK dependencies. Core selects `candid` and
+`management-canister-types`; only Agent adds `agent`. The
 [Platform contract](../ic-platform.md) retains the original 0.1.8 adoption evidence.
 
 Host owns hashing, descriptor IO and process custody. Testkit owns simulator assets
@@ -24,53 +22,59 @@ Reqwest client policy and original journals. Applications own membership, routin
 release identity, consistency and external-effect settlement. A standalone CLI and
 complete application runner remain outside the implemented scope.
 
-The incoming manifest/lock update is preserved: Testkit 0.54.0, Host 0.27.4 and
-Platform 0.1.9 are locked. Host requirements remain 0.27.1 and Platform's minimum
-remains 0.1.8. This maintenance pass changes no dependency selection. Shared Tooling
-0.24.0 remains at `cab12cd3dfa4fdb34846b25397f0d72881bb9ae0` with 114 exact payloads.
+The released graph selects Testkit 0.54.0, Host 0.27.4 and Platform 0.1.10. Shared
+Tooling 0.24.0 remains at `cab12cd3dfa4fdb34846b25397f0d72881bb9ae0` with 114
+exact payloads. Development Rust is 1.99.1; consumer MSRV remains 1.91.0.
 
-## Prepared maintenance
+## Delivered qualification
 
-Rust 1.99.1 is selected for development; consumer MSRV remains 1.91.0. README and
-development guidance agree. Native CI compares the already-admitted common Rust
-tool directory, preserving per-tool physical identity instead of a second roster
-that included the retired extractor. Changelog notes link the owning issues.
-Canonical explicit setup has prepared the common tools and locked Testkit 0.54.0
-CLI for Rust 1.99.1. Prior bundles and failed attempts remain retained. Development
-guidance describes compiler-bound tool receipts and the current common catalog.
+The exact 0.31.2 CI source passes the complete configured gate on Linux x86-64,
+Intel macOS and Apple Silicon. Every job passes explicit tool preparation and
+offline reuse, including application flag/wrapper isolation, the admitted common
+formatter directory and the locked Testkit CLI's physical identity. Native logs
+include 34 Core and 12 Agent PocketIC cases, actual Rust 1.91 independent Core/Agent
+consumers and compilation of both current package archives together. The earlier
+[0.31.1 failure](https://github.com/dragginzgame/ic-backup/actions/runs/39123427210)
+remains historical evidence; its stale tool comparison is corrected in 0.31.2.
 
-The latest delivered [CI run](https://github.com/dragginzgame/ic-backup/actions/runs/39123427210)
-failed on all three hosts in tool reuse before product validation. The retained
-Linux artifact confirms successful installer checks and the obsolete comparison.
-[The CI repair](https://github.com/dragginzgame/ic-backup/issues/60) is local only;
-no native hosted result exists for the dirty batch. Testkit consumer acceptance
-still requires a successful containing native matrix. Earlier 0.31.0 green CI is
-historical evidence, not qualification of this delivery.
+These receipts satisfy the containing native-matrix requirements for
+[#55 — Testkit library server admission](https://github.com/dragginzgame/ic-backup/issues/55),
+[#58 — Rust 1.99.1 qualification](https://github.com/dragginzgame/ic-backup/issues/58)
+and [#60 — Admitted Rust tool comparison](https://github.com/dragginzgame/ic-backup/issues/60).
+The advisory [#59 — README compiler floor](https://github.com/dragginzgame/ic-backup/issues/59)
+correction is delivered too. CI does not qualify installed-IC or complete
+application acceptance. Application transport authority and full runner/terminal
+proof remain [#25 — Reserved Agent transport qualification](https://github.com/dragginzgame/ic-backup/issues/25)
+and [#29 — Original-plan runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
 
-## Focused qualification
+## Remaining acceptance and evidence
 
-On the current pending graph, Rust 1.99.1 all-target/all-feature checking and strict
-Clippy pass. All 78 IC model/codec, 14 Agent HTTP, 34 Core PocketIC and 12 Agent
-PocketIC cases pass. The sandboxed HTTP attempt refused socket binding; the
-loopback-enabled rerun passes, with both attempts retained. Rust 1.91 all-target
-checking and both independent production consumers pass; the latter retain
-`target/msrv-consumers.dGrOin/`. Hooks and actionlint pass. The actual CI comparison
-block reproduces the old failure, accepts current reuse and rejects missing or
-mismatched targets. Formatting, dependency/pin checks, snapshot integrity and
-local links pass. Before-images and receipts: `/tmp/backup-issue-pass-mlttf_tl/`.
+The remaining application acceptance requires a concrete integration contract for
+current membership/control/read authority, whole-selection fencing and external
+obligations. The restore-safety and terminal-evidence ports intentionally install
+no default provider. Their test implementations qualify fixture behavior only.
+The next implementation must supply these application-owned inputs before wiring
+the complete runner; local all-Applied checkpoints cannot substitute for them.
 
-The subsequent tooling qualification passes `make tools-check` and the complete
-native CI reuse step on Linux, with only its fixture directory changed to a
-unique caller-owned path. Offline host/IC/common/selected Cargo reuse, hostile
-application flag/wrapper isolation and exact physical identities pass together.
-The initial sandbox refusal to acquire a shared-store lock is retained separately
-from the successful host-enabled run. Both current package archives compile
-together in an independent consumer on the original normal graph; archive and
-unpacked-file checksums pass. Evidence: `/tmp/backup-native-followup-wafn4qmr/`,
-`target/ci-fixtures/native-reuse.y_641iwl/` and `target/package-check.CN2Dxh/`.
+The linked Canic adoption issues remain open. Its reviewed default-branch source
+at `53f1f22d2e23a16c5566b8590f3b0a2a643b6d84` already implements the
+[terminal-evidence adapter](https://github.com/dragginzgame/canic/blob/53f1f22d2e23a16c5566b8590f3b0a2a643b6d84/crates/canic-backup/src/restore/persistence/retention/mod.rs#L94)
+and calls guarded reference release. Its
+[live-create entry point](https://github.com/dragginzgame/canic/blob/53f1f22d2e23a16c5566b8590f3b0a2a643b6d84/crates/canic-cli/src/backup/create/mod.rs#L38)
+still refuses execution. This is source inspection, not fresh consumer execution.
+The remaining work is application authority/fencing integration and complete
+retained-plan capture-to-restore qualification with interruption, reconciliation
+and effect-free terminal replay. It does not require a second terminal API or
+Canic control-plane dependencies in Backup.
 
-These are focused Linux checks, not full local CI, native macOS, installed-IC,
-package publication or complete application acceptance. The earlier 634-test and
-package/identity receipts retain their original source and dependency identities.
-No own version change, staging, commit, push, merge, CI dispatch, release,
-publication, deployment or artifact cleanup was performed.
+Exact 0.31.2 hosted job metadata and all three raw native logs are retained at
+`/tmp/backup-issue-reconcile-0wqan5nq/`. Earlier focused Linux receipts remain at
+`/tmp/backup-issue-pass-mlttf_tl/`, `/tmp/backup-native-followup-wafn4qmr/`,
+`target/msrv-consumers.dGrOin/`, `target/ci-fixtures/native-reuse.y_641iwl/` and
+`target/package-check.CN2Dxh/`. Those receipts retain their original source and
+dependency selections. The earlier 0.1.8 adoption has separate provenance in the
+Platform contract.
+
+This documentation reconciliation changes no library behavior, dependency, public
+API, persisted schema or tool selection. No new local full-suite run, live IC
+operation, release, publication, deployment or artifact cleanup is part of it.
