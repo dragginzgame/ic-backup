@@ -47,21 +47,43 @@ application acceptance. Application transport authority and full runner/terminal
 proof remain [#25 — Reserved Agent transport qualification](https://github.com/dragginzgame/ic-backup/issues/25)
 and [#29 — Original-plan runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
 
-## Pending work and evidence
+## Pending dependency graph
 
-The incoming `Cargo.toml`/`Cargo.lock` edits remain preserved: the Platform
-requirement is `0.1`, the selected version is 0.1.11, and the lock also changes
-crypto-common/generic-array selections. The 0.31.2 native receipt selects 0.1.10
-and does not qualify this pending graph. This reconciliation changes no manifest,
-lockfile, tool selection, public API or persisted schema.
+The local manifest and lock update is preserved: the Platform requirement is
+`0.1`, with Platform 0.1.13 and Testkit 0.54.1 selected. The lock also changes
+crypto-common/generic-array selections. The 0.31.2 native receipt selects Platform
+0.1.10 and Testkit 0.54.0 and does not qualify this pending graph. This conflict
+resolution changes no manifest, lockfile, tool selection, public API or persisted
+schema.
 
-Exact hosted job metadata, all three raw native logs, issue payloads and document
-before-images are retained at `/tmp/backup-issue-reconcile-0wqan5nq/`. Earlier
-focused Linux receipts remain at `/tmp/backup-issue-pass-mlttf_tl/`,
-`/tmp/backup-native-followup-wafn4qmr/`, `target/msrv-consumers.dGrOin/`,
-`target/ci-fixtures/native-reuse.y_641iwl/` and `target/package-check.CN2Dxh/`.
-Those receipts retain their original dependency selections.
+## Remaining acceptance and evidence
 
-No local full-suite run, own version change, staging, commit, push, merge, CI
-dispatch, release, publication, deployment or artifact cleanup was performed by
-this reconciliation.
+The remaining application acceptance requires a concrete integration contract for
+current membership/control/read authority, whole-selection fencing and external
+obligations. The restore-safety and terminal-evidence ports intentionally install
+no default provider. Their test implementations qualify fixture behavior only.
+The next implementation must supply these application-owned inputs before wiring
+the complete runner; local all-Applied checkpoints cannot substitute for them.
+
+The linked Canic adoption issues remain open. Its reviewed default-branch source
+at `53f1f22d2e23a16c5566b8590f3b0a2a643b6d84` already implements the
+[terminal-evidence adapter](https://github.com/dragginzgame/canic/blob/53f1f22d2e23a16c5566b8590f3b0a2a643b6d84/crates/canic-backup/src/restore/persistence/retention/mod.rs#L94)
+and calls guarded reference release. Its
+[live-create entry point](https://github.com/dragginzgame/canic/blob/53f1f22d2e23a16c5566b8590f3b0a2a643b6d84/crates/canic-cli/src/backup/create/mod.rs#L38)
+still refuses execution. This is source inspection, not fresh consumer execution.
+The remaining work is application authority/fencing integration and complete
+retained-plan capture-to-restore qualification with interruption, reconciliation
+and effect-free terminal replay. It does not require a second terminal API or
+Canic control-plane dependencies in Backup.
+
+Exact 0.31.2 hosted job metadata and all three raw native logs are retained at
+`/tmp/backup-issue-reconcile-0wqan5nq/`. Earlier focused Linux receipts remain at
+`/tmp/backup-issue-pass-mlttf_tl/`, `/tmp/backup-native-followup-wafn4qmr/`,
+`target/msrv-consumers.dGrOin/`, `target/ci-fixtures/native-reuse.y_641iwl/` and
+`target/package-check.CN2Dxh/`. Those receipts retain their original source and
+dependency selections. The earlier 0.1.8 adoption has separate provenance in the
+Platform contract.
+
+This documentation reconciliation changes no library behavior, dependency, public
+API, persisted schema or tool selection. No new local full-suite run, live IC
+operation, release, publication, deployment or artifact cleanup is part of it.

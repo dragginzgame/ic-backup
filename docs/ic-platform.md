@@ -2,7 +2,7 @@
 
 The repository’s Platform migration was completed with published
 [ic-platform 0.1.8](https://crates.io/crates/ic-platform/0.1.8). Released Backup
-0.31.2 selects Platform 0.1.10; the pending lock selects 0.1.11. Their qualification
+0.31.2 selects Platform 0.1.10; the current lock selects 0.1.13. Their qualification
 boundaries are recorded in the [current handoff](status/current.md); the provenance
 below describes the original adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
