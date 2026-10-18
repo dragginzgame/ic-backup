@@ -56,11 +56,16 @@ no default provider. Their test implementations qualify fixture behavior only.
 The next implementation must supply these application-owned inputs before wiring
 the complete runner; local all-Applied checkpoints cannot substitute for them.
 
-The linked Canic adoption issues remain open. Canic owns its membership, routing,
-application safety and terminal provider; this library must not acquire those
-control-plane dependencies. The next independent qualification is the selected
-application adapter, followed by a complete retained-plan capture-to-restore
-journey with interruption, reconciliation and effect-free terminal replay.
+The linked Canic adoption issues remain open. Its reviewed default-branch source
+at `53f1f22d2e23a16c5566b8590f3b0a2a643b6d84` already implements the
+[terminal-evidence adapter](https://github.com/dragginzgame/canic/blob/53f1f22d2e23a16c5566b8590f3b0a2a643b6d84/crates/canic-backup/src/restore/persistence/retention/mod.rs#L94)
+and calls guarded reference release. Its
+[live-create entry point](https://github.com/dragginzgame/canic/blob/53f1f22d2e23a16c5566b8590f3b0a2a643b6d84/crates/canic-cli/src/backup/create/mod.rs#L38)
+still refuses execution. This is source inspection, not fresh consumer execution.
+The remaining work is application authority/fencing integration and complete
+retained-plan capture-to-restore qualification with interruption, reconciliation
+and effect-free terminal replay. It does not require a second terminal API or
+Canic control-plane dependencies in Backup.
 
 Exact 0.31.2 hosted job metadata and all three raw native logs are retained at
 `/tmp/backup-issue-reconcile-0wqan5nq/`. Earlier focused Linux receipts remain at
