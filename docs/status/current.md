@@ -72,3 +72,11 @@ obsolete owned files. Before-images and new receipts are in
 
 No full local CI, package version edit, commit, push, release, publication,
 deployment or artifact cleanup was performed.
+
+The subsequent hook repair replaces the removed direct-Candid fixture assumption
+with the current inherited dependency table. `make hooks-check` passes with retained
+fixture `target/hook-tests.r6cL5L/`. Injected setup failure preserves its original
+status and case-log diagnostic without a secondary missing-log error. Shell syntax,
+ShellCheck, formatting and local links pass. Evidence: `/tmp/backup-hook-fix-lka3yijj/`.
+The original failed hook fixture and validation logs remain retained; no full CI or
+product qualification is claimed by this focused repair.

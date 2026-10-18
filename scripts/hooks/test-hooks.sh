@@ -233,8 +233,9 @@ run_case() {
 CASE_NAME=shared-formatting
 CASE_LOG="$TEMPORARY/$CASE_NAME.log"
 printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
-perl -0777 -pe 's/^(candid\.workspace[^\n]*)\n(ic-host-artifacts\.workspace[^\n]*)$/$2\n$1/m or die "expected dependency ordering fixture\n"' \
-    "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml"
+# Perturb the current inherited dependency table without retaining retired names.
+perl -0777 -pe 's/^(\[dependencies\]\n)([A-Za-z0-9_-]+\.workspace[^\n]*\n)([A-Za-z0-9_-]+\.workspace[^\n]*\n)/$1$3$2/m or die "expected two inherited production dependencies\n"' \
+    "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml" 2> "$CASE_LOG"
 formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
 while IFS= read -r -d '' path; do
     # The index may still name an intentionally deleted Rust test before commit.

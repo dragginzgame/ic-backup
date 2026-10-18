@@ -54,6 +54,11 @@
 - Correct active ownership and transport guidance, and archive the pre-release
   handoff while retaining all historical receipts and source attribution.
 
+### Fixed
+
+- Restore hook sorting qualification after Platform adoption by perturbing current
+  inherited dependencies. Retain fixture-setup diagnostics in the case log.
+
 ## [0.31.0] - 2026-10-17
 
 ### Breaking
