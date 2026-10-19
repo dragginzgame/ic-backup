@@ -137,23 +137,13 @@ pub(super) fn run(fault: Fault) {
     status(&mut backend, CanisterStatusType::Stopped);
     let (plan, snapshot_id, timestamp, total_size) = capture(&mut backend, fault);
     let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), &snapshot_id).unwrap();
-    let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request), false);
-    let raw = raw.unwrap();
+    let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     assert_eq!(metadata.metadata().stable_memory_size, 65_536);
     assert!(metadata.metadata().wasm_memory_size >= 131_072);
     assert_eq!(metadata.metadata().certified_data, 42_u64.to_le_bytes());
     assert_eq!(metadata.metadata().wasm_chunk_store.len(), 1);
-    let downloaded = download(
-        &mut backend,
-        &plan,
-        &metadata,
-        &raw,
-        timestamp,
-        total_size,
-        false,
-    )
-    .unwrap();
+    let downloaded = download(&mut backend, &plan, &metadata, &raw, timestamp, total_size);
     let root = &downloaded.root;
     let checksum = &downloaded.checksum;
     let manifest = &downloaded.manifest;
@@ -240,8 +230,7 @@ fn download(
     raw: &[u8],
     timestamp: u64,
     total_size: u64,
-    lose_first_reply: bool,
-) -> Result<Downloaded, u64> {
+) -> Downloaded {
     let kinds = extents(metadata);
     let mut original_chunks = Vec::new();
     let root = backend.root.join("backup");
@@ -273,13 +262,7 @@ fn download(
             .unwrap();
         for kind in &kinds {
             let request = IcSnapshotDataRequest::new(metadata, kind.clone()).unwrap();
-            let (sequence, raw) = backend.read(
-                IcSnapshotTransferReadPayload::Data(&request),
-                lose_first_reply && original_chunks.is_empty(),
-            );
-            let Some(raw) = raw else {
-                return Err(sequence);
-            };
+            let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Data(&request));
             let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
             original_chunks.push(reply.chunk().to_vec());
             writer = writer.append(&reply).unwrap();
@@ -294,12 +277,12 @@ fn download(
         let manifest = journal.publish_download_manifest(plan).unwrap();
         (checksum, manifest)
     };
-    Ok(Downloaded {
+    Downloaded {
         root,
         checksum,
         manifest,
         chunks: original_chunks,
-    })
+    }
 }
 
 fn allocate(
@@ -414,11 +397,9 @@ fn verify_destination(
 ) -> ArtifactChecksumRecord {
     let destination_request =
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), destination).unwrap();
-    let (_, destination_raw) = backend.read(
-        IcSnapshotTransferReadPayload::Metadata(&destination_request),
-        false,
-    );
-    let destination_raw = destination_raw.unwrap();
+    let (_, destination_raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(
+        &destination_request,
+    ));
     let destination_metadata =
         IcSnapshotMetadataReply::decode(&destination_request, &destination_raw).unwrap();
     assert_eq!(
@@ -458,8 +439,7 @@ fn verify_destination(
     let mut evidence = vec![metadata.digest(), destination_metadata.digest()];
     for (kind, expected) in extents(metadata).iter().zip(original_chunks) {
         let request = IcSnapshotDataRequest::new(&destination_metadata, kind.clone()).unwrap();
-        let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Data(&request), false);
-        let raw = raw.unwrap();
+        let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Data(&request));
         let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
         assert_eq!(reply.chunk(), expected);
         evidence.push(reply.digest());
@@ -592,68 +572,4 @@ fn verify_loaded(
     let evidence = verify_destination(backend, metadata, actual, original_chunks);
     fs::write(backend.root.join("post-load-verification.json"), serde_json::to_vec_pretty(&serde_json::json!({"original_source_metadata":metadata.digest(),"loaded_destination":destination,"verification_operation_sequence":sequence,"verification_snapshot_id":actual,"complete_state_evidence":evidence})).unwrap()).unwrap();
     evidence
-}
-
-/// Actual successful ingress with a discarded transfer-read reply stops the journey.
-pub(super) fn lost_transfer_read(data: bool) {
-    let mut backend = Backend::new();
-    assert!(
-        lifecycle(
-            &mut backend,
-            Method::StopCanister,
-            None,
-            Fault::None,
-            |_| None
-        )
-        .is_none()
-    );
-    status(&mut backend, CanisterStatusType::Stopped);
-    let (plan, id, timestamp, total_size) = capture(&mut backend, Fault::None);
-    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), &id).unwrap();
-    let (sequence, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request), !data);
-    if data {
-        let raw = raw.unwrap();
-        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let Err(sequence) = download(
-            &mut backend,
-            &plan,
-            &metadata,
-            &raw,
-            timestamp,
-            total_size,
-            true,
-        ) else {
-            panic!("discarded data reply must stop before artifact publication");
-        };
-        let root = backend.root.join("backup");
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let journal = DownloadJournalGuard::open(&layout, plan.digest().hash()).unwrap();
-        assert_eq!(
-            journal.record().unwrap().artifacts()[0].state(),
-            ic_backup::model::download_journal::ArtifactStateRecord::Created
-        );
-        assert!(
-            !root
-                .join("artifacts")
-                .join(backend.target.to_text())
-                .exists()
-        );
-        assert!(root.join("restore-references.json").is_file());
-        let bytes = fs::read(journal.path()).unwrap();
-        let references = fs::read(root.join("restore-references.json")).unwrap();
-        drop(journal);
-        drop(layout);
-        backend.assert_pending_read_replay(sequence);
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let journal = DownloadJournalGuard::open(&layout, plan.digest().hash()).unwrap();
-        assert_eq!(fs::read(journal.path()).unwrap(), bytes);
-        assert_eq!(
-            fs::read(root.join("restore-references.json")).unwrap(),
-            references
-        );
-    } else {
-        assert!(raw.is_none());
-        assert!(!backend.root.join("backup").exists());
-        backend.assert_pending_read_replay(sequence);
-    }
 }

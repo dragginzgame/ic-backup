@@ -1,22 +1,115 @@
 # Current handoff — 2026-10-19
 
-The current local release is **0.31.4**, commit
-`5a4c12d` (`v0.31.4`); package versions remain 0.31.4.
+The current local release is **0.32.0**, commit
+`710f09f` (`v0.32.0`); package versions remain 0.32.0.
 
-## Pending Host 0.28 adoption
+## Host 0.29 and WAT adoption
 
-Commit `715c5bc` selects direct Host Artifacts, FS and Process 0.28.0. The public
-`PersistenceError::Publication` carries Host FS's `NamedWriteError` identity, so
-pending notes select **0.32.0**. Consumers sharing that error type must align their
-direct Host FS dependency to 0.28. No own package-version change is made.
+The incoming catalog and lock already selected published Host Artifacts, FS and
+Process **0.29.0**. Their registry checksums and cached source/archive identities
+are verified. Preserve the incoming Platform 0.1.18 and Testkit 0.54.1 selections;
+Testkit's separate Host 0.27.6 dependencies remain development-only.
 
-Testkit 0.54.1 retains its separate development-only Host 0.27.6 graph; those
-packages remain in the lockfile intentionally. Platform stays at 0.1.15. Earlier
-qualification below retains its original graph and does not qualify Host 0.28.
-This batch updates release notes only; native build, MSRV and runtime qualification
-of the Host update remains outstanding.
+Both fixture compilers now call Host Artifacts' `wasm_text::compile` with explicit
+64 KiB source/output bounds. Only development edges enable `wasm-text`; the direct
+WAT catalog/member declarations are removed. WAT remains Host's private transitive
+backend. All three fixture modules retain their exact earlier binary hashes.
+The dependency-boundary policy rejects direct WAT, including aliases and
+normal/build/development/target-specific declarations. Independent consumers retain
+the existing transitive WAT/simulator exclusion.
 
-## Delivered scheduling and contract cleanup
+Host FS 0.29 changes the public Rust identity carried by
+`PersistenceError::Publication`; consumers using its Host error type must align
+their direct FS dependency to 0.29. Pending notes therefore move from 0.32.1 to
+**0.33.0**, incorporating the earlier compatible work. Package versions remain
+0.32.0; no staging, commit, release, publication or deployment ran.
+
+Focused Linux checks pass: 538 library cases, five local artifact/recovery cases,
+14 HTTP boundary cases and all 50 Core/Agent PocketIC cases. Strict all-target/
+all-feature Clippy, actual Rust 1.91 all-target checks and both independent MSRV
+consumers pass, including the canonical public Host error identity. All six normal/
+build trees for Linux and both macOS targets exclude WAT, simulator, parser and CDK;
+Core remains Agent-free. Formatting, dependency ownership/inheritance, local links,
+snapshot integrity and diff whitespace checks pass. Cross-target graph inspection
+does not qualify native macOS or installed-IC behavior. No full local suite ran.
+
+Inputs, task-entry before-images, registry/archive checks, fixture-byte comparison
+and per-command logs are retained at `/tmp/backup-host-wat-22wfe_qj/`; independent
+consumer evidence is at `target/msrv-consumers.X2YEvB/`. Manifests and lock remain
+unchanged during qualification. Earlier receipts below retain their original scope;
+this batch supersedes their draft compatibility classification, not their evidence.
+
+## Earlier connected capture/restore fixture
+
+The existing PocketIC workflow driver now connects frozen capture and restore
+allocations through download/manifest publication, allocation, data upload, same-ID
+load, full stopped-state verification and start. Exact original request/reply bytes
+precede qualified receipts. The fixture changes live state after capture and requires
+the restored module/memory/global/certified/chunk evidence before start.
+
+Six registered cases cover successful completion, cold reconstruction before
+allocation/load/start, and lost allocation/second-write/load/start replies. Both
+catalogues are frozen before capture; source custody remains outside restore-stage
+ancestry. The attempted single-catalogue composition contended with its own held
+source layout during ancestor admission; its failure log remains retained. No
+library lock, public API, stored schema, dependency or spending contract was changed.
+
+All eleven affected original-workflow PocketIC cases and strict target Clippy pass.
+The fixture also compiles with actual Rust 1.91; formatting, local documentation
+links, shared snapshot integrity and diff whitespace checks pass. These are focused
+Linux checks, not a full local suite. Evidence and task-entry
+before-images are at `/tmp/backup-round-trip-70gl75h1/`; failed attempts/fixtures
+remain retained. Earlier pending work, dependency selections and the index are
+preserved. This extends the same compatible 0.32.1 notes, with no package-version
+change or release action. Application/Canic authority, production terminal/reference
+release, native macOS and installed-IC qualification remain outside this fixture.
+
+## Earlier local simplification
+
+The pending **0.32.1** notes cover compatible implementation and test cleanup;
+no package-version change is made. Compound allocation/data uploads qualify and
+record receipts under the same original guard and bounded decoded reply used for
+dispatch. Checkpoints remain outside that guard. Public interfaces, wire formats,
+persisted records, spending and cancellation/replay rules remain unchanged.
+
+The contract guide groups maintained obligations by capability and removes obsolete
+restore-copy publication and adoption announcements. Dependency selections stay in
+manifests/lockfiles, migration history in the changelog, and qualification receipts
+here and in the archives. Numeric safety and custody contracts remain mandatory.
+
+PocketIC first-read and retained-prefix loss cases use the production download
+coordinator. The redundant manual success/lost-read entrypoints and their unused
+failure plumbing are removed; distinct capture/allocation/data/lifecycle successful
+reconciliation scenarios remain. Planned upload/restore retains source metadata,
+full-byte verification, immutable manifest/journal and reference checks.
+
+The incoming Host 0.28.1 lock update is preserved and outside this cleanup.
+The current locked graph also selects Platform 0.1.16 and Testkit 0.54.1, with
+Testkit's separate development-only Host 0.27.6 graph. Validation below applies
+only to its stated source and dependency selection. Earlier receipts do not
+qualify this pending work or the incoming dependency update.
+
+Focused Linux validation passes on this preserved locked graph: 16 upload/allocation
+and seven data-upload unit cases, all 32 Core PocketIC cases, strict all-target/
+all-feature Clippy for both packages, actual Rust 1.91 production-library checks
+for both packages, and warning-denied Rustdoc. Formatting, local links, snapshot
+integrity and diff whitespace checks pass. Original dependency-input identities
+and the Git index remain unchanged. Original inputs, source before-images, fixture
+assertion mapping and per-command logs are retained at
+`/tmp/backup-complexity-ejkvtr4a/`.
+
+PocketIC requires loopback networking; the sandbox-only attempt failed at listener
+startup and is retained separately. The first network-enabled pass exposed an
+incorrect new fixture reference assertion: restore legitimately retains an
+additional source reference. The final pass checks survival of all prior references
+and preserves exact post-admission reference equality inside the restore fixture;
+all cases pass. Failed fixture directories and logs remain retained.
+
+These focused results do not replace native macOS, installed-IC or complete
+application acceptance. No full local CI, package-version edit, staging, commit,
+push, release, publication, deployment or artifact cleanup ran.
+
+## Earlier scheduling and contract cleanup
 
 Fresh and retained workflow entry points keep their original admission paths and
 share one post-admission scheduler. Existing execution, checkpoint, spending and
@@ -61,7 +154,7 @@ Reqwest client policy and original journals. Applications own membership, routin
 release identity, consistency and external-effect settlement. A standalone CLI and
 complete application runner remain outside the implemented scope.
 
-The released graph selects Testkit 0.54.0, Host 0.27.4 and Platform 0.1.10. Shared
+The 0.31.2 receipt selects Testkit 0.54.0, Host 0.27.4 and Platform 0.1.10. Shared
 Tooling 0.24.0 remains at `cab12cd3dfa4fdb34846b25397f0d72881bb9ae0` with 114
 exact payloads. Development Rust is 1.99.1; consumer MSRV remains 1.91.0.
 

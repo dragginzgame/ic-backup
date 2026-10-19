@@ -238,6 +238,48 @@ The ordinary local journal/manifest replay invokes no management calls and check
 unchanged originals, consumed allowances and retained restore-reference bytes.
 It is not full product terminal replay or reference-release admission.
 
+## Connected original capture and restore workflows
+
+The [existing workflow driver](../crates/ic-backup/tests/pic_journey/planned_runner/mod.rs)
+now connects capture, metadata/data download and durable manifest publication to
+allocation, data upload, same-ID load, full stopped-state verification and start.
+Its [round-trip cases](../crates/ic-backup/tests/pic_journey/planned_runner/round_trip/mod.rs)
+use the public coordinators and existing actual-ingress upload/restore providers.
+No production API, dependency or application safety default is added.
+
+Capture and restore have separate original catalogues and layout ancestry. Freeze
+both allocations before capture: capture has 66 mutations/two observations and
+restore has 67 mutations/zero observations, including original 64-call data-stage
+ceilings. Unassigned headroom supplies no retry. The restore purpose commits the
+capture catalogue; learned child plans additionally bind exact original metadata,
+source plan/manifest and actual allocated destination. Preserve the captured source
+layout guard during restore; ancestor re-admission acquires the restore stages'
+separate layout locks. A source held inside the same catalogue's ancestor chain
+would contend with those locks.
+
+The fixture deliberately changes live state from 42 to 99 and clears its chunk
+store after capture. Those setup operations and fresh verification observations
+have independently retained per-call plans; they are outside the workflow-stage
+allowances. Loading must restore the original complete module, heap, stable,
+global/certified metadata and chunk bytes before start. The inspected one-owner
+program has no timers, outbound work or irreversible obligations. Its authority
+and acceptance do not establish a production application lane.
+
+Cold continuation discards the driver before allocation, load and start, then
+rebuilds only from exact retained request/reply bytes, original plans/bindings,
+manifest, allocation and post-load acceptance. Every settled prefix's records and
+artifacts remain unchanged. Discarded allocation, second data-write, load and start
+replies keep the original mutation pending with no remaining allowance. Fresh and
+retained reentry invoke no new provider or successor. A denied checkpoint read may
+allocate its empty mutex sidecar; it changes no product record or artifact.
+
+Completed replay discards all learned driver state, reopens both exact catalogues
+and invokes no callbacks or management calls. All retained file bytes stay unchanged.
+Each case retains `fixture-connected-result.json` alongside its original catalogue
+and evidence. Completion here means settled fixture workflows; source references
+remain retained. Product terminal evidence, application fence/reference release,
+Canic integration and native macOS/installed-IC acceptance remain separate.
+
 ## Reproduce and retain evidence
 
 Prepare the reviewed local tools and locked Cargo cache explicitly before running:
@@ -262,13 +304,15 @@ original plans, reserved journals, arguments/replies, management trace, durable
 source artifacts/manifest/references, stopped post-load verification or retained
 pending-lifecycle evidence, and a successful qualification result with instance,
 target, raw source/destination IDs, elapsed time and accounted ingress count.
-Transfer-read loss retains a separate pending-transfer-read result and original
-management trace. Successful tests with pending evidence qualify safe stopping,
+Transfer-read loss retains its original pending journal and any partial Created
+artifact bytes. Successful tests with pending evidence qualify safe stopping,
 not a completed backup or restore.
 Simulator instance disposal does not remove those host-side records.
 
-[The machine review](pocketic-qualification.json) records source/dependency identity,
-registered case names, the reviewed backend and exact scope. Linux results do not
+[The historical machine review](pocketic-qualification.json) retains its named
+source/dependency identities, registered cases, backend and original scope.
+Current focused receipts belong to the [handoff](status/current.md) and its retained
+per-command/fixture evidence. Linux results do not
 supply native macOS qualification. The original journey was delivered under
 [issue #17](https://github.com/dragginzgame/ic-backup/issues/17); current transfer-read
 adoption is tracked in [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).

@@ -36,7 +36,7 @@ help:
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
 	@echo "cloc                        Report Rust workspace source and test LOC"
-	@echo "dependency-boundaries-check Check Platform ownership of direct Candid/CDK dependencies"
+	@echo "dependency-boundaries-check Check direct IC and WAT dependency ownership"
 	@echo "dependency-pins-check       Check dependency declarations and exceptions"
 	@echo "deps                        Fetch locked dependencies"
 	@echo "doc                         Build documentation with warnings denied"

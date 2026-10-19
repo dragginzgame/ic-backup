@@ -912,7 +912,12 @@ both production and tests remain in production. In particular, direct `sha2` and
 and Tokio through Agent. `ic-platform` is the production Candid and native Agent
 boundary; direct Agent declarations are prohibited. Reqwest
 owns the consumer’s HTTP client configuration;
-`ic-testkit` and `wat` are test/tooling packages. Names do not determine roles.
+`ic-testkit` and Host Artifacts' `wasm-text` feature are test/tooling selections.
+Fixture WAT compilation uses `ic_host_artifacts::wasm_text::compile` with explicit
+64 KiB source and output bounds. Only development edges enable this feature;
+`wat` remains Host's private transitive backend. Names do not determine roles.
+`make dependency-boundaries-check` rejects direct WAT declarations, including
+aliases and development/build/target-specific edges, alongside the IC boundaries.
 
 Independent MSRV and unpacked-package consumers reuse `consumer-graph.jq` to
 reject `ic-testkit`, `pocket-ic` and `wat` anywhere in their normal graph by resolved

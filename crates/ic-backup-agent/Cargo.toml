@@ -17,12 +17,12 @@ reqwest.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+ic-host-artifacts = { workspace = true, features = ["wasm-text"] }
 ic-host-fs = { workspace = true, features = ["test-support"] }
 ic-host-process = { workspace = true, features = ["test-support"] }
 ic-testkit.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
-wat.workspace = true
 
 [lints]
 workspace = true

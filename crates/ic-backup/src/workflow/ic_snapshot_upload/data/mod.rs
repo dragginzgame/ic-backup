@@ -1,24 +1,23 @@
 //! Complete finite original data uploads with explicit integration-qualified receipts.
 
-use super::{IcSnapshotUploadExecutionError, upload_snapshot};
+use super::{IcSnapshotUploadExecutionError, upload_snapshot_with};
 use crate::{
     model::{
-        artifacts::ArtifactChecksumRecord,
         attempt_journal::MutationReceiptRequest,
         evidence_digest::EvidenceDigest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
             IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadAttempt,
-            IcSnapshotUploadAttemptError, IcSnapshotUploadRequest,
+            IcSnapshotUploadAttemptError,
         },
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, DownloadJournalGuard,
-        ExecutionProgressPersistenceError, ExecutionStageCheckpointError, ExecutionStageGuard,
-        ExecutionWorkflowPersistenceError, IcSnapshotUploadArtifactError, read_execution_progress,
+        AttemptJournalError, DownloadJournalGuard, ExecutionProgressPersistenceError,
+        ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionWorkflowPersistenceError,
+        IcSnapshotUploadArtifactError, read_execution_progress,
     },
-    policy::ic_snapshot_upload::{IcSnapshotUploadAssociationError, validate_acknowledgement},
+    policy::ic_snapshot_upload::IcSnapshotUploadAssociationError,
     ports::ic_snapshot_upload::IcSnapshotUploadProvider,
 };
 use thiserror::Error;
@@ -88,11 +87,39 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
             kind.clone(),
         )?;
         // The single-call owner rechecks the exact full source/context/request before spending.
-        let acknowledgement =
-            upload_snapshot(stage, sequence, &payload, provider, &mut admit).await?;
-        let digest = record_qualified(stage, sequence, &payload, &acknowledgement, &mut qualify)
-            .await
-            .map_err(|source| IcSnapshotDataUploadExecutionError::AfterReply {
+        let (acknowledgement, settlement) = upload_snapshot_with(
+            stage,
+            sequence,
+            &payload,
+            provider,
+            &mut admit,
+            async |journal, request, admitted| {
+                super::super::qualified_receipt::AppliedReceiptRecorder {
+                    journal,
+                    expected_attempt: request.mutation_attempt(),
+                    expected_request: payload.binding_digest().hash(),
+                }
+                .record_applied(
+                    request,
+                    admitted.acknowledgement(),
+                    async |request, reply| qualify(request, reply).await,
+                    IcSnapshotDataUploadReplyError::Qualification,
+                    || IcSnapshotDataUploadReplyError::ReceiptRequired,
+                    || {
+                        stage
+                            .layout()
+                            .map(|_| ())
+                            .map_err(IcSnapshotDataUploadReplyError::Stage)
+                    },
+                )
+                .await?;
+                stage.layout()?;
+                Ok::<_, IcSnapshotDataUploadReplyError<E>>(admitted.reply().digest())
+            },
+        )
+        .await?;
+        let digest =
+            settlement.map_err(|source| IcSnapshotDataUploadExecutionError::AfterReply {
                 operation_sequence: sequence,
                 source,
                 acknowledgement: Box::new(acknowledgement),
@@ -104,46 +131,6 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);
     }
     Ok(stage.reconcile_checkpoint(evidence.finish())?)
-}
-
-async fn record_qualified<E: std::error::Error + 'static>(
-    stage: &ExecutionStageGuard<'_>,
-    sequence: u64,
-    payload: &IcSnapshotUploadRequest<'_>,
-    acknowledgement: &IcMutationAcknowledgement,
-    qualify: &mut impl AsyncFnMut(
-        &IcSnapshotUploadAttempt<'_, '_>,
-        &IcMutationAcknowledgement,
-    ) -> Result<MutationReceiptRequest, E>,
-) -> Result<ArtifactChecksumRecord, IcSnapshotDataUploadReplyError<E>> {
-    let plan = stage.plan();
-    let authority = plan
-        .attempt_authority(sequence)
-        .map_err(IcSnapshotUploadAttemptError::from)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
-    let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
-    super::super::qualified_receipt::AppliedReceiptRecorder {
-        journal: &mut journal,
-        expected_attempt: request.mutation_attempt(),
-        expected_request: payload.binding_digest().hash(),
-    }
-    .record_applied(
-        &request,
-        acknowledgement,
-        async |request, reply| qualify(request, reply).await,
-        IcSnapshotDataUploadReplyError::Qualification,
-        || IcSnapshotDataUploadReplyError::ReceiptRequired,
-        || {
-            stage
-                .layout()
-                .map(|_| ())
-                .map_err(IcSnapshotDataUploadReplyError::Stage)
-        },
-    )
-    .await?;
-    stage.layout()?;
-    Ok(admitted.reply().digest())
 }
 
 /// Data-stage failure preserves source, original spending and returned acknowledgement bytes.

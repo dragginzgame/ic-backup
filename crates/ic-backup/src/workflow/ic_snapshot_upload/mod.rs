@@ -25,7 +25,10 @@ use crate::{
         AttemptJournalError, AttemptJournalGuard, ExecutionProgressPersistenceError,
         ExecutionStageGuard, ExecutionWorkflowPersistenceError,
     },
-    policy::ic_snapshot_upload::{IcSnapshotUploadAssociationError, validate_acknowledgement},
+    policy::ic_snapshot_upload::{
+        IcSnapshotUploadAcknowledgementView, IcSnapshotUploadAssociationError,
+        validate_acknowledgement,
+    },
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
 };
 use thiserror::Error;
@@ -68,6 +71,32 @@ pub async fn upload_snapshot<E: std::error::Error + 'static>(
     provider: &mut impl IcSnapshotUploadProvider,
     admit: impl AsyncFnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
 ) -> Result<IcMutationAcknowledgement, IcSnapshotUploadExecutionError<E>> {
+    let (acknowledgement, ()) = upload_snapshot_with(
+        stage,
+        operation_sequence,
+        payload,
+        provider,
+        admit,
+        async |_, _, _| (),
+    )
+    .await?;
+    Ok(acknowledgement)
+}
+
+// Complete compound uploads under their original guard using the admitted reply.
+// Return before checkpointing, which must run after journal exclusion is released.
+async fn upload_snapshot_with<E: std::error::Error + 'static, T>(
+    stage: &ExecutionStageGuard<'_>,
+    operation_sequence: u64,
+    payload: &IcSnapshotUploadRequest<'_>,
+    provider: &mut impl IcSnapshotUploadProvider,
+    admit: impl AsyncFnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
+    complete: impl AsyncFnOnce(
+        &mut AttemptJournalGuard<'_>,
+        &IcSnapshotUploadAttempt<'_, '_>,
+        &IcSnapshotUploadAcknowledgementView<'_, '_>,
+    ) -> T,
+) -> Result<(IcMutationAcknowledgement, T), IcSnapshotUploadExecutionError<E>> {
     let plan = stage.plan();
     let authority = plan.attempt_authority(operation_sequence)?;
     let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
@@ -89,19 +118,23 @@ pub async fn upload_snapshot<E: std::error::Error + 'static>(
             });
         }
     };
-    if let Err(source) = validate_acknowledgement(&request, record, &acknowledgement) {
-        return Err(IcSnapshotUploadExecutionError::Association {
-            source,
-            acknowledgement: Box::new(acknowledgement),
-        });
-    }
+    let admitted = match validate_acknowledgement(&request, record, &acknowledgement) {
+        Ok(admitted) => admitted,
+        Err(source) => {
+            return Err(IcSnapshotUploadExecutionError::Association {
+                source,
+                acknowledgement: Box::new(acknowledgement),
+            });
+        }
+    };
     if let Err(source) = stage.layout() {
         return Err(IcSnapshotUploadExecutionError::AfterReplyStage {
             source,
             acknowledgement: Box::new(acknowledgement),
         });
     }
-    Ok(acknowledgement)
+    let result = complete(&mut journal, &request, &admitted).await;
+    Ok((acknowledgement, result))
 }
 
 /// Upload-step failures retain original spending and any bounded returned acknowledgement.

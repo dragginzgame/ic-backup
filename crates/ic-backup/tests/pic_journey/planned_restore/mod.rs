@@ -36,9 +36,9 @@ use std::{
     io::{self, Write},
 };
 
-struct Provider<'a, 'b> {
-    backend: &'a RefCell<&'b mut Backend>,
-    failure: Failure,
+pub(super) struct Provider<'a, 'b> {
+    pub(super) backend: &'a RefCell<&'b mut Backend>,
+    pub(super) failure: Failure,
 }
 impl IcMutationProvider for Provider<'_, '_> {
     fn submit_mutation(

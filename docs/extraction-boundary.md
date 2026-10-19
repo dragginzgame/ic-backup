@@ -2435,7 +2435,11 @@ its native receipt fixtures qualify local admission, not IC effects. A separate
 Testkit driver exercises actual capture, metadata and complete data artifact
 publication through the coordinator, including lost capture/data replies and
 retained continuation after rebuilding a driver from the first two stages'
-original Candid bytes and bindings.
+original Candid bytes and bindings. The same driver also connects separate frozen
+capture/restore catalogues through allocation, upload, load, verification and start.
+Cold continuation reconstructs originals before allocation/load/start; lost replies
+retain pending spending and deny reentry. Completed replay is local and effect-free.
+See [the fixture scope](pocketic-qualification.md#connected-original-capture-and-restore-workflows).
 Authenticated production adapters, resumable full backup/restore, application
 admission and terminal/fence/reference release remain unimplemented.
 

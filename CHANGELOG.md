@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.33.0]
+
+### Breaking
+
+- Adopt Host Artifacts, FS and Process 0.29.0. Consumers matching or constructing
+  `PersistenceError::Publication` with Host FS types must align to Host FS 0.29;
+  its carried `NamedWriteError<std::io::Error>` has that release's Rust identity.
+
+### Changed
+
+- Keep compound upload submission and independently qualified settlement under one
+  original journal guard, reusing the admitted reply. Preserve public APIs, exact
+  evidence, pending spending and checkpointing after guard release.
+- Organize current implementation obligations by capability and remove superseded
+  restore-copy and dependency-adoption instructions.
+
+### Testing
+
+- Compile retained WAT fixtures through Host Artifacts with explicit source/output
+  bounds. Remove direct WAT dependencies and keep text compilation test-only.
+- Consolidate overlapping simulator journeys around production coordinators,
+  retaining first-read and retained-prefix loss checks, source custody and all
+  distinct successful-reconciliation scenarios.
+- Qualify connected capture-to-restore workflows with frozen source/restore
+  allocations, cold continuation, lost replies and effect-free completed replay.
+  Keep application authority and terminal-release acceptance integration-owned.
+
 ## [0.32.0] - 2026-10-19
 
 ### Breaking

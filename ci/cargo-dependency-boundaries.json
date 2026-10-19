@@ -50,5 +50,9 @@
   {
     "dependency": "ic-management-canister-types",
     "allowed_packages": []
+  },
+  {
+    "dependency": "wat",
+    "allowed_packages": []
   }
 ]

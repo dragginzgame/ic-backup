@@ -46,10 +46,10 @@ pub(crate) enum Failure {
     StartLost,
     StartMalformed,
 }
-struct Provider<'a> {
-    backend: &'a mut Backend,
-    failure: Failure,
-    submitted: BTreeSet<(String, u32)>,
+pub(super) struct Provider<'a> {
+    pub(super) backend: &'a mut Backend,
+    pub(super) failure: Failure,
+    pub(super) submitted: BTreeSet<(String, u32)>,
 }
 impl IcSnapshotUploadProvider for Provider<'_> {
     fn submit_upload(
@@ -221,22 +221,22 @@ pub(crate) fn run(failure: Failure) {
     status(&mut backend, CanisterStatusType::Stopped);
     let (source_plan, source_id, timestamp, size) = capture(&mut backend, Fault::None);
     let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), &source_id).unwrap();
-    let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request), false);
-    let raw = raw.unwrap();
+    let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let source = download(
-        &mut backend,
-        &source_plan,
-        &metadata,
-        &raw,
-        timestamp,
-        size,
-        false,
-    )
-    .unwrap();
+    let source = download(&mut backend, &source_plan, &metadata, &raw, timestamp, size);
     let source_layout = BackupLayoutGuard::acquire(&source.root).unwrap();
     let source_journal =
         DownloadJournalGuard::open(&source_layout, source_plan.digest().hash()).unwrap();
+    assert_eq!(metadata.metadata().stable_memory_size, 65_536);
+    assert!(metadata.metadata().wasm_memory_size >= 131_072);
+    assert_eq!(metadata.metadata().certified_data, 42_u64.to_le_bytes());
+    assert_eq!(metadata.metadata().wasm_chunk_store.len(), 1);
+    assert_eq!(
+        source_journal
+            .read_download_manifest(&source_plan, &source.manifest)
+            .unwrap(),
+        *source_journal.record().unwrap()
+    );
     let original_source = fs::read(source_journal.path()).unwrap();
     let original_references = source_layout.restore_references().unwrap();
     let upload = source_journal
@@ -459,6 +459,28 @@ pub(crate) fn run(failure: Failure) {
         destination,
         &source,
         failure,
+    );
+    assert_eq!(
+        source_journal
+            .verify_ic_snapshot_artifact(&source_plan, "retained-original-snapshot", &metadata)
+            .unwrap(),
+        source.checksum
+    );
+    assert_eq!(
+        source_journal
+            .read_download_manifest(&source_plan, &source.manifest)
+            .unwrap(),
+        *source_journal.record().unwrap()
+    );
+    assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
+    // Restore adds its own reference before admission; every older reference survives.
+    // The restore fixture checks exact post-admission reference equality on every exit.
+    let retained_references = source_layout.restore_references().unwrap();
+    assert!(
+        original_references
+            .entries()
+            .iter()
+            .all(|entry| retained_references.entries().contains(entry))
     );
 }
 

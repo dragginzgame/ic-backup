@@ -1,4 +1,8 @@
-//! One-shot public workflow coordinator against actual managed `PocketIC` ingress.
+//! Public workflow coordination against actual managed `PocketIC` ingress.
+
+mod round_trip;
+use round_trip::RestoreProgress;
+pub(crate) use round_trip::run_round_trip;
 
 use super::{
     Fault,
@@ -233,7 +237,9 @@ struct CompleteDriver {
     snapshot: Option<IcSnapshotInfo>,
     raw_metadata: Option<Vec<u8>>,
     stages: Vec<u64>,
-    stop_before_data: bool,
+    stop_before: Option<u64>,
+    restore: Option<RestoreProgress>,
+    restore_failure: super::planned_upload::Failure,
 }
 impl CompleteDriver {
     fn capture(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
@@ -246,6 +252,11 @@ impl CompleteDriver {
             oracle: &oracle,
             submitted: false,
         };
+        retain_bytes(
+            stage.layout().unwrap(),
+            "capture-arguments.candid",
+            payload.arguments(),
+        );
         let acknowledgement = ready(capture_snapshot(
             stage,
             0,
@@ -259,6 +270,11 @@ impl CompleteDriver {
         ))
         .map_err(|error| io::Error::other(error.to_string()))?;
         assert!(provider.submitted);
+        retain_bytes(
+            stage.layout().unwrap(),
+            "capture.candid",
+            &acknowledgement.input().reply,
+        );
         let reply = IcSnapshotReply::decode(&payload, &acknowledgement.input().reply)
             .map_err(|error| io::Error::other(error.to_string()))?;
         assert_eq!(reply.snapshots().len(), 1);
@@ -277,6 +293,7 @@ impl CompleteDriver {
             })
             .unwrap();
         self.snapshot = Some(reply.snapshots()[0].clone());
+        drop(journal);
         Ok(reply.digest())
     }
 
@@ -298,6 +315,11 @@ impl CompleteDriver {
             async |read, response| {
                 retain_bytes(
                     stage.layout().unwrap(),
+                    "metadata-arguments.candid",
+                    read.payload().arguments(),
+                );
+                retain_bytes(
+                    stage.layout().unwrap(),
                     "metadata.candid",
                     &response.input().reply,
                 );
@@ -314,6 +336,10 @@ impl CompleteDriver {
         Ok(checkpoint.learned_evidence().clone())
     }
 
+    #[expect(
+        clippy::too_many_lines,
+        reason = "retain exact request/reply bytes, append/receipt chronology and published source custody in one trace"
+    )]
     fn data(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
         let snapshot = self.snapshot.as_ref().unwrap();
         let request =
@@ -357,6 +383,7 @@ impl CompleteDriver {
             calls: 0,
             fail_at: 1,
         };
+        let mut chunks = Vec::new();
         let checksum = ready(download_snapshot(
             stage,
             &download,
@@ -368,6 +395,20 @@ impl CompleteDriver {
             },
             async |read, response| {
                 let sequence = read.authority().binding().operation_sequence();
+                retain_bytes(
+                    layout,
+                    &format!("data-{sequence}-arguments.candid"),
+                    read.payload().arguments(),
+                );
+                chunks.push(
+                    crate::pic_journey::IcSnapshotDataReply::decode(
+                        &download.requests()[usize::try_from(sequence).unwrap()],
+                        &response.input().reply,
+                    )
+                    .unwrap()
+                    .chunk()
+                    .to_vec(),
+                );
                 retain_bytes(
                     layout,
                     &format!("data-{sequence}.candid"),
@@ -389,7 +430,20 @@ impl CompleteDriver {
                 .unwrap(),
             checksum
         );
-        Ok(artifacts.publish_download_manifest(plan).unwrap())
+        let manifest = artifacts.publish_download_manifest(plan).unwrap();
+        self.restore = Some(RestoreProgress {
+            source_binding: stage.binding().clone(),
+            source_plan: plan.clone(),
+            source: super::Downloaded {
+                root: layout.root().into(),
+                checksum,
+                manifest: manifest.clone(),
+                chunks,
+            },
+            allocation: None,
+            acceptance: None,
+        });
+        Ok(manifest)
     }
 }
 impl ExecutionWorkflowStageDriver for CompleteDriver {
@@ -402,7 +456,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> Result<OperationPlanRecord, Self::Error> {
         assert_eq!(workflow, &self.workflow);
-        assert_eq!(predecessors.len(), usize::from(sequence != 0));
+        assert_eq!(predecessors.len(), usize::from(!matches!(sequence, 0 | 11)));
         if sequence == 7 {
             let snapshot = self.snapshot.as_ref().unwrap();
             if predecessors[0].stage_sequence() != 0
@@ -412,8 +466,8 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                 return Err(io::Error::other("capture edge commitment mismatch"));
             }
         }
-        if self.stop_before_data && sequence == 9 {
-            return Err(io::Error::other("stop before data stage"));
+        if self.stop_before == Some(sequence) {
+            return Err(io::Error::other("fixture interruption before absent stage"));
         }
         Ok(match sequence {
             0 => {
@@ -441,6 +495,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                     .unwrap()
                     .clone()
             }
+            11 | 13 | 17 | 3 => self.bind_restore(workflow, sequence, predecessors),
             _ => panic!("fixed original stage"),
         })
     }
@@ -451,12 +506,22 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     ) -> impl Future<Output = Result<ArtifactChecksumRecord, Self::Error>> {
         let sequence = stage.binding().stage_sequence();
         self.stages.push(sequence);
-        std::future::ready(match sequence {
+        let result = match sequence {
             0 => self.capture(stage),
             7 => self.metadata(stage),
             9 => self.data(stage),
+            11 | 13 => self.upload(stage),
+            17 | 3 => self.restore(stage),
             _ => panic!("fixed original stage"),
-        })
+        };
+        if let Ok(evidence) = &result {
+            retain_bytes(
+                stage.layout().unwrap(),
+                "fixture-learned.sha256",
+                evidence.hash().as_bytes(),
+            );
+        }
+        std::future::ready(result)
     }
 
     fn learned_for_successor(
@@ -504,7 +569,9 @@ pub(crate) fn run_complete(data_failure: ReadFailure) {
         snapshot: None,
         raw_metadata: None,
         stages: Vec::new(),
-        stop_before_data: false,
+        stop_before: None,
+        restore: None,
+        restore_failure: super::planned_upload::Failure::None,
     };
     let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
     assert_eq!(driver.stages, [0, 7, 9]);
@@ -550,12 +617,20 @@ fn read_retained_prefix(
     Vec<u8>,
 ) {
     let capture_payload = management(backend, Method::TakeCanisterSnapshot, None);
+    assert_eq!(
+        fs::read(root.join("execution-stage-0/capture-arguments.candid")).unwrap(),
+        capture_payload.arguments()
+    );
     let raw_capture = fs::read(root.join("execution-stage-0/capture.candid")).unwrap();
     let capture_reply = IcSnapshotReply::decode(&capture_payload, &raw_capture).unwrap();
     assert_eq!(capture_reply.snapshots().len(), 1);
     let snapshot = capture_reply.snapshots()[0].clone();
     let metadata_request =
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
+    assert_eq!(
+        fs::read(root.join("execution-stage-7/metadata-arguments.candid")).unwrap(),
+        metadata_request.arguments()
+    );
     let raw_metadata = fs::read(root.join("execution-stage-7/metadata.candid")).unwrap();
     let metadata_reply = IcSnapshotMetadataReply::decode(&metadata_request, &raw_metadata).unwrap();
     let capture_journal: AttemptJournalRecord = read_json(
@@ -684,7 +759,9 @@ pub(crate) fn run_retained() {
         snapshot: None,
         raw_metadata: None,
         stages: Vec::new(),
-        stop_before_data: true,
+        stop_before: Some(9),
+        restore: None,
+        restore_failure: super::planned_upload::Failure::None,
     };
     assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
     assert_eq!(driver.stages, [0, 7]);
@@ -713,7 +790,9 @@ pub(crate) fn run_retained() {
         snapshot: Some(snapshot),
         raw_metadata: Some(raw_metadata),
         stages: Vec::new(),
-        stop_before_data: false,
+        stop_before: None,
+        restore: None,
+        restore_failure: super::planned_upload::Failure::None,
     };
     let view = ready(run_retained_execution_workflow(
         &layout,

@@ -45,6 +45,7 @@ use std::{convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt, path:
 pub(crate) enum ReadFailure {
     None,
     Lost,
+    LostFirst,
     Malformed,
 }
 
@@ -131,7 +132,7 @@ impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
             }
             // Retained fixture oracle is never outcome/retry evidence for the workflow.
             fs::write(self.oracle, &response.input().reply).unwrap();
-            if self.failure == ReadFailure::Lost {
+            if matches!(self.failure, ReadFailure::Lost | ReadFailure::LostFirst) {
                 return Err(IcObservationProviderError::Indeterminate);
             }
             let mut input = response.input().clone();
@@ -409,7 +410,7 @@ pub(crate) fn run(failure: ReadFailure) {
         failure,
         oracle: &oracle,
         calls: 0,
-        fail_at: 1,
+        fail_at: usize::from(failure != ReadFailure::LostFirst),
     };
     let result = ready(download_snapshot(
         &stage,
@@ -444,7 +445,7 @@ pub(crate) fn run(failure: ReadFailure) {
         if failure == ReadFailure::None {
             download.requests().len()
         } else {
-            2
+            usize::from(failure != ReadFailure::LostFirst) + 1
         }
     );
     if failure != ReadFailure::None {
@@ -466,10 +467,12 @@ pub(crate) fn run(failure: ReadFailure) {
                 ))
             ));
         }
+        let pending = u64::from(failure != ReadFailure::LostFirst);
+        let dispatched = u32::try_from(pending + 1).unwrap();
         let view = read_execution_progress(stage_layout, &plan.digest()).unwrap();
-        assert_eq!(view.attempts.mutations_used, 2);
-        assert_eq!(view.applied_operations, 1);
-        assert_eq!(backend.calls, calls_before_data + 2);
+        assert_eq!(view.attempts.mutations_used, dispatched);
+        assert_eq!(view.applied_operations, usize::try_from(pending).unwrap());
+        assert_eq!(backend.calls, calls_before_data + u64::from(dispatched));
         assert_eq!(
             artifacts.record().unwrap().artifacts()[0].state(),
             ArtifactStateRecord::Created
@@ -477,8 +480,10 @@ pub(crate) fn run(failure: ReadFailure) {
         assert!(
             ready(read_snapshot(
                 &stage,
-                2,
-                IcSnapshotTransferReadPayload::Data(&download.requests()[2]),
+                pending + 1,
+                IcSnapshotTransferReadPayload::Data(
+                    &download.requests()[usize::try_from(pending + 1).unwrap()]
+                ),
                 &mut backend,
                 async |_| -> Result<(), Infallible> {
                     panic!("pending prerequisite rejects before admission")
@@ -486,7 +491,32 @@ pub(crate) fn run(failure: ReadFailure) {
             ))
             .is_err()
         );
-        let original = fs::read(stage_layout.root().join("attempt-1.json")).unwrap();
+        assert!(
+            ready(read_snapshot(
+                &stage,
+                pending,
+                IcSnapshotTransferReadPayload::Data(
+                    &download.requests()[usize::try_from(pending).unwrap()]
+                ),
+                &mut backend,
+                async |_| -> Result<(), Infallible> {
+                    panic!("pending read cannot dispatch again")
+                },
+            ))
+            .is_err()
+        );
+        let original =
+            fs::read(stage_layout.root().join(format!("attempt-{pending}.json"))).unwrap();
+        let artifact_bytes = fs::read(artifacts.path()).unwrap();
+        let reference_bytes =
+            fs::read(stage_layout.root().join("restore-references.json")).unwrap();
+        assert!(!stage_layout.root().join("download-manifest.json").exists());
+        assert!(
+            !stage_layout
+                .root()
+                .join(artifacts.record().unwrap().artifacts()[0].artifact_path())
+                .exists()
+        );
         drop(artifacts);
         drop(stage);
         let (reopened, resumed) =
@@ -494,11 +524,17 @@ pub(crate) fn run(failure: ReadFailure) {
         let current = reopened.layout().unwrap();
         assert_eq!(resumed, view);
         assert_eq!(
-            fs::read(current.root().join("attempt-1.json")).unwrap(),
+            fs::read(current.root().join(format!("attempt-{pending}.json"))).unwrap(),
             original
         );
+        let artifacts = DownloadJournalGuard::open(current, plan.digest().hash()).unwrap();
+        assert_eq!(fs::read(artifacts.path()).unwrap(), artifact_bytes);
+        assert_eq!(
+            fs::read(current.root().join("restore-references.json")).unwrap(),
+            reference_bytes
+        );
         assert_eq!(current.restore_references().unwrap(), references);
-        assert_eq!(backend.calls, calls_before_data + 2);
+        assert_eq!(backend.calls, calls_before_data + u64::from(dispatched));
         assert!(ExecutionStageGuard::create(&layout, binding, plan.clone()).is_err());
         return;
     }
@@ -629,4 +665,6 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
         references
     );
     assert!(!layout.root().join("execution-stage-9").exists());
+    assert!(!stage.layout().unwrap().root().join("artifacts").exists());
+    assert_eq!(provider.backend.calls, calls + 1);
 }

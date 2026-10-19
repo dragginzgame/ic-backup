@@ -11,7 +11,9 @@ use crate::{
         ic_snapshot_upload::IcSnapshotUploadReply,
         ic_update_response::IcUpdateResponseInput,
     },
-    ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
+    ops::persistence::{
+        AttemptJournalGuard, BackupLayoutGuard, create_execution_workflow, read_execution_progress,
+    },
     ports::ic_mutation::IcMutationProviderError,
     test_support::{
         ic_snapshot_upload::{

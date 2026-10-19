@@ -59,11 +59,6 @@ fn planned_capture_malformed_reply_retains_pending_original_without_recapture_or
 }
 
 #[test]
-fn real_capture_download_upload_and_same_id_restore_preserve_complete_state() {
-    pic_journey::run(pic_journey::Fault::None);
-}
-
-#[test]
 fn lost_capture_reply_requires_reserved_reconciliation_and_never_reissues() {
     pic_journey::run(pic_journey::Fault::Capture);
 }
@@ -99,13 +94,8 @@ fn lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restar
 }
 
 #[test]
-fn lost_metadata_read_reply_keeps_original_spending_and_stops_before_download() {
-    pic_journey::lost_transfer_read(false);
-}
-
-#[test]
-fn lost_data_read_reply_retains_created_artifacts_without_reissue_or_upload() {
-    pic_journey::lost_transfer_read(true);
+fn planned_download_lost_first_reply_retains_created_bytes_without_followup() {
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::LostFirst);
 }
 
 #[test]
@@ -171,4 +161,46 @@ fn planned_restore_lost_start_retains_pending_without_restart() {
 #[test]
 fn planned_restore_malformed_start_retains_reply_without_restart() {
     pic_journey::planned_upload::run(pic_journey::planned_upload::Failure::StartMalformed);
+}
+
+#[test]
+fn connected_original_workflow_round_trips_same_id_and_replays_without_effects() {
+    pic_journey::planned_runner::run_round_trip(pic_journey::planned_upload::Failure::None, false);
+}
+
+#[test]
+fn connected_original_workflow_resumes_at_allocation_load_and_start() {
+    pic_journey::planned_runner::run_round_trip(pic_journey::planned_upload::Failure::None, true);
+}
+
+#[test]
+fn connected_original_workflow_lost_allocation_refuses_reentry_and_upload() {
+    pic_journey::planned_runner::run_round_trip(
+        pic_journey::planned_upload::Failure::MetadataLost,
+        false,
+    );
+}
+
+#[test]
+fn connected_original_workflow_lost_second_upload_retains_applied_prefix_and_pending() {
+    pic_journey::planned_runner::run_round_trip(
+        pic_journey::planned_upload::Failure::DataLostSecond,
+        false,
+    );
+}
+
+#[test]
+fn connected_original_workflow_lost_load_refuses_reentry_and_start() {
+    pic_journey::planned_runner::run_round_trip(
+        pic_journey::planned_upload::Failure::LoadLost,
+        false,
+    );
+}
+
+#[test]
+fn connected_original_workflow_lost_start_retains_pending_without_reissue() {
+    pic_journey::planned_runner::run_round_trip(
+        pic_journey::planned_upload::Failure::StartLost,
+        false,
+    );
 }

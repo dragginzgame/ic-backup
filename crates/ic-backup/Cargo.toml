@@ -22,9 +22,9 @@ serde_json.workspace = true
 thiserror.workspace = true
 
 [target.'cfg(unix)'.dev-dependencies]
+ic-host-artifacts = { workspace = true, features = ["wasm-text"] }
 ic-host-process = { workspace = true, features = ["test-support"] }
 ic-testkit.workspace = true
-wat.workspace = true
 
 [dev-dependencies]
 ic-host-fs = { workspace = true, features = ["test-support"] }

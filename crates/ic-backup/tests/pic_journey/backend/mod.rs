@@ -56,7 +56,14 @@ impl Backend {
         let root = crate::support::temp_root("ic-backup-pocketic");
         fs::write(
             root.join("original.wasm"),
-            wat::parse_str(include_str!("../state.wat")).unwrap(),
+            ic_host_artifacts::wasm_text::compile(
+                include_str!("../state.wat"),
+                ic_host_artifacts::wasm_text::CompileLimits {
+                    source_bytes: 64 * 1024,
+                    module_bytes: 64 * 1024,
+                },
+            )
+            .unwrap(),
         )
         .unwrap();
         let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -202,11 +209,7 @@ impl Backend {
         (index, Some(raw))
     }
 
-    pub fn read(
-        &mut self,
-        payload: IcSnapshotTransferReadPayload<'_, '_>,
-        lose_reply: bool,
-    ) -> (u64, Option<Vec<u8>>) {
+    pub fn read(&mut self, payload: IcSnapshotTransferReadPayload<'_, '_>) -> (u64, Vec<u8>) {
         let digest = payload.digest();
         let (index, layout, plan) = self.begin_call(payload.method(), payload.arguments(), &digest);
         let mut journal =
@@ -216,11 +219,6 @@ impl Backend {
             IcSnapshotTransferReadRequest::new(&plan, index, journal.record().unwrap(), payload)
                 .unwrap();
         let response = ready(self.read_snapshot(&request, journal.record().unwrap())).unwrap();
-        if lose_reply {
-            // Oracle bytes never enter passive association or a success receipt.
-            Self::retain_lost_reply(layout.root(), &journal, attempt, &response.input().reply);
-            return (index, None);
-        }
         let view = validate_response(&request, journal.record().unwrap(), &response).unwrap();
         let evidence = match view.reply() {
             IcSnapshotTransferReadReply::Metadata(reply) => reply.digest(),
@@ -236,7 +234,7 @@ impl Backend {
             &evidence,
             &raw,
         );
-        (index, Some(raw))
+        (index, raw)
     }
 
     fn begin_call(
@@ -283,55 +281,6 @@ impl Backend {
             })
             .unwrap();
         assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
-    }
-
-    pub fn assert_pending_read_replay(&self, sequence: u64) {
-        let before = self.calls;
-        for (index, expected) in &self.plans {
-            let layout = self.layout(*index);
-            let plan = read_operation_plan(&layout, expected).unwrap();
-            let authority = plan.attempt_authority(*index).unwrap();
-            let mut journal = AttemptJournalGuard::open(&layout, &authority).unwrap();
-            let original = fs::read(journal.path()).unwrap();
-            let view = journal.record().unwrap().view();
-            assert_eq!((view.mutations_used, view.mutations_remaining), (1, 0));
-            if *index == sequence {
-                assert_eq!(
-                    (view.pending_mutation, view.pending_observation),
-                    (Some(1), None)
-                );
-                assert!(!view.applied);
-                assert!(matches!(
-                    journal.reserve_mutation(),
-                    Err(AttemptJournalError::Record(
-                        AttemptJournalRecordError::MutationPending { attempt: 1 }
-                    ))
-                ));
-                assert_eq!(fs::read(journal.path()).unwrap(), original);
-            } else {
-                assert!(view.applied);
-            }
-            drop(journal);
-            let reopened = AttemptJournalGuard::open(&layout, &authority).unwrap();
-            assert_eq!(fs::read(reopened.path()).unwrap(), original);
-        }
-        assert_eq!(self.calls, before);
-        assert_eq!(
-            self.trace
-                .iter()
-                .filter(|row| row["method"] == "take_canister_snapshot")
-                .count(),
-            1
-        );
-        assert!(!self.trace.iter().any(|row| matches!(
-            row["method"].as_str(),
-            Some("upload_canister_snapshot_metadata" | "load_canister_snapshot" | "start_canister")
-        )));
-        fs::write(self.root.join("pending-transfer-read.json"),serde_json::to_vec_pretty(&json!({"operation_sequence":sequence,"calls":self.calls,"elapsed_ms":self.started.elapsed().as_millis(),"restored":false,"pending_update":1,"pending_observation":null,"reissued":false})).unwrap()).unwrap();
-        eprintln!(
-            "PocketIC pending transfer read retained at {}",
-            self.root.display()
-        );
     }
 
     pub fn write_state(&self, value: u64) {

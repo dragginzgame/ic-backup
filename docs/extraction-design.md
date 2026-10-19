@@ -492,8 +492,11 @@ A one-shot original-workflow coordinator now publishes a new allocation, prepare
 each exact child in the graph's topological order, invokes an integration-owned
 stage driver once, and reconciles its complete Applied checkpoint. Occupied
 workflow reentry refuses before invoking the driver. The isolated Testkit fixture
-qualifies a capture/metadata/data artifact path and lost data reply through this
-coordinator. Reopening uncertain effects, authenticated application adapters,
+qualifies capture/metadata/data artifact publication and a connected same-ID
+upload/load/start journey through separate frozen capture/restore catalogues.
+Its cold continuation and lost-reply cases preserve original spending and evidence;
+[the qualification guide](pocketic-qualification.md#connected-original-capture-and-restore-workflows)
+records the exact fixture scope. Reopening uncertain effects, authenticated application adapters,
 full backup/restore terminal evidence and guarded release still need distinct
 owners.
 

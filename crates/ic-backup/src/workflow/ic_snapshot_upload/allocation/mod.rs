@@ -1,6 +1,6 @@
 //! Original metadata allocation with independently qualified receipt and learned checkpoint.
 
-use super::{IcSnapshotUploadExecutionError, upload_snapshot};
+use super::{IcSnapshotUploadExecutionError, upload_snapshot_with};
 use crate::{
     model::{
         attempt_journal::MutationReceiptRequest,
@@ -12,10 +12,10 @@ use crate::{
         },
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, ExecutionStageCheckpointError,
-        ExecutionStageGuard, ExecutionWorkflowPersistenceError,
+        AttemptJournalError, ExecutionStageCheckpointError, ExecutionStageGuard,
+        ExecutionWorkflowPersistenceError,
     },
-    policy::ic_snapshot_upload::{IcSnapshotUploadAssociationError, validate_acknowledgement},
+    policy::ic_snapshot_upload::IcSnapshotUploadAssociationError,
     ports::ic_snapshot_upload::IcSnapshotUploadProvider,
 };
 use thiserror::Error;
@@ -23,7 +23,7 @@ use thiserror::Error;
 /// Allocate one new snapshot through an exact singleton original metadata stage.
 ///
 /// Prepare the retained workflow/stage and complete original journals first; hold no
-/// attempt guards. Reuse [`upload_snapshot`] for exact source/payload binding, durable
+/// attempt guards. Reuse [`super::upload_snapshot`] for exact source/payload binding, durable
 /// spending, mandatory fresh `admit` and one provider invocation. A pending or Applied
 /// allocation never dispatches again, including after failed checkpoint publication.
 ///
@@ -70,63 +70,44 @@ pub async fn allocate_snapshot<E: std::error::Error + 'static>(
     {
         return Err(IcSnapshotAllocationExecutionError::OriginalMismatch);
     }
-    let acknowledgement =
-        upload_snapshot(stage, operation_sequence, payload, provider, admit).await?;
-    match settle_allocation(
+    let (acknowledgement, settlement) = upload_snapshot_with(
         stage,
         operation_sequence,
         payload,
-        &acknowledgement,
-        qualify,
+        provider,
+        admit,
+        async |journal, request, admitted| {
+            super::super::qualified_receipt::AppliedReceiptRecorder {
+                journal,
+                expected_attempt: request.mutation_attempt(),
+                expected_request: payload.binding_digest().hash(),
+            }
+            .record_applied(
+                request,
+                admitted.acknowledgement(),
+                qualify,
+                IcSnapshotAllocationSettlementError::Qualification,
+                || IcSnapshotAllocationSettlementError::ReceiptRequired,
+                || {
+                    stage
+                        .layout()
+                        .map(|_| ())
+                        .map_err(IcSnapshotAllocationSettlementError::Stage)
+                },
+            )
+            .await?;
+            Ok::<_, IcSnapshotAllocationSettlementError<E>>(admitted.reply().digest())
+        },
     )
-    .await
-    {
+    .await?;
+    // The upload owner releases its journal before checkpoint admission locks it again.
+    match settlement.and_then(|evidence| Ok(stage.reconcile_checkpoint(evidence)?)) {
         Ok(predecessor) => Ok((acknowledgement, predecessor)),
         Err(source) => Err(IcSnapshotAllocationExecutionError::AfterReply {
             source,
             acknowledgement: Box::new(acknowledgement),
         }),
     }
-}
-
-async fn settle_allocation<E: std::error::Error + 'static>(
-    stage: &ExecutionStageGuard<'_>,
-    sequence: u64,
-    payload: &IcSnapshotUploadRequest<'_>,
-    acknowledgement: &IcMutationAcknowledgement,
-    qualify: impl AsyncFnOnce(
-        &IcSnapshotUploadAttempt<'_, '_>,
-        &IcMutationAcknowledgement,
-    ) -> Result<MutationReceiptRequest, E>,
-) -> Result<ExecutionStagePredecessorRecord, IcSnapshotAllocationSettlementError<E>> {
-    let plan = stage.plan();
-    let authority = plan
-        .attempt_authority(sequence)
-        .map_err(IcSnapshotUploadAttemptError::from)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    let request = IcSnapshotUploadAttempt::new(plan, sequence, journal.record()?, payload)?;
-    let admitted = validate_acknowledgement(&request, journal.record()?, acknowledgement)?;
-    super::super::qualified_receipt::AppliedReceiptRecorder {
-        journal: &mut journal,
-        expected_attempt: request.mutation_attempt(),
-        expected_request: payload.binding_digest().hash(),
-    }
-    .record_applied(
-        &request,
-        acknowledgement,
-        async |request, reply| qualify(request, reply).await,
-        IcSnapshotAllocationSettlementError::Qualification,
-        || IcSnapshotAllocationSettlementError::ReceiptRequired,
-        || {
-            stage
-                .layout()
-                .map(|_| ())
-                .map_err(IcSnapshotAllocationSettlementError::Stage)
-        },
-    )
-    .await?;
-    drop(journal);
-    Ok(stage.reconcile_checkpoint(admitted.reply().digest())?)
 }
 
 /// Allocation coordination failures retain original spending and bounded returned bytes.

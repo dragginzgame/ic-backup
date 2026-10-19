@@ -179,7 +179,14 @@ impl Fixture {
         let root = support::root("pocketic");
         fs::write(
             root.join("original.wasm"),
-            wat::parse_str(wasm_source).unwrap(),
+            ic_host_artifacts::wasm_text::compile(
+                wasm_source,
+                ic_host_artifacts::wasm_text::CompileLimits {
+                    source_bytes: 64 * 1024,
+                    module_bytes: 64 * 1024,
+                },
+            )
+            .unwrap(),
         )
         .unwrap();
         let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
