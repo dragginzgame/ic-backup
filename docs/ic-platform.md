@@ -60,12 +60,14 @@ old Candid/CDK paths.
 
 Candid and SDK remain necessary production transitives. The complete development
 lock retains PocketIC’s management DTO 0.8.0 alongside Platform’s 0.11.0. Testkit
-0.55.2 still requires Platform 0.1, resolved to 0.1.18, and forwards its explicit
-PocketIC exports. Both published Platform 0.1.18 and 0.2.1 omit the
+0.54.1 still requires Platform 0.1, resolved to 0.1.18, and separately re-exports
+the original PocketIC client. Testkit 0.55 narrows that client to Platform's
+explicit exports. Both published Platform 0.1.18 and 0.2.1 omit the
 `RawEffectivePrincipal` needed for exact management ingress routing, tracked by
 [Platform #27](https://github.com/dragginzgame/ic-platform/issues/27).
-The Core simulator target remains blocked on a published export and Testkit
-adoption; no copied DTO or routing fallback substitutes for it. The lock contains
+Keep Testkit 0.54.1 until a published Platform/Testkit selection supplies that
+identity. The selected client preserves exact Core management routing without a
+copied DTO, direct PocketIC declaration or routing fallback. The lock contains
 neither the standalone Testkit codec nor CDK-family packages. Simulator packages
 do not enter the libraries’ production graphs. Deployment admission belongs to the
 consuming application’s exact target/features, successful locked build and artifact

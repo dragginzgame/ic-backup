@@ -27,7 +27,7 @@ thiserror = "2.0"
 tokio = { version = "1.50", features = ["rt-multi-thread", "macros"] }
 
 # Tests and tooling only
-ic-testkit = "0.55"
+ic-testkit = "0.56"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

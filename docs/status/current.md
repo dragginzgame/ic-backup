@@ -3,7 +3,38 @@
 The current local release is **0.33.0**, commit
 `d7921ae` (`v0.33.0`); package versions remain 0.33.0.
 
-## Platform 0.2.1 adoption
+## Simulator compile recovery
+
+Testkit **0.54.1** restores the required original PocketIC client exports. Its
+0.55.2 replacement forwards Platform's narrower surface, which omits
+`RawEffectivePrincipal` and caused the reported all-target check failure. Fresh
+registry inspection confirms no supplying release is published yet. Hold Testkit
+at the compatible 0.54 line until
+[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27) and
+[Testkit #132](https://github.com/dragginzgame/ic-testkit/issues/132) deliver an
+ordinary published selection with that identity.
+
+Production Platform **0.2.1** and Host **0.30.0** remain selected. Both normal/build
+dependency trees are byte-identical to the task-entry trees. The lock changes only
+the Testkit development graph, including its Host 0.27.6 dependencies. Testkit's
+published archive and all 45 unpacked files match the registry checksum. The
+already prepared selected CLI/server passes offline admission without installation.
+No import, management routing, original journal or product API changes; no local
+DTO, direct PocketIC declaration, sibling patch or retry fallback is introduced.
+
+`make check` and strict all-target Clippy pass. Actual Rust 1.91 all-target checks,
+all 38 Core and 12 Agent PocketIC cases, formatting, dependency boundaries and
+inheritance, snapshot integrity and local links pass on this repaired graph.
+These are focused Linux results; full local CI, native macOS and installed-IC
+qualification remain separate. Earlier receipts retain their original scope.
+
+Task-entry source at `6a63467`, archive provenance, unchanged production trees and
+per-command logs remain at `/tmp/backup-testkit-repair-9e3r09ay/`. The pending
+0.34.0 notes cover the repair; package versions remain 0.33.0. Staging and unrelated
+work are preserved. No commit, push, release, publication, deployment or artifact
+cleanup ran.
+
+## Earlier Platform 0.2.1 adoption
 
 Published **Platform 0.2.1** is selected with minimum requirement `0.2.1` and
 empty defaults. The incoming lock already selected it, Host 0.30.0 and Testkit

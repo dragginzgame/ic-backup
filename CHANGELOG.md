@@ -16,6 +16,10 @@
 
 ### Fixed
 
+- Restore simulator fixture compilation with Testkit 0.54.1, retaining exact
+  management routing and production Platform 0.2.1. Testkit 0.55 adoption awaits
+  the published client exports tracked in
+  [Platform #27](https://github.com/dragginzgame/ic-platform/issues/27).
 - Render release manifest edits through the reviewed Shared Tooling owner, accepting
   retained comments, dependency aliases and table forms while preserving requirement
   operators and precision. Keep original receipts, lock selection and rollback.
