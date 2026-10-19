@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.32.0]
+
+### Breaking
+
+- Adopt Host Artifacts, FS and Process 0.28.0 as direct production dependencies.
+  `PersistenceError::Publication` now carries Host FS 0.28's
+  `NamedWriteError<std::io::Error>` Rust identity. Consumers matching or constructing
+  that error with direct Host FS types must align their dependency to 0.28.
+
 ## [0.31.4] - 2026-10-19
 
 ### Changed

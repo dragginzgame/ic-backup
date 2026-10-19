@@ -1,10 +1,22 @@
 # Current handoff — 2026-10-19
 
-The current local release is **0.31.3**, commit
-`cdc8e28` (`v0.31.3`); package versions remain 0.31.3. Compatible pending notes
-select 0.31.4. The incoming lockfile selects Platform 0.1.15 and remains preserved.
+The current local release is **0.31.4**, commit
+`5a4c12d` (`v0.31.4`); package versions remain 0.31.4.
 
-## Local scheduling and contract cleanup
+## Pending Host 0.28 adoption
+
+Commit `715c5bc` selects direct Host Artifacts, FS and Process 0.28.0. The public
+`PersistenceError::Publication` carries Host FS's `NamedWriteError` identity, so
+pending notes select **0.32.0**. Consumers sharing that error type must align their
+direct Host FS dependency to 0.28. No own package-version change is made.
+
+Testkit 0.54.1 retains its separate development-only Host 0.27.6 graph; those
+packages remain in the lockfile intentionally. Platform stays at 0.1.15. Earlier
+qualification below retains its original graph and does not qualify Host 0.28.
+This batch updates release notes only; native build, MSRV and runtime qualification
+of the Host update remains outstanding.
+
+## Delivered scheduling and contract cleanup
 
 Fresh and retained workflow entry points keep their original admission paths and
 share one post-admission scheduler. Existing execution, checkpoint, spending and
