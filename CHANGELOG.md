@@ -10,15 +10,15 @@
 
 ### Changed
 
-- Adopt published Platform 0.2.1 for Candid, Principal, management DTOs and Agent.
+- Adopt published Platform 0.2.2 for Candid, Principal, management DTOs and Agent.
   Preserve existing host-only features, bounded management codecs and upstream
   identities; no CDK runtime or application codec migration is required.
 
 ### Fixed
 
-- Restore simulator fixture compilation with Testkit 0.54.1, retaining exact
-  management routing and production Platform 0.2.1. Testkit 0.55 adoption awaits
-  the published client exports tracked in
+- Restore simulator fixture compilation with Testkit 0.56.0 and require Platform
+  0.2.2's published client exports, preserving exact management routing and
+  upstream identities. Resolves the consumer blocker tracked in
   [Platform #27](https://github.com/dragginzgame/ic-platform/issues/27).
 - Render release manifest edits through the reviewed Shared Tooling owner, accepting
   retained comments, dependency aliases and table forms while preserving requirement

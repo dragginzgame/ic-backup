@@ -1260,9 +1260,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.56.0"
+version = "0.57.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a84308c44c3a21f11e9769a2833d7b78fca3f0513b9139bfa089d2388a64a647"
+checksum = "9834c00995ca544baaeb6a3e7f8c981efc90d59fb4f5e07787fc91a68a653f4f"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",

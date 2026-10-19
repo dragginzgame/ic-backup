@@ -3,36 +3,42 @@
 The current local release is **0.33.0**, commit
 `d7921ae` (`v0.33.0`); package versions remain 0.33.0.
 
-## Simulator compile recovery
+## Published Platform simulator exports
 
-Testkit **0.54.1** restores the required original PocketIC client exports. Its
-0.55.2 replacement forwards Platform's narrower surface, which omits
-`RawEffectivePrincipal` and caused the reported all-target check failure. Fresh
-registry inspection confirms no supplying release is published yet. Hold Testkit
-at the compatible 0.54 line until
-[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27) and
-[Testkit #132](https://github.com/dragginzgame/ic-testkit/issues/132) deliver an
-ordinary published selection with that identity.
+The current graph selects published **Platform 0.2.2 + Testkit 0.56.0**. Platform
+0.2.2 was published at 17:57:34 UTC, after the reported 17:52 compilation failure,
+and supplies the original `RawEffectivePrincipal` export. The incoming lock already
+selects it; the root minimum is now 0.2.2 so an existing 0.2.1 lock cannot retain
+the incomplete surface. No Testkit downgrade or import change is needed.
 
-Production Platform **0.2.1** and Host **0.30.0** remain selected. Both normal/build
-dependency trees are byte-identical to the task-entry trees. The lock changes only
-the Testkit development graph, including its Host 0.27.6 dependencies. Testkit's
-published archive and all 45 unpacked files match the registry checksum. The
-already prepared selected CLI/server passes offline admission without installation.
-No import, management routing, original journal or product API changes; no local
-DTO, direct PocketIC declaration, sibling patch or retry fallback is introduced.
+Both registry archives and all unpacked files are verified: 43 for Platform and
+50 for Testkit. The used Candid, bounded decoder, Agent and management sources are
+unchanged from 0.2.1. Production features and upstream identities remain unchanged;
+the lock now has one Platform version. All six normal/build target trees preserve
+Core/Agent isolation without parser, simulator, WAT or CDK reachability. The
+prepared selected Testkit CLI/server passes offline admission without installation.
 
-`make check` and strict all-target Clippy pass. Actual Rust 1.91 all-target checks,
-all 38 Core and 12 Agent PocketIC cases, formatting, dependency boundaries and
-inheritance, snapshot integrity and local links pass on this repaired graph.
-These are focused Linux results; full local CI, native macOS and installed-IC
-qualification remain separate. Earlier receipts retain their original scope.
+`make check`, strict all-target Clippy, actual Rust 1.91 all-target checks and both
+independent consumers pass. All 38 Core and 12 Agent actual PocketIC cases pass,
+including exact management routing, same-ID restoration, lost replies and retained
+workflow recovery. Formatting, dependency boundaries/inheritance, snapshot integrity
+and local links pass. Full local CI, native macOS and installed-IC qualification
+remain separate. No DTO copy, direct PocketIC declaration, sibling patch or retry
+fallback is introduced.
 
-Task-entry source at `6a63467`, archive provenance, unchanged production trees and
-per-command logs remain at `/tmp/backup-testkit-repair-9e3r09ay/`. The pending
-0.34.0 notes cover the repair; package versions remain 0.33.0. Staging and unrelated
-work are preserved. No commit, push, release, publication, deployment or artifact
-cleanup ran.
+Backup's published-selection acceptance is recorded on
+[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27#issuecomment-6274095674).
+Testkit 0.56.0's own minimum still admits 0.2.1; its upstream minimum and forwarding
+regression remain [Testkit #132](https://github.com/dragginzgame/ic-testkit/issues/132).
+Backup's root minimum enforces the required release locally.
+
+Task-entry source at `8dc6a40`, archive provenance and per-command logs remain at
+`/tmp/backup-testkit56-fix-nijbfhs8/`; independent consumers remain at
+`target/msrv-consumers.M4omJD/`. The earlier temporary Testkit 0.54.1 hold and its
+50-case qualification retain their original evidence at
+`/tmp/backup-testkit-repair-9e3r09ay/`. The pending notes remain 0.34.0 and package
+versions remain 0.33.0. The incoming lock, staging and unrelated work are preserved.
+No commit, push, release, publication, deployment or artifact cleanup ran.
 
 ## Earlier Platform 0.2.1 adoption
 

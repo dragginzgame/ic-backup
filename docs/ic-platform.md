@@ -1,10 +1,10 @@
 # Platform dependency boundary
 
 The repository selects published
-[ic-platform 0.2.1](https://crates.io/crates/ic-platform/0.2.1), with requirement
-`0.2.1` and empty defaults. Its archive SHA-256 is
-`73506580e1ea0f78adacdd44560717eb9057e86274169e6525bbb024d1dd1c83`,
-source revision `de1c469de46f99b795c31cfa36448c46a49dac75`.
+[ic-platform 0.2.2](https://crates.io/crates/ic-platform/0.2.2), with requirement
+`0.2.2` and empty defaults. Its archive SHA-256 is
+`b083e911eb9799daf15f501a883d50a76e709d300a51b25fb0c31cd0be0377bd`,
+source revision `f105386a5336b5100042ddbd1208bb12be27aced`.
 Qualification boundaries are recorded in the [current handoff](status/current.md);
 the provenance below preserves the original 0.1.8 adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
@@ -21,7 +21,7 @@ features are not selected.
 Platform 0.2 replaces its optional CDK runtime and entrypoint identities and uses
 `MIT AND Apache-2.0` licensing. Backup does not enable that runtime or its macros.
 The used Candid (including bounded decoder), Agent and management module sources
-are unchanged from 0.1.18, as are the selected upstream identities below.
+are unchanged from 0.2.1, as are the selected upstream identities below.
 
 | Surface | Owner and selection |
 | --- | --- |
@@ -30,6 +30,7 @@ are unchanged from 0.1.18, as are the selected upstream identities below.
 | All 24 snapshot/status/transfer/upload DTOs | Platform management exports over exactly upstream 0.11.0 |
 | Native SDK identities and operations | Platform Agent exports over SDK 0.49.2 with PEM |
 | URL/client configuration | Explicit Reqwest dependency; Backup owns middleware, trust, timeout and retry policy |
+| Native simulator client identities | Platform over PocketIC 16.1.0, forwarded by development-only Testkit |
 | Simulator assets and managed processes | Development-only Testkit; Backup owns fixture custody and original evidence |
 
 Backup retains method-specific byte/work/skip/type/header limits, bounded DTO
@@ -60,14 +61,16 @@ old Candid/CDK paths.
 
 Candid and SDK remain necessary production transitives. The complete development
 lock retains PocketIC’s management DTO 0.8.0 alongside Platform’s 0.11.0. Testkit
-0.54.1 still requires Platform 0.1, resolved to 0.1.18, and separately re-exports
-the original PocketIC client. Testkit 0.55 narrows that client to Platform's
-explicit exports. Both published Platform 0.1.18 and 0.2.1 omit the
-`RawEffectivePrincipal` needed for exact management ingress routing, tracked by
-[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27).
-Keep Testkit 0.54.1 until a published Platform/Testkit selection supplies that
-identity. The selected client preserves exact Core management routing without a
-copied DTO, direct PocketIC declaration or routing fallback. The lock contains
+0.56.0 forwards Platform's explicit native PocketIC exports. The root minimum
+of Platform 0.2.2 supplies `RawEffectivePrincipal` for exact management ingress
+routing, resolving Backup's missing-export blocker in
+[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27). An older
+0.2.1 lock is no longer admitted. Testkit 0.56.0 itself still permits 0.2.1;
+[Testkit #132](https://github.com/dragginzgame/ic-testkit/issues/132) owns its
+supplying minimum. Backup's explicit minimum closes that gap locally.
+The selected client preserves original
+PocketIC identities without a copied DTO, direct PocketIC declaration or routing
+fallback. The lock now has one Platform version and contains
 neither the standalone Testkit codec nor CDK-family packages. Simulator packages
 do not enter the libraries’ production graphs. Deployment admission belongs to the
 consuming application’s exact target/features, successful locked build and artifact
