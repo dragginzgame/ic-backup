@@ -5,7 +5,7 @@ package signs and submits one previously reserved replicated update with separat
 receiver/effective target, explicit endpoint, caller, trusted root and deadline.
 It disables redirects, HTTP/TCP retries, automatic polling and root-key fetching.
 
-The selected Platform 0.1.8 native `agent` feature supplies all SDK identities,
+The selected Platform native `agent` feature supplies all SDK identities,
 including `CallResponse` and `AnonymousIdentity`. Reqwest client policy remains
 explicit here. No direct SDK declaration, polling or replacement identity is needed.
 

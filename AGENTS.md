@@ -57,8 +57,8 @@ or dependencies on Canic runtime/control-plane crates.
 
 ## Simulator qualification
 
-Simulator fixtures depend on published `ic-testkit` and use its complete
-`pocket_ic` re-export for exact management ingress and async gateway qualification.
+Simulator fixtures depend on published `ic-testkit` and use its Platform-backed
+`pocket_ic` exports for exact management ingress and async gateway qualification.
 Testkit's explicit managed server owns bounded readiness/cleanup and retains raw
 output in each caller-owned fixture directory. No baseline reuse/reset, funding
 policy, hidden snapshot retry or receipt inference is adopted. Preserve original

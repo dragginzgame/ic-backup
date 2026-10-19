@@ -15,7 +15,6 @@ use super::{
 };
 use crate::ready::ready;
 use crate::support::read_json;
-use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -28,7 +27,6 @@ use ic_backup::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
             MAX_EXECUTION_STAGE_BYTES,
         },
-        ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
@@ -39,7 +37,6 @@ use ic_backup::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
         read_complete_execution_workflow,
     },
-    ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
     workflow::{
         execution_workflow::{
             ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
@@ -61,121 +58,6 @@ use std::{
     path::Path,
 };
 
-struct Provider<'a> {
-    backend: &'a mut Backend,
-    lose_reply: bool,
-    called: bool,
-}
-impl IcMutationProvider for Provider<'_> {
-    fn submit_mutation(
-        &mut self,
-        request: &IcMutationRequest<'_>,
-        journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>> {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            assert!(!self.called);
-            self.called = true;
-            let payload = request.payload();
-            let raw = self
-                .backend
-                .management(payload.method().name(), payload.arguments());
-            fs::write(
-                self.backend
-                    .root
-                    .join("runner-original-capture-reply.candid"),
-                &raw,
-            )
-            .unwrap();
-            if self.lose_reply {
-                return Err(IcMutationProviderError::Indeterminate);
-            }
-            IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: self.backend.target.to_text(),
-                evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                reply: raw,
-            })
-            .map_err(|_| IcMutationProviderError::Indeterminate)
-        })())
-    }
-}
-
-struct Driver {
-    backend: Backend,
-    lose_reply: bool,
-    binds: usize,
-    executions: usize,
-}
-impl ExecutionWorkflowStageDriver for Driver {
-    type Error = io::Error;
-
-    fn bind_stage(
-        &mut self,
-        _workflow: &ExecutionWorkflowRecord,
-        sequence: u64,
-        predecessors: &[ExecutionStagePredecessorRecord],
-    ) -> Result<OperationPlanRecord, Self::Error> {
-        assert_eq!(sequence, 0);
-        assert_eq!(predecessors, []);
-        self.binds += 1;
-        let payload = management(&self.backend, Method::TakeCanisterSnapshot, None);
-        Ok(self.backend.plan(&payload.digest(), 0))
-    }
-
-    fn execute_stage(
-        &mut self,
-        stage: &ExecutionStageGuard<'_>,
-    ) -> impl Future<Output = Result<ArtifactChecksumRecord, Self::Error>> {
-        let result = (|| {
-            self.executions += 1;
-            let payload = management(&self.backend, Method::TakeCanisterSnapshot, None);
-            let expected = stage.plan().context().clone();
-            let mut provider = Provider {
-                backend: &mut self.backend,
-                lose_reply: self.lose_reply,
-                called: false,
-            };
-            let acknowledgement = ready(capture_snapshot(
-                stage,
-                0,
-                &payload,
-                &mut provider,
-                async |request| {
-                    // This stopped isolated app has no external effects or timers.
-                    // The fixture owns exact direct control and original ingress custody.
-                    assert_eq!(request.plan().context(), &expected);
-                    assert_eq!(request.payload().digest(), payload.digest());
-                    Ok::<(), io::Error>(())
-                },
-            ))
-            .map_err(|error| io::Error::other(error.to_string()))?;
-            assert!(provider.called);
-            let reply = IcSnapshotReply::decode(&payload, &acknowledgement.input().reply)
-                .map_err(|error| io::Error::other(error.to_string()))?;
-            assert_eq!(reply.snapshots().len(), 1);
-            let mut journal = AttemptJournalGuard::open(
-                stage.layout().unwrap(),
-                &stage.plan().attempt_authority(0).unwrap(),
-            )
-            .unwrap();
-            let attempt = journal.record().unwrap().view().pending_mutation.unwrap();
-            journal
-                .record_mutation(MutationReceiptRequest {
-                    attempt,
-                    request: payload.digest().hash().into(),
-                    outcome: MutationOutcomeRecord::Applied,
-                    evidence: reply.digest().hash().into(),
-                })
-                .unwrap();
-            Ok(reply.digest())
-        })();
-        std::future::ready(result)
-    }
-}
-
 pub(crate) fn run(lose_reply: bool) {
     let mut backend = Backend::new();
     assert!(
@@ -194,23 +76,37 @@ pub(crate) fn run(lose_reply: bool) {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let payload = management(&backend, Method::TakeCanisterSnapshot, None);
     let workflow = ExecutionWorkflowRecord::new(backend.plan(&payload.digest(), 0));
-    let mut driver = Driver {
+    let mut driver = CompleteDriver {
         backend,
-        lose_reply,
-        binds: 0,
-        executions: 0,
+        workflow: workflow.clone(),
+        binds: Vec::new(),
+        capture_failure: if lose_reply {
+            CaptureFailure::Lost
+        } else {
+            CaptureFailure::None
+        },
+        data_failure: ReadFailure::None,
+        snapshot: None,
+        raw_metadata: None,
+        stages: Vec::new(),
+        stop_before: None,
+        restore: None,
+        restore_failure: super::planned_upload::Failure::None,
     };
     let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
-    assert_eq!(driver.binds, 1);
-    assert_eq!(driver.executions, 1);
+    assert_eq!(driver.binds, [0]);
+    assert_eq!(driver.stages, [0]);
     if lose_reply {
         assert!(result.is_err());
         let path = root.join("execution-stage-0/attempt-0.json");
         let original = fs::read(&path).unwrap();
+        let journal: AttemptJournalRecord = read_json(&path, MAX_ATTEMPT_JOURNAL_BYTES).unwrap();
+        assert_eq!(journal.view().pending_mutation, Some(1));
+        assert_eq!(journal.view().mutations_remaining, 0);
         let calls = driver.backend.calls;
         assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
-        assert_eq!(driver.binds, 1);
-        assert_eq!(driver.executions, 1);
+        assert_eq!(driver.binds, [0]);
+        assert_eq!(driver.stages, [0]);
         assert_eq!(driver.backend.calls, calls);
         assert_eq!(fs::read(&path).unwrap(), original);
         assert!(read_complete_execution_workflow(&layout, &workflow.digest()).is_err());
@@ -233,6 +129,8 @@ pub(crate) fn run(lose_reply: bool) {
 struct CompleteDriver {
     backend: Backend,
     workflow: ExecutionWorkflowRecord,
+    binds: Vec<u64>,
+    capture_failure: CaptureFailure,
     data_failure: ReadFailure,
     snapshot: Option<IcSnapshotInfo>,
     raw_metadata: Option<Vec<u8>>,
@@ -248,7 +146,7 @@ impl CompleteDriver {
         let oracle = stage.layout().unwrap().root().join("capture.candid");
         let mut provider = CaptureProvider {
             backend: &mut self.backend,
-            failure: CaptureFailure::None,
+            failure: self.capture_failure,
             oracle: &oracle,
             submitted: false,
         };
@@ -456,6 +354,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> Result<OperationPlanRecord, Self::Error> {
         assert_eq!(workflow, &self.workflow);
+        self.binds.push(sequence);
         assert_eq!(predecessors.len(), usize::from(!matches!(sequence, 0 | 11)));
         if sequence == 7 {
             let snapshot = self.snapshot.as_ref().unwrap();
@@ -565,6 +464,8 @@ pub(crate) fn run_complete(data_failure: ReadFailure) {
     let mut driver = CompleteDriver {
         backend,
         workflow: workflow.clone(),
+        binds: Vec::new(),
+        capture_failure: CaptureFailure::None,
         data_failure,
         snapshot: None,
         raw_metadata: None,
@@ -755,6 +656,8 @@ pub(crate) fn run_retained() {
     let mut driver = CompleteDriver {
         backend,
         workflow: workflow.clone(),
+        binds: Vec::new(),
+        capture_failure: CaptureFailure::None,
         data_failure: ReadFailure::None,
         snapshot: None,
         raw_metadata: None,
@@ -786,6 +689,8 @@ pub(crate) fn run_retained() {
     let mut resumed = CompleteDriver {
         backend,
         workflow: workflow.clone(),
+        binds: Vec::new(),
+        capture_failure: CaptureFailure::None,
         data_failure: ReadFailure::None,
         snapshot: Some(snapshot),
         raw_metadata: Some(raw_metadata),

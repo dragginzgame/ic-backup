@@ -1,7 +1,7 @@
 # Direct Agent transport
 
 The maintained product transport is `crates/ic-backup-agent`, using registry
-Platform 0.1.8’s native `agent` feature over the unchanged `ic-agent` 0.49.2
+Platform’s native `agent` feature over the unchanged `ic-agent` 0.49.2
 identity. Reqwest is an explicit consumer dependency for the bounded HTTP client.
 All SDK imports, including `CallResponse` and `AnonymousIdentity`, use Platform;
 there is no direct SDK declaration. The maintainer selected the transport hard cut on 2026-10-08; the complete

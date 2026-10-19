@@ -61,6 +61,14 @@ manifests. Product receipt/source validation remains independent. Consumer
 fixtures prove an earlier sorted release can be checked while a later current
 manifest is unsorted, without formatting either source or changing real Git refs.
 
+Manifest version edits use the reviewed Shared Tooling renderer for both the
+workspace version and owned internal dependency requirements. It preserves comments
+and requirement operators/precision: for example, `0.1` becomes `0.2`, while
+`=0.1.0` becomes `=0.2.0`. Backup supplies parsed workspace ownership and retains
+its component bounds, original lock transformation,
+receipt/source checks and rollback. Failed or empty helper output never installs
+a candidate. No local regex imposes another manifest layout.
+
 ## Release fixture ownership
 
 `make release-check` runs both the consumer adapter fixture and the unchanged

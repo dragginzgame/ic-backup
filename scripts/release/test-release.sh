@@ -489,6 +489,16 @@ test_version_reader() {
         before="$(fingerprint)"
         [[ "$(perl scripts/release/release-data.pl version)" == 0.1.0 ]] || exit 1
         assert_unchanged
+    elif [[ "$mode" == render ]]; then
+        sed 's/version = "0.1.0"/version = "0.1.0" # retained version comment/' Cargo.toml > target/commented.toml
+        cp target/commented.toml Cargo.toml
+        cp Cargo.lock target/original.lock
+        cp crates/ic-backup/Cargo.toml target/original-member.toml
+        perl scripts/release/release-data.pl set-version 0.1.1
+        rg -Fx 'version = "0.1.1" # retained version comment' Cargo.toml
+        cmp Cargo.lock target/original.lock
+        cmp crates/ic-backup/Cargo.toml target/original-member.toml
+        [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     elif [[ "$mode" == selected ]]; then
         mkdir -p "target/commits/$TEST_SOURCE/files/crates/ic-backup/src"
         cp Cargo.toml "target/commits/$TEST_SOURCE/files/"
@@ -535,10 +545,25 @@ test_preparation() {
     assert_cache_retained
 }
 test_multi_package_preparation() {
+    local form="${1:-inline}" dependency=ic-backup expected=0.2
     perl -pi -e 's/members = \["crates\/ic-backup"\]/members = ["crates\/ic-backup", "crates\/ic-backup-agent"]/' Cargo.toml
-    printf '\n[workspace.dependencies]\nic-backup = { version = "0.1", path = "crates/ic-backup" }\n' >> Cargo.toml
+    case "$form" in
+        inline) printf '\n[workspace.dependencies]\nic-backup = { version = "0.1", path = "crates/ic-backup" }\n' >> Cargo.toml ;;
+        comments)
+            sed 's/version = "0.1.0"/version = "0.1.0" # retained version comment/' Cargo.toml > target/commented.toml
+            cp target/commented.toml Cargo.toml
+            printf '\n[workspace.dependencies]\n"ic-backup" = { path = "crates/ic-backup", version = "0.1" } # retained dependency comment\n' >> Cargo.toml ;;
+        table)
+            printf '\n[workspace.dependencies.ic-backup]\npath = "crates/ic-backup"\nversion = "=0.1.0" # exact member\n' >> Cargo.toml
+            expected='=0.2.0' ;;
+        alias)
+            dependency=backup-core
+            printf '\n[workspace.dependencies]\nbackup-core = { package = "ic-backup", path = "crates/ic-backup", version = "^0.1" }\n' >> Cargo.toml
+            expected='^0.2' ;;
+        *) echo 'unknown manifest fixture' >&2; exit 1 ;;
+    esac
     mkdir -p crates/ic-backup-agent/src
-    printf '[package]\nname = "ic-backup-agent"\nversion.workspace = true\nedition.workspace = true\n[dependencies]\nic-backup.workspace = true\n' > crates/ic-backup-agent/Cargo.toml
+    printf '[package]\nname = "ic-backup-agent"\nversion.workspace = true\nedition.workspace = true\n[dependencies]\n%s.workspace = true\n' "$dependency" > crates/ic-backup-agent/Cargo.toml
     printf '// Selected transport library fixture.\n' > crates/ic-backup-agent/src/lib.rs
     printf '\n[[package]]\nname = "ic-backup-agent"\nversion = "0.1.0"\ndependencies = ["ic-backup"]\n' >> Cargo.lock
     perl scripts/release/release-data.pl validation-receipt target/multi.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.2.0
@@ -549,7 +574,12 @@ test_multi_package_preparation() {
     perl scripts/release/release-data.pl validation-check target/multi.validation.json "$TEST_SOURCE" 2026-10-05 0.1.0 0.2.0 prepared
     perl scripts/release/release-data.pl verify
     jq -e '.files | has("crates/ic-backup-agent/Cargo.toml")' docs/release.json
-    rg -F 'ic-backup = { version = "0.2.0", path = "crates/ic-backup" }' Cargo.toml
+    yq -p toml -o json '.' Cargo.toml | jq -e --arg dependency "$dependency" --arg expected "$expected" \
+        '.workspace.dependencies[$dependency].version == $expected'
+    if [[ "$form" == comments ]]; then
+        rg -Fx 'version = "0.2.0" # retained version comment' Cargo.toml
+        rg -Fx '"ic-backup" = { path = "crates/ic-backup", version = "0.2" } # retained dependency comment' Cargo.toml
+    fi
     [[ "$(rg -c 'version = "0.2.0"' Cargo.lock)" == 2 ]] || exit 1
     mkdir -p "target/commits/$TEST_SOURCE/files"
     cp Cargo.toml Cargo.lock CHANGELOG.md "target/commits/$TEST_SOURCE/files/"
@@ -567,6 +597,9 @@ test_lockfile_rejection() {
         failed-output)
             mv scripts/ci/rewrite-local-lock-versions.pl target/original-transformer.pl
             printf '%s\n' 'print "version = 4\n"; exit 13;' > scripts/ci/rewrite-local-lock-versions.pl ;;
+        failed-renderer)
+            printf '%s\n' 'print "[workspace.package]\nversion = \"0.1.1\"\n"; exit 13;' > scripts/ci/render-cargo-workspace-version.pl ;;
+        empty-renderer) printf '%s\n' 'exit 0;' > scripts/ci/render-cargo-workspace-version.pl ;;
     esac
     before="$(fingerprint)"
     expect_failure perl scripts/release/release-data.pl prepare-version 0.1.1
@@ -1025,12 +1058,13 @@ for outcome in success failure; do
 done
 run_case validation-source-identity test_validation_source_identity
 run_case versions test_versions
-for mode in comments selected duplicate failed-output empty failed-parser; do run_case "version-reader-$mode" test_version_reader "$mode"; done
+for mode in comments render selected duplicate failed-output empty failed-parser; do run_case "version-reader-$mode" test_version_reader "$mode"; done
 for invalid in conflict duplicate dated historical-duplicate competing same-date unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
 for mode in empty missing imported bumped failed-output empty-output; do run_case "shared-notes-$mode" test_shared_changelog "$mode"; done
 run_case preparation test_preparation
-run_case multi-package-preparation test_multi_package_preparation
-for failure in mismatch duplicate missing failed-output; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
+for form in inline comments table alias; do run_case "multi-package-$form" test_multi_package_preparation "$form"; done
+run_case 'multi-package-unicode-雪' test_multi_package_preparation
+for failure in mismatch duplicate missing failed-output failed-renderer empty-renderer; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done
 run_case staging test_staging
 for state in no-release tagged; do run_case "publish-$state" test_publish "$state"; done

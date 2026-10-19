@@ -623,6 +623,8 @@ fn rebuild(
     CompleteDriver {
         backend,
         workflow: workflow.clone(),
+        binds: Vec::new(),
+        capture_failure: super::CaptureFailure::None,
         data_failure: super::ReadFailure::None,
         snapshot: Some(snapshot),
         raw_metadata: Some(raw_metadata),
@@ -692,6 +694,8 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
     let mut driver = CompleteDriver {
         backend,
         workflow: capture_workflow.clone(),
+        binds: Vec::new(),
+        capture_failure: super::CaptureFailure::None,
         data_failure: super::ReadFailure::None,
         snapshot: None,
         raw_metadata: None,
@@ -829,6 +833,8 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         driver = CompleteDriver {
             backend,
             workflow: workflow.clone(),
+            binds: Vec::new(),
+            capture_failure: super::CaptureFailure::None,
             data_failure: super::ReadFailure::None,
             snapshot: None,
             raw_metadata: None,

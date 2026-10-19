@@ -684,7 +684,8 @@ create an absent checkpoint. The 0.29 hard cut removes fresh-only checkpoint
 shortcuts and direct public record publication without aliases.
 
 Management reply decoding delegates exact-result and compact decoder setup to
-`ic-platform` 0.1.8 with explicit `candid` and `management-canister-types` features. Product DTO bounds, raw limits, per-method quotas
+the selected `ic-platform` with explicit `candid` and `management-canister-types`
+features. Product DTO bounds, raw limits, per-method quotas
 and redacted outer errors remain in Backup. Independent consumer qualification
 rejects simulator packages in the production graph. Run existing codec goldens and
 bounds against the extracted production decoder when changing this selection.

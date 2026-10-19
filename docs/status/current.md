@@ -1,9 +1,91 @@
 # Current handoff — 2026-10-19
 
-The current local release is **0.32.0**, commit
-`710f09f` (`v0.32.0`); package versions remain 0.32.0.
+The current local release is **0.33.0**, commit
+`d7921ae` (`v0.33.0`); package versions remain 0.33.0.
 
-## Host 0.29 and WAT adoption
+## Platform 0.2.1 adoption
+
+Published **Platform 0.2.1** is selected with minimum requirement `0.2.1` and
+empty defaults. The incoming lock already selected it, Host 0.30.0 and Testkit
+0.55.2; those selections and the lock bytes are preserved. The archive and all
+43 unpacked files match the registry checksum; its source revision and checksum
+are recorded in the [Platform contract](../ic-platform.md). No sibling source,
+Cargo patch or new adapter supplies the dependency.
+
+Core retains `candid` and `management-canister-types`; only Agent adds `agent`.
+The used Candid, bounded decoder, Agent and management module sources are unchanged
+from 0.1.18. Principal 0.1.5, management DTO 0.11.0, Candid 0.10.38 and SDK 0.49.2
+identities remain. Platform 0.2's CDK/runtime changes are outside this host graph.
+Mandatory Candid and SDK transitives remain; no direct upstream IC declaration,
+parser or CDK-family package is introduced. Testkit still selects development-only
+Platform 0.1.18 and Host 0.29.0; PocketIC retains its independent management 0.8 DTOs.
+
+Focused Linux checks pass: 212 IC-related unit cases, twelve public codec cases,
+three Agent unit cases, fourteen HTTP boundary cases and all twelve actual Agent
+PocketIC cases. Strict Core-library and Agent all-target Clippy, actual Rust 1.91
+library/independent-consumer checks and native/Wasm identity probes for all 24
+management exports and Principal pass. All six normal/build target trees preserve
+Core/Agent isolation without parser, simulator, WAT or CDK reachability. Formatting,
+dependency boundaries/inheritance, local links and snapshot integrity pass.
+
+The workspace all-target check still fails at the unchanged Core simulator import:
+neither published Platform 0.1.18 nor 0.2.1 exports `RawEffectivePrincipal`.
+A standalone 0.2.1 consumer reproduces E0432, reported on
+[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27#issuecomment-6272016874).
+Publish the original export and adopt it through Testkit before qualifying Core's
+exact-routing simulator journey; no routing fallback or copied DTO is added.
+Native macOS, installed-IC and full local CI are not qualified by these checks.
+
+The pending notes are **0.34.0** because the incoming Host 0.30 selection changes
+the public publication-error identity. Package versions remain 0.33.0. Original
+task-entry source, registry evidence, standalone probes and per-command logs remain
+at `/tmp/backup-platform-adopt-29kiauql/`; independent consumers remain at
+`target/msrv-consumers.amei8S/`. Unrelated pending work and staging are preserved.
+No commit, push, release, publication, deployment or artifact cleanup ran.
+
+## Earlier local renderer and fixture consolidation
+
+Both local version-edit commands delegate literal rendering to the reviewed Shared
+Tooling renderer. Backup supplies parsed member ownership and retains its numeric
+bounds, original lock transformation, receipts, source admission and rollback.
+Comments, aliases and dependency tables follow one renderer; requirement operators
+and precision are preserved. Failed or empty helper output refuses before either
+candidate is installed.
+
+The two single-stage simulator cases now use the existing complete workflow driver
+and capture provider. Exact bind/execute counts, pending mutation/exhausted allowance,
+unchanged original journals and no-redispatch checks remain. Distinct reconciliation
+cases are retained. No product API, stored record or spending contract changes.
+These compatible changes are included in the pending **0.34.0** notes alongside
+the incoming Host update, without a package-version edit.
+
+All 78 local release-adapter cases pass, including comments, tables, aliases,
+Unicode paths and failed/empty renderer output. The actual Make/receipt/rollback
+and private-index checks use isolated substitutes; no real Git/release effects run.
+Their original cases/logs remain at `target/shared-release-tests.7SVWdG/`.
+
+The incoming Testkit 0.55.2 catalog/lock update is preserved. Its forwarded Platform
+0.1.18 surface omits `RawEffectivePrincipal`, so current-graph fixture compilation
+stops at the unchanged management-routing import. The published export blocker is
+[Platform #27 — Complete PocketIC exports used by Testkit consumers in Backup and Canic](https://github.com/dragginzgame/ic-platform/issues/27).
+No direct PocketIC exception, copied DTO, routing fallback or sibling edit is added.
+The exact locked Testkit CLI/server has been explicitly prepared and admitted.
+
+An isolated copy of the current fixture source with the released commit's exact
+Cargo inputs (Testkit 0.54.1, Platform 0.1.18, Host 0.29.0) passes strict target
+Clippy, actual Rust 1.91 compilation and all eleven affected PocketIC cases. Its
+physical server bundle matches the admitted original SHA-256. The first isolated
+attempt correctly refused a linked tool directory before any IC call; that failure
+and its fixtures remain retained. This source qualification does not approve the
+pending 0.55.2 graph. Native macOS, installed-IC and full local CI remain separate.
+
+Task-entry source/inputs, isolated source/lock, command logs and failed attempts are
+retained at `/tmp/backup-local-followups-xf8fjzza/`. Current formatting, dependency
+boundaries/inheritance, local links, snapshot integrity and whitespace checks pass.
+Original Cargo inputs and staging are unchanged. No commit, push, release,
+publication, deployment or artifact cleanup ran.
+
+## Earlier Host 0.29 and WAT adoption
 
 The incoming catalog and lock already selected published Host Artifacts, FS and
 Process **0.29.0**. Their registry checksums and cached source/archive identities

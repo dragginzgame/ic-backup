@@ -1,10 +1,12 @@
 # Platform dependency boundary
 
-The repository’s Platform migration was completed with published
-[ic-platform 0.1.8](https://crates.io/crates/ic-platform/0.1.8). Released Backup
-0.31.2 selects Platform 0.1.10; the current lock selects 0.1.14. Their qualification
-boundaries are recorded in the [current handoff](status/current.md); the provenance
-below describes the original adoption. All production and
+The repository selects published
+[ic-platform 0.2.1](https://crates.io/crates/ic-platform/0.2.1), with requirement
+`0.2.1` and empty defaults. Its archive SHA-256 is
+`73506580e1ea0f78adacdd44560717eb9057e86274169e6525bbb024d1dd1c83`,
+source revision `de1c469de46f99b795c31cfa36448c46a49dac75`.
+Qualification boundaries are recorded in the [current handoff](status/current.md);
+the provenance below preserves the original 0.1.8 adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
 direct declarations of those upstream packages, CDK-family packages or the old
 Testkit codec, and no local compatibility re-exports or pin exceptions.
@@ -15,6 +17,11 @@ The root catalog selects `default-features = false` with `candid` and
 `management-canister-types`. Only `ic-backup-agent` adds `agent`; Core’s independent
 consumer remains Agent-free. Parser, executor, ic0, certification and ledger
 features are not selected.
+
+Platform 0.2 replaces its optional CDK runtime and entrypoint identities and uses
+`MIT AND Apache-2.0` licensing. Backup does not enable that runtime or its macros.
+The used Candid (including bounded decoder), Agent and management module sources
+are unchanged from 0.1.18, as are the selected upstream identities below.
 
 | Surface | Owner and selection |
 | --- | --- |
@@ -53,17 +60,23 @@ old Candid/CDK paths.
 
 Candid and SDK remain necessary production transitives. The complete development
 lock retains PocketIC’s management DTO 0.8.0 alongside Platform’s 0.11.0. Testkit
-0.54 no longer introduces the standalone codec or CDK family. Simulator packages
+0.55.2 still requires Platform 0.1, resolved to 0.1.18, and forwards its explicit
+PocketIC exports. Both published Platform 0.1.18 and 0.2.1 omit the
+`RawEffectivePrincipal` needed for exact management ingress routing, tracked by
+[Platform #27](https://github.com/dragginzgame/ic-platform/issues/27).
+The Core simulator target remains blocked on a published export and Testkit
+adoption; no copied DTO or routing fallback substitutes for it. The lock contains
+neither the standalone Testkit codec nor CDK-family packages. Simulator packages
 do not enter the libraries’ production graphs. Deployment admission belongs to the
 consuming application’s exact target/features, successful locked build and artifact
 identity.
 
-## Current graph qualification
+## Earlier 0.1.14 graph qualification
 
 Platform 0.1.14's registry archive matches the locked SHA-256
 `03c2300b6d347bc1c19ba35fcf4c31069134aefe1d4ec5bf7b5a8dfbc411285f`.
 Its Candid, Agent and management module sources are unchanged from 0.1.10 and
-0.1.13. The current graph passes all-target/all-feature compilation, strict Clippy,
+0.1.13. That graph passed all-target/all-feature compilation, strict Clippy,
 actual Rust 1.91 checks and independent Core/Agent consumers, 78 IC codec/model
 cases, three Agent unit cases, 14 HTTP cases and 46 Core/Agent PocketIC cases on
 Linux. Declaration checks and production-tree inspection preserve Core/Agent

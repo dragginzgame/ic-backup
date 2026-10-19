@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.34.0]
+
+### Breaking
+
+- Align the pending Host Artifacts, FS and Process update to 0.30.0. Consumers
+  matching or constructing `PersistenceError::Publication` with Host FS types
+  must align to Host FS 0.30 for the carried error's Rust identity.
+
+### Changed
+
+- Adopt published Platform 0.2.1 for Candid, Principal, management DTOs and Agent.
+  Preserve existing host-only features, bounded management codecs and upstream
+  identities; no CDK runtime or application codec migration is required.
+
+### Fixed
+
+- Render release manifest edits through the reviewed Shared Tooling owner, accepting
+  retained comments, dependency aliases and table forms while preserving requirement
+  operators and precision. Keep original receipts, lock selection and rollback.
+
+### Testing
+
+- Use one simulator workflow driver and capture provider for single-stage and
+  connected journeys, preserving lost-reply spending and no-redispatch assertions.
+
 ## [0.33.0] - 2026-10-19
 
 ### Breaking
