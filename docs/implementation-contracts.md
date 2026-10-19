@@ -142,35 +142,13 @@ implementation determine what has actually been qualified.
   Preserve synchronized pre-publication and durable-completion barriers. The
   public `PersistenceError::Publication` retains original producer, cleanup and
   visibility evidence; no local-write error grants paid retry or resets spending.
-  The Host 0.5 error identity was delivered in 0.7.0. The externally selected
-  Host 0.7 graph changed that exposed Rust identity again in released 0.8.0.
-  Released 0.8.1 qualifies Host 0.7.1. Released 0.9.0 qualifies the Host 0.8
-  exposed Rust identity. Released 0.11.0 selects direct Host 0.9. Released
-  0.12.0 selects direct Host 0.10 artifact/FS packages. Released 0.13.0 selects
-  direct Host 0.11, changing that public Rust identity again; consumers sharing
-  publication errors must align Host 0.11. Released 0.14.0 selects direct Host
-  Artifact/FS 0.12, changing that public Rust identity without a library behavior
-  or record change. Consumers sharing publication errors must align Host 0.12.
-  Released 0.14.1 selects Testkit 0.32 and aligns its test-only Host graph with
-  direct Host 0.12. Released 0.14.2 qualifies Host 0.12.4 and Testkit 0.32.2.
-  Released 0.17.0 qualifies Host 0.12.10 and Testkit 0.33.1.
-  Released 0.18.0 selects direct Host Artifact/FS 0.13, changing exposed
-  publication error identity. Testkit 0.33.2 retains separate dev-only Host 0.12.10. Host rejects NUL paths
-  before publication effects; Testkit's scoped reset classification supplies no
-  Backup recovery recipe, repeat-call authority or product record change.
-  The pending 0.19.0 batch selects direct Host Artifact/FS 0.14, changing
-  that exposed Rust identity. Consumers sharing publication errors must align
-  Host 0.14; Testkit 0.33.7 retains its separate dev-only Host 0.13.5 graph.
-  No compatibility adapter or record change follows. The direct process
-  dependency retired with its sole ICP probe caller; Testkit's dev-only managed
-  server owner does not grant backup command custody or spending authority.
-  Local bounded capture retains its direct-child semantics. Group cleanup does not
-  replace inherited descriptor custody or prove descendant quiescence; bounded
-  test capture retains its separate direct-child semantics.
-  The pending 0.25.0 selection moves the direct Host Artifact/FS dependency to
-  0.19 and replaces the exposed Host publication error with Backup's own
-  `PublicationError`. Its producer, cleanup and before/after-publication
-  evidence remain typed; consumers must update exhaustive error matches.
+  Host rejects NUL paths before publication effects. Simulator reset and managed
+  server ownership grant no Backup recovery recipe, command custody, repeat-call
+  permission or spending authority. Bounded test capture retains direct-child
+  semantics; group cleanup does not replace inherited descriptor custody or prove
+  descendant quiescence. The [changelog](../CHANGELOG.md) retains historical
+  dependency identities and publication-error migrations; the current error
+  contract is stated above.
   Private-parent preparation now refuses observed symlink ancestors and `..`
   before creation;
   callers selecting an intentional alias must resolve that root at input
@@ -199,9 +177,10 @@ implementation determine what has actually been qualified.
   Runner/authority contract work remains part of B1 before importing runners.
 - Continued extraction includes layout lifetime exclusion and durable restore
   reference retention. The v1 records and bounds are documented in
-  [the implemented boundary](extraction-boundary.md). No reference release
-  or prune operation is implemented; terminal proof and command custody must own
-  release admission before that API is added.
+  [the implemented boundary](extraction-boundary.md). Guarded reference release
+  uses `BackupLayoutGuard::release_restore`, requiring freshly qualified terminal
+  evidence and quiescent original command custody. No prune operation is implemented;
+  releasing a reference grants no artifact-deletion authority.
 - Command custody delegates owned descriptor inheritance and exact existing-sidecar
   quiescence to published Host Process. Backup retains exact v1 filesystem identity
   records, journal/operation binding, the descriptor environment name and 250 ms/5 ms

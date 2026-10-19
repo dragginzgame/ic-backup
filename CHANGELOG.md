@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.31.4]
+
+### Changed
+
+- Share post-admission stage scheduling between fresh and retained workflow runs.
+  Preserve create-only fresh admission, complete retained-evidence checks, exact
+  successor commitments, callback ordering and original spending/replay behavior.
+- Reconcile implementation contracts with the current Host publication error and
+  guarded restore-reference release; retain migration history in this changelog.
+
 ## [0.31.3] - 2026-10-18
 
 ### Changed

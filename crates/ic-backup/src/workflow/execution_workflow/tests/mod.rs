@@ -226,14 +226,22 @@ fn retained_run_replays_settled_stage_before_executing_absent_successor() {
     let journal = root.join("execution-stage-0/attempt-42.json");
     let original = fs::read(&journal).unwrap();
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &child(0), vec![]).unwrap();
+    let edge = ArtifactChecksumRecord::from_bytes(b"retained outgoing commitment");
     let retained = BTreeMap::from([(
         0,
         RetainedStageEvidence::new(
             binding.digest(),
             ArtifactChecksumRecord::from_bytes(&0_u64.to_be_bytes()),
-        ),
+        )
+        .with_successor_evidence(BTreeMap::from([(7, edge.clone())])),
     )]);
     driver.stop_before = None;
+    // Recovery uses the independently retained commitment, never a fresh driver
+    // projection of an already completed predecessor.
+    driver.edge_overrides.insert(
+        (0, 7),
+        ArtifactChecksumRecord::from_bytes(b"changed driver commitment"),
+    );
     let view = ready(run_retained_execution_workflow(
         &layout,
         &workflow.digest(),
@@ -244,6 +252,16 @@ fn retained_run_replays_settled_stage_before_executing_absent_successor() {
     assert_eq!(driver.calls, [0, 7]);
     assert_eq!(fs::read(journal).unwrap(), original);
     assert_eq!(view.stages().len(), workflow.stages().len());
+    {
+        let successor = view
+            .stages()
+            .iter()
+            .find(|s| s.stage_sequence() == 7)
+            .unwrap();
+        let stage =
+            ExecutionStageGuard::open(&layout, &workflow.digest(), 7, successor.binding()).unwrap();
+        assert_eq!(stage.binding().predecessors()[0].learned_evidence(), &edge);
+    }
     drop(layout);
     fs::remove_dir_all(root).unwrap();
 }

@@ -131,32 +131,7 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
     driver: &mut D,
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionWorkflowRunError<D::Error>> {
     create_execution_workflow(layout, workflow)?;
-    let mut completed: BTreeMap<u64, ExecutionStagePredecessorRecord> = BTreeMap::new();
-    for node in workflow.allocation().graph().ordered_nodes() {
-        let sequence = node.operation_sequence();
-        let predecessors = node
-            .depends_on()
-            .iter()
-            .map(|dependency| {
-                let original =
-                    completed.get(dependency).ok_or(
-                        ExecutionWorkflowRunError::<D::Error>::MissingPredecessor(*dependency),
-                    )?;
-                let learned = driver
-                    .learned_for_successor(original, sequence)
-                    .map_err(ExecutionWorkflowRunError::Driver)?;
-                Ok(ExecutionStagePredecessorRecord::new(
-                    *dependency,
-                    original.binding().clone(),
-                    original.settlement().clone(),
-                    learned,
-                ))
-            })
-            .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
-        let checkpoint =
-            execute_absent_stage(layout, workflow, sequence, predecessors, driver).await?;
-        completed.insert(sequence, checkpoint);
-    }
+    execute_remaining_stages(layout, workflow, BTreeMap::new(), &BTreeMap::new(), driver).await?;
     Ok(read_complete_execution_workflow(
         layout,
         &workflow.digest(),
@@ -216,6 +191,19 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
     if read_execution_stage_occupancy(layout, expected_workflow)? != occupied {
         return Err(ExecutionWorkflowRunError::RetainedStageSetMismatch);
     }
+    execute_remaining_stages(layout, &workflow, completed, retained, driver).await?;
+    Ok(read_complete_execution_workflow(layout, expected_workflow)?)
+}
+
+// Entry points finish their own create-only or retained-evidence admission before
+// sharing dependency propagation and execution of only the remaining stages.
+async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
+    layout: &BackupLayoutGuard,
+    workflow: &ExecutionWorkflowRecord,
+    mut completed: BTreeMap<u64, ExecutionStagePredecessorRecord>,
+    retained: &BTreeMap<u64, RetainedStageEvidence>,
+    driver: &mut D,
+) -> Result<(), ExecutionWorkflowRunError<D::Error>> {
     for node in workflow.allocation().graph().ordered_nodes() {
         let sequence = node.operation_sequence();
         if completed.contains_key(&sequence) {
@@ -245,10 +233,10 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
             })
             .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
         let checkpoint =
-            execute_absent_stage(layout, &workflow, sequence, predecessors, driver).await?;
+            execute_absent_stage(layout, workflow, sequence, predecessors, driver).await?;
         completed.insert(sequence, checkpoint);
     }
-    Ok(read_complete_execution_workflow(layout, expected_workflow)?)
+    Ok(())
 }
 
 async fn execute_absent_stage<D: ExecutionWorkflowStageDriver>(

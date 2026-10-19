@@ -1,6 +1,33 @@
-# Current handoff — 2026-10-18
+# Current handoff — 2026-10-19
 
-Released baseline: `ic-backup` and `ic-backup-agent` **0.31.2**, commit
+The current local release is **0.31.3**, commit
+`cdc8e28` (`v0.31.3`); package versions remain 0.31.3. Compatible pending notes
+select 0.31.4. The incoming lockfile selects Platform 0.1.15 and remains preserved.
+
+## Local scheduling and contract cleanup
+
+Fresh and retained workflow entry points keep their original admission paths and
+share one post-admission scheduler. Existing execution, checkpoint, spending and
+replay owners are unchanged. The retained-prefix regression now checks that an
+absent successor uses the retained edge commitment even when the driver's current
+projection differs. Public APIs, persisted records and sibling consumers do not
+change.
+
+All eight owning workflow regressions and five actual PocketIC workflow cases
+pass on the preserved Platform 0.1.15 graph. Strict Core library/test Clippy,
+actual Rust 1.91 Core compilation, formatting, local links and snapshot integrity
+checks pass. Original inputs, before-images and per-command evidence remain at
+`/tmp/backup-local-simplification-jr888nke/`. These are focused Linux checks; no
+full local suite, native macOS or installed-IC qualification is claimed. No own
+version change, staging, commit, push, release, publication or deployment ran.
+
+The implementation contracts now describe the current Host publication error and
+guarded reference release. Superseded migration directions are removed from active
+guidance; the unchanged historical changelog retains those transitions.
+
+## Earlier native qualification
+
+Earlier native-qualified baseline: `ic-backup` and `ic-backup-agent` **0.31.2**, commit
 `db9c5d99c00657b1fda6a766a256599bc195f235` (`v0.31.2`). The tag resolves to the
 same source as the [successful native CI matrix](https://github.com/dragginzgame/ic-backup/actions/runs/39130374520).
 Release metadata retains authority. Earlier receipts remain in the
@@ -47,15 +74,15 @@ application acceptance. Application transport authority and full runner/terminal
 proof remain [#25 — Reserved Agent transport qualification](https://github.com/dragginzgame/ic-backup/issues/25)
 and [#29 — Original-plan runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
 
-## Current dependency qualification
+## Earlier Platform 0.1.14 qualification
 
-The local manifest and lock update is preserved: the Platform requirement is
-`0.1`, with Platform 0.1.14 and Testkit 0.54.1 selected. The lock also changes
-crypto-common/generic-array selections. The 0.31.2 native receipt selects Platform
-0.1.10 and Testkit 0.54.0 and retains its original scope. Compatible pending notes
-select 0.31.3; own package versions remain 0.31.2.
+The 0.31.3 release selects Platform 0.1.14 and Testkit 0.54.1; the Platform
+requirement remains `0.1`. Its lock also changes crypto-common/generic-array
+selections. The 0.31.2 native receipt selects Platform 0.1.10 and Testkit 0.54.0 and
+retains its original scope. The incoming Platform 0.1.15 lock update is separate
+from these earlier receipts.
 
-The current graph passes focused Linux all-target/all-feature compilation, strict
+The Platform 0.1.14 graph passed focused Linux all-target/all-feature compilation, strict
 Clippy, actual Rust 1.91 compilation and both independent public consumers. All 78
 IC codec/model, three Agent unit, 14 HTTP, 34 Core PocketIC and 12 Agent PocketIC
 cases pass. The exact locked Testkit CLI and authenticated server are prepared and
