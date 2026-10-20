@@ -934,6 +934,10 @@ package identity, so renaming an edge does not evade admission. Adding another
 test-only catalog entry requires reviewing and updating that explicit policy;
 comments are not an automatically interpreted exclusion list. The dependency-pin
 check enforces source/version declarations and inheritance, not these roles.
+The Core MSRV consumer also imports Host Artifacts and FS directly using the
+requirements projected from Core's production metadata. It compiles the checksum
+error conversion and publication-error payload through those consumer-selected
+identities, catching split Host versions without hard-coded fixture pins.
 
 This adoption inspected locked normal/build graphs for both libraries with default
 features across all three supported target triples. None contained the excluded

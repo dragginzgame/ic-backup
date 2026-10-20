@@ -56,7 +56,7 @@
     "test_versions": "Actual relative consumer entry point resolves under inherited CDPATH; version admission rejects noncanonical/beta/historical regressions; shared helper dispatch retained",
     "test_invalid_changelog": "Consumer candidate/history conflict refusal with exact original bytes",
     "test_shared_changelog": "Consumer delegate finalizer failure/empty output custody and metadata transaction",
-    "test_version_reader": "Passive metadata parsing, selected historical package/member input and shared standalone rendering of commented versions without lock/member mutation; no partial helper outputs",
+    "test_version_reader": "Passive metadata parsing, selected historical package/member input and complete preparation of commented versions with the exact local lock update and unchanged member/foreign lock bytes; no partial helper outputs",
     "test_multi_package_preparation": "Shared renderer integration for owned inline/table/aliased dependency requirements, comments and Unicode checkout paths; canonical operator/precision behavior, exact receipts, member custody and unchanged foreign lock selections",
     "test_preparation": "Actual preparation receipt, original validation sidecar, unchanged foreign lock entries/history and retained backups/cache",
     "test_lockfile_rejection": "Consumer package lock selection/missing/duplicate and failing/empty manifest or lock helper output refuse before replacement",

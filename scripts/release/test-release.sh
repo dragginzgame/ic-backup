@@ -508,9 +508,10 @@ test_version_reader() {
         cp target/commented.toml Cargo.toml
         cp Cargo.lock target/original.lock
         cp crates/ic-backup/Cargo.toml target/original-member.toml
-        perl scripts/release/release-data.pl set-version 0.1.1
+        perl scripts/release/release-data.pl prepare-version 0.1.1
         rg -Fx 'version = "0.1.1" # retained version comment' Cargo.toml
-        cmp Cargo.lock target/original.lock
+        sed 's/version = "0.1.0"/version = "0.1.1"/' target/original.lock > target/expected.lock
+        cmp Cargo.lock target/expected.lock
         cmp crates/ic-backup/Cargo.toml target/original-member.toml
         [[ ! -s "$TEST_EFFECTS" ]] || exit 1
     elif [[ "$mode" == selected ]]; then
@@ -923,7 +924,7 @@ test_completed_evidence_replay() {
     mv target/retained-proof.json target/release-state/0.1.1.validation.json
     "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
     [[ ! -s "$TEST_EFFECTS" ]] || exit 1
-    expect_failure perl scripts/release/release-data.pl set-version 9.9.9 --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    expect_failure perl scripts/release/release-data.pl prepare-version 9.9.9 --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     expect_failure perl scripts/release/release-data.pl verify --commit invalid
     expect_failure perl scripts/release/release-data.pl verify "$TEST_SOURCE" 1900-01-01 0.1.1 --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1

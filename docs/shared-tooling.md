@@ -49,7 +49,19 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 119-file snapshot selects committed Shared Tooling **0.25.4** at
+The current 119-file snapshot selects committed Shared Tooling **0.25.5** at
+`75c633d71933b64b3b2558c4a5f3ac0679b7ab32`, verified against remote `main` on
+2026-10-20. No GitHub release object was available. The canonical exporter ran
+from an isolated clean checkout and preserved every selected payload's exact
+bytes and executable mode. This patch changes only producer-side tests outside
+Backup's entrypoint closure; it adds no consumer helper or setup requirement.
+[The review](shared-tooling-review.json) records the refreshed provenance and
+focused consumer checks. Existing dependency, release and product qualification
+retain their original evidence scope.
+
+### Prior Shared Tooling 0.25.4 review
+
+The prior 119-file snapshot selects committed Shared Tooling **0.25.4** at
 `db555ab6cf4a93af9a183f18d921d3b0ee97c725`, verified against remote `main` on
 2026-10-20. This is a committed snapshot selection; no GitHub release object was
 available. The canonical exporter ran from an isolated clean checkout: 28

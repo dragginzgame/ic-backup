@@ -2,159 +2,66 @@
   "version": 1,
   "inspection_date": "2026-10-20",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "db555ab6cf4a93af9a183f18d921d3b0ee97c725",
-  "label": "0.25.4",
+  "revision": "75c633d71933b64b3b2558c4a5f3ac0679b7ab32",
+  "label": "0.25.5",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 119,
-  "previous_revision": "cab12cd3dfa4fdb34846b25397f0d72881bb9ae0",
+  "previous_revision": "db555ab6cf4a93af9a183f18d921d3b0ee97c725",
   "previous_review": {
-    "commit": "3d02961744015c246fb3556a5c975471e3580634",
+    "commit": "e323361e926884784c7c1966d7a22d1a778907be",
     "path": "docs/shared-tooling-review.json"
   },
   "canonical_refresh": true,
   "source_verification": {
     "remote_ref": "refs/heads/main",
-    "remote_revision": "db555ab6cf4a93af9a183f18d921d3b0ee97c725",
+    "remote_revision": "75c633d71933b64b3b2558c4a5f3ac0679b7ab32",
     "isolated_clean_checkout": true,
     "dirty_sibling_inputs_excluded": true,
-    "github_release_object_available": false
+    "github_release_object_available": false,
+    "all_payloads_match_committed_source_bytes_checksums_and_modes": true
   },
-  "changed_paths": [
-    "docs/verification-helpers.md",
-    "scripts/ci/test-documentation-links.pl",
-    "rules/dependency-pinning.md",
-    "audits/README.md",
-    "audits/code-hygiene.md",
-    "docs/provenance.md",
-    "docs/ic-tools.md",
-    "docs/local-setup.md",
-    "scripts/ci/check-dependency-pins.sh",
-    "scripts/ci/test-dependency-pins.sh",
-    "scripts/ci/test-evidence-checksums.sh",
-    "docs/principles/rust-code-hygiene.md",
-    "docs/consuming-snapshots.md",
-    "docs/supported-hosts.md",
-    "DRAGGINZGAME.md",
-    "docs/releases.md",
-    "rules/cargo-dependencies.md",
-    "rules/git-hooks.md",
-    "scripts/ci/check-formatting-hooks.sh",
-    "rules/rust-workspaces.md",
-    "audits/ic-canister-applications.md",
-    "scripts/dev/install-rust-tools.sh",
-    "rules/contributions.md",
-    "make/rust-format.mk",
-    "scripts/dev/cargo-tool-build.sh",
-    "docs/make-interface.md",
-    "scripts/ci/cargo-release-metadata.sh",
-    "docs/cargo-publication.md"
-  ],
-  "added_paths": [
-    "scripts/ci/check-no-symlinks.pl",
-    "scripts/ci/check-license.pl",
-    "docs/cargo-graph-checks.md",
-    "scripts/ci/release-metadata-transaction.sh",
-    "licenses/MIT.txt",
-    "licenses/Dragginz-ICP-Burn-1.0.txt",
-    "licenses/Dragginz-ICP-Burn-1.1.txt",
-    "licenses/prior-mit-notice.txt"
-  ],
-  "retired_paths": [
-    "scripts/ci/rewrite-local-lock-versions.pl",
-    "scripts/ci/test-local-lock-versions.pl",
-    "scripts/ci/render-cargo-workspace-version.pl"
-  ],
+  "changed_paths": [],
+  "added_paths": [],
+  "retired_paths": [],
   "consumer_changes": [
-    "Use shared grouped formatting defaults and keep dependency roles inside the root catalog.",
-    "Select the published IC Build 0.18.0 release editor with an 8 MiB per-document allowance through explicit setup and offline admission; preserve original candidates, receipts and rollback.",
-    "Check maintained source paths for symlinks and all regular MIT license copies; verify exact license bytes inside both Cargo archives.",
-    "Preserve ordered Testkit setup/checks and qualify release editor setup/refusal through existing consumer fixtures.",
-    "Use shared CI evidence collection; refuse failed selector output as physical payload authority and retain redirected parents without traversal."
+    "Advance snapshot provenance and current adoption references; all 119 payloads and the entrypoint closure are unchanged."
   ],
+  "upstream_change_scope": "Five producer-only fixtures derive helper exports and workflow-step selection through existing canonical owners; none is selected by Backup.",
   "deployment_enforcement": {
     "automated": [
       "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity."
     ],
     "not_enforced_here": [
-      "Role comments do not automatically derive the consumer exclusion policy.",
-      "No application deployment entrypoint binds the selected target/features, locked build and artifact digest to deployed bytes."
+      "Role comments do not automatically derive exclusion policy.",
+      "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
     ]
   },
   "qualification": {
     "status": "passed-focused-linux",
     "passed": [
-      "canonical 119-file snapshot integrity",
-      "prepared common/Testkit/editor tool admission",
-      "all 78 consumer release adapter cases with published IC Build editor",
-      "all 16 selected validation targets (see timings)",
-      "535 Core unit cases and all native integration cases",
-      "38 Core and 12 Agent PocketIC cases; 14 Agent HTTP cases",
-      "strict native all-target Clippy and warning-free Rustdoc",
-      "actual Rust 1.91 all-target and independent Core/Agent consumers",
-      "both exact unpacked Cargo archives including canonical/exact license checks",
-      "eight normal/build target/package graphs",
-      "registry-only Rust 1.91 native and Wasm principal/management probe",
-      "five actual CI-step evidence scenarios"
+      "canonical refresh and independent verification of all 119 payloads",
+      "shared-tooling-check",
+      "tooling-check, including retained-evidence and actual CI collector fixtures",
+      "fmt-check",
+      "check-doc-links"
     ],
-    "followup_checks": "CI/tooling and documentation follow-up are qualified separately; see current handoff",
     "not_run": [
-      "full local make ci for this graph",
+      "full local make ci",
       "native macOS",
       "installed IC",
-      "hosted artifact upload/download",
       "release or publication"
-    ]
+    ],
+    "timings": "validation/validation.0d6YOt/timings.tsv"
   },
-  "evidence_directory": "/tmp/backup-shared-host-platform-trcpwxv2",
-  "production_graph_review": [
+  "unchanged_evidence": [
     {
-      "package": "ic-backup",
-      "target": "x86_64-unknown-linux-gnu",
-      "forbidden_present": [],
-      "agent_present": false
+      "directory": "/tmp/backup-testkit-release-cut-5orrht2t",
+      "scope": "Unchanged tooling/release adapters and Cargo graph: 15 focused targets, 78 consumer release cases, native HTTP/PocketIC, MSRV and package archives."
     },
     {
-      "package": "ic-backup-agent",
-      "target": "x86_64-unknown-linux-gnu",
-      "forbidden_present": [],
-      "agent_present": true
-    },
-    {
-      "package": "ic-backup",
-      "target": "x86_64-apple-darwin",
-      "forbidden_present": [],
-      "agent_present": false
-    },
-    {
-      "package": "ic-backup-agent",
-      "target": "x86_64-apple-darwin",
-      "forbidden_present": [],
-      "agent_present": true
-    },
-    {
-      "package": "ic-backup",
-      "target": "aarch64-apple-darwin",
-      "forbidden_present": [],
-      "agent_present": false
-    },
-    {
-      "package": "ic-backup-agent",
-      "target": "aarch64-apple-darwin",
-      "forbidden_present": [],
-      "agent_present": true
-    },
-    {
-      "package": "ic-backup",
-      "target": "wasm32-unknown-unknown",
-      "forbidden_present": [],
-      "agent_present": false
-    },
-    {
-      "package": "ic-backup-agent",
-      "target": "wasm32-unknown-unknown",
-      "forbidden_present": [],
-      "agent_present": false
+      "directory": "/tmp/backup-host-consumer-7j5fm1d2",
+      "scope": "Unchanged Host checksum/publication consumer identities, mismatched-Host negative control and real checksum/custody cases."
     }
   ],
-  "validation_directory": "/tmp/backup-shared-host-platform-trcpwxv2/validation/validation.ILIF3W"
+  "evidence_directory": "/tmp/backup-shared-0255-1o2lv21t"
 }

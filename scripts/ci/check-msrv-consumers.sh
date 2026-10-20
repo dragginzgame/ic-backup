@@ -42,12 +42,14 @@ rust-version = "$msrv"
 $package = { path = $dependency }
 TOML
     if [[ "$package" == ic-backup ]]; then
-        host_fs_requirement="$(jq -er '
-            .packages[] | select(.name == "ic-backup") | .dependencies[]
-            | select(.name == "ic-host-fs" and .kind == null) | .req | @json
-        ' "$fixture/original.json")"
-        printf 'ic-host-fs = { version = %s, default-features = false }\n' \
-            "$host_fs_requirement" >> "$selected/Cargo.toml"
+        for host_package in ic-host-artifacts ic-host-fs; do
+            requirement="$(jq -er --arg name "$host_package" '
+                .packages[] | select(.name == "ic-backup") | .dependencies[]
+                | select(.name == $name and .kind == null) | .req | @json
+            ' "$fixture/original.json")"
+            printf '%s = { version = %s, default-features = false }\n' \
+                "$host_package" "$requirement" >> "$selected/Cargo.toml"
+        done
         cat > "$selected/src/main.rs" <<'RUST'
 use ic_backup::{
     model::{
@@ -55,12 +57,14 @@ use ic_backup::{
         ic_snapshot_transfer_read::{IcSnapshotTransferReadError, IcSnapshotTransferReadResponse},
         ic_update_response::IcUpdateResponseInput,
     },
-    ops::persistence::PersistenceError,
+    ops::{artifacts::ArtifactError, persistence::PersistenceError},
 };
+use ic_host_artifacts::artifact::tree::DirectoryChecksumError;
 use ic_host_fs::durable::NamedWriteError;
 use std::io;
 
 fn main() {
+    let _: fn(DirectoryChecksumError) -> ArtifactError = ArtifactError::from;
     let _: fn(IcUpdateResponseInput) -> Result<IcMutationAcknowledgement, IcMutationAcknowledgementError>
         = IcMutationAcknowledgement::new;
     let _: fn(IcUpdateResponseInput) -> Result<IcSnapshotTransferReadResponse, IcSnapshotTransferReadError>

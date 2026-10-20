@@ -1,10 +1,10 @@
 # Platform dependency boundary
 
 The repository selects published
-[ic-platform 0.4.0](https://crates.io/crates/ic-platform/0.4.0), with requirement
+[ic-platform 0.4.1](https://crates.io/crates/ic-platform/0.4.1), with requirement
 `0.4` and empty defaults. Its archive SHA-256 is
-`3baf34ec6f65d10d78271159d1edc0feb61940816cc95af51bfce3f8dcfa4355`,
-source revision `26a07c510ab74413ec30779cd69af84db13cff11`.
+`b18d164492c33ea09395d97ef4f7858678af7565e457b35cafff59a6fc9869fd`,
+source revision `30058e1ff181b0c2f5c1be0118a56cd9e02715c8`.
 Qualification boundaries are recorded in the [current handoff](status/current.md);
 the provenance below preserves the original 0.1.8 adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
@@ -51,7 +51,7 @@ or replacement identity is introduced. No storage or memory schema changes.
 
 ## Dependency enforcement
 
-`make dependency-boundaries-check` uses Shared Tooling 0.25.4's canonical checker
+`make dependency-boundaries-check` uses Shared Tooling 0.25.5's canonical checker
 with `ci/cargo-dependency-boundaries.json`. CI/release validation rejects direct
 upstream IC declarations across normal/build/dev/target edges by canonical package
 identity, including aliases. The independent Core MSRV consumer separately rejects
@@ -66,10 +66,11 @@ old Candid/CDK paths.
 
 Candid and SDK remain necessary production transitives. The complete development
 lock retains PocketIC's management DTO 0.8.0 alongside Platform's 0.11.0. Published
-Testkit 0.57 still requires Platform 0.2 and resolves 0.2.2 for its Candid/PocketIC
-exports, including `RawEffectivePrincipal`. This second Platform version is
-development-only; Testkit also retains Host 0.30.1. No local patch or unrelated
-Testkit update is introduced. Production selects Host 0.31.1 and Platform 0.4.0.
+Testkit 0.59.0 shares Platform 0.4.1 and Host 0.31.1 with production, removing the
+older development-only Platform and Host identities. Its PocketIC exports include
+`RawEffectivePrincipal` without changing the upstream client identity. Testkit's
+native CLI brings Clap into the development graph only; no local patch supplies
+any dependency.
 The selected client preserves original PocketIC identities without a copied DTO,
 direct PocketIC declaration or routing fallback. The lock contains neither the
 standalone Testkit codec nor CDK-family packages. Simulator packages do not enter

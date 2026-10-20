@@ -173,7 +173,7 @@ if ($command eq 'version') {
 } elsif ($command eq 'changelog-check' || $command eq 'finalize') {
     my $text = changelog(@args);
     write_file('CHANGELOG.md', $text) if $command eq 'finalize';
-} elsif ($command eq 'set-version' || $command eq 'prepare-version') {
+} elsif ($command eq 'prepare-version') {
     my ($target) = @args;
     parts($target);
     my $previous = version();
@@ -182,27 +182,24 @@ if ($command eq 'version') {
     $editor =~ m{\A/} && -f $editor && -x $editor && $limit =~ /\A[1-9][0-9]*\z/
         or die "select the offline-admitted Cargo editor and positive byte allowance\n";
     my @render = ($editor, '--max-input-bytes', $limit, 'manifest', 'Cargo.toml', $previous, $target);
-    my ($temporary, $lock);
-    if ($command eq 'prepare-version') {
-        # Supply admitted ownership to the common renderer; never duplicate its
-        # literal/alias/range policy. Keep both candidates before either write.
-        my @members = map { +{
-            name => toml_projection($_, '.package.name'),
-            manifest_path => decode('UTF-8', abs_path($_) // die("missing workspace member: $_\n"), FB_CROAK | LEAVE_SRC),
-        } } member_manifests();
-        $temporary = tempdir('ic-backup-render.XXXXXX', TMPDIR => 1, CLEANUP => 0);
-        my $input = "$temporary/workspace-input.json";
-        write_file($input, JSON::PP->new->utf8->encode({
-            manifest => toml_projection('Cargo.toml', '.'), members => \@members,
-        }));
-        push @render, $input;
-        open my $rewrite, '-|', $editor, '--max-input-bytes', $limit, 'lock',
-            'Cargo.lock', $previous, $target, map { $_->{name} } @members
-            or die "cannot invoke shared lockfile transformer; retained: $temporary\n";
-        $lock = do { local $/; <$rewrite> };
-        close $rewrite or die "shared lockfile transformer failed; retained: $temporary\n";
-        defined($lock) && length($lock) or die "shared lockfile transformer emitted no candidate; retained: $temporary\n";
-    }
+    # Supply admitted ownership to the common renderer; never duplicate its
+    # literal/alias/range policy. Keep both candidates before either write.
+    my @members = map { +{
+        name => toml_projection($_, '.package.name'),
+        manifest_path => decode('UTF-8', abs_path($_) // die("missing workspace member: $_\n"), FB_CROAK | LEAVE_SRC),
+    } } member_manifests();
+    my $temporary = tempdir('ic-backup-render.XXXXXX', TMPDIR => 1, CLEANUP => 0);
+    my $input = "$temporary/workspace-input.json";
+    write_file($input, JSON::PP->new->utf8->encode({
+        manifest => toml_projection('Cargo.toml', '.'), members => \@members,
+    }));
+    push @render, $input;
+    open my $rewrite, '-|', $editor, '--max-input-bytes', $limit, 'lock',
+        'Cargo.lock', $previous, $target, map { $_->{name} } @members
+        or die "cannot invoke shared lockfile transformer; retained: $temporary\n";
+    my $lock = do { local $/; <$rewrite> };
+    close $rewrite or die "shared lockfile transformer failed; retained: $temporary\n";
+    defined($lock) && length($lock) or die "shared lockfile transformer emitted no candidate; retained: $temporary\n";
     my $manifest;
     eval {
         open my $renderer, '-|', @render or die "cannot invoke shared manifest renderer\n";
@@ -210,10 +207,10 @@ if ($command eq 'version') {
         close $renderer or die "shared manifest renderer failed\n";
         defined($manifest) && length($manifest) or die "shared manifest renderer emitted no candidate\n";
         1;
-    } or die $@ . (defined($temporary) ? "Manifest inputs retained: $temporary\n" : '');
-    remove_tree($temporary) if defined $temporary;
+    } or die $@ . "Manifest inputs retained: $temporary\n";
+    remove_tree($temporary);
     write_file('Cargo.toml', $manifest);
-    write_file('Cargo.lock', $lock) if defined $lock;
+    write_file('Cargo.lock', $lock);
 } elsif ($command eq 'validation-receipt' || $command eq 'validation-check') {
     my ($path, $source, $date, $previous, $candidate, $mode) = @args;
     parts($previous); parts($candidate);

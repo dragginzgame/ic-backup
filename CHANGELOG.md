@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.35.1]
+
+- Align simulator qualification with published Testkit 0.59.0, sharing the
+  production Host 0.31 and Platform 0.4 dependency identities. Prepare its selected
+  CLI with `make install-testkit-server` before running offline checks.
+- Use complete manifest-and-lockfile preparation for release metadata edits,
+  removing the unused manifest-only path while retaining comments, original
+  inputs and rollback checks.
+- Compile the public Host checksum-error conversion in the independent Rust 1.91
+  consumer, covering the identity mismatch reported in
+  [#62 — Align published Backup public types with Host 0.29](https://github.com/dragginzgame/ic-backup/issues/62).
+
 ## [0.35.0] - 2026-10-20
 
 ### Breaking

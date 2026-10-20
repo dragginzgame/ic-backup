@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.25.4
+# version	0.25.5
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	db555ab6cf4a93af9a183f18d921d3b0ee97c725
+revision	75c633d71933b64b3b2558c4a5f3ac0679b7ab32
 # entrypoint	docs/verification-helpers.md
 # entrypoint	scripts/ci/check-documentation-links.pl
 # entrypoint	scripts/ci/test-documentation-links.pl
