@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.36.0]
+## [0.36.0] - 2026-10-20
 
 - **Breaking:** Adopt Host Artifacts, FS and Process 0.32.0. Consumers sharing
   `PersistenceError::Publication` or the `DirectoryChecksumError` conversion into
