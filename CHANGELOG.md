@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.35.1]
+## [0.35.1] - 2026-10-20
 
 - Align simulator qualification with published Testkit 0.59.0, sharing the
   production Host 0.31 and Platform 0.4 dependency identities. Prepare its selected
