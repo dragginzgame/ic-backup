@@ -1123,10 +1123,10 @@ dependencies = [
 name = "ic-backup"
 version = "0.34.1"
 dependencies = [
- "ic-host-artifacts",
- "ic-host-fs",
- "ic-host-process",
- "ic-platform 0.3.0",
+ "ic-host-artifacts 0.31.1",
+ "ic-host-fs 0.31.1",
+ "ic-host-process 0.31.1",
+ "ic-platform 0.4.0",
  "ic-testkit",
  "rustix",
  "serde",
@@ -1140,10 +1140,10 @@ name = "ic-backup-agent"
 version = "0.34.1"
 dependencies = [
  "ic-backup",
- "ic-host-artifacts",
- "ic-host-fs",
- "ic-host-process",
- "ic-platform 0.3.0",
+ "ic-host-artifacts 0.31.1",
+ "ic-host-fs 0.31.1",
+ "ic-host-process 0.31.1",
+ "ic-platform 0.4.0",
  "ic-testkit",
  "reqwest",
  "serde_json",
@@ -1188,6 +1188,15 @@ checksum = "05253e4f12a18fa5012bc46be46901259cae264ec5da5bbe71662728bbdb87f9"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "ic-host-artifacts"
+version = "0.31.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4417f092a4bc5bc1b55fb6a59a43b2d41703dfe1be7943117dbbf31b84211b6"
+dependencies = [
+ "sha2 0.10.9",
  "wat",
 ]
 
@@ -1197,7 +1206,18 @@ version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93a88de3f33e927fcb4c50491b88de82a3be89ec4c903f5eedd103b676d64729"
 dependencies = [
- "ic-host-artifacts",
+ "ic-host-artifacts 0.30.1",
+ "rustix",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "ic-host-fs"
+version = "0.31.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1cd9bad40d94a862ab47615f998e7f3b8eb9ba9ca5821188488713adf78c5bc"
+dependencies = [
+ "ic-host-artifacts 0.31.1",
  "rustix",
  "thiserror 2.0.18",
 ]
@@ -1209,8 +1229,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e17da14b6f4936cafe412b82454c76582a5e47cc6e9ced0c132b950b0be5928"
 dependencies = [
  "command-fds",
- "ic-host-artifacts",
- "ic-host-fs",
+ "ic-host-artifacts 0.30.1",
+ "ic-host-fs 0.30.1",
+ "libc",
+ "rustix",
+]
+
+[[package]]
+name = "ic-host-process"
+version = "0.31.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f67820c240d86e86e0310edb8265aebb8c82cf9c97ed31cf59c25aa0404f6ff"
+dependencies = [
+ "command-fds",
+ "ic-host-artifacts 0.31.1",
+ "ic-host-fs 0.31.1",
  "libc",
  "rustix",
 ]
@@ -1258,9 +1291,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a01558df9cef88b1841fbfbd7c8dd1cae2ba23b9861346f68faf3e3c3f106837"
+checksum = "3baf34ec6f65d10d78271159d1edc0feb61940816cc95af51bfce3f8dcfa4355"
 dependencies = [
  "candid",
  "crc32fast",
@@ -1277,9 +1310,9 @@ version = "0.57.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9834c00995ca544baaeb6a3e7f8c981efc90d59fb4f5e07787fc91a68a653f4f"
 dependencies = [
- "ic-host-artifacts",
- "ic-host-fs",
- "ic-host-process",
+ "ic-host-artifacts 0.30.1",
+ "ic-host-fs 0.30.1",
+ "ic-host-process 0.30.1",
  "ic-metrics",
  "ic-platform 0.2.2",
  "libc",
@@ -2294,9 +2327,9 @@ checksum = "eec689c0bc40ff2458a5977b6619cb718087084a18e02a131c599b62d05e1a5f"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.15"
+version = "0.103.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
 dependencies = [
  "aws-lc-rs",
  "ring",

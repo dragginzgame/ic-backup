@@ -1,10 +1,10 @@
 # Platform dependency boundary
 
 The repository selects published
-[ic-platform 0.3.0](https://crates.io/crates/ic-platform/0.3.0), with requirement
-`0.3` and empty defaults. Its archive SHA-256 is
-`a01558df9cef88b1841fbfbd7c8dd1cae2ba23b9861346f68faf3e3c3f106837`,
-source revision `390644fe75fc0421efa98dc0319db34101639e64`.
+[ic-platform 0.4.0](https://crates.io/crates/ic-platform/0.4.0), with requirement
+`0.4` and empty defaults. Its archive SHA-256 is
+`3baf34ec6f65d10d78271159d1edc0feb61940816cc95af51bfce3f8dcfa4355`,
+source revision `26a07c510ab74413ec30779cd69af84db13cff11`.
 Qualification boundaries are recorded in the [current handoff](status/current.md);
 the provenance below preserves the original 0.1.8 adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
@@ -18,7 +18,7 @@ The root catalog selects `default-features = false` with `candid` and
 consumer remains Agent-free. Parser, executor, ic0, certification and ledger
 features are not selected.
 
-Platform 0.3 owns its root `Principal` and `PrincipalError` representations and
+Platform owns its root `Principal` and `PrincipalError` representations and
 uses `MIT AND Apache-2.0` licensing. Backup keeps bounded canonical admission on
 the owned principal, converting explicitly into external management DTOs and
 Agent calls. Candid status projections use `candid::contract::Principal`;
@@ -51,7 +51,7 @@ or replacement identity is introduced. No storage or memory schema changes.
 
 ## Dependency enforcement
 
-`make dependency-boundaries-check` uses Shared Tooling 0.24.0’s canonical checker
+`make dependency-boundaries-check` uses Shared Tooling 0.25.4's canonical checker
 with `ci/cargo-dependency-boundaries.json`. CI/release validation rejects direct
 upstream IC declarations across normal/build/dev/target edges by canonical package
 identity, including aliases. The independent Core MSRV consumer separately rejects
@@ -68,7 +68,8 @@ Candid and SDK remain necessary production transitives. The complete development
 lock retains PocketIC's management DTO 0.8.0 alongside Platform's 0.11.0. Published
 Testkit 0.57 still requires Platform 0.2 and resolves 0.2.2 for its Candid/PocketIC
 exports, including `RawEffectivePrincipal`. This second Platform version is
-development-only; no local patch or unrelated Testkit update is introduced.
+development-only; Testkit also retains Host 0.30.1. No local patch or unrelated
+Testkit update is introduced. Production selects Host 0.31.1 and Platform 0.4.0.
 The selected client preserves original PocketIC identities without a copied DTO,
 direct PocketIC declaration or routing fallback. The lock contains neither the
 standalone Testkit codec nor CDK-family packages. Simulator packages do not enter

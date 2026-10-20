@@ -49,7 +49,37 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 114-file snapshot selects committed Shared Tooling 0.24.0 at
+The current 119-file snapshot selects committed Shared Tooling **0.25.4** at
+`db555ab6cf4a93af9a183f18d921d3b0ee97c725`, verified against remote `main` on
+2026-10-20. This is a committed snapshot selection; no GitHub release object was
+available. The canonical exporter ran from an isolated clean checkout: 28
+payloads updated, eight added and three retired. Old Perl Cargo renderers and
+their generic lock fixture are retired upstream; Backup's release adapter now
+uses the published IC Build editor and retains its original-input, candidate,
+receipt and rollback checks. [The review](shared-tooling-review.json) records
+selection and consumer qualification separately.
+
+Shared owns grouped formatting defaults; redundant local Make overrides are
+removed. The two dependency-role headers remain inside the single root catalog.
+Setup prepares the common Cargo set, locked Testkit and the explicit release
+editor through the canonical installer. Offline checks never repair selections;
+prior tool generations and failed evidence remain retained.
+
+`repository-files-check` rejects indexed and maintained working-tree links and
+checks all three regular MIT license copies. Archive qualification additionally
+checks each prepared package's exact license bytes through the shared owner.
+Independent-consumer admission retains its transitive simulator/WAT exclusions.
+The hosted failure step delegates selector/archive composition to Shared's
+collector. Failed selector output cannot select physical payloads; local logs,
+redirected parent links and incomplete-collection diagnostics remain retained.
+Five cases execute the actual workflow step locally; hosted artifact upload and
+download remain separate qualification.
+There is no application deployment/artifact-binding gate in this host-library
+repository; consuming applications retain that enforcement.
+
+### Prior Shared Tooling 0.24.0 review
+
+The earlier 114-file snapshot selects committed Shared Tooling 0.24.0 at
 `cab12cd3dfa4fdb34846b25397f0d72881bb9ae0`, matching remote `main` on 2026-10-18.
 The canonical exporter ran from an isolated clean checkout, retaining every old
 entrypoint and adding Shared's selected-source Cargo release metadata checker.

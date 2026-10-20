@@ -98,6 +98,12 @@ Direct Agent transport and generic workflow coordination are implemented.
 Integrations supply current authority, application admission and stage execution;
 installing tools alone establishes no backend or application qualification.
 
+Common setup also prepares the published IC Build release editor through
+`make install-release-editor`; `make release-editor-check` admits its absolute
+path offline. The release adapter supplies the bounded candidate-rendering input;
+the editor is tooling only and does not enter either library's dependency graph.
+See [release preparation](releasing.md) for its ownership and recovery boundaries.
+
 The shared `make install-rust-tools` and offline `make rust-tools-check` prepare
 and check the common Cargo formatters selected by the reviewed catalog through
 verified generations referenced under `.tools/rust/`, activated together at

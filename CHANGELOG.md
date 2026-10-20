@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.35.0]
+
+### Breaking
+
+- Adopt Host Artifacts, FS and Process 0.31.1. Consumers sharing
+  `PersistenceError::Publication` must align their Host FS dependency to 0.31
+  for the carried `NamedWriteError<std::io::Error>` identity.
+
+### Changed
+
+- Adopt published Platform 0.4.0, preserving principal admission, management wire
+  DTOs, bounded decoding and Agent submission behavior.
+- Adopt committed Shared Tooling 0.25.4 and its grouped formatting defaults.
+  Release preparation uses the explicitly prepared IC Build Cargo editor; retire
+  the superseded Perl renderers and retain original inputs and rollback checks.
+- Enforce regular source files and complete package-license copies, including
+  exact license bytes in both prepared Cargo archives.
+
+### Fixed
+
+- Collect failed CI evidence through the shared orchestrator. Failed selector
+  output remains diagnostic; redirected parents are retained as links without
+  traversing their contents or losing independent validation logs.
+
 ## [0.34.1] - 2026-10-20
 
 ### Changed

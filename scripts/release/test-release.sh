@@ -26,6 +26,9 @@ TEST_REAL_MAKE="$(command -v make)"
 TEST_REAL_GIT="$(command -v git)"
 TEST_REAL_CARGO="$(command -v cargo)"
 export TEST_REAL_MAKE TEST_REAL_GIT TEST_REAL_CARGO
+TEST_RELEASE_EDITOR="$("$TEST_REAL_MAKE" --no-print-directory -s -C "$ROOT" release-editor-check)"
+export TEST_RELEASE_EDITOR CARGO_RELEASE_METADATA_EDITOR="$TEST_RELEASE_EDITOR"
+export CARGO_RELEASE_METADATA_MAX_BYTES=1048576
 export PATH="$ROOT/.tools/host/bin:$PATH"
 mkdir -p "$ROOT/target"
 TEMPORARY="$(mktemp -d "$ROOT/target/shared-release-tests.XXXXXX")"
@@ -67,10 +70,10 @@ create_fixture() {
     cp "$ROOT/Makefile" "$FIXTURE/"
     cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
     cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/validate-release-inputs.pl" "$ROOT/scripts/ci/StableVersion.pm" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/scripts/ci/rewrite-local-lock-versions.pl" "$ROOT/scripts/ci/read-cargo-workspace-version.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/read-cargo-workspace-version.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/scripts/ci/finalize-release-changelog.awk" "$FIXTURE/scripts/ci/"
     cp "$ROOT/scripts/ci/cargo-release-metadata.sh" "$ROOT/scripts/ci/cargo-workspace-members.jq" \
-        "$ROOT/scripts/ci/compare-stable-versions.pl" "$ROOT/scripts/ci/render-cargo-workspace-version.pl" "$FIXTURE/scripts/ci/"
+        "$ROOT/scripts/ci/compare-stable-versions.pl" "$FIXTURE/scripts/ci/"
     cd "$FIXTURE"
     cat > Cargo.toml <<'TOML'
 [workspace]
@@ -97,6 +100,12 @@ TOML
     mkdir -p scripts/dev target/mock-tools/0.28.1
     printf 'original receipt\n' > target/mock-tools/0.28.1/receipt
     : > target/tool-effects.log
+    cat > target/release-editor <<'EDITOR'
+#!/usr/bin/env bash
+exec "$TEST_RELEASE_EDITOR" "$@"
+EDITOR
+    chmod +x target/release-editor
+    export CARGO_RELEASE_METADATA_EDITOR="$FIXTURE/target/release-editor"
     # Substitutes qualify consumer ordering only. Canonical installer tests own
     # receipt/lock integrity and real Testkit owns server asset admission.
     for common in install-host-tools install-ic-tools; do
@@ -117,9 +126,10 @@ TOOL
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'installer %s\n' "$*" >> "$TEST_LOG"
-version=''; check=false; preflight=false
+version=''; package=''; check=false; preflight=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --package) package="$2"; shift 2 ;;
         --lockfile)
             # Project this fixture's known package. Strict source/ambiguity/drift
             # admission belongs to the real shared installer's own regressions.
@@ -130,6 +140,10 @@ while [[ $# -gt 0 ]]; do
         *) shift ;;
     esac
 done
+if [[ "$package" == ic-build ]]; then
+    printf '%s/target/release-editor\n' "$PWD"
+    exit 0
+fi
 if [[ "$preflight" == true ]]; then
     printf 'preflight install-rust-tools\n' >> "$TEST_LOG"
     [[ "${TEST_COMMON_PREFLIGHT_FAIL:-}" != install-rust-tools ]] || exit 24
@@ -594,12 +608,19 @@ test_lockfile_rejection() {
         mismatch) perl -pi -e 's/0\.1\.0/0.0.9/' Cargo.lock ;;
         duplicate) printf '\n[[package]]\nname = "ic-backup"\nversion = "0.1.0"\n' >> Cargo.lock ;;
         missing) perl -pi -e 's/name = "ic-backup"/name = "other-package"/' Cargo.lock ;;
-        failed-output)
-            mv scripts/ci/rewrite-local-lock-versions.pl target/original-transformer.pl
-            printf '%s\n' 'print "version = 4\n"; exit 13;' > scripts/ci/rewrite-local-lock-versions.pl ;;
-        failed-renderer)
-            printf '%s\n' 'print "[workspace.package]\nversion = \"0.1.1\"\n"; exit 13;' > scripts/ci/render-cargo-workspace-version.pl ;;
-        empty-renderer) printf '%s\n' 'exit 0;' > scripts/ci/render-cargo-workspace-version.pl ;;
+        failed-output|failed-renderer|empty-renderer)
+            cat > target/release-editor <<'EDITOR'
+#!/usr/bin/env bash
+if [[ "$TEST_EDITOR_FAILURE" == failed-output && "$3" == lock ]]; then
+    printf 'version = 4\n'; exit 13
+elif [[ "$TEST_EDITOR_FAILURE" == failed-renderer && "$3" == manifest ]]; then
+    printf '[workspace.package]\nversion = "0.1.1"\n'; exit 13
+elif [[ "$TEST_EDITOR_FAILURE" == empty-renderer && "$3" == manifest ]]; then
+    exit 0
+fi
+exec "$TEST_RELEASE_EDITOR" "$@"
+EDITOR
+            export TEST_EDITOR_FAILURE="$1" ;;
     esac
     before="$(fingerprint)"
     expect_failure perl scripts/release/release-data.pl prepare-version 0.1.1

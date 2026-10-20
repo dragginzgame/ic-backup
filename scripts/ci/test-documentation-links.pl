@@ -8,11 +8,23 @@ use Test::More;
 
 my $checker = "$FindBin::Bin/check-documentation-links.pl";
 my $fixture = tempdir('documentation-links.XXXXXX', TMPDIR => 1, CLEANUP => 0);
+my $complete = 0;
 END {
+    my $status = $?;
     if (defined $fixture) {
-        if (Test::More->builder->is_passing) { remove_tree($fixture); }
-        else { warn "Documentation link fixtures retained: $fixture\n"; }
+        if ($complete && $status == 0 && Test::More->builder->is_passing) {
+            my $errors;
+            remove_tree($fixture, {error => \$errors});
+            if (@$errors || -e $fixture || -l $fixture) {
+                warn "Documentation link fixture cleanup incomplete: $fixture\n";
+                $status = 1;
+            }
+        } else {
+            warn "Documentation link fixtures retained: $fixture\n";
+            $status ||= 1;
+        }
     }
+    $? = $status;
 }
 mkdir "$fixture/docs" or die $!;
 sub write_file {
@@ -57,3 +69,4 @@ write_file('docs/links.md', "~~~\n[unterminated code](absent.md)\n");
 is(check('docs/links.md'), 0, 'unclosed code fence extends to EOF');
 isnt(check(), 0, 'no implicit document roster');
 done_testing();
+$complete = Test::More->builder->is_passing;

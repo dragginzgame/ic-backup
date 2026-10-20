@@ -1,8 +1,12 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
-LOCAL_TOOL_INSTALL_TARGETS := install-ic-tools deps install-testkit-server
-LOCAL_TOOL_CHECK_TARGETS := ic-tools-check testkit-server-check
+LOCAL_TOOL_INSTALL_TARGETS := install-ic-tools deps install-testkit-server install-release-editor
+LOCAL_TOOL_CHECK_TARGETS := ic-tools-check testkit-server-check release-editor-check
+RELEASE_EDITOR_VERSION := 0.18.0
+export RELEASE_EDITOR_MAX_BYTES := 8388608
+RELEASE_EDITOR_COMMAND = bash "$(CURDIR)/scripts/dev/install-rust-tools.sh" --consumer "$(CURDIR)" \
+    --package ic-build --version "$(RELEASE_EDITOR_VERSION)" --bin ic-build-release-metadata --profile debug
 # IC executables remain an explicit Backup selection; common includes add host/Cargo.
 export PATH := $(CURDIR)/.tools/ic/bin:$(PATH)
 VERSION ?=
@@ -13,10 +17,8 @@ export RELEASE_DELIVERY
 RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
-FORMAT_WRITE_COMMAND = bash -ec '"$$1" sort --workspace --grouped; "$$1" fmt --all' -- "$(FORMAT_CARGO)"
-FORMAT_CHECK_COMMAND = bash -ec '"$$1" sort --workspace --grouped --check; "$$1" fmt --all -- --check' -- "$(FORMAT_CARGO)"
 include make/consumer.mk
-CI_TARGETS := shared-tooling-check tools-check dependency-pins-check dependency-boundaries-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links deps shell-check tooling-check release-check hooks-check fmt-check check clippy test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
@@ -26,6 +28,7 @@ CI_TARGETS := shared-tooling-check tools-check dependency-pins-check dependency-
         release-push-check release-tag-check release-verify shell-check \
         tags tasks test tooling-check validate version
 .PHONY: dependency-boundaries-check dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
+.PHONY: install-release-editor release-editor-check repository-files-check
 
 help:
 	@echo "check                       Compile this library's native targets"
@@ -51,6 +54,7 @@ help:
 	@echo "install-hooks               Enable the tracked pre-commit formatter"
 	@echo "install-host-tools          Prepare pinned local jq/yq/ripgrep/cloc"
 	@echo "install-ic-tools            Prepare the pinned local IC executables"
+	@echo "install-release-editor      Prepare the published Cargo release editor"
 	@echo "install-rust-tools          Prepare the complete shared Cargo tool set"
 	@echo "install-testkit-server       Prepare the locked Testkit CLI and its PocketIC server"
 	@echo "install-tools               Prepare host, Cargo, IC and locked Testkit tools in order"
@@ -59,6 +63,7 @@ help:
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
 	@echo "release-check               Test release helpers with isolated substitutes"
 	@echo "release-delivery-check      Verify the supported direct release policy without effects"
+	@echo "release-editor-check        Admit the prepared Cargo release editor offline"
 	@echo "release-major               Maintainer: prepare, commit, tag and push a major"
 	@echo "release-minor               Maintainer: prepare, commit, tag and push a minor"
 	@echo "release-patch               Maintainer: prepare, commit, tag and push a patch"
@@ -66,6 +71,7 @@ help:
 	@echo "release-resume VERSION=x.y.z Maintainer: resume the exact saved release"
 	@echo "release-tag-check           Verify the current annotated release tag"
 	@echo "release-verify              Run the full release validation gate"
+	@echo "repository-files-check      Check source links and complete package licenses"
 	@echo "rust-tools-check            Verify the complete local Cargo tools offline"
 	@echo "shared-tooling-check        Verify the reviewed local tooling snapshot"
 	@echo "shell-check                 Check maintained shell and Perl tooling"
@@ -120,6 +126,17 @@ dependency-boundaries-check:
 
 dependency-pins-check:
 	+bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
+
+install-release-editor:
+	+@$(RELEASE_EDITOR_COMMAND)
+
+release-editor-check:
+	+@$(RELEASE_EDITOR_COMMAND) --check
+
+repository-files-check:
+	perl scripts/ci/check-no-symlinks.pl --consumer "$(CURDIR)"
+	@for license in LICENSE crates/ic-backup/LICENSE crates/ic-backup-agent/LICENSE; do \
+		perl scripts/ci/check-license.pl --kind mit --file "$$license" || exit "$$?"; done
 
 # The canonical Cargo installer selects the exact registry Testkit from Cargo.lock
 # CLI receipts; Testkit owns server assets, admission and provisioning.
@@ -218,8 +235,6 @@ shell-check:
 	perl -c scripts/release/release-data.pl
 	perl -c scripts/ci/check-documentation-links.pl
 	perl -c scripts/ci/test-documentation-links.pl
-	perl -c scripts/ci/rewrite-local-lock-versions.pl
-	perl -c scripts/ci/test-local-lock-versions.pl
 	perl -c scripts/dev/check-cargo-tool-versions.pl
 
 check-cargo-tool-versions:
@@ -239,6 +254,7 @@ tooling-check: shared-tooling-check
 	bash scripts/ci/test-evidence-checksums.sh
 	bash scripts/ci/test-evidence-archive.sh
 	bash scripts/ci/test-testkit-commands.sh
+	bash scripts/ci/test-failure-evidence.sh
 
 validate: ci
 

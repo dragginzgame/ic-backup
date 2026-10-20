@@ -1,22 +1,16 @@
 #!/usr/bin/env bash
-# Shared companions: scripts/ci/verify-evidence-checksums.sh scripts/ci/verify-file-checksum.sh
+# Shared companions: scripts/ci/verify-evidence-checksums.sh scripts/ci/verify-file-checksum.sh scripts/ci/fixture-lifecycle.sh
 set -Eeuo pipefail
 
 ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
-TEMPORARY="$(mktemp -d "${TMPDIR:-/tmp}/blob-evidence-checksums.XXXXXX")"
+# shellcheck source=scripts/ci/fixture-lifecycle.sh
+source "$ROOT/scripts/ci/fixture-lifecycle.sh"
+TEMPORARY="$(fixture_create "${TMPDIR:-/tmp}/blob-evidence-checksums.XXXXXX")"
 fixture_complete=false
-finish() {
-    local status=$?
-    # Bash 3.2 may report zero after nounset before assertions finish.
-    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
-    if [[ "$status" == 0 ]]; then rm -rf "$TEMPORARY";
-    else echo "Checksum fixture/evidence retained: $TEMPORARY" >&2; fi
-    exit "$status"
-}
-trap finish EXIT
+trap 'fixture_finish "$?" "$TEMPORARY" "Checksum fixture/evidence retained"' EXIT
 cp "$ROOT/scripts/ci/verify-evidence-checksums.sh" "$ROOT/scripts/ci/verify-file-checksum.sh" "$TEMPORARY/"
 cd "$TEMPORARY"
 printf abc > 'selected file'

@@ -61,8 +61,13 @@ manifests. Product receipt/source validation remains independent. Consumer
 fixtures prove an earlier sorted release can be checked while a later current
 manifest is unsorted, without formatting either source or changing real Git refs.
 
-Manifest version edits use the reviewed Shared Tooling renderer for both the
-workspace version and owned internal dependency requirements. It preserves comments
+Manifest and lockfile candidates use the published IC Build 0.18.0
+`ic-build-release-metadata` command, selected through Shared Tooling's installer.
+`make install-release-editor` explicitly prepares it; `make release-editor-check`
+returns its offline-admitted absolute path. Normal release preflight includes
+setup, while saved preparation consumes only that admitted selection. Backup's
+adapter supplies its 8 MiB per-document allowance automatically.
+The renderer preserves comments
 and requirement operators/precision: for example, `0.1` becomes `0.2`, while
 `=0.1.0` becomes `=0.2.0`. Backup supplies parsed workspace ownership and retains
 its component bounds, original lock transformation,

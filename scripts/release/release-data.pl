@@ -177,7 +177,11 @@ if ($command eq 'version') {
     my ($target) = @args;
     parts($target);
     my $previous = version();
-    my @render = ($^X, 'scripts/ci/render-cargo-workspace-version.pl', 'Cargo.toml', $previous, $target);
+    my $editor = $ENV{CARGO_RELEASE_METADATA_EDITOR} // '';
+    my $limit = $ENV{CARGO_RELEASE_METADATA_MAX_BYTES} // '';
+    $editor =~ m{\A/} && -f $editor && -x $editor && $limit =~ /\A[1-9][0-9]*\z/
+        or die "select the offline-admitted Cargo editor and positive byte allowance\n";
+    my @render = ($editor, '--max-input-bytes', $limit, 'manifest', 'Cargo.toml', $previous, $target);
     my ($temporary, $lock);
     if ($command eq 'prepare-version') {
         # Supply admitted ownership to the common renderer; never duplicate its
@@ -192,7 +196,7 @@ if ($command eq 'version') {
             manifest => toml_projection('Cargo.toml', '.'), members => \@members,
         }));
         push @render, $input;
-        open my $rewrite, '-|', $^X, 'scripts/ci/rewrite-local-lock-versions.pl',
+        open my $rewrite, '-|', $editor, '--max-input-bytes', $limit, 'lock',
             'Cargo.lock', $previous, $target, map { $_->{name} } @members
             or die "cannot invoke shared lockfile transformer; retained: $temporary\n";
         $lock = do { local $/; <$rewrite> };

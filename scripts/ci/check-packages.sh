@@ -33,6 +33,8 @@ cargo package --offline --locked --allow-dirty --no-verify \
 mkdir -p "$fixture/unpacked" "$fixture/consumer/src"
 for package in ic-backup ic-backup-agent; do
     archive="$fixture/build/package/$package-$version.crate"
+    perl scripts/ci/check-license.pl --kind mit --file "crates/$package/LICENSE" \
+        --archive "$archive" --member "$package-$version/LICENSE"
     digest="$(bash scripts/ci/verify-file-checksum.sh --print sha256 "$archive")"
     printf '%s  %s\n' "$digest" "$archive" >> "$fixture/archives.sha256"
     tar -xzf "$archive" -C "$fixture/unpacked"

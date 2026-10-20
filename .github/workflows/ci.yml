@@ -113,57 +113,53 @@ jobs:
         id: validation-archive
         if: failure()
         run: |
+          archive_root="$(mktemp -d "$RUNNER_TEMP/ic-backup-evidence.XXXXXX")"
+          printf 'path=%s\n' "$archive_root" >> "$GITHUB_OUTPUT"
+          mkdir "$archive_root/diagnostics"
           inputs=()
-          for path in target/ci-fixtures target/validation-failures target/*-tests.*; do
-            if [[ -e "$path" || -L "$path" ]]; then
-              inputs+=("$GITHUB_WORKSPACE" "$path")
-            fi
-          done
-          for root in "$RUNNER_TEMP" "$TMPDIR"; do
+          local_status=0
+          if [[ -L target ]]; then
+            inputs+=("$GITHUB_WORKSPACE" target)
+            printf 'target is redirected; retaining the parent link only.\n' > "$archive_root/diagnostics/local-selection.log"
+            local_status=1
+          else
+            for path in target/ci-fixtures target/validation-failures target/*-tests.*; do
+              if [[ -e "$path" || -L "$path" ]]; then
+                inputs+=("$GITHUB_WORKSPACE" "$path")
+              fi
+            done
+          fi
+          roots=("$RUNNER_TEMP")
+          [[ "$TMPDIR" == "$RUNNER_TEMP" ]] || roots+=("$TMPDIR")
+          for root in "${roots[@]}"; do
+            if [[ -L target && "$root" == "$GITHUB_WORKSPACE/target/"* ]]; then continue; fi
             for path in "$root"/formatting.*; do
               if [[ -e "$path" || -L "$path" ]]; then
                 inputs+=("$root" "${path#"$root/"}")
               fi
             done
           done
-          # Select only this checkout's retained references and admitted bundles.
-          archive_root="$(mktemp -d "$RUNNER_TEMP/ic-backup-evidence.XXXXXX")"
-          # Publish the retention destination before either collection can fail.
-          printf 'path=%s\n' "$archive_root" >> "$GITHUB_OUTPUT"
-          if [[ ${#inputs[@]} != 0 ]]; then
-            if bash scripts/ci/archive-evidence.sh "$archive_root/local-evidence.tar.gz" "${inputs[@]}" \
-                > "$archive_root/local-archive.log" 2>&1; then
-              :
-            else
-              status=$?
-              printf 'Local evidence collection incomplete (exit %s); retaining diagnostics.\n' "$status" >&2
-              exit "$status"
-            fi
+          if [[ -L .tools ]]; then
+            inputs+=("$GITHUB_WORKSPACE" .tools)
+            printf '.tools is redirected; retaining the parent link only.\n' >> "$archive_root/diagnostics/local-selection.log"
+            local_status=1
+          elif [[ -L .tools/rust ]]; then
+            inputs+=("$GITHUB_WORKSPACE" .tools/rust)
+            printf '.tools/rust is redirected; retaining the parent link only.\n' >> "$archive_root/diagnostics/local-selection.log"
+            local_status=1
           fi
-          selector_status=0
-          bash scripts/ci/select-tool-evidence.sh full "$GITHUB_WORKSPACE" "$archive_root" \
-            > "$archive_root/selections.nul" 2> "$archive_root/shared-selection.log" || selector_status=$?
-          printf '%s\n' "$selector_status" > "$archive_root/selection-status"
-          # The canonical selector emits admitted local evidence even on rejection.
-          shared_inputs=()
-          while IFS= read -r -d '' selected_root && IFS= read -r -d '' selected_path; do
-            shared_inputs+=("$selected_root" "$selected_path")
-          done < "$archive_root/selections.nul"
-          if [[ ${#shared_inputs[@]} != 0 ]]; then
-            if bash scripts/ci/archive-evidence.sh "$archive_root/shared-tools.tar.gz" "${shared_inputs[@]}" \
-                > "$archive_root/shared-archive.log" 2>&1; then
-              :
-            else
-              status=$?
-              printf 'Shared evidence collection incomplete (exit %s); retaining local evidence and diagnostics.\n' "$status" >&2
-              exit "$status"
-            fi
+          printf '%s\n' "$local_status" > "$archive_root/diagnostics/local-selection-status"
+          status=0
+          bash scripts/ci/collect-tool-evidence.sh "$archive_root/evidence.tar.gz" \
+            "$GITHUB_WORKSPACE" "$archive_root/diagnostics" full \
+            "$GITHUB_WORKSPACE/ci/tool-versions.env" "$GITHUB_WORKSPACE/ci/ic-tools.tsv" \
+            "${inputs[@]}" > "$archive_root/collection.log" 2>&1 || status=$?
+          if [[ "$status" == 0 && "$local_status" != 0 ]]; then status=1; fi
+          if [[ "$status" != 0 ]]; then
+            cat "$archive_root/collection.log" >&2
+            printf 'Evidence collection incomplete (exit %s); retaining archives and diagnostics.\n' "$status" >&2
           fi
-          if [[ "$selector_status" != 0 ]]; then
-            cat "$archive_root/shared-selection.log" >&2
-            printf 'Shared evidence selection incomplete (exit %s); retaining admitted local evidence and diagnostics.\n' "$selector_status" >&2
-            exit "$selector_status"
-          fi
+          exit "$status"
       - name: Retain failed validation evidence
         if: failure() && steps.validation-archive.outputs.path != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

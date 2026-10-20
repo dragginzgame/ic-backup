@@ -78,7 +78,10 @@ prepare() {
           cp "$RELEASE_BACKUP_DIR/CHANGELOG.md" CHANGELOG.md
           if [[ "$RELEASE_HAD_RECEIPT" == 1 ]]; then cp "$RELEASE_BACKUP_DIR/release.json" docs/release.json; else rm -f docs/release.json; fi' EXIT
     perl "$DATA" finalize "$RELEASE_VERSION" "$RELEASE_DATE" "$RELEASE_PREVIOUS"
-    perl "$DATA" prepare-version "$RELEASE_VERSION"
+    editor="$(make --no-print-directory -s release-editor-check)" || return "$?"
+    CARGO_RELEASE_METADATA_EDITOR="$editor" \
+        CARGO_RELEASE_METADATA_MAX_BYTES="${RELEASE_EDITOR_MAX_BYTES:?}" \
+        perl "$DATA" prepare-version "$RELEASE_VERSION"
     cargo metadata --offline --locked --no-deps --format-version 1 >/dev/null
     make --no-print-directory fmt-check
     perl "$DATA" receipt "$RELEASE_SOURCE" "$RELEASE_DATE"
