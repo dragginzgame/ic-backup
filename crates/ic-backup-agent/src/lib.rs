@@ -22,8 +22,8 @@ mod transfer_read;
 pub use transfer_read::AgentSnapshotTransferReadProvider;
 
 use ic_backup::model::operation_plan::PlanContextRecord;
-use ic_platform::Principal;
 use ic_platform::agent::{Agent, Identity, RequestId};
+use ic_platform::principal::ExternalPrincipal;
 use std::{sync::Arc, time::Duration};
 use thiserror::Error;
 
@@ -107,7 +107,7 @@ impl AgentTransport {
 pub struct PreparedUpdate<'a> {
     transport: &'a AgentTransport,
     request: ReservedUpdate<'a>,
-    target: Principal,
+    target: ExternalPrincipal,
     envelope: Vec<u8>,
     request_id: RequestId,
     reply_limit: usize,

@@ -145,6 +145,28 @@ fn binds_method_routing_target_and_exact_snapshot_bytes_with_canonical_aliases()
     );
     assert_ne!(first.arguments(), changed.arguments());
     assert_ne!(first.digest(), changed.digest());
+
+    for length in 0..=ic_platform::Principal::MAX_LENGTH_IN_BYTES {
+        let raw = vec![0xa5; length];
+        let external = contract::Principal::from_slice(&raw);
+        let canonical = external.to_text();
+        let normalized = request(IcManagementMethodRecord::StopCanister, &canonical, None);
+        let uppercase = request(
+            IcManagementMethodRecord::StopCanister,
+            &canonical.to_uppercase(),
+            None,
+        );
+        assert_eq!(normalized, uppercase);
+        assert_eq!(normalized.target(), canonical);
+        assert_eq!(normalized.target_bytes, raw);
+        assert_eq!(
+            normalized.arguments(),
+            contract::encode_one(CanisterIdRecord {
+                canister_id: external,
+            })
+            .unwrap(),
+        );
+    }
 }
 
 #[test]

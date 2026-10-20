@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.34.1]
+
+### Changed
+
+- Adopt published Platform 0.3.0's owned principal for internal admission, converting
+  explicitly at management and Agent boundaries. Preserve external DTO/SDK
+  identities, canonical text, wire bytes, decoder limits and persisted records.
+- Share immutable workflow and checkpoint read admission through the existing
+  persistence owner, preserving record limits, lock scope and typed errors.
+- Describe implemented workflow coordination separately from integration-owned
+  application admission and terminal evidence.
+
+### Testing
+
+- Prepare ordinary workflow fixtures through the production stage owner, while
+  retaining explicit record-only, missing-journal and interrupted-preparation cases.
+- Qualify the pending Host 0.30.1 lock through the complete Linux validation gate,
+  including Agent transport, independent Rust 1.91 consumers and package archives.
+
 ## [0.34.0] - 2026-10-19
 
 ### Breaking

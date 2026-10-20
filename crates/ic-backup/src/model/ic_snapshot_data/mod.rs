@@ -46,7 +46,7 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         let target = Principal::from_text(metadata.request().target())
             .map_err(|_| IcRequestError::InvalidTarget)?;
         let arguments = contract::encode_one(ReadCanisterSnapshotDataArgs {
-            canister_id: target,
+            canister_id: target.into(),
             snapshot_id: metadata.request().snapshot_id().to_vec(),
             kind: kind.clone(),
         })

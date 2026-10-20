@@ -47,7 +47,7 @@ fn request(original: &Original) -> IcObservationRequest<'_> {
 #[derive(contract::CandidType)]
 #[candid_path("ic_platform::candid::contract")]
 struct Settings {
-    controllers: Vec<ic_platform::Principal>,
+    controllers: Vec<contract::Principal>,
 }
 #[derive(contract::CandidType)]
 #[candid_path("ic_platform::candid::contract")]
@@ -65,7 +65,7 @@ fn input(
     input.reply = contract::encode_one(WireStatus {
         status,
         settings: Settings {
-            controllers: vec![ic_platform::Principal::anonymous()],
+            controllers: vec![contract::Principal::anonymous()],
         },
         marker,
     })

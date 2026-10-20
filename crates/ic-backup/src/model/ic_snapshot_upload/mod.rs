@@ -95,7 +95,7 @@ impl<'source> IcSnapshotUploadRequest<'source> {
         let target = Principal::from_text(source.request().target())
             .map_err(|_| IcRequestError::InvalidTarget)?;
         let arguments = contract::encode_one(UploadCanisterSnapshotMetadataArgs {
-            canister_id: target,
+            canister_id: target.into(),
             replace_snapshot: None,
             wasm_module_size: values.wasm_module_size,
             globals,
@@ -163,7 +163,7 @@ impl<'source> IcSnapshotUploadRequest<'source> {
         let target =
             Principal::from_text(metadata.target()).map_err(|_| IcRequestError::InvalidTarget)?;
         let arguments = contract::encode_one(UploadCanisterSnapshotDataArgs {
-            canister_id: target,
+            canister_id: target.into(),
             snapshot_id: snapshot_id.to_vec(),
             kind,
             chunk: chunk.to_vec(),

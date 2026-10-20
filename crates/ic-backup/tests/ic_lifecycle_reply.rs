@@ -18,8 +18,8 @@ use ic_backup::{
         read_operation_plan,
     },
 };
+use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::management_canister_types::CanisterStatusType;
-use ic_platform::{Principal, candid::contract::CandidType};
 use serde_json::json;
 use std::fs;
 

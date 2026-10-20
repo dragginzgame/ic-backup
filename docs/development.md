@@ -94,9 +94,9 @@ server through `make testkit-server-check`, which prints its admitted absolute
 path offline. Both simulator suites call that check before managed startup.
 Original server digests, private logs and fixture state remain retained.
 Offline admission precedes [real single-canister qualification](pocketic-qualification.md).
-Direct Agent transport is implemented separately; runners remain unimplemented.
-Installing tools alone establishes
-no backend or application qualification.
+Direct Agent transport and generic workflow coordination are implemented.
+Integrations supply current authority, application admission and stage execution;
+installing tools alone establishes no backend or application qualification.
 
 The shared `make install-rust-tools` and offline `make rust-tools-check` prepare
 and check the common Cargo formatters selected by the reviewed catalog through
@@ -224,10 +224,12 @@ prove application safety or establish that a remote operation succeeded.
 The root `Cargo.toml` owns the workspace, package metadata, dependency versions
 and shared lints. The members are `crates/ic-backup` and `crates/ic-backup-agent`. It provides the local
 artifact and persistence mechanisms described in
-[the implemented extraction boundary](extraction-boundary.md). Capture/restore
-runners remain unimplemented; [Agent transport](agent-transport.md) owns bounded
-async submission. Pure checksum records belong to
-model; filesystem operations belong to ops.
+[the implemented extraction boundary](extraction-boundary.md). The
+[workflow runner](../crates/ic-backup/src/workflow/execution_workflow/mod.rs)
+coordinates new and retained original stages through integration-owned drivers.
+[Agent transport](agent-transport.md) owns bounded async submission; applications
+supply fresh authority, admission and terminal evidence. Pure checksum records
+belong to model; filesystem operations belong to ops.
 Host Artifacts `artifact::tree::checksum_relative_files` composes directory
 checksums from owned `(PathBuf, Sha256Digest)` entries without filesystem IO.
 Host FS `read::tree::checksum` owns no-follow directory hashing with an explicit

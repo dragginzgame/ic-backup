@@ -48,7 +48,7 @@ impl IcSnapshotMetadataRequest {
         let (target, principal) =
             super::principal::canonical_parts(target).ok_or(IcRequestError::InvalidTarget)?;
         let arguments = contract::encode_one(ReadCanisterSnapshotMetadataArgs {
-            canister_id: principal,
+            canister_id: principal.into(),
             snapshot_id: snapshot_id.to_vec(),
         })
         .map_err(|error| IcRequestError::Encoding(error.to_string()))?;

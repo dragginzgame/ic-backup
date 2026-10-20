@@ -102,15 +102,13 @@ pub fn read_execution_workflow(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<ExecutionWorkflowRecord, ExecutionWorkflowPersistenceError> {
-    layout.check_root()?;
-    let path = layout.root().join(WORKFLOW_FILE);
-    let _lock = JournalLock::acquire(&path)?;
-    let record: ExecutionWorkflowRecord = read_json(&path, MAX_EXECUTION_WORKFLOW_BYTES)?;
-    super::json::check_json_size(&record, MAX_EXECUTION_WORKFLOW_BYTES)?;
-    if &record.digest() != expected {
-        return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
-    }
-    Ok(record)
+    super::immutable_record::read(
+        layout,
+        WORKFLOW_FILE,
+        MAX_EXECUTION_WORKFLOW_BYTES,
+        |record: &ExecutionWorkflowRecord| &record.digest() == expected,
+        || ExecutionWorkflowPersistenceError::DigestMismatch,
+    )
 }
 
 /// Read which allocated stage paths are already occupied under the held layout.

@@ -6,9 +6,9 @@ use crate::model::{
     bounded_sequence,
     control_authority::{ControllerSet, MAX_CONTROLLERS},
 };
+use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::candid::{DecodeLimits, decode_exactly_one};
 use ic_platform::management_canister_types::CanisterStatusType;
-use ic_platform::{Principal, candid::contract::CandidType};
 use serde::{Deserialize, Deserializer};
 
 const DECODING_QUOTA: usize = 2 * 1024 * 1024;

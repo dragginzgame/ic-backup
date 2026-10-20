@@ -88,11 +88,12 @@ public compatibility assessment, native checks and separately applicable
 authenticated IC qualification. Core and Agent consume those identities only
 through Platform; direct management DTO declarations are forbidden.
 
-`ic-platform::Principal` owns the principal dependency boundary. Platform supplies
-the same selected upstream 0.1.5 identity; no direct principal pin or exception
-remains. Changes to that selected identity require normalization, identity/hash
-regression checks and public compatibility assessment, followed by relevant native
-qualification.
+`ic-platform::Principal` owns internal principal admission. Platform 0.3 supplies
+its owned representation; required Candid DTOs and external SDK calls use
+Platform's `candid::contract::Principal` or `principal::ExternalPrincipal` exports
+over upstream 0.1.5, with explicit boundary conversions. No direct principal pin
+or exception remains. Changes require normalization, identity/hash regression
+checks and public compatibility assessment, followed by relevant native qualification.
 
 These are reviewed compatibility constraints, not universal exact-pin policy.
 Shared tools use the vendored version/checksum owners under `ci/`; local setup is

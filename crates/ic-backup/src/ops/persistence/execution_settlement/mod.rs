@@ -1,9 +1,9 @@
 //! Immutable original all-Applied journal checkpoint publication and local replay.
 
-use super::json::{check_json_size, create_encoded, encode_json};
+use super::json::{create_encoded, encode_json};
 use super::{
     AttemptJournalError, BackupLayoutGuard, JournalLock, JournalLockError,
-    OperationPlanPersistenceError, PersistenceError, read_json,
+    OperationPlanPersistenceError, PersistenceError,
 };
 use crate::{
     model::{
@@ -124,16 +124,17 @@ pub fn read_execution_settlement(
     expected_plan: &ArtifactChecksumRecord,
     expected: &ArtifactChecksumRecord,
 ) -> Result<ExecutionSettlementRecord, ExecutionSettlementPersistenceError> {
-    layout.check_root()?;
-    let path = layout.root().join("execution-settlement.json");
-    let _lock = JournalLock::acquire(&path)?;
-    let record: ExecutionSettlementRecord = read_json(&path, MAX_EXECUTION_SETTLEMENT_BYTES)?;
-    check_json_size(&record, MAX_EXECUTION_SETTLEMENT_BYTES)?;
-    if record.plan_intent() != expected_plan || &record.digest() != expected {
-        return Err(ExecutionSettlementPersistenceError::DigestMismatch);
-    }
-    validate_retained(layout, &record)?;
-    Ok(record)
+    super::immutable_record::read_with(
+        layout,
+        "execution-settlement.json",
+        MAX_EXECUTION_SETTLEMENT_BYTES,
+        |record: &ExecutionSettlementRecord| {
+            if record.plan_intent() != expected_plan || &record.digest() != expected {
+                return Err(ExecutionSettlementPersistenceError::DigestMismatch);
+            }
+            validate_retained(layout, record)
+        },
+    )
 }
 fn validate_retained(
     layout: &BackupLayoutGuard,

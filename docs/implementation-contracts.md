@@ -37,9 +37,11 @@ belong to manifests and the lockfile, migration history to the
 
 Platform owns all Candid, Principal, management DTO and Agent SDK imports. Core
 selects `candid` and `management-canister-types`; only Agent adds `agent` and PEM
-support. Preserve upstream management DTO 0.11.0 and Principal 0.1.5 identities,
-normalization and hashes. Direct upstream declarations and local pin exceptions
-are forbidden. Changes require the compatibility and qualification review in
+support. Internal principal admission uses Platform's owned `Principal`; external
+Candid DTOs and SDK calls retain upstream 0.1.5 through Platform's contract or
+external exports and explicit conversions. Preserve management DTO 0.11.0,
+canonical text/raw bytes, wire formats and hashes. Direct upstream declarations
+and local pin exceptions are forbidden. Changes require the compatibility and qualification review in
 [AGENTS.md](../AGENTS.md). The selected Agent SDK is 0.49.2.
 
 Host Artifacts owns accepted-byte hashing, typed SHA-256 and declared-directory

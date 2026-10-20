@@ -237,7 +237,7 @@ impl Fixture {
         pic.install_canister(target, wasm, vec![], None).await;
         pic.update_call(
             target,
-            ic_platform::Principal::anonymous(),
+            ic_platform::principal::ExternalPrincipal::anonymous(),
             "write",
             42_u64.to_le_bytes().to_vec(),
         )
@@ -264,11 +264,13 @@ impl Fixture {
             identity,
         }
     }
-    fn caller(&self) -> ic_platform::Principal {
+    fn caller(&self) -> ic_platform::principal::ExternalPrincipal {
         self.identity.sender().unwrap()
     }
-    fn principal(&self) -> ic_platform::Principal {
-        ic_platform::Principal::from_text(&self.target).unwrap()
+    fn principal(&self) -> ic_platform::principal::ExternalPrincipal {
+        ic_platform::Principal::from_text(&self.target)
+            .unwrap()
+            .into()
     }
     fn original(
         &mut self,
@@ -543,7 +545,7 @@ async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserv
         .pic
         .update_call(
             fixture.principal(),
-            ic_platform::Principal::anonymous(),
+            ic_platform::principal::ExternalPrincipal::anonymous(),
             "write",
             99_u64.to_le_bytes().to_vec(),
         )
@@ -570,7 +572,7 @@ async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserv
         .pic
         .query_call(
             fixture.principal(),
-            ic_platform::Principal::anonymous(),
+            ic_platform::principal::ExternalPrincipal::anonymous(),
             "read",
             vec![],
         )

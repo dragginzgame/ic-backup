@@ -2,7 +2,7 @@
 
 ## Current server ownership cut
 
-The pending 0.11.0 adoption uses the exact locked Testkit CLI for explicit
+The simulator suites use the exact locked Testkit CLI for explicit
 `make install-testkit-server` and offline `make testkit-server-check`. The check
 returns the authenticated absolute server path for both simulator suites;
 server selection/asset/version admission belongs to Testkit. Caller-owned private

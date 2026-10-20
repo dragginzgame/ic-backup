@@ -36,7 +36,7 @@ application runtime, general scheduler or complete backup/restore runner here.
 | Descriptor IO, publication and filesystem identity | `ic-host-fs`; Backup selects record budgets, closed snapshot layouts and recovery transitions |
 | Inherited process custody | `ic-host-process`; Backup binds custody to its original journal and quiescence requirements |
 | Candid decoder setup and exact-result mechanics | Published `ic-platform` with its `candid` feature; Backup retains bounded wire projections, method quotas and redacted errors |
-| Management DTOs and principal identity | Platform’s `management_canister_types` exports over exact upstream 0.11.0 and its root `Principal` export |
+| Management DTOs and principal identity | Platform’s management exports over exact upstream 0.11.0; owned root `Principal` for internal admission, contract/external principal exports for Candid and SDK boundaries |
 | Simulator process/assets and PocketIC SDK | Development-only `ic-testkit`; fixture intent, original bytes, logs and application assertions remain here |
 | Common developer/release tooling | Exact reviewed Shared Tooling snapshot; consumer package, registry, delivery and resume policy remains local |
 | Fleet membership, routing, release identity, quiescence and external obligations | Canic or another application integration, through Core ports; Core has no Canic runtime/control-plane dependency |

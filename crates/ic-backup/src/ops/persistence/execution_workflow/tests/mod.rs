@@ -32,7 +32,7 @@ fn first_stage(
 ) -> ExecutionStageBindingRecord {
     let plan = child(0);
     let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::create(layout, binding.clone(), plan).unwrap();
+    let stage = ExecutionStageGuard::prepare(layout, binding.clone(), plan).unwrap();
     assert_eq!(stage.binding(), &binding);
     binding
 }
@@ -46,7 +46,7 @@ fn settle_first(
     let plan = stage.plan();
     let stage_layout = stage.layout().unwrap();
     let mut journal =
-        AttemptJournalGuard::create(stage_layout, plan.attempt_authority(42).unwrap()).unwrap();
+        AttemptJournalGuard::open(stage_layout, &plan.attempt_authority(42).unwrap()).unwrap();
     let attempt = journal.reserve_planned_mutation(&plan.digest()).unwrap();
     journal
         .record_mutation(MutationReceiptRequest {
@@ -90,7 +90,7 @@ fn pending_attempt_survives_exact_reopen_without_new_plan_or_allowance() {
         );
     }
     let authority = stage.plan().attempt_authority(42).unwrap();
-    let mut journal = AttemptJournalGuard::create(stage_layout, authority.clone()).unwrap();
+    let mut journal = AttemptJournalGuard::open(stage_layout, &authority).unwrap();
     let attempt = journal
         .reserve_planned_mutation(&stage.plan().digest())
         .unwrap();
@@ -126,7 +126,7 @@ fn exact_predecessor_settlement_admits_learned_plan_but_changed_history_stops() 
     let row = settle_first(&layout, &workflow, &first);
     let plan = child(7);
     let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![row]).unwrap();
-    let stage = ExecutionStageGuard::create(&layout, binding.clone(), plan.clone()).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan.clone()).unwrap();
     let original = fs::read(stage.layout().unwrap().root().join("stage-binding.json")).unwrap();
     assert_eq!(stage.plan(), &plan);
     assert!(ExecutionStageGuard::open(&layout, &workflow.digest(), 7, &binding.digest()).is_err());
@@ -151,7 +151,8 @@ fn exact_predecessor_settlement_admits_learned_plan_but_changed_history_stops() 
 #[test]
 fn declarations_and_missing_settlement_never_allocate_a_successor() {
     let (root, layout, workflow) = prepare();
-    let first = first_stage(&layout, &workflow);
+    let first = ExecutionStageBindingRecord::new(&workflow, 0, &child(0), vec![]).unwrap();
+    drop(ExecutionStageGuard::create(&layout, first.clone(), child(0)).unwrap());
     let row = ExecutionStagePredecessorRecord::new(
         0,
         first.digest(),
@@ -169,7 +170,9 @@ fn declarations_and_missing_settlement_never_allocate_a_successor() {
 #[test]
 fn lost_complete_creation_reopens_but_partial_or_unsafe_preparation_is_retained() {
     let (root, layout, workflow) = prepare();
-    let binding = first_stage(&layout, &workflow);
+    let binding = ExecutionStageBindingRecord::new(&workflow, 0, &child(0), vec![]).unwrap();
+    drop(ExecutionStageGuard::create(&layout, binding.clone(), child(0)).unwrap());
+    assert!(!root.join("execution-stage-0/attempt-42.json").exists());
     // Discard the successful response and recover only exact retained records.
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();

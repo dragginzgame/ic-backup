@@ -24,7 +24,7 @@ use ic_backup::{
         ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     },
 };
-use ic_platform::Principal;
+use ic_platform::principal::ExternalPrincipal;
 use ic_testkit::{
     pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal},
@@ -41,7 +41,7 @@ pub(super) struct Backend {
     pub pic: PocketIc,
     // Instance teardown precedes the managed server, retaining its original output files.
     _server: PocketIcManagedServer,
-    pub target: Principal,
+    pub target: ExternalPrincipal,
     pub root: PathBuf,
     pub release: ArtifactChecksumRecord,
     pub calls: u64,
@@ -141,7 +141,7 @@ impl Backend {
             .as_bytes(),
         );
         serde_json::from_value(json!({
-            "version":1,"context":{"network":network.hash(),"caller":Principal::anonymous().to_text(),"release":self.release.hash()},
+            "version":1,"context":{"network":network.hash(),"caller":ExternalPrincipal::anonymous().to_text(),"release":self.release.hash()},
             "inventory":{"version":1,"targets":[{"canister_id":self.target.to_text(),"parent_canister_id":null,"role":null,"module_hash":self.release.hash()}]},
             "selected_targets":[self.target.to_text()],"graph":{"version":1,"nodes":[{"operation_sequence":sequence,"depends_on":[]}]},
             "operations":[{"operation_sequence":sequence,"target":self.target.to_text(),"request":digest.hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
@@ -162,14 +162,14 @@ impl Backend {
         let raw = self
             .pic
             .update_call_with_effective_principal(
-                Principal::management_canister(),
+                ExternalPrincipal::management_canister(),
                 RawEffectivePrincipal::CanisterId(self.target.as_slice().into()),
-                Principal::anonymous(),
+                ExternalPrincipal::anonymous(),
                 method,
                 arguments.into(),
             )
             .unwrap_or_else(|error| panic!("PocketIC {method}: {error:?}"));
-        self.trace.push(json!({"sequence":self.calls,"instance":self.pic.instance_id(),"receiver":"aaaaa-aa","target":self.target.to_text(),"caller":Principal::anonymous().to_text(),"method":method,"arguments_sha256":ArtifactChecksumRecord::from_bytes(arguments).hash(),"reply_sha256":ArtifactChecksumRecord::from_bytes(&raw).hash()}));
+        self.trace.push(json!({"sequence":self.calls,"instance":self.pic.instance_id(),"receiver":"aaaaa-aa","target":self.target.to_text(),"caller":ExternalPrincipal::anonymous().to_text(),"method":method,"arguments_sha256":ArtifactChecksumRecord::from_bytes(arguments).hash(),"reply_sha256":ArtifactChecksumRecord::from_bytes(&raw).hash()}));
         fs::write(
             self.root.join("management-trace.json"),
             serde_json::to_vec_pretty(&self.trace).unwrap(),
@@ -287,7 +287,7 @@ impl Backend {
         self.pic
             .update_call(
                 self.target,
-                Principal::anonymous(),
+                ExternalPrincipal::anonymous(),
                 "write",
                 value.to_le_bytes().into(),
             )
@@ -312,7 +312,7 @@ impl Backend {
     pub fn assert_state(&self, expected: u64) {
         let raw = self
             .pic
-            .query_call(self.target, Principal::anonymous(), "read", vec![])
+            .query_call(self.target, ExternalPrincipal::anonymous(), "read", vec![])
             .unwrap();
         assert_eq!(
             raw,
@@ -413,7 +413,7 @@ impl Backend {
         purpose: &str,
     ) -> ArtifactChecksumRecord {
         assert_eq!(self.plans[&sequence], plan.digest());
-        let bytes = serde_json::to_vec(&json!({"purpose":purpose,"original_plan":plan.digest().hash(),"original_sequence":sequence,"context":plan.context(),"actual_target":self.target.to_text(),"actual_caller":Principal::anonymous().to_text(),"exclusive_completed_ingress_history":self.trace})).unwrap();
+        let bytes = serde_json::to_vec(&json!({"purpose":purpose,"original_plan":plan.digest().hash(),"original_sequence":sequence,"context":plan.context(),"actual_target":self.target.to_text(),"actual_caller":ExternalPrincipal::anonymous().to_text(),"exclusive_completed_ingress_history":self.trace})).unwrap();
         fs::write(
             self.root
                 .join("calls")

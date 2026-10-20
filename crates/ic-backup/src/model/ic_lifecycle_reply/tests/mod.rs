@@ -3,10 +3,10 @@
 use super::*;
 use crate::model::{control_authority::MAX_CONTROLLERS, ic_request::IcManagementRequest};
 use ic_platform::candid::contract;
+use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::management_canister_types::{
     CanisterStatusResult, DefiniteCanisterSettings, MemoryMetrics, QueryStats, StatusVisibility,
 };
-use ic_platform::{Principal, candid::contract::CandidType};
 use serde::Deserialize;
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";

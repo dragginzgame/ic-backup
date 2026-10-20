@@ -98,7 +98,7 @@ impl IcManagementRequestRecord {
         let arguments = match request.method {
             IcManagementMethodRecord::TakeCanisterSnapshot => {
                 contract::encode_one(TakeCanisterSnapshotArgs {
-                    canister_id: principal,
+                    canister_id: principal.into(),
                     replace_snapshot: None,
                     uninstall_code: Some(false),
                     sender_canister_version: None,
@@ -106,7 +106,7 @@ impl IcManagementRequestRecord {
             }
             IcManagementMethodRecord::LoadCanisterSnapshot => {
                 contract::encode_one(LoadCanisterSnapshotArgs {
-                    canister_id: principal,
+                    canister_id: principal.into(),
                     snapshot_id: request
                         .snapshot_id
                         .clone()
@@ -118,7 +118,7 @@ impl IcManagementRequestRecord {
             | IcManagementMethodRecord::ListCanisterSnapshots
             | IcManagementMethodRecord::StartCanister
             | IcManagementMethodRecord::StopCanister => contract::encode_one(CanisterIdRecord {
-                canister_id: principal,
+                canister_id: principal.into(),
             }),
         }
         .map_err(|error| IcRequestError::Encoding(error.to_string()))?;

@@ -1126,7 +1126,7 @@ dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
- "ic-platform",
+ "ic-platform 0.3.0",
  "ic-testkit",
  "rustix",
  "serde",
@@ -1143,7 +1143,7 @@ dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
- "ic-platform",
+ "ic-platform 0.3.0",
  "ic-testkit",
  "reqwest",
  "serde_json",
@@ -1182,9 +1182,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.30.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44bba54ae405baf6849816c20ce00b79cd47e751efc494cd4f84699bf420d124"
+checksum = "05253e4f12a18fa5012bc46be46901259cae264ec5da5bbe71662728bbdb87f9"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
@@ -1193,9 +1193,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.30.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8799a269455def6035808f2d6b2c7872bd42b2a0f71a22fd95b713e6730aa405"
+checksum = "93a88de3f33e927fcb4c50491b88de82a3be89ec4c903f5eedd103b676d64729"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1204,9 +1204,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.30.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7131fc84dbcc5a0c51cd145600ac16af3a8c3c887a1f040ec5847e2a1a3c97b6"
+checksum = "6e17da14b6f4936cafe412b82454c76582a5e47cc6e9ced0c132b950b0be5928"
 dependencies = [
  "command-fds",
  "ic-host-artifacts",
@@ -1250,11 +1250,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b083e911eb9799daf15f501a883d50a76e709d300a51b25fb0c31cd0be0377bd"
 dependencies = [
  "candid",
- "ic-agent",
- "ic-management-canister-types 0.11.0",
  "ic0",
  "ic_principal",
  "pocket-ic",
+ "serde",
+]
+
+[[package]]
+name = "ic-platform"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a01558df9cef88b1841fbfbd7c8dd1cae2ba23b9861346f68faf3e3c3f106837"
+dependencies = [
+ "candid",
+ "crc32fast",
+ "data-encoding",
+ "ic-agent",
+ "ic-management-canister-types 0.11.0",
+ "ic_principal",
  "serde",
 ]
 
@@ -1268,7 +1281,7 @@ dependencies = [
  "ic-host-fs",
  "ic-host-process",
  "ic-metrics",
- "ic-platform",
+ "ic-platform 0.2.2",
  "libc",
  "thiserror 2.0.18",
  "tokio",
@@ -3238,9 +3251,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-root-certs"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b"
+checksum = "58ec80e73fd8baf57bf0d9615554c75348bda990d6d5bbeab964dd068319fecb"
 dependencies = [
  "rustls-pki-types",
 ]

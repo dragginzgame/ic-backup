@@ -26,8 +26,8 @@ pub(crate) async fn submit_once<E>(
     let target = Principal::from_text(wire.target).map_err(|_| unsupported())?;
     let signed = transport
         .agent
-        .update(&receiver, wire.method)
-        .with_effective_canister_id(target)
+        .update(&receiver.into(), wire.method)
+        .with_effective_canister_id(target.into())
         .with_arg(wire.arguments)
         .sign()
         .map_err(|_| unsupported())?;
@@ -40,7 +40,7 @@ pub(crate) async fn submit_once<E>(
     let prepared = PreparedUpdate {
         transport,
         request,
-        target,
+        target: target.into(),
         envelope: signed.signed_update,
         request_id: signed.request_id,
         reply_limit,
