@@ -31,6 +31,12 @@ guide for performing a canister backup or restore.
 
 ## CI source qualification
 
+CI/release validation dispatches targets sequentially. After prepared tools,
+locked dependencies, source checks and formatting, the existing `make clippy`
+gate runs before expensive product checks, tooling/release/hook suites and
+packaging. A lint failure stops later stages under serial or parallel Make.
+Publication and its dry run use the same lint scope before Cargo packaging/upload.
+
 `make ci` declares the root Cargo.toml and Cargo.lock as validation inputs. The
 shared runner checks them before and after each target, including same-checkout
 nested gates. Changed, missing or unreadable inputs stop later dispatch and retain
@@ -247,30 +253,23 @@ independent. The focused product publication/recovery check is
 `cargo test --offline --locked -p ic-backup --test directory_checksum`.
 JSON serializers run once before parent/staging effects; their byte buffer retains
 that contract. Host's typed descriptor publisher owns staging/atomic publication,
-with private parent policy and acknowledged crash barriers in Backup. In the
-0.6.0 release, match `PersistenceError::Publication` for its original typed producer,
-cleanup and before/after-publication failures; visible output requires recovery.
-Released 0.8.1 selects the Host 0.7.1 publication-error Rust identity. The
-released 0.9.0 selected Host 0.8. Released 0.11.0, 0.12.0 and 0.13.0 selected
-direct Host 0.9, 0.10 and 0.11 respectively. Released 0.14.0 and 0.18.0
-selected Host 0.12 and 0.13. Released 0.19.0 selected Host Artifact/FS 0.14.
-Released 0.22.0 selected direct Host Artifact/FS 0.16.0; their published
-Rust sources match 0.15.2, but the exposed `NamedWriteError` identity changes.
-Testkit 0.35.1 keeps its independently selected dev-only Host 0.15.2 graph.
-Consumers of that release sharing `NamedWriteError` values or matching through
-a direct Host dependency had to select that same compatible line. The pending
-0.25.0 hard cut introduced Backup's own `PublicationError`. The 0.28 hard cut
-removes that mirror without an alias: `PersistenceError::Publication` directly
-carries `ic_host_fs::durable::NamedWriteError<std::io::Error>`. Update imports and
-exhaustive matches to Host's enum and align a direct `ic-host-fs` dependency with
-Backup's selected 0.24 line. Publication phases and retained cleanup evidence remain
-unchanged. Production direct Host
-dependencies still disable default features. Testkit enables artifact archive/Wasm
-and Candid-extraction features in the dev graph, and owns dev-only Host process
-startup/cleanup. No new production inspection, installation-limit or process
-policy is added. The direct process dependency retired with the ICP probe. Local bounded test capture still
-cleans only its direct child; process-group signalling
-does not replace Backup's inherited lock-descriptor quiescence checks.
+with private parent policy and acknowledged crash barriers in Backup. `PersistenceError::Publication` carries Host FS's
+`NamedWriteError<std::io::Error>`, retaining original producer/cleanup causes and
+before/after-publication phases. Visible output requires reconciliation. Consumers
+matching or constructing that variant must align a direct `ic-host-fs` dependency
+with Backup's selected **0.32** line. The public conversion from Host Artifacts'
+`DirectoryChecksumError` into `ArtifactError` requires the same **0.32** alignment
+for `ic-host-artifacts`. Earlier identity changes remain in the
+[changelog](../CHANGELOG.md); no local error mirror or compatibility alias exists.
+
+The published Artifacts, FS and Process 0.32.0 Rust sources match 0.31.2. All
+production Host dependencies disable defaults; no capability/tempfile, archive,
+WAT or CLI feature is needed in production. Unix Process supplies inherited
+command custody and bounded quiescence. Local test features select WAT compilation,
+fixture allocation and HTTP capture. Testkit 0.60.0 retains its own development-only
+Host 0.31.2 graph and owns simulator startup/cleanup. Native tests qualify that
+coexistence without converting Host-owned errors between versions. Process exit
+or group cleanup never substitutes for inherited lock-descriptor quiescence.
 Unix artifact and lock operations use Rustix's `io::Error::from` conversion
 directly. Native codes and existing typed error projections stay intact; no local
 errno wrapper or retry policy is layered over that upstream implementation.

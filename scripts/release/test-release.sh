@@ -176,7 +176,7 @@ TOOL
     printf 'retained build artifact\n' > target/debug/cache-sentinel
     export VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/target/validation-failures" GITHUB_STEP_SUMMARY="$FIXTURE/target/summary.md"
     unset YQ
-    unset TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL TEST_TOOL_FAIL TEST_SERVER_FAIL TEST_COMMON_TOOL_FAIL CARGO_NET_OFFLINE
+    unset TEST_CLIPPY_FAIL TEST_CLIPPY_ORDER TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL TEST_TOOL_FAIL TEST_SERVER_FAIL TEST_COMMON_TOOL_FAIL CARGO_NET_OFFLINE
 }
 expect_failure() {
     local status
@@ -354,6 +354,13 @@ target=''
 for argument in "$@"; do
     case "$argument" in -*|*=*) ;; *) target="$argument" ;; esac
 done
+# The actual release-verify/CI recipe retains its target roster and sequencing.
+# Substitute preparation and expensive stages; run the real Clippy recipe with
+# the exact Cargo substitute below, including under parallel parent Make.
+if [[ "${TEST_CLIPPY_ORDER:-0}" == 1 && -n "$target" && "$target" != clippy ]]; then
+    printf '%s\n' "$target" >> "$TEST_EFFECTS"
+    exit 0
+fi
 if [[ "$target" == shared-tooling-check ]]; then exit 0; fi
 if [[ "$target" == fmt-check ]]; then
     echo prepared-format-check >> "$TEST_EFFECTS"
@@ -380,6 +387,8 @@ case "$*" in
         version="$(yq -p toml -o json '.workspace.package.version' Cargo.toml | jq -r .)"
         jq -n --arg version "$version" '{workspace_members:["fixture"],packages:[{id:"fixture",name:"ic-backup",version:$version,source:null}]}' ;;
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
+    'clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings')
+        echo clippy >> "$TEST_EFFECTS"; [[ "${TEST_CLIPPY_FAIL:-0}" != 1 ]] || exit 23 ;;
     'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
     'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent'|'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent --dry-run')
@@ -664,14 +673,48 @@ test_publish() {
     if [[ "$1" == tagged ]]; then prepare_tagged_release; before="$(fingerprint)"; fi
     : > "$TEST_EFFECTS"
     "$TEST_REAL_MAKE" --no-print-directory publish
-    [[ "$(cat "$TEST_EFFECTS")" == publish && "$(fingerprint)" == "$before" ]] || exit 1
+    [[ "$(cat "$TEST_EFFECTS")" == $'clippy\npublish' && "$(fingerprint)" == "$before" ]] || exit 1
     assert_cache_retained
 }
 test_publish_failure() {
     before="$(fingerprint)"; export TEST_PUBLISH_FAIL=1
     expect_failure "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
     assert_unchanged
-    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
+    [[ "$(cat "$TEST_EFFECTS")" == clippy ]] || exit 1
+}
+test_clippy_gate() {
+    local entry="$1" jobs="$2" outcome="$3"
+    before="$(fingerprint)"
+    if [[ "$entry" == release-verify ]]; then
+        cat >> Makefile <<'MAKE'
+.PHONY: fixture-ci-targets
+fixture-ci-targets:
+	@printf '%s\n' $(CI_TARGETS)
+MAKE
+        "$TEST_REAL_MAKE" --no-print-directory -s fixture-ci-targets > target/expected-order
+        sed -n '1,/^clippy$/p' target/expected-order > target/lint-prefix
+        [[ "$(tail -n 1 target/lint-prefix)" == clippy ]] || exit 1
+        if grep -Ex 'check|test|doc|check-msrv|package|tooling-check|release-check|hooks-check' target/lint-prefix; then
+            echo 'expensive stage precedes Clippy' >&2; exit 1
+        fi
+        export TEST_CLIPPY_ORDER=1
+    else
+        printf '%s\n' clippy publish > target/expected-order
+        printf '%s\n' clippy > target/lint-prefix
+    fi
+    if [[ "$outcome" == failure ]]; then
+        export TEST_CLIPPY_FAIL=1
+        expect_failure "$TEST_REAL_MAKE" --no-print-directory "-j$jobs" "$entry"
+        cmp target/lint-prefix "$TEST_EFFECTS"
+        if grep -F 'cargo publish ' "$TEST_LOG"; then exit 1; fi
+    else
+        "$TEST_REAL_MAKE" --no-print-directory "-j$jobs" "$entry"
+        cmp target/expected-order "$TEST_EFFECTS"
+    fi
+    grep -Fx 'cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings' "$TEST_LOG" >/dev/null
+    [[ ! -d target/release-state/lock ]] || exit 1
+    assert_unchanged
+    assert_cache_retained
 }
 test_invalid_release() {
     prepare_tagged_release
@@ -1091,6 +1134,13 @@ for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST
 run_case staging test_staging
 for state in no-release tagged; do run_case "publish-$state" test_publish "$state"; done
 run_case publish-failure test_publish_failure
+for entry in release-verify publish publish-dry-run; do
+    for jobs in 1 4; do
+        for outcome in success failure; do
+            run_case "clippy-$entry-$jobs-$outcome" test_clippy_gate "$entry" "$jobs" "$outcome"
+        done
+    done
+done
 for drift in notes tag head; do run_case "completed-$drift" test_invalid_release "$drift"; done
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
 run_case early-plan-retry-retention test_early_plan_retry

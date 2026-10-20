@@ -137,6 +137,7 @@ lock_release() {
 }
 publish() {
     case "${1:-}" in ''|--dry-run) ;; *) fail 'expected publish [--dry-run]' ;; esac
+    make --no-print-directory clippy || return "$?"
     cargo publish --locked --registry crates-io -p ic-backup -p ic-backup-agent ${1:+"$1"}
 }
 command="${1:-}"

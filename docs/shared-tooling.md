@@ -49,7 +49,31 @@ reviewed refresh, a normal consumer diff and the relevant local validation.
 
 ## Reviewed sources
 
-The current 119-file snapshot selects committed Shared Tooling **0.25.5** at
+The current 119-file snapshot selects committed Shared Tooling **0.25.7** at
+`d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b`, verified against remote `main` on
+2026-10-20. No GitHub release object was available. Canonical refresh from a clean
+isolated source updates the baseline and two guides; entrypoints and tools stay
+unchanged. Backup applies the new rule locally: the sequential CI/release gate
+runs its existing Clippy scope before expensive stages, and publication/dry runs
+require that same gate before Cargo packaging/upload. Serial and parallel Make
+fixtures qualify failure stopping and retained metadata/publication exclusion.
+[The review](shared-tooling-review.json) records provenance and local checks.
+
+### Prior Shared Tooling 0.25.6 review
+
+The prior 119-file snapshot selects committed Shared Tooling **0.25.6** at
+`84a8742c7c2e3f5611647f9c0f67fed049960327`, verified against remote `main` on
+2026-10-20. No GitHub release object was available. The canonical exporter ran
+from an isolated clean checkout, updating the Cargo release metadata checker and
+its release guide without changing entrypoints or adding/retiring payloads.
+Failed live and selected-commit metadata checks retain root inputs, stdout,
+streamed stderr and separate Cargo/logger statuses without retry or lock repair.
+[The review](shared-tooling-review.json) records exact source/mode verification
+and fresh consumer qualification. Tool selections and build policy are unchanged.
+
+### Prior Shared Tooling 0.25.5 review
+
+The prior 119-file snapshot selects committed Shared Tooling **0.25.5** at
 `75c633d71933b64b3b2558c4a5f3ac0679b7ab32`, verified against remote `main` on
 2026-10-20. No GitHub release object was available. The canonical exporter ran
 from an isolated clean checkout and preserved every selected payload's exact

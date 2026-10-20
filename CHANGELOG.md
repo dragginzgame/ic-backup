@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.36.0]
+
+- **Breaking:** Adopt Host Artifacts, FS and Process 0.32.0. Consumers sharing
+  `PersistenceError::Publication` or the `DirectoryChecksumError` conversion into
+  `ArtifactError` must align their direct Host dependencies to 0.32. Publication
+  phases, retained evidence and persisted records are unchanged.
+
+- Adopt published Platform 0.5.0 without expanding features or changing public
+  types, management wire formats, decoder limits or Agent submission behavior.
+
+- Align simulator qualification with published Testkit 0.60.0, sharing Platform
+  0.5 decoder identities. Prepare its exact CLI with `make install-testkit-server`
+  before running offline checks.
+- Adopt Shared Tooling 0.25.7's early Clippy gate: release validation runs the
+  unchanged lint scope before expensive checks, and publication/dry runs stop
+  before Cargo packaging or upload when lint fails, including under parallel Make.
+- Adopt Shared Tooling 0.25.6: failed release metadata checks retain Cargo output,
+  root inputs and separate Cargo/logger statuses, preserving the original failure
+  without retries. See [Shared Tooling #291 — Retain failed Cargo metadata diagnostics and root inputs](https://github.com/dragginzgame/shared-tooling/issues/291).
+
 ## [0.35.1] - 2026-10-20
 
 - Align simulator qualification with published Testkit 0.59.0, sharing the

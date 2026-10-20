@@ -54,12 +54,29 @@ another lane. Ordinary contributions continue through authorized PRs.
 | `make publish-dry-run` | Run Cargo registry admission without uploading | Maintainer |
 | `make publish` | Upload the current package to crates.io | Maintainer |
 
+The sequential CI/release gate runs the existing `make clippy` after tool,
+dependency, source and formatting admission, before product checks, test suites
+and packaging. Clippy still selects both packages, all targets/features and
+`-D warnings`. Failure stops later targets even under `make -j`.
+Standalone `publish` and `publish-dry-run` acquire their existing exclusion, then
+run that same Clippy gate before Cargo's packaging or upload. Prepare required
+tools/dependencies explicitly with `make install-tools`; publication never
+continues after failed lint. Exact saved-source recovery and terminal replay
+retain their original validation/receipt obligations without restarting CI.
+
 Release preparation runs the same grouped `make fmt-check` used by CI. Committed
 admission additionally invokes Shared's Cargo metadata checker with
 `--manifest-order-grouped` against `RELEASE_COMMIT`, rather than current working
 manifests. Product receipt/source validation remains independent. Consumer
 fixtures prove an earlier sorted release can be checked while a later current
 manifest is unsorted, without formatting either source or changing real Git refs.
+
+Failed shared metadata checks retain their JSON stdout, streamed stderr, physical
+selected root, root manifest/lock copies and separate Cargo/logger exit statuses.
+Cargo's failure takes priority when both commands fail; a logger failure also
+refuses admission. A selected-commit check retains its exported tree. Live root
+copies do not freeze member manifests or Cargo configuration. No automatic retry
+or lockfile repair is performed; inspect the reported retained directory.
 
 Manifest and lockfile candidates use the published IC Build 0.18.0
 `ic-build-release-metadata` command, selected through Shared Tooling's installer.

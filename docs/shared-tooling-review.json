@@ -2,31 +2,37 @@
   "version": 1,
   "inspection_date": "2026-10-20",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "75c633d71933b64b3b2558c4a5f3ac0679b7ab32",
-  "label": "0.25.5",
+  "revision": "d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b",
+  "label": "0.25.7",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 119,
-  "previous_revision": "db555ab6cf4a93af9a183f18d921d3b0ee97c725",
+  "previous_revision": "84a8742c7c2e3f5611647f9c0f67fed049960327",
   "previous_review": {
-    "commit": "e323361e926884784c7c1966d7a22d1a778907be",
-    "path": "docs/shared-tooling-review.json"
+    "state": "incoming uncommitted 0.25.6 adoption",
+    "path": "/tmp/backup-shared-0257-gq1cn_l2/before/docs/shared-tooling-review.json"
   },
   "canonical_refresh": true,
   "source_verification": {
     "remote_ref": "refs/heads/main",
-    "remote_revision": "75c633d71933b64b3b2558c4a5f3ac0679b7ab32",
+    "remote_revision": "d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b",
     "isolated_clean_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "github_release_object_available": false,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true
   },
-  "changed_paths": [],
+  "changed_paths": [
+    "DRAGGINZGAME.md",
+    "docs/principles/rust-code-hygiene.md",
+    "docs/releases.md"
+  ],
   "added_paths": [],
   "retired_paths": [],
   "consumer_changes": [
-    "Advance snapshot provenance and current adoption references; all 119 payloads and the entrypoint closure are unchanged."
+    "Run the unchanged Clippy gate before expensive stages in the sequential CI/release target list.",
+    "Gate standalone publication and dry runs on the existing Clippy scope after publication exclusion and before Cargo packaging/upload.",
+    "Qualify success/failure under serial/parallel Make with real consumer entrypoints and substituted expensive/external effects."
   ],
-  "upstream_change_scope": "Five producer-only fixtures derive helper exports and workflow-step selection through existing canonical owners; none is selected by Backup.",
+  "upstream_change_scope": "Require early failure-stopping Clippy in Rust release/deployment entrypoints while preserving consumer lint scope and recovery admission.",
   "deployment_enforcement": {
     "automated": [
       "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity."
@@ -41,27 +47,35 @@
     "passed": [
       "canonical refresh and independent verification of all 119 payloads",
       "shared-tooling-check",
-      "tooling-check, including retained-evidence and actual CI collector fixtures",
+      "shell-check",
       "fmt-check",
-      "check-doc-links"
+      "existing native Clippy gate: both packages, all targets/features, offline/locked, -D warnings; incoming Metrics 0.14.11 graph",
+      "tooling-check",
+      "check-doc-links",
+      "all 90 consumer release-adapter cases, including 12 serial/parallel Clippy ordering, refusal and publication-lock controls"
     ],
     "not_run": [
       "full local make ci",
-      "native macOS",
+      "native macOS for this working-tree batch",
       "installed IC",
       "release or publication"
     ],
-    "timings": "validation/validation.0d6YOt/timings.tsv"
+    "timings": "validation/validation.7xqVvD/timings.tsv",
+    "release_registry": "target/shared-release-tests.rxMx3p/cases.txt"
   },
   "unchanged_evidence": [
     {
       "directory": "/tmp/backup-testkit-release-cut-5orrht2t",
-      "scope": "Unchanged tooling/release adapters and Cargo graph: 15 focused targets, 78 consumer release cases, native HTTP/PocketIC, MSRV and package archives."
+      "scope": "Earlier native, HTTP/PocketIC, MSRV and archive evidence retains its original source/lock scope; it does not qualify the incoming Metrics 0.14.11 update. This pass qualifies the existing Clippy gate on that graph."
     },
     {
       "directory": "/tmp/backup-host-consumer-7j5fm1d2",
       "scope": "Unchanged Host checksum/publication consumer identities, mismatched-Host negative control and real checksum/custody cases."
+    },
+    {
+      "directory": "/tmp/backup-shared-0256-b14_rsos",
+      "scope": "Unchanged shared metadata checker: retained Cargo/logger status precedence and exact input evidence across 16 live/committed failure cases."
     }
   ],
-  "evidence_directory": "/tmp/backup-shared-0255-1o2lv21t"
+  "evidence_directory": "/tmp/backup-shared-0257-gq1cn_l2"
 }

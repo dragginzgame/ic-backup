@@ -55,7 +55,11 @@ The default `RELEASE_DELIVERY=direct` workflow is:
    Never infer a deployment destination or credentials.
 2. **Validate.** Run the repository's documented complete release gate against
    the selected source and dependencies. Patch, minor and major use the same
-   gate. Stop before version mutation if validation fails; retain failure logs
+   gate. Rust consumers run their existing Clippy gate before expensive builds,
+   tests and packaging, with failure stopping later stages even under parallel
+   Make. The same ordering applies to Rust deployment entrypoints under the
+   [shared validation policy](../DRAGGINZGAME.md#validation-and-evidence).
+   Stop before version mutation if validation fails; retain failure logs
    and build artifacts. Coordinated Rust crates with unchanged versions may use
    [local archive qualification](../rules/cargo-dependencies.md#qualifying-coordinated-package-archives-before-a-version-bump)
    when registry verification selects an older published dependency. This does
@@ -848,6 +852,14 @@ The `check` operation uses `RELEASE_COMMIT` when selected, exporting that exact
 committed source instead of reading newer working metadata. No version selection,
 fetch, tool installation, Git staging/ref mutation or publication is implicit.
 Consumer preflight and late source/index admission remain outside this helper.
+
+When `check` or `check-graph` dispatches Cargo metadata, failures retain its stdout
+(including an empty JSON file), streamed stderr, separate Cargo/logger statuses,
+the selected physical root and copies of its root `Cargo.toml`/`Cargo.lock`.
+A Cargo failure takes priority over a simultaneous logger failure; a logger
+failure also refuses an otherwise successful check. Root input copies do not freeze member manifests or Cargo
+configuration in a live workspace. A selected committed-source check additionally
+retains its exported tree. Neither path retries Cargo or repairs the lockfile.
 
 IC Metrics adopts the corrected helper from committed Shared Tooling 0.11.1
 through normal snapshot distribution, retaining its local policy in a thin adapter.

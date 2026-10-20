@@ -74,7 +74,8 @@
     "test_dependency_failure_conditional_status": "Cargo substitute cannot produce false-success/cache under conditional errexit semantics",
     "test_conditional_substitute_rejections": "Fixture Git/formatter missing proofs cannot become false-success under supported shell semantics",
     "test_real_index_boundaries": "Real private Git index distinguishes staged, unstaged, untracked and unusual-name paths, initial phase refusals and observation errors; preserves index, lock, working bytes and HEAD without creating commits",
-    "test_committed_preparation_retry": "Actual Backup Make/metadata adapter with Git/Cargo substitutes: rolled-back or committed bumped local preparation, unchanged archived intent/backups, failed fresh gate without effects, current-source validation and next metadata selection."
+    "test_committed_preparation_retry": "Actual Backup Make/metadata adapter with Git/Cargo substitutes: rolled-back or committed bumped local preparation, unchanged archived intent/backups, failed fresh gate without effects, current-source validation and next metadata selection.",
+    "test_clippy_gate": "Actual release-verify/CI target roster and Clippy recipe, with preparation/downstream effects substituted; serial/parallel success and failure prove early ordering, unchanged lint scope and no later work/publication after refusal. Publication exclusion and metadata/cache custody remain checked."
   },
   "retained_git_substitute": "Still required by actual selected historical receipts: immutable full product file trees, source/member/lock/notes/receipt reads, descendant proofs and remote tag association. Canonical runner fixture models generic version/evidence files, so no new generic fake-Git framework or callback contract is introduced. Unused lost-tag/push injection branches are retired.",
   "evidence": "target/release-fixture-052-review",

@@ -1,10 +1,10 @@
 # Platform dependency boundary
 
 The repository selects published
-[ic-platform 0.4.1](https://crates.io/crates/ic-platform/0.4.1), with requirement
-`0.4` and empty defaults. Its archive SHA-256 is
-`b18d164492c33ea09395d97ef4f7858678af7565e457b35cafff59a6fc9869fd`,
-source revision `30058e1ff181b0c2f5c1be0118a56cd9e02715c8`.
+[ic-platform 0.5.0](https://crates.io/crates/ic-platform/0.5.0), with requirement
+`0.5` and empty defaults. Its archive SHA-256 is
+`071793369ed93c3a42dae9a19eedfa76856ca2d0b31f03de7167ae7905bdc4f4`,
+source revision `b840423928f0ca7f14d7fc860508730c87356640`.
 Qualification boundaries are recorded in the [current handoff](status/current.md);
 the provenance below preserves the original 0.1.8 adoption. All production and
 test Candid, Principal, SDK and management DTO imports use Platform. There are no
@@ -16,7 +16,14 @@ Testkit codec, and no local compatibility re-exports or pin exceptions.
 The root catalog selects `default-features = false` with `candid` and
 `management-canister-types`. Only `ic-backup-agent` adds `agent`; Core’s independent
 consumer remains Agent-free. Parser, executor, ic0, certification and ledger
-features are not selected.
+features are not selected. Service declaration generation (`candid-service`) and
+the CDK entrypoint/runtime surfaces are unused; 0.5 requires no source adapter or
+feature expansion. Published archive inspection confirms that principal, Agent,
+management exports and bounded decoder behavior are unchanged from 0.4.1. The
+Candid contract change only gates unused service macros/printer machinery behind
+`candid-service`. Plain `candid` no longer requests the printer, but management
+DTOs and Agent still enable upstream Candid defaults in the resolved production
+graph; this adoption does not remove the transitive printer.
 
 Platform owns its root `Principal` and `PrincipalError` representations and
 uses `MIT AND Apache-2.0` licensing. Backup keeps bounded canonical admission on
@@ -51,7 +58,7 @@ or replacement identity is introduced. No storage or memory schema changes.
 
 ## Dependency enforcement
 
-`make dependency-boundaries-check` uses Shared Tooling 0.25.5's canonical checker
+`make dependency-boundaries-check` uses Shared Tooling 0.25.7's canonical checker
 with `ci/cargo-dependency-boundaries.json`. CI/release validation rejects direct
 upstream IC declarations across normal/build/dev/target edges by canonical package
 identity, including aliases. The independent Core MSRV consumer separately rejects
@@ -66,11 +73,14 @@ old Candid/CDK paths.
 
 Candid and SDK remain necessary production transitives. The complete development
 lock retains PocketIC's management DTO 0.8.0 alongside Platform's 0.11.0. Published
-Testkit 0.59.0 shares Platform 0.4.1 and Host 0.31.1 with production, removing the
-older development-only Platform and Host identities. Its PocketIC exports include
-`RawEffectivePrincipal` without changing the upstream client identity. Testkit's
-native CLI brings Clap into the development graph only; no local patch supplies
-any dependency.
+Testkit 0.60.0 selects Platform 0.5, consolidating production and development on
+0.5.0. Its native call helpers use the same decoder-limit/error identities;
+external principal/PocketIC identities and caller-selected limits are unchanged.
+No conversion shim or local patch is needed. Production Host selects 0.32.0;
+Testkit retains Host 0.31.2 in the development graph. Platform's PocketIC exports
+include `RawEffectivePrincipal` without changing the upstream client identity.
+Testkit's native CLI brings Clap into the development graph only; no local patch
+supplies any dependency.
 The selected client preserves original PocketIC identities without a copied DTO,
 direct PocketIC declaration or routing fallback. The lock contains neither the
 standalone Testkit codec nor CDK-family packages. Simulator packages do not enter

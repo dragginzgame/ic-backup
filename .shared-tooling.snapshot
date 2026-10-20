@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.25.5
+# version	0.25.7
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	75c633d71933b64b3b2558c4a5f3ac0679b7ab32
+revision	d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b
 # entrypoint	docs/verification-helpers.md
 # entrypoint	scripts/ci/check-documentation-links.pl
 # entrypoint	scripts/ci/test-documentation-links.pl
@@ -121,7 +121,7 @@ file	63aa3234167bca3d4e4b37a40a48a3f2a96c34fba74d6770bfa8f3e226ada84e	x	scripts/
 file	59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499	-	docs/principles/README.md
 file	9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7	-	docs/principles/decision-artifact-discipline.md
 file	72a6e34f90aea62c00aa612d65f21815dc7dc9d543c48998b541983ec7a42dce	-	docs/principles/reviewable-changes.md
-file	378fa05af602ee00ac81fbfdba024ed9e3009b23746344e7cb0cc2635d023305	-	docs/principles/rust-code-hygiene.md
+file	b7486cbe9bb822d6a73d1a3a9da9f3ab8ad3268fe9cddd5a9c7c71e167cf6c82	-	docs/principles/rust-code-hygiene.md
 file	457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55	-	docs/principles/simplicity-and-maintainability.md
 file	1530333838b291ed5a6abb3ba5ac7bf85bba959b245204aad6295808ce4636de	-	docs/consuming-snapshots.md
 file	bed4a3ec58de41956039b2b04baf357024ae7901c1f7d301b294cb35a8c44bcd	-	docs/supported-hosts.md
@@ -129,9 +129,9 @@ file	4c981184847462ab3c01cac087e28309f8e054253fd95c7bbe56f643877aa708	x	scripts/
 file	a4682503812f210b951aede536cdd65642bfe266b02ab532853a1aeff64f9742	x	scripts/ci/verify-shared-tooling-snapshot.sh
 file	e7647e72465b1caf790d8312fc276dda0efc2a8f7dacf1c0ff519ee5b7f1640a	x	scripts/ci/run-validation-targets.sh
 file	77363e393b076a50a450956b1326c88853b3768db859772ecc01bfcb24badc66	x	scripts/ci/test-validation-target-runner.sh
-file	6680359b8395bec1cbd264f5f2a2052461b93b9eb20710d649e870999d06404a	-	DRAGGINZGAME.md
+file	edfc690f09324146d5dd0355a8e5116634076e2403c64f33073446aa3746e786	-	DRAGGINZGAME.md
 file	372e8a256767514d119ecd3e584cd20f15732b3eb169b212716069be7c3f9c80	-	rules/changelogs.md
-file	f2a7c39121295d70f335de888c3e6f70fc41e7e2e17356ab93bfbd0b29dcf4eb	-	docs/releases.md
+file	4044eca5ede2db713dd96bedafacaf89ac026f42ecbbeb93362b0b2edceedd87	-	docs/releases.md
 file	924e66af90c91cf6b5efa0d330d53742dcdf8eb28d34ca8465c15fe8687ab4ea	x	scripts/ci/run-release.sh
 file	918815a81861abd80684fea14f71cb5a298644317afc0f5860a3d1b6506a0a16	x	scripts/ci/next-release-version.sh
 file	4ac92baf6ec8887acee153fb15d468a4d6306cbd55ceb58ac3fd807283b0f363	-	scripts/ci/finalize-release-changelog.awk
@@ -187,7 +187,7 @@ file	b504048aee31664bb51cfeb14061a43d13fbc1cfff6d84aa6951f1809d424294	-	docs/mak
 file	a9ed416a02f737d420723642935de94ffdd53cf92f75bb06ab4b0bc1c68430dc	-	tasks/cargo-tool-versions.md
 file	e01538ee7aadd1b599ea9d4fc420fe64f27f204227fe2c7937ac6c2e1d378852	x	scripts/dev/check-cargo-tool-versions.pl
 file	fa96fe86ee2ccf61002fbce2b09603298550fd239d28131cbdcf6449a8247923	-	rules/change-reporting.md
-file	6020a4cb5bc9524cd6c63895d1338bc3e955231be4f4df74f6dc9d2ffca8a379	x	scripts/ci/cargo-release-metadata.sh
+file	b46a945b4a4edda01fd73fcc0d84f5e126fd376ae7197c9a23c0c1ecfd6ac1e1	x	scripts/ci/cargo-release-metadata.sh
 file	d38467ef1b8e143e9d8daca99975b93f6957fa3796f825b830997b3dc7f0b145	-	scripts/ci/check-cargo-dependency-boundaries.sh
 file	f921bbea3cebef8362b57c888e7624b4d2c82a64c00318df02c873e6df84cfd7	x	scripts/ci/check-no-symlinks.pl
 file	a5e3b562645c111b023b04fb96d938651a209fccb6b907ec0d75aaf67114e798	-	scripts/ci/check-license.pl
