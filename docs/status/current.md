@@ -1,94 +1,96 @@
-# Current handoff — 2026-10-20
+# Current handoff — 2026-10-21
 
 ## Current boundary
 
 Core owns backup records, bounded spending, guarded persistence, reconciliation
 and coordination. Agent owns reserved signed transport. Platform owns external
-IC types/codecs/SDKs; Host owns generic host IO/process custody; Testkit owns
-simulator assets/processes. Applications supply fresh authority, consistency,
-fencing and external-effect settlement. The
-[implementation contracts](../implementation-contracts.md) remain mandatory.
+IC types/codecs/SDKs. IC Tooling owns Host, Build and Testkit: generic host
+IO/process custody, release metadata rendering and simulator assets/processes.
+Applications retain fresh authority, consistency, fencing and external-effect
+settlement. The [implementation contracts](../implementation-contracts.md) remain
+mandatory; this batch changes no Rust, storage, wire or recovery behavior.
 
-## Current batch
+## Current selections
 
-Task-entry HEAD remains **`5614847` / 0.35.1**. Incoming work already selected
-Host **0.32.0**, Platform **0.5.0**, Metrics **0.14.11** and Shared Tooling
-**0.25.7** (`d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b`). Testkit changed concurrently
-from 0.59 to **0.60.0**; preserve that selection and qualify the current graph.
-No manifest/lock edits are made by this pass. Original and concurrent inputs,
-staging and unrelated pending work remain preserved.
+HEAD remains **`38b3b0f` / 0.36.0**. The incoming pending graph selects Host/Testkit
+**0.62.1**, Platform **0.5.1**, Candid/derive **0.10.39** and development Metrics
+**0.15.0**, with IC Build **0.62.1** as the release editor. Package versions remain
+**0.36.0**, notes **0.36.1**. This cleanup preserves incoming manifests and lock
+bytes, index, HEAD and all snapshot payloads. Published registry sources supply
+dependencies; no sibling checkout or Cargo patch is used.
 
-Artifacts, FS and Process **0.32.0** are the latest published Host releases.
-All 167 registry archive files match their checksums/unpacked sources at revision
-`c3f6f605a47f248e18bc3ad337e431a990a7a619`. All 136 Rust source files match 0.31.2;
-FS/Process update their internal Host dependency identities, without feature changes.
-Backup needs no source adapter or new production feature. However its public
-`PersistenceError::Publication` and `ArtifactError` checksum-error conversion now
-use Host 0.32 types. Consumers sharing those values must align their direct Host
-FS/Artifacts dependencies. Pending notes therefore select **0.36.0**; package
-versions remain **0.35.1**. Wire/storage formats and custody/recovery policy stay
-unchanged. See [consumer guidance](../development.md) and [notes](../../CHANGELOG.md).
+Shared Tooling remains **0.25.9**, revision
+`85aded191d85ac4a8c0e5deab207f6be18895862`, with 119 canonical payloads. The prior
+adoption qualifies the runner's refusal to increment again after unconfirmed
+committed delivery, preserving exact intent, metadata, receipt, proof and tools.
+[The review](../shared-tooling-review.json) distinguishes adoption provenance
+from this batch's consumer changes.
 
-Published Testkit **0.60.0** is checksum-verified across all 51 archive files;
-its Rust sources match 0.59.0. It shares Platform 0.5.0 with production, including
-decoder limits/errors, removing development-only Platform 0.4.1. Testkit retains
-Host 0.31.2 solely in development. The exact 0.60 CLI is explicitly prepared and
-admits the existing PocketIC **16.1.0** server. No local patch or compatibility
-shim is introduced. See [the Platform boundary](../ic-platform.md).
+## Simplified contributor tooling and guidance
 
-The pending Shared Tooling adoption retains its canonical 119-file closure and
-early Clippy ordering for CI/release and publication/dry runs. Saved-source
-recovery and exact receipts retain their semantics. The
-[review](../shared-tooling-review.json) records canonical provenance; unchanged
-metadata failure checks retain their [release evidence](../releasing.md).
+Required setup now orders common host/Cargo tools, locked fetch, Testkit and the
+release editor. Offline checks admit host/Cargo, Testkit and editor selections.
+The five optional IC executables are outside `install-tools`, `tools-check`, CI
+reuse/PATH and release preflight. Manual `make install-ic-tools` and
+`make ic-tools-check` remain available; existing bundles and failed evidence stay
+retained. Required Testkit admission, original fixture custody and server lifecycle
+are unchanged. See [development](../development.md#quick-start) and
+[release preparation](../releasing.md).
+
+[Shared Tooling guidance](../shared-tooling.md) and [Platform guidance](../ic-platform.md)
+now describe maintained owners/contracts. Complete incoming adoption records,
+exact revisions, checksums and historical receipts are preserved with rebased
+links in the [Shared archive](archive-shared-tooling-2026-10-21.md) and
+[Platform archive](archive-platform-adoption-2026-10-21.md). Manifests, the snapshot
+and this handoff own current selections and evidence; compatibility constraints
+on external principal 0.1.5 and management DTO 0.11.0 remain explicit.
 
 ## Qualification and remaining limits
 
-All ten focused targets pass: dependency boundaries and inheritance, formatting,
-early strict Clippy, all-target compilation, tests, Rustdoc, Rust **1.91** with both
-independent consumers, both exact package archives and local documentation links.
-All **638** native tests pass, including **38 Core and 12 Agent PocketIC** cases
-and **14 HTTP** cases. The independent Core consumer remains Agent-free and
-compiles both public Host error conversions using 0.32. An isolated negative
-control proves both conversions reject 0.31 identities with typed compiler errors.
-Archives preserve exact source/license bytes and compile together.
+All **10 focused targets** pass: offline tool admission, snapshot integrity,
+dependency boundaries/inheritance, formatting, early strict Clippy, shell,
+consumer tooling, documentation links and native tests. All **638 native tests**
+pass, including **38 Core + 12 Agent PocketIC** and **14 HTTP** cases. Real setup,
+all focused targets and the actual CI offline-reuse step pass with optional IC
+commands forced unavailable; no optional command is attempted. The second
+consumer reuses exact host/formatter/Testkit identities while downloads refuse.
+All **90 consumer release-adapter cases** pass against the published editor;
+manual IC routing/refusal, parallel ordering and required-tool failures remain
+covered. No real repository Git/release/registry effects occur.
 
-Evidence: `/tmp/backup-host032-4pl4im4n/`, with
-`validation-current/validation.uBtis0/timings.tsv`, registry/source comparisons,
-`negative-host-identity/`, and eight normal/build target trees. Those trees cover
-Linux, Intel macOS, Apple Silicon and Wasm for both packages; production contains
-only Host 0.32.0 and excludes simulator/parser/CDK, WAT, CLI and opt-in filesystem
-backends. Independent consumers remain at `target/msrv-consumers.cQMT5v/` and
-archives at `target/package-check.r9ONVn/`. Manifest/lock bytes remain identical to
-the preserved concurrent inputs. The initial `validation/validation.KtJRuI/` refusal
-for an unprepared 0.60 CLI remains retained; explicit setup and fresh validation
-resolved it without weakening offline admission.
+Current evidence: `/tmp/backup-local-simplification-pz964fhf/`, including
+`install-tools.log`, `validation/validation.HEb4B1/timings.tsv`,
+`ci-reuse-result.json`, `ci-reuse-evidence/`, `release-adapter.log`,
+`archive-preservation.json` and the original task-entry files under `before/`.
+Release cases/traces remain at `target/shared-release-tests.ixoGB9/`.
 
-Earlier Platform identity/Wasm evidence remains at
-`/tmp/backup-platform050-_nqizc_l/`; Shared's six focused checks and 90 release cases
-remain at `/tmp/backup-shared-0257-gq1cn_l2/`. The unchanged metadata checker's
-controls remain at `/tmp/backup-shared-0256-b14_rsos/`. Receipts retain their
-original source/graph scope. No new full local `make ci` or release is claimed.
-The pushed 0.35.1 source's
-[hosted CI run](https://github.com/dragginzgame/ic-backup/actions/runs/39414777205)
-passed Linux and both macOS hosts; it does not qualify this dirty batch.
-Cross-target tree inspection is separate from native macOS, Wasm compilation,
-installed-IC and application qualification.
+Unchanged Rust/graph evidence is reused from
+`/tmp/backup-upstream-20261021-_lowx6__/`: 13 passing focused targets, Rust 1.91
+independent consumers and exact archives, eight production target trees, and
+native/Wasm public principal and all 24 management DTO identity probes.
+Independent consumers remain at `target/msrv-consumers.eKuMcC/`, archives at
+`target/package-check.9jGJB1/`. Earlier failure/release fixtures and receipts retain
+their original source/graph scope. Production excludes simulator, parser/CDK,
+WAT, CLI and opt-in filesystem backends; Core remains Agent-free.
 
-Direct dependency admission includes aliases and normal/build/dev/target edges;
-transitive features still need separate review. Candid remains required for
-management/SDK contracts, including upstream printer selection. Development-only
-ic0 and PocketIC DTO 0.8 remain separate from production DTO 0.11. Independent
-consumers enforce simulator/WAT exclusions, not role-comment-derived exclusions or
-a development-only Clap ban. Deployment admission belongs to consuming applications.
+The direct boundary gate checks aliases and normal/build/dev/target declarations,
+not transitive features or deployed bytes. Candid remains required for management
+and SDK contracts, including upstream printer selection; development PocketIC's
+DTO identity remains separate. No new full local `make ci`, native macOS,
+installed-IC, hosted artifact delivery, release or publication is claimed.
 
-## Remaining application acceptance
+## Remaining constraints and application acceptance
+
+The prior adoption held Shared 0.26.0 for the optional multi-tool installer's
+supported macOS awk failure ([#294](https://github.com/dragginzgame/shared-tooling/issues/294)).
+This batch does not refresh that snapshot or adopt a local repair. PocketIC pins
+thiserror exactly 2.0.18; SHA-256 test oracles retain Host's 0.10.9 line.
 
 Complete application acceptance still requires integration-owned current
 membership/control/read authority, whole-selection fencing, retained source and
 external-obligation custody, and terminal evidence. Local all-Applied checkpoints
-and test providers do not supply those facts. See
+and providers do not establish those facts. See
 [application admission](../implementation-contracts.md#application-admission-and-fencing).
-Earlier Canic source observations retain their recorded identities; no new sibling
-inspection or application qualification is claimed. Migration history remains in
-the [October 19 archive](archive-2026-10-19.md).
+No new sibling or application qualification is claimed; earlier Canic observations
+retain their recorded identities. Earlier migration history remains in
+[the October 19 archive](archive-2026-10-19.md).

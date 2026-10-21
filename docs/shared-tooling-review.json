@@ -1,38 +1,36 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-20",
+  "inspection_date": "2026-10-21",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b",
-  "label": "0.25.7",
+  "revision": "85aded191d85ac4a8c0e5deab207f6be18895862",
+  "label": "0.25.9",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 119,
-  "previous_revision": "84a8742c7c2e3f5611647f9c0f67fed049960327",
-  "previous_review": {
-    "state": "incoming uncommitted 0.25.6 adoption",
-    "path": "/tmp/backup-shared-0257-gq1cn_l2/before/docs/shared-tooling-review.json"
-  },
+  "previous_revision": "d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b",
+  "previous_review": "/tmp/backup-upstream-20261021-_lowx6__/before/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
-    "remote_ref": "refs/heads/main",
-    "remote_revision": "d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b",
     "isolated_clean_checkout": true,
     "dirty_sibling_inputs_excluded": true,
-    "github_release_object_available": false,
-    "all_payloads_match_committed_source_bytes_checksums_and_modes": true
+    "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
+    "observed_remote_main": "c71db44c5773876b237037c8413e583c53c35539",
+    "selected_compatible_ancestor": "85aded191d85ac4a8c0e5deab207f6be18895862"
   },
   "changed_paths": [
-    "DRAGGINZGAME.md",
-    "docs/principles/rust-code-hygiene.md",
-    "docs/releases.md"
+    "rules/changelogs.md",
+    "docs/releases.md",
+    "scripts/ci/run-release.sh",
+    "scripts/ci/finalize-release-changelog.awk",
+    "scripts/ci/test-release-runner.sh"
   ],
   "added_paths": [],
   "retired_paths": [],
   "consumer_changes": [
-    "Run the unchanged Clippy gate before expensive stages in the sequential CI/release target list.",
-    "Gate standalone publication and dry runs on the existing Clippy scope after publication exclusion and before Cargo packaging/upload.",
-    "Qualify success/failure under serial/parallel Make with real consumer entrypoints and substituted expensive/external effects."
+    "Release editor selects coordinated published IC Build 0.62.1.",
+    "Keep optional manual IC setup/check on the reviewed snapshot; required aggregates and CI no longer select IC executables.",
+    "Adapt the existing committed-preparation fixture to assert preserved intent, metadata, proof and tool state on refusal."
   ],
-  "upstream_change_scope": "Require early failure-stopping Clippy in Rust release/deployment entrypoints while preserving consumer lint scope and recovery admission.",
+  "upstream_change_scope": "Accept numbered pending headings; refuse a second release increment after uncertain committed delivery.",
   "deployment_enforcement": {
     "automated": [
       "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity."
@@ -45,37 +43,51 @@
   "qualification": {
     "status": "passed-focused-linux",
     "passed": [
-      "canonical refresh and independent verification of all 119 payloads",
-      "shared-tooling-check",
-      "shell-check",
-      "fmt-check",
-      "existing native Clippy gate: both packages, all targets/features, offline/locked, -D warnings; incoming Metrics 0.14.11 graph",
-      "tooling-check",
-      "check-doc-links",
-      "all 90 consumer release-adapter cases, including 12 serial/parallel Clippy ordering, refusal and publication-lock controls"
+      "119 canonical payloads match exact source bytes/checksums/executable modes",
+      "13 focused validation targets: snapshot, dependencies, formatting, Clippy, builds/tests/docs/MSRV/archives, shell, consumer tooling and links",
+      "Offline admission of all prepared tools, including locked Testkit and IC Build 0.62.1",
+      "90 consumer release-adapter cases against the actual published IC Build editor, including retained refusal before another increment",
+      "Rust 1.91 native/Wasm management and principal identity probe"
     ],
+    "timings": "validation/validation.IN5X0V/timings.tsv",
+    "release_registry": "target/shared-release-tests.GoqsEe/cases.txt",
+    "initial_failure": "target/shared-release-tests.jZsYj8 retained an obsolete expectation allowing an undelivered second increment; adapted consumer expectation now qualifies the canonical refusal.",
     "not_run": [
       "full local make ci",
-      "native macOS for this working-tree batch",
+      "native macOS for current graph",
       "installed IC",
+      "hosted artifact delivery",
       "release or publication"
-    ],
-    "timings": "validation/validation.7xqVvD/timings.tsv",
-    "release_registry": "target/shared-release-tests.rxMx3p/cases.txt"
+    ]
   },
-  "unchanged_evidence": [
-    {
-      "directory": "/tmp/backup-testkit-release-cut-5orrht2t",
-      "scope": "Earlier native, HTTP/PocketIC, MSRV and archive evidence retains its original source/lock scope; it does not qualify the incoming Metrics 0.14.11 update. This pass qualifies the existing Clippy gate on that graph."
-    },
-    {
-      "directory": "/tmp/backup-host-consumer-7j5fm1d2",
-      "scope": "Unchanged Host checksum/publication consumer identities, mismatched-Host negative control and real checksum/custody cases."
-    },
-    {
-      "directory": "/tmp/backup-shared-0256-b14_rsos",
-      "scope": "Unchanged shared metadata checker: retained Cargo/logger status precedence and exact input evidence across 16 live/committed failure cases."
-    }
-  ],
-  "evidence_directory": "/tmp/backup-shared-0257-gq1cn_l2"
+  "unchanged_evidence": [],
+  "evidence_directory": "/tmp/backup-upstream-20261021-_lowx6__",
+  "blocked_adoption": {
+    "version": "0.26.0",
+    "issue": "https://github.com/dragginzgame/shared-tooling/issues/294",
+    "reason": "The optional multi-tool IC installer fails on supported macOS awk; repair remains uncommitted. Required Backup setup no longer calls it."
+  },
+  "qualification_scope": "Original snapshot adoption evidence; subsequent consumer-only setup and documentation changes are qualified separately below.",
+  "consumer_tooling_cleanup": {
+    "date": "2026-10-21",
+    "result": "passed-focused-linux",
+    "evidence_directory": "/tmp/backup-local-simplification-pz964fhf",
+    "timings": "validation/validation.HEb4B1/timings.tsv",
+    "passed": [
+      "Real offline install-tools and tools-check with all five optional IC commands unavailable",
+      "10 focused targets including strict Clippy, shell, tooling, links and 638 native tests (50 PocketIC and 14 HTTP)",
+      "Actual CI offline-reuse step: exact host/formatter/Testkit physical identities, downloads refused",
+      "90 consumer release-adapter cases; required ordering/refusal and retained recovery evidence",
+      "Complete incoming adoption guides preserved with rebased relative links"
+    ],
+    "optional_ic_command_attempts": 0,
+    "release_registry": "target/shared-release-tests.ixoGB9/cases.txt",
+    "preserved": "Incoming manifests/lock, index, HEAD, all canonical payloads, manual IC setup/check targets and required Testkit admission.",
+    "not_run": [
+      "full local make ci",
+      "new native macOS or installed-IC qualification",
+      "hosted artifact delivery",
+      "release or publication"
+    ]
+  }
 }

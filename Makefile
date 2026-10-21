@@ -1,14 +1,12 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
-LOCAL_TOOL_INSTALL_TARGETS := install-ic-tools deps install-testkit-server install-release-editor
-LOCAL_TOOL_CHECK_TARGETS := ic-tools-check testkit-server-check release-editor-check
-RELEASE_EDITOR_VERSION := 0.18.0
+LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server install-release-editor
+LOCAL_TOOL_CHECK_TARGETS := testkit-server-check release-editor-check
+RELEASE_EDITOR_VERSION := 0.62.1
 export RELEASE_EDITOR_MAX_BYTES := 8388608
 RELEASE_EDITOR_COMMAND = bash "$(CURDIR)/scripts/dev/install-rust-tools.sh" --consumer "$(CURDIR)" \
     --package ic-build --version "$(RELEASE_EDITOR_VERSION)" --bin ic-build-release-metadata --profile debug
-# IC executables remain an explicit Backup selection; common includes add host/Cargo.
-export PATH := $(CURDIR)/.tools/ic/bin:$(PATH)
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
@@ -50,14 +48,14 @@ help:
 	@echo "help                        Show available commands"
 	@echo "hooks-check                 Test the pre-commit formatter"
 	@echo "host-tools-check            Verify local jq/yq/ripgrep/cloc offline"
-	@echo "ic-tools-check              Verify the local IC executables offline"
+	@echo "ic-tools-check              Optional: verify manually prepared IC executables"
 	@echo "install-hooks               Enable the tracked pre-commit formatter"
 	@echo "install-host-tools          Prepare pinned local jq/yq/ripgrep/cloc"
-	@echo "install-ic-tools            Prepare the pinned local IC executables"
+	@echo "install-ic-tools            Optional: prepare the shared IC executables"
 	@echo "install-release-editor      Prepare the published Cargo release editor"
 	@echo "install-rust-tools          Prepare the complete shared Cargo tool set"
 	@echo "install-testkit-server       Prepare the locked Testkit CLI and its PocketIC server"
-	@echo "install-tools               Prepare host, Cargo, IC and locked Testkit tools in order"
+	@echo "install-tools               Prepare host/Cargo tools, locked Testkit and release editor"
 	@echo "package                     Verify both library packages locally"
 	@echo "publish                     Publish both libraries to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
@@ -80,7 +78,7 @@ help:
 	@echo "test                        Run native library tests and doctests"
 	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
 	@echo "tooling-check               Test consumer CI wiring and retained evidence"
-	@echo "tools-check                 Verify host, Cargo, IC and locked Testkit tools offline"
+	@echo "tools-check                 Verify host/Cargo tools, locked Testkit and release editor"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 

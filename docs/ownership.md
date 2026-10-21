@@ -118,9 +118,10 @@ Agent uses 16 pages each for full MiB transfers, and fence reconciliation exerci
 separate acquisition/observation state. No generated implementation requires
 consolidation. Release/package fixtures retain consumer graph, archive and exact
 resume-policy assertions; snapshot-owned tooling is deliberately vendored and
-must be refreshed through its exporter rather than locally rewritten. The five
-shared IC executables remain an explicit contributor/qualification selection in
-AGENTS and Make; they do not reintroduce the retired ICP product transport.
+must be refreshed through its exporter rather than locally rewritten. Shared IC
+executables are optional manual tools, outside required setup, CI and release
+preflight; they do not reintroduce the retired ICP product transport. Testkit's
+authenticated server and offline admission remain required for simulator checks.
 
 Read-only sibling inspection confirmed Host, Testkit, Wire, Platform, Shared
 Tooling and Canic ownership. Selected registry source, not uncommitted sibling

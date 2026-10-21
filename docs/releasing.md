@@ -78,8 +78,9 @@ refuses admission. A selected-commit check retains its exported tree. Live root
 copies do not freeze member manifests or Cargo configuration. No automatic retry
 or lockfile repair is performed; inspect the reported retained directory.
 
-Manifest and lockfile candidates use the published IC Build 0.18.0
-`ic-build-release-metadata` command, selected through Shared Tooling's installer.
+Manifest and lockfile candidates use the published IC Build
+`ic-build-release-metadata` command. `RELEASE_EDITOR_VERSION` in
+[Makefile](../Makefile) selects it through Shared Tooling's installer.
 `make install-release-editor` explicitly prepares it; `make release-editor-check`
 returns its offline-admitted absolute path. Normal release preflight includes
 setup, while saved preparation consumes only that admitted selection. Backup's
@@ -191,9 +192,10 @@ staged/unstaged/untracked work and changed original manifest/lock/receipt. Stage
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
 the snapshot and runs `make install-tools`: common host and Cargo setup,
-then the local ordered IC setup, root-workspace `cargo fetch --locked` and Testkit
-setup targets. Offline `make tools-check` runs common checks followed by IC and
-Testkit admission before the full gate. Recheck original source/manifest/lock/receipt afterward. The standard
+then root-workspace `cargo fetch --locked`, Testkit and release editor setup in
+order. Offline `make tools-check` runs common checks followed by Testkit and
+editor admission before the full gate. Optional IC executables are not required.
+Recheck original source/manifest/lock/receipt afterward. The standard
 release includes this required selected-CLI preparation; explicit offline Cargo
 settings remain authoritative and missing inputs fail without switching online.
 Setup reuses an admitted selection, preserves earlier tools and refuses invalid

@@ -763,7 +763,7 @@ Unknown/missing/duplicate fields, unsupported methods/generations and injected
 argument/digest/receiver/authority fields reject. Decode bounds raw byte retention.
 
 The model derives cached Candid arguments through published Platform’s codec and
-management exports, preserving selected Candid 0.10.38 and management DTO 0.11.0. Original
+management exports, preserving selected Candid 0.10.39 and management DTO 0.11.0. Original
 0.10.35 Candid and 0.8.0 SDK source evidence remain historical; the request/reply
 wire goldens have also been rerun against the current selection. See
 [SDK upgrade evidence](management-types-upgrade.json). Receiver is fixed to the management principal

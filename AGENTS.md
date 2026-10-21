@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.25.7's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.25.9's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
@@ -64,9 +64,11 @@ output in each caller-owned fixture directory. No baseline reuse/reset, funding
 policy, hidden snapshot retry or receipt inference is adopted. Preserve original
 plans, journals, byte evidence and fixture-specific application safety.
 
-The snapshot-owned `ci/ic-tools.tsv` selects the five shared IC executables only.
-Backup explicitly registers their setup/check targets after common host/Cargo
-steps and publishes its prepared IC PATH. Testkit owns
+The snapshot-owned `ci/ic-tools.tsv` selects optional IC executables. Manual
+`make install-ic-tools` and `make ic-tools-check` remain available; aggregate
+setup, CI and release preflight require no IC executable bundle or IC PATH.
+After common host/Cargo steps, Backup registers locked fetch, Testkit and release
+editor setup, with offline Testkit/editor admission after common checks. Testkit owns
 PocketIC release selection, authenticated assets, explicit setup and offline
 admission. The unique locked Testkit package also selects the exact CLI through
 Shared Tooling's Cargo installer; no second server catalog, version equality
@@ -88,7 +90,7 @@ public compatibility assessment, native checks and separately applicable
 authenticated IC qualification. Core and Agent consume those identities only
 through Platform; direct management DTO declarations are forbidden.
 
-`ic-platform::Principal` owns internal principal admission. Platform 0.3 supplies
+`ic-platform::Principal` owns internal principal admission. Platform supplies
 its owned representation; required Candid DTOs and external SDK calls use
 Platform's `candid::contract::Principal` or `principal::ExternalPrincipal` exports
 over upstream 0.1.5, with explicit boundary conversions. No direct principal pin

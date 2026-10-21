@@ -53,7 +53,7 @@ jobs:
         run: |
           make install-tools
           printf '%s\n' "$GITHUB_WORKSPACE/.tools/host/bin" \
-            "$GITHUB_WORKSPACE/.tools/ic/bin" "$GITHUB_WORKSPACE/.tools/rust/common/bin" >> "$GITHUB_PATH"
+            "$GITHUB_WORKSPACE/.tools/rust/common/bin" >> "$GITHUB_PATH"
           make tools-check
       - name: Verify native shared-tool reuse offline
         run: |
@@ -61,16 +61,14 @@ jobs:
           mkdir -p "$sharing/consumer" "$sharing/bin"
           printf '#!/bin/sh\necho unexpected-download >&2\nexit 91\n' > "$sharing/bin/curl"
           chmod +x "$sharing/bin/curl"
-          for kind in host ic; do
-            for mode in install check; do
-              options=()
-              if [[ "$mode" == check ]]; then options=(--check); fi
-              PATH="$sharing/bin:$PATH" bash "scripts/dev/install-$kind-tools.sh" \
-                --consumer "$sharing/consumer" ${options[@]+"${options[@]}"} \
-                > "$sharing/$kind-$mode.log" 2>&1
-            done
-            test "$(cd "$GITHUB_WORKSPACE/.tools/$kind" && pwd -P)" = "$(cd "$sharing/consumer/.tools/$kind" && pwd -P)"
+          for mode in install check; do
+            options=()
+            if [[ "$mode" == check ]]; then options=(--check); fi
+            PATH="$sharing/bin:$PATH" bash scripts/dev/install-host-tools.sh \
+              --consumer "$sharing/consumer" ${options[@]+"${options[@]}"} \
+              > "$sharing/host-$mode.log" 2>&1
           done
+          test "$(cd "$GITHUB_WORKSPACE/.tools/host" && pwd -P)" = "$(cd "$sharing/consumer/.tools/host" && pwd -P)"
           # Cargo tool identities exclude application flags and wrappers.
           cp Cargo.lock "$sharing/consumer/Cargo.lock"
           for mode in install check; do

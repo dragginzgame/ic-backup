@@ -77,20 +77,20 @@ make test
 ```
 
 Explicit local setup uses the snapshot-owned [host and Cargo pins](../ci/tool-versions.env)
-and [IC tool matrix](../ci/ic-tools.tsv), through the shared
-[common Make entrypoint](../make/consumer.mk). It downloads and verifies jq/yq, ripgrep with
-PCRE2, cloc, Cargo-sort and Cargo-sort-derives. The ordered
-Backup extension explicitly prepares the five IC executables, fetches locked
-dependencies, then prepares its selected Testkit CLI/server. Previous sets and failed candidates
-are retained. Make selects `.tools/host/bin`, `.tools/ic/bin` and `.tools/rust/common/bin`.
+through the shared [common Make entrypoint](../make/consumer.mk). It prepares
+verified jq/yq, ripgrep with PCRE2, cloc, Cargo-sort and Cargo-sort-derives. The
+ordered Backup extension fetches locked dependencies, then prepares the selected
+Testkit CLI/server and release editor. Previous sets and failed candidates remain
+retained. Make selects `.tools/host/bin` and `.tools/rust/common/bin`.
 Interactive shells can use:
 
 ```bash
-export PATH="$PWD/.tools/host/bin:$PWD/.tools/ic/bin:$PWD/.tools/rust/common/bin:$PATH"
+export PATH="$PWD/.tools/host/bin:$PWD/.tools/rust/common/bin:$PATH"
 ```
 
-See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites) and
-[IC setup](ic-tools.md). Prepared Cargo toolchains, ShellCheck and macOS GNU
+See [bootstrap prerequisites](local-setup.md#bootstrap-prerequisites).
+Optional IC executables are separate; see [manual setup](#current-shared-tool-selection).
+Prepared Cargo toolchains, ShellCheck and macOS GNU
 Make/flock remain separate product prerequisites. Published Testkit supplies the
 test-only PocketIC client and managed server. Its locked package selects CLI and
 server assets; the aggregate prepares them before tests. The narrow
@@ -125,17 +125,17 @@ flags, wrappers and Cargo configuration do not configure tool builds. Testkit's
 selected CLI uses that owner; Testkit still owns local server storage and lifecycle.
 The default Backup formatter uses Cargo manifest sorting and rustfmt. Initial
 setup uses `make install-tools`, then `make tools-check`. Command paths remain
-`.tools/host/bin` and `.tools/ic/bin`. Existing local bundles and failed attempts
+`.tools/host/bin` and `.tools/rust/common/bin`. Existing local bundles and failed attempts
 stay retained; setup activates new references without moving or deleting them.
 An explicit absolute `SHARED_TOOLING_STORE` setting must be shared by setup,
 checks and evidence collection. CI uses one isolated store per native job and
-checks actual host/IC/common/selected Cargo reuse from a second consumer offline.
+checks actual host/common/selected Cargo reuse from a second consumer offline.
 Avoid independent
 store owners, sibling PATHs or manual binary relocation. The aggregate
 runs common host and Cargo steps in order, then product targets registered
 through `LOCAL_TOOL_INSTALL_TARGETS`/`LOCAL_TOOL_CHECK_TARGETS`. Backup registers
-IC setup before locked fetch and Testkit setup, and IC admission before Testkit
-admission after common checks.
+locked fetch, Testkit and release editor setup in that order, then Testkit and
+editor admission after common checks. Optional IC targets are outside both aggregates.
 Do not attach unordered aggregate prerequisites or call the aggregate from an
 extension target.
 The pre-commit hook and formatting-adoption checker find prepared checkout-local
@@ -189,11 +189,6 @@ and original WAT bytes remain local.
 After a locked Testkit version update, repeat `make install-testkit-server`; the
 older retained CLI cannot satisfy the updated selection. Admission failures name
 the selected version and the explicit setup command.
-
-Shared 0.2.0 requires explicit `make install-ic-tools` to select the five-tool
-bundle. Old six-tool bundles, pins, receipts and failed candidates are retained.
-Their offline check refuses under the new selection; no automatic conversion or
-cleanup occurs. CI prepares both the shared bundle and Testkit on all three hosts.
 
 `make shell-check` also requires ShellCheck and Perl. It prefers a prepared
 `.tools/ci/bin/shellcheck`, then searches `PATH` and `~/.local/bin/shellcheck`.
@@ -257,17 +252,19 @@ with private parent policy and acknowledged crash barriers in Backup. `Persisten
 `NamedWriteError<std::io::Error>`, retaining original producer/cleanup causes and
 before/after-publication phases. Visible output requires reconciliation. Consumers
 matching or constructing that variant must align a direct `ic-host-fs` dependency
-with Backup's selected **0.32** line. The public conversion from Host Artifacts'
-`DirectoryChecksumError` into `ArtifactError` requires the same **0.32** alignment
-for `ic-host-artifacts`. Earlier identity changes remain in the
+with Backup's owning workspace selection in [Cargo.toml](../Cargo.toml). The public
+conversion from Host Artifacts' `DirectoryChecksumError` into `ArtifactError`
+requires matching `ic-host-artifacts` identity as well. Earlier identity changes remain in the
 [changelog](../CHANGELOG.md); no local error mirror or compatibility alias exists.
 
-The published Artifacts, FS and Process 0.32.0 Rust sources match 0.31.2. All
+IC Tooling owns the published Host, Build and Testkit packages. The manifest,
+lockfile and [current handoff](status/current.md) record selections and qualification.
+All
 production Host dependencies disable defaults; no capability/tempfile, archive,
 WAT or CLI feature is needed in production. Unix Process supplies inherited
 command custody and bounded quiescence. Local test features select WAT compilation,
-fixture allocation and HTTP capture. Testkit 0.60.0 retains its own development-only
-Host 0.31.2 graph and owns simulator startup/cleanup. Native tests qualify that
+fixture allocation and HTTP capture. Testkit shares the selected production
+Host identities and owns simulator startup/cleanup. Native tests qualify that
 coexistence without converting Host-owned errors between versions. Process exit
 or group cleanup never substitutes for inherited lock-descriptor quiescence.
 Unix artifact and lock operations use Rustix's `io::Error::from` conversion
@@ -767,11 +764,14 @@ older releases rather than a current dependency requirement.
 
 ## Current shared tool selection
 
-The reviewed Shared Tooling 0.23.0 snapshot selects ICP CLI 1.7.0. Run
-`make install-ic-tools` to prepare the authenticated selection before offline
-`make tools-check`. Common host/Cargo tools and Testkit keep their existing
-owners and ordered setup. This contributor setup does not change management
-wire DTOs or grant live backup/restore authority.
+The [snapshot](../.shared-tooling.snapshot) and its [catalog](../ci/ic-tools.tsv)
+own optional IC executable selections. `make install-ic-tools` prepares that
+bundle and `make ic-tools-check` checks it offline. Neither is part of
+`install-tools`, `tools-check`, CI or release preflight. Add `.tools/ic/bin` to an
+interactive PATH only when deliberately using these manual tools. Existing bundles
+and failed evidence remain retained. See [the shared installer](ic-tools.md);
+these commands grant no live backup/restore authority. Testkit remains mandatory
+for native checks and simulator qualification.
 
 ## Supported host scope
 

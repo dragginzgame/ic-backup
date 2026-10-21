@@ -108,8 +108,7 @@ EDITOR
     export CARGO_RELEASE_METADATA_EDITOR="$FIXTURE/target/release-editor"
     # Substitutes qualify consumer ordering only. Canonical installer tests own
     # receipt/lock integrity and real Testkit owns server asset admission.
-    for common in install-host-tools install-ic-tools; do
-        cat > "scripts/dev/$common.sh" <<'TOOL'
+    cat > scripts/dev/install-host-tools.sh <<'TOOL'
 #!/usr/bin/env bash
 set -euo pipefail
 target="${0##*/}"; target="${target%.sh}"
@@ -121,7 +120,6 @@ fi
 printf 'common %s\n' "$target" >> "$TEST_LOG"
 [[ "${TEST_COMMON_TOOL_FAIL:-}" != "$target" ]] || exit 8
 TOOL
-    done
     cat > scripts/dev/install-rust-tools.sh <<'TOOL'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -811,6 +809,24 @@ test_committed_preparation_retry() {
     printf '%s\n' "$fix" > target/mock-head
     before="$(fingerprint)"
     : > "$TEST_EFFECTS"
+    if [[ "$disposition" == bumped ]]; then
+        # Committing the candidate does not confirm its Git delivery. The shared
+        # runner must retain that exact intent rather than select another bump.
+        cp docs/release.json target/original-receipt.json
+        cp target/tool-effects.log target/tools-before-refusal
+        expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
+        grep -F 'prepared version 0.1.1 is committed but delivery is unconfirmed' "$CASE_LOG" >/dev/null
+        [[ "$(fingerprint)" == "$before" && ! -s "$TEST_EFFECTS" ]] || exit 1
+        cmp target/original-plan target/release-state/0.1.1.plan
+        cmp target/original-validation.json target/release-state/0.1.1.validation.json
+        cmp target/original-backup "${backups[0]}"
+        cmp target/original-receipt.json docs/release.json
+        cmp target/tools-before-refusal target/tool-effects.log
+        [[ ! -e "target/release-state/$next.plan" ]] || exit 1
+        if compgen -G 'target/release-state/0.1.1.attempt.*' >/dev/null; then exit 1; fi
+        assert_cache_retained
+        return
+    fi
     TEST_GATE_FAIL=1 expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     local archives=(target/release-state/0.1.1.attempt.*/0.1.1.plan)
     [[ "${#archives[@]}" == 1 && "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'fetch\nvalidate' ]] || exit 1
@@ -847,7 +863,7 @@ test_selected_tool_preflight() {
         [[ "$(cat target/tool-effects.log)" == $'build 0.28.2\nsetup\ncheck' ]] || exit 1
         # First original-source preflight fetched before setup/admission/gate.
         awk '/^cargo fetch/{fetch=NR} /^cli setup/{setup=NR} /^cli check/{check=NR} /^make .*release-verify/{gate=NR} END {exit !(fetch < setup && setup < check && check < gate)}' "$TEST_LOG"
-        awk '/^common install-host-tools$/{host=NR} /^common install-ic-tools$/{ic=NR} /^common install-rust-tools$/{rust=NR} /^cargo fetch/{fetch=NR} /^cli setup/{exit !(host < rust && rust < ic && ic < fetch)}' "$TEST_LOG"
+        awk '/^common install-host-tools$/{host=NR} /^common install-rust-tools$/{rust=NR} /^cargo fetch/{fetch=NR} /^cli setup/{exit !(host > 0 && host < rust && rust < fetch)}' "$TEST_LOG"
         unset TEST_GATE_FAIL
         "$TEST_REAL_MAKE" --no-print-directory release-patch
         [[ "$(grep -c '^build ' target/tool-effects.log)" == 1 ]] || exit 1

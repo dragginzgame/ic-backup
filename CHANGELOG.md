@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.36.1]
+
+- Qualify published IC Tooling Host/Testkit 0.62.1 and Platform 0.5.1 with the
+  existing features and Rust 1.91 floor. Align the explicit release editor with
+  IC Build 0.62.1; refresh prepared tools with `make install-tools`.
+- Adopt Shared Tooling 0.25.9's guard against a second increment after undelivered
+  committed preparation, plus numbered pending-note support
+  ([Shared Tooling #292 — Prevent committed release preparation from silently incrementing twice](https://github.com/dragginzgame/shared-tooling/issues/292)).
+  Keep the reviewed snapshot while the optional IC installer's 0.26 macOS fix
+  awaits a committed release.
+- Remove unused IC executables from required setup, CI and release preflight.
+  Manual `make install-ic-tools` and `make ic-tools-check` remain available;
+  existing bundles and failed evidence are retained. Testkit admission is unchanged.
+- Separate Shared Tooling and Platform adoption history from current guidance;
+  manifests, the snapshot and the handoff remain the selection/evidence owners.
+
 ## [0.36.0] - 2026-10-20
 
 - **Breaking:** Adopt Host Artifacts, FS and Process 0.32.0. Consumers sharing
