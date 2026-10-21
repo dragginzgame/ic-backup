@@ -9,20 +9,22 @@ simulator assets/processes. Applications retain fresh authority, consistency,
 fencing and external-effect settlement. The [implementation contracts](../implementation-contracts.md)
 remain mandatory; storage, wire formats and spending semantics are unchanged.
 
-Default branch **`1e39353` / delivered source 0.37.1** supplies Host Artifacts/FS/Process,
+Default branch **`c37122e` / delivered source 0.37.2** supplies Host Artifacts/FS/Process,
 Testkit and the separately installed Build release editor **0.63.0**. Build and
 Testkit setup/checks explicitly select `cli`; library consumers keep it disabled.
 Shared Tooling remains **0.25.9**, revision
 `85aded191d85ac4a8c0e5deab207f6be18895862`.
 The snapshot is authoritative; see [Shared guidance](../shared-tooling.md).
-Current main selects **Platform 0.6.3**. Its 0.37.1 release includes the earlier
-PR notes but not the held-lock reader or independent-consumer implementation.
-Published history is preserved; the 0.37.2 draft identifies actual delivery of
-those pending changes. Package versions remain 0.37.1; this PR runs no release.
+Current main selects **Platform 0.6.3**. The 0.37.1 and 0.37.2 release notes
+describe the pending PR, but those releases exclude its held-lock reader and
+independent-consumer implementation. Their finalized history is preserved; the
+0.37.3 draft records actual delivery of those pending changes. Package versions
+remain 0.37.2; this PR runs no release. Merge the qualified implementation before
+preparing another release. The maintainer checkout is left unchanged.
 
 ## Pending terminal qualification
 
-The compatible **0.37.2** draft adds
+The compatible **0.37.3** draft adds
 `read_complete_execution_workflow_locked`. A terminal provider can replay complete
 original workflow settlement without releasing and reacquiring its held journal
 lock. Wrong journal guards and original digests, malformed/oversized/symlinked
@@ -98,6 +100,18 @@ and warnings-denied Rustdoc. Formatting, links, boundaries, inheritance and the
 corrected connected-workflow invocation ran all six affected cases. Those logs
 remain retained separately. Native macOS qualification awaits exact-head PR CI;
 previous-head CI does not qualify this merge. The main checkout is untouched.
+
+A second conflict resolution merges `c37122e` and preserves its finalized 0.37.2
+notes and release metadata. Rust source and the complete resolved external graph
+are identical to `7522581`; only local package versions advance with main.
+The earlier 64 focused passing tests, Clippy, Rust 1.91 and Rustdoc evidence
+therefore retain their exact implementation/external-graph scope. The previous
+head also passed hosted Linux CI; both macOS jobs were still running at the
+start of this resolution. Exact new-head native-host qualification remains CI-owned.
+Fresh strict all-target/all-feature Clippy, both independent authenticated consumer
+journeys and Rust 1.91 all-target checks pass with main's 0.37.2 package metadata.
+Formatting, local links, dependency boundaries/inheritance and the shared snapshot
+also pass. Evidence: `/tmp/backup-pr63-conflict2-20261021-esb6jar_/`.
 
 Earlier Tooling adoption evidence remains at
 `/tmp/backup-tooling-adoption-20261021-0omaduks/`: 14 focused targets, 638 native
