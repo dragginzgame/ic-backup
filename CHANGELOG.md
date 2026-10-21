@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.37.2] - Unreleased
+## [0.37.2] - 2026-10-21
 
 - Deliver terminal settlement replay under the held original journal lock and
   guarded source-reference release. These implementation changes were described
