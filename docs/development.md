@@ -31,7 +31,9 @@ guide for performing a canister backup or restore.
 
 ## CI source qualification
 
-CI/release validation dispatches targets sequentially. After prepared tools,
+CI/release validation dispatches targets sequentially. `make ci` consumes the
+selected dependency cache without fetching. Prepare it through `make install-tools`
+or the explicit `make deps` target before validation. After prepared tools,
 locked dependencies, source checks and formatting, the existing `make clippy`
 gate runs before expensive product checks, tooling/release/hook suites and
 packaging. A lint failure stops later stages under serial or parallel Make.

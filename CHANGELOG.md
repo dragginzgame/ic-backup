@@ -2,6 +2,9 @@
 
 ## [0.37.3] - Unreleased
 
+- Keep dependency fetching in explicit setup; ordinary CI validation consumes
+  the prepared cache without dispatching another fetch
+  ([#64 — Keep dependency fetching in setup rather than ordinary CI validation](https://github.com/dragginzgame/ic-backup/issues/64)).
 - Deliver terminal settlement replay under the held original journal lock and
   guarded source-reference release. These implementation changes were described
   in the 0.37.1 and 0.37.2 notes but were absent from those releases' source.
