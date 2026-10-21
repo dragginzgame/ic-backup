@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.37.1] - Unreleased
+## [0.37.1] - 2026-10-21
 
 - Allow terminal providers to replay complete workflow settlement under the
   already-held original journal lock. Preserve strict record, digest and bounds
