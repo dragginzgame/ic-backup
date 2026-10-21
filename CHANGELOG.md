@@ -2,6 +2,18 @@
 
 ## [0.37.3] - Unreleased
 
+- Qualify Host/Testkit 0.63.2 and Platform 0.6.5 with the selected authenticated
+  simulator and independent consumer capture/restore and interruption checks.
+
+- Adopt Shared Tooling 0.26.4, including asynchronous hosted CI for ordinary
+  development and authorized merges. Focused checks and enforced GitHub checks
+  and reviews still apply; release qualification remains separate.
+- Preserve primary validation failures and complete bounded diagnostics with the
+  refreshed shared runner; reject NUL-corrupted checksum output. Shell checks
+  follow sourced helpers, and CI help describes prepared-cache validation.
+- Manual IC tool setup and checks now require the same explicit selection, such
+  as `IC_TOOLS=wasm-opt`. Required host/Cargo/Testkit setup is unchanged; existing
+  IC bundles and failed evidence stay retained.
 - Keep dependency fetching in explicit setup; ordinary CI validation consumes
   the prepared cache without dispatching another fetch
   ([#64 — Keep dependency fetching in setup rather than ordinary CI validation](https://github.com/dragginzgame/ic-backup/issues/64)).

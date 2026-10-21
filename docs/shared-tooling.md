@@ -43,8 +43,11 @@ startup. See [development](development.md#quick-start) for prerequisites and
 ## Consumer-owned IC pins
 
 The snapshot-owned [IC catalog](../ci/ic-tools.tsv) owns selections for the five
-optional IC executables. Manual `make install-ic-tools` and `make ic-tools-check`
-remain available through [the shared installer](ic-tools.md). They are not
+optional IC executable versions. Manual setup and offline checks require the same
+explicit `IC_TOOLS` selection, for example `make install-ic-tools IC_TOOLS=wasm-opt`
+and `make ic-tools-check IC_TOOLS=wasm-opt`, through
+[the shared installer](ic-tools.md). A quoted list selects multiple executables;
+no full bundle is selected by default. These manual targets are not
 prerequisites of aggregate setup, CI or release preflight, and their directory is
 not added to the default PATH. An operator using these executables must select
 and admit them explicitly; installation supplies no live-effect authority.
@@ -65,6 +68,24 @@ checks. Reuse passing evidence only for unchanged source and graph scope.
 Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
+
+The reviewed Shared Tooling 0.26.4 snapshot includes the
+[asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
+development and authorized merges. Focused checks, review and enforced GitHub
+requirements still apply. Report exact pending run/source identities without
+polling the full matrix or claiming its native-host qualification. Release,
+publication, deployment and application acceptance remain separate.
+
+The shared validation runner owns failure summaries, bounded excerpts and atomic
+latest-log publication. Backup qualifies its actual callers and evidence custody;
+it keeps no alternate summary implementation. ShellCheck follows sourced helpers
+with `-x`. The checksum verifier rejects NUL-corrupted tool output before shell
+capture. Optional producer download helpers are not consumer dependencies.
+
+[Shared Tooling #300](https://github.com/dragginzgame/shared-tooling/issues/300)
+tracks clarification of asynchronous merge guidance when an agent runtime imposes
+an additional approval gate. Runtime rejection remains a blocker; the baseline
+does not override it or authorize bypassing repository requirements.
 
 ## Adoption history
 

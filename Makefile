@@ -33,7 +33,7 @@ help:
 	@echo "check-cargo-tool-versions   Inspect Cargo tool versions online without installing"
 	@echo "check-doc-links             Check maintained local Markdown targets"
 	@echo "check-msrv                  Check Rust 1.91.0 and independent consumers"
-	@echo "ci                          Fetch dependencies and run the full gate"
+	@echo "ci                          Run the full gate against prepared dependencies"
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
 	@echo "cloc                        Report Rust workspace source and test LOC"
@@ -48,10 +48,10 @@ help:
 	@echo "help                        Show available commands"
 	@echo "hooks-check                 Test the pre-commit formatter"
 	@echo "host-tools-check            Verify local jq/yq/ripgrep/cloc offline"
-	@echo "ic-tools-check              Optional: verify manually prepared IC executables"
+	@echo "ic-tools-check IC_TOOLS=... Optional: verify the selected IC executables"
 	@echo "install-hooks               Enable the tracked pre-commit formatter"
 	@echo "install-host-tools          Prepare pinned local jq/yq/ripgrep/cloc"
-	@echo "install-ic-tools            Optional: prepare the shared IC executables"
+	@echo "install-ic-tools IC_TOOLS=... Optional: prepare selected IC executables"
 	@echo "install-release-editor      Prepare the published Cargo release editor"
 	@echo "install-rust-tools          Prepare the complete shared Cargo tool set"
 	@echo "install-testkit-server       Prepare the locked Testkit CLI and its PocketIC server"
@@ -228,8 +228,8 @@ shell-check:
 		printf '%s\n' 'error: ShellCheck is required; install it on PATH or at ~/.local/bin/shellcheck' >&2; \
 		exit 127; \
 	fi; \
-	printf '%s\n' "$$shellcheck_bin scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit"; \
-	"$$shellcheck_bin" scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
+	printf '%s\n' "$$shellcheck_bin -x scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit"; \
+	"$$shellcheck_bin" -x scripts/ci/*.sh scripts/dev/*.sh scripts/release/*.sh scripts/hooks/*.sh .githooks/pre-commit
 	perl -c scripts/release/release-data.pl
 	perl -c scripts/ci/check-documentation-links.pl
 	perl -c scripts/ci/test-documentation-links.pl

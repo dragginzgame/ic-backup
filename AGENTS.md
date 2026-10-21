@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.25.9's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.26.4's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
@@ -65,7 +65,8 @@ policy, hidden snapshot retry or receipt inference is adopted. Preserve original
 plans, journals, byte evidence and fixture-specific application safety.
 
 The snapshot-owned `ci/ic-tools.tsv` selects optional IC executables. Manual
-`make install-ic-tools` and `make ic-tools-check` remain available; aggregate
+`make install-ic-tools IC_TOOLS="..."` and the matching `make ic-tools-check`
+remain available with an explicit executable selection; aggregate
 setup, CI and release preflight require no IC executable bundle or IC PATH.
 After common host/Cargo steps, Backup registers locked fetch, Testkit and release
 editor setup, with offline Testkit/editor admission after common checks. Testkit owns

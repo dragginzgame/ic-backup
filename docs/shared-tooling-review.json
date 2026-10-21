@@ -2,92 +2,77 @@
   "version": 1,
   "inspection_date": "2026-10-21",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "85aded191d85ac4a8c0e5deab207f6be18895862",
-  "label": "0.25.9",
+  "revision": "dc1ced7e240e90f0c6daa89fb6248fcb074164eb",
+  "label": "0.26.4",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 119,
-  "previous_revision": "d39e8a84bf4fd7e42776d2bb8e589ad09aacb02b",
-  "previous_review": "/tmp/backup-upstream-20261021-_lowx6__/before/docs/shared-tooling-review.json",
+  "previous_revision": "18023786319fef0aae68296a78a3fc3913eabe0f",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/7714c97931b343309c67908fc5f6cb958b7a6a07/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
     "isolated_clean_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "c71db44c5773876b237037c8413e583c53c35539",
-    "selected_compatible_ancestor": "85aded191d85ac4a8c0e5deab207f6be18895862"
+    "observed_remote_main": "dc1ced7e240e90f0c6daa89fb6248fcb074164eb",
+    "version_authority": "Committed VERSION and changelog; no GitHub Release object was found."
   },
   "changed_paths": [
-    "rules/changelogs.md",
-    "docs/releases.md",
-    "scripts/ci/run-release.sh",
-    "scripts/ci/finalize-release-changelog.awk",
-    "scripts/ci/test-release-runner.sh"
+    "docs/verification-helpers.md",
+    "rules/dependency-pinning.md",
+    "docs/supported-hosts.md",
+    "scripts/ci/verify-file-checksum.sh",
+    "scripts/ci/run-validation-targets.sh",
+    "scripts/ci/test-validation-target-runner.sh",
+    "DRAGGINZGAME.md",
+    "rules/contributions.md"
   ],
   "added_paths": [],
   "retired_paths": [],
   "consumer_changes": [
-    "Release editor selects coordinated published IC Build 0.62.1.",
-    "Keep optional manual IC setup/check on the reviewed snapshot; required aggregates and CI no longer select IC executables.",
-    "Adapt the existing committed-preparation fixture to assert preserved intent, metadata, proof and tool state on refusal."
+    "Adopt committed failure-runner fixes for independent parent errors, bounded diagnostic capture, atomic latest-log publication and primary exit-status preservation.",
+    "Adopt checksum verification that rejects NUL-corrupted backend output before shell capture.",
+    "Apply the baseline own-the-solution rule for DFINITY dependencies; historical incident links are evidence, not current prerequisites for future upstream work.",
+    "Follow sourced helpers in the existing ShellCheck gate and correct CI help to describe prepared-cache validation.",
+    "Retain incoming asynchronous CI and explicit optional IC_TOOLS adoption; enforce GitHub requirements and report runtime approval vetoes separately."
   ],
-  "upstream_change_scope": "Accept numbered pending headings; refuse a second release increment after uncertain committed delivery.",
+  "dependency_and_release_changes": "None in this batch. Incoming Host/Testkit 0.63.2, Platform 0.6.5 and their lock graph are preserved. Both selected Testkit CLI/server and other tools pass offline admission.",
   "deployment_enforcement": {
     "automated": [
-      "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity."
+      "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity; the local consumer-graph fixture remains passing."
     ],
     "not_enforced_here": [
       "Role comments do not automatically derive exclusion policy.",
       "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
-    ]
+    ],
+    "scope": "Unchanged consumer enforcement; this adoption does not add a deployment gate or select the unused generic graph checker."
   },
   "qualification": {
     "status": "passed-focused-linux",
     "passed": [
-      "119 canonical payloads match exact source bytes/checksums/executable modes",
-      "13 focused validation targets: snapshot, dependencies, formatting, Clippy, builds/tests/docs/MSRV/archives, shell, consumer tooling and links",
-      "Offline admission of all prepared tools, including locked Testkit and IC Build 0.62.1",
-      "90 consumer release-adapter cases against the actual published IC Build editor, including retained refusal before another increment",
-      "Rust 1.91 native/Wasm management and principal identity probe"
+      "119 exact committed payloads through the canonical exporter, with no added or retired payloads",
+      "Snapshot integrity, offline tool admission, formatting, Cargo inheritance, IC dependency boundaries and repository file/license checks",
+      "Validation target runner regressions, including bounded failure publication and parent/child error retention",
+      "Consumer CI manifest/lock checkpoints, transitive simulator/WAT graph refusal and original fixture retention",
+      "Consumer full-mode failure evidence, checksum portability/refusals and archive custody fixtures",
+      "Full consumer shell syntax and ShellCheck -x gate; no sourced-helper diagnostics",
+      "Actual pre-commit fixture coverage for selected formatting, index refresh, partial-stage refusal and unrelated edit preservation",
+      "Release metadata real-Git fixtures and validation-failure retention (isolated repositories only)",
+      "Testkit aggregate ordering, original tool selection and refusal fixtures",
+      "Canonical checksum-owner fixture for SHA-256/SHA-512, GNU/Perl backends, hostile filenames, backend failures and NUL output refusal"
     ],
-    "timings": "validation/validation.IN5X0V/timings.tsv",
-    "release_registry": "target/shared-release-tests.GoqsEe/cases.txt",
-    "initial_failure": "target/shared-release-tests.jZsYj8 retained an obsolete expectation allowing an undelivered second increment; adapted consumer expectation now qualifies the canonical refusal.",
     "not_run": [
-      "full local make ci",
-      "native macOS for current graph",
-      "installed IC",
-      "hosted artifact delivery",
-      "release or publication"
-    ]
-  },
-  "unchanged_evidence": [],
-  "evidence_directory": "/tmp/backup-upstream-20261021-_lowx6__",
-  "blocked_adoption": {
-    "version": "0.26.0",
-    "issue": "https://github.com/dragginzgame/shared-tooling/issues/294",
-    "reason": "The optional multi-tool IC installer fails on supported macOS awk; repair remains uncommitted. Required Backup setup no longer calls it."
-  },
-  "qualification_scope": "Original snapshot adoption evidence; subsequent consumer-only setup and documentation changes are qualified separately below.",
-  "consumer_tooling_cleanup": {
-    "date": "2026-10-21",
-    "result": "passed-focused-linux",
-    "evidence_directory": "/tmp/backup-local-simplification-pz964fhf",
-    "timings": "validation/validation.HEb4B1/timings.tsv",
-    "passed": [
-      "Real offline install-tools and tools-check with all five optional IC commands unavailable",
-      "10 focused targets including strict Clippy, shell, tooling, links and 638 native tests (50 PocketIC and 14 HTTP)",
-      "Actual CI offline-reuse step: exact host/formatter/Testkit physical identities, downloads refused",
-      "90 consumer release-adapter cases; required ordering/refusal and retained recovery evidence",
-      "Complete incoming adoption guides preserved with rebased relative links"
+      "Full local make ci; unchanged product Rust qualification is reused within its source/graph scope",
+      "Native macOS for this snapshot",
+      "Installed IC, release, publication or deployment"
     ],
-    "optional_ic_command_attempts": 0,
-    "release_registry": "target/shared-release-tests.ixoGB9/cases.txt",
-    "preserved": "Incoming manifests/lock, index, HEAD, all canonical payloads, manual IC setup/check targets and required Testkit admission.",
-    "not_run": [
-      "full local make ci",
-      "new native macOS or installed-IC qualification",
-      "hosted artifact delivery",
-      "release or publication"
-    ]
-  }
+    "reused_product_evidence": "The incoming Platform 0.6.5 graph passed both-package all-target/all-feature build, strict Clippy, Rust 1.91 and independent real-PocketIC Core/Agent cases before this snapshot-only batch. See docs/status/current.md; no product source or locks changed here."
+  },
+  "evidence_directory": "/tmp/backup-shared-practices-20261021-M8mR3LwA",
+  "previous_review_scope": "The linked review is the last committed adoption. The incoming uncommitted 0.26.3 review and all other pending work were retained in the task evidence directory before refreshing.",
+  "findings": [
+    {
+      "issue": "https://github.com/dragginzgame/shared-tooling/issues/300",
+      "scope": "Clarify async merge guidance under an additional agent runtime approval gate; no bypass or change to GitHub requirements."
+    }
+  ]
 }

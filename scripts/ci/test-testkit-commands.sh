@@ -66,6 +66,13 @@ else
     case "${1:-}" in
         */scripts/dev/install-host-tools.sh|*/scripts/dev/install-ic-tools.sh|*/scripts/dev/install-rust-tools.sh)
             name="${1##*/}"
+            if [[ "$name" == install-ic-tools.sh ]]; then
+                printf '%s\0' "${@:2}" > "$TESTKIT_COMMAND_OPTIONAL_ARGS"
+                [[ " $* " == *' --tool '* ]] || {
+                    echo 'Explicit IC executable selection is required' >&2
+                    exit 28
+                }
+            fi
             if [[ "$name" == install-ic-tools.sh && "${TESTKIT_COMMAND_OPTIONAL_IC:-0}" != 1 ]]; then
                 echo 'Optional IC tools are unavailable in this fixture' >&2
                 exit 26
@@ -102,6 +109,7 @@ chmod +x "$fixture/bin/cargo" "$fixture/bin/bash" "$fixture/cli/ic-testkit-serve
 export TESTKIT_COMMAND_INSTALL="$fixture/install.log"
 export TESTKIT_COMMAND_CALLS="$fixture/calls.log"
 export TESTKIT_COMMAND_ORDER="$fixture/order.log"
+export TESTKIT_COMMAND_OPTIONAL_ARGS="$fixture/optional-args"
 export TESTKIT_COMMAND_CLI="$fixture/cli/ic-testkit-server"
 export TESTKIT_COMMAND_SERVER="$fixture/admitted-server"
 export TESTKIT_COMMAND_BASH="$BASH"
@@ -186,10 +194,22 @@ cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
 # Manual setup/check remain available, with their own admission failures.
 for target in install-ic-tools ic-tools-check; do
     : > "$TESTKIT_COMMAND_ORDER"
-    if run_make "$target" > "$fixture/optional-$target-unavailable.log" 2>&1; then exit 1; fi
+    if TESTKIT_COMMAND_OPTIONAL_IC=1 run_make "$target" IC_TOOLS= > "$fixture/optional-$target-unselected.log" 2>&1; then exit 1; fi
+    grep -F 'Explicit IC executable selection is required' "$fixture/optional-$target-unselected.log" >/dev/null || exit 1
     [[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
-    TESTKIT_COMMAND_OPTIONAL_IC=1 run_make "$target" > "$fixture/optional-$target.log" 2>&1
+    if run_make "$target" IC_TOOLS=wasm-opt > "$fixture/optional-$target-unavailable.log" 2>&1; then exit 1; fi
+    [[ ! -s "$TESTKIT_COMMAND_ORDER" ]] || exit 1
+    TESTKIT_COMMAND_OPTIONAL_IC=1 run_make "$target" IC_TOOLS=wasm-opt > "$fixture/optional-$target.log" 2>&1
+    printf '%s\0' --consumer "$fixture/consumer" --pins "$fixture/consumer/ci/ic-tools.tsv" --tool wasm-opt > "$fixture/expected-optional-args"
+    if [[ "$target" == ic-tools-check ]]; then printf '%s\0' --check >> "$fixture/expected-optional-args"; fi
+    cmp "$TESTKIT_COMMAND_OPTIONAL_ARGS" "$fixture/expected-optional-args"
     printf '%s\n' 'common install-ic-tools.sh' > "$fixture/expected-order"
+    cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
+    : > "$TESTKIT_COMMAND_ORDER"
+    TESTKIT_COMMAND_OPTIONAL_IC=1 run_make "$target" 'IC_TOOLS=wasm-opt icp' > "$fixture/optional-$target-multiple.log" 2>&1
+    printf '%s\0' --consumer "$fixture/consumer" --pins "$fixture/consumer/ci/ic-tools.tsv" --tool wasm-opt --tool icp > "$fixture/expected-optional-args"
+    if [[ "$target" == ic-tools-check ]]; then printf '%s\0' --check >> "$fixture/expected-optional-args"; fi
+    cmp "$TESTKIT_COMMAND_OPTIONAL_ARGS" "$fixture/expected-optional-args"
     cmp "$TESTKIT_COMMAND_ORDER" "$fixture/expected-order"
 done
 [[ "$(cat "$fixture/retained")" == 'retained original evidence' ]] || exit 1

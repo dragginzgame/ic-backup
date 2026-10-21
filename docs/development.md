@@ -51,6 +51,13 @@ selects one complete native matrix for that source; the tag does not repeat it.
 Distinct main commits retain their own runs. Every selected run keeps Linux,
 Intel macOS, Apple Silicon, MSRV, simulator and shell-portability checks.
 
+Ordinary development and authorized merges follow the baseline's
+[asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence). Complete
+focused checks and review, then merge when authorized and enforced GitHub checks
+and reviews permit it. Report pending runs with their exact source identity;
+pending native jobs are not passing qualification. Release, publication and
+deployment retain their separate acceptance gates.
+
 For an explicitly authorized tag-only or other branch qualification, select its
 exact ref through the existing manual workflow:
 
@@ -770,8 +777,11 @@ older releases rather than a current dependency requirement.
 ## Current shared tool selection
 
 The [snapshot](../.shared-tooling.snapshot) and its [catalog](../ci/ic-tools.tsv)
-own optional IC executable selections. `make install-ic-tools` prepares that
-bundle and `make ic-tools-check` checks it offline. Neither is part of
+own optional IC executable versions. Operators explicitly choose executable names:
+`make install-ic-tools IC_TOOLS=wasm-opt` prepares that selection, and
+`make ic-tools-check IC_TOOLS=wasm-opt` checks it offline. Use a quoted list for
+multiple tools, with the same selection for setup and checks. No complete bundle
+is selected implicitly. Neither manual target is part of
 `install-tools`, `tools-check`, CI or release preflight. Add `.tools/ic/bin` to an
 interactive PATH only when deliberately using these manual tools. Existing bundles
 and failed evidence remain retained. See [the shared installer](ic-tools.md);

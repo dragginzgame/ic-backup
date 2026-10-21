@@ -332,14 +332,25 @@ ordinary event[unit].*+?: not-a-prefix
 eventuZZ: not-a-literal-match
 LOG
 cat "$FIXTURE/neutral-context" >> "$FIXTURE/diagnostic-input"
+awk 'BEGIN { for (i = 1; i <= 500; i++) printf "error: bounded-marker-%04d\n", i }' \
+    > "$FIXTURE/large-input"
 cat >> "$FIXTURE/Makefile" <<'MAKE'
 diagnostic-families:
 	@cat diagnostic-input
 	@i=0; while [ $$i -lt 200 ]; do echo ordinary-tail; i=$$((i + 1)); done
 	@exit 7
+fail-after-nested:
+	@VALIDATION_FAILURE_LOG_DIR=nested-child-logs bash scripts/ci/run-validation-targets.sh fail-one || :
+	@printf '%s\n' '[ERR:adapter] inherited-custom-marker' '[ERR:adapter] inherited-custom-marker'
+	@i=0; while [ $$i -lt 9 ]; do echo ordinary-gap; i=$$((i + 1)); done
+	@echo 'fatal: independent-parent-failure'
+	@exit 9
+large-failure:
+	@cat large-input
+	@exit 7
 MAKE
 mkdir "$FIXTURE/without-rg"
-for tool in bash dirname mktemp cp mv make sed awk grep tail tee date mkdir rm cat printf echo; do
+for tool in bash dirname mktemp cp mv make sed awk grep tail tee date mkdir rm cat printf echo perl; do
     ln -s "$(type -P "$tool")" "$FIXTURE/without-rg/$tool"
 done
 for backend in rg grep; do
@@ -366,6 +377,206 @@ for backend in rg grep; do
             grep -Fx "[diagnostic-families] $line" "$output" >/dev/null
             if grep -Fx "[ERR:diagnostic-families] $line" "$output" >/dev/null; then exit 1; fi
         done < "$FIXTURE/neutral-context"
+    done
+
+    # A handled child failure must not suppress a later independent parent
+    # diagnostic. Preserve inherited annotations, including custom messages,
+    # without wrapping them again or repeating them in retained summaries.
+    status=0
+    PATH="$backend_path" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/$backend-nested" \
+        GITHUB_STEP_SUMMARY="$FIXTURE/$backend-nested-summary.md" \
+        VALIDATION_RUNNER_DEPTH=0 VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-after-nested \
+        > "$FIXTURE/$backend-nested-output.log" 2>&1 || status=$?
+    [[ "$status" == 2 ]] || exit 1
+    for output in "$FIXTURE/$backend-nested-output.log" "$FIXTURE/$backend-nested-summary.md" \
+        "$FIXTURE/$backend-nested/latest-errors.log"; do
+        grep -Fx '[ERR:fail-after-nested] fatal: independent-parent-failure' "$output" >/dev/null
+        grep -Fx '[ERR:fail-one] error: first-live-error-marker' "$output" >/dev/null
+        grep -Fx '[ERR:adapter] inherited-custom-marker' "$output" >/dev/null
+        if grep -E '^\[ERR:fail-after-nested\] \[ERR:' "$output" >/dev/null; then exit 1; fi
+    done
+    for output in "$FIXTURE/$backend-nested-summary.md" "$FIXTURE/$backend-nested/latest-errors.log"; do
+        [[ "$(grep -Fxc '[ERR:adapter] inherited-custom-marker' "$output")" == 1 ]] || exit 1
+        [[ "$(grep -Fxc '[ERR:fail-one] error: first-live-error-marker' "$output")" == 1 ]] || exit 1
+    done
+    grep -Fx 'fatal: independent-parent-failure' "$FIXTURE/$backend-nested/latest-combined.log" >/dev/null
+
+    # Keep the complete raw log while bounding the selected diagnostic tail.
+    status=0
+    PATH="$backend_path" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/$backend-large" \
+        VALIDATION_RUNNER_DEPTH=0 VALIDATION_REPOSITORY_ROOT="$FIXTURE" \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" large-failure \
+        > "$FIXTURE/$backend-large-output.log" 2>&1 || status=$?
+    [[ "$status" == 2 ]] || exit 1
+    [[ "$(grep -c '^error: bounded-marker-' "$FIXTURE/$backend-large/latest-combined.log")" == 500 ]] || exit 1
+    awk 'END { exit (NR != 160) }' "$FIXTURE/$backend-large/latest-errors.log"
+    grep -Fx '[ERR:large-failure] error: bounded-marker-0500' "$FIXTURE/$backend-large/latest-errors.log" >/dev/null
+    if grep -F 'bounded-marker-0001' "$FIXTURE/$backend-large/latest-errors.log" >/dev/null; then exit 1; fi
+done
+
+# Publishing a convenience name must not follow links, copy into directories,
+# truncate prior complete bytes, or replace the target's original failure status.
+mkdir "$FIXTURE/publication-bin"
+PUBLICATION_REAL_CP="$(command -v cp)"
+export PUBLICATION_REAL_CP
+cat > "$FIXTURE/publication-bin/cp" <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+destination="${!#}"
+case "${PUBLICATION_FAILURE:-}:$destination" in
+    raw:*-0-fail-one.log.latest.*|highlighted:*-errors.log.latest.*|combined:*-combined.log.latest.*)
+        printf 'partial candidate\n' > "$destination"
+        exit 31 ;;
+esac
+exec "$PUBLICATION_REAL_CP" "$@"
+SCRIPT
+chmod +x "$FIXTURE/publication-bin/cp"
+for scenario in symlink directory raw highlighted combined; do
+    publication="$FIXTURE/publication-$scenario"
+    mkdir "$publication"
+    printf 'prior complete evidence\n' > "$publication/prior"
+    cp "$publication/prior" "$publication/outside"
+    for name in latest.log latest-errors.log latest-combined.log; do
+        case "$scenario" in
+            symlink) ln -s outside "$publication/$name" ;;
+            directory) mkdir "$publication/$name"; cp "$publication/prior" "$publication/$name/sentinel" ;;
+            *) cp "$publication/prior" "$publication/$name" ;;
+        esac
+    done
+    status=0
+    PATH="$FIXTURE/publication-bin:$PATH" PUBLICATION_FAILURE="$scenario" \
+        VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_RUNNER_DEPTH=0 \
+        VALIDATION_FAILURE_LOG_DIR="$publication" \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" fail-one \
+        > "$publication/output.log" 2>&1 || status=$?
+    [[ "$status" == 2 ]] || exit 1
+    cmp "$publication/prior" "$publication/outside"
+    case "$scenario" in
+        symlink)
+            for name in latest.log latest-errors.log latest-combined.log; do
+                [[ -f "$publication/$name" && ! -L "$publication/$name" ]] || exit 1
+                grep -F 'first-live-error-marker' "$publication/$name" >/dev/null
+            done ;;
+        directory)
+            for name in latest.log latest-errors.log latest-combined.log; do
+                cmp "$publication/prior" "$publication/$name/sentinel"
+                [[ "$(ls -A "$publication/$name")" == sentinel ]] || exit 1
+            done ;;
+        *)
+            case "$scenario" in
+                raw) name=latest.log ;;
+                highlighted) name=latest-errors.log ;;
+                combined) name=latest-combined.log ;;
+            esac
+            cmp "$publication/prior" "$publication/$name"
+            candidates=("$publication/"*.latest.*)
+            [[ "${#candidates[@]}" == 1 ]] || exit 1
+            grep -Fx 'partial candidate' "${candidates[0]}" >/dev/null ;;
+    esac
+    for label in 'Latest complete failure log' 'Latest highlighted errors'; do
+        retained="$(sed -n "s/^\[ERR:summary\] $label: //p" "$publication/output.log")"
+        [[ -f "$retained" && ! -L "$retained" && "${retained##*/}" != latest* ]] || exit 1
+        grep -F 'first-live-error-marker' "$retained" >/dev/null
+        if [[ "$scenario" == symlink ]]; then
+            name=latest.log
+            [[ "$label" != 'Latest highlighted errors' ]] || name=latest-errors.log
+            perl -e 'exit (((stat $ARGV[0])[2] & 0777) == ((stat $ARGV[1])[2] & 0777) ? 0 : 1)' \
+                "$retained" "$publication/$name"
+        fi
+    done
+done
+
+# Summary publication is independent of raw-log retention. Open/write failures
+# retain the complete summary, preserve a target failure and cannot claim success
+# when only the targets passed. A partial append preserves prior summary bytes.
+mkdir "$FIXTURE/summary-bin"
+SUMMARY_REAL_CAT="$(command -v cat)"
+export SUMMARY_REAL_CAT
+cat > "$FIXTURE/summary-bin/cat" <<'SCRIPT'
+#!/usr/bin/env bash
+case "${1:-}" in */github-summary.md) printf 'partial summary\n'; exit 37 ;; esac
+exec "$SUMMARY_REAL_CAT" "$@"
+SCRIPT
+chmod +x "$FIXTURE/summary-bin/cat"
+for scenario in directory writer; do
+    for target in pass fail-one; do
+        run="$FIXTURE/summary-$scenario-$target"
+        mkdir -p "$run/tmp"
+        summary="$run/summary.md"
+        summary_path="$PATH"
+        if [[ "$scenario" == directory ]]; then
+            mkdir "$summary"
+            expected=1
+        else
+            printf 'prior summary\n' > "$summary"
+            summary_path="$FIXTURE/summary-bin:$PATH"
+            expected=37
+        fi
+        [[ "$target" != fail-one ]] || expected=2
+        status=0
+        PATH="$summary_path" TMPDIR="$run/tmp" GITHUB_STEP_SUMMARY="$summary" \
+            VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_RUNNER_DEPTH=0 \
+            VALIDATION_FAILURE_LOG_DIR="$run/failures" \
+            bash "$FIXTURE/scripts/ci/run-validation-targets.sh" "$target" \
+            > "$run/output.log" 2>&1 || status=$?
+        [[ "$status" == "$expected" ]] || exit 1
+        retained="$(sed -n 's/^Validation logs retained at: //p' "$run/output.log")"
+        [[ -f "$retained/0.log" && -s "$retained/github-summary.md" ]] || exit 1
+        grep -Fx '### Validation summary' "$retained/github-summary.md" >/dev/null
+        grep -F 'Unable to append GitHub summary; complete summary retained at:' "$run/output.log" >/dev/null
+        if grep -F 'VALIDATION PASSED:' "$run/output.log" >/dev/null; then exit 1; fi
+        if [[ "$target" == fail-one ]]; then
+            grep -F 'first-live-error-marker' "$run/failures/latest-combined.log" >/dev/null
+            grep -F 'first-live-error-marker' "$run/failures/latest-errors.log" >/dev/null
+        else
+            [[ ! -e "$run/failures" ]] || exit 1
+            grep -Fx 'pass-marker' "$retained/0.log" >/dev/null
+        fi
+        if [[ "$scenario" == writer ]]; then
+            printf 'prior summary\npartial summary\n' > "$run/expected-summary"
+            cmp "$run/expected-summary" "$summary"
+        fi
+    done
+done
+
+# Cleanup is secondary to validation. Exercise both real EXIT traps after
+# passing/failing targets, preserving the primary status and naming leftovers.
+mkdir "$FIXTURE/cleanup-bin"
+CLEANUP_REAL_RM="$(command -v rm)"
+export CLEANUP_REAL_RM
+cat > "$FIXTURE/cleanup-bin/rm" <<'SCRIPT'
+#!/usr/bin/env bash
+case "$CLEANUP_BOUNDARY:${!#}" in
+    snapshot:*/validation-runner.*|logs:*/validation.*) exit 47 ;;
+esac
+exec "$CLEANUP_REAL_RM" "$@"
+SCRIPT
+chmod +x "$FIXTURE/cleanup-bin/rm"
+for boundary in snapshot logs; do
+    for target in pass fail-one; do
+        run="$FIXTURE/cleanup-$boundary-$target"
+        mkdir -p "$run/tmp"
+        status=0
+        PATH="$FIXTURE/cleanup-bin:$PATH" CLEANUP_BOUNDARY="$boundary" TMPDIR="$run/tmp" \
+            VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_RUNNER_DEPTH=0 \
+            VALIDATION_FAILURE_LOG_DIR="$run/failures" \
+            bash "$FIXTURE/scripts/ci/run-validation-targets.sh" "$target" \
+            > "$run/output.log" 2>&1 || status=$?
+        expected=47
+        [[ "$target" != fail-one ]] || expected=2
+        [[ "$status" == "$expected" ]] || exit 1
+        if [[ "$boundary" == snapshot ]]; then
+            retained="$(sed -n 's/^Runner source cleanup failed; inspect: //p' "$run/output.log")"
+            cmp "$FIXTURE/scripts/ci/run-validation-targets.sh" "$retained/run-validation-targets.sh"
+        else
+            retained="$(sed -n 's/^Validation logs cleanup failed; inspect: //p' "$run/output.log")"
+            [[ -f "$retained/0.log" ]] || exit 1
+        fi
+        if [[ "$target" == fail-one ]]; then
+            grep -F 'first-live-error-marker' "$run/failures/latest-combined.log" >/dev/null
+            grep -F 'VALIDATION FAILED: fail-one' "$run/output.log" >/dev/null
+        fi
     done
 done
 
