@@ -9,16 +9,20 @@ simulator assets/processes. Applications retain fresh authority, consistency,
 fencing and external-effect settlement. The [implementation contracts](../implementation-contracts.md)
 remain mandatory; storage, wire formats and spending semantics are unchanged.
 
-Default branch **`a72f7fe` / published 0.37.0** supplies Host Artifacts/FS/Process,
+Default branch **`1e39353` / delivered source 0.37.1** supplies Host Artifacts/FS/Process,
 Testkit and the separately installed Build release editor **0.63.0**. Build and
 Testkit setup/checks explicitly select `cli`; library consumers keep it disabled.
 Shared Tooling remains **0.25.9**, revision
 `85aded191d85ac4a8c0e5deab207f6be18895862`.
 The snapshot is authoritative; see [Shared guidance](../shared-tooling.md).
+Current main selects **Platform 0.6.3**. Its 0.37.1 release includes the earlier
+PR notes but not the held-lock reader or independent-consumer implementation.
+Published history is preserved; the 0.37.2 draft identifies actual delivery of
+those pending changes. Package versions remain 0.37.1; this PR runs no release.
 
 ## Pending terminal qualification
 
-The compatible **0.37.1** draft adds
+The compatible **0.37.2** draft adds
 `read_complete_execution_workflow_locked`. A terminal provider can replay complete
 original workflow settlement without releasing and reacquiring its held journal
 lock. Wrong journal guards and original digests, malformed/oversized/symlinked
@@ -61,14 +65,14 @@ No runtime/transport, schema, dependency, feature or production API change occur
 ## Focused evidence and preserved work
 
 Evidence is retained at `/tmp/backup-29-20261021-qrcsyx1t/`, including failed
-attempts and original fixture bundles. The isolated PR worktree keeps the
+attempts and original fixture bundles. The original isolated PR head used the
 committed **Platform 0.6.1** lock and its own target directory. On that exact graph,
 strict all-target Clippy, **38 workflow native cases**, **six native guarded-release
 cases**, **six connected PocketIC cases**, Rust **1.91** all-target/all-feature
 compilation and warnings-denied
-Rustdoc pass. The maintainer checkout's incoming **Platform 0.6.2** lock update
-is preserved and excluded from the PR; its early/final Clippy, 25 persistence
-workflow cases and the six connected cases also pass. This is focused evidence,
+Rustdoc pass. The then-incoming **Platform 0.6.2** lock update was preserved and
+excluded from that original PR head; its early/final Clippy, 25 persistence workflow cases and
+the six connected cases also passed. This is focused evidence,
 not complete dependency-adoption qualification.
 
 The independent-consumer batch retains evidence at
@@ -83,6 +87,18 @@ Both owning tests and the independent normal consumer pass Rust 1.91 checks
 boundaries/inheritance, unchanged shared snapshot and exact new source inclusion
 in the Agent archive also pass. Manifests, features and lockfiles are unchanged.
 
+Conflict resolution merges current main `1e39353` without rewriting the shared
+PR history. Candidate source is unchanged from `b0ea13a`; only current main's
+package metadata/Platform 0.6.3 graph and local pending notes/handoff change.
+Fresh evidence at `/tmp/backup-pr63-conflicts-20261021-9rk6cm0u/` passes strict
+all-target/all-feature Clippy, 38 workflow and six guarded-release native tests,
+six connected Core and all 14 Agent PocketIC cases, Rust 1.91 all-target checks,
+and warnings-denied Rustdoc. Formatting, links, boundaries, inheritance and the
+119-file snapshot also pass. The initial Core filter selected zero tests; the
+corrected connected-workflow invocation ran all six affected cases. Those logs
+remain retained separately. Native macOS qualification awaits exact-head PR CI;
+previous-head CI does not qualify this merge. The main checkout is untouched.
+
 Earlier Tooling adoption evidence remains at
 `/tmp/backup-tooling-adoption-20261021-0omaduks/`: 14 focused targets, 638 native
 tests and 90 release-adapter cases. Its graph/source scope is historical, not
@@ -95,7 +111,7 @@ journey, release or publication is claimed. Published Host public-type alignment
 has independent registry-only Rust 1.91 evidence at
 `/tmp/backup-issue-review-20261021-vre9c3ph/registry-consumer/`. The exact 0.37.0
 three-host CI matrix passed, completing the alignment issue. This does not qualify
-the pending 0.37.1 source on native macOS.
+the pending implementation on native macOS or its later Platform 0.6.3 graph.
 
 ## Remaining application acceptance
 

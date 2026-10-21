@@ -1,6 +1,17 @@
 # Changelog
 
-## [0.37.1] - Unreleased
+## [0.37.2] - Unreleased
+
+- Deliver terminal settlement replay under the held original journal lock and
+  guarded source-reference release. These implementation changes were described
+  in the 0.37.1 notes but were not included in that release's source.
+- Qualify independent Core/Agent consumer processes through authenticated capture,
+  durable publication, same-ID restore and effect-free terminal replay. Process
+  death after authenticated load preserves pending spending and refuses redispatch.
+  Production application qualification remains open under
+  [#29 — Complete original-plan execution and stage binding before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
+
+## [0.37.1] - 2026-10-21
 
 - Allow terminal providers to replay complete workflow settlement under the
   already-held original journal lock. Preserve strict record, digest and bounds

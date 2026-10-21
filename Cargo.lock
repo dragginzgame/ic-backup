@@ -1121,7 +1121,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.37.0"
+version = "0.37.1"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1137,7 +1137,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup-agent"
-version = "0.37.0"
+version = "0.37.1"
 dependencies = [
  "ic-backup",
  "ic-host-artifacts",
@@ -1239,9 +1239,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.6.1"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d895a280a0d7542d5a1636f72ae44fed177a7f14c68bc666ccbd3451ffd4983"
+checksum = "9ebb7f66c9b68a5cd642229dd0583f21501fe602b293ad931f6c5a144161078e"
 dependencies = [
  "candid",
  "crc32fast",
