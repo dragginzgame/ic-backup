@@ -155,7 +155,46 @@ pub fn read_complete_execution_workflow(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionStageCheckpointError> {
-    let workflow = read_execution_workflow(layout, expected)?;
+    read_complete_with(layout, expected, || {
+        read_execution_workflow(layout, expected)
+    })
+}
+
+/// Replay complete original settlement while retaining the exact workflow journal lock.
+///
+/// Terminal-evidence providers may use this instead of reacquiring their held journal
+/// lock. The guard must protect this layout's original `execution-workflow.json`.
+/// Both opening and closing reads retain the ordinary bounds, strict decoding and
+/// expected original digest checks; child locks and checkpoint admission are unchanged.
+/// This supplies local settlement only, never application or reference-release authority.
+/// # Errors
+/// Rejects a guard for another journal, changed originals, or incomplete settlement.
+pub fn read_complete_execution_workflow_locked(
+    layout: &BackupLayoutGuard,
+    journal: &JournalLock,
+    expected: &ArtifactChecksumRecord,
+) -> Result<ExecutionWorkflowSettlementView, ExecutionStageCheckpointError> {
+    if journal.journal() != layout.root().join(WORKFLOW_FILE) {
+        return Err(ExecutionWorkflowPersistenceError::DigestMismatch.into());
+    }
+    read_complete_with(layout, expected, || {
+        layout.check_root()?;
+        let workflow: ExecutionWorkflowRecord =
+            read_json(journal.journal(), MAX_EXECUTION_WORKFLOW_BYTES)?;
+        super::json::check_json_size(&workflow, MAX_EXECUTION_WORKFLOW_BYTES)?;
+        if &workflow.digest() != expected {
+            return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
+        }
+        Ok(workflow)
+    })
+}
+
+fn read_complete_with(
+    layout: &BackupLayoutGuard,
+    expected: &ArtifactChecksumRecord,
+    read_original: impl Fn() -> Result<ExecutionWorkflowRecord, ExecutionWorkflowPersistenceError>,
+) -> Result<ExecutionWorkflowSettlementView, ExecutionStageCheckpointError> {
+    let workflow = read_original()?;
     let mut stages = Vec::with_capacity(workflow.stages().len());
     let mut bindings = Vec::with_capacity(workflow.stages().len());
     let mut by_sequence = BTreeMap::new();
@@ -189,7 +228,7 @@ pub fn read_complete_execution_workflow(
             }
         }
     }
-    read_execution_workflow(layout, expected)?;
+    read_original()?;
     Ok(ExecutionWorkflowSettlementView {
         workflow: expected.clone(),
         stages,

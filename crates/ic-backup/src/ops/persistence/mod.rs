@@ -49,7 +49,7 @@ pub use execution_workflow::{
     ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionStagePreparationError,
     ExecutionStageResumeError, ExecutionStageSettlementView, ExecutionWorkflowPersistenceError,
     ExecutionWorkflowSettlementView, create_execution_workflow, read_complete_execution_workflow,
-    read_execution_workflow,
+    read_complete_execution_workflow_locked, read_execution_workflow,
 };
 pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,

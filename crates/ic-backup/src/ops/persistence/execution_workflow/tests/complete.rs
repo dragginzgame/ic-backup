@@ -42,6 +42,20 @@ fn every_original_stage_is_required_and_exact_checkpoint_rows_are_replayed() {
     drop(stage);
 
     let view = read_complete_execution_workflow(&layout, &workflow.digest()).unwrap();
+    {
+        let lock = JournalLock::acquire(&root.join(WORKFLOW_FILE)).unwrap();
+        assert!(matches!(
+            read_complete_execution_workflow(&layout, &workflow.digest()),
+            Err(ExecutionStageCheckpointError::Stage(
+                ExecutionWorkflowPersistenceError::Lock(JournalLockError::Locked { .. })
+            ))
+        ));
+        assert_eq!(
+            read_complete_execution_workflow_locked(&layout, &lock, &workflow.digest()).unwrap(),
+            view
+        );
+        assert!(JournalLock::acquire(&root.join(WORKFLOW_FILE)).is_err());
+    }
     assert_eq!(view.workflow(), &workflow.digest());
     assert_eq!(view.stages().len(), 2);
     for (actual, expected) in view.stages().iter().zip([first_row, second_row]) {
@@ -62,6 +76,12 @@ fn every_original_stage_is_required_and_exact_checkpoint_rows_are_replayed() {
     let changed_binding = serde_json::to_vec_pretty(&changed_binding).unwrap();
     fs::write(&binding_path, &changed_binding).unwrap();
     assert!(read_complete_execution_workflow(&layout, &workflow.digest()).is_err());
+    {
+        let lock = JournalLock::acquire(&root.join(WORKFLOW_FILE)).unwrap();
+        assert!(
+            read_complete_execution_workflow_locked(&layout, &lock, &workflow.digest()).is_err()
+        );
+    }
     assert_eq!(fs::read(&binding_path).unwrap(), changed_binding);
     fs::write(&binding_path, original_binding).unwrap();
 
@@ -82,6 +102,58 @@ fn every_original_stage_is_required_and_exact_checkpoint_rows_are_replayed() {
     assert_eq!(fs::read(&journal_path).unwrap(), changed);
     assert_eq!(fs::read(&path).unwrap(), original);
 
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn held_workflow_guard_requires_exact_original_and_bounded_regular_bytes() {
+    let (root, layout, workflow) = prepare();
+    let path = root.join(WORKFLOW_FILE);
+    let original = fs::read(&path).unwrap();
+    let lock = JournalLock::acquire(&path).unwrap();
+    let wrong = JournalLock::acquire(&root.join("another-journal.json")).unwrap();
+    for (guard, digest) in [
+        (&wrong, workflow.digest()),
+        (
+            &lock,
+            ArtifactChecksumRecord::from_bytes(b"another original"),
+        ),
+    ] {
+        assert!(matches!(
+            read_complete_execution_workflow_locked(&layout, guard, &digest),
+            Err(ExecutionStageCheckpointError::Stage(
+                ExecutionWorkflowPersistenceError::DigestMismatch
+            ))
+        ));
+        assert_eq!(fs::read(&path).unwrap(), original);
+    }
+    let mut changed: serde_json::Value = serde_json::from_slice(&original).unwrap();
+    changed["unknown"] = serde_json::json!(true);
+    fs::write(&path, serde_json::to_vec(&changed).unwrap()).unwrap();
+    assert!(matches!(
+        read_complete_execution_workflow_locked(&layout, &lock, &workflow.digest()),
+        Err(ExecutionStageCheckpointError::Stage(
+            ExecutionWorkflowPersistenceError::Persistence(PersistenceError::Json(_))
+        ))
+    ));
+    fs::File::create(&path)
+        .unwrap()
+        .set_len(MAX_EXECUTION_WORKFLOW_BYTES + 1)
+        .unwrap();
+    assert!(matches!(
+        read_complete_execution_workflow_locked(&layout, &lock, &workflow.digest()),
+        Err(ExecutionStageCheckpointError::Stage(
+            ExecutionWorkflowPersistenceError::Persistence(PersistenceError::RecordTooLarge { .. })
+        ))
+    ));
+    fs::remove_file(&path).unwrap();
+    fs::write(root.join("retained-original"), &original).unwrap();
+    symlink(root.join("retained-original"), &path).unwrap();
+    assert!(read_complete_execution_workflow_locked(&layout, &lock, &workflow.digest()).is_err());
+    assert_eq!(fs::read(root.join("retained-original")).unwrap(), original);
+    drop(wrong);
+    drop(lock);
     drop(layout);
     fs::remove_dir_all(root).unwrap();
 }

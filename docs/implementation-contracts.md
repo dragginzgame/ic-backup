@@ -368,6 +368,9 @@ qualify completeness. Applied counters alone are insufficient. Reject duplicate 
 cross-journal command identities, missing/replaced sidecars and active descendants.
 Hold existing inode-bound quiescence guards through durable reference publication,
 recheck terminal bytes/layout and synchronize exact absent-reference replay.
+Providers validating a workflow journal can call
+`read_complete_execution_workflow_locked` with that same held `JournalLock`;
+the complete original stage replay retains its ordinary bounds and digest checks.
 This API performs no IC effect, application fence release or artifact deletion.
 
 ## Agent transport and qualification

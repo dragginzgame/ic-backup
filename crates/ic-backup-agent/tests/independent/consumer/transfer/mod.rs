@@ -1,0 +1,254 @@
+//! Metadata, durable source publication and source-bound uploads through public APIs.
+
+use super::*;
+use ic_backup::ports::ic_mutation::IcMutationProviderError;
+use ic_backup::{
+    model::{
+        download_journal::DownloadArtifactRequest,
+        ic_snapshot_upload::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind},
+    },
+    ops::persistence::{DownloadJournalGuard, read_operation_plan},
+    workflow::{
+        ic_snapshot_download::download_snapshot,
+        ic_snapshot_metadata::read_snapshot_metadata,
+        ic_snapshot_upload::{allocate_snapshot, upload_snapshot_data},
+    },
+};
+use ic_backup_agent::{AgentSnapshotTransferReadProvider, AgentUpdateProvider};
+
+impl Driver {
+    pub(super) async fn transfer(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
+        let request = self.metadata_request()?;
+        let transport = self.transport(stage.plan());
+        let layout = stage.layout().map_err(error)?;
+        let mut provider = AgentSnapshotTransferReadProvider::new(&transport, |request: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest<'_, '_>, prepared: &PreparedUpdate<'_>| signed(layout.root(), &ReservedUpdate::TransferRead(request), prepared).map_err(|_| ic_backup::ports::ic_observation::IcObservationProviderError::Unavailable));
+        let qualify = async |request: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest<'_, '_>, reply: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse| {
+            receipt(layout.root(), request.authority().binding().operation_sequence(), request.mutation_attempt(), &request.payload().digest(), request.payload().arguments(), &reply.input().reply)
+        };
+        if stage.binding().stage_sequence() == 1 {
+            return read_snapshot_metadata(
+                stage,
+                1,
+                &request,
+                &mut provider,
+                async |_| self.admit().map(|_| ()),
+                qualify,
+            )
+            .await
+            .map(|(_, checkpoint)| checkpoint.learned_evidence().clone())
+            .map_err(error);
+        }
+        let raw = self.raw(false, 1)?;
+        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+        let download =
+            IcSnapshotDownloadPlan::new(&self.capture, 2, &metadata, CHUNK).map_err(error)?;
+        let binding: ExecutionStageBindingRecord = serde_json::from_slice(&read(
+            &self
+                .root
+                .join("capture/execution-stage-1/stage-binding.json"),
+        )?)?;
+        let metadata_layout =
+            BackupLayoutGuard::acquire(&self.root.join("capture/execution-stage-1"))
+                .map_err(error)?;
+        let metadata_plan = read_operation_plan(&metadata_layout, binding.plan()).map_err(error)?;
+        assert_eq!(
+            &download
+                .bind(
+                    &binding,
+                    &metadata_plan,
+                    stage.binding().predecessors().to_vec()
+                )
+                .map_err(error)?,
+            stage.binding()
+        );
+        drop(metadata_layout);
+        let capture = self.payload(Method::TakeCanisterSnapshot, None);
+        let capture_raw = self.raw(false, 0)?;
+        let capture_reply = IcSnapshotReply::decode(&capture, &capture_raw).map_err(error)?;
+        let snapshot = &capture_reply.snapshots()[0];
+        layout
+            .retain_restore(
+                &self.root.join("restore/execution-workflow.json"),
+                self.restore.digest().hash(),
+            )
+            .map_err(error)?;
+        fs::DirBuilder::new()
+            .mode(0o700)
+            .create(layout.root().join("artifacts"))?;
+        let mut journal = DownloadJournalGuard::create(
+            layout,
+            stage.plan().digest().hash(),
+            vec![DownloadArtifactRequest {
+                canister_id: self.config["target"].as_str().unwrap().into(),
+                snapshot_id: TOKEN.into(),
+                snapshot_taken_at_timestamp: snapshot.taken_at_timestamp(),
+                snapshot_total_size_bytes: snapshot.total_size(),
+            }],
+        )
+        .map_err(error)?;
+        let writer = journal
+            .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
+            .map_err(error)?;
+        let checksum = download_snapshot(
+            stage,
+            &download,
+            writer,
+            &mut provider,
+            async |_| self.admit().map(|_| ()),
+            qualify,
+        )
+        .await
+        .map_err(error)?;
+        assert_eq!(
+            journal
+                .verify_ic_snapshot_artifact(stage.plan(), TOKEN, &metadata)
+                .map_err(error)?,
+            checksum
+        );
+        journal
+            .publish_download_manifest(stage.plan())
+            .map_err(error)
+    }
+
+    pub(super) fn source_plan(
+        &self,
+        source: &BackupLayoutGuard,
+    ) -> io::Result<OperationPlanRecord> {
+        let request = self.metadata_request()?;
+        let raw = self.raw(false, 1)?;
+        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+        let plan = IcSnapshotDownloadPlan::new(&self.capture, 2, &metadata, CHUNK)
+            .map_err(error)?
+            .plan()
+            .unwrap()
+            .clone();
+        read_operation_plan(source, &plan.digest()).map_err(error)
+    }
+
+    pub(super) fn destination(&self) -> io::Result<Vec<u8>> {
+        let request = self.metadata_request()?;
+        let raw = self.raw(false, 1)?;
+        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let plan = self.source_plan(&source)?;
+        let journal = DownloadJournalGuard::open(&source, plan.digest().hash()).map_err(error)?;
+        let upload = journal
+            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
+            .map_err(error)?;
+        let raw = self.raw(true, 3)?;
+        let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
+        let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
+            return Err(io::ErrorKind::InvalidData.into());
+        };
+        Ok(snapshot_id.clone())
+    }
+
+    pub(super) fn bind_upload(
+        &self,
+        workflow: &ExecutionWorkflowRecord,
+        sequence: u64,
+        predecessors: &[ExecutionStagePredecessorRecord],
+    ) -> io::Result<OperationPlanRecord> {
+        let request = self.metadata_request()?;
+        let raw = self.raw(false, 1)?;
+        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let source_plan = self.source_plan(&source)?;
+        let journal =
+            DownloadJournalGuard::open(&source, source_plan.digest().hash()).map_err(error)?;
+        let upload = journal
+            .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
+            .map_err(error)?;
+        if sequence == 3 {
+            return Ok(self.singleton(workflow, 3, &upload.binding_digest()));
+        }
+        let raw = self.raw(true, 3)?;
+        let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
+        let data = journal
+            .prepare_ic_snapshot_data_upload_plan(workflow, 4, TOKEN, &reply, CHUNK)
+            .map_err(error)?;
+        let binding: ExecutionStageBindingRecord = serde_json::from_slice(&read(
+            &self
+                .root
+                .join("restore/execution-stage-3/stage-binding.json"),
+        )?)?;
+        let allocation = BackupLayoutGuard::acquire(&self.root.join("restore/execution-stage-3"))
+            .map_err(error)?;
+        let plan = read_operation_plan(&allocation, binding.plan()).map_err(error)?;
+        data.bind(&binding, &plan, predecessors.to_vec())
+            .map_err(error)?;
+        Ok(data.plan().unwrap().clone())
+    }
+
+    pub(super) async fn upload(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
+        let request = self.metadata_request()?;
+        let raw = self.raw(false, 1)?;
+        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let plan = self.source_plan(&source)?;
+        let journal = DownloadJournalGuard::open(&source, plan.digest().hash()).map_err(error)?;
+        let manifest = journal.record().map_err(error)?.digest();
+        journal
+            .read_download_manifest(&plan, &manifest)
+            .map_err(error)?;
+        journal
+            .verify_ic_snapshot_artifact(&plan, TOKEN, &metadata)
+            .map_err(error)?;
+        let upload = journal
+            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
+            .map_err(error)?;
+        let transport = self.transport(stage.plan());
+        let root = stage.layout().map_err(error)?.root();
+        let mut provider = AgentUpdateProvider::new(
+            &transport,
+            |request: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+                signed(root, request, prepared).map_err(|_| IcMutationProviderError::Unavailable)
+            },
+        );
+        let qualify =
+            async |request: &ic_backup::model::ic_snapshot_upload::IcSnapshotUploadAttempt<
+                '_,
+                '_,
+            >,
+                   reply: &ic_backup::model::ic_mutation::IcMutationAcknowledgement| {
+                receipt(
+                    root,
+                    request.authority().binding().operation_sequence(),
+                    request.mutation_attempt(),
+                    &request.payload().binding_digest(),
+                    request.payload().arguments(),
+                    &reply.input().reply,
+                )
+            };
+        if stage.binding().stage_sequence() == 3 {
+            return allocate_snapshot(
+                stage,
+                3,
+                &upload,
+                &mut provider,
+                async |_| self.admit().map(|_| ()),
+                qualify,
+            )
+            .await
+            .map(|(_, checkpoint)| checkpoint.learned_evidence().clone())
+            .map_err(error);
+        }
+        let raw = self.raw(true, 3)?;
+        let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
+        let data = journal
+            .prepare_ic_snapshot_data_upload_plan(&self.restore, 4, TOKEN, &reply, CHUNK)
+            .map_err(error)?;
+        upload_snapshot_data(
+            stage,
+            &data,
+            &journal,
+            TOKEN,
+            &mut provider,
+            async |_| self.admit().map(|_| ()),
+            qualify,
+        )
+        .await
+        .map(|checkpoint| checkpoint.learned_evidence().clone())
+        .map_err(error)
+    }
+}

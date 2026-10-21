@@ -1,5 +1,7 @@
 //! Connected original-plan qualification; application authority belongs to this fixture.
 
+mod terminal;
+
 use super::super::{
     Backend, Downloaded, Fault, lifecycle, management,
     planned_restore::Provider as RestoreProvider,
@@ -821,6 +823,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         assert!(source.source.root.join("restore-references.json").is_file());
         assert!(source.source.root.join("download-manifest.json").is_file());
         drop(stage);
+        terminal::check(&driver, &layout, &capture_layout, false);
     } else {
         let complete = result.unwrap();
         assert_eq!(executed, STAGES);
@@ -860,6 +863,11 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
             read_complete_execution_workflow(&layout, &original_workflow).unwrap(),
             complete
         );
+        // Terminal admission must also work after reconstructing original evidence,
+        // without dispatch, cached completion flags or a second application query.
+        let backend = driver.backend;
+        driver = rebuild(backend, &layout, &capture_layout, &workflow, None, failure);
+        terminal::check(&driver, &layout, &capture_layout, true);
     }
     if failure == Failure::None {
         let before = files(&custody_root);
@@ -888,6 +896,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         "capture":capture_workflow.digest(), "restore":original_workflow,
         "target":driver.backend.target.to_text(), "executed_stages":executed,
         "completed":failure == Failure::None, "pending_stage":expected_failure.map(|(stage, _, _)| stage),
+        "fixture_source_reference_released":failure == Failure::None,
         "management_calls":driver.backend.calls,
     })).unwrap());
     assert_eq!(workflow.digest(), original_workflow);
