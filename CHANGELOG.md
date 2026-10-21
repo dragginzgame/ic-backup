@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.37.3] - Unreleased
+## [0.37.3] - 2026-10-21
 
 - Qualify Host/Testkit 0.63.2 and Platform 0.6.5 with the selected authenticated
   simulator and independent consumer capture/restore and interruption checks.
