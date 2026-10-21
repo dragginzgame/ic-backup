@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.37.0]
+## [0.37.0] - 2026-10-21
 
 - **Breaking:** Adopt published IC Tooling Host Artifacts, FS and Process 0.63.0.
   Consumers sharing `PersistenceError::Publication` or the `DirectoryChecksumError`
