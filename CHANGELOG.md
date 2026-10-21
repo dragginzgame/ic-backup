@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.36.1]
+## [0.36.1] - 2026-10-21
 
 - Qualify published IC Tooling Host/Testkit 0.62.1 and Platform 0.5.1 with the
   existing features and Rust 1.91 floor. Align the explicit release editor with
