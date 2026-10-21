@@ -10,6 +10,14 @@
   replies retain the original references. Production application qualification
   remains open under [#29 — Complete original-plan execution and stage binding
   before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
+- Qualify an independent Core/Agent consumer process over the complete capture,
+  durable artifact, upload, same-ID restore and guarded reference-release journey.
+  Cold replay makes no new calls; process death after authenticated load retains
+  the pending original and refuses redispatch. Testkit stays outside its normal
+  dependency graph. This is isolated application evidence, not Canic acceptance.
+- Consumers sharing Host public types can use published Backup 0.37.0 with Host
+  0.63; [#62 — Align published Backup public types with Host](https://github.com/dragginzgame/ic-backup/issues/62)
+  is resolved after its native qualification completed.
 
 ## [0.37.0] - 2026-10-21
 

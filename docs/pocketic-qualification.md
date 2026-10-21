@@ -297,6 +297,17 @@ Each case retains `fixture-connected-result.json` alongside its original catalog
 and evidence. Canic integration, independent installed-consumer acceptance and
 native macOS/installed-IC qualification remain separate.
 
+## Independent authenticated consumer processes
+
+The Agent suite also runs a [normal Core/Agent consumer](agent-transport.md#independent-normal-consumer)
+from a separate temporary workspace and target directory. Testkit and the actual
+application checks remain parent-owned. The two registered cases cover cold
+capture/restoration/accepted start/terminal replay and process death after an
+authenticated load with safe refusal of reentry. Both retain the original frozen
+catalogues, durable artifacts/manifest, signed ingress, raw replies and source
+references; failed process logs are never overwritten. This is candidate-path
+library qualification, not a published-product or Canic acceptance receipt.
+
 ## Reproduce and retain evidence
 
 Prepare the reviewed local tools and locked Cargo cache explicitly before running:

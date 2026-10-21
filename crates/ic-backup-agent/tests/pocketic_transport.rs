@@ -1,5 +1,6 @@
 //! Actual agent HTTP gateway effects on an isolated no-external-effects fixture.
 mod fence_reconciliation;
+mod independent;
 mod support;
 use ic_backup::ports::ic_mutation::{IcMutationProvider, IcMutationProviderError};
 use ic_backup::{

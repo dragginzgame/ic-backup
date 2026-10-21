@@ -158,7 +158,7 @@ oversized/disconnected/timed-out responses, no implicit polling and byte-identic
 pending journals across reopen. Context and reservation mismatches reject before
 network access. These controlled servers prove HTTP behavior, not management effects.
 
-The selected published Testkit 0.33 manages explicit PocketIC 16.1 startup/cleanup and retains
+The workspace-selected published Testkit manages explicit PocketIC startup/cleanup and retains
 server stdout/stderr in each fixture root. The async client uses its complete
 PocketIC re-export; exact call accounting remains in Backup. Actual isolated
 PocketIC HTTP gateways qualify the production transport's separate
@@ -189,11 +189,65 @@ qualification does not supply current native macOS proof; configured CI selects
 both libraries on Linux, Intel macOS and Apple Silicon macOS. The complete runner,
 authenticated application providers, production identities/endpoints, exclusive
 never-dispatched custody, complete installed product and terminal/fence/reference
-release remain independently qualified. [Transport acceptance #25](https://github.com/dragginzgame/ic-backup/issues/25)
-owns that boundary; historical ICP routing acceptance no longer blocks this transport.
+release require application-owned acceptance.
+[#29 — Complete original-plan execution and stage binding before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29)
+owns the remaining acceptance consolidated from the closed transport issue.
 
-Agent 0.31 uses one `AgentUpdateProvider` for mutation and source-bound upload
-ports. Replace both former provider names and change retention callbacks to
+Use one `AgentUpdateProvider` for mutation and source-bound upload
+ports, with retention callbacks that
 accept `&ReservedUpdate<'_>`. Match `Mutation` or `Upload` when accessing the typed
 request; the callback receives the exact borrowed request selected for dispatch.
 Both ports preserve their own admission, reply limits and evidence domains.
+
+
+## Independent normal consumer
+
+The [consumer harness](../crates/ic-backup-agent/tests/independent/mod.rs) runs in
+`pocketic_transport`. It builds the [canonical consumer program](../crates/ic-backup-agent/tests/independent/consumer/mod.rs)
+in a temporary independent workspace, deriving its external requirements and MSRV
+from the owning package and using the candidate Core/Agent paths. The existing
+offline consumer graph checker requires unchanged resolved package identities and
+excludes Testkit, PocketIC and WAT. No sibling patches, new permanent workspace,
+registry publication or installed production CLI is implied.
+
+Testkit belongs only to the parent. The real Ed25519 controller, gateway and root
+key bind the child's configured transport. Before each process phase the parent
+separately reserves an actual status/control observation and checks the installed
+module hash. The parent retains exclusive instance/controller custody throughout
+the phase; no other application effect occurs while the child runs. The inspected
+program has one fixed target and no timers, outbound calls, payments or fence.
+These are explicit fixture conditions, not generic authority or safety defaults.
+
+Both workflow catalogues are retained before capture. The consumer uses public
+coordinators, original stage journals, durable metadata/data transfer and artifact
+manifest publication, source-bound uploads and same-release restore safety.
+Create-only operation-scoped ingress files prevent a new signature from becoming
+repeat-dispatch authority. Explicit qualified receipts remain with the integration;
+the Agent still makes no journal transition. Capture, stopped restore, accepted
+start and terminal replay run in distinct processes over the same originals.
+
+The parent changes live state after capture, then independently captures and
+compares the loaded module, complete heap/stable regions, globals, certified data,
+chunk store and timer/hook metadata while stopped. All verification ingress has
+separate retained original accounting. Only successful actual verification writes
+the source/destination-bound acceptance record, including verification metadata and
+region hashes. Missing acceptance refuses before allocating the start stage.
+The terminal provider freshly replays complete settlement under its held journal
+lock and checks source bytes/manifest before exact reference release. Cold terminal
+replay changes no files and signs/submits no new request.
+
+A second case exits the consumer after the actual authenticated load response,
+before an Applied receipt. Independently observed complete restored state remains
+an oracle outside its acceptance channel. Original pending spending, exhausted
+allowance, signed intent, source bytes and reference survive. A new process refuses
+before another dispatch or start stage. Parent process cleanup uses Host ownership
+with a finite caller-selected deadline; it is not settlement of an IC effect.
+Every invocation retains separate private stdout/stderr, including refusals. Graph,
+build, program digest, workflow, ingress, raw reply and qualification evidence stay
+in the caller-owned temporary roots on success and failure.
+
+This qualifies candidate-library composition in an isolated consumer. Production
+application authentication, multi-canister fencing/obligations, Canic integration,
+registry-only installed delivery and native macOS/installed-IC acceptance remain
+separate. Run `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport independent:: -- --nocapture`
+after the normal explicit tool/cache setup; no setup or download occurs in tests.

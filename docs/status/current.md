@@ -40,6 +40,24 @@ application fence. Calls are in-process and its complete external command set is
 empty. Native process tests separately cover nonempty command custody. These
 fixture facts are not a production application safety default.
 
+## Independent consumer qualification
+
+The Agent suite now builds and runs the canonical consumer program in a separate
+normal-dependency workspace and target directory. It uses candidate Core/Agent
+paths, the original locked external identities and the existing no-Testkit/PocketIC/
+WAT graph admission. The parent alone owns the simulator, actual fixed membership,
+controller/module/status observations and complete stopped post-load verification.
+All parent observations reserve separate original accounting before calls.
+
+Both catalogues precede capture. Distinct processes perform capture, stopped
+restore, accepted start and effect-free terminal replay over original stages,
+bytes, manifest and source references. Withheld acceptance refuses before the
+start stage exists. An actual process exit after authenticated load but before
+receipt leaves pending exhausted spending; cold continuation refuses without
+redispatch. Its full restored-state oracle stays outside the acceptance channel.
+Host owns process cleanup; every invocation retains unique private output logs.
+No runtime/transport, schema, dependency, feature or production API change occurs.
+
 ## Focused evidence and preserved work
 
 Evidence is retained at `/tmp/backup-29-20261021-qrcsyx1t/`, including failed
@@ -53,6 +71,18 @@ is preserved and excluded from the PR; its early/final Clippy, 25 persistence
 workflow cases and the six connected cases also pass. This is focused evidence,
 not complete dependency-adoption qualification.
 
+The independent-consumer batch retains evidence at
+`/tmp/backup-0371-consumer-b0wb4fhj/`. Strict Agent all-target Clippy passes;
+`agent-pocketic.log` covers all 12 unchanged Agent cases and the first two consumer
+cases. `independent-final.log` reruns both new cases after strengthening original
+intent/witness custody, preserving the initial failed development evidence.
+The final normal graph/build is `/tmp/ic-backup-agent-independent-build-3317842-0/`;
+actual success/death roots are `/tmp/ic-backup-agent-pocketic-3317842-{1,2}/`.
+Both owning tests and the independent normal consumer pass Rust 1.91 checks
+(`msrv-owner.log`, `msrv-normal-consumer.log`). Formatting, local links, dependency
+boundaries/inheritance, unchanged shared snapshot and exact new source inclusion
+in the Agent archive also pass. Manifests, features and lockfiles are unchanged.
+
 Earlier Tooling adoption evidence remains at
 `/tmp/backup-tooling-adoption-20261021-0omaduks/`: 14 focused targets, 638 native
 tests and 90 release-adapter cases. Its graph/source scope is historical, not
@@ -63,8 +93,9 @@ qualification of later changes. Adoption records remain in the
 No full local `make ci`, new native macOS, installed-IC, production application
 journey, release or publication is claimed. Published Host public-type alignment
 has independent registry-only Rust 1.91 evidence at
-`/tmp/backup-issue-review-20261021-vre9c3ph/registry-consumer/`; its Intel macOS
-exact-source CI gate was still running at this review.
+`/tmp/backup-issue-review-20261021-vre9c3ph/registry-consumer/`. The exact 0.37.0
+three-host CI matrix passed, completing the alignment issue. This does not qualify
+the pending 0.37.1 source on native macOS.
 
 ## Remaining application acceptance
 
