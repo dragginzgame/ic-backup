@@ -3,10 +3,10 @@ SHELL := /bin/bash
 export CARGO_TARGET_DIR := $(CURDIR)/target
 LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server install-release-editor
 LOCAL_TOOL_CHECK_TARGETS := testkit-server-check release-editor-check
-RELEASE_EDITOR_VERSION := 0.62.1
+RELEASE_EDITOR_VERSION := 0.63.0
 export RELEASE_EDITOR_MAX_BYTES := 8388608
 RELEASE_EDITOR_COMMAND = bash "$(CURDIR)/scripts/dev/install-rust-tools.sh" --consumer "$(CURDIR)" \
-    --package ic-build --version "$(RELEASE_EDITOR_VERSION)" --bin ic-build-release-metadata --profile debug
+    --package ic-build --version "$(RELEASE_EDITOR_VERSION)" --bin ic-build-release-metadata --profile debug --features cli
 VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
@@ -141,7 +141,7 @@ repository-files-check:
 define TESTKIT_SERVER
 	+@set -eo pipefail; \
 	cli="$$(bash scripts/dev/install-rust-tools.sh --consumer "$(CURDIR)" \
-	  --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release $(1))" || { \
+	  --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release --features cli $(1))" || { \
 	  status=$$?; \
 	  printf 'Locked Testkit CLI admission failed. Prepare a missing selection with make install-testkit-server; inspect retained evidence if it is changed.\n' >&2; \
 	  exit "$$status"; \

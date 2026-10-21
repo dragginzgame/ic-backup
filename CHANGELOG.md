@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.37.0]
+
+- **Breaking:** Adopt published IC Tooling Host Artifacts, FS and Process 0.63.0.
+  Consumers sharing `PersistenceError::Publication` or the `DirectoryChecksumError`
+  conversion into `ArtifactError` must align their direct Host dependencies to
+  0.63. Publication phases, stored records and recovery behavior are unchanged.
+- Align Testkit and the release editor with IC Tooling 0.63.0. Their installers
+  explicitly select the required `cli` feature; rerun `make install-tools`.
+  Library dependencies keep CLI features disabled. Testkit no longer introduces
+  IC Metrics or a second Platform version.
+- Adopt published Platform 0.6.0 with existing features. Principal admission,
+  management wire formats, decoder limits and Agent submission behavior remain
+  unchanged.
+
 ## [0.36.1] - 2026-10-21
 
 - Qualify published IC Tooling Host/Testkit 0.62.1 and Platform 0.5.1 with the

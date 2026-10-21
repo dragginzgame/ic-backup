@@ -124,10 +124,11 @@ TOOL
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'installer %s\n' "$*" >> "$TEST_LOG"
-version=''; package=''; check=false; preflight=false
+version=''; package=''; features=''; check=false; preflight=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --package) package="$2"; shift 2 ;;
+        --features) features="$2"; shift 2 ;;
         --lockfile)
             # Project this fixture's known package. Strict source/ambiguity/drift
             # admission belongs to the real shared installer's own regressions.
@@ -138,6 +139,9 @@ while [[ $# -gt 0 ]]; do
         *) shift ;;
     esac
 done
+case "$package" in
+    ic-build|ic-testkit) [[ "$features" == cli ]] || exit 27 ;;
+esac
 if [[ "$package" == ic-build ]]; then
     printf '%s/target/release-editor\n' "$PWD"
     exit 0

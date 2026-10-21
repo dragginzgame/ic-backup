@@ -108,6 +108,9 @@ Common setup also prepares the published IC Build release editor through
 `make install-release-editor`; `make release-editor-check` admits its absolute
 path offline. The release adapter supplies the bounded candidate-rendering input;
 the editor is tooling only and does not enter either library's dependency graph.
+Both installer selections explicitly enable `cli`; the library dependency on
+Testkit keeps that feature disabled. Repeat `make install-tools` when these
+selected package versions or features change; older tool receipts do not substitute.
 See [release preparation](releasing.md) for its ownership and recovery boundaries.
 
 The shared `make install-rust-tools` and offline `make rust-tools-check` prepare

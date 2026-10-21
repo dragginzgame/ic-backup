@@ -10,81 +10,84 @@ Applications retain fresh authority, consistency, fencing and external-effect
 settlement. The [implementation contracts](../implementation-contracts.md) remain
 mandatory; this batch changes no Rust, storage, wire or recovery behavior.
 
-## Current selections
+## Current batch and selections
 
-HEAD remains **`38b3b0f` / 0.36.0**. The incoming pending graph selects Host/Testkit
-**0.62.1**, Platform **0.5.1**, Candid/derive **0.10.39** and development Metrics
-**0.15.0**, with IC Build **0.62.1** as the release editor. Package versions remain
-**0.36.0**, notes **0.36.1**. This cleanup preserves incoming manifests and lock
-bytes, index, HEAD and all snapshot payloads. Published registry sources supply
-dependencies; no sibling checkout or Cargo patch is used.
+Task-entry HEAD is **`1ef6227` / 0.36.1**, with a clean working tree. The workspace
+now requires Platform **0.6**, resolved to published **0.6.0**. The only added
+package is Platform 0.6.0; all prior package versions/checksums remain selected.
+Host/Testkit and the IC Build release editor remain **0.62.1**, Candid/derive
+**0.10.39**, Agent SDK **0.49.2**, and development Metrics **0.15.0**. Package
+versions remain **0.36.1**; compatible pending notes select **0.36.2**. No index,
+commit, ref, release receipt or snapshot changes are made.
+
+The registry archive checksum matches Cargo.lock and all 61 downloaded source
+files match Cargo's actual cached source. Its recorded source revision is
+`73dda4a5ee17abb78d905562b102a2af51031dda`; migration guidance is verified against
+that committed changelog and the published README. All 23 files in the consumed
+principal/account, Candid, management DTO, Agent and PocketIC modules are unchanged
+from 0.5.1. The breaking change gates principal/account availability behind
+`principal`, already included by our codec/DTO/client features. No new feature,
+source adapter or consumer API change is needed.
+
+Testkit retains its supported **Platform 0.5.1** development dependency. Its client
+exports retain original upstream principal/PocketIC identities, so fixture calls
+continue without conversion shims. Both libraries' independent production graphs
+select only **Platform 0.6.0**. Leave Testkit/Host upgrades to their own batch;
+removing this development-only duplicate does not justify a wider migration.
+See [Platform guidance](../ic-platform.md) for maintained contracts and enforcement.
+
+## Contributor tooling and retained history
 
 Shared Tooling remains **0.25.9**, revision
-`85aded191d85ac4a8c0e5deab207f6be18895862`, with 119 canonical payloads. The prior
-adoption qualifies the runner's refusal to increment again after unconfirmed
-committed delivery, preserving exact intent, metadata, receipt, proof and tools.
-[The review](../shared-tooling-review.json) distinguishes adoption provenance
-from this batch's consumer changes.
+`85aded191d85ac4a8c0e5deab207f6be18895862`, with 119 canonical payloads. Required
+setup orders common host/Cargo tools, locked fetch, Testkit and the release editor.
+Offline checks admit required selections. Optional IC executables remain outside
+aggregate setup, CI reuse/PATH and release preflight. Manual IC setup/check
+commands and retained bundles/evidence remain available. Testkit's authenticated
+server, fixture custody and offline admission remain mandatory.
 
-## Simplified contributor tooling and guidance
-
-Required setup now orders common host/Cargo tools, locked fetch, Testkit and the
-release editor. Offline checks admit host/Cargo, Testkit and editor selections.
-The five optional IC executables are outside `install-tools`, `tools-check`, CI
-reuse/PATH and release preflight. Manual `make install-ic-tools` and
-`make ic-tools-check` remain available; existing bundles and failed evidence stay
-retained. Required Testkit admission, original fixture custody and server lifecycle
-are unchanged. See [development](../development.md#quick-start) and
-[release preparation](../releasing.md).
-
-[Shared Tooling guidance](../shared-tooling.md) and [Platform guidance](../ic-platform.md)
-now describe maintained owners/contracts. Complete incoming adoption records,
-exact revisions, checksums and historical receipts are preserved with rebased
-links in the [Shared archive](archive-shared-tooling-2026-10-21.md) and
-[Platform archive](archive-platform-adoption-2026-10-21.md). Manifests, the snapshot
-and this handoff own current selections and evidence; compatibility constraints
-on external principal 0.1.5 and management DTO 0.11.0 remain explicit.
+[Shared Tooling guidance](../shared-tooling.md), [development](../development.md)
+and [release preparation](../releasing.md) describe current commands. Complete
+adoption records remain in the [Shared archive](archive-shared-tooling-2026-10-21.md)
+and [Platform archive](archive-platform-adoption-2026-10-21.md). Manifests, the
+snapshot and this handoff own current selections and evidence; exact external
+principal **0.1.5** and management DTO **0.11.0** constraints remain mandatory.
 
 ## Qualification and remaining limits
 
-All **10 focused targets** pass: offline tool admission, snapshot integrity,
-dependency boundaries/inheritance, formatting, early strict Clippy, shell,
-consumer tooling, documentation links and native tests. All **638 native tests**
-pass, including **38 Core + 12 Agent PocketIC** and **14 HTTP** cases. Real setup,
-all focused targets and the actual CI offline-reuse step pass with optional IC
-commands forced unavailable; no optional command is attempted. The second
-consumer reuses exact host/formatter/Testkit identities while downloads refuse.
-All **90 consumer release-adapter cases** pass against the published editor;
-manual IC routing/refusal, parallel ordering and required-tool failures remain
-covered. No real repository Git/release/registry effects occur.
+All **11 focused targets** pass: snapshot, direct dependency boundaries and
+inheritance, formatting, early strict Clippy, all-target compilation, tests,
+Rustdoc, Rust **1.91** with independent consumers, exact package archives and
+documentation links. All **638 native tests** pass, including **38 Core + 12 Agent
+PocketIC** and **14 HTTP** cases. Native/Wasm Rust 1.91 probes preserve all 24
+management DTO and external principal identities; native also checks public Core
+metadata/status projections. The new principal feature is active on all inspected
+targets without expanding codec/runtime/parser selection.
 
-Current evidence: `/tmp/backup-local-simplification-pz964fhf/`, including
-`install-tools.log`, `validation/validation.HEb4B1/timings.tsv`,
-`ci-reuse-result.json`, `ci-reuse-evidence/`, `release-adapter.log`,
-`archive-preservation.json` and the original task-entry files under `before/`.
-Release cases/traces remain at `target/shared-release-tests.ixoGB9/`.
+Current evidence: `/tmp/backup-platform-06-20261021-r9dxe81w/`, including registry
+metadata/archive, source comparisons, `validation/validation.qDTYqV/timings.tsv`,
+`platform-identity/` and eight normal/build target trees with enabled features.
+Independent consumers remain at `target/msrv-consumers.JaDLnQ/`, exact archives at
+`target/package-check.cvW0Jn/`. Core stays Agent-free. Linux, Intel/ARM macOS and
+Wasm tree inspection excludes development Platform, simulator, parser/CDK, WAT and
+CLI from production; target inspection is distinct from native qualification.
 
-Unchanged Rust/graph evidence is reused from
-`/tmp/backup-upstream-20261021-_lowx6__/`: 13 passing focused targets, Rust 1.91
-independent consumers and exact archives, eight production target trees, and
-native/Wasm public principal and all 24 management DTO identity probes.
-Independent consumers remain at `target/msrv-consumers.eKuMcC/`, archives at
-`target/package-check.9jGJB1/`. Earlier failure/release fixtures and receipts retain
-their original source/graph scope. Production excludes simulator, parser/CDK,
-WAT, CLI and opt-in filesystem backends; Core remains Agent-free.
+Unchanged tooling evidence retains its original scope at
+`/tmp/backup-local-simplification-pz964fhf/`: real setup/offline admission with
+optional IC commands unavailable, actual offline CI reuse and 90 consumer release
+cases (`target/shared-release-tests.ixoGB9/`). These tooling receipts are not
+qualification of the new product graph. Earlier archives and failed evidence stay
+retained. No full local `make ci`, new native macOS, installed-IC, hosted artifact
+delivery, release or publication is claimed.
 
 The direct boundary gate checks aliases and normal/build/dev/target declarations,
 not transitive features or deployed bytes. Candid remains required for management
 and SDK contracts, including upstream printer selection; development PocketIC's
-DTO identity remains separate. No new full local `make ci`, native macOS,
-installed-IC, hosted artifact delivery, release or publication is claimed.
+DTO identity remains separate. The earlier Shared 0.26 optional macOS installer
+hold is recorded in [the review](../shared-tooling-review.json); no snapshot repair
+is adopted here. PocketIC retains its exact thiserror 2.0.18 requirement.
 
-## Remaining constraints and application acceptance
-
-The prior adoption held Shared 0.26.0 for the optional multi-tool installer's
-supported macOS awk failure ([#294](https://github.com/dragginzgame/shared-tooling/issues/294)).
-This batch does not refresh that snapshot or adopt a local repair. PocketIC pins
-thiserror exactly 2.0.18; SHA-256 test oracles retain Host's 0.10.9 line.
+## Remaining application acceptance
 
 Complete application acceptance still requires integration-owned current
 membership/control/read authority, whole-selection fencing, retained source and

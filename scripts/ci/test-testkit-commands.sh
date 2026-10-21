@@ -59,6 +59,7 @@ set -euo pipefail
 if [[ "${1:-}" == scripts/dev/install-rust-tools.sh ]]; then
     shift
     printf '%s\n' "$*" >> "$TESTKIT_COMMAND_INSTALL"
+    [[ " $* " == *' --features cli '* ]] || exit 27
     [[ ${TESTKIT_COMMAND_INSTALL_FAILURE:-0} == 0 ]] || exit 17
     printf '%s\n' "$TESTKIT_COMMAND_CLI"
 else
@@ -70,6 +71,7 @@ else
                 exit 26
             fi
             if [[ " $* " == *' --package ic-build '* ]]; then
+                [[ " $* " == *' --features cli '* ]] || exit 27
                 mode=setup
                 [[ "${!#}" != --check ]] || mode=check
                 printf 'editor %s\n' "$mode" >> "$TESTKIT_COMMAND_ORDER"
@@ -113,12 +115,12 @@ run_make() {
 run_make testkit-server-check > "$fixture/path"
 printf '%s\n' "$TESTKIT_COMMAND_SERVER" > "$fixture/expected-path"
 cmp "$fixture/path" "$fixture/expected-path"
-printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release --check" > "$fixture/expected-install"
+printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release --features cli --check" > "$fixture/expected-install"
 cmp "$TESTKIT_COMMAND_INSTALL" "$fixture/expected-install"
 printf '%s\n' "check --directory $fixture/consumer/.tools/testkit-server" > "$fixture/expected-calls"
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 run_make install-testkit-server > "$fixture/setup-path"
-printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release" >> "$fixture/expected-install"
+printf '%s\n' "--consumer $fixture/consumer --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release --features cli" >> "$fixture/expected-install"
 cmp "$TESTKIT_COMMAND_INSTALL" "$fixture/expected-install"
 printf '%s\n' "setup --directory $fixture/consumer/.tools/testkit-server" >> "$fixture/expected-calls"
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"

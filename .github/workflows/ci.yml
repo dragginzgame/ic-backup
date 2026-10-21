@@ -81,7 +81,7 @@ jobs:
             CARGO_NET_OFFLINE=true RUSTFLAGS=--invalid-application-flag RUSTC_WRAPPER=/absent-application-wrapper \
               bash scripts/dev/install-rust-tools.sh --consumer "$sharing/consumer" \
                 --package ic-testkit --lockfile "$sharing/consumer/Cargo.lock" \
-                --bin ic-testkit-server --profile release ${options[@]+"${options[@]}"} \
+                --bin ic-testkit-server --profile release --features cli ${options[@]+"${options[@]}"} \
                 > "$sharing/testkit-$mode.log" 2>&1
           done
           for selected in "$GITHUB_WORKSPACE/.tools/rust/common/bin/"*; do
@@ -96,7 +96,7 @@ jobs:
           test "$(perl -MCwd=abs_path -e 'print abs_path($ARGV[0])' "$testkit")" = \
             "$(perl -MCwd=abs_path -e 'print abs_path($ARGV[0])' "$(bash scripts/dev/install-rust-tools.sh \
               --consumer "$GITHUB_WORKSPACE" --package ic-testkit --lockfile Cargo.lock \
-              --bin ic-testkit-server --profile release --check)")"
+              --bin ic-testkit-server --profile release --features cli --check)")"
       - name: Validate the native library and repository tooling
         run: |
           if [[ "$RUNNER_OS" == macOS ]]; then

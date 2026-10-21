@@ -9,8 +9,9 @@ local Cargo patch supplies dependencies.
 ## Ownership and features
 
 The workspace disables defaults and selects `candid` and
-`management-canister-types`. Only Agent adds `agent`; an independent Core consumer
-remains Agent-free. Parser, executor, ic0, certification, ledger, service generation
+`management-canister-types`. These features include `principal`, preserving owned
+principal/account availability without another feature selection. Only Agent adds
+`agent`; an independent Core consumer remains Agent-free. Parser, executor, ic0, certification, ledger, service generation
 and CDK runtime features are unused. Production and test imports use Platform;
 no local compatibility re-exports, direct upstream declarations or pin exceptions
 remain. Application protocols owned by IC Wire keep their existing representation.
@@ -59,8 +60,9 @@ generators emit no old Candid/CDK paths.
 Candid and the SDK remain necessary production transitives. Upstream management
 DTOs and Agent enable Candid defaults, including printer machinery. The complete
 development graph retains PocketIC's management DTO 0.8 separately from the
-qualified production 0.11 identity. Simulator clients and CLI dependencies remain
-development-only. Production-tree checks and exact public-identity probes are
+qualified production 0.11 identity. Simulator clients remain development-only.
+CLI features are selected only for separately installed tools; library dependencies
+do not enable them. Production-tree checks and exact public-identity probes are
 separate from direct declaration checks; deployment admission belongs to the
 application's exact target/features, locked build and artifact identity.
 
