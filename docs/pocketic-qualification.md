@@ -275,10 +275,27 @@ allocate its empty mutex sidecar; it changes no product record or artifact.
 
 Completed replay discards all learned driver state, reopens both exact catalogues
 and invokes no callbacks or management calls. All retained file bytes stay unchanged.
+The [fixture terminal provider](../crates/ic-backup/tests/pic_journey/planned_runner/round_trip/terminal/mod.rs)
+extends this journey through guarded source-reference release. After cold evidence
+reconstruction, it replays the complete restore under the original held journal
+lock, verifies the source artifact/manifest and binds stopped post-load acceptance
+to the source metadata, actual upload destination and exact load/start bytes.
+Withholding or substituting application acceptance refuses even when every stage
+is Applied. Lost allocation, data, load and start replies retain the reference and
+all original bytes. Success changes only the reference record; immediate release
+replay changes no files and makes no remote calls. An independent unfinished
+restore's reference remains present, continuing to block pruning. Even already-released replay
+must freshly qualify acceptance. No artifact or remote snapshot is deleted.
+
+This in-process fixture creates no external backup commands; its complete command
+set is empty. The inspected program has no timers, outbound work, payments or
+application fence. Native process tests separately cover active descendants and
+retained command identities. These facts do not install a production terminal
+provider or qualify another application's obligations or fencing.
+
 Each case retains `fixture-connected-result.json` alongside its original catalogue
-and evidence. Completion here means settled fixture workflows; source references
-remain retained. Product terminal evidence, application fence/reference release,
-Canic integration and native macOS/installed-IC acceptance remain separate.
+and evidence. Canic integration, independent installed-consumer acceptance and
+native macOS/installed-IC qualification remain separate.
 
 ## Reproduce and retain evidence
 
@@ -317,7 +334,7 @@ supply native macOS qualification. The original journey was delivered under
 [issue #17](https://github.com/dragginzgame/ic-backup/issues/17); current transfer-read
 adoption is tracked in [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).
 Application-qualified Agent integration, executable workflows/CLI, Canic adaptation, application-specific
-lifecycle recovery, fencing and terminal/reference-release qualification remain
+lifecycle recovery, fencing and production terminal/reference-release qualification remain
 separate. The inspected
 [management snapshot contract](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
 supplies platform shapes;

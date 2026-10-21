@@ -2391,6 +2391,14 @@ view does not authenticate receipts, transfer, application safety or command/
 byte custody, and cannot establish terminal or fence/reference release.
 No persisted schema, digest, spending owner or allowance changes.
 
+`read_complete_execution_workflow_locked` supplies the same replay to a terminal
+provider holding the original workflow `JournalLock`. It checks that the guard
+names this layout's exact workflow path, then reads the bounded original before
+and after stage admission without attempting to acquire that same lock again.
+It preserves all ordinary original-digest, strict decoding and checkpoint checks.
+The caller retains the guard throughout; no local settlement becomes application
+acceptance or reference-release permission.
+
 `run_new_execution_workflow` coordinates a new allocation and exact child stages
 in declared topological order. The integration supplies each learned child plan,
 fresh effect-boundary admission, authenticated request/reply retention, explicit

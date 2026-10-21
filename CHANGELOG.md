@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.37.1] - Unreleased
+
+- Allow terminal providers to replay complete workflow settlement under the
+  already-held original journal lock. Preserve strict record, digest and bounds
+  checks without releasing custody or attempting to reacquire that lock.
+- Extend the connected PocketIC journey through guarded source-reference release
+  and effect-free replay. Missing or mismatched application acceptance and lost
+  replies retain the original references. Production application qualification
+  remains open under [#29 — Complete original-plan execution and stage binding
+  before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29).
+
 ## [0.37.0] - 2026-10-21
 
 - **Breaking:** Adopt published IC Tooling Host Artifacts, FS and Process 0.63.0.
