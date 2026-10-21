@@ -2,6 +2,11 @@
 
 ## Ownership and delivered source
 
+The pending contributor-tooling fix keeps dependency fetching in explicit setup,
+removing its repeated dispatch from ordinary validation; see
+[#64](https://github.com/dragginzgame/ic-backup/issues/64). Product source and
+selected dependencies are unchanged by that fix.
+
 Core owns backup records, bounded spending, guarded persistence, reconciliation
 and coordination. Agent owns reserved signed transport. Platform owns external
 IC types/codecs/SDKs. IC Tooling owns generic host custody, release rendering and

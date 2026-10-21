@@ -16,7 +16,7 @@ RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
-CI_TARGETS := shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links deps shell-check fmt-check clippy tooling-check release-check hooks-check check test doc check-msrv package
+CI_TARGETS := shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links shell-check fmt-check clippy tooling-check release-check hooks-check check test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
