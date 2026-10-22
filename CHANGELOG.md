@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.37.4] - Unreleased
+## [0.37.4] - 2026-10-22
 
 - Qualify locked Host/Testkit 0.63.3, Platform 0.6.7 and Tokio 1.54.1 on Linux
   through Core/Agent tests, authenticated simulator journeys and independent
