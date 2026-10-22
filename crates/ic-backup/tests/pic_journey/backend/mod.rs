@@ -24,11 +24,11 @@ use ic_backup::{
         ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     },
 };
-use ic_platform::principal::ExternalPrincipal;
-use ic_testkit::{
-    pic::{PocketIcManagedServer, PocketIcStartupConfig},
+use ic_platform::{
     pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal},
+    principal::ExternalPrincipal,
 };
+use ic_testkit::pic::{PocketIcManagedServer, PocketIcStartupConfig};
 use serde_json::json;
 use std::{
     collections::{BTreeMap, BTreeSet},

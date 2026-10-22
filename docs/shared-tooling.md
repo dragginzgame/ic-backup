@@ -69,7 +69,7 @@ Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
 
-The reviewed Shared Tooling 0.26.4 snapshot includes the
+The reviewed Shared Tooling 0.26.6 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -77,15 +77,20 @@ polling the full matrix or claiming its native-host qualification. Release,
 publication, deployment and application acceptance remain separate.
 
 The shared validation runner owns failure summaries, bounded excerpts and atomic
-latest-log publication. Backup qualifies its actual callers and evidence custody;
+latest-log publication. Relative retained-log paths resolve from the caller,
+including leading-dash paths, independently of inherited `CDPATH`.
+Backup qualifies its actual callers and evidence custody;
 it keeps no alternate summary implementation. ShellCheck follows sourced helpers
 with `-x`. The checksum verifier rejects NUL-corrupted tool output before shell
 capture. Optional producer download helpers are not consumer dependencies.
 
-[Shared Tooling #300](https://github.com/dragginzgame/shared-tooling/issues/300)
-tracks clarification of asynchronous merge guidance when an agent runtime imposes
-an additional approval gate. Runtime rejection remains a blocker; the baseline
-does not override it or authorize bypassing repository requirements.
+The adopted baseline includes
+[#300 — Clarify runtime approval boundaries](https://github.com/dragginzgame/shared-tooling/issues/300):
+enforced GitHub requirements and runtime approval restrictions remain distinct.
+Optional hosted CI supplies no additional approval requirement, and runtime
+rejection must be reported without switching execution paths to evade it.
+The snapshot also includes the shared [CI/release integrity audit](../audits/ci-release-integrity.md).
+Its availability adds no recurring audit or new product gate.
 
 ## Adoption history
 

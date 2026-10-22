@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.26.4's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.26.6's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
@@ -60,8 +60,9 @@ or dependencies on Canic runtime/control-plane crates.
 
 ## Simulator qualification
 
-Simulator fixtures depend on published `ic-testkit` and use its
-`pocket_ic` client exports for exact management ingress and async gateway qualification.
+Simulator fixtures use published `ic-platform::pocket_ic` clients and DTOs for
+exact management ingress and async gateway qualification. Published `ic-testkit`
+owns the harness extensions; Platform's `pocket-ic` feature is development-only.
 Testkit's explicit managed server owns bounded readiness/cleanup and retains raw
 output in each caller-owned fixture directory. No baseline reuse/reset, funding
 policy, hidden snapshot retry or receipt inference is adopted. Preserve original

@@ -26,6 +26,9 @@ The [Core](../crates/ic-backup/Cargo.toml) and
 There is no standalone CLI package, canister,
 application runtime, general scheduler or complete backup/restore runner here.
 
+The ownership table follows current dependency adoptions. Historical cleanup
+findings below retain their original review sources and qualification scope.
+
 | Entry or capability | Authoritative owner and relationship |
 | --- | --- |
 | `ic_backup::{model, policy, view}` | Backup records, validation and read-only projections; policy performs no IO |
@@ -37,7 +40,7 @@ application runtime, general scheduler or complete backup/restore runner here.
 | Inherited process custody | `ic-host-process`; Backup binds custody to its original journal and quiescence requirements |
 | Candid decoder setup and exact-result mechanics | Published `ic-platform` with its `candid` feature; Backup retains bounded wire projections, method quotas and redacted errors |
 | Management DTOs and principal identity | Platform’s management exports over exact upstream 0.11.0; owned root `Principal` for internal admission, contract/external principal exports for Candid and SDK boundaries |
-| Simulator process/assets and PocketIC SDK | Development-only `ic-testkit`; fixture intent, original bytes, logs and application assertions remain here |
+| Simulator process/assets and PocketIC SDK | Development-only Testkit owns managed servers/assets and harness extensions; Platform's development-only `pocket-ic` feature owns clients/DTOs. Fixture intent, bytes, logs and application assertions remain here |
 | Common developer/release tooling | Exact reviewed Shared Tooling snapshot; consumer package, registry, delivery and resume policy remains local |
 | Fleet membership, routing, release identity, quiescence and external obligations | Canic or another application integration, through Core ports; Core has no Canic runtime/control-plane dependency |
 

@@ -168,7 +168,7 @@ async fn run(reply: Reply) {
         .unwrap_err();
     assert_eq!(
         rejected.reject_code,
-        ic_testkit::pocket_ic::RejectCode::CanisterReject
+        ic_platform::pocket_ic::RejectCode::CanisterReject
     );
     assert_eq!(rejected.reject_message, "fenced");
     retain(

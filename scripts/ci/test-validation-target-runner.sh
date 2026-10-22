@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Shared companions: scripts/ci/fixture-lifecycle.sh
+# Shared companions: scripts/ci/fixture-lifecycle.sh scripts/ci/prepare-script-fixture.sh scripts/ci/run-validation-targets.sh
 set -euo pipefail
 
 # Fixtures below supply their own Make selections and logger identities.
+# Complete qualification also needs this Shared checkout's Git history through
+# the nested release-metadata fixture; only the child logger bundles are isolated.
 unset MAKEFLAGS MFLAGS MAKEOVERRIDES GNUMAKEFLAGS MAKEFILES
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 # Synthetic failures and summaries belong to this fixture, not its caller.
@@ -20,10 +22,8 @@ source "$ROOT/scripts/ci/fixture-lifecycle.sh"
 fixture_complete=false
 trap 'fixture_finish "$?" "$FIXTURE" "Failed validation-target-runner fixture retained"' EXIT
 
-mkdir -p "$FIXTURE/scripts/ci" "$FIXTURE/failure-logs"
-cp "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
-cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/scripts/ci/"
-cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/scripts/ci/"
+mkdir -p "$FIXTURE/failure-logs"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$FIXTURE" scripts/ci/run-validation-targets.sh
 printf '%s\n' \
     '.PHONY: pass passing-tests mutate-runner fail-one fail-two fail-after-caught-panic fail-with-test-context' \
     'pass:' \
@@ -92,12 +92,28 @@ for depth in SHARED_DEPTH_UNDEFINED 00 01 08 -1 +1 '1+1' '1/0' '1 ' $'1\n' \
     if rg -F 'VALIDATION PASSED:' "$FIXTURE/depth-invalid.log" >/dev/null; then exit 1; fi
 done
 
+# Relative retained-log roots belong to the caller, not inherited CDPATH.
+# Anchor a leading dash before mkdir too; neither case may touch a decoy root.
+log_caller="$FIXTURE/log-caller"
+log_decoy="$FIXTURE/log-decoy"
+mkdir -p "$log_caller" "$log_decoy/records" "$log_decoy/-records"
+for selection in records -records; do
+    (cd "$log_caller" && CDPATH="$log_decoy" VALIDATION_LOG_DIR="$selection" \
+        VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_RUNNER_DEPTH=0 \
+        bash "$FIXTURE/scripts/ci/run-validation-targets.sh" pass) \
+        > "$FIXTURE/log-path-$selection.log" 2>&1
+    runs=("$log_caller/$selection/"validation.*)
+    [[ "${#runs[@]}" == 1 && -f "${runs[0]}/timings.tsv" ]] || exit 1
+    grep -Fx 'pass-marker' "${runs[0]}/0.log" >/dev/null
+    announced="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/log-path-$selection.log")"
+    [[ "$announced" == "${runs[0]}" && -z "$(ls -A "$log_decoy/$selection")" ]] || exit 1
+done
+
 # Fault-inject copies of the actual runner: premature exits must fail and retain
 # evidence in both the source wrapper and executing body, even after dispatch
 # has made temporary logs eligible for cleanup. No production test hook is used.
-mkdir -p "$FIXTURE/exit-probe/scripts/ci"
-cp "$ROOT/scripts/ci/check-make-execution.sh" "$FIXTURE/exit-probe/scripts/ci/"
-cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/exit-probe/scripts/ci/"
+mkdir -p "$FIXTURE/exit-probe"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$FIXTURE/exit-probe" scripts/ci/run-validation-targets.sh
 for boundary in snapshot body summary; do
     for failure in nounset zero nonzero command; do
         # shellcheck disable=SC2016 # Expanded only in the copied runner.
@@ -629,13 +645,9 @@ done
 
 # Exercise real Make overrides and logger dispatch across checkout boundaries.
 parent="$FIXTURE/parent"
-mkdir -p "$parent/scripts/ci" "$parent/child/scripts/ci"
-cp "$ROOT/scripts/ci/run-validation-targets.sh" "$parent/scripts/ci/"
-cp "$ROOT/scripts/ci/run-validation-targets.sh" "$parent/child/scripts/ci/"
-cp "$ROOT/scripts/ci/check-make-execution.sh" "$parent/scripts/ci/"
-cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$parent/scripts/ci/"
-cp "$ROOT/scripts/ci/check-make-execution.sh" "$parent/child/scripts/ci/"
-cp "$ROOT/scripts/ci/verify-file-checksum.sh" "$parent/child/scripts/ci/"
+mkdir -p "$parent/child"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$parent" scripts/ci/run-validation-targets.sh
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$parent/child" scripts/ci/run-validation-targets.sh
 cat > "$parent/Makefile" <<'MAKE'
 .PHONY: validate adoption same-checkout selection child-gate ci
 validate:
@@ -800,11 +812,9 @@ cmp "$FIXTURE/combined-before-failure" "$FIXTURE/failure-logs/latest-combined.lo
 # Opted-in checkpoints stop at the actual stage boundary, including nested
 # same-checkout gates, without leaking a parent's inputs into another checkout.
 checkpoint="$FIXTURE/checkpoint with spaces"
-mkdir -p "$checkpoint/scripts/ci" "$checkpoint/child/scripts/ci" "$checkpoint/nested graph"
-for helper in run-validation-targets check-make-execution verify-file-checksum; do
-    cp "$ROOT/scripts/ci/$helper.sh" "$checkpoint/scripts/ci/"
-    cp "$ROOT/scripts/ci/$helper.sh" "$checkpoint/child/scripts/ci/"
-done
+mkdir -p "$checkpoint/child" "$checkpoint/nested graph"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$checkpoint" scripts/ci/run-validation-targets.sh
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$checkpoint/child" scripts/ci/run-validation-targets.sh
 cat > "$checkpoint/Makefile" <<'MAKE'
 pass:
 	@echo pass >> dispatched

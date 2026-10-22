@@ -52,7 +52,20 @@ full backup/restore completion, terminal proof and fence/reference release remai
 separate. Original failure logs, raw server output, signed ingress, state/rejections,
 requests/replies, journals and obligations remain retained.
 
+## Current simulator dependency boundary
+
+Testkit 0.64 owns managed server startup, authenticated assets and harness
+extensions. Simulator clients and DTOs come directly from published
+`ic_platform::pocket_ic`; both libraries enable Platform's `pocket-ic` feature only
+in development dependencies. Platform remains at the selected 0.6.7 release.
+No forwarding module or production simulator dependency is retained. The existing
+exact management bytes, bounded calls, signed transport, original journals and
+independent readback assertions remain local.
+
 ## Earlier Testkit qualification
+
+The following records retain their original dependency selections and scope;
+use the current dependency boundary above and the handoff for current evidence.
 
 Both simulator suites depend on published `ic-testkit` 0.25.1 and its complete
 `pocket_ic` re-export. Their exact management calls, byte comparisons and original

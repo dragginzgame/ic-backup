@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.38.0] - Unreleased
+
+- **Breaking Rust dependency identity:** adopt published Host 0.64.0. Consumers
+  naming or exchanging Host types exposed by Backup must align their Host
+  dependencies to 0.64. Preserve public checksum-error conversion and typed
+  declaration causes ([#66 — Align artifact error conversion with published Host 0.64](https://github.com/dragginzgame/ic-backup/issues/66)).
+  Wire/storage formats and recovery behavior are unchanged.
+- Adopt Testkit and the contributor release editor at 0.64.0. Simulator clients
+  and DTOs now come directly from Platform's development-only PocketIC feature;
+  Testkit retains server admission and managed process ownership. Prepare the
+  updated tools with `make install-testkit-server` and `make install-release-editor`.
+- Adopt Shared Tooling 0.26.6, including caller-relative validation-log paths,
+  declared fixture companions, CI/release integrity guidance and clarified
+  asynchronous CI/runtime approval boundaries.
+
 ## [0.37.4] - 2026-10-22
 
 - Qualify locked Host/Testkit 0.63.3, Platform 0.6.7 and Tokio 1.54.1 on Linux

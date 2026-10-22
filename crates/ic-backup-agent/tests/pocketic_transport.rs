@@ -24,11 +24,11 @@ use ic_backup_agent::{
     AgentSnapshotTransferReadProvider, AgentTransport, AgentUpdateProvider, PreparedUpdate,
     ReservedUpdate,
 };
-use ic_platform::management_canister_types::{CanisterStatusType, SnapshotDataKind};
-use ic_testkit::{
-    pic::{PocketIcManagedServer, PocketIcStartupConfig},
+use ic_platform::{
+    management_canister_types::{CanisterStatusType, SnapshotDataKind},
     pocket_ic::{PocketIcBuilder, nonblocking::PocketIc},
 };
+use ic_testkit::pic::{PocketIcManagedServer, PocketIcStartupConfig};
 use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 
 #[tokio::test(flavor = "multi_thread")]

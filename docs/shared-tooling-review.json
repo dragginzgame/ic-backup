@@ -1,41 +1,44 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-21",
+  "inspection_date": "2026-10-22",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "dc1ced7e240e90f0c6daa89fb6248fcb074164eb",
-  "label": "0.26.4",
+  "revision": "4cb9bc907154225a3f7e4c33fd8d75fbeaa125c8",
+  "label": "0.26.6",
   "manifest": ".shared-tooling.snapshot",
-  "selected_files": 119,
-  "previous_revision": "18023786319fef0aae68296a78a3fc3913eabe0f",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/7714c97931b343309c67908fc5f6cb958b7a6a07/docs/shared-tooling-review.json",
+  "selected_files": 122,
+  "previous_revision": "dc1ced7e240e90f0c6daa89fb6248fcb074164eb",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/522aec08e81e2369652f61e30108c370838f151a/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
-    "isolated_clean_checkout": true,
+    "clean_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "dc1ced7e240e90f0c6daa89fb6248fcb074164eb",
-    "version_authority": "Committed VERSION and changelog; no GitHub Release object was found."
+    "observed_remote_main": "4cb9bc907154225a3f7e4c33fd8d75fbeaa125c8",
+    "version_authority": "Committed VERSION and changelog, verified against remote main."
   },
   "changed_paths": [
-    "docs/verification-helpers.md",
-    "rules/dependency-pinning.md",
-    "docs/supported-hosts.md",
-    "scripts/ci/verify-file-checksum.sh",
+    "DRAGGINZGAME.md",
+    "audits/README.md",
+    "audits/flow-convergence-and-duplication.md",
+    "docs/provenance.md",
+    "rules/contributions.md",
     "scripts/ci/run-validation-targets.sh",
     "scripts/ci/test-validation-target-runner.sh",
-    "DRAGGINZGAME.md",
-    "rules/contributions.md"
+    "scripts/distribution/governance-files.txt"
   ],
-  "added_paths": [],
+  "added_paths": [
+    "audits/ci-release-integrity.md",
+    "scripts/ci/prepare-script-fixture.sh",
+    "scripts/ci/shared-companions.sh"
+  ],
   "retired_paths": [],
   "consumer_changes": [
-    "Adopt committed failure-runner fixes for independent parent errors, bounded diagnostic capture, atomic latest-log publication and primary exit-status preservation.",
-    "Adopt checksum verification that rejects NUL-corrupted backend output before shell capture.",
-    "Apply the baseline own-the-solution rule for DFINITY dependencies; historical incident links are evidence, not current prerequisites for future upstream work.",
-    "Follow sourced helpers in the existing ShellCheck gate and correct CI help to describe prepared-cache validation.",
-    "Retain incoming asynchronous CI and explicit optional IC_TOOLS adoption; enforce GitHub requirements and report runtime approval vetoes separately."
+    "Adopt caller-relative retained-log paths independently of CDPATH and leading dashes.",
+    "Use declared companion closure for isolated validation-runner fixtures.",
+    "Adopt the CI/release integrity audit and focused boundary-handoff guidance without adding recurring gates.",
+    "Apply the clarified independent GitHub/runtime approval boundaries; preserve asynchronous CI cadence."
   ],
-  "dependency_and_release_changes": "None in this batch. Incoming Host/Testkit 0.63.2, Platform 0.6.5 and their lock graph are preserved. Both selected Testkit CLI/server and other tools pass offline admission.",
+  "dependency_and_release_changes": "Host/Testkit 0.64.0 and Build release-editor 0.64.0 are adopted together. Platform stays 0.6.7. PocketIC imports move to Platform development dependencies. The exposed Host type identity change requires pending 0.38.0 notes; repository package versions remain 0.37.4.",
   "deployment_enforcement": {
     "automated": [
       "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity; the local consumer-graph fixture remains passing."
@@ -49,30 +52,42 @@
   "qualification": {
     "status": "passed-focused-linux",
     "passed": [
-      "119 exact committed payloads through the canonical exporter, with no added or retired payloads",
-      "Snapshot integrity, offline tool admission, formatting, Cargo inheritance, IC dependency boundaries and repository file/license checks",
-      "Validation target runner regressions, including bounded failure publication and parent/child error retention",
-      "Consumer CI manifest/lock checkpoints, transitive simulator/WAT graph refusal and original fixture retention",
-      "Consumer full-mode failure evidence, checksum portability/refusals and archive custody fixtures",
-      "Full consumer shell syntax and ShellCheck -x gate; no sourced-helper diagnostics",
-      "Actual pre-commit fixture coverage for selected formatting, index refresh, partial-stage refusal and unrelated edit preservation",
-      "Release metadata real-Git fixtures and validation-failure retention (isolated repositories only)",
-      "Testkit aggregate ordering, original tool selection and refusal fixtures",
-      "Canonical checksum-owner fixture for SHA-256/SHA-512, GNU/Perl backends, hostile filenames, backend failures and NUL output refusal"
+      "122 exact committed payloads through the canonical exporter; no retired payloads",
+      "Offline admission of Testkit and Build 0.64.0 tools; existing PocketIC 16.1.0 asset readmitted",
+      "Both-library all-target/all-feature native checks, strict Clippy and warning-denied Rustdoc",
+      "Rust 1.91 owning targets and independent Core/Agent consumers on the final ICU-updated graph",
+      "Actual unpacked package archives compile together with original graph and immutable archive checksums",
+      "642 native tests without failures, ignored cases or filters, including 39 Core and 14 Agent simulator cases and both independent-process acceptance cases",
+      "Current independent graphs exclude Testkit/PocketIC/WAT and development-only Platform/Host features; Core excludes Agent",
+      "Consumer shell, hooks, snapshot, checkpoint, retention, evidence and isolated release-helper fixtures",
+      "Caller-relative records and -records retained logs resist inherited CDPATH without touching decoys"
     ],
+    "reused_evidence": "Tooling integration fixtures retain their unchanged scripts and isolated substitute graphs across the concurrent ICU-only lock edit. All graph-dependent product checks and tests were restarted and pass on the final lock.",
     "not_run": [
-      "Full local make ci; unchanged product Rust qualification is reused within its source/graph scope",
-      "Native macOS for this snapshot",
-      "Installed IC, release, publication or deployment"
-    ],
-    "reused_product_evidence": "The incoming Platform 0.6.5 graph passed both-package all-target/all-feature build, strict Clippy, Rust 1.91 and independent real-PocketIC Core/Agent cases before this snapshot-only batch. See docs/status/current.md; no product source or locks changed here."
+      "Full local make ci",
+      "Native macOS and hosted CI for the pending source",
+      "Registry-only installed-product, live IC or Canic application acceptance",
+      "Release, publication or deployment"
+    ]
   },
-  "evidence_directory": "/tmp/backup-shared-practices-20261021-M8mR3LwA",
-  "previous_review_scope": "The linked review is the last committed adoption. The incoming uncommitted 0.26.3 review and all other pending work were retained in the task evidence directory before refreshing.",
-  "findings": [
-    {
-      "issue": "https://github.com/dragginzgame/shared-tooling/issues/300",
-      "scope": "Clarify async merge guidance under an additional agent runtime approval gate; no bypass or change to GitHub requirements."
-    }
-  ]
+  "evidence_directory": "/tmp/backup-host-shared-adoption-20261022-4phyjkg6",
+  "findings": [],
+  "validated_lock_sha256": "5a5252bf8880f161f954410e4302f2e8e0e9deadd21313c2182b28ea3b984c34",
+  "concurrent_lock_update": {
+    "preserved": true,
+    "description": "ICU 2.4 and related transitive selections changed during the first native test run. Its input guard correctly rejected that run; preparation, product checks and all native tests were restarted.",
+    "packages": [
+      "icu_collections",
+      "icu_locale_core",
+      "icu_normalizer",
+      "icu_normalizer_data",
+      "icu_properties",
+      "icu_properties_data",
+      "icu_provider",
+      "tinystr",
+      "yoke",
+      "zerovec",
+      "zerovec-derive"
+    ]
+  }
 }
