@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.38.0] - Unreleased
+## [0.38.0] - 2026-10-22
 
 - **Breaking Rust dependency identity:** adopt published Host 0.64.0. Consumers
   naming or exchanging Host types exposed by Backup must align their Host
