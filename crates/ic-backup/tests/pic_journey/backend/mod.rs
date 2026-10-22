@@ -67,6 +67,11 @@ impl Backend {
         )
         .unwrap();
         let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        fs::copy(
+            manifest.ancestors().nth(2).unwrap().join("Cargo.lock"),
+            root.join("Cargo.lock"),
+        )
+        .unwrap();
         let bundle = manifest
             .ancestors()
             .nth(2)
@@ -425,60 +430,33 @@ impl Backend {
         ArtifactChecksumRecord::from_bytes(&bytes)
     }
 
-    pub fn complete(
-        &self,
-        fault: &str,
-        original: &[u8],
-        destination: &[u8],
-        checksum: &ArtifactChecksumRecord,
-        manifest: &ArtifactChecksumRecord,
-    ) {
+    pub fn assert_calls(&self, method: &str, expected: usize) {
+        assert_eq!(
+            self.trace
+                .iter()
+                .filter(|row| row["method"] == method)
+                .count(),
+            expected,
+            "exact intended ingresses for {method}"
+        );
+    }
+
+    pub fn complete(&self, case: &str) {
         assert_eq!(self.trace.len(), usize::try_from(self.calls).unwrap());
-        assert_eq!(
-            self.trace
-                .iter()
-                .filter(|row| row["method"] == "take_canister_snapshot")
-                .count(),
-            if self.root.join("post-load-verification.json").exists() {
-                2
-            } else {
-                1
-            }
-        );
-        assert_eq!(
-            self.trace
-                .iter()
-                .filter(|row| row["method"] == "upload_canister_snapshot_metadata")
-                .count(),
-            1
-        );
-        for (method, expected) in [
-            ("load_canister_snapshot", 1),
-            ("stop_canister", 2),
-            (
-                "start_canister",
-                if self.root.join("pending-lifecycle.json").exists() {
-                    1
-                } else {
-                    2
-                },
-            ),
-        ] {
-            assert_eq!(
-                self.trace
-                    .iter()
-                    .filter(|row| row["method"] == method)
-                    .count(),
-                expected,
-                "exact intended lifecycle ingresses for {method}"
-            );
-        }
-        let result = json!({"case":fault,"result":"passed","server":"16.0.0","client":"16.0.0","instance":self.pic.instance_id(),"target":self.target.to_text(),"release_sha256":self.release.hash(),"original_snapshot_id":original,"destination_snapshot_id":destination,"artifact_sha256":checksum.hash(),"manifest_sha256":manifest.hash(),"management_calls":self.calls,"elapsed_ms":self.started.elapsed().as_millis(),"journey_restored":self.root.join("post-load-verification.json").exists(),"pending_lifecycle":self.root.join("pending-lifecycle.json").exists(),"originals":self.plans.iter().map(|(sequence, digest)| json!({"sequence":sequence,"plan_sha256":digest.hash()})).collect::<Vec<_>>()});
+        let lock = fs::read(self.root.join("Cargo.lock")).unwrap();
+        let result = json!({"case":case,"result":"passed","server":ic_testkit::pic::POCKET_IC_SERVER_VERSION,
+            "dependency_lock_sha256":ArtifactChecksumRecord::from_bytes(&lock).hash(),
+            "instance":self.pic.instance_id(),"target":self.target.to_text(),"release_sha256":self.release.hash(),
+            "management_calls":self.calls,"elapsed_ms":self.started.elapsed().as_millis(),
+            "journey_restored":self.root.join("post-load-verification.json").exists(),
+            "pending_lifecycle":self.root.join("pending-lifecycle.json").exists(),
+            "originals":self.plans.iter().map(|(sequence, digest)| json!({"sequence":sequence,"plan_sha256":digest.hash()})).collect::<Vec<_>>()});
         fs::write(
             self.root.join("qualification-result.json"),
             serde_json::to_vec_pretty(&result).unwrap(),
         )
         .unwrap();
+        eprintln!("PocketIC recovery evidence: {}", self.root.display());
     }
 }
 

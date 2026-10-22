@@ -1,9 +1,19 @@
 # ic-backup extraction and implementation design
 
-Date: 2026-10-04. Status: proposed product implementation design; the Rust
-repository foundation is implemented. This document defines a destination and
-delivery sequence. It does not claim an implemented product or accept a Canic
-release/minor boundary.
+Original design: 2026-10-04. This document retains the extraction rationale,
+proposed complete-product behavior and acceptance criteria. Proposed CLI commands,
+record names and recovery flows are not supported library contracts.
+
+Current implementation obligations belong to [implementation contracts](implementation-contracts.md)
+and exact record/API details to [the extraction boundary](extraction-boundary.md).
+[Qualification](pocketic-qualification.md) describes fixture scope; the
+[current handoff](status/current.md) records source-specific evidence and limits.
+Read those owners before changing implemented behavior. Completing a proposal here
+requires its own accepted design and qualification; it grants no new dispatch,
+partial-transfer resume, terminal or application-release authority.
+
+The [retained design at 0.37.3](https://github.com/dragginzgame/ic-backup/blob/21b0a94a1fa8241d26ed1b933e1e353fbc71d2ca/docs/extraction-design.md)
+preserves the original implementation chronology and superseded descriptions.
 
 ## 1. Outcome
 
@@ -188,18 +198,10 @@ code; those commands are adapters with behavior, not compatibility aliases.
 
 ## 5. Repository and package layout
 
-The workspace-only root and `crates/ic-backup` library package are established.
-Local artifact/persistence machinery, layout lifetime exclusion and conservative
-restore-reference retention, command custody, local download/attempt journals and
-canonical physical inventories with pure selection, explicit dependency graphs and
-immutable declared operation plans with pure retained-journal progress and a closed
-IC host-ingress request codec and typed membership/control ports with pure result admission
-are implemented; see
-[its maintained boundary](extraction-boundary.md) and
-[fresh source provenance](extraction-source.json). Capture/restore runners are not implemented. Direct single-update
-transport is implemented in `ic-backup-agent`; full workflow/application qualification
-remains separate. Create the remaining proposed layout with its
-implementation rather than as empty stubs:
+The maintained packages are `ic-backup` and `ic-backup-agent`; their current
+surface is documented at [the implementation boundary](extraction-boundary.md).
+The remaining layout below is proposed. Create it with its implementation rather
+than as empty stubs:
 
 ```text
 crates/
@@ -252,71 +254,32 @@ records and logs. Canonical principals and digest bytes own equality.
 
 An explicit inventory proves selection only. It does not prove membership of an
 application, current controller custody or a globally consistent checkpoint.
-The implemented `InventoryRecord` admits a canonical declared forest and hashes
-its exact fields. Pure `policy::selection` expands exact principals into read-only
-subsets; immutable bounded persistence checks the full original inventory digest.
-Missing parent relationships and cycles reject. This declaration/selection boundary
-does not itself perform live membership observation. The separate typed
-`MembershipProvider` contract and pure matching admission are now implemented;
-no qualified provider/backend is installed. See
-[the maintained contracts](extraction-boundary.md).
+Current declared inventory, selection and exact authority bindings belong to the
+[implementation contracts](implementation-contracts.md#application-admission-and-fencing)
+and [record/API boundary](extraction-boundary.md). Declarations alone perform no
+live membership observation.
 Preflight obtains current status, applicable controller/read permissions and
 snapshot capacity evidence through the selected authenticated transport. Public
 status/read visibility must never be mistaken for write authority.
 
 ### Named ports and implementation boundary
 
-| Port | Owned contract |
-| --- | --- |
-| `SnapshotExecutor` | Typed status/inventory/capture/transfer/load/lifecycle effects and exact receipts |
-| `IcMutationProvider` | Implemented async exact original update/current guarded reservation and bounded passive acknowledgement; configured AgentUpdateProvider requires durable signed retention, with no default or automatic settlement |
-| `IcSnapshotTransferReadProvider` | Implemented async exact original metadata/data payload and current guarded pending-update record, bounded passive response and existing decoder association; configured Agent adapter requires durable signed retention, with no automatic receipt or read reissue |
-| `IcObservationProvider` | Implemented exact original mutation/reserved status-list observation envelope and bounded passive reply association; configured async Agent observation adapter with durable ingress; no automatic outcome or lost-observation reissue |
-| `IcSnapshotUploadProvider` | Implemented async source-bound metadata/data update and current guarded record, reusing exact attempts, passive acknowledgements and IC update failures; configured Agent adapter requires durable signed retention, with no automatic settlement or retry |
-| `IcSnapshotUploadObservationProvider` | Implemented exact original metadata-upload/reserved list observation signature and passive inventory association; configured async Agent observation adapter with durable ingress; no allocation outcome, data reconciliation or reissue |
-| `IcSnapshotUploadDataObservationProvider` | Implemented exact original destination/extent/reserved readback observation with passive chunk comparison; configured async Agent observation adapter with durable ingress; no write attribution, automatic receipt or reissue |
-| `MembershipProvider` | Implemented ephemeral original-plan/challenge/boundary request, full current inventory/context result, optional opaque revision/evidence and bounded call reporting; actual provider qualification remains integration-owned |
-| `ControlAuthorityProvider` | Implemented exact original IC mutation/challenge request and canonical actual context/target/controllers result; pure direct caller-controller admission only, without live provider or dispatch permit |
-| `SnapshotReadProvider` | Implemented original mutation intent plus independent exact list payload/challenge request and actual snapshot visibility/context/target result; pure caller read paths only, without live provider or spending authority |
-| `ConsistencyProvider` | Implemented ephemeral current stopped/drained target and existing exact application fence validation under original guarantee; no provider or acquisition/release effects |
-| `ConsistencyCoordinator` | Original fence obligation retention and exact acquisition-journal projections are implemented; actual acquisition, authenticated uncertain-effect reconciliation and controlled release remain intended integration responsibilities |
-| `FenceReconciliationProvider` | Implemented read-only original pending acquisition/reserved observation binding and pure actual unit/attribution checks; no installed provider, automatic receipts or acquisition/release effects |
-| `FenceAcquisitionProvider` | Implemented bounded original application update envelope and exact reserved-mutation/passive acknowledgement association contract; actual permissions, whole-unit semantics and exclusive dispatch custody remain integration-owned, with configured async Agent acquisition and mandatory ingress/reply retention; no automatic receipt |
-| `RestoreSafetyProvider` | Implemented immutable original source/safety requirement and fresh exact load/start evidence matching; actual source, fence, restored acceptance and external-obligation qualification remain integration-owned |
-| `ArtifactStore` | Local durable custody, streamed verification, references and retention locks |
-| `Clock` | Testable deadline/lease policy; time is not an authority identifier |
+The [implemented application contracts](implementation-contracts.md#application-admission-and-fencing)
+and [async coordination contracts](implementation-contracts.md#async-effect-coordination)
+own current typed ports, identity/bound checks and admission obligations. Exact
+request/result specifications remain at [the record/API boundary](extraction-boundary.md)
+and its linked machine contracts.
 
-Membership, direct-control, snapshot-read, consistency, restore-safety and
-fence-reconciliation observation ports have maintained Rust signatures. The acquisition
-update port and exact IC mutation/recovery-observation/upload ports also have maintained
-Rust signatures; other rows remain intended
-responsibilities. The membership request derives exact original intent
-and operation identity, immutable full inventory/selection, a caller-owned fresh
-challenge, explicit before/after boundary and 0–1,024 descriptive remote-call
-ceiling. Actual result context and full inventory must match; policy rejects old
-challenge/boundary results and excess reported calls without IO or state changes.
-No request/result/view has Serde or persisted authority admission. Provider
-freshness, prior approved per-call accounting, lost replies and revision/evidence
-meaning remain integration-owned. A ceiling is not a reservation or fresh budget.
-Matching hashes or revisions before and after do not exclude changes between
-observations.
-See [the typed membership contract](contracts/membership-port.json).
-The [typed control contract](contracts/control-authority-port.json) separately
-validates original mutation bytes and requires the actual selected caller in a
-complete known canonical controller set. Another controller, Root/parent proxy,
-read visibility or subnet-admin exception cannot satisfy this direct-host lane.
-Control results are ephemeral too; no Proven flag upgrades a plan. Actual provider
-authentication/freshness, load source/origin permissions and full effect admission
-remain separate qualification work.
-The [typed snapshot-read contract](contracts/snapshot-read-port.json) binds exact
-independent list bytes to original mutation intent. Its actual snapshot visibility
-is distinct from status/log visibility. Known exact controllers, public visibility
-or exact allowed viewers can establish a read-only matching view. Unknown controller
-evidence cannot establish a controller path; independent public/viewer access needs
-no controller projection. No Root-configured/Proven declaration, read success or
-matching digest supplies mutation control, fresh spending or settlement of a lost
-observation. The separate metadata/data codecs grant no current read permission;
-complete transfer and actual provider qualification remain pending.
+A complete application integration must supply qualified membership, direct caller
+control, independent snapshot-read access, continuity/fencing and restore-safety
+evidence. It owns fresh observation chronology, prior per-call accounting, original
+ingress attribution and command/byte custody. Read visibility, another controller
+or a Root proxy cannot substitute for the direct-host caller's mutation authority.
+A descriptive call ceiling creates no reservation. Equal before/after revisions
+cannot prove continuity between observations.
+
+Proposed responsibilities such as a complete snapshot executor, artifact store or
+clock do not require traits or parallel wrappers beyond demonstrated consumers.
 Prefer separate ports over a single all-powerful executor. Requests and results
 use named passive structs/enums. Integration implementations convert their framework evidence into
 generic inputs; they do not give the engine raw application journals or code.
@@ -343,24 +306,9 @@ Maintain two explicit consistency guarantees:
    membership changes, relevant timers and external work for the entire selected
    unit, proves drained work and retains that fence across interruption.
 
-`ConsistencyRequirementRecord` now retains this requested choice under exact full
-original plan intent; immutable local publication/read has a strict v1 schema and
-1 KiB input/output bound. Declaration equality establishes no actual guarantee.
-No missing or edited declaration silently downgrades coordinated capture. See
-[the requirement schema](contracts/consistency-requirement.schema.json).
-The [typed current consistency port](contracts/consistency-port.json) binds the
-original requirement/operation, challenge, before/after capture boundary and exact
-integration-retained fence identity plus original membership revision. Actual
-context/full inventory/exact selected target rows must match, with every target
-stopped and drained evidence qualified by its owner. Coordinated results require
-an actually Active exact fence, with actual/fence revisions both equal to the
-original retained revision, plus whole-unit write/membership/timer/external-work
-fencing and drained-work evidence. No accepted/expiry/Proven flag upgrades a plan.
-This port validates existing obligations; acquisition/release, actual continuous
-fence custody, per-call accounting and backend/lifecycle qualification remain with
-their owners. Models/policy cannot authenticate opaque evidence hashes or prove
-continuity by matching before/after values. Capture wire/effect admission and
-restore/external-obligation safety remain separate contracts.
+The [current application-admission contracts](implementation-contracts.md#application-admission-and-fencing)
+own exact retained consistency requirements, fence/revision matching and evidence
+admission. Declaration equality alone establishes no actual guarantee.
 
 Stopping canisters sequentially is not an application-consistent distributed
 checkpoint. A matching topology hash before and after capture also cannot
@@ -374,62 +322,11 @@ Do not automatically release a consistency fence on timeout, process death,
 partial capture or restore failure. A failed operation retains the exact safety
 obligation and exposes a reviewed continuation/disposition action.
 
-`FenceObligationRecord` now retains the exact original plan/selection, capture or
-restore requirement, chosen fence/revisions and explicit application acquisition
-operation before reservation/dispatch. Its immutable 1 KiB publication requires
-retained originals; restore checks both guarded plans. Recovery joins the exact
-original attempt journal, without inventing another accounting ledger or treating
-missing evidence as unspent. Pending and settled outcomes retain the declaration.
-An Applied projection does not establish current Active custody or authorize
-release. Obligation retention supplies no acquisition/release action, release flag
-or terminal admission. Original request semantics and whole-selection
-fence custody remain integration-qualified. See
-[the schema](contracts/fence-obligation.schema.json) and
-[implemented boundary](extraction-boundary.md#original-application-fence-obligation-retention).
-
-Fence reconciliation now binds an already pending original acquisition and its exact
-reserved observation. Actual context, full inventory, selection and both attempt IDs
-must match. Acquisition needs exclusive original-request attribution and the exact
-Active fence/revisions; restore also retains whole-unit, rewind-independent custody
-and replay-safety evidence. Current absence/inactivity cannot prove nonapplication.
-Lost provider replies remain pending and spent; settled uncertainty and retained
-late replies are distinct. Pure views create no receipts, redispatch or release.
-Application-owned authenticated observation and controlled release remain
-separately qualified; the configured acquisition adapter grants no Active custody.
-See the [typed contract](contracts/fence-reconciliation-port.json).
-
-`workflow::fence_reconciliation::settle_fence_acquisition_observation` now joins
-retained originals and complete journal admission to mandatory independent async
-receipt qualification. Supply the original challenge and retained observation;
-match exact attempt/request/outcome/evidence before the existing durable transition.
-The helper calls no provider or new reservation. Settled uncertainty retains the
-pending mutation; original obligations/references remain. Local settlement grants
-no current Active custody, terminal proof or release.
-Actual capture-only simulator cases also qualify cancellation during receipt
-qualification and rejection of changed retained reply bytes. Exact pending history
-survives; explicit local recovery can settle the original retained observation
-without another read. Production settlement does not repair evidence. Complete
-terminal evidence and original command/byte custody remain prerequisites for the
-guarded source-reference release boundary.
-
-Application acquisition now has a bounded exact host update envelope. Its canonical
-receiver, mode, exact method and opaque arguments are hashed before the plan, avoiding
-a cycle through requirement/obligation digests. The original acquisition operation
-subsequently binds that digest. Requests require an already reserved exact mutation
-and no pending observation recovery. Provider admission still needs actual context,
-permissions, original whole-unit argument semantics, complete prerequisites and
-exclusive proof of no prior dispatch. The single-update contract forbids hidden
-reissues/observations; reconstructed pending requests supply no retry authority.
-Acknowledgements associate full original authority and exact mutation only, with
-no outcome, current Active proof or automatic receipt. Failures keep pending consumed
-spending and original obligations/source references. The acquisition port is async and receives the current guarded original journal.
-The configured Agent adapter requires exact durable ingress before one update and
-exact bounded raw-reply retention before passive acknowledgement. Acquisition
-semantics, current Active custody and exclusive attribution are application-owned.
-The reconciliation port also returns a future under original journal exclusion;
-actual application read methods and qualification remain unimplemented. Controlled
-release is not implemented. See the
-[typed contract](contracts/fence-acquisition-port.json).
+Current acquisition, obligation retention and explicit observation settlement
+belong to [async coordination](implementation-contracts.md#async-effect-coordination)
+and [recovery settlement](implementation-contracts.md#explicit-recovery-settlement).
+Application-owned continuous Active custody and controlled release still require
+qualification; local Applied evidence supplies neither.
 
 Snapshot load can restore old journals, timer state and application intent while
 external payments, providers and other canisters have already advanced. An
@@ -438,17 +335,9 @@ restore fence outside the rewindable snapshot. A generic default cannot certify
 that property. Canic's custody restrictions and blob/auth service contracts
 remain their owners' qualification work; extraction must not bypass them.
 
-The implemented restore-safety declaration retains exact original restore/source
-intent and source artifact binding, same-network/release existing IDs, explicit
-no-irreversible-effects or application-fenced lane and original outside-snapshot
-fence revisions. Fresh requests bind original exact load/start bytes and challenge.
-Pure admission requires actual full inventory/selection/source/lane, all stopped
-targets before load and source-specific restored acceptance before start. A
-fenced start additionally needs qualified controlled execution. No provider,
-fence acquisition/release, complete source manifest/transfer qualification or
-uncertain-load settlement is installed. See
-[the requirement schema](contracts/restore-safety-requirement.schema.json) and
-[typed port contract](contracts/restore-safety-port.json).
+The [current restore-safety boundary](extraction-boundary.md#original-same-id-loadstart-coordination)
+owns exact original source/requirement binding and fresh load/start admission.
+The complete product must preserve those checks when adding application adapters.
 
 The standalone single-canister example must state its assumption: the selected
 application has no unreconciled irreversible external effects. Applications that
@@ -457,396 +346,20 @@ rejects without suitable evidence. A generic `--force` bypass is not a solution.
 
 ## 8. Maintained records and hashing
 
-Freeze machine-readable v1 JSON schemas and canonical hashing rules before
-moving execution code. Human selection/configuration uses TOML. Reject unknown
-schema fields and missing required nullable fields where required by the current
-contract. Bound counts, strings, depth and total metadata bytes before allocation.
+The [record and spending contracts](implementation-contracts.md#records-plans-and-spending)
+and [schema/API boundary](extraction-boundary.md) own implemented records, hash
+framing, numeric bounds and transitions. Machine-readable contracts live under
+[`docs/contracts/`](contracts/). Keep those owners current rather than adding an
+implementation ledger or a second schema description here.
 
-The implemented learned-stage binding uses a distinct `ExecutionWorkflowRecord`
-for original stage allocations and `ExecutionStageBindingRecord` for later exact
-child plans. The allocation reuses ordinary plan structural validation; its request
-hashes commit integration-owned stage input/purpose contracts and are never wire
-requests or journal authority. Each fixed stage directory retains one ordinary
-exact child plan within the original target/context/inventory and stage ceilings.
-Predecessor bindings and complete chronological Applied settlements are required
-before creating the child. Learned snapshot ID/dimension evidence is an opaque
-commitment whose authenticity and derivation remain integration-qualified.
-Local stage admission checks complete exact chronological settlements and original
-journals throughout the ancestor DAG, visiting shared ancestors once with sequential
-locks. Missing or changed transitive evidence rejects; no atomic byte-custody claim
-follows. Reopen preserves original journals; interrupted preparation stops with evidence
-retained. No complete backup/restore runner, automatic outcome, fresh permission,
-transfer completion or terminal/release authority follows. See
-[the implemented contract](extraction-boundary.md#original-workflow-allocations-and-learned-stage-binding).
-The stage guard now owns checkpoint/predecessor assembly, admitting full original
-workflow and ancestor history before and after immutable journal-checkpoint
-publication. Failed post-admission retains published evidence; learned-input
-qualification and effect-boundary permission stay integration-owned.
-Complete local workflow replay additionally requires every original stage's
-retained binding, complete Applied journal history and exact checkpoint, and
-cross-checks predecessor identities against that whole set. It returns a
-sequential read-only view, not authentic learned evidence, product completion,
-command quiescence or terminal/reference-release admission.
-
-A one-shot original-workflow coordinator now publishes a new allocation, prepares
-each exact child in the graph's topological order, invokes an integration-owned
-stage driver once, and reconciles its complete Applied checkpoint. Occupied
-workflow reentry refuses before invoking the driver. The isolated Testkit fixture
-qualifies capture/metadata/data artifact publication and a connected same-ID
-upload/load/start journey through separate frozen capture/restore catalogues.
-Its cold continuation and lost-reply cases preserve original spending and evidence;
-[the qualification guide](pocketic-qualification.md#connected-original-capture-and-restore-workflows)
-records the exact fixture scope. Reopening uncertain effects, authenticated application adapters,
-full backup/restore terminal evidence and guarded release still need distinct
-owners.
-
-An integration can derive a separate learned commitment for each outgoing edge
-before binding its successor. The default remains the predecessor stage's
-checkpoint digest. The edge callback is effect-free and cannot grant fresh
-dispatch authority; its digest is frozen in the successor binding.
-
-A retained-workflow continuation now matches every occupied original stage to
-integration-qualified binding and learned-evidence identities, then replays all
-complete Applied checkpoints before any callback. Only absent successors may be
-prepared under the original allocation. Pending or partially prepared stages
-refuse without redispatch. An occupied successor also rejects a conflicting
-supplied learned predecessor digest. Retained evidence may name distinct
-integration-qualified digests for original outgoing edges; unknown edges and
-changed occupied commitments refuse before callbacks. The Testkit fixture
-rebuilds its driver from retained capture/metadata
-bytes before continuing the data stage. The integration still owns authenticity
-and fresh effect admission.
-
-
-The implemented metadata-derived data planner counts complete region/chunk reads
-before allocation and binds exact requests to an original finite data stage. Every
-request retains one update and zero observation allowance under explicit sequential
-dependencies. Testkit qualifies an isolated complete capture/download/publication
-journey and safe stopping after lost/malformed data replies. The one-shot stage
-coordinator adds no generic application authority or terminal admission.
-See [the planner contract](extraction-boundary.md#metadata-derived-original-download-planning).
-
-Complete local stage resume now returns the exact retained stage and its canonical
-original child-journal progress together, with original ancestor history admitted
-before and after reading. Missing/changed/held journals reject without creation or
-allowance reset; record-only inspection remains distinct. This supplies local
-recovery admission, not fresh application authority or an installed runner.
-
-| Record | Required purpose and binding |
-| --- | --- |
-| `BackupPlanRecord` | Exact membership, network/caller/release, consistency, effects and budget authority |
-| `PreflightRecord` | Observations and fence evidence bound to the complete plan and execution attempt |
-| `BackupJournalRecord` | Attempt consumption, dispatched intent, observations, receipts and progress |
-| `DownloadJournalRecord` | Exact snapshot/artifact identity, transfer extents and durable byte verification |
-| `BackupManifestRecord` | Complete verified artifacts, snapshot provenance, source identities and consistency guarantee |
-| `RestorePlanRecord` | Exact manifest, same-ID targets, preconditions, safety fence, effect graph and budgets |
-| `RestoreJournalRecord` | Upload/load/lifecycle/verification progress and uncertain-effect reconciliation |
-| `RestoreReferenceRecord` | Durable dependency on source artifacts, including external journal location |
-| `CompletionReceiptRecord` | Exact local terminal evidence and effect/accounting summary for replay |
-
-The local `DownloadJournalRecord` lifecycle now retains exact principal/snapshot
-identity and observed timestamp/size, fixed relative locations, checksum evidence
-and the four local states. Its schema and guarded persistence are documented in
-[the maintained boundary](extraction-boundary.md). This implements local artifact
-progress only. `AttemptJournalRecord` additionally binds exact declared operation
-identity and immutable mutation/observation limits, consumes reservations durably
-and replays chronological receipts. Its schema specifies canonical authority
-hashing. This local accounting grants no fresh authority or dispatch permit;
-backend metadata/extent qualification, bounded backend calls, remote-effect
-reconciliation and full completion/manifest binding remain required before runners.
-`InventoryRecord` now has a closed v1 schema with required nullable fields,
-canonical order, bounded graph admission and an unambiguous binary hash. Its
-selection projections preserve original parent links and full inventory binding.
-`EffectGraphRecord` now retains bounded exact opaque operation sequences and
-explicit closed acyclic dependencies. Canonical hashing and deterministic planning
-order are model-owned; pure readiness validates declared causal progress. This
-graph is one component of a future complete plan, not a plan, receipt or execution
-permit. Integration-qualified application dependencies must be declared explicitly.
-`OperationPlanRecord` now binds full inventory/selection, graph and one exact
-target/request/original-budget declaration per graph node to shared network/caller/
-release context. Its canonical digest owns intent for derived attempt authority;
-checked assigned totals fit immutable aggregate ceilings. It is not a complete
-authenticated backup/restore plan: typed payloads, application safety, lifecycle,
-preflight and actual execution remain outside this local binding primitive.
-Pure execution progress now admits the complete original attempt-journal set,
-checks exact plan/context/target/request/limit binding and projects retained
-Applied/pending/exhausted conditions in explicit graph order. Attempted operations
-with unmet Applied prerequisites reject. This local projection does not prove
-cross-journal dispatch chronology, authenticate receipts or establish terminal
-completion; missing journals are never reconstructed as empty evidence.
-`ExecutionSettlementRecord` now retains the complete exact original journal
-fingerprints under the full plan digest. Pure admission reuses progress, requires
-every operation Applied and matches full chronological authority/reservation/receipt
-hashes; equal final projections cannot hide changed evidence. Its immutable v1
-checkpoint has 8,192-row/2 MiB bounds. Guarded publication/reopen read the retained
-original plan and journal set locally, using bulk canonical authority derivation
-and sequential journal locks. It adds no accounting owner or terminal flag and
-qualifies no actual receipt, full backup/restore completion, command quiescence or
-release admission. See the [schema](contracts/execution-settlement.schema.json).
-The IC-specific request boundary now encodes exact status/inventory, stop/start,
-capture and load Candid arguments under pinned upstream types. Its v1 wire digest
-binds fixed receiver, effective target, replicated update mode, method and argument
-bytes; original mutation and separate observation digests admit exact payloads.
-Raw snapshot bytes and generic backend tokens remain distinct owner boundaries.
-Bounded capture/inventory reply decoding additionally retains exact raw snapshot
-IDs and required nat64 timestamp/size fields. Inventory views are canonical and
-reject duplicate IDs; local evidence hashes bind the declared request and exact
-raw response. The wire contains no target/network/caller identity, so association
-is integration-qualified rather than authenticated by decoding. No decoded reply
-settles a pending journal or attests transfer completeness. See
-[the reply contract](contracts/ic-snapshot-reply.json).
-Pure inventory comparison now rejects lost or changed baseline descriptors and
-projects new exact-ID candidates under the capture/list declarations. It preserves
-original reply evidence but establishes no capture attribution or observation
-chronology; even a singleton cannot settle a lost paid call. See
-[the comparison contract](contracts/snapshot-inventory-delta.json).
-The existing status/stop/start/load methods now have a bounded local lifecycle
-reply owner. It retains required status/controller projections or canonical empty
-acknowledgements, with raw-request/reply evidence binding. Unprojected status
-metadata stays unqualified. Neither a Stopped value nor a decoded acknowledgement
-proves actual freshness, continuous fencing or safe load settlement. See
-[the lifecycle reply contract](contracts/ic-lifecycle-reply.json).
-Remaining response/transfer semantics, transport and fresh effect-boundary
-authority still require qualification.
-
-Persist immutable reviewed intent separately from mutable execution observations.
-Refreshing authority, progress or timestamps cannot change issued spending limits,
-selected bytes or destructive dispositions. A changed plan needs a distinct
-reviewed operation; unsettled prior effects remain an explicit prerequisite.
-
-Canonical hashes bind exact machine-relevant fields using a specified unambiguous
-encoding with domain separation. Specify integer widths, null representation,
-principal encoding, sorted-set versus ordered-list semantics and hash exclusions.
-The implemented record and Agent reply digests stream their original framing
-through Host Artifacts hashing rather than allocating the entire framed payload.
-Chunk comparison and naming use Host's typed SHA-256 digest. These implementation
-choices preserve the original v1 domains, field order and bytes.
-Do not hash pretty-printed JSON or explanatory messages. Structural identifiers
-must reject duplicates and cycles rather than rely on overwrite order.
-
-Topology and artifact identities are separate. Artifact tree digests bind a
-deterministically sorted set of relative paths, file lengths and file SHA-256
-digests; exclude host permissions and mtimes from content identity. Reject path
-encoding aliases and collisions. Normalize valid uppercase/lowercase hash input
-to digest bytes, then emit one canonical lowercase representation.
-
-Snapshot data is opaque to application schemas, but not opaque to transfer
-integrity. Validate the pinned upstream metadata shape, declared lengths, expected
-files, globals, certified data, chunk-store identities and applicable timer/hook
-fields. Preserve exact backend artifacts across retries. A verified code hash
-alone does not verify heap, stable memory, globals or snapshot-load success.
-
-The local `model::ic_snapshot_metadata` codec now encodes exact metadata-read
-arguments and admits bounded pinned SDK metadata without installing a provider.
-It preserves required nat64 fields, ordered global values (including unavailable
-slots and floating bits), chunk identities and optional source/timer/hook values.
-Absence is retained and cannot supply an upload default. Exact raw evidence remains
-distinct from canonical values. Complete data extent coverage, authentic association,
-fresh read permissions, original per-call accounting and complete transfer/upload
-qualification remain integration work. See
-[the implemented boundary](extraction-boundary.md#bounded-ic-snapshot-metadata).
-
-`model::ic_snapshot_data` now borrows that exact metadata to encode checked nonzero
-Wasm/heap/stable ranges or known chunk-store identities. Bounded replies require
-the requested byte length or exact matching chunk SHA-256, including empty known
-chunks. Evidence retains metadata/request/raw-byte association without a provider,
-extent ledger, scheduling, new accounting or a full-transfer claim. Integrations
-still qualify durable every-region/chunk byte custody, authenticated snapshot identity,
-fresh read access, prior per-call authority and upload/load/terminal safety. See
-[the data boundary](extraction-boundary.md#bounded-metadata-bound-ic-snapshot-data).
-
-`model::ic_snapshot_coverage` now owns incremental declared coverage of admitted
-replies: three contiguous zero-based region cursors and one presence bit for each
-retained chunk. Regions can interleave and chunks can arrive in any order; gaps,
-overlaps, duplicates and changed metadata evidence reject without advancement.
-Every exact size and chunk must be covered before a read-only view appears.
-Admission retains no data, has no aggregate size sum or new call allowance, and
-starts empty when reconstructed. Complete declared coverage therefore supplies
-no byte custody, durable artifact, authentic association or backend completeness.
-Integration qualification of durable exact full-state transfer remains separate.
-
-Ordinary metadata/data reads now have an original-plan-bound
-`IcSnapshotTransferReadRequest` and single-call provider contract. Exact wire/target
-identity and pending update reservations remain with the original plan/journal;
-pure passive response association rechecks actual claimed context and delegates to
-the existing bounded decoders. Replicated reads use the existing mutation lane.
-Lost replies retain spending and cannot be reissued from pending state. No installed
-provider or automatic receipt/aggregate transfer proof is introduced. The real
-PocketIC driver uses this public boundary before explicit success recording; see
-[the contract](contracts/ic-snapshot-transfer-read-port.json).
-
-`workflow::ic_snapshot_capture::capture_snapshot` now coordinates one new original
-capture under a retained execution stage. Reuse exact management payload binding,
-complete-plan durable reservation and the existing single-call mutation port.
-Mandatory integration admission qualifies fresh control, capture consistency,
-quiescence/fence obligations and never-dispatched custody while the journal stays
-locked. Successful passive acknowledgements remain pending; existing explicit
-receipt admission alone records qualified outcomes. The isolated Testkit driver
-connects this capture step to metadata/data reads and durable artifact publication,
-and blocks recapture or successor stages after lost/malformed capture replies.
-Capture admission and mutation submission are async under journal exclusion. The
-configured Agent mutation provider requires durable signed-ingress retention before
-one call. Cancellation preserves pending spending and denies reentry. No default
-application admission or complete runner follows.
-
-`workflow::ic_snapshot_transfer_read::read_snapshot` now coordinates one new
-planned read under an exact retained stage. It rejects mismatched original payloads
-before spending, opens the existing journal, durably reserves through canonical
-complete-plan admission, and holds that journal through mandatory integration-owned
-fresh admission and one provider call. Stage/ancestor checks bracket dispatch;
-bounded response association creates no receipt. All post-reservation failures
-retain consumption; returned replies survive later rejection in typed errors.
-Success also stays pending until an independently qualified integration records its
-outcome. The real isolated download driver uses this step for metadata and every
-data request. Full backup/restore coordination, application admission and terminal
-proof remain incomplete; no default provider, permission or retry is installed.
-
-`workflow::ic_snapshot_metadata::read_snapshot_metadata` now joins a singleton
-original metadata stage to the existing single-read, explicit receipt and checkpoint
-owners. Mandatory integration qualification authenticates exact attribution and
-retains original request/reply bytes durably before returning an Applied receipt.
-Only then record the receipt and checkpoint the exact request/raw-metadata digest.
-Returned response/predecessor feed the existing metadata decoder and download-plan
-binding; successor stage/writer preparation stays explicit. Lost or rejected replies
-retain pending spending; receipt/checkpoint failures retain returned bytes and any
-already Applied history. Ordinary reopen or explicit checkpoint recovery never
-reissues the read. No new schema, byte store, allowance or default Agent provider
-is introduced. The actual stopped fixture uses the coordinator and qualifies lost/
-malformed metadata safe stops before a data stage is created.
-
-The transfer provider and read/metadata/download coordinators are async. Await
-fresh admission and independent qualification under selected original journal
-exclusion; providers recheck the currently guarded record. The configured Agent
-transfer adapter retains signed ingress durably before one submission. Retain
-replies before cancellable qualification work. Cancellation preserves pending or
-Applied spending, earlier download receipts and partial files, denying reentry.
-The core adds no runtime or `Send` bound. All three separately reserved IC recovery
-observation ports also return futures and accept the currently guarded original
-journal. The configured Agent observation adapter durably retains signed ingress
-before one status/list/readback submission; both attempts stay pending on cancellation
-or passive replies. Application-fence semantics and full application coordination
-remain incomplete.
-
-The opt-in local `IcSnapshotArtifactWriter` now binds that admitted coverage to
-private exact region/chunk bytes, original raw metadata/request and incremental
-checksums. Before another append, every region name must still select its held
-regular file at the original coverage length. Detectable drift rejects before
-coverage admission or further writes; sequential checks establish no byte fence.
-Complete fresh tree checks persist the expected checksum in the existing
-download journal before its canonical durable publisher runs. Publication recovery
-uses the retained journal; partial Created transfers are preserved without automatic
-coverage reconstruction or repeated reads. Generic token/raw-ID mapping, authentic
-complete backend transfer, fresh permissions/accounting and stable noncooperating
-custody still require integration qualification. See
-[the implemented local artifact boundary](extraction-boundary.md#durable-metadata-bound-ic-snapshot-artifacts).
-
-`workflow::ic_snapshot_download::download_snapshot` now streams the complete
-nonempty metadata-derived data plan through an existing private writer. Require
-exact retained stage/metadata/writer intent, empty original coverage and no consumed
-data attempts before spending. Reuse the single-read coordinator for every request,
-then require an explicit independently qualified Applied receipt under the original
-journal lock. Append accepted bytes before the sole journal owner records the receipt
-and admits dependent dispatch. Failure consumes the writer and preserves partial
-bytes, spending, recorded receipts and bounded returned response evidence. Finish
-through the existing checksum/durable publisher; manifest/checkpoint publication
-remains explicit. Successor data-stage preparation, authentic token/raw-ID association,
-application admission and terminal/custody proof remain independent integration work.
-There is no partial-read resume or default Agent provider.
-
-Explicit `verify_ic_snapshot_artifact` checks one published tree under the full
-retained original plan and unchanged journal. It reuses complete Durable selected-set
-admission, then verifies exact format/metadata/request, region lengths, bounded chunk
-hashes and the existing retained checksum. Only that target's bytes are checked;
-ordinary resume stays artifact-free. Passive sequential checks retain no fresh byte
-custody and authorize no upload.
-
-`model::ic_snapshot_upload` now binds representable original metadata and bounded
-source slices/chunks to the same target and a distinct new destination ID. Explicit
-guarded preparation verifies retained source bytes; each upload payload's source/wire
-binding precedes its own immutable plan and original mutation reservation. Passive
-reply admission retains pending spending and proves no destination attribution or
-complete upload. Live transfer permissions, providers, original dispatch custody and
-lost-effect reconciliation remain integration work. See
-[the upload boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
-
-`workflow::ic_snapshot_upload::upload_snapshot` now joins exact original source/
-wire binding to retained stage/journal admission, durable reservation and one upload
-provider call under mandatory fresh integration admission. Controller, authentic
-complete source, new-destination attribution and never-dispatched stable custody
-remain integration-owned. Bounded associated acknowledgements remain pending until
-an independently qualified explicit receipt is retained. Stage/ancestor checks
-bracket dispatch; post-reply errors retain returned bytes. No automatic metadata
-allocation outcome, data plan, retry, load/start or terminal/release follows.
-The actual Testkit workflow retains one original allocation, checkpoints explicitly
-attributed metadata before learning data payloads, prepares complete data journals
-within its original ceiling and verifies the uploaded destination independently.
-Lost/malformed metadata creates no data stage; lost/malformed data stops without
-reissue and retains original source evidence/references. Full generic upload/restore
-orchestration and async Agent/application admission remain incomplete.
-
-`workflow::ic_snapshot_upload::allocate_snapshot` now coordinates an exact singleton
-metadata allocation through the existing one-upload owner. Require mandatory fresh
-admission and independently qualified durable original request/reply retention before
-recording an explicit exact Applied receipt under journal exclusion. Release that
-lock before checkpointing the canonical allocation reply digest. The returned original
-acknowledgement/predecessor feeds explicit learned data binding; no data plan or call
-is generated. Lost/unqualified replies, invalid receipts and occupied checkpoints
-retain spending/returned bytes and prevent allocation reissue. The actual Testkit
-upload caller now delegates this metadata assembly to the public coordinator.
-
-The upload provider and upload/allocation/data-stage coordinators are async.
-Providers receive the currently guarded original record; fresh admission and
-independent qualification retain selected exclusion across awaits. The configured
-Agent adapter requires durable signed ingress before one submission. Retain replies
-before cancellable qualification work. Cancellation preserves source bytes/references,
-earlier receipts and current pending spending and denies reentry. No executor,
-`Send` bound, new schema, accounting owner or default application lane is added.
-
-`DownloadJournalGuard::prepare_ic_snapshot_data_upload_plan` counts complete exact
-extents against the original data-stage ceiling before source IO. Guarded canonical
-batch preparation hashes the same bytes used for payload bindings, admitting the
-canonical source checksum before returning. Full source checks surround the batch;
-closed-tree, file identity and length checks use the existing verification owner.
-Only one bounded payload and its framing are retained at a time.
-The ephemeral plan binds the exact allocation reply and Applied predecessor, with
-one update and zero observations per ordered write; spare headroom stays unassigned.
-`workflow::ic_snapshot_upload::upload_snapshot_data` refuses any prior spending,
-freshly prepares each payload and delegates single-call admission/reservation.
-Mandatory independent qualification durably retains request/reply bytes before
-each explicit Applied receipt. All writes settle through the existing checkpoint;
-failures stop without reissue, preserving source, spending and returned evidence.
-Actual simulator journeys qualify complete destination verification and stopping
-after lost/malformed second writes. Full restore, async Agent/application admission
-and terminal/custody proof remain separate.
-
-`workflow::ic_snapshot_restore::restore_snapshot` now coordinates an original
-singleton load/start stage under both retained source and restore layouts. Recheck
-the immutable requirement, reserve through the existing journal owner and apply
-the existing current safety policy to mandatory fresh integration evidence before
-one update. Independently qualified durable request/reply evidence precedes each
-exact Applied receipt and existing checkpoint. A load receipt supplies no later
-application acceptance; lost/malformed replies stop without reissue or successor
-start. Actual Testkit journeys join complete upload, independently verified stopped
-restored bytes and start while retaining source obligations. Admission, mutation submission and independent qualification are now async under
-the selected journal lock; the configured Agent mutation provider joins this exact
-port. Retain replies before cancellable qualification work. Other async provider
-ports, full runners and terminal/custody proof remain separate. See
-[the maintained coordination boundary](extraction-boundary.md#original-same-id-loadstart-coordination).
-
-Local IC-tree verification and upload preparation no longer retain per-guard
-metrics. Callers own timing/reporting around returned operations and may select
-`ic-metrics` directly. Observations supply no progress, spending or terminal
-evidence; persistence retains no diagnostic lock or clock.
-
-Original-plan-bound local execution admission now joins persisted plans and every
-retained attempt journal through a sequential-lock reader shared with settlement.
-The opt-in planned mutation/observation reservations preserve the existing spending
-owner and reject missing evidence; mutations require retained Applied prerequisites.
-Local progress/reopen changes no accounting or references. Fresh permissions,
-backend dispatch custody, receipt authenticity and application safety remain
-integration-owned. This boundary reduces runner-side reconstruction without
-installing a scheduler or choosing another transport.
-See [the implemented admission](extraction-boundary.md#original-plan-bound-retained-execution-admission).
+The complete operator product may need backup/restore plans, current preflight,
+run journals, a bundle manifest and terminal completion receipts beyond the
+existing primitives. Names such as `BackupPlanRecord`, `PreflightRecord`,
+`BackupJournalRecord`, `BackupManifestRecord`, `RestorePlanRecord`,
+`RestoreJournalRecord` and `CompletionReceiptRecord` remain design candidates.
+Define their necessary information at the existing plan/journal owners first;
+this list requires no new record, parallel state machine or compatibility lane.
+Current local checkpoints and Applied receipts grant none of that product authority.
 
 ## 9. Backup workflow
 
@@ -959,121 +472,23 @@ paid commands. A new live verification operation reports current state separatel
 After source references are released, pruning may remove artifact bytes; terminal
 replay uses retained completion evidence rather than silently reacquiring them.
 
-Original all-Applied execution settlement replay is now implemented as a local
-checkpoint primitive. It verifies retained original plan/journal fingerprints,
-without calling providers or fresh artifact/application checks. Full product terminal
-evidence still requires qualified effects, manifests/transfer, application safety
-and command custody before reference or fence release; these are not inferred from
-the local ledger checkpoint. Callers can now derive and publish that checkpoint
-from the retained original plan and complete journals with
-`reconcile_execution_settlement`; the private publisher rechecks exact histories
-before writing and an exact occupied checkpoint replays without replacement.
-Identity-bound read-only replay remains separate and never creates absent evidence.
+Current [checkpoint recovery](implementation-contracts.md#workflow-preparation-and-checkpoints),
+[explicit effect settlement](implementation-contracts.md#explicit-recovery-settlement)
+and [terminal/reference release](implementation-contracts.md#terminal-evidence-and-reference-release)
+have separate maintained obligations. Their implemented state machines, original
+byte/attempt associations and exact rejection rules are not restated here.
 
-Immutable local download manifest publication now reuses the existing v1 download
-journal record after guarded original-plan-bound fresh verification. Its canonical
-digest seals exact snapshot tokens/metadata, derived paths, Durable states and
-checksums. Local replay checks original retained plan/journal identity and reads no
-artifact trees. This is a retained local artifact-set declaration, not the proposed
-complete `BackupManifestRecord`: authenticated capture/transfer, consistency/effect
-evidence and product terminal admission remain necessary. It releases no references.
-
-Explicit fresh local restore-source verification now joins both retained original
-plans, immutable safety requirement and exact local download-manifest digest with
-the unchanged guarded source journal. Canonical owners require same network/release,
-existing selected IDs and complete Durable source coverage. A read-only selection
-borrows original artifacts without rebinding; a subset still needs application
-qualification. Every original source tree is verified, including those outside that
-subset, with original records re-admitted before/after traversal under both layout
-lifetimes. Generic integration source digests are not reinterpreted. Local replay
-performs no fresh verification; no transfer, upload/load/start, current authority,
-application safety, terminal or reference/fence release proof follows from this join.
-
-Generic operation-bound restore-copy staging/publication is retired in the pending
-0.27.0 cut. The implemented IC upload source path reads bounded extents directly
-from verified original snapshot artifacts. Preserve retained copies, journals and
-obligations; settle unfinished copy-based restores with their original released
-tool before adoption. See [the retirement boundary](extraction-boundary.md#retired-generic-restore-artifact-copies).
-
-Exact originally reserved IC capture/load/start/stop requests now join the full
-original plan, immutable attempt authority and existing canonical IC payloads.
-A single-update port and bounded passive reply association reuse existing capture
-and lifecycle codecs; no provider implementation or dispatch/effect settlement is
-imported. Missing/different reservation or pending recovery observation rejects.
-Retained context/target claims and wire bytes authenticate no provider and grant
-no fresh permissions, replay/retry, restoration safety or terminal/release proof.
-Actual dispatch custody, source/upload/application qualification and lost-effect
-reconciliation remain necessary before runners. See
-[the maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-mutation-updates).
-
-Exact status/list recovery observations now bind both pending original attempt IDs,
-the original mutation and already reserved canonical observation bytes. Passive
-association rechecks the current journal and actual claims, then uses existing
-bounded status/inventory codecs. A failed observation stays pending; decoded
-Stopped/controllers or inventory cardinality produce no automatic outcome.
-Fresh method-specific read permissions, authenticated timing/attribution and
-exclusive original dispatch custody remain integration-qualified. See
-[the maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-recovery-observations).
-
-Metadata-upload recovery now has an exact original-plan/source-bound list observation
-request and single previously reserved observation port. It reuses existing passive
-responses, current reservation checks and bounded inventory decoding. Zero/one/many
-snapshots establish no allocation outcome; lost observation replies remain pending.
-Original baseline custody, exclusive authenticated allocation attribution and data-
-upload reconciliation remain integration work. See
-[the maintained boundary](extraction-boundary.md#exact-originally-reserved-metadata-upload-observations).
-
-Data-upload recovery now has an exact original-plan/source-bound destination readback
-request and single already reserved observation port. Known uploaded destination
-metadata, original dimensions and exact raw ID/extent/hash are required. Current
-reservations and passive claims reuse canonical admission; existing bounded data
-decoding returns bytes and original-chunk comparison. Matching/different bytes
-produce no write outcome or receipt. Actual allocation/write attribution, read
-permissions, chronology and backend capability remain integration-qualified. See
-[the maintained boundary](extraction-boundary.md#exact-originally-reserved-data-upload-observations).
-
-Successful exact data-read evidence now supports a separate passive original-write
-settlement admission. It binds full original authority/both pending attempts, a
-fresh qualification challenge and exact existing metadata/read/raw-reply/observation
-identity. Matching bytes additionally require exclusive original-write attribution;
-negative claims require exclusion of transient application/overwrite. Actual settled
-uncertainty is distinct from a lost read. Pure views perform no IO or journal change;
-only qualified integrations use the existing receipt transition, retaining all
-consumption and original obligations/references. Authentic attribution and backend
-qualification remain integration work. See
-[the maintained boundary](extraction-boundary.md#exact-data-upload-settlement-claims).
-
-Metadata-allocation settlement now binds exact original/current inventories,
-reservations and challenge to independent passive attribution. It reuses closed
-baseline comparison; Applied names a new non-source ID rather than selecting a
-singleton. Negative evidence excludes transient allocation/deletion, while settled
-uncertainty remains distinct from lost replies. Existing receipt owners retain all
-consumption and source obligations. Actual authenticated attribution/backend
-qualification remain integration work. See
-[the maintained boundary](extraction-boundary.md#exact-metadata-upload-settlement-claims).
-
-Original capture settlement now binds independent claims to exact full baseline
-and already spent list evidence. Applied names an explicitly attributed new raw ID;
-candidate cardinality never implies a receipt. The existing closed-baseline and
-journal owners retain all metadata, consumed allowances and original obligations.
-Actual original baseline chronology, authenticated attribution/custody, capture
-consistency and backend qualification remain integration-owned. See
-[the maintained boundary](extraction-boundary.md#exact-independently-qualified-capture-settlement).
+Retired generic restore-copy staging grants no new migration path. Preserve
+retained copies and unfinished obligations and settle them with their original
+qualified tool before adoption; see [the retirement boundary](extraction-boundary.md#retired-generic-restore-artifact-copies).
 
 ## 12. Filesystem custody, durability and retention
 
-Layout lifetime exclusion and durable reference retention are implemented with
-the bounded v1 contract in [the maintained boundary](extraction-boundary.md).
-Owned command descriptor custody and exact existing-sidecar quiescence are also
-implemented with native process evidence. Backend-specific custody and complete product terminal qualification remain
-integration-owned. `BackupLayoutGuard::release_restore` now supplies the local
-release operation: held journal/layout guards, bounded fresh terminal bytes,
-product-owned original intent/settlement admission and all declared existing
-command-custody identities. Quiescence guards remain held through durable reference
-publication; changed bytes, active commands and replaced sidecars refuse. Exact
-replay synchronizes the current reference state without IC effects. The provider
-must enumerate every original command and qualify complete application obligations;
-this generic operation supplies no product terminal or fence-release proof.
+Current [filesystem/command custody](implementation-contracts.md#filesystem-publication-and-command-custody)
+and [terminal/reference release](implementation-contracts.md#terminal-evidence-and-reference-release)
+contracts own implemented locks, original journal binding, quiescence checks and
+effect-free local replay. The complete product must preserve those protections
+when adding operator retention and prune workflows.
 
 Preserve the existing three concrete protections: layout lifetime exclusion,
 operation journal serialization and subprocess lifetime custody. A path-local
@@ -1145,62 +560,17 @@ proof remains Canic-owned, and snapshots cannot stand in for that authority.
 
 ## 14. Direct Agent transport contract
 
-The maintainer selected `ic-backup-agent` as the sole product transport and retired
-ICP subprocess extraction/probing. Historical routing evidence remains in
-[the qualification history](pocketic-qualification.md#pinned-cli-capability-probe).
-No compatibility backend or fallback is retained. The common shared IC tool
-inventory remains canonical; installation does not select a product backend.
+The selected product transport is `ic-backup-agent`. Its maintained obligations
+belong to [Agent transport and qualification](implementation-contracts.md#agent-transport-and-qualification)
+and its [transport guide](agent-transport.md). Platform owns external IC identities,
+management Candid and Agent SDK access; Backup owns exact method bytes, reservations,
+bounds and reply association. Application endpoints follow the shared IC Wire rule.
 
-IC management arguments and replies retain Candid encoding, as defined by the
-[management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/).
-This includes snapshot capture/transfer/upload/load and canister status/lifecycle
-calls. IC Wire's Postcard contracts apply to application endpoints whose producers
-and consumers select that contract; they do not replace the platform's management
-protocol. Shared Candid decoding mechanics belong in the independent
-published `ic-platform` crate with its `candid` feature. Backup retains method-specific quotas, bounded wire
-projections, exact-result admission and typed domain errors; production use of that
-codec must not introduce a PocketIC dependency.
-
-A public acquisition step now joins exact retained stage/requirement/obligation
-admission to the original journal reservation, mandatory fresh application callback
-and one configured acquisition provider await. Passive replies remain pending;
-application reconciliation/Active semantics and full terminal custody remain separate.
-
-The implemented async package accepts only existing original reserved mutation,
-recovery observation, transfer read, upload, upload observation/readback and
-application fence-acquisition requests. It reuses their exact receiver, effective
-target, method, replicated-update argument bytes and reply bounds. The transport
-checks exact plan context and actual signer without inferring network/release
-identity from an endpoint. Integrations provision the trusted root externally and
-qualify current permissions, prerequisites, stable bytes and never-dispatched custody.
-
-Configure one HTTPS origin or literal loopback HTTP origin, no URL credentials,
-path/query/fragment, explicit trusted root and finite 1..300s HTTP timeout/ingress
-expiry. The fixed client uses HTTP/1, disables proxies, redirects, HTTP/TCP retries
-and bypasses Agent's default 429/503 retry middleware. HTTP bodies are bounded at
-4 MiB, signed envelopes at 3 MiB and replies at their existing method-specific limits.
-No root fetch, query substitution, background polling or additional management call
-is performed. Transport timeout alone does not bound a complete workflow.
-
-The configured provider signs without network traffic, then passes a passive
-prepared-envelope view to mandatory durable retention. The callback retains exact
-signed bytes and request ID with the original plan/reservation before returning
-success; the provider then submits once. Signing and dispatch are internal, with
-no public prepare/submit or envelope re-import/reissue API. A successful certificate
-reply is passive evidence for canonical decoding/association, not an automatic
-Applied/NotApplied receipt. Accepted/processing returns the port's Indeterminate
-error without waiting;
-errors, cancellation and lost replies keep original spending and obligations.
-Recovery is independently admitted and accounted, never a blind repeat call.
-
-Actual Linux local HTTP checks cover one-request admission, errors, disconnect,
-timeout, body bounds, redirects and no implicit follow-up. Real PocketIC gateway
-checks cover capture, metadata, full 1 MiB heap/stable reads, upload/load/start,
-same-ID state restoration, discarded replies and wrong trusted-root failure.
-This qualifies the isolated fixture and transport boundary, not arbitrary application
-fencing, installed Canic adapters, complete runners or terminal/reference release.
-Native consumer macOS evidence remains separate. See [the current scope](agent-transport.md)
-and [transport acceptance](https://github.com/dragginzgame/ic-backup/issues/25).
+ICP subprocess extraction/probing is retired. Its [routing evidence](pocketic-qualification.md#pinned-cli-capability-probe)
+remains historical evidence, with no fallback backend or future upstream-fix dependency.
+Complete application adapters must still qualify trust, current permissions,
+never-dispatched custody, consistency and external-effect settlement. An installed
+transport or simulator result does not complete that integration.
 
 ## 15. Standalone CLI and configuration
 
@@ -1374,79 +744,10 @@ the independently qualified product and Canic's own accepted boundary. B6 does
 not claim complete Canic extraction if B5 remains undone. The standalone toolkit
 can be delivered earlier with that ownership distinction stated explicitly.
 
-The initial documentation bootstrap created none of these implementation
-packages. Subsequent setup established the library and contributor tooling.
-The first extraction refreshed source hashes, traced consumers and established
-the local artifact/persistence contracts with native regression evidence. The
-next local batch adds stable layout locking and bounded immutable restore
-dependencies, with fresh publication/owner-death and replaced-root evidence.
-Command custody now has owned inheritance, retained v1 file identity, bounded
-finish and fresh exclusive probes with real owner/descendant exit evidence.
-Local download lifecycle records and guarded verified publication now have fresh
-native lost-write, changed-byte and owner-death recovery evidence.
-Explicit fresh integrity now binds the retained original plan and exact selected
-set to every durable published directory checksum. Native recovery retains pending
-spending and restore references. Sequential local checks require stable byte custody
-and prove neither backend transfer completeness nor terminal/release admission.
-Local operation accounting now has exact identity/budget binding, a canonical
-authority digest and append-only reservation/receipt history with fresh native
-lost-write, exhaustion, stale-receipt and owner-death qualification. Complete
-execution journals, preflight/consistency and backend reconciliation remain proposed.
-Declared physical inventory and pure selection now have fresh canonical hash,
-duplicate/graph/bound and immutable local persistence qualification. Authoritative
-membership observation/revision/fencing remains integration and port work.
-Explicit operation dependency graphs now have deterministic model-owned ordering,
-causal declared-progress policy and bounded immutable local persistence with fresh
-native qualification. Complete operation requests, full plans and qualified actual
-completion remain outside this graph primitive.
-Immutable declared operation plans now join the local inventory/graph/budget owners
-and derive original journal intent under a specified canonical hash. Fresh native
-qualification covers structural/physical binding, assigned limits and unchanged
-consumption through repeated declaration/reopen. Complete backup/restore semantics,
-transfer/response codecs and fresh preflight remain necessary for runners.
-Pure original-plan progress now joins exact retained attempt journals and rejects
-missing evidence, changed authority/limits and attempted unmet dependencies. Native
-recovery qualification preserves pending observations and assigned allowance totals
-without reset or IO in policy. Actual backend effects and terminal proof remain pending.
-The closed IC host-ingress codec now has independent Candid/hash goldens, official
-argument-shape decoding, bounded strict records and native byte-bound journal
-recovery qualification. This does not qualify an authenticated backend or actual
-snapshot/lifecycle effects. Transfer/response codecs and live admission remain pending.
-Remaining B1 work qualifies actual lost capture/upload/load reconciliation and freezes
-application fence acquisition/release and actual restore safety, journal and executor
-contracts before importing
-runners. This local machinery batch does not establish full B1/B2 completion.
-The membership request/result/provider contract and pure exact-result admission now
-have fresh native context/inventory/challenge/call-bound qualification and public
-spent-journal recovery. No live authoritative membership, continuity, application
-fence or permission is inferred from those tests.
-Direct-control request/result/provider contracts and pure caller-controller checks
-now have exact payload/context/target/challenge/set-bound and revoked-caller tests,
-plus public spent-journal recovery. They qualify local admission only; authenticated
-current permissions, delegated framework routing and complete preflight remain pending.
-Snapshot-list permission requests/results/provider contracts and pure visibility
-policy now have exact read-payload/challenge/context/target/viewer-bound tests and
-public lost-observation recovery. They establish no actual live read access,
-transfer completeness, mutation control, observation settlement or backend qualification.
-Original consistency declarations and current capture/fence matching now have
-strict schema/hash, no-downgrade local persistence, exact original revision/fence,
-inactive/non-stopped denial and public retained-obligation/spent-journal recovery
-qualification. Actual distributed checkpoint, continuous application fencing,
-acquisition/release and same-release restore settlement remain unestablished.
-Original restore/source/safety requirements and fresh exact load/start checks now
-have strict schema/hash, immutable both-layout persistence, current source/lane/
-fence-revision/lifecycle/acceptance denial and retained-spending/obligation/reference
-recovery evidence. These are local contracts; actual source/upload qualification,
-outside-snapshot application safety, providers and lost-load settlement remain pending.
-
-Original lifecycle recovery now has passive stop/start/load settlement claims bound
-to exact already spent status observations, challenges and original journal identity.
-The integration independently qualifies original attribution, exact restored state,
-nonapplication or actual settled uncertainty. Status/code equality alone does not
-create an outcome. Pure admission reuses the existing journal receipt owner; lost
-replies retain pending spending, and local recording/reopen replenishes nothing.
-Actual backend/authentication, custody, application safety and terminal/release
-qualification remain prerequisites for executable runners.
+The [original implementation chronology](https://github.com/dragginzgame/ic-backup/blob/21b0a94a1fa8241d26ed1b933e1e353fbc71d2ca/docs/extraction-design.md#19-coherent-implementation-batches)
+is retained as historical evidence. Current implementation, open acceptance and
+qualification belong to their linked owners above; the batch table is a proposed
+delivery sequence, not an active completion ledger.
 
 ## 20. Completion criteria
 
@@ -1470,15 +771,7 @@ The extraction is complete only when all promised boundaries are executable:
 Moving files or passing copied unit tests is not completion. The product's value
 is independent usability with preserved recovery and custody guarantees.
 
-The first executable qualification uses a private real PocketIC driver through
-published Testkit for bounded managed startup/cleanup and the complete client API.
-Original byte, accounting and fixture-safety owners stay local. It covers
-single-canister capture, complete production artifact transfer, upload and same-ID
-load/start, including reserved recovery of deliberately lost capture/allocation/data
-and stop/load/start replies. Complete separately accounted fresh snapshot checks
-qualify stopped post-load state before restart. A lost load-status observation
-retains both reservations and stops without a receipt, retry or restart.
-It supplies fixture-specific platform evidence while full executable workflows and application-qualified transport adoption remain separate. Canic adoption and B5
-remain independent. See [the exact scope](pocketic-qualification.md); this does not
-complete the multi-canister, process/network-loss, application-fence, installed
-consumer or terminal/reference-release qualification families above.
+Current simulator and independent consumer scope is recorded in the
+[qualification guide](pocketic-qualification.md). Passing those fixtures does not
+complete the multi-canister, application-fence, installed operator-command or
+production external-effect acceptance families above.

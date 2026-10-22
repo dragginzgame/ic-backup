@@ -200,15 +200,21 @@ The fixture durably reserves before invoking the client. Read methods also have
 explicitly accounted ingress; a recovery read consumes the original pending
 mutation's separate observation budget. These per-call test plans do not implement
 a full executable product workflow or authorize replenishment of an existing plan.
-The driver admits at most 64 management ingresses and reads regions in at most
-32 KiB extents. Fixture creation, installation, cycle funding, chunk seeding/clearing/listing and
-application writes/queries are explicit simulator setup/assertions outside these
+The driver admits at most 64 management ingresses; the production download
+planner selects original bounded data-stage requests. Independent verification
+reads use at most 32 KiB extents. Fixture creation, installation, cycle funding,
+chunk seeding/clearing/listing and application writes/queries are explicit simulator setup/assertions outside these
 backup/restore journals. Reported management counts cover accounted backup,
 restore, verification and recovery ingress; these fixture operations are separate.
 
-Registered cases run the same complete journey normally and with capture,
-metadata-allocation, first data-write, stop, load or final start reply deliberately
-discarded after real completed ingress. Discarded mutation replies are retained
+Focused recovery cases deliberately discard capture, metadata-allocation, first
+data-write, stop, load or start replies after real completed ingress. Each case
+ends at its own settlement/no-followup boundary. Successful upload-source setup
+uses the existing production capture/metadata/download workflow driver. Load
+recovery uses the original native snapshot and independently verifies complete
+stopped state; connected workflow cases separately qualify uploaded destinations,
+full round trips and terminal replay. The focused cases keep no second complete
+backup/upload/restore runner. Discarded mutation replies are retained
 separately as test oracles; reconciliation never reads them. Reopen must retain the pending mutation and
 exhausted mutation allowance; attempting another mutation returns the existing
 typed pending error. An exact observation is retained and reserved before dispatch.
@@ -227,8 +233,8 @@ capture or restart follows. The test oracle alone decodes that discarded status 
 assert the actual isolated canister remains stopped; those bytes never enter
 settlement. Both original reservations and exhausted allowances survive exact local
 reopen. Another mutation or observation returns the existing typed pending denial
-without changing journal bytes or making a call. All other original journals,
-source artifacts/manifest and reference bytes are replayed unchanged as well.
+without changing journal bytes or making a call. Other original journals and any
+prepared source artifacts/manifest and references are replayed unchanged as well.
 
 This is post-effect reply-discard qualification, not a network-fault injector or
 process-crash test. PocketIC's client submits ingress and awaits that original
@@ -237,6 +243,16 @@ another management ingress. The explicit client request limit is 60 seconds.
 The ordinary local journal/manifest replay invokes no management calls and checks
 unchanged originals, consumed allowances and retained restore-reference bytes.
 It is not full product terminal replay or reference-release admission.
+
+The independent stopped-state readback oracle requires expected bytes for every
+declared extent before issuing another management call. A missing chunk cannot
+silently truncate verification through paired iteration. A real-source regression
+checks rejection of incomplete expected-byte coverage with no further ingress.
+
+Each Core fixture retains the admitted server digest and the original
+`Cargo.lock`. Focused result records obtain the server version from Testkit and
+bind the copied lock's SHA-256 for the exact client/dependency selection. There
+is no separately maintained client version label or second server selection.
 
 ## Connected original capture and restore workflows
 

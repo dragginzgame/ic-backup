@@ -28,9 +28,11 @@ Shared Tooling's own validation commands apply upstream, not to this repository.
 ## Start of session
 
 Read `docs/status/current.md` first, then the relevant sections of
-`docs/extraction-design.md`. Distinguish proposed behavior from implemented and
-qualified behavior. Update the handoff after a meaningful batch; do not turn it
-into an issue tracker or release authority.
+`docs/implementation-contracts.md`. Consult `docs/extraction-design.md` for
+extraction rationale and proposed product work; it is not an implementation ledger.
+Distinguish proposed behavior from implemented and qualified behavior. Update the
+handoff after a meaningful batch; do not turn it into an issue tracker or release
+authority.
 
 ## Scope and authority
 
@@ -45,8 +47,9 @@ or dependencies on Canic runtime/control-plane crates.
 ## Product safeguards
 
 - Before product changes, read the relevant [implementation contracts](docs/implementation-contracts.md)
-  and [extraction design](docs/extraction-design.md). Their exact bounds, authority,
-  custody and recovery requirements remain mandatory.
+  and [record/API boundary](docs/extraction-boundary.md). Their exact bounds, authority,
+  custody and recovery requirements remain mandatory. The [extraction design](docs/extraction-design.md)
+  retains rationale and proposals; proposed flows do not widen implemented contracts.
 - Backup runs on the operator host. Integrations own membership, routing,
   release identity, application quiescence and external-effect settlement.
 - Same-release restore targets the same existing canister IDs. Persist intent

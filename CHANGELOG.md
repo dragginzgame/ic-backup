@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.37.4] - Unreleased
+
+- Qualify locked Host/Testkit 0.63.3, Platform 0.6.7 and Tokio 1.54.1 on Linux
+  through Core/Agent tests, authenticated simulator journeys and independent
+  Rust 1.91 and package consumers.
+- Focus lost-reply simulator cases on their recovery boundaries and reuse the
+  production workflow driver for successful source preparation. Retain distinct
+  recovery assertions and connected same-ID round-trip coverage.
+- Reject incomplete expected-byte coverage before simulator readback verification,
+  preserving complete stopped-state restoration checks.
+- Bind simulator evidence to Testkit's server selection and the retained dependency
+  lock instead of hardcoded client/server version labels.
+- Keep implemented contracts at their canonical documentation owners; retain
+  extraction rationale, future-product proposals and linked historical evidence.
+
 ## [0.37.3] - 2026-10-21
 
 - Qualify Host/Testkit 0.63.2 and Platform 0.6.5 with the selected authenticated

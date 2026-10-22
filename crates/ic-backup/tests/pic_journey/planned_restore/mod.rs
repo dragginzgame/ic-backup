@@ -218,11 +218,7 @@ pub(super) fn run(
                 );
                 assert_eq!(
                     source_journal
-                        .verify_ic_snapshot_artifact(
-                            source_plan,
-                            "retained-original-snapshot",
-                            metadata
-                        )
+                        .verify_ic_snapshot_artifact(source_plan, super::TOKEN, metadata)
                         .unwrap(),
                     source.checksum
                 );

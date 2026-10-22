@@ -1,4 +1,4 @@
-//! First real management-service journey; product terminal/release remains separate.
+//! Focused real recovery cases and shared fixture oracles; product release stays separate.
 
 use ic_platform::candid::contract;
 mod backend;
@@ -12,18 +12,17 @@ use backend::Backend;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        download_journal::DownloadArtifactRequest,
         ic_lifecycle_reply::{IcLifecycleReply, IcLifecycleReplyKind},
         ic_request::{
             IcManagementMethodRecord as Method, IcManagementRequest, IcManagementRequestRecord,
         },
         ic_snapshot_data::{IcSnapshotDataReply, IcSnapshotDataRequest},
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-        ic_snapshot_reply::IcSnapshotReply,
+        ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
         ic_snapshot_transfer_read::IcSnapshotTransferReadPayload,
         ic_snapshot_upload::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind},
     },
-    ops::persistence::{BackupLayoutGuard, DownloadJournalGuard, create_operation_plan},
+    ops::persistence::{BackupLayoutGuard, DownloadJournalGuard},
 };
 use ic_platform::management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use std::fs;
@@ -132,88 +131,152 @@ pub(super) enum Fault {
 }
 
 pub(super) fn run(fault: Fault) {
-    let mut backend = Backend::new();
-    assert!(lifecycle(&mut backend, Method::StopCanister, None, fault, |_| None).is_none());
-    status(&mut backend, CanisterStatusType::Stopped);
-    let (plan, snapshot_id, timestamp, total_size) = capture(&mut backend, fault);
-    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), &snapshot_id).unwrap();
-    let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    assert_eq!(metadata.metadata().stable_memory_size, 65_536);
-    assert!(metadata.metadata().wasm_memory_size >= 131_072);
-    assert_eq!(metadata.metadata().certified_data, 42_u64.to_le_bytes());
-    assert_eq!(metadata.metadata().wasm_chunk_store.len(), 1);
-    let downloaded = download(&mut backend, &plan, &metadata, &raw, timestamp, total_size);
-    let root = &downloaded.root;
-    let checksum = &downloaded.checksum;
-    let manifest = &downloaded.manifest;
-    let original_chunks = &downloaded.chunks;
-    let token = "retained-original-snapshot";
-    let before_replay = backend.calls;
-    let layout = BackupLayoutGuard::acquire(root).unwrap();
+    if matches!(fault, Fault::Stop | Fault::Start | Fault::Capture) {
+        let mut backend = Backend::new();
+        assert!(lifecycle(&mut backend, Method::StopCanister, None, fault, |_| None).is_none());
+        match fault {
+            Fault::Start => {
+                assert!(
+                    lifecycle(&mut backend, Method::StartCanister, None, fault, |_| None).is_none()
+                );
+                backend.assert_state(42);
+                backend.assert_calls("start_canister", 1);
+            }
+            Fault::Capture => {
+                capture(&mut backend);
+                backend.assert_calls("take_canister_snapshot", 1);
+                backend.assert_calls("read_canister_snapshot_metadata", 0);
+            }
+            Fault::Stop => backend.assert_calls("stop_canister", 1),
+            _ => unreachable!(),
+        }
+        backend.assert_local_replay(None);
+        backend.complete(match fault {
+            Fault::Start => "start-reply-discarded",
+            Fault::Capture => "capture-reply-discarded",
+            _ => "stop-reply-discarded",
+        });
+        return;
+    }
+
+    // Reuse the production capture/metadata/download coordinators for successful setup.
+    // Each case stops at its own recovery boundary; the connected runner owns round trips.
+    let CapturedSource {
+        mut backend,
+        plan,
+        snapshot,
+        raw_metadata,
+        source,
+    } = planned_runner::capture_source();
+    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
+    let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
+    let layout = BackupLayoutGuard::acquire(&source.root).unwrap();
     let journal = DownloadJournalGuard::open(&layout, plan.digest().hash()).unwrap();
-    assert_eq!(
-        journal.read_download_manifest(&plan, manifest).unwrap(),
-        *journal.record().unwrap()
-    );
-    assert_eq!(backend.calls, before_replay);
-    let retained_journal = fs::read(journal.path()).unwrap();
-    let retained_references = fs::read(root.join("restore-references.json")).unwrap();
-    let metadata_upload = journal
-        .prepare_ic_snapshot_upload_metadata(&plan, token, &metadata)
-        .unwrap();
-    let destination = allocate(&mut backend, &metadata_upload, fault);
-    upload_data(
-        &mut backend,
-        &plan,
-        &journal,
-        &metadata_upload,
-        &destination,
-        fault,
-    );
-    verify_destination(&mut backend, &metadata, &destination, original_chunks);
-    let pending = restore(
-        &mut backend,
-        fault,
-        &metadata,
-        &destination,
-        original_chunks,
-    );
+    let original_journal = fs::read(journal.path()).unwrap();
+    let original_references = layout.restore_references().unwrap();
+    let mut pending = None;
+    match fault {
+        Fault::Metadata | Fault::Data => {
+            recover_upload(&mut backend, &plan, &journal, &metadata, fault);
+        }
+        Fault::Load | Fault::LoadObservation => {
+            planned_runner::change_live_state(&mut backend);
+            // Original native snapshot suffices for lifecycle recovery; uploaded destinations
+            // and full transfer/load/start composition are checked by the connected runner.
+            pending = lifecycle(
+                &mut backend,
+                Method::LoadCanisterSnapshot,
+                Some(snapshot.id().to_vec()),
+                fault,
+                |backend| {
+                    Some(verify_loaded(
+                        backend,
+                        &metadata,
+                        snapshot.id(),
+                        &source.chunks,
+                    ))
+                },
+            );
+            backend.assert_calls("load_canister_snapshot", 1);
+            backend.assert_calls("start_canister", 1); // Only the deliberate pre-load mutation.
+            status(&mut backend, CanisterStatusType::Stopped);
+        }
+        _ => panic!("focused recovery requires a fault"),
+    }
     assert_eq!(
         journal
-            .verify_ic_snapshot_artifact(&plan, token, &metadata)
+            .verify_ic_snapshot_artifact(&plan, TOKEN, &metadata)
             .unwrap(),
-        *checksum
+        source.checksum
     );
-    assert_eq!(fs::read(journal.path()).unwrap(), retained_journal);
+    assert_eq!(fs::read(journal.path()).unwrap(), original_journal);
     assert_eq!(
-        journal.read_download_manifest(&plan, manifest).unwrap(),
+        journal
+            .read_download_manifest(&plan, &source.manifest)
+            .unwrap(),
         *journal.record().unwrap()
     );
-    assert_eq!(
-        fs::read(root.join("restore-references.json")).unwrap(),
-        retained_references
-    );
+    assert_eq!(layout.restore_references().unwrap(), original_references);
     if let Some(sequence) = pending {
         backend.assert_pending_lifecycle_replay(sequence);
     }
     backend.assert_local_replay(pending);
-    let case = match fault {
-        Fault::None => "normal",
-        Fault::Capture => "capture-reply-discarded",
+    backend.complete(match fault {
         Fault::Metadata => "metadata-reply-discarded",
         Fault::Data => "data-reply-discarded",
-        Fault::Stop => "stop-reply-discarded",
         Fault::Load => "load-reply-discarded",
-        Fault::Start => "start-reply-discarded",
         Fault::LoadObservation => "load-and-status-replies-discarded",
-    };
-    backend.complete(case, &snapshot_id, &destination, checksum, manifest);
-    eprintln!(
-        "PocketIC journey retained at {} ({} management calls)",
-        backend.root.display(),
-        backend.calls
-    );
+        _ => unreachable!(),
+    });
+}
+
+fn recover_upload(
+    backend: &mut Backend,
+    plan: &ic_backup::model::operation_plan::OperationPlanRecord,
+    journal: &DownloadJournalGuard<'_>,
+    metadata: &IcSnapshotMetadataReply<'_>,
+    fault: Fault,
+) {
+    let upload = journal
+        .prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata)
+        .unwrap();
+    let destination = allocate(backend, &upload, fault);
+    backend.assert_calls("upload_canister_snapshot_metadata", 1);
+    if fault == Fault::Data {
+        let request =
+            IcSnapshotMetadataRequest::new(&backend.target.to_text(), &destination).unwrap();
+        let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
+        let destination_metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+        let kind = extents(metadata).into_iter().next().unwrap();
+        let payload = journal
+            .prepare_ic_snapshot_upload_data(plan, TOKEN, &upload, &destination, kind.clone())
+            .unwrap();
+        let (sequence, raw) = backend.call(
+            payload.method(),
+            payload.arguments(),
+            &payload.binding_digest(),
+            |_| panic!("reply is deliberately lost"),
+            true,
+        );
+        assert!(raw.is_none());
+        let read = IcSnapshotDataRequest::new(&destination_metadata, kind).unwrap();
+        recovery::data(backend, sequence, &payload, &read);
+        backend.assert_calls("upload_canister_snapshot_data", 1);
+    } else {
+        backend.assert_calls("upload_canister_snapshot_data", 0);
+    }
+    backend.assert_calls("load_canister_snapshot", 0);
+    backend.assert_calls("start_canister", 0);
+}
+
+const TOKEN: &str = "runner-original-snapshot";
+
+struct CapturedSource {
+    backend: Backend,
+    plan: ic_backup::model::operation_plan::OperationPlanRecord,
+    snapshot: IcSnapshotInfo,
+    raw_metadata: Vec<u8>,
+    source: Downloaded,
 }
 
 struct Downloaded {
@@ -221,68 +284,6 @@ struct Downloaded {
     checksum: ic_backup::model::artifacts::ArtifactChecksumRecord,
     manifest: ic_backup::model::artifacts::ArtifactChecksumRecord,
     chunks: Vec<Vec<u8>>,
-}
-
-fn download(
-    backend: &mut Backend,
-    plan: &ic_backup::model::operation_plan::OperationPlanRecord,
-    metadata: &IcSnapshotMetadataReply<'_>,
-    raw: &[u8],
-    timestamp: u64,
-    total_size: u64,
-) -> Downloaded {
-    let kinds = extents(metadata);
-    let mut original_chunks = Vec::new();
-    let root = backend.root.join("backup");
-    fs::create_dir(&root).unwrap();
-    fs::create_dir(root.join("artifacts")).unwrap();
-    let token = "retained-original-snapshot"; // Integration-owned raw-ID/token association.
-    let (checksum, manifest) = {
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        create_operation_plan(&layout, plan).unwrap();
-        layout
-            .retain_restore(
-                &backend.root.join("unfinished-restore.json"),
-                plan.digest().hash(),
-            )
-            .unwrap();
-        let mut journal = DownloadJournalGuard::create(
-            &layout,
-            plan.digest().hash(),
-            vec![DownloadArtifactRequest {
-                canister_id: backend.target.to_text(),
-                snapshot_id: token.into(),
-                snapshot_taken_at_timestamp: timestamp,
-                snapshot_total_size_bytes: total_size,
-            }],
-        )
-        .unwrap();
-        let mut writer = journal
-            .stage_ic_snapshot_artifact(token, metadata, raw)
-            .unwrap();
-        for kind in &kinds {
-            let request = IcSnapshotDataRequest::new(metadata, kind.clone()).unwrap();
-            let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Data(&request));
-            let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
-            original_chunks.push(reply.chunk().to_vec());
-            writer = writer.append(&reply).unwrap();
-        }
-        let checksum = writer.finish().unwrap();
-        assert_eq!(
-            journal
-                .verify_ic_snapshot_artifact(plan, token, metadata)
-                .unwrap(),
-            checksum
-        );
-        let manifest = journal.publish_download_manifest(plan).unwrap();
-        (checksum, manifest)
-    };
-    Downloaded {
-        root,
-        checksum,
-        manifest,
-        chunks: original_chunks,
-    }
 }
 
 fn allocate(
@@ -333,68 +334,18 @@ fn allocate(
     destination
 }
 
-fn upload_data(
-    backend: &mut Backend,
-    plan: &ic_backup::model::operation_plan::OperationPlanRecord,
-    journal: &DownloadJournalGuard<'_>,
-    metadata_upload: &ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest<'_>,
-    destination: &[u8],
-    fault: Fault,
-) {
-    let token = "retained-original-snapshot";
-    let initial_destination_request =
-        IcSnapshotMetadataRequest::new(&backend.target.to_text(), destination).unwrap();
-    let (_, initial_destination_raw) = backend.call(
-        initial_destination_request.method(),
-        initial_destination_request.arguments(),
-        &initial_destination_request.digest(),
-        |raw| {
-            IcSnapshotMetadataReply::decode(&initial_destination_request, raw)
-                .unwrap()
-                .digest()
-        },
-        false,
-    );
-    let initial_destination_raw = initial_destination_raw.unwrap();
-    let initial_destination_metadata =
-        IcSnapshotMetadataReply::decode(&initial_destination_request, &initial_destination_raw)
-            .unwrap();
-    for (extent, kind) in extents(metadata_upload.source()).iter().enumerate() {
-        let upload = journal
-            .prepare_ic_snapshot_upload_data(
-                plan,
-                token,
-                metadata_upload,
-                destination,
-                kind.clone(),
-            )
-            .unwrap();
-        let discard_reply = fault == Fault::Data && extent == 0;
-        let (write_index, _) = backend.call(
-            upload.method(),
-            upload.arguments(),
-            &upload.binding_digest(),
-            |raw| {
-                IcSnapshotUploadReply::decode(&upload, raw)
-                    .unwrap()
-                    .digest()
-            },
-            discard_reply,
-        );
-        if discard_reply {
-            let read =
-                IcSnapshotDataRequest::new(&initial_destination_metadata, kind.clone()).unwrap();
-            recovery::data(backend, write_index, &upload, &read);
-        }
-    }
-}
-
 fn verify_destination(
     backend: &mut Backend,
     metadata: &IcSnapshotMetadataReply<'_>,
     destination: &[u8],
     original_chunks: &[Vec<u8>],
 ) -> ArtifactChecksumRecord {
+    let kinds = extents(metadata);
+    assert_eq!(
+        kinds.len(),
+        original_chunks.len(),
+        "readback oracle must cover every declared extent",
+    );
     let destination_request =
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), destination).unwrap();
     let (_, destination_raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(
@@ -437,7 +388,7 @@ fn verify_destination(
         contract::encode_one(&source.on_low_wasm_memory_hook_status).unwrap()
     );
     let mut evidence = vec![metadata.digest(), destination_metadata.digest()];
-    for (kind, expected) in extents(metadata).iter().zip(original_chunks) {
+    for (kind, expected) in kinds.iter().zip(original_chunks) {
         let request = IcSnapshotDataRequest::new(&destination_metadata, kind.clone()).unwrap();
         let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Data(&request));
         let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
@@ -447,15 +398,7 @@ fn verify_destination(
     ArtifactChecksumRecord::from_bytes(&serde_json::to_vec(&evidence).unwrap())
 }
 
-fn capture(
-    backend: &mut Backend,
-    fault: Fault,
-) -> (
-    ic_backup::model::operation_plan::OperationPlanRecord,
-    Vec<u8>,
-    u64,
-    u64,
-) {
+fn capture(backend: &mut Backend) {
     let list = management(backend, Method::ListCanisterSnapshots, None);
     let (_, baseline_raw) = backend.call(
         list.method().name(),
@@ -472,22 +415,11 @@ fn capture(
         capture.method().name(),
         capture.arguments(),
         &capture.digest(),
-        |raw| IcSnapshotReply::decode(&capture, raw).unwrap().digest(),
-        fault == Fault::Capture,
+        |_| panic!("discarded capture reply never enters decoding"),
+        true,
     );
-    let (snapshot_id, timestamp, total_size) = if let Some(raw) = raw {
-        let reply = IcSnapshotReply::decode(&capture, &raw).unwrap();
-        let snapshot = &reply.snapshots()[0];
-        (
-            snapshot.id().to_vec(),
-            snapshot.taken_at_timestamp(),
-            snapshot.total_size(),
-        )
-    } else {
-        recovery::capture(backend, index, &capture, &list, &baseline)
-    };
-    let plan = backend.retained_plan(index);
-    (plan, snapshot_id, timestamp, total_size)
+    assert!(raw.is_none());
+    recovery::capture(backend, index, &capture, &list, &baseline);
 }
 
 fn status(backend: &mut Backend, expected: CanisterStatusType) {
@@ -509,42 +441,6 @@ fn status(backend: &mut Backend, expected: CanisterStatusType) {
         info.controllers().principals(),
         [ic_platform::Principal::anonymous().to_text()]
     );
-}
-
-fn restore(
-    backend: &mut Backend,
-    fault: Fault,
-    metadata: &IcSnapshotMetadataReply<'_>,
-    destination: &[u8],
-    original_chunks: &[Vec<u8>],
-) -> Option<u64> {
-    // Deliberate application work separates current state from the retained snapshot.
-    assert!(lifecycle(backend, Method::StartCanister, None, Fault::None, |_| None).is_none());
-    backend.write_state(99);
-    backend.assert_state(99);
-    backend.clear_fixture_chunk_store();
-    assert!(lifecycle(backend, Method::StopCanister, None, Fault::None, |_| None).is_none());
-    // The closed fixture's no-external-effects admission never applies generically.
-    let pending = lifecycle(
-        backend,
-        Method::LoadCanisterSnapshot,
-        Some(destination.to_vec()),
-        fault,
-        |backend| {
-            Some(verify_loaded(
-                backend,
-                metadata,
-                destination,
-                original_chunks,
-            ))
-        },
-    );
-    if pending.is_some() {
-        return pending;
-    }
-    assert!(lifecycle(backend, Method::StartCanister, None, fault, |_| None).is_none());
-    backend.assert_state(42);
-    None
 }
 
 fn verify_loaded(
@@ -572,4 +468,30 @@ fn verify_loaded(
     let evidence = verify_destination(backend, metadata, actual, original_chunks);
     fs::write(backend.root.join("post-load-verification.json"), serde_json::to_vec_pretty(&serde_json::json!({"original_source_metadata":metadata.digest(),"loaded_destination":destination,"verification_operation_sequence":sequence,"verification_snapshot_id":actual,"complete_state_evidence":evidence})).unwrap()).unwrap();
     evidence
+}
+
+#[test]
+fn readback_requires_complete_expected_chunks_before_management_calls() {
+    let CapturedSource {
+        mut backend,
+        snapshot,
+        raw_metadata,
+        source,
+        ..
+    } = planned_runner::capture_source();
+    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
+    let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
+    let (_, incomplete) = source
+        .chunks
+        .split_last()
+        .expect("fixture retains at least one expected chunk");
+    let calls = backend.calls;
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        verify_destination(&mut backend, &metadata, snapshot.id(), incomplete)
+    }));
+    assert!(result.is_err(), "incomplete byte oracle must reject");
+    assert_eq!(
+        backend.calls, calls,
+        "refuse before another management call"
+    );
 }

@@ -2,9 +2,10 @@
 
 Read the relevant sections before changing planning, persistence, transport or
 recovery. These are current obligations. [The extraction boundary](extraction-boundary.md)
-specifies record and API details; [the design](extraction-design.md) distinguishes
-implemented mechanisms from the proposed complete product. Dependency selections
-belong to manifests and the lockfile, migration history to the
+specifies record and API details; [the design](extraction-design.md) retains
+rationale and proposed complete-product behavior. It supplies no additional
+implemented recovery modes or current status ledger. Dependency selections belong
+to manifests and the lockfile, migration history to the
 [changelog](../CHANGELOG.md), and qualification receipts to the
 [current handoff](status/current.md) and its archives.
 

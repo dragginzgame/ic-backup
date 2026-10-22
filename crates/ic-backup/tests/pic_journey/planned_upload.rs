@@ -1,6 +1,6 @@
 //! Actual original allocation and complete data stages using the public coordinators.
 
-use super::{Backend, Fault, capture, download, extents, lifecycle, status, verify_destination};
+use super::{Backend, CapturedSource, TOKEN, extents, planned_runner, verify_destination};
 use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
@@ -9,9 +9,7 @@ use ic_backup::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_mutation::IcMutationAcknowledgement,
-        ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-        ic_snapshot_transfer_read::IcSnapshotTransferReadPayload,
         ic_snapshot_upload::{
             IcSnapshotUploadAttempt, IcSnapshotUploadKind, IcSnapshotUploadReply,
             IcSnapshotUploadReplyKind, IcSnapshotUploadRequest,
@@ -27,7 +25,6 @@ use ic_backup::{
         IcSnapshotUploadExecutionError, allocate_snapshot, upload_snapshot, upload_snapshot_data,
     },
 };
-use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
 use std::{collections::BTreeSet, convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt};
 
@@ -207,23 +204,15 @@ fn assert_failed(
     reason = "retain the isolated source/allocation/data custody chronology in one qualification trace"
 )]
 pub(crate) fn run(failure: Failure) {
-    let mut backend = Backend::new();
-    assert!(
-        lifecycle(
-            &mut backend,
-            Method::StopCanister,
-            None,
-            Fault::None,
-            |_| None
-        )
-        .is_none()
-    );
-    status(&mut backend, CanisterStatusType::Stopped);
-    let (source_plan, source_id, timestamp, size) = capture(&mut backend, Fault::None);
-    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), &source_id).unwrap();
-    let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
+    let CapturedSource {
+        mut backend,
+        plan: source_plan,
+        snapshot,
+        raw_metadata: raw,
+        source,
+    } = planned_runner::capture_source();
+    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let source = download(&mut backend, &source_plan, &metadata, &raw, timestamp, size);
     let source_layout = BackupLayoutGuard::acquire(&source.root).unwrap();
     let source_journal =
         DownloadJournalGuard::open(&source_layout, source_plan.digest().hash()).unwrap();
@@ -240,7 +229,7 @@ pub(crate) fn run(failure: Failure) {
     let original_source = fs::read(source_journal.path()).unwrap();
     let original_references = source_layout.restore_references().unwrap();
     let upload = source_journal
-        .prepare_ic_snapshot_upload_metadata(&source_plan, "retained-original-snapshot", &metadata)
+        .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
         .unwrap();
     let kinds = extents(&metadata);
     let workflow = allocation(
@@ -331,7 +320,7 @@ pub(crate) fn run(failure: Failure) {
     let planned = source_journal.prepare_ic_snapshot_data_upload_plan(
         &workflow,
         7,
-        "retained-original-snapshot",
+        TOKEN,
         &reply,
         1024 * 1024,
     );
@@ -361,7 +350,7 @@ pub(crate) fn run(failure: Failure) {
         &stage,
         &data,
         &source_journal,
-        "retained-original-snapshot",
+        TOKEN,
         &mut provider,
         async |request| {
             assert_eq!(request.payload().source_checksum(), &source.checksum);
@@ -432,7 +421,7 @@ pub(crate) fn run(failure: Failure) {
             &stage,
             &data,
             &source_journal,
-            "retained-original-snapshot",
+            TOKEN,
             &mut provider,
             async |_| -> Result<(), Infallible> { panic!("Applied cannot replay") },
             async |_, _| -> Result<MutationReceiptRequest, Infallible> {
@@ -462,7 +451,7 @@ pub(crate) fn run(failure: Failure) {
     );
     assert_eq!(
         source_journal
-            .verify_ic_snapshot_artifact(&source_plan, "retained-original-snapshot", &metadata)
+            .verify_ic_snapshot_artifact(&source_plan, TOKEN, &metadata)
             .unwrap(),
         source.checksum
     );
@@ -530,7 +519,7 @@ fn assert_data_failed(
             &stage,
             data,
             source,
-            "retained-original-snapshot",
+            TOKEN,
             provider,
             async |_| -> Result<(), Infallible> { panic!("pending cannot reissue") },
             async |_, _| -> Result<MutationReceiptRequest, Infallible> {

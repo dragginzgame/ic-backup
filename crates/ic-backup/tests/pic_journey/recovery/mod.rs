@@ -26,7 +26,7 @@ pub(super) fn capture(
     mutation: &IcManagementRequestRecord,
     list: &IcManagementRequestRecord,
     baseline: &IcSnapshotReply<'_>,
-) -> (Vec<u8>, u64, u64) {
+) {
     let plan = backend.retained_plan(index);
     let layout = backend.layout(index);
     let mut journal =
@@ -98,12 +98,7 @@ pub(super) fn capture(
         &settlement,
     )
     .unwrap();
-    let captured = view.captured_snapshot().unwrap();
-    let result = (
-        captured.id().to_vec(),
-        captured.taken_at_timestamp(),
-        captured.total_size(),
-    );
+    assert_eq!(view.captured_snapshot(), Some(snapshot));
     journal
         .record_observation(ObservationReceiptRequest {
             attempt: request.observation_attempt(),
@@ -114,7 +109,6 @@ pub(super) fn capture(
         .unwrap();
     assert_eq!(journal.record().unwrap().view().observations_remaining, 0);
     assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
-    result
 }
 
 pub(super) fn allocation(

@@ -54,7 +54,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const TOKEN: &str = "runner-original-snapshot";
+use super::super::TOKEN;
 const STAGES: [u64; 7] = [0, 7, 9, 11, 13, 17, 3];
 
 pub(super) struct RestoreProgress {
@@ -90,7 +90,7 @@ fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
 
 // Deliberate fixture mutation after the original capture, independently accounted
 // through Backend's retained per-call plans. This is not a product workflow step.
-pub(super) fn change_live_state(backend: &mut Backend) {
+pub(in crate::pic_journey) fn change_live_state(backend: &mut Backend) {
     assert!(lifecycle(backend, Method::StartCanister, None, Fault::None, |_| None).is_none());
     backend.write_state(99);
     backend.assert_state(99);

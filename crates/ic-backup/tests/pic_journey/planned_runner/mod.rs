@@ -2,6 +2,7 @@
 
 mod round_trip;
 use round_trip::RestoreProgress;
+pub(super) use round_trip::change_live_state;
 pub(crate) use round_trip::run_round_trip;
 
 use super::{
@@ -258,7 +259,7 @@ impl CompleteDriver {
                 plan.digest().hash(),
             )
             .unwrap();
-        let token = "runner-original-snapshot";
+        let token = super::TOKEN;
         let mut artifacts = DownloadJournalGuard::create(
             layout,
             plan.digest().hash(),
@@ -445,6 +446,22 @@ fn retain_bytes(layout: &BackupLayoutGuard, name: &str, bytes: &[u8]) {
 }
 
 pub(crate) fn run_complete(data_failure: ReadFailure) {
+    complete_capture(data_failure);
+}
+
+pub(super) fn capture_source() -> super::CapturedSource {
+    let mut driver = complete_capture(ReadFailure::None);
+    let source = driver.restore.take().unwrap();
+    super::CapturedSource {
+        backend: driver.backend,
+        plan: source.source_plan,
+        snapshot: driver.snapshot.unwrap(),
+        raw_metadata: driver.raw_metadata.unwrap(),
+        source: source.source,
+    }
+}
+
+fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
     let mut backend = Backend::new();
     assert!(
         lifecycle(
@@ -507,6 +524,7 @@ pub(crate) fn run_complete(data_failure: ReadFailure) {
         "PocketIC complete workflow runner evidence: {}",
         driver.backend.root.display()
     );
+    driver
 }
 
 fn read_retained_prefix(
