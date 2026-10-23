@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.40.0] - Unreleased
+## [0.40.0] - 2026-10-23
 
 - **Breaking Rust dependency identity:** adopt published Host 0.66.0. Consumers
   exchanging Host checksum/publication errors with Backup must align their Host
