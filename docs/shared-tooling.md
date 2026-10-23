@@ -69,7 +69,7 @@ Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
 
-The reviewed Shared Tooling 0.26.7 snapshot includes the
+The reviewed Shared Tooling 0.26.8 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -97,7 +97,15 @@ selected tool slot. `SHARED_TOOLING_SETUP_WAIT_SECONDS` selects a canonical 0..3
 second budget; zero refuses immediately. Setup preserves the owner and failed
 evidence, then rechecks compiler/build identity, locked selection, source checksum
 and receipt before reuse. Offline `--check`/`--preflight` admission remains
-immediate; setup waiting alone does not invalidate existing tool binaries. See
+immediate and never repairs selections. The wait tolerates record withdrawal only
+for the same previously admitted physical lock; missing initial records and
+replacement claims still refuse.
+
+Source-cache initialization now uses admitted idempotent directory creation,
+without a global installation lock. Cargo owns download serialization; old
+source-preparation slots and previous generations remain retained. This changes
+the build-policy digest: after adoption, run `make install-tools` once to refresh
+the common Cargo tools, locked Testkit CLI/server and release editor. See
 [the canonical setup guidance](local-setup.md#standard-cargo-tool-build-environment).
 
 ## Adoption history

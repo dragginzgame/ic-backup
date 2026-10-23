@@ -228,8 +228,8 @@ impl Fixture {
         .build_instance_async(builder)
         .await
         .unwrap();
-        let mut pic = owned.instance;
-        let server = owned.server.expect("spawn mode owns the managed server");
+        let (mut pic, server) = owned.into_parts();
+        let server = server.expect("spawn mode owns the managed server");
         let target = pic.create_canister().await;
         pic.add_cycles(target, 100_000_000_000_000).await;
         let wasm = fs::read(root.join("original.wasm")).unwrap();

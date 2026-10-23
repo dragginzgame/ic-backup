@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.40.0] - Unreleased
+
+- **Breaking Rust dependency identity:** adopt published Host 0.66.0. Consumers
+  exchanging Host checksum/publication errors with Backup must align their Host
+  dependencies to 0.66. Wire/storage formats and recovery contracts are unchanged.
+- Adopt Testkit and the contributor release editor at 0.66.0. Simulator fixtures
+  explicitly transfer client/server ownership through Testkit's maintained API,
+  retaining their existing cleanup custody and raw output. Prepare the selected
+  tools with `make install-testkit-server` and `make install-release-editor`.
+
+- Adopt Shared Tooling 0.26.8, fixing setup lock withdrawal races and removing the
+  global Cargo source-cache initialization lock. Run `make install-tools` once to
+  refresh Cargo-tool selections under the changed build policy.
+
 ## [0.39.0] - 2026-10-23
 
 - **Breaking Rust dependency identity:** adopt published Host 0.65.0. Consumers

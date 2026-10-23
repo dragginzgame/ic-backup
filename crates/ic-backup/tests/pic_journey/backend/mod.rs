@@ -107,8 +107,8 @@ impl Backend {
         }
         .build_instance(builder)
         .unwrap();
-        let pic = owned.instance;
-        let server = owned.server.expect("spawn mode owns the managed server");
+        let (pic, server) = owned.into_parts();
+        let server = server.expect("spawn mode owns the managed server");
         let wasm = fs::read(root.join("original.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
