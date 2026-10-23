@@ -1,93 +1,67 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-22",
+  "inspection_date": "2026-10-23",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "4cb9bc907154225a3f7e4c33fd8d75fbeaa125c8",
-  "label": "0.26.6",
+  "revision": "3e8d7cd3e7e9b7b79a5e800c30daf0be2710dab0",
+  "label": "0.26.7",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 122,
-  "previous_revision": "dc1ced7e240e90f0c6daa89fb6248fcb074164eb",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/522aec08e81e2369652f61e30108c370838f151a/docs/shared-tooling-review.json",
+  "previous_revision": "4cb9bc907154225a3f7e4c33fd8d75fbeaa125c8",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/43e65df388d6b6b8b3ba5b5ac5cab0788de67845/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
     "clean_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "4cb9bc907154225a3f7e4c33fd8d75fbeaa125c8",
-    "version_authority": "Committed VERSION and changelog, verified against remote main."
+    "observed_remote_main": "3e8d7cd3e7e9b7b79a5e800c30daf0be2710dab0",
+    "version_authority": "Committed VERSION/changelog and remote main."
   },
   "changed_paths": [
-    "DRAGGINZGAME.md",
-    "audits/README.md",
-    "audits/flow-convergence-and-duplication.md",
-    "docs/provenance.md",
-    "rules/contributions.md",
-    "scripts/ci/run-validation-targets.sh",
-    "scripts/ci/test-validation-target-runner.sh",
-    "scripts/distribution/governance-files.txt"
+    "docs/local-setup.md",
+    "scripts/dev/install-rust-tools.sh",
+    "scripts/dev/tool-store.sh"
   ],
-  "added_paths": [
-    "audits/ci-release-integrity.md",
-    "scripts/ci/prepare-script-fixture.sh",
-    "scripts/ci/shared-companions.sh"
-  ],
+  "added_paths": [],
   "retired_paths": [],
   "consumer_changes": [
-    "Adopt caller-relative retained-log paths independently of CDPATH and leading dashes.",
-    "Use declared companion closure for isolated validation-runner fixtures.",
-    "Adopt the CI/release integrity audit and focused boundary-handoff guidance without adding recurring gates.",
-    "Apply the clarified independent GitHub/runtime approval boundaries; preserve asynchronous CI cadence."
+    "Explicit selected Cargo tool setup waits for an admitted slot owner with a default 60-second budget and canonical 0..300 override.",
+    "Recheck compiler/build identity, locked package selection, source archive checksum and receipt after a wait; preserve failed generations and original owners.",
+    "Offline checks/preflight and source-cache/checkout/Host/IC locks remain non-waiting; existing tool build policy/digest is unchanged."
   ],
-  "dependency_and_release_changes": "Host/Testkit 0.64.0 and Build release-editor 0.64.0 are adopted together. Platform stays 0.6.7. PocketIC imports move to Platform development dependencies. The exposed Host type identity change requires pending 0.38.0 notes; repository package versions remain 0.37.4.",
+  "dependency_and_release_changes": "Published Host/Testkit and Build editor 0.65.0. Host Artifacts/FS/Process and Build Rust source are unchanged from their incoming selections; only unused optional Testkit Wire helpers change. Preserve incoming Platform 0.6.9, Agent/Transport 0.49.3 and all other lock selections. Public Host type identities require pending 0.39.0 notes; package versions stay 0.38.0.",
   "deployment_enforcement": {
     "automated": [
-      "Independent MSRV and unpacked archive consumers reject simulator and WAT packages by canonical transitive identity; the local consumer-graph fixture remains passing."
+      "Independent normal consumers reject Testkit/PocketIC/WAT by resolved identity and enforce original selections."
     ],
     "not_enforced_here": [
-      "Role comments do not automatically derive exclusion policy.",
+      "Role comments do not derive exclusion policy.",
       "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
     ],
-    "scope": "Unchanged consumer enforcement; this adoption does not add a deployment gate or select the unused generic graph checker."
+    "scope": "Unchanged host-library boundary; no deployed Wasm or new deployment gate."
   },
   "qualification": {
     "status": "passed-focused-linux",
     "passed": [
-      "122 exact committed payloads through the canonical exporter; no retired payloads",
-      "Offline admission of Testkit and Build 0.64.0 tools; existing PocketIC 16.1.0 asset readmitted",
-      "Both-library all-target/all-feature native checks, strict Clippy and warning-denied Rustdoc",
-      "Rust 1.91 owning targets and independent Core/Agent consumers on the final ICU-updated graph",
-      "Actual unpacked package archives compile together with original graph and immutable archive checksums",
-      "642 native tests without failures, ignored cases or filters, including 39 Core and 14 Agent simulator cases and both independent-process acceptance cases",
-      "Current independent graphs exclude Testkit/PocketIC/WAT and development-only Platform/Host features; Core excludes Agent",
-      "Consumer shell, hooks, snapshot, checkpoint, retention, evidence and isolated release-helper fixtures",
-      "Caller-relative records and -records retained logs resist inherited CDPATH without touching decoys"
+      "122 payloads verify against the committed 0.26.7 source through the canonical exporter; no additions/retirements.",
+      "Exact published archives/checksums/VCS for Host/Testkit/Build 0.65.0; no Rust source changes in Host Artifacts/FS/Process or Build from incoming selections.",
+      "Explicit canonical Testkit/Build 0.65 setup and offline checks; PocketIC stays 16.1.0.",
+      "Consumer shell, tooling/checkpoint/failure-evidence and hook integration fixtures.",
+      "Both-library all-target/all-feature strict Clippy and compilation; warning-denied Rustdoc.",
+      "Actual Rust 1.91 owning targets and independent normal consumers; public Host checksum conversion and publication identities compile.",
+      "Both unpacked package archives compile together on original selections and verified archive checksums.",
+      "203 selected runtime tests: artifact/persistence units, public identity/recovery/artifact/workflow integrations, six connected Core PocketIC cases, 14 HTTP cases and four Agent PocketIC cases including both cold-process journeys.",
+      "Normal graphs exclude simulator/WAT/Wire and development-only Host/Platform features; Core excludes Agent.",
+      "Read-only minor release preview selects 0.39.0 while workspace/package versions remain 0.38.0."
     ],
-    "reused_evidence": "Tooling integration fixtures retain their unchanged scripts and isolated substitute graphs across the concurrent ICU-only lock edit. All graph-dependent product checks and tests were restarted and pass on the final lock.",
     "not_run": [
-      "Full local make ci",
-      "Native macOS and hosted CI for the pending source",
-      "Registry-only installed-product, live IC or Canic application acceptance",
+      "Full local make ci or complete workspace test suite",
+      "Native macOS/new hosted CI for pending source",
+      "New registry-only installed-product, live IC or Canic application qualification",
       "Release, publication or deployment"
-    ]
+    ],
+    "reused_evidence": "Source comparison avoids rerunning upstream producer suites or the complete workspace test suite. Previous released-source Linux/macOS CI and registry-only 0.38 acceptance remain historical evidence for their exact graphs."
   },
-  "evidence_directory": "/tmp/backup-host-shared-adoption-20261022-4phyjkg6",
+  "evidence_directory": "/tmp/backup-host-shared-20261023-07cbuc2g",
   "findings": [],
-  "validated_lock_sha256": "5a5252bf8880f161f954410e4302f2e8e0e9deadd21313c2182b28ea3b984c34",
-  "concurrent_lock_update": {
-    "preserved": true,
-    "description": "ICU 2.4 and related transitive selections changed during the first native test run. Its input guard correctly rejected that run; preparation, product checks and all native tests were restarted.",
-    "packages": [
-      "icu_collections",
-      "icu_locale_core",
-      "icu_normalizer",
-      "icu_normalizer_data",
-      "icu_properties",
-      "icu_properties_data",
-      "icu_provider",
-      "tinystr",
-      "yoke",
-      "zerovec",
-      "zerovec-derive"
-    ]
-  }
+  "validated_lock_sha256": "65a5ea1720954f4f869489597d559e0e00e03f776d51dd15830d316dbc76aef3"
 }

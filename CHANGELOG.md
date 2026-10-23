@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.39.0] - Unreleased
+
+- **Breaking Rust dependency identity:** adopt published Host 0.65.0. Consumers
+  exchanging Host checksum/publication errors with Backup must align their Host
+  dependencies to 0.65. Wire/storage formats and recovery contracts are unchanged.
+- Adopt Testkit and the contributor release editor at 0.65.0. Backup does not use
+  Testkit's optional Wire helpers changed in this release. Prepare the selected
+  tools with `make install-testkit-server` and `make install-release-editor`.
+- Adopt Shared Tooling 0.26.7: explicit Cargo tool setup waits for an occupied
+  tool slot with a bounded budget and rechecks inputs before reuse. Offline
+  admission remains immediate and never installs.
+
+- Document Canic's adopted dependency boundary, the remaining application-runner
+  integration and acceptance sequence ahead of the post-Blob backup attempt.
+
 ## [0.38.0] - 2026-10-22
 
 - **Breaking Rust dependency identity:** adopt published Host 0.64.0. Consumers

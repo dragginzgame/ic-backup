@@ -36,6 +36,7 @@ below to find the document that matches your task.
 | [Implemented extraction boundary](extraction-boundary.md) | Exact behavior currently provided by the library and what it does not establish |
 | [Ownership boundary](ownership.md) | Current dependency owners, retained adapters and extraction cleanup |
 | [Platform boundary](ic-platform.md) | Completed IC dependency ownership, selected features and qualification |
+| [Canic adoption](canic-adoption.md) | Verified consumer state, integration interfaces and application acceptance sequence |
 | [Extraction and implementation design](extraction-design.md) | Detailed proposed product architecture, workflows and completion criteria |
 
 ## Develop and maintain it

@@ -336,6 +336,10 @@ authenticated load with safe refusal of reentry. Both retain the original frozen
 catalogues, durable artifacts/manifest, signed ingress, raw replies and source
 references; failed process logs are never overwritten. This is candidate-path
 library qualification, not a published-product or Canic acceptance receipt.
+The [current handoff](status/current.md#canic-adoption-preparation) records the
+separate release-bound registry-only follow-up and its exact harness adaptation.
+Published-library qualification still leaves production Canic acceptance open;
+the [adoption guide](canic-adoption.md) identifies those application responsibilities.
 
 ## Reproduce and retain evidence
 

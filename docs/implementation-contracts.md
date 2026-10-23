@@ -43,7 +43,7 @@ Candid DTOs and SDK calls retain upstream 0.1.5 through Platform's contract or
 external exports and explicit conversions. Preserve management DTO 0.11.0,
 canonical text/raw bytes, wire formats and hashes. Direct upstream declarations
 and local pin exceptions are forbidden. Changes require the compatibility and qualification review in
-[AGENTS.md](../AGENTS.md). The selected Agent SDK is 0.49.2.
+[AGENTS.md](../AGENTS.md). The selected Agent SDK is 0.49.3.
 
 Host Artifacts owns accepted-byte hashing, typed SHA-256 and declared-directory
 checksum composition. Host FS owns descriptor IO, `FileIdentity`, sidecar locks

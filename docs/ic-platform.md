@@ -24,7 +24,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 | All 24 snapshot/status/transfer/upload DTOs | Platform management exports over exactly upstream 0.11.0 |
 | Native SDK identities and operations | Platform Agent exports, including PEM |
 | URL/client configuration | Explicit Reqwest dependency; Backup owns middleware, trust, timeout and retry policy |
-| Native simulator client identities | Platform, forwarded by development-only Testkit |
+| Native simulator client identities | Platform's development-only `pocket-ic` feature, imported directly |
 | Simulator assets and managed processes | Testkit; Backup owns original plans, byte evidence and fixture custody |
 
 The exact external principal and management DTO identities are reviewed

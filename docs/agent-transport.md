@@ -246,8 +246,11 @@ Every invocation retains separate private stdout/stderr, including refusals. Gra
 build, program digest, workflow, ingress, raw reply and qualification evidence stay
 in the caller-owned temporary roots on success and failure.
 
-This qualifies candidate-library composition in an isolated consumer. Production
-application authentication, multi-canister fencing/obligations, Canic integration,
-registry-only installed delivery and native macOS/installed-IC acceptance remain
-separate. Run `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport independent:: -- --nocapture`
+This default harness qualifies candidate-library composition in an isolated
+consumer. Release-specific registry-only runs of the same program are recorded
+separately in the [handoff](status/current.md). Production application authentication,
+multi-canister fencing/obligations, installed Canic delivery and native macOS/
+installed-IC acceptance retain their own scope. See the
+[Canic adoption guide](canic-adoption.md) for the integration sequence.
+Run `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport independent:: -- --nocapture`
 after the normal explicit tool/cache setup; no setup or download occurs in tests.
