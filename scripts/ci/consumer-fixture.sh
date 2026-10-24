@@ -21,15 +21,21 @@ consumer_fixture_snapshot() {
 
 consumer_fixture_prepare() {
     local root="$1" fixture="$2" selected="$3" consumer="$4" rust_version="$5"
+    local source_mode="${6:-candidate}"
+    [[ "$source_mode" == candidate || "$source_mode" == registry ]] || {
+        echo "invalid consumer source mode: $source_mode" >&2; return 2;
+    }
     cp "$fixture/original.lock" "$selected/Cargo.lock"
     # Preparation may prune unused packages and add only the fixture root.
     consumer_fixture_cargo "$rust_version" metadata --offline \
         --manifest-path "$selected/Cargo.toml" --format-version 1 \
         > "$selected/metadata.json" 2> "$selected/preparation.log"
     jq -L "$root/scripts/ci" -e --arg consumer "$consumer" \
-        --slurpfile original "$fixture/original.json" '
+        --arg source_mode "$source_mode" --slurpfile original "$fixture/original.json" '
         include "consumer-graph";
-        original_graph_admitted($original[0]; $consumer)
+        (if $source_mode == "registry"
+         then published_graph_admitted($original[0]; $consumer)
+         else original_graph_admitted($original[0]; $consumer) end)
         or error("Independent consumer changed selected packages or retained test/tooling dependencies")
     ' "$selected/metadata.json" >/dev/null
 }

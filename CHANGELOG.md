@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.42.0]
+
+- **Breaking Rust dependency identity:** adopt published Host 0.67.0. Consumers
+  exchanging Host checksum/publication errors with Backup must align their Host
+  dependencies to 0.67. Product wire/storage formats and recovery contracts remain
+  unchanged.
+- Adopt Testkit and the contributor release editor at 0.67.0. Keep simulator
+  lifecycle/asset ownership with Testkit; prepare the updated selections with
+  `make install-testkit-server` and `make install-release-editor`.
+
+- Add an explicit registry-only mode to the independent authenticated consumer
+  harness. Require exact published Core/Agent versions and the original external
+  dependency graph, with no path fallback or simulator packages in the consumer.
+  This qualifies the generic installed-consumer portion of
+  [#29 — Complete original-plan execution and stage binding before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29);
+  production application acceptance remains outstanding.
+
+- Add public consumer coverage and integration guidance for application-owned Root
+  ingress using the existing workflow and attempt guards. Qualify exact retained
+  envelope binding, pending lost replies and cold replay while preserving separately
+  owned paid-effect evidence. This native fixture does not enable Canic live capture.
+
 ## [0.41.0] - 2026-10-24
 
 - **Breaking Rust API:** remove standalone inventory/graph persistence and

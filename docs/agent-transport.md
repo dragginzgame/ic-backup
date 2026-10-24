@@ -253,4 +253,18 @@ multi-canister fencing/obligations, installed Canic delivery and native macOS/
 installed-IC acceptance retain their own scope. See the
 [Canic adoption guide](canic-adoption.md) for the integration sequence.
 Run `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport independent:: -- --nocapture`
+for candidate paths. Set `IC_BACKUP_CONSUMER_REGISTRY=1` on that same command for
+release-specific registry-only qualification. It selects exactly the owning package
+version for both Core and Agent, with default features disabled; only the two
+workspace source identities may change to crates.io. All other selected package
+versions/sources must match the original lock. Path/Git substitutions, missing
+release packages, version drift and simulator dependencies reject.
+
+Before selecting registry mode, explicitly cache both published packages at that
+version using `cargo info PACKAGE@VERSION --registry crates-io`. The tests do not
+fetch or fall back to candidate paths. An unpublished version correctly fails
+preparation. Both modes retain independent metadata/lock and build evidence;
+the parent remains responsible for simulator/application authority. Registry-only
+qualification runs the same cold-process success/lost-load cases and does not
+establish Canic production fencing, obligations or installed-IC acceptance.
 after the normal explicit tool/cache setup; no setup or download occurs in tests.

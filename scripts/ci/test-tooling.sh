@@ -81,6 +81,35 @@ for dependency in ic-testkit pocket-ic wat; do
 done
 echo 'Consumer production graph: PASS (simulator and WAT packages refuse by identity).'
 
+# Published qualification admits only exact workspace-to-crates.io substitutions.
+jq -n '{packages: [
+    {name:"ic-backup", version:"0.41.0", source:null},
+    {name:"ic-backup-agent", version:"0.41.0", source:null},
+    {name:"runtime", version:"1.0.0", source:"registry+https://github.com/rust-lang/crates.io-index"}
+]}' > "$graph/release-original.json"
+jq '.packages |= map(.source = "registry+https://github.com/rust-lang/crates.io-index")' \
+    "$graph/release-original.json" > "$graph/release-selected.json"
+jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/release-original.json" '
+    include "consumer-graph"; published_graph_admitted($original[0]; "consumer")
+' "$graph/release-selected.json" >/dev/null
+for mutation in version path git runtime simulator missing; do
+    jq --arg mutation "$mutation" '
+        if $mutation == "version" then .packages[0].version = "0.42.0"
+        elif $mutation == "path" then .packages[0].source = null
+        elif $mutation == "git" then .packages[0].source = "git+https://example.invalid/backup"
+        elif $mutation == "runtime" then .packages[2].version = "2.0.0"
+        elif $mutation == "simulator" then .packages += [{name:"pocket-ic", version:"16.1.0", source:"registry+https://github.com/rust-lang/crates.io-index"}]
+        else .packages |= map(select(.name != "ic-backup-agent")) end
+    ' "$graph/release-selected.json" > "$graph/release-refused.json"
+    if jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/release-original.json" '
+        include "consumer-graph"; published_graph_admitted($original[0]; "consumer")
+    ' "$graph/release-refused.json" >/dev/null; then
+        echo "published consumer graph accepted invalid selection: $mutation" >&2; exit 1
+    fi
+done
+echo 'Published consumer graph: PASS (exact release sources only).'
+
+
 # Contradict a successful local command result: Bash 3.2 must stop at the
 # assertion rather than continue to completion and discard its original inputs.
 assertion="$FIXTURE/assertion"
