@@ -7,7 +7,7 @@
     "observation": "model::snapshot_read::SnapshotReadObservation",
     "visibility": "model::snapshot_read::SnapshotVisibility",
     "viewers": "model::snapshot_read::SnapshotViewerSet",
-    "provider": "ports::snapshot_read::SnapshotReadProvider::observe_snapshot_read",
+    "admission": "Integration-owned async workflow callback; validate fresh observation with the corresponding pure policy",
     "policy": "policy::snapshot_read::validate",
     "view": "policy::snapshot_read::SnapshotReadView"
   },
@@ -66,7 +66,7 @@
     "CallerCannotRead",
     "ObservationLimitExceeded(limit, reported)"
   ],
-  "provider_errors": {
+  "integration_failure_semantics": {
     "Unavailable": "No qualified provider; no remote effects",
     "Unsupported": "Cannot satisfy contract; no remote effects",
     "Indeterminate": "Uncertain reply/observation/accounting; retain consumed allowance/evidence, stop without retry"

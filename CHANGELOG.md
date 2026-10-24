@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.41.0]
+
+- **Breaking Rust API:** remove standalone inventory/graph persistence and
+  caller-declared completion readiness. Persist full operation plans and derive
+  progress from their original journals. Inventory/graph models and their wire
+  formats remain unchanged; preserve existing files and recovery evidence.
+- **Breaking Rust API:** remove the five unused synchronous membership, control,
+  snapshot-read, consistency and restore-safety provider traits and errors. Use
+  mandatory async workflow admission callbacks with the existing evidence models
+  and pure policies; integrations retain all freshness, authority and custody duties.
+- **Breaking Rust API:** remove redundant `Request`/`Association` variants and
+  their `From` conversions from metadata/download/allocation/data settlement errors.
+  Handle request/association failures through the existing single-call `Read` or
+  `Upload` error path. Reply retention, spending and lifecycle semantics are unchanged.
+
+- Consolidate contributor documentation around current contract owners and focused
+  checks. Remove stale extraction-era implementation claims and describe the current
+  async admission boundary in the crate overview.
+
 ## [0.40.1] - 2026-10-24
 
 - Adopt published Host, Testkit and the contributor release editor at 0.66.2,

@@ -545,23 +545,16 @@ including unselected targets. Parent links may point outside a selected subset.
 Canonical presentation order is not a lifecycle/effect order. Policy performs no
 IO, serialized record writes, scheduling or persisted transitions.
 
-`ops::persistence::create_inventory` holds layout/journal exclusion and durably
-creates fixed `inventory.json` without replacing prior evidence. `read_inventory`
-validates the retained forest and original expected digest, observing only local
-records. Lost creation responses reconcile by reading that exact declaration;
-existing records cannot be replaced through this API. Symlinks/unsafe entries,
-replaced roots and malformed records reject. Encoded reads and canonical pretty
-writes each admit at most 1 MiB. Canonical output is checked independently because
-JSON escaping of admitted role text can expand beyond input/field byte bounds.
+Inventory is persisted inside the complete immutable `OperationPlanRecord` through
+`create_operation_plan` and re-admitted through `read_operation_plan`. The plan's
+1 MiB encoded-input and canonical-output limits bound persistence. Inventory models
+retain their target, field and topology bounds independently. No standalone inventory
+file API or replacement reader is provided; retain historical evidence unchanged.
 
-Fresh native regressions rerun Canic's order-independent hash and direct/recursive
-child cases against these owners. New cases cover two golden encodings, nullable
-distinctions, exact field changes, normalized duplicates, missing parents/cycles,
-maximum count/depth, UTF-8 and escaped-output bounds, selector errors, overlapping
-expansions, unchanged prior bytes, locks and unsafe/replaced paths. An external
-public-API journey persists/reopens an explicit declaration and selects a subtree
-without framework or backend dependencies. Live authoritative discovery and IC
-effects remain outside this qualification.
+Native model/selection tests cover independent hashes, canonical identities, declared
+forest bounds and exact subtree expansion. The public selection journey reopens the
+complete original plan before selecting its declared targets. None of these checks
+certifies live authoritative membership or IC effects.
 
 ### Explicit operation dependency graphs and causal readiness
 
@@ -589,41 +582,18 @@ Application order must be declared and qualified explicitly. The graph does not
 infer parent-before-child, reverse start order, control routing, privileged roots
 or physical inventory edges. Canic can supply its parent-first restoration and
 child-first restart dependencies through its own adapter. Other applications may
-have different valid dependencies. This primitive is one component of a future
-complete plan: it contains no operation payload, target/request/network/release
-binding, consistency guarantee, spending limit, receipt or execution permission.
-Complete plans must bind graph identities to their exact reviewed operations and
-the existing immutable attempt authority; no such runner wiring is implemented.
+have different valid dependencies. The complete immutable operation plan binds this
+graph to exact operation payload identities, targets, context and original attempt
+authority.
+`policy::execution_progress::progress` derives readiness from the complete original
+journal set and requires Applied prerequisites. Caller-declared completed sequences
+are not an alternative evidence source. Persistence belongs to the operation plan;
+there is no standalone graph file API. Preserve historical graph files as evidence.
 
-`policy::effect_order::readiness` takes a passive `EffectProgressRequest` with
-caller-declared completed sequence identities. Excessive, duplicate or unknown
-completed identities reject. A declared completed operation must include all its
-prerequisites in that same completed set; inconsistent causal progress rejects.
-The read-only view binds the original graph digest, counts admitted declared
-completion and separates incomplete ready/blocked nodes in planning order.
-Policy performs no IO, record writes, scheduling or mutations. Ready means only
-that declared prerequisites are present. A completed identity is not a qualified
-receipt: callers own actual evidence, exact binding and remote-effect settlement.
-Neither readiness nor an empty incomplete set grants fresh authority, paid-call
-allowance, command quiescence, terminal completion or reference release.
-
-`ops::persistence::create_effect_graph` durably creates fixed `effect-graph.json`
-under layout/journal exclusion without replacing retained evidence.
-`read_effect_graph` admits only a validated graph under its original exact expected
-digest. Lost creation replies reconcile through that exact local read; no graph
-update/replacement API is exposed. Encoded input and canonical pretty-output each
-admit at most 1 MiB; dense valid graphs can exceed the output bound and reject
-before publication. Missing/unsafe entries, replaced roots and malformed graphs
-reject without repair, progress reset or remote observations.
-
-Fresh native regressions adapt relevant Canic parent/child ordering into explicit
-dependencies, without importing relocation, Root scopes or fake management effects.
-They cover a golden binary hash, changed identities/edges, deterministic ready ties,
-unknown/duplicate/missing dependencies, cycles, closed schemas, cached-order injection,
-maximum chain/count, exact direct/aggregate edge bounds, causal progress, immutable
-original bytes, contention and unsafe/replaced paths. A public-API journey reopens
-the original graph and projects declared progress locally. These checks qualify
-graph/policy/persistence behavior, not full plans, live effects or actual completion.
+Native graph tests retain independent hash, identity, edge, cycle and bounded-decoder
+coverage. Execution-progress tests cover missing or rebound journals, causal ordering,
+Applied prerequisites and pending/exhausted spending without editing original evidence.
+These local checks do not authenticate receipts or certify live effects.
 
 ### Immutable operation plan and derived original attempt authority
 
@@ -979,14 +949,21 @@ selection, graph, payloads and original allowances; none is reissued or replaced
 The challenge's unpredictability, uniqueness and current applicability stay
 integration-owned. A digest proves binding, not freshness or authentic observations.
 
-`ports::membership::MembershipProvider` returns a passive `MembershipObservation`:
+Workflows use mandatory async admission callbacks. Integrations obtain fresh evidence
+and invoke the corresponding pure policy within those callbacks; the library provides
+no synchronous observation-provider traits or provider-error taxonomy. Callback errors
+remain integration-owned, fail closed and never refund spending or release obligations.
+The request, observation and policy types below remain the evidence boundary.
+
+Application admission supplies a passive `MembershipObservation`:
 exact current request digest, actually observed canonical context, complete current
 inventory, optional opaque current revision, required opaque evidence identifier
 and actual remote-observation count. A provider must qualify actual observations
 and locked authenticated context; echoed declarations or decoded old receipts are
 not observations. No provider/default implementation or live backend is installed.
-Unavailable/Unsupported fail before remote effects; Indeterminate retains consumed
-allowance/evidence and stops without implying retry. Diagnostics carry typed redacted
+Unavailable or unsupported integrations fail before remote effects. Indeterminate
+results retain consumed allowance/evidence and stop without implying retry.
+Diagnostics carry typed redacted
 errors rather than provider credentials or raw output.
 
 The descriptive ceiling bounds one invocation's reported calls; it is not an
@@ -1001,7 +978,7 @@ ceiling. Changed unselected parents/metadata reject too. Its private-field view
 borrows current inventory, original selected targets, optional revision and evidence;
 it performs no IO, provider call, record serialization, journal mutation or scheduling.
 Request, result and view have no Serde/persisted fresh-authority admission. This adds
-one typed v1 port contract without changing existing persisted schemas. See
+typed evidence admission without changing existing persisted schemas. See
 [the machine-readable typed contract](contracts/membership-port.json).
 
 Matching hashes or current revisions before/after do not exclude intermediate
@@ -1015,7 +992,7 @@ intent/operation/challenge/boundary/ceiling sensitivity, observed context mismat
 full inventory drift, zero/max call ceilings and the 1,024-target bound. A public
 integration journey reopens original intent and spent pending journal authority,
 rejects an old result under a new challenge without a provider call, and preserves
-consumption through all typed provider failures. These qualify local contracts and
+consumption after rejected stale evidence. These qualify local contracts and
 recovery only, not actual current membership, authority or IC effects.
 
 ### Direct caller-controller observations for exact IC mutation payloads
@@ -1038,11 +1015,10 @@ the actual target and retains actual canonical context, known controllers, curre
 request digest, opaque qualified evidence and reported actual calls in an immutable
 `ControlObservation`. All these types have no Serde or persisted authority lane.
 
-`ports::control_authority::ControlAuthorityProvider` has no installed/default
-implementation. It owns fresh authenticated observations, actual context/target,
+Application admission has no installed/default implementation. It owns fresh authenticated observations, actual context/target,
 complete controller evidence, challenge timing/uniqueness, coherent custody and
-separately approved prior per-call accounting. Unavailable/Unsupported fail before
-remote effects; Indeterminate retains consumed allowance/evidence and stops without
+separately approved prior per-call accounting. Unavailable or unsupported integrations fail before
+remote effects; an indeterminate result retains consumed allowance/evidence and stops without
 retry admission. Public/read success, echoed declarations, old receipts and
 unqualified query responses cannot supply current controller authority.
 
@@ -1069,7 +1045,7 @@ hash, wrong payload/class/target/context/challenge/ceiling, canonical controller
 aliases/duplicates/bounds, empty/Root-only/revoked-caller denial and zero/max call
 reporting. A public journey reopens original plan and spent pending journal, rejects
 stale results without calling the provider, denies revoked caller control and
-preserves bytes/allowances across every typed provider failure. These qualify local
+preserves bytes/allowances after revoked-controller denial. These qualify local
 contracts/recovery only; no actual controller custody or IC backend is modeled.
 
 ### Snapshot-list permission observations and pure caller read paths
@@ -1094,10 +1070,9 @@ is distinct. Public or exact viewer membership needs no controller projection;
 unobserved controllers never establish controller access. All new types lack Serde
 and persisted fresh-authority admission. Existing schemas remain unchanged.
 
-`ports::snapshot_read::SnapshotReadProvider` is fallible with no installed/default
-implementation. Actual authenticated snapshot settings/context, freshness, challenge
+Snapshot-read admission is integration-owned and fallible with no default implementation. Actual authenticated snapshot settings/context, freshness, challenge
 uniqueness/timing, evidence meaning and custody remain integration-owned. Unknown
-visibility must fail. Unavailable/Unsupported reject before effects; Indeterminate
+visibility must fail. Unavailable or unsupported integrations reject before effects; an indeterminate result
 retains consumed accounting/evidence and stops without retry or replenishment.
 An observation of permissions does not perform the list or settle a lost list reply.
 Terminal replay must never invoke the provider; live verification is separate.
@@ -1122,7 +1097,7 @@ ceiling mismatch, viewer aliases/duplicates/bounds, unknown vs empty controllers
 all three caller paths and Root-only/revoked-caller denial. A public local fixture
 reopens original plan and spent pending mutation/observation, reads the exact observer
 digest from the retained reservation, rejects stale results without provider use and
-preserves exact bytes/allowances across typed failures. Permission evidence cannot
+preserves exact bytes/allowances after permission denial. Permission evidence cannot
 settle the lost observation or reserve another. These qualify local binding/recovery,
 not actual IC permissions or effects.
 
@@ -1163,13 +1138,13 @@ includes actual Active/Inactive fence state, identity, revision and required who
 write/membership/timer/external-work fencing and drained-work evidence digests.
 No parent/component ordering or unit grouping implies a distributed checkpoint.
 
-`ports::consistency::ConsistencyProvider` observes existing obligations, with no
+Application consistency admission observes existing obligations, with no
 installed/default implementation or acquisition/release API. Providers qualify actual
 authenticated context/selection/state, drain and continuously retained whole-selection
 fencing across capture/interruption. Fresh challenges, timing, custody, evidence meaning
 and prior approved per-call accounting remain integration-owned. Unknown custody fails;
-known inactive fences produce denial. Unavailable/Unsupported reject before effects;
-Indeterminate retains consumed allowance/evidence and obligations, then stops without
+known inactive fences produce denial. Unavailable or unsupported integrations reject before effects;
+an indeterminate result retains consumed allowance/evidence and obligations, then stops without
 retry/reset/release. Failure, timeout, process death or dropping model values must not
 release the integration's fence. Terminal replay invokes no provider.
 
@@ -1193,7 +1168,7 @@ Local persistence tests cover original requirement retention/no downgrade, conte
 1 KiB raw bounds, malformed/rebound records, symlinks and replaced layouts. A public
 native provider fixture reopens original requirement and spent pending journals,
 rejects stale/wrong-fence results and preserves exact retained integration obligation
-fixture bytes across all typed failures/drop. These establish local contracts only;
+fixture bytes after fence mismatch and guard drop. These establish local contracts only;
 application fence acquisition/release, actual lifecycle/drain/continuous custody,
 capture completion and same-release restore/external-payment settlement remain pending.
 
@@ -1251,12 +1226,12 @@ evidence. Known unresolved external obligations and inactive/rebound fences deny
 Settlement alone cannot qualify restored work that may replay an irreversible
 effect. Hash equality and passive DTO construction cannot authenticate these facts.
 
-`ports::restore_safety::RestoreSafetyProvider` has no installed implementation.
+Restore-safety admission has no installed implementation.
 Integrations qualify complete original source artifacts and target-local uploaded
 snapshot association, actual freshness/release/lifecycle/drain, outside-snapshot
 fence custody/revisions/replay safety, restored acceptance and prior per-call
-accounting. A descriptive ceiling grants no spending. Unavailable/Unsupported
-reject before effects; Indeterminate retains evidence, original spent authority
+accounting. A descriptive ceiling grants no spending. Unavailable or unsupported integrations
+reject before effects; an indeterminate result retains evidence, original spent authority
 and obligations and stops without retry, reset or release. Dropping values,
 timeouts and process death release no obligation. Terminal replay invokes no
 provider. No view settles a lost load, proves complete transfer, signs/dispatches

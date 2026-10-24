@@ -154,7 +154,9 @@ originals refuse; no automatic redispatch or second spending owner is installed.
 
 Membership requests bind original plans, independent challenges and actual full
 inventory/context. Their 1,024 descriptive remote-observation ceiling is not spending
-authority. Providers own authentication, freshness, prior per-call accounting and
+authority. Mandatory async workflow admission callbacks obtain fresh evidence and invoke the
+corresponding pure policy; no synchronous observation-provider interface is installed.
+Integrations own authentication, freshness, prior per-call accounting and
 opaque revision meaning; matching revisions do not prove continuity or a fence.
 
 Control observations require the selected caller itself in the complete canonical

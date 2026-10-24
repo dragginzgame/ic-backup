@@ -13,8 +13,6 @@ use thiserror::Error;
 pub const MAX_EFFECT_OPERATIONS: usize = 8192;
 /// Maximum total explicit dependencies across one graph.
 pub const MAX_EFFECT_EDGES: usize = 65536;
-/// Maximum input/canonical-output bytes admitted by graph persistence.
-pub const MAX_EFFECT_GRAPH_BYTES: u64 = 1024 * 1024;
 
 /// Canonical v1 dependency graph over opaque exact operation sequence identities.
 ///

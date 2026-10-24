@@ -9,15 +9,14 @@ use ic_backup::{
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
         operation_plan::OperationPlanRecord,
         snapshot_read::{
-            SnapshotReadObservation, SnapshotReadObservationInput, SnapshotReadRequest,
-            SnapshotViewerSet, SnapshotVisibility,
+            SnapshotReadObservation, SnapshotReadObservationError, SnapshotReadObservationInput,
+            SnapshotReadRequest, SnapshotViewerSet, SnapshotVisibility,
         },
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
     },
     policy::snapshot_read::{SnapshotReadError, SnapshotReadPath, validate},
-    ports::snapshot_read::{SnapshotReadProvider, SnapshotReadProviderError},
 };
 use serde_json::json;
 use std::fs;
@@ -48,18 +47,14 @@ fn plan(mutation: &IcManagementRequestRecord) -> OperationPlanRecord {
 struct LocalFixtureProvider {
     plan: OperationPlanRecord,
     visibility: SnapshotVisibility,
-    failure: Option<SnapshotReadProviderError>,
     requests: Vec<ArtifactChecksumRecord>,
 }
-impl SnapshotReadProvider for LocalFixtureProvider {
+impl LocalFixtureProvider {
     fn observe_snapshot_read(
         &mut self,
         request: &SnapshotReadRequest<'_>,
-    ) -> Result<SnapshotReadObservation, SnapshotReadProviderError> {
+    ) -> Result<SnapshotReadObservation, SnapshotReadObservationError> {
         self.requests.push(request.digest());
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
         SnapshotReadObservation::new(SnapshotReadObservationInput {
             request: request.digest(),
             context: self.plan.context().clone(),
@@ -69,7 +64,6 @@ impl SnapshotReadProvider for LocalFixtureProvider {
             evidence: hash("34"),
             remote_observations: 0,
         })
-        .map_err(|_| SnapshotReadProviderError::Indeterminate)
     }
 }
 
@@ -95,10 +89,9 @@ fn reopens_spent_mutation_and_lost_observation_denies_stale_and_revoked_read_wit
     let mut provider = LocalFixtureProvider {
         plan: plan.clone(),
         visibility: SnapshotVisibility::Public,
-        failure: None,
         requests: vec![],
     };
-    let retained = SnapshotReadProvider::observe_snapshot_read(&mut provider, &before).unwrap();
+    let retained = provider.observe_snapshot_read(&before).unwrap();
     assert_eq!(
         validate(&before, &retained).unwrap().path(),
         SnapshotReadPath::Public
@@ -130,35 +123,26 @@ fn reopens_spent_mutation_and_lost_observation_denies_stale_and_revoked_read_wit
         ),
     ] {
         provider.visibility = visibility;
-        let revoked = SnapshotReadProvider::observe_snapshot_read(&mut provider, &fresh).unwrap();
+        let revoked = provider.observe_snapshot_read(&fresh).unwrap();
         assert_eq!(
             validate(&fresh, &revoked).unwrap_err(),
             SnapshotReadError::CallerCannotRead
         );
     }
-    for failure in [
-        SnapshotReadProviderError::Unavailable,
-        SnapshotReadProviderError::Unsupported,
-        SnapshotReadProviderError::Indeterminate,
-    ] {
-        provider.failure = Some(failure);
-        assert_eq!(
-            SnapshotReadProvider::observe_snapshot_read(&mut provider, &fresh).unwrap_err(),
-            failure
-        );
-        let spent = journal.record().unwrap().view();
-        assert_eq!(spent.pending_mutation, Some(mutation));
-        assert_eq!(spent.pending_observation, Some(observation));
-        assert_eq!((spent.mutations_used, spent.observations_used), (1, 1));
-        assert_eq!(
-            (spent.mutations_remaining, spent.observations_remaining),
-            (0, 0)
-        );
-        assert_eq!(
-            serde_json::to_vec(&journal.record().unwrap()).unwrap(),
-            retained_bytes
-        );
-    }
+    // Pure admission retains the original spending and obligations.
+    let spent = journal.record().unwrap().view();
+    assert_eq!(spent.pending_mutation, Some(mutation));
+    assert_eq!(spent.pending_observation, Some(observation));
+    assert_eq!((spent.mutations_used, spent.observations_used), (1, 1));
+    assert_eq!(
+        (spent.mutations_remaining, spent.observations_remaining),
+        (0, 0)
+    );
+    assert_eq!(
+        serde_json::to_vec(&journal.record().unwrap()).unwrap(),
+        retained_bytes
+    );
+
     // Permission evidence does not settle the lost reply or authorize a second observation.
     assert!(
         matches!(journal.reserve_observation(mutation, expected.hash()), Err(ic_backup::ops::persistence::AttemptJournalError::Record(ic_backup::model::attempt_journal::AttemptJournalRecordError::ObservationPending { attempt })) if attempt == observation)

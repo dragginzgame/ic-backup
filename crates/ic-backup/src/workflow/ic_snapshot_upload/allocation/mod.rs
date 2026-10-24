@@ -7,15 +7,13 @@ use crate::{
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
-            IcSnapshotUploadAttempt, IcSnapshotUploadAttemptError, IcSnapshotUploadKind,
-            IcSnapshotUploadRequest,
+            IcSnapshotUploadAttempt, IcSnapshotUploadKind, IcSnapshotUploadRequest,
         },
     },
     ops::persistence::{
         AttemptJournalError, ExecutionStageCheckpointError, ExecutionStageGuard,
         ExecutionWorkflowPersistenceError,
     },
-    policy::ic_snapshot_upload::IcSnapshotUploadAssociationError,
     ports::ic_snapshot_upload::IcSnapshotUploadProvider,
 };
 use thiserror::Error;
@@ -144,12 +142,6 @@ pub enum IcSnapshotAllocationSettlementError<E: std::error::Error + 'static> {
     /// Selected journal or receipt admission failed.
     #[error(transparent)]
     Journal(#[from] AttemptJournalError),
-    /// Original upload/current reservation admission failed.
-    #[error(transparent)]
-    Request(#[from] IcSnapshotUploadAttemptError),
-    /// Canonical bounded acknowledgement association failed.
-    #[error(transparent)]
-    Association(#[from] IcSnapshotUploadAssociationError),
     /// Canonical all-Applied checkpoint publication/re-admission failed.
     #[error(transparent)]
     Checkpoint(#[from] ExecutionStageCheckpointError),

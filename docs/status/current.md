@@ -1,4 +1,4 @@
-# Current handoff — 2026-10-23
+# Current handoff — 2026-10-24
 
 ## Ownership and source
 
@@ -9,74 +9,69 @@ Applications retain membership, permissions, consistency, fencing and external
 obligations. Current contracts belong to [implementation contracts](../implementation-contracts.md)
 and [the record/API boundary](../extraction-boundary.md).
 
-Released source remains **0.40.0**, `70d4d49`; workspace/package versions remain
-**0.40.0**. Compatible **0.40.1** notes cover the IC Tooling patch adoption.
-No Rust source or public contract changes. No staging, commit, release, publication,
-deployment, live IC effect or sibling source edit occurs here. Pending Shared
-Tooling provenance and unrelated work are preserved.
+The API cleanup started from clean released **0.40.1**, `73b145f`, leaving package
+versions, manifest/lock selections and Shared Tooling **0.26.9** payloads unchanged.
+Pending **0.41.0** notes describe the authorized breaking Rust API cleanup; they
+are not a version change or release. No staging, commit, push, publication,
+deployment, live IC effect or sibling edit occurs here.
 
-## Published IC Tooling adoption
+## Completed API cleanup
 
-Host Artifacts/FS/Process and Testkit require published **0.66.2**; the contributor
-Build release editor selects exactly **0.66.2**. Official registry metadata and
-archive checksums identify source **`4bc810c84ba45baa191030eb625b8e793124581e`**.
-All five packages' library/binary Rust source matches 0.66.0. Upstream changes
-correct dependency documentation and Build executable examples, which Backup does
-not consume. No adapter, protocol, decoder bound or cleanup change is needed.
-The existing explicit PocketIC ownership transfer remains intact.
+- Metadata/download/allocation/data settlement errors no longer expose unproduced
+  request/association variants or their generated conversions. Existing single-call
+  Read/Upload failures still own those errors and retained replies.
+- Complete operation plans own inventory/graph persistence; original journals own
+  execution progress. Standalone file publishers/readers, caller-declared completed
+  sequence readiness and their obsolete tests are removed. Standalone file-byte
+  constants/schema annotations are removed; embedded model bounds and the complete
+  plan's 1 MiB input/output limit remain. Existing files are not deleted or migrated.
+- Mandatory async workflow admission remains the integration mechanism. Five unused
+  synchronous observation traits/error enums are removed. Passive requests/results,
+  pure validators and all application safety obligations remain. Public fixtures
+  retain stale/revoked evidence, original spending, bytes and obligation assertions;
+  they no longer test injected pass-through provider errors.
 
-The incoming lock already selected these four library packages; it stays
-byte-for-byte unchanged. Incoming Platform **0.6.11** is preserved and now passes
-the focused native build/consumer checks below. Its authenticated archive has no
-Rust-source difference from 0.6.10. Agent/Transport **0.49.3**, management DTO
-**0.11.0**, external Principal **0.1.5** and PocketIC **16.1.0** remain selected.
+Consumers must update imports and error matches as described in the
+[changelog](../../CHANGELOG.md). This is a source-level hard cut, with no new wire
+format, persisted schema generation, compatibility reader or lifecycle behavior.
+Extraction provenance retains original source identities and historical destinations,
+with an explicit historical-scope note; current guidance describes the surviving APIs.
 
-Canonical setup waited 93 seconds for the admitted ic-timers owner of the same
-Testkit slot, then rechecked inputs and reused its completed exact build. The
-explicit wait budget was 300 seconds; no owner lock, process or failed generation
-was removed. Both Testkit and Build pass offline admission; prior tools remain
-retained. CLI tools keep explicit `cli`; product libraries do not enable it.
+## API cleanup qualification
 
-## Focused qualification
+These results precede the incoming dependency update described below.
 
-Linux Rust **1.99.1** passes strict all-target/all-feature Clippy, compilation and
-warning-denied Rustdoc. Actual Rust **1.91.0** owning and independent normal-consumer
-checks pass. Public Host checksum conversion/publication identities compile through
-consumer-selected 0.66.2 types. Both unpacked package archives compile together
-with original selections and verified archive checksums.
+Linux all-target/all-feature compilation and strict Clippy pass. Warning-denied
+Rustdoc, shared formatting and documentation links pass. All **528 core unit tests**
+and **7 public integration tests** pass, including inventory selection through the
+original plan, execution progress and all five application-evidence journeys.
+The unit suite includes the affected compound snapshot workflows, bounded models,
+immutable plan persistence, journal-derived prerequisites and retained-reply failures.
+Rust **1.91.0** all-target/all-feature MSRV compilation also passes.
 
-**9 public artifact/recovery/workflow tests pass**, including typed
-checksum causes, non-UTF-8 paths, changed-byte publication/recovery refusal and
-retained original spending/obligations. Normal graphs contain only Host 0.66.2
-and Platform 0.6.11; they exclude Testkit/PocketIC/WAT/Wire/Clap and development-only
-features. Core remains Agent-free. Manifest/lock fingerprints stay stable throughout
-qualification. The refreshed editor renders independently checked manifest/lock
-candidates for 0.40.1 in a disposable directory; real metadata stays at 0.40.0.
-Read-only patch release preview agrees; no release operation runs.
+Logs are `/tmp/backup-cleanup-{check,lib,integration,clippy,rustdoc,msrv,docs}.log`.
+No simulator execution, native macOS, installed IC, independent registry-consumer,
+Canic or full local `make ci` qualification was run for this API-only cut.
+[The released handoff](https://github.com/dragginzgame/ic-backup/blob/73b145f/docs/status/current.md)
+retains prior dependency-adoption evidence at its original source/graph scope.
 
-Evidence: `/tmp/backup-tooling-0662-20261023-_3h2ofqx/`, including authenticated source comparisons,
-setup and product logs, normal-consumer graphs, package archives, public test
-fixtures and read-only editor checks. Preserved/validated lock SHA-256:
-`310d3effeb82853c9850061f49baf90cd17e63a6275be2777903629748eec070`.
+[Canic adoption preparation](../canic-adoption.md) remains application-owned;
+this cleanup supplies no production authority/fence integration and grants no live
+backup attempt before Blob storage is complete.
 
-The [released-source handoff](https://github.com/dragginzgame/ic-backup/blob/70d4d49699fb0b14a6d2a293012a328321d2f3f0/docs/status/current.md)
-retains the earlier 19 simulator/recovery cases on Host 0.66.0 and Platform 0.6.10.
-Those are reused only as unchanged-implementation evidence, not new execution of
-the 0.66.2 graph. The simulator suite, full local make ci, new hosted/native macOS,
-registry-only installed-product, installed IC and Canic qualification are not run.
+## Documentation follow-up
 
-## Shared Tooling and application boundary
+The development guide now owns contributor setup, focused checks and fixture
+instructions. Detailed product behavior links to the implementation contracts,
+record/API boundary and Agent guide instead of repeating an extraction ledger.
+The crate overview describes current async admission, workflow coordination and
+application-owned obligations. Historical source/provenance evidence is retained.
+No runtime code, symbol, schema or dependency change belongs to this follow-up.
 
-The pending **Shared Tooling 0.26.9** revision
-**`3657c044c0e91321effe8835989491a4cd0b5cba`** and its reviewed provenance are
-unchanged. All **122 payloads** still verify. See [the review](../shared-tooling-review.json)
-and `/tmp/backup-shared-0269-20261023-wnhypkbf/` for the provenance-only refresh.
-This IC Tooling adoption changes no shared payload, pin or build-policy helper.
-
-[Canic adoption preparation](../canic-adoption.md) retains its source-specific
-integration map and acceptance sequence. Production Root authority, whole-unit
-fencing and external obligations remain application-owned. The live backup attempt
-is deferred until Blob storage is complete; this patch adoption grants no live
-effect authority. [Backup #29 — Complete original-plan execution and stage binding before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29)
-retains complete application acceptance. Earlier registry-only 0.38 fixture
-results keep their original source and graph scope.
+An incoming lockfile update selects Host Artifacts/FS/Process and Testkit **0.66.3**;
+it is preserved byte-for-byte. Earlier API-cleanup test results are not new
+qualification of that update. Formatting, documentation links, all three independent
+golden-generator `--check` commands and warning-denied Rustdoc pass on the current
+checkout. No runtime tests, MSRV, simulator or native macOS checks were rerun for
+this documentation-only follow-up. Logs: `/tmp/backup-doc-cleanup-checks.log` and
+`/tmp/backup-doc-cleanup-rustdoc.log`.

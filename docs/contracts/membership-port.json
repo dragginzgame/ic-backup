@@ -4,7 +4,7 @@
   "rust": {
     "request": "model::membership::MembershipObservationRequest",
     "observation": "model::membership::MembershipObservation",
-    "provider": "ports::membership::MembershipProvider::observe_membership",
+    "admission": "Integration-owned async workflow callback; validate fresh observation with the corresponding pure policy",
     "policy": "policy::membership::validate",
     "view": "policy::membership::MembershipView"
   },
@@ -47,7 +47,7 @@
     "Exact full inventory including unselected parents and metadata",
     "Reported remote calls <= original descriptive ceiling"
   ],
-  "provider_errors": {
+  "integration_failure_semantics": {
     "Unavailable": "Absent provider, reject before remote effects",
     "Unsupported": "Cannot meet current contract, reject before remote effects",
     "Indeterminate": "Observation/reply/accounting failed or uncertain; retain consumed allowance/evidence and stop; no retry implied"

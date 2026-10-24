@@ -1,4 +1,5 @@
 {
+  "historical_scope": "Extraction-time provenance: destinations and qualification below describe the original extraction, not current API availability. Standalone inventory/graph persistence, declared-completion readiness and synchronous observation ports are retired in the 0.41.0 API cut. Current ownership and consumer guidance are in docs/extraction-boundary.md; original source identities and evidence remain retained.",
   "schema_version": 1,
   "kind": "membership_source_provenance",
   "inspection_date": "2026-10-04",

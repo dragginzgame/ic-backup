@@ -27,8 +27,6 @@
   },
   "x-max-total-edges": 65536,
   "x-runtime-max-chain-depth": 8191,
-  "x-max-encoded-bytes": 1048576,
-  "x-max-canonical-output-bytes": 1048576,
   "x-topological-order": "Repeatedly emit the smallest currently ready sequence; computed order is not persisted. Order grants no effect authority or dispatch permission. Application dependencies are explicitly integration-qualified, not inferred from inventory parents.",
   "x-canonical-digest": {
     "algorithm": "sha256",

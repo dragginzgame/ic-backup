@@ -8,7 +8,7 @@
     "expected_fence": "model::consistency::ApplicationFenceBinding",
     "input": "model::consistency::ConsistencyObservationInput",
     "observation": "model::consistency::ConsistencyObservation",
-    "provider": "ports::consistency::ConsistencyProvider::observe_consistency",
+    "admission": "Integration-owned async workflow callback; validate fresh observation with the corresponding pure policy",
     "policy": "policy::consistency::validate",
     "view": "policy::consistency::ConsistencyView"
   },
@@ -58,7 +58,7 @@
     "Exact original guarantee; no automatic upgrade/downgrade",
     "Coordinated fence exact retained identity, currently Active, actual revision and fence revision both equal original retained revision"
   ],
-  "provider_errors": {
+  "integration_failure_semantics": {
     "Unavailable": "No qualified provider; reject before effects",
     "Unsupported": "Cannot satisfy original guarantee; reject before effects",
     "Indeterminate": "Uncertain observations/reply/accounting/custody; retain spent allowance/evidence and fence obligations, stop without retry/reset/release"

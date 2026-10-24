@@ -4,7 +4,8 @@ mod support;
 
 use ic_backup::{
     model::inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
-    ops::persistence::{BackupLayoutGuard, InventoryError, create_inventory, read_inventory},
+    model::operation_plan::OperationPlanRecord,
+    ops::persistence::{BackupLayoutGuard, create_operation_plan, read_operation_plan},
     policy::selection::{SelectionExpansion, SelectionRequest, select},
 };
 use std::fs;
@@ -35,14 +36,22 @@ fn explicit_inventory_reopens_and_selects_exact_physical_targets_without_framewo
     )
     .expect("declared forest");
     let original_digest = record.digest();
+    let plan: OperationPlanRecord = serde_json::from_value(serde_json::json!({
+        "version": 1,
+        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
+        "inventory": record,
+        "selected_targets": ["renrk-eyaaa-aaaaa-aaada-cai"],
+        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
+        "operations": [{"operation_sequence": 7, "target": "renrk-eyaaa-aaaaa-aaada-cai", "request": "ef".repeat(32), "budget": {"mutations": 1, "observations": 1}}],
+        "budget": {"mutations": 1, "observations": 1}
+    })).expect("complete original plan");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclusion");
-    create_inventory(&layout, &record).expect("persist before later planning");
+    create_operation_plan(&layout, &plan).expect("persist complete original plan");
     drop(layout);
     let layout = BackupLayoutGuard::acquire(&root).expect("reopen");
-    let retained =
-        read_inventory(&layout, &original_digest).expect("admit original exact declaration");
+    let retained = read_operation_plan(&layout, &plan.digest()).expect("admit original exact plan");
     let selected = select(
-        &retained,
+        retained.inventory(),
         &SelectionRequest {
             canister_ids: vec!["RENRK-EYAAA-AAAAA-AAADA-CAI".into()],
             expansion: SelectionExpansion::Descendants,
@@ -59,14 +68,8 @@ fn explicit_inventory_reopens_and_selects_exact_physical_targets_without_framewo
         vec!["renrk-eyaaa-aaaaa-aaada-cai", "rno2w-sqaaa-aaaaa-aaacq-cai"]
     );
     assert_eq!(selected.targets[0].parent_canister_id(), Some("aaaaa-aa"));
-    assert!(matches!(
-        create_inventory(&layout, &record),
-        Err(InventoryError::Persistence(_))
-    ));
-    assert_eq!(
-        read_inventory(&layout, &original_digest).expect("evidence preserved"),
-        record
-    );
+    assert_eq!(retained.inventory(), &record);
+    assert_eq!(retained, plan);
     drop(layout);
     fs::remove_dir_all(root).expect("clean successful fixture");
 }

@@ -6,8 +6,8 @@ use crate::{
         attempt_journal::MutationReceiptRequest,
         ic_snapshot_download::{IcSnapshotDownloadPlan, IcSnapshotDownloadPlanningError},
         ic_snapshot_transfer_read::{
-            IcSnapshotTransferReadError, IcSnapshotTransferReadPayload,
-            IcSnapshotTransferReadRequest, IcSnapshotTransferReadResponse,
+            IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
+            IcSnapshotTransferReadResponse,
         },
     },
     ops::persistence::{
@@ -15,10 +15,7 @@ use crate::{
         ExecutionStageGuard, ExecutionWorkflowPersistenceError, IcSnapshotArtifactError,
         IcSnapshotArtifactWriter, read_execution_progress,
     },
-    policy::ic_snapshot_transfer_read::{
-        IcSnapshotTransferReadAssociationError, IcSnapshotTransferReadReply,
-        IcSnapshotTransferReadView,
-    },
+    policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, IcSnapshotTransferReadView},
     ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     workflow::ic_snapshot_transfer_read::{
         IcSnapshotTransferReadExecutionError, read_snapshot_with,
@@ -215,12 +212,6 @@ pub enum IcSnapshotDownloadReplyError<E: std::error::Error + 'static> {
     /// Original selected journal/spending/receipt admission.
     #[error(transparent)]
     Journal(#[from] AttemptJournalError),
-    /// Original request/current reservation admission.
-    #[error(transparent)]
-    Request(#[from] IcSnapshotTransferReadError),
-    /// Existing bounded passive decoder/association.
-    #[error(transparent)]
-    Association(#[from] IcSnapshotTransferReadAssociationError),
     /// Exact local bytes/custody admission failed.
     #[error(transparent)]
     Artifact(#[from] IcSnapshotArtifactError),

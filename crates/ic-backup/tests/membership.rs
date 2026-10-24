@@ -12,7 +12,6 @@ use ic_backup::{
         AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
     },
     policy::membership::{MembershipError, validate},
-    ports::membership::{MembershipProvider, MembershipProviderError},
 };
 use serde_json::json;
 use std::fs;
@@ -32,29 +31,25 @@ fn plan() -> OperationPlanRecord {
     })).expect("original plan")
 }
 
-// Fixture data qualifies the public port's exact local binding, not any management backend.
+// Fixture data qualifies the public evidence model's exact local binding, not any management backend.
 struct LocalFixtureProvider {
     observed: OperationPlanRecord,
-    failure: Option<MembershipProviderError>,
     requests: Vec<ArtifactChecksumRecord>,
 }
-impl MembershipProvider for LocalFixtureProvider {
+impl LocalFixtureProvider {
     fn observe_membership(
         &mut self,
         request: &MembershipObservationRequest<'_>,
-    ) -> Result<MembershipObservation, MembershipProviderError> {
+    ) -> MembershipObservation {
         self.requests.push(request.digest());
-        if let Some(failure) = self.failure {
-            return Err(failure);
-        }
-        Ok(MembershipObservation {
+        MembershipObservation {
             request: request.digest(),
             context: self.observed.context().clone(),
             inventory: self.observed.inventory().clone(),
             revision: None,
             evidence: hash("34"),
             remote_observations: 0,
-        })
+        }
     }
 }
 
@@ -79,10 +74,9 @@ fn binds_external_provider_to_reopened_original_plan_without_resetting_spent_all
     .unwrap();
     let mut provider = LocalFixtureProvider {
         observed: original.clone(),
-        failure: None,
         requests: vec![],
     };
-    let retained = MembershipProvider::observe_membership(&mut provider, &before).unwrap();
+    let retained = provider.observe_membership(&before);
     assert_eq!(
         validate(&before, &retained).unwrap().inventory(),
         original.inventory()
@@ -108,28 +102,19 @@ fn binds_external_provider_to_reopened_original_plan_without_resetting_spent_all
         MembershipError::RequestMismatch
     );
     assert_eq!(provider.requests.len(), 1); // Pure rejection made no provider call.
-    let current = MembershipProvider::observe_membership(&mut provider, &after).unwrap();
+    let current = provider.observe_membership(&after);
     let view = validate(&after, &current).unwrap();
     assert_eq!(view.request(), &after.digest());
     assert_eq!(view.selected_targets(), reopened.selected_targets());
     assert_eq!(view.revision(), None); // No invented uninterrupted membership/fence.
     assert_eq!(view.remote_observations(), 0);
-    for failure in [
-        MembershipProviderError::Unavailable,
-        MembershipProviderError::Unsupported,
-        MembershipProviderError::Indeterminate,
-    ] {
-        provider.failure = Some(failure);
-        assert_eq!(
-            MembershipProvider::observe_membership(&mut provider, &after).unwrap_err(),
-            failure
-        );
-        let retained = journal.record().unwrap().view();
-        assert_eq!(retained.mutations_used, used.mutations_used);
-        assert_eq!(retained.observations_used, used.observations_used);
-        assert_eq!(retained.pending_mutation, Some(mutation));
-        assert_eq!(retained.mutations_remaining, 0);
-    }
+    // Pure admission retains the original spending and obligations.
+    let retained = journal.record().unwrap().view();
+    assert_eq!(retained.mutations_used, used.mutations_used);
+    assert_eq!(retained.observations_used, used.observations_used);
+    assert_eq!(retained.pending_mutation, Some(mutation));
+    assert_eq!(retained.mutations_remaining, 0);
+
     assert_eq!(
         fs::read(root.join("operation-plan.json")).unwrap(),
         original_plan_bytes

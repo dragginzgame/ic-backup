@@ -5,13 +5,11 @@ mod attempt_journal;
 mod command_lifetime_lock;
 mod consistency;
 mod download_journal;
-mod effect_graph;
 mod execution_progress;
 mod execution_settlement;
 mod execution_workflow;
 mod fence_obligation;
 mod immutable_record;
-mod inventory;
 mod journal_lock;
 mod journal_path;
 pub(crate) mod json;
@@ -38,7 +36,6 @@ pub use download_journal::{
     IcSnapshotArtifactError, IcSnapshotArtifactWriter, IcSnapshotDataUploadPreparationError,
     IcSnapshotUploadArtifactError,
 };
-pub use effect_graph::{EffectGraphPersistenceError, create_effect_graph, read_effect_graph};
 pub use execution_progress::{ExecutionProgressPersistenceError, read_execution_progress};
 pub use execution_settlement::{
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError,
@@ -55,7 +52,6 @@ pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,
     read_fence_obligation,
 };
-pub use inventory::{InventoryError, create_inventory, read_inventory};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub(crate) use json::read_json;
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};

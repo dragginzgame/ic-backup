@@ -341,7 +341,7 @@ The complete product must preserve those checks when adding application adapters
 
 The standalone single-canister example must state its assumption: the selected
 application has no unreconciled irreversible external effects. Applications that
-cannot establish this condition need `RestoreSafetyProvider`, and execution
+cannot establish this condition need application-owned restore-safety admission, and execution
 rejects without suitable evidence. A generic `--force` bypass is not a solution.
 
 ## 8. Maintained records and hashing

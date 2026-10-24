@@ -17,7 +17,6 @@ use ic_backup::{
         read_restore_safety_requirement,
     },
     policy::restore_safety::{RestoreSafetyError, validate},
-    ports::restore_safety::{RestoreSafetyProvider, RestoreSafetyProviderError},
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
@@ -60,18 +59,14 @@ struct LocalEvidenceFixture {
     source: OperationPlanRecord,
     source_artifacts: ArtifactChecksumRecord,
     fence: RestoreFenceEvidence,
-    failure: Option<RestoreSafetyProviderError>,
     requests: Vec<ArtifactChecksumRecord>,
 }
-impl RestoreSafetyProvider for LocalEvidenceFixture {
+impl LocalEvidenceFixture {
     fn observe_restore_safety(
         &mut self,
         request: &RestoreSafetyRequest<'_>,
-    ) -> Result<RestoreSafetyObservation, RestoreSafetyProviderError> {
+    ) -> Result<RestoreSafetyObservation, RestoreSafetyObservationError> {
         self.requests.push(request.digest());
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
         RestoreSafetyObservation::new(RestoreSafetyObservationInput {
             request: request.digest(),
             context: self.plan.context().clone(),
@@ -88,7 +83,6 @@ impl RestoreSafetyProvider for LocalEvidenceFixture {
             evidence: hash("67"),
             remote_observations: 0,
         })
-        .map_err(|_| RestoreSafetyProviderError::Indeterminate)
     }
 }
 // Native retained originals captured before interruption, independently of the fresh request.
@@ -148,7 +142,6 @@ fn prepare_original_evidence(
             external_obligations_and_replay: hash("de"),
             controlled_execution: Some(hash("ef")),
         },
-        failure: None,
         requests: vec![],
     };
     let observation = provider.observe_restore_safety(&request).unwrap();
@@ -235,41 +228,29 @@ fn reopens_original_source_safety_spending_and_obligations_without_effects_or_re
     assert_eq!(evidence.provider.requests.len(), 1);
     reject_weaker_requirement(&layout, &source_layout, &reopened, &reopened_source);
     reject_unsafe_fence(&mut evidence.provider, &fresh);
-    for error in [
-        RestoreSafetyProviderError::Unavailable,
-        RestoreSafetyProviderError::Unsupported,
-        RestoreSafetyProviderError::Indeterminate,
-    ] {
-        evidence.provider.failure = Some(error);
-        assert_eq!(
-            evidence
-                .provider
-                .observe_restore_safety(&fresh)
-                .unwrap_err(),
-            error
-        );
-        let view = journal.record().unwrap().view();
-        let original_view = evidence.journal.view();
-        assert_eq!(
-            (view.pending_mutation, view.pending_observation),
-            (
-                original_view.pending_mutation,
-                original_view.pending_observation
-            )
-        );
-        assert_eq!(
-            (view.mutations_remaining, view.observations_remaining),
-            (0, 0)
-        );
-        assert_eq!(journal.record().unwrap(), &evidence.journal);
-        assert_eq!(fs::read(journal.path()).unwrap(), journal_bytes);
-        assert_eq!(fs::read(&requirement_path).unwrap(), requirement_bytes);
-        assert_eq!(fs::read(&obligation).unwrap(), obligation_bytes);
-        assert_eq!(
-            source_layout.restore_references().unwrap(),
-            evidence.references
-        );
-    }
+    // Pure admission retains the original spending and obligations.
+    let view = journal.record().unwrap().view();
+    let original_view = evidence.journal.view();
+    assert_eq!(
+        (view.pending_mutation, view.pending_observation),
+        (
+            original_view.pending_mutation,
+            original_view.pending_observation
+        )
+    );
+    assert_eq!(
+        (view.mutations_remaining, view.observations_remaining),
+        (0, 0)
+    );
+    assert_eq!(journal.record().unwrap(), &evidence.journal);
+    assert_eq!(fs::read(journal.path()).unwrap(), journal_bytes);
+    assert_eq!(fs::read(&requirement_path).unwrap(), requirement_bytes);
+    assert_eq!(fs::read(&obligation).unwrap(), obligation_bytes);
+    assert_eq!(
+        source_layout.restore_references().unwrap(),
+        evidence.references
+    );
+
     assert_eq!(reopened.attempt_authority(7).unwrap(), authority);
     drop(journal);
     drop(layout);

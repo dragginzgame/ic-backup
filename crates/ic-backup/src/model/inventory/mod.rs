@@ -14,8 +14,6 @@ use thiserror::Error;
 
 /// Maximum exact physical targets in one declared inventory.
 pub const MAX_INVENTORY_TARGETS: usize = 1024;
-/// Maximum encoded input and canonical output bytes admitted by inventory persistence.
-pub const MAX_INVENTORY_BYTES: u64 = 1024 * 1024;
 
 /// Immutable v1 declared forest with canonical unique principals and closed parent links.
 ///

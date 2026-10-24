@@ -13,7 +13,6 @@ use ic_backup::{
         read_operation_plan,
     },
     policy::consistency::{ConsistencyError, validate},
-    ports::consistency::{ConsistencyProvider, ConsistencyProviderError},
 };
 use serde_json::json;
 use std::fs;
@@ -57,18 +56,14 @@ fn fence() -> ApplicationFenceEvidence {
 struct LocalFixtureProvider {
     plan: OperationPlanRecord,
     fence: ApplicationFenceEvidence,
-    failure: Option<ConsistencyProviderError>,
     requests: Vec<ArtifactChecksumRecord>,
 }
-impl ConsistencyProvider for LocalFixtureProvider {
+impl LocalFixtureProvider {
     fn observe_consistency(
         &mut self,
         request: &ConsistencyRequest<'_>,
-    ) -> Result<ConsistencyObservation, ConsistencyProviderError> {
+    ) -> Result<ConsistencyObservation, ConsistencyObservationError> {
         self.requests.push(request.digest());
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
         ConsistencyObservation::new(ConsistencyObservationInput {
             request: request.digest(),
             context: self.plan.context().clone(),
@@ -83,7 +78,6 @@ impl ConsistencyProvider for LocalFixtureProvider {
             evidence: hash("34"),
             remote_observations: 0,
         })
-        .map_err(|_| ConsistencyProviderError::Indeterminate)
     }
 }
 fn assert_spent(journal: &AttemptJournalGuard<'_>, mutation: u32, observation: u32) {
@@ -123,10 +117,9 @@ fn retains_original_guarantee_and_fence_obligation_across_stale_results_failures
     let mut provider = LocalFixtureProvider {
         plan: plan.clone(),
         fence: fence(),
-        failure: None,
         requests: vec![],
     };
-    let old = ConsistencyProvider::observe_consistency(&mut provider, &before).unwrap();
+    let old = provider.observe_consistency(&before).unwrap();
     assert_eq!(
         validate(&before, &old).unwrap().fence().unwrap().identity,
         hash("56")
@@ -152,29 +145,20 @@ fn retains_original_guarantee_and_fence_obligation_across_stale_results_failures
         Err(ConsistencyPersistenceError::DigestMismatch)
     ));
     provider.fence.identity = hash("90");
-    let wrong = ConsistencyProvider::observe_consistency(&mut provider, &fresh).unwrap();
+    let wrong = provider.observe_consistency(&fresh).unwrap();
     assert_eq!(
         validate(&fresh, &wrong).unwrap_err(),
         ConsistencyError::FenceMismatch
     );
-    for failure in [
-        ConsistencyProviderError::Unavailable,
-        ConsistencyProviderError::Unsupported,
-        ConsistencyProviderError::Indeterminate,
-    ] {
-        provider.failure = Some(failure);
-        assert_eq!(
-            ConsistencyProvider::observe_consistency(&mut provider, &fresh).unwrap_err(),
-            failure
-        );
-        assert_spent(&journal, mutation, observation);
-        assert_eq!(journal.record().unwrap(), &retained_journal);
-        assert_eq!(fs::read(&obligation_path).unwrap(), obligation_bytes);
-        assert_eq!(
-            fs::read(root.join("consistency-requirement.json")).unwrap(),
-            requirement_bytes
-        );
-    }
+    // Pure admission retains the original spending and obligations.
+    assert_spent(&journal, mutation, observation);
+    assert_eq!(journal.record().unwrap(), &retained_journal);
+    assert_eq!(fs::read(&obligation_path).unwrap(), obligation_bytes);
+    assert_eq!(
+        fs::read(root.join("consistency-requirement.json")).unwrap(),
+        requirement_bytes
+    );
+
     assert_eq!(reopened.attempt_authority(7).unwrap(), authority);
     drop(journal);
     drop(layout);

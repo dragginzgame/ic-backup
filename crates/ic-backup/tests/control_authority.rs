@@ -6,7 +6,8 @@ use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         control_authority::{
-            ControlObservation, ControlObservationInput, ControlObservationRequest, ControllerSet,
+            ControlObservation, ControlObservationError, ControlObservationInput,
+            ControlObservationRequest, ControllerSet,
         },
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
         operation_plan::OperationPlanRecord,
@@ -15,7 +16,6 @@ use ic_backup::{
         AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
     },
     policy::control_authority::{ControlAuthorityError, validate},
-    ports::control_authority::{ControlAuthorityProvider, ControlProviderError},
 };
 use serde_json::json;
 use std::fs;
@@ -39,18 +39,14 @@ fn plan(wire: &IcManagementRequestRecord) -> OperationPlanRecord {
 struct LocalFixtureProvider {
     context: OperationPlanRecord,
     controllers: ControllerSet,
-    failure: Option<ControlProviderError>,
     requests: Vec<ArtifactChecksumRecord>,
 }
-impl ControlAuthorityProvider for LocalFixtureProvider {
+impl LocalFixtureProvider {
     fn observe_control(
         &mut self,
         request: &ControlObservationRequest<'_>,
-    ) -> Result<ControlObservation, ControlProviderError> {
+    ) -> Result<ControlObservation, ControlObservationError> {
         self.requests.push(request.digest());
-        if let Some(error) = self.failure {
-            return Err(error);
-        }
         ControlObservation::new(ControlObservationInput {
             request: request.digest(),
             context: self.context.context().clone(),
@@ -59,7 +55,6 @@ impl ControlAuthorityProvider for LocalFixtureProvider {
             evidence: hash("34"),
             remote_observations: 0,
         })
-        .map_err(|_| ControlProviderError::Indeterminate)
     }
 }
 
@@ -83,10 +78,9 @@ fn reopens_spent_original_intent_and_denies_replay_and_revoked_controller_withou
     let mut provider = LocalFixtureProvider {
         context: plan.clone(),
         controllers: ControllerSet::new(vec!["2VXSX-FAE".into()]).unwrap(),
-        failure: None,
         requests: vec![],
     };
-    let retained = ControlAuthorityProvider::observe_control(&mut provider, &before).unwrap();
+    let retained = provider.observe_control(&before).unwrap();
     assert_eq!(
         validate(&before, &retained).unwrap().target(),
         wire.target()
@@ -104,27 +98,18 @@ fn reopens_spent_original_intent_and_denies_replay_and_revoked_controller_withou
     );
     assert_eq!(provider.requests.len(), 1); // Pure rejection invokes no provider.
     provider.controllers = ControllerSet::new(vec!["aaaaa-aa".into()]).unwrap();
-    let revoked = ControlAuthorityProvider::observe_control(&mut provider, &fresh).unwrap();
+    let revoked = provider.observe_control(&fresh).unwrap();
     assert_eq!(
         validate(&fresh, &revoked).unwrap_err(),
         ControlAuthorityError::CallerNotController
     );
-    for failure in [
-        ControlProviderError::Unavailable,
-        ControlProviderError::Unsupported,
-        ControlProviderError::Indeterminate,
-    ] {
-        provider.failure = Some(failure);
-        assert_eq!(
-            ControlAuthorityProvider::observe_control(&mut provider, &fresh).unwrap_err(),
-            failure
-        );
-        let spent = journal.record().unwrap().view();
-        assert_eq!(spent.pending_mutation, Some(mutation));
-        assert_eq!(spent.mutations_used, 1);
-        assert_eq!(spent.mutations_remaining, 0);
-        assert_eq!(spent.observations_used, 0);
-    }
+    // Pure admission retains the original spending and obligations.
+    let spent = journal.record().unwrap().view();
+    assert_eq!(spent.pending_mutation, Some(mutation));
+    assert_eq!(spent.mutations_used, 1);
+    assert_eq!(spent.mutations_remaining, 0);
+    assert_eq!(spent.observations_used, 0);
+
     assert_eq!(reopened.attempt_authority(7).unwrap(), authority);
     assert_eq!(
         fs::read(root.join("operation-plan.json")).unwrap(),

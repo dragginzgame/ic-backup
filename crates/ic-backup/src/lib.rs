@@ -1,98 +1,30 @@
 //! Host-side snapshot backup and same-release recovery for Internet Computer canisters.
 //!
-//! The library provides directory checksums, no-follow traversal and IC snapshot staging,
-//! verified durable directory publication, bounded JSON persistence and journal
-//! locking, layout lifetime exclusion, durable restore dependencies and
-//! inherited command custody. Local download journals retain exact snapshot
-//! identity and verified publication progress. Local attempt journals bind exact
-//! declared identity and finite mutation/observation allowances, retaining durable
-//! reservations and qualified receipts. These mechanisms do not authorize canister
-//! effects.
-//! Explicit fresh download integrity checks bind the retained original plan and
-//! exact selected set to published directory bytes without changing journals,
-//! replenishing allowances or releasing dependencies. Stable byte custody and
-//! backend transfer completeness remain integration-owned.
-//! Immutable local download manifests reuse that exact v1 journal schema after
-//! fresh byte verification. Exact replay reads original retained records only,
-//! preserving snapshot/checksum provenance even when artifact trees are absent.
-//! Explicit local restore-source verification joins both original plans, retained
-//! safety requirement and exact local manifest before checking every source tree.
-//! Borrowed same-ID selection views grant no upload/load, application or release authority.
-//! Bounded physical inventories retain canonical declared parent forests; pure
-//! selection policy expands exact principals without live discovery or authority.
-//! Explicit effect graphs retain validated operation dependencies and project
-//! deterministic planning order/readiness without authorizing dispatch.
-//! Immutable operation plans bind these declarations to exact target/request digests
-//! and original attempt allowances, deriving journal authority under the full plan digest.
-//! Pure execution progress joins exact retained journals to the original plan and
-//! projects causal Applied evidence, pending attempts and exhaustion without dispatch.
-//! Original-plan-bound local progress reopens every retained journal. Planned
-//! reservations require complete original evidence and Applied mutation prerequisites,
-//! retaining the existing spending owner without dispatching or resetting allowance.
-//! The IC request boundary encodes closed host-ingress management operations and
-//! binds exact method/routing/Candid bytes to original mutation or observation digests.
-//! Codec qualification does not establish IC effects or fresh execution authority.
-//! Bounded capture/inventory reply decoding preserves raw snapshot identity and
-//! exact request/reply evidence without authenticating origin or settling effects.
-//! Bounded snapshot metadata reads preserve ordered globals, optional timer/hook
-//! values and exact chunk identities, without attesting complete data transfer.
-//! Metadata-bound data reads admit checked ranges, exact reply lengths and chunk
-//! hashes while retaining original evidence without effects. Incremental coverage
-//! checks reject gaps and repeated chunks without retaining or publishing bytes.
-//! Snapshot upload payloads preserve representable metadata and bind exact bounded
-//! source slices to a distinct new ID. Explicit local preparation checks retained
-//! source bytes; passive original-attempt reply admission supplies no dispatch,
-//! settlement, complete upload or new spending. A single-update upload provider
-//! contract reuses original accounting and passive replies; no provider is installed.
-//! Pure inventory comparison exposes new candidates and rejects baseline drift;
-//! candidate cardinality never attributes or settles a lost capture.
-//! Bounded lifecycle replies retain exact empty acknowledgements and required
-//! status/controller projections without converting them into fresh authority.
-//! Exact IC mutation envelopes bind already reserved original updates; a single-call
-//! provider contract and bounded passive reply association preserve pending spending.
-//! Existing codecs decode replies without automatic settlement, retries or release.
-//! Exact reserved status/list observations also retain both original attempt identities;
-//! passive association leaves lost observations pending and proves no effect outcome.
-//! A separate membership port binds ephemeral provider results to original intent,
-//! exact current context/full inventory and an integration-owned challenge.
-//! Pure matching views grant neither controller authority nor application continuity.
-//! The separate control port checks direct caller-controller evidence for exact
-//! IC mutation payloads; its matching views still grant no dispatch or restore safety.
-//! A separate snapshot-read port checks current snapshot-list visibility and exact
-//! caller read paths, without granting mutation control or settling lost replies.
-//! Immutable consistency requirements retain the original requested guarantee;
-//! current target/fence checks acquire or release no application obligations.
-//! Immutable restore safety requirements bind exact original source and same-release
-//! targets; fresh application evidence checks load/start safety without effects,
-//! lost-load settlement or fence/reference release.
-//! Immutable fence obligations retain original scope and acquisition identity;
-//! recovery joins their exact original attempt journals without new accounting,
-//! automatic release or a claim of current Active custody.
-//! Reserved fence-acquisition reconciliation matches original-request attribution
-//! under exact pending mutation and observation identities. Passive claims and
-//! late-reply admission perform no automatic settlement, redispatch or release;
-//! authenticated providers and actual application effects remain integration-owned.
-//! Exact application acquisition envelopes bind receiver, update mode, method and
-//! opaque bytes to already reserved original mutations. Passive acknowledgement
-//! association establishes no acquisition outcome or fresh dispatch permission.
-//! Immutable execution settlement checkpoints bind complete original Applied
-//! journals and their exact chronological histories for local replay. They prove
-//! no full backup/restore completion, command quiescence or fence/reference release.
-//! Distinct workflow allocations bind learned stages to one fixed exact child plan
-//! and original ceilings. Predecessor settlement admission reuses retained journal
-//! histories; stage reopen preserves spending without dispatch or repair.
-//! Metadata-derived download plans admit every exact data request against the
-//! original stage allowance before allocation, retaining one accounted update per
-//! request and explicit sequential dependencies. Planning grants no fresh access.
+//! [`model`] owns bounded records, exact identities, IC wire formats and valid state
+//! transitions. [`policy`] validates evidence and projects progress without IO.
+//! [`ops`] owns guarded persistence, artifact staging and original-journal transitions.
+//! [`workflow`] coordinates snapshot capture, transfer, upload, restore and recovery
+//! through integration-supplied async [`ports`] and mandatory admission callbacks.
+//! [`view`] exposes read-only projections across those boundaries.
 //!
-//! Applications own membership, release identity, control routing, quiescence
-//! and external-effect settlement. Complete application backup/restore remains integration-owned;
-//! the direct Agent transport lives in the separate `ic-backup-agent` crate.
-//! Filesystem access and credentials remain on the
-//! operator host.
-//! Bounded Unix record reads and publication use Host FS; generic accepted-byte
-//! hashing uses Host Artifacts. Product record validation, confinement, original
-//! journal binding and recovery policy remain local.
+//! Complete operation plans retain inventory, dependency graphs and original attempt
+//! limits. Progress derives from the complete original journals and qualified receipts.
+//! Lost replies preserve pending spending; they never authorize blind retries, reset
+//! allowances or replacement plans. Same-release restore targets existing canister IDs.
+//! Artifact verification retains exact source bindings and requires stable byte custody.
+//!
+//! Applications own fresh membership, control/read permissions, consistency, fencing,
+//! restore safety and external-effect settlement. Admission uses the existing passive
+//! evidence models and pure validators; no default application authority is installed.
+//! Records, matching hashes and decoded replies alone do not authorize effects or
+//! establish authenticated outcomes. Terminal replay is effect-free, and failures
+//! retain unfinished journals, artifacts, source references and fence obligations.
+//!
+//! The separate `ic-backup-agent` crate implements configured single-update transport.
+//! Complete application runners and terminal/release evidence remain integration-owned.
+//! Host supplies generic filesystem, process and hash capabilities; Platform supplies
+//! external IC identities, codecs and SDK boundaries. Product contracts remain local,
+//! with filesystem access and credentials on the operator host.
 
 pub mod model;
 pub mod ops;

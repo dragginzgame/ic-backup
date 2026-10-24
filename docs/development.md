@@ -26,8 +26,9 @@
 # Development
 
 This guide is for contributors working on the Rust library and its repository
-tooling. It describes the current local implementation; it is not an operator
-guide for performing a canister backup or restore.
+tooling. It covers setup, focused checks and contribution workflows. Product contracts
+belong to the linked implementation guides; this is not an operator guide for
+performing a canister backup or restore.
 
 ## CI source qualification
 
@@ -228,551 +229,87 @@ installs a tool implicitly.
 | Model | Owns records, identities, bounds and valid state transitions |
 | Policy | Validates and derives decisions without filesystem or network access |
 | Operations | Performs approved local persistence and filesystem work |
-| Ports | Defines observations and capabilities supplied by an IC or application integration |
+| Ports | Defines async effect and recovery capabilities supplied by integrations |
+| Workflow | Coordinates original plans and journals with mandatory async admission |
+| Agent | Implements configured single-update transport with explicit evidence retention |
 
 The library deliberately separates a recorded declaration from current authority
 to act. A plan, journal or decoded reply does not by itself permit a network call,
 prove application safety or establish that a remote operation succeeded.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-implementation-boundary.svg" alt="Implementation boundary showing locally tested models, policy and persistence, application-supplied integration contracts, and the planned IC transport, runners and CLI" width="800">
+  <img src="https://raw.githubusercontent.com/dragginzgame/shared-assets/main/ic-backup/ic-backup-implementation-boundary.svg" alt="Implementation boundary showing locally tested models, policy and persistence, application-supplied integration contracts, and implemented Agent transport with application-owned runners and authority" width="800">
 </p>
 
-## Detailed component ownership
+## Product contracts and ownership
 
-The root `Cargo.toml` owns the workspace, package metadata, dependency versions
-and shared lints. The members are `crates/ic-backup` and `crates/ic-backup-agent`. It provides the local
-artifact and persistence mechanisms described in
-[the implemented extraction boundary](extraction-boundary.md). The
-[workflow runner](../crates/ic-backup/src/workflow/execution_workflow/mod.rs)
-coordinates new and retained original stages through integration-owned drivers.
-[Agent transport](agent-transport.md) owns bounded async submission; applications
-supply fresh authority, admission and terminal evidence. Pure checksum records
-belong to model; filesystem operations belong to ops.
-Host Artifacts `artifact::tree::checksum_relative_files` composes directory
-checksums from owned `(PathBuf, Sha256Digest)` entries without filesystem IO.
-Host FS `read::tree::checksum` owns no-follow directory hashing with an explicit
-per-file byte bound. Backup's adapters are private; independent callers use Host
-and convert raw digests with `ArtifactChecksumRecord::from_digest` where needed.
-Directory traversal, synchronized publication and IC-tree verification share the
-Host framing owner. Consumer descriptor sync, byte custody and publication remain
-independent. The focused product publication/recovery check is
-`cargo test --offline --locked -p ic-backup --test directory_checksum`.
-JSON serializers run once before parent/staging effects; their byte buffer retains
-that contract. Host's typed descriptor publisher owns staging/atomic publication,
-with private parent policy and acknowledged crash barriers in Backup. `PersistenceError::Publication` carries Host FS's
-`NamedWriteError<std::io::Error>`, retaining original producer/cleanup causes and
-before/after-publication phases. Visible output requires reconciliation. Consumers
-matching or constructing that variant must align a direct `ic-host-fs` dependency
-with Backup's owning workspace selection in [Cargo.toml](../Cargo.toml). The public
-conversion from Host Artifacts' `DirectoryChecksumError` into `ArtifactError`
-requires matching `ic-host-artifacts` identity as well. Earlier identity changes remain in the
-[changelog](../CHANGELOG.md); no local error mirror or compatibility alias exists.
+Read [implementation contracts](implementation-contracts.md) before product changes.
+The [record/API boundary](extraction-boundary.md) owns detailed limits, evidence
+requirements and recovery semantics. [Agent transport](agent-transport.md) describes
+configuration and single-update submission. The [current handoff](status/current.md)
+records source-specific qualification and outstanding integration limits;
+[release notes](../CHANGELOG.md) own historical API removals and migration actions.
 
-IC Tooling owns the published Host, Build and Testkit packages. The manifest,
-lockfile and [current handoff](status/current.md) record selections and qualification.
-All
-production Host dependencies disable defaults; no capability/tempfile, archive,
-WAT or CLI feature is needed in production. Unix Process supplies inherited
-command custody and bounded quiescence. Local test features select WAT compilation,
-fixture allocation and HTTP capture. Testkit shares the selected production
-Host identities and owns simulator startup/cleanup. Native tests qualify that
-coexistence without converting Host-owned errors between versions. Process exit
-or group cleanup never substitutes for inherited lock-descriptor quiescence.
-Unix artifact and lock operations use Rustix's `io::Error::from` conversion
-directly. Native codes and existing typed error projections stay intact; no local
-errno wrapper or retry policy is layered over that upstream implementation.
-Restore dependency records and immutable retention transitions belong to model;
-layout exclusion, canonical journal-parent resolution and durable publication
-belong to persistence ops. Guarded restore-reference release requires fresh
-product terminal admission; no prune API is exposed.
-Local download journal identities/transitions and derived resume views belong to
-model; its guard borrows layout exclusion and owns bounded durable updates,
-byte verification and publication reconciliation. Remote download completeness,
-execution journals and runner authority remain integration/contract work.
-Local attempt journal identity, immutable budgets and chronological replay belong
-to model. Its persistence guard reserves before returning and stops after an
-indeterminate write. Qualified receipts, fresh authority, backend call/retry bounds
-and remote reconciliation remain caller-owned; the ledger performs no dispatch.
-See [the v1 attempt schema](contracts/attempt-journal.schema.json) and
-[source provenance](attempt-journal-source.json). Native fixtures kill acknowledged
-owners before/after reservation persistence and after the returned reservation;
-they qualify local accounting, not IC paid effects.
-Canonical inventory identities, bounded forest validation and binary hashing belong
-to model. Immutable inventory publication/admission belongs to persistence ops;
-exact/direct-child/subtree decisions belong to pure `policy::selection`. Policy
-performs no IO, serializes no records and changes no persisted state. It returns
-read-only references bound to the full inventory digest. Parent links can point
-outside a selected subset while remaining inside the original declared forest.
-See [the v1 inventory schema](contracts/inventory.schema.json) and
-[inventory provenance](inventory-source.json). Current declaration tests qualify
-graph/hash/selection and native local persistence, not authoritative discovery.
-Explicit operation dependencies, cycle checks, deterministic topological order and
-canonical graph hashing belong to model. Immutable graph persistence belongs to
-ops. Pure `policy::effect_order` admits causal declared completion identities and
-projects ready/blocked nodes without reading receipts, scheduling or executing.
-Qualified receipts and application ordering remain integration-owned. See
-[the graph schema](contracts/effect-graph.schema.json) and
-[ordering provenance](effect-graph-source.json).
-Operation-plan context, exact graph/target/request binding, aggregate assigned
-ceilings, canonical hashing and derived original attempt authority belong to model.
-Ops owns immutable `operation-plan.json` admission under the exact reviewed digest.
-Native public tests derive authority and reopen an already-consumed attempt through
-the original plan, without remote calls or allowance replenishment. See
-[the plan schema](contracts/operation-plan.schema.json) and
-[binding provenance](operation-plan-source.json). Complete backup/restore plan
-semantics, transfer/response codecs, fresh preflight and runner wiring remain
-unimplemented.
-Pure `policy::execution_progress` joins the original plan with one retained
-`AttemptJournalRecord` per operation. It validates complete exact authority/limit
-binding and causal Applied prerequisites for attempted operations, then derives
-graph-ordered local conditions and totals over assigned allowances only. It never
-reads files, creates missing journals, schedules work, serializes records or changes
-state. The caller owns coherent retained custody and qualified actual receipts;
-the projection proves neither freshness nor cross-journal dispatch chronology.
-See [progress provenance](execution-progress-source.json) and
-[the maintained boundary](extraction-boundary.md).
+Core owns product records, codecs, guarded persistence and workflow coordination.
+Host owns generic filesystem/process/hash capabilities; Platform owns external IC
+identities, codecs and SDK boundaries; Testkit owns simulator setup and processes.
+Applications supply fresh membership, control/read permissions, consistency and
+restore-safety evidence through mandatory async admission. Their pure policy
+validators remain in Core. No synchronous observation-provider interface or default
+application authority is installed.
 
-`model::ic_request` is the IC-specific host-ingress codec boundary. It owns closed
-method/target/raw-snapshot declarations, pinned upstream Candid argument encoding,
-exact wire digests and mutation/observation payload checks. Generic plan/journal
-owners remain independent of the codec. SDK DTOs and the Platform Candid boundary
-are registry dependencies, not Canic runtime imports. Native tests compare independent wire vectors, decode
-official argument types and reopen byte-bound local journals; they perform no IC
-effects. Callers retaining these declarations use the existing bounded JSON ops
-with the codec's 8 KiB bound under their own custody; no runner request layout or
-dispatch persistence API is introduced. See
-[the wire schema](contracts/ic-request.schema.json) and
-[codec provenance](ic-request-source.json). Transfer/response codecs, authenticated
-transport, fresh preflight and backend effects remain unimplemented.
+Use complete operation plans for inventory/graph persistence and original journals
+for progress. The workflows provide snapshot capture, transfer, upload, restore and
+reconciliation steps; complete application runners, fencing and external-obligation
+settlement remain integration-owned. Local records or decoded replies never grant
+fresh authority, automatic retries or reference release.
 
-`ports::membership::MembershipProvider` is a fallible integration contract, with no
-installed provider. `model::membership` derives ephemeral immutable requests from
-the original plan and operation, plus an integration-owned challenge, explicit
-before/after boundary and 0–1,024 descriptive remote-call ceiling.
-`policy::membership::validate` checks exact request/context/full inventory and
-reported calls, then returns a read-only view. It performs no IO or record
-serialization and changes no plan/journal. Requests/results/views have no Serde
-admission or persisted fresh-authority flags. Freshness, challenge uniqueness,
-actual permissions, prior per-call spending and revision/fence semantics remain
-integration-owned. Before/after equality proves no uninterrupted membership.
-The descriptive call ceiling is separate from finite journal allowances and
-cannot admit or replenish paid probes. See
-[the typed port contract](contracts/membership-port.json) and
-[membership provenance](membership-source.json). Native public tests exercise
-provider binding and local spent-journal recovery; they certify no live membership.
+## Focused product checks and fixtures
 
-`model::control_authority` binds original intent/operation and exact IC mutation
-bytes into ephemeral controller-observation requests. It owns canonical actual
-targets and complete unique controller sets bounded to 10. The fallible
-`ports::control_authority::ControlAuthorityProvider` has no installed provider.
-Pure `policy::control_authority::validate` checks actual context/target/call count
-and requires the original caller itself in current controllers. Status/read access
-or a controlling Root does not substitute. No Serde/Proven flag, plan mutation or
-dispatch permit is exposed. Actual authentication/freshness, prior per-call spending,
-snapshot origin permissions and full restore/lifecycle/application safety remain
-integration-owned. See [the typed control contract](contracts/control-authority-port.json)
-and [control provenance](control-authority-source.json).
+Prepare the locked tools and dependencies using the quick start before running
+checks. Select the tests that exercise the changed boundary; a native model or
+filesystem test does not qualify an IC effect. See the current handoff for actual
+results rather than inferring qualification from the commands below.
 
-`model::snapshot_read` binds original mutation intent and independently declared
-exact snapshot-list bytes to an ephemeral challenge. Its fallible
-`ports::snapshot_read::SnapshotReadProvider` has no installed implementation.
-Pure `policy::snapshot_read::validate` checks actual context/target/call reporting
-and known controller, public or exact allowed-viewer access. Canonical viewers
-are unique and bounded to 10; unknown controllers cannot establish controller access.
-Public/viewer evidence grants no mutation control. No Serde/default authority,
-fresh spending or lost-observation settlement is introduced. Provider authentication,
-freshness, custody and per-call accounting remain integration-owned. The separate
-metadata/data codecs grant no read permission; complete transfer remains pending.
-See [the typed read contract](contracts/snapshot-read-port.json)
-and [fresh read provenance](snapshot-read-source.json).
+| Changed boundary | Focused selection |
+| --- | --- |
+| Model or policy | `cargo test --offline --locked -p ic-backup --lib FILTER`, using the owning module path |
+| Public consumer contract | `cargo test --offline --locked -p ic-backup --test TARGET`, choosing the corresponding file in `crates/ic-backup/tests` |
+| Artifact publication and recovery | Public targets `directory_checksum`, `ic_snapshot_artifact`, `download_integrity` and `local_restore_source`; unit filters `ops::artifacts`, `artifact_commit` and `ops::persistence::json` |
+| IC management/workflow effects | `cargo test --offline --locked -p ic-backup --test pocketic_snapshot FILTER`; `planned_upload` selects complete-upload and failed-write cases |
+| Agent HTTP policy | `cargo test --offline --locked -p ic-backup-agent --test http_boundary` |
+| Agent simulator integration | `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport` |
 
-`model::consistency` now owns a strict v1 original-plan-bound guarantee declaration,
-retained at fixed `consistency-requirement.json` under layout exclusion with 1 KiB
-input/output bounds and no-replace publication. Exact expected requirement/plan
-reads reject downgraded or rebound declarations. Ephemeral current requests bind
-original operation, challenge, capture boundary and retained fence/original revision.
-The fallible `ports::consistency::ConsistencyProvider` observes existing obligations;
-no provider or acquisition/release operation is installed. Pure admission checks
-actual full inventory/exact selected stopped/drained targets and original guarantee;
-coordinated evidence requires exact Active fence and original membership revision.
-Opaque evidence authenticity, current observations, continuous whole-unit fencing,
-retained custody and prior per-call accounting remain integration-owned. No request/
-result/view can be admitted from JSON as fresh authority. Native fixtures qualify
-local declarations, persistence and spent-journal/obligation recovery only. See
-[the requirement schema](contracts/consistency-requirement.schema.json),
-[typed current port](contracts/consistency-port.json) and
-[fresh consistency provenance](consistency-source.json).
+Keep independent wire fixtures independent of the Rust encoder. Regenerate metadata
+before data/upload fixtures; pass `--check` to compare existing generated bytes
+without writing them:
 
-The snapshot reply codec in `model::ic_snapshot_reply` decodes the existing capture
-singleton and snapshot inventory methods using required upstream fields. It has
-bounded input, sequences and decoder work, canonical unique raw IDs and exact
-request/raw-reply evidence hashing. Neither result nor metadata grants settlement,
-authority or transfer completion. [The reply contract](contracts/ic-snapshot-reply.json)
-and [fresh provenance](ic-snapshot-reply-source.json) define the maintained boundary.
-Focused checks are `cargo test --offline --locked -p ic-backup --lib model::ic_`
-and `cargo test --offline --locked -p ic-backup --test ic_snapshot_reply --test ic_request`.
+```bash
+perl scripts/dev/generate-snapshot-metadata.pl --check
+perl scripts/dev/generate-snapshot-data.pl --check
+perl scripts/dev/generate-snapshot-upload.pl --check
+```
 
-`model::ic_snapshot_metadata` encodes an exact metadata-read request for a canonical
-target and raw snapshot ID. Its bounded reply preserves required nat64 fields,
-ordered globals and unavailable slots, exact floating bits, unique SHA-256 chunk
-identities and optional source/timer/hook values. It shares the existing management
-payload hash owner without changing the six-method lifecycle/recovery record.
-No provider or transfer-completeness, permission or settlement API appears.
-See [the metadata contract](contracts/ic-snapshot-metadata.json) and
-[source review](ic-snapshot-metadata-source.json). Regenerate independent wire fixtures
-and the contract with `perl scripts/dev/generate-snapshot-metadata.pl`; `--check`
-verifies exact generated bytes. Focused checks are
-`cargo test --offline --locked -p ic-backup --lib model::ic_snapshot_metadata` and
-`cargo test --offline --locked -p ic-backup --test ic_snapshot_metadata`.
+After intentional regeneration, run the corresponding codec tests and review the
+changed contracts/goldens. Relevant targets include `ic_snapshot_metadata`,
+`ic_snapshot_data` and `ic_snapshot_upload`; the data tests also cover incremental
+coverage. Goldens qualify bytes and bounds, not transport or application authority.
 
-`model::ic_snapshot_data` borrows the retained metadata reply and encodes a checked
-Wasm/heap/stable range or exact known chunk-store hash. It decodes bounded chunks
-with exact range lengths or matching actual SHA-256 bytes, including valid known
-empty chunks. Request hashing reuses the management payload owner; reply evidence
-also binds exact original metadata. It adds no aggregate coverage, provider,
-spending owner, receipt or transfer-completeness claim. See
-[the generated data contract](contracts/ic-snapshot-data.json) and
-[source review](ic-snapshot-data-source.json). Regenerate the metadata fixtures
-first, then use `perl scripts/dev/generate-snapshot-data.pl`; both generators accept
-`--check`. Focused checks are
-`cargo test --offline --locked -p ic-backup --lib model::ic_snapshot_data` and
-`cargo test --offline --locked -p ic-backup --test ic_snapshot_data`.
+Public integration journeys allocate directories through
+`crates/ic-backup/tests/support/mod.rs`, print each path and retain failed evidence.
+Only successful fixtures explicitly remove their own directories. Fixture allocation
+and recovery checks use the `fixture_roots` and `fence_reconciliation` targets.
+Unix FIFO fixtures require the standard `mkfifo -m 600` utility and verify its
+resulting type and permissions on Linux/macOS.
 
-`model::ic_snapshot_coverage::IcSnapshotDataCoverage` admits already decoded replies
-incrementally under exact metadata request/raw evidence. Each region advances from
-zero without gaps or overlaps; chunks admit once in any order. Three nat64 cursors
-and at most 1,024 presence bits retain no data buffers. `complete()` borrows a
-read-only view only after every declared size and chunk is covered. Dropping this
-ephemeral value loses its coverage; reconstructing it starts empty and never resumes
-or resets spending. It has no serialization, durable-transfer attestation, provider
-or release permit. The data contract also describes these checks. Focused coverage
-checks are `cargo test --offline --locked -p ic-backup --lib model::ic_snapshot_coverage`
-and the existing public `ic_snapshot_data` test target above.
+Install the workspace MSRV separately before `make check-msrv`. That target checks
+all targets/features and each library in an independent consumer without Testkit
+feature unification. Fixtures seed the original lock, prepare only their own locks
+offline and reject changes to selected package/version/source identities. Native
+macOS evidence remains separate from Linux; the supported product runs on a host.
 
-`DownloadJournalGuard::stage_ic_snapshot_artifact` creates the distinct private
-v1 metadata/region/chunk tree for an original Created entry. Its consuming writer
-streams already admitted replies and checks full coverage against actual retained
-bytes. Explicit `finish` persists the exact checksum through existing model/journal
-owners, then synchronizes and publishes through the canonical artifact publisher.
-Errors/drop retain partial bytes; occupied paths reject recreation. Reopen and
-`finalize_artifact` recover ChecksumVerified publication without repeating reads.
-Generic token/raw-ID mapping, authentic transfer, spending/permission and stable
-external custody remain integration-owned. Explicit `verify_ic_snapshot_artifact`
-checks one published tree against the full retained original plan, unchanged journal,
-original metadata/request, region lengths and bounded chunk hashes. Complete Durable
-selection is required, but only the requested target's bytes are verified. No evidence
-is rewritten, ordinary resume reads no artifact bytes, and the returned checksum
-holds no upload permission or fresh byte custody. See
-[the tree contract](contracts/ic-snapshot-artifact.json) and
-[source review](ic-snapshot-artifact-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal`,
-`cargo test --offline --locked -p ic-backup --lib artifact_commit` and
-`cargo test --offline --locked -p ic-backup --test ic_snapshot_artifact`.
-Unix FIFO fixtures use the host's `mkfifo -m 600` utility and verify the created
-file type and permissions. This works with the standard Linux/macOS utility;
-Rustix's descriptor-relative FIFO creation API is unavailable on Apple targets.
-
-Public integration journeys reserve their fixture directories through
-`crates/ic-backup/tests/support/mod.rs` before creating children. Atomic directory
-creation and a process-local sequence replace clock-derived ownership; occupied
-files, directories and links are skipped without replacement, with a 128-candidate
-ceiling. Each allocated path is printed for failure diagnosis. The helper performs
-no automatic cleanup: journeys retain failed evidence and explicitly remove only
-their successful owned fixtures. Focused allocation/recovery checks are
-`cargo test --offline --locked -p ic-backup --all-features --test fixture_roots --test fence_reconciliation`.
-
-`policy::snapshot_inventory_delta::compare` borrows the existing capture declaration
-and bounded inventory replies. It rejects method/target mismatch, lost baseline IDs
-and changed baseline metadata, then exposes canonical new descriptors without IO,
-serialization, journal mutation or capture attribution. The original request/reply
-owners supply exact evidence; no new record or hash encoder is added. See
-[the comparison contract](contracts/snapshot-inventory-delta.json) and
-[fresh Canic provenance](snapshot-inventory-delta-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib policy::snapshot_inventory_delta`
-and `cargo test --offline --locked -p ic-backup --test snapshot_inventory_delta`.
-These native fixtures qualify local comparison and retention, not remote settlement.
-
-`model::ic_lifecycle_reply` admits the existing stop/start/load canonical empty
-tuple and required status/settings/controllers projection. Status uses the upstream
-SDK enum and existing bounded `ControllerSet` owner. Unprojected fields are skipped
-under finite work limits and remain unqualified; exact raw evidence hashes retain
-them. Required fields, duplicate controllers, excess counts/work/types, extra
-arguments and trailing bytes reject. No transport, receipt or fresh provider evidence
-is installed. See [the reply contract](contracts/ic-lifecycle-reply.json) and
-[fresh source provenance](ic-lifecycle-reply-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib model::ic_lifecycle_reply` and
-`cargo test --offline --locked -p ic-backup --test ic_lifecycle_reply`.
-
-Rust 1.99.1 is pinned in `rust-toolchain.toml`, with rustfmt and Clippy. The
-minimum supported version is 1.91.0. Both libraries are checked on that
-compiler. Install it separately for `make check-msrv`, which records Cargo/rustc
-versions, compiles
-all targets/features and checks each public library in an independent consumer
-without Testkit feature unification. Those fixtures seed the unchanged workspace
-lock, prepare only their own standalone locks offline and refuse any different
-selected package/version/source. No dependency downgrade or ignored Rust floor
-is used. The actual toolchain, locked graph and independent consumers passed
-on Linux for the 1.91.0 support floor. Native macOS qualification remains
-separate. Native builds are the supported product lane; the toolkit runs on
-an operator host.
-
-`policy::download_integrity::validate` checks retained plan/journal declarations
-without IO. `DownloadJournalGuard::verify_durable_artifacts` separately re-admits
-the persisted original plan and unchanged journal, then verifies every published
-directory checksum. Neither result is a terminal proof or backend transfer permit;
-integrations maintain stable byte custody during sequential checks. See
-[the integrity contract](contracts/download-integrity.json) and
-[fresh source provenance](download-integrity-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib download_integrity`,
-`cargo test --offline --locked -p ic-backup --lib ops::persistence::download_journal::integrity`
-and `cargo test --offline --locked -p ic-backup --test download_integrity`.
-
-`DownloadJournalGuard::publish_download_manifest` reuses that guarded fresh byte
-verification and immutably publishes the exact existing `DownloadJournalRecord` at
-`download-manifest.json`, under its original plan. The v1 schema/1 MiB/1,024-entry
-bounds are unchanged; its model-owned binary digest binds exact snapshot metadata,
-paths, state and checksums. `read_download_manifest` validates the expected digest,
-original plan and unchanged retained download journal under exclusion. Drop active
-download guards before replay; replay reads records only, even with absent artifact
-trees. Complete backend transfer/consistency and full terminal proof remain separate.
-See [the contract and independent goldens](contracts/download-manifest.json) and
-[source inspection](download-manifest-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib download_manifest` and
-`cargo test --offline --locked -p ic-backup --test execution_settlement`.
-
-`policy::local_restore_source::validate` joins the original restore/source plans,
-requirement and exact local manifest without IO. Its selected artifacts borrow the
-complete original durable source; no IDs are rebound. Opt into this local source
-binding by retaining the existing download-manifest digest as `source_artifacts`;
-generic integration artifact digests keep their existing meaning.
-`DownloadJournalGuard::read_download_manifest` reads exact retained evidence while
-borrowing its held original journal, without reacquiring that journal's lock.
-`verify_local_restore_source` additionally admits the retained requirement and both
-plans before/after fresh no-follow checks of every source tree, including artifacts
-outside a restore subset. The view borrows both layout lifetimes. Record-only replay
-never invokes this explicit verification. No references, spending or obligations change;
-stable noncooperating bytes and actual capture/transfer/application safety remain
-integration-owned. See [the contract](contracts/local-restore-source.json) and
-[fresh inspection](local-restore-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib local_restore_source` and
-`cargo test --offline --locked -p ic-backup --test local_restore_source`.
-
-Generic operation-bound restore-copy APIs are retired. Current IC upload preparation
-reads exact bounded extents from verified original snapshot artifacts, retaining
-source references and safety requirements. Existing restore copies and original
-journals remain evidence: finish an unfinished copy-based restore with its original
-released tool before adopting the cut, or obtain explicit safe disposition from
-the integration owner. See [the retirement boundary](extraction-boundary.md#retired-generic-restore-artifact-copies).
-
-`model::restore_safety` retains an immutable original restore/source/artifact/safety
-requirement. Persistence requires both original plans under unchanged layout guards
-and never replaces the 1 KiB declaration. Ephemeral exact load/start requests and
-canonical actual evidence feed pure `policy::restore_safety`; the provider port has
-no installed implementation. Applications qualify source/upload completeness,
-fresh lifecycle, irreversible-work absence or rewind-independent retained fence/
-replay safety, and restored-state acceptance. Views grant no effects or release.
-See [the requirement schema](contracts/restore-safety-requirement.schema.json),
-[typed port contract](contracts/restore-safety-port.json) and
-[source provenance](restore-safety-source.json). Focused checks are
-`cargo test --offline --locked -p ic-backup --lib restore_safety` and
-`cargo test --offline --locked -p ic-backup --test restore_safety`.
-
-`model::fence_obligation` retains exact original capture/restore requirements,
-fence revisions and the explicit application acquisition operation. Fixed
-`fence-obligation.json` publication is immutable and bounded to 1 KiB; existing
-plan/requirement owners and both restore/source layout guards admit its originals.
-`policy::fence_obligation::acquisition_progress` returns the existing exact attempt
-journal view. It creates no spending owner, Active/released flag or dispatch permit.
-Actual request semantics, acquisition and authenticated reconciliation remain
-integration-owned; controlled release requires terminal evidence before an API
-can be added. See [the schema](contracts/fence-obligation.schema.json),
-[source inspection](fence-obligation-source.json) and
-[maintained boundary](extraction-boundary.md#original-application-fence-obligation-retention).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_obligation`
-and `cargo test --offline --locked -p ic-backup --test fence_obligation`.
-
-`model::fence_reconciliation`, its read-only provider port and pure policy bind an
-existing pending acquisition to the exact reserved observation. The journal's
-pending-request accessor reads its existing projection without changing v1 records
-or accounting. Responses require exact original unit/context and attributed fence
-evidence; a single descriptive remote observation never grants spending authority.
-Provider failures retain pending spent attempts, obligations and source references;
-retained late replies can be admitted without another provider call. See the
-[typed contract](contracts/fence-reconciliation-port.json),
-[fresh source inspection](fence-reconciliation-source.json) and
-[maintained boundary](extraction-boundary.md#reserved-fence-acquisition-reconciliation).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_reconciliation`
-and `cargo test --offline --locked -p ic-backup --test fence_reconciliation`.
-
-`model::fence_acquisition` admits exact original application update envelopes and
-checks their target/digest against the existing reserved acquisition journal.
-Opaque arguments are bounded to 1 MiB before copying; methods retain 1..128 visible
-ASCII bytes. Application codecs retain/qualify original whole-unit semantics and
-actual dispatch authority. The provider contract permits one prior-accounted update
-without hidden retries or observations. Pure acknowledgement association writes no
-receipt or outcome; errors/acknowledgements leave the original mutation pending.
-See the [typed contract and independent goldens](contracts/fence-acquisition-port.json),
-[fresh inspection](fence-acquisition-source.json) and
-[maintained boundary](extraction-boundary.md#exact-application-fence-acquisition-requests).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib fence_acquisition`
-and `cargo test --offline --locked -p ic-backup --test fence_acquisition`.
-
-Use `workflow::fence_acquisition::acquire_fence` with the prepared original stage,
-retained purpose-specific requirement/obligation and exact original payload. Hold
-no attempt guards on entry. The coordinator checks originals before spending,
-reserves through complete-plan admission and holds the selected journal across
-fresh application admission and one provider call. Capture and restore retain
-separate original requirements; restore keeps its source layout/plan. Callers
-qualify actual application semantics, fresh permissions and command custody.
-Replies stay pending, and cancellation cannot grant reentry. Post-reply errors
-retain passive acknowledgement evidence. Focused native orchestration checks are
-`cargo test --offline --locked -p ic-backup --lib workflow::fence_acquisition`.
-
-Use `workflow::fence_reconciliation::observe_fence_acquisition` for one observation
-of an existing pending acquisition. Retain the same stage, original acquisition
-bytes, purpose-specific requirement/obligation and, for restore, source layout/plan.
-Hold no attempt guards on entry. The step reserves through complete-plan admission
-and holds selected journal exclusion across mandatory fresh application admission
-and one observation-provider await. Callers qualify read authority, whole-unit
-membership, exact observation semantics, exclusive attribution and never-dispatched
-custody; preflight calls require their own accounting. Both attempts stay pending.
-Cancellation denies reentry, and post-reply errors retain complete observations.
-Explicit authenticated settlement remains integration-owned. No default application
-provider exists. Native checks are
-`cargo test --offline --locked -p ic-backup --lib workflow::fence_acquisition::tests::reconciliation`.
-
-`model::ic_mutation::IcMutationRequest` binds the exact original plan operation,
-immutable allowances and existing closed IC payload to an already pending mutation.
-The provider contract describes one previously accounted host update. Pure
-`policy::ic_mutation::validate_acknowledgement` checks current reservation and actual
-claimed context/target/authority/attempt, then uses the existing bounded snapshot or
-lifecycle decoder. Raw reply ownership is capped at 1 MiB and Debug is redacted;
-matching preserves all pending spending and establishes no receipt or fresh permit.
-Lost replies need original reconciliation, and pending recovery observations cannot
-be bypassed. Fresh authentication, permissions/prerequisites, capture consistency,
-same-release load/start source/upload/application safety and exclusive custody remain
-integration-owned. No transport/provider implementation exists. See
-[the typed contract](contracts/ic-mutation-port.json),
-[fresh source inspection](ic-mutation-source.json) and
-[maintained boundary](extraction-boundary.md#exact-originally-reserved-ic-mutation-updates).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib ic_mutation`
-and `cargo test --offline --locked -p ic-backup --test ic_mutation`.
-
-`model::ic_observation::IcObservationRequest` binds both pending original attempts,
-original mutation bytes and exact already reserved status/list payload to the full
-plan and immutable authority. The provider contract permits one previously accounted
-host replicated observation, with no hidden retries or follow-up calls. Pure
-`policy::ic_observation::validate_response` rechecks current reservation, exact payload,
-both attempt IDs and actual claimed context/target, then reuses existing status or
-snapshot inventory decoders. Raw replies are capped at 1 MiB with redacted Debug.
-Matching writes no receipt; lost replies remain pending rather than settled Uncertain.
-Status/controller projections and inventory cardinality establish no automatic effect
-outcome. Authentication, method-specific current read permission, chronology and
-exclusive attribution/dispatch custody remain integration-owned. No implementation
-is installed. See [the contract](contracts/ic-observation-port.json),
-[source inspection](ic-observation-source.json) and
-[boundary](extraction-boundary.md#exact-originally-reserved-ic-recovery-observations).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib ic_observation`
-and `cargo test --offline --locked -p ic-backup --test ic_observation`.
-
-`model::execution_settlement` retains bounded strict v1 original plan/journal
-fingerprints, with independent binary goldens for full chronological history.
-Pure admission reuses `execution_progress` and requires the exact original journal
-set, every operation Applied and unchanged receipt/reservation histories. Fixed
-`execution-settlement.json` has immutable 2 MiB publication/read under retained
-original plans and per-journal guards. Drop active journal guards before invoking
-these operations. Bulk canonical authority derivation hashes the full plan once;
-sequential journal locks bound descriptor use. Replay performs local IO only and
-supplies no terminal, fresh verification, command-quiescence or release authority.
-See the [schema and goldens](contracts/execution-settlement.schema.json),
-[fresh inspection](execution-settlement-source.json) and
-[maintained boundary](extraction-boundary.md#original-execution-settlement-checkpoints).
-Focused checks are `cargo test --offline --locked -p ic-backup --lib execution_settlement`
-and `cargo test --offline --locked -p ic-backup --test execution_settlement`.
-
-For checkpoint creation and recovery after lost local publication replies, use
-`reconcile_execution_settlement` or `ExecutionStageGuard::reconcile_checkpoint`.
-An exact occupied checkpoint replays without replacement; changed or unsafe evidence
-refuses. For read-only inspection use `replay_execution_settlement`,
-`read_execution_settlement` or `ExecutionStageGuard::replay_checkpoint`; these never
-create an absent checkpoint. The 0.29 hard cut removes fresh-only checkpoint
-shortcuts and direct public record publication without aliases.
-
-Management reply decoding delegates exact-result and compact decoder setup to
-the selected `ic-platform` with explicit `candid` and `management-canister-types`
-features. Product DTO bounds, raw limits, per-method quotas
-and redacted outer errors remain in Backup. Independent consumer qualification
-rejects simulator packages in the production graph. Run existing codec goldens and
-bounds against the extracted production decoder when changing this selection.
-
-## Snapshot upload payloads
-
-`model::ic_snapshot_upload` owns same-target metadata/data arguments and bounded
-passive replies. Metadata preserves every available global and absent timer/hook
-values; an unavailable global rejects. No replacement is encoded. Data binds exact
-original extents or known chunk hashes, actual bytes and a distinct new raw ID.
-Keep `binding_digest()` in the new original operation plan; `digest()` hashes wire
-bytes only. Each later data intent includes the allocated ID before its own
-reservation. A metadata reservation cannot supply data spending.
-
-`DownloadJournalGuard::prepare_ic_snapshot_upload_metadata` freshly verifies the
-original published IC tree. `prepare_ic_snapshot_upload_data` verifies before/after
-one bounded no-follow source read. These operations change no records or references
-and hold no future byte custody. `IcSnapshotUploadAttempt` and pure
-`policy::ic_snapshot_upload::validate_acknowledgement` recheck current original
-pending evidence, without receipt, retry, remote call or complete-upload proof.
-Lost replies remain pending, including lost recovery observations.
-
-Focused checks are `cargo test --offline --locked -p ic-backup --lib upload` and
-`cargo test --offline --locked -p ic-backup --test ic_snapshot_upload`. Regenerate
-metadata fixtures first, then `perl scripts/dev/generate-snapshot-upload.pl`;
-`--check` independently compares all registered wire/hash fixtures and the
-[machine contract](contracts/ic-snapshot-upload.json). Native fixtures qualify local
-bytes and declarations only; real IC upload and lost-effect reconciliation remain
-unimplemented. See [the boundary](extraction-boundary.md#original-source-bound-ic-snapshot-upload).
-
-Exact data-upload recovery and settlement use
-`policy::ic_snapshot_upload_data_observation::validate_response` and
-`validate_settlement`. Retain original destination metadata/read bytes before
-reservation. The latter also matches independently qualified attribution, a fresh
-challenge and exact readback/provenance evidence. It never records a receipt or
-performs another call. Matching bytes alone do not supply attribution; lost replies
-stay pending. The public local upload case also exercises an explicit synthetic
-settled-uncertainty receipt through the existing journal owner and exhausted reopen.
-This qualifies persistence only. See
-[the contract](contracts/ic-snapshot-upload-data-settlement.json).
-
-For complete data-stage coordination, first obtain the independently qualified
-allocation acknowledgement/predecessor from `allocate_snapshot`. Admit its canonical
-metadata reply and call `prepare_ic_snapshot_data_upload_plan` on the original source
-guard. Use its `bind` with the allocation binding, plan and retained predecessor;
-prepare that exact original stage and complete journals through existing workflow
-owners. `upload_snapshot_data` then requires separate fresh-admission and independent
-qualification callbacks for each write. Qualification must durably retain original
-request/reply bytes before returning its explicit exact Applied receipt.
-
-The coordinator buffers one freshly verified payload at a time, stops on every
-failure and refuses any consumed stage on reentry. Plan preparation reads and hashes
-exact payload bytes in one bounded batch,
-with full-tree verification before and after it. These three source passes do not
-grow with the number of extents. Actual writes still freshly verify each payload's
-source before and after preparation; no benchmark speed-up is claimed.
-Empty data has no child plan. Checkpointed writes need independent destination and
-application qualification before load/start. Focused actual simulator checks are
-`cargo test --offline --locked -p ic-backup --test pocketic_snapshot planned_upload`;
-they include complete upload and lost/malformed second writes. Local fixtures also
-cover source drift, invalid receipts, missing journals and occupied checkpoints.
-
-## Local IC artifact diagnostics
-
-Persistence guards no longer retain diagnostic metrics, mutexes or timing samples.
-The `ic_snapshot_metrics` API and Metrics type reexports are removed in 0.28.
-Measure returned verification/preparation calls in the caller or performance
-fixtures; select `ic-metrics` directly if a report needs its arithmetic. Such
-measurements never supply progress, spending, receipts or recovery authority.
-The [prior dependency review](ic-metrics-adoption.json) remains provenance for
-older releases rather than a current dependency requirement.
+Measure artifact verification/preparation in the caller or performance fixture.
+Diagnostics never supply progress, spending, receipts or recovery authority.
 
 ## Current shared tool selection
 
@@ -990,80 +527,10 @@ bytes; the MIT notices remain in the root license.
 
 Native tests qualify the extracted local mechanisms, including actual child
 process death around publication and lock ownership. They perform no IC effects.
-Snapshot and lifecycle behavior will
-require PocketIC or a deliberately selected real local IC backend. The original
+Snapshot and lifecycle checks require PocketIC or a deliberately selected real local IC backend. The original
 [Canic source baseline](source-baseline.json) remains retained planning evidence.
 [Fresh source provenance](extraction-source.json) records this extraction input
 and the public consumers; it is separate from test qualification.
-
-## Metadata-allocation settlement admission
-
-The existing metadata-observation module admits independently qualified allocation
-claims against exact original/current inventory evidence and still-pending attempts.
-Reuse canonical inventory delta and source/destination identity admission; never
-infer outcomes from candidate counts. See [the maintained boundary](extraction-boundary.md#exact-metadata-upload-settlement-claims).
-Focused tests select `upload`, `snapshot_inventory_delta` and `ic_observation` with
-`cargo test --offline --locked -p ic-backup --lib FILTER`, plus the existing public
-`ic_snapshot_upload` target. Native synthetic settled claims qualify only local
-admission/accounting/reopen; actual authenticated providers remain integration-owned.
-
-## Dependency and retained-evidence cuts
-
-The former Metrics getter/reexport contract is removed in 0.28. Applications own
-reporting and select their own Metrics dependency where needed; no compatibility
-adapter or per-guard diagnostic state remains.
-
-The maintained v1 records, digests, retained source artifacts, spending reservations,
-fence obligations and restore references retain their exact formats and owners.
-Do not reset or discard unfinished evidence as part of this dependency hard cut.
-Package version changes, release execution and publication remain maintainer-owned.
-
-## Stream hashing and generic IO ownership
-
-Backup keeps private directory checksum record adapters. Independent directory,
-file/path hashing and copying use Host FS and Host Artifacts directly, with caller-
-selected custody and bounds. Product staging uses the journal-bound IC snapshot
-writer. Generic JSON reading is also internal; product consumers use guarded
-record operations, while independent documents use bounded Host FS reads and
-caller-owned decoding. These 0.28 cuts retain original artifacts and partial trees.
-
-Stream hashing uses Host Artifacts directly. Host FS
-`durable::tree::sync_checksum_directory_at` synchronizes files before hashing and
-directories after children. Backup projects the original step/error identities,
-admits its expected checksum and retains publication/recovery custody. The unused
-private stream adapter is removed. Interrupted reads retry within the shared
-reader; callers own blocking/timeouts. Other IO kinds/causes and invalid-count
-refusal remain unchanged.
-
-Raw checksum construction and digest formatting use the shared `Sha256Digest`,
-while Backup owns its normalized v1 record and permissive equivalent hex casing.
-ASCII case normalization precedes shared digest parsing; malformed-hash errors
-retain the original input. Layout lock keys use the same canonical raw digest
-formatter. Raw digest-text fields in plans, attempt identity/history, inventories,
-requirements, downloads and references call the one internal normalizer directly;
-they do not construct checksum records merely to extract a normalized string.
-Independent persistence reopen admission uses that same owner and keeps its
-original error conversion/order. Layout lock keys retain their exact prior names.
-IC artifact verification supplies
-the opened file's admitted length to shared bounded hashing, checks the returned
-byte count and rejects short/excess input as `FileShape`. Original IO errors and
-independent descriptor/path identity checks remain intact. These consolidate
-existing contracts without another public checksum API or retained-data reset.
-IC chunk hash comparison and names use Host's typed SHA-256 value. Bounded copies/collection
-and output counting use Host Artifacts; no-follow record reads use Host FS. Unused
-archive/compression/Wasm features are disabled and their lockfile entries removed.
-Host owns directory digest framing and ordered sync traversal. Backup retains
-0700/0600 staging, product crash hooks, expected-checksum admission, guarded
-publication/recovery, journals and spending. Existing
-records/artifacts need no reset. See [the adoption review](ic-host-tools-adoption.json).
-The published 0.3.0 archives' recorded source commit is available locally but was
-not retrievable from their declared GitHub repository at inspection; the upstream
-[provenance report](https://github.com/dragginzgame/ic-host-tooling/issues/7)
-records that separate limitation. Cached archive/source verification does not
-establish upstream CI or native qualification.
-Focused unit filters are `ops::artifacts`, `model::artifacts` and
-`ops::persistence::json`; artifact commit and IC source preparation retain their
-existing checks above. Native filesystem qualification is distinct from IC effects.
 
 ## Workspace inheritance and version inspection
 
@@ -1137,12 +604,3 @@ sorting, actual Rust formatting and hook/index custody remain consumer-owned.
 The helper's rejection fixtures run in normal tooling checks and explicitly
 under macOS system Bash 3.2. Native qualification belongs to the configured
 consumer jobs, independently from a Linux pass or upstream source adoption.
-
-## Explicit fence-observation receipt recording
-
-For a retained result from `observe_fence_acquisition`, supply its original challenge
-and observation to `settle_fence_acquisition_observation`. The required callback
-qualifies actual application attribution/authentication and retained evidence before
-returning the exact `ObservationReceiptRequest`. The selected journal stays locked
-through that callback; hold no attempt guards on entry. See the
-[settlement contract](extraction-boundary.md#explicit-original-fence-observation-settlement).

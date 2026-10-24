@@ -7,18 +7,15 @@ use crate::{
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
         ic_snapshot_transfer_read::{
-            IcSnapshotTransferReadError, IcSnapshotTransferReadPayload,
-            IcSnapshotTransferReadRequest, IcSnapshotTransferReadResponse,
+            IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
+            IcSnapshotTransferReadResponse,
         },
     },
     ops::persistence::{
         AttemptJournalError, AttemptJournalGuard, ExecutionStageCheckpointError,
         ExecutionStageGuard, ExecutionWorkflowPersistenceError,
     },
-    policy::ic_snapshot_transfer_read::{
-        IcSnapshotTransferReadAssociationError, IcSnapshotTransferReadReply,
-        IcSnapshotTransferReadView,
-    },
+    policy::ic_snapshot_transfer_read::{IcSnapshotTransferReadReply, IcSnapshotTransferReadView},
     ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     workflow::ic_snapshot_transfer_read::{
         IcSnapshotTransferReadExecutionError, read_snapshot_with,
@@ -169,12 +166,6 @@ pub enum IcSnapshotMetadataSettlementError<E: std::error::Error + 'static> {
     /// Original selected journal or receipt admission failed.
     #[error(transparent)]
     Journal(#[from] AttemptJournalError),
-    /// Exact original request/current reservation admission failed.
-    #[error(transparent)]
-    Request(#[from] IcSnapshotTransferReadError),
-    /// Existing bounded passive response admission failed.
-    #[error(transparent)]
-    Association(#[from] IcSnapshotTransferReadAssociationError),
     /// Canonical all-Applied checkpoint publication/re-admission failed.
     #[error(transparent)]
     Checkpoint(#[from] ExecutionStageCheckpointError),

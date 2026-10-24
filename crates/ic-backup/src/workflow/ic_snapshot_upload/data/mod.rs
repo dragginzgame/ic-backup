@@ -9,7 +9,6 @@ use crate::{
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
             IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadAttempt,
-            IcSnapshotUploadAttemptError,
         },
     },
     ops::persistence::{
@@ -17,7 +16,6 @@ use crate::{
         ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionWorkflowPersistenceError,
         IcSnapshotUploadArtifactError, read_execution_progress,
     },
-    policy::ic_snapshot_upload::IcSnapshotUploadAssociationError,
     ports::ic_snapshot_upload::IcSnapshotUploadProvider,
 };
 use thiserror::Error;
@@ -184,10 +182,4 @@ pub enum IcSnapshotDataUploadReplyError<E: std::error::Error + 'static> {
     /// Existing selected journal/receipt persistence failed.
     #[error(transparent)]
     Journal(#[from] AttemptJournalError),
-    /// Existing original payload/current reservation binding failed.
-    #[error(transparent)]
-    Request(#[from] IcSnapshotUploadAttemptError),
-    /// Existing bounded acknowledgement association failed.
-    #[error(transparent)]
-    Association(#[from] IcSnapshotUploadAssociationError),
 }

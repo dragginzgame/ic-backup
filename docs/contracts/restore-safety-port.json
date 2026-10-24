@@ -50,7 +50,7 @@
       "source" : "Exact qualified original source plan and complete artifacts; before load, complete metadata/data and target-local snapshot ID association to the original source",
       "targets" : "1..1024 normalized sorted unique inventory-backed actual target rows, upstream CanisterStatusType, lifecycle/drained-work evidence and nullable source-specific restored acceptance"
    },
-   "provider_errors" : {
+   "integration_failure_semantics" : {
       "Indeterminate" : "Unknown actual state/custody/source/reply/accounting; retain consumed authority and obligations and stop without retry/reset/release",
       "Unavailable" : "No qualified provider; reject before effects",
       "Unsupported" : "Cannot qualify original safety/source contract; reject before effects"
