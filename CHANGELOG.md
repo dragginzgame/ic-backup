@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.44.0]
+
+- **Breaking Rust dependency identity:** adopt published Host 0.68.0. Consumers
+  exchanging Host checksum/publication errors with Backup must align their Host
+  dependencies to 0.68. Product wire/storage and recovery contracts are unchanged.
+- Adopt Testkit and the contributor release editor at 0.68.0. Backup does not
+  enable Testkit's optional Wire adapter; simulator lifecycle and asset ownership
+  remain with Testkit. Prepare tools with `make install-testkit-server` and
+  `make install-release-editor`.
+
 ## [0.43.0] - 2026-10-24
 
 - **Breaking Rust API:** remove `ExecutionStageGuard::create`. Use `prepare` to
