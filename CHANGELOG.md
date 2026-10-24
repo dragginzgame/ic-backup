@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.41.0]
+## [0.41.0] - 2026-10-24
 
 - **Breaking Rust API:** remove standalone inventory/graph persistence and
   caller-declared completion readiness. Persist full operation plans and derive
