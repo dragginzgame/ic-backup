@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.43.0]
+## [0.43.0] - 2026-10-24
 
 - **Breaking Rust API:** remove `ExecutionStageGuard::create`. Use `prepare` to
   create a stage with its complete original attempt journals; use `open` for
