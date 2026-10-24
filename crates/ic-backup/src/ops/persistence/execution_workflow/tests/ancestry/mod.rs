@@ -82,7 +82,7 @@ fn changed_ancestor_history_refuses_descendant_before_allocation() {
     fs::write(&path, serde_json::to_vec_pretty(&journal).unwrap()).unwrap();
     let changed = fs::read(&path).unwrap();
     assert!(matches!(
-        ExecutionStageGuard::create(&layout, binding.clone(), plan(9)),
+        ExecutionStageGuard::create_with(&layout, binding.clone(), plan(9), |_| {}),
         Err(ExecutionWorkflowPersistenceError::Settlement(_))
     ));
     assert!(matches!(

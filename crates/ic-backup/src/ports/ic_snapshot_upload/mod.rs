@@ -54,6 +54,3 @@ pub trait IcSnapshotUploadProvider {
         journal: &AttemptJournalRecord,
     ) -> impl Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>;
 }
-
-#[cfg(test)]
-mod tests;

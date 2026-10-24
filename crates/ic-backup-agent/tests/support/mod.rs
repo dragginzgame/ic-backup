@@ -26,7 +26,6 @@ pub fn retain_signed(
     root: &std::path::Path,
     prepared: &ic_backup_agent::PreparedUpdate<'_>,
 ) -> std::io::Result<()> {
-    use std::io::Write;
     for (name, bytes) in [
         ("signed-ingress.cbor", prepared.envelope().to_vec()),
         (
@@ -34,19 +33,36 @@ pub fn retain_signed(
             prepared.request_id().to_string().into_bytes(),
         ),
     ] {
-        let mut options = fs::OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let mut file = options.open(root.join(name))?;
-        file.write_all(&bytes)?;
-        file.sync_all()?;
+        retain_file(&root.join(name), &bytes)?;
     }
     fs::File::open(root)?.sync_all()
 }
+
+/// Create and sync one private evidence file, preserving partial bytes on failure.
+fn retain_file(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()
+}
+
+/// Retain a single evidence file and synchronize its existing parent.
+#[allow(
+    dead_code,
+    reason = "shared support also compiles in binaries retaining only signed ingress"
+)]
+pub fn retain_bytes(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
+    retain_file(path, bytes)?;
+    fs::File::open(path.parent().unwrap())?.sync_all()
+}
+
 pub fn identity() -> Arc<dyn Identity> {
     Arc::new(AnonymousIdentity)
 }

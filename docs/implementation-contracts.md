@@ -92,7 +92,8 @@ journal admission; hold no unrelated attempt guards when entering it.
 
 ## Workflow preparation and checkpoints
 
-Catalog rows declare stage purposes and ceilings; only bound child plans own
+`ExecutionStageGuard::prepare` is the sole public fresh-stage constructor;
+record-only allocation remains private. Catalog rows declare stage purposes and ceilings; only bound child plans own
 attempt journals. Keep exact target/context/full inventory, original stage budgets,
 fixed create-only directories and predecessor bindings. Before allocation, derive
 all authorities and encode/admit plan and binding bytes. Fresh preparation creates

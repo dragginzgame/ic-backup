@@ -99,7 +99,7 @@ fn pending_attempt_survives_exact_reopen_without_new_plan_or_allowance() {
     drop(journal);
     let bytes = fs::read(stage_layout.root().join("attempt-42.json")).unwrap();
     drop(stage);
-    assert!(ExecutionStageGuard::create(&layout, binding.clone(), child(0)).is_err());
+    assert!(ExecutionStageGuard::create_with(&layout, binding.clone(), child(0), |_| {}).is_err());
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
     let stage_layout = stage.layout().unwrap();
@@ -152,7 +152,7 @@ fn exact_predecessor_settlement_admits_learned_plan_but_changed_history_stops() 
 fn declarations_and_missing_settlement_never_allocate_a_successor() {
     let (root, layout, workflow) = prepare();
     let first = ExecutionStageBindingRecord::new(&workflow, 0, &child(0), vec![]).unwrap();
-    drop(ExecutionStageGuard::create(&layout, first.clone(), child(0)).unwrap());
+    drop(ExecutionStageGuard::create_with(&layout, first.clone(), child(0), |_| {}).unwrap());
     let row = ExecutionStagePredecessorRecord::new(
         0,
         first.digest(),
@@ -160,7 +160,7 @@ fn declarations_and_missing_settlement_never_allocate_a_successor() {
         ArtifactChecksumRecord::from_bytes(b"learned"),
     );
     let binding = ExecutionStageBindingRecord::new(&workflow, 7, &child(7), vec![row]).unwrap();
-    assert!(ExecutionStageGuard::create(&layout, binding, child(7)).is_err());
+    assert!(ExecutionStageGuard::create_with(&layout, binding, child(7), |_| {}).is_err());
     assert!(!root.join("execution-stage-7").exists());
     assert!(!root.join("execution-stage-0/attempt-42.json").exists());
     drop(layout);
@@ -171,7 +171,7 @@ fn declarations_and_missing_settlement_never_allocate_a_successor() {
 fn lost_complete_creation_reopens_but_partial_or_unsafe_preparation_is_retained() {
     let (root, layout, workflow) = prepare();
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &child(0), vec![]).unwrap();
-    drop(ExecutionStageGuard::create(&layout, binding.clone(), child(0)).unwrap());
+    drop(ExecutionStageGuard::create_with(&layout, binding.clone(), child(0), |_| {}).unwrap());
     assert!(!root.join("execution-stage-0/attempt-42.json").exists());
     // Discard the successful response and recover only exact retained records.
     let stage =
@@ -182,7 +182,7 @@ fn lost_complete_creation_reopens_but_partial_or_unsafe_preparation_is_retained(
     let original = fs::read(&path).unwrap();
     fs::remove_file(&path).unwrap();
     assert!(ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).is_err());
-    assert!(ExecutionStageGuard::create(&layout, binding.clone(), child(0)).is_err());
+    assert!(ExecutionStageGuard::create_with(&layout, binding.clone(), child(0), |_| {}).is_err());
     assert!(root.join("execution-stage-0/operation-plan.json").exists());
     assert!(!path.exists());
     fs::write(&path, original).unwrap();
@@ -275,7 +275,7 @@ fn acknowledged_process_death_retains_partial_stage_or_reopens_complete_binding(
         let reopened = ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest());
         assert_eq!(reopened.is_ok(), complete);
         drop(reopened);
-        assert!(ExecutionStageGuard::create(&layout, binding, child(0)).is_err());
+        assert!(ExecutionStageGuard::create_with(&layout, binding, child(0), |_| {}).is_err());
         assert_eq!(
             fs::read(stage_path.join("operation-plan.json")).unwrap(),
             original

@@ -2271,8 +2271,8 @@ plan owner bounds assigned operation allowances. Zero-total child operations
 reject, bounding total child operations by original allocated attempts. Rebuilding
 an in-memory plan grants no extra allowance and cannot replace the retained plan.
 
-`ExecutionStageGuard::create` borrows the original workflow layout and creates
-only its fixed direct `execution-stage-{sequence}` child with 0700 permissions.
+The private stage-allocation step within `ExecutionStageGuard::prepare` borrows
+the original workflow layout and creates its fixed direct `execution-stage-{sequence}` child with 0700 permissions.
 It validates all records before filesystem allocation and requires each original
 predecessor's exact retained binding/plan and complete Applied settlement through
 the existing journal-history owner. Parent synchronization and existing durable
@@ -2299,13 +2299,12 @@ exact learned snapshot/extent evidence and derivation, receipt authentication,
 fresh effect-boundary permissions/safety and never-dispatched command/byte custody.
 Noncooperating filesystem custody retains its existing operator-owned boundary.
 
-`ExecutionStageGuard::prepare` additionally derives all original child authorities
-before allocation and creates their complete attempt-journal set through the
+`ExecutionStageGuard::prepare` is the public fresh-stage entry point. It derives
+all original child authorities before allocation and creates their complete attempt-journal set through the
 existing durable create-only journal owner before returning. It takes one journal
 lock at a time and re-admits original stage/predecessor records after publication.
-`create` remains the record/layout primitive and creates no journals. Neither
-entrypoint reserves attempts, authenticates receipts or supplies fresh dispatch
-custody. Partial journal preparation retains the occupied stage and every original
+Record/layout allocation remains private. Preparation reserves no attempts,
+authenticates no receipts and supplies no fresh dispatch custody. Partial journal preparation retains the occupied stage and every original
 record; calling `prepare` again refuses rather than filling gaps. A lost successful
 response can reopen the complete exact set. `open` creates no journal, and execution
 admission still rejects any missing, changed or unsafe original. The typed
@@ -2831,54 +2830,15 @@ qualification; production terminal providers, application fence release and Cani
 adoption remain separate. Generic journal sidecars may protect file or directory
 publication locations; terminal readers own journal-file admission.
 
-| Canic surface | Extraction disposition |
-| --- | --- |
-| Original all-Applied journal settlement | Adapted immutable full-plan/exact-history local checkpoint and guarded replay; completion counts/flags, command exit, actual terminal proof and release authority are not imported |
-| Hash helpers and artifact IO | Copied into pure checksum records and artifact ops; canonical decoding and UTF-8 identity strengthened |
-| JSON IO, journal/file locking, artifact publication | Copied into persistence ops; record byte bounds/private permissions added; direct regressions rerun |
-| Layout lifetime locks and reference retention | Copied with model-owned v1 validation/transitions, stable parent-side locking, directory identity and explicit bounds |
-| Command lifetime locks | Copied with owned inheritance, exact v1 sidecar identity, one-spawn allowance and retained exclusive quiescence; fresh native process evidence |
-| Reference release and prune | Remain in Canic until terminal completion, backend custody and runner integration govern release/deletion |
-| Local download journal lifecycle | Adapted exact v1 identities, state/checksum transitions and derived views; guarded local verification/publication and explicit original-plan/exact-set published-byte checks with fresh recovery evidence |
-| Pending claims and operation receipts | Adapted local exact-identity ledger, immutable separate allowances and chronological replay; guarded reservations/receipts with fresh native recovery evidence |
-| Remote transfer extents, execution/restore journals, plans and manifests | Require complete backend metadata, generic v1 identity/budget binding and model-owned transitions before runner import |
-| Topology hashing and declared registry target expansion | Adapted into bounded canonical forest records, unambiguous v1 binary hashes, pure exact/direct-child/subtree selection and immutable local persistence |
-| Authoritative discovery, registry revisions and routing | Fleet/Root observation, membership authority and application fencing stay integration-owned; no live provider imported |
-| Backup phase and restore member ordering | Adapted explicit bounded DAG records, deterministic planning order and pure causal declared-progress views; application dependency semantics remain adapter-owned |
-| Plan structure, operation projection and original-plan resume binding | Adapted immutable declared context/inventory/selection/graph/request/allowance binding, canonical full intent and derived original attempt authority; complete backup/restore safety semantics and transfer/response codecs remain pending |
-| Plan/journal integrity and resume reporting | Adapted complete exact journal binding, retained causal Applied checks and pure graph-ordered condition/assigned-accounting projections; no accepted-preflight, retry or terminal flags imported |
-| Typed backup executor and snapshot/lifecycle command payloads | Adapted closed IC host-ingress method/target/raw-snapshot declarations, official Candid encoding and exact wire digests; argv rendering, transport selection, actual permissions/receipts and transfer remain with their owners |
-| Topology preflight projection/admission and provider boundary | Adapted into ephemeral original-plan/challenge/boundary membership requests, fallible provider results and pure actual-context/full-inventory matching; freshness, permissions, fence/revision semantics and actual provider remain integration-owned |
-| Control authority declarations, receipt headers and controller projections | Adapted into exact original IC mutation/challenge requests, complete known canonical controller sets and pure direct caller-controller admission; Root/Proven upgrades, read visibility, proxy/admin lanes, live observations and full preflight remain with their owners |
-| Snapshot-read declarations/receipts and visibility projections | Adapted into original mutation intent plus independent exact list/challenge binding and pure actual-context/target/controller/public/viewer read paths; no Root-configured/Proven upgrades, status/log fallback, provider or paid-call admission imported |
-| Quiescence declarations, receipt admission and consistency-unit projection | Adapted immutable original requested guarantee plus ephemeral exact stopped/drained/fence evidence matching; accepted/expiry/RootCoordinated flags and parent-derived application consistency are not copied; real fencing/custody and acquisition/release remain integration-owned |
-| Restore source identities, stopped-load checks and verification consumers | Adapted immutable same-network/release selected-source declarations and fresh exact load/start safety matching; remapping, Root fields, rendered commands and module-hash-only safety/settlement are not copied |
-| Backup and restore runners | Require the reviewed generic ports and uncertain-effect reconciliation; not copied in this batch |
-| ICP subprocess transport | Retired destination; direct `ic-backup-agent` reuses exact original wire/reservation owners; historical CLI evidence is preserved |
-| Local prune and CLI integration | Generic retention belongs here after layout/reference contracts; Fleet-facing commands remain Canic-owned |
-| Operational-readiness/IC fixtures | Port against the actual extracted behavior as its owners move; current native evidence does not qualify IC effects |
-| Timestamp and strict-field serialization helpers | Introduce with the records that need them; no unused helpers or compatibility wrappers copied |
+### Historical extraction disposition
 
-The source consumer trace identifies `canic-cli` as the dependent package. Its
-backup/restore commands consume layout, manifest, plan, journal and runner APIs;
-list/cycles/metrics also consume discovery failures. Canic Host owns the ICP
-transport used by the CLI executors. Existing prune depends on layout lifetime
-and durable restore references. No consumer was changed or old source removed.
-
-Source plans still bind Fleet, environment, Root identity/control and
-Root-coordinated quiescence. Restore has relocatable identity/mapping surfaces
-outside this product's same-ID scope. The restore executor accepts rendered
-process output, while backup injects typed status/snapshot methods. These
-contracts must be reshaped before moving runners. The current Canic backup
-executor's topology preflight still rejects; copying local IO does not fix it.
-
-Native qualification reruns the copied checksum, JSON, publication and lock
-regressions. New cases cover canonical record decoding, private staging, UTF-8
-identity, bounded reads and real acknowledged child-process death before/after
-JSON and directory publication. A public integration journey persists original
-checksum intent, adopts a published tree after a lost reply and rejects changed
-bytes without changing that intent. Full B1 authority/backend qualification,
-full B2 journal/runner extraction and live backup/restore remain incomplete.
+The original extraction table, ICP consumer trace and B1/B2 progress account are
+[historical evidence at released 0.42.0](https://github.com/dragginzgame/ic-backup/blob/c300c05/docs/extraction-boundary.md#source-ownership-and-remaining-contract-work).
+They describe the extraction's source state, not current ownership or unfinished
+work. Current obligations belong to [implementation contracts](implementation-contracts.md),
+package ownership to [ownership boundaries](ownership.md), and application adoption
+to [Canic adoption](canic-adoption.md). Retained records and historical qualification
+remain evidence; this documentation cleanup authorizes no disposal or migration.
 
 ## Exact metadata-upload settlement claims
 
@@ -2910,36 +2870,15 @@ and [fresh source review](ic-snapshot-upload-settlement-source.json).
 
 ## Real single-canister platform qualification
 
-The test-only driver uses published Testkit 0.25 for managed server startup/cleanup
-and the complete PocketIC re-export, with retained private raw output. The
-[qualified consumer pins](shared-tooling.md#consumer-owned-ic-pins) select 16.1.
-Original calls, reservations and application safety remain local. It exercises
-actual PocketIC capture, complete bounded
-metadata/data reads, canonical durable artifact publication and retained original
-manifest replay through the production library. Exact source-bound upload preparation
-feeds real metadata/data calls, complete destination metadata/byte verification and
-same-release load/start into the same existing ID. A separately accounted fresh
-snapshot verifies the complete loaded state while stopped before restart. The
-inspected fixture proves restored heap/global/stable/certified state and chunk-store
-contents after deliberate pre-load changes, with exact timer/hook metadata.
-Original intent and immutable spending precede
-every tested management ingress. Deliberately discarded capture/allocation/data
-and stop/load/start replies require reserved observations and independently controlled
-original-request attribution before explicit existing receipts. Load attribution
-includes full stopped-state verification. Losing its status reply retains both pending
-reservations and stops before further verification or restart; no receipts, retries
-or refunds occur.
-Local replay preserves originals and source-reference bytes without remote calls.
-
-This is an integration qualification driver, not an installed product provider,
-transport, runner or CLI. The fixture owns exclusive simulator membership, caller,
-permissions and no-external-effects/drain admission. It qualifies no Canic adapter,
-application fence, arbitrary metadata configuration, process/network interruption,
-application-specific lifecycle recovery or full product terminal/reference release.
-Public APIs, v1 records, bounds and release identity are unchanged. See
-[the qualification guide](pocketic-qualification.md),
-[machine review](pocketic-qualification.json) and
-[issue #17](https://github.com/dragginzgame/ic-backup/issues/17).
+The original Testkit 0.25 single-canister account is
+[historical qualification evidence](https://github.com/dragginzgame/ic-backup/blob/c300c05/docs/extraction-boundary.md#real-single-canister-platform-qualification),
+with its [machine review](pocketic-qualification.json). It does not qualify the
+current dependency graph or an installed application. The maintained
+[qualification guide](pocketic-qualification.md) describes fixture responsibilities;
+[current status](status/current.md) records source-scoped execution results.
+[Implementation contracts](implementation-contracts.md) own preserved ingress,
+spending, byte custody, reconciliation and lifecycle obligations. No production
+provider, application fence or terminal authority follows from simulator evidence.
 
 ## Originally reserved snapshot transfer reads
 

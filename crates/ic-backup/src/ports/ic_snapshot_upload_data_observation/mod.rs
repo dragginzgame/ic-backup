@@ -38,6 +38,3 @@ pub trait IcSnapshotUploadDataObservationProvider {
         journal: &AttemptJournalRecord,
     ) -> impl Future<Output = Result<IcSnapshotUploadDataObservationResponse, IcObservationProviderError>>;
 }
-
-#[cfg(test)]
-mod tests;

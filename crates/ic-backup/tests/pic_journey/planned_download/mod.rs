@@ -535,7 +535,7 @@ pub(crate) fn run(failure: ReadFailure) {
         );
         assert_eq!(current.restore_references().unwrap(), references);
         assert_eq!(backend.calls, calls_before_data + u64::from(dispatched));
-        assert!(ExecutionStageGuard::create(&layout, binding, plan.clone()).is_err());
+        assert!(ExecutionStageGuard::prepare(&layout, binding, plan.clone()).is_err());
         return;
     }
     let checksum = result.unwrap();

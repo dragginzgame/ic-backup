@@ -1107,16 +1107,5 @@ async fn configured_application_update_retains_empty_reply_without_claiming_acti
 
 /// Create-only durable exact passive reply evidence, including valid empty application replies.
 fn retain_reply(root: &std::path::Path, reply: &[u8]) -> std::io::Result<()> {
-    use std::io::Write;
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    let mut file = options.open(root.join("reply.candid"))?;
-    file.write_all(reply)?;
-    file.sync_all()?;
-    fs::File::open(root)?.sync_all()
+    support::retain_bytes(&root.join("reply.candid"), reply)
 }

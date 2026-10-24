@@ -7,7 +7,7 @@ attempt; preparing this integration does not enable live creation.
 
 ## Verified starting point
 
-Released Backup source **0.41.0**, `9bb769b`, contains the original-plan coordinator
+Released Backup source **0.42.0**, `c300c05`, contains the original-plan coordinator
 and the cleanup described in the changelog. Applications exchanging Host errors
 must align with Backup's selected Host family. Platform supplies external IC
 identities and SDKs; Testkit remains development-only. Core does not depend on Agent;
@@ -17,7 +17,7 @@ Read-only inspection on 2026-10-24 uses Canic HEAD
 [`cf2d3d1`](https://github.com/dragginzgame/canic/commit/cf2d3d1fba84a00a76cdbc541ae7e68fe36e9bb5)
 **plus its pending 0.112 working changes**, not that commit alone:
 
-- Its working catalog selects Backup **0.40.1**. Artifact, layout/command custody
+- Its working catalog selects Backup **0.42.0**. Artifact, layout/command custody
   and graph adoption are present; complete original stage/attempt adoption is pending.
 - `canic-control-plane/src/storage/stable/application_checkpoint` retains Root
   checkpoint state outside participant snapshots. Its workflow connects current
@@ -30,14 +30,12 @@ Read-only inspection on 2026-10-24 uses Canic HEAD
   `RestoreTerminalEvidenceProvider`. Change its evidence inputs when the engine
   changes instead of creating another terminal authority owner.
 
-**0.41 adoption dependency:** Canic's pending
-`restore/apply/journal::next_effect_sequence` and its error/test still use removed
-`policy::effect_order` APIs. Do not upgrade its dependency alone. Keep the maintained
-restore engine on 0.40.1 until that caller is adapted or replaced by the original
-plan/journal engine. Caller-declared Completed states cannot be manufactured into
-qualified upstream Applied receipts. Graph models/topological order remain available;
-the existing restore state machine remains Canic-owned until its replacement is
-qualified. This guide adds no compatibility alias or second spending authority.
+Canic's `restore/apply/journal::next_effect_sequence` now uses the retained graph
+model and its own serial completion checks; the removed `policy::effect_order`
+API no longer blocks dependency adoption. This is not original stage/attempt
+engine adoption. Preserve the active restore engine until its replacement is
+qualified; caller-declared Completed states are not qualified Backup Applied
+receipts. No compatibility alias or second spending authority is needed.
 
 ## Integration map
 

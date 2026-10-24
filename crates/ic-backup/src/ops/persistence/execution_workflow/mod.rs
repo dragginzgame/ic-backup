@@ -367,21 +367,7 @@ impl<'a> ExecutionStageGuard<'a> {
         stage.layout()?;
         Ok(stage)
     }
-    /// Create a fixed private stage directory, exact child plan and immutable binding.
-    ///
-    /// Every original predecessor and ancestor needs its exact retained binding, plan and
-    /// complete chronological Applied settlement. The directory is create-only:
-    /// occupied or interrupted preparation is retained and cannot be recreated
-    /// with another plan. No journal or backend effect occurs before return.
-    /// # Errors
-    /// Rejects changed allocation, unavailable prerequisites, occupied stages and IO failures.
-    pub fn create(
-        workflow_layout: &'a BackupLayoutGuard,
-        binding: ExecutionStageBindingRecord,
-        plan: OperationPlanRecord,
-    ) -> Result<Self, ExecutionWorkflowPersistenceError> {
-        Self::create_with(workflow_layout, binding, plan, |_| {})
-    }
+    // Allocate immutable stage records internally before preparing original journals.
     fn create_with(
         workflow_layout: &'a BackupLayoutGuard,
         binding: ExecutionStageBindingRecord,

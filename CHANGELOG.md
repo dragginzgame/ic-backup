@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.43.0]
+
+- **Breaking Rust API:** remove `ExecutionStageGuard::create`. Use `prepare` to
+  create a stage with its complete original attempt journals; use `open` for
+  record inspection or `resume` for complete retained-accounting admission.
+  Partial preparations and existing journals remain preserved without repair.
+
+- Simplify test maintenance by removing self-testing provider fakes and sharing
+  private, create-only Agent fixture evidence writes. Production workflow failure
+  coverage and independent-consumer isolation remain intact.
+- Refresh Canic adoption guidance and separate historical extraction qualification
+  from current implementation contracts.
+
 ## [0.42.0] - 2026-10-24
 
 - **Breaking Rust dependency identity:** adopt published Host 0.67.0. Consumers

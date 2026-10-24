@@ -132,7 +132,7 @@ fn learned_snapshot_payload_is_bound_once_and_pending_read_retains_original_allo
     assert_eq!(fs::read(journal.path()).unwrap(), bytes);
     drop(journal);
     drop(stage);
-    assert!(ExecutionStageGuard::create(&layout, binding, plan(&metadata.digest())).is_err());
+    assert!(ExecutionStageGuard::prepare(&layout, binding, plan(&metadata.digest())).is_err());
     drop(layout);
     fs::remove_dir_all(root).unwrap();
 }

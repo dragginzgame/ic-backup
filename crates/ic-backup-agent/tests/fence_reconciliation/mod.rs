@@ -3,7 +3,7 @@
 //! membership mutation, release endpoint or external work. These conditions are
 //! qualified here, never inferred for an application or installed as a default.
 
-use super::{Fixture, support};
+use super::{Fixture, support, support::retain_bytes as retain};
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -42,7 +42,7 @@ use serde_json::json;
 use std::{
     fs,
     future::{Future, poll_fn},
-    io::{self, Write},
+    io,
     path::{Path, PathBuf},
     task::Poll,
 };
@@ -574,17 +574,4 @@ fn private_dir(path: &Path) {
         builder.mode(0o700);
     }
     builder.create(path).unwrap();
-}
-fn retain(path: &Path, bytes: &[u8]) -> io::Result<()> {
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    let mut file = options.open(path)?;
-    file.write_all(bytes)?;
-    file.sync_all()?;
-    fs::File::open(path.parent().unwrap())?.sync_all()
 }
