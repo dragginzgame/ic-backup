@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.44.1]
+## [0.44.1] - 2026-10-24
 
 - Adopt Shared Tooling 0.26.14 for Cargo-tool setup diagnostics, literal formatter
   catalog admission, aggregate offline tool reports and release recovery fixes.
