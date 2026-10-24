@@ -1,62 +1,62 @@
 # Current handoff — 2026-10-24
 
-## Ownership and released source
+## Ownership and source
 
-Released Backup is **0.43.0**, `79bc98b`. Core owns bounded records, guarded
+Released Backup is **0.44.0**, `7d48b94`. Core owns bounded records, guarded
 persistence, reconciliation and original-plan coordination. Agent owns reserved
-signed transport. Host owns generic IO/process/hash capabilities; Platform owns
-external IC identities and SDKs; Testkit owns simulator assets and processes.
-Applications own current membership, permissions, release binding, whole-unit
-fencing and external obligations. [Implementation contracts](../implementation-contracts.md)
-and the [record/API boundary](../extraction-boundary.md) retain safety obligations.
-The released incomplete-stage API cut and fixture cleanup remain in place.
+signed transport; applications own current authority, membership, release binding,
+whole-unit fencing and external obligations. Host owns generic IO/process/hash,
+Platform external IC identities/SDKs, and Testkit simulator assets/processes.
+[Implementation contracts](../implementation-contracts.md) retain product obligations.
 
-## Published IC Tooling adoption
+## Shared Tooling adoption
 
-Pending **0.44.0** adopts published Host Artifacts/FS/Process, Testkit and the Build
-release editor **0.68.0**, source **8f281177faaeee0adc51edc1031d4a7b268b0ce0**.
-All three Host Rust source trees and Build's Rust source match 0.67.0 byte-for-byte.
-Testkit changes only its optional Wire adapter/tests; Backup does not enable that
-feature. No product codec, storage, decoder, lifecycle or recovery behavior changes.
-The minor note reflects exposed Host Rust type identities; consumers exchanging
-Host checksum/publication errors must align their dependencies to 0.68.
+Pending **0.44.1** adopts committed Shared Tooling **0.26.14**,
+`e14050bcc0c627f9c8a9064051699cac44fd7ab3`, matching observed remote main.
+Canonical impact review/export verifies all 124 selected files; 21 payloads change,
+two are added and none retire. [The review](../shared-tooling-review.json) records
+provenance and scope; [the adoption guide](../shared-tooling.md) owns consumer use.
+No vendored payload is hand-edited. Existing prepared tools pass offline admission
+without setup or rebuild; the common tool catalogs remain unchanged.
 
-The lock changes exactly four packages from 0.67.0 to 0.68.0. Platform 0.6.14,
-Agent 0.49.3, management DTO 0.11.0, external Principal 0.1.5 and PocketIC 16.1.0
-remain selected. Shared Tooling stays 0.26.9; no snapshot payload changes.
-Archive checksums/source identities: `/tmp/backup-tooling-068-published.json`.
-The canonical installer prepared the new Testkit and Build CLIs. Offline admission
-passes and the existing PocketIC asset is reused; old/failed tools remain retained.
-Current lock SHA-256: `9e5cf974a16a179c39628e99935d3a199d1838502a70fb48f78f57e1e5efec16`.
+The actual Make boundary target composes Shared's external-IC inventory with four
+additional Backup exclusions. Matching fixtures exercise aliases, optional/target
+metadata and normal/build/dev declarations. Local hook fixtures carry the complete
+literal-catalog parser closure. Testkit distinguishes busy status 75 from missing
+installation without invoking its server or suggesting setup. Make retains its
+normal wrapper exit behavior. `tools-report` diagnoses all offline checks while
+setup/release admission remains fail-fast.
 
-## Qualification
+The release fixture now admits clean manually committed candidate metadata as a
+fresh base while retaining the earlier uncertain intent, backups and validation.
+Failed fresh gates preserve original metadata/receipts; later success completes
+only the new increment. Actual release effects remain separately authorized.
 
-Linux strict all-target/all-feature Clippy, 525 Core and three Agent unit tests,
-actual Rust 1.91.0 all-target/all-feature compilation, dependency inheritance and
-boundary checks, formatting and local documentation links pass. Both independent
-MSRV consumers pass, including public Host checksum/publication error identities.
-Their normal graphs select only Host 0.68.0, exclude Testkit/PocketIC/WAT/Clap and
-Host development features, and keep Core Agent-free. Evidence:
-`target/msrv-consumers.f3o4Vt/`.
+## IC Tooling and preserved work
 
-Both authenticated independent candidate-consumer simulator cases pass: cold
-capture/restore/acceptance with terminal replay, and process death after load
-without redispatch. Build/graph evidence:
-`/tmp/ic-backup-agent-independent-build-2659235-0/`; fixture evidence:
-`/tmp/ic-backup-agent-pocketic-2659235-{1,2}/`.
-The new release editor passes isolated metadata/retention fixtures at
-`target/shared-release-tests.eYnzZX/`. Logs:
-`/tmp/backup-tooling-068-{setup,tools-check,unit,clippy,msrv,consumers,boundaries,editor,simulator}.log`.
+Registry checks confirm **0.68.0** is still the latest published Host Artifacts,
+FS, Process, Testkit and Build release. All are already selected; no dependency
+update or lock generation is needed. The unpublished 0.68.1 draft is not adopted.
+The incoming Platform **0.6.15** lock edit is preserved byte-for-byte, SHA-256
+`7211adb61040e98ef8f31f68a266f95fc4f7b90bd2ff7f2936834349eedc99c4`.
+Workspace package versions remain 0.44.0. No product Rust, wire/storage or lifecycle
+behavior changes; no staging, commit, push, release, publication or sibling edit.
 
-## Remaining application work and limits
+## Qualification and limits
 
-The [Canic guide](../canic-adoption.md) describes the application-owned adapter.
-Canic's active restore engine and original journals remain until its replacement
-qualifies current authority, whole-unit fencing, Root-paid effect reconciliation
-and external obligations. Generic fixture acceptance does not qualify those facts.
-Earlier registry-only and package qualification retain their original source scope
-in the [released handoff](https://github.com/dragginzgame/ic-backup/blob/79bc98b/docs/status/current.md).
-No native macOS, installed Canic/IC, new registry-only acceptance, package-archive
-qualification or full local make ci run is claimed for this batch. Workspace
-package versions remain 0.43.0. No staging, commit, push, release, publication,
-live IC effect or sibling edit is performed.
+Snapshot, direct boundary/inheritance, consumer tooling/graph/refusal, formatting,
+hook/index/partial-stage, Testkit command routing, focused ShellCheck, offline tools,
+aggregate tool report, Backup release-adapter and canonical shared runner fixtures
+pass. Evidence is in `/tmp/backup-shared-02614-*.log`; original failed fixtures are
+retained. Release evidence: `target/shared-release-tests.DQHNf2/`; hook evidence:
+`target/hook-tests.eMbaZ6/`. Documentation links and repository-file/license checks
+are verified after this handoff update.
+
+No new Rust/MSRV/package/simulator qualification is claimed for incoming Platform
+0.6.15. Earlier product results retain their source/graph scope in the
+[released handoff](https://github.com/dragginzgame/ic-backup/blob/7d48b94/docs/status/current.md).
+Full local make ci, native macOS, installed Canic/IC and live effects are not run.
+Direct declarations and independent consumer graph exclusions do not bind actual
+deployed Wasm bytes; the deploying application owns that target/feature/artifact
+gate. Canic still owns production integration and eventual retirement of its old
+restore engine after replacement acceptance.

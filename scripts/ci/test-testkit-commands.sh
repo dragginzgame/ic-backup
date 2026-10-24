@@ -60,6 +60,7 @@ if [[ "${1:-}" == scripts/dev/install-rust-tools.sh ]]; then
     shift
     printf '%s\n' "$*" >> "$TESTKIT_COMMAND_INSTALL"
     [[ " $* " == *' --features cli '* ]] || exit 27
+    [[ ${TESTKIT_COMMAND_INSTALL_FAILURE:-0} != 75 ]] || exit 75
     [[ ${TESTKIT_COMMAND_INSTALL_FAILURE:-0} == 0 ]] || exit 17
     printf '%s\n' "$TESTKIT_COMMAND_CLI"
 else
@@ -136,6 +137,12 @@ cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 if TESTKIT_COMMAND_INSTALL_FAILURE=1 run_make testkit-server-check > "$fixture/missing.log" 2>&1; then exit 1; fi
 grep -F 'Locked Testkit CLI' "$fixture/missing.log" >/dev/null
 grep -F 'make install-testkit-server' "$fixture/missing.log" >/dev/null
+cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
+# Busy shared-slot admission is distinct from missing installation, with no setup.
+if TESTKIT_COMMAND_INSTALL_FAILURE=75 run_make testkit-server-check > "$fixture/busy.log" 2>&1; then exit 1; fi
+grep -F 'Locked Testkit CLI is busy' "$fixture/busy.log" >/dev/null
+grep -F 'Error 75' "$fixture/busy.log" >/dev/null
+if grep -F 'make install-testkit-server' "$fixture/busy.log"; then exit 1; fi
 cmp "$TESTKIT_COMMAND_CALLS" "$fixture/expected-calls"
 # Server admission failure propagates without a setup or alternate server attempt.
 if TESTKIT_COMMAND_SERVER_FAILURE=1 run_make testkit-server-check > "$fixture/changed.log" 2>&1; then exit 1; fi

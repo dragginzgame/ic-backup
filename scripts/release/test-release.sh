@@ -9,8 +9,9 @@ ROOT="${ROOT%/.}"
 # exports both environment values and command-line overrides through GNU Make;
 # neither may reach the fixture's standalone gates or select a parent helper.
 # This child-only reset leaves the enclosing release and its evidence intact.
-# Consumer assertions are mapped in docs/release-fixture-ownership.json. The
-# canonical shared suite owns increment/phase and generic lost-reply matrices.
+# Historical fixture ownership is recorded in docs/release-fixture-ownership.json.
+# Current recovery behavior belongs to docs/releasing.md. The canonical shared
+# suite owns increment/phase and generic lost-reply matrices.
 unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND RELEASE_COMMIT \
     RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE RELEASE_DELIVERY VERSION \
     MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL GNUMAKEFLAGS MAKEFILES
@@ -814,22 +815,8 @@ test_committed_preparation_retry() {
     before="$(fingerprint)"
     : > "$TEST_EFFECTS"
     if [[ "$disposition" == bumped ]]; then
-        # Committing the candidate does not confirm its Git delivery. The shared
-        # runner must retain that exact intent rather than select another bump.
+        # A clean committed candidate may advance, preserving its unconfirmed intent.
         cp docs/release.json target/original-receipt.json
-        cp target/tool-effects.log target/tools-before-refusal
-        expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-        grep -F 'prepared version 0.1.1 is committed but delivery is unconfirmed' "$CASE_LOG" >/dev/null
-        [[ "$(fingerprint)" == "$before" && ! -s "$TEST_EFFECTS" ]] || exit 1
-        cmp target/original-plan target/release-state/0.1.1.plan
-        cmp target/original-validation.json target/release-state/0.1.1.validation.json
-        cmp target/original-backup "${backups[0]}"
-        cmp target/original-receipt.json docs/release.json
-        cmp target/tools-before-refusal target/tool-effects.log
-        [[ ! -e "target/release-state/$next.plan" ]] || exit 1
-        if compgen -G 'target/release-state/0.1.1.attempt.*' >/dev/null; then exit 1; fi
-        assert_cache_retained
-        return
     fi
     TEST_GATE_FAIL=1 expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     local archives=(target/release-state/0.1.1.attempt.*/0.1.1.plan)
@@ -837,6 +824,11 @@ test_committed_preparation_retry() {
     cmp target/original-plan "${archives[0]}"
     cmp target/original-validation.json target/release-state/0.1.1.validation.json
     cmp target/original-backup "${backups[0]}"
+    if [[ "$disposition" == bumped ]]; then
+        cmp target/original-receipt.json docs/release.json
+        [[ "$(tail -n 1 "${archives[0]}")" == prepare ]] || exit 1
+        [[ ! -e target/tags/v0.1.1.commit && ! -e target/tags/v0.1.1.object ]] || exit 1
+    fi
     [[ ! -e "target/release-state/$next.plan" ]] || exit 1
     "$TEST_REAL_MAKE" --no-print-directory release-patch
     [[ "$(perl scripts/release/release-data.pl version)" == "$next" && "$(perl scripts/release/release-data.pl source)" == "$fix" ]] || exit 1

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.44.1]
+
+- Adopt Shared Tooling 0.26.14 for Cargo-tool setup diagnostics, literal formatter
+  catalog admission, aggregate offline tool reports and release recovery fixes.
+  Compose the shared external-IC dependency guard with Backup's remaining local
+  exclusions. Distinguish busy Testkit admission from missing installation and
+  retain earlier uncertain release evidence when a committed candidate advances.
+  IC Tooling remains at the latest published release, 0.68.0.
+
 ## [0.44.0] - 2026-10-24
 
 - **Breaking Rust dependency identity:** adopt published Host 0.68.0. Consumers

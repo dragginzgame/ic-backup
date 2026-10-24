@@ -69,7 +69,7 @@ Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
 
-The reviewed Shared Tooling 0.26.9 snapshot includes the
+The reviewed Shared Tooling 0.26.14 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -107,6 +107,39 @@ source-preparation slots and previous generations remain retained. This changes
 the build-policy digest. When a refresh changes that digest, run `make install-tools`
 once to refresh the common Cargo tools, locked Testkit CLI/server and release editor. See
 [the canonical setup guidance](local-setup.md#standard-cargo-tool-build-environment).
+
+## Current guard and recovery integration
+
+The direct dependency target composes Shared's reviewed
+[external IC inventory](../ci/external-ic-dependencies.txt) through `--external-ic`
+with Backup's [additional exclusions](../ci/cargo-dependency-boundaries.json).
+The common guard owns Candid, Principal, Agent, CDK, simulator and other known IC
+package declarations; the local overlay retains three additional retired IC
+packages and direct WAT exclusion. Cargo metadata preserves package identity
+through aliases and includes normal/build/dev, optional and target-specific
+entries. The actual Make target has focused composition/refusal coverage.
+
+These declaration checks are separate from resolved normal-graph simulator/WAT
+exclusions in the independent consumer fixtures. Backup is a host library and
+ships no deployed canister entrypoint binding target/features, a locked build and
+an artifact digest. Neither role labels nor the declaration guard supply that
+missing deployment admission. Application consumers retain that responsibility.
+
+`make tools-report` runs all existing offline tool checks and retains every
+failure; `tools-check` remains fail-fast. Cargo setup reports phases on stderr
+while stdout remains path-only. Offline Cargo admission remains immediate by
+default; explicit `--check --wait-seconds N` allows bounded read-only waiting.
+Status 75 means admitted contention, including timeout, and never authorizes
+installation or lock cleanup. Backup preserves that status and distinguishes it
+from a missing Testkit selection; the release editor adapter already propagates
+its admission failure without setup fallback.
+
+The shared runner admits a clean, manually committed preparation as the base for
+a fresh increment even when earlier Git delivery remains unconfirmed. It archives
+the old intent, retains original evidence and runs fresh preflight/validation.
+Backup's release fixture tests both unchanged and manually advanced metadata with
+failed-gate retention before success. This adoption executes only isolated tests;
+actual release and publication authority remain with the maintainer.
 
 ## Adoption history
 

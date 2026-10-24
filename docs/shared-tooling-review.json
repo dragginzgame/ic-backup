@@ -1,62 +1,99 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-23",
+  "inspection_date": "2026-10-24",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "3657c044c0e91321effe8835989491a4cd0b5cba",
-  "label": "0.26.9",
+  "revision": "e14050bcc0c627f9c8a9064051699cac44fd7ab3",
+  "label": "0.26.14",
   "manifest": ".shared-tooling.snapshot",
-  "selected_files": 122,
-  "previous_revision": "0b07c2a3163a5a66328e100b553baf93afd8ed07",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/70d4d49699fb0b14a6d2a293012a328321d2f3f0/docs/shared-tooling-review.json",
+  "selected_files": 124,
+  "previous_revision": "3657c044c0e91321effe8835989491a4cd0b5cba",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/7d48b94/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
     "clean_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "3657c044c0e91321effe8835989491a4cd0b5cba",
-    "version_authority": "Committed VERSION and matching changelog select 0.26.9; the commit subject is not version authority."
+    "observed_remote_main": "e14050bcc0c627f9c8a9064051699cac44fd7ab3",
+    "version_authority": "Committed VERSION selects 0.26.14; remote main matches the inspected clean checkout."
   },
-  "changed_paths": [],
-  "added_paths": [],
-  "retired_paths": [],
-  "upstream_changes_outside_consumer_closure": [
-    "scripts/ci/prepare-cargo-failure-fixture.sh",
-    "scripts/ci/test-cargo-graph.sh",
-    "scripts/ci/test-release-changelog.sh",
-    "scripts/ci/test-script-paths.sh"
+  "changed_paths": [
+    "DRAGGINZGAME.md",
+    "docs/cargo-graph-checks.md",
+    "docs/consuming-snapshots.md",
+    "docs/ic-tools.md",
+    "docs/local-setup.md",
+    "docs/make-interface.md",
+    "docs/releases.md",
+    "docs/supported-hosts.md",
+    "docs/tool-catalog-bindings.md",
+    "docs/verification-helpers.md",
+    "make/rust-format.mk",
+    "make/tools.mk",
+    "rules/cargo-dependencies.md",
+    "scripts/ci/check-cargo-dependency-boundaries.sh",
+    "scripts/ci/run-release.sh",
+    "scripts/ci/test-release-runner.sh",
+    "scripts/dev/install-host-tools.sh",
+    "scripts/dev/install-ic-tools.sh",
+    "scripts/dev/install-rust-tools.sh",
+    "scripts/dev/tool-store.sh",
+    "tasks/snapshot-drift.md"
   ],
+  "added_paths": [
+    "ci/external-ic-dependencies.txt",
+    "scripts/ci/describe-tool-selection.pl"
+  ],
+  "retired_paths": [],
   "consumer_changes": [
-    "Advance the reviewed revision and label; all 122 payload bytes, modes, tool pins and build-policy helpers match the adopted 0.26.8 snapshot.",
-    "Do not add unused upstream producer fixtures or repeat the upstream implementation matrix."
+    "Activate the common external-IC inventory through the actual Make boundary target; retain four additional local exclusions instead of copying the common list.",
+    "Qualify alias, optional, target-specific and normal/build/dev metadata through the actual boundary recipe with isolated substituted Cargo observations.",
+    "Copy the literal tool catalog parser and its companions into local hook fixtures; retain matching grouped formatting and release metadata checks.",
+    "Distinguish Testkit admission status 75 from missing setup without dispatching the server; Make retains its normal wrapper exit behavior.",
+    "Qualify fresh-gate advancement from clean manually committed candidate metadata while retaining the earlier uncertain plan, backups and validation.",
+    "Expose the common tools-report diagnostic without changing fail-fast setup/release admission."
   ],
   "setup_refresh_required": false,
-  "dependency_and_release_changes": "No manifests, lockfiles, package versions, product Rust, CI or release behavior change. Preserve the incoming Platform 0.6.11 lock selection; this provenance refresh does not qualify that independent update.",
+  "dependency_and_release_changes": "IC Tooling 0.68.0 remains the latest published Host/Testkit/Build release. Cargo.toml and the incoming Platform 0.6.15 lockfile selection remain byte-identical; package versions remain 0.44.0. Pending 0.44.1 records contributor-only adoption.",
   "deployment_enforcement": {
     "automated": [
-      "Existing direct dependency gates and independent normal-graph exclusions remain unchanged."
+      "Direct declarations compose the common IC guard with local retired-package/WAT bans, using package identity across aliases and all Cargo dependency tables.",
+      "Existing independent consumer checks exclude Testkit, PocketIC and WAT from selected normal graphs."
     ],
     "not_enforced_here": [
       "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
     ],
-    "scope": "Unchanged host-library enforcement; no new deployment gate."
+    "scope": "Host libraries only; direct declaration checks do not prove transitive or deployed-Wasm absence. No new product graph qualification is claimed for the independent incoming Platform update."
   },
   "qualification": {
-    "status": "passed-focused-provenance-and-tool-admission",
+    "status": "passed-focused-consumer-adoption",
     "passed": [
-      "Canonical exporter verifies all 122 payloads against committed 0.26.9.",
-      "All selected file records, bytes and executable modes equal the 0.26.8 snapshot.",
-      "Existing host/common Cargo/Testkit/Build selections pass offline tools-check without installation.",
-      "Documentation links, JSON parsing and repository-file/license checks pass."
+      "Canonical export and integrity verification of all 124 payloads.",
+      "Common/local direct boundary composition, consumer graph rejection and evidence-retention fixtures.",
+      "Literal/grouped formatting, local hook/index/partial-stage fixtures, and focused ShellCheck.",
+      "Offline host/Cargo/Testkit/editor admission and aggregate tools-report.",
+      "Testkit setup/check ordering and busy status refusal without setup advice or server dispatch.",
+      "Backup release-adapter suite and canonical shared runner fixture, including retained uncertain preparation and fresh-gate recovery.",
+      "Local documentation links, snapshot integrity, whitespace and repository-file/license checks."
     ],
-    "reused_evidence": "Selected scripts, pins and build policy are byte-identical to 0.26.8. Existing consumer shell/tooling/hook/formatting receipts keep that unchanged-script scope. Released 0.40 product evidence remains tied to its Platform 0.6.10 graph.",
     "not_run": [
-      "New product compilation, MSRV, packaging or runtime tests for pending Platform 0.6.11",
-      "Full local make ci or upstream regression matrix",
-      "New hosted/native macOS, registry-only installed-product, installed IC or Canic application qualification",
-      "Tool installation, Git contribution, release, publication or deployment"
+      "Full local make ci or Shared Tooling owner matrix",
+      "New Rust product/MSRV/package/simulator qualification for the incoming Platform 0.6.15 graph",
+      "Native macOS, installed Canic/IC, registry publication or deployment"
+    ],
+    "evidence": [
+      "/tmp/backup-shared-02614-boundaries.log",
+      "/tmp/backup-shared-02614-tooling.log",
+      "/tmp/backup-shared-02614-hooks-complete.log",
+      "/tmp/backup-shared-02614-testkit.log",
+      "/tmp/backup-shared-02614-release-final.log",
+      "/tmp/backup-shared-02614-tools-initial.log",
+      "/tmp/backup-shared-02614-tools-report.log",
+      "/tmp/backup-shared-02614-shellcheck.log",
+      "/tmp/backup-shared-02614-local-shellcheck.log",
+      "/tmp/backup-shared-02614-final.log"
     ]
   },
-  "evidence_directory": "/tmp/backup-shared-0269-20261023-wnhypkbf",
-  "preserved_incoming_lock_sha256": "7e576f3eaf4b9cb7a85b903bc46b38fabb06d1597b24ab810ae46094fab19478",
+  "evidence_directory": "/tmp/backup-shared-02614-*",
+  "preserved_incoming_lock_sha256": "7211adb61040e98ef8f31f68a266f95fc4f7b90bd2ff7f2936834349eedc99c4",
   "findings": []
 }

@@ -29,7 +29,7 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 
 create_fixture() {
     mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks" "$FIXTURE/make"
-    cp "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$FIXTURE/scripts/ci/"
+    cp "$ROOT/scripts/ci/StableVersion.pm" "$ROOT/scripts/ci/ic-tool-pins.awk" "$ROOT/scripts/ci/tool-catalog-records.pl" "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$FIXTURE/scripts/ci/"
     cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
     cp "$ROOT/ci/tool-versions.env" "$FIXTURE/ci/"
     cp "$ROOT/.githooks/pre-commit" "$FIXTURE/.githooks/"
@@ -236,7 +236,7 @@ printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
 # Perturb the current inherited dependency table without retaining retired names.
 perl -0777 -pe 's/^(\[dependencies\]\n)([A-Za-z0-9_-]+\.workspace[^\n]*\n)([A-Za-z0-9_-]+\.workspace[^\n]*\n)/$1$3$2/m or die "expected two inherited production dependencies\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml" 2> "$CASE_LOG"
-formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/StableVersion.pm scripts/ci/ic-tool-pins.awk scripts/ci/tool-catalog-records.pl scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
 while IFS= read -r -d '' path; do
     # The index may still name an intentionally deleted Rust test before commit.
     [[ -e "$ROOT/$path" || -L "$ROOT/$path" ]] || continue

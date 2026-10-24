@@ -59,6 +59,45 @@ for changed in Cargo.toml Cargo.lock; do
 done
 echo 'Consumer manifest/lock checkpoints: PASS (changed inputs stop later CI dispatch).'
 
+# Exercise the actual local Make boundary target with both common and local policy.
+# Metadata is substituted only inside this tooling fixture; production uses Cargo.
+boundary="$FIXTURE/boundary"
+mkdir -p "$boundary/ci" "$boundary/make" "$boundary/scripts/ci" "$boundary/bin"
+cp "$ROOT/Makefile" "$boundary/"
+cp "$ROOT"/make/{consumer,release,tools,rust-format,execution}.mk "$boundary/make/"
+cp "$ROOT/scripts/ci/"{check-cargo-dependency-boundaries,check-make-execution}.sh "$boundary/scripts/ci/"
+cp "$ROOT/ci/"{external-ic-dependencies.txt,cargo-dependency-boundaries.json} "$boundary/ci/"
+printf '[package]\nname = "boundary-fixture"\nversion = "0.0.0"\n' > "$boundary/Cargo.toml"
+cat > "$boundary/bin/cargo" <<'CARGO'
+#!/usr/bin/env bash
+set -euo pipefail
+cat "$BOUNDARY_METADATA"
+CARGO
+chmod +x "$boundary/bin/cargo"
+export BOUNDARY_METADATA="$boundary/metadata.json"
+for dependency in ic-platform ic0 wat; do
+    for kind in normal build dev; do
+        jq -n --arg name "$dependency" --arg kind "$kind" --arg root "$boundary" '{
+            version:1,workspace_root:$root,workspace_members:["fixture"],
+            packages:[{id:"fixture",name:"boundary-fixture",dependencies:[{
+                name:$name,rename:"renamed_dependency",kind:(if $kind == "normal" then null else $kind end),
+                target:"cfg(unix)",optional:true,features:["fixture-feature"]
+            }]}]
+        }' > "$BOUNDARY_METADATA"
+        status=0
+        PATH="$boundary/bin:$PATH" make --no-print-directory -s -C "$boundary" \
+            dependency-boundaries-check > "$boundary/$dependency-$kind.log" 2>&1 || status=$?
+        if [[ "$dependency" == ic-platform ]]; then
+            [[ "$status" == 0 ]] || { cat "$boundary/$dependency-$kind.log" >&2; exit 1; }
+        else
+            [[ "$status" != 0 ]] || { echo "local gate admitted forbidden $kind dependency: $dependency" >&2; exit 1; }
+            grep -F "boundary-fixture -> $dependency" "$boundary/$dependency-$kind.log" >/dev/null
+        fi
+    done
+done
+unset BOUNDARY_METADATA
+echo 'Consumer dependency boundaries: PASS (common IC and local WAT rules compose through Make).'
+
 # Independent consumers contain only their selected production graph. Check
 # package identities, including a renamed transitive test/tool dependency.
 graph="$FIXTURE/graph"

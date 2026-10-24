@@ -79,6 +79,7 @@ help:
 	@echo "testkit-server-check        Check the locked Testkit CLI/server offline; print server path"
 	@echo "tooling-check               Test consumer CI wiring and retained evidence"
 	@echo "tools-check                 Verify host/Cargo tools, locked Testkit and release editor"
+	@echo "tools-report                Diagnose every offline tool check and retain failures"
 	@echo "validate                    Run the full validation gate"
 	@echo "version                     Print the workspace package version"
 
@@ -120,7 +121,7 @@ hooks-check:
 	bash scripts/hooks/test-hooks.sh
 
 dependency-boundaries-check:
-	+bash scripts/ci/check-cargo-dependency-boundaries.sh --consumer "$(CURDIR)"
+	+bash scripts/ci/check-cargo-dependency-boundaries.sh --consumer "$(CURDIR)" --external-ic
 
 dependency-pins-check:
 	+bash scripts/ci/check-dependency-pins.sh --cargo-inheritance
@@ -143,6 +144,10 @@ define TESTKIT_SERVER
 	cli="$$(bash scripts/dev/install-rust-tools.sh --consumer "$(CURDIR)" \
 	  --package ic-testkit --lockfile Cargo.lock --bin ic-testkit-server --profile release --features cli $(1))" || { \
 	  status=$$?; \
+	  if [[ "$$status" == 75 ]]; then \
+	    printf 'Locked Testkit CLI is busy; retry after its installation owner finishes.\n' >&2; \
+	    exit "$$status"; \
+	  fi; \
 	  printf 'Locked Testkit CLI admission failed. Prepare a missing selection with make install-testkit-server; inspect retained evidence if it is changed.\n' >&2; \
 	  exit "$$status"; \
 	}; \

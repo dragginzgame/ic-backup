@@ -263,7 +263,10 @@ A saved `prepare` intent without staging evidence can also be superseded by
 a newer clean descendant commit through the normal direct target. The runner
 archives the exact old intent, reads current canonical metadata (the saved base
 or candidate), selects the requested increment and repeats preflight/full validation.
-Backup preparation mutates only local metadata; original backups, validation
+A manually committed candidate is eligible even when earlier tags or Git delivery
+are missing. This preserves the earlier uncertainty; it does not complete that
+release or qualify registry publication. Backup preparation mutates only local
+metadata; original backups, validation
 sidecars and failure logs remain retained. Dirty, divergent or conflicting states
 still stop. See the [shared restart contract](releases.md#source-changes-after-saved-preparation-intent).
 
