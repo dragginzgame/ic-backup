@@ -1182,9 +1182,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.66.0"
+version = "0.66.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644214a0ac4c9ec4a62569bc23520355c81b4a95d0bbfbe197c12fb6dfee5ba2"
+checksum = "5fdeaeca1529a325d2e863d3cb98c34afb83dcae16b250aedbe09c094b5dd4a8"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
@@ -1193,9 +1193,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.66.0"
+version = "0.66.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21564c5b496120544ebd91c3433d32093dfbf91385478f4095ec932d5ec3fb37"
+checksum = "1f25aa47f719db6c6c16979aaed0ec913575c3bbaf516d19d118733ccb563a01"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1204,9 +1204,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.66.0"
+version = "0.66.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "607b405452f4d7824801abc647b17e3ddc7add83abea6bc544b68d79d5ac19c1"
+checksum = "77b06ba6e7393e85a84fb2347c26b3a5af6591797dd662d40022e072caeb809b"
 dependencies = [
  "command-fds",
  "ic-host-artifacts",
@@ -1239,9 +1239,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.6.10"
+version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8f5e91537f896a8f70dd2abf00fe57b48a33b901ce959ebaf2a4b712897f3b5"
+checksum = "a1efa3bea22eed8dbca1e667936664a694a02bfdee29543ee533084f04ea5f6b"
 dependencies = [
  "candid",
  "crc32fast",
@@ -1256,9 +1256,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.66.0"
+version = "0.66.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "462f20a1fc6d394b28c08ac2d46b35bfeead474599de89c7c300461b299e863b"
+checksum = "e8e40bb27854fe8a3e559e664a7da3f79c4cf203d7dc09fb34feb32d69307137"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -2573,9 +2573,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.16.3"
+version = "1.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b3dc8af474f516a851ff4bd12db780f948b9250ad37211e4eec0bccea54e01b"
+checksum = "d0d5d4b1981b8bbbb7aed204cae5726d683d5d6ac7e74ec54122ea28f315e7c8"
 
 [[package]]
 name = "socket2"

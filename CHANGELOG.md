@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.40.1] - Unreleased
+
+- Adopt published Host, Testkit and the contributor release editor at 0.66.2,
+  aligning dependency minimums and tool selection with the maintained patch.
+  Public APIs, wire/storage formats and lifecycle behavior remain unchanged.
+
 ## [0.40.0] - 2026-10-23
 
 - **Breaking Rust dependency identity:** adopt published Host 0.66.0. Consumers

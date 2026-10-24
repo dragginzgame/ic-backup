@@ -2,72 +2,61 @@
   "version": 1,
   "inspection_date": "2026-10-23",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "0b07c2a3163a5a66328e100b553baf93afd8ed07",
-  "label": "0.26.8",
+  "revision": "3657c044c0e91321effe8835989491a4cd0b5cba",
+  "label": "0.26.9",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 122,
-  "previous_revision": "3e8d7cd3e7e9b7b79a5e800c30daf0be2710dab0",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/0342c67/docs/shared-tooling-review.json",
+  "previous_revision": "0b07c2a3163a5a66328e100b553baf93afd8ed07",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/70d4d49699fb0b14a6d2a293012a328321d2f3f0/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
     "clean_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "0b07c2a3163a5a66328e100b553baf93afd8ed07",
-    "version_authority": "Reviewed committed VERSION 0.26.8 and remote main; upstream changelog uses Unreleased."
+    "observed_remote_main": "3657c044c0e91321effe8835989491a4cd0b5cba",
+    "version_authority": "Committed VERSION and matching changelog select 0.26.9; the commit subject is not version authority."
   },
-  "changed_paths": [
-    "docs/local-setup.md",
-    "scripts/dev/cargo-tool-build.sh",
-    "scripts/dev/tool-store.sh"
-  ],
+  "changed_paths": [],
   "added_paths": [],
   "retired_paths": [],
-  "consumer_changes": [
-    "Tolerate admitted owner withdrawal only for the same physical lock; preserve malformed/replacement-claim refusals, bounded waits and atomic acquisition.",
-    "Initialize the admitted source cache with idempotent private directory creation and no global installation lock; Cargo owns source-download serialization.",
-    "Refresh all common and selected Cargo-tool receipts explicitly for the changed build-policy digest; retain old generations and source-preparation slots.",
-    "Offline checks/preflight remain immediate and never repair selections."
+  "upstream_changes_outside_consumer_closure": [
+    "scripts/ci/prepare-cargo-failure-fixture.sh",
+    "scripts/ci/test-cargo-graph.sh",
+    "scripts/ci/test-release-changelog.sh",
+    "scripts/ci/test-script-paths.sh"
   ],
-  "dependency_and_release_changes": "Host/Testkit/Build 0.66.0 and the pending two-site ownership migration are preserved. A concurrent Platform 0.6.10 lock update is retained and qualified; its published Rust source matches 0.6.9 and optional Wire schema remains disabled. Own package versions remain 0.39.0; pending 0.40.0 notes remain required by the Host public identity change, not this contributor-only tooling refresh.",
+  "consumer_changes": [
+    "Advance the reviewed revision and label; all 122 payload bytes, modes, tool pins and build-policy helpers match the adopted 0.26.8 snapshot.",
+    "Do not add unused upstream producer fixtures or repeat the upstream implementation matrix."
+  ],
+  "setup_refresh_required": false,
+  "dependency_and_release_changes": "No manifests, lockfiles, package versions, product Rust, CI or release behavior change. Preserve the incoming Platform 0.6.11 lock selection; this provenance refresh does not qualify that independent update.",
   "deployment_enforcement": {
     "automated": [
-      "Independent normal consumers reject Testkit/PocketIC/WAT by resolved identity and admit original selections; final normal graphs also exclude Wire and development-only features."
+      "Existing direct dependency gates and independent normal-graph exclusions remain unchanged."
     ],
     "not_enforced_here": [
-      "Role comments do not derive exclusion policy.",
       "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
     ],
-    "scope": "Unchanged production-host-library enforcement; this refresh adds no deployment gate."
+    "scope": "Unchanged host-library enforcement; no new deployment gate."
   },
   "qualification": {
-    "status": "passed-focused-linux",
+    "status": "passed-focused-provenance-and-tool-admission",
     "passed": [
-      "122 exact committed payloads verify through the canonical exporter; three changed files and no additions/retirements.",
-      "Explicit make install-tools refreshes common Cargo tools, Testkit 0.66 CLI/server and Build 0.66 editor under the new build policy; offline tools-check passes.",
-      "Consumer shell, tooling/checkpoint/failure-evidence, hooks and matching grouped formatting pass.",
-      "Actual refreshed Build editor renders read-only 0.40 manifest/lock candidates; owned dependency/version and unrelated lock preservation assertions pass without modifying real metadata.",
-      "Restarted strict all-target/all-feature Clippy, compilation, warning-denied Rustdoc and Rust 1.91 owning/independent normal consumers pass on the preserved Platform 0.6.10 graph.",
-      "Both unpacked package archives compile together on original selections with verified archive checksums.",
-      "19 selected public Host identity/recovery and actual Core/Agent simulator cases pass on the final graph, including both independent cold-process journeys.",
-      "Final normal graphs exclude Testkit/PocketIC/WAT/Wire and development-only features; Core excludes Agent."
+      "Canonical exporter verifies all 122 payloads against committed 0.26.9.",
+      "All selected file records, bytes and executable modes equal the 0.26.8 snapshot.",
+      "Existing host/common Cargo/Testkit/Build selections pass offline tools-check without installation.",
+      "Documentation links, JSON parsing and repository-file/license checks pass."
     ],
+    "reused_evidence": "Selected scripts, pins and build policy are byte-identical to 0.26.8. Existing consumer shell/tooling/hook/formatting receipts keep that unchanged-script scope. Released 0.40 product evidence remains tied to its Platform 0.6.10 graph.",
     "not_run": [
-      "Full local make ci or complete workspace test suite",
-      "Upstream implementation regression matrix in this consumer",
-      "New hosted/native macOS, registry-only installed-product, installed IC or Canic qualification",
-      "Release, publication or deployment"
-    ],
-    "reused_evidence": "The first tooling run was rejected after a concurrent lock update. Its output remains retained; the selected tooling/product gates and runtime cases were restarted and pass on the final graph. The upstream implementation matrix is not copied into this consumer."
+      "New product compilation, MSRV, packaging or runtime tests for pending Platform 0.6.11",
+      "Full local make ci or upstream regression matrix",
+      "New hosted/native macOS, registry-only installed-product, installed IC or Canic application qualification",
+      "Tool installation, Git contribution, release, publication or deployment"
+    ]
   },
-  "evidence_directory": "/tmp/backup-shared-0268-20261023-3ep0swa_",
-  "findings": [],
-  "validated_lock_sha256": "5c60401b984b472b3eb4487270191b3004ebf4bb3de9cdb6320218a889a31e35",
-  "concurrent_lock_update": {
-    "preserved": true,
-    "packages": [
-      "ic-platform"
-    ],
-    "description": "The first consumer tooling run was rejected after Cargo.lock changed from Platform 0.6.9 to 0.6.10. Locked fetch and the selected tooling/product qualification were restarted against the current inputs; earlier evidence remains scoped to its original graph."
-  }
+  "evidence_directory": "/tmp/backup-shared-0269-20261023-wnhypkbf",
+  "preserved_incoming_lock_sha256": "7e576f3eaf4b9cb7a85b903bc46b38fabb06d1597b24ab810ae46094fab19478",
+  "findings": []
 }
