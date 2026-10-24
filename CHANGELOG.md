@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.40.1] - Unreleased
+## [0.40.1] - 2026-10-24
 
 - Adopt published Host, Testkit and the contributor release editor at 0.66.2,
   aligning dependency minimums and tool selection with the maintained patch.
