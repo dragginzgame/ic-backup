@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.44.2]
+## [0.44.2] - 2026-10-25
 
 - Adopt published Host/Testkit and the contributor release editor at 0.68.1,
   with Platform 0.6.15 as the minimum facade selection. Backup does not enable
