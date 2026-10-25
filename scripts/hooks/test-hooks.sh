@@ -29,13 +29,9 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 
 create_fixture() {
     mkdir -p "$FIXTURE/crates/ic-backup/src" "$FIXTURE/scripts/dev" "$FIXTURE/scripts/ci" "$FIXTURE/ci" "$FIXTURE/.githooks" "$FIXTURE/make"
-    cp "$ROOT/scripts/ci/StableVersion.pm" "$ROOT/scripts/ci/ic-tool-pins.awk" "$ROOT/scripts/ci/tool-catalog-records.pl" "$ROOT/scripts/ci/check-format-tools.sh" "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
-    cp "$ROOT/ci/tool-versions.env" "$FIXTURE/ci/"
-    cp "$ROOT/.githooks/pre-commit" "$FIXTURE/.githooks/"
-    cp "$ROOT/scripts/dev/install-git-hooks.sh" "$FIXTURE/scripts/dev/"
-    cp "$ROOT/Makefile" "$FIXTURE/"
-    cp "$ROOT/rust-toolchain.toml" "$FIXTURE/"
+    bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$FIXTURE" \
+        Makefile make/consumer.mk ci/tool-versions.env .githooks/pre-commit \
+        scripts/dev/install-git-hooks.sh rust-toolchain.toml
     cat > "$FIXTURE/crates/ic-backup/Cargo.toml" <<'TOML'
 [package]
 name = "hook-fixture"

@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.44.2]
+
+- Adopt published Host/Testkit and the contributor release editor at 0.68.1,
+  with Platform 0.6.15 as the minimum facade selection. Backup does not enable
+  the changed Wire/schema features; product wire/storage and recovery contracts
+  remain unchanged. Prepare the selected CLIs with `make install-testkit-server`
+  and `make install-release-editor`.
+
+- Simplify tooling fixtures through the shared dependency-closure copier and
+  consolidate valid plan/fence fixtures and independent golden request framing.
+  Reuse immutable publication and simplify Agent transfer projection while
+  preserving public APIs, retained records and method-specific reply limits.
+
 ## [0.44.1] - 2026-10-24
 
 - Adopt Shared Tooling 0.26.14 for Cargo-tool setup diagnostics, literal formatter

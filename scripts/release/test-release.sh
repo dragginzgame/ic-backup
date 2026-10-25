@@ -66,15 +66,13 @@ run_case() {
 create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
-    cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$FIXTURE/make/"
-    cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/check-release-source.sh" "$ROOT/scripts/ci/check-release-tag.sh" "$ROOT/scripts/ci/run-formatting.sh" "$ROOT/scripts/ci/verify-file-checksum.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/Makefile" "$FIXTURE/"
-    cp "$ROOT/scripts/release/release.sh" "$ROOT/scripts/release/release-data.pl" "$FIXTURE/scripts/release/"
-    cp "$ROOT/scripts/ci/run-release.sh" "$ROOT/scripts/ci/next-release-version.sh" "$ROOT/scripts/ci/validate-release-inputs.pl" "$ROOT/scripts/ci/StableVersion.pm" "$ROOT/scripts/ci/run-validation-targets.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/scripts/ci/read-cargo-workspace-version.sh" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/scripts/ci/finalize-release-changelog.awk" "$FIXTURE/scripts/ci/"
-    cp "$ROOT/scripts/ci/cargo-release-metadata.sh" "$ROOT/scripts/ci/cargo-workspace-members.jq" \
-        "$ROOT/scripts/ci/compare-stable-versions.pl" "$FIXTURE/scripts/ci/"
+    bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$FIXTURE" \
+        Makefile make/consumer.mk scripts/release/release.sh scripts/release/release-data.pl \
+        scripts/ci/check-release-source.sh scripts/ci/check-release-tag.sh \
+        scripts/ci/next-release-version.sh scripts/ci/validate-release-inputs.pl \
+        scripts/ci/read-cargo-workspace-version.sh scripts/ci/finalize-release-changelog.awk \
+        scripts/ci/cargo-release-metadata.sh scripts/ci/cargo-workspace-members.jq \
+        scripts/ci/compare-stable-versions.pl
     cd "$FIXTURE"
     cat > Cargo.toml <<'TOML'
 [workspace]

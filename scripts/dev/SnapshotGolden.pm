@@ -4,8 +4,9 @@ use warnings;
 use Exporter 'import';
 use JSON::PP;
 use Math::BigInt;
+use Digest::SHA qw(sha256_hex);
 
-our @EXPORT_OK = qw(uleb sleb field_hash labels fields variant argument write_json);
+our @EXPORT_OK = qw(uleb sleb field_hash labels fields variant argument write_json request_digest);
 
 # Independent golden-vector encoding primitives; production Rust never uses these.
 sub uleb {
@@ -57,6 +58,14 @@ sub argument {
     my ($types, $fields, $values) = @_;
     return 'DIDL' . uleb(scalar @$types) . join('', @$types) . uleb(1) . sleb(0)
         . join('', map { $values->{$_} } labels($fields));
+}
+
+# Independent management request framing shared by the golden generators.
+sub request_digest {
+    my ($target, $method, $arguments) = @_;
+    return sha256_hex("ic-backup/ic-management-request/v1\0" . "\0"
+        . chr(length $target) . $target . "\x01" . chr(length $method) . $method
+        . pack('N', length $arguments) . $arguments);
 }
 
 sub write_json {

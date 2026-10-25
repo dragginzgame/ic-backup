@@ -6,7 +6,7 @@ use JSON::PP qw(decode_json);
 use Digest::SHA qw(sha256_hex);
 use FindBin;
 use lib $FindBin::Bin;
-use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json);
+use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json request_digest);
 
 die "usage: perl scripts/dev/generate-snapshot-data.pl [--check]\n"
     if @ARGV > 1 || (@ARGV && $ARGV[0] ne '--check');
@@ -40,9 +40,7 @@ for my $name ('wasm_module', 'wasm_memory', 'stable_memory', 'wasm_chunk') {
     my $arguments = 'DIDL' . uleb(scalar @types) . join('', @types)
         . uleb(1) . sleb(0) . join('', map { $values{$_} } labels(\%args));
     my $method = 'read_canister_snapshot_data';
-    my $request_digest = sha256_hex("ic-backup/ic-management-request/v1\0" . "\0"
-        . chr(length $target) . $target . "\x01" . chr(length $method) . $method
-        . pack('N', length $arguments) . $arguments);
+    my $request_digest = request_digest($target, $method, $arguments);
     push @cases, { name => $name, kind => {$name => $name eq 'wasm_chunk' ? {hash => [unpack('C*', $hash)]} : {offset => $offset, size => 3}},
         arguments_hex => unpack('H*', $arguments), request_digest => $request_digest,
         reply_hex => unpack('H*', $raw), payload_checksum => $payload_checksum,

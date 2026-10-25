@@ -19,16 +19,26 @@ pub struct Original {
 }
 pub fn original(restore: bool) -> Original {
     let plan = plan();
-    let obligation = if restore {
+    let obligation = obligation(&plan, restore);
+    let mut journal = AttemptJournalRecord::new(plan.attempt_authority(0).unwrap());
+    journal.reserve_mutation().unwrap();
+    Original {
+        plan,
+        obligation,
+        journal,
+    }
+}
+pub(super) fn obligation(plan: &OperationPlanRecord, restore: bool) -> FenceObligationRecord {
+    if restore {
         let source = restore_safety::source();
         let requirement =
-            restore_safety::requirement(&plan, &source, RestoreSafetyLaneRecord::ApplicationFenced);
-        FenceObligationRecord::for_restore(&plan, &source, &requirement, 0).unwrap()
+            restore_safety::requirement(plan, &source, RestoreSafetyLaneRecord::ApplicationFenced);
+        FenceObligationRecord::for_restore(plan, &source, &requirement, 0).unwrap()
     } else {
         FenceObligationRecord::for_capture(
-            &plan,
+            plan,
             &ConsistencyRequirementRecord::new(
-                &plan,
+                plan,
                 ConsistencyGuaranteeRecord::ApplicationCoordinated,
             ),
             0,
@@ -38,13 +48,6 @@ pub fn original(restore: bool) -> Original {
             },
         )
         .unwrap()
-    };
-    let mut journal = AttemptJournalRecord::new(plan.attempt_authority(0).unwrap());
-    journal.reserve_mutation().unwrap();
-    Original {
-        plan,
-        obligation,
-        journal,
     }
 }
 pub fn reserve(original: &mut Original, challenge: &str) {

@@ -76,24 +76,25 @@ impl ReservedUpdate<'_> {
                 arguments: r.payload().arguments(),
                 reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
             },
-            Self::TransferRead(r) => match r.payload() {
-                IcSnapshotTransferReadPayload::Metadata(p) => Wire {
+            Self::TransferRead(r) => {
+                // Borrow bytes from the original request, not the temporary payload enum.
+                let (target, arguments, reply_limit) = match r.payload() {
+                    IcSnapshotTransferReadPayload::Metadata(p) => {
+                        (p.target(), p.arguments(), MAX_IC_SNAPSHOT_METADATA_BYTES)
+                    }
+                    IcSnapshotTransferReadPayload::Data(p) => {
+                        (p.target(), p.arguments(), MAX_IC_SNAPSHOT_DATA_REPLY_BYTES)
+                    }
+                };
+                Wire {
                     context: r.plan().context(),
-                    receiver: p.receiver(),
-                    target: p.target(),
-                    method: p.method(),
-                    arguments: p.arguments(),
-                    reply_limit: MAX_IC_SNAPSHOT_METADATA_BYTES,
-                },
-                IcSnapshotTransferReadPayload::Data(p) => Wire {
-                    context: r.plan().context(),
-                    receiver: p.receiver(),
-                    target: p.target(),
-                    method: p.method(),
-                    arguments: p.arguments(),
-                    reply_limit: MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
-                },
-            },
+                    receiver: r.payload().receiver(),
+                    target,
+                    method: r.payload().method(),
+                    arguments,
+                    reply_limit,
+                }
+            }
             Self::Upload(r) => Wire {
                 context: r.plan().context(),
                 receiver: r.payload().receiver(),

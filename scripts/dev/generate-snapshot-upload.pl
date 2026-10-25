@@ -6,7 +6,7 @@ use JSON::PP qw(decode_json);
 use Digest::SHA qw(sha256_hex);
 use FindBin;
 use lib $FindBin::Bin;
-use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json);
+use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json request_digest);
 
 die "usage: perl scripts/dev/generate-snapshot-upload.pl [--check]\n"
     if @ARGV > 1 || (@ARGV && $ARGV[0] ne '--check');
@@ -37,8 +37,7 @@ sub register {
     die "missing source: $source" unless $metadata_source;
     push @cases, { name=>$name, source=>$source, metadata_digest=>$metadata_source->{digest},
         method=>$method, arguments_hex=>unpack('H*',$args),
-        request_digest=>sha256_hex("ic-backup/ic-management-request/v1\0" . "\0" . chr(length $target)
-            . $target . "\x01" . chr(length $method) . $method . pack('N',length $args) . $args),
+        request_digest=>request_digest($target, $method, $args),
         reply_hex=>unpack('H*',$raw), payload_checksum=>sha256_hex($raw), %$extra };
 }
 my $metadata_reply = 'DIDL'.uleb(2).fields(-20,{snapshot_id=>1}).sleb(-19).sleb(-5)

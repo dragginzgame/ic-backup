@@ -90,10 +90,7 @@ pub fn create_execution_workflow(
 ) -> Result<(), ExecutionWorkflowPersistenceError> {
     layout.check_root()?;
     let bytes = super::json::encode_json(record, MAX_EXECUTION_WORKFLOW_BYTES)?;
-    let path = layout.root().join(WORKFLOW_FILE);
-    let _lock = JournalLock::acquire(&path)?;
-    super::json::create_encoded(&path, &bytes)?;
-    Ok(())
+    super::immutable_record::create_encoded_record(layout, WORKFLOW_FILE, &bytes)
 }
 /// Read exact original workflow allocation; missing evidence never supplies a new budget.
 /// # Errors

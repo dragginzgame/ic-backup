@@ -6,7 +6,7 @@ use JSON::PP qw(decode_json);
 use Digest::SHA qw(sha256_hex);
 use FindBin;
 use lib $FindBin::Bin;
-use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json);
+use SnapshotGolden qw(uleb sleb field_hash labels fields variant argument write_json request_digest);
 
 die "usage: perl scripts/dev/generate-snapshot-metadata.pl [--check]\n"
     if @ARGV > 1 || (@ARGV && $ARGV[0] ne '--check');
@@ -19,9 +19,7 @@ my %argument_values = (canister_id => "\x01" . uleb(length $target_bytes) . $tar
 my $arguments = 'DIDL' . uleb(2) . fields(-20, \%argument_fields) . sleb(-19) . sleb(-5)
     . uleb(1) . sleb(0) . join('', map { $argument_values{$_} } labels(\%argument_fields));
 my $method = 'read_canister_snapshot_metadata';
-my $request_digest = sha256_hex("ic-backup/ic-management-request/v1\0" . "\0"
-    . chr(length $target_bytes) . $target_bytes . "\x01" . chr(length $method)
-    . $method . pack('N', length $arguments) . $arguments);
+my $request_digest = request_digest($target_bytes, $method, $arguments);
 my %source = (taken_from_canister => -16, metadata_upload => -16);
 my %global = (i32 => -11, i64 => -12, f32 => -13, f64 => -14, v128 => -3);
 my %timer = (inactive => -1, active => -8);

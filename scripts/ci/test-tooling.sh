@@ -32,9 +32,8 @@ trap finish EXIT
 # recipes. Only these unique targets substitute the graph-edit/next-stage effects.
 checkpoint="$FIXTURE/input-checkpoint"
 mkdir -p "$checkpoint/make" "$checkpoint/scripts/ci"
-cp "$ROOT/Makefile" "$checkpoint/"
-cp "$ROOT"/make/{consumer,release,tools,rust-format,execution}.mk "$checkpoint/make/"
-cp "$ROOT/scripts/ci/"{run-validation-targets,check-make-execution,verify-file-checksum}.sh "$checkpoint/scripts/ci/"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$checkpoint" \
+    Makefile make/consumer.mk scripts/ci/run-validation-targets.sh
 cat >> "$checkpoint/Makefile" <<'MAKE'
 .PHONY: fixture-mutate-input fixture-later-stage
 fixture-mutate-input:
@@ -63,10 +62,9 @@ echo 'Consumer manifest/lock checkpoints: PASS (changed inputs stop later CI dis
 # Metadata is substituted only inside this tooling fixture; production uses Cargo.
 boundary="$FIXTURE/boundary"
 mkdir -p "$boundary/ci" "$boundary/make" "$boundary/scripts/ci" "$boundary/bin"
-cp "$ROOT/Makefile" "$boundary/"
-cp "$ROOT"/make/{consumer,release,tools,rust-format,execution}.mk "$boundary/make/"
-cp "$ROOT/scripts/ci/"{check-cargo-dependency-boundaries,check-make-execution}.sh "$boundary/scripts/ci/"
-cp "$ROOT/ci/"{external-ic-dependencies.txt,cargo-dependency-boundaries.json} "$boundary/ci/"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$boundary" \
+    Makefile make/consumer.mk scripts/ci/check-cargo-dependency-boundaries.sh \
+    ci/external-ic-dependencies.txt ci/cargo-dependency-boundaries.json
 printf '[package]\nname = "boundary-fixture"\nversion = "0.0.0"\n' > "$boundary/Cargo.toml"
 cat > "$boundary/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash

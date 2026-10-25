@@ -65,3 +65,62 @@ pub(crate) const WIRE_ORACLE_LIMITS: ic_platform::candid::DecodeLimits =
         type_entries: 4096,
         header_bytes: 64 * 1024,
     };
+
+/// One valid single-target declaration; corruption tests retain their explicit JSON inputs.
+#[allow(
+    dead_code,
+    reason = "support also compiles in unrelated integration binaries"
+)]
+pub(crate) fn single_operation_plan(
+    sequence: u64,
+    request: &str,
+) -> ic_backup::model::operation_plan::OperationPlanRecord {
+    use ic_backup::model::{
+        attempt_journal::AttemptBudgetRecord,
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
+        inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
+        operation_plan::{
+            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlanContextRecord,
+            PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
+        },
+    };
+    let target = "renrk-eyaaa-aaaaa-aaada-cai";
+    OperationPlanRecord::new(OperationPlanRequest {
+        context: PlanContextRecord::new(&PlanContextRequest {
+            network: "ab".repeat(32),
+            caller: "2vxsx-fae".into(),
+            release: "cd".repeat(32),
+        })
+        .unwrap(),
+        inventory: InventoryRecord::new(vec![
+            InventoryTargetRecord::new(&InventoryTargetRequest {
+                canister_id: target.into(),
+                parent_canister_id: None,
+                role: None,
+                module_hash: None,
+            })
+            .unwrap(),
+        ])
+        .unwrap(),
+        selected_targets: vec![target.into()],
+        graph: EffectGraphRecord::new(vec![
+            EffectNodeRecord::new(EffectNodeRequest {
+                operation_sequence: sequence,
+                depends_on: vec![],
+            })
+            .unwrap(),
+        ])
+        .unwrap(),
+        operations: vec![
+            PlannedOperationRecord::new(PlannedOperationRequest {
+                operation_sequence: sequence,
+                target: target.into(),
+                request: request.into(),
+                budget: AttemptBudgetRecord::new(1, 1).unwrap(),
+            })
+            .unwrap(),
+        ],
+        budget: PlanBudgetRecord::new(1, 1).unwrap(),
+    })
+    .unwrap()
+}
