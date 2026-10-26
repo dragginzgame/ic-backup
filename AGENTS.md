@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.26.20's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.26.21's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)

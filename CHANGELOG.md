@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.44.4]
+
+### 📝 Summary
+
+- Align Host/Testkit and the contributor release editor with published 0.68.8,
+  and Platform with 0.6.19, retaining existing feature and wire/storage contracts.
+  Prepare the selected CLIs with `make install-testkit-server` and
+  `make install-release-editor`.
+- Adopt Shared Tooling 0.26.21 and its emoji category sections for current and
+  future root release notes.
+
 ## [0.44.3] - 2026-10-26
 
 ### 📝 Summary

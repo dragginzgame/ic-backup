@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.26.20
+# version	0.26.21
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	a7f85d45d4212d4c39225f58597580560a333550
+revision	66c91c4412856baa147482e648fc80428db8b179
 # entrypoint	docs/verification-helpers.md
 # entrypoint	scripts/ci/check-documentation-links.pl
 # entrypoint	scripts/ci/test-documentation-links.pl
@@ -127,8 +127,8 @@ file	36f36552df36ea6e082f1fd1f14661d40b281ea01294ffda2eb6c6ec91bc6907	x	scripts/
 file	a4682503812f210b951aede536cdd65642bfe266b02ab532853a1aeff64f9742	x	scripts/ci/verify-shared-tooling-snapshot.sh
 file	3258ccde9b45cfa46310e3ce117196857b1f963289bd53583523a599c99af8a7	x	scripts/ci/run-validation-targets.sh
 file	c52fe4771eb3b731b6cf1f4250e5af955cb4432176ed925fac636087f239f387	x	scripts/ci/test-validation-target-runner.sh
-file	6cfb92f17d07c051fbd2f2f000176b7eede69f412596943fd3616285f724bb09	-	DRAGGINZGAME.md
-file	3c88853136d4ad9962b8c01caacd9607192164c2d4aeb901e36b4e3da81fdf99	-	rules/changelogs.md
+file	6bbddc6caf450fbc987dcef66c8756eee1d7571e74b49529ff05708aaff206bf	-	DRAGGINZGAME.md
+file	f5b493200ef3aaa2f08b27b4a644345005d5e86431dc4cb33fd27844056f5ff0	-	rules/changelogs.md
 file	9567eeaba8dc34c56f5da8e32910b0db57aa43606a6e08109615d1476a356c94	-	docs/releases.md
 file	8e72d1bf484eee8c8ec079ab65be7c5718f46117952a41fe9cbcf6ad3abf4bd3	x	scripts/ci/run-release.sh
 file	918815a81861abd80684fea14f71cb5a298644317afc0f5860a3d1b6506a0a16	x	scripts/ci/next-release-version.sh

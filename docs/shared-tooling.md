@@ -69,7 +69,7 @@ Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
 
-The reviewed Shared Tooling 0.26.20 snapshot includes the
+The reviewed Shared Tooling 0.26.21 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -146,6 +146,10 @@ The compact baseline delegates detailed contracts to task-specific rules and
 makes line/symbol accounting opt-in. The npm SDK boundary remains optional;
 Backup's Rust-only graph needs no npm tooling. Snapshot adoption supplies neither
 application deployment admission nor release/publication authority.
+
+Root release notes follow the shared IcyDB-style emoji category sections. Use
+only relevant sections, including a single summary for small entries, while
+preserving older release content and identities. Presentation adds no release gate.
 
 ## Adoption history
 

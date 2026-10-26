@@ -2,58 +2,34 @@
   "version": 1,
   "inspection_date": "2026-10-26",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "a7f85d45d4212d4c39225f58597580560a333550",
-  "label": "0.26.20",
+  "revision": "66c91c4412856baa147482e648fc80428db8b179",
+  "label": "0.26.21",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 124,
-  "previous_revision": "e14050bcc0c627f9c8a9064051699cac44fd7ab3",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/33702a4/docs/shared-tooling-review.json",
+  "previous_revision": "a7f85d45d4212d4c39225f58597580560a333550",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/3a6f0fe3926eba656a4ed4798c321f25963a3f9c/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
     "clean_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "a7f85d45d4212d4c39225f58597580560a333550",
-    "version_authority": "Committed VERSION selects 0.26.20; the observed GitHub main matches the clean selected source."
+    "observed_remote_main": "66c91c4412856baa147482e648fc80428db8b179",
+    "version_authority": "Committed VERSION selects 0.26.21; the observed GitHub main matches the clean selected source."
   },
   "changed_paths": [
-    "docs/verification-helpers.md",
-    "rules/dependency-pinning.md",
-    "audits/README.md",
-    "audits/module-cleanup.md",
-    "docs/principles/reviewable-changes.md",
     "DRAGGINZGAME.md",
-    "rules/changelogs.md",
-    "docs/releases.md",
-    "scripts/ci/run-release.sh",
-    "scripts/ci/finalize-release-changelog.awk",
-    "rules/cargo-dependencies.md",
-    "scripts/distribution/governance-files.txt",
-    "rules/rust-workspaces.md",
-    "scripts/ci/release-pr.sh",
-    "rules/change-reporting.md",
-    "docs/cargo-graph-checks.md",
-    "docs/ci-change-selection.md"
+    "rules/changelogs.md"
   ],
-  "added_paths": [
-    "rules/engineering-details.md",
-    "rules/rpc-budgets.md",
-    "docs/node-tools.md"
-  ],
-  "retired_paths": [
-    "scripts/ci/test-release-runner.sh"
-  ],
+  "added_paths": [],
+  "retired_paths": [],
   "consumer_changes": [
-    "Adopt the compact core baseline and task-specific engineering/RPC details; keep Backup product constraints and exact resume-receipt admission local.",
-    "Normal releases start fresh from current clean committed metadata; explicit resume alone selects a saved attempt. Qualify actual Make/adapters, original receipt/validation bytes, uncertain earlier delivery and fresh-gate failures.",
-    "Align Host/Testkit and Build editor requirements with published 0.68.7 and Platform with 0.6.18, retaining existing features, the incoming lockfile and Backup package versions.",
-    "Document aggregate versus focused validation and opt-in line/symbol reporting. Rust-only Backup does not select the optional npm guard.",
-    "Retire the generic release-runner fixture and dispatch through the canonical exporter; retain Backup-specific adapter, selected-source receipt and recovery assertions.",
-    "Select Shared node-tools documentation through the exporter to close the new dependency-rule link; no Node executable or npm gate is selected. Remove the retired generic runner retention probe from the local caller fixture."
+    "Merge authorized changelog presentation PR #69 at its reviewed head, preserving older entries.",
+    "Adopt emoji category sections in current and future root entries; no release gate or history rewrite is added.",
+    "Align manifest minimums and separately selected CLIs with published Tooling 0.68.8 and Platform 0.6.19; retain existing feature selection, package version 0.44.3 and incoming lockfile."
   ],
   "setup_refresh_required": true,
-  "setup_refresh_reason": "Selected Testkit and release-editor CLIs change; use canonical setup and offline admission while retaining previous tools.",
-  "dependency_and_release_changes": "Registry Host/Testkit/Build 0.68.7 and Platform 0.6.18; root lock already selected them at task start. Backup remains 0.44.2 with pending compatible 0.44.3 notes. No Git/release/publication effects.",
+  "setup_refresh_reason": "The separately selected release editor advances to 0.68.8; canonical setup and offline admission reuse authenticated caches.",
+  "dependency_and_release_changes": "The incoming lock already selects Host/Testkit 0.68.8 and Platform 0.6.19 and carries an incoming OpenSSL probe 0.2.2 edit. Online Cargo update found no additional Rust-1.91-compatible changes. Package versions remain 0.44.3; pending compatible notes are 0.44.4.",
   "deployment_enforcement": {
     "automated": [
       "Direct declarations compose the common IC guard with local retired-package/WAT bans, using package identity across aliases and all Cargo dependency tables.",
@@ -67,44 +43,45 @@
   "qualification": {
     "status": "passed-focused-consumer-adoption",
     "passed": [
-      "Canonical export and offline integrity admission; full locked root and independent normal-consumer metadata with unchanged incoming lock.",
-      "Canonical selected CLI setup and offline host/Cargo/Testkit/editor admission.",
+      "Canonical export of 124 files; only the core baseline and changelog rules change.",
+      "Registry archive checksums and committed-source comparisons for Tooling 0.68.8 and Platform 0.6.19; consumed Rust sources match the prior releases.",
+      "Full locked root and independent normal-consumer graphs, dependency inheritance/boundaries and unchanged incoming lockfile.",
       "Strict all-target/all-feature Clippy for both affected libraries.",
-      "Artifact checksum/publication, download integrity and local restore-source integration tests.",
-      "Independent Core and Agent consumers on Rust 1.91.0, including public Host error identities.",
-      "Connected Core capture/restore/terminal replay on real PocketIC.",
-      "Independent authenticated Agent cold capture/restore/terminal replay and death-after-load journeys.",
-      "Actual Backup Make/release adapter regressions including fresh-attempt failures, explicit recovery, original receipt/validation custody and private-index checks.",
-      "Focused release-script ShellCheck.",
-      "Actual CI/evidence caller fixtures after retiring the generic runner probe; final snapshot integrity, non-mutating formatting, local documentation links and whitespace checks."
+      "Independent Core/Agent Rust 1.91.0 consumers, including public Host error identities.",
+      "Canonical selected CLI setup and offline common/Testkit/editor admission.",
+      "Actual selected editor renders isolated manifest and lock candidates with exact owned versions, unchanged foreign packages and unchanged live inputs.",
+      "Final snapshot integrity, non-mutating formatting, maintained Markdown links and whitespace checks."
     ],
     "not_run": [
-      "Shared Tooling owner regression matrix or full local make ci",
-      "Native macOS, installed Canic/IC, new package-archive/registry-only acceptance, publication or deployment"
+      "New full local CI, simulator or complete release-adapter suite; consumed Rust sources and runner/adapter implementations are unchanged.",
+      "Native macOS, installed Canic/IC, package-archive/registry-only acceptance, publication or deployment."
     ],
     "evidence": [
-      "/tmp/backup-adopt-shared-impact.log",
-      "/tmp/backup-adopt-shared-refresh.log",
-      "/tmp/backup-adopt-shared-retire-preview.log",
-      "/tmp/backup-adopt-shared-retire.log",
-      "/tmp/backup-adopt-published.json",
-      "/tmp/backup-adopt-admission.log",
-      "/tmp/backup-adopt-tools.log",
-      "/tmp/backup-adopt-clippy.log",
-      "/tmp/backup-adopt-host-tests.log",
-      "/tmp/backup-adopt-consumers.log",
-      "/tmp/backup-adopt-core-simulator-retry.log",
-      "/tmp/backup-adopt-agent-simulator.log",
-      "/tmp/backup-adopt-release.log",
-      "/tmp/backup-adopt-shellcheck.log",
-      "/tmp/backup-adopt-shared-doc-preview.log",
-      "/tmp/backup-adopt-shared-doc-refresh.log",
-      "/tmp/backup-adopt-final-admission.log",
-      "/tmp/backup-adopt-shellcheck-final.log",
-      "/tmp/backup-adopt-caller-tests-final.log",
-      "/tmp/backup-adopt-final-checks.log"
+      "/tmp/backup-refresh-shared-impact.log",
+      "/tmp/backup-refresh-shared.log",
+      "/tmp/backup-refresh-published.json",
+      "/tmp/backup-refresh-admission.log",
+      "/tmp/backup-refresh-metadata.json",
+      "/tmp/backup-refresh-graphs/",
+      "/tmp/backup-refresh-clippy.log",
+      "/tmp/backup-refresh-consumers.log",
+      "/tmp/backup-refresh-setup.log",
+      "/tmp/backup-refresh-tools.log",
+      "/tmp/backup-refresh-editor/",
+      "/tmp/backup-refresh-final.log"
     ]
   },
-  "preserved_incoming_lock_sha256": "350624a872db50c087b688c26170f76146099c54e60b972bfdb27c10ebccd78e",
-  "findings": []
+  "preserved_incoming_lock_sha256": "5e51f1c9f7bd8477ff56ec4bae0e47b4fb5596e0b30b233e36ce5cf1c2d68c53",
+  "findings": [],
+  "merged_pr": {
+    "number": 69,
+    "head": "4c643db917269cc70752ebcd4b768a7d5c5f08c7",
+    "merge_commit": "528afdda02d0dae0ff7c10b70ec5eaaefa806f08",
+    "url": "https://github.com/dragginzgame/ic-backup/pull/69",
+    "current_author_permission": "admin",
+    "enforced_branch_rules": [],
+    "observed_ci_run": "https://github.com/dragginzgame/ic-backup/actions/runs/40362881639",
+    "observed_ci_status": "in_progress",
+    "ci_scope": "Merged commit only; subsequent local adoption edits are not included."
+  }
 }
