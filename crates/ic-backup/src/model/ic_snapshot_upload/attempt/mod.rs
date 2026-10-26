@@ -72,17 +72,13 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcSnapshotUploadAttemptError> {
-        if journal.authority() != &self.authority {
-            return Err(IcSnapshotUploadAttemptError::AuthorityMismatch);
-        }
-        let view = journal.view();
-        if view.pending_mutation != Some(self.mutation_attempt) {
-            return Err(IcSnapshotUploadAttemptError::MutationMismatch);
-        }
-        if view.pending_observation.is_some() {
-            return Err(IcSnapshotUploadAttemptError::ObservationPending);
-        }
-        Ok(())
+        journal.validate_pending_mutation(
+            &self.authority,
+            self.mutation_attempt,
+            IcSnapshotUploadAttemptError::AuthorityMismatch,
+            IcSnapshotUploadAttemptError::MutationMismatch,
+            IcSnapshotUploadAttemptError::ObservationPending,
+        )
     }
 }
 

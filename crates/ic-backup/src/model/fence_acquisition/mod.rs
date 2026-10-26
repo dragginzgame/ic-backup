@@ -199,17 +199,13 @@ impl<'a> FenceAcquisitionRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), FenceAcquisitionError> {
-        if journal.authority() != &self.authority {
-            return Err(FenceAcquisitionError::AuthorityMismatch);
-        }
-        let current = journal.view();
-        if current.pending_mutation != Some(self.mutation_attempt) {
-            return Err(FenceAcquisitionError::MutationMismatch);
-        }
-        if current.pending_observation.is_some() {
-            return Err(FenceAcquisitionError::ObservationPending);
-        }
-        Ok(())
+        journal.validate_pending_mutation(
+            &self.authority,
+            self.mutation_attempt,
+            FenceAcquisitionError::AuthorityMismatch,
+            FenceAcquisitionError::MutationMismatch,
+            FenceAcquisitionError::ObservationPending,
+        )
     }
 }
 

@@ -1,83 +1,91 @@
-# Current handoff — 2026-10-24
+# Current handoff — 2026-10-26
 
-## Ownership and released source
+## Released source and ownership
 
-Released Backup is **0.44.1**, `39094a5`. Core owns bounded records, guarded
+Released Backup is **0.44.2**, `33702a4`. Core owns bounded records, guarded
 persistence, reconciliation and original-plan coordination. Agent owns reserved
 signed transport. Applications own current authority, membership, release binding,
 whole-unit fencing and external obligations. Host owns generic IO/process/hash,
 Platform external IC identities/SDKs, and Testkit simulator assets/processes.
 [Implementation contracts](../implementation-contracts.md) retain product obligations.
 
-## Published dependency adoption
+The selected graph uses Host/Testkit and the Build editor **0.68.7**, Platform
+**0.6.18**, Agent 0.49.3, management DTO 0.11.0 and PocketIC 16.1.0. Shared Tooling
+is the reviewed **0.26.20** snapshot. Package versions remain 0.44.2.
 
-Pending **0.44.2** aligns Host Artifacts/FS/Process, Testkit and the Build release
-editor minimums to published **0.68.1**, source
-`c9c5ef7c44e3d0c3b23c8531a5d43c1800656c0a`. Platform's minimum becomes published
-**0.6.15**, source `6dcf54a229201f85775d218b7a9f41809297878f`.
-These are the latest published supplying releases at inspection. All five Tooling
-Rust source trees match 0.68.0; Platform's Rust source matches 0.6.14. The relevant
-release changes select Wire/schema dependencies/features that Backup does not enable.
-The dependency adoption itself changes no product Rust, codec, storage, lifecycle,
-public type or recovery logic.
+## Pending 0.44.3
 
-The incoming lock already selected the four Tooling 0.68.1 libraries and Platform
-0.6.15. It remains byte-identical: SHA-256
-`a71c6fa12455a0cf4ae26987b7cc3cd80d59b67418c8dd65e5ff4cc7702bc28e`.
-Authenticated archive/source identities are in `/tmp/backup-deps-0681-published.json`.
-Agent 0.49.3, management DTO 0.11.0, external Principal 0.1.5 and PocketIC 16.1.0
-remain selected. Shared Tooling stays 0.26.14; no snapshot payload changes.
-Workspace versions remain 0.44.1. No staging, commit, push, release, publication,
-live IC effect or sibling edit is performed.
+The incoming private journal admission cleanup remains unchanged: one helper
+admits exact authority, pending mutation and absence of recovery in that order.
+Mutation, acquisition, transfer-read and upload requests preserve public typed
+errors, constructor checks and rejection order. Its earlier thirty focused tests
+and public-error assertions remain at `/tmp/backup-pending-admission-*.log`.
+No new record, public API, effect, spending or recovery mode is introduced.
 
-## Qualification
+Shared's generic checksum/archive suites and release-runner matrix are retired
+through its canonical exporter. Backup retains actual CI/evidence callers,
+Testkit setup ordering, product gates and native-host CI. Shared owns its generic
+matrices upstream. Current release-adapter assertions remain local.
 
-Linux strict all-target/all-feature Clippy, 525 Core and three Agent unit tests,
-actual Rust 1.91.0 all-target/all-feature compilation, dependency inheritance and
-boundary checks, formatting and local documentation links pass. Both independent
-MSRV consumers pass, including public Host checksum/publication error identities.
-Their normal graphs select Host 0.68.1/Platform 0.6.15 and exclude Testkit, PocketIC,
-WAT, Clap, Wire/schema packages and Host development features; Core stays Agent-free.
-Evidence: `target/msrv-consumers.VHocWF/`.
+Normal releases now start fresh from clean committed metadata without reading
+historical plans. Only the selected candidate's stale plan/staging/PR receipt is
+superseded; other plans, metadata backups and failure evidence remain retained.
+Backup archives earlier validation bytes before fresh proof. Exact saved recovery
+uses `release-resume VERSION=X.Y.Z` and still requires the original receipt.
+[Release guidance](../releasing.md) owns the command contract; no release is run.
 
-Canonical setup reused authenticated Testkit/Build CLI assets without rebuilding.
-Both offline checks pass, and the selected editor passes isolated metadata/retention
-fixtures at `target/shared-release-tests.ixjmk8/`. Existing PocketIC assets and older
-or failed tools remain retained. Both authenticated independent candidate-consumer
-simulator cases pass: cold capture/restore/acceptance with terminal replay, and
-process death after load without redispatch. Build/graph evidence:
-`/tmp/ic-backup-agent-independent-build-3617012-0/`; fixture evidence:
-`/tmp/ic-backup-agent-pocketic-3617012-{1,2}/`.
-Logs: `/tmp/backup-deps-0681-{boundaries,clippy,unit,msrv,consumers,setup,tools-check,editor,simulator}.log`.
+## Published upstream adoption
 
-## Local cleanup qualification
+Manifest minimums and the contributor release editor select published Tooling
+**0.68.7**, source `7ae301d00353e1e27e94300d492e47f9736941c3`, and Platform
+**0.6.18**, source `98a2a8aa9b015c730ef222941b387674a729b0ab`. Registry index,
+archive SHA-256 and committed source comparisons are retained in
+`/tmp/backup-adopt-published.json`. Dirty sibling Platform work is excluded.
+Shared's committed **0.26.20** source is
+`a7f85d45d4212d4c39225f58597580560a333550`; its clean checkout matched observed
+GitHub main. [The review](../shared-tooling-review.json) binds selection and evidence.
 
-The pending patch also replaces manual shared-helper fixture copy lists with the
-snapshot's declared dependency-closure copier, retaining explicit local roots and
-substitutes. Valid public plan fixtures use typed constructors; unit fence fixtures
-share obligation construction. Golden generators share independent request framing
-and all three check modes reproduce existing bytes exactly. Workflow publication
-uses the existing immutable-record owner after bounded encoding. Agent transfer
-projection retains original borrows and the distinct metadata/data reply ceilings.
-Public signatures, persisted formats and cancellation/recovery contracts are unchanged.
+The incoming lock already selected these libraries and remains byte-identical:
+SHA-256 `350624a872db50c087b688c26170f76146099c54e60b972bfdb27c10ebccd78e`.
+Host FS consolidates name admission; Testkit consolidates startup/assets; Build
+consolidates metadata editing. Platform's added optional BLAKE3 feature is not
+selected. Existing features, public external identities, wire/storage bytes and
+product Rust source are unchanged. No new dependency patch or sibling input is used.
+Canonical setup prepared the selected CLIs and reused authenticated PocketIC
+assets, retaining previous tools and failed evidence. Offline admission passes.
 
-Fresh Linux checks pass: strict all-target/all-feature Clippy, 528 library unit tests,
-four public integration journeys, and the authenticated Agent capture/download/upload/
-same-ID restore simulator journey. Hook, tooling and complete local release-adapter
-fixtures pass, including private-index and retained-proof recovery; ShellCheck passes.
-Release fixture evidence: `target/shared-release-tests.L2mTrJ/`; hook evidence:
-`target/hook-tests.5ZxVjd/`. Logs: `/tmp/backup-five-{clippy,unit,integration,simulator,hooks,tooling,release,shellcheck}.log`.
-The incoming dependency manifests, lockfile and Makefile remain unchanged by cleanup.
-No new native macOS, MSRV, installed-IC or full CI qualification is claimed for this batch.
+## Focused Linux qualification
+
+Both affected libraries pass strict all-target/all-feature Clippy. Artifact
+checksum/publication, download integrity and local restore-source integration
+checks pass. Both independent Rust 1.91.0 consumers pass, including public Host
+error identities; evidence is at `target/msrv-consumers.Dz7z4d/`.
+Root and independent locked metadata pass. Normal consumers select singleton
+Platform 0.6.18 and Host 0.68.7 without CLI, simulator, WAT, Wire-schema or CDK
+runtime features; Core stays Agent-free. Graph evidence: `/tmp/backup-adopt-graphs/`.
+
+The connected Core capture/restore/terminal-replay case passes with retained
+fixture `/tmp/ic-backup-pocketic-3016097-0/`. Both authenticated independent Agent
+journeys pass: cold capture/restore/application acceptance and terminal replay,
+and death after load preserving original pending spending without redispatch.
+Build/graph evidence: `/tmp/ic-backup-agent-independent-build-3141305-0/`;
+application fixtures: `/tmp/ic-backup-agent-pocketic-3141305-{1,2}/`.
+
+Backup's release-adapter suite passes, including explicit lost-commit recovery,
+exact historical receipts, fresh patch/minor attempts leaving earlier delivery
+uncertain, failed-gate retention and real private-index admission. Evidence:
+`target/shared-release-tests.DrvLEW/` and `/tmp/backup-adopt-release.log`.
+Actual CI/evidence caller fixtures, focused ShellCheck, snapshot integrity,
+formatting and local documentation links pass. Logs use `/tmp/backup-adopt-*`.
+The initial sandbox-only setup and local-port failures remain retained alongside
+successful authorized retries; they supply no passing product evidence.
 
 ## Limits and remaining integration
 
-This batch does not claim native macOS, installed Canic/IC, new package-archive or
-registry-only acceptance, or full local make ci. Agent's signing graph still contains
-crypto-bigint 0.5.5; this update supplies no cryptographic correction. The
-[Canic guide](../canic-adoption.md) retains application responsibilities and the
-requirement to qualify replacement behavior before retiring its existing restore
-engine. Direct declarations and normal-graph checks do not admit deployed Wasm
-bytes; the deploying application owns target/feature/artifact binding.
-Shared Tooling's preceding adoption evidence remains at the
-[released handoff](https://github.com/dragginzgame/ic-backup/blob/39094a5/docs/status/current.md).
+Native macOS, installed Canic/IC, new package-archive/registry-only acceptance,
+Shared's owner matrix and full local CI were not run. Host-consumer graphs do not
+qualify deployed Wasm bytes; deployment binding remains application-owned.
+Agent still contains crypto-bigint 0.5.5 transitively; this adoption does not resolve
+that existing cryptographic dependency concern. The [Canic guide](../canic-adoption.md)
+retains application responsibilities before retiring its existing restore engine.
+No staging, commit, push, release, publication, live IC effect or sibling edit occurs.

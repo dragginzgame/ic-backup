@@ -753,14 +753,13 @@ test_early_plan_retry() {
     cp target/release-state/0.1.1.validation.json target/earlier-proof
     export TEST_SOURCE=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
     "$TEST_REAL_MAKE" --no-print-directory release-patch
-    local archives=(target/release-state/0.1.1.attempt.*/0.1.1.plan)
     local proofs=(target/release-state/0.1.1.validation.*/validation.json)
-    cmp target/earlier-plan "${archives[0]}"
     cmp target/earlier-proof "${proofs[0]}"
+    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]] || exit 1
     [[ "$(perl scripts/release/release-data.pl source)" == "$TEST_SOURCE" ]] || exit 1
     assert_cache_retained
 }
-test_prepared_normal_retry() {
+test_prepared_explicit_resume() {
     export TEST_LOST_EFFECT=commit
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     unset TEST_LOST_EFFECT
@@ -770,7 +769,7 @@ test_prepared_normal_retry() {
     perl scripts/release/release-data.pl verify
     : > "$TEST_EFFECTS"
     cp target/tool-effects.log target/tools-before-resume
-    "$TEST_REAL_MAKE" --no-print-directory release-patch
+    "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
     [[ "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'tag\npush' ]] || exit 1
     cmp docs/release.json target/original-receipt.json
     cmp target/release-state/0.1.1.validation.json target/original-validation.json
@@ -817,21 +816,24 @@ test_committed_preparation_retry() {
         cp docs/release.json target/original-receipt.json
     fi
     TEST_GATE_FAIL=1 expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
-    local archives=(target/release-state/0.1.1.attempt.*/0.1.1.plan)
-    [[ "${#archives[@]}" == 1 && "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'fetch\nvalidate' ]] || exit 1
-    cmp target/original-plan "${archives[0]}"
+    [[ "$(fingerprint)" == "$before" && "$(cat "$TEST_EFFECTS")" == $'fetch\nvalidate' ]] || exit 1
     cmp target/original-validation.json target/release-state/0.1.1.validation.json
     cmp target/original-backup "${backups[0]}"
     if [[ "$disposition" == bumped ]]; then
         cmp target/original-receipt.json docs/release.json
-        [[ "$(tail -n 1 "${archives[0]}")" == prepare ]] || exit 1
+        cmp target/original-plan target/release-state/0.1.1.plan
         [[ ! -e target/tags/v0.1.1.commit && ! -e target/tags/v0.1.1.object ]] || exit 1
     fi
     [[ ! -e "target/release-state/$next.plan" ]] || exit 1
     "$TEST_REAL_MAKE" --no-print-directory release-patch
     [[ "$(perl scripts/release/release-data.pl version)" == "$next" && "$(perl scripts/release/release-data.pl source)" == "$fix" ]] || exit 1
     [[ "$(tail -n 1 "target/release-state/$next.plan")" == complete ]] || exit 1
-    cmp target/original-plan "${archives[0]}"
+    if [[ "$disposition" == bumped ]]; then
+        cmp target/original-plan target/release-state/0.1.1.plan
+    else
+        local proofs=(target/release-state/0.1.1.validation.*/validation.json)
+        cmp target/original-validation.json "${proofs[0]}"
+    fi
     cmp target/original-backup "${backups[0]}"
     assert_cache_retained
 }
@@ -897,6 +899,7 @@ test_older_release_recovery() {
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
     unset TEST_PUSH_FAIL
     cp target/release-state/0.1.1.validation.json target/original-proof.json
+    cp target/release-state/0.1.1.plan target/original-plan
     record_reviewed_fix "$next"
     if [[ "$mode" == explicit-unsorted ]]; then
         # Current HEAD is deliberately unsorted but clean in the Git substitute.
@@ -926,7 +929,8 @@ test_older_release_recovery() {
             expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
             [[ "$(perl scripts/release/release-data.pl version)" == 0.1.1 ]] || exit 1
             [[ ! -e target/release-state/0.1.2.plan ]] || exit 1
-            [[ "$(cat target/remote-head)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]] || exit 1
+            [[ ! -e target/remote-head ]] || exit 1
+            cmp target/original-plan target/release-state/0.1.1.plan
             unset TEST_GATE_FAIL
             "$TEST_REAL_MAKE" --no-print-directory release-patch
         else
@@ -940,8 +944,14 @@ test_older_release_recovery() {
         perl scripts/release/release-data.pl verify
     fi
     [[ "$(cat target/tags/v0.1.1.commit)" == bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ]] || exit 1
-    [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]] || exit 1
-    [[ "$(sed -n '2p' target/pushes.log)" == 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb v0.1.1' ]] || exit 1
+    if [[ "$mode" == explicit || "$mode" == explicit-unsorted ]]; then
+        [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == complete ]] || exit 1
+        [[ "$(sed -n '2p' target/pushes.log)" == 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb v0.1.1' ]] || exit 1
+    else
+        cmp target/original-plan target/release-state/0.1.1.plan
+        [[ "$(wc -l < target/pushes.log)" == 2 ]] || exit 1
+        [[ "$(sed -n '2p' target/pushes.log)" == "$(cat target/mock-head) v$next" ]] || exit 1
+    fi
     cmp target/original-proof.json target/release-state/0.1.1.validation.json
     perl scripts/release/release-data.pl verify --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     assert_cache_retained
@@ -960,7 +970,7 @@ test_selected_proof_rejection() {
         export TEST_REMOTE_FAIL=1
     fi
     : > "$TEST_EFFECTS"
-    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-resume VERSION=0.1.1
     [[ ! -s "$TEST_EFFECTS" && ! -f target/remote-head ]] || exit 1
     [[ "$(tail -n 1 target/release-state/0.1.1.plan)" == push ]] || exit 1
     assert_cache_retained
@@ -1154,7 +1164,7 @@ done
 for drift in notes tag head; do run_case "completed-$drift" test_invalid_release "$drift"; done
 for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
 run_case early-plan-retry-retention test_early_plan_retry
-run_case prepared-normal-retry test_prepared_normal_retry
+run_case prepared-explicit-resume test_prepared_explicit_resume
 for disposition in unchanged bumped; do run_case "committed-preparation-$disposition" test_committed_preparation_retry "$disposition"; done
 for mode in retry offline network invalid lock common prerequisite; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
 for mode in explicit explicit-unsorted patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done

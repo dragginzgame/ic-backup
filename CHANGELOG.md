@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.44.3]
+
+- Stop rerunning Shared Tooling's checksum, archive and generic release suites;
+  retain local evidence integration, snapshot integrity and native-host gates.
+
+- Consolidate pending-mutation admission across mutation, acquisition, transfer and
+  upload requests while preserving typed errors and their rejection order.
+
+- Adopt published Host/Testkit and the contributor release editor at 0.68.7,
+  with Platform 0.6.18 as the minimum facade selection. Retain explicit simulator
+  startup, original evidence custody and independent release metadata validation.
+  Prepare the selected CLIs with `make install-testkit-server` and
+  `make install-release-editor`.
+
+- Adopt Shared Tooling 0.26.20. Normal release commands start fresh from clean
+  committed metadata; use `make release-resume VERSION=X.Y.Z` to continue a saved
+  attempt with Backup's exact receipt checks. Earlier validation and metadata
+  backups remain retained.
+
 ## [0.44.2] - 2026-10-25
 
 - Adopt published Host/Testkit and the contributor release editor at 0.68.1,

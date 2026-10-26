@@ -92,17 +92,13 @@ impl<'a> IcMutationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcMutationRequestError> {
-        if journal.authority() != &self.authority {
-            return Err(IcMutationRequestError::AuthorityMismatch);
-        }
-        let current = journal.view();
-        if current.pending_mutation != Some(self.mutation_attempt) {
-            return Err(IcMutationRequestError::MutationMismatch);
-        }
-        if current.pending_observation.is_some() {
-            return Err(IcMutationRequestError::ObservationPending);
-        }
-        Ok(())
+        journal.validate_pending_mutation(
+            &self.authority,
+            self.mutation_attempt,
+            IcMutationRequestError::AuthorityMismatch,
+            IcMutationRequestError::MutationMismatch,
+            IcMutationRequestError::ObservationPending,
+        )
     }
 }
 

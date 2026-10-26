@@ -1,59 +1,59 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-24",
+  "inspection_date": "2026-10-26",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "e14050bcc0c627f9c8a9064051699cac44fd7ab3",
-  "label": "0.26.14",
+  "revision": "a7f85d45d4212d4c39225f58597580560a333550",
+  "label": "0.26.20",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 124,
-  "previous_revision": "3657c044c0e91321effe8835989491a4cd0b5cba",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/7d48b94/docs/shared-tooling-review.json",
+  "previous_revision": "e14050bcc0c627f9c8a9064051699cac44fd7ab3",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/33702a4/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
     "clean_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "e14050bcc0c627f9c8a9064051699cac44fd7ab3",
-    "version_authority": "Committed VERSION selects 0.26.14; remote main matches the inspected clean checkout."
+    "observed_remote_main": "a7f85d45d4212d4c39225f58597580560a333550",
+    "version_authority": "Committed VERSION selects 0.26.20; the observed GitHub main matches the clean selected source."
   },
   "changed_paths": [
-    "DRAGGINZGAME.md",
-    "docs/cargo-graph-checks.md",
-    "docs/consuming-snapshots.md",
-    "docs/ic-tools.md",
-    "docs/local-setup.md",
-    "docs/make-interface.md",
-    "docs/releases.md",
-    "docs/supported-hosts.md",
-    "docs/tool-catalog-bindings.md",
     "docs/verification-helpers.md",
-    "make/rust-format.mk",
-    "make/tools.mk",
-    "rules/cargo-dependencies.md",
-    "scripts/ci/check-cargo-dependency-boundaries.sh",
+    "rules/dependency-pinning.md",
+    "audits/README.md",
+    "audits/module-cleanup.md",
+    "docs/principles/reviewable-changes.md",
+    "DRAGGINZGAME.md",
+    "rules/changelogs.md",
+    "docs/releases.md",
     "scripts/ci/run-release.sh",
-    "scripts/ci/test-release-runner.sh",
-    "scripts/dev/install-host-tools.sh",
-    "scripts/dev/install-ic-tools.sh",
-    "scripts/dev/install-rust-tools.sh",
-    "scripts/dev/tool-store.sh",
-    "tasks/snapshot-drift.md"
+    "scripts/ci/finalize-release-changelog.awk",
+    "rules/cargo-dependencies.md",
+    "scripts/distribution/governance-files.txt",
+    "rules/rust-workspaces.md",
+    "scripts/ci/release-pr.sh",
+    "rules/change-reporting.md",
+    "docs/cargo-graph-checks.md",
+    "docs/ci-change-selection.md"
   ],
   "added_paths": [
-    "ci/external-ic-dependencies.txt",
-    "scripts/ci/describe-tool-selection.pl"
+    "rules/engineering-details.md",
+    "rules/rpc-budgets.md",
+    "docs/node-tools.md"
   ],
-  "retired_paths": [],
+  "retired_paths": [
+    "scripts/ci/test-release-runner.sh"
+  ],
   "consumer_changes": [
-    "Activate the common external-IC inventory through the actual Make boundary target; retain four additional local exclusions instead of copying the common list.",
-    "Qualify alias, optional, target-specific and normal/build/dev metadata through the actual boundary recipe with isolated substituted Cargo observations.",
-    "Copy the literal tool catalog parser and its companions into local hook fixtures; retain matching grouped formatting and release metadata checks.",
-    "Distinguish Testkit admission status 75 from missing setup without dispatching the server; Make retains its normal wrapper exit behavior.",
-    "Qualify fresh-gate advancement from clean manually committed candidate metadata while retaining the earlier uncertain plan, backups and validation.",
-    "Expose the common tools-report diagnostic without changing fail-fast setup/release admission."
+    "Adopt the compact core baseline and task-specific engineering/RPC details; keep Backup product constraints and exact resume-receipt admission local.",
+    "Normal releases start fresh from current clean committed metadata; explicit resume alone selects a saved attempt. Qualify actual Make/adapters, original receipt/validation bytes, uncertain earlier delivery and fresh-gate failures.",
+    "Align Host/Testkit and Build editor requirements with published 0.68.7 and Platform with 0.6.18, retaining existing features, the incoming lockfile and Backup package versions.",
+    "Document aggregate versus focused validation and opt-in line/symbol reporting. Rust-only Backup does not select the optional npm guard.",
+    "Retire the generic release-runner fixture and dispatch through the canonical exporter; retain Backup-specific adapter, selected-source receipt and recovery assertions.",
+    "Select Shared node-tools documentation through the exporter to close the new dependency-rule link; no Node executable or npm gate is selected. Remove the retired generic runner retention probe from the local caller fixture."
   ],
-  "setup_refresh_required": false,
-  "dependency_and_release_changes": "IC Tooling 0.68.0 remains the latest published Host/Testkit/Build release. Cargo.toml and the incoming Platform 0.6.15 lockfile selection remain byte-identical; package versions remain 0.44.0. Pending 0.44.1 records contributor-only adoption.",
+  "setup_refresh_required": true,
+  "setup_refresh_reason": "Selected Testkit and release-editor CLIs change; use canonical setup and offline admission while retaining previous tools.",
+  "dependency_and_release_changes": "Registry Host/Testkit/Build 0.68.7 and Platform 0.6.18; root lock already selected them at task start. Backup remains 0.44.2 with pending compatible 0.44.3 notes. No Git/release/publication effects.",
   "deployment_enforcement": {
     "automated": [
       "Direct declarations compose the common IC guard with local retired-package/WAT bans, using package identity across aliases and all Cargo dependency tables.",
@@ -62,38 +62,49 @@
     "not_enforced_here": [
       "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
     ],
-    "scope": "Host libraries only; direct declaration checks do not prove transitive or deployed-Wasm absence. No new product graph qualification is claimed for the independent incoming Platform update."
+    "scope": "Host libraries only; direct declaration admission and independent normal-consumer graphs do not qualify deployed Wasm bytes. Backup adds no application deployment entrypoint."
   },
   "qualification": {
     "status": "passed-focused-consumer-adoption",
     "passed": [
-      "Canonical export and integrity verification of all 124 payloads.",
-      "Common/local direct boundary composition, consumer graph rejection and evidence-retention fixtures.",
-      "Literal/grouped formatting, local hook/index/partial-stage fixtures, and focused ShellCheck.",
-      "Offline host/Cargo/Testkit/editor admission and aggregate tools-report.",
-      "Testkit setup/check ordering and busy status refusal without setup advice or server dispatch.",
-      "Backup release-adapter suite and canonical shared runner fixture, including retained uncertain preparation and fresh-gate recovery.",
-      "Local documentation links, snapshot integrity, whitespace and repository-file/license checks."
+      "Canonical export and offline integrity admission; full locked root and independent normal-consumer metadata with unchanged incoming lock.",
+      "Canonical selected CLI setup and offline host/Cargo/Testkit/editor admission.",
+      "Strict all-target/all-feature Clippy for both affected libraries.",
+      "Artifact checksum/publication, download integrity and local restore-source integration tests.",
+      "Independent Core and Agent consumers on Rust 1.91.0, including public Host error identities.",
+      "Connected Core capture/restore/terminal replay on real PocketIC.",
+      "Independent authenticated Agent cold capture/restore/terminal replay and death-after-load journeys.",
+      "Actual Backup Make/release adapter regressions including fresh-attempt failures, explicit recovery, original receipt/validation custody and private-index checks.",
+      "Focused release-script ShellCheck.",
+      "Actual CI/evidence caller fixtures after retiring the generic runner probe; final snapshot integrity, non-mutating formatting, local documentation links and whitespace checks."
     ],
     "not_run": [
-      "Full local make ci or Shared Tooling owner matrix",
-      "New Rust product/MSRV/package/simulator qualification for the incoming Platform 0.6.15 graph",
-      "Native macOS, installed Canic/IC, registry publication or deployment"
+      "Shared Tooling owner regression matrix or full local make ci",
+      "Native macOS, installed Canic/IC, new package-archive/registry-only acceptance, publication or deployment"
     ],
     "evidence": [
-      "/tmp/backup-shared-02614-boundaries.log",
-      "/tmp/backup-shared-02614-tooling.log",
-      "/tmp/backup-shared-02614-hooks-complete.log",
-      "/tmp/backup-shared-02614-testkit.log",
-      "/tmp/backup-shared-02614-release-final.log",
-      "/tmp/backup-shared-02614-tools-initial.log",
-      "/tmp/backup-shared-02614-tools-report.log",
-      "/tmp/backup-shared-02614-shellcheck.log",
-      "/tmp/backup-shared-02614-local-shellcheck.log",
-      "/tmp/backup-shared-02614-final.log"
+      "/tmp/backup-adopt-shared-impact.log",
+      "/tmp/backup-adopt-shared-refresh.log",
+      "/tmp/backup-adopt-shared-retire-preview.log",
+      "/tmp/backup-adopt-shared-retire.log",
+      "/tmp/backup-adopt-published.json",
+      "/tmp/backup-adopt-admission.log",
+      "/tmp/backup-adopt-tools.log",
+      "/tmp/backup-adopt-clippy.log",
+      "/tmp/backup-adopt-host-tests.log",
+      "/tmp/backup-adopt-consumers.log",
+      "/tmp/backup-adopt-core-simulator-retry.log",
+      "/tmp/backup-adopt-agent-simulator.log",
+      "/tmp/backup-adopt-release.log",
+      "/tmp/backup-adopt-shellcheck.log",
+      "/tmp/backup-adopt-shared-doc-preview.log",
+      "/tmp/backup-adopt-shared-doc-refresh.log",
+      "/tmp/backup-adopt-final-admission.log",
+      "/tmp/backup-adopt-shellcheck-final.log",
+      "/tmp/backup-adopt-caller-tests-final.log",
+      "/tmp/backup-adopt-final-checks.log"
     ]
   },
-  "evidence_directory": "/tmp/backup-shared-02614-*",
-  "preserved_incoming_lock_sha256": "7211adb61040e98ef8f31f68a266f95fc4f7b90bd2ff7f2936834349eedc99c4",
+  "preserved_incoming_lock_sha256": "350624a872db50c087b688c26170f76146099c54e60b972bfdb27c10ebccd78e",
   "findings": []
 }

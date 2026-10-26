@@ -143,17 +143,13 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcSnapshotTransferReadError> {
-        if journal.authority() != &self.authority {
-            return Err(IcSnapshotTransferReadError::AuthorityMismatch);
-        }
-        let view = journal.view();
-        if view.pending_mutation != Some(self.mutation_attempt) {
-            return Err(IcSnapshotTransferReadError::MutationMismatch);
-        }
-        if view.pending_observation.is_some() {
-            return Err(IcSnapshotTransferReadError::ObservationPending);
-        }
-        Ok(())
+        journal.validate_pending_mutation(
+            &self.authority,
+            self.mutation_attempt,
+            IcSnapshotTransferReadError::AuthorityMismatch,
+            IcSnapshotTransferReadError::MutationMismatch,
+            IcSnapshotTransferReadError::ObservationPending,
+        )
     }
 }
 

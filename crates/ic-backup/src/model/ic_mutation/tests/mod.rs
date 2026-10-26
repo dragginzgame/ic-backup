@@ -41,6 +41,13 @@ fn unknown_operation_and_changed_original_authority_are_typed_denials() {
         Err(IcMutationRequestError::Plan(_))
     ));
     let other = AttemptJournalRecord::new(original.plan.attempt_authority(0).unwrap());
+    let request =
+        IcMutationRequest::new(&original.plan, 7, &original.journal, &original.payload).unwrap();
+    // Wrong authority wins even when the supplied journal also lacks the mutation.
+    assert!(matches!(
+        request.validate_journal(&other),
+        Err(IcMutationRequestError::AuthorityMismatch)
+    ));
     assert!(matches!(
         IcMutationRequest::new(&original.plan, 7, &other, &original.payload),
         Err(IcMutationRequestError::AuthorityMismatch)
@@ -124,6 +131,13 @@ fn absent_replaced_settled_and_recovering_reservations_do_not_admit_dispatch() {
         .journal
         .reserve_observation(2, hash("56").hash())
         .unwrap();
+    // The original request's replaced mutation wins over pending recovery.
+    let before = original.journal.clone();
+    assert!(matches!(
+        request.validate_journal(&original.journal),
+        Err(IcMutationRequestError::MutationMismatch)
+    ));
+    assert_eq!(original.journal, before);
     assert!(matches!(
         IcMutationRequest::new(&original.plan, 7, &original.journal, &original.payload),
         Err(IcMutationRequestError::ObservationPending)

@@ -148,7 +148,7 @@ case "$command" in
         next="$(perl "$DATA" next "${1:-patch}")"
         printf 'Current: %s\nTarget:  %s\n' "$(version)" "$next"
         echo 'Maintainer workflow: preflight -> validate -> prepare -> stage -> commit/tag -> atomic push'
-        echo 'Normal targets reconcile interrupted releases; release-resume selects only one saved version. No effects performed.' ;;
+        echo 'Normal targets start fresh; release-resume selects only one saved version. No effects performed.' ;;
     ensure-clean) ensure_clean ;;
     preflight) preflight ;;
     prepare) prepare ;;

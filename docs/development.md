@@ -82,8 +82,7 @@ From the repository root:
 rustup show active-toolchain
 make install-tools
 make tools-check
-make check
-make test
+cargo test --offline --locked -p ic-backup --test directory_checksum
 ```
 
 Explicit local setup uses the snapshot-owned [host and Cargo pins](../ci/tool-versions.env)
@@ -270,6 +269,15 @@ Prepare the locked tools and dependencies using the quick start before running
 checks. Select the tests that exercise the changed boundary; a native model or
 filesystem test does not qualify an IC effect. See the current handoff for actual
 results rather than inferring qualification from the commands below.
+
+`make check`, `make clippy`, `make test`, `make check-msrv` and `make package` are
+aggregate selections. Ordinary work uses the affected package, target or test
+filter below; full repository suites remain release or explicitly requested work.
+For dependency adoption affecting both libraries, use
+`cargo clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings`
+after admitting the locked root and independent consumer graphs. The existing
+consumer scripts own generated fixture locks; no maintained independent workspace
+or deployed canister artifact is added by this host-library adoption.
 
 | Changed boundary | Focused selection |
 | --- | --- |

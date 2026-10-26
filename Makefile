@@ -3,7 +3,7 @@ SHELL := /bin/bash
 export CARGO_TARGET_DIR := $(CURDIR)/target
 LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server install-release-editor
 LOCAL_TOOL_CHECK_TARGETS := testkit-server-check release-editor-check
-RELEASE_EDITOR_VERSION := 0.68.1
+RELEASE_EDITOR_VERSION := 0.68.7
 export RELEASE_EDITOR_MAX_BYTES := 8388608
 RELEASE_EDITOR_COMMAND = bash "$(CURDIR)/scripts/dev/install-rust-tools.sh" --consumer "$(CURDIR)" \
     --package ic-build --version "$(RELEASE_EDITOR_VERSION)" --bin ic-build-release-metadata --profile debug --features cli
@@ -171,7 +171,6 @@ publish-dry-run:
 
 release-check:
 	+bash scripts/release/test-release.sh
-	+RELEASE_MAKE=make bash scripts/ci/test-release-runner.sh
 
 release-delivery-check:
 	@[[ "$${RELEASE_DELIVERY:-direct}" == direct ]] || { echo 'This repository supports direct release delivery; PR delivery needs a qualified consumer adapter.' >&2; exit 2; }
@@ -252,10 +251,9 @@ test:
 tasks:
 	@cat tasks/README.md
 
+# Shared owns generic checksum/archive matrices; this gate qualifies Backup callers.
 tooling-check: shared-tooling-check
 	bash scripts/ci/test-tooling.sh
-	bash scripts/ci/test-evidence-checksums.sh
-	bash scripts/ci/test-evidence-archive.sh
 	bash scripts/ci/test-testkit-commands.sh
 	bash scripts/ci/test-failure-evidence.sh
 

@@ -95,17 +95,19 @@ a candidate. No local regex imposes another manifest layout.
 
 ## Release fixture ownership
 
-`make release-check` runs both the consumer adapter fixture and the unchanged
-canonical shared runner suite. [The assertion map](release-fixture-ownership.json)
-binds the owners to exact reviewed scripts. The shared suite owns all increment
-and generic phase/restart/lost-reply/destination matrices. The local fixture
+`make release-check` runs the consumer adapter fixture.
+[The assertion map](release-fixture-ownership.json) binds consumer assertions to
+their owners. Shared Tooling runs the generic increment, phase, restart, lost-reply
+and destination matrices at its own source; Backup does not vendor or rerun that
+suite. The local fixture
 retains actual metadata/lock/changelog transaction failures, receipt and validation
 custody, selected older `RELEASE_COMMIT` verification, real staged-index admission,
-publication separation and one normal Make-to-adapter lost-commit recovery.
+publication separation and explicit Make-to-adapter lost-commit recovery.
 
 That local recovery compares exact original receipt and validation bytes, admits
 the completed original version/history and preserves the prepared input/cache.
-Retained historical proof tests still exercise all their original modes. Their
+Historical proof tests distinguish explicit recovery from fresh patch/minor
+attempts that leave the earlier uncertain delivery untouched. Their
 Git substitute needs immutable full product file trees; the generic runner fixture
 models different evidence. No new shared mock framework is needed to remove the
 runner-only cases. Fixture substitutes reject unsupported calls; their behavior
@@ -142,9 +144,9 @@ The workspace owns package versions; selecting notes changes neither manifest no
 lockfile. `release-plan` accepts patch/minor/major or an exact preview, but one-shot
 release execution accepts the three common increments. The old `bump-x`, `patch`,
 `minor`, `major`, `release-x`, `release-stage`, `release-commit` and `release-push`
-commands are removed. Use the selected common one-shot command; after interruption,
-rerun that normal target to reconcile the exact saved release. `release-resume`
-selects only the explicitly named saved release. A preflight or validation-only
+commands are removed. Use the selected common one-shot command for a fresh release;
+after interruption, `release-resume VERSION=X.Y.Z` selects that saved release.
+A preflight or validation-only
 failure retries the normal target against current reviewed source with fresh
 preflight and the complete gate. Do not infer completion from old
 standalone prepared metadata: inspect its original receipt/source/tag and retained
@@ -161,10 +163,12 @@ and the complete reviewed common Cargo set plus the declared Rust toolchains.
 Prepare toolchains before setup; ordinary validation never installs tools. Supported host evidence
 remains separately qualified.
 
-Source admission reports every staged, unstaged and untracked path outside the
-phase's exact metadata allowance, quoting unusual names and retaining Git errors.
-Initial preflight permits pending `CHANGELOG.md` notes only; package metadata and
-the lockfile must match the selected source. Its refusal states that validation
+Normal commands require clean committed source, including pending notes, before
+selecting a fresh attempt. The product adapter additionally reports every staged,
+unstaged and untracked path outside the phase's exact metadata allowance, quoting
+unusual names and retaining Git errors. Its preflight permits pending
+`CHANGELOG.md` notes only; package metadata and the lockfile must match the selected
+source. Its refusal states that validation
 and version preparation have not started for that attempt. Prepared checks keep
 their existing metadata allowance and original-source/receipt requirements;
 committed and resumed checks require a clean checkout. Admission never stages,
@@ -188,7 +192,7 @@ owns bootstrap prerequisites; exact registry compatibility constraints remain in
 [the local overlay](../AGENTS.md#qualified-dependency-constraints).
 
 The runner selects the source SHA, previous/candidate versions, UTC date, branch and
-single push URL before mutation. Preflight admits pending notes and rejects unrelated
+single push URL from clean committed inputs before mutation. Product preflight rejects unrelated
 staged/unstaged/untracked work and changed original manifest/lock/receipt. Staged
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
@@ -235,40 +239,27 @@ running this workflow.
 
 ## Exact interruption recovery
 
-Preflight and validation-only failures create no new release plan or prepared
-metadata. Retry the normal selected target after fixing/reviewing source; it selects
-the current source and repeats preflight and the full gate. Earlier failure logs
-remain retained. Safe earlier plans at preflight/validate are archived in unique
-attempt directories after checking base, destination and absence of preparation/tag
-effects. An earlier validation sidecar is also copied to a unique retained directory
-before a new successful gate records its exact original inputs; no proof is reused.
+Normal release commands start fresh from current clean, committed metadata. They
+do not scan historical plans or replay earlier commit, tag or push effects. Each
+attempt repeats preflight and the full gate. When the candidate matches an older
+attempt, the runner supersedes only that candidate's stale plan, staging roster
+and PR receipt under the release lock; it does not archive the old plan. Other
+versions' plans, failure logs and metadata backups remain retained. Backup copies
+an earlier validation sidecar to a unique retained directory before recording fresh
+proof. No earlier proof supplies fresh validation.
 
 Immediately after successful validation, before preparation can mutate metadata,
 the runner retains `.git/release-state/X.Y.Z.plan`, its NUL-separated release paths
 and the consumer `.validation.json` evidence. The directory lock records its owner;
 inspect that owner before disposing of a stale lock. Never steal an active release
-lock or discard plans, source backups, validation logs or build artifacts as cleanup.
+lock or discard source backups, validation logs or build artifacts as cleanup.
 
-Normal targets select unfinished intent before computing an increment from possibly
-prepared metadata. An unchanged same-kind retry finishes only that release. After
-its exact release commit exists, newer committed fixes on its descendant history or
-a different requested kind cause recovery first, then fresh preflight and full
-validation for the next increment from the actual local version. No old proof is
-recreated, old release commit/tag replaced or unvalidated fix pushed with the old
-release. A failure in the new gate retains the completed older release and both
-attempts' evidence. Dirty source, conflicting payload/history/tag/destination,
-missing original proof and occupied locks stop recovery.
-
-A saved `prepare` intent without staging evidence can also be superseded by
-a newer clean descendant commit through the normal direct target. The runner
-archives the exact old intent, reads current canonical metadata (the saved base
-or candidate), selects the requested increment and repeats preflight/full validation.
-A manually committed candidate is eligible even when earlier tags or Git delivery
-are missing. This preserves the earlier uncertainty; it does not complete that
-release or qualify registry publication. Backup preparation mutates only local
-metadata; original backups, validation
-sidecars and failure logs remain retained. Dirty, divergent or conflicting states
-still stop. See the [shared restart contract](releases.md#source-changes-after-saved-preparation-intent).
+A clean manually committed preparation may supply the next normal release's base,
+including when earlier Git delivery remains uncertain. This neither completes that
+earlier attempt nor qualifies publication. A failed fresh gate performs no old
+delivery or new version preparation. Preflight and validation-only failures create
+no new plan; fix and commit the inputs before trying a normal command again. See
+the [shared restart contract](releases.md#source-changes-after-saved-preparation-intent).
 
 `make release-resume VERSION=X.Y.Z` uses only that saved phase without starting a
 new increment. Completed commit/tag/push identities reconcile rather than repeat.
@@ -303,8 +294,8 @@ adoption. Follow-up publication is an explicit maintainer action.
 
 ## Focused qualification
 
-`make release-check` exercises actual consumer Make entry points with Git/Cargo
-substitutes, plus the exact vendored runner's command-stub regressions. It covers
+`make release-check` exercises actual consumer Make entry points and the reviewed
+runner with Git/Cargo substitutes. It covers
 both member manifests/local lock entries and their internal registry requirement,
 all three increments, identical phase order, exact staging/push, failure before
 mutation, dependency bootstrap, original-input validation, retained metadata/history,
@@ -316,9 +307,8 @@ automatic shell error handling. Fixture command traces
 and failure evidence are retained under `target/shared-release-tests.*`.
 
 The consumer suite clears inherited release identities and GNU Make recursion/
-override state in its child process; each fixture owns its exact context. The
-unchanged shared runner suite uses its own `make` substitute, including in macOS
-system-Bash CI. Qualification under parent release variables and command-line
+override state in its child process; each fixture owns its exact context.
+Qualification under parent release variables and command-line
 overrides checks this boundary. Explicit source mismatches still reject before
 recording validation evidence; successful dependency targets do not bypass that
 production guard.

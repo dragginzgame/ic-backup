@@ -182,9 +182,6 @@ mkdir -p "$retention/bin"
 if [[ "${1:-}" == */scripts/ci/"$RETENTION_FAILED_HELPER" ]]; then
     # Admission fixtures must reach the real guard and their failing control
     # gate before the original retained patch fixture receives our injection.
-    if [[ "$RETENTION_FAILED_HELPER" == run-release.sh && "${PWD##*/}" != patch ]]; then
-        exec "$RETENTION_REAL_BASH" "$@"
-    fi
     # The new goal-admission cases must reach the actual logger. Inject only
     # at the original passing-output case whose fixture retention we qualify.
     if [[ "$RETENTION_FAILED_HELPER" == run-validation-targets.sh && "${2:-}" != passing-tests ]]; then
@@ -201,7 +198,7 @@ exec "$RETENTION_REAL_BASH" "$@"
 BASH
 } > "$retention/bin/bash"
 chmod +x "$retention/bin/bash"
-for owner in dependency-pins validation-target-runner release-runner; do
+for owner in dependency-pins validation-target-runner; do
     case "$owner" in
         dependency-pins)
             helper=check-dependency-pins.sh; child_status=23; expected_status=1
@@ -209,9 +206,6 @@ for owner in dependency-pins validation-target-runner release-runner; do
         validation-target-runner)
             helper=run-validation-targets.sh; child_status=31; expected_status=31
             prefix=validation-runner-test; original=Makefile ;;
-        release-runner)
-            helper=run-release.sh; child_status=33; expected_status=33
-            prefix=release-runner-test; original=patch/version ;;
     esac
     mkdir "$retention/$owner"
     status=0
@@ -234,7 +228,6 @@ for owner in dependency-pins validation-target-runner release-runner; do
         validation-target-runner)
             captured="${retained[0]}/passing-tests.log"
             rg -F 'first-failure-marker' "${retained[0]}/$original" >/dev/null ;;
-        release-runner) [[ "$(cat "${retained[0]}/$original")" == 0.1.0 ]] || exit 1 ;;
     esac
     # A missing/broken launcher must not accidentally satisfy a refusal case.
     rg -Fx "injected child-helper status: $child_status" "$captured" >/dev/null

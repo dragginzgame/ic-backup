@@ -69,7 +69,7 @@ Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
 
-The reviewed Shared Tooling 0.26.14 snapshot includes the
+The reviewed Shared Tooling 0.26.20 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -134,12 +134,18 @@ installation or lock cleanup. Backup preserves that status and distinguishes it
 from a missing Testkit selection; the release editor adapter already propagates
 its admission failure without setup fallback.
 
-The shared runner admits a clean, manually committed preparation as the base for
-a fresh increment even when earlier Git delivery remains unconfirmed. It archives
-the old intent, retains original evidence and runs fresh preflight/validation.
-Backup's release fixture tests both unchanged and manually advanced metadata with
-failed-gate retention before success. This adoption executes only isolated tests;
-actual release and publication authority remain with the maintainer.
+Normal release commands start fresh from current clean, committed metadata without
+reading historical plans. The selected candidate's stale plan and staging roster
+are superseded; other plans, Backup's metadata backups and validation logs remain
+retained. Backup archives an earlier validation sidecar before recording fresh
+proof. Use `release-resume VERSION=X.Y.Z` for exact saved-attempt recovery, including
+the mandatory original receipt check. Consumer fixtures qualify fresh attempts,
+failed-gate retention and explicit recovery through the actual Make/adapters.
+
+The compact baseline delegates detailed contracts to task-specific rules and
+makes line/symbol accounting opt-in. The npm SDK boundary remains optional;
+Backup's Rust-only graph needs no npm tooling. Snapshot adoption supplies neither
+application deployment admission nor release/publication authority.
 
 ## Adoption history
 

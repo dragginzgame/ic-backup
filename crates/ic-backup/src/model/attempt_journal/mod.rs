@@ -178,6 +178,28 @@ impl AttemptJournalRecord {
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
         &self.authority
     }
+    // Keep passive request admission ordered: authority, mutation, then recovery.
+    // Callers retain their own public error types; this grants no dispatch authority.
+    pub(crate) fn validate_pending_mutation<E>(
+        &self,
+        authority: &AttemptAuthorityRecord,
+        mutation_attempt: u32,
+        authority_mismatch: E,
+        mutation_mismatch: E,
+        observation_pending: E,
+    ) -> Result<(), E> {
+        if self.authority() != authority {
+            return Err(authority_mismatch);
+        }
+        let current = self.view();
+        if current.pending_mutation != Some(mutation_attempt) {
+            return Err(mutation_mismatch);
+        }
+        if current.pending_observation.is_some() {
+            return Err(observation_pending);
+        }
+        Ok(())
+    }
     /// Read the exact canonical request of the unresolved observation, if any.
     ///
     /// This projects existing validated history. It creates no reservation or

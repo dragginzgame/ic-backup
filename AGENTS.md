@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.26.14's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.26.20's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
@@ -130,13 +130,8 @@ Product transport/runtime qualification stays separate from executable version c
 
 ## Validation and delivery
 
-- Follow the shared baseline's validation cadence: run meaningful focused checks
-  for changed product and tooling boundaries and reuse unchanged passing evidence.
-  Run the local full `make ci` suite only for an explicitly authorized release or
-  explicit request for that suite; configured CI remains separate. Release,
-  publication and deployment still require explicit authorization.
-  [Development](docs/development.md) describes local commands and target-directory
-  ownership.
+- [Development](docs/development.md) describes local focused selections, aggregate
+  commands and target-directory ownership under the shared validation cadence.
 - Before compilation, check for an active command using this repository's
   target directory. Do not alter source or locks beneath active validation.
 - Unit tests live beside code; integration tests live in `tests/`. Canister
