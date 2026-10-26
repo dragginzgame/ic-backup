@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.44.3]
+## [0.44.3] - 2026-10-26
 
 - Stop rerunning Shared Tooling's checksum, archive and generic release suites;
   retain local evidence integration, snapshot integrity and native-host gates.
