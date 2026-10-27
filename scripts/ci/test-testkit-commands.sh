@@ -19,7 +19,8 @@ finish() {
 }
 trap finish EXIT
 mkdir -p "$fixture/consumer/make" "$fixture/consumer/scripts/ci" "$fixture/bin" "$fixture/cli"
-cp "$ROOT/Makefile" "$fixture/consumer/Makefile"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$fixture/consumer" \
+    Makefile make/consumer.mk
 cat > "$fixture/consumer/Cargo.lock" <<'LOCK'
 version = 4
 
@@ -28,8 +29,6 @@ name = "ic-testkit"
 version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 LOCK
-cp "$ROOT/make/consumer.mk" "$ROOT/make/release.mk" "$ROOT/make/tools.mk" "$ROOT/make/rust-format.mk" "$ROOT/make/execution.mk" "$fixture/consumer/make/"
-cp "$ROOT/scripts/ci/check-make-execution.sh" "$ROOT/scripts/ci/run-formatting.sh" "$ROOT/scripts/ci/run-rust-formatting.pl" "$fixture/consumer/scripts/ci/"
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail

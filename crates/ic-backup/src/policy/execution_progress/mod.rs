@@ -7,7 +7,7 @@ use crate::model::{
     operation_plan::OperationPlanRecord,
 };
 use serde::Serialize;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use thiserror::Error;
 
 /// Passive complete journal set supplied by the local evidence-owning caller.
@@ -134,10 +134,11 @@ pub(super) fn progress_with_journals<'a>(
             ));
         }
     }
-    let applied: BTreeSet<_> = journals
-        .iter()
-        .filter_map(|(sequence, journal)| journal.applied_receipt().map(|_| *sequence))
-        .collect();
+    let is_applied = |sequence: &u64| {
+        journals
+            .get(sequence)
+            .is_some_and(|journal| journal.applied_receipt().is_some())
+    };
     let mut totals = ExecutionAttemptTotalsView {
         mutations_used: 0,
         observations_used: 0,
@@ -155,7 +156,7 @@ pub(super) fn progress_with_journals<'a>(
         let unmet = node
             .depends_on()
             .iter()
-            .find(|dependency| !applied.contains(dependency));
+            .find(|dependency| !is_applied(dependency));
         if attempts.mutations_used != 0
             && let Some(prerequisite) = unmet
         {
@@ -175,7 +176,10 @@ pub(super) fn progress_with_journals<'a>(
         ExecutionProgressView {
             intent,
             graph: plan.graph().digest(),
-            applied_operations: applied.len(),
+            applied_operations: journals
+                .keys()
+                .filter(|sequence| is_applied(sequence))
+                .count(),
             attempts: totals,
             operations,
         },

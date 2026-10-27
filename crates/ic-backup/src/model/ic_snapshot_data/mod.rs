@@ -11,7 +11,6 @@ use super::{
     ic_request::{IcRequestError, encode_arguments, management_request_digest},
     ic_snapshot_metadata::IcSnapshotMetadataReply,
 };
-use ic_platform::Principal;
 use ic_platform::management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind};
 use std::fmt;
 use thiserror::Error;
@@ -29,7 +28,6 @@ pub const MAX_IC_SNAPSHOT_DATA_REPLY_BYTES: usize = 2 * 1024 * 1024;
 pub struct IcSnapshotDataRequest<'metadata> {
     metadata: &'metadata IcSnapshotMetadataReply<'metadata>,
     kind: SnapshotDataKind,
-    target_bytes: Vec<u8>,
     arguments: Vec<u8>,
 }
 
@@ -44,8 +42,7 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         kind: SnapshotDataKind,
     ) -> Result<Self, IcSnapshotDataError> {
         validate_kind(metadata, &kind)?;
-        let target = Principal::from_text(metadata.request().target())
-            .map_err(|_| IcRequestError::InvalidTarget)?;
+        let target = metadata.request().principal();
         let arguments = encode_arguments(ReadCanisterSnapshotDataArgs {
             canister_id: target.into(),
             snapshot_id: metadata.request().snapshot_id().to_vec(),
@@ -54,7 +51,6 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         Ok(Self {
             metadata,
             kind,
-            target_bytes: target.as_slice().to_vec(),
             arguments,
         })
     }
@@ -111,7 +107,11 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
     /// separately included in the reply evidence digest. Spending stays external.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        management_request_digest(&self.target_bytes, self.method(), &self.arguments)
+        management_request_digest(
+            self.metadata.request().principal().as_slice(),
+            self.method(),
+            &self.arguments,
+        )
     }
 }
 

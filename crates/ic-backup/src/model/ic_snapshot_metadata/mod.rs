@@ -6,6 +6,7 @@ use super::{
     artifacts::ArtifactChecksumRecord,
     ic_request::{IcRequestError, admits_snapshot_id, encode_arguments, management_request_digest},
 };
+use ic_platform::Principal;
 use ic_platform::management_canister_types::{
     ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult,
 };
@@ -27,7 +28,7 @@ pub const MAX_IC_SNAPSHOT_CHUNKS: usize = 1024;
 #[derive(Clone)]
 pub struct IcSnapshotMetadataRequest {
     target: String,
-    target_bytes: Vec<u8>,
+    principal: Principal,
     snapshot_id: Vec<u8>,
     arguments: Vec<u8>,
 }
@@ -50,10 +51,14 @@ impl IcSnapshotMetadataRequest {
         })?;
         Ok(Self {
             target,
-            target_bytes: principal.as_slice().to_vec(),
+            principal,
             snapshot_id: snapshot_id.to_vec(),
             arguments,
         })
+    }
+
+    pub(crate) const fn principal(&self) -> Principal {
+        self.principal
     }
 
     /// Read the canonical effective routing target, also encoded in the arguments.
@@ -89,7 +94,7 @@ impl IcSnapshotMetadataRequest {
     /// Hash exact receiver/routing/update-mode/method/arguments with the existing owner.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        management_request_digest(&self.target_bytes, self.method(), &self.arguments)
+        management_request_digest(self.principal.as_slice(), self.method(), &self.arguments)
     }
 }
 

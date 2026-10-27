@@ -65,37 +65,18 @@ pub async fn acquire_fence<E: std::error::Error + 'static>(
         .map_err(FenceAcquisitionExecutionError::Admission)?;
     read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
     let acknowledgement = provider.acquire_fence(&request, journal.record()?).await?;
-    let record = match journal.record() {
-        Ok(record) => record,
-        Err(source) => {
-            return Err(FenceAcquisitionExecutionError::AfterReplyJournal {
-                source,
-                acknowledgement: Box::new(acknowledgement),
-            });
-        }
+    let admit_reply = || -> Result<(), FenceAcquisitionReplyError> {
+        validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
+        read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
+        Ok(())
     };
-    if let Err(source) = validate_acknowledgement(&request, record, &acknowledgement) {
-        return Err(FenceAcquisitionExecutionError::Association {
+    match admit_reply() {
+        Ok(()) => Ok(acknowledgement),
+        Err(source) => Err(FenceAcquisitionExecutionError::AfterReply {
             source,
             acknowledgement: Box::new(acknowledgement),
-        });
+        }),
     }
-    let layout = match stage.layout() {
-        Ok(layout) => layout,
-        Err(source) => {
-            return Err(FenceAcquisitionExecutionError::AfterReplyStage {
-                source,
-                acknowledgement: Box::new(acknowledgement),
-            });
-        }
-    };
-    if let Err(source) = read_fence_obligation(layout, plan, requirement, &obligation.digest()) {
-        return Err(FenceAcquisitionExecutionError::AfterReplyObligation {
-            source,
-            acknowledgement: Box::new(acknowledgement),
-        });
-    }
-    Ok(acknowledgement)
 }
 
 /// Acquisition-step failure preserving original spending, obligations and passive replies.
@@ -125,38 +106,31 @@ pub enum FenceAcquisitionExecutionError<E: std::error::Error + 'static> {
     /// Single provider invocation failed; no nonapplication or refund is inferred.
     #[error(transparent)]
     Provider(#[from] FenceAcquisitionProviderError),
-    /// Passive original authority/attempt association rejected the reply.
-    #[error("fence acquisition acknowledgement association failed: {source}")]
-    Association {
-        /// Canonical passive association rejection.
-        source: FenceAcquisitionAcknowledgementError,
-        /// Exact returned passive acknowledgement, without acquisition proof.
+    /// Admission after the reply failed, retaining its complete original evidence.
+    #[error("fence acquisition reply rejected: {source}")]
+    AfterReply {
+        /// Typed original admission failure.
+        source: FenceAcquisitionReplyError,
+        /// Complete returned passive evidence, without settlement authority.
         acknowledgement: Box<FenceAcquisitionAcknowledgement>,
     },
-    /// Selected journal re-admission failed after reply.
-    #[error("fence acquisition journal changed after reply: {source}")]
-    AfterReplyJournal {
-        /// Original journal rejection.
-        source: AttemptJournalError,
-        /// Exact returned passive acknowledgement.
-        acknowledgement: Box<FenceAcquisitionAcknowledgement>,
-    },
-    /// Retained stage/ancestor admission failed after reply.
-    #[error("fence acquisition stage changed after reply: {source}")]
-    AfterReplyStage {
-        /// Original stage/ancestor rejection.
-        source: ExecutionWorkflowPersistenceError,
-        /// Exact returned passive acknowledgement.
-        acknowledgement: Box<FenceAcquisitionAcknowledgement>,
-    },
-    /// Retained requirement/obligation admission failed after reply.
-    #[error("fence acquisition obligation changed after reply: {source}")]
-    AfterReplyObligation {
-        /// Original requirement/obligation rejection.
-        source: FenceObligationPersistenceError,
-        /// Exact returned passive acknowledgement.
-        acknowledgement: Box<FenceAcquisitionAcknowledgement>,
-    },
+}
+
+/// Admission failure after a returned fence acquisition reply.
+#[derive(Debug, Error)]
+pub enum FenceAcquisitionReplyError {
+    /// Original selected journal cannot be re-admitted.
+    #[error(transparent)]
+    Journal(#[from] AttemptJournalError),
+    /// Passive exact reply association failed.
+    #[error(transparent)]
+    Association(#[from] FenceAcquisitionAcknowledgementError),
+    /// Original stage or ancestor evidence cannot be re-admitted.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
+    /// Original requirement or obligation cannot be re-admitted.
+    #[error(transparent)]
+    Obligation(#[from] FenceObligationPersistenceError),
 }
 
 #[cfg(all(test, unix))]

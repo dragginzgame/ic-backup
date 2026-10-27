@@ -76,37 +76,18 @@ pub async fn observe_fence_acquisition<E: std::error::Error + 'static>(
     let observation = provider
         .observe_fence_acquisition(&request, journal.record()?)
         .await?;
-    let association = match journal.record() {
-        Ok(record) => record,
-        Err(source) => {
-            return Err(FenceReconciliationExecutionError::AfterReplyJournal {
-                source,
-                observation: Box::new(observation),
-            });
-        }
+    let admit_reply = || -> Result<(), FenceReconciliationReplyError> {
+        validate(&request, journal.record()?, &observation)?;
+        read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
+        Ok(())
     };
-    if let Err(source) = validate(&request, association, &observation) {
-        return Err(FenceReconciliationExecutionError::Association {
+    match admit_reply() {
+        Ok(()) => Ok(observation),
+        Err(source) => Err(FenceReconciliationExecutionError::AfterReply {
             source,
             observation: Box::new(observation),
-        });
+        }),
     }
-    let layout = match stage.layout() {
-        Ok(layout) => layout,
-        Err(source) => {
-            return Err(FenceReconciliationExecutionError::AfterReplyStage {
-                source,
-                observation: Box::new(observation),
-            });
-        }
-    };
-    if let Err(source) = read_fence_obligation(layout, plan, requirement, &obligation.digest()) {
-        return Err(FenceReconciliationExecutionError::AfterReplyObligation {
-            source,
-            observation: Box::new(observation),
-        });
-    }
-    Ok(observation)
 }
 
 /// Explicitly retain an independently qualified original fence-acquisition observation.
@@ -239,36 +220,29 @@ pub enum FenceReconciliationExecutionError<E: std::error::Error + 'static> {
     /// The one provider invocation failed; the observation remains pending.
     #[error(transparent)]
     Provider(#[from] FenceReconciliationProviderError),
-    /// Passive result association rejected the returned observation.
-    #[error("fence reconciliation association failed: {source}")]
-    Association {
-        /// Original result mismatch.
-        source: FenceReconciliationError,
-        /// Complete returned observation, without authenticated settlement authority.
+    /// Admission after the reply failed, retaining its complete original evidence.
+    #[error("fence reconciliation reply rejected: {source}")]
+    AfterReply {
+        /// Typed original admission failure.
+        source: FenceReconciliationReplyError,
+        /// Complete returned passive evidence, without settlement authority.
         observation: Box<FenceReconciliationObservation>,
     },
-    /// Selected journal re-admission failed after reply.
-    #[error("fence reconciliation journal changed after reply: {source}")]
-    AfterReplyJournal {
-        /// Original journal rejection.
-        source: AttemptJournalError,
-        /// Complete returned observation.
-        observation: Box<FenceReconciliationObservation>,
-    },
-    /// Retained stage/ancestor admission failed after reply.
-    #[error("fence reconciliation stage changed after reply: {source}")]
-    AfterReplyStage {
-        /// Original stage/ancestor rejection.
-        source: ExecutionWorkflowPersistenceError,
-        /// Complete returned observation.
-        observation: Box<FenceReconciliationObservation>,
-    },
-    /// Original requirement/obligation admission failed after reply.
-    #[error("fence reconciliation obligation changed after reply: {source}")]
-    AfterReplyObligation {
-        /// Original requirement/obligation rejection.
-        source: FenceObligationPersistenceError,
-        /// Complete returned observation.
-        observation: Box<FenceReconciliationObservation>,
-    },
+}
+
+/// Admission failure after a returned fence reconciliation reply.
+#[derive(Debug, Error)]
+pub enum FenceReconciliationReplyError {
+    /// Original selected journal cannot be re-admitted.
+    #[error(transparent)]
+    Journal(#[from] AttemptJournalError),
+    /// Passive exact reply association failed.
+    #[error(transparent)]
+    Association(#[from] FenceReconciliationError),
+    /// Original stage or ancestor evidence cannot be re-admitted.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
+    /// Original requirement or obligation cannot be re-admitted.
+    #[error(transparent)]
+    Obligation(#[from] FenceObligationPersistenceError),
 }

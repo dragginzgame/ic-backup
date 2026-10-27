@@ -561,14 +561,20 @@ fn after_reply_association_stage_and_obligation_rejections_retain_acknowledgemen
         ))
         .unwrap_err();
         let acknowledgement = match result {
-            FenceAcquisitionExecutionError::Association {
-                acknowledgement, ..
+            FenceAcquisitionExecutionError::AfterReply {
+                source: FenceAcquisitionReplyError::Association(_),
+                acknowledgement,
+                ..
             } if boundary == 0 => acknowledgement,
-            FenceAcquisitionExecutionError::AfterReplyStage {
-                acknowledgement, ..
+            FenceAcquisitionExecutionError::AfterReply {
+                source: FenceAcquisitionReplyError::Stage(_),
+                acknowledgement,
+                ..
             } if boundary == 1 => acknowledgement,
-            FenceAcquisitionExecutionError::AfterReplyObligation {
-                acknowledgement, ..
+            FenceAcquisitionExecutionError::AfterReply {
+                source: FenceAcquisitionReplyError::Obligation(_),
+                acknowledgement,
+                ..
             } if boundary == 2 => acknowledgement,
             other => panic!("unexpected post-reply error: {other:?}"),
         };
@@ -631,8 +637,10 @@ fn replaced_layout_after_reply_retains_journal_and_acknowledgement() {
         admit,
     ))
     .unwrap_err();
-    let FenceAcquisitionExecutionError::AfterReplyJournal {
-        acknowledgement, ..
+    let FenceAcquisitionExecutionError::AfterReply {
+        source: FenceAcquisitionReplyError::Journal(_),
+        acknowledgement,
+        ..
     } = error
     else {
         panic!("unexpected replaced-layout rejection")

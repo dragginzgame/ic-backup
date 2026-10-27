@@ -193,8 +193,6 @@ fn read_complete_with(
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionStageCheckpointError> {
     let workflow = read_original()?;
     let mut stages = Vec::with_capacity(workflow.stages().len());
-    let mut bindings = Vec::with_capacity(workflow.stages().len());
-    let mut by_sequence = BTreeMap::new();
     for allocated in workflow.stages() {
         let sequence = allocated.operation_sequence();
         let stage = acquire_stage(layout, sequence)?;
@@ -204,20 +202,22 @@ fn read_complete_with(
         let (binding, plan) = read_binding(&stage, &workflow, sequence, &binding.digest())?;
         let settlement = replay_execution_settlement(&stage, &plan.digest())?;
         read_binding(&stage, &workflow, sequence, &binding.digest())?;
-        by_sequence.insert(sequence, stages.len());
-        stages.push(ExecutionStageSettlementView {
+        let view = ExecutionStageSettlementView {
             stage_sequence: sequence,
             binding: binding.digest(),
             settlement: settlement.digest(),
-        });
-        bindings.push(binding);
+        };
+        stages.push((binding, view));
     }
-    for binding in &bindings {
+    for (binding, _) in &stages {
         for predecessor in binding.predecessors() {
-            let Some(&index) = by_sequence.get(&predecessor.stage_sequence()) else {
-                return Err(ExecutionWorkflowPersistenceError::DigestMismatch.into());
-            };
-            let actual = &stages[index];
+            // The original catalog supplies canonical sequence order.
+            let index = stages
+                .binary_search_by_key(&predecessor.stage_sequence(), |(_, view)| {
+                    view.stage_sequence()
+                })
+                .map_err(|_| ExecutionWorkflowPersistenceError::DigestMismatch)?;
+            let actual = &stages[index].1;
             if predecessor.binding() != actual.binding()
                 || predecessor.settlement() != actual.settlement()
             {
@@ -228,7 +228,7 @@ fn read_complete_with(
     read_original()?;
     Ok(ExecutionWorkflowSettlementView {
         workflow: expected.clone(),
-        stages,
+        stages: stages.into_iter().map(|(_, view)| view).collect(),
     })
 }
 

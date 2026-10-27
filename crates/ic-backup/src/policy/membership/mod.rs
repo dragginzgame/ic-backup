@@ -10,24 +10,20 @@ use thiserror::Error;
 /// Read-only matching observation; not a dispatch permit, continuity proof or fresh permission.
 #[derive(Clone, Debug)]
 pub struct MembershipView<'a> {
-    request: ArtifactChecksumRecord,
-    inventory: &'a InventoryRecord,
+    observation: &'a MembershipObservation,
     selected_targets: &'a [String],
-    revision: Option<&'a ArtifactChecksumRecord>,
-    evidence: &'a ArtifactChecksumRecord,
-    remote_observations: u32,
 }
 
 impl MembershipView<'_> {
     /// Read the exact original challenge/boundary-bound request digest.
     #[must_use]
     pub const fn request(&self) -> &ArtifactChecksumRecord {
-        &self.request
+        &self.observation.request
     }
     /// Read the complete matching current inventory supplied by the provider.
     #[must_use]
     pub const fn inventory(&self) -> &InventoryRecord {
-        self.inventory
+        &self.observation.inventory
     }
     /// Read original exact selection in canonical order, without dispatch order.
     #[must_use]
@@ -37,17 +33,17 @@ impl MembershipView<'_> {
     /// Read optional current revision; matching revisions alone prove no continuity.
     #[must_use]
     pub const fn revision(&self) -> Option<&ArtifactChecksumRecord> {
-        self.revision
+        self.observation.revision.as_ref()
     }
     /// Read the provider-owned opaque evidence identifier, not a signature or permission.
     #[must_use]
     pub const fn evidence(&self) -> &ArtifactChecksumRecord {
-        self.evidence
+        &self.observation.evidence
     }
     /// Read reported calls; this does not reserve, refund or replenish any allowance.
     #[must_use]
     pub const fn remote_observations(&self) -> u32 {
-        self.remote_observations
+        self.observation.remote_observations
     }
 }
 
@@ -81,12 +77,8 @@ pub fn validate<'a>(
         |limit, reported| MembershipError::ObservationLimitExceeded { limit, reported },
     )?;
     Ok(MembershipView {
-        request: digest,
-        inventory: &observation.inventory,
+        observation,
         selected_targets: request.selected_targets(),
-        revision: observation.revision.as_ref(),
-        evidence: &observation.evidence,
-        remote_observations: observation.remote_observations,
     })
 }
 

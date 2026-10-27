@@ -13,10 +13,7 @@ use crate::model::{
 };
 
 pub(crate) struct InventorySettlementIdentity<'a> {
-    pub authority: &'a ArtifactChecksumRecord,
-    pub mutation_attempt: u32,
-    pub observation_attempt: u32,
-    pub challenge: &'a ArtifactChecksumRecord,
+    pub operation: SettlementIdentity<'a>,
     pub baseline: &'a ArtifactChecksumRecord,
     pub inventory: &'a ArtifactChecksumRecord,
     pub observation_evidence: &'a ArtifactChecksumRecord,
@@ -24,18 +21,7 @@ pub(crate) struct InventorySettlementIdentity<'a> {
 
 impl InventorySettlementIdentity<'_> {
     pub fn compare(&self, expected: &Self) -> Result<(), InventorySettlementMismatch> {
-        SettlementIdentity {
-            authority: self.authority,
-            mutation_attempt: self.mutation_attempt,
-            observation_attempt: self.observation_attempt,
-            challenge: self.challenge,
-        }
-        .compare(&SettlementIdentity {
-            authority: expected.authority,
-            mutation_attempt: expected.mutation_attempt,
-            observation_attempt: expected.observation_attempt,
-            challenge: expected.challenge,
-        })?;
+        self.operation.compare(&expected.operation)?;
         if self.baseline != expected.baseline {
             return Err(InventorySettlementMismatch::Baseline);
         }

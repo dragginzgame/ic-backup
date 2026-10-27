@@ -125,11 +125,6 @@ impl OperationPlanRecord {
         if request.operations.len() != request.graph.nodes().len() {
             return Err(OperationPlanError::OperationCountMismatch);
         }
-        let selected: BTreeSet<_> = request
-            .selected_targets
-            .iter()
-            .map(String::as_str)
-            .collect();
         let mut used = BTreeSet::new();
         let mut allocated = AllocatedAttemptsView {
             mutations: 0,
@@ -142,7 +137,11 @@ impl OperationPlanRecord {
                     actual: operation.operation_sequence(),
                 });
             }
-            if !selected.contains(operation.target()) {
+            if request
+                .selected_targets
+                .binary_search_by(|target| target.as_str().cmp(operation.target()))
+                .is_err()
+            {
                 return Err(OperationPlanError::UnselectedTarget(
                     operation.target().into(),
                 ));

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.46.0]
+
+### ⚠️ Breaking
+
+- Consolidate fence acquisition and reconciliation post-reply failures into
+  `AfterReply { source, ... }`. Update matches on `Association`, `AfterReplyJournal`,
+  `AfterReplyStage` and `AfterReplyObligation` to inspect `FenceAcquisitionReplyError`
+  or `FenceReconciliationReplyError`. Returned replies and original spending remain
+  retained; stored formats and protocol identities are unchanged.
+
+### 🧹 Cleanup
+
+- Simplify internal planning, settlement and workflow replay by reusing admitted
+  identities and canonical collections, with the same admission and recovery checks.
+- Bind Agent observation reply identities directly to their original requests and
+  reuse Shared Tooling's declared dependency closure for Testkit command fixtures.
+
 ## [0.45.1] - 2026-10-27
 
 ### 🔧 Changed

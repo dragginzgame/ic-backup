@@ -14,7 +14,7 @@ use crate::{
     ops::persistence::{AttemptJournalGuard, ExecutionStageGuard},
     ports::fence_reconciliation::{FenceReconciliationProvider, FenceReconciliationProviderError},
     workflow::fence_reconciliation::{
-        FenceReconciliationExecutionError, observe_fence_acquisition,
+        FenceReconciliationExecutionError, FenceReconciliationReplyError, observe_fence_acquisition,
     },
 };
 use std::{convert::Infallible, fs, path::PathBuf};
@@ -425,19 +425,21 @@ fn after_reply_association_stage_and_obligation_errors_keep_returned_evidence() 
         ))
         .unwrap_err();
         let observation = match error {
-            FenceReconciliationExecutionError::Association { observation, .. } if boundary == 0 => {
-                observation
-            }
-            FenceReconciliationExecutionError::AfterReplyStage { observation, .. }
-                if boundary == 1 =>
-            {
-                observation
-            }
-            FenceReconciliationExecutionError::AfterReplyObligation { observation, .. }
-                if boundary == 2 =>
-            {
-                observation
-            }
+            FenceReconciliationExecutionError::AfterReply {
+                source: FenceReconciliationReplyError::Association(_),
+                observation,
+                ..
+            } if boundary == 0 => observation,
+            FenceReconciliationExecutionError::AfterReply {
+                source: FenceReconciliationReplyError::Stage(_),
+                observation,
+                ..
+            } if boundary == 1 => observation,
+            FenceReconciliationExecutionError::AfterReply {
+                source: FenceReconciliationReplyError::Obligation(_),
+                observation,
+                ..
+            } if boundary == 2 => observation,
             other => panic!("unexpected post-reply failure: {other:?}"),
         };
         assert_eq!(
@@ -467,7 +469,12 @@ fn replaced_restore_layout_retains_original_observation_and_source_references() 
         admit,
     ))
     .unwrap_err();
-    let FenceReconciliationExecutionError::AfterReplyJournal { observation, .. } = error else {
+    let FenceReconciliationExecutionError::AfterReply {
+        source: FenceReconciliationReplyError::Journal(_),
+        observation,
+        ..
+    } = error
+    else {
         panic!("unexpected replacement rejection")
     };
     assert_eq!(

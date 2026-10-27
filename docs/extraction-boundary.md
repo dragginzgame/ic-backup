@@ -1428,6 +1428,9 @@ or accounting owner is added. Selected journal exclusion spans fresh application
 admission and one observation-provider await. Stage/ancestor and purpose-specific
 requirement/obligation checks bracket dispatch, including both source and restore
 layouts/plans. Post-reply typed errors retain the complete returned observation.
+Both fence coordinators return one `AfterReply` variant containing the original
+reply and a typed Journal, Association, Stage or Obligation cause. The ordered
+admission checks and retained pending attempts are unchanged.
 
 Success returns matched passive claims without recording an outcome. Both attempts
 remain pending after success, cancellation and failure; another challenge cannot

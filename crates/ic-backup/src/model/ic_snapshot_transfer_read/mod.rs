@@ -20,7 +20,7 @@ pub enum IcSnapshotTransferReadPayload<'request, 'metadata> {
     Data(&'request IcSnapshotDataRequest<'metadata>),
 }
 
-impl IcSnapshotTransferReadPayload<'_, '_> {
+impl<'request> IcSnapshotTransferReadPayload<'request, '_> {
     pub(crate) fn validate_binding(
         &self,
         authority: &AttemptAuthorityRecord,
@@ -34,7 +34,7 @@ impl IcSnapshotTransferReadPayload<'_, '_> {
     }
     /// Read the canonical effective routing target.
     #[must_use]
-    pub fn target(&self) -> &str {
+    pub fn target(&self) -> &'request str {
         match self {
             Self::Metadata(payload) => payload.target(),
             Self::Data(payload) => payload.target(),
@@ -58,7 +58,7 @@ impl IcSnapshotTransferReadPayload<'_, '_> {
     }
     /// Read existing canonical bounded Candid bytes.
     #[must_use]
-    pub fn arguments(&self) -> &[u8] {
+    pub fn arguments(&self) -> &'request [u8] {
         match self {
             Self::Metadata(payload) => payload.arguments(),
             Self::Data(payload) => payload.arguments(),
