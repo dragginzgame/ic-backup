@@ -50,8 +50,7 @@ impl<'a> FenceReconciliationIntent<'a> {
             return Err(FenceReconciliationRequestError::AuthorityMismatch);
         }
         let mutation_attempt = journal
-            .view()
-            .pending_mutation
+            .pending_mutation()
             .ok_or(FenceReconciliationRequestError::NoPendingMutation)?;
         Ok(Self {
             plan,
@@ -107,7 +106,7 @@ impl<'a> FenceReconciliationIntent<'a> {
         if journal.authority() != &self.authority {
             return Err(FenceReconciliationRequestError::AuthorityMismatch);
         }
-        if journal.view().pending_mutation != Some(self.mutation_attempt) {
+        if journal.pending_mutation() != Some(self.mutation_attempt) {
             return Err(FenceReconciliationRequestError::MutationMismatch);
         }
         Ok(())
@@ -147,8 +146,7 @@ impl<'a, 'plan> FenceReconciliationRequest<'a, 'plan> {
     ) -> Result<Self, FenceReconciliationRequestError> {
         intent.validate_mutation(journal)?;
         let observation_attempt = journal
-            .view()
-            .pending_observation
+            .pending_observation()
             .ok_or(FenceReconciliationRequestError::NoPendingObservation)?;
         let request = Self {
             intent,
@@ -182,7 +180,7 @@ impl<'a, 'plan> FenceReconciliationRequest<'a, 'plan> {
         journal: &AttemptJournalRecord,
     ) -> Result<(), FenceReconciliationRequestError> {
         self.intent.validate_mutation(journal)?;
-        if journal.view().pending_observation != Some(self.observation_attempt) {
+        if journal.pending_observation() != Some(self.observation_attempt) {
             return Err(FenceReconciliationRequestError::ObservationMismatch);
         }
         if journal.pending_observation_request() != Some(self.digest().hash()) {

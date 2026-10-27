@@ -20,18 +20,14 @@ fn metadata_wire() -> Vec<u8> {
         "../../../model/ic_snapshot_metadata/tests/golden.json"
     ))
     .unwrap();
-    cases
-        .iter()
-        .find(|case| case["name"] == "data-source")
-        .unwrap()["reply_hex"]
-        .as_str()
-        .unwrap()
-        .as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect()
+    crate::test_support::hex_bytes(
+        cases
+            .iter()
+            .find(|case| case["name"] == "data-source")
+            .unwrap()["reply_hex"]
+            .as_str()
+            .unwrap(),
+    )
 }
 
 fn plan(payload: IcSnapshotTransferReadPayload<'_, '_>) -> OperationPlanRecord {

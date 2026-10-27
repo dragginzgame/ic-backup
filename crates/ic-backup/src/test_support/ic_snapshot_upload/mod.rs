@@ -1,23 +1,21 @@
 //! Declared originals and independent wire vectors; no simulated IC effects.
 
 use crate::model::{
-    ic_snapshot_upload::IcSnapshotUploadRequest, operation_plan::OperationPlanRecord,
+    attempt_journal::AttemptBudgetRecord,
+    effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
+    ic_snapshot_upload::IcSnapshotUploadRequest,
+    operation_plan::{
+        OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlannedOperationRecord,
+        PlannedOperationRequest,
+    },
 };
+pub use crate::test_support::hex_bytes as unhex;
 use ic_platform::candid::contract;
 use serde_json::json;
 
 pub const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 pub const SOURCE_ID: &[u8] = &[0, 255, 17];
 pub const DESTINATION_ID: &[u8] = &[21, 0, 255];
-
-pub fn unhex(hex: &str) -> Vec<u8> {
-    hex.as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect()
-}
 
 pub fn raw(name: &str) -> Vec<u8> {
     let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
@@ -109,18 +107,38 @@ pub fn data_workflow(
     payload: &IcSnapshotUploadRequest<'_>,
     mutations: u32,
 ) -> crate::model::execution_workflow::ExecutionWorkflowRecord {
-    let mut fields = serde_json::to_value(upload_plan(payload)).unwrap();
-    fields["graph"]["nodes"] = json!([
-        {"operation_sequence":0,"depends_on":[]}, {"operation_sequence":7,"depends_on":[0]}
-    ]);
-    let mut allocation = fields["operations"][0].clone();
-    allocation["operation_sequence"] = json!(0);
-    allocation["budget"] = json!({"mutations":1,"observations":0});
-    let mut data = fields["operations"][0].clone();
-    data["budget"] = json!({"mutations":mutations,"observations":1});
-    fields["operations"] = json!([allocation, data]);
-    fields["budget"] = json!({"mutations":mutations+10,"observations":10});
+    let original = upload_plan(payload);
+    let operation = |sequence, mutations, observations| {
+        PlannedOperationRecord::new(PlannedOperationRequest {
+            operation_sequence: sequence,
+            target: TARGET.into(),
+            request: payload.binding_digest().hash().into(),
+            budget: AttemptBudgetRecord::new(mutations, observations).unwrap(),
+        })
+        .unwrap()
+    };
+    let graph = EffectGraphRecord::new(
+        [(0, vec![]), (7, vec![0])]
+            .into_iter()
+            .map(|(sequence, depends_on)| {
+                EffectNodeRecord::new(EffectNodeRequest {
+                    operation_sequence: sequence,
+                    depends_on,
+                })
+                .unwrap()
+            })
+            .collect(),
+    )
+    .unwrap();
     crate::model::execution_workflow::ExecutionWorkflowRecord::new(
-        serde_json::from_value(fields).unwrap(),
+        OperationPlanRecord::new(OperationPlanRequest {
+            context: original.context().clone(),
+            inventory: original.inventory().clone(),
+            selected_targets: original.selected_targets().to_vec(),
+            graph,
+            operations: vec![operation(0, 1, 0), operation(7, mutations, 1)],
+            budget: PlanBudgetRecord::new(mutations + 10, 10).unwrap(),
+        })
+        .unwrap(),
     )
 }

@@ -58,6 +58,24 @@ impl ArtifactStateRecord {
     }
 }
 
+// Internal transition inputs cannot pair a state with inappropriate checksum
+// evidence. Persisted fields retain their independent decoding/corruption checks.
+pub(crate) enum ArtifactTransition {
+    Downloaded,
+    ChecksumVerified(ArtifactChecksumRecord),
+    Durable,
+}
+
+impl ArtifactTransition {
+    const fn state(&self) -> ArtifactStateRecord {
+        match self {
+            Self::Downloaded => ArtifactStateRecord::Downloaded,
+            Self::ChecksumVerified(_) => ArtifactStateRecord::ChecksumVerified,
+            Self::Durable => ArtifactStateRecord::Durable,
+        }
+    }
+}
+
 /// Immutable exact snapshot identity with validated local progress evidence.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(try_from = "ArtifactFields")]
@@ -311,42 +329,43 @@ impl DownloadJournalRecord {
         canister: &str,
         snapshot: &str,
     ) -> Result<&DownloadArtifactRecord, DownloadJournalRecordError> {
+        Ok(&self.artifacts[self.artifact_index(canister, snapshot)?])
+    }
+
+    fn artifact_index(
+        &self,
+        canister: &str,
+        snapshot: &str,
+    ) -> Result<usize, DownloadJournalRecordError> {
         let canister = normalize_principal(canister)?;
-        let entry = self
+        let index = self
             .artifacts
-            .iter()
-            .find(|entry| entry.canister_id == canister)
-            .ok_or(DownloadJournalRecordError::UnknownArtifact)?;
-        if entry.snapshot_id != snapshot {
+            .binary_search_by(|entry| entry.canister_id.cmp(&canister))
+            .map_err(|_| DownloadJournalRecordError::UnknownArtifact)?;
+        if self.artifacts[index].snapshot_id != snapshot {
             return Err(DownloadJournalRecordError::SnapshotMismatch);
         }
-        Ok(entry)
+        Ok(index)
     }
 
     pub(crate) fn advance(
         &mut self,
         canister: &str,
         snapshot: &str,
-        next: ArtifactStateRecord,
-        checksum: Option<ArtifactChecksumRecord>,
+        transition: ArtifactTransition,
     ) -> Result<(), DownloadJournalRecordError> {
-        let entry = self.artifact(canister, snapshot)?;
+        let index = self.artifact_index(canister, snapshot)?;
+        let entry = &mut self.artifacts[index];
         let from = entry.state;
+        let next = transition.state();
         if !from.can_advance_to(next) {
             return Err(DownloadJournalRecordError::InvalidStateTransition { from, to: next });
         }
-        let checksum = match next {
-            ArtifactStateRecord::Downloaded if checksum.is_none() => None,
-            ArtifactStateRecord::ChecksumVerified if checksum.is_some() => checksum,
-            ArtifactStateRecord::Durable if checksum.is_none() => entry.checksum.clone(),
-            _ => return Err(DownloadJournalRecordError::InvalidChecksumState(next)),
+        let checksum = match transition {
+            ArtifactTransition::Downloaded => None,
+            ArtifactTransition::ChecksumVerified(checksum) => Some(checksum),
+            ArtifactTransition::Durable => entry.checksum.clone(),
         };
-        let canister = entry.canister_id.clone();
-        let entry = self
-            .artifacts
-            .iter_mut()
-            .find(|entry| entry.canister_id == canister)
-            .ok_or(DownloadJournalRecordError::UnknownArtifact)?;
         entry.state = next;
         entry.checksum = checksum;
         Ok(())

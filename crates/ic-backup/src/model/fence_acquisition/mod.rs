@@ -154,8 +154,7 @@ impl<'a> FenceAcquisitionRequest<'a> {
     ) -> Result<Self, FenceAcquisitionError> {
         let authority = original_authority(plan, obligation, journal, payload)?;
         let mutation_attempt = journal
-            .view()
-            .pending_mutation
+            .pending_mutation()
             .ok_or(FenceAcquisitionError::NoPendingMutation)?;
         let request = Self {
             plan,

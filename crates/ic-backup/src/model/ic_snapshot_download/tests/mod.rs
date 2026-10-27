@@ -18,13 +18,7 @@ pub(crate) fn values() -> ReadCanisterSnapshotMetadataResult {
         .unwrap()["reply_hex"]
         .as_str()
         .unwrap();
-    let bytes: Vec<u8> = hex
-        .as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect();
+    let bytes = crate::test_support::hex_bytes(hex);
     let mut values: ReadCanisterSnapshotMetadataResult =
         ic_platform::candid::decode_one(&bytes, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 64;

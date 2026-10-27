@@ -2,6 +2,29 @@
 
 use std::path::PathBuf;
 
+/// Decode golden bytes strictly; this support module is compiled outside the library.
+#[allow(
+    dead_code,
+    reason = "support also compiles in binaries without hexadecimal fixtures"
+)]
+pub(crate) fn hex_bytes(hex: &str) -> Vec<u8> {
+    let (pairs, remainder) = hex.as_bytes().as_chunks::<2>();
+    assert!(
+        remainder.is_empty(),
+        "fixture hex must contain complete bytes"
+    );
+    pairs
+        .iter()
+        .map(|pair| {
+            u8::from_str_radix(
+                std::str::from_utf8(pair).expect("fixture hex must be ASCII"),
+                16,
+            )
+            .expect("invalid fixture hex byte")
+        })
+        .collect()
+}
+
 /// Reserve a fresh root before a public integration journey writes any children.
 pub(crate) fn temp_root(prefix: &str) -> PathBuf {
     let selected_temp = std::env::temp_dir()

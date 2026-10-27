@@ -1,6 +1,7 @@
 //! Fresh local lifecycle, uncertainty and process-death evidence; no IC executor.
 
 use super::*;
+use crate::model::artifacts::ArtifactChecksumRecord;
 use crate::{
     model::{
         artifacts::ChecksumError,
@@ -179,7 +180,7 @@ fn failed_write_keeps_previous_bytes_and_requires_retained_recovery() {
         DownloadJournalGuard::create(&layout, INTENT, vec![request()]).expect("journal");
     let original = fs::read(guard.path()).expect("retained identity");
     let next = guard
-        .next(CANISTER, SNAPSHOT, ArtifactStateRecord::Downloaded, None)
+        .next(CANISTER, SNAPSHOT, ArtifactTransition::Downloaded)
         .expect("transition");
     assert!(matches!(
         guard.store(next, |_, _| Err(
@@ -238,14 +239,13 @@ fn encoded_output_bound_preserves_previous_progress() {
         .collect::<Vec<_>>();
     for (canister, snapshot) in identities {
         record
-            .advance(&canister, &snapshot, ArtifactStateRecord::Downloaded, None)
+            .advance(&canister, &snapshot, ArtifactTransition::Downloaded)
             .expect("model download");
         record
             .advance(
                 &canister,
                 &snapshot,
-                ArtifactStateRecord::ChecksumVerified,
-                Some(ArtifactChecksumRecord::from_bytes(b"bytes")),
+                ArtifactTransition::ChecksumVerified(ArtifactChecksumRecord::from_bytes(b"bytes")),
             )
             .expect("model checksum");
     }
@@ -283,7 +283,7 @@ fn post_write_error_requires_reopen_and_adopts_exact_retained_state() {
     let mut guard =
         DownloadJournalGuard::create(&layout, INTENT, vec![request()]).expect("journal");
     let next = guard
-        .next(CANISTER, SNAPSHOT, ArtifactStateRecord::Downloaded, None)
+        .next(CANISTER, SNAPSHOT, ArtifactTransition::Downloaded)
         .expect("transition");
     let error = guard.store(next, |path, record| {
         write_encoded(path, record)?;

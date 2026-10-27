@@ -51,24 +51,21 @@ pub fn validate_acknowledgement<'request, 'source>(
 {
     request.validate_journal(journal)?;
     let input = acknowledgement.input();
-    ResponseIdentity {
-        authority: &input.authority,
-        mutation_attempt: input.mutation_attempt,
-        context: &input.context,
-        target: &input.target,
-    }
-    .compare(&ResponseIdentity {
-        authority: &request.authority().digest(),
-        mutation_attempt: request.mutation_attempt(),
-        context: request.plan().context(),
-        target: request.payload().target(),
-    })
-    .map_err(|mismatch| match mismatch {
-        ResponseIdentityMismatch::Authority => IcSnapshotUploadAssociationError::AuthorityMismatch,
-        ResponseIdentityMismatch::Attempt => IcSnapshotUploadAssociationError::AttemptMismatch,
-        ResponseIdentityMismatch::Context => IcSnapshotUploadAssociationError::ContextMismatch,
-        ResponseIdentityMismatch::Target => IcSnapshotUploadAssociationError::TargetMismatch,
-    })?;
+    ResponseIdentity::from(input)
+        .compare(&ResponseIdentity {
+            authority: &request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: request.plan().context(),
+            target: request.payload().target(),
+        })
+        .map_err(|mismatch| match mismatch {
+            ResponseIdentityMismatch::Authority => {
+                IcSnapshotUploadAssociationError::AuthorityMismatch
+            }
+            ResponseIdentityMismatch::Attempt => IcSnapshotUploadAssociationError::AttemptMismatch,
+            ResponseIdentityMismatch::Context => IcSnapshotUploadAssociationError::ContextMismatch,
+            ResponseIdentityMismatch::Target => IcSnapshotUploadAssociationError::TargetMismatch,
+        })?;
     let reply = IcSnapshotUploadReply::decode(request.payload(), &input.reply)?;
     Ok(IcSnapshotUploadAcknowledgementView {
         acknowledgement,

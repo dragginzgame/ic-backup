@@ -2,9 +2,14 @@
 
 use crate::{
     model::{
+        attempt_journal::AttemptBudgetRecord,
         consistency::ApplicationFenceState,
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
-        operation_plan::{OperationPlanRecord, PlanContextRecord, PlanContextRequest},
+        operation_plan::{
+            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlanContextRecord,
+            PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
+        },
         restore_safety::*,
     },
     test_support::{
@@ -13,7 +18,6 @@ use crate::{
     },
 };
 use ic_platform::management_canister_types::CanisterStatusType;
-use serde_json::json;
 
 pub fn wire(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
     wires()
@@ -22,31 +26,64 @@ pub fn wire(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
         .unwrap()
 }
 pub fn plan() -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version":1,"context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},
-        "inventory":{"version":1,"targets":[
-            {"canister_id":"aaaaa-aa","parent_canister_id":null,"role":null,"module_hash":null},
-            {"canister_id":APP,"parent_canister_id":"aaaaa-aa","role":null,"module_hash":null}
-        ]},
-        "selected_targets":[APP],"graph":{"version":1,"nodes":[{"operation_sequence":7,"depends_on":[]},{"operation_sequence":8,"depends_on":[7]}]},
-        "operations":[
-            {"operation_sequence":7,"target":APP,"request":wire(IcManagementMethodRecord::LoadCanisterSnapshot).digest().hash(),"budget":{"mutations":1,"observations":1}},
-            {"operation_sequence":8,"target":APP,"request":wire(IcManagementMethodRecord::StartCanister).digest().hash(),"budget":{"mutations":1,"observations":1}}
-        ],"budget":{"mutations":2,"observations":2}
-    })).unwrap()
+    fixture_plan(
+        "2vxsx-fae",
+        &[
+            (7, IcManagementMethodRecord::LoadCanisterSnapshot),
+            (8, IcManagementMethodRecord::StartCanister),
+        ],
+    )
 }
 pub fn source() -> OperationPlanRecord {
-    let mut value = serde_json::to_value(plan()).unwrap();
-    value["context"]["caller"] = json!("aaaaa-aa");
-    value["graph"]["nodes"].as_array_mut().unwrap().truncate(1);
-    value["operations"].as_array_mut().unwrap().truncate(1);
-    value["operations"][0]["request"] = json!(
-        wire(IcManagementMethodRecord::TakeCanisterSnapshot)
-            .digest()
-            .hash()
-    );
-    value["budget"] = json!({"mutations":1,"observations":1});
-    serde_json::from_value(value).unwrap()
+    fixture_plan(
+        "aaaaa-aa",
+        &[(7, IcManagementMethodRecord::TakeCanisterSnapshot)],
+    )
+}
+fn fixture_plan(caller: &str, methods: &[(u64, IcManagementMethodRecord)]) -> OperationPlanRecord {
+    let original = super::membership::plan();
+    let nodes = methods
+        .iter()
+        .enumerate()
+        .map(|(index, (sequence, _))| {
+            EffectNodeRecord::new(EffectNodeRequest {
+                operation_sequence: *sequence,
+                depends_on: index
+                    .checked_sub(1)
+                    .map(|prior| methods[prior].0)
+                    .into_iter()
+                    .collect(),
+            })
+            .unwrap()
+        })
+        .collect();
+    let operations = methods
+        .iter()
+        .map(|(sequence, method)| {
+            PlannedOperationRecord::new(PlannedOperationRequest {
+                operation_sequence: *sequence,
+                target: APP.into(),
+                request: wire(*method).digest().hash().into(),
+                budget: AttemptBudgetRecord::new(1, 1).unwrap(),
+            })
+            .unwrap()
+        })
+        .collect();
+    let count = u32::try_from(methods.len()).unwrap();
+    OperationPlanRecord::new(OperationPlanRequest {
+        context: PlanContextRecord::new(&PlanContextRequest {
+            network: original.context().network().into(),
+            caller: caller.into(),
+            release: original.context().release().into(),
+        })
+        .unwrap(),
+        inventory: original.inventory().clone(),
+        selected_targets: original.selected_targets().to_vec(),
+        graph: EffectGraphRecord::new(nodes).unwrap(),
+        operations,
+        budget: PlanBudgetRecord::new(count, count).unwrap(),
+    })
+    .unwrap()
 }
 pub fn binding() -> RestoreFenceBindingRecord {
     RestoreFenceBindingRecord {

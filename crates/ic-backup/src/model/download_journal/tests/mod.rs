@@ -51,23 +51,27 @@ fn canonical_identity_and_exact_metadata_survive_roundtrip() {
 fn canonical_transitions_update_evidence_together_and_project_resume_actions() {
     let mut record = journal();
     let checksum = ArtifactChecksumRecord::from_bytes(b"actual staged bytes");
-    for (state, action, evidence) in [
+    for (state, action, transition) in [
         (ArtifactStateRecord::Created, ResumeAction::Download, None),
         (
             ArtifactStateRecord::Downloaded,
             ResumeAction::VerifyChecksum,
-            None,
+            Some(ArtifactTransition::Downloaded),
         ),
         (
             ArtifactStateRecord::ChecksumVerified,
             ResumeAction::Finalize,
-            Some(checksum.clone()),
+            Some(ArtifactTransition::ChecksumVerified(checksum.clone())),
         ),
-        (ArtifactStateRecord::Durable, ResumeAction::Skip, None),
+        (
+            ArtifactStateRecord::Durable,
+            ResumeAction::Skip,
+            Some(ArtifactTransition::Durable),
+        ),
     ] {
-        if state != ArtifactStateRecord::Created {
+        if let Some(transition) = transition {
             record
-                .advance(CANISTER, "snap-1", state, evidence)
+                .advance(CANISTER, "snap-1", transition)
                 .expect("canonical transition");
         }
         let view = record.resume_view();
@@ -91,13 +95,12 @@ fn canonical_transitions_update_evidence_together_and_project_resume_actions() {
 fn rejected_transitions_preserve_all_fields_and_never_rebind_identity() {
     let mut record = journal();
     let original = record.clone();
-    for state in [
-        ArtifactStateRecord::Created,
-        ArtifactStateRecord::ChecksumVerified,
-        ArtifactStateRecord::Durable,
+    for transition in [
+        ArtifactTransition::ChecksumVerified(ArtifactChecksumRecord::from_bytes(b"bytes")),
+        ArtifactTransition::Durable,
     ] {
         assert!(matches!(
-            record.advance(CANISTER, "snap-1", state, None),
+            record.advance(CANISTER, "snap-1", transition),
             Err(DownloadJournalRecordError::InvalidStateTransition { .. })
         ));
         assert_eq!(record, original);
@@ -106,53 +109,33 @@ fn rejected_transitions_preserve_all_fields_and_never_rebind_identity() {
         record.advance(
             CANISTER,
             "different-snapshot",
-            ArtifactStateRecord::Downloaded,
-            None
+            ArtifactTransition::Downloaded
         ),
         Err(DownloadJournalRecordError::SnapshotMismatch)
     ));
-    assert!(matches!(
-        record.advance(
-            CANISTER,
-            "snap-1",
-            ArtifactStateRecord::Downloaded,
-            Some(ArtifactChecksumRecord::from_bytes(b"bytes"))
-        ),
-        Err(DownloadJournalRecordError::InvalidChecksumState(
-            ArtifactStateRecord::Downloaded
-        ))
-    ));
     assert_eq!(record, original);
     record
-        .advance(CANISTER, "snap-1", ArtifactStateRecord::Downloaded, None)
+        .advance(CANISTER, "snap-1", ArtifactTransition::Downloaded)
         .expect("download");
     let downloaded = record.clone();
     assert!(matches!(
-        record.advance(
-            CANISTER,
-            "snap-1",
-            ArtifactStateRecord::ChecksumVerified,
-            None
-        ),
-        Err(DownloadJournalRecordError::InvalidChecksumState(
-            ArtifactStateRecord::ChecksumVerified
-        ))
+        record.advance(CANISTER, "snap-1", ArtifactTransition::Downloaded),
+        Err(DownloadJournalRecordError::InvalidStateTransition { .. })
     ));
     assert_eq!(record, downloaded);
     record
         .advance(
             CANISTER,
             "snap-1",
-            ArtifactStateRecord::ChecksumVerified,
-            Some(ArtifactChecksumRecord::from_bytes(b"bytes")),
+            ArtifactTransition::ChecksumVerified(ArtifactChecksumRecord::from_bytes(b"bytes")),
         )
         .expect("verify");
     record
-        .advance(CANISTER, "snap-1", ArtifactStateRecord::Durable, None)
+        .advance(CANISTER, "snap-1", ArtifactTransition::Durable)
         .expect("publish");
     let durable = record.clone();
     assert!(matches!(
-        record.advance(CANISTER, "snap-1", ArtifactStateRecord::Downloaded, None),
+        record.advance(CANISTER, "snap-1", ArtifactTransition::Downloaded),
         Err(DownloadJournalRecordError::InvalidStateTransition { .. })
     ));
     assert_eq!(record, durable);
@@ -161,6 +144,26 @@ fn rejected_transitions_preserve_all_fields_and_never_rebind_identity() {
 #[test]
 fn current_schema_requires_every_field_and_closed_state_evidence() {
     let value = serde_json::to_value(journal()).expect("serialize");
+    for (state, checksum) in [
+        (
+            ArtifactStateRecord::Created,
+            Some(ArtifactChecksumRecord::from_bytes(b"bytes")),
+        ),
+        (
+            ArtifactStateRecord::Downloaded,
+            Some(ArtifactChecksumRecord::from_bytes(b"bytes")),
+        ),
+        (ArtifactStateRecord::ChecksumVerified, None),
+        (ArtifactStateRecord::Durable, None),
+    ] {
+        let mut invalid = value.clone();
+        invalid["artifacts"][0]["state"] = serde_json::to_value(state).unwrap();
+        invalid["artifacts"][0]["checksum"] = serde_json::to_value(checksum).unwrap();
+        assert!(
+            serde_json::from_value::<DownloadJournalRecord>(invalid).is_err(),
+            "invalid checksum state {state:?}"
+        );
+    }
     for field in ["version", "intent", "artifacts"] {
         let mut invalid = value.clone();
         invalid.as_object_mut().expect("object").remove(field);

@@ -1,12 +1,26 @@
 //! Ordered passive update-response identity; reservation and decoding stay with callers.
 
-use crate::model::{artifacts::ArtifactChecksumRecord, operation_plan::PlanContextRecord};
+use crate::model::{
+    artifacts::ArtifactChecksumRecord, ic_update_response::IcUpdateResponseInput,
+    operation_plan::PlanContextRecord,
+};
 
 pub(super) struct ResponseIdentity<'a> {
     pub authority: &'a ArtifactChecksumRecord,
     pub mutation_attempt: u32,
     pub context: &'a PlanContextRecord,
     pub target: &'a str,
+}
+
+impl<'a> From<&'a IcUpdateResponseInput> for ResponseIdentity<'a> {
+    fn from(input: &'a IcUpdateResponseInput) -> Self {
+        Self {
+            authority: &input.authority,
+            mutation_attempt: input.mutation_attempt,
+            context: &input.context,
+            target: &input.target,
+        }
+    }
 }
 
 impl ResponseIdentity<'_> {

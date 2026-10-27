@@ -1,6 +1,7 @@
 //! Native metadata/data replay preserves exact original spending and retention.
 
 use ic_platform::candid::contract;
+use support::hex_bytes as bytes;
 mod support;
 
 use ic_backup::{
@@ -25,15 +26,6 @@ struct Case {
     kind: SnapshotDataKind,
     reply_hex: String,
     digest: String,
-}
-
-fn bytes(hex: &str) -> Vec<u8> {
-    hex.as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect()
 }
 
 #[test]

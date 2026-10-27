@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.44.7]
+
+### 🧹 Cleanup
+
+- Narrow reservation and reply-identity checks, compare download metadata once and
+  validate fence bindings without constructing temporary obligation records.
+- Use typed internal artifact transitions and one canonical artifact lookup while
+  preserving persisted evidence, public errors and recovery ordering.
+- Separate written endpoint syntax, root-origin shape and transport admission
+  without changing the accepted endpoint policy.
+
+### 🧪 Testing
+
+- Share strict hexadecimal fixture decoding and construct ordinary multi-stage
+  fixtures through typed model inputs; retain independent wire/hash goldens.
+- Reuse read-only release receipt checks directly, with focused receipt/recovery
+  fixtures preserving exact selected-commit and mandatory resume admission.
+
 ## [0.44.6] - 2026-10-27
 
 ### 🧹 Cleanup

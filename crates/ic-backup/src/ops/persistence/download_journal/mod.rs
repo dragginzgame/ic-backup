@@ -21,10 +21,10 @@ use super::{
 };
 use crate::{
     model::{
-        artifacts::{ArtifactChecksumRecord, canonical_hash},
+        artifacts::canonical_hash,
         download_journal::{
-            ArtifactStateRecord, DownloadArtifactRequest, DownloadJournalRecord,
-            DownloadJournalRecordError, MAX_DOWNLOAD_JOURNAL_BYTES,
+            ArtifactStateRecord, ArtifactTransition, DownloadArtifactRequest,
+            DownloadJournalRecord, DownloadJournalRecordError, MAX_DOWNLOAD_JOURNAL_BYTES,
         },
     },
     ops::artifacts::{ArtifactError, checksum_directory},
@@ -123,7 +123,7 @@ impl<'a> DownloadJournalGuard<'a> {
         canister: &str,
         snapshot: &str,
     ) -> Result<(), DownloadJournalError> {
-        let next = self.next(canister, snapshot, ArtifactStateRecord::Downloaded, None)?;
+        let next = self.next(canister, snapshot, ArtifactTransition::Downloaded)?;
         self.check_artifact_parent()?;
         let entry = next.artifact(canister, snapshot)?;
         checksum_directory(&self.layout.root().join(entry.staging_path()))?;
@@ -153,8 +153,7 @@ impl<'a> DownloadJournalGuard<'a> {
         let next = self.next(
             canister,
             snapshot,
-            ArtifactStateRecord::ChecksumVerified,
-            Some(checksum),
+            ArtifactTransition::ChecksumVerified(checksum),
         )?;
         self.store(next, write_encoded)
     }
@@ -179,7 +178,7 @@ impl<'a> DownloadJournalGuard<'a> {
         snapshot: &str,
         write: impl FnOnce(&std::path::Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<(), DownloadJournalError> {
-        let next = self.next(canister, snapshot, ArtifactStateRecord::Durable, None)?;
+        let next = self.next(canister, snapshot, ArtifactTransition::Durable)?;
         let bytes = encode_json(&next, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         self.check_artifact_parent()?;
         let entry = next.artifact(canister, snapshot)?;
@@ -203,12 +202,11 @@ impl<'a> DownloadJournalGuard<'a> {
         &self,
         canister: &str,
         snapshot: &str,
-        state: ArtifactStateRecord,
-        checksum: Option<ArtifactChecksumRecord>,
+        transition: ArtifactTransition,
     ) -> Result<DownloadJournalRecord, DownloadJournalError> {
         self.check_usable()?;
         let mut next = self.record.clone();
-        next.advance(canister, snapshot, state, checksum)?;
+        next.advance(canister, snapshot, transition)?;
         Ok(next)
     }
 

@@ -83,15 +83,7 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
         .iter()
         .find(|source| source["name"] == "data-source")
         .unwrap();
-    let raw = source["reply_hex"]
-        .as_str()
-        .unwrap()
-        .as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect::<Vec<_>>();
+    let raw = support::hex_bytes(source["reply_hex"].as_str().unwrap());
     let mut values: ReadCanisterSnapshotMetadataResult =
         ic_platform::candid::decode_one(&raw, support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 3;

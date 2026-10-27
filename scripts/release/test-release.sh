@@ -17,10 +17,13 @@ unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND 
     MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL GNUMAKEFLAGS MAKEFILES
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 metadata_only=false
+receipts_only=false
 if [[ "$#" == 1 && "$1" == --metadata-only ]]; then
     metadata_only=true
+elif [[ "$#" == 1 && "$1" == --receipts-only ]]; then
+    receipts_only=true
 elif [[ "$#" != 0 ]]; then
-    echo 'usage: test-release.sh [--metadata-only]' >&2
+    echo 'usage: test-release.sh [--metadata-only|--receipts-only]' >&2
     exit 2
 fi
 TEST_REAL_MAKE="$(command -v make)"
@@ -1125,6 +1128,17 @@ SH
     rg -F 'unstaged: CHANGELOG.md' target/rejection.log >/dev/null
     [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]] || exit 1
 }
+
+if [[ "$receipts_only" == true ]]; then
+    run_case validation-source-identity test_validation_source_identity
+    for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
+    for mode in explicit explicit-unsorted; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
+    for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
+    run_case completed-evidence-replay test_completed_evidence_replay
+    echo 'release receipt selection and exact resume checks passed'
+    fixture_complete=true
+    exit 0
+fi
 
 if [[ "$metadata_only" == true ]]; then
     for outcome in success failure; do

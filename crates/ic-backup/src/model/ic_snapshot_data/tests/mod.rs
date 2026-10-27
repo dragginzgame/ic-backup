@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest};
+use crate::test_support::hex_bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::CandidType;
 use ic_platform::management_canister_types::{
@@ -22,15 +23,6 @@ struct GoldenCase {
     chunk_checksum: String,
     metadata_digest: String,
     digest: String,
-}
-
-fn hex_bytes(hex: &str) -> Vec<u8> {
-    let (pairs, rest) = hex.as_bytes().as_chunks::<2>();
-    assert_eq!(rest, b"");
-    pairs
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect()
 }
 
 fn metadata_bytes() -> Vec<u8> {

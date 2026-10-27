@@ -35,6 +35,18 @@ fn plan(request: &IcManagementRequestRecord) -> OperationPlanRecord {
 }
 
 #[test]
+fn fixture_hex_preserves_complete_bytes_and_rejects_partial_or_malformed_input() {
+    assert_eq!(support::hex_bytes("00ff80AB"), [0, 255, 128, 171]);
+    assert_eq!(support::hex_bytes(""), [] as [u8; 0]);
+    for invalid in ["0", "abc", "0g", "é", "000Z"] {
+        assert!(
+            std::panic::catch_unwind(|| support::hex_bytes(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
 fn preserves_typed_payload_and_independent_observation_allowance_through_reopen() {
     let root = support::temp_root("ic-backup-public-wire");
     let layout = BackupLayoutGuard::acquire(&root).expect("local exclusion");

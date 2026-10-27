@@ -47,15 +47,7 @@ fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_rel
         "../src/model/ic_snapshot_metadata/tests/golden.json"
     ))
     .unwrap();
-    let raw: Vec<u8> = cases[0]["reply_hex"]
-        .as_str()
-        .unwrap()
-        .as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect();
+    let raw = support::hex_bytes(cases[0]["reply_hex"].as_str().unwrap());
     let reply = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let digest = reply.digest();
     let arguments = request.arguments().to_vec();

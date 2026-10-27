@@ -108,12 +108,26 @@ fn capture_binds_full_original_plan_requirement_fence_and_explicit_acquisition()
 }
 #[test]
 fn zero_original_mutation_allowance_cannot_declare_acquisition() {
+    let original = plan();
+    let record =
+        FenceObligationRecord::for_capture(&original, &capture(&original), 0, &fence()).unwrap();
     let mut value = serde_json::to_value(plan()).unwrap();
     value["operations"][0]["budget"]["mutations"] = json!(0);
     let plan = serde_json::from_value(value).unwrap();
     assert!(matches!(
         FenceObligationRecord::for_capture(&plan, &capture(&plan), 0, &fence()),
         Err(FenceObligationError::NoAcquisitionAllowance)
+    ));
+    // A retained binding may drift at the same time as allowance disappears.
+    // Purpose/allowance admission still precedes the final binding comparison.
+    assert!(matches!(
+        record.validate_capture(&plan, &capture(&plan), &fence()),
+        Err(FenceObligationError::NoAcquisitionAllowance)
+    ));
+    let weaker = ConsistencyRequirementRecord::new(&plan, ConsistencyGuaranteeRecord::PerCanister);
+    assert!(matches!(
+        record.validate_capture(&plan, &weaker, &fence()),
+        Err(FenceObligationError::FenceNotRequired)
     ));
 }
 #[test]

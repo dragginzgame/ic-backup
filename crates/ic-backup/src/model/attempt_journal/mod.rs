@@ -191,14 +191,24 @@ impl AttemptJournalRecord {
         if self.authority() != authority {
             return Err(authority_mismatch);
         }
-        let current = self.view();
-        if current.pending_mutation != Some(mutation_attempt) {
+        if self.pending_mutation() != Some(mutation_attempt) {
             return Err(mutation_mismatch);
         }
-        if current.pending_observation.is_some() {
+        if self.pending_observation().is_some() {
             return Err(observation_pending);
         }
         Ok(())
+    }
+    // Reservation admission reads the validated projection without building the
+    // public reporting view or hashing authority unrelated to these attempt IDs.
+    pub(crate) const fn pending_mutation(&self) -> Option<u32> {
+        self.projection.pending_mutation
+    }
+    pub(crate) const fn pending_observation(&self) -> Option<u32> {
+        match &self.projection.pending_observation {
+            Some(pending) => Some(pending.attempt),
+            None => None,
+        }
     }
     /// Read the exact canonical request of the unresolved observation, if any.
     ///

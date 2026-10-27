@@ -57,30 +57,27 @@ pub fn validate_response<'request, 'metadata>(
 {
     request.validate_journal(journal)?;
     let input = response.input();
-    ResponseIdentity {
-        authority: &input.authority,
-        mutation_attempt: input.mutation_attempt,
-        context: &input.context,
-        target: &input.target,
-    }
-    .compare(&ResponseIdentity {
-        authority: &request.authority().digest(),
-        mutation_attempt: request.mutation_attempt(),
-        context: request.plan().context(),
-        target: request.payload().target(),
-    })
-    .map_err(|mismatch| match mismatch {
-        ResponseIdentityMismatch::Authority => {
-            IcSnapshotTransferReadAssociationError::AuthorityMismatch
-        }
-        ResponseIdentityMismatch::Attempt => {
-            IcSnapshotTransferReadAssociationError::AttemptMismatch
-        }
-        ResponseIdentityMismatch::Context => {
-            IcSnapshotTransferReadAssociationError::ContextMismatch
-        }
-        ResponseIdentityMismatch::Target => IcSnapshotTransferReadAssociationError::TargetMismatch,
-    })?;
+    ResponseIdentity::from(input)
+        .compare(&ResponseIdentity {
+            authority: &request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: request.plan().context(),
+            target: request.payload().target(),
+        })
+        .map_err(|mismatch| match mismatch {
+            ResponseIdentityMismatch::Authority => {
+                IcSnapshotTransferReadAssociationError::AuthorityMismatch
+            }
+            ResponseIdentityMismatch::Attempt => {
+                IcSnapshotTransferReadAssociationError::AttemptMismatch
+            }
+            ResponseIdentityMismatch::Context => {
+                IcSnapshotTransferReadAssociationError::ContextMismatch
+            }
+            ResponseIdentityMismatch::Target => {
+                IcSnapshotTransferReadAssociationError::TargetMismatch
+            }
+        })?;
     let reply = match request.payload() {
         IcSnapshotTransferReadPayload::Metadata(payload) => IcSnapshotTransferReadReply::Metadata(
             IcSnapshotMetadataReply::decode(payload, &input.reply)?,

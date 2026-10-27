@@ -82,6 +82,10 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
     pub fn requests(&self) -> &[IcSnapshotDataRequest<'metadata>] {
         &self.requests
     }
+    // Every immutable request was constructed from this same original metadata.
+    pub(crate) fn matches_metadata(&self, metadata: &IcSnapshotMetadataReply<'_>) -> bool {
+        self.metadata.digest() == metadata.digest()
+    }
     /// Read the original-allocation child plan. None means no data calls are needed,
     /// not that capture, durable publication or complete transfer is qualified.
     #[must_use]

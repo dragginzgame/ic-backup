@@ -6,34 +6,46 @@ use std::net::IpAddr;
 
 pub(super) fn admit_written_origin(endpoint: &str) -> Result<Url, TransportError> {
     let url = Url::parse(endpoint).map_err(|_| TransportError::Configuration)?;
+    if !written_root_origin(endpoint) || !root_origin(&url) || !allowed_transport(&url) {
+        return Err(TransportError::Configuration);
+    }
+    Ok(url)
+}
+
+fn written_root_origin(endpoint: &str) -> bool {
     // URL parsing removes dot segments, so inspect the written path before
     // accepting a root origin. A normalized `/path/..` is still a path input.
-    let raw_origin_path = endpoint.split_once("://").is_some_and(|(_, authority)| {
+    let root_path = endpoint.split_once("://").is_some_and(|(_, authority)| {
         !authority.contains('\\')
             && authority
                 .find('/')
                 .is_none_or(|path_start| &authority[path_start..] == "/")
     });
-    let local = url.host_str().is_some_and(|host| {
-        host.trim_matches(['[', ']'])
-            .parse::<IpAddr>()
-            .is_ok_and(|ip| ip.is_loopback())
-    });
-    if !(url.scheme() == "https" || (url.scheme() == "http" && local))
-        || url.host_str().is_none()
-        || endpoint
+    root_path
+        && !endpoint
             .chars()
             .any(|character| character.is_whitespace() || character.is_control())
-        || !raw_origin_path
-        || !url.username().is_empty()
-        || url.password().is_some()
-        || url.path() != "/"
-        || url.query().is_some()
-        || url.fragment().is_some()
-    {
-        return Err(TransportError::Configuration);
+}
+
+fn root_origin(url: &Url) -> bool {
+    url.host_str().is_some()
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.path() == "/"
+        && url.query().is_none()
+        && url.fragment().is_none()
+}
+
+fn allowed_transport(url: &Url) -> bool {
+    match url.scheme() {
+        "https" => true,
+        "http" => url.host_str().is_some_and(|host| {
+            host.trim_matches(['[', ']'])
+                .parse::<IpAddr>()
+                .is_ok_and(|ip| ip.is_loopback())
+        }),
+        _ => false,
     }
-    Ok(url)
 }
 
 #[cfg(test)]
@@ -60,6 +72,11 @@ mod tests {
             "http://localhost/",
             "http://example.com/",
             "https://example.com/?query",
+            "https://example.com/#fragment",
+            "https://user:password@example.com/",
+            "https://example.com/%2e",
+            "https://example.com/\n",
+            "ftp://example.com/",
         ] {
             assert!(admit_written_origin(endpoint).is_err(), "{endpoint}");
         }

@@ -33,8 +33,7 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
     ) -> Result<Self, IcSnapshotUploadAttemptError> {
         let authority = original_authority(plan, operation_sequence, journal, payload)?;
         let mutation_attempt = journal
-            .view()
-            .pending_mutation
+            .pending_mutation()
             .ok_or(IcSnapshotUploadAttemptError::NoPendingMutation)?;
         let attempt = Self {
             plan,

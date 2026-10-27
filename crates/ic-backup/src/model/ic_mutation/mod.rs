@@ -52,8 +52,7 @@ impl<'a> IcMutationRequest<'a> {
         }
         payload.validate_mutation_binding(authority.binding())?;
         let mutation_attempt = journal
-            .view()
-            .pending_mutation
+            .pending_mutation()
             .ok_or(IcMutationRequestError::NoPendingMutation)?;
         let request = Self {
             plan,

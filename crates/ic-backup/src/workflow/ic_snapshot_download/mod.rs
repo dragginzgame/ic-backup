@@ -69,10 +69,7 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
         .plan()
         .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
     if stage.plan() != plan
-        || download
-            .requests()
-            .iter()
-            .any(|request| request.metadata().digest() != writer.coverage().metadata().digest())
+        || !download.matches_metadata(writer.coverage().metadata())
         || writer.coverage().covered_region_bytes() != [0; 3]
         || writer.coverage().covered_chunks() != 0
     {

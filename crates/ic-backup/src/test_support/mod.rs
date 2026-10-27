@@ -15,6 +15,37 @@ pub mod ready;
 pub mod restore_safety;
 pub mod snapshot_read;
 
+/// Decode independent fixture bytes without a production encoder or silent truncation.
+pub fn hex_bytes(hex: &str) -> Vec<u8> {
+    let (pairs, remainder) = hex.as_bytes().as_chunks::<2>();
+    assert!(
+        remainder.is_empty(),
+        "fixture hex must contain complete bytes"
+    );
+    pairs
+        .iter()
+        .map(|pair| {
+            u8::from_str_radix(
+                std::str::from_utf8(pair).expect("fixture hex must be ASCII"),
+                16,
+            )
+            .expect("invalid fixture hex byte")
+        })
+        .collect()
+}
+
+#[test]
+fn fixture_hex_admits_exact_bytes_and_rejects_partial_or_malformed_input() {
+    assert_eq!(hex_bytes("00ff80AB"), [0, 255, 128, 171]);
+    assert_eq!(hex_bytes(""), [] as [u8; 0]);
+    for invalid in ["0", "abc", "0g", "é", "000Z"] {
+        assert!(
+            std::panic::catch_unwind(|| hex_bytes(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
 #[cfg(unix)]
 use std::{
     fs,

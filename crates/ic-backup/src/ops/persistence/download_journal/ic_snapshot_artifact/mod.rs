@@ -9,7 +9,7 @@ use super::{DownloadJournalError, DownloadJournalGuard};
 use crate::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
-        download_journal::ArtifactStateRecord,
+        download_journal::{ArtifactStateRecord, ArtifactTransition},
         ic_snapshot_coverage::{IcSnapshotDataCoverage, IcSnapshotDataCoverageError},
         ic_snapshot_data::IcSnapshotDataReply,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_METADATA_BYTES},
@@ -250,17 +250,13 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
         checksum_directory(&self.path)?.verify(expected.hash())?;
         self.check_custody()?;
         let target = self.coverage.metadata().request().target();
-        let mut next = self.journal.next(
-            target,
-            &self.snapshot,
-            ArtifactStateRecord::Downloaded,
-            None,
-        )?;
+        let mut next = self
+            .journal
+            .next(target, &self.snapshot, ArtifactTransition::Downloaded)?;
         next.advance(
             target,
             &self.snapshot,
-            ArtifactStateRecord::ChecksumVerified,
-            Some(expected.clone()),
+            ArtifactTransition::ChecksumVerified(expected.clone()),
         )
         .map_err(DownloadJournalError::from)?;
         self.journal.store(next, write_encoded)?;

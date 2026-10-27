@@ -124,13 +124,12 @@ pub(crate) struct ObservationReservation<'a> {
 pub(crate) fn pending_attempts(
     journal: &AttemptJournalRecord,
 ) -> Result<(u32, u32), IcObservationRequestError> {
-    let current = journal.view();
     Ok((
-        current
-            .pending_mutation
+        journal
+            .pending_mutation()
             .ok_or(IcObservationRequestError::NoPendingMutation)?,
-        current
-            .pending_observation
+        journal
+            .pending_observation()
             .ok_or(IcObservationRequestError::NoPendingObservation)?,
     ))
 }
@@ -143,11 +142,10 @@ impl ObservationReservation<'_> {
         if journal.authority() != self.authority {
             return Err(IcObservationRequestError::AuthorityMismatch);
         }
-        let current = journal.view();
-        if current.pending_mutation != Some(self.mutation_attempt) {
+        if journal.pending_mutation() != Some(self.mutation_attempt) {
             return Err(IcObservationRequestError::MutationMismatch);
         }
-        if current.pending_observation != Some(self.observation_attempt) {
+        if journal.pending_observation() != Some(self.observation_attempt) {
             return Err(IcObservationRequestError::ObservationMismatch);
         }
         if journal.pending_observation_request() != Some(self.request.hash()) {

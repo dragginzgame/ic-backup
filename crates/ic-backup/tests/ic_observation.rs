@@ -51,15 +51,7 @@ fn wire(method: Method) -> Vec<u8> {
         .iter()
         .find(|case| case["method"] == serde_json::to_value(method).unwrap())
         .unwrap();
-    case["reply_hex"]
-        .as_str()
-        .unwrap()
-        .as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect()
+    support::hex_bytes(case["reply_hex"].as_str().unwrap())
 }
 /// Passive callback fixture records the requested envelope but implements no IC behavior.
 struct NativeProvider {

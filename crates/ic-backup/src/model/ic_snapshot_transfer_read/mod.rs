@@ -104,8 +104,7 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         }
         payload.validate_binding(&authority)?;
         let mutation_attempt = journal
-            .view()
-            .pending_mutation
+            .pending_mutation()
             .ok_or(IcSnapshotTransferReadError::NoPendingMutation)?;
         let request = Self {
             plan,

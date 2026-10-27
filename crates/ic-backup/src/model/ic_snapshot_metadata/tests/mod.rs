@@ -1,5 +1,6 @@
 use super::*;
 use crate::model::ic_request::MAX_IC_SNAPSHOT_ID_BYTES;
+use crate::test_support::hex_bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::{CandidType, Nat, Reserved};
 use ic_platform::management_canister_types::{
@@ -19,15 +20,6 @@ struct GoldenCase {
     digest: String,
     globals: usize,
     source_present: bool,
-}
-
-fn hex_bytes(hex: &str) -> Vec<u8> {
-    let (pairs, rest) = hex.as_bytes().as_chunks::<2>();
-    assert_eq!(rest, b"");
-    pairs
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect()
 }
 
 #[test]

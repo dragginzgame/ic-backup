@@ -16,10 +16,7 @@ fn independent_goldens_bind_raw_receiver_mode_method_lengths_and_exact_bytes() {
     .unwrap();
     for golden in contract["digest_goldens"].as_array().unwrap() {
         let hex = golden["arguments_hex"].as_str().unwrap();
-        let arguments: Vec<_> = (0..hex.len())
-            .step_by(2)
-            .map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).unwrap())
-            .collect();
+        let arguments = crate::test_support::hex_bytes(hex);
         let payload = FenceAcquisitionPayload::new(
             golden["target"].as_str().unwrap(),
             golden["method"].as_str().unwrap(),
@@ -27,10 +24,7 @@ fn independent_goldens_bind_raw_receiver_mode_method_lengths_and_exact_bytes() {
         )
         .unwrap();
         let hex = golden["principal_hex"].as_str().unwrap();
-        let principal: Vec<_> = (0..hex.len())
-            .step_by(2)
-            .map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).unwrap())
-            .collect();
+        let principal = crate::test_support::hex_bytes(hex);
         assert_eq!(payload.target_bytes, principal);
         assert_eq!(payload.digest().hash(), golden["sha256"].as_str().unwrap());
     }

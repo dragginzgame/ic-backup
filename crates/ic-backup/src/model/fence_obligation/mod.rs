@@ -88,10 +88,7 @@ impl FenceObligationRecord {
         acquisition_operation: u64,
         fence: &ApplicationFenceBinding,
     ) -> Result<Self, FenceObligationError> {
-        requirement.validate_plan(plan)?;
-        if requirement.guarantee() != ConsistencyGuaranteeRecord::ApplicationCoordinated {
-            return Err(FenceObligationError::FenceNotRequired);
-        }
+        require_capture(plan, requirement)?;
         Self::new(
             plan,
             acquisition_operation,
@@ -111,13 +108,7 @@ impl FenceObligationRecord {
         requirement: &RestoreSafetyRequirementRecord,
         acquisition_operation: u64,
     ) -> Result<Self, FenceObligationError> {
-        requirement.validate_plans(plan, source)?;
-        if requirement.safety() != RestoreSafetyLaneRecord::ApplicationFenced {
-            return Err(FenceObligationError::FenceNotRequired);
-        }
-        let fence = requirement
-            .expected_fence()
-            .ok_or(FenceObligationError::FenceNotRequired)?;
+        let fence = require_restore(plan, source, requirement)?;
         Self::new(
             plan,
             acquisition_operation,
@@ -163,15 +154,7 @@ impl FenceObligationRecord {
         if self.plan_intent != plan.digest() {
             return Err(FenceObligationError::PlanMismatch);
         }
-        if plan
-            .attempt_authority(self.acquisition_operation)?
-            .budget()
-            .mutations()
-            == 0
-        {
-            return Err(FenceObligationError::NoAcquisitionAllowance);
-        }
-        Ok(())
+        require_acquisition(plan, self.acquisition_operation)
     }
     /// Match every original capture binding without weakening scope on recovery.
     /// # Errors
@@ -182,8 +165,16 @@ impl FenceObligationRecord {
         requirement: &ConsistencyRequirementRecord,
         fence: &ApplicationFenceBinding,
     ) -> Result<(), FenceObligationError> {
-        let original = Self::for_capture(plan, requirement, self.acquisition_operation, fence)?;
-        self.validate_original(&original)
+        require_capture(plan, requirement)?;
+        require_acquisition(plan, self.acquisition_operation)?;
+        let scope_matches = matches!(
+            &self.scope,
+            FenceObligationScopeRecord::Capture { requirement: original, identity, membership_revision }
+                if original == &requirement.digest()
+                    && identity == &fence.identity
+                    && membership_revision == &fence.membership_revision
+        );
+        self.validate_binding(plan, scope_matches)
     }
     /// Match original restore/source/fence bindings without treating their hashes as custody.
     /// # Errors
@@ -194,11 +185,23 @@ impl FenceObligationRecord {
         source: &OperationPlanRecord,
         requirement: &RestoreSafetyRequirementRecord,
     ) -> Result<(), FenceObligationError> {
-        let original = Self::for_restore(plan, source, requirement, self.acquisition_operation)?;
-        self.validate_original(&original)
+        let fence = require_restore(plan, source, requirement)?;
+        require_acquisition(plan, self.acquisition_operation)?;
+        let scope_matches = matches!(
+            &self.scope,
+            FenceObligationScopeRecord::Restore { requirement: original, fence: original_fence }
+                if original == &requirement.digest() && original_fence == fence
+        );
+        self.validate_binding(plan, scope_matches)
     }
-    fn validate_original(&self, original: &Self) -> Result<(), FenceObligationError> {
-        if self != original {
+    // Match original declarations after purpose and allowance admission, retaining
+    // BindingMismatch for drift rather than changing the public rejection order.
+    fn validate_binding(
+        &self,
+        plan: &OperationPlanRecord,
+        scope_matches: bool,
+    ) -> Result<(), FenceObligationError> {
+        if self.plan_intent != plan.digest() || !scope_matches {
             return Err(FenceObligationError::BindingMismatch);
         }
         Ok(())
@@ -235,6 +238,43 @@ impl FenceObligationRecord {
         }
         bytes.finish()
     }
+}
+
+fn require_capture(
+    plan: &OperationPlanRecord,
+    requirement: &ConsistencyRequirementRecord,
+) -> Result<(), FenceObligationError> {
+    requirement.validate_plan(plan)?;
+    if requirement.guarantee() != ConsistencyGuaranteeRecord::ApplicationCoordinated {
+        return Err(FenceObligationError::FenceNotRequired);
+    }
+    Ok(())
+}
+
+fn require_restore<'a>(
+    plan: &OperationPlanRecord,
+    source: &OperationPlanRecord,
+    requirement: &'a RestoreSafetyRequirementRecord,
+) -> Result<&'a RestoreFenceBindingRecord, FenceObligationError> {
+    requirement.validate_plans(plan, source)?;
+    if requirement.safety() != RestoreSafetyLaneRecord::ApplicationFenced {
+        return Err(FenceObligationError::FenceNotRequired);
+    }
+    requirement
+        .expected_fence()
+        .ok_or(FenceObligationError::FenceNotRequired)
+}
+
+fn require_acquisition(
+    plan: &OperationPlanRecord,
+    sequence: u64,
+) -> Result<(), FenceObligationError> {
+    // The admitted plan already owns canonical bindings. Reading its allowance
+    // does not require constructing a new authority and rehashing the full plan.
+    if plan.operation(sequence)?.budget().mutations() == 0 {
+        return Err(FenceObligationError::NoAcquisitionAllowance);
+    }
+    Ok(())
 }
 /// Typed original obligation rejection; never releases a fence or resets attempts.
 #[derive(Debug, Error)]

@@ -294,6 +294,12 @@ adoption. Follow-up publication is an explicit maintainer action.
 
 ## Focused qualification
 
+`bash scripts/release/test-release.sh --receipts-only` selects the consumer's
+validation custody, exact older-commit receipt and completed-resume checks.
+It uses isolated repositories and substitutes, preserving the mandatory receipt
+check and refusal without effects when proof or remote observations are missing.
+This selection does not execute a release in the working repository.
+
 `make release-check` exercises actual consumer Make entry points and the reviewed
 runner with Git/Cargo substitutes. It covers
 both member manifests/local lock entries and their internal registry requirement,

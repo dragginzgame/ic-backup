@@ -68,15 +68,7 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         .iter()
         .find(|case| case["name"] == "upload-source-absent")
         .unwrap();
-    let bytes = fixture["reply_hex"]
-        .as_str()
-        .unwrap()
-        .as_bytes()
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect::<Vec<_>>();
+    let bytes = support::hex_bytes(fixture["reply_hex"].as_str().unwrap());
     let mut values: ReadCanisterSnapshotMetadataResult =
         ic_platform::candid::decode_one(&bytes, support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 3;

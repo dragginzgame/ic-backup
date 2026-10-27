@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::{control_authority::MAX_CONTROLLERS, ic_request::IcManagementRequest};
+use crate::test_support::hex_bytes as bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::management_canister_types::{
@@ -52,17 +53,6 @@ fn status(controllers: Vec<Principal>) -> Status {
         status: CanisterStatusType::Stopping,
         settings: Settings { controllers },
     }
-}
-
-fn bytes(hex: &str) -> Vec<u8> {
-    let (pairs, remainder) = hex.as_bytes().as_chunks::<2>();
-    assert_eq!(remainder, b"", "complete golden bytes");
-    pairs
-        .iter()
-        .map(|pair| {
-            u8::from_str_radix(std::str::from_utf8(pair).expect("ASCII hex"), 16).expect("hex byte")
-        })
-        .collect()
 }
 
 #[test]

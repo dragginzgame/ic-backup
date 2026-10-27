@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::ic_request::{IcManagementRequest, MAX_IC_SNAPSHOT_ID_BYTES};
+use crate::test_support::hex_bytes as bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::CandidType;
 use ic_platform::management_canister_types::Snapshot;
@@ -33,17 +34,6 @@ fn inventory_request() -> IcManagementRequestRecord {
         IcManagementMethodRecord::ListCanisterSnapshots,
         "renrk-eyaaa-aaaaa-aaada-cai",
     )
-}
-
-fn bytes(hex: &str) -> Vec<u8> {
-    let (pairs, remainder) = hex.as_bytes().as_chunks::<2>();
-    assert!(remainder.is_empty(), "complete golden bytes");
-    pairs
-        .iter()
-        .map(|pair| {
-            u8::from_str_radix(std::str::from_utf8(pair).expect("ASCII"), 16).expect("hex byte")
-        })
-        .collect()
 }
 
 fn snapshot(id: Vec<u8>) -> Snapshot {

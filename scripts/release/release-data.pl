@@ -155,6 +155,50 @@ sub changelog {
     return $candidate;
 }
 
+# Read-only checks share the selected Git source in this process, including resume.
+sub check_validation_receipt {
+    my ($path, $source, $date, $previous, $candidate, $mode) = @_;
+    parts($previous); parts($candidate);
+    die "invalid validation source/date\n" unless $source =~ /\A[0-9a-f]{40,64}\z/
+        && $date =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/;
+    my $record = decode_json(read_file($path));
+    die "validation identity mismatch\n" unless $record->{schema} == 1
+        && $record->{source} eq $source && $record->{date} eq $date
+        && $record->{previous} eq $previous && $record->{candidate} eq $candidate
+        && $record->{gate} eq 'release-verify';
+    die "validation files mismatch\n" unless join(',',sort keys %{$record->{files}})
+        eq join(',', receipt_files());
+    die "invalid validation check mode\n" unless $mode eq 'original' || $mode eq 'prepared';
+    for my $file (keys %{$record->{files}}) {
+        next if $mode eq 'prepared' && $file !~ m{\Acrates/[^/]+/Cargo\.toml\z};
+        die "validated input changed: $file\n" unless sha256_hex(read_file($file)) eq $record->{files}{$file};
+    }
+}
+
+sub verify_release_receipt {
+    my @selection = @_;
+    my $receipt = decode_json(read_file('docs/release.json'));
+    die "unsupported release receipt\n" unless $receipt->{schema} == 1;
+    die "release receipt selection mismatch\n" if @selection && (@selection != 3
+        || $receipt->{source} ne $selection[0] || $receipt->{date} ne $selection[1]
+        || $receipt->{version} ne $selection[2]);
+    die "release version mismatch\n" unless $receipt->{version} eq version();
+    die "invalid release source\n" unless $receipt->{source} =~ /\A[0-9a-f]{40,64}\z/;
+    die "invalid release gate\n" unless $receipt->{gate} eq 'release-verify';
+    die "invalid release date\n" unless $receipt->{date} =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/;
+    my @files = sort keys %{$receipt->{files}};
+    die "unexpected receipt files\n"
+        unless join(',', @files) eq join(',', receipt_files());
+    for my $path (@files) {
+        die "release file changed after validation: $path\n"
+            unless sha256_hex(read_file($path)) eq $receipt->{files}{$path};
+    }
+    my $notes = read_file('CHANGELOG.md');
+    my $heading = "## [$receipt->{version}] - $receipt->{date}";
+    die "dated changelog missing\n" unless $notes =~ /^\Q$heading\E$/m;
+    return $receipt;
+}
+
 my ($command, @args) = @ARGV;
 $command //= '';
 if (@args >= 2 && $args[-2] eq '--commit') {
@@ -211,33 +255,20 @@ if ($command eq 'version') {
     remove_tree($temporary);
     write_file('Cargo.toml', $manifest);
     write_file('Cargo.lock', $lock);
-} elsif ($command eq 'validation-receipt' || $command eq 'validation-check') {
+} elsif ($command eq 'validation-receipt') {
     my ($path, $source, $date, $previous, $candidate, $mode) = @args;
     parts($previous); parts($candidate);
     die "invalid validation source/date\n" unless $source =~ /\A[0-9a-f]{40,64}\z/
         && $date =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/;
-    if ($command eq 'validation-receipt') {
-        die "validation version changed\n" unless version() eq $previous;
-        my %files = map { $_ => sha256_hex(read_file($_)) }
-            receipt_files();
-        write_file($path, JSON::PP->new->canonical->pretty->encode({
-            schema=>1,source=>$source,date=>$date,previous=>$previous,candidate=>$candidate,
-            gate=>'release-verify',files=>\%files,
-        }));
-    } else {
-        my $record = decode_json(read_file($path));
-        die "validation identity mismatch\n" unless $record->{schema} == 1
-            && $record->{source} eq $source && $record->{date} eq $date
-            && $record->{previous} eq $previous && $record->{candidate} eq $candidate
-            && $record->{gate} eq 'release-verify';
-        die "validation files mismatch\n" unless join(',',sort keys %{$record->{files}})
-            eq join(',', receipt_files());
-        die "invalid validation check mode\n" unless $mode eq 'original' || $mode eq 'prepared';
-        for my $file (keys %{$record->{files}}) {
-            next if $mode eq 'prepared' && $file !~ m{\Acrates/[^/]+/Cargo\.toml\z};
-            die "validated input changed: $file\n" unless sha256_hex(read_file($file)) eq $record->{files}{$file};
-        }
-    }
+    die "validation version changed\n" unless version() eq $previous;
+    my %files = map { $_ => sha256_hex(read_file($_)) }
+        receipt_files();
+    write_file($path, JSON::PP->new->canonical->pretty->encode({
+        schema=>1,source=>$source,date=>$date,previous=>$previous,candidate=>$candidate,
+        gate=>'release-verify',files=>\%files,
+    }));
+} elsif ($command eq 'validation-check') {
+    check_validation_receipt(@args);
 } elsif ($command eq 'resume-validation-check') {
     my ($path, $candidate) = @args;
     parts($candidate);
@@ -246,10 +277,13 @@ if ($command eq 'version') {
     die "resumed validation differs from receipt\n" unless $proof->{candidate} eq $candidate
         && $receipt->{version} eq $candidate && $proof->{source} eq $receipt->{source}
         && $proof->{date} eq $receipt->{date};
-    my @selection = defined $read_commit ? ('--commit', $read_commit) : ();
-    system($^X, $0, 'validation-check', $path, $proof->{source}, $proof->{date},
-        $proof->{previous}, $candidate, 'prepared', @selection) == 0 or die "resumed validation failed\n";
-    system($^X, $0, 'verify', $proof->{source}, $proof->{date}, $candidate, @selection) == 0 or die "resumed receipt failed\n";
+    eval {
+        check_validation_receipt($path, $proof->{source}, $proof->{date},
+            $proof->{previous}, $candidate, 'prepared');
+        1;
+    } or die $@ . "resumed validation failed\n";
+    eval { verify_release_receipt($proof->{source}, $proof->{date}, $candidate); 1 }
+        or die $@ . "resumed receipt failed\n";
 } elsif ($command eq 'receipt') {
     my ($source, $date) = @args;
     my %hashes = map { $_ => sha256_hex(read_file($_)) }
@@ -260,25 +294,7 @@ if ($command eq 'version') {
     };
     write_file('docs/release.json', JSON::PP->new->canonical->pretty->encode($receipt));
 } elsif ($command eq 'verify' || $command eq 'source') {
-    my $receipt = decode_json(read_file('docs/release.json'));
-    die "unsupported release receipt\n" unless $receipt->{schema} == 1;
-    die "release receipt selection mismatch\n" if @args && (@args != 3
-        || $receipt->{source} ne $args[0] || $receipt->{date} ne $args[1]
-        || $receipt->{version} ne $args[2]);
-    die "release version mismatch\n" unless $receipt->{version} eq version();
-    die "invalid release source\n" unless $receipt->{source} =~ /\A[0-9a-f]{40,64}\z/;
-    die "invalid release gate\n" unless $receipt->{gate} eq 'release-verify';
-    die "invalid release date\n" unless $receipt->{date} =~ /\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/;
-    my @files = sort keys %{$receipt->{files}};
-    die "unexpected receipt files\n"
-        unless join(',', @files) eq join(',', receipt_files());
-    for my $path (@files) {
-        die "release file changed after validation: $path\n"
-            unless sha256_hex(read_file($path)) eq $receipt->{files}{$path};
-    }
-    my $notes = read_file('CHANGELOG.md');
-    my $heading = "## [$receipt->{version}] - $receipt->{date}";
-    die "dated changelog missing\n" unless $notes =~ /^\Q$heading\E$/m;
+    my $receipt = verify_release_receipt(@args);
     print "$receipt->{source}\n" if $command eq 'source';
 } else {
     die "unknown release-data command\n";
