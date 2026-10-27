@@ -246,12 +246,21 @@ fn exact_authority_both_attempts_challenge_readback_and_observation_evidence_are
                 assert!(match change {
                     0 => matches!(
                         error,
-                        IcSnapshotUploadDataSettlementError::AuthorityMismatch
+                        IcSnapshotUploadDataSettlementError::Identity(
+                            SettlementIdentityMismatch::Authority
+                        )
                     ),
-                    1 | 2 => matches!(error, IcSnapshotUploadDataSettlementError::AttemptMismatch),
+                    1 | 2 => matches!(
+                        error,
+                        IcSnapshotUploadDataSettlementError::Identity(
+                            SettlementIdentityMismatch::Attempt
+                        )
+                    ),
                     3 => matches!(
                         error,
-                        IcSnapshotUploadDataSettlementError::ChallengeMismatch
+                        IcSnapshotUploadDataSettlementError::Identity(
+                            SettlementIdentityMismatch::Challenge
+                        )
                     ),
                     4 => matches!(error, IcSnapshotUploadDataSettlementError::ReadbackMismatch),
                     _ => matches!(

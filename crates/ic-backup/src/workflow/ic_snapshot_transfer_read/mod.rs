@@ -92,30 +92,20 @@ pub(super) async fn read_snapshot_with<E: std::error::Error + 'static, T>(
         .map_err(IcSnapshotTransferReadExecutionError::Admission)?;
     stage.layout()?;
     let response = provider.read_snapshot(&request, journal.record()?).await?;
-    let record = match journal.record() {
-        Ok(record) => record,
-        Err(source) => {
-            return Err(IcSnapshotTransferReadExecutionError::AfterReplyJournal {
-                source,
-                response: Box::new(response),
-            });
-        }
+    let admit_reply = || {
+        let admitted = validate_response(&request, journal.record()?, &response)?;
+        stage.layout()?;
+        Ok::<_, IcSnapshotTransferReadReplyError>(admitted)
     };
-    let admitted = match validate_response(&request, record, &response) {
+    let admitted = match admit_reply() {
         Ok(admitted) => admitted,
         Err(source) => {
-            return Err(IcSnapshotTransferReadExecutionError::Association {
+            return Err(IcSnapshotTransferReadExecutionError::AfterReply {
                 source,
                 response: Box::new(response),
             });
         }
     };
-    if let Err(source) = stage.layout() {
-        return Err(IcSnapshotTransferReadExecutionError::AfterReplyStage {
-            source,
-            response: Box::new(response),
-        });
-    }
     let result = complete(&mut journal, &request, &admitted).await;
     Ok((response, result))
 }
@@ -144,30 +134,28 @@ pub enum IcSnapshotTransferReadExecutionError<E: std::error::Error + 'static> {
     /// The single provider call failed; its reservation stays pending.
     #[error(transparent)]
     Provider(#[from] IcObservationProviderError),
-    /// Passive association rejected a bounded returned reply.
-    #[error("snapshot read response association failed: {source}")]
-    Association {
-        /// Canonical structural rejection.
-        source: IcSnapshotTransferReadAssociationError,
-        /// Exact bounded returned response, without authentication or outcome.
+    /// Admission after a reply failed, retaining its complete bounded evidence.
+    #[error("snapshot transfer read reply rejected: {source}")]
+    AfterReply {
+        /// Typed original admission failure.
+        source: IcSnapshotTransferReadReplyError,
+        /// Complete returned passive evidence, without settlement authority.
         response: Box<IcSnapshotTransferReadResponse>,
     },
-    /// Journal re-admission failed after a reply; retain the reply.
-    #[error("snapshot read journal changed after reply: {source}")]
-    AfterReplyJournal {
-        /// Original journal rejection.
-        source: AttemptJournalError,
-        /// Exact bounded returned response.
-        response: Box<IcSnapshotTransferReadResponse>,
-    },
-    /// Stage/ancestor re-admission failed after a reply; retain the reply.
-    #[error("snapshot read stage changed after reply: {source}")]
-    AfterReplyStage {
-        /// Original stage or ancestor rejection.
-        source: ExecutionWorkflowPersistenceError,
-        /// Exact bounded returned response.
-        response: Box<IcSnapshotTransferReadResponse>,
-    },
+}
+
+/// Admission failure after a returned snapshot transfer read reply.
+#[derive(Debug, Error)]
+pub enum IcSnapshotTransferReadReplyError {
+    /// Original selected journal cannot be re-admitted.
+    #[error(transparent)]
+    Journal(#[from] AttemptJournalError),
+    /// Passive exact reply association failed.
+    #[error(transparent)]
+    Association(#[from] IcSnapshotTransferReadAssociationError),
+    /// Original stage or ancestor evidence cannot be re-admitted.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
 }
 
 #[cfg(all(test, unix))]

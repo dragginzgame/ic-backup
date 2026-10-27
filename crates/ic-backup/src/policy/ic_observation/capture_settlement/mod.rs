@@ -152,40 +152,12 @@ pub enum IcCaptureSettlementError {
     /// Existing closed full-baseline comparison rejected.
     #[error(transparent)]
     Baseline(#[from] SnapshotInventoryDeltaError),
-    /// Complete original operation authority differs.
-    #[error("capture settlement original authority differs")]
-    AuthorityMismatch,
-    /// Original mutation or observation attempt differs.
-    #[error("capture settlement attempt identities differ")]
-    AttemptMismatch,
-    /// Caller-owned current qualification challenge differs.
-    #[error("capture settlement challenge differs")]
-    ChallengeMismatch,
-    /// Exact original baseline request/raw evidence differs.
-    #[error("capture settlement original baseline differs")]
-    BaselineMismatch,
-    /// Exact current inventory request/raw evidence differs.
-    #[error("capture settlement current inventory differs")]
-    InventoryMismatch,
-    /// Opaque observation evidence differs even if raw reply bytes match.
-    #[error("capture settlement observation evidence differs")]
-    ObservationEvidenceMismatch,
+    /// Exact original settlement identity or retained evidence differs.
+    #[error(transparent)]
+    Identity(#[from] InventorySettlementMismatch),
     /// The attributed raw ID is not a bounded new candidate in the current inventory.
     #[error("capture settlement ID is not a new candidate")]
     NotNewCandidate,
-}
-
-impl From<InventorySettlementMismatch> for IcCaptureSettlementError {
-    fn from(value: InventorySettlementMismatch) -> Self {
-        match value {
-            InventorySettlementMismatch::Authority => Self::AuthorityMismatch,
-            InventorySettlementMismatch::Attempt => Self::AttemptMismatch,
-            InventorySettlementMismatch::Challenge => Self::ChallengeMismatch,
-            InventorySettlementMismatch::Baseline => Self::BaselineMismatch,
-            InventorySettlementMismatch::Inventory => Self::InventoryMismatch,
-            InventorySettlementMismatch::ObservationEvidence => Self::ObservationEvidenceMismatch,
-        }
-    }
 }
 
 #[cfg(test)]

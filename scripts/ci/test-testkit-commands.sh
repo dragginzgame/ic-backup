@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/fixture-lifecycle.sh scripts/ci/prepare-script-fixture.sh
 # Qualify local Make routing; provisioning and receipt admission stay with their owners.
 set -euo pipefail
 ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
-fixture="$(mktemp -d "${TMPDIR:-$ROOT/target}/testkit-commands.XXXXXX")"
+# shellcheck source=scripts/ci/fixture-lifecycle.sh
+source "$ROOT/scripts/ci/fixture-lifecycle.sh"
+mkdir -p "$ROOT/target"
+fixture="$(fixture_create "${TMPDIR:-$ROOT/target}/testkit-commands.XXXXXX")"
 fixture_complete=false
 finish() {
-    local status=$?
-    [[ "$fixture_complete" == true || "$status" != 0 ]] || status=1
-    if [[ $status == 0 ]]; then
-        rm -rf "$fixture"
-    else
-        printf 'Testkit command fixture retained: %s\n' "$fixture" >&2
-    fi
-    exit "$status"
+    fixture_finish "$?" "$fixture" 'Testkit command fixture retained'
 }
 trap finish EXIT
 mkdir -p "$fixture/consumer/make" "$fixture/consumer/scripts/ci" "$fixture/bin" "$fixture/cli"

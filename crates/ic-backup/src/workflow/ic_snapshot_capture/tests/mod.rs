@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::test_support::ready::ready;
+use crate::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -425,8 +426,9 @@ fn malformed_and_wrong_target_acknowledgements_retain_original_bytes_without_rec
         }
         let error =
             ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).unwrap_err();
-        let IcSnapshotCaptureExecutionError::Association {
-            acknowledgement, ..
+        let IcSnapshotCaptureExecutionError::AfterReply {
+            source: IcSnapshotCaptureReplyError::Association(_),
+            acknowledgement,
         } = error
         else {
             panic!("passive rejection retains reply")
@@ -472,11 +474,13 @@ fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retain
         .unwrap_err();
         match error {
             IcSnapshotCaptureExecutionError::Stage(_) if boundary == 0 => {}
-            IcSnapshotCaptureExecutionError::AfterReplyStage {
-                acknowledgement, ..
+            IcSnapshotCaptureExecutionError::AfterReply {
+                source: IcSnapshotCaptureReplyError::Stage(_),
+                acknowledgement,
             } if boundary == 1 => assert_eq!(acknowledgement.input().reply, raw),
-            IcSnapshotCaptureExecutionError::AfterReplyJournal {
-                acknowledgement, ..
+            IcSnapshotCaptureExecutionError::AfterReply {
+                source: IcSnapshotCaptureReplyError::Journal(_),
+                acknowledgement,
             } if boundary == 2 => assert_eq!(acknowledgement.input().reply, raw),
             other => panic!("unexpected boundary failure: {other:?}"),
         }

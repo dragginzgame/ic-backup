@@ -334,6 +334,12 @@ bounds. Reserve observations separately before calls; remote preflight and
 qualification also require independent prior accounting. No automatic observation,
 receipt, repeat call or allowance reset is installed.
 
+Settlement identity denials share the public `policy::SettlementIdentityMismatch`
+and `policy::InventorySettlementMismatch` causes, wrapped by each settlement
+policy's `Identity` error variant. Reservation and wire admission precede claim
+comparison; capture/allocation closed-baseline admission precedes identity checks.
+Status/readback, attribution and destination denials remain domain-specific.
+
 - Capture and metadata-allocation settlement require exact original/current list
   targets, full baseline IDs/timestamps/sizes unchanged, original authority/both
   attempts, fresh challenge, exact list/raw digests and opaque observation evidence.

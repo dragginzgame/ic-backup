@@ -297,7 +297,8 @@ adoption. Follow-up publication is an explicit maintainer action.
 `bash scripts/release/test-release.sh --metadata-only` includes read-only release
 planning through the actual Make entry point, including equal/increasing targets,
 downgrade refusal and local canonical-version/component bounds. It also checks
-isolated metadata, index and validation retention; it performs no release here.
+isolated metadata, index and validation retention, selected-source version reads,
+and refusal of failed or empty version/parser output; it performs no release here.
 
 `bash scripts/release/test-release.sh --receipts-only` selects the consumer's
 validation custody, exact older-commit receipt and completed-resume checks.

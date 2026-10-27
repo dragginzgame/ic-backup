@@ -24,8 +24,12 @@ use ic_backup::{
         restore_references::RestoreReferencesRecord,
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_operation_plan},
-    policy::ic_observation::{
-        validate_capture_settlement, validate_lifecycle_settlement, validate_response,
+    policy::{
+        InventorySettlementMismatch, SettlementIdentityMismatch,
+        ic_observation::{
+            IcCaptureSettlementError, IcLifecycleSettlementError, validate_capture_settlement,
+            validate_lifecycle_settlement, validate_response,
+        },
     },
     ports::ic_observation::{IcObservationProvider, IcObservationProviderError},
 };
@@ -313,6 +317,18 @@ fn record_qualified_lifecycle_claim(
     let layout = BackupLayoutGuard::acquire(root).unwrap();
     let journal = AttemptJournalGuard::open(&layout, request.authority()).unwrap();
     let before = fs::read(journal.path()).unwrap();
+    assert!(matches!(
+        validate_lifecycle_settlement(
+            request,
+            journal.record().unwrap(),
+            response,
+            &ArtifactChecksumRecord::from_bytes(b"stale qualification challenge"),
+            &claim,
+        ),
+        Err(IcLifecycleSettlementError::Identity(
+            SettlementIdentityMismatch::Challenge
+        ))
+    ));
     let view = validate_lifecycle_settlement(
         request,
         journal.record().unwrap(),
@@ -498,6 +514,19 @@ fn record_qualified_capture_claim(
     let layout = BackupLayoutGuard::acquire(root).unwrap();
     let journal = AttemptJournalGuard::open(&layout, request.authority()).unwrap();
     let before = fs::read(journal.path()).unwrap();
+    assert!(matches!(
+        validate_capture_settlement(
+            request,
+            journal.record().unwrap(),
+            &baseline,
+            response,
+            &ArtifactChecksumRecord::from_bytes(b"stale qualification challenge"),
+            &claim,
+        ),
+        Err(IcCaptureSettlementError::Identity(
+            InventorySettlementMismatch::Challenge
+        ))
+    ));
     let view = validate_capture_settlement(
         request,
         journal.record().unwrap(),

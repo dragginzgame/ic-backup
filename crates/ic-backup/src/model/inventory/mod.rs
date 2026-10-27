@@ -9,7 +9,7 @@ use crate::model::{
     bounded_sequence,
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum exact physical targets in one declared inventory.
@@ -60,13 +60,13 @@ impl InventoryRecord {
                 ));
             }
         }
-        let parents: BTreeMap<_, _> = targets
-            .iter()
-            .map(|target| (target.canister_id(), target.parent_canister_id()))
-            .collect();
-        for target in &targets {
+        let record = Self {
+            version: 1,
+            targets,
+        };
+        for target in &record.targets {
             if let Some(parent) = target.parent_canister_id()
-                && !parents.contains_key(parent)
+                && record.canonical_target(parent).is_none()
             {
                 return Err(InventoryRecordError::MissingParent {
                     canister_id: target.canister_id().into(),
@@ -74,20 +74,20 @@ impl InventoryRecord {
                 });
             }
         }
-        for target in &targets {
-            let mut current = Some(target.canister_id());
+        for target in &record.targets {
+            let mut current = Some(target);
             let mut seen = BTreeSet::new();
-            while let Some(id) = current {
+            while let Some(target) = current {
+                let id = target.canister_id();
                 if !seen.insert(id) {
                     return Err(InventoryRecordError::Cycle(id.into()));
                 }
-                current = parents[id];
+                current = target
+                    .parent_canister_id()
+                    .and_then(|id| record.canonical_target(id));
             }
         }
-        Ok(Self {
-            version: 1,
-            targets,
-        })
+        Ok(record)
     }
 
     /// Read targets in canonical ASCII principal order; this is not an effect order.

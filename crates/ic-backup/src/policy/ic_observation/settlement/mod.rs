@@ -112,31 +112,15 @@ pub enum IcLifecycleSettlementError {
     /// Existing association, current reservation or bounded decoder rejected.
     #[error(transparent)]
     Observation(#[from] IcObservationAssociationError),
-    /// Complete original operation authority differs.
-    #[error("lifecycle settlement original authority differs")]
-    AuthorityMismatch,
-    /// Original mutation or observation attempt differs.
-    #[error("lifecycle settlement attempt identities differ")]
-    AttemptMismatch,
-    /// Caller-owned current qualification challenge differs.
-    #[error("lifecycle settlement challenge differs")]
-    ChallengeMismatch,
+    /// Exact original settlement identity or retained evidence differs.
+    #[error(transparent)]
+    Identity(#[from] SettlementIdentityMismatch),
     /// Exact original status request/raw reply digest differs.
     #[error("lifecycle settlement status evidence differs")]
     StatusMismatch,
     /// Retained opaque observation evidence differs even if reply bytes match.
     #[error("lifecycle settlement observation evidence differs")]
     ObservationEvidenceMismatch,
-}
-
-impl From<SettlementIdentityMismatch> for IcLifecycleSettlementError {
-    fn from(value: SettlementIdentityMismatch) -> Self {
-        match value {
-            SettlementIdentityMismatch::Authority => Self::AuthorityMismatch,
-            SettlementIdentityMismatch::Attempt => Self::AttemptMismatch,
-            SettlementIdentityMismatch::Challenge => Self::ChallengeMismatch,
-        }
-    }
 }
 
 #[cfg(test)]

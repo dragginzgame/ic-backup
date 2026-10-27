@@ -209,19 +209,22 @@ fn changed_settlement_identity_challenge_and_exact_evidence_reject() {
             0 => {
                 assert!(matches!(
                     error,
-                    IcLifecycleSettlementError::AuthorityMismatch
+                    IcLifecycleSettlementError::Identity(SettlementIdentityMismatch::Authority)
                 ));
                 combined.authority = initial.authority.clone();
             }
             1 => {
-                assert!(matches!(error, IcLifecycleSettlementError::AttemptMismatch));
+                assert!(matches!(
+                    error,
+                    IcLifecycleSettlementError::Identity(SettlementIdentityMismatch::Attempt)
+                ));
                 combined.mutation_attempt = initial.mutation_attempt;
                 combined.observation_attempt = initial.observation_attempt;
             }
             2 => {
                 assert!(matches!(
                     error,
-                    IcLifecycleSettlementError::ChallengeMismatch
+                    IcLifecycleSettlementError::Identity(SettlementIdentityMismatch::Challenge)
                 ));
                 combined.challenge = initial.challenge.clone();
             }
@@ -248,9 +251,18 @@ fn changed_settlement_identity_challenge_and_exact_evidence_reject() {
         )
         .unwrap_err();
         assert!(match change {
-            0 => matches!(error, IcLifecycleSettlementError::AuthorityMismatch),
-            1..=2 => matches!(error, IcLifecycleSettlementError::AttemptMismatch),
-            3 => matches!(error, IcLifecycleSettlementError::ChallengeMismatch),
+            0 => matches!(
+                error,
+                IcLifecycleSettlementError::Identity(SettlementIdentityMismatch::Authority)
+            ),
+            1..=2 => matches!(
+                error,
+                IcLifecycleSettlementError::Identity(SettlementIdentityMismatch::Attempt)
+            ),
+            3 => matches!(
+                error,
+                IcLifecycleSettlementError::Identity(SettlementIdentityMismatch::Challenge)
+            ),
             4 => matches!(error, IcLifecycleSettlementError::StatusMismatch),
             _ => matches!(
                 error,

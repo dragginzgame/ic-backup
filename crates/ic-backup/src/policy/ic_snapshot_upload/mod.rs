@@ -51,21 +51,12 @@ pub fn validate_acknowledgement<'request, 'source>(
 {
     request.validate_journal(journal)?;
     let input = acknowledgement.input();
-    ResponseIdentity::from(input)
-        .compare(&ResponseIdentity {
-            authority: &request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context(),
-            target: request.payload().target(),
-        })
-        .map_err(|mismatch| match mismatch {
-            ResponseIdentityMismatch::Authority => {
-                IcSnapshotUploadAssociationError::AuthorityMismatch
-            }
-            ResponseIdentityMismatch::Attempt => IcSnapshotUploadAssociationError::AttemptMismatch,
-            ResponseIdentityMismatch::Context => IcSnapshotUploadAssociationError::ContextMismatch,
-            ResponseIdentityMismatch::Target => IcSnapshotUploadAssociationError::TargetMismatch,
-        })?;
+    ResponseIdentity::from(input).compare(&ResponseIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        context: request.plan().context(),
+        target: request.payload().target(),
+    })?;
     let reply = IcSnapshotUploadReply::decode(request.payload(), &input.reply)?;
     Ok(IcSnapshotUploadAcknowledgementView {
         acknowledgement,
@@ -79,18 +70,9 @@ pub enum IcSnapshotUploadAssociationError {
     /// Exact current original mutation/reservation no longer matches.
     #[error(transparent)]
     Reservation(#[from] IcSnapshotUploadAttemptError),
-    /// Claimed full original authority differs.
-    #[error("snapshot upload acknowledgement authority mismatch")]
-    AuthorityMismatch,
-    /// Claimed already allocated mutation differs.
-    #[error("snapshot upload acknowledgement attempt mismatch")]
-    AttemptMismatch,
-    /// Claimed actual network/caller/release differs.
-    #[error("snapshot upload acknowledgement context mismatch")]
-    ContextMismatch,
-    /// Claimed actual target differs.
-    #[error("snapshot upload acknowledgement target mismatch")]
-    TargetMismatch,
+    /// Passive claims differ from the exact original update identity.
+    #[error(transparent)]
+    Identity(#[from] ResponseIdentityMismatch),
     /// Canonical bounded upload decoder rejected the raw reply.
     #[error(transparent)]
     Reply(#[from] IcSnapshotUploadError),

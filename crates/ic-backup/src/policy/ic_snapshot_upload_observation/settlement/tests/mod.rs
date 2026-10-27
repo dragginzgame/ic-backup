@@ -250,7 +250,9 @@ fn missing_or_changed_baseline_cannot_support_any_claim() {
             ),
         ] {
             let response = response(&request, rows);
-            let claims = claims(&request, &baseline, &response, unresolved());
+            let mut claims = claims(&request, &baseline, &response, unresolved());
+            // Baseline drift rejects before the conflicting original authority.
+            claims.authority = ArtifactChecksumRecord::from_bytes(b"wrong settlement authority");
             assert!(
                 matches!(validate_settlement(&request, journal, &baseline, &response, &claims.challenge, &claims), Err(IcSnapshotUploadSettlementError::Baseline(actual)) if actual == expected)
             );
@@ -321,15 +323,37 @@ fn every_settlement_identity_and_exact_raw_evidence_is_bound() {
             );
             assert!(matches!(
                 (index, result),
-                (0, Err(IcSnapshotUploadSettlementError::AuthorityMismatch))
-                    | (1 | 2, Err(IcSnapshotUploadSettlementError::AttemptMismatch))
-                    | (3, Err(IcSnapshotUploadSettlementError::ChallengeMismatch))
-                    | (4, Err(IcSnapshotUploadSettlementError::BaselineMismatch))
-                    | (5, Err(IcSnapshotUploadSettlementError::InventoryMismatch))
-                    | (
-                        6,
-                        Err(IcSnapshotUploadSettlementError::ObservationEvidenceMismatch)
-                    )
+                (
+                    0,
+                    Err(IcSnapshotUploadSettlementError::Identity(
+                        InventorySettlementMismatch::Authority
+                    ))
+                ) | (
+                    1 | 2,
+                    Err(IcSnapshotUploadSettlementError::Identity(
+                        InventorySettlementMismatch::Attempt
+                    ))
+                ) | (
+                    3,
+                    Err(IcSnapshotUploadSettlementError::Identity(
+                        InventorySettlementMismatch::Challenge
+                    ))
+                ) | (
+                    4,
+                    Err(IcSnapshotUploadSettlementError::Identity(
+                        InventorySettlementMismatch::Baseline
+                    ))
+                ) | (
+                    5,
+                    Err(IcSnapshotUploadSettlementError::Identity(
+                        InventorySettlementMismatch::Inventory
+                    ))
+                ) | (
+                    6,
+                    Err(IcSnapshotUploadSettlementError::Identity(
+                        InventorySettlementMismatch::ObservationEvidence
+                    ))
+                )
             ));
         }
         let reordered = response_input_reordered(&request);
@@ -342,7 +366,9 @@ fn every_settlement_identity_and_exact_raw_evidence_is_bound() {
                 &original.challenge,
                 &original
             ),
-            Err(IcSnapshotUploadSettlementError::InventoryMismatch)
+            Err(IcSnapshotUploadSettlementError::Identity(
+                InventorySettlementMismatch::Inventory
+            ))
         ));
         let mut changed = response.input().clone();
         changed.evidence = wrong;
@@ -356,7 +382,9 @@ fn every_settlement_identity_and_exact_raw_evidence_is_bound() {
                 &original.challenge,
                 &original
             ),
-            Err(IcSnapshotUploadSettlementError::ObservationEvidenceMismatch)
+            Err(IcSnapshotUploadSettlementError::Identity(
+                InventorySettlementMismatch::ObservationEvidence
+            ))
         ));
     });
 }

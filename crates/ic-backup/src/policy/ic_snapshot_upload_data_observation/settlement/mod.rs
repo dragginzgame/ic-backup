@@ -105,15 +105,9 @@ pub enum IcSnapshotUploadDataSettlementError {
     /// Existing reservation, passive actual claims or data decoder rejected.
     #[error(transparent)]
     Observation(#[from] IcSnapshotUploadDataObservationAssociationError),
-    /// The full original plan/operation/allowances differ.
-    #[error("data upload settlement original authority differs")]
-    AuthorityMismatch,
-    /// Original write or read attempt differs.
-    #[error("data upload settlement attempt identities differ")]
-    AttemptMismatch,
-    /// Qualification challenge differs from the caller's current challenge.
-    #[error("data upload settlement challenge differs")]
-    ChallengeMismatch,
+    /// Exact original settlement identity or retained evidence differs.
+    #[error(transparent)]
+    Identity(#[from] SettlementIdentityMismatch),
     /// Exact metadata/request/raw reply digest differs.
     #[error("data upload settlement readback differs")]
     ReadbackMismatch,
@@ -123,16 +117,6 @@ pub enum IcSnapshotUploadDataSettlementError {
     /// Applied cannot admit a current extent different from the original encoded write.
     #[error("data upload settlement applied bytes differ from original intent")]
     AppliedBytesMismatch,
-}
-
-impl From<SettlementIdentityMismatch> for IcSnapshotUploadDataSettlementError {
-    fn from(value: SettlementIdentityMismatch) -> Self {
-        match value {
-            SettlementIdentityMismatch::Authority => Self::AuthorityMismatch,
-            SettlementIdentityMismatch::Attempt => Self::AttemptMismatch,
-            SettlementIdentityMismatch::Challenge => Self::ChallengeMismatch,
-        }
-    }
 }
 
 #[cfg(test)]

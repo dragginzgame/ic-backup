@@ -3,6 +3,8 @@
 use super::{Fault, backend::Backend, lifecycle, management, status};
 use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
+use ic_backup::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
+use ic_backup::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -225,8 +227,9 @@ fn capture(
                 ))
             ));
         } else {
-            let Err(IcSnapshotCaptureExecutionError::Association {
-                acknowledgement, ..
+            let Err(IcSnapshotCaptureExecutionError::AfterReply {
+                source: IcSnapshotCaptureReplyError::Association(_),
+                acknowledgement,
             }) = result
             else {
                 panic!("retained malformed capture acknowledgement")
@@ -451,7 +454,10 @@ pub(crate) fn run(failure: ReadFailure) {
     if failure != ReadFailure::None {
         if failure == ReadFailure::Malformed {
             let Err(IcSnapshotDownloadExecutionError::Read(
-                IcSnapshotTransferReadExecutionError::Association { response, .. },
+                IcSnapshotTransferReadExecutionError::AfterReply {
+                    source: IcSnapshotTransferReadReplyError::Association(_),
+                    response,
+                },
             )) = result
             else {
                 panic!("retained malformed reply")
@@ -624,7 +630,10 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
         ));
     } else {
         let Err(IcSnapshotMetadataExecutionError::Read(
-            IcSnapshotTransferReadExecutionError::Association { response, .. },
+            IcSnapshotTransferReadExecutionError::AfterReply {
+                source: IcSnapshotTransferReadReplyError::Association(_),
+                response,
+            },
         )) = result
         else {
             panic!("retain malformed metadata")

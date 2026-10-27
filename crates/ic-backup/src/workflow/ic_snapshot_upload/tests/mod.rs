@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::test_support::ready::ready;
+use crate::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -288,8 +289,9 @@ fn malformed_or_mismatched_reply_retains_exact_returned_bytes_and_pending_spendi
             if mismatched {
                 provider.target = Some("aaaaa-aa");
             }
-            let Err(IcSnapshotUploadExecutionError::Association {
-                acknowledgement, ..
+            let Err(IcSnapshotUploadExecutionError::AfterReply {
+                source: IcSnapshotUploadReplyError::Association(_),
+                acknowledgement,
             }) = ready(upload_snapshot(&stage, 7, payload, &mut provider, admit))
             else {
                 panic!("passive association must reject")
@@ -423,8 +425,9 @@ fn changed_stage_before_dispatch_or_after_reply_preserves_original_reservation()
                 },
             ));
             if after_reply {
-                let Err(IcSnapshotUploadExecutionError::AfterReplyStage {
-                    acknowledgement, ..
+                let Err(IcSnapshotUploadExecutionError::AfterReply {
+                    source: IcSnapshotUploadReplyError::Stage(_),
+                    acknowledgement,
                 }) = result
                 else {
                     panic!("retain returned acknowledgement")

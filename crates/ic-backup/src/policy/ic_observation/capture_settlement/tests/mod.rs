@@ -235,12 +235,32 @@ fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
         )
         .unwrap_err();
         assert!(match change {
-            0 => matches!(error, IcCaptureSettlementError::AuthorityMismatch),
-            1..=2 => matches!(error, IcCaptureSettlementError::AttemptMismatch),
-            3 => matches!(error, IcCaptureSettlementError::ChallengeMismatch),
-            4 => matches!(error, IcCaptureSettlementError::BaselineMismatch),
-            5 => matches!(error, IcCaptureSettlementError::InventoryMismatch),
-            _ => matches!(error, IcCaptureSettlementError::ObservationEvidenceMismatch),
+            0 => matches!(
+                error,
+                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Authority)
+            ),
+            1..=2 => matches!(
+                error,
+                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Attempt)
+            ),
+            3 => matches!(
+                error,
+                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Challenge)
+            ),
+            4 => matches!(
+                error,
+                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Baseline)
+            ),
+            5 => matches!(
+                error,
+                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Inventory)
+            ),
+            _ => matches!(
+                error,
+                IcCaptureSettlementError::Identity(
+                    InventorySettlementMismatch::ObservationEvidence
+                )
+            ),
         });
     }
     // Equal canonical views cannot substitute for differently ordered raw evidence.
@@ -256,7 +276,9 @@ fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
             &hash("56"),
             &initial
         ),
-        Err(IcCaptureSettlementError::BaselineMismatch)
+        Err(IcCaptureSettlementError::Identity(
+            InventorySettlementMismatch::Baseline
+        ))
     ));
     let changed = IcObservationResponse::new(input(
         &request,
@@ -272,7 +294,9 @@ fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
             &hash("56"),
             &initial
         ),
-        Err(IcCaptureSettlementError::InventoryMismatch)
+        Err(IcCaptureSettlementError::Identity(
+            InventorySettlementMismatch::Inventory
+        ))
     ));
     let mut changed = response.input().clone();
     changed.evidence = hash("12");
@@ -286,7 +310,9 @@ fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
             &hash("56"),
             &initial
         ),
-        Err(IcCaptureSettlementError::ObservationEvidenceMismatch)
+        Err(IcCaptureSettlementError::Identity(
+            InventorySettlementMismatch::ObservationEvidence
+        ))
     ));
 }
 
@@ -310,7 +336,10 @@ fn full_closed_baseline_and_original_methods_remain_mandatory() {
             }
         };
         let response = IcObservationResponse::new(input(&request, snapshots)).unwrap();
-        let claim = claims(&request, &baseline, &response);
+        let mut claim = claims(&request, &baseline, &response);
+        // Closed-baseline admission must precede conflicting identity claims.
+        claim.authority = hash("12");
+        claim.challenge = hash("12");
         let error = validate_capture_settlement(
             &request,
             &original.journal,

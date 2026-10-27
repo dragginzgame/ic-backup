@@ -1,6 +1,7 @@
 //! Original accounting and typed association denial; no fake IC qualification.
 
 use super::*;
+use crate::policy::ResponseIdentityMismatch;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
@@ -214,19 +215,21 @@ fn actual_claims_attempt_and_bounded_wire_fail_without_settlement() {
         assert!(match change {
             0 => matches!(
                 error,
-                IcSnapshotTransferReadAssociationError::AuthorityMismatch
+                IcSnapshotTransferReadAssociationError::Identity(
+                    ResponseIdentityMismatch::Authority
+                )
             ),
             1 => matches!(
                 error,
-                IcSnapshotTransferReadAssociationError::AttemptMismatch
+                IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Attempt)
             ),
             2..=4 => matches!(
                 error,
-                IcSnapshotTransferReadAssociationError::ContextMismatch
+                IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Context)
             ),
             5 => matches!(
                 error,
-                IcSnapshotTransferReadAssociationError::TargetMismatch
+                IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Target)
             ),
             6 => matches!(error, IcSnapshotTransferReadAssociationError::Metadata(_)),
             _ => matches!(

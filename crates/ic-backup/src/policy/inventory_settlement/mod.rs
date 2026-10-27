@@ -35,12 +35,26 @@ impl InventorySettlementIdentity<'_> {
     }
 }
 
-pub(crate) enum InventorySettlementMismatch {
+/// Passive settlement claims differ from their independently qualified original evidence.
+#[derive(Debug, thiserror::Error, Eq, PartialEq)]
+pub enum InventorySettlementMismatch {
+    /// Full original operation authority differs.
+    #[error("inventory settlement authority differs")]
     Authority,
+    /// Original mutation or observation attempt differs.
+    #[error("inventory settlement attempts differ")]
     Attempt,
+    /// Caller-owned qualification challenge differs.
+    #[error("inventory settlement challenge differs")]
     Challenge,
+    /// Exact retained baseline request and raw evidence differ.
+    #[error("inventory settlement baseline differs")]
     Baseline,
+    /// Exact current inventory request and raw evidence differ.
+    #[error("inventory settlement inventory differs")]
     Inventory,
+    /// Retained opaque observation evidence differs.
+    #[error("inventory settlement observation evidence differs")]
     ObservationEvidence,
 }
 

@@ -57,27 +57,12 @@ pub fn validate_response<'request, 'metadata>(
 {
     request.validate_journal(journal)?;
     let input = response.input();
-    ResponseIdentity::from(input)
-        .compare(&ResponseIdentity {
-            authority: &request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context(),
-            target: request.payload().target(),
-        })
-        .map_err(|mismatch| match mismatch {
-            ResponseIdentityMismatch::Authority => {
-                IcSnapshotTransferReadAssociationError::AuthorityMismatch
-            }
-            ResponseIdentityMismatch::Attempt => {
-                IcSnapshotTransferReadAssociationError::AttemptMismatch
-            }
-            ResponseIdentityMismatch::Context => {
-                IcSnapshotTransferReadAssociationError::ContextMismatch
-            }
-            ResponseIdentityMismatch::Target => {
-                IcSnapshotTransferReadAssociationError::TargetMismatch
-            }
-        })?;
+    ResponseIdentity::from(input).compare(&ResponseIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        context: request.plan().context(),
+        target: request.payload().target(),
+    })?;
     let reply = match request.payload() {
         IcSnapshotTransferReadPayload::Metadata(payload) => IcSnapshotTransferReadReply::Metadata(
             IcSnapshotMetadataReply::decode(payload, &input.reply)?,
@@ -95,18 +80,9 @@ pub enum IcSnapshotTransferReadAssociationError {
     /// Current original journal no longer matches the read request.
     #[error(transparent)]
     Reservation(#[from] IcSnapshotTransferReadError),
-    /// Claimed full original authority differs.
-    #[error("snapshot transfer read response authority differs")]
-    AuthorityMismatch,
-    /// Claimed original attempt differs.
-    #[error("snapshot transfer read response attempt differs")]
-    AttemptMismatch,
-    /// Actual claimed network/caller/release differs.
-    #[error("snapshot transfer read response context differs")]
-    ContextMismatch,
-    /// Actual claimed routing target differs.
-    #[error("snapshot transfer read response target differs")]
-    TargetMismatch,
+    /// Passive claims differ from the exact original update identity.
+    #[error(transparent)]
+    Identity(#[from] ResponseIdentityMismatch),
     /// Original metadata decoder rejects shape or its tighter 1 MiB bound.
     #[error(transparent)]
     Metadata(#[from] IcSnapshotMetadataError),

@@ -164,18 +164,14 @@ fn open_directory_no_follow(_path: &Path) -> io::Result<File> {
 fn sync_reference(path: &Path) -> io::Result<()> {
     #[cfg(unix)]
     {
-        use rustix::fs::{FileType, Mode, OFlags, fstat, open};
-        let fd = open(
-            path,
-            OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
-            Mode::empty(),
-        )
-        .map_err(io::Error::from)?;
-        let metadata = fstat(&fd).map_err(io::Error::from)?;
-        if !FileType::from_raw_mode(metadata.st_mode).is_file() {
-            return Err(io::Error::from(io::ErrorKind::InvalidInput));
-        }
-        File::from(fd).sync_all()
+        ic_host_fs::read::open_regular_file_no_follow(path)
+            .map_err(|error| match error {
+                ic_host_artifacts::artifact::ArtifactError::NotRegularFile => {
+                    io::Error::from(io::ErrorKind::InvalidInput)
+                }
+                error => error.into(),
+            })?
+            .sync_all()
     }
     #[cfg(not(unix))]
     {

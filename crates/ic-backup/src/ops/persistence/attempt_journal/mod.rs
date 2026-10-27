@@ -155,11 +155,7 @@ impl<'a> AttemptJournalGuard<'a> {
         mutation: u32,
         request: &str,
     ) -> Result<u32, ExecutionProgressPersistenceError> {
-        super::execution_progress::read_with_current(
-            self.layout,
-            expected_plan,
-            Some(self.record()?),
-        )?;
+        self.admit_planned_progress(expected_plan)?;
         Ok(self.reserve_observation(mutation, request)?)
     }
     /// Retain an exact integration-qualified direct mutation reply.

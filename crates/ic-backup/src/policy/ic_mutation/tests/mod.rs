@@ -1,4 +1,5 @@
 use super::*;
+use crate::policy::ResponseIdentityMismatch;
 use crate::{
     model::{
         ic_request::IcManagementMethodRecord as Method, ic_update_response::IcUpdateResponseInput,
@@ -101,10 +102,22 @@ fn different_authority_attempt_actual_context_and_target_reject() {
         let error =
             validate_acknowledgement(&request, &original.journal, &acknowledgement).unwrap_err();
         assert!(match change {
-            0 => matches!(error, IcMutationAssociationError::AuthorityMismatch),
-            1 => matches!(error, IcMutationAssociationError::AttemptMismatch),
-            2..=4 => matches!(error, IcMutationAssociationError::ContextMismatch),
-            _ => matches!(error, IcMutationAssociationError::TargetMismatch),
+            0 => matches!(
+                error,
+                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Authority)
+            ),
+            1 => matches!(
+                error,
+                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Attempt)
+            ),
+            2..=4 => matches!(
+                error,
+                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Context)
+            ),
+            _ => matches!(
+                error,
+                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Target)
+            ),
         });
     }
 }

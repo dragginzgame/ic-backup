@@ -26,8 +26,16 @@ impl SettlementIdentity<'_> {
     }
 }
 
-pub(super) enum SettlementIdentityMismatch {
+/// Passive settlement claims differ from their independently qualified original evidence.
+#[derive(Debug, thiserror::Error, Eq, PartialEq)]
+pub enum SettlementIdentityMismatch {
+    /// Full original operation authority differs.
+    #[error("settlement authority differs")]
     Authority,
+    /// Original mutation or observation attempt differs.
+    #[error("settlement attempts differ")]
     Attempt,
+    /// Caller-owned qualification challenge differs.
+    #[error("settlement challenge differs")]
     Challenge,
 }

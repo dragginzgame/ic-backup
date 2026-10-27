@@ -14,6 +14,31 @@ use std::{
 };
 
 #[test]
+fn reference_sync_preserves_native_errors_and_rejects_nonregular_files_without_reading() {
+    let root = temp_dir("ic-backup-reference-sync");
+    let regular = root.join("regular");
+    fs::write(&regular, b"retained reference bytes").unwrap();
+    sync_reference(&regular).unwrap();
+    assert_eq!(fs::read(&regular).unwrap(), b"retained reference bytes");
+    assert_eq!(
+        sync_reference(&root.join("missing")).unwrap_err().kind(),
+        io::ErrorKind::NotFound
+    );
+    let link = root.join("link");
+    symlink(&regular, &link).unwrap();
+    assert!(sync_reference(&link).unwrap_err().raw_os_error().is_some());
+    let fifo = root.join("fifo");
+    create_private_fifo(&fifo);
+    for path in [&root, &fifo] {
+        assert_eq!(
+            sync_reference(path).unwrap_err().kind(),
+            io::ErrorKind::InvalidInput
+        );
+    }
+    fs::remove_dir_all(root).expect("clean successful fixture");
+}
+
+#[test]
 fn canonical_digest_retains_exact_layout_lock_names_and_existing_contention() {
     let parent = temp_dir("ic-backup-layout-lock-golden");
     let parent = parent.canonicalize().unwrap();

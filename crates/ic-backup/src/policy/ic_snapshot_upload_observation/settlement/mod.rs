@@ -151,40 +151,12 @@ pub enum IcSnapshotUploadSettlementError {
     /// A status projection cannot substitute for the original list.
     #[error("metadata settlement requires snapshot inventory")]
     WrongInventory,
-    /// Full original authority differs.
-    #[error("metadata settlement authority differs")]
-    AuthorityMismatch,
-    /// Original attempt identities differ.
-    #[error("metadata settlement attempts differ")]
-    AttemptMismatch,
-    /// Current challenge differs.
-    #[error("metadata settlement challenge differs")]
-    ChallengeMismatch,
-    /// Exact original baseline evidence differs.
-    #[error("metadata settlement baseline differs")]
-    BaselineMismatch,
-    /// Exact current inventory evidence differs.
-    #[error("metadata settlement inventory differs")]
-    InventoryMismatch,
-    /// Opaque observation evidence differs.
-    #[error("metadata settlement observation evidence differs")]
-    ObservationEvidenceMismatch,
+    /// Exact original settlement identity or retained evidence differs.
+    #[error(transparent)]
+    Identity(#[from] InventorySettlementMismatch),
     /// The attributed ID is not a new candidate in the exact current inventory.
     #[error("metadata settlement ID is not a new candidate")]
     NotNewCandidate,
-}
-
-impl From<InventorySettlementMismatch> for IcSnapshotUploadSettlementError {
-    fn from(value: InventorySettlementMismatch) -> Self {
-        match value {
-            InventorySettlementMismatch::Authority => Self::AuthorityMismatch,
-            InventorySettlementMismatch::Attempt => Self::AttemptMismatch,
-            InventorySettlementMismatch::Challenge => Self::ChallengeMismatch,
-            InventorySettlementMismatch::Baseline => Self::BaselineMismatch,
-            InventorySettlementMismatch::Inventory => Self::InventoryMismatch,
-            InventorySettlementMismatch::ObservationEvidence => Self::ObservationEvidenceMismatch,
-        }
-    }
 }
 
 #[cfg(test)]

@@ -84,6 +84,34 @@ fn persisted_generation_fields_and_duplicate_identities_reject() {
 }
 
 #[test]
+fn decoded_references_sort_once_and_report_duplicates_in_canonical_path_order() {
+    let first = reference("a", &"aa".repeat(32));
+    let last = reference("z", &"bb".repeat(32));
+    let record = RestoreReferencesRecord::try_from(ReferencesFields {
+        version: 1,
+        restores: vec![last.clone(), first.clone()],
+    })
+    .unwrap();
+    assert_eq!(record.entries(), &[first.clone(), last.clone()]);
+    let conflicting = reference("a", &"cc".repeat(32));
+    for restores in [
+        vec![
+            last.clone(),
+            first.clone(),
+            last.clone(),
+            conflicting.clone(),
+        ],
+        vec![conflicting, last.clone(), first, last],
+    ] {
+        assert!(matches!(
+            RestoreReferencesRecord::try_from(ReferencesFields { version: 1, restores }),
+            Err(RestoreReferenceError::DuplicateJournal { journal })
+                if journal == Path::new("/operator/a.json")
+        ));
+    }
+}
+
+#[test]
 fn count_bound_rejects_new_entries_and_excess_decoding() {
     let hash = "12".repeat(32);
     let mut record = RestoreReferencesRecord::empty();

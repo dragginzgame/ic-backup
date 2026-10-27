@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.47.0]
+
+### ⚠️ Breaking
+
+- Capture, upload and transfer-read workflow errors now retain returned evidence
+  through `AfterReply { source, ... }`. Update matches on the former `Association`,
+  `AfterReplyJournal` and `AfterReplyStage` variants to inspect the corresponding
+  `IcSnapshotCaptureReplyError`, `IcSnapshotUploadReplyError` or
+  `IcSnapshotTransferReadReplyError` cause.
+- Mutation, upload and transfer-read association errors now expose
+  `Identity(ResponseIdentityMismatch)` for authority, attempt, context and target
+  mismatches. Match the shared cause exported from `policy` instead of separate
+  per-policy mismatch variants. Ordered admission, pending spending and wire/storage
+  identities are unchanged.
+- Lifecycle and data-upload settlement errors now expose
+  `Identity(SettlementIdentityMismatch)`; capture and metadata-allocation settlement
+  errors expose `Identity(InventorySettlementMismatch)`. Match these shared causes
+  exported from `policy` instead of the former per-policy identity variants.
+  Attribution, baseline admission and domain-specific failures are unchanged.
+
+### 🧹 Cleanup
+
+- Reuse admitted snapshot identities, canonical inventory lookup and Host file
+  admission while preserving bounds, custody and recovery behavior. Restore-reference
+  duplicate diagnostics now select the first repeated path in canonical order.
+- Reuse shared hook source selection and fixture lifecycle, and centralize checked
+  read-only subprocess output in the release adapter. The focused metadata selection
+  also covers its existing version-reader failure and selected-source cases.
+
 ## [0.46.0] - 2026-10-27
 
 ### ⚠️ Breaking

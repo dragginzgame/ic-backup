@@ -1211,8 +1211,13 @@ if [[ "$receipts_only" == true ]]; then
     exit 0
 fi
 
+run_version_reader_cases() {
+    for mode in comments render selected duplicate failed-output empty failed-parser; do run_case "version-reader-$mode" test_version_reader "$mode"; done
+}
+
 if [[ "$metadata_only" == true ]]; then
     run_case versions test_versions
+    run_version_reader_cases
     for outcome in success failure; do
         run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"
     done
@@ -1229,7 +1234,7 @@ for outcome in success failure; do
 done
 run_case validation-source-identity test_validation_source_identity
 run_case versions test_versions
-for mode in comments render selected duplicate failed-output empty failed-parser; do run_case "version-reader-$mode" test_version_reader "$mode"; done
+run_version_reader_cases
 for invalid in conflict duplicate dated historical-duplicate competing same-date unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
 for mode in empty missing imported bumped failed-output empty-output; do run_case "shared-notes-$mode" test_shared_changelog "$mode"; done
 run_preparation_cases

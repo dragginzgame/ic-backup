@@ -14,14 +14,18 @@ use Encode qw(decode FB_CROAK LEAVE_SRC);
 
 my $read_commit;
 
+sub command_output {
+    my ($context, @command) = @_;
+    open my $pipe, '-|', @command or die "$context: cannot start command: $!\n";
+    my $text = do { local $/; <$pipe> };
+    close $pipe or die "$context: command failed\n";
+    return $text;
+}
+
 sub read_file {
     my ($path) = @_;
     if (defined $read_commit && $path =~ /\A(?:Cargo\.toml|Cargo\.lock|CHANGELOG\.md|docs\/release\.json|crates\/[A-Za-z0-9_-]+\/(?:Cargo\.toml|src\/lib\.rs))\z/) {
-        open my $object, '-|', 'git', 'show', "$read_commit:$path"
-            or die "cannot read selected release file: $path\n";
-        my $text = do { local $/; <$object> };
-        close $object or die "selected release file unavailable: $path\n";
-        return $text;
+        return command_output("selected release file unavailable: $path", 'git', 'show', "$read_commit:$path");
     }
     open my $fh, '<', $path or die "$path: $!\n";
     local $/;
@@ -40,10 +44,8 @@ sub read_manifest {
     my ($path) = @_;
     my $temporary = tempdir('ic-backup-members.XXXXXX', TMPDIR => 1, CLEANUP => 0);
     write_file("$temporary/input.toml", read_file($path));
-    open my $parser, '-|', ($ENV{YQ} // 'yq'), '-p', 'toml', '-o', 'json', '.', "$temporary/input.toml"
-        or die "cannot project selected manifest; retained: $temporary\n";
-    my $json = do { local $/; <$parser> };
-    close $parser or die "selected manifest projection failed; retained: $temporary\n";
+    my $json = command_output("selected manifest projection failed; retained: $temporary",
+        ($ENV{YQ} // 'yq'), '-p', 'toml', '-o', 'json', '.', "$temporary/input.toml");
     my $value = JSON::PP->new->allow_nonref->decode($json);
     remove_tree($temporary);
     return $value;
@@ -79,10 +81,8 @@ sub version {
             }
             $manifest = "$export/Cargo.toml";
         }
-        open my $reader, '-|', 'bash', "$FindBin::Bin/../ci/read-cargo-workspace-version.sh", '--stable', $manifest
-            or die "cannot invoke shared workspace version reader: $!\n";
-        $value = do { local $/; <$reader> };
-        close $reader or die "shared workspace version reader failed\n";
+        $value = command_output('shared workspace version reader failed',
+            'bash', "$FindBin::Bin/../ci/read-cargo-workspace-version.sh", '--stable', $manifest);
         die "shared workspace version reader returned no version\n" unless defined $value;
         chomp $value;
         parts($value); # Consumer release arithmetic retains its component ceiling.
@@ -108,10 +108,8 @@ sub next_version {
     parts($previous);
     my $next = $requested;
     if ($requested =~ /\A(?:patch|minor|major)\z/) {
-        open my $helper, '-|', 'bash', 'scripts/ci/next-release-version.sh', $previous, $requested
-            or die "cannot inspect common release increment\n";
-        $next = do { local $/; <$helper> };
-        close $helper or die "common release increment rejected\n";
+        $next = command_output('common release increment rejected',
+            'bash', 'scripts/ci/next-release-version.sh', $previous, $requested);
         chomp $next;
     }
     parts($next);

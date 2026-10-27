@@ -2,87 +2,111 @@
 
 ## Released source and ownership
 
-Released Backup is **0.45.1**, `5444f6f83c963e21af379089f39c9fa61abf9088`.
-The [released handoff](https://github.com/dragginzgame/ic-backup/blob/5444f6f83c963e21af379089f39c9fa61abf9088/docs/status/current.md)
-retains the Shared Tooling 0.26.23 adoption, #70 diagnosis and earlier evidence
-with their original scope. This batch does not requalify those hosted results.
+Released Backup is **0.46.0**, `bbe4c18ab81b4567631e9b7e6d0f101a56483498`.
+The [released handoff](https://github.com/dragginzgame/ic-backup/blob/bbe4c18ab81b4567631e9b7e6d0f101a56483498/docs/status/current.md)
+retains the preceding ten simplifications and their original evidence scope.
 Core owns bounded records, guarded persistence and original-plan coordination;
 Agent owns reserved signed transport. Applications retain authority, membership,
 release binding, fencing and external obligations.
 [Implementation contracts](../implementation-contracts.md) remain authoritative.
 
-## Pending 0.46.0 simplification batch
+## Pending 0.47.0 simplifications
 
-All ten reviewed simplifications are implemented. Fence acquisition and
-reconciliation now preserve their returned evidence through one `AfterReply`
-variant and a typed Journal, Association, Stage or Obligation cause. Every ordered
-post-reply check remains; original pending spending, obligations and source
-references remain retained. Existing failure fixtures match the nested typed
-causes and still assert exact replies, reservations and bounded provider calls.
+All ten reviewed changes are implemented. Capture, upload and transfer-read
+coordinators now preserve returned evidence through `AfterReply` with a typed
+Journal, Association or Stage cause. Each ordered check and original journal
+exclusion remains in place, including the decoded-view continuation used by
+compound transfers. Source, pending spending, replies and recovery evidence remain
+retained; no hidden reservation, retry, receipt or cleanup is introduced.
 
-Complete workflow replay keeps each admitted binding and settlement projection in
-one canonical vector. Predecessor lookup uses the catalog's sequence order, without
-parallel vectors or another index. Opening/closing reads, complete journal replay,
-ancestor evidence and one-lock-at-a-time custody are unchanged.
-
-Agent observation reply bindings derive from the exact reserved request variant,
-so callers no longer supply a second independent identity. Transfer payload
-accessors return their original request lifetime, allowing Agent to borrow their
-bytes directly while keeping metadata/data reply limits separate.
-
-Inventory settlement identities compose the existing operation settlement
-identity instead of rebuilding it for comparison. Metadata retains its admitted
-Platform Principal; data requests reuse it instead of reparsing canonical text or
-retaining another raw principal copy. Membership views borrow the admitted
-observation. Progress derives Applied membership from its original journal index,
-and plan admission searches its already canonical selection. Original wire/hash
-framing, normalization, typed denials, schemas and numeric bounds remain unchanged.
-
-The Testkit command fixture uses Shared's existing dependency-closure copier for
-its selected roots. No snapshot-owned tooling or sibling checkout was edited.
-
-The public fence error enum changes require **0.46.0** notes. Consumers match
-`AfterReply { source, acknowledgement }` or `AfterReply { source, observation }`
-and inspect `FenceAcquisitionReplyError` or `FenceReconciliationReplyError`.
+The three association policies expose `Identity(ResponseIdentityMismatch)` for
+Authority, Attempt, Context and Target denials. `policy` exports the shared cause.
+Original reservation admission still precedes identity comparison; bounded decoding
+follows it. Consumers must update their matches on these and the workflow errors.
+[The pending changelog](../../CHANGELOG.md) selects **0.47.0** for that hard cut.
 There are no compatibility aliases or retained-data migration requirements.
-Package versions remain **0.45.1**; no version or release operation was performed.
+
+The final settlement API follow-up exposes `Identity(SettlementIdentityMismatch)`
+for lifecycle/data-write claims and `Identity(InventorySettlementMismatch)` for
+capture/metadata-allocation claims. Both causes are exported from `policy`.
+Four duplicated per-policy conversion implementations are removed; the existing
+comparison functions, closed-baseline-before-identity order, attribution checks
+and domain-specific denials are unchanged. This completes the agreed error API
+scope for the pending 0.47.0 cut.
+
+Reference synchronization uses Host FS's existing no-follow, nonblocking regular
+file opener, retaining native IO errors and InvalidInput for nonregular entries.
+Upload construction and hashing reuse the metadata owner's admitted Platform
+Principal. Inventory closure and cycle checks use canonical target lookup instead
+of a temporary parent map, with missing-parent admission still preceding cycles.
+Restore-reference decoding sorts once and checks adjacent paths; multiply corrupt
+inputs now report the first duplicate in canonical path order. Version, field,
+count and authority denials remain strict. Planned observation reservation reuses
+its existing complete-original-progress admission method before the same transition.
+
+Hook fixtures delegate Rust and member-manifest selection to Shared's existing
+`--rust-sources`, including tracked deletions and untracked additions. Testkit
+command fixtures reuse Shared's lifecycle helpers and declare their complete
+helper closure. They explicitly create their default target parent; success cleans
+only their fixture, while failure preserves it and its original exit status.
+
+Four read-only release-adapter subprocess paths share checked output capture.
+Selected Git reads, manifest projection, version and increment commands still
+require successful child completion before consuming stdout. Candidate-rendering
+and original receipt/recovery custody remain explicit. The existing metadata
+selection now includes the shared roster of seven version-reader cases.
 
 ## Focused evidence
 
-All **100** selected Core tests pass: model filters `ic_snapshot_data`,
-`ic_snapshot_metadata` and `operation_plan`; policy filters `execution_progress`,
-`membership`, `ic_observation::capture_settlement`,
-`ic_snapshot_upload_observation::settlement` and `ic_snapshot_transfer_read`;
-`ops::persistence::execution_workflow`; `workflow::fence_acquisition` (including
-reconciliation/settlement); and public targets `fence_acquisition` and
-`fence_reconciliation`. These include fixed codec/digest goldens, mismatched
-identities, retained-reply failures, cancellation and sparse-stage replay.
-The initial model transfer-read filter selected zero tests; its actual policy
-owner was then selected and all five registered tests pass.
+The preceding ten-change batch passed **113** selected Core tests before the
+settlement API follow-up. Filters cover snapshot workflows; mutation,
+upload and transfer-read association policies; upload and inventory models;
+restore-reference decoding; layout lifetime, attempt journals and execution
+progress. The 54 affected workflow cases pass again after the final caller-pattern
+cleanup. Existing assertions retain typed causes, exact bytes/hashes, pending
+attempts, cancellation, original source references and bounded provider calls.
+New cases cover regular/missing/symlink/directory/FIFO reference synchronization
+and deterministic duplicate-path reporting, including conflicting authorities.
 
-Agent's `http_boundary` target passes all **14** tests, including the three
-observation variants, signed byte retention, zero/one-call bounds, cancellation
-and pending spending. The sandbox initially refused local socket listeners;
-the approved loopback-capable rerun passes. The `reply_evidence` golden test also
-passes. These native substitutes qualify local transport/orchestration, not IC
-management effects or authenticated application settlement.
+The settlement follow-up passes **24** owning policy unit tests and **four**
+public consumer tests in `ic_observation` and `ic_snapshot_upload`. All identity
+components, baseline drift, exact evidence, attribution and pending-spending
+assertions remain active. Capture/allocation tests additionally reject baseline
+drift before conflicting identity claims; public lifecycle/capture consumers match
+the exported typed stale-challenge causes and retain byte-identical journals.
+Focused Clippy for Core's library and those public targets passes with
+`-D warnings`. Logs are `/tmp/backup-settlement-{lifecycle,data,capture,allocation,public,clippy}.log`.
+Formatting, documentation links and diff checks pass for the extended batch.
 
-Library Clippy for both packages passes with `-D warnings` after eliding the
-unused metadata lifetime. Testkit Make routing/refusal passes using the copied
-closure. Formatting, focused shell checks, local Markdown links and diff checks
-pass. Logs, including initial failed attempts, remain at
-`/tmp/backup-complexity-*`. Native test fixtures retain their original custody
-and cleanup rules; no original evidence was manually removed.
+The following receipts predate the settlement follow-up and keep that source scope.
+Clippy passes with `-D warnings` for Core's library and `pocketic_snapshot` caller,
+and separately for Agent's production library. Simulator fixture callers compile
+and lint; no simulator effects were executed. An initial 101-line fixture helper
+was shortened by removing redundant all-fields rest patterns. Its diagnostic
+excerpt is retained at `/tmp/backup-next10-initial-clippy-diagnostic.txt`; the
+complete initial Cargo log was replaced by the passing rerun.
 
-Cargo.toml and Cargo.lock are byte-identical to HEAD. Lock SHA-256 is
-`6a49a1ab0cc5a506a8780541a4b60125b819e7c3ffb52d96e14c4b2fe495c825`.
-Shared Tooling **0.26.23**, Platform **0.7.0**, Host/Testkit/editor **0.69.0** and
-the Rust **1.91** floor are unchanged.
+All five hook cases pass at `target/hook-tests.zKmed1/`. All 12 selected metadata
+cases pass at `target/shared-release-tests.dQeStL/`, and all 13 receipt/recovery
+cases pass at `target/shared-release-tests.SuZtRe/`. Testkit routing/refusal passes.
+An isolated copy without target/ proves parent creation, success cleanup and
+exact failure-23 retention at `/tmp/backup-next10-lifecycle-us724sjp/`.
+Initial fixture refusals remain retained with their logs. Evidence and commands
+are under `/tmp/backup-next10-*`. Matching ShellCheck `-x`, Bash/Perl syntax,
+formatting, local documentation links and diff checks pass.
+
+Cargo.toml and Cargo.lock remain byte-identical to HEAD. Lock SHA-256 is
+`c5ba971535f9ae7d55b6d47d4d0c544167325ebcad9ed7dd203c782d8d31d10a`.
+The actual released lock already selects Host/Testkit **0.69.1** and Platform
+**0.7.0**; editor selection remains **0.69.0**, Shared Tooling **0.26.23** and
+Rust floor **1.91**. Package versions remain **0.46.0**. No snapshot payload,
+sibling checkout, dependency declaration or lock was edited.
 
 ## Limits and delivery
 
-No full suite/CI, simulator, native macOS or MSRV run is claimed for this batch.
-No live IC effect, complete application acceptance, terminal settlement or
-fence/reference-release qualification is added. Earlier Agent crypto-bigint
-qualification remains unresolved. Changes are unstaged and uncommitted; no own
-version bump, tag, push, publication, deployment or release was performed.
+No full suite/CI, simulator execution, new Agent HTTP run, native macOS or MSRV
+run is claimed. These focused checks add no live IC effect, authenticated
+application settlement, terminal proof or fence/reference-release qualification.
+Earlier Agent crypto-bigint qualification remains unresolved. Changes are unstaged
+and uncommitted; no own version bump, tag, push, publication, deployment or release
+was performed.

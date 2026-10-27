@@ -41,9 +41,19 @@ impl ResponseIdentity<'_> {
     }
 }
 
-pub(super) enum ResponseIdentityMismatch {
+/// Passive response claims differ from the original reserved update identity.
+#[derive(Debug, thiserror::Error, Eq, PartialEq)]
+pub enum ResponseIdentityMismatch {
+    /// Full original operation authority differs.
+    #[error("response authority differs")]
     Authority,
+    /// The already reserved mutation attempt differs.
+    #[error("response attempt differs")]
     Attempt,
+    /// Claimed network, caller or release differs.
+    #[error("response context differs")]
     Context,
+    /// Claimed canonical routing target differs.
+    #[error("response target differs")]
     Target,
 }

@@ -3,6 +3,7 @@
 use super::*;
 use crate::model::attempt_journal::MutationOutcomeRecord;
 use crate::test_support::ready::ready;
+use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::workflow::ic_snapshot_transfer_read::read_snapshot;
 use crate::{
     model::{
@@ -362,7 +363,10 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
             assert!(matches!(
                 error,
                 IcSnapshotDownloadExecutionError::Read(
-                    IcSnapshotTransferReadExecutionError::Association { .. }
+                    IcSnapshotTransferReadExecutionError::AfterReply {
+                        source: IcSnapshotTransferReadReplyError::Association(_),
+                        ..
+                    }
                 )
             ));
         } else {

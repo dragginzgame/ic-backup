@@ -55,19 +55,12 @@ pub fn validate_acknowledgement<'a>(
 ) -> Result<IcMutationAcknowledgementView<'a>, IcMutationAssociationError> {
     request.validate_journal(journal)?;
     let input = acknowledgement.input();
-    ResponseIdentity::from(input)
-        .compare(&ResponseIdentity {
-            authority: &request.authority().digest(),
-            mutation_attempt: request.mutation_attempt(),
-            context: request.plan().context(),
-            target: request.payload().target(),
-        })
-        .map_err(|mismatch| match mismatch {
-            ResponseIdentityMismatch::Authority => IcMutationAssociationError::AuthorityMismatch,
-            ResponseIdentityMismatch::Attempt => IcMutationAssociationError::AttemptMismatch,
-            ResponseIdentityMismatch::Context => IcMutationAssociationError::ContextMismatch,
-            ResponseIdentityMismatch::Target => IcMutationAssociationError::TargetMismatch,
-        })?;
+    ResponseIdentity::from(input).compare(&ResponseIdentity {
+        authority: &request.authority().digest(),
+        mutation_attempt: request.mutation_attempt(),
+        context: request.plan().context(),
+        target: request.payload().target(),
+    })?;
     let reply = match request.payload().method() {
         IcManagementMethodRecord::TakeCanisterSnapshot => {
             IcMutationReplyView::Capture(IcSnapshotReply::decode(request.payload(), &input.reply)?)
@@ -91,18 +84,9 @@ pub enum IcMutationAssociationError {
     /// Current original reservation does not match the request.
     #[error(transparent)]
     Reservation(#[from] IcMutationRequestError),
-    /// Reply claims another full original operation authority.
-    #[error("IC mutation acknowledgement authority mismatch")]
-    AuthorityMismatch,
-    /// Reply claims another already allocated mutation attempt.
-    #[error("IC mutation acknowledgement attempt mismatch")]
-    AttemptMismatch,
-    /// Claimed actual network/caller/release differs from original context.
-    #[error("IC mutation acknowledgement context mismatch")]
-    ContextMismatch,
-    /// Claimed actual target differs from the exact original routing target.
-    #[error("IC mutation acknowledgement target mismatch")]
-    TargetMismatch,
+    /// Passive claims differ from the exact original update identity.
+    #[error(transparent)]
+    Identity(#[from] ResponseIdentityMismatch),
     /// Existing snapshot decoder rejected the capture reply.
     #[error(transparent)]
     Snapshot(#[from] IcSnapshotReplyError),

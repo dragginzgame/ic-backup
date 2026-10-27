@@ -5,10 +5,7 @@ use crate::model::{
     bounded_sequence,
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::{
-    collections::BTreeSet,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 /// Maximum references admitted into one layout's retained dependency record.
@@ -86,17 +83,18 @@ impl TryFrom<ReferencesFields> for RestoreReferencesRecord {
         if fields.version != 1 {
             return Err(RestoreReferenceError::UnsupportedVersion(fields.version));
         }
-        let mut journals = BTreeSet::new();
-        for entry in &fields.restores {
-            if !journals.insert(entry.journal()) {
-                return Err(RestoreReferenceError::DuplicateJournal {
-                    journal: entry.journal.clone(),
-                });
-            }
-        }
         fields
             .restores
             .sort_by(|left, right| left.journal.cmp(&right.journal));
+        if let Some(pair) = fields
+            .restores
+            .windows(2)
+            .find(|pair| pair[0].journal == pair[1].journal)
+        {
+            return Err(RestoreReferenceError::DuplicateJournal {
+                journal: pair[0].journal.clone(),
+            });
+        }
         Ok(Self {
             version: 1,
             restores: fields.restores,

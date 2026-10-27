@@ -2471,6 +2471,12 @@ qualification, Canic adoption, full restore or terminal/fence/reference release.
 
 ### Provider-driven snapshot capture step
 
+Capture, upload and transfer-read coordinators preserve post-reply evidence in
+`AfterReply` with a typed Journal, Association or Stage cause. Their association
+policies share `policy::ResponseIdentityMismatch` for exact authority, mutation
+attempt, context and target denials, in that order. Reservation admission still
+precedes those checks and bounded decoding follows them.
+
 `workflow::ic_snapshot_capture::capture_snapshot` accepts only the exact original
 `TakeCanisterSnapshot` payload under a retained execution stage. Canonical target/
 wire binding rejects before spending. Open the existing original journal, never
@@ -2844,6 +2850,13 @@ to [Canic adoption](canic-adoption.md). Retained records and historical qualific
 remain evidence; this documentation cleanup authorizes no disposal or migration.
 
 ## Exact metadata-upload settlement claims
+
+Settlement policies expose identity denials through `Identity` and shared causes
+exported from `policy`: `SettlementIdentityMismatch` for lifecycle/data-write
+claims and `InventorySettlementMismatch` for capture/allocation claims. The
+existing comparison owners retain authority/attempt/challenge order, followed by
+inventory evidence where applicable. Full-baseline admission still precedes
+inventory identity comparison. Domain-specific attribution and byte checks remain.
 
 Passive `IcSnapshotUploadSettlement` and `IcSnapshotUploadAttribution` bind the
 full original upload authority, both still-pending attempts, a current challenge,

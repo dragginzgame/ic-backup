@@ -68,28 +68,18 @@ pub async fn capture_snapshot<E: std::error::Error + 'static>(
     let acknowledgement = provider
         .submit_mutation(&request, journal.record()?)
         .await?;
-    let record = match journal.record() {
-        Ok(record) => record,
-        Err(source) => {
-            return Err(IcSnapshotCaptureExecutionError::AfterReplyJournal {
-                source,
-                acknowledgement: Box::new(acknowledgement),
-            });
-        }
+    let admit_reply = || -> Result<(), IcSnapshotCaptureReplyError> {
+        validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
+        stage.layout()?;
+        Ok(())
     };
-    if let Err(source) = validate_acknowledgement(&request, record, &acknowledgement) {
-        return Err(IcSnapshotCaptureExecutionError::Association {
+    match admit_reply() {
+        Ok(()) => Ok(acknowledgement),
+        Err(source) => Err(IcSnapshotCaptureExecutionError::AfterReply {
             source,
             acknowledgement: Box::new(acknowledgement),
-        });
+        }),
     }
-    if let Err(source) = stage.layout() {
-        return Err(IcSnapshotCaptureExecutionError::AfterReplyStage {
-            source,
-            acknowledgement: Box::new(acknowledgement),
-        });
-    }
-    Ok(acknowledgement)
 }
 
 /// Capture-step failures retain original spending and any bounded returned acknowledgement.
@@ -119,30 +109,28 @@ pub enum IcSnapshotCaptureExecutionError<E: std::error::Error + 'static> {
     /// The single provider call failed; spending remains pending.
     #[error(transparent)]
     Provider(#[from] IcMutationProviderError),
-    /// Passive bounded association rejected a returned acknowledgement.
-    #[error("snapshot capture acknowledgement association failed: {source}")]
-    Association {
-        /// Existing canonical mutation association rejection.
-        source: IcMutationAssociationError,
-        /// Exact returned acknowledgement, without authenticated outcome.
+    /// Admission after a reply failed, retaining its complete bounded evidence.
+    #[error("snapshot capture reply rejected: {source}")]
+    AfterReply {
+        /// Typed original admission failure.
+        source: IcSnapshotCaptureReplyError,
+        /// Complete returned passive evidence, without settlement authority.
         acknowledgement: Box<IcMutationAcknowledgement>,
     },
-    /// Selected journal re-admission failed after a reply.
-    #[error("snapshot capture journal changed after reply: {source}")]
-    AfterReplyJournal {
-        /// Original journal rejection.
-        source: AttemptJournalError,
-        /// Exact bounded returned acknowledgement.
-        acknowledgement: Box<IcMutationAcknowledgement>,
-    },
-    /// Stage or ancestor re-admission failed after a reply.
-    #[error("snapshot capture stage changed after reply: {source}")]
-    AfterReplyStage {
-        /// Original stage or ancestor rejection.
-        source: ExecutionWorkflowPersistenceError,
-        /// Exact bounded returned acknowledgement.
-        acknowledgement: Box<IcMutationAcknowledgement>,
-    },
+}
+
+/// Admission failure after a returned snapshot capture reply.
+#[derive(Debug, Error)]
+pub enum IcSnapshotCaptureReplyError {
+    /// Original selected journal cannot be re-admitted.
+    #[error(transparent)]
+    Journal(#[from] AttemptJournalError),
+    /// Passive exact reply association failed.
+    #[error(transparent)]
+    Association(#[from] IcMutationAssociationError),
+    /// Original stage or ancestor evidence cannot be re-admitted.
+    #[error(transparent)]
+    Stage(#[from] ExecutionWorkflowPersistenceError),
 }
 
 #[cfg(all(test, unix))]

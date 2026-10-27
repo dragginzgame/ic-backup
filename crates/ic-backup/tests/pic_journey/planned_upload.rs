@@ -3,6 +3,7 @@
 use super::{Backend, CapturedSource, TOKEN, extents, planned_runner, verify_destination};
 use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
+use ic_backup::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -153,8 +154,9 @@ fn assert_failed(
 ) {
     match result {
         Err(IcSnapshotUploadExecutionError::Provider(IcMutationProviderError::Indeterminate)) => {}
-        Err(IcSnapshotUploadExecutionError::Association {
-            acknowledgement, ..
+        Err(IcSnapshotUploadExecutionError::AfterReply {
+            source: IcSnapshotUploadReplyError::Association(_),
+            acknowledgement,
         }) => assert_eq!(acknowledgement.input().reply, [] as [u8; 0]),
         _ => panic!("lost/malformed upload safe stop"),
     }
@@ -490,8 +492,9 @@ fn assert_data_failed(
             IcSnapshotUploadExecutionError::Provider(IcMutationProviderError::Indeterminate),
         )) => {}
         Err(IcSnapshotDataUploadExecutionError::Upload(
-            IcSnapshotUploadExecutionError::Association {
-                acknowledgement, ..
+            IcSnapshotUploadExecutionError::AfterReply {
+                source: IcSnapshotUploadReplyError::Association(_),
+                acknowledgement,
             },
         )) => assert_eq!(acknowledgement.input().reply, [] as [u8; 0]),
         _ => panic!("original data stage safe stop"),

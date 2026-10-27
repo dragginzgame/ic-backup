@@ -1,4 +1,5 @@
 use super::*;
+use crate::policy::ResponseIdentityMismatch;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -153,10 +154,22 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error = validate_acknowledgement(&request, &journal, &acknowledgement).unwrap_err();
         assert!(match change {
-            0 => matches!(error, IcSnapshotUploadAssociationError::AuthorityMismatch),
-            1 => matches!(error, IcSnapshotUploadAssociationError::AttemptMismatch),
-            2..=4 => matches!(error, IcSnapshotUploadAssociationError::ContextMismatch),
-            5 => matches!(error, IcSnapshotUploadAssociationError::TargetMismatch),
+            0 => matches!(
+                error,
+                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Authority)
+            ),
+            1 => matches!(
+                error,
+                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Attempt)
+            ),
+            2..=4 => matches!(
+                error,
+                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Context)
+            ),
+            5 => matches!(
+                error,
+                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Target)
+            ),
             _ => matches!(error, IcSnapshotUploadAssociationError::Reply(_)),
         });
         assert_eq!(journal, before);

@@ -1,7 +1,9 @@
 //! Spending, exclusive dispatch and retained failures through the public step.
 
 use super::*;
+use crate::policy::ResponseIdentityMismatch;
 use crate::test_support::ready::ready;
+use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -415,7 +417,11 @@ fn malformed_reply_retains_returned_bytes_and_original_pending_reservation() {
     let raw = b"invalid bounded candid".to_vec();
     let mut provider = Provider::new(Ok(raw.clone()));
     let error = ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).unwrap_err();
-    let IcSnapshotTransferReadExecutionError::Association { response, .. } = error else {
+    let IcSnapshotTransferReadExecutionError::AfterReply {
+        source: IcSnapshotTransferReadReplyError::Association(_),
+        response,
+    } = error
+    else {
         panic!("retained association failure")
     };
     assert_eq!(response.input().reply, raw);
@@ -455,7 +461,10 @@ fn changed_stage_at_admission_stops_dispatch_and_changed_stage_after_reply_retai
         ))
         .unwrap_err();
         if after_reply {
-            let IcSnapshotTransferReadExecutionError::AfterReplyStage { response, .. } = error
+            let IcSnapshotTransferReadExecutionError::AfterReply {
+                source: IcSnapshotTransferReadReplyError::Stage(_),
+                response,
+            } = error
             else {
                 panic!("retained reply after stage drift")
             };
@@ -493,13 +502,17 @@ fn wrong_claim_and_replaced_layout_retain_reply_without_outcome_or_repair() {
         }
         let error = ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).unwrap_err();
         let response = match error {
-            IcSnapshotTransferReadExecutionError::AfterReplyJournal { response, .. }
-                if replaced =>
-            {
-                response
-            }
-            IcSnapshotTransferReadExecutionError::Association {
-                source: IcSnapshotTransferReadAssociationError::TargetMismatch,
+            IcSnapshotTransferReadExecutionError::AfterReply {
+                source: IcSnapshotTransferReadReplyError::Journal(_),
+                response,
+            } if replaced => response,
+            IcSnapshotTransferReadExecutionError::AfterReply {
+                source:
+                    IcSnapshotTransferReadReplyError::Association(
+                        IcSnapshotTransferReadAssociationError::Identity(
+                            ResponseIdentityMismatch::Target,
+                        ),
+                    ),
                 response,
             } if !replaced => response,
             other => panic!("unexpected retained rejection: {other:?}"),

@@ -18,7 +18,6 @@ use super::{
     ic_snapshot_metadata::IcSnapshotMetadataReply,
     operation_plan::OperationPlanRecord,
 };
-use ic_platform::Principal;
 use ic_platform::management_canister_types::{
     SnapshotDataKind, SnapshotDataOffset, UploadCanisterSnapshotDataArgs,
     UploadCanisterSnapshotMetadataArgs,
@@ -62,7 +61,6 @@ pub struct IcSnapshotUploadRequest<'source> {
     source_checksum: ArtifactChecksumRecord,
     kind: IcSnapshotUploadKind,
     arguments: Vec<u8>,
-    target_bytes: Vec<u8>,
 }
 
 impl<'source> IcSnapshotUploadRequest<'source> {
@@ -93,8 +91,7 @@ impl<'source> IcSnapshotUploadRequest<'source> {
             .cloned()
             .collect::<Option<Vec<_>>>()
             .ok_or(IcSnapshotUploadError::UnavailableGlobal)?;
-        let target = Principal::from_text(source.request().target())
-            .map_err(|_| IcRequestError::InvalidTarget)?;
+        let target = source.request().principal();
         let arguments = contract::encode_one(UploadCanisterSnapshotMetadataArgs {
             canister_id: target.into(),
             replace_snapshot: None,
@@ -161,8 +158,7 @@ impl<'source> IcSnapshotUploadRequest<'source> {
                 SnapshotDataOffset::WasmChunk
             }
         };
-        let target =
-            Principal::from_text(metadata.target()).map_err(|_| IcRequestError::InvalidTarget)?;
+        let target = metadata.source.request().principal();
         let arguments = contract::encode_one(UploadCanisterSnapshotDataArgs {
             canister_id: target.into(),
             snapshot_id: snapshot_id.to_vec(),
@@ -194,15 +190,12 @@ impl<'source> IcSnapshotUploadRequest<'source> {
         if arguments.len() > MAX_IC_SNAPSHOT_UPLOAD_ARGUMENT_BYTES {
             return Err(IcSnapshotUploadError::ArgumentsTooLarge);
         }
-        let target = Principal::from_text(source.request().target())
-            .map_err(|_| IcRequestError::InvalidTarget)?;
         Ok(Self {
             source_plan,
             source,
             source_checksum: source_checksum.clone(),
             kind,
             arguments,
-            target_bytes: target.as_slice().to_vec(),
         })
     }
 
@@ -263,7 +256,11 @@ impl<'source> IcSnapshotUploadRequest<'source> {
     /// Hash wire payload only, before plan/authority derivation, using its canonical owner.
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
-        management_request_digest(&self.target_bytes, self.method(), &self.arguments)
+        management_request_digest(
+            self.source.request().principal().as_slice(),
+            self.method(),
+            &self.arguments,
+        )
     }
     /// Bind original source evidence/tree and metadata origin separately from wire intent.
     #[must_use]
