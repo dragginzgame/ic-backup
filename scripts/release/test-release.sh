@@ -980,13 +980,35 @@ test_older_release_recovery() {
         [[ "$(sed -n '2p' target/pushes.log)" == 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb v0.1.1' ]] || exit 1
     else
         cmp target/original-plan target/release-state/0.1.1.plan
-        [[ "$(wc -l < target/pushes.log)" == 2 ]] || exit 1
+        [[ "$(wc -l < target/pushes.log)" -eq 2 ]] || exit 1
         [[ "$(sed -n '2p' target/pushes.log)" == "$(cat target/mock-head) v$next" ]] || exit 1
     fi
     cmp target/original-proof.json target/release-state/0.1.1.validation.json
     perl scripts/release/release-data.pl verify --commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     assert_cache_retained
 }
+test_older_release_padded_count() {
+    # macOS wc pads counts on stdin; keep its presentation independent of the ledger.
+    TEST_REAL_WC="$(command -v wc)"
+    export TEST_REAL_WC
+    mkdir -p target/padded-wc
+    cat > target/padded-wc/wc <<'WC'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$#" == 1 && "$1" == -l ]]; then
+    count="$("$TEST_REAL_WC" "$@")"
+    printf '%8d\n' "$count" > "$FIXTURE/target/padded-count"
+    cat "$FIXTURE/target/padded-count"
+else
+    exec "$TEST_REAL_WC" "$@"
+fi
+WC
+    chmod +x target/padded-wc/wc
+    export PATH="$PWD/target/padded-wc:$PATH"
+    test_older_release_recovery patch
+    [[ -s target/padded-count ]] || exit 1
+}
+
 test_selected_proof_rejection() {
     export TEST_PUSH_FAIL=1
     expect_failure "$TEST_REAL_MAKE" --no-print-directory release-patch
@@ -1171,10 +1193,17 @@ if [[ "$preparation_only" == true ]]; then
     exit 0
 fi
 
+run_older_release_cases() {
+    for mode in explicit explicit-unsorted patch minor gate-failure; do
+        run_case "older-release-$mode" test_older_release_recovery "$mode"
+    done
+    run_case older-release-padded-count test_older_release_padded_count
+}
+
 if [[ "$receipts_only" == true ]]; then
     run_case validation-source-identity test_validation_source_identity
     for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
-    for mode in explicit explicit-unsorted; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
+    run_older_release_cases
     for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
     run_case completed-evidence-replay test_completed_evidence_replay
     echo 'release receipt selection and exact resume checks passed'
@@ -1221,7 +1250,7 @@ run_case early-plan-retry-retention test_early_plan_retry
 run_case prepared-explicit-resume test_prepared_explicit_resume
 for disposition in unchanged bumped; do run_case "committed-preparation-$disposition" test_committed_preparation_retry "$disposition"; done
 for mode in retry offline network invalid lock common prerequisite; do run_case "selected-tool-$mode" test_selected_tool_preflight "$mode"; done
-for mode in explicit explicit-unsorted patch minor gate-failure; do run_case "older-release-$mode" test_older_release_recovery "$mode"; done
+run_older_release_cases
 for reason in missing identity remote; do run_case "selected-proof-$reason" test_selected_proof_rejection "$reason"; done
 run_case completed-evidence-replay test_completed_evidence_replay
 run_case dependency-failure-conditional-status test_dependency_failure_conditional_status

@@ -301,6 +301,9 @@ isolated metadata, index and validation retention; it performs no release here.
 
 `bash scripts/release/test-release.sh --receipts-only` selects the consumer's
 validation custody, exact older-commit receipt and completed-resume checks.
+It also covers fresh patch/minor attempts after an uncertain older delivery,
+failed fresh validation and padded line-count output in the same recovery cases
+used by the normal consumer suite.
 It uses isolated repositories and substitutes, preserving the mandatory receipt
 check and refusal without effects when proof or remote observations are missing.
 This selection does not execute a release in the working repository.

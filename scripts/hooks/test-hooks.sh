@@ -129,14 +129,16 @@ TOML
 
 test_formatting_output() {
     make --no-print-directory fmt > write.log 2>&1
-    [[ "$(cat write.log)" == 'Formatting... ok' ]] || exit 1
+    rg -q '^Manifest sorting \[\.\]\.\.\. ok \(' write.log
+    rg -q '^Rust formatting \[\.\]\.\.\. ok \(' write.log
     local before sources lock_before
     before="$(index_fingerprint)"
     sources="$(sources_fingerprint)"
-    printf 'unrelated retained lock\n' > Cargo.lock
+    printf '# unrelated retained lock\nversion = 4\n\n[[package]]\nname = "hook-fixture"\nversion = "0.0.0"\n' > Cargo.lock
     lock_before="$(checksum Cargo.lock)"
     make --no-print-directory fmt-check > check.log 2>&1
-    [[ "$(cat check.log)" == 'Checking formatting... ok' ]] || exit 1
+    rg -q '^Manifest sorting \[\.\]\.\.\. ok \(' check.log
+    rg -q '^Rust formatting \[\.\]\.\.\. ok \(' check.log
     mkdir failing-bin diagnostics
     export HOOK_TEST_REAL_CARGO
     HOOK_TEST_REAL_CARGO="$(command -v cargo)"
@@ -155,7 +157,7 @@ CARGO
         "FORMAT_CARGO=$FIXTURE/failing-bin/cargo" > failure.log 2>&1; then
         echo 'expected formatting refusal' >&2; return 1
     fi
-    rg -q 'Checking formatting\.\.\. FAILED \(exit 17\)' failure.log
+    rg -q '^Manifest sorting \[\.\]\.\.\. FAILED \(exit 17,' failure.log
     rg -q 'Details: .*formatting\.' failure.log
     local logs=(diagnostics/formatting.*)
     [[ ${#logs[@]} == 1 && -s "${logs[0]}" && ! -e unexpected-rustfmt ]] || exit 1
@@ -232,7 +234,7 @@ printf '%s\n' "$CASE_NAME" >> "$TEMPORARY/cases.txt"
 # Perturb the current inherited dependency table without retaining retired names.
 perl -0777 -pe 's/^(\[dependencies\]\n)([A-Za-z0-9_-]+\.workspace[^\n]*\n)([A-Za-z0-9_-]+\.workspace[^\n]*\n)/$1$3$2/m or die "expected two inherited production dependencies\n"' \
     "$ROOT/crates/ic-backup/Cargo.toml" > "$TEMPORARY/unsorted-Cargo.toml" 2> "$CASE_LOG"
-formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/StableVersion.pm scripts/ci/ic-tool-pins.awk scripts/ci/tool-catalog-records.pl scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
+formatter_inputs=(Cargo.toml Cargo.lock rust-toolchain.toml ci/tool-versions.env scripts/ci/StableVersion.pm scripts/ci/ic-tool-pins.awk scripts/ci/tool-catalog-records.pl scripts/ci/check-format-tools.sh scripts/ci/run-formatting.sh scripts/ci/run-rust-formatting.pl make/consumer.mk make/release.mk make/tools.mk make/rust-format.mk make/execution.mk)
 while IFS= read -r -d '' path; do
     # The index may still name an intentionally deleted Rust test before commit.
     [[ -e "$ROOT/$path" || -L "$ROOT/$path" ]] || continue

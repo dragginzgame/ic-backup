@@ -33,6 +33,12 @@ Required executable paths are `.tools/host/bin` and `.tools/rust/common/bin`;
 Testkit and the editor use admitted absolute paths. Previous bundles and failed
 evidence remain retained and supply no fallback.
 
+Standard Rust formatting delegates to the shared driver for per-pass progress and
+reuse of identical successful inputs. Prepared tools are checked before reuse;
+staged-hook worktrees always run their formatters. Backup keeps grouped manifest
+sorting followed by Rustfmt, with no additional workspaces or derive-sorting pass.
+Use `make fmt-check FORMAT_RUST_ARGS=--no-cache` to run every pass explicitly.
+
 Common catalogs live in [ci/tool-versions.env](../ci/tool-versions.env). Testkit
 owns its authenticated PocketIC selection and process lifecycle; the unique
 locked Testkit package also selects its CLI through the shared Cargo installer.
@@ -76,7 +82,7 @@ Backup's bounded management wire adapters remain external Candid projections;
 domain and persisted records do not acquire a Candid contract. Snapshot adoption
 does not install new source scanners or qualify every existing input boundary.
 
-The reviewed Shared Tooling 0.26.22 snapshot includes the
+The reviewed Shared Tooling 0.26.23 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without

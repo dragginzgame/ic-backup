@@ -2,84 +2,91 @@
 
 ## Released source and ownership
 
-Released Backup is **0.44.8**, `15ffb73c001269c07e329d0e3f26044d98ac5d87`.
-The [released handoff](https://github.com/dragginzgame/ic-backup/blob/15ffb73c001269c07e329d0e3f26044d98ac5d87/docs/status/current.md)
-retains earlier simplification and qualification evidence. Core owns bounded
-records, guarded persistence, reconciliation and original-plan coordination.
+Released Backup is **0.45.0**, `b11928151fb68a1b40115c0c3515b9198b9dd73b`.
+The [released handoff](https://github.com/dragginzgame/ic-backup/blob/b11928151fb68a1b40115c0c3515b9198b9dd73b/docs/status/current.md)
+retains earlier simplification, Tooling/Platform adoption and qualification evidence.
+Core owns bounded records, guarded persistence and original-plan coordination;
 Agent owns reserved signed transport. Applications retain authority, membership,
-release binding, whole-unit fencing and external obligations.
+release binding, fencing and external obligations.
 [Implementation contracts](../implementation-contracts.md) remain authoritative.
 
-## Pending 0.45.0 adoption and release-plan cleanup
+## Pending 0.45.1 shared formatting and release-fixture fix
 
-The reviewed Shared Tooling **0.26.22** snapshot remains at committed source
-`5fc904a935d82ad31f0fba14434b71ccb8c10345`, with 124 selected files. The earlier
-canonical export and impact review cover five governance payload changes; no
-shared setup, formatter or release implementation changed. The current task
-preserves that pending adoption and the separate release-plan cleanup.
-[The adoption review](../shared-tooling-review.json) records source and qualification.
+Shared Tooling **0.26.23** is adopted from committed source
+`48ec9794892da6f8e2812653ec16c5e8ea23df47` through the canonical impact review and
+exporter. The 125-file snapshot updates seven payloads and adds the standard Rust
+formatting driver. [The review](../shared-tooling-review.json) records provenance.
+Backup keeps grouped root manifest sorting followed by Rustfmt, with no new
+workspace or derive-sorting policy. The driver reports timings and reuses only
+identical successful inputs; prepared tools remain checked and staged-hook
+worktrees always run their formatters. Local fixtures carry the new helper and
+qualify its progress, failure status, logs and custody. Gzip ownership guidance
+needs no code change: Backup has no local application/golden-generator encoder.
 
-The workspace selects Platform **0.7.0** and Host/Testkit **0.69.0**. The selected
-release editor is also **0.69.0**. Tooling's committed source is
-`f268aef5d205e51811e934648afcd13f026635f1`. Published archives match registry
-checksums, and every committed src file matches the published source. All consumed
-Tooling src files are unchanged from 0.68.12; no sibling checkout or patch supplies
-a build dependency. Platform's retired compiler exports are unused.
+[#70 — Diagnose the macOS older-release-patch adapter fixture failure](https://github.com/dragginzgame/ic-backup/issues/70)
+is fixed locally. The older-release recovery fixture compared `wc -l` output to
+string `2`. macOS pads that count; the exact numeric two-attempt ledger was rejected.
+The assertion now compares numerically. No release runner, adapter, spending,
+receipt, source-selection or recovery semantics change.
 
-Compared with the incoming graph, this refresh upgrades only Host Artifacts,
-Host FS, Host Process and Testkit from 0.68.12 to 0.69.0 and removes Platform
-0.6.21. Normal and development graphs now share one Platform 0.7.0 identity.
-Library feature selections remain unchanged. Independent normal consumers exclude
-Testkit/PocketIC/WAT, and Core remains Agent-free. External principal, Candid,
-management DTO and Agent identities remain unchanged; the separate development
-management DTO 0.8.0 remains distinct from production 0.11.0.
+Diagnosis uses [CI run 40493923484](https://github.com/dragginzgame/ic-backup/actions/runs/40493923484),
+at exact released source `b11928151fb68a1b40115c0c3515b9198b9dd73b`.
+Both macOS jobs fail `older-release-patch`; Linux passes. Retained ARM64 artifact
+`12729843978` has verified SHA-256
+`0b3c998db11ff3b297d625aa701f8d41eeeb30dfc759509603c57b86ceeed321`.
+Its fixture has exactly two push records, the expected 0.1.2/source/tag/complete
+plan, and unchanged old plan and validation proof. A local padded-count regression
+reproduces the failing string assertion after those preceding checks pass. The
+optional Git-upstream warning is not the cause of this assertion failure.
 
-Public Host error identities now belong to 0.69. Consumers exchanging
-`NamedWriteError` or `DirectoryChecksumError` must align direct Host dependencies.
-That concrete Rust type change selects pending **0.45.0** notes; package versions
-remain **0.44.8**. Product Rust source, wire/storage formats, hashes, spending and
-recovery order are unchanged. Final Cargo.lock SHA-256 is
-`5266a7ec6a05d9c050dbbe0047ad6a822813a318708d17f9fb78793ed4c9335e`.
-Canonical setup and offline common/Testkit/editor admission pass. Old bundles
-remain retained; optional IC executable selection is unchanged.
+The regression delegates counting to the real wc and pads only its presentation.
+It exercises the same fresh-patch recovery and exact identities/evidence checks.
+A single older-release case roster feeds both the normal consumer gate and
+`--receipts-only`: explicit resume, unsorted selected-source resume, fresh patch,
+fresh minor, failed fresh validation and padded counts. The focused selection now
+covers the fresh branch that failed on macOS; no new command selector is added.
+The fixture ownership map and release guide describe the maintained scope.
 
-Release plans reuse Shared's `StableVersion::version_cmp`, removing the private
-comparator under [#71 — Reuse Shared stable version ordering in the release-plan helper](https://github.com/dragginzgame/ic-backup/issues/71).
-Local canonical syntax, component ceilings, equality and downgrade diagnostics
-remain in place, with an explicit module companion for fixture copying. Its prior
-five metadata and nine receipt/recovery cases retain evidence under
-`target/shared-release-tests.lfUKmF/`, `target/shared-release-tests.22gSc9/` and
-`/tmp/backup-issue71-*`. Native macOS and delivery remain required for closure.
+## Focused evidence
 
-## Focused evidence on Tooling 0.69.0
+Under 0.26.23, actual root formatting passes with `--no-cache`; a normal invocation
+records stable inputs and the next reports unchanged input reuse. All five named
+hook cases pass, including partial staging, index refresh, unrelated edits,
+dependency grouping, formatter exit 17 and checkout-local tool refusal. Evidence
+remains at `target/hook-tests.wfbY23/` and `/tmp/backup-shared23-*`.
+Testkit Make routing/refusal, offline tool admission and all five release metadata
+cases pass; metadata evidence is at `target/shared-release-tests.G5zECg/`.
 
-Strict all-target/all-feature Clippy passes for both libraries. All **84** selected
-Core codec, identity, inventory, artifact publication, JSON and command-custody
-unit tests pass, including independent golden bytes, bounds, typed failures and
-process-death recovery. All **3** Agent endpoint/evidence unit tests and **14**
-HTTP boundary tests pass. Independent Core and Agent consumers pass on Rust
-**1.91.0**, including public Host 0.69 error probes, retaining
-`target/msrv-consumers.GTw8qo/`.
+The following #70 receipts predate the snapshot refresh and retain that scope.
+Before the fix, the padded-count regression fails at the exact string comparison
+with two real push records. Trace and retained fixture are
+`/tmp/backup-issue70-red.log` and `target/shared-release-tests.YI5o3w/`.
+After the fix, all **13** selected consumer receipt/recovery cases pass, retaining
+`/tmp/backup-issue70-green.log` and `target/shared-release-tests.nqoWsv/`.
+Original plans, proof, old tag and source identity checks remain active.
 
-All **12** isolated preparation cases pass with release editor 0.69.0, retaining
-`target/shared-release-tests.D8SwiX/`. Dependency inheritance/boundaries, snapshot
-integrity, formatting and maintained documentation links pass. Detailed logs and
-published-source/lock-delta verification remain under `/tmp/backup-tooling69-*`;
-normal graph evidence is `/tmp/backup-tooling69-graphs.MFafMm/`.
+Bash syntax, focused ShellCheck, non-mutating formatting, Shared snapshot
+integrity, fixture ownership JSON admission and local Markdown links pass.
+Check logs remain under `/tmp/backup-issue70-*`.
+The native macOS ZIP, nested evidence archive and selected raw fixture files are
+retained there too; no original CI or failed-regression evidence was deleted.
 
-PocketIC **16.1.0** passes connected same-ID capture/restore/replay, retaining
-`/tmp/ic-backup-pocketic-408287-0/`. Both independent normal Agent journeys pass:
-capture/restore/acceptance/terminal replay and death after authenticated load
-without redispatch. Graph/build evidence remains at
-`/tmp/ic-backup-agent-independent-build-451335-0/`; simulator evidence is at
-`/tmp/ic-backup-agent-pocketic-451335-1/` and
-`/tmp/ic-backup-agent-pocketic-451335-2/`.
+The selected Platform **0.7.0**, Host/Testkit/editor **0.69.0**, Rust **1.91** floor
+and feature choices are unchanged. The incoming #70 release fixture is also
+byte-identical after the snapshot refresh. Cargo.lock
+remains byte-identical to HEAD, SHA-256
+`8d380c16b76d2cd50250eb5e5aafefdc5c3def40c13a100b980eb9e9018c7771`.
+No Rust compilation or simulator run was needed for these tooling-only changes;
+prior product evidence retains its original source/graph scope.
 
 ## Limits and delivery
 
-This is focused native Linux, simulator, independent normal/MSRV consumers and
-isolated editor evidence, not new full CI, native macOS, installed IC, package
-archive or registry-only Backup acceptance. Application acceptance remains
-consumer-owned. Agent's prior transitive crypto-bigint 0.5.5 concern remains
-unresolved. Changes are unstaged and uncommitted. No own package version, release,
-tag, publication, deployment, live IC effect or sibling edit is performed.
+The padded-count regression runs on Linux; it is not a new native macOS pass.
+The latest hosted macOS results still belong to the failing released source.
+Deliver the patch and obtain current native CI acceptance before closing #70;
+#71's delivered implementation also still awaits accepted hosted qualification.
+No full local CI, complete release-adapter matrix, installed IC, publication or
+application acceptance is claimed. Prior Agent crypto-bigint 0.5.5 qualification
+remains unresolved. Notes select **0.45.1**; package versions remain **0.45.0**.
+Changes are unstaged and uncommitted. No own package version, release, tag, push,
+publication, deployment, live IC effect or sibling edit is performed.

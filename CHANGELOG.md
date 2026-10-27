@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.45.1]
+
+### 🔧 Changed
+
+- Adopt Shared Tooling 0.26.23 with per-pass formatting progress and reuse of
+  successful results for unchanged inputs. Prepared-tool admission and staged-hook
+  formatting remain explicit; library dependencies and formats are unchanged.
+
+### 🧪 Testing
+
+- Compare release-fixture push counts numerically so macOS's padded `wc` output
+  preserves the exact two-attempt check. Cover fresh and resumed recovery plus
+  padded counts in the focused suite
+  ([#70 — Diagnose the macOS older-release-patch adapter fixture failure](https://github.com/dragginzgame/ic-backup/issues/70)).
+
 ## [0.45.0] - 2026-10-27
 
 ### ⚠️ Breaking

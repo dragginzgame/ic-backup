@@ -611,6 +611,10 @@ from `ci/tool-versions.env`. It requires successful exact cargo-sort and rustfmt
 availability probes, offline with rustup automatic installation disabled. It
 installs nothing and changes no files. CI setup uses that same pin; workspace
 sorting, actual Rust formatting and hook/index custody remain consumer-owned.
+The shared Rust driver reports each pass and its elapsed time. It can reuse a
+successful result only for identical observed inputs, tools and policy; prepared
+tools are still checked. Use `make fmt-check FORMAT_RUST_ARGS=--no-cache` to run
+every pass explicitly. Isolated staged-hook worktrees always run their formatters.
 The helper's rejection fixtures run in normal tooling checks and explicitly
 under macOS system Bash 3.2. Native qualification belongs to the configured
 consumer jobs, independently from a Linux pass or upstream source adoption.

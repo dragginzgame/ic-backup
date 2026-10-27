@@ -68,6 +68,7 @@
     "test_validation_custody": "Missing original validation or changed member metadata prevents adapter recovery",
     "test_early_plan_retry": "Fresh normal release supersedes the same candidate plan without parsing it; Backup retains earlier validation bytes before recording fresh proof.",
     "test_older_release_recovery": "Explicit resume checks exact older committed receipts; fresh patch/minor attempts leave the old plan, proof and uncertain delivery untouched. Failed fresh gates retain original evidence.",
+    "test_older_release_padded_count": "The same fresh-patch recovery retains exactly two actual push records when wc pads its line count, matching macOS presentation; both normal and focused recovery suites select this regression.",
     "test_selected_proof_rejection": "Explicit resume refuses missing/wrong original receipt identity or unavailable remote proof without dispatching effects.",
     "test_completed_evidence_replay": "Local completed replay requires retained validation; malformed selected-commit/read/write arguments refuse without effects",
     "test_dependency_failure_conditional_status": "Cargo substitute cannot produce false-success/cache under conditional errexit semantics",
