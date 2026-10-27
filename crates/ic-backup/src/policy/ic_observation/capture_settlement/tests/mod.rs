@@ -234,34 +234,15 @@ fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
             &claim,
         )
         .unwrap_err();
-        assert!(match change {
-            0 => matches!(
-                error,
-                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Authority)
-            ),
-            1..=2 => matches!(
-                error,
-                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Attempt)
-            ),
-            3 => matches!(
-                error,
-                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Challenge)
-            ),
-            4 => matches!(
-                error,
-                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Baseline)
-            ),
-            5 => matches!(
-                error,
-                IcCaptureSettlementError::Identity(InventorySettlementMismatch::Inventory)
-            ),
-            _ => matches!(
-                error,
-                IcCaptureSettlementError::Identity(
-                    InventorySettlementMismatch::ObservationEvidence
-                )
-            ),
-        });
+        let expected = match change {
+            0 => InventorySettlementMismatch::Authority,
+            1..=2 => InventorySettlementMismatch::Attempt,
+            3 => InventorySettlementMismatch::Challenge,
+            4 => InventorySettlementMismatch::Baseline,
+            5 => InventorySettlementMismatch::Inventory,
+            _ => InventorySettlementMismatch::ObservationEvidence,
+        };
+        assert!(matches!(error, IcCaptureSettlementError::Identity(actual) if actual == expected));
     }
     // Equal canonical views cannot substitute for differently ordered raw evidence.
     let bytes = contract::encode_one(vec![snapshot(&[2]), snapshot(&[1])]).unwrap();

@@ -58,6 +58,17 @@ selection now includes the shared roster of seven version-reader cases.
 
 ## Focused evidence
 
+The maintainer's full Clippy gate on prepared commit `4ef6655` rejected the capture
+identity/raw-evidence test at 109 lines. The earlier focused lint selection did
+not include the Core library-test target. One expected-cause table and a single
+typed comparison now retain all seven mutation cases and the raw-evidence checks
+without a lint suppression. Core Clippy's `--tests` selection passes with
+`-D warnings`, and all six capture-settlement unit cases pass. Formatting, links
+and diff checks pass. Fix logs are `/tmp/backup-settlement-lint-fix-*`; the original
+failure remains at `target/validation-failures/20261027T172540Z-3411640-8-clippy.log`.
+The complete two-package/all-feature Clippy gate and full CI were not rerun here.
+
+
 The preceding ten-change batch passed **113** selected Core tests before the
 settlement API follow-up. Filters cover snapshot workflows; mutation,
 upload and transfer-read association policies; upload and inventory models;
