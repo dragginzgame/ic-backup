@@ -6,7 +6,8 @@ use super::{DownloadJournalGuard, IcSnapshotUploadArtifactError};
 use crate::model::{
     execution_workflow::ExecutionWorkflowRecord,
     ic_snapshot_upload::{
-        IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadReply,
+        DataUploadPreparation, IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError,
+        IcSnapshotUploadReply,
     },
 };
 use thiserror::Error;
@@ -39,21 +40,18 @@ impl DownloadJournalGuard<'_> {
         IcSnapshotDataUploadPlan<'workflow, 'request, 'source>,
         IcSnapshotDataUploadPreparationError,
     > {
-        let kinds =
-            IcSnapshotDataUploadPlan::derive_kinds(workflow, sequence, allocation, chunk_bytes)?;
-        let metadata = allocation.request();
-        let crate::model::ic_snapshot_upload::IcSnapshotUploadReplyKind::Metadata { snapshot_id } =
-            allocation.kind()
-        else {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch.into());
-        };
+        let preparation = DataUploadPreparation::new(workflow, sequence, allocation, chunk_bytes)?;
+        let metadata = preparation.metadata();
         let bindings =
             self.with_upload_source(metadata.source_plan(), snapshot, metadata, |directory| {
-                source::bindings(directory, metadata, snapshot_id, &kinds)
+                source::bindings(
+                    directory,
+                    metadata,
+                    preparation.destination(),
+                    preparation.kinds(),
+                )
             })?;
-        Ok(IcSnapshotDataUploadPlan::from_bindings(
-            workflow, sequence, allocation, kinds, &bindings,
-        )?)
+        Ok(preparation.finish(&bindings)?)
     }
 }
 

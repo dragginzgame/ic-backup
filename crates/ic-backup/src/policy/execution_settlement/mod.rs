@@ -10,7 +10,6 @@ use crate::{
         OperationProgressState,
     },
 };
-use std::collections::BTreeMap;
 use thiserror::Error;
 
 /// Admit the original complete causal journal set and match every retained history.
@@ -32,7 +31,8 @@ pub fn validate(
     if &plan.digest() != settlement.plan_intent() {
         return Err(ExecutionSettlementPolicyError::IntentMismatch);
     }
-    let view = execution_progress::progress(&ExecutionProgressRequest { plan, journals })?;
+    let (view, actual) =
+        execution_progress::progress_with_journals(&ExecutionProgressRequest { plan, journals })?;
     if let Some(operation) = view
         .operations
         .iter()
@@ -45,10 +45,6 @@ pub fn validate(
     if settlement.journals().len() != plan.operations().len() {
         return Err(ExecutionSettlementPolicyError::JournalSetMismatch);
     }
-    let actual: BTreeMap<_, _> = journals
-        .iter()
-        .map(|journal| (journal.authority().binding().operation_sequence(), *journal))
-        .collect();
     for (row, operation) in settlement.journals().iter().zip(plan.operations()) {
         if row.operation_sequence() != operation.operation_sequence() {
             return Err(ExecutionSettlementPolicyError::JournalSetMismatch);

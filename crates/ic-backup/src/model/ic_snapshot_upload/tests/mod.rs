@@ -1,6 +1,7 @@
 //! Exact SDK fields, source/wire identity, bounds and original pending spending.
 
 use super::*;
+use crate::model::ic_request::MAX_IC_SNAPSHOT_ID_BYTES;
 use ic_platform::candid::contract;
 
 #[test]

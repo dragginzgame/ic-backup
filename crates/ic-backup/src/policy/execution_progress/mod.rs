@@ -2,11 +2,9 @@
 
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
-    attempt_journal::{
-        AttemptAuthorityRecord, AttemptJournalRecord, AttemptJournalView, OperationBindingRecord,
-    },
+    attempt_journal::{AttemptJournalRecord, AttemptJournalView},
     effect_graph::MAX_EFFECT_OPERATIONS,
-    operation_plan::{OperationPlanRecord, PlanContextRecord, PlannedOperationRecord},
+    operation_plan::OperationPlanRecord,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -96,6 +94,20 @@ pub struct ExecutionProgressView {
 pub fn progress(
     request: &ExecutionProgressRequest<'_>,
 ) -> Result<ExecutionProgressView, ExecutionProgressError> {
+    Ok(progress_with_journals(request)?.0)
+}
+
+// Retain the admitted original index for exact-history settlement, so that it
+// consumes the same coverage/authority proof as the public progress projection.
+pub(super) fn progress_with_journals<'a>(
+    request: &ExecutionProgressRequest<'a>,
+) -> Result<
+    (
+        ExecutionProgressView,
+        BTreeMap<u64, &'a AttemptJournalRecord>,
+    ),
+    ExecutionProgressError,
+> {
     if request.journals.len() > MAX_EFFECT_OPERATIONS {
         return Err(ExecutionProgressError::TooManyJournals);
     }
@@ -110,15 +122,10 @@ pub fn progress(
         if journals.contains_key(&sequence) {
             return Err(ExecutionProgressError::DuplicateJournal(sequence));
         }
-        let original = OriginalJournalBinding {
-            intent: &intent,
-            context: plan.context(),
-            operation,
-        };
-        if !original.matches(journal.authority()) {
+        if !plan.matches_authority(operation, &intent, journal.authority()) {
             return Err(ExecutionProgressError::AuthorityMismatch(sequence));
         }
-        journals.insert(sequence, journal.view());
+        journals.insert(sequence, *journal);
     }
     for operation in plan.operations() {
         if !journals.contains_key(&operation.operation_sequence()) {
@@ -129,7 +136,7 @@ pub fn progress(
     }
     let applied: BTreeSet<_> = journals
         .iter()
-        .filter_map(|(sequence, attempts)| attempts.applied.then_some(*sequence))
+        .filter_map(|(sequence, journal)| journal.applied_receipt().map(|_| *sequence))
         .collect();
     let mut totals = ExecutionAttemptTotalsView {
         mutations_used: 0,
@@ -142,8 +149,9 @@ pub fn progress(
         let sequence = node.operation_sequence();
         // Closed graph/table identity and complete coverage were admitted above.
         let attempts = journals
-            .remove(&sequence)
-            .ok_or(ExecutionProgressError::MissingJournal(sequence))?;
+            .get(&sequence)
+            .ok_or(ExecutionProgressError::MissingJournal(sequence))?
+            .view();
         let unmet = node
             .depends_on()
             .iter()
@@ -163,37 +171,16 @@ pub fn progress(
             attempts,
         });
     }
-    Ok(ExecutionProgressView {
-        intent,
-        graph: plan.graph().digest(),
-        applied_operations: applied.len(),
-        attempts: totals,
-        operations,
-    })
-}
-
-struct OriginalJournalBinding<'a> {
-    intent: &'a ArtifactChecksumRecord,
-    context: &'a PlanContextRecord,
-    operation: &'a PlannedOperationRecord,
-}
-impl OriginalJournalBinding<'_> {
-    fn matches(&self, authority: &AttemptAuthorityRecord) -> bool {
-        self.identity_matches(authority.binding())
-            && self.context_matches(authority.binding())
-            && authority.budget() == self.operation.budget()
-    }
-    fn identity_matches(&self, binding: &OperationBindingRecord) -> bool {
-        binding.intent() == self.intent.hash()
-            && binding.operation_sequence() == self.operation.operation_sequence()
-            && binding.target() == self.operation.target()
-            && binding.request() == self.operation.request()
-    }
-    fn context_matches(&self, binding: &OperationBindingRecord) -> bool {
-        binding.network() == self.context.network()
-            && binding.caller() == self.context.caller()
-            && binding.release() == self.context.release()
-    }
+    Ok((
+        ExecutionProgressView {
+            intent,
+            graph: plan.graph().digest(),
+            applied_operations: applied.len(),
+            attempts: totals,
+            operations,
+        },
+        journals,
+    ))
 }
 impl ExecutionAttemptTotalsView {
     fn add(&mut self, attempts: &AttemptJournalView) -> Result<(), ExecutionProgressError> {

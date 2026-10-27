@@ -138,11 +138,17 @@ fn read_chunk(
     let (mut file, original) = open_regular_child(directory, &name, length, maximum)?;
     file.seek(SeekFrom::Start(offset))?;
     let size = size.unwrap_or(original.len());
+    read_chunk_bytes(file, size)
+}
+
+// Both individual preparation and batch binding buffer one exact admitted chunk.
+// Full-tree verification and closing custody checks remain with their callers.
+fn read_chunk_bytes(reader: impl Read, size: u64) -> Result<Vec<u8>, IcSnapshotArtifactError> {
     let limit = usize::try_from(size)
         .ok()
         .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
         .ok_or(IcSnapshotArtifactError::FileShape)?;
-    ic_host_artifacts::artifact::read_exact_reader(file.take(size), limit).map_err(|error| {
+    ic_host_artifacts::artifact::read_exact_reader(reader.take(size), limit).map_err(|error| {
         use ic_host_artifacts::artifact::ArtifactError;
         match error {
             ArtifactError::LimitExceeded { .. } | ArtifactError::LengthMismatch { .. } => {

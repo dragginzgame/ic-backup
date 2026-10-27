@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.44.6]
+
+### 🧹 Cleanup
+
+- Share original authority matching and the admitted journal index used by progress
+  and exact-history settlement, preserving coverage, causality and typed failures.
+- Carry checked allocation and artifact member identities through upload preparation;
+  share bounded source reads while retaining allowance preflight and custody checks.
+- Simplify attributed snapshot views and canonical restore-reference updates;
+  reuse observation and raw snapshot-ID admission without changing public APIs,
+  wire/storage formats or recovery behavior.
+
+### 🧪 Testing
+
+- Separate independent-consumer setup into source, manifest, graph and build phases,
+  retaining command output in the caller-owned qualification directory.
+
 ## [0.44.5] - 2026-10-27
 
 ### 🧹 Cleanup

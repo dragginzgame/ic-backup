@@ -14,7 +14,7 @@ use crate::model::{
         ExecutionWorkflowRecord,
     },
     ic_snapshot_data::{ExtentPlanningError, planned_extents},
-    operation_plan::{OperationPlanError, OperationPlanRecord},
+    operation_plan::{OperationPlanError, OperationPlanRecord, PlannedOperationRecord},
 };
 use ic_platform::management_canister_types::SnapshotDataKind;
 use thiserror::Error;
@@ -35,13 +35,24 @@ pub struct IcSnapshotDataUploadPlan<'workflow, 'request, 'source> {
     kinds: Vec<SnapshotDataKind>,
     plan: Option<OperationPlanRecord>,
 }
-impl<'workflow, 'request, 'source> IcSnapshotDataUploadPlan<'workflow, 'request, 'source> {
-    pub(crate) fn derive_kinds(
-        workflow: &ExecutionWorkflowRecord,
+// Carry the admitted allocation and bounded extents across guarded source IO.
+// Only finish can turn their exact ordered byte bindings into a public plan.
+pub(crate) struct DataUploadPreparation<'workflow, 'request, 'source> {
+    workflow: &'workflow ExecutionWorkflowRecord,
+    stage: &'workflow PlannedOperationRecord,
+    metadata: &'request IcSnapshotUploadRequest<'source>,
+    destination: Vec<u8>,
+    allocation_evidence: ArtifactChecksumRecord,
+    kinds: Vec<SnapshotDataKind>,
+}
+
+impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 'source> {
+    pub(crate) fn new(
+        workflow: &'workflow ExecutionWorkflowRecord,
         sequence: u64,
-        allocation: &IcSnapshotUploadReply<'_, '_>,
+        allocation: &IcSnapshotUploadReply<'request, 'source>,
         chunk_bytes: u64,
-    ) -> Result<Vec<SnapshotDataKind>, IcSnapshotDataUploadPlanningError> {
+    ) -> Result<Self, IcSnapshotDataUploadPlanningError> {
         let metadata = allocation.request();
         let stage = workflow.stage(sequence)?;
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = allocation.kind() else {
@@ -53,41 +64,55 @@ impl<'workflow, 'request, 'source> IcSnapshotDataUploadPlan<'workflow, 'request,
         {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
         }
-        Ok(planned_extents(
-            metadata.source(),
-            chunk_bytes,
-            stage.budget().mutations(),
-        )?)
-    }
-
-    pub(crate) fn from_bindings(
-        workflow: &'workflow ExecutionWorkflowRecord,
-        sequence: u64,
-        allocation: &IcSnapshotUploadReply<'request, 'source>,
-        kinds: Vec<SnapshotDataKind>,
-        bindings: &[ArtifactChecksumRecord],
-    ) -> Result<Self, IcSnapshotDataUploadPlanningError> {
-        // Consume the unchanged extents admitted before source IO. Workflow and
-        // allocation are the same immutable owners used by `derive_kinds`.
-        if bindings.len() != kinds.len() {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
-        }
-        let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = allocation.kind() else {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
-        };
-        let stage = workflow.stage(sequence)?;
-        let plan = data_stage_plan::build(workflow.allocation(), stage, bindings.iter().cloned())?;
+        let kinds = planned_extents(metadata.source(), chunk_bytes, stage.budget().mutations())?;
         Ok(Self {
             workflow,
-            sequence,
-            metadata: allocation.request(),
+            stage,
+            metadata,
             destination: snapshot_id.clone(),
             allocation_evidence: allocation.digest(),
             kinds,
-            plan,
         })
     }
 
+    pub(crate) const fn metadata(&self) -> &'request IcSnapshotUploadRequest<'source> {
+        self.metadata
+    }
+    pub(crate) fn destination(&self) -> &[u8] {
+        &self.destination
+    }
+    pub(crate) fn kinds(&self) -> &[SnapshotDataKind] {
+        &self.kinds
+    }
+
+    pub(crate) fn finish(
+        self,
+        bindings: &[ArtifactChecksumRecord],
+    ) -> Result<
+        IcSnapshotDataUploadPlan<'workflow, 'request, 'source>,
+        IcSnapshotDataUploadPlanningError,
+    > {
+        if bindings.len() != self.kinds.len() {
+            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+        }
+        let plan = data_stage_plan::build(
+            self.workflow.allocation(),
+            self.stage,
+            bindings.iter().cloned(),
+        )?;
+        Ok(IcSnapshotDataUploadPlan {
+            workflow: self.workflow,
+            sequence: self.stage.operation_sequence(),
+            metadata: self.metadata,
+            destination: self.destination,
+            allocation_evidence: self.allocation_evidence,
+            kinds: self.kinds,
+            plan,
+        })
+    }
+}
+
+impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
     /// Read exact ordered source extents. Operation sequences are zero-based indices.
     #[must_use]
     pub fn kinds(&self) -> &[SnapshotDataKind] {

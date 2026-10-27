@@ -7,12 +7,13 @@ mod plan;
 mod reply;
 pub(crate) use attempt::original_authority;
 pub use attempt::{IcSnapshotUploadAttempt, IcSnapshotUploadAttemptError};
+pub(crate) use plan::DataUploadPreparation;
 pub use plan::{IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError};
 pub use reply::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind};
 
 use super::{
     artifacts::{ArtifactChecksumRecord, ChecksumError},
-    ic_request::{IcRequestError, MAX_IC_SNAPSHOT_ID_BYTES, management_request_digest},
+    ic_request::{IcRequestError, admits_snapshot_id, management_request_digest},
     ic_snapshot_data::{IcSnapshotDataError, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
     ic_snapshot_metadata::IcSnapshotMetadataReply,
     operation_plan::OperationPlanRecord,
@@ -289,7 +290,7 @@ pub(super) fn validate_destination(
     source: &IcSnapshotMetadataReply<'_>,
     snapshot_id: &[u8],
 ) -> Result<(), IcSnapshotUploadError> {
-    if snapshot_id.is_empty() || snapshot_id.len() > MAX_IC_SNAPSHOT_ID_BYTES {
+    if !admits_snapshot_id(snapshot_id) {
         return Err(IcSnapshotUploadError::InvalidDestination);
     }
     if snapshot_id == source.request().snapshot_id() {

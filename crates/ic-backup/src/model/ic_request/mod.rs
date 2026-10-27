@@ -88,7 +88,7 @@ impl IcManagementRequestRecord {
                 return Err(IcRequestError::SnapshotRequired);
             }
             (IcManagementMethodRecord::LoadCanisterSnapshot, Some(bytes)) => {
-                if bytes.is_empty() || bytes.len() > MAX_IC_SNAPSHOT_ID_BYTES {
+                if !admits_snapshot_id(bytes) {
                     return Err(IcRequestError::InvalidSnapshotId);
                 }
             }
@@ -212,6 +212,12 @@ impl IcManagementRequestRecord {
         }
         Ok(())
     }
+}
+
+// Shared scalar admission; callers retain method-specific absence/source-ID rules
+// and JSON/Candid visitors retain their separate bounded decoding behavior.
+pub(super) fn admits_snapshot_id(bytes: &[u8]) -> bool {
+    !bytes.is_empty() && bytes.len() <= MAX_IC_SNAPSHOT_ID_BYTES
 }
 
 // Callers own canonical principal bytes, a fixed ASCII method and bounded arguments.

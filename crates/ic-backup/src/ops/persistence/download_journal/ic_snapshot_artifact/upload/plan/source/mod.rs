@@ -1,13 +1,11 @@
 //! Bind each admitted extent while hashing the same bytes under original source custody.
 
 use super::super::super::{
-    ArtifactChecksumRecord, File, IcSnapshotArtifactError, REGIONS, member,
+    ArtifactChecksumRecord, File, IcSnapshotArtifactError, member,
     verification::{checksum_child_with, checksum_exact_reader, checksum_ic_tree_with},
 };
-use super::super::IcSnapshotUploadArtifactError;
-use crate::model::{
-    ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, ic_snapshot_upload::IcSnapshotUploadRequest,
-};
+use super::super::{IcSnapshotUploadArtifactError, read_chunk_bytes};
+use crate::model::{ic_snapshot_data::DataExtent, ic_snapshot_upload::IcSnapshotUploadRequest};
 use ic_host_artifacts::artifact::HashingWriter;
 use ic_platform::management_canister_types::SnapshotDataKind;
 use std::{
@@ -62,38 +60,31 @@ fn member_checksum(
     bindings: &mut Vec<ArtifactChecksumRecord>,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotUploadArtifactError> {
     // Fixed metadata members have no payloads; zero-length regions still hash exactly.
-    if !member.is_payload {
+    let Some(payload) = member.payload else {
         return Ok(checksum_exact_reader(file, length)?);
-    }
+    };
     let mut digest = HashingWriter::new(io::sink(), length);
     while let Some(kind) = remaining.peek() {
-        let (member_name, offset, size) = match member::select(kind)? {
-            member::Member::Region {
-                index,
-                offset,
-                size,
-            } => (REGIONS[index].to_owned(), offset, size),
-            member::Member::Chunk { name } => (name, 0, length),
+        let (offset, size) = match (payload, DataExtent::from(*kind)) {
+            (
+                member::PayloadMember::Region(expected),
+                DataExtent::Region {
+                    index,
+                    offset,
+                    size,
+                },
+            ) if expected == index => (offset, size),
+            (member::PayloadMember::Chunk(expected), DataExtent::Chunk { hash })
+                if expected.as_bytes() == hash =>
+            {
+                (0, length)
+            }
+            _ => break,
         };
-        if member_name != member.name {
-            break;
-        }
         if offset != digest.bytes_written() || size > length - digest.bytes_written() {
             return Err(IcSnapshotArtifactError::IncompleteCoverage.into());
         }
-        let size = usize::try_from(size)
-            .ok()
-            .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
-            .ok_or(IcSnapshotArtifactError::FileShape)?;
-        let bytes =
-            ic_host_artifacts::artifact::read_exact_reader((&mut *file).take(size as u64), size)
-                .map_err(|error| match error {
-                    ic_host_artifacts::artifact::ArtifactError::LimitExceeded { .. }
-                    | ic_host_artifacts::artifact::ArtifactError::LengthMismatch { .. } => {
-                        IcSnapshotArtifactError::FileShape
-                    }
-                    error => IcSnapshotArtifactError::Io(error.into()),
-                })?;
+        let bytes = read_chunk_bytes(&mut *file, size)?;
         digest
             .write_all(&bytes)
             .map_err(IcSnapshotArtifactError::from)?;

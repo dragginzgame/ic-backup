@@ -58,12 +58,8 @@ impl<'a> IcSnapshotUploadSettlementView<'a> {
     /// Read only the explicitly attributed new descriptor, with no singleton inference.
     #[must_use]
     pub fn allocated_snapshot(&self) -> Option<&IcSnapshotInfo> {
-        match self.observation.reply() {
-            IcObservationReplyView::Inventory(reply) => self
-                .allocated_snapshot
-                .map(|index| &reply.snapshots()[index]),
-            IcObservationReplyView::Status(_) => None,
-        }
+        self.observation
+            .inventory_snapshot(self.allocated_snapshot?)
     }
 }
 

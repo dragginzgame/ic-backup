@@ -44,12 +44,18 @@ pub(super) fn chunk_name(hash: Sha256Digest) -> String {
 }
 
 /// One exact tree member; declaration digests grant no byte custody.
+#[derive(Clone, Copy)]
+pub(super) enum PayloadMember {
+    Region(usize),
+    Chunk(Sha256Digest),
+}
+
 pub(super) struct ExpectedMember {
     pub name: String,
     pub length: Option<u64>,
     pub maximum: u64,
     pub checksum: Option<ArtifactChecksumRecord>,
-    pub is_payload: bool,
+    pub payload: Option<PayloadMember>,
 }
 
 pub(super) fn expected(
@@ -82,7 +88,7 @@ pub(super) fn expected(
         length,
         maximum,
         checksum: Some(checksum),
-        is_payload: false,
+        payload: None,
     })
     .collect::<Vec<_>>();
     let values = metadata.metadata();
@@ -94,12 +100,13 @@ pub(super) fn expected(
                 values.wasm_memory_size,
                 values.stable_memory_size,
             ])
-            .map(|(name, length)| ExpectedMember {
+            .enumerate()
+            .map(|(index, (name, length))| ExpectedMember {
                 name: name.into(),
                 length: Some(length),
                 maximum: length,
                 checksum: None,
-                is_payload: true,
+                payload: Some(PayloadMember::Region(index)),
             }),
     );
     for chunk in &values.wasm_chunk_store {
@@ -115,7 +122,7 @@ pub(super) fn expected(
             length: None,
             maximum: MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64,
             checksum: Some(ArtifactChecksumRecord::from_digest(*digest.as_bytes())),
-            is_payload: true,
+            payload: Some(PayloadMember::Chunk(digest)),
         });
     }
     Ok(members)

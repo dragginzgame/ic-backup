@@ -9,7 +9,7 @@ use crate::model::{
         IcObservationResponseInput,
     },
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
-    ic_snapshot_reply::{IcSnapshotReply, IcSnapshotReplyError},
+    ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply, IcSnapshotReplyError},
     operation_plan::PlanContextRecord,
 };
 use thiserror::Error;
@@ -39,6 +39,15 @@ impl<'a> IcObservationResponseView<'a> {
     #[must_use]
     pub const fn reply(&self) -> &IcObservationReplyView<'a> {
         &self.reply
+    }
+
+    // The view owns its decoded inventory. Settlement keeps an admitted index
+    // and borrows the exact descriptor through this owner when requested.
+    pub(super) fn inventory_snapshot(&self, index: usize) -> Option<&IcSnapshotInfo> {
+        match &self.reply {
+            IcObservationReplyView::Inventory(reply) => reply.snapshots().get(index),
+            IcObservationReplyView::Status(_) => None,
+        }
     }
 }
 

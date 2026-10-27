@@ -66,13 +66,15 @@ pub fn validate<'a>(
     observation: &'a ConsistencyObservation,
 ) -> Result<ConsistencyView<'a>, ConsistencyError> {
     let digest = request.digest();
-    if *observation.request() != digest {
-        return Err(ConsistencyError::RequestMismatch);
-    }
     let binding = request.binding();
-    if let Some(field) = super::observed_context::first_mismatch(binding, observation.context()) {
-        return Err(ConsistencyError::ContextMismatch(field));
-    }
+    super::observed_context::admit_request_context(
+        &digest,
+        observation.request(),
+        binding,
+        observation.context(),
+        ConsistencyError::RequestMismatch,
+        ConsistencyError::ContextMismatch,
+    )?;
     if observation.inventory() != request.inventory() {
         return Err(ConsistencyError::InventoryMismatch);
     }
@@ -84,12 +86,11 @@ pub fn validate<'a>(
     {
         return Err(ConsistencyError::SelectionMismatch);
     }
-    if observation.remote_observations() > request.max_remote_observations() {
-        return Err(ConsistencyError::ObservationLimitExceeded {
-            limit: request.max_remote_observations(),
-            reported: observation.remote_observations(),
-        });
-    }
+    super::observed_context::admit_limit(
+        request.max_remote_observations(),
+        observation.remote_observations(),
+        |limit, reported| ConsistencyError::ObservationLimitExceeded { limit, reported },
+    )?;
     if observation
         .targets()
         .iter()

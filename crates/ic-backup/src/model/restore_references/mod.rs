@@ -130,10 +130,9 @@ impl RestoreReferencesRecord {
         &mut self,
         reference: &RestoreReferenceRecord,
     ) -> Result<bool, RestoreReferenceError> {
-        let Some(index) = self
+        let Ok(index) = self
             .restores
-            .iter()
-            .position(|entry| entry.journal == reference.journal)
+            .binary_search_by(|entry| entry.journal.cmp(&reference.journal))
         else {
             return Ok(false);
         };
@@ -150,26 +149,26 @@ impl RestoreReferencesRecord {
         &mut self,
         reference: RestoreReferenceRecord,
     ) -> Result<bool, RestoreReferenceError> {
-        if let Some(existing) = self
+        let index = match self
             .restores
-            .iter()
-            .find(|entry| entry.journal == reference.journal)
+            .binary_search_by(|entry| entry.journal.cmp(&reference.journal))
         {
-            if existing != &reference {
-                return Err(RestoreReferenceError::AuthorityConflict {
-                    journal: reference.journal,
-                });
+            Ok(index) => {
+                if self.restores[index] != reference {
+                    return Err(RestoreReferenceError::AuthorityConflict {
+                        journal: reference.journal,
+                    });
+                }
+                return Ok(false);
             }
-            return Ok(false);
-        }
+            Err(index) => index,
+        };
         if self.restores.len() == MAX_RESTORE_REFERENCES {
             return Err(RestoreReferenceError::TooManyReferences {
                 limit: MAX_RESTORE_REFERENCES,
             });
         }
-        self.restores.push(reference);
-        self.restores
-            .sort_by(|left, right| left.journal.cmp(&right.journal));
+        self.restores.insert(index, reference);
         Ok(true)
     }
 }

@@ -6,7 +6,7 @@ mod wire;
 use super::{
     artifacts::ArtifactChecksumRecord,
     ic_request::{
-        IcRequestError, MAX_IC_ARGUMENT_BYTES, MAX_IC_SNAPSHOT_ID_BYTES, management_request_digest,
+        IcRequestError, MAX_IC_ARGUMENT_BYTES, admits_snapshot_id, management_request_digest,
     },
 };
 use ic_platform::management_canister_types::{
@@ -42,7 +42,7 @@ impl IcSnapshotMetadataRequest {
     /// Rejects malformed principals, empty/oversized raw identifiers, encoding
     /// failure or arguments exceeding the existing 4 KiB request bound.
     pub fn new(target: &str, snapshot_id: &[u8]) -> Result<Self, IcRequestError> {
-        if snapshot_id.is_empty() || snapshot_id.len() > MAX_IC_SNAPSHOT_ID_BYTES {
+        if !admits_snapshot_id(snapshot_id) {
             return Err(IcRequestError::InvalidSnapshotId);
         }
         let (target, principal) =

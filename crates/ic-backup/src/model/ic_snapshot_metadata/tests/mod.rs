@@ -1,4 +1,5 @@
 use super::*;
+use crate::model::ic_request::MAX_IC_SNAPSHOT_ID_BYTES;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::{CandidType, Nat, Reserved};
 use ic_platform::management_canister_types::{

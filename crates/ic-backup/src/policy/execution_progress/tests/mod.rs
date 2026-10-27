@@ -1,6 +1,7 @@
 //! Fresh local evidence joins; fixtures attest no IC effects or current authority.
 
 use super::*;
+use crate::model::attempt_journal::{AttemptAuthorityRecord, OperationBindingRecord};
 use crate::model::{
     attempt_journal::{
         AttemptJournalRecordError, MutationOutcomeRecord, MutationReceiptRequest,

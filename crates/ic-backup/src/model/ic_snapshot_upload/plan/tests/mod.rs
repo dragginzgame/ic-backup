@@ -52,7 +52,8 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
     with_values(values, |metadata| {
         let workflow = data_workflow(metadata, 12);
         let reply = allocation(metadata);
-        let kinds = IcSnapshotDataUploadPlan::derive_kinds(&workflow, 7, &reply, 4).unwrap();
+        let preparation = DataUploadPreparation::new(&workflow, 7, &reply, 4).unwrap();
+        let kinds = preparation.kinds();
         let expected = vec![
             SnapshotDataKind::WasmModule { offset: 0, size: 4 },
             SnapshotDataKind::WasmModule { offset: 4, size: 1 },
@@ -61,15 +62,13 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
             SnapshotDataKind::WasmChunk { hash: vec![2; 32] },
         ];
         assert_eq!(
-            contract::encode_one(&kinds).unwrap(),
+            contract::encode_one(kinds).unwrap(),
             contract::encode_one(expected).unwrap()
         );
         let bindings: Vec<_> = (0..kinds.len())
             .map(|i| ArtifactChecksumRecord::from_bytes(&i.to_le_bytes()))
             .collect();
-        let data =
-            IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, kinds.clone(), &bindings)
-                .unwrap();
+        let data = preparation.finish(&bindings).unwrap();
         assert_eq!(data.destination(), &[21, 0, 255]);
         let plan = data.plan().unwrap();
         assert_eq!(plan.budget().mutations(), 12);
@@ -111,14 +110,10 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
             Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
         ));
         assert!(
-            IcSnapshotDataUploadPlan::from_bindings(
-                &workflow,
-                7,
-                &reply,
-                kinds.clone(),
-                &bindings[..4]
-            )
-            .is_err()
+            DataUploadPreparation::new(&workflow, 7, &reply, 4)
+                .unwrap()
+                .finish(&bindings[..4])
+                .is_err()
         );
     });
 }
@@ -132,13 +127,14 @@ fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
     with_values(input.clone(), |metadata| {
         let reply = allocation(metadata);
         assert_eq!(
-            IcSnapshotDataUploadPlan::derive_kinds(&data_workflow(metadata, 2), 7, &reply, 4)
+            DataUploadPreparation::new(&data_workflow(metadata, 2), 7, &reply, 4)
                 .unwrap()
+                .kinds()
                 .len(),
             2
         );
         assert!(matches!(
-            IcSnapshotDataUploadPlan::derive_kinds(&data_workflow(metadata, 1), 7, &reply, 4),
+            DataUploadPreparation::new(&data_workflow(metadata, 1), 7, &reply, 4),
             Err(IcSnapshotDataUploadPlanningError::InsufficientAllowance {
                 required: 2,
                 original: 1
@@ -146,17 +142,12 @@ fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
         ));
         for chunk in [0, 1024 * 1024 + 1, u64::MAX] {
             assert!(matches!(
-                IcSnapshotDataUploadPlan::derive_kinds(
-                    &data_workflow(metadata, 2),
-                    7,
-                    &reply,
-                    chunk
-                ),
+                DataUploadPreparation::new(&data_workflow(metadata, 2), 7, &reply, chunk),
                 Err(IcSnapshotDataUploadPlanningError::InvalidChunkSize)
             ));
         }
         assert!(matches!(
-            IcSnapshotDataUploadPlan::derive_kinds(&data_workflow(metadata, 2), 99, &reply, 4),
+            DataUploadPreparation::new(&data_workflow(metadata, 2), 99, &reply, 4),
             Err(IcSnapshotDataUploadPlanningError::Plan(_))
         ));
     });
@@ -166,11 +157,11 @@ fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
         let reply = allocation(metadata);
         let workflow = data_workflow(metadata, 2);
         assert!(matches!(
-            IcSnapshotDataUploadPlan::derive_kinds(&workflow, 7, &reply, 1),
+            DataUploadPreparation::new(&workflow, 7, &reply, 1),
             Err(IcSnapshotDataUploadPlanningError::CountOverflow)
         ));
         assert!(matches!(
-            IcSnapshotDataUploadPlan::derive_kinds(&workflow, 7, &reply, 1024 * 1024),
+            DataUploadPreparation::new(&workflow, 7, &reply, 1024 * 1024),
             Err(IcSnapshotDataUploadPlanningError::InsufficientAllowance { .. })
         ));
     });
@@ -185,8 +176,10 @@ fn empty_regions_make_no_placeholder_but_known_empty_chunk_requires_a_write() {
     with_values(input.clone(), |metadata| {
         let reply = allocation(metadata);
         let workflow = data_workflow(metadata, 1);
-        let plan =
-            IcSnapshotDataUploadPlan::from_bindings(&workflow, 7, &reply, Vec::new(), &[]).unwrap();
+        let plan = DataUploadPreparation::new(&workflow, 7, &reply, 4)
+            .unwrap()
+            .finish(&[])
+            .unwrap();
         assert!(plan.kinds().is_empty());
         assert!(plan.plan().is_none());
     });
@@ -197,8 +190,9 @@ fn empty_regions_make_no_placeholder_but_known_empty_chunk_requires_a_write() {
         let reply = allocation(metadata);
         let workflow = data_workflow(metadata, 1);
         assert_eq!(
-            IcSnapshotDataUploadPlan::derive_kinds(&workflow, 7, &reply, 1024 * 1024)
+            DataUploadPreparation::new(&workflow, 7, &reply, 1024 * 1024)
                 .unwrap()
+                .kinds()
                 .len(),
             1
         );
@@ -216,19 +210,14 @@ fn changed_original_context_and_data_acknowledgement_cannot_plan_allocation() {
         caller_fields["allocation"]["context"]["caller"] = serde_json::json!(TARGET);
         let another_caller = serde_json::from_value(caller_fields).unwrap();
         assert!(
-            IcSnapshotDataUploadPlan::derive_kinds(
-                &another_caller,
-                7,
-                &allocation(metadata),
-                1024 * 1024
-            )
-            .is_ok()
+            DataUploadPreparation::new(&another_caller, 7, &allocation(metadata), 1024 * 1024)
+                .is_ok()
         );
         let mut fields = serde_json::to_value(&workflow).unwrap();
         fields["allocation"]["context"]["release"] = serde_json::json!("99".repeat(32));
         let changed = serde_json::from_value(fields).unwrap();
         assert!(matches!(
-            IcSnapshotDataUploadPlan::derive_kinds(&changed, 7, &allocation(metadata), 1024 * 1024),
+            DataUploadPreparation::new(&changed, 7, &allocation(metadata), 1024 * 1024),
             Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
         ));
         let data = IcSnapshotUploadRequest::data(
@@ -244,7 +233,7 @@ fn changed_original_context_and_data_acknowledgement_cannot_plan_allocation() {
         )
         .unwrap();
         assert!(matches!(
-            IcSnapshotDataUploadPlan::derive_kinds(&workflow, 7, &reply, 1024 * 1024),
+            DataUploadPreparation::new(&workflow, 7, &reply, 1024 * 1024),
             Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
         ));
     });

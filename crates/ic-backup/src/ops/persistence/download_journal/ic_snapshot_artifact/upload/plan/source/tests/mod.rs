@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::{
+    model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES,
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
     test_support::ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan},
 };
@@ -39,7 +40,7 @@ fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_
     let members = member::expected(&metadata).unwrap();
     let module = members
         .iter()
-        .find(|member| member.name == REGIONS[0])
+        .find(|member| matches!(member.payload, Some(member::PayloadMember::Region(0))))
         .unwrap();
     let checksum = ArtifactChecksumRecord::from_bytes(b"declared original source");
     let upload = IcSnapshotUploadRequest::metadata(&plan, &metadata, &checksum).unwrap();

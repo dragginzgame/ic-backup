@@ -267,6 +267,24 @@ impl OperationPlanRecord {
             operation.budget().clone(),
         ))
     }
+    // Borrow the same original fields used by authority construction; progress
+    // admission must not grow a separate definition of original authority.
+    pub(crate) fn matches_authority(
+        &self,
+        operation: &PlannedOperationRecord,
+        intent: &ArtifactChecksumRecord,
+        authority: &AttemptAuthorityRecord,
+    ) -> bool {
+        let binding = authority.binding();
+        let identity_matches = binding.intent() == intent.hash()
+            && binding.operation_sequence() == operation.operation_sequence()
+            && binding.target() == operation.target()
+            && binding.request() == operation.request();
+        let context_matches = binding.network() == self.context.network()
+            && binding.caller() == self.context.caller()
+            && binding.release() == self.context.release();
+        identity_matches && context_matches && authority.budget() == operation.budget()
+    }
     /// Hash the entire canonical declaration using the maintained nonrecursive v1 encoding.
     ///
     /// Derived intent/authority, allocated views and local progress are excluded.

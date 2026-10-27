@@ -77,13 +77,15 @@ pub fn validate<'a>(
     observation: &'a RestoreSafetyObservation,
 ) -> Result<RestoreSafetyView<'a>, RestoreSafetyError> {
     let digest = request.digest();
-    if *observation.request() != digest {
-        return Err(RestoreSafetyError::RequestMismatch);
-    }
     let binding = request.binding();
-    if let Some(field) = super::observed_context::first_mismatch(binding, observation.context()) {
-        return Err(RestoreSafetyError::ContextMismatch(field));
-    }
+    super::observed_context::admit_request_context(
+        &digest,
+        observation.request(),
+        binding,
+        observation.context(),
+        RestoreSafetyError::RequestMismatch,
+        RestoreSafetyError::ContextMismatch,
+    )?;
     if observation.inventory() != request.inventory() {
         return Err(RestoreSafetyError::InventoryMismatch);
     }
@@ -102,12 +104,11 @@ pub fn validate<'a>(
     if observation.source_artifacts() != requirement.source_artifacts() {
         return Err(RestoreSafetyError::SourceArtifactsMismatch);
     }
-    if observation.remote_observations() > request.max_remote_observations() {
-        return Err(RestoreSafetyError::ObservationLimitExceeded {
-            limit: request.max_remote_observations(),
-            reported: observation.remote_observations(),
-        });
-    }
+    super::observed_context::admit_limit(
+        request.max_remote_observations(),
+        observation.remote_observations(),
+        |limit, reported| RestoreSafetyError::ObservationLimitExceeded { limit, reported },
+    )?;
     let before_start = request.wire().method() == IcManagementMethodRecord::StartCanister;
     let lifecycle_matches = observation.targets().iter().all(|target| {
         if before_start && target.target != binding.target() {
