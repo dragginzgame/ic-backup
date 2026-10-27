@@ -69,7 +69,14 @@ Native Linux, native macOS, cross-compilation and installed-IC acceptance are
 distinct evidence. The direct dependency gate and independent package consumers
 also have distinct scopes; see [the Platform boundary](ic-platform.md).
 
-The reviewed Shared Tooling 0.26.21 snapshot includes the
+The baseline keeps Candid derives at named external-protocol boundaries, uses
+the existing `thiserror` dependency for mechanical native errors and requires
+strict input admission, bounded process capture and safe terminal rendering.
+Backup's bounded management wire adapters remain external Candid projections;
+domain and persisted records do not acquire a Candid contract. Snapshot adoption
+does not install new source scanners or qualify every existing input boundary.
+
+The reviewed Shared Tooling 0.26.22 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without

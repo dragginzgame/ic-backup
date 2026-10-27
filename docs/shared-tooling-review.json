@@ -1,87 +1,166 @@
 {
   "version": 1,
-  "inspection_date": "2026-10-26",
+  "inspection_date": "2026-10-27",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "66c91c4412856baa147482e648fc80428db8b179",
-  "label": "0.26.21",
+  "revision": "5fc904a935d82ad31f0fba14434b71ccb8c10345",
+  "label": "0.26.22",
   "manifest": ".shared-tooling.snapshot",
   "selected_files": 124,
-  "previous_revision": "a7f85d45d4212d4c39225f58597580560a333550",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/3a6f0fe3926eba656a4ed4798c321f25963a3f9c/docs/shared-tooling-review.json",
+  "previous_revision": "66c91c4412856baa147482e648fc80428db8b179",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/15ffb73c001269c07e329d0e3f26044d98ac5d87/docs/shared-tooling-review.json",
   "canonical_refresh": true,
   "source_verification": {
-    "clean_source_checkout": true,
+    "clean_shared_source_checkout": true,
     "dirty_sibling_inputs_excluded": true,
     "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "66c91c4412856baa147482e648fc80428db8b179",
-    "version_authority": "Committed VERSION selects 0.26.21; the observed GitHub main matches the clean selected source."
+    "observed_remote_main": {
+      "shared_tooling": "5fc904a935d82ad31f0fba14434b71ccb8c10345",
+      "ic_platform": "60c43108ca7f2a99bfac62ec21075afff5ed7a7e",
+      "ic_tooling": "f268aef5d205e51811e934648afcd13f026635f1"
+    },
+    "version_authority": "Committed Shared VERSION selects 0.26.22. GitHub main identities were observed through the GitHub connector; registry archives and published src files match selected committed releases."
   },
   "changed_paths": [
     "DRAGGINZGAME.md",
-    "rules/changelogs.md"
+    "audits/code-hygiene.md",
+    "docs/principles/rust-code-hygiene.md",
+    "rules/cargo-dependencies.md",
+    "rules/engineering-details.md"
   ],
   "added_paths": [],
   "retired_paths": [],
   "consumer_changes": [
-    "Merge authorized changelog presentation PR #69 at its reviewed head, preserving older entries.",
-    "Adopt emoji category sections in current and future root entries; no release gate or history rewrite is added.",
-    "Align manifest minimums and separately selected CLIs with published Tooling 0.68.8 and Platform 0.6.19; retain existing feature selection, package version 0.44.3 and incoming lockfile."
+    "Select Platform 0.7.0 and Host/Testkit 0.69.0 through the root workspace, retaining feature choices and own package version 0.44.8. The separately selected release editor is 0.69.0.",
+    "Advance the incoming Tooling 0.68.12 selections to 0.69.0. Testkit now uses Platform 0.7.0, removing the development-only 0.6.21 package without other package reselection.",
+    "Document the public Host error identity change and select pending 0.45.0 notes. Consumers exchanging NamedWriteError or DirectoryChecksumError must align direct Host dependencies to 0.69.",
+    "Retain external management wire adapters under the clarified owned-type Candid rule and preserve strict input/process/rendering guidance. No new scanner or blanket enforcement claim is added.",
+    "Preserve the independent release-plan cleanup under issue #71 and its existing focused evidence."
+  ],
+  "compatibility_assessment": {
+    "backup_release_classification": "Breaking Host Rust type identity change; pending notes are 0.45.0. Own package versions remain 0.44.8. No wire, stored-data or effect-order migration.",
+    "platform": "0.7 removes compiler-only Candid parser exports unused by Backup. Selected principal, Candid, Agent and PocketIC modules have unchanged sources from 0.6.19. Management exports are additive over the same exact 0.11.0 upstream crate; optional new protocol features remain unselected.",
+    "tooling": "All committed src files of the five consumed Tooling packages are unchanged between 0.68.12 and 0.69.0. Tooling's Platform requirement moves to 0.7.0, aligning Testkit with Backup. The Host 0.69 crate versions still define distinct public error types from 0.68.",
+    "public_identities": "Root normal/development graphs contain one Platform 0.7.0. Core remains Agent-free; independent normal consumers exclude Testkit/PocketIC/WAT. Public Host error identities move to 0.69; Candid 0.10.39, external principal 0.1.5, management DTO 0.11.0 and Agent 0.49.3 are unchanged. Development DTO 0.8.0 remains separate.",
+    "rust_version": "Independent normal consumers pass on Rust 1.91.0, including public Host error identity probes."
+  },
+  "published_sources": [
+    {
+      "committed_source_files": 85,
+      "package": "ic-platform",
+      "registry_archive_sha256": "677aad73f8b1339cbe1cd7c851f4140bdcdc91c3838fda425bb82549dcd7c35d",
+      "revision": "60c43108ca7f2a99bfac62ec21075afff5ed7a7e",
+      "source_bytes_match": true,
+      "version": "0.7.0"
+    },
+    {
+      "committed_source_files": 30,
+      "package": "ic-host-artifacts",
+      "registry_archive_sha256": "0be52dbee3196757c330a4b673447eb42c07823210bc6d3308917696e2bf5da7",
+      "revision": "f268aef5d205e51811e934648afcd13f026635f1",
+      "source_bytes_match": true,
+      "version": "0.69.0"
+    },
+    {
+      "committed_source_files": 61,
+      "package": "ic-host-fs",
+      "registry_archive_sha256": "74745003fa19e7036ecaf1523f9aa6348e7bc74c91d3e906299b688d7d3d6979",
+      "revision": "f268aef5d205e51811e934648afcd13f026635f1",
+      "source_bytes_match": true,
+      "version": "0.69.0"
+    },
+    {
+      "committed_source_files": 45,
+      "package": "ic-host-process",
+      "registry_archive_sha256": "bfe52382d0c27f6e2ae313c771d736080ade7493fc6abebd720a65361403ccff",
+      "revision": "f268aef5d205e51811e934648afcd13f026635f1",
+      "source_bytes_match": true,
+      "version": "0.69.0"
+    },
+    {
+      "committed_source_files": 27,
+      "package": "ic-testkit",
+      "registry_archive_sha256": "8a6fdcfb4adf96f7850a6f16e8985db6d90d82562743516a6121f4376e657f97",
+      "revision": "f268aef5d205e51811e934648afcd13f026635f1",
+      "source_bytes_match": true,
+      "version": "0.69.0"
+    },
+    {
+      "committed_source_files": 64,
+      "package": "ic-build",
+      "registry_archive_sha256": "37e6b66125a983e0e579fe9073a2d9dce333f1bac06e879bed88815c1ec9be49",
+      "revision": "f268aef5d205e51811e934648afcd13f026635f1",
+      "source_bytes_match": true,
+      "version": "0.69.0"
+    }
   ],
   "setup_refresh_required": true,
-  "setup_refresh_reason": "The separately selected release editor advances to 0.68.8; canonical setup and offline admission reuse authenticated caches.",
-  "dependency_and_release_changes": "The incoming lock already selects Host/Testkit 0.68.8 and Platform 0.6.19 and carries an incoming OpenSSL probe 0.2.2 edit. Online Cargo update found no additional Rust-1.91-compatible changes. Package versions remain 0.44.3; pending compatible notes are 0.44.4.",
+  "setup_refresh_reason": "Canonical setup and offline common/Testkit/editor checks pass for the selected 0.69.0 CLIs. Older bundles and fixture evidence remain retained.",
+  "dependency_and_release_changes": "The current refresh upgrades only Host Artifacts, Host FS, Host Process and Testkit from 0.68.12 to 0.69.0 and removes Platform 0.6.21. The earlier Platform 0.7.0 and Shared 0.26.22 adoption and issue #71 work remain intact. No own version, Git, release, publication or deployment effects.",
+  "incoming_lock_sha256": "bd52927fb0c4b4d5dcaf00d152ef42229a95357e0932dc5d8d502da527331405",
+  "final_lock_sha256": "5266a7ec6a05d9c050dbbe0047ad6a822813a318708d17f9fb78793ed4c9335e",
   "deployment_enforcement": {
     "automated": [
-      "Direct declarations compose the common IC guard with local retired-package/WAT bans, using package identity across aliases and all Cargo dependency tables.",
-      "Existing independent consumer checks exclude Testkit, PocketIC and WAT from selected normal graphs."
+      "Common external IC declaration checks compose with local retired-package/WAT bans using locked metadata.",
+      "Independent normal-consumer graphs exclude Testkit/PocketIC/WAT and the older Platform selection; Core additionally excludes Agent."
     ],
     "not_enforced_here": [
-      "No application deployment entrypoint binds target/features, locked build and artifact digest to deployed bytes."
+      "No deployed application entrypoint binds target/features, locked build and artifact digest to deployed bytes.",
+      "Rule adoption alone does not install scanner, machine-output, process-capture or terminal-rendering enforcement."
     ],
-    "scope": "Host libraries only; direct declaration admission and independent normal-consumer graphs do not qualify deployed Wasm bytes. Backup adds no application deployment entrypoint."
+    "scope": "Host libraries and contributor setup; application deployment and installed-IC acceptance remain consumer-owned."
   },
   "qualification": {
     "status": "passed-focused-consumer-adoption",
     "passed": [
-      "Canonical export of 124 files; only the core baseline and changelog rules change.",
-      "Registry archive checksums and committed-source comparisons for Tooling 0.68.8 and Platform 0.6.19; consumed Rust sources match the prior releases.",
-      "Full locked root and independent normal-consumer graphs, dependency inheritance/boundaries and unchanged incoming lockfile.",
-      "Strict all-target/all-feature Clippy for both affected libraries.",
-      "Independent Core/Agent Rust 1.91.0 consumers, including public Host error identities.",
-      "Canonical selected CLI setup and offline common/Testkit/editor admission.",
-      "Actual selected editor renders isolated manifest and lock candidates with exact owned versions, unchanged foreign packages and unchanged live inputs.",
-      "Final snapshot integrity, non-mutating formatting, maintained Markdown links and whitespace checks."
+      "Retained canonical Shared 0.26.22 impact review/export of 124 files; no further snapshot refresh or producer suite.",
+      "Current registry archive checksums and committed src comparisons for Platform 0.7.0 and consumed Tooling 0.69.0 packages; Tooling src bodies unchanged from 0.68.12.",
+      "Current locked root and independent normal graph admission and dependency inheritance/boundaries; strict all-target/all-feature Clippy for both packages.",
+      "84 selected Core codec, golden, identity, bounds, publication, JSON and command-custody tests on the 0.69 graph.",
+      "Three Agent endpoint/evidence unit tests and fourteen local HTTP boundary tests on the 0.69 graph.",
+      "Both independent Rust 1.91.0 consumers with public Host 0.69 error identity probes.",
+      "Canonical setup, offline tool checks and twelve isolated preparation fixtures with release editor 0.69.0.",
+      "Core connected same-ID PocketIC capture/restore/effect-free replay on Testkit 0.69.0.",
+      "Both independent normal Agent journeys on Tooling 0.69.0: capture/restore/acceptance/terminal replay and death after authenticated load without redispatch.",
+      "Final formatting, snapshot integrity, maintained local Markdown links and whitespace checks."
     ],
     "not_run": [
-      "New full local CI, simulator or complete release-adapter suite; consumed Rust sources and runner/adapter implementations are unchanged.",
-      "Native macOS, installed Canic/IC, package-archive/registry-only acceptance, publication or deployment."
+      "New full local CI, complete release-adapter/receipt matrix or generic producer tooling suites.",
+      "Native macOS, installed IC, package-archive/registry-only Backup acceptance, publication or deployment.",
+      "Issue #71 retains its earlier five metadata and nine receipt/recovery case evidence at unchanged helper sources; this Tooling refresh does not provide native macOS acceptance."
     ],
     "evidence": [
-      "/tmp/backup-refresh-shared-impact.log",
-      "/tmp/backup-refresh-shared.log",
-      "/tmp/backup-refresh-published.json",
-      "/tmp/backup-refresh-admission.log",
-      "/tmp/backup-refresh-metadata.json",
-      "/tmp/backup-refresh-graphs/",
-      "/tmp/backup-refresh-clippy.log",
-      "/tmp/backup-refresh-consumers.log",
-      "/tmp/backup-refresh-setup.log",
-      "/tmp/backup-refresh-tools.log",
-      "/tmp/backup-refresh-editor/",
-      "/tmp/backup-refresh-final.log"
+      "/tmp/backup-adopt-shared-impact.log",
+      "/tmp/backup-adopt-shared-refresh.log",
+      "/tmp/backup-tooling69-provenance.json",
+      "/tmp/backup-tooling69-source-diff.log",
+      "/tmp/backup-tooling69-lock-delta.json",
+      "/tmp/backup-tooling69-graphs.MFafMm/",
+      "/tmp/backup-tooling69-admission.log",
+      "/tmp/backup-tooling69-clippy.log",
+      "/tmp/backup-tooling69-core.log",
+      "/tmp/backup-tooling69-agent-http.log",
+      "/tmp/backup-tooling69-msrv.log",
+      "target/msrv-consumers.GTw8qo/",
+      "/tmp/backup-tooling69-setup.log",
+      "/tmp/backup-tooling69-tools-check.log",
+      "/tmp/backup-tooling69-editor.log",
+      "target/shared-release-tests.D8SwiX/",
+      "/tmp/backup-tooling69-core-pocketic.log",
+      "/tmp/ic-backup-pocketic-408287-0/",
+      "/tmp/backup-tooling69-agent-pocketic.log",
+      "/tmp/backup-tooling69-final.log",
+      "/tmp/ic-backup-agent-independent-build-451335-0/",
+      "/tmp/ic-backup-agent-pocketic-451335-1/",
+      "/tmp/ic-backup-agent-pocketic-451335-2/"
     ]
   },
-  "preserved_incoming_lock_sha256": "5e51f1c9f7bd8477ff56ec4bae0e47b4fb5596e0b30b233e36ce5cf1c2d68c53",
   "findings": [],
-  "merged_pr": {
-    "number": 69,
-    "head": "4c643db917269cc70752ebcd4b768a7d5c5f08c7",
-    "merge_commit": "528afdda02d0dae0ff7c10b70ec5eaaefa806f08",
-    "url": "https://github.com/dragginzgame/ic-backup/pull/69",
-    "current_author_permission": "admin",
-    "enforced_branch_rules": [],
-    "observed_ci_run": "https://github.com/dragginzgame/ic-backup/actions/runs/40362881639",
-    "observed_ci_status": "in_progress",
-    "ci_scope": "Merged commit only; subsequent local adoption edits are not included."
+  "tooling_refresh": {
+    "previous_tooling": "0.68.12",
+    "selected_tooling": "0.69.0",
+    "revision": "f268aef5d205e51811e934648afcd13f026635f1",
+    "incoming_lock_sha256": "fe3241d4e436fff7ebf124e6efd20ee886e07ffa36c840ab639f5deb5b988279",
+    "source_body_diff": "No src changes in consumed Host Artifacts, Host FS, Host Process, Testkit or Build packages.",
+    "migration": "Align consumer direct Host dependencies to 0.69 where exchanging Backup's public Host error types."
   }
 }

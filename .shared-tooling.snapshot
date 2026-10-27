@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.26.21
+# version	0.26.22
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	66c91c4412856baa147482e648fc80428db8b179
+revision	5fc904a935d82ad31f0fba14434b71ccb8c10345
 # entrypoint	docs/verification-helpers.md
 # entrypoint	scripts/ci/check-documentation-links.pl
 # entrypoint	scripts/ci/test-documentation-links.pl
@@ -101,7 +101,7 @@ file	a04ef3105e7851b83bb682120873e29a6c3c604183c275bc53051dd9e4b300a7	x	scripts/
 file	bf82bdccfa783dd546d15a7a3656ceacd0b21b8a1f9ac5fdbcb0cba10fa33904	x	scripts/ci/test-documentation-links.pl
 file	74fe8a45d5235ca4126b2ba9f7db1082d4f3414d0294ad8d5f3ddaf279d2f9c0	-	rules/dependency-pinning.md
 file	d5933681ed28d3a4cc34c1d5a6cc5701261f5f947f167863e76178b474861f6e	-	audits/README.md
-file	bf4d6e18b578aa84b9f96a7c6c0794852636bce48b28bff4664e531dd79eaf21	-	audits/code-hygiene.md
+file	cbe34699ea2073f108b310c5a703f09786e75151bb28ebb8fc64f486223eaed6	-	audits/code-hygiene.md
 file	52628e3c08d8c1ac8e258d34ea102daa81253fe78448d5afe406b52e247610d3	-	audits/flow-convergence-and-duplication.md
 file	ffdca09602c44c8aff8fc2a17588b20eb6a56e2e71fb6d42ad75087fdd65819b	-	audits/complexity-and-technical-debt.md
 file	1b64cf2ba0393ab329ec29eb05a696d47ef5933f5ab9bff6e1fe4a7e7b294075	-	audits/module-surface-hardening.md
@@ -119,7 +119,7 @@ file	f0fa06579c46aa3bd02a3f5823400ea1f42bdcec29305cce7869c5c091310608	x	scripts/
 file	59f6cb0b47fcfa698396776bbb391737292ebf34457ad7c65803fe7b36961499	-	docs/principles/README.md
 file	9315c9faffa4f36cfab496342535bf49d728ddd2111e8e127cbc44b3fac89ce7	-	docs/principles/decision-artifact-discipline.md
 file	0e95bbdb5bdaabf587297b20324b034979a7e0ff81be5cee9ac440f6fdcdb0d3	-	docs/principles/reviewable-changes.md
-file	b7486cbe9bb822d6a73d1a3a9da9f3ab8ad3268fe9cddd5a9c7c71e167cf6c82	-	docs/principles/rust-code-hygiene.md
+file	fe4aae95898f3dae972faa75ef15e26930644db321141ee95c9ac41c5bf98c3f	-	docs/principles/rust-code-hygiene.md
 file	457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55	-	docs/principles/simplicity-and-maintainability.md
 file	b4f6c957e5dac9caa8222140a928f47eccb66ac09273d797426c521fa3d8101b	-	docs/consuming-snapshots.md
 file	dfab70f4facaba0b1befa34db70c51587442b55fe40ba1de0fef5b9475cc9778	-	docs/supported-hosts.md
@@ -127,13 +127,13 @@ file	36f36552df36ea6e082f1fd1f14661d40b281ea01294ffda2eb6c6ec91bc6907	x	scripts/
 file	a4682503812f210b951aede536cdd65642bfe266b02ab532853a1aeff64f9742	x	scripts/ci/verify-shared-tooling-snapshot.sh
 file	3258ccde9b45cfa46310e3ce117196857b1f963289bd53583523a599c99af8a7	x	scripts/ci/run-validation-targets.sh
 file	c52fe4771eb3b731b6cf1f4250e5af955cb4432176ed925fac636087f239f387	x	scripts/ci/test-validation-target-runner.sh
-file	6bbddc6caf450fbc987dcef66c8756eee1d7571e74b49529ff05708aaff206bf	-	DRAGGINZGAME.md
+file	c0f3fe326ed6a96c1e8548526972fa12c78051c0aab4b5dc407bb20111aa5562	-	DRAGGINZGAME.md
 file	f5b493200ef3aaa2f08b27b4a644345005d5e86431dc4cb33fd27844056f5ff0	-	rules/changelogs.md
 file	9567eeaba8dc34c56f5da8e32910b0db57aa43606a6e08109615d1476a356c94	-	docs/releases.md
 file	8e72d1bf484eee8c8ec079ab65be7c5718f46117952a41fe9cbcf6ad3abf4bd3	x	scripts/ci/run-release.sh
 file	918815a81861abd80684fea14f71cb5a298644317afc0f5860a3d1b6506a0a16	x	scripts/ci/next-release-version.sh
 file	1316c76e83c65a39d9cca45992433d71bcb9473a7a0af1da4cb09f8a7026f52f	-	scripts/ci/finalize-release-changelog.awk
-file	2f30364bf420a76ba27579b3942cb6657fc456695ccd5d0fb47c97600963c07b	-	rules/cargo-dependencies.md
+file	661dc6af2c80754005b6bbfbd463d408af2ea33c02ffa2710d6bc6a125f535df	-	rules/cargo-dependencies.md
 file	ea61b8d4e501011f73729ed56613c365b14a947c8ca18d66dced4990cbdb40ea	-	rules/git-hooks.md
 file	0a24db6fb954511ecd0885c263309fd973817613483ce05bfb5473bf1f951511	x	.githooks/pre-commit
 file	9976e6cd4e60bfa86298f4b4209f5ffde0651105feef208a9c5ea9c90a432f2d	x	scripts/dev/install-git-hooks.sh
@@ -200,7 +200,7 @@ file	7f8a58cc55f1cea0546b39bf97b64fee0a0a0e7fe2aaf31712c158cc43b6320c	-	docs/rus
 file	9aa52699f4f7f8069cddd6b6ec295afc7a781e48b09bf104d2fff8f262a4720d	-	scripts/distribution/maintenance-files.txt
 file	11757ea2ccb5fc433c02d4cc60ec7bb85dd215007c8de6d5a6f819187e5119fc	-	docs/ci-change-selection.md
 file	92d926a0195db35172ffea5bfd0553e407d2d377114962fe71789aa1f33d9f8c	x	scripts/ci/prepare-script-fixture.sh
-file	32c612512bbb0b189f9eb9bb1bd0a0b47a02190fdbde2f7081b30ca315e4390a	-	rules/engineering-details.md
+file	acf90dc66f0d883eb3097878ea8b64fc9bf85807b68754268a1ec61cf246bb2a	-	rules/engineering-details.md
 file	e3aed908dd9b08bf93255328bb056bed57298dab39944e3726aad2726548e653	-	rules/rpc-budgets.md
 file	4cb513119ba707355d99b5fb6c72d1b6d7641a48fa70434c4272e0ccfe072dab	-	docs/cargo-publication.md
 file	d7b179f9ceaec6e11c690c975b61f91bedc80526415f71571615064db14f0c9c	x	scripts/ci/check-release-tag.sh

@@ -447,12 +447,37 @@ test_validation_source_identity() {
     assert_cache_retained
 }
 test_versions() {
+    local requested expected value before
+    before="$(fingerprint)"
     # Invoke the actual consumer entry point under a noisy directory-search environment.
     [[ "$(CDPATH="$PWD" bash scripts/release/release.sh version)" == 0.1.0 ]] || exit 1
-    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 patch)" == 0.1.1 ]] || exit 1
-    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 minor)" == 0.2.0 ]] || exit 1
-    [[ "$(bash scripts/ci/next-release-version.sh 0.1.0 major)" == 1.0.0 ]] || exit 1
-    for value in 01.2.3 0.1.1-extra 0.0.9; do expect_failure perl scripts/release/release-data.pl next "$value"; done
+    while read -r requested expected; do
+        CDPATH="$PWD" "$TEST_REAL_MAKE" --no-print-directory release-plan "VERSION=$requested" > target/plan
+        rg -Fx 'Current: 0.1.0' target/plan
+        rg -Fx "Target:  $expected" target/plan
+        assert_unchanged
+    done <<'VERSIONS'
+patch 0.1.1
+minor 0.2.0
+major 1.0.0
+0.1.0 0.1.0
+0.1.1 0.1.1
+0.10.0 0.10.0
+1.0.0 1.0.0
+999999999.999999999.999999999 999999999.999999999.999999999
+VERSIONS
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory release-plan VERSION=0.0.9
+    rg -F 'target version must not decrease' target/rejection.log
+    assert_unchanged
+    for value in 01.2.3 0.01.1 0.1.01 v0.1.1 0.1 0.1.1.0 0.1.1-rc.1 0.1.1+build \
+        1000000000.0.0 0.1000000000.0 0.1.1000000000; do
+        expect_failure "$TEST_REAL_MAKE" --no-print-directory release-plan "VERSION=$value"
+        rg -F 'expected canonical x.y.z with components below 1 billion' target/rejection.log
+        assert_unchanged
+    done
+    expect_failure perl scripts/release/release-data.pl next ''
+    assert_unchanged
+    [[ ! -s "$TEST_EFFECTS" ]] || exit 1
 }
 test_invalid_changelog() {
     case "$1" in
@@ -1158,12 +1183,13 @@ if [[ "$receipts_only" == true ]]; then
 fi
 
 if [[ "$metadata_only" == true ]]; then
+    run_case versions test_versions
     for outcome in success failure; do
         run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"
     done
     run_case validation-source-identity test_validation_source_identity
     run_case real-index-boundaries test_real_index_boundaries
-    echo 'release metadata real-Git and validation-retention tests passed'
+    echo 'release version planning, metadata real-Git and validation-retention tests passed'
     fixture_complete=true
     exit 0
 fi

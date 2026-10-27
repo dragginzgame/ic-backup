@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# Shared companions: scripts/ci/StableVersion.pm
 use strict;
 use warnings;
 use JSON::PP;
@@ -6,6 +7,8 @@ use Digest::SHA qw(sha256_hex);
 use File::Path qw(make_path remove_tree);
 use File::Temp qw(tempdir);
 use FindBin;
+use lib "$FindBin::Bin/../ci";
+use StableVersion qw(version_cmp);
 use Cwd qw(abs_path);
 use Encode qw(decode FB_CROAK LEAVE_SRC);
 
@@ -112,19 +115,8 @@ sub next_version {
         chomp $next;
     }
     parts($next);
-    die "target version must not decrease\n" if compare_versions($next, $previous) < 0;
+    die "target version must not decrease\n" if version_cmp($next, $previous) < 0;
     return $next;
-}
-
-sub compare_versions {
-    my ($left, $right) = @_;
-    my @left = parts($left);
-    my @right = parts($right);
-    for my $i (0..2) {
-        my $order = $left[$i] <=> $right[$i];
-        return $order if $order;
-    }
-    return 0;
 }
 
 sub changelog {

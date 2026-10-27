@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.45.0]
+
+### ⚠️ Breaking
+
+- Move public Host error identities to IC Tooling 0.69. Consumers exchanging
+  `NamedWriteError` or `DirectoryChecksumError` with Backup must align their
+  direct Host dependencies to 0.69. Stored formats and protocol bytes are unchanged.
+
+### 🔧 Changed
+
+- Adopt Shared Tooling 0.26.22, Platform 0.7.0 and IC Tooling 0.69.0, including
+  the selected Testkit and release-editor tools. Preserve management wire
+  identities, stored formats and Rust 1.91 support.
+
+### 🧹 Cleanup
+
+- Reuse Shared's stable version ordering for release plans while retaining local
+  version bounds and downgrade refusal
+  ([#71 — Reuse Shared stable version ordering in the release-plan helper](https://github.com/dragginzgame/ic-backup/issues/71)).
+
 ## [0.44.8] - 2026-10-27
 
 ### 🧹 Cleanup

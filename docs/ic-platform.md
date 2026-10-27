@@ -66,6 +66,19 @@ do not enable them. Production-tree checks and exact public-identity probes are
 separate from direct declaration checks; deployment admission belongs to the
 application's exact target/features, locked build and artifact identity.
 
+The normal and development graphs select one Platform 0.7.0 identity, including
+Testkit 0.69.0. Independent normal consumers exclude Testkit, PocketIC and WAT.
+Backup's public Host error types now belong to the 0.69 line; consumers exchanging
+those values must align direct Host dependencies. Their fields, source chains,
+recovery behavior and serialized data retain their existing contracts.
+
+Platform 0.7 removes Candid frontend compiler exports; Backup selects neither
+the parser feature nor those exports. Management DTO 0.11.0, external principal
+0.1.5, Agent identities and the consumed codecs remain unchanged. The local
+bounded status, list, metadata and data projections serve the management-canister
+protocol; test-only malformed shapes qualify rejection of that same external
+wire format. They are separate from Backup's domain and persisted records.
+
 ## Adoption history
 
 The [archived adoption record](status/archive-platform-adoption-2026-10-21.md)
