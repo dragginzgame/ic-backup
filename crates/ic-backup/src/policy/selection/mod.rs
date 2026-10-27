@@ -6,7 +6,7 @@ use crate::model::{
         InventoryRecord, InventoryRecordError, InventoryTargetRecord, MAX_INVENTORY_TARGETS,
     },
 };
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use thiserror::Error;
 
 /// Exact expansion selected by the caller; no implicit role or root special case.
@@ -66,16 +66,19 @@ pub fn select<'a>(
         queue.push_back(target.canister_id());
     }
     if request.expansion != SelectionExpansion::Exact {
+        let mut children: BTreeMap<_, Vec<_>> = BTreeMap::new();
+        for target in inventory.targets() {
+            if let Some(parent) = target.parent_canister_id() {
+                children
+                    .entry(parent)
+                    .or_default()
+                    .push(target.canister_id());
+            }
+        }
         while let Some(parent) = queue.pop_front() {
-            for child in inventory
-                .targets()
-                .iter()
-                .filter(|target| target.parent_canister_id() == Some(parent))
-            {
-                if selected.insert(child.canister_id())
-                    && request.expansion == SelectionExpansion::Descendants
-                {
-                    queue.push_back(child.canister_id());
+            for child in children.get(parent).into_iter().flatten() {
+                if selected.insert(*child) && request.expansion == SelectionExpansion::Descendants {
+                    queue.push_back(*child);
                 }
             }
         }

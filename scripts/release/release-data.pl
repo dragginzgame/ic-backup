@@ -33,11 +33,11 @@ sub write_file {
 }
 
 # The same reviewed TOML projector selects members and names; Cargo owns validity.
-sub toml_projection {
-    my ($path, $expression) = @_;
+sub read_manifest {
+    my ($path) = @_;
     my $temporary = tempdir('ic-backup-members.XXXXXX', TMPDIR => 1, CLEANUP => 0);
     write_file("$temporary/input.toml", read_file($path));
-    open my $parser, '-|', ($ENV{YQ} // 'yq'), '-p', 'toml', '-o', 'json', $expression, "$temporary/input.toml"
+    open my $parser, '-|', ($ENV{YQ} // 'yq'), '-p', 'toml', '-o', 'json', '.', "$temporary/input.toml"
         or die "cannot project selected manifest; retained: $temporary\n";
     my $json = do { local $/; <$parser> };
     close $parser or die "selected manifest projection failed; retained: $temporary\n";
@@ -46,7 +46,9 @@ sub toml_projection {
     return $value;
 }
 sub member_manifests {
-    my $members = toml_projection('Cargo.toml', '.workspace.members');
+    my ($manifest) = @_;
+    $manifest //= read_manifest('Cargo.toml');
+    my $members = $manifest->{workspace}{members};
     ref($members) eq 'ARRAY' && @$members or die "expected explicit workspace members\n";
     my %seen;
     for (@$members) {
@@ -228,14 +230,15 @@ if ($command eq 'version') {
     my @render = ($editor, '--max-input-bytes', $limit, 'manifest', 'Cargo.toml', $previous, $target);
     # Supply admitted ownership to the common renderer; never duplicate its
     # literal/alias/range policy. Keep both candidates before either write.
+    my $manifest_input = read_manifest('Cargo.toml');
     my @members = map { +{
-        name => toml_projection($_, '.package.name'),
+        name => read_manifest($_)->{package}{name},
         manifest_path => decode('UTF-8', abs_path($_) // die("missing workspace member: $_\n"), FB_CROAK | LEAVE_SRC),
-    } } member_manifests();
+    } } member_manifests($manifest_input);
     my $temporary = tempdir('ic-backup-render.XXXXXX', TMPDIR => 1, CLEANUP => 0);
     my $input = "$temporary/workspace-input.json";
     write_file($input, JSON::PP->new->utf8->encode({
-        manifest => toml_projection('Cargo.toml', '.'), members => \@members,
+        manifest => $manifest_input, members => \@members,
     }));
     push @render, $input;
     open my $rewrite, '-|', $editor, '--max-input-bytes', $limit, 'lock',

@@ -106,10 +106,16 @@ impl InventoryRecord {
     ) -> Result<&InventoryTargetRecord, InventoryRecordError> {
         let id = super::principal::canonical_text(canister_id)
             .ok_or(InventoryRecordError::InvalidPrincipal("canister_id"))?;
+        self.canonical_target(&id)
+            .ok_or(InventoryRecordError::UnknownTarget(id))
+    }
+
+    // Internal callers have already admitted canonical text at their owning boundary.
+    pub(super) fn canonical_target(&self, id: &str) -> Option<&InventoryTargetRecord> {
         self.targets
-            .binary_search_by(|target| target.canister_id().cmp(&id))
+            .binary_search_by(|target| target.canister_id().cmp(id))
+            .ok()
             .map(|index| &self.targets[index])
-            .map_err(|_| InventoryRecordError::UnknownTarget(id))
     }
 
     /// Hash exact canonical declared fields using the documented v1 binary encoding.

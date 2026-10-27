@@ -1,13 +1,10 @@
 //! Bounded snapshot metadata reads; decoded declarations do not prove transfer.
 
-use ic_platform::candid::contract;
 mod wire;
 
 use super::{
     artifacts::ArtifactChecksumRecord,
-    ic_request::{
-        IcRequestError, MAX_IC_ARGUMENT_BYTES, admits_snapshot_id, management_request_digest,
-    },
+    ic_request::{IcRequestError, admits_snapshot_id, encode_arguments, management_request_digest},
 };
 use ic_platform::management_canister_types::{
     ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult,
@@ -47,14 +44,10 @@ impl IcSnapshotMetadataRequest {
         }
         let (target, principal) =
             super::principal::canonical_parts(target).ok_or(IcRequestError::InvalidTarget)?;
-        let arguments = contract::encode_one(ReadCanisterSnapshotMetadataArgs {
+        let arguments = encode_arguments(ReadCanisterSnapshotMetadataArgs {
             canister_id: principal.into(),
             snapshot_id: snapshot_id.to_vec(),
-        })
-        .map_err(|error| IcRequestError::Encoding(error.to_string()))?;
-        if arguments.len() > MAX_IC_ARGUMENT_BYTES {
-            return Err(IcRequestError::ArgumentsTooLarge);
-        }
+        })?;
         Ok(Self {
             target,
             target_bytes: principal.as_slice().to_vec(),
@@ -122,6 +115,21 @@ pub struct IcSnapshotMetadataReply<'request> {
 }
 
 impl<'request> IcSnapshotMetadataReply<'request> {
+    pub(crate) fn region_sizes(&self) -> [u64; 3] {
+        [
+            self.metadata.wasm_module_size,
+            self.metadata.wasm_memory_size,
+            self.metadata.stable_memory_size,
+        ]
+    }
+
+    pub(crate) fn chunk_index(&self, hash: &[u8]) -> Option<usize> {
+        self.metadata
+            .wasm_chunk_store
+            .iter()
+            .position(|chunk| chunk.hash == hash)
+    }
+
     /// Decode one bounded metadata argument without skipped fields or extra bytes.
     ///
     /// # Errors

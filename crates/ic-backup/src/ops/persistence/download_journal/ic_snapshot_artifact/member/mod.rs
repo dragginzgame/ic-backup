@@ -95,11 +95,7 @@ pub(super) fn expected(
     members.extend(
         REGIONS
             .into_iter()
-            .zip([
-                values.wasm_module_size,
-                values.wasm_memory_size,
-                values.stable_memory_size,
-            ])
+            .zip(metadata.region_sizes())
             .enumerate()
             .map(|(index, (name, length))| ExpectedMember {
                 name: name.into(),

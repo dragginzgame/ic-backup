@@ -53,10 +53,7 @@ impl<'a> MembershipObservationRequest<'a> {
         if max_remote_observations > MAX_MEMBERSHIP_REMOTE_OBSERVATIONS {
             return Err(MembershipRequestError::ObservationLimitTooLarge);
         }
-        let binding = plan
-            .attempt_authority(operation_sequence)?
-            .binding()
-            .clone();
+        let binding = plan.operation_binding(operation_sequence)?;
         Ok(Self {
             plan,
             binding,

@@ -94,7 +94,7 @@ impl<'a> SnapshotReadRequest<'a> {
         if wire.method() != IcManagementMethodRecord::ListCanisterSnapshots {
             return Err(SnapshotReadRequestError::UnsupportedMethod);
         }
-        let binding = plan.attempt_authority(sequence)?.binding().clone();
+        let binding = plan.operation_binding(sequence)?;
         wire.validate_observation_binding(&binding, observation)?;
         Ok(Self {
             binding,

@@ -6,7 +6,7 @@ pub use node::{EffectNodeRecord, EffectNodeRequest, MAX_EFFECT_DEPENDENCIES};
 
 use crate::model::{artifacts::ArtifactChecksumRecord, bounded_sequence};
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum operation identities in a declared dependency graph.
@@ -124,22 +124,17 @@ fn append_count(bytes: &mut EvidenceDigest, count: usize) {
 }
 
 fn topological_order(nodes: &[EffectNodeRecord]) -> Result<Vec<usize>, EffectGraphError> {
-    let indices: BTreeMap<_, _> = nodes
-        .iter()
-        .enumerate()
-        .map(|(index, node)| (node.operation_sequence(), index))
-        .collect();
     let mut dependents = vec![Vec::new(); nodes.len()];
     let mut remaining: Vec<_> = nodes.iter().map(|node| node.depends_on().len()).collect();
     for (index, node) in nodes.iter().enumerate() {
         for dependency in node.depends_on() {
-            let parent = indices
-                .get(dependency)
-                .ok_or(EffectGraphError::MissingDependency {
+            let parent = nodes
+                .binary_search_by_key(dependency, EffectNodeRecord::operation_sequence)
+                .map_err(|_| EffectGraphError::MissingDependency {
                     operation_sequence: node.operation_sequence(),
                     dependency: *dependency,
                 })?;
-            dependents[*parent].push(index);
+            dependents[parent].push(index);
         }
     }
     let mut ready: BTreeSet<_> = remaining

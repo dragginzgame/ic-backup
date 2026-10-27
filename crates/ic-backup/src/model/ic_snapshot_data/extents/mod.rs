@@ -18,11 +18,7 @@ pub(crate) fn planned_extents(
         return Err(ExtentPlanningError::InvalidChunkSize);
     }
     let values = metadata.metadata();
-    let sizes = [
-        values.wasm_module_size,
-        values.wasm_memory_size,
-        values.stable_memory_size,
-    ];
+    let sizes = metadata.region_sizes();
     let mut count = u64::try_from(values.wasm_chunk_store.len())
         .map_err(|_| ExtentPlanningError::CountOverflow)?;
     for size in sizes {

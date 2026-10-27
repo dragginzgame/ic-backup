@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.44.8]
+
+### 🧹 Cleanup
+
+- Simplify original binding derivation, inventory and snapshot metadata queries,
+  graph traversal and guarded journal ownership while preserving public APIs,
+  exact bytes, typed admission failures and recovery behavior.
+- Reuse bounded management argument encoding and parse release manifests once
+  within preparation; retain exact selected-commit receipt checks.
+
+### 🧪 Testing
+
+- Add a focused selection for existing release manifest and lockfile preparation
+  fixtures, including rejected candidates and multi-package layouts.
+
 ## [0.44.7] - 2026-10-27
 
 ### 🧹 Cleanup

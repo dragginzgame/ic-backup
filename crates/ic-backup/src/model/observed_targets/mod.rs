@@ -24,7 +24,7 @@ pub(super) fn canonicalize<T: ObservedTargetRow, E>(
     for row in &mut rows {
         let canonical = canonical_text(row.target()).ok_or_else(invalid_principal)?;
         *row.target_mut() = canonical;
-        if inventory.target(row.target()).is_err() {
+        if inventory.canonical_target(row.target()).is_none() {
             return Err(absent());
         }
     }

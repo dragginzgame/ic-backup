@@ -76,7 +76,7 @@ impl<'a> ControlObservationRequest<'a> {
         if max_remote_observations > MAX_CONTROL_REMOTE_OBSERVATIONS {
             return Err(ControlRequestError::ObservationLimitTooLarge);
         }
-        let binding = plan.attempt_authority(sequence)?.binding().clone();
+        let binding = plan.operation_binding(sequence)?;
         wire.validate_mutation_binding(&binding)?;
         Ok(Self {
             binding,

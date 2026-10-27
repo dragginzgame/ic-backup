@@ -83,10 +83,7 @@ impl<'a> ConsistencyRequest<'a> {
             }
             _ => {}
         }
-        let binding = plan
-            .attempt_authority(input.operation_sequence)?
-            .binding()
-            .clone();
+        let binding = plan.operation_binding(input.operation_sequence)?;
         Ok(Self {
             plan,
             requirement,

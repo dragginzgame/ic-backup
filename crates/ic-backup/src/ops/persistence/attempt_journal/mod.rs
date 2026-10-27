@@ -79,6 +79,11 @@ impl<'a> AttemptJournalGuard<'a> {
         self.check_usable()?;
         Ok(&self.record)
     }
+
+    fn into_record(self) -> Result<AttemptJournalRecord, AttemptJournalError> {
+        self.check_usable()?;
+        Ok(self.record)
+    }
     /// Return the exact journal location for this operation sequence.
     #[must_use]
     pub fn path(&self) -> PathBuf {
@@ -253,7 +258,7 @@ pub(super) fn read_original_journals(
             journals.push(current.clone());
         } else {
             let guard = AttemptJournalGuard::open(layout, authority)?;
-            journals.push(guard.record()?.clone());
+            journals.push(guard.into_record()?);
         }
     }
     layout.check_root()?;

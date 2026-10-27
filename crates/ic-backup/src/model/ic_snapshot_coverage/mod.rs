@@ -60,10 +60,7 @@ impl<'metadata> IcSnapshotDataCoverage<'metadata> {
             DataExtent::Chunk { hash } => {
                 let index = self
                     .metadata
-                    .metadata()
-                    .wasm_chunk_store
-                    .iter()
-                    .position(|chunk| chunk.hash == hash)
+                    .chunk_index(hash)
                     .ok_or(IcSnapshotDataCoverageError::MetadataMismatch)?;
                 if self.chunks[index] {
                     return Err(IcSnapshotDataCoverageError::DuplicateChunk);
@@ -110,12 +107,7 @@ impl<'metadata> IcSnapshotDataCoverage<'metadata> {
     /// could overflow when independent regions use the full nat64 domain.
     #[must_use]
     pub fn complete(&self) -> Option<IcSnapshotDataCoverageView<'_, 'metadata>> {
-        let values = self.metadata.metadata();
-        let sizes = [
-            values.wasm_module_size,
-            values.wasm_memory_size,
-            values.stable_memory_size,
-        ];
+        let sizes = self.metadata.region_sizes();
         (self.regions == sizes && self.chunks.iter().all(|covered| *covered))
             .then_some(IcSnapshotDataCoverageView { coverage: self })
     }

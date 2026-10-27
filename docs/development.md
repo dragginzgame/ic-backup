@@ -287,6 +287,7 @@ or deployed canister artifact is added by this host-library adoption.
 | IC management/workflow effects | `cargo test --offline --locked -p ic-backup --test pocketic_snapshot FILTER`; `planned_upload` selects complete-upload and failed-write cases |
 | Agent HTTP policy | `cargo test --offline --locked -p ic-backup-agent --test http_boundary` |
 | Local release receipt/recovery helpers | `bash scripts/release/test-release.sh --receipts-only`; all Git/release effects remain in isolated substitute fixtures |
+| Release manifest/lockfile rendering | `bash scripts/release/test-release.sh --preparation-only`; checks ownership, layout preservation and rejected candidates in isolated fixtures |
 | Agent simulator integration | `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport` |
 
 Keep independent wire fixtures independent of the Rust encoder. Regenerate metadata

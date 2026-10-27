@@ -65,10 +65,7 @@ impl<'a> RestoreSafetyRequest<'a> {
         ) {
             return Err(RestoreSafetyRequestError::UnsupportedMethod);
         }
-        let binding = plan
-            .attempt_authority(input.operation_sequence)?
-            .binding()
-            .clone();
+        let binding = plan.operation_binding(input.operation_sequence)?;
         wire.validate_mutation_binding(&binding)?;
         Ok(Self {
             plan,

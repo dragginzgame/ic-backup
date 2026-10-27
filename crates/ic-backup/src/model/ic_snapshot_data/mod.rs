@@ -1,6 +1,5 @@
 //! Metadata-bound snapshot data codecs, without dispatch or transfer completion.
 
-use ic_platform::candid::contract;
 mod extents;
 mod kind;
 mod wire;
@@ -9,7 +8,7 @@ pub(crate) use kind::DataExtent;
 
 use super::{
     artifacts::ArtifactChecksumRecord,
-    ic_request::{IcRequestError, MAX_IC_ARGUMENT_BYTES, management_request_digest},
+    ic_request::{IcRequestError, encode_arguments, management_request_digest},
     ic_snapshot_metadata::IcSnapshotMetadataReply,
 };
 use ic_platform::Principal;
@@ -47,15 +46,11 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
         validate_kind(metadata, &kind)?;
         let target = Principal::from_text(metadata.request().target())
             .map_err(|_| IcRequestError::InvalidTarget)?;
-        let arguments = contract::encode_one(ReadCanisterSnapshotDataArgs {
+        let arguments = encode_arguments(ReadCanisterSnapshotDataArgs {
             canister_id: target.into(),
             snapshot_id: metadata.request().snapshot_id().to_vec(),
             kind: kind.clone(),
-        })
-        .map_err(|error| IcRequestError::Encoding(error.to_string()))?;
-        if arguments.len() > MAX_IC_ARGUMENT_BYTES {
-            return Err(IcRequestError::ArgumentsTooLarge.into());
-        }
+        })?;
         Ok(Self {
             metadata,
             kind,
@@ -124,29 +119,19 @@ pub(crate) fn validate_kind(
     metadata: &IcSnapshotMetadataReply<'_>,
     kind: &SnapshotDataKind,
 ) -> Result<(), IcSnapshotDataError> {
-    let values = metadata.metadata();
     match DataExtent::from(kind) {
         DataExtent::Region {
             index,
             offset,
             size,
         } => {
-            let sizes = [
-                values.wasm_module_size,
-                values.wasm_memory_size,
-                values.stable_memory_size,
-            ];
-            range(offset, size, sizes[index])?;
+            range(offset, size, metadata.region_sizes()[index])?;
         }
         DataExtent::Chunk { hash } => {
             if hash.len() != 32 {
                 return Err(IcSnapshotDataError::InvalidChunkHash);
             }
-            if !values
-                .wasm_chunk_store
-                .iter()
-                .any(|chunk| chunk.hash == hash)
-            {
+            if metadata.chunk_index(hash).is_none() {
                 return Err(IcSnapshotDataError::ChunkNotInMetadata);
             }
         }

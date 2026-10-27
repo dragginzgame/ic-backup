@@ -253,7 +253,25 @@ impl OperationPlanRecord {
         operation: &PlannedOperationRecord,
         intent: &ArtifactChecksumRecord,
     ) -> Result<AttemptAuthorityRecord, OperationPlanError> {
-        let binding = OperationBindingRecord::new(&OperationBindingRequest {
+        Ok(AttemptAuthorityRecord::new(
+            self.binding_for_operation(operation, intent)?,
+            operation.budget().clone(),
+        ))
+    }
+
+    pub(crate) fn operation_binding(
+        &self,
+        sequence: u64,
+    ) -> Result<OperationBindingRecord, OperationPlanError> {
+        self.binding_for_operation(self.operation(sequence)?, &self.digest())
+    }
+
+    fn binding_for_operation(
+        &self,
+        operation: &PlannedOperationRecord,
+        intent: &ArtifactChecksumRecord,
+    ) -> Result<OperationBindingRecord, OperationPlanError> {
+        Ok(OperationBindingRecord::new(&OperationBindingRequest {
             intent: intent.hash().into(),
             operation_sequence: operation.operation_sequence(),
             network: self.context.network().into(),
@@ -261,11 +279,7 @@ impl OperationPlanRecord {
             target: operation.target().into(),
             release: self.context.release().into(),
             request: operation.request().into(),
-        })?;
-        Ok(AttemptAuthorityRecord::new(
-            binding,
-            operation.budget().clone(),
-        ))
+        })?)
     }
     // Borrow the same original fields used by authority construction; progress
     // admission must not grow a separate definition of original authority.

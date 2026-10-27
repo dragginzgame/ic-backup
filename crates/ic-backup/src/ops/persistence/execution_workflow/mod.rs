@@ -514,31 +514,37 @@ fn validate_predecessors(
     // Traverse the original acyclic catalog iteratively, admitting each ancestor
     // once. Keep at most one row per catalog node, not one per dependency path.
     // Learned evidence may differ between edges; binding/settlement identity cannot.
-    let mut expected: BTreeMap<u64, ExecutionStagePredecessorRecord> = binding
+    let mut expected: BTreeMap<_, _> = binding
         .predecessors()
         .iter()
-        .map(|row| (row.stage_sequence(), row.clone()))
+        .map(|row| {
+            (
+                row.stage_sequence(),
+                (row.binding().clone(), row.settlement().clone()),
+            )
+        })
         .collect();
     let mut pending: Vec<_> = expected.keys().copied().collect();
     while let Some(sequence) = pending.pop() {
-        let row = &expected[&sequence];
+        let (expected_binding, expected_settlement) = &expected[&sequence];
         let original = {
             // Release this layout and every journal lock before admitting another
             // ancestor, including an ancestor shared by multiple branches.
             let predecessor = acquire_stage(layout, sequence)?;
-            let (original, _) = read_binding(&predecessor, workflow, sequence, row.binding())?;
-            read_execution_settlement(&predecessor, original.plan(), row.settlement())?;
+            let (original, _) = read_binding(&predecessor, workflow, sequence, expected_binding)?;
+            read_execution_settlement(&predecessor, original.plan(), expected_settlement)?;
             original
         };
         for ancestor in original.predecessors() {
             match expected.entry(ancestor.stage_sequence()) {
                 Entry::Vacant(entry) => {
                     pending.push(ancestor.stage_sequence());
-                    entry.insert(ancestor.clone());
+                    entry.insert((ancestor.binding().clone(), ancestor.settlement().clone()));
                 }
                 Entry::Occupied(entry) => {
-                    if entry.get().binding() != ancestor.binding()
-                        || entry.get().settlement() != ancestor.settlement()
+                    let (expected_binding, expected_settlement) = entry.get();
+                    if expected_binding != ancestor.binding()
+                        || expected_settlement != ancestor.settlement()
                     {
                         return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
                     }

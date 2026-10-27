@@ -18,12 +18,15 @@ unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND 
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 metadata_only=false
 receipts_only=false
+preparation_only=false
 if [[ "$#" == 1 && "$1" == --metadata-only ]]; then
     metadata_only=true
 elif [[ "$#" == 1 && "$1" == --receipts-only ]]; then
     receipts_only=true
+elif [[ "$#" == 1 && "$1" == --preparation-only ]]; then
+    preparation_only=true
 elif [[ "$#" != 0 ]]; then
-    echo 'usage: test-release.sh [--metadata-only|--receipts-only]' >&2
+    echo 'usage: test-release.sh [--metadata-only|--preparation-only|--receipts-only]' >&2
     exit 2
 fi
 TEST_REAL_MAKE="$(command -v make)"
@@ -1129,6 +1132,20 @@ SH
     [[ "$("$TEST_REAL_GIT" -C "$native" rev-parse HEAD)" == "$source" ]] || exit 1
 }
 
+run_preparation_cases() {
+    run_case preparation test_preparation
+    for form in inline comments table alias; do run_case "multi-package-$form" test_multi_package_preparation "$form"; done
+    run_case 'multi-package-unicode-雪' test_multi_package_preparation
+    for failure in mismatch duplicate missing failed-output failed-renderer empty-renderer; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
+}
+
+if [[ "$preparation_only" == true ]]; then
+    run_preparation_cases
+    echo 'release manifest and lockfile preparation checks passed'
+    fixture_complete=true
+    exit 0
+fi
+
 if [[ "$receipts_only" == true ]]; then
     run_case validation-source-identity test_validation_source_identity
     for custody in missing member; do run_case "validation-$custody" test_validation_custody "$custody"; done
@@ -1160,10 +1177,7 @@ run_case versions test_versions
 for mode in comments render selected duplicate failed-output empty failed-parser; do run_case "version-reader-$mode" test_version_reader "$mode"; done
 for invalid in conflict duplicate dated historical-duplicate competing same-date unnumbered; do run_case "notes-$invalid" test_invalid_changelog "$invalid"; done
 for mode in empty missing imported bumped failed-output empty-output; do run_case "shared-notes-$mode" test_shared_changelog "$mode"; done
-run_case preparation test_preparation
-for form in inline comments table alias; do run_case "multi-package-$form" test_multi_package_preparation "$form"; done
-run_case 'multi-package-unicode-雪' test_multi_package_preparation
-for failure in mismatch duplicate missing failed-output failed-renderer empty-renderer; do run_case "lockfile-$failure" test_lockfile_rejection "$failure"; done
+run_preparation_cases
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done
 run_case staging test_staging
 for state in no-release tagged; do run_case "publish-$state" test_publish "$state"; done

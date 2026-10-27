@@ -300,6 +300,11 @@ It uses isolated repositories and substitutes, preserving the mandatory receipt
 check and refusal without effects when proof or remote observations are missing.
 This selection does not execute a release in the working repository.
 
+`bash scripts/release/test-release.sh --preparation-only` selects the existing
+manifest/lockfile rendering fixtures, including multi-package ownership, alternate
+TOML layouts, Unicode paths and rejected candidates. Effects stay in isolated
+fixtures; original metadata is retained on failure.
+
 `make release-check` exercises actual consumer Make entry points and the reviewed
 runner with Git/Cargo substitutes. It covers
 both member manifests/local lock entries and their internal registry requirement,

@@ -97,7 +97,7 @@ impl IcManagementRequestRecord {
         }
         let arguments = match request.method {
             IcManagementMethodRecord::TakeCanisterSnapshot => {
-                contract::encode_one(TakeCanisterSnapshotArgs {
+                encode_arguments(TakeCanisterSnapshotArgs {
                     canister_id: principal.into(),
                     replace_snapshot: None,
                     uninstall_code: Some(false),
@@ -105,7 +105,7 @@ impl IcManagementRequestRecord {
                 })
             }
             IcManagementMethodRecord::LoadCanisterSnapshot => {
-                contract::encode_one(LoadCanisterSnapshotArgs {
+                encode_arguments(LoadCanisterSnapshotArgs {
                     canister_id: principal.into(),
                     snapshot_id: request
                         .snapshot_id
@@ -117,14 +117,10 @@ impl IcManagementRequestRecord {
             IcManagementMethodRecord::CanisterStatus
             | IcManagementMethodRecord::ListCanisterSnapshots
             | IcManagementMethodRecord::StartCanister
-            | IcManagementMethodRecord::StopCanister => contract::encode_one(CanisterIdRecord {
+            | IcManagementMethodRecord::StopCanister => encode_arguments(CanisterIdRecord {
                 canister_id: principal.into(),
             }),
-        }
-        .map_err(|error| IcRequestError::Encoding(error.to_string()))?;
-        if arguments.len() > MAX_IC_ARGUMENT_BYTES {
-            return Err(IcRequestError::ArgumentsTooLarge);
-        }
+        }?;
         Ok(Self {
             version: 1,
             method: request.method,
@@ -212,6 +208,17 @@ impl IcManagementRequestRecord {
         }
         Ok(())
     }
+}
+
+pub(super) fn encode_arguments(
+    value: impl contract::CandidType,
+) -> Result<Vec<u8>, IcRequestError> {
+    let arguments =
+        contract::encode_one(value).map_err(|error| IcRequestError::Encoding(error.to_string()))?;
+    if arguments.len() > MAX_IC_ARGUMENT_BYTES {
+        return Err(IcRequestError::ArgumentsTooLarge);
+    }
+    Ok(arguments)
 }
 
 // Shared scalar admission; callers retain method-specific absence/source-ID rules

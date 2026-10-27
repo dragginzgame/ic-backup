@@ -214,27 +214,26 @@ impl FenceObligationRecord {
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/fence-obligation/v1\0");
-        bytes.append(self.plan_intent.hash().as_bytes());
-        bytes.append(&self.acquisition_operation.to_be_bytes());
-        let (tag, hashes) = match &self.scope {
+        bytes.checksum(&self.plan_intent);
+        bytes.u64_be(self.acquisition_operation);
+        match &self.scope {
             FenceObligationScopeRecord::Capture {
                 requirement,
                 identity,
                 membership_revision,
-            } => (0, vec![requirement, identity, membership_revision]),
-            FenceObligationScopeRecord::Restore { requirement, fence } => (
-                1,
-                vec![
-                    requirement,
-                    &fence.identity,
-                    &fence.membership_revision,
-                    &fence.external_obligations_revision,
-                ],
-            ),
-        };
-        bytes.byte(tag);
-        for hash in hashes {
-            bytes.append(hash.hash().as_bytes());
+            } => {
+                bytes.byte(0);
+                bytes.checksum(requirement);
+                bytes.checksum(identity);
+                bytes.checksum(membership_revision);
+            }
+            FenceObligationScopeRecord::Restore { requirement, fence } => {
+                bytes.byte(1);
+                bytes.checksum(requirement);
+                bytes.checksum(&fence.identity);
+                bytes.checksum(&fence.membership_revision);
+                bytes.checksum(&fence.external_obligations_revision);
+            }
         }
         bytes.finish()
     }
