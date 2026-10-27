@@ -17,22 +17,13 @@ use ic_backup::{
     },
     policy::control_authority::{ControlAuthorityError, validate},
 };
-use serde_json::json;
 use std::fs;
 
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
 }
 fn plan(wire: &IcManagementRequestRecord) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": wire.target(), "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [wire.target()],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": wire.target(), "request": wire.digest().hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).unwrap()
+    support::single_operation_plan(wire.target(), 7, wire.digest().hash())
 }
 
 // Independent local fixture values exercise the public port, never actual controller custody.

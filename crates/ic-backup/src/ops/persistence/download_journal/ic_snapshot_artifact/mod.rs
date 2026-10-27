@@ -360,6 +360,35 @@ impl fmt::Debug for IcSnapshotArtifactWriter<'_, '_, '_> {
     }
 }
 
+// Both fresh verification and upload reads hold the same descriptor scope through
+// their closing namespace checks. Callers retain original-plan checks on each side.
+fn with_artifact_directory<T, E: From<IcSnapshotArtifactError>>(
+    root: &Path,
+    artifact: &str,
+    read: impl FnOnce(&File) -> Result<T, E>,
+    finish: impl FnOnce() -> Result<(), E>,
+) -> Result<T, E> {
+    let parent_path = root.join("artifacts");
+    let parent = open_directory_no_follow(&parent_path).map_err(IcSnapshotArtifactError::from)?;
+    let path = root.join(artifact);
+    let directory = File::from(
+        unix_fs::openat(
+            &parent,
+            path.file_name()
+                .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
+            OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+            Mode::empty(),
+        )
+        .map_err(io::Error::from)
+        .map_err(IcSnapshotArtifactError::from)?,
+    );
+    let result = read(&directory)?;
+    check_directory_identity(&parent_path, &parent)?;
+    check_directory_identity(&path, &directory)?;
+    finish()?;
+    Ok(result)
+}
+
 fn check_directory_identity(path: &Path, held: &File) -> Result<(), IcSnapshotArtifactError> {
     match ic_host_fs::durable::admit_directory(path, held) {
         Ok(()) => Ok(()),

@@ -46,37 +46,32 @@ pub(super) struct Wire<'a> {
 }
 
 impl ReservedUpdate<'_> {
-    pub(super) fn validate(&self, journal: &AttemptJournalRecord) -> bool {
-        match self {
-            Self::Mutation(r) => r.validate_journal(journal).is_ok(),
-            Self::Observation(r) => r.validate_journal(journal).is_ok(),
-            Self::TransferRead(r) => r.validate_journal(journal).is_ok(),
-            Self::Upload(r) => r.validate_journal(journal).is_ok(),
-            Self::UploadObservation(r) => r.validate_journal(journal).is_ok(),
-            Self::UploadDataObservation(r) => r.validate_journal(journal).is_ok(),
-            Self::FenceAcquisition(r) => r.validate_journal(journal).is_ok(),
-        }
-    }
-
-    pub(super) fn wire(&self) -> Wire<'_> {
-        match self {
-            Self::Mutation(r) => Wire {
-                context: r.plan().context(),
-                receiver: r.payload().receiver(),
-                target: r.payload().target(),
-                method: r.payload().method().name(),
-                arguments: r.payload().arguments(),
-                reply_limit: MAX_IC_MUTATION_REPLY_BYTES,
-            },
-            Self::Observation(r) => Wire {
-                context: r.plan().context(),
-                receiver: r.payload().receiver(),
-                target: r.payload().target(),
-                method: r.payload().method().name(),
-                arguments: r.payload().arguments(),
-                reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
-            },
+    pub(super) fn admit(&self, journal: &AttemptJournalRecord) -> Option<Wire<'_>> {
+        Some(match self {
+            Self::Mutation(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire {
+                    context: r.plan().context(),
+                    receiver: r.payload().receiver(),
+                    target: r.payload().target(),
+                    method: r.payload().method().name(),
+                    arguments: r.payload().arguments(),
+                    reply_limit: MAX_IC_MUTATION_REPLY_BYTES,
+                }
+            }
+            Self::Observation(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire {
+                    context: r.plan().context(),
+                    receiver: r.payload().receiver(),
+                    target: r.payload().target(),
+                    method: r.payload().method().name(),
+                    arguments: r.payload().arguments(),
+                    reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
+                }
+            }
             Self::TransferRead(r) => {
+                r.validate_journal(journal).ok()?;
                 // Borrow bytes from the original request, not the temporary payload enum.
                 let (target, arguments, reply_limit) = match r.payload() {
                     IcSnapshotTransferReadPayload::Metadata(p) => {
@@ -95,38 +90,50 @@ impl ReservedUpdate<'_> {
                     reply_limit,
                 }
             }
-            Self::Upload(r) => Wire {
-                context: r.plan().context(),
-                receiver: r.payload().receiver(),
-                target: r.payload().target(),
-                method: r.payload().method(),
-                arguments: r.payload().arguments(),
-                reply_limit: MAX_IC_SNAPSHOT_UPLOAD_REPLY_BYTES,
-            },
-            Self::UploadObservation(r) => Wire {
-                context: r.plan().context(),
-                receiver: r.payload().receiver(),
-                target: r.payload().target(),
-                method: r.payload().method().name(),
-                arguments: r.payload().arguments(),
-                reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
-            },
-            Self::UploadDataObservation(r) => Wire {
-                context: r.plan().context(),
-                receiver: r.payload().receiver(),
-                target: r.payload().target(),
-                method: r.payload().method(),
-                arguments: r.payload().arguments(),
-                reply_limit: MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
-            },
-            Self::FenceAcquisition(r) => Wire {
-                context: r.plan().context(),
-                receiver: r.payload().target(),
-                target: r.payload().target(),
-                method: r.payload().method(),
-                arguments: r.payload().arguments(),
-                reply_limit: crate::MAX_APPLICATION_REPLY_BYTES,
-            },
-        }
+            Self::Upload(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire {
+                    context: r.plan().context(),
+                    receiver: r.payload().receiver(),
+                    target: r.payload().target(),
+                    method: r.payload().method(),
+                    arguments: r.payload().arguments(),
+                    reply_limit: MAX_IC_SNAPSHOT_UPLOAD_REPLY_BYTES,
+                }
+            }
+            Self::UploadObservation(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire {
+                    context: r.plan().context(),
+                    receiver: r.payload().receiver(),
+                    target: r.payload().target(),
+                    method: r.payload().method().name(),
+                    arguments: r.payload().arguments(),
+                    reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
+                }
+            }
+            Self::UploadDataObservation(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire {
+                    context: r.plan().context(),
+                    receiver: r.payload().receiver(),
+                    target: r.payload().target(),
+                    method: r.payload().method(),
+                    arguments: r.payload().arguments(),
+                    reply_limit: MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
+                }
+            }
+            Self::FenceAcquisition(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire {
+                    context: r.plan().context(),
+                    receiver: r.payload().target(),
+                    target: r.payload().target(),
+                    method: r.payload().method(),
+                    arguments: r.payload().arguments(),
+                    reply_limit: crate::MAX_APPLICATION_REPLY_BYTES,
+                }
+            }
+        })
     }
 }

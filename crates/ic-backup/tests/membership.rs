@@ -19,7 +19,7 @@ fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).expect("bounded exact digest")
 }
 fn plan() -> OperationPlanRecord {
-    support::single_operation_plan(7, hash("ef").hash())
+    support::single_operation_plan("renrk-eyaaa-aaaaa-aaada-cai", 7, hash("ef").hash())
 }
 
 // Fixture data qualifies the public evidence model's exact local binding, not any management backend.

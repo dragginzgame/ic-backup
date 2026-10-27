@@ -1,72 +1,67 @@
-# Current handoff — 2026-10-26
+# Current handoff — 2026-10-27
 
 ## Released source and ownership
 
-Released Backup is **0.44.3**, `3a6f0fe`. The authorized changelog presentation
-[PR #69](https://github.com/dragginzgame/ic-backup/pull/69) is merged at
-`528afdda02d0dae0ff7c10b70ec5eaaefa806f08`, and the local checkout is fast-forwarded
-to that commit. It adds only the latest release's summary heading, preserving
-release identities, dates and older content.
+Released Backup is **0.44.4**, `063318da739d42833d0998fe40d0aeddd68ef65e`.
+The [released handoff](https://github.com/dragginzgame/ic-backup/blob/063318da739d42833d0998fe40d0aeddd68ef65e/docs/status/current.md)
+retains the earlier adoption evidence. Core owns bounded records, guarded
+persistence, reconciliation and original-plan coordination. Agent owns reserved
+signed transport. Applications retain authority, membership, release binding,
+whole-unit fencing and external obligations. [Implementation contracts](../implementation-contracts.md)
+remain authoritative.
 
-Core owns bounded records, guarded persistence, reconciliation and original-plan
-coordination. Agent owns reserved signed transport. Applications retain current
-authority, membership, release binding, whole-unit fencing and external obligations.
-[Implementation contracts](../implementation-contracts.md) retain product obligations.
-The [released handoff](https://github.com/dragginzgame/ic-backup/blob/3a6f0fe3926eba656a4ed4798c321f25963a3f9c/docs/status/current.md)
-preserves the prior cleanup, release-adapter and simulator evidence.
+## Pending 0.44.5 simplification
 
-## Pending 0.44.4 adoption
+All ten reviewed complexity reductions are implemented. Platform supplies bounded
+Candid sequence decoding and strict reserved-marker admission. Backup retains its
+product bounds, aggregate quotas and persisted-record visitor. Snapshot extent
+classification and learned-predecessor checks have one local owner; stage-binding
+validation borrows retained data instead of constructing a temporary record.
 
-Manifest minimums and the contributor release editor now select published
-Host/Testkit/Build **0.68.8**, source `7c3b715d07bbeca38b4ba89a60d3bec309de7417`,
-and Platform **0.6.19**, source `0502bce432c2478cf86215435864223a22a14a38`.
-Shared Tooling is the canonical **0.26.21** snapshot from
-`66c91c4412856baa147482e648fc80428db8b179`, matching observed GitHub main.
-[The review](../shared-tooling-review.json) records selection and qualification.
-Root notes use emoji category sections; older history remains unchanged.
+Qualification, exact Applied receipt admission, domain work and journal recording
+are explicit in each affected workflow. Shared journal publication invalidates
+cached state before writing and only restores usability after success. Artifact
+verification and upload reads share descriptor custody through closing namespace
+and original-plan checks. Agent reservation admission now returns its wire
+projection in one match. Ordinary integration journeys reuse typed plan fixtures;
+malformed JSON and independent wire/hash goldens remain explicit.
 
-The incoming lock already selected the new IC packages and includes the user's
-OpenSSL probe 0.2.2 update. An online Cargo refresh found no further compatible
-updates. The lock is byte-identical to task start: SHA-256
-`5e51f1c9f7bd8477ff56ec4bae0e47b4fb5596e0b30b233e36ce5cf1c2d68c53`.
-Package versions remain **0.44.3**; only notes select the next compatible patch.
+Public APIs, typed errors, v1 records, digest domains, wire bytes, bounded authority
+and effect/recovery ordering are preserved. Notes select pending **0.44.5**;
+package versions remain **0.44.4**.
 
-All consumed Host/Testkit/Build Rust source is unchanged from 0.68.7; Platform's
-Rust source is unchanged from 0.6.18. Its raised Wire metadata minimum is outside
-Backup's selected features. Registry archive hashes and committed-source matches
-are retained in `/tmp/backup-refresh-published.json`. Agent remains 0.49.3,
-management DTO 0.11.0, external Principal 0.1.5 and PocketIC 16.1.0.
-No product Rust, feature, wire/storage, authority or recovery changes are made.
-
-Canonical setup reuses authenticated Testkit/editor caches and existing server
-assets while retaining earlier tools and evidence. Offline tool admission passes.
-Normal releases still start fresh; exact saved recovery uses `release-resume`
-with Backup's mandatory receipt checks. This task performs no release.
+The incoming lock selects Host/Testkit **0.68.9** and Platform **0.6.19**; manifest
+minimums remain tooling **0.68.8** and Platform **0.6.19**. Shared Tooling remains
+the reviewed **0.26.21** snapshot. This batch does not update dependencies: the
+incoming lock remains byte-identical, SHA-256
+`a72b14d4ff05e69f8e98a006ea8094ab743f73ddc6de90b44925112b568adbbc`.
 
 ## Focused evidence
 
-Full locked root metadata and independent normal-consumer graphs pass. Both
-consumers select singleton Platform 0.6.19 and Host 0.68.8 without CLI, simulator,
-WAT, Wire-schema or CDK runtime features; Core stays Agent-free. Graph evidence:
-`/tmp/backup-refresh-graphs/`. Strict all-target/all-feature Clippy passes for both
-libraries. Independent Rust 1.91.0 consumers, including public Host error identity
-checks, pass at `target/msrv-consumers.jlYSjK/`.
+Formatting, documentation links and strict all-target/all-feature Clippy pass for
+both packages. Focused Core model, workflow, attempt/download journal and execution
+workflow tests pass, including receipt rejection, cancellation, indeterminate
+publication, custody and process-death cases. All thirteen affected integration
+targets and fourteen Agent HTTP boundary tests pass. Logs are retained under
+`/tmp/backup-simplify-*`; starting source is retained in
+`/tmp/backup-simplify-20261027-start/`.
 
-The offline-admitted 0.68.8 editor renders isolated root manifest and lock
-candidates, changing only owned versions while preserving foreign packages and
-live metadata. Evidence: `/tmp/backup-refresh-editor/`. Dependency inheritance,
-boundaries, snapshot integrity and tool admission pass. Logs use
-`/tmp/backup-refresh-*`. Prior runtime and recovery evidence remains source-scoped;
-simulator and full release-adapter suites are not rerun for unchanged Rust sources.
+Independent normal consumers pass on Rust **1.91.0**, with evidence at
+`target/msrv-consumers.0C7Esd/`. The locked Testkit CLI is explicitly prepared and
+offline-admitted; PocketIC **16.1.0** is reused through its authenticated asset
+owner. Core's original-workflow capture/restore/replay case passes, retaining
+`/tmp/ic-backup-pocketic-1406912-0/`. Both independent Agent consumer journeys pass:
+cold capture/restore/acceptance/terminal replay and death after authenticated load
+without redispatch. Build evidence is at
+`/tmp/ic-backup-agent-independent-build-1424340-0/`; simulator evidence remains at
+`/tmp/ic-backup-agent-pocketic-1424340-1/` and
+`/tmp/ic-backup-agent-pocketic-1424340-2/`.
 
 ## Limits and delivery
 
-The merged commit's native Linux/macOS CI was in progress when observed:
-[run 40362881639](https://github.com/dragginzgame/ic-backup/actions/runs/40362881639),
-source `528afdda02d0dae0ff7c10b70ec5eaaefa806f08`. It does not qualify these
-subsequent local adoption edits. No new local full CI, simulator, installed Canic/IC,
-package-archive/registry-only, publication or deployment qualification is claimed.
-Deployment binding and application acceptance remain consumer-owned. Agent still
-contains crypto-bigint 0.5.5 transitively; that earlier concern remains unresolved.
-The adoption is left unstaged and uncommitted. No new release, package version,
-tag, publication, live IC effect or sibling edit is performed.
+This is focused native Linux and simulator evidence, not a new full CI, macOS,
+installed IC, package-archive/registry-only or release qualification. Deployment
+binding and application acceptance remain consumer-owned. Agent's previously
+recorded transitive crypto-bigint 0.5.5 concern remains unresolved. Changes are
+unstaged and uncommitted. No package version, release, tag, publication, deployment,
+live IC effect or sibling edit is performed.

@@ -183,39 +183,9 @@ impl ExecutionStageBindingRecord {
         plan: &OperationPlanRecord,
         mut predecessors: Vec<ExecutionStagePredecessorRecord>,
     ) -> Result<Self, ExecutionWorkflowError> {
-        let stage = workflow
-            .stage(stage_sequence)
-            .map_err(|_| ExecutionWorkflowError::UnknownStage(stage_sequence))?;
-        if plan.context() != workflow.allocation.context()
-            || plan.inventory() != workflow.allocation.inventory()
-            || plan.selected_targets() != [stage.target()]
-        {
-            return Err(ExecutionWorkflowError::ChildIdentityMismatch);
-        }
-        if plan.budget().mutations() != stage.budget().mutations()
-            || plan.budget().observations() != stage.budget().observations()
-        {
-            return Err(ExecutionWorkflowError::ChildBudgetMismatch);
-        }
-        if plan.operations().iter().any(|operation| {
-            operation.budget().mutations() == 0 && operation.budget().observations() == 0
-        }) {
-            return Err(ExecutionWorkflowError::UnallocatedOperation);
-        }
+        validate_child(workflow, stage_sequence, plan)?;
         canonical_predecessors(&mut predecessors)?;
-        let dependencies = workflow
-            .allocation
-            .graph()
-            .node(stage_sequence)
-            .map_err(|_| ExecutionWorkflowError::PredecessorMismatch)?
-            .depends_on();
-        if !predecessors
-            .iter()
-            .map(ExecutionStagePredecessorRecord::stage_sequence)
-            .eq(dependencies.iter().copied())
-        {
-            return Err(ExecutionWorkflowError::PredecessorMismatch);
-        }
+        validate_predecessor_set(workflow, stage_sequence, &predecessors)?;
         Ok(Self {
             version: 1,
             workflow: workflow.digest(),
@@ -235,13 +205,40 @@ impl ExecutionStageBindingRecord {
         if self.workflow != workflow.digest() || self.plan != plan.digest() {
             return Err(ExecutionWorkflowError::BindingMismatch);
         }
-        Self::new(
-            workflow,
-            self.stage_sequence,
-            plan,
-            self.predecessors.clone(),
-        )?;
+        // Construction and deserialization already admit canonical predecessors.
+        // Recheck their relation to the original allocation without rebuilding a record.
+        validate_child(workflow, self.stage_sequence, plan)?;
+        validate_predecessor_set(workflow, self.stage_sequence, &self.predecessors)?;
         Ok(())
+    }
+
+    // Both transfer plans bind one exact learned metadata/allocation predecessor.
+    // Callers first validate this binding against its full workflow and child plan.
+    pub(crate) fn matches_learned_predecessor(
+        &self,
+        plan: &OperationPlanRecord,
+        request: &str,
+        learned: &ArtifactChecksumRecord,
+        predecessors: &[ExecutionStagePredecessorRecord],
+    ) -> bool {
+        matches!(plan.operations(), [operation] if operation.request() == request)
+            && predecessors.iter().any(|row| {
+                row.stage_sequence() == self.stage_sequence
+                    && row.binding() == &self.digest()
+                    && row.learned_evidence() == learned
+            })
+    }
+
+    pub(crate) fn has_learned_evidence(
+        &self,
+        sequence: u64,
+        learned: &ArtifactChecksumRecord,
+    ) -> bool {
+        self.stage_sequence == sequence
+            && self
+                .predecessors
+                .iter()
+                .any(|row| row.learned_evidence() == learned)
     }
     /// Read full original workflow identity.
     #[must_use]
@@ -281,6 +278,54 @@ impl ExecutionStageBindingRecord {
         bytes.finish()
     }
 }
+fn validate_child(
+    workflow: &ExecutionWorkflowRecord,
+    stage_sequence: u64,
+    plan: &OperationPlanRecord,
+) -> Result<(), ExecutionWorkflowError> {
+    let stage = workflow
+        .stage(stage_sequence)
+        .map_err(|_| ExecutionWorkflowError::UnknownStage(stage_sequence))?;
+    if plan.context() != workflow.allocation.context()
+        || plan.inventory() != workflow.allocation.inventory()
+        || plan.selected_targets() != [stage.target()]
+    {
+        return Err(ExecutionWorkflowError::ChildIdentityMismatch);
+    }
+    if plan.budget().mutations() != stage.budget().mutations()
+        || plan.budget().observations() != stage.budget().observations()
+    {
+        return Err(ExecutionWorkflowError::ChildBudgetMismatch);
+    }
+    if plan.operations().iter().any(|operation| {
+        operation.budget().mutations() == 0 && operation.budget().observations() == 0
+    }) {
+        return Err(ExecutionWorkflowError::UnallocatedOperation);
+    }
+    Ok(())
+}
+
+fn validate_predecessor_set(
+    workflow: &ExecutionWorkflowRecord,
+    stage_sequence: u64,
+    predecessors: &[ExecutionStagePredecessorRecord],
+) -> Result<(), ExecutionWorkflowError> {
+    let dependencies = workflow
+        .allocation
+        .graph()
+        .node(stage_sequence)
+        .map_err(|_| ExecutionWorkflowError::PredecessorMismatch)?
+        .depends_on();
+    if !predecessors
+        .iter()
+        .map(ExecutionStagePredecessorRecord::stage_sequence)
+        .eq(dependencies.iter().copied())
+    {
+        return Err(ExecutionWorkflowError::PredecessorMismatch);
+    }
+    Ok(())
+}
+
 fn canonical_predecessors(
     rows: &mut [ExecutionStagePredecessorRecord],
 ) -> Result<(), ExecutionWorkflowError> {

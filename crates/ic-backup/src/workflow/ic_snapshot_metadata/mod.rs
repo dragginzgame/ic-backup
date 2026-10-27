@@ -107,29 +107,24 @@ async fn settle_metadata<E: std::error::Error + 'static>(
         &IcSnapshotTransferReadResponse,
     ) -> Result<MutationReceiptRequest, E>,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotMetadataSettlementError<E>> {
-    super::qualified_receipt::AppliedReceiptRecorder {
-        journal,
-        expected_attempt: request.mutation_attempt(),
-        expected_request: request.payload().digest().hash(),
-    }
-    .record_applied(
-        request,
-        admitted.response(),
-        async |request, reply| qualify(request, reply).await,
-        IcSnapshotMetadataSettlementError::Qualification,
-        || IcSnapshotMetadataSettlementError::ReceiptRequired,
-        || {
-            let digest = match admitted.reply() {
-                IcSnapshotTransferReadReply::Metadata(metadata) => metadata.digest(),
-                IcSnapshotTransferReadReply::Data(_) => {
-                    return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
-                }
-            };
-            stage.layout()?;
-            Ok(digest)
-        },
+    let receipt = qualify(request, admitted.response())
+        .await
+        .map_err(IcSnapshotMetadataSettlementError::Qualification)?;
+    let receipt = super::qualified_receipt::admit_applied(
+        receipt,
+        request.mutation_attempt(),
+        request.payload().digest().hash(),
     )
-    .await
+    .ok_or(IcSnapshotMetadataSettlementError::ReceiptRequired)?;
+    let digest = match admitted.reply() {
+        IcSnapshotTransferReadReply::Metadata(metadata) => metadata.digest(),
+        IcSnapshotTransferReadReply::Data(_) => {
+            return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
+        }
+    };
+    stage.layout()?;
+    journal.record_mutation(receipt)?;
+    Ok(digest)
 }
 
 /// Metadata coordination failures retain exact original spending and returned evidence.

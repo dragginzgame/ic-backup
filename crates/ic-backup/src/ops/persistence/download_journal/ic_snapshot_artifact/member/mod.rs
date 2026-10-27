@@ -4,7 +4,7 @@ use super::{
     ArtifactChecksumRecord, FORMAT, IcSnapshotArtifactError, IcSnapshotMetadataReply,
     MAX_IC_SNAPSHOT_METADATA_BYTES, REGIONS,
 };
-use crate::model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES;
+use crate::model::ic_snapshot_data::{DataExtent, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::management_canister_types::SnapshotDataKind;
 
@@ -20,26 +20,19 @@ pub(super) enum Member {
 }
 
 pub(super) fn select(kind: &SnapshotDataKind) -> Result<Member, IcSnapshotArtifactError> {
-    Ok(match kind {
-        SnapshotDataKind::WasmModule { offset, size } => Member::Region {
-            index: 0,
-            offset: *offset,
-            size: *size,
+    Ok(match DataExtent::from(kind) {
+        DataExtent::Region {
+            index,
+            offset,
+            size,
+        } => Member::Region {
+            index,
+            offset,
+            size,
         },
-        SnapshotDataKind::WasmMemory { offset, size } => Member::Region {
-            index: 1,
-            offset: *offset,
-            size: *size,
-        },
-        SnapshotDataKind::StableMemory { offset, size } => Member::Region {
-            index: 2,
-            offset: *offset,
-            size: *size,
-        },
-        SnapshotDataKind::WasmChunk { hash } => Member::Chunk {
+        DataExtent::Chunk { hash } => Member::Chunk {
             name: chunk_name(Sha256Digest::from_bytes(
-                hash.as_slice()
-                    .try_into()
+                hash.try_into()
                     .map_err(|_| IcSnapshotArtifactError::OriginalMismatch)?,
             )),
         },

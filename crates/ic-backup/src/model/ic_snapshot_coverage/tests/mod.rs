@@ -6,7 +6,7 @@ use crate::model::{
 };
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::{
-    ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult,
+    ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
 };
 use sha2::{Digest, Sha256};
 

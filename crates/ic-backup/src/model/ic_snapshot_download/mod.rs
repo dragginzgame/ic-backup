@@ -100,12 +100,7 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
             .as_ref()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
         binding.validate(self.workflow, plan)?;
-        if binding.stage_sequence() != self.sequence
-            || !binding
-                .predecessors()
-                .iter()
-                .any(|row| row.learned_evidence() == &self.metadata.digest())
-        {
+        if !binding.has_learned_evidence(self.sequence, &self.metadata.digest()) {
             return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
         }
         Ok(())
@@ -130,14 +125,12 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
             .as_ref()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
         metadata_binding.validate(self.workflow, metadata_plan)?;
-        if metadata_plan.operations().len() != 1
-            || metadata_plan.operations()[0].request() != self.metadata.request().digest().hash()
-            || !predecessors.iter().any(|row| {
-                row.stage_sequence() == metadata_binding.stage_sequence()
-                    && row.binding() == &metadata_binding.digest()
-                    && row.learned_evidence() == &self.metadata.digest()
-            })
-        {
+        if !metadata_binding.matches_learned_predecessor(
+            metadata_plan,
+            self.metadata.request().digest().hash(),
+            &self.metadata.digest(),
+            &predecessors,
+        ) {
             return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
         }
         Ok(ExecutionStageBindingRecord::new(

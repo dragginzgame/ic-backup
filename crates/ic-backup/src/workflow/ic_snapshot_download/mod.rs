@@ -129,26 +129,21 @@ async fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + '
 ) -> Result<IcSnapshotArtifactWriter<'journal, 'layout, 'metadata>, IcSnapshotDownloadReplyError<E>>
 {
     let plan = stage.plan();
-    let writer = super::qualified_receipt::AppliedReceiptRecorder {
-        journal,
-        expected_attempt: request.mutation_attempt(),
-        expected_request: request.payload().digest().hash(),
-    }
-    .record_applied(
-        request,
-        admitted.response(),
-        async |request, reply| qualify(request, reply).await,
-        IcSnapshotDownloadReplyError::Qualification,
-        || IcSnapshotDownloadReplyError::ReceiptRequired,
-        || {
-            writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
-            let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
-                return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
-            };
-            Ok(writer.append(reply)?)
-        },
+    let receipt = qualify(request, admitted.response())
+        .await
+        .map_err(IcSnapshotDownloadReplyError::Qualification)?;
+    let receipt = super::qualified_receipt::admit_applied(
+        receipt,
+        request.mutation_attempt(),
+        request.payload().digest().hash(),
     )
-    .await?;
+    .ok_or(IcSnapshotDownloadReplyError::ReceiptRequired)?;
+    writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
+    let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
+        return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
+    };
+    let writer = writer.append(reply)?;
+    journal.record_mutation(receipt)?;
     stage.layout()?;
     Ok(writer)
 }

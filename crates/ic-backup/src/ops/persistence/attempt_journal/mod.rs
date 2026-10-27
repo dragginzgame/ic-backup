@@ -219,10 +219,10 @@ impl<'a> AttemptJournalGuard<'a> {
         let mut next = self.record.clone();
         let result = transition(&mut next)?;
         let bytes = encode_json(&next, MAX_ATTEMPT_JOURNAL_BYTES)?;
-        self.usable = false;
-        write(&self.path(), &bytes)?;
-        self.record = next;
-        self.usable = true;
+        let path = self.path();
+        super::json::replace_cached_record(&mut self.record, &mut self.usable, next, || {
+            write(&path, &bytes)
+        })?;
         Ok(result)
     }
     fn check_usable(&self) -> Result<(), AttemptJournalError> {

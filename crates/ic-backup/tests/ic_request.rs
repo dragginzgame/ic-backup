@@ -20,7 +20,6 @@ use ic_backup::{
         read_operation_plan,
     },
 };
-use serde_json::json;
 use std::fs;
 
 fn request(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
@@ -32,15 +31,7 @@ fn request(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
     .expect("typed closed host-ingress request")
 }
 fn plan(request: &IcManagementRequestRecord) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": request.target(), "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [request.target()],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": request.target(), "request": request.digest().hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).expect("original byte-bound local plan")
+    support::single_operation_plan(request.target(), 7, request.digest().hash())
 }
 
 #[test]

@@ -2,8 +2,8 @@
 
 use super::{
     ArtifactChecksumRecord, DownloadJournalGuard, File, IcSnapshotArtifactError,
-    IcSnapshotMetadataReply, Mode, OFlags, check_closed_tree, check_directory_identity,
-    checksum_relative_files, member, open_directory_no_follow, unix_fs,
+    IcSnapshotMetadataReply, Mode, OFlags, check_closed_tree, checksum_relative_files, member,
+    unix_fs, with_artifact_directory,
 };
 use crate::{
     model::operation_plan::OperationPlanRecord,
@@ -57,23 +57,15 @@ impl DownloadJournalGuard<'_> {
             .checksum()
             .ok_or(IcSnapshotArtifactError::OriginalMismatch)?;
         self.check_artifact_parent()?;
-        let parent_path = self.layout.root().join("artifacts");
-        let parent = open_directory_no_follow(&parent_path)?;
-        let path = self.layout.root().join(entry.artifact_path());
-        let directory = File::from(
-            unix_fs::openat(
-                &parent,
-                path.file_name()
-                    .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
-                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-                Mode::empty(),
-            )
-            .map_err(io::Error::from)?,
-        );
-        checksum_ic_tree(&directory, metadata)?.verify(expected.hash())?;
-        check_directory_identity(&parent_path, &parent)?;
-        check_directory_identity(&path, &directory)?;
-        self.admit_ic_artifact_original(plan)?;
+        with_artifact_directory(
+            self.layout.root(),
+            entry.artifact_path(),
+            |directory| {
+                checksum_ic_tree(directory, metadata)?.verify(expected.hash())?;
+                Ok::<_, IcSnapshotArtifactError>(())
+            },
+            || Ok(self.admit_ic_artifact_original(plan)?),
+        )?;
         Ok(expected.clone())
     }
 

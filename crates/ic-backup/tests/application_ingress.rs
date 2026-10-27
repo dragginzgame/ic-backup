@@ -27,15 +27,7 @@ const STAGE: u64 = 7;
 const OPERATION: u64 = 42;
 
 fn original_plan(request: &Digest) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": ROOT, "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [ROOT],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": OPERATION, "depends_on": []}]},
-        "operations": [{"operation_sequence": OPERATION, "target": ROOT, "request": request.hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).unwrap()
+    support::single_operation_plan(ROOT, OPERATION, request.hash())
 }
 
 // The application owns the exact envelope encoding/digest and current admission.

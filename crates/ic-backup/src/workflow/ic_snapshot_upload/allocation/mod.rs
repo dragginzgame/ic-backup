@@ -75,25 +75,17 @@ pub async fn allocate_snapshot<E: std::error::Error + 'static>(
         provider,
         admit,
         async |journal, request, admitted| {
-            super::super::qualified_receipt::AppliedReceiptRecorder {
-                journal,
-                expected_attempt: request.mutation_attempt(),
-                expected_request: payload.binding_digest().hash(),
-            }
-            .record_applied(
-                request,
-                admitted.acknowledgement(),
-                qualify,
-                IcSnapshotAllocationSettlementError::Qualification,
-                || IcSnapshotAllocationSettlementError::ReceiptRequired,
-                || {
-                    stage
-                        .layout()
-                        .map(|_| ())
-                        .map_err(IcSnapshotAllocationSettlementError::Stage)
-                },
+            let receipt = qualify(request, admitted.acknowledgement())
+                .await
+                .map_err(IcSnapshotAllocationSettlementError::Qualification)?;
+            let receipt = super::super::qualified_receipt::admit_applied(
+                receipt,
+                request.mutation_attempt(),
+                payload.binding_digest().hash(),
             )
-            .await?;
+            .ok_or(IcSnapshotAllocationSettlementError::ReceiptRequired)?;
+            stage.layout()?;
+            journal.record_mutation(receipt)?;
             Ok::<_, IcSnapshotAllocationSettlementError<E>>(admitted.reply().digest())
         },
     )

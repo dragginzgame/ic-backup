@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.44.5]
+
+### 🧹 Cleanup
+
+- Reuse Platform's bounded Candid sequences and strict reserved-marker decoder,
+  retaining Backup's reply quotas, wire admission and redacted errors.
+- Share snapshot extent and learned-predecessor checks; validate retained stage
+  bindings without rebuilding temporary records. Public APIs and v1 formats stay
+  unchanged.
+- Make qualification and domain work explicit before receipt recording, retaining
+  original spending, evidence and cancellation boundaries.
+- Share fail-closed journal publication and artifact descriptor custody while
+  preserving before/after-publication checks and indeterminate-write recovery.
+- Keep Agent wire projection bound to original reservation admission, preserving
+  each port's routing, reply ceilings and single-submit behavior.
+
+### 🧪 Testing
+
+- Reuse typed operation-plan fixtures in ordinary integration journeys while
+  keeping malformed JSON cases and independent wire/hash goldens explicit.
+
 ## [0.44.4] - 2026-10-26
 
 ### 📝 Summary

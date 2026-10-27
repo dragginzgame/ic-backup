@@ -15,10 +15,7 @@ pub(crate) async fn submit_once<E>(
     unsupported: fn() -> E,
     indeterminate: fn() -> E,
 ) -> Result<(RequestId, Vec<u8>), E> {
-    if !request.validate(journal) {
-        return Err(unsupported());
-    }
-    let wire = request.wire();
+    let wire = request.admit(journal).ok_or_else(unsupported)?;
     if wire.context != &transport.context {
         return Err(unsupported());
     }

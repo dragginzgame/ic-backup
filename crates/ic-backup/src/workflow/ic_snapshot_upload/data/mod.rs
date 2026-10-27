@@ -92,25 +92,17 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
             provider,
             &mut admit,
             async |journal, request, admitted| {
-                super::super::qualified_receipt::AppliedReceiptRecorder {
-                    journal,
-                    expected_attempt: request.mutation_attempt(),
-                    expected_request: payload.binding_digest().hash(),
-                }
-                .record_applied(
-                    request,
-                    admitted.acknowledgement(),
-                    async |request, reply| qualify(request, reply).await,
-                    IcSnapshotDataUploadReplyError::Qualification,
-                    || IcSnapshotDataUploadReplyError::ReceiptRequired,
-                    || {
-                        stage
-                            .layout()
-                            .map(|_| ())
-                            .map_err(IcSnapshotDataUploadReplyError::Stage)
-                    },
+                let receipt = qualify(request, admitted.acknowledgement())
+                    .await
+                    .map_err(IcSnapshotDataUploadReplyError::Qualification)?;
+                let receipt = super::super::qualified_receipt::admit_applied(
+                    receipt,
+                    request.mutation_attempt(),
+                    payload.binding_digest().hash(),
                 )
-                .await?;
+                .ok_or(IcSnapshotDataUploadReplyError::ReceiptRequired)?;
+                stage.layout()?;
+                journal.record_mutation(receipt)?;
                 stage.layout()?;
                 Ok::<_, IcSnapshotDataUploadReplyError<E>>(admitted.reply().digest())
             },

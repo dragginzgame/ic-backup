@@ -1688,7 +1688,7 @@ sizes or equating them with local artifact lengths. Bounded visitors admit at mo
 4,096 ordered globals, 1,024 distinct ordered SHA-256 chunk identities and 32
 certified-data bytes, without allocating from untrusted length hints. The v128
 global must fit unsigned 128 bits; floating globals retain exact bits. The source
-adapter reads the actual Candid reserved marker rather than using the SDK's
+adapter uses Platform's strict Candid reserved-marker visitor rather than the SDK's
 arbitrary-value skipping deserializer. Malformed/unknown optional values, skipped
 extensions, extra arguments and trailing bytes reject.
 

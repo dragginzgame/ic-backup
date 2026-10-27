@@ -72,6 +72,7 @@ pub(crate) const WIRE_ORACLE_LIMITS: ic_platform::candid::DecodeLimits =
     reason = "support also compiles in unrelated integration binaries"
 )]
 pub(crate) fn single_operation_plan(
+    target: &str,
     sequence: u64,
     request: &str,
 ) -> ic_backup::model::operation_plan::OperationPlanRecord {
@@ -84,7 +85,6 @@ pub(crate) fn single_operation_plan(
             PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
         },
     };
-    let target = "renrk-eyaaa-aaaaa-aaada-cai";
     OperationPlanRecord::new(OperationPlanRequest {
         context: PlanContextRecord::new(&PlanContextRequest {
             network: "ab".repeat(32),

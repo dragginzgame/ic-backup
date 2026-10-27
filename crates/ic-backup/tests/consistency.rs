@@ -21,7 +21,7 @@ fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
 }
 fn plan() -> OperationPlanRecord {
-    support::single_operation_plan(7, hash("01").hash())
+    support::single_operation_plan("renrk-eyaaa-aaaaa-aaada-cai", 7, hash("01").hash())
 }
 fn parameters(challenge: ArtifactChecksumRecord) -> ConsistencyRequestInput {
     ConsistencyRequestInput {

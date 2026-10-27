@@ -19,7 +19,6 @@ use ic_backup::{
     policy::snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare},
 };
 use ic_platform::management_canister_types::Snapshot;
-use serde_json::json;
 use std::fs;
 
 fn request(method: IcManagementMethodRecord, target: &str) -> IcManagementRequestRecord {
@@ -60,15 +59,8 @@ fn singleton_and_ambiguous_deltas_preserve_pending_capture_and_original_evidence
         IcManagementMethodRecord::ListCanisterSnapshots,
         capture.target(),
     );
-    let plan: OperationPlanRecord = serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": capture.target(), "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [capture.target()],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": capture.target(), "request": capture.digest().hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).expect("original plan");
+    let plan: OperationPlanRecord =
+        support::single_operation_plan(capture.target(), 7, capture.digest().hash());
     create_operation_plan(&layout, &plan).expect("retain original intent");
     let intent = plan.digest();
     // Integration-owned original baseline fixture; no live observation or receipt.

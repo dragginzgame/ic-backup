@@ -244,10 +244,10 @@ impl<'a> DownloadJournalGuard<'a> {
         write: impl FnOnce(&std::path::Path, &[u8]) -> Result<(), PersistenceError>,
     ) -> Result<(), DownloadJournalError> {
         self.layout.check_root()?;
-        self.usable = false;
-        write(&self.path(), bytes)?;
-        self.record = next;
-        self.usable = true;
+        let path = self.path();
+        super::json::replace_cached_record(&mut self.record, &mut self.usable, next, || {
+            write(&path, bytes)
+        })?;
         Ok(())
     }
 }

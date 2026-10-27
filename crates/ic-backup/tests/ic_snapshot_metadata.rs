@@ -14,14 +14,9 @@ use ic_backup::{
         AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
     },
 };
-use serde_json::json;
 use std::fs;
 
 #[test]
-#[expect(
-    clippy::too_many_lines,
-    reason = "one original byte/spending/reopen journey retains all custody assertions together"
-)]
 fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_release() {
     let root = support::temp_root("ic-backup-metadata");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -32,15 +27,8 @@ fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_rel
     })
     .unwrap();
     let request = IcSnapshotMetadataRequest::new(capture.target(), &[0, 255, 17]).unwrap();
-    let plan: OperationPlanRecord = serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": capture.target(), "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [capture.target()],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": capture.target(), "request": capture.digest().hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).unwrap();
+    let plan: OperationPlanRecord =
+        support::single_operation_plan(capture.target(), 7, capture.digest().hash());
     create_operation_plan(&layout, &plan).unwrap();
     layout
         .retain_restore(&root.join("restore-reference.json"), plan.digest().hash())

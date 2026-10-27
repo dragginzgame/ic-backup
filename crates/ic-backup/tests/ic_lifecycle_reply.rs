@@ -20,7 +20,6 @@ use ic_backup::{
 };
 use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::management_canister_types::CanisterStatusType;
-use serde_json::json;
 use std::fs;
 
 #[derive(CandidType)]
@@ -60,15 +59,8 @@ fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
         Some(vec![0, 255, 17]),
     );
     let status = request(IcManagementMethodRecord::CanisterStatus, None);
-    let plan: OperationPlanRecord = serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": load.target(), "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [load.target()],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": load.target(), "request": load.digest().hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).expect("original intent");
+    let plan: OperationPlanRecord =
+        support::single_operation_plan(load.target(), 7, load.digest().hash());
     create_operation_plan(&layout, &plan).expect("retain original plan");
     let intent = plan.digest();
     let authority = plan.attempt_authority(7).expect("original authority");

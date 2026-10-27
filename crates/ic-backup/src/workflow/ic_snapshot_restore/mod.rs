@@ -108,20 +108,17 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
     let settle = async || {
         let admitted = validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
         retain()?;
-        super::qualified_receipt::AppliedReceiptRecorder {
-            journal: &mut journal,
-            expected_attempt: request.mutation_attempt(),
-            expected_request: safety.wire().digest().hash(),
-        }
-        .record_applied(
-            &request,
-            &acknowledgement,
-            qualify,
-            IcRestoreReplyError::Qualification,
-            || IcRestoreReplyError::ReceiptRequired,
-            retain,
+        let receipt = qualify(&request, &acknowledgement)
+            .await
+            .map_err(IcRestoreReplyError::Qualification)?;
+        let receipt = super::qualified_receipt::admit_applied(
+            receipt,
+            request.mutation_attempt(),
+            safety.wire().digest().hash(),
         )
-        .await?;
+        .ok_or(IcRestoreReplyError::ReceiptRequired)?;
+        retain()?;
+        journal.record_mutation(receipt)?;
         retain()?;
         let IcMutationReplyView::Lifecycle(reply) = admitted.reply() else {
             return Err(IcRestoreReplyError::ReceiptRequired);

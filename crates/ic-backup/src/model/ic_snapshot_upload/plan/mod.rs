@@ -127,14 +127,12 @@ impl<'workflow, 'request, 'source> IcSnapshotDataUploadPlan<'workflow, 'request,
             .as_ref()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
         allocation_binding.validate(self.workflow, allocation_plan)?;
-        if allocation_plan.operations().len() != 1
-            || allocation_plan.operations()[0].request() != self.metadata.binding_digest().hash()
-            || !predecessors.iter().any(|row| {
-                row.stage_sequence() == allocation_binding.stage_sequence()
-                    && row.binding() == &allocation_binding.digest()
-                    && row.learned_evidence() == &self.allocation_evidence
-            })
-        {
+        if !allocation_binding.matches_learned_predecessor(
+            allocation_plan,
+            self.metadata.binding_digest().hash(),
+            &self.allocation_evidence,
+            &predecessors,
+        ) {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
         }
         Ok(ExecutionStageBindingRecord::new(
@@ -153,12 +151,7 @@ impl<'workflow, 'request, 'source> IcSnapshotDataUploadPlan<'workflow, 'request,
             .as_ref()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
         binding.validate(self.workflow, plan)?;
-        if binding.stage_sequence() != self.sequence
-            || !binding
-                .predecessors()
-                .iter()
-                .any(|row| row.learned_evidence() == &self.allocation_evidence)
-        {
+        if !binding.has_learned_evidence(self.sequence, &self.allocation_evidence) {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
         }
         Ok(())

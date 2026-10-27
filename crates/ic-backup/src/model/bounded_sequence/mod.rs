@@ -12,7 +12,7 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    deserialize_with::<D, T, _, _, _, _, LIMIT, false>(deserializer, expected, overflow, |_| {
+    deserialize_with::<D, T, _, _, _, _, LIMIT>(deserializer, expected, overflow, |_| {
         Ok::<(), std::convert::Infallible>(())
     })
 }
@@ -30,25 +30,10 @@ where
     C: fmt::Display,
     F: FnMut(&T) -> Result<(), C>,
 {
-    deserialize_with::<D, T, _, _, C, F, LIMIT, false>(deserializer, expected, overflow, check)
+    deserialize_with::<D, T, _, _, C, F, LIMIT>(deserializer, expected, overflow, check)
 }
 
-/// IC wire values reject excessive hints and decode the one excess value by type.
-pub(crate) fn deserialize_wire<'de, D, T, const LIMIT: usize>(
-    deserializer: D,
-    expected: impl fmt::Display,
-    overflow: impl fmt::Display,
-) -> Result<Vec<T>, D::Error>
-where
-    D: Deserializer<'de>,
-    T: Deserialize<'de>,
-{
-    deserialize_with::<D, T, _, _, _, _, LIMIT, true>(deserializer, expected, overflow, |_| {
-        Ok::<(), std::convert::Infallible>(())
-    })
-}
-
-fn deserialize_with<'de, D, T, X, E, C, F, const LIMIT: usize, const WIRE: bool>(
+fn deserialize_with<'de, D, T, X, E, C, F, const LIMIT: usize>(
     deserializer: D,
     expected: X,
     overflow: E,
@@ -62,7 +47,7 @@ where
     C: fmt::Display,
     F: FnMut(&T) -> Result<(), C>,
 {
-    struct Visitor<T, X, E, C, F, const LIMIT: usize, const WIRE: bool> {
+    struct Visitor<T, X, E, C, F, const LIMIT: usize> {
         expected: X,
         overflow: E,
         check: F,
@@ -76,8 +61,7 @@ where
         C: fmt::Display,
         F: FnMut(&T) -> Result<(), C>,
         const LIMIT: usize,
-        const WIRE: bool,
-    > de::Visitor<'de> for Visitor<T, X, E, C, F, LIMIT, WIRE>
+    > de::Visitor<'de> for Visitor<T, X, E, C, F, LIMIT>
     {
         type Value = Vec<T>;
 
@@ -89,9 +73,6 @@ where
             mut self,
             mut sequence: A,
         ) -> Result<Self::Value, A::Error> {
-            if WIRE && sequence.size_hint().is_some_and(|size| size > LIMIT) {
-                return Err(de::Error::custom(self.overflow));
-            }
             let mut entries = Vec::new();
             while entries.len() < LIMIT {
                 match sequence.next_element()? {
@@ -102,18 +83,13 @@ where
                     None => return Ok(entries),
                 }
             }
-            let excess = if WIRE {
-                sequence.next_element::<T>()?.is_some()
-            } else {
-                sequence.next_element::<de::IgnoredAny>()?.is_some()
-            };
-            if excess {
+            if sequence.next_element::<de::IgnoredAny>()?.is_some() {
                 return Err(de::Error::custom(self.overflow));
             }
             Ok(entries)
         }
     }
-    deserializer.deserialize_seq(Visitor::<T, _, _, _, _, LIMIT, WIRE> {
+    deserializer.deserialize_seq(Visitor::<T, _, _, _, _, LIMIT> {
         expected,
         overflow,
         check,

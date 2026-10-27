@@ -17,7 +17,6 @@ use ic_backup::{
 };
 use ic_platform::management_canister_types::SnapshotDataKind;
 use serde::Deserialize;
-use serde_json::json;
 use std::fs;
 
 #[derive(Deserialize)]
@@ -74,15 +73,8 @@ fn retained_case(case: Case, raw_metadata: &[u8]) {
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, raw_metadata).unwrap();
     let request = IcSnapshotDataRequest::new(&metadata, case.kind.clone()).unwrap();
     let arguments = request.arguments().to_vec();
-    let plan: OperationPlanRecord = serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": capture.target(), "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [capture.target()],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": capture.target(), "request": capture.digest().hash(), "budget": {"mutations": 1, "observations": 1}}],
-        "budget": {"mutations": 1, "observations": 1}
-    })).unwrap();
+    let plan: OperationPlanRecord =
+        support::single_operation_plan(capture.target(), 7, capture.digest().hash());
     create_operation_plan(&layout, &plan).unwrap();
     layout
         .retain_restore(&root.join("restore-reference.json"), plan.digest().hash())

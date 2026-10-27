@@ -2,8 +2,10 @@
 
 use ic_platform::candid::contract;
 mod extents;
+mod kind;
 mod wire;
 pub(crate) use extents::{ExtentPlanningError, planned_extents};
+pub(crate) use kind::DataExtent;
 
 use super::{
     artifacts::ArtifactChecksumRecord,
@@ -75,16 +77,7 @@ impl<'metadata> IcSnapshotDataRequest<'metadata> {
     }
 
     pub(crate) fn matches_kind(&self, original: &SnapshotDataKind) -> bool {
-        use SnapshotDataKind::{StableMemory, WasmChunk, WasmMemory, WasmModule};
-        match (&self.kind, original) {
-            (WasmModule { offset: a, size: b }, WasmModule { offset: c, size: d })
-            | (WasmMemory { offset: a, size: b }, WasmMemory { offset: c, size: d })
-            | (StableMemory { offset: a, size: b }, StableMemory { offset: c, size: d }) => {
-                a == c && b == d
-            }
-            (WasmChunk { hash: a }, WasmChunk { hash: b }) => a == b,
-            _ => false,
-        }
+        DataExtent::from(&self.kind) == DataExtent::from(original)
     }
 
     /// Read the canonical effective routing target, also encoded in the arguments.
@@ -132,24 +125,27 @@ pub(crate) fn validate_kind(
     kind: &SnapshotDataKind,
 ) -> Result<(), IcSnapshotDataError> {
     let values = metadata.metadata();
-    match kind {
-        SnapshotDataKind::WasmModule { offset, size } => {
-            range(*offset, *size, values.wasm_module_size)?;
+    match DataExtent::from(kind) {
+        DataExtent::Region {
+            index,
+            offset,
+            size,
+        } => {
+            let sizes = [
+                values.wasm_module_size,
+                values.wasm_memory_size,
+                values.stable_memory_size,
+            ];
+            range(offset, size, sizes[index])?;
         }
-        SnapshotDataKind::WasmMemory { offset, size } => {
-            range(*offset, *size, values.wasm_memory_size)?;
-        }
-        SnapshotDataKind::StableMemory { offset, size } => {
-            range(*offset, *size, values.stable_memory_size)?;
-        }
-        SnapshotDataKind::WasmChunk { hash } => {
+        DataExtent::Chunk { hash } => {
             if hash.len() != 32 {
                 return Err(IcSnapshotDataError::InvalidChunkHash);
             }
             if !values
                 .wasm_chunk_store
                 .iter()
-                .any(|chunk| chunk.hash == *hash)
+                .any(|chunk| chunk.hash == hash)
             {
                 return Err(IcSnapshotDataError::ChunkNotInMetadata);
             }
@@ -207,16 +203,14 @@ impl<'request, 'metadata> IcSnapshotDataReply<'request, 'metadata> {
         let chunk = wire::decode(bytes)?;
         let chunk_digest = ic_host_artifacts::artifact::Sha256Digest::compute(&chunk);
         let chunk_checksum = ArtifactChecksumRecord::from_digest(*chunk_digest.as_bytes());
-        match request.kind() {
-            SnapshotDataKind::WasmModule { size, .. }
-            | SnapshotDataKind::WasmMemory { size, .. }
-            | SnapshotDataKind::StableMemory { size, .. } => {
-                if u64::try_from(chunk.len()).ok() != Some(*size) {
+        match DataExtent::from(request.kind()) {
+            DataExtent::Region { size, .. } => {
+                if u64::try_from(chunk.len()).ok() != Some(size) {
                     return Err(IcSnapshotDataError::LengthMismatch);
                 }
             }
-            SnapshotDataKind::WasmChunk { hash } => {
-                if chunk_digest.as_bytes().as_slice() != hash.as_slice() {
+            DataExtent::Chunk { hash } => {
+                if chunk_digest.as_bytes().as_slice() != hash {
                     return Err(IcSnapshotDataError::ChunkHashMismatch);
                 }
             }

@@ -1,7 +1,9 @@
 //! Incremental coverage of admitted snapshot replies, without IO or durable progress.
 
-use super::{ic_snapshot_data::IcSnapshotDataReply, ic_snapshot_metadata::IcSnapshotMetadataReply};
-use ic_platform::management_canister_types::SnapshotDataKind;
+use super::{
+    ic_snapshot_data::{DataExtent, IcSnapshotDataReply},
+    ic_snapshot_metadata::IcSnapshotMetadataReply,
+};
 use std::fmt;
 use thiserror::Error;
 
@@ -49,17 +51,19 @@ impl<'metadata> IcSnapshotDataCoverage<'metadata> {
         if reply.request().metadata().digest() != self.metadata.digest() {
             return Err(IcSnapshotDataCoverageError::MetadataMismatch);
         }
-        let (index, offset, size) = match reply.request().kind() {
-            SnapshotDataKind::WasmModule { offset, size } => (0, *offset, *size),
-            SnapshotDataKind::WasmMemory { offset, size } => (1, *offset, *size),
-            SnapshotDataKind::StableMemory { offset, size } => (2, *offset, *size),
-            SnapshotDataKind::WasmChunk { hash } => {
+        let (index, offset, size) = match DataExtent::from(reply.request().kind()) {
+            DataExtent::Region {
+                index,
+                offset,
+                size,
+            } => (index, offset, size),
+            DataExtent::Chunk { hash } => {
                 let index = self
                     .metadata
                     .metadata()
                     .wasm_chunk_store
                     .iter()
-                    .position(|chunk| chunk.hash == *hash)
+                    .position(|chunk| chunk.hash == hash)
                     .ok_or(IcSnapshotDataCoverageError::MetadataMismatch)?;
                 if self.chunks[index] {
                     return Err(IcSnapshotDataCoverageError::DuplicateChunk);

@@ -1,10 +1,7 @@
 //! Decode-only wire adapters with bounded Serde sequences and upstream Candid types.
 
 use super::{IcSnapshotInfo, IcSnapshotReplyError, MAX_IC_SNAPSHOT_REPLY_ENTRIES};
-use crate::model::{
-    bounded_sequence,
-    ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES},
-};
+use crate::model::ic_request::{IcManagementMethodRecord, MAX_IC_SNAPSHOT_ID_BYTES};
 use ic_platform::candid::contract::CandidType;
 use ic_platform::candid::{DecodeLimits, decode_exactly_one};
 use serde::{Deserialize, Deserializer, de};
@@ -39,7 +36,7 @@ struct WireInventory(Vec<WireSnapshot>);
 
 impl<'de> Deserialize<'de> for WireInventory {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        bounded_sequence::deserialize_wire::<_, WireSnapshot, MAX_IC_SNAPSHOT_REPLY_ENTRIES>(
+        ic_platform::candid::sequence::deserialize::<_, WireSnapshot, MAX_IC_SNAPSHOT_REPLY_ENTRIES>(
             deserializer,
             "at most 1024 snapshot descriptors",
             "snapshot inventory exceeds its entry bound",
@@ -49,7 +46,7 @@ impl<'de> Deserialize<'de> for WireInventory {
 }
 
 pub(crate) fn snapshot_id<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-    let bytes = bounded_sequence::deserialize_wire::<_, u8, MAX_IC_SNAPSHOT_ID_BYTES>(
+    let bytes = ic_platform::candid::sequence::deserialize::<_, u8, MAX_IC_SNAPSHOT_ID_BYTES>(
         deserializer,
         "1..=256 raw snapshot bytes",
         "snapshot identifier exceeds its bounds",

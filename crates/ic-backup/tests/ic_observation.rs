@@ -29,7 +29,6 @@ use ic_backup::{
     },
     ports::ic_observation::{IcObservationProvider, IcObservationProviderError},
 };
-use serde_json::json;
 use std::{fs, path::Path};
 
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
@@ -135,12 +134,8 @@ fn retained_case(
 ) {
     let mutation = payload(mutation_method);
     let observation = payload(method);
-    let plan: OperationPlanRecord = serde_json::from_value(json!({
-        "version":1,"context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},
-        "inventory":{"version":1,"targets":[{"canister_id":TARGET,"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[TARGET],"graph":{"version":1,"nodes":[{"operation_sequence":42,"depends_on":[]}]},
-        "operations":[{"operation_sequence":42,"target":TARGET,"request":mutation.digest().hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
-    })).unwrap();
+    let plan: OperationPlanRecord =
+        support::single_operation_plan(TARGET, 42, mutation.digest().hash());
     let root = support::temp_root("ic-observation");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_operation_plan(&layout, &plan).unwrap();

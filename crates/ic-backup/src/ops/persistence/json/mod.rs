@@ -32,6 +32,21 @@ pub(crate) fn encode_json(
     encode_into(value, Vec::new(), max_bytes)
 }
 
+// Candidates are encoded before entry. A failed or lost publication must leave
+// either journal guard unusable, without installing its unconfirmed cached record.
+pub(super) fn replace_cached_record<T>(
+    record: &mut T,
+    usable: &mut bool,
+    next: T,
+    publish: impl FnOnce() -> Result<(), PersistenceError>,
+) -> Result<(), PersistenceError> {
+    *usable = false;
+    publish()?;
+    *record = next;
+    *usable = true;
+    Ok(())
+}
+
 fn encode_into<W: Write>(
     value: &impl Serialize,
     sink: W,

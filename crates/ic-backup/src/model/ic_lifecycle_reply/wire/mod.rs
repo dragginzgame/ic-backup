@@ -2,10 +2,7 @@
 
 use super::MAX_IC_LIFECYCLE_REPLY_BYTES;
 use super::{IcCanisterStatusInfo, IcLifecycleReplyError};
-use crate::model::{
-    bounded_sequence,
-    control_authority::{ControllerSet, MAX_CONTROLLERS},
-};
+use crate::model::control_authority::{ControllerSet, MAX_CONTROLLERS};
 use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::candid::{DecodeLimits, decode_exactly_one};
 use ic_platform::management_canister_types::CanisterStatusType;
@@ -30,7 +27,7 @@ struct WireSettings {
 }
 
 fn controllers<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<Principal>, D::Error> {
-    bounded_sequence::deserialize_wire::<_, Principal, MAX_CONTROLLERS>(
+    ic_platform::candid::sequence::deserialize::<_, Principal, MAX_CONTROLLERS>(
         deserializer,
         "a bounded controller principal sequence",
         "controller sequence exceeds bound",

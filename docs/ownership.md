@@ -100,12 +100,12 @@ qualification selection, with no library, wire or persistence change.
 
 ## Deliberate retention and unresolved coordination
 
-**Retained product policy.** Backup’s bounded sequence visitors enforce product
-counts and aggregate bounds, reject excessive wire hints and type-check excess
-values. The strict reserved marker preserves zero-skip admission. Generic decoder
-setup and exact-result mechanics already belong to Platform; these projections
-are not a pending migration or compatibility layer. Preserve their original wire
-and aggregate regressions when changing product policy.
+**Retained product policy.** Backup selects sequence counts, aggregate bounds and
+decoder quotas. Platform supplies the bounded typed Candid sequence visitor and
+strict reserved marker, including excessive-hint refusal, typed excess values and
+zero-skip admission. Persisted-record sequence visitors and aggregate checks stay
+local. Preserve the original wire and aggregate regressions when changing product
+policy; none of these adapters supplies authentication or effect authority.
 
 Candid remains the external management protocol through the completed
 [Platform boundary](ic-platform.md). There is no direct Candid declaration.

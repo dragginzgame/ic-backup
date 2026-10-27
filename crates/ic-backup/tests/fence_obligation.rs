@@ -28,6 +28,7 @@ fn hash(pair: &str) -> ArtifactChecksumRecord {
 }
 fn plan() -> OperationPlanRecord {
     support::single_operation_plan(
+        "renrk-eyaaa-aaaaa-aaada-cai",
         0,
         ArtifactChecksumRecord::from_bytes(b"native application acquire fixture").hash(),
     )

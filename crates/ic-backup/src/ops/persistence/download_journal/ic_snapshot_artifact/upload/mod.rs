@@ -4,9 +4,8 @@ mod plan;
 pub use plan::IcSnapshotDataUploadPreparationError;
 
 use super::{
-    DownloadJournalGuard, File, IcSnapshotArtifactError, Mode, OFlags, REGIONS,
-    check_directory_identity, member, open_directory_no_follow, unix_fs,
-    verification::open_regular_child,
+    DownloadJournalGuard, File, IcSnapshotArtifactError, REGIONS, member,
+    verification::open_regular_child, with_artifact_directory,
 };
 use crate::model::{
     ic_snapshot_data::{MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
@@ -15,7 +14,7 @@ use crate::model::{
     operation_plan::OperationPlanRecord,
 };
 use ic_platform::management_canister_types::SnapshotDataKind;
-use std::io::{self, Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom};
 use thiserror::Error;
 
 impl DownloadJournalGuard<'_> {
@@ -87,26 +86,9 @@ impl DownloadJournalGuard<'_> {
             .artifact(metadata.request().target(), snapshot)
             .map_err(super::DownloadJournalError::from)
             .map_err(IcSnapshotArtifactError::from)?;
-        let parent_path = self.layout.root().join("artifacts");
-        let parent =
-            open_directory_no_follow(&parent_path).map_err(IcSnapshotArtifactError::from)?;
-        let path = self.layout.root().join(entry.artifact_path());
-        let directory = File::from(
-            unix_fs::openat(
-                &parent,
-                path.file_name()
-                    .ok_or(IcSnapshotArtifactError::CustodyChanged)?,
-                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-                Mode::empty(),
-            )
-            .map_err(io::Error::from)
-            .map_err(IcSnapshotArtifactError::from)?,
-        );
-        let result = read(&directory)?;
-        check_directory_identity(&parent_path, &parent)?;
-        check_directory_identity(&path, &directory)?;
-        self.require_upload_source(plan, snapshot, metadata_upload)?;
-        Ok(result)
+        with_artifact_directory(self.layout.root(), entry.artifact_path(), read, || {
+            self.require_upload_source(plan, snapshot, metadata_upload)
+        })
     }
 
     fn require_upload_source(

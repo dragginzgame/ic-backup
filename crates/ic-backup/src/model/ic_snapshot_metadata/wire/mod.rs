@@ -2,16 +2,15 @@
 
 use super::MAX_IC_SNAPSHOT_METADATA_BYTES;
 use super::{IcSnapshotMetadataError, MAX_IC_SNAPSHOT_CHUNKS, MAX_IC_SNAPSHOT_GLOBALS};
-use crate::model::bounded_sequence;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::CandidType;
-use ic_platform::candid::{DecodeLimits, decode_exactly_one};
+use ic_platform::candid::{DecodeLimits, decode_exactly_one, reserved::StrictReserved};
 use ic_platform::management_canister_types::{
     CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotMetadataResult,
     SnapshotMetadataGlobal, SnapshotSource,
 };
-use serde::{Deserialize, Deserializer, de};
-use std::{collections::BTreeSet, fmt};
+use serde::{Deserialize, Deserializer};
+use std::collections::BTreeSet;
 
 #[derive(CandidType, Deserialize)]
 #[candid_path("ic_platform::candid::contract")]
@@ -43,43 +42,9 @@ struct WireChunk {
 #[candid_path("ic_platform::candid::contract")]
 enum WireSource {
     #[serde(rename = "taken_from_canister")]
-    TakenFromCanister(WireReserved),
+    TakenFromCanister(StrictReserved),
     #[serde(rename = "metadata_upload")]
-    MetadataUpload(WireReserved),
-}
-
-// The SDK's Reserved deserializer deliberately skips arbitrary values. Read the
-// actual Candid reserved marker instead so recognized source tags need no skipped
-// work and cannot silently discard an unknown payload under our zero-skip quota.
-struct WireReserved;
-
-impl CandidType for WireReserved {
-    fn _ty() -> contract::types::Type {
-        contract::types::TypeInner::Reserved.into()
-    }
-    fn idl_serialize<S: contract::types::Serializer>(&self, serializer: S) -> Result<(), S::Error> {
-        serializer.serialize_null(())
-    }
-}
-
-impl<'de> Deserialize<'de> for WireReserved {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        struct ReservedVisitor;
-        impl de::Visitor<'_> for ReservedVisitor {
-            type Value = WireReserved;
-            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("the Candid reserved marker")
-            }
-            fn visit_byte_buf<E: de::Error>(self, bytes: Vec<u8>) -> Result<Self::Value, E> {
-                if bytes == [3] {
-                    Ok(WireReserved)
-                } else {
-                    Err(E::custom("invalid reserved marker"))
-                }
-            }
-        }
-        d.deserialize_any(ReservedVisitor)
-    }
+    MetadataUpload(StrictReserved),
 }
 
 fn globals<'de, D: Deserializer<'de>>(
@@ -103,7 +68,7 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    bounded_sequence::deserialize_wire::<_, T, LIMIT>(
+    ic_platform::candid::sequence::deserialize::<_, T, LIMIT>(
         d,
         format_args!("at most {LIMIT} metadata elements"),
         "metadata sequence exceeds bound",
