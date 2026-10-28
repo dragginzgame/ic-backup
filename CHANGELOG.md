@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.48.0]
+## [0.48.0] - 2026-10-28
 
 ### 🔧 Tooling and dependencies
 
