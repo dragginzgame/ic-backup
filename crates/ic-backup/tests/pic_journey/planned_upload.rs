@@ -441,6 +441,13 @@ pub(crate) fn run(failure: Failure) {
     );
     assert_eq!(provider.submitted.len(), data.kinds().len() + 1);
     drop(stage);
+    let restore_source = ic_backup::workflow::ic_snapshot_restore::IcRestoreSource::uploaded(
+        &source_layout,
+        &data,
+        &layout,
+        &checkpoint,
+    )
+    .unwrap();
     super::planned_restore::run(
         provider.backend,
         &source_plan,
@@ -450,6 +457,7 @@ pub(crate) fn run(failure: Failure) {
         destination,
         &source,
         failure,
+        &restore_source,
     );
     assert_eq!(
         source_journal

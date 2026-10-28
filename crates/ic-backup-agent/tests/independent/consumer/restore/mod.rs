@@ -13,7 +13,7 @@ use ic_backup::{
         read_complete_execution_workflow_locked,
     },
     view::restore_reference_release::TerminalRestoreEvidence,
-    workflow::ic_snapshot_restore::restore_snapshot,
+    workflow::ic_snapshot_restore::{IcRestoreSource, restore_snapshot},
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 
@@ -85,6 +85,29 @@ impl Driver {
         journal
             .read_download_manifest(&source_plan, &manifest)
             .map_err(error)?;
+        let restore_source = if sequence == 5 {
+            let upload = journal
+                .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
+                .map_err(error)?;
+            let allocation_raw = self.raw(true, 3)?;
+            let allocation = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadReply::decode(
+                &upload,
+                &allocation_raw,
+            )
+            .map_err(error)?;
+            let data = journal
+                .prepare_ic_snapshot_data_upload_plan(&self.restore, 4, TOKEN, &allocation, CHUNK)
+                .map_err(error)?;
+            IcRestoreSource::uploaded(
+                &source,
+                &data,
+                stage.workflow_layout(),
+                &stage.binding().predecessors()[0],
+            )
+            .map_err(error)?
+        } else {
+            IcRestoreSource::existing(&source, &source_plan, &request)
+        };
         drop(journal);
         let payload = self.payload(
             if sequence == 5 {
@@ -137,8 +160,7 @@ impl Driver {
         );
         restore_snapshot(
             stage,
-            &source,
-            &source_plan,
+            restore_source,
             &safety,
             &mut provider,
             async |request, safety| {

@@ -39,7 +39,7 @@ use ic_backup::{
         execution_workflow::{
             RetainedStageEvidence, run_new_execution_workflow, run_retained_execution_workflow,
         },
-        ic_snapshot_restore::restore_snapshot,
+        ic_snapshot_restore::{IcRestoreSource, restore_snapshot},
         ic_snapshot_upload::{allocate_snapshot, upload_snapshot_data},
     },
 };
@@ -385,6 +385,31 @@ impl CompleteDriver {
             },
         )
         .unwrap();
+        let restore_source = if sequence == 17 {
+            let upload = journal
+                .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
+                .unwrap();
+            let (_, _, raw) = retained.allocation.as_ref().unwrap();
+            let allocation = IcSnapshotUploadReply::decode(&upload, raw).unwrap();
+            let data = journal
+                .prepare_ic_snapshot_data_upload_plan(
+                    &self.workflow,
+                    13,
+                    TOKEN,
+                    &allocation,
+                    32 * 1024,
+                )
+                .unwrap();
+            IcRestoreSource::uploaded(
+                &source_layout,
+                &data,
+                stage.workflow_layout(),
+                &stage.binding().predecessors()[0],
+            )
+            .unwrap()
+        } else {
+            IcRestoreSource::existing(&source_layout, &retained.source_plan, &request)
+        };
         let backend = RefCell::new(&mut self.backend);
         let mut provider = RestoreProvider {
             backend: &backend,
@@ -392,8 +417,7 @@ impl CompleteDriver {
         };
         let (acknowledgement, checkpoint) = ready(restore_snapshot(
             stage,
-            &source_layout,
-            &retained.source_plan,
+            restore_source,
             &safety,
             &mut provider,
             async |request, safety| {

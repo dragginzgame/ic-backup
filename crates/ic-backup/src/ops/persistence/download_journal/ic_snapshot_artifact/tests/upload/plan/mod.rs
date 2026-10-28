@@ -5,7 +5,9 @@ use crate::test_support::ready::ready;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-        execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
+        execution_workflow::{
+            ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
+        },
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
             IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadAttempt,
@@ -32,6 +34,22 @@ fn with_data_stage(
         &DownloadJournalGuard<'_>,
     ),
 ) {
+    with_data_stage_then(4, check, |_, _, _| {});
+}
+
+fn with_data_stage_then(
+    chunk_bytes: u64,
+    check: impl FnOnce(
+        &ExecutionStageGuard<'_>,
+        &IcSnapshotDataUploadPlan<'_, '_, '_>,
+        &DownloadJournalGuard<'_>,
+    ),
+    after: impl FnOnce(
+        &BackupLayoutGuard,
+        &IcSnapshotDataUploadPlan<'_, '_, '_>,
+        &DownloadJournalGuard<'_>,
+    ),
+) {
     let root = root();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let original = source_plan();
@@ -42,7 +60,7 @@ fn with_data_stage(
     let payload = source
         .prepare_ic_snapshot_upload_metadata(&original, TOKEN, &metadata)
         .unwrap();
-    let workflow = data_workflow(&payload, 12);
+    let workflow = data_workflow(&payload, 64);
     let path = root.join("workflow");
     fs::create_dir(&path).unwrap();
     let workflow_layout = BackupLayoutGuard::acquire(&path).unwrap();
@@ -77,7 +95,7 @@ fn with_data_stage(
     drop(journal);
     let predecessor = stage.reconcile_checkpoint(allocation.digest()).unwrap();
     let data = source
-        .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, 4)
+        .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, chunk_bytes)
         .unwrap();
     let binding = data
         .bind(stage.binding(), stage.plan(), vec![predecessor])
@@ -95,6 +113,8 @@ fn with_data_stage(
         )
         .unwrap();
     check(&stage, &data, &source);
+    drop(stage);
+    after(&workflow_layout, &data, &source);
 }
 #[derive(Clone, Copy, PartialEq)]
 enum Failure {
@@ -104,6 +124,7 @@ enum Failure {
     WrongReceiptSecond,
     Admission,
     SourceAfterFirst,
+    SourceReplacedAfterFirst,
     OccupiedCheckpoint,
 }
 struct Provider {
@@ -358,6 +379,7 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
         Failure::WrongReceiptSecond,
         Failure::Admission,
         Failure::SourceAfterFirst,
+        Failure::SourceReplacedAfterFirst,
         Failure::OccupiedCheckpoint,
     ] {
         with_data_stage(|stage, data, source| {
@@ -408,6 +430,16 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
                         )
                         .unwrap();
                     }
+                    if failure == Failure::SourceReplacedAfterFirst {
+                        let path = source
+                            .layout
+                            .root()
+                            .join(format!("artifacts/{TARGET}/wasm-module.bin"));
+                        let original = fs::read(&path).unwrap();
+                        fs::rename(&path, source.layout.root().join("original-wasm-module.bin"))
+                            .unwrap();
+                        fs::write(&path, original).unwrap();
+                    }
                     Ok(MutationReceiptRequest {
                         attempt: request.mutation_attempt(),
                         request: request.payload().binding_digest().hash().into(),
@@ -446,7 +478,7 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
                     assert!(result.is_err());
                     (1, 0, 0)
                 }
-                Failure::SourceAfterFirst => {
+                Failure::SourceAfterFirst | Failure::SourceReplacedAfterFirst => {
                     assert!(matches!(
                         result,
                         Err(IcSnapshotDataUploadExecutionError::Source(_))
@@ -685,6 +717,9 @@ fn batch_plans_empty_regions_and_known_empty_chunks_without_placeholder_writes()
             .unwrap();
         assert_eq!(data.kinds().len(), usize::from(known_empty));
         assert_eq!(data.plan().is_some(), known_empty);
+        if !known_empty {
+            check_empty_restore_source(&source, &workflow, &data, &allocation);
+        }
         if let Some(plan) = data.plan() {
             let payload = source
                 .prepare_ic_snapshot_upload_data(
@@ -702,4 +737,247 @@ fn batch_plans_empty_regions_and_known_empty_chunks_without_placeholder_writes()
         }
         assert_eq!(fs::read(source.path()).unwrap(), before);
     }
+}
+
+fn complete_data(
+    stage: &ExecutionStageGuard<'_>,
+    data: &IcSnapshotDataUploadPlan<'_, '_, '_>,
+    source: &DownloadJournalGuard<'_>,
+) -> ExecutionStagePredecessorRecord {
+    let mut provider = Provider {
+        calls: 0,
+        failure: Failure::None,
+    };
+    ready(upload_snapshot_data(
+        stage,
+        data,
+        source,
+        TOKEN,
+        &mut provider,
+        async |_| Ok::<_, io::Error>(()),
+        async |request, acknowledgement| {
+            let reply =
+                IcSnapshotUploadReply::decode(request.payload(), &acknowledgement.input().reply)
+                    .unwrap();
+            Ok(MutationReceiptRequest {
+                attempt: request.mutation_attempt(),
+                request: request.payload().binding_digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: reply.digest().hash().into(),
+            })
+        },
+    ))
+    .unwrap()
+}
+
+#[test]
+fn complete_upload_reads_are_linear_in_bytes_for_different_chunk_counts() {
+    for chunk in [1, 2, 4] {
+        with_data_stage_then(
+            chunk,
+            |stage, data, source| {
+                let entry = source
+                    .record()
+                    .unwrap()
+                    .artifact(TARGET, TOKEN)
+                    .unwrap()
+                    .clone();
+                let directory = source.layout.root().join(entry.artifact_path());
+                let total: u64 = fs::read_dir(&directory)
+                    .unwrap()
+                    .map(|entry| entry.unwrap().metadata().unwrap().len())
+                    .sum();
+                let values = data.metadata().source().metadata();
+                let payload = values.wasm_module_size
+                    + values.wasm_memory_size
+                    + values.stable_memory_size
+                    + values
+                        .wasm_chunk_store
+                        .iter()
+                        .map(|chunk| {
+                            fs::metadata(directory.join(format!(
+                                    "chunk-{}.bin",
+                                    ArtifactChecksumRecord::from_digest(
+                                        chunk.hash.clone().try_into().unwrap()
+                                    )
+                                    .hash()
+                                )))
+                            .unwrap()
+                            .len()
+                        })
+                        .sum::<u64>();
+                let (_, reads) =
+                    super::super::super::read_count::measure(|| complete_data(stage, data, source));
+                // Two complete admission passes and one closing pass, plus each exact payload once.
+                assert_eq!(reads, 3 * total + payload);
+                assert!(data.kinds().len() > 1);
+            },
+            |_, _, _| {},
+        );
+    }
+}
+
+#[test]
+fn uploaded_restore_source_requires_complete_original_and_rejects_snapshot_substitution() {
+    use crate::{
+        model::ic_request::{
+            IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord,
+        },
+        workflow::ic_snapshot_restore::{IcRestoreSource, IcRestoreSourceError},
+    };
+    for completed in [false, true] {
+        let predecessor = std::cell::RefCell::new(None);
+        with_data_stage_then(
+            4,
+            |stage, data, source| {
+                let proof = if completed {
+                    complete_data(stage, data, source)
+                } else {
+                    let mut journal = AttemptJournalGuard::open(
+                        stage.layout().unwrap(),
+                        &stage.plan().attempt_authority(0).unwrap(),
+                    )
+                    .unwrap();
+                    journal
+                        .reserve_planned_mutation(&stage.plan().digest())
+                        .unwrap();
+                    ExecutionStagePredecessorRecord::new(
+                        7,
+                        stage.binding().digest(),
+                        ArtifactChecksumRecord::from_bytes(b"unsettled"),
+                        ArtifactChecksumRecord::from_bytes(b"not applied"),
+                    )
+                };
+                *predecessor.borrow_mut() = Some(proof);
+            },
+            |layout, data, source| {
+                let proof = predecessor.borrow();
+                let result =
+                    IcRestoreSource::uploaded(source.layout, data, layout, proof.as_ref().unwrap());
+                if !completed {
+                    assert!(matches!(result, Err(IcRestoreSourceError::Checkpoint(_))));
+                    return;
+                }
+                let original = result.unwrap();
+                check_changed_upload_plan(source, data, layout, proof.as_ref().unwrap());
+                for snapshot in [data.destination().to_vec(), vec![88, 99]] {
+                    let wire = IcManagementRequestRecord::new(IcManagementRequest {
+                        method: IcManagementMethodRecord::LoadCanisterSnapshot,
+                        target: TARGET.into(),
+                        snapshot_id: Some(snapshot.clone()),
+                    })
+                    .unwrap();
+                    let mut fields = serde_json::to_value(upload_plan(data.metadata())).unwrap();
+                    fields["operations"][0]["request"] = serde_json::json!(wire.digest().hash());
+                    let plan = serde_json::from_value(fields).unwrap();
+                    let workflow = ExecutionWorkflowRecord::new(plan);
+                    let root = root();
+                    let load_layout = BackupLayoutGuard::acquire(&root).unwrap();
+                    create_execution_workflow(&load_layout, &workflow).unwrap();
+                    let plan = workflow.allocation().clone();
+                    let sequence = plan.operations()[0].operation_sequence();
+                    let binding =
+                        ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![])
+                            .unwrap();
+                    let load = ExecutionStageGuard::prepare(&load_layout, binding, plan).unwrap();
+                    let result = original.validate(&load, &wire);
+                    if snapshot == data.destination() {
+                        result.unwrap();
+                    } else {
+                        assert!(matches!(result, Err(IcRestoreSourceError::Mismatch)));
+                    }
+                    let wrong_target = IcManagementRequestRecord::new(IcManagementRequest {
+                        method: wire.method(),
+                        target: "aaaaa-aa".into(),
+                        snapshot_id: Some(snapshot),
+                    })
+                    .unwrap();
+                    assert!(matches!(
+                        original.validate(&load, &wrong_target),
+                        Err(IcRestoreSourceError::Mismatch)
+                    ));
+                    assert_eq!(
+                        read_execution_progress(load.layout().unwrap(), &load.plan().digest())
+                            .unwrap()
+                            .attempts
+                            .mutations_used,
+                        0
+                    );
+                }
+            },
+        );
+    }
+}
+
+fn check_empty_restore_source(
+    source: &DownloadJournalGuard<'_>,
+    workflow: &ExecutionWorkflowRecord,
+    data: &IcSnapshotDataUploadPlan<'_, '_, '_>,
+    allocation: &IcSnapshotUploadReply<'_, '_>,
+) {
+    use crate::workflow::ic_snapshot_restore::{IcRestoreSource, IcRestoreSourceError};
+    for matches in [false, true] {
+        let path = root();
+        let layout = BackupLayoutGuard::acquire(&path).unwrap();
+        create_execution_workflow(&layout, workflow).unwrap();
+        let mut fields = serde_json::to_value(upload_plan(data.metadata())).unwrap();
+        fields["operations"][0]["operation_sequence"] = serde_json::json!(0);
+        fields["graph"]["nodes"][0]["operation_sequence"] = serde_json::json!(0);
+        fields["operations"][0]["budget"]["observations"] = serde_json::json!(0);
+        fields["budget"]["observations"] = serde_json::json!(0);
+        let plan = serde_json::from_value(fields).unwrap();
+        let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
+        let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
+        let authority = stage.plan().attempt_authority(0).unwrap();
+        let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+        journal
+            .reserve_planned_mutation(&stage.plan().digest())
+            .unwrap();
+        journal
+            .record_mutation(MutationReceiptRequest {
+                attempt: 1,
+                request: data.metadata().binding_digest().hash().into(),
+                outcome: MutationOutcomeRecord::Applied,
+                evidence: if matches {
+                    allocation.digest()
+                } else {
+                    ArtifactChecksumRecord::from_bytes(b"different allocation reply")
+                }
+                .hash()
+                .into(),
+            })
+            .unwrap();
+        drop(journal);
+        // Learned evidence is not authenticated merely by checkpoint replay.
+        let completed = stage.reconcile_checkpoint(allocation.digest()).unwrap();
+        drop(stage);
+        let result = IcRestoreSource::uploaded(source.layout, data, &layout, &completed);
+        if matches {
+            assert!(result.is_ok());
+        } else {
+            assert!(matches!(result, Err(IcRestoreSourceError::Mismatch)));
+        }
+    }
+}
+
+fn check_changed_upload_plan(
+    source: &DownloadJournalGuard<'_>,
+    original: &IcSnapshotDataUploadPlan<'_, '_, '_>,
+    layout: &BackupLayoutGuard,
+    completed: &ExecutionStagePredecessorRecord,
+) {
+    use crate::workflow::ic_snapshot_restore::{IcRestoreSource, IcRestoreSourceError};
+    let workflow =
+        crate::ops::persistence::read_execution_workflow(layout, &original.workflow_digest())
+            .unwrap();
+    let wire = unhex("4449444c026c01b6b897890f016d7b0100031500ff");
+    let allocation = IcSnapshotUploadReply::decode(original.metadata(), &wire).unwrap();
+    let different = source
+        .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, 2)
+        .unwrap();
+    assert_ne!(different.plan(), original.plan());
+    assert!(matches!(
+        IcRestoreSource::uploaded(source.layout, &different, layout, completed),
+        Err(IcRestoreSourceError::Planning(_))
+    ));
 }

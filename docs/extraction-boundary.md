@@ -2705,6 +2705,15 @@ receipts, changed source and occupied checkpoints stop immediately and preserve
 original spending, returned bounded evidence and source references. This entrypoint
 provides no partial-upload resume or hidden observations/reissue.
 
+Complete upload execution uses one guarded source session: full checks bracket
+the batch, closed-tree and native identity/length/change observations bracket each
+bounded read, and each exact payload must match the original plan's request hash.
+Those observations detect drift; they are not a content cache or immutable-byte
+authority. A closing full checksum check precedes the data checkpoint. Stable
+noncooperating byte custody still belongs to the integration. Standalone payload
+preparation retains its full per-call source checks. This changes no original
+request/hash, retained record or attempted-stage reentry rule.
+
 After every exact Applied receipt, release journal locks and checkpoint through
 the existing owner. Learned evidence hashes the NUL-terminated
 `ic-backup/ic-snapshot-data-upload/v1` domain, 64 ASCII original plan-hash bytes,
@@ -2717,6 +2726,15 @@ data assembly and independently verifies destination bytes; second-write lost or
 malformed replies and insufficient original allocation qualify bounded stopping.
 
 ### Original same-ID load/start coordination
+
+`IcRestoreSource` binds load identity independently of the requested load plan.
+Existing snapshots use their independently qualified metadata request; uploaded
+snapshots use the exact source-derived data plan and its original complete
+checkpoint/Applied histories, including allocation ancestry. An all-empty upload
+uses the exact Applied allocation receipt without a placeholder data stage.
+Reopening this provenance across admission and settlement creates no records or
+allowance. Same-workflow loads require the exact upload predecessor. Authentic
+backend completeness and current application safety remain independently qualified.
 
 `workflow::ic_snapshot_restore::restore_snapshot` coordinates one exact singleton
 load/start stage under the original workflow, complete journal set and source plan.

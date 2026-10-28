@@ -1,6 +1,8 @@
 //! Bounded local snapshot streaming joined to the existing durable download owner.
 
 mod member;
+#[cfg(test)]
+mod read_count;
 mod upload;
 mod verification;
 pub use upload::{IcSnapshotDataUploadPreparationError, IcSnapshotUploadArtifactError};

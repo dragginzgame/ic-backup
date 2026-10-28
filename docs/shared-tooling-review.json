@@ -1,95 +1,38 @@
 {
-  "version": 1,
-  "inspection_date": "2026-10-27",
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "48ec9794892da6f8e2812653ec16c5e8ea23df47",
-  "label": "0.26.23",
-  "manifest": ".shared-tooling.snapshot",
-  "selected_files": 125,
-  "previous_revision": "5fc904a935d82ad31f0fba14434b71ccb8c10345",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/b11928151fb68a1b40115c0c3515b9198b9dd73b/docs/shared-tooling-review.json",
-  "canonical_refresh": true,
-  "source_verification": {
-    "clean_shared_source_checkout": true,
-    "dirty_sibling_inputs_excluded": true,
-    "all_payloads_match_committed_source_bytes_checksums_and_modes": true,
-    "observed_remote_main": "48ec9794892da6f8e2812653ec16c5e8ea23df47",
-    "version_authority": "Committed Shared VERSION selects 0.26.23; GitHub main matches the clean canonical exporter source."
+  "revision": "cc81a58a5b2dd287c577cbffd2c576c178b6785c",
+  "label": "0.27.3",
+  "reviewed_on": "2026-10-28",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/ca70617a3df142848700f980e459cc36e82da097/docs/shared-tooling-review.json",
+  "provenance": {
+    "selection": "Independently observed GitHub main matches the clean canonical source checkout; committed VERSION selects 0.27.3.",
+    "export": "Canonical impact preview followed by refresh-consumer.sh; 126 declared payloads, including the new RustSource.pm companion.",
+    "source_comparison": "Trusted source verifier compared every exported payload and executable mode against the independently selected full commit. Ordinary offline integrity checks remain separate."
   },
-  "changed_paths": [
-    "DRAGGINZGAME.md",
-    "audits/code-hygiene.md",
-    "docs/consuming-snapshots.md",
-    "docs/make-interface.md",
-    "make/rust-format.mk",
-    "rules/engineering-details.md",
-    "rules/git-hooks.md"
+  "reviewed_changes": [
+    "Balanced Rust attribute inspection, optional explicitly selected standalone Rustfmt sources, opaque submodules and formatter-hook companion closure; Backup retains its grouped root manifest and Rustfmt selection.",
+    "Source-commit comparison at adoption; the consumer records the independently selected source rather than trusting its manifest alone.",
+    "Optional sccache catalog support and latest-stable maintenance guidance; Backup enables no compiler cache or new automatic latest resolution.",
+    "Bootstrap ordering and full release prerequisite inventory; Backup retains native host preparation before common Cargo tools, then locked fetch, exact Testkit and release-editor setup/admission.",
+    "One supplying-owner dependency/advisory issue, preserving distinct consumer work and qualification obligations.",
+    "Unattended maintenance becomes report-only and restricted. This adoption installs or activates no schedules or host automation."
   ],
-  "added_paths": [
-    "scripts/ci/run-rust-formatting.pl"
-  ],
-  "retired_paths": [],
   "consumer_changes": [
-    "Keep Backup's standard grouped root manifest sorting followed by Rustfmt. No extra workspace or derive-sorting policy is enabled.",
-    "Use the new shared Rust driver through the existing common Make entrypoint, with observable pass timings, exact-input reuse and explicit --no-cache qualification.",
-    "Carry the new helper into raw-copy formatter and Testkit routing fixtures; fixture preparation through the declared companion closure also includes it.",
-    "Adapt the consumer hook's success/failure output assertions and use a valid retained fixture lock so input observation can succeed. Exact failure status, diagnostics, lock/index custody and no-later-rustfmt assertions remain.",
-    "Document formatting reuse and gzip ownership locally. No application encoder change is needed; consumer Rust and golden-generator sources contain no gzip encoder.",
-    "Preserve the incoming issue #70 numeric-count fix, expanded receipt suite, ownership map and notes."
+    "Refresh only through the canonical exporter; no snapshot payload is edited locally.",
+    "Update the local overlay's reviewed snapshot version and retain all product authority, custody, spending and exact resume-receipt requirements.",
+    "Select published Host/Testkit and release editor 0.69.4. Platform remains selected at 0.7.1; external management DTO and Principal identities, Rust floor and wire/storage contracts stay unchanged."
   ],
-  "compatibility_assessment": {
-    "backup_release_classification": "Compatible patch notes 0.45.1; own package versions remain 0.45.0.",
-    "formatting": "Prepared formatter checks precede every invocation, including a reuse hit. Isolated staged-hook worktrees run all formatters. Failed formatting retains its log and original status. Custom command support remains in the shared owner.",
-    "product": "No library dependency, feature, Rust source, wire/storage format, public Host identity, spending or recovery change.",
-    "gzip": "The new rule delegates application gzip encoding to Tooling. Backup has no local Rust/golden-generator gzip encoder. System tar/gzip use is infrastructure for bootstrap, archives and evidence under the explicit rule; no codec or backend migration is performed."
-  },
-  "setup_refresh_required": false,
-  "setup_refresh_reason": "Host/Cargo catalogs, installer/build policy and selected Testkit/editor versions are unchanged. Existing offline make tools-check passes. The clone already uses .githooks.",
-  "dependency_and_release_changes": "Cargo.toml, Cargo.lock, own versions, Platform 0.7.0 and Host/Testkit/editor 0.69.0 remain unchanged. Snapshot-owned files are canonical exports; only unlisted local guidance and consumer fixtures are adapted.",
-  "preserved_incoming_lock_sha256": "8d380c16b76d2cd50250eb5e5aafefdc5c3def40c13a100b980eb9e9018c7771",
-  "preserved_issue70_fixture_sha256": "8121d4137064175d09cefa364de461ca464341ff18da004fd1cb1fc4b4232784",
-  "deployment_enforcement": {
-    "automated": [
-      "Common external IC declaration checks compose with local retired-package/WAT bans using locked metadata.",
-      "Independent normal-consumer graphs exclude Testkit/PocketIC/WAT and the older Platform selection; Core additionally excludes Agent."
+  "validation": {
+    "source_proof": "/tmp/backup-shared273-trusted-source-proof.log",
+    "impact": "/tmp/backup-shared273-impact.log",
+    "export": "/tmp/backup-shared273-refresh.log",
+    "setup": "/tmp/backup-shared273-tooling694-setup.log",
+    "consumer_qualification": [
+      "Explicit complete setup and offline admission pass for common tools, locked Testkit 0.69.4/PocketIC 16.1.0 and release editor 0.69.4.",
+      "Forced formatting, actual consumer hooks, Testkit routing and dependency inheritance/boundaries pass.",
+      "All 12 selected metadata and 13 receipt/recovery adapter cases pass after editor setup. Initial unprepared-editor refusals remain in separate logs.",
+      "Final-graph product checks pass: 17 focused native cases, strict affected Core/Agent Clippy, six connected PocketIC cases and two independent candidate-consumer cases. Current handoff retains their exact scope and paths."
     ],
-    "not_enforced_here": [
-      "No deployed application entrypoint binds target/features, locked build and artifact digest to deployed bytes.",
-      "Rule adoption alone does not install scanner, machine-output, process-capture or terminal-rendering enforcement."
-    ],
-    "scope": "Host libraries and contributor setup; application deployment and installed-IC acceptance remain consumer-owned."
-  },
-  "qualification": {
-    "status": "passed-focused-consumer-adoption",
-    "passed": [
-      "Canonical impact review, source/companion inspection and export of 125 files, including one new formatter helper and seven changed payloads.",
-      "Actual root no-cache formatting check runs manifest sorting and Rustfmt; a normal check records stable inputs and a second normal check reuses the identical result.",
-      "All five named consumer hook cases pass, including selected index refresh, partial-stage refusal, unrelated edits, grouped dependency roles, exact formatter exit 17, retained stdout/stderr, unchanged locks and checkout-local tool refusal.",
-      "Testkit Make setup/check routing, original selection and refusal fixtures pass with the new helper available.",
-      "All five local release metadata cases pass under the new snapshot, including version planning, validation custody and real private-index boundaries.",
-      "Existing offline common/Testkit/editor admission, Perl syntax, focused ShellCheck, snapshot integrity, maintained Markdown links and whitespace checks pass.",
-      "Incoming Cargo.lock and the issue #70 release fixture remain byte-identical to their pre-refresh inputs."
-    ],
-    "not_run": [
-      "Shared Tooling's generic producer formatter/hook/release matrices; consumer checks exercise Backup's actual callers.",
-      "New Rust compilation, simulator, MSRV, full local CI, complete release-adapter suite or native macOS qualification; product source and dependencies are unchanged.",
-      "No staging, commit, release, publication, deployment or live IC effect. Issue #70/#71 acceptance still needs delivered native CI evidence."
-    ],
-    "evidence": [
-      "/tmp/backup-shared23-impact.log",
-      "/tmp/backup-shared23-refresh.log",
-      "/tmp/backup-shared23-forced-format.log",
-      "/tmp/backup-shared23-record-format.log",
-      "/tmp/backup-shared23-reuse-format.log",
-      "/tmp/backup-shared23-hooks.log",
-      "target/hook-tests.wfbY23/",
-      "/tmp/backup-shared23-testkit-routing.log",
-      "/tmp/backup-shared23-tools.log",
-      "/tmp/backup-shared23-release-metadata.log",
-      "target/shared-release-tests.G5zECg/",
-      "/tmp/backup-shared23-incoming.sha256",
-      "/tmp/backup-shared23-final.log"
-    ]
-  },
-  "findings": []
+    "limits": "No producer-wide matrix, full local repository gate, native macOS/MSRV run, publication, deployment or live IC operation is supplied by adoption."
+  }
 }

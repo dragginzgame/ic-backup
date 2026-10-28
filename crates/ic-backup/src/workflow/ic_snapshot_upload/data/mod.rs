@@ -73,17 +73,11 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     }
     let mut evidence = EvidenceDigest::new(b"ic-backup/ic-snapshot-data-upload/v1\0");
     evidence.append(plan.digest().hash().as_bytes());
+    let session = source.upload_session(snapshot, upload)?;
     for (index, kind) in upload.kinds().iter().enumerate() {
         let sequence =
             u64::try_from(index).map_err(|_| IcSnapshotDataUploadPlanningError::CountOverflow)?;
-        let metadata = upload.metadata();
-        let payload = source.prepare_ic_snapshot_upload_data(
-            metadata.source_plan(),
-            snapshot,
-            metadata,
-            upload.destination(),
-            kind.clone(),
-        )?;
+        let payload = session.prepare(sequence, kind.clone())?;
         // The single-call owner rechecks the exact full source/context/request before spending.
         let (acknowledgement, settlement) = upload_snapshot_with(
             stage,
@@ -116,6 +110,7 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
             })?;
         evidence.append(digest.hash().as_bytes());
     }
+    session.finish()?;
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
     if progress.applied_operations != upload.kinds().len() {
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);

@@ -17,6 +17,12 @@ local overlay. Selected dependency versions belong to [Cargo.toml](../Cargo.toml
 and [Cargo.lock](../Cargo.lock); current evidence and material limits belong to
 [the handoff](status/current.md).
 
+Adoption compares every exported byte and executable mode with an independently
+selected full commit through the trusted source verifier's paired `--source` and
+`--revision` options. Ordinary builds retain the offline local integrity check;
+that check alone does not establish source provenance. The review records the
+selected revision and both kinds of evidence.
+
 Refresh deliberately using [the canonical procedure](consuming-snapshots.md).
 Inspect the complete exported change and qualify affected consumer boundaries.
 Never patch snapshot payloads in place or use a moving sibling checkout. Every
@@ -82,7 +88,7 @@ Backup's bounded management wire adapters remain external Candid projections;
 domain and persisted records do not acquire a Candid contract. Snapshot adoption
 does not install new source scanners or qualify every existing input boundary.
 
-The reviewed Shared Tooling 0.26.23 snapshot includes the
+The reviewed Shared Tooling 0.27.3 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without

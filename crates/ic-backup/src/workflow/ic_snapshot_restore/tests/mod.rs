@@ -9,12 +9,14 @@ use crate::{
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_lifecycle_reply::IcLifecycleReply,
         ic_request::IcManagementMethodRecord as Method,
+        ic_snapshot_metadata::IcSnapshotMetadataRequest,
         ic_update_response::IcUpdateResponseInput,
+        operation_plan::OperationPlanRecord,
         restore_safety::{RestoreSafetyLaneRecord, RestoreSafetyRequestInput},
     },
     ops::persistence::{
-        create_execution_workflow, create_operation_plan, create_restore_safety_requirement,
-        read_execution_progress,
+        BackupLayoutGuard, create_execution_workflow, create_operation_plan,
+        create_restore_safety_requirement, read_execution_progress,
     },
     test_support::{
         restore_safety::{input, plan, requirement, source, wire},
@@ -25,6 +27,16 @@ use std::{
     fs,
     io::{self, Write},
 };
+
+fn existing<'a>(
+    layout: &'a BackupLayoutGuard,
+    plan: &'a OperationPlanRecord,
+) -> IcRestoreSource<'a> {
+    let load = wire(Method::LoadCanisterSnapshot);
+    let metadata =
+        IcSnapshotMetadataRequest::new(load.target(), load.snapshot_id().unwrap()).unwrap();
+    IcRestoreSource::existing(layout, plan, &metadata)
+}
 
 fn single(method: Method) -> OperationPlanRecord {
     let mut value = serde_json::to_value(plan()).unwrap();
@@ -126,8 +138,7 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         };
         let (reply, checkpoint) = ready(restore_snapshot(
             &stage,
-            &source_layout,
-            &source,
+            existing(&source_layout, &source),
             &safety,
             &mut provider,
             async |request, safety| {
@@ -187,8 +198,7 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         assert!(
             ready(restore_snapshot(
                 &stage,
-                &source_layout,
-                &source,
+                existing(&source_layout, &source),
                 &safety,
                 &mut provider,
                 async |_, _| -> Result<_, io::Error> { panic!("Applied never admits") },
@@ -259,8 +269,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
     let reply_path = root.join("retained-reply.candid");
     let mut future = Box::pin(restore_snapshot(
         &stage,
-        &source_layout,
-        &source,
+        existing(&source_layout, &source),
         &safety,
         &mut provider,
         async |_, safety| Ok::<_, io::Error>(RestoreSafetyObservation::new(input(safety)).unwrap()),
@@ -298,8 +307,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
     assert!(
         ready(restore_snapshot(
             &stage,
-            &source_layout,
-            &source,
+            existing(&source_layout, &source),
             &safety,
             &mut provider,
             async |_, _| -> Result<_, io::Error> { panic!("pending never readmits") },
@@ -399,8 +407,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         }
         let result = ready(restore_snapshot(
             &stage,
-            &source_layout,
-            &source,
+            existing(&source_layout, &source),
             &safety,
             &mut provider,
             async |_, safety| {
@@ -495,8 +502,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         assert!(
             ready(restore_snapshot(
                 &stage,
-                &source_layout,
-                &source,
+                existing(&source_layout, &source),
                 &safety,
                 &mut provider,
                 async |_, _| -> Result<_, io::Error> { panic!("pending never admits") },
@@ -517,4 +523,82 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
             original
         );
     }
+}
+
+#[test]
+fn independently_valid_load_plan_cannot_rebind_the_admitted_snapshot_source() {
+    use crate::model::ic_request::{IcManagementRequest, IcManagementRequestRecord};
+    let root = temp_dir("restore-different-valid-snapshot");
+    fs::create_dir(root.join("source")).unwrap();
+    let layout = BackupLayoutGuard::acquire(&root).unwrap();
+    let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
+    let original_source = source();
+    create_operation_plan(&source_layout, &original_source).unwrap();
+    let original = wire(Method::LoadCanisterSnapshot);
+    let other = IcManagementRequestRecord::new(IcManagementRequest {
+        method: original.method(),
+        target: original.target().into(),
+        snapshot_id: Some(vec![88, 99]),
+    })
+    .unwrap();
+    let mut fields = serde_json::to_value(single(Method::LoadCanisterSnapshot)).unwrap();
+    fields["operations"][0]["request"] = serde_json::json!(other.digest().hash());
+    let plan: OperationPlanRecord = serde_json::from_value(fields).unwrap();
+    let workflow = ExecutionWorkflowRecord::new(plan.clone());
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let sequence = plan.operations()[0].operation_sequence();
+    let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
+    let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
+    let requirement = requirement(
+        stage.plan(),
+        &original_source,
+        RestoreSafetyLaneRecord::NoIrreversibleEffects,
+    );
+    create_restore_safety_requirement(
+        stage.layout().unwrap(),
+        &source_layout,
+        stage.plan(),
+        &original_source,
+        &requirement,
+    )
+    .unwrap();
+    // Both the new plan and its exact load request are internally valid.
+    let safety = RestoreSafetyRequest::new(
+        stage.plan(),
+        &original_source,
+        &requirement,
+        &other,
+        RestoreSafetyRequestInput {
+            operation_sequence: sequence,
+            challenge: ArtifactChecksumRecord::from_bytes(b"fresh"),
+            max_remote_observations: 0,
+        },
+    )
+    .unwrap();
+    let mut provider = Provider {
+        calls: 0,
+        reply: Ok(crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec()),
+    };
+    let result = ready(restore_snapshot(
+        &stage,
+        existing(&source_layout, &original_source),
+        &safety,
+        &mut provider,
+        async |_, _| -> Result<_, io::Error> { panic!("wrong source cannot admit") },
+        async |_, _| -> Result<_, io::Error> { panic!("wrong source cannot settle") },
+    ));
+    assert!(matches!(
+        result,
+        Err(IcRestoreExecutionError::Retention(
+            IcRestoreReplyError::Source(IcRestoreSourceError::Mismatch)
+        ))
+    ));
+    assert_eq!(provider.calls, 0);
+    assert_eq!(
+        read_execution_progress(stage.layout().unwrap(), &stage.plan().digest())
+            .unwrap()
+            .attempts
+            .mutations_used,
+        0
+    );
 }

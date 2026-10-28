@@ -69,7 +69,7 @@ impl DownloadJournalGuard<'_> {
         Ok(expected.clone())
     }
 
-    fn admit_ic_artifact_original(
+    pub(super) fn admit_ic_artifact_original(
         &self,
         plan: &OperationPlanRecord,
     ) -> Result<(), DownloadIntegrityError> {
@@ -168,6 +168,8 @@ pub(super) fn checksum_exact_reader<R: Read>(
     reader: R,
     length: u64,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
+    #[cfg(test)]
+    let reader = super::read_count::Reader(reader);
     let identity = hash_exact_reader(reader, length).map_err(|error| match error {
         InputError::LimitExceeded { .. } | InputError::LengthMismatch { .. } => {
             IcSnapshotArtifactError::FileShape

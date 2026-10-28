@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.48.0]
+
+### 🔧 Tooling and dependencies
+
+- Adopt reviewed Shared Tooling 0.27.3 and published IC Tooling 0.69.4 for Host,
+  Testkit and the release editor. Re-run explicit tool setup for the new selections;
+  snapshot provenance, offline admission and retained failure evidence remain intact.
+
+### ⚠️ Breaking
+
+- Restore steps now require an explicit `IcRestoreSource` instead of separate
+  source layout/plan arguments. Upload-backed loads bind the exact allocated
+  destination and complete retained upload stage before spending; existing-snapshot
+  callers bind their independently qualified metadata request. Update callers of
+  `restore_snapshot`. Retained records and original spending remain unchanged
+  ([#72](https://github.com/dragginzgame/ic-backup/issues/72)).
+
+### ⚡ Performance
+
+- Complete data uploads verify each bounded payload against its original plan
+  commitment, check source drift around reads and bracket the batch with full
+  artifact verification. Source-byte reads now grow linearly with artifact bytes
+  instead of rescanning the full artifact for every chunk. Partial attempted stages
+  still refuse reentry ([#73](https://github.com/dragginzgame/ic-backup/issues/73)).
+
 ## [0.47.1] - 2026-10-28
 
 ### 🔧 Dependencies

@@ -26,7 +26,7 @@ use ic_backup::{
         create_restore_safety_requirement,
     },
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
-    workflow::ic_snapshot_restore::{IcRestoreExecutionError, restore_snapshot},
+    workflow::ic_snapshot_restore::{IcRestoreExecutionError, IcRestoreSource, restore_snapshot},
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 use serde_json::json;
@@ -117,6 +117,7 @@ pub(super) fn run(
     destination: &[u8],
     source: &Downloaded,
     failure: Failure,
+    restore_source: &IcRestoreSource<'_>,
 ) {
     // Independently change live state so successful load must restore the original.
     assert!(lifecycle(backend, Method::StartCanister, None, Fault::None, |_| None).is_none());
@@ -207,8 +208,7 @@ pub(super) fn run(
         };
         let result = ready(restore_snapshot(
             &stage,
-            source_layout,
-            source_plan,
+            restore_source.clone(),
             &safety,
             &mut provider,
             async |request, safety| {
@@ -320,8 +320,7 @@ pub(super) fn run(
             assert!(
                 ready(restore_snapshot(
                     &stage,
-                    source_layout,
-                    source_plan,
+                    restore_source.clone(),
                     &safety,
                     &mut provider,
                     async |_, _| -> Result<_, io::Error> { panic!("pending never admits") },

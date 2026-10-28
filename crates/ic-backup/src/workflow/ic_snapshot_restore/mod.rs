@@ -1,18 +1,19 @@
 //! One original same-ID load/start with fresh safety and independently qualified settlement.
 
+mod source;
+pub use source::{IcRestoreSource, IcRestoreSourceError};
+
 use crate::{
     model::{
         attempt_journal::MutationReceiptRequest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::{IcMutationAcknowledgement, IcMutationRequest, IcMutationRequestError},
-        operation_plan::OperationPlanRecord,
         restore_safety::{RestoreSafetyObservation, RestoreSafetyRequest},
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard,
-        ExecutionProgressPersistenceError, ExecutionStageCheckpointError, ExecutionStageGuard,
-        ExecutionWorkflowPersistenceError, RestoreSafetyPersistenceError,
-        read_restore_safety_requirement,
+        AttemptJournalError, AttemptJournalGuard, ExecutionProgressPersistenceError,
+        ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionWorkflowPersistenceError,
+        RestoreSafetyPersistenceError, read_restore_safety_requirement,
     },
     policy::{
         ic_mutation::{IcMutationAssociationError, IcMutationReplyView, validate_acknowledgement},
@@ -25,7 +26,9 @@ use thiserror::Error;
 /// Execute and checkpoint one exact singleton original load or start stage.
 ///
 /// Retain the complete original stage/journals, source plan, safety requirement and
-/// source references first; hold no attempt guards. `safety` binds the exact original
+/// source references first; hold no attempt guards. `source` explicitly binds an
+/// existing snapshot or the complete original upload destination independently of
+/// the load plan. Re-admit that provenance across all boundaries. `safety` binds the exact original
 /// load/start bytes and a fresh integration-owned challenge. Read the requirement
 /// under both layouts before spending and recheck it across admission and settlement.
 /// No source is reconstructed, uploaded, replaced or released by this function.
@@ -57,8 +60,7 @@ use thiserror::Error;
 /// checkpoint failure. Returned bounded replies survive post-reply rejection.
 pub async fn restore_snapshot<E: std::error::Error + 'static>(
     stage: &ExecutionStageGuard<'_>,
-    source_layout: &BackupLayoutGuard,
-    source_plan: &OperationPlanRecord,
+    source: IcRestoreSource<'_>,
     safety: &RestoreSafetyRequest<'_>,
     provider: &mut impl IcMutationProvider,
     admit: impl AsyncFnOnce(
@@ -77,11 +79,12 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
         return Err(IcRestoreExecutionError::OriginalMismatch);
     }
     let retain = || {
+        source.validate(stage, safety.wire())?;
         read_restore_safety_requirement(
             stage.layout()?,
-            source_layout,
+            source.layout,
             plan,
-            source_plan,
+            source.plan,
             &safety.requirement().digest(),
         )?;
         Ok::<_, IcRestoreReplyError<E>>(())
@@ -187,6 +190,9 @@ pub enum IcRestoreExecutionError<E: std::error::Error + 'static> {
 /// Post-reply restore rejection, preserving original receipts and pending spending.
 #[derive(Debug, Error)]
 pub enum IcRestoreReplyError<E: std::error::Error + 'static> {
+    /// Existing snapshot or complete uploaded destination no longer matches.
+    #[error(transparent)]
+    Source(#[from] IcRestoreSourceError),
     /// Original stage/ancestor/layout admission failed.
     #[error(transparent)]
     Stage(#[from] ExecutionWorkflowPersistenceError),

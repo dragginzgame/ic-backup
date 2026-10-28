@@ -435,6 +435,12 @@ impl<'a> ExecutionStageGuard<'a> {
     pub const fn binding(&self) -> &ExecutionStageBindingRecord {
         &self.binding
     }
+
+    /// Borrow the held original workflow layout for read-only predecessor admission.
+    #[must_use]
+    pub const fn workflow_layout(&self) -> &BackupLayoutGuard {
+        self.workflow_layout
+    }
     /// Re-admit both original records and expose the existing journal/layout owner.
     ///
     /// Callers must use complete original journal admission for resume. Never

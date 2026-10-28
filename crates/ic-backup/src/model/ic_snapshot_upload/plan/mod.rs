@@ -113,6 +113,32 @@ impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 's
 }
 
 impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
+    pub(crate) fn workflow_digest(&self) -> ArtifactChecksumRecord {
+        self.workflow.digest()
+    }
+    pub(crate) fn validate_completion(
+        &self,
+        binding: &ExecutionStageBindingRecord,
+        plan: &OperationPlanRecord,
+        learned: &ArtifactChecksumRecord,
+    ) -> Result<(), IcSnapshotDataUploadPlanningError> {
+        if let Some(expected) = self.plan() {
+            self.validate_binding(binding)?;
+            if plan != expected {
+                return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+            }
+        } else {
+            binding.validate(self.workflow, plan)?;
+            if plan.operations().len() != 1
+                || plan.operations()[0].target() != self.metadata.target()
+                || plan.operations()[0].request() != self.metadata.binding_digest().hash()
+                || learned != &self.allocation_evidence
+            {
+                return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+            }
+        }
+        Ok(())
+    }
     /// Read exact ordered source extents. Operation sequences are zero-based indices.
     #[must_use]
     pub fn kinds(&self) -> &[SnapshotDataKind] {

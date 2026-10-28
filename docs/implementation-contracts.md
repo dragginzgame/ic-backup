@@ -297,8 +297,14 @@ Upload planning preflights all extents against original capacity before source I
 One bounded batch retains canonical payload digests from exact bytes, verifies the
 retained tree checksum and brackets the batch with full source admission. Bind the
 exact allocation reply and Applied predecessor before publishing the data plan;
-metadata allowance supplies no data allowance. Each write freshly prepares one
-bounded payload and verifies original bytes/custody again. Reject prior consumption
+metadata allowance supplies no data allowance. Complete upload execution brackets
+one session with full source verification. Each write checks the closed tree and
+file identity/length/change observations and freshly hashes its bounded payload
+against the immutable original request commitment. Metadata observations are drift
+checks, never content authority or a fence against noncooperating writers. Final
+full verification precedes checkpointing; independent stable byte custody remains
+mandatory. Standalone payload preparation retains its full per-call verification.
+Reject prior consumption
 of the complete original data stage before any new write.
 
 Allocation and data uploads use the same single-upload owner through independent
@@ -317,6 +323,16 @@ authentication, attribution and durable byte retention precede the explicit exac
 Applied receipt. Checkpoint only after guard release. A load receipt never supplies
 later restored-state acceptance. Coordinators establish neither complete backend
 transfer nor product terminal/fence/reference release.
+
+`IcRestoreSource` additionally binds the exact snapshot identity independently of
+the load plan being admitted. Existing snapshots use their qualified metadata
+request. Uploaded snapshots reuse the exact source-derived data plan and complete
+original stage checkpoint, including allocation ancestry. Reopen and re-admit that
+evidence across admission/settlement; no incomplete or pending stage supplies a
+source. An all-empty upload binds the exact Applied allocation receipt without a
+placeholder data stage. Same-workflow loads require that exact upload predecessor;
+separate restore workflows retain explicit source provenance. These local checks
+authenticate no backend bytes or application fact and supply no new authority.
 
 The connected fixture freezes separate capture and restore catalogues before
 capture, binding restore's purpose to the original capture allocation and its

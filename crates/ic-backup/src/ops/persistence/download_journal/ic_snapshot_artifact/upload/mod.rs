@@ -1,6 +1,7 @@
 //! Fresh original source-byte preparation; payloads confer no upload permission.
 
 mod plan;
+mod session;
 pub use plan::IcSnapshotDataUploadPreparationError;
 
 use super::{
@@ -10,7 +11,9 @@ use super::{
 use crate::model::{
     ic_snapshot_data::{MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
     ic_snapshot_metadata::IcSnapshotMetadataReply,
-    ic_snapshot_upload::{IcSnapshotUploadError, IcSnapshotUploadRequest},
+    ic_snapshot_upload::{
+        IcSnapshotDataUploadPlan, IcSnapshotUploadError, IcSnapshotUploadRequest,
+    },
     operation_plan::OperationPlanRecord,
 };
 use ic_platform::management_canister_types::SnapshotDataKind;
@@ -18,6 +21,16 @@ use std::io::{Read, Seek, SeekFrom};
 use thiserror::Error;
 
 impl DownloadJournalGuard<'_> {
+    pub(crate) fn upload_session<'a, 'workflow, 'request, 'source>(
+        &'a self,
+        snapshot: &'a str,
+        upload: &'a IcSnapshotDataUploadPlan<'workflow, 'request, 'source>,
+    ) -> Result<
+        session::UploadSession<'a, 'workflow, 'request, 'source>,
+        IcSnapshotUploadArtifactError,
+    > {
+        session::UploadSession::new(self, snapshot, upload)
+    }
     /// Freshly verify an original published IC source and encode exact upload metadata.
     ///
     /// Requires the full retained source plan, unchanged journal and complete Durable
@@ -144,6 +157,8 @@ fn read_chunk(
 // Both individual preparation and batch binding buffer one exact admitted chunk.
 // Full-tree verification and closing custody checks remain with their callers.
 fn read_chunk_bytes(reader: impl Read, size: u64) -> Result<Vec<u8>, IcSnapshotArtifactError> {
+    #[cfg(test)]
+    let reader = super::read_count::Reader(reader);
     let limit = usize::try_from(size)
         .ok()
         .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)
