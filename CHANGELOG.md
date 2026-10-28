@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.48.1]
+
+### 🔧 Dependencies
+
+- Require published IC Platform 0.7.2. Keep the existing management DTO, Principal,
+  Agent SDK and persisted record identities; no new optional Platform features
+  are enabled.
+
 ## [0.48.0] - 2026-10-28
 
 ### 🔧 Tooling and dependencies

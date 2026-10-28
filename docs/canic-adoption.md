@@ -7,32 +7,35 @@ attempt; preparing this integration does not enable live creation.
 
 ## Verified starting point
 
-Released Backup source **0.47.0**, `97a0be3`, contains the original-plan coordinator
-and the error API hard cuts described in the changelog. Applications exchanging
-Host errors must align with Backup's selected Host family. Platform supplies external IC
-identities and SDKs; Testkit remains development-only. Core does not depend on Agent;
-an alternative transport needs its own qualification.
+Released Backup source **0.48.0**, `df39f44`, supplies the original-plan
+coordinator, explicit restore source provenance and bounded upload sessions.
+Applications exchanging Host errors must align with Backup's selected Host family.
+Platform supplies external IC identities and SDKs; Testkit remains development-only.
+Core does not depend on Agent; an alternative transport needs its own qualification.
 
-Read-only inspection on 2026-10-27 uses local Canic HEAD
-`f768a5519edb35512912dd73fce45936155edc6e`, not yet available on its remote.
-Its 0.112 release qualification remains in progress:
+Released Canic 0.112.0 is `5c236ab130c0d63892ef281b45bdc3fa353e012f`.
+[PR #702](https://github.com/dragginzgame/canic/pull/702), head
+`78a57d5b1e83a357999bfd4afbe88a06b0809c64`, contributes the first original host
+preparation adapter from an isolated checkout:
 
-- Its lock selects Backup **0.45.1**. Artifact, layout/command custody
-  and graph adoption are present; complete original stage/attempt adoption is pending.
-- `canic-control-plane/src/storage/stable/application_checkpoint` retains Root
-  checkpoint state outside participant snapshots. Its workflow connects current
-  local-unit discovery and authenticated Wire begin/status/advance/release; ops
-  connects catalogue exclusion. Its installed `qualify_root_dispatch` fixture in
-  `crates/canic-testing-internal/src/pic/application_checkpoint/root/mod.rs`
-  exercises two actual participants, unauthorized ingress, partial preparation,
-  Root upgrade with retained progress, stale identity refusal and completed
-  release replay. This inspection did not execute the fixture or qualify its
-  selected release graph. The fixture supplies no snapshot spending authority.
-- `canic-cli/src/backup/create` still refuses live creation before effects. The
-  active restore runner and its original retained journals remain maintained.
-- `canic-backup/src/restore/persistence/retention` already implements
-  `RestoreTerminalEvidenceProvider`. Change its evidence inputs when the engine
-  changes instead of creating another terminal authority owner.
+- `canic-backup::checkpoint` selects published Backup 0.48.0, freezes the complete
+  installed Root unit and exact bounded Wire requests, and implements Backup's
+  existing workflow stage driver. It requires fresh admission, original command
+  custody and independent reply qualification; no default live provider is supplied.
+- Existing Root stable checkpoint storage, authenticated commands and catalogue
+  exclusion remain the runtime owners. The installed original workflow case
+  qualifies lost ingress, original observation recovery and cold continuation
+  across two participants, then separate fixture-authorized same-ID snapshot/load
+  and release. The existing Root interruption/release case also passes. These
+  fixture conditions grant no production Root-paid snapshot or live trust authority.
+- The 27 focused native cases and both installed cases pass, together with strict
+  affected Clippy and consumer/tooling checks. The [handoff](status/current.md)
+  retains exact evidence and limitations. This is an open contribution, not
+  delivered Canic main or complete application acceptance.
+- Live CLI creation still refuses before effects. The active restore runner and
+  original journals remain maintained. Its existing
+  `RestoreTerminalEvidenceProvider` must adopt the new engine's evidence inputs
+  when the whole operation changes; do not create another terminal authority owner.
 
 Canic's `restore/apply/journal::next_effect_sequence` now uses the retained graph
 model and its own serial completion checks; the removed `policy::effect_order`
@@ -111,18 +114,16 @@ fresh permissions, fencing, terminal release or actual process-death behavior.
 
 ## Bounded implementation sequence
 
-1. Reuse the connected Canic production Root checkpoint storage, authenticated
-   commands, catalogue exclusion and installed Root-dispatch fixture under
-   [Canic #550 — Application-coordinated checkpoints](https://github.com/dragginzgame/canic/issues/550).
-   Verify the fixture on the selected release graph, then extend that same owner
-   for paid-effect and original-plan acceptance. Do not add another store,
-   sequence or participant fixture. The earlier driver-held proof in PR #607
-   retains its narrower scope.
-2. Bind one new frozen application operation to the existing Backup stage driver.
-   Account fresh authority observations separately. Reuse original child planning,
-   journal preparation and capture/transfer owners instead of introducing another
-   ready-operation loop. Qualify one complete current unit with at least two actual
-   participants before exposing live creation.
+1. Complete production Root-paid snapshot intent, finite dispatch and unknown-result
+   reconciliation at Canic's existing replay/cost owner. PR #702's installed
+   checkpoint and original host accounting provide a preparation boundary; its
+   direct simulator management calls do not implement that production dispatcher.
+   Retain exact snapshot metadata and complete transfer bytes before publication.
+2. Qualify the production provider's actual network/caller/release, controller,
+   complete current unit and ingress custody. Account every fresh observation
+   separately under original authority. Reuse child planning, journal preparation
+   and capture/transfer owners; do not add another ready-operation loop or turn
+   fixture custody into deployed admission.
 3. Connect stopped restore, complete post-load verification, accepted start and
    terminal release to that same retained operation. Preserve the active restore
    path until its replacement is qualified; each operation must have one spending
