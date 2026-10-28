@@ -2,48 +2,50 @@
 
 ## Current dependency batch
 
-Backup requires published IC Platform **0.7.2**, source
-`95b7caf960ec3af045923d85bad4801e9e463782`. The published crate's VCS identity
-matches that committed release. The workspace minimum is updated; the lockfile
-already selected 0.7.2 when this request began. Preserve its accompanying user
-updates to Host Artifacts/FS/Process and Testkit **0.69.5**. Their declaration
-minimums and the tooling-only release editor remain **0.69.4**.
+Backup now requires published IC Tooling **0.69.6** for Host Artifacts/FS/Process
+and Testkit; the tooling-only release editor also selects **0.69.6**. Published
+library VCS identities match `cba072ee8fe288eb92bb4a4ddf9753b8abc4b580`.
+The incoming lockfile already selected those library versions; their minimums and
+`RELEASE_EDITOR_VERSION` now match. Platform **0.7.3**, source
+`6733f504b62b81456001a1735f2a25b3bbffe3b9`, remains selected from the preceding
+adoption. No sibling checkout or snapshot-owned tooling was edited.
 
-Own package versions remain **0.48.0**; the compatible adoption note is open under
-[0.48.1](../../CHANGELOG.md#0481). No staging, commit, version bump, release or
-publication ran. Previous local Canic adoption guidance remains in the working
-batch alongside these dependency notes.
-
-Selected management DTOs **0.11.0**, external Principal **0.1.5**, Agent SDK
-**0.49.3**, Candid **0.10.39** and Rust floor **1.91** remain unchanged. Review of
-Platform's consumed Principal, management and Agent paths found no required API
-migration; the Candid change documents an existing Wasm nesting limitation.
-Backup remains host-side. No optional call, gzip, profiler or signature feature
-was enabled. Original wire/hash bytes, schemas and spending owners are unchanged.
-Lock SHA-256: `7868e6d070ea5d7b2cfcf43beaed873ee2415f50706888a194d7489d718ab6b8`.
+The base remains `7036715c6e7ab6438c912a53fe834fb297cd74fb`, with own versions
+**0.48.1**. Both compatible dependency adoptions share the open
+[0.48.2 notes](../../CHANGELOG.md#0482). No staging, commit, own version bump,
+release or publication ran. Management DTOs **0.11.0**, external Principal
+**0.1.5**, Agent SDK **0.49.3**, Candid **0.10.39** and Rust floor **1.91** remain
+unchanged. Review found no Backup API migration or new feature requirement.
+Original wire/hash bytes, schemas, host transport and spending owners remain intact.
+Lock SHA-256: `f74e6ad555ff6fc2d3e04ad3ee8ad87a7d40a4395b769ec1f02f1940a2e33bd7`.
 
 ## Focused adoption evidence
 
-All 27 selected native request/lifecycle/metadata wire and inventory identity tests
-pass, including independent goldens, Principal aliases, raw bounds, malformed
-replies and exact hash commitments. Both independent candidate consumer journeys
-pass on the selected published dependency graph: cold capture/transfer/upload,
-same-ID restore and terminal replay; process death after authenticated load with
-original pending spending and no redispatch. Actual wrong-trusted-root rejection
-also passes without settling the original stop.
+All 33 selected native artifact, durable JSON, publication/recovery and public
+checksum/source-reference cases pass. Both independent candidate consumer journeys
+pass on the 0.69.6 graph: cold capture/transfer/upload, same-ID restore and terminal
+replay; process death after authenticated load with original pending spending and
+no redispatch. Original journals and raw byte evidence remain retained.
 
-Strict Core/Agent all-target/all-feature Clippy passes. Dependency inheritance,
-external IC boundaries, formatting and offline locked Testkit CLI/server admission
-pass. Explicit setup prepared Testkit 0.69.5 with PocketIC **16.1.0**; old bundles
-and evidence remain retained. No full local repository suite, new native host
-matrix or registry-only Backup consumer qualification ran.
+Explicit setup prepared Testkit 0.69.6 with PocketIC **16.1.0** and the 0.69.6
+release editor. Aggregate offline tools admission, dependency inheritance,
+external IC boundaries, formatting, documentation links and strict Core/Agent
+all-target/all-feature Clippy pass. All 12 release-preparation and 13 receipt/resume
+cases pass with the actual selected editor in isolated substitute repositories.
+No real release/Git effects occurred. No full local repository suite, new native
+macOS/MSRV matrix or registry-only Backup consumer qualification ran; the producer's
+macOS build fix is not fresh consumer macOS evidence.
 
-Logs: `/tmp/backup-platform072-*`. Independent graph/build evidence is
-`/tmp/ic-backup-agent-independent-build-2391369-0`; application/journal evidence is
-`/tmp/ic-backup-agent-pocketic-2391369-1` and
-`/tmp/ic-backup-agent-pocketic-2391369-3`. Keep original journals and raw bytes.
-The bounded adoption is complete; delivery and any selected release gate remain
-user-owned.
+Logs: `/tmp/backup-tooling696-*`. Independent graph/build evidence is
+`/tmp/ic-backup-agent-independent-build-57819-0`; application/journal evidence is
+`/tmp/ic-backup-agent-pocketic-57819-1` and
+`/tmp/ic-backup-agent-pocketic-57819-3`. Release fixture evidence remains in
+`target/shared-release-tests.Vrx3E8/` and `target/shared-release-tests.MIVV2H/`.
+Keep all original files and previous tool bundles. Earlier Platform qualification
+remains separately under `/tmp/backup-platform073-*` and
+`/tmp/backup-platform072-*`; its 27 wire/identity regressions and three PocketIC
+cases qualified their earlier dependency graphs. The current bounded dependency
+batch is complete; delivery and any selected release gate remain user-owned.
 
 ## Previous delivery and Canic integration
 

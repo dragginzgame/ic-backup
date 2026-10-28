@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.48.2]
+
+### 🔧 Dependencies
+
+- Require published IC Platform 0.7.3, retaining the existing host transport,
+  selected features and management/Principal/Agent identities.
+- Adopt published IC Tooling 0.69.6 for Host libraries, Testkit and the release
+  editor. Refresh explicit Testkit/editor setup for the new selections; original
+  journals, artifact identities and retained evidence remain unchanged.
+
 ## [0.48.1] - 2026-10-28
 
 ### 🔧 Dependencies

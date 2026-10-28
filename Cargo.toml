@@ -13,10 +13,10 @@ publish = ["crates-io"]
 [workspace.dependencies]
 # Production dependencies
 ic-backup = { version = "0.48.1", path = "crates/ic-backup" }
-ic-host-artifacts = { version = "0.69.4", default-features = false }
-ic-host-fs = { version = "0.69.4", default-features = false }
-ic-host-process = { version = "0.69.4", default-features = false }
-ic-platform = { version = "0.7.2", default-features = false, features = ["candid", "management-canister-types"] }
+ic-host-artifacts = { version = "0.69.6", default-features = false }
+ic-host-fs = { version = "0.69.6", default-features = false }
+ic-host-process = { version = "0.69.6", default-features = false }
+ic-platform = { version = "0.7.3", default-features = false, features = ["candid", "management-canister-types"] }
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls"] }
 rustix = { version = "1.1.4", features = ["fs"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -26,7 +26,7 @@ thiserror = "2.0"
 tokio = { version = "1.50", features = ["rt-multi-thread", "macros"] }
 
 # Tests and tooling only
-ic-testkit = "0.69.4"
+ic-testkit = "0.69.6"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
