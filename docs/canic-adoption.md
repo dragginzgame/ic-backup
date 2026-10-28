@@ -7,23 +7,27 @@ attempt; preparing this integration does not enable live creation.
 
 ## Verified starting point
 
-Released Backup source **0.42.0**, `c300c05`, contains the original-plan coordinator
-and the cleanup described in the changelog. Applications exchanging Host errors
-must align with Backup's selected Host family. Platform supplies external IC
+Released Backup source **0.47.0**, `97a0be3`, contains the original-plan coordinator
+and the error API hard cuts described in the changelog. Applications exchanging
+Host errors must align with Backup's selected Host family. Platform supplies external IC
 identities and SDKs; Testkit remains development-only. Core does not depend on Agent;
 an alternative transport needs its own qualification.
 
-Read-only inspection on 2026-10-24 uses Canic HEAD
-[`cf2d3d1`](https://github.com/dragginzgame/canic/commit/cf2d3d1fba84a00a76cdbc541ae7e68fe36e9bb5)
-**plus its pending 0.112 working changes**, not that commit alone:
+Read-only inspection on 2026-10-27 uses local Canic HEAD
+`f768a5519edb35512912dd73fce45936155edc6e`, not yet available on its remote.
+Its 0.112 release qualification remains in progress:
 
-- Its working catalog selects Backup **0.42.0**. Artifact, layout/command custody
+- Its lock selects Backup **0.45.1**. Artifact, layout/command custody
   and graph adoption are present; complete original stage/attempt adoption is pending.
 - `canic-control-plane/src/storage/stable/application_checkpoint` retains Root
   checkpoint state outside participant snapshots. Its workflow connects current
   local-unit discovery and authenticated Wire begin/status/advance/release; ops
-  connects catalogue exclusion. These are implemented working changes, not a new
-  installed production qualification.
+  connects catalogue exclusion. Its installed `qualify_root_dispatch` fixture in
+  `crates/canic-testing-internal/src/pic/application_checkpoint/root/mod.rs`
+  exercises two actual participants, unauthorized ingress, partial preparation,
+  Root upgrade with retained progress, stale identity refusal and completed
+  release replay. This inspection did not execute the fixture or qualify its
+  selected release graph. The fixture supplies no snapshot spending authority.
 - `canic-cli/src/backup/create` still refuses live creation before effects. The
   active restore runner and its original retained journals remain maintained.
 - `canic-backup/src/restore/persistence/retention` already implements
@@ -107,12 +111,13 @@ fresh permissions, fencing, terminal release or actual process-death behavior.
 
 ## Bounded implementation sequence
 
-1. Qualify the connected Canic production Root checkpoint storage, authenticated
-   commands and whole-unit exclusion under
+1. Reuse the connected Canic production Root checkpoint storage, authenticated
+   commands, catalogue exclusion and installed Root-dispatch fixture under
    [Canic #550 — Application-coordinated checkpoints](https://github.com/dragginzgame/canic/issues/550).
-   Reuse those owners; do not add another store or sequence. Installed Root dispatch
-   across at least two actual participants, interruption and exact replay remain
-   required, separately from the driver-held fixture in PR #607.
+   Verify the fixture on the selected release graph, then extend that same owner
+   for paid-effect and original-plan acceptance. Do not add another store,
+   sequence or participant fixture. The earlier driver-held proof in PR #607
+   retains its narrower scope.
 2. Bind one new frozen application operation to the existing Backup stage driver.
    Account fresh authority observations separately. Reuse original child planning,
    journal preparation and capture/transfer owners instead of introducing another

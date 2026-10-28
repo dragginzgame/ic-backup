@@ -1,123 +1,85 @@
 # Current handoff — 2026-10-27
 
-## Released source and ownership
+## Delivered source and accepted continuation
 
-Released Backup is **0.46.0**, `bbe4c18ab81b4567631e9b7e6d0f101a56483498`.
-The [released handoff](https://github.com/dragginzgame/ic-backup/blob/bbe4c18ab81b4567631e9b7e6d0f101a56483498/docs/status/current.md)
-retains the preceding ten simplifications and their original evidence scope.
-Core owns bounded records, guarded persistence and original-plan coordination;
-Agent owns reserved signed transport. Applications retain authority, membership,
-release binding, fencing and external obligations.
-[Implementation contracts](../implementation-contracts.md) remain authoritative.
+Released source is **0.47.0**, `97a0be383097fbeda819614fcea9dc9061122689`.
+Its [changelog](../../CHANGELOG.md#0470---2026-10-27) describes the workflow and
+settlement error hard cuts. The [released handoff](https://github.com/dragginzgame/ic-backup/blob/97a0be383097fbeda819614fcea9dc9061122689/docs/status/current.md)
+retains the preceding simplifications and their original focused evidence.
+It was written before release; its pending-version and dirty-state descriptions
+are historical. Source delivery is not registry publication or application acceptance.
 
-## Pending 0.47.0 simplifications
+The accepted continuation reviews the incoming Host/Testkit lock update,
+current native issue acceptance and the next application integration step.
+Core owns bounded records and original-plan coordination; Agent owns reserved
+signed transport. Applications retain membership, authority, release binding,
+fencing and external obligations. [Implementation contracts](../implementation-contracts.md)
+remain authoritative. No live backup/restore, release, commit or push is selected.
 
-All ten reviewed changes are implemented. Capture, upload and transfer-read
-coordinators now preserve returned evidence through `AfterReply` with a typed
-Journal, Association or Stage cause. Each ordered check and original journal
-exclusion remains in place, including the decoded-view continuation used by
-compound transfers. Source, pending spending, replies and recovery evidence remain
-retained; no hidden reservation, retry, receipt or cleanup is introduced.
+## Pending compatible dependency adoption
 
-The three association policies expose `Identity(ResponseIdentityMismatch)` for
-Authority, Attempt, Context and Target denials. `policy` exports the shared cause.
-Original reservation admission still precedes identity comparison; bounded decoding
-follows it. Consumers must update their matches on these and the workflow errors.
-[The pending changelog](../../CHANGELOG.md) selects **0.47.0** for that hard cut.
-There are no compatibility aliases or retained-data migration requirements.
+The incoming Cargo.lock update selects published Host Artifacts/FS/Process and
+Testkit **0.69.2**, replacing 0.69.1. No other package selection changes.
+The reviewed upstream release is `1e245a9e8791b04daa0bf971124ae8908d956821`;
+the registry Testkit package records that source. Process state and private
+exchange modes are consolidated; baseline-pool completion retains fatal discard,
+one bounded rebuild and both failure causes. Backup does not use that pool.
+No public API, retained format or product policy change is selected.
 
-The final settlement API follow-up exposes `Identity(SettlementIdentityMismatch)`
-for lifecycle/data-write claims and `Identity(InventorySettlementMismatch)` for
-capture/metadata-allocation claims. Both causes are exported from `policy`.
-Four duplicated per-policy conversion implementations are removed; the existing
-comparison functions, closed-baseline-before-identity order, attribution checks
-and domain-specific denials are unchanged. This completes the agreed error API
-scope for the pending 0.47.0 cut.
+The [pending changelog](../../CHANGELOG.md#0471) selects **0.47.1** for compatible
+dependency adoption and refreshed Canic guidance. Own package versions remain
+0.47.0. Workspace dependency declarations remain on the compatible 0.69 line;
+Platform stays **0.7.0**, release editor **0.69.0**, Shared Tooling **0.26.23** and
+consumer Rust floor **1.91**. No vendored snapshot payload or sibling is edited.
+Working lock SHA-256:
+`e2bf03f5442ce8fe2a6ed646333793fcf3f88953c99ff369f0d5fc9f5f502193`.
 
-Reference synchronization uses Host FS's existing no-follow, nonblocking regular
-file opener, retaining native IO errors and InvalidInput for nonregular entries.
-Upload construction and hashing reuse the metadata owner's admitted Platform
-Principal. Inventory closure and cycle checks use canonical target lookup instead
-of a temporary parent map, with missing-parent admission still preceding cycles.
-Restore-reference decoding sorts once and checks adjacent paths; multiply corrupt
-inputs now report the first duplicate in canonical path order. Version, field,
-count and authority denials remain strict. Planned observation reservation reuses
-its existing complete-original-progress admission method before the same transition.
+## Current focused evidence
 
-Hook fixtures delegate Rust and member-manifest selection to Shared's existing
-`--rust-sources`, including tracked deletions and untracked additions. Testkit
-command fixtures reuse Shared's lifecycle helpers and declare their complete
-helper closure. They explicitly create their default target parent; success cleans
-only their fixture, while failure preserves it and its original exit status.
+All six Core command-lifetime custody tests pass under the new graph, including
+failed spawn, descendant custody after owner death, unsafe sidecars and bounded
+finish. Strict Agent library and HTTP-boundary target Clippy passes. Logs:
+`/tmp/backup-host0692-custody.log` and
+`/tmp/backup-host0692-agent-clippy.log`.
+Dependency inheritance/boundary checks, local documentation links and diff checks
+also pass; static logs are `/tmp/backup-host0692-{boundaries,doc-links}.log`.
 
-Four read-only release-adapter subprocess paths share checked output capture.
-Selected Git reads, manifest projection, version and increment commands still
-require successful child completion before consuming stdout. Candidate-rendering
-and original receipt/recovery custody remain explicit. The existing metadata
-selection now includes the shared roster of seven version-reader cases.
+The matching Testkit CLI is explicitly prepared through the shared installer;
+its offline check admits the existing authenticated PocketIC 16.1.0 server.
+The first setup was denied write access to the shared store; the authorized retry
+succeeded. Original setup/check failures remain retained. Logs:
+`/tmp/backup-host0692-testkit-{setup-authorized,check-prepared}.log`.
+These are native Linux checks, not simulator execution or current native macOS/MSRV
+qualification. No full repository gate or new Agent HTTP execution ran here.
 
-## Focused evidence
+The earlier full Clippy failure and its narrow correction remain documented in
+the released handoff. Original failure:
+`target/validation-failures/20261027T172540Z-3411640-8-clippy.log`.
+Passing Core `--tests` Clippy and six capture-settlement cases are retained under
+`/tmp/backup-settlement-lint-fix-*`; they predate the new dependency graph.
 
-The maintainer's full Clippy gate on prepared commit `4ef6655` rejected the capture
-identity/raw-evidence test at 109 lines. The earlier focused lint selection did
-not include the Core library-test target. One expected-cause table and a single
-typed comparison now retain all seven mutation cases and the raw-evidence checks
-without a lint suppression. Core Clippy's `--tests` selection passes with
-`-D warnings`, and all six capture-settlement unit cases pass. Formatting, links
-and diff checks pass. Fix logs are `/tmp/backup-settlement-lint-fix-*`; the original
-failure remains at `target/validation-failures/20261027T172540Z-3411640-8-clippy.log`.
-The complete two-package/all-feature Clippy gate and full CI were not rerun here.
+## Native acceptance and application boundary
 
+Exact delivered-source [CI 40553307413](https://github.com/dragginzgame/ic-backup/actions/runs/40553307413)
+remains in progress on Linux, Intel macOS and Apple Silicon. It selects released
+0.47.0's 0.69.1 lock, not this dirty 0.69.2 graph. Do not claim a complete native
+pass or close [#70](https://github.com/dragginzgame/ic-backup/issues/70) and
+[#71](https://github.com/dragginzgame/ic-backup/issues/71) without their applicable
+complete matrix. Both fixes and their consumer cases are delivered; inspect the
+latest complete results on the next activated maintenance pass without polling.
 
-The preceding ten-change batch passed **113** selected Core tests before the
-settlement API follow-up. Filters cover snapshot workflows; mutation,
-upload and transfer-read association policies; upload and inventory models;
-restore-reference decoding; layout lifetime, attempt journals and execution
-progress. The 54 affected workflow cases pass again after the final caller-pattern
-cleanup. Existing assertions retain typed causes, exact bytes/hashes, pending
-attempts, cancellation, original source references and bounded provider calls.
-New cases cover regular/missing/symlink/directory/FIFO reference synchronization
-and deterministic duplicate-path reporting, including conflicting authorities.
+[Canic adoption](../canic-adoption.md) records the read-only inspection of local,
+unpublished Canic `f768a5519edb35512912dd73fce45936155edc6e`, selecting Backup
+0.45.1. Its installed Root-dispatch fixture already covers two participants,
+partial preparation, Root upgrade and release replay. No Canic test ran here.
+Reuse that owner for original-plan and Root-paid-effect integration; preserve
+live-create refusal and the active restore engine until replacements qualify.
+[#29](https://github.com/dragginzgame/ic-backup/issues/29) retains complete
+application, current-permission, external-obligation and terminal acceptance;
+the independent registry consumer's earlier proof has its narrower scope.
 
-The settlement follow-up passes **24** owning policy unit tests and **four**
-public consumer tests in `ic_observation` and `ic_snapshot_upload`. All identity
-components, baseline drift, exact evidence, attribution and pending-spending
-assertions remain active. Capture/allocation tests additionally reject baseline
-drift before conflicting identity claims; public lifecycle/capture consumers match
-the exported typed stale-challenge causes and retain byte-identical journals.
-Focused Clippy for Core's library and those public targets passes with
-`-D warnings`. Logs are `/tmp/backup-settlement-{lifecycle,data,capture,allocation,public,clippy}.log`.
-Formatting, documentation links and diff checks pass for the extended batch.
-
-The following receipts predate the settlement follow-up and keep that source scope.
-Clippy passes with `-D warnings` for Core's library and `pocketic_snapshot` caller,
-and separately for Agent's production library. Simulator fixture callers compile
-and lint; no simulator effects were executed. An initial 101-line fixture helper
-was shortened by removing redundant all-fields rest patterns. Its diagnostic
-excerpt is retained at `/tmp/backup-next10-initial-clippy-diagnostic.txt`; the
-complete initial Cargo log was replaced by the passing rerun.
-
-All five hook cases pass at `target/hook-tests.zKmed1/`. All 12 selected metadata
-cases pass at `target/shared-release-tests.dQeStL/`, and all 13 receipt/recovery
-cases pass at `target/shared-release-tests.SuZtRe/`. Testkit routing/refusal passes.
-An isolated copy without target/ proves parent creation, success cleanup and
-exact failure-23 retention at `/tmp/backup-next10-lifecycle-us724sjp/`.
-Initial fixture refusals remain retained with their logs. Evidence and commands
-are under `/tmp/backup-next10-*`. Matching ShellCheck `-x`, Bash/Perl syntax,
-formatting, local documentation links and diff checks pass.
-
-Cargo.toml and Cargo.lock remain byte-identical to HEAD. Lock SHA-256 is
-`c5ba971535f9ae7d55b6d47d4d0c544167325ebcad9ed7dd203c782d8d31d10a`.
-The actual released lock already selects Host/Testkit **0.69.1** and Platform
-**0.7.0**; editor selection remains **0.69.0**, Shared Tooling **0.26.23** and
-Rust floor **1.91**. Package versions remain **0.46.0**. No snapshot payload,
-sibling checkout, dependency declaration or lock was edited.
-
-## Limits and delivery
-
-No full suite/CI, simulator execution, new Agent HTTP run, native macOS or MSRV
-run is claimed. These focused checks add no live IC effect, authenticated
-application settlement, terminal proof or fence/reference-release qualification.
-Earlier Agent crypto-bigint qualification remains unresolved. Changes are unstaged
-and uncommitted; no own version bump, tag, push, publication, deployment or release
-was performed.
+The unresolved crypto-bigint qualification is now owned by
+[Platform #50](https://github.com/dragginzgame/ic-platform/issues/50).
+Backup #68 closed as superseded tracking, not as a vulnerability fix or exemption.
+Original plans, journals, bytes, references, obligations and failed evidence stay
+retained. No spending reset, blind retry, inferred receipt or cleanup is introduced.

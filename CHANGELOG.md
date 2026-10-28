@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.47.1]
+
+### 🔧 Dependencies
+
+- Select published Host and Testkit 0.69.2 in the lockfile, retaining the 0.69
+  public type family and existing Platform, wire and storage contracts. Refresh
+  the locked Testkit CLI with `make install-testkit-server` before offline checks.
+
+### 📚 Documentation
+
+- Refresh Canic adoption guidance against its installed Root-dispatch fixture;
+  retain original-plan integration and complete application acceptance under
+  [#29](https://github.com/dragginzgame/ic-backup/issues/29).
+
 ## [0.47.0] - 2026-10-27
 
 ### ⚠️ Breaking
