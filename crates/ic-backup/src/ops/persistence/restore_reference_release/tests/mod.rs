@@ -202,16 +202,22 @@ fn cross_journal_and_duplicate_command_sets_refuse_without_release() {
         f.layout.release_restore(&f.lock, &Validator),
         Err(RestoreReferenceReleaseError::InvalidCommandSet)
     ));
-    drop(other);
-    let custody = CommandLifetimeLock::acquire(&f.journal, 7).unwrap();
-    f.terminal.commands = vec![custody.record().clone(), custody.record().clone()];
-    drop(custody);
-    f.write();
-    assert!(matches!(
-        f.layout.release_restore(&f.lock, &Validator),
-        Err(RestoreReferenceReleaseError::InvalidCommandSet)
-    ));
     assert_eq!(f.references(), references);
+    let custody = CommandLifetimeLock::acquire(&f.journal, 7).unwrap();
+    // Keep the first command locked so rejection cannot depend on quiescence.
+    for commands in [
+        vec![custody.record().clone(), custody.record().clone()],
+        vec![custody.record().clone(), other.record().clone()],
+    ] {
+        f.terminal.commands = commands;
+        f.write();
+        let result = f.layout.release_restore(&f.lock, &Validator);
+        assert!(
+            matches!(result, Err(RestoreReferenceReleaseError::InvalidCommandSet)),
+            "invalid complete command set must precede custody probes: {result:?}"
+        );
+        assert_eq!(f.references(), references);
+    }
 }
 
 #[test]

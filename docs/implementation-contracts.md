@@ -390,8 +390,9 @@ Status/readback, attribution and destination denials remain domain-specific.
 fresh bounded terminal bytes, exact original intent and the integration's complete
 retained command-custody set. Preserve 16 MiB terminal input and 8,192-command bounds.
 Integrations authenticate their journal, settle effects/application obligations and
-qualify completeness. Applied counters alone are insufficient. Reject duplicate or
-cross-journal command identities, missing/replaced sidecars and active descendants.
+qualify completeness. Applied counters alone are insufficient. Validate the complete
+command set and reject duplicate or cross-journal identities before probing custody.
+Reject missing/replaced sidecars and active descendants.
 Hold existing inode-bound quiescence guards through durable reference publication,
 recheck terminal bytes/layout and synchronize exact absent-reference replay.
 Providers validating a workflow journal can call

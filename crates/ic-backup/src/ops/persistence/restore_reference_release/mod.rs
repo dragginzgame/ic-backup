@@ -78,11 +78,13 @@ impl BackupLayoutGuard {
             return Err(RestoreReferenceReleaseError::InvalidCommandSet);
         }
         let mut operations = BTreeSet::new();
-        let mut quiescence = Vec::with_capacity(terminal.commands().len());
         for command in terminal.commands() {
             if command.journal() != journal || !operations.insert(command.operation_sequence()) {
                 return Err(RestoreReferenceReleaseError::InvalidCommandSet);
             }
+        }
+        let mut quiescence = Vec::with_capacity(terminal.commands().len());
+        for command in terminal.commands() {
             quiescence.push(CommandQuiescenceGuard::acquire(command)?);
         }
         let mut references = self.restore_references()?;

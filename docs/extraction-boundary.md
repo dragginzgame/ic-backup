@@ -2849,8 +2849,9 @@ Guarded source-reference release is implemented separately by
 `BackupLayoutGuard::release_restore`. It reads bounded current terminal bytes
 under the actual held journal/layout guards and delegates complete original
 intent, application/effect settlement and command enumeration to the product's
-`RestoreTerminalEvidenceProvider`. Existing inode-bound command quiescence remains
-held through publication; invalid command sets, active descendants, changed bytes
+`RestoreTerminalEvidenceProvider`. The complete command set is admitted before
+any custody probe. Existing inode-bound command quiescence remains held through
+publication; invalid command sets, active descendants, changed bytes
 and missing/replaced sidecars refuse. Exact absent-reference replay synchronizes
 current durable state without effects. The local API has native process/filesystem
 qualification; production terminal providers, application fence release and Canic

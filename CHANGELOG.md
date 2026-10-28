@@ -2,6 +2,12 @@
 
 ## [0.48.2]
 
+### 🩹 Fixed
+
+- Validate complete terminal command sets before probing quiescence when releasing
+  restore references. Duplicate and cross-journal identities now retain their typed
+  refusal even when an earlier command is still held; references remain retained.
+
 ### 🔧 Dependencies
 
 - Require published IC Platform 0.7.3, retaining the existing host transport,

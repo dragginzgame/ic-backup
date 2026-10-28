@@ -1,51 +1,53 @@
 # Current handoff — 2026-10-28
 
-## Current dependency batch
+## Current restore-reference correction
 
-Backup now requires published IC Tooling **0.69.6** for Host Artifacts/FS/Process
-and Testkit; the tooling-only release editor also selects **0.69.6**. Published
-library VCS identities match `cba072ee8fe288eb92bb4a4ddf9753b8abc4b580`.
-The incoming lockfile already selected those library versions; their minimums and
-`RELEASE_EDITOR_VERSION` now match. Platform **0.7.3**, source
-`6733f504b62b81456001a1735f2a25b3bbffe3b9`, remains selected from the preceding
-adoption. No sibling checkout or snapshot-owned tooling was edited.
+The working correction is based on `b52bebc08091b92a65c57109b922837ba45881ad`;
+own versions remain **0.48.1** and the [0.48.2 notes](../../CHANGELOG.md#0482)
+remain open. No staging, commit, version mutation or release ran for this fix.
 
-The base remains `7036715c6e7ab6438c912a53fe834fb297cd74fb`, with own versions
-**0.48.1**. Both compatible dependency adoptions share the open
-[0.48.2 notes](../../CHANGELOG.md#0482). No staging, commit, own version bump,
-release or publication ran. Management DTOs **0.11.0**, external Principal
-**0.1.5**, Agent SDK **0.49.3**, Candid **0.10.39** and Rust floor **1.91** remain
-unchanged. Review found no Backup API migration or new feature requirement.
-Original wire/hash bytes, schemas, host transport and spending owners remain intact.
-Lock SHA-256: `f74e6ad555ff6fc2d3e04ad3ee8ad87a7d40a4395b769ec1f02f1940a2e33bd7`.
+The maintainer's full validation failed in duplicate-command reference-release
+admission: the first command's quiescence probe could fail before the later
+invalid identity was reached. A strengthened regression deliberately holds that
+first command and reproduces `Custody(InFlight)` in place of `InvalidCommandSet`.
+`release_restore` now validates the complete bounded catalogue before acquiring
+any command guard. Valid catalogues still require every original inode-bound
+quiescence guard held through durable reference publication and exact replay.
+Duplicate and mixed-journal regressions preserve the original reference bytes.
 
-## Focused adoption evidence
+All 14 focused native checks pass: six owning restore-release cases, six command
+custody/lifecycle cases and the two public source/safety cases. Strict Core
+library/test Clippy, shared formatting and documentation links pass. No new IC
+effect or schema change is introduced. The original full validation has not been
+rerun; the focused correction is complete and reviewable.
 
-All 33 selected native artifact, durable JSON, publication/recovery and public
-checksum/source-reference cases pass. Both independent candidate consumer journeys
-pass on the 0.69.6 graph: cold capture/transfer/upload, same-ID restore and terminal
-replay; process death after authenticated load with original pending spending and
-no redispatch. Original journals and raw byte evidence remain retained.
+Preserve `target/validation-failures/20261028T131421Z-499630-13-test.log` and its
+highlight/combined logs. `/tmp/backup-reference-release-before.log` retains the
+deterministic pre-fix failure; matching `-after`, `-custody`, `-public`, `-clippy`
+and `-source-checks` logs retain passing evidence. No retry, budget reset, inferred
+receipt or reference cleanup is authorized by the correction.
 
-Explicit setup prepared Testkit 0.69.6 with PocketIC **16.1.0** and the 0.69.6
-release editor. Aggregate offline tools admission, dependency inheritance,
-external IC boundaries, formatting, documentation links and strict Core/Agent
-all-target/all-feature Clippy pass. All 12 release-preparation and 13 receipt/resume
-cases pass with the actual selected editor in isolated substitute repositories.
-No real release/Git effects occurred. No full local repository suite, new native
-macOS/MSRV matrix or registry-only Backup consumer qualification ran; the producer's
-macOS build fix is not fresh consumer macOS evidence.
+## Dependency batch retained
 
-Logs: `/tmp/backup-tooling696-*`. Independent graph/build evidence is
-`/tmp/ic-backup-agent-independent-build-57819-0`; application/journal evidence is
-`/tmp/ic-backup-agent-pocketic-57819-1` and
-`/tmp/ic-backup-agent-pocketic-57819-3`. Release fixture evidence remains in
+The preceding batch selected published IC Tooling **0.69.6**,
+`cba072ee8fe288eb92bb4a4ddf9753b8abc4b580`, for Host Artifacts/FS/Process,
+Testkit and the tooling-only release editor. Platform **0.7.3** remains selected
+from `6733f504b62b81456001a1735f2a25b3bbffe3b9`. Management DTOs **0.11.0**,
+external Principal **0.1.5**, Agent SDK **0.49.3**, Candid **0.10.39** and Rust
+floor **1.91** are unchanged. Lock SHA-256 remains
+`f74e6ad555ff6fc2d3e04ad3ee8ad87a7d40a4395b769ec1f02f1940a2e33bd7`.
+
+Earlier dependency qualification passed 33 artifact/persistence native cases,
+both independent candidate consumer PocketIC journeys, strict Core/Agent lint,
+offline tools/dependency admission, 12 release-preparation and 13 receipt/resume
+cases. That evidence predates this ordering correction. Logs remain under
+`/tmp/backup-tooling696-*`, with original consumer evidence under
+`/tmp/ic-backup-agent-independent-build-57819-0` and
+`/tmp/ic-backup-agent-pocketic-57819-{1,3}`. Release fixtures remain in
 `target/shared-release-tests.Vrx3E8/` and `target/shared-release-tests.MIVV2H/`.
-Keep all original files and previous tool bundles. Earlier Platform qualification
-remains separately under `/tmp/backup-platform073-*` and
-`/tmp/backup-platform072-*`; its 27 wire/identity regressions and three PocketIC
-cases qualified their earlier dependency graphs. The current bounded dependency
-batch is complete; delivery and any selected release gate remain user-owned.
+Older Platform runs remain under `/tmp/backup-platform073-*` and
+`/tmp/backup-platform072-*`. Keep original journals, bytes and tool bundles;
+no full native host matrix or registry-only Backup qualification is claimed.
 
 ## Previous delivery and Canic integration
 
