@@ -69,11 +69,11 @@ fn member_checksum(
             (
                 member::PayloadMember::Region(expected),
                 DataExtent::Region {
-                    index,
+                    region,
                     offset,
                     size,
                 },
-            ) if expected == index => (offset, size),
+            ) if expected == region => (offset, size),
             (member::PayloadMember::Chunk(expected), DataExtent::Chunk { hash })
                 if expected.as_bytes() == hash =>
             {

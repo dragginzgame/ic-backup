@@ -96,8 +96,6 @@ pub fn validate_capture_settlement<'a>(
         return Err(IcCaptureSettlementError::UnsupportedMethod);
     };
     let authority = request.authority().digest();
-    let baseline_digest = baseline.digest();
-    let inventory_digest = inventory.digest();
     let candidates = validate_pair::<IcCaptureSettlementError>(
         request.mutation().target(),
         baseline,
@@ -113,17 +111,13 @@ pub fn validate_capture_settlement<'a>(
             inventory: &settlement.inventory,
             observation_evidence: &settlement.observation_evidence,
         },
-        &InventorySettlementIdentity {
-            operation: SettlementIdentity {
-                authority: &authority,
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                challenge,
-            },
-            baseline: &baseline_digest,
-            inventory: &inventory_digest,
-            observation_evidence: &response.input().evidence,
+        &SettlementIdentity {
+            authority: &authority,
+            mutation_attempt: request.mutation_attempt(),
+            observation_attempt: request.observation_attempt(),
+            challenge,
         },
+        &response.input().evidence,
     )?;
     let (outcome, captured_snapshot) = admitted_outcome(
         inventory,

@@ -4,11 +4,58 @@ use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptBudgetRecord, AttemptJournalRecordError},
     effect_graph::{EffectGraphError, EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
+    execution_workflow::{
+        ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
+        ExecutionWorkflowRecord,
+    },
     operation_plan::{
         OperationPlanError, OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord,
         PlannedOperationRecord, PlannedOperationRequest,
     },
 };
+
+/// Original workflow edge and exact learned evidence shared by data-stage plans.
+pub(crate) struct LearnedDataStage<'a> {
+    pub workflow: &'a ExecutionWorkflowRecord,
+    pub sequence: u64,
+    pub evidence: ArtifactChecksumRecord,
+}
+
+impl LearnedDataStage<'_> {
+    pub fn validate(
+        &self,
+        binding: &ExecutionStageBindingRecord,
+        plan: &OperationPlanRecord,
+    ) -> Result<bool, ExecutionWorkflowError> {
+        binding.validate(self.workflow, plan)?;
+        Ok(binding.has_learned_evidence(self.sequence, &self.evidence))
+    }
+
+    pub fn bind(
+        &self,
+        plan: &OperationPlanRecord,
+        source_binding: &ExecutionStageBindingRecord,
+        source_plan: &OperationPlanRecord,
+        source_request: &str,
+        predecessors: Vec<ExecutionStagePredecessorRecord>,
+    ) -> Result<Option<ExecutionStageBindingRecord>, ExecutionWorkflowError> {
+        source_binding.validate(self.workflow, source_plan)?;
+        if !source_binding.matches_learned_predecessor(
+            source_plan,
+            source_request,
+            &self.evidence,
+            &predecessors,
+        ) {
+            return Ok(None);
+        }
+        Ok(Some(ExecutionStageBindingRecord::new(
+            self.workflow,
+            self.sequence,
+            plan,
+            predecessors,
+        )?))
+    }
+}
 
 /// Build one sequential, single-update operation per original ordered request digest.
 pub(crate) fn build(

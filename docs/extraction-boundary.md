@@ -2503,7 +2503,7 @@ joins durable artifact publication; lost/malformed capture replies preserve pend
 originals and source references, with no recapture, checkpoint or successor stage.
 These cases qualify the controlled stopped fixture only. Full backup/restore,
 configured full Agent runner, default application admission and terminal/custody/fence/reference
-release remain open in [#29](https://github.com/dragginzgame/ic-backup/issues/29).
+release remain with the [application acceptance owners](canic-adoption.md#required-application-acceptance).
 See the [mutation port contract](contracts/ic-mutation-port.json).
 
 ### Provider-driven snapshot transfer read step
@@ -2540,7 +2540,7 @@ retention are qualified for that isolated stopped application only. This install
 one callable coordination step, not a complete backup/restore runner or default
 Agent provider. Applications still own full transfer, fresh membership/consistency,
 restore safety, stable custody and terminal/fence/reference release. See
-[#29](https://github.com/dragginzgame/ic-backup/issues/29) and the
+[application acceptance](canic-adoption.md#required-application-acceptance) and the
 [port contract](contracts/ic-snapshot-transfer-read-port.json).
 
 ### Original metadata-stage coordination
@@ -2614,7 +2614,8 @@ also cover wrong receipts/outcomes, failed qualification/persistence, changed
 metadata/intent/coverage and stage/byte custody. These qualify the stopped fixture,
 not arbitrary application consistency, stable noncooperating byte custody, complete
 product manifests, full Agent/backup/restore orchestration or terminal/fence/reference
-release. [#29](https://github.com/dragginzgame/ic-backup/issues/29) remains open.
+release. Those remain [application acceptance](canic-adoption.md#required-application-acceptance)
+obligations.
 
 ### Original snapshot upload coordination
 
@@ -2656,8 +2657,8 @@ stage preparation, then uses the coordinator for each exact original upload. Ind
 destination verification compares all metadata and complete source bytes. Lost/malformed
 metadata cannot create a data stage; lost/malformed data retains source records and
 references across reopen without repetition. These are fixture qualifications, not
-a generic complete upload/restore runner. Keep full application/async Agent/terminal
-custody work in [#29](https://github.com/dragginzgame/ic-backup/issues/29).
+a generic complete upload/restore runner. Full application and terminal-custody
+composition remain with the [application acceptance owners](canic-adoption.md#required-application-acceptance).
 
 `workflow::ic_snapshot_upload::allocate_snapshot` requires an exact singleton original
 metadata stage before dispatch. Reuse one-upload authority/reservation/admission and

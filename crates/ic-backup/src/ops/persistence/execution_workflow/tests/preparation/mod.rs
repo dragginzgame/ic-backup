@@ -2,9 +2,9 @@ use super::*;
 use crate::model::{
     attempt_journal::AttemptBudgetRecord,
     effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
-    execution_workflow::tests::child_request,
     operation_plan::{PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest},
 };
+use crate::test_support::execution_workflow::child_request;
 use serde_json::json;
 
 pub(super) fn catalog() -> ExecutionWorkflowRecord {

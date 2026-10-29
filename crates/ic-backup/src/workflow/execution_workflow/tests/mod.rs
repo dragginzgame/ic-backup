@@ -1,9 +1,9 @@
 use super::*;
+use crate::test_support::execution_workflow::{child, workflow};
 use crate::{
     model::{
         attempt_journal::{AttemptBudgetRecord, MutationOutcomeRecord, MutationReceiptRequest},
         effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
-        execution_workflow::tests::{child, workflow},
         operation_plan::{
             OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest,
         },
@@ -106,7 +106,7 @@ fn layout(prefix: &str) -> (PathBuf, BackupLayoutGuard) {
 }
 
 fn branched_workflow() -> ExecutionWorkflowRecord {
-    let mut request = crate::model::operation_plan::tests::request();
+    let mut request = crate::test_support::operation_plan::request();
     request.graph = EffectGraphRecord::new(
         [(0, vec![]), (7, vec![0]), (9, vec![0])]
             .into_iter()
@@ -136,7 +136,7 @@ fn branched_workflow() -> ExecutionWorkflowRecord {
 #[test]
 fn dependencies_run_in_topological_order_and_complete_originals_replay() {
     let (root, layout) = layout("ic-backup-run-workflow");
-    let mut request = crate::model::operation_plan::tests::request();
+    let mut request = crate::test_support::operation_plan::request();
     request.graph = EffectGraphRecord::new(
         [(0, vec![7]), (7, vec![])]
             .into_iter()

@@ -4,13 +4,15 @@ use super::{
     ArtifactChecksumRecord, FORMAT, IcSnapshotArtifactError, IcSnapshotMetadataReply,
     MAX_IC_SNAPSHOT_METADATA_BYTES, REGIONS,
 };
-use crate::model::ic_snapshot_data::{DataExtent, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
+use crate::model::ic_snapshot_data::{
+    DataExtent, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, SnapshotRegion,
+};
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::management_canister_types::SnapshotDataKind;
 
 pub(super) enum Member {
     Region {
-        index: usize,
+        region: SnapshotRegion,
         offset: u64,
         size: u64,
     },
@@ -22,11 +24,11 @@ pub(super) enum Member {
 pub(super) fn select(kind: &SnapshotDataKind) -> Result<Member, IcSnapshotArtifactError> {
     Ok(match DataExtent::from(kind) {
         DataExtent::Region {
-            index,
+            region,
             offset,
             size,
         } => Member::Region {
-            index,
+            region,
             offset,
             size,
         },
@@ -46,7 +48,7 @@ pub(super) fn chunk_name(hash: Sha256Digest) -> String {
 /// One exact tree member; declaration digests grant no byte custody.
 #[derive(Clone, Copy)]
 pub(super) enum PayloadMember {
-    Region(usize),
+    Region(SnapshotRegion),
     Chunk(Sha256Digest),
 }
 
@@ -93,16 +95,15 @@ pub(super) fn expected(
     .collect::<Vec<_>>();
     let values = metadata.metadata();
     members.extend(
-        REGIONS
+        SnapshotRegion::ALL
             .into_iter()
             .zip(metadata.region_sizes())
-            .enumerate()
-            .map(|(index, (name, length))| ExpectedMember {
-                name: name.into(),
+            .map(|(region, length)| ExpectedMember {
+                name: REGIONS[region.index()].into(),
                 length: Some(length),
                 maximum: length,
                 checksum: None,
-                payload: Some(PayloadMember::Region(index)),
+                payload: Some(PayloadMember::Region(region)),
             }),
     );
     for chunk in &values.wasm_chunk_store {

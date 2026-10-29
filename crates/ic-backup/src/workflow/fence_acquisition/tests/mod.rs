@@ -1,6 +1,7 @@
 //! Native orchestration/custody fixtures; no application fence semantics or IC effects.
 
 use super::*;
+use crate::test_support::execution_workflow::{child_request, workflow};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -8,10 +9,7 @@ use crate::{
         consistency::{
             ApplicationFenceBinding, ConsistencyGuaranteeRecord, ConsistencyRequirementRecord,
         },
-        execution_workflow::{
-            ExecutionStageBindingRecord, ExecutionWorkflowRecord,
-            tests::{child_request, workflow},
-        },
+        execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         operation_plan::OperationPlanRecord,
         restore_safety::{
             RestoreFenceBindingRecord, RestoreSafetyLaneRecord, RestoreSafetyRequirementRecord,

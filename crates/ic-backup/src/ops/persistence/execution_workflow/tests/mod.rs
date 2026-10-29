@@ -1,11 +1,9 @@
 use super::*;
+use crate::test_support::execution_workflow::{child, workflow};
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-        execution_workflow::{
-            ExecutionStagePredecessorRecord,
-            tests::{child, workflow},
-        },
+        execution_workflow::ExecutionStagePredecessorRecord,
     },
     ops::persistence::{AttemptJournalGuard, read_execution_progress},
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},

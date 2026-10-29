@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.48.3]
+
+### 🔧 Tooling and dependencies
+
+- Adopt reviewed Shared Tooling 0.27.6 and published Host/Testkit and release editor
+  0.69.9. Refresh explicit tool setup for the new selections; preserve original
+  journals, artifact identities and failed evidence.
+
+### 🧹 Cleanup
+
+- Share capture/restore reservation and dispatch, qualified checkpoint completion,
+  learned data-stage bindings and expected inventory-settlement identity assembly.
+- Represent pending attempts and snapshot regions explicitly, retain observation
+  reservation identity as one component and reuse canonical digest framing helpers.
+- Separate stage guards from binding/ancestor admission and move shared plan and
+  metadata fixture builders into test support. Preserve public APIs, persisted and
+  wire formats, hashes, error ordering, lock custody and no-reissue behavior.
+
 ## [0.48.2] - 2026-10-28
 
 ### 🩹 Fixed

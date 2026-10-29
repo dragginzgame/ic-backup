@@ -307,21 +307,21 @@ impl OperationPlanRecord {
         bytes.append(self.context.network().as_bytes());
         append_principal(&mut bytes, self.context.caller());
         bytes.append(self.context.release().as_bytes());
-        bytes.append(self.inventory.digest().hash().as_bytes());
-        bytes.append(self.graph.digest().hash().as_bytes());
+        bytes.checksum(&self.inventory.digest());
+        bytes.checksum(&self.graph.digest());
         append_count(&mut bytes, self.selected_targets.len());
         for target in &self.selected_targets {
             append_principal(&mut bytes, target);
         }
-        bytes.append(&self.budget.mutations().to_be_bytes());
-        bytes.append(&self.budget.observations().to_be_bytes());
+        bytes.u32_be(self.budget.mutations());
+        bytes.u32_be(self.budget.observations());
         append_count(&mut bytes, self.operations.len());
         for operation in &self.operations {
-            bytes.append(&operation.operation_sequence().to_be_bytes());
+            bytes.u64_be(operation.operation_sequence());
             append_principal(&mut bytes, operation.target());
             bytes.append(operation.request().as_bytes());
-            bytes.append(&operation.budget().mutations().to_be_bytes());
-            bytes.append(&operation.budget().observations().to_be_bytes());
+            bytes.u32_be(operation.budget().mutations());
+            bytes.u32_be(operation.budget().observations());
         }
         bytes.finish()
     }
@@ -336,7 +336,7 @@ fn append_principal(bytes: &mut EvidenceDigest, text: &str) {
     reason = "validated selection/operation counts are at most 8192"
 )]
 fn append_count(bytes: &mut EvidenceDigest, count: usize) {
-    bytes.append(&(count as u32).to_be_bytes());
+    bytes.u32_be(count as u32);
 }
 fn bounded_selected<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<String>, D::Error> {
     bounded::<D, String, MAX_INVENTORY_TARGETS>(deserializer)
@@ -420,4 +420,4 @@ pub enum OperationPlanError {
 }
 
 #[cfg(test)]
-pub(crate) mod tests;
+mod tests;

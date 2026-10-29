@@ -275,8 +275,8 @@ fi
 for expected in \
     '[ERR:fail-one] error: first-live-error-marker' \
     '[ERR:fail-two] error: second-live-error-marker'; do
-    [[ "$(rg -F -c "$expected" "$FIXTURE/output.log")" -ge 3 ]] || {
-        echo "validation target runner test failed: live error was not highlighted before both summaries" >&2
+    [[ "$(rg -F -c "$expected" "$FIXTURE/output.log")" == 2 ]] || {
+        echo "validation target runner test failed: expected live error and one final excerpt" >&2
         exit 1
     }
 done
@@ -719,12 +719,23 @@ nested-failure:
 	+bash scripts/ci/run-validation-targets.sh fail-one
 MAKE
 status=0
-VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
+mkdir "$FIXTURE/excerpt-bin"
+EXCERPT_REAL_RG="$(command -v rg)"
+EXCERPT_SCANS="$FIXTURE/excerpt-scans"
+export EXCERPT_REAL_RG EXCERPT_SCANS
+cat > "$FIXTURE/excerpt-bin/rg" <<'RG'
+#!/usr/bin/env bash
+if [[ "${!#}" == *.clean ]]; then printf 'selected\n' >> "$EXCERPT_SCANS"; fi
+exec "$EXCERPT_REAL_RG" "$@"
+RG
+chmod +x "$FIXTURE/excerpt-bin/rg"
+PATH="$FIXTURE/excerpt-bin:$PATH" VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
     VALIDATION_FAILURE_LOG_DIR="$FIXTURE/failure-logs" VALIDATION_FAILURE_EVENT_PREFIX='[CONSUMER:E' \
     GITHUB_STEP_SUMMARY="$FIXTURE/summary.md" VALIDATION_RUNNER_DEPTH=0 \
     bash "$FIXTURE/scripts/ci/run-validation-targets.sh" pass structured \
     > "$FIXTURE/retained.log" 2>&1 || status=$?
 [[ "$status" == 2 ]] || exit 1
+[[ "$(wc -l < "$EXCERPT_SCANS" | tr -d ' ')" == 1 ]] || exit 1
 run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/retained.log")"
 [[ -d "$run" ]] || exit 1
 printf 'pass-marker\n' > "$FIXTURE/pass.expected"
@@ -737,6 +748,7 @@ awk -F '\t' -v run="$run" '
 ' "$run/timings.tsv"
 rg -F '[ERR:structured] [CONSUMER:E001] structured-marker' "$FIXTURE/retained.log" >/dev/null
 rg -F '[ERR:structured] [CONSUMER:E001] structured-marker' "$FIXTURE/failure-logs/latest-errors.log" >/dev/null
+cmp "$run/1.log.excerpt" "$FIXTURE/failure-logs/latest-errors.log"
 rg -F $'\033[32mcolored raw bytes\033[0m' "$run/1.log" >/dev/null
 if rg -F '[ERR:' "$run/1.log" >/dev/null; then exit 1; fi
 [[ "$(rg -c '^### Validation summary' "$FIXTURE/summary.md")" == 1 ]] || exit 1
@@ -761,6 +773,7 @@ VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_LOG_DIR="$FIXTURE/runs" \
 outer_run="$(sed -n 's/^Validation logs and timings: //p' "$FIXTURE/nested-failures.log" | head -n 1)"
 cat "$outer_run/0.log" "$outer_run/1.log" > "$FIXTURE/nested-combined.expected"
 cmp "$FIXTURE/nested-combined.expected" "$FIXTURE/failure-logs/latest-combined.log"
+[[ "$(grep -c '^Failure details (selected from the full logs):' "$FIXTURE/nested-failures.log")" == 1 ]] || exit 1
 
 # A failed aggregate write must preserve raw inputs and the prior complete
 # latest batch, while returning the original target failure status.

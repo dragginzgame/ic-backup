@@ -202,10 +202,10 @@ impl AttemptJournalRecord {
     // Reservation admission reads the validated projection without building the
     // public reporting view or hashing authority unrelated to these attempt IDs.
     pub(crate) const fn pending_mutation(&self) -> Option<u32> {
-        self.projection.pending_mutation
+        self.projection.pending_mutation()
     }
     pub(crate) const fn pending_observation(&self) -> Option<u32> {
-        match &self.projection.pending_observation {
+        match self.projection.pending_observation() {
             Some(pending) => Some(pending.attempt),
             None => None,
         }
@@ -217,8 +217,7 @@ impl AttemptJournalRecord {
     #[must_use]
     pub fn pending_observation_request(&self) -> Option<&str> {
         self.projection
-            .pending_observation
-            .as_ref()
+            .pending_observation()
             .map(|pending| pending.request.as_str())
     }
     /// Read the terminal Applied receipt from validated original history.
@@ -262,13 +261,12 @@ impl AttemptJournalRecord {
                 - self.projection.mutations_used,
             observations_remaining: self.authority.budget().observations()
                 - self.projection.observations_used,
-            pending_mutation: self.projection.pending_mutation,
+            pending_mutation: self.projection.pending_mutation(),
             pending_observation: self
                 .projection
-                .pending_observation
-                .as_ref()
+                .pending_observation()
                 .map(|pending| pending.attempt),
-            applied: self.projection.applied,
+            applied: self.projection.applied(),
             history_len: self.events.len(),
         }
     }
@@ -280,8 +278,8 @@ impl AttemptJournalRecord {
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/attempt-journal-history/v1\0");
-        bytes.append(self.authority.digest().hash().as_bytes());
-        bytes.append(&(self.events.len() as u64).to_be_bytes());
+        bytes.checksum(&self.authority.digest());
+        bytes.u64_be(self.events.len() as u64);
         for event in &self.events {
             event.append_digest_bytes(&mut bytes);
         }

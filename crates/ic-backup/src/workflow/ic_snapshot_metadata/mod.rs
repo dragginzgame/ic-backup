@@ -88,13 +88,9 @@ pub async fn read_snapshot_metadata<E: std::error::Error + 'static>(
         },
     )
     .await?;
-    match settlement.and_then(|digest| Ok(stage.reconcile_checkpoint(digest)?)) {
-        Ok(predecessor) => Ok((response, predecessor)),
-        Err(source) => Err(IcSnapshotMetadataExecutionError::AfterReply {
-            source,
-            response: Box::new(response),
-        }),
-    }
+    super::qualified_receipt::checkpoint_reply(stage, response, settlement, |source, response| {
+        IcSnapshotMetadataExecutionError::AfterReply { source, response }
+    })
 }
 
 async fn settle_metadata<E: std::error::Error + 'static>(

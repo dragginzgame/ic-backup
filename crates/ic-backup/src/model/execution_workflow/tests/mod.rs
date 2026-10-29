@@ -1,42 +1,11 @@
 use super::*;
 use crate::model::{
     attempt_journal::AttemptBudgetRecord,
-    effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
-    operation_plan::{OperationPlanRequest, PlanBudgetRecord, PlannedOperationRequest},
+    operation_plan::{PlanBudgetRecord, PlannedOperationRequest},
 };
 
-pub(crate) fn workflow() -> ExecutionWorkflowRecord {
-    ExecutionWorkflowRecord::new(
-        OperationPlanRecord::new(crate::model::operation_plan::tests::request()).unwrap(),
-    )
-}
-pub(crate) fn child_request(sequence: u64) -> OperationPlanRequest {
-    let mut request = crate::model::operation_plan::tests::request();
-    let stage = workflow().stage(sequence).unwrap().clone();
-    request.graph = EffectGraphRecord::new(vec![
-        EffectNodeRecord::new(EffectNodeRequest {
-            operation_sequence: 42,
-            depends_on: vec![],
-        })
-        .unwrap(),
-    ])
-    .unwrap();
-    request.operations = vec![
-        PlannedOperationRecord::new(PlannedOperationRequest {
-            operation_sequence: 42,
-            target: stage.target().into(),
-            request: "78".repeat(32),
-            budget: stage.budget().clone(),
-        })
-        .unwrap(),
-    ];
-    request.budget =
-        PlanBudgetRecord::new(stage.budget().mutations(), stage.budget().observations()).unwrap();
-    request
-}
-pub(crate) fn child(sequence: u64) -> OperationPlanRecord {
-    OperationPlanRecord::new(child_request(sequence)).unwrap()
-}
+use crate::test_support::execution_workflow::*;
+
 fn predecessor() -> ExecutionStagePredecessorRecord {
     ExecutionStagePredecessorRecord::new(
         0,

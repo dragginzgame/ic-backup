@@ -2,10 +2,38 @@
 
 use ic_platform::management_canister_types::SnapshotDataKind;
 
+/// The fixed order used by metadata, contiguous coverage and artifact regions.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum SnapshotRegion {
+    WasmModule,
+    WasmMemory,
+    StableMemory,
+}
+
+impl SnapshotRegion {
+    pub(crate) const ALL: [Self; 3] = [Self::WasmModule, Self::WasmMemory, Self::StableMemory];
+
+    pub(crate) const fn index(self) -> usize {
+        match self {
+            Self::WasmModule => 0,
+            Self::WasmMemory => 1,
+            Self::StableMemory => 2,
+        }
+    }
+
+    pub(crate) const fn extent(self, offset: u64, size: u64) -> SnapshotDataKind {
+        match self {
+            Self::WasmModule => SnapshotDataKind::WasmModule { offset, size },
+            Self::WasmMemory => SnapshotDataKind::WasmMemory { offset, size },
+            Self::StableMemory => SnapshotDataKind::StableMemory { offset, size },
+        }
+    }
+}
+
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum DataExtent<'a> {
     Region {
-        index: usize,
+        region: SnapshotRegion,
         offset: u64,
         size: u64,
     },
@@ -18,17 +46,17 @@ impl<'a> From<&'a SnapshotDataKind> for DataExtent<'a> {
     fn from(kind: &'a SnapshotDataKind) -> Self {
         match kind {
             SnapshotDataKind::WasmModule { offset, size } => Self::Region {
-                index: 0,
+                region: SnapshotRegion::WasmModule,
                 offset: *offset,
                 size: *size,
             },
             SnapshotDataKind::WasmMemory { offset, size } => Self::Region {
-                index: 1,
+                region: SnapshotRegion::WasmMemory,
                 offset: *offset,
                 size: *size,
             },
             SnapshotDataKind::StableMemory { offset, size } => Self::Region {
-                index: 2,
+                region: SnapshotRegion::StableMemory,
                 offset: *offset,
                 size: *size,
             },

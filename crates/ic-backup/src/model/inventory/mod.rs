@@ -131,7 +131,7 @@ impl InventoryRecord {
             reason = "validated target count is at most 1024"
         )]
         let count = self.targets.len() as u32;
-        bytes.append(&count.to_be_bytes());
+        bytes.u32_be(count);
         for target in &self.targets {
             append_text(&mut bytes, target.canister_id());
             for field in [
@@ -157,7 +157,7 @@ impl InventoryRecord {
     reason = "all admitted text is bounded to at most 256 UTF-8 bytes"
 )]
 fn append_text(bytes: &mut EvidenceDigest, value: &str) {
-    bytes.append(&(value.len() as u32).to_be_bytes());
+    bytes.u32_be(value.len() as u32);
     bytes.append(value.as_bytes());
 }
 

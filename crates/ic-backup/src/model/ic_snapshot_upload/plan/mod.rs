@@ -7,7 +7,7 @@ use super::{
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::AttemptJournalRecordError,
-    data_stage_plan::{self, DataStagePlanError},
+    data_stage_plan::{self, DataStagePlanError, LearnedDataStage},
     effect_graph::EffectGraphError,
     execution_workflow::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
@@ -27,11 +27,9 @@ use thiserror::Error;
 /// stage headroom stays unassigned. No upload bytes, spending, authenticated allocation
 /// or complete-transfer proof are retained here. Empty data needs no placeholder plan.
 pub struct IcSnapshotDataUploadPlan<'workflow, 'request, 'source> {
-    workflow: &'workflow ExecutionWorkflowRecord,
-    sequence: u64,
+    binding: LearnedDataStage<'workflow>,
     metadata: &'request IcSnapshotUploadRequest<'source>,
     destination: Vec<u8>,
-    allocation_evidence: ArtifactChecksumRecord,
     kinds: Vec<SnapshotDataKind>,
     plan: Option<OperationPlanRecord>,
 }
@@ -101,11 +99,13 @@ impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 's
             bindings.iter().cloned(),
         )?;
         Ok(IcSnapshotDataUploadPlan {
-            workflow: self.workflow,
-            sequence: self.stage.operation_sequence(),
+            binding: LearnedDataStage {
+                workflow: self.workflow,
+                sequence: self.stage.operation_sequence(),
+                evidence: self.allocation_evidence,
+            },
             metadata: self.metadata,
             destination: self.destination,
-            allocation_evidence: self.allocation_evidence,
             kinds: self.kinds,
             plan,
         })
@@ -114,7 +114,7 @@ impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 's
 
 impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
     pub(crate) fn workflow_digest(&self) -> ArtifactChecksumRecord {
-        self.workflow.digest()
+        self.binding.workflow.digest()
     }
     pub(crate) fn validate_completion(
         &self,
@@ -128,11 +128,11 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
                 return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
             }
         } else {
-            binding.validate(self.workflow, plan)?;
+            binding.validate(self.binding.workflow, plan)?;
             if plan.operations().len() != 1
                 || plan.operations()[0].target() != self.metadata.target()
                 || plan.operations()[0].request() != self.metadata.binding_digest().hash()
-                || learned != &self.allocation_evidence
+                || learned != &self.binding.evidence
             {
                 return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
             }
@@ -177,21 +177,15 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
             .plan
             .as_ref()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
-        allocation_binding.validate(self.workflow, allocation_plan)?;
-        if !allocation_binding.matches_learned_predecessor(
-            allocation_plan,
-            self.metadata.binding_digest().hash(),
-            &self.allocation_evidence,
-            &predecessors,
-        ) {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
-        }
-        Ok(ExecutionStageBindingRecord::new(
-            self.workflow,
-            self.sequence,
-            plan,
-            predecessors,
-        )?)
+        self.binding
+            .bind(
+                plan,
+                allocation_binding,
+                allocation_plan,
+                self.metadata.binding_digest().hash(),
+                predecessors,
+            )?
+            .ok_or(IcSnapshotDataUploadPlanningError::OriginalMismatch)
     }
     pub(crate) fn validate_binding(
         &self,
@@ -201,8 +195,7 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
             .plan
             .as_ref()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
-        binding.validate(self.workflow, plan)?;
-        if !binding.has_learned_evidence(self.sequence, &self.allocation_evidence) {
+        if !self.binding.validate(binding, plan)? {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
         }
         Ok(())

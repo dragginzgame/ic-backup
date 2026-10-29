@@ -1,16 +1,15 @@
 //! Exact spending, locked admission, bounded evidence and no recapture on failure.
 
 use super::*;
+use crate::ops::persistence::AttemptJournalGuard;
+use crate::test_support::execution_workflow::{child_request, workflow};
 use crate::test_support::ready::ready;
 use crate::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{AttemptJournalRecord, MutationOutcomeRecord, MutationReceiptRequest},
-        execution_workflow::{
-            ExecutionStageBindingRecord,
-            tests::{child_request, workflow},
-        },
+        execution_workflow::ExecutionStageBindingRecord,
         ic_request::IcManagementRequest,
         ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},

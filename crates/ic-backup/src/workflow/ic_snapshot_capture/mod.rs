@@ -7,8 +7,8 @@ use crate::{
         operation_plan::OperationPlanError,
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, ExecutionProgressPersistenceError,
-        ExecutionStageGuard, ExecutionWorkflowPersistenceError,
+        AttemptJournalError, ExecutionProgressPersistenceError, ExecutionStageGuard,
+        ExecutionWorkflowPersistenceError,
     },
     policy::ic_mutation::{IcMutationAssociationError, validate_acknowledgement},
     ports::ic_mutation::{IcMutationProvider, IcMutationProviderError},
@@ -55,25 +55,26 @@ pub async fn capture_snapshot<E: std::error::Error + 'static>(
     }
     let plan = stage.plan();
     let authority = plan.attempt_authority(operation_sequence)?;
-    payload
-        .validate_mutation_binding(authority.binding())
-        .map_err(IcMutationRequestError::from)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    journal.reserve_planned_mutation(&plan.digest())?;
-    let request = IcMutationRequest::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request)
-        .await
-        .map_err(IcSnapshotCaptureExecutionError::Admission)?;
-    stage.layout()?;
-    let acknowledgement = provider
-        .submit_mutation(&request, journal.record()?)
-        .await?;
-    let admit_reply = || -> Result<(), IcSnapshotCaptureReplyError> {
-        validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
-        stage.layout()?;
-        Ok(())
-    };
-    match admit_reply() {
+    let (acknowledgement, admission) = super::ic_mutation::submit_with(
+        stage,
+        &authority,
+        payload,
+        provider,
+        async |request| {
+            admit(request)
+                .await
+                .map_err(IcSnapshotCaptureExecutionError::Admission)?;
+            stage.layout()?;
+            Ok::<_, IcSnapshotCaptureExecutionError<E>>(())
+        },
+        async |journal, request, acknowledgement| {
+            validate_acknowledgement(request, journal.record()?, acknowledgement)?;
+            stage.layout()?;
+            Ok::<_, IcSnapshotCaptureReplyError>(())
+        },
+    )
+    .await?;
+    match admission {
         Ok(()) => Ok(acknowledgement),
         Err(source) => Err(IcSnapshotCaptureExecutionError::AfterReply {
             source,

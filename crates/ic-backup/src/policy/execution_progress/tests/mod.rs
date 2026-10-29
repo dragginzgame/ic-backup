@@ -8,8 +8,9 @@ use crate::model::{
         ObservationOutcomeRecord, ObservationReceiptRequest,
     },
     effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
-    operation_plan::{OperationPlanRequest, PlanBudgetRecord, tests::request},
+    operation_plan::{OperationPlanRequest, PlanBudgetRecord},
 };
+use crate::test_support::operation_plan::request;
 
 fn plan() -> OperationPlanRecord {
     OperationPlanRecord::new(request()).expect("original plan")

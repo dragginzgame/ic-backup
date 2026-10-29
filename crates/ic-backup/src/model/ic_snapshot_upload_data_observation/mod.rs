@@ -5,7 +5,7 @@ use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_observation::{
         IcObservationRequestError, IcObservationResponseError, IcObservationResponseInput,
-        ObservationReservation, fmt_response_input, pending_attempts, validate_response_input,
+        ObservationReservation, fmt_response_input, validate_response_input,
     },
     ic_snapshot_data::{IcSnapshotDataRequest, MAX_IC_SNAPSHOT_DATA_REPLY_BYTES},
     ic_snapshot_upload::{
@@ -30,9 +30,7 @@ pub struct IcSnapshotUploadDataObservationRequest<'request, 'source, 'metadata> 
     plan: &'request OperationPlanRecord,
     mutation: &'request IcSnapshotUploadRequest<'source>,
     payload: &'request IcSnapshotDataRequest<'metadata>,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
-    observation_attempt: u32,
+    reservation: ObservationReservation,
     original_chunk_checksum: &'request ArtifactChecksumRecord,
 }
 
@@ -88,17 +86,14 @@ impl<'request, 'source, 'metadata>
         {
             return Err(IcSnapshotUploadDataObservationError::DestinationMetadataMismatch);
         }
-        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
         let request = Self {
             plan,
             mutation,
             payload,
-            authority,
-            mutation_attempt,
-            observation_attempt,
+            reservation,
             original_chunk_checksum: chunk_checksum,
         };
-        request.validate_journal(journal)?;
         Ok(request)
     }
 
@@ -120,17 +115,17 @@ impl<'request, 'source, 'metadata>
     /// Read original operation authority and assigned limits.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the original pending data-upload attempt.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Read the already consumed exact data-read observation attempt.
     #[must_use]
     pub const fn observation_attempt(&self) -> u32 {
-        self.observation_attempt
+        self.reservation.observation_attempt
     }
     /// Read original encoded chunk identity; it establishes no write attribution.
     #[must_use]
@@ -144,13 +139,7 @@ impl<'request, 'source, 'metadata>
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        ObservationReservation {
-            authority: &self.authority,
-            mutation_attempt: self.mutation_attempt,
-            observation_attempt: self.observation_attempt,
-            request: self.payload.digest(),
-        }
-        .validate(journal)
+        self.reservation.validate(journal)
     }
 }
 

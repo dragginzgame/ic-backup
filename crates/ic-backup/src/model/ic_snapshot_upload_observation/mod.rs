@@ -2,7 +2,7 @@
 
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
-    ic_observation::{IcObservationRequestError, ObservationReservation, pending_attempts},
+    ic_observation::{IcObservationRequestError, ObservationReservation},
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
     ic_snapshot_upload::{
         IcSnapshotUploadAttemptError, IcSnapshotUploadKind, IcSnapshotUploadRequest,
@@ -26,9 +26,7 @@ pub struct IcSnapshotUploadObservationRequest<'request, 'source> {
     plan: &'request OperationPlanRecord,
     mutation: &'request IcSnapshotUploadRequest<'source>,
     payload: &'request IcManagementRequestRecord,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
-    observation_attempt: u32,
+    reservation: ObservationReservation,
 }
 
 impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
@@ -55,16 +53,13 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
         payload
             .validate_observation_binding(authority.binding(), &payload.digest())
             .map_err(IcObservationRequestError::from)?;
-        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
         let request = Self {
             plan,
             mutation,
             payload,
-            authority,
-            mutation_attempt,
-            observation_attempt,
+            reservation,
         };
-        request.validate_journal(journal)?;
         Ok(request)
     }
 
@@ -86,17 +81,17 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
     /// Read original plan-derived authority, without fresh spending permission.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the original unresolved metadata-upload attempt.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Read the already consumed inventory-observation attempt.
     #[must_use]
     pub const fn observation_attempt(&self) -> u32 {
-        self.observation_attempt
+        self.reservation.observation_attempt
     }
     /// Recheck exact current authority, both pending attempts and reserved list bytes.
     /// # Errors
@@ -105,13 +100,7 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        ObservationReservation {
-            authority: &self.authority,
-            mutation_attempt: self.mutation_attempt,
-            observation_attempt: self.observation_attempt,
-            request: self.payload.digest(),
-        }
-        .validate(journal)
+        self.reservation.validate(journal)
     }
 }
 

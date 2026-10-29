@@ -7,11 +7,14 @@ attempt; preparing this integration does not enable live creation.
 
 ## Verified starting point
 
-Released Backup source **0.48.0**, `df39f44`, supplies the original-plan
+Delivered Backup source **0.48.2**, `ba7f5d4`, supplies the original-plan
 coordinator, explicit restore source provenance and bounded upload sessions.
 Applications exchanging Host errors must align with Backup's selected Host family.
 Platform supplies external IC identities and SDKs; Testkit remains development-only.
 Core does not depend on Agent; an alternative transport needs its own qualification.
+Its [complete native CI matrix](https://github.com/dragginzgame/ic-backup/actions/runs/40698974873)
+passes on Linux, Intel macOS and Apple Silicon. This qualifies the library and
+its controlled consumer fixtures; production Canic acceptance remains separate.
 
 Released Canic 0.112.0 is `5c236ab130c0d63892ef281b45bdc3fa353e012f`.
 [PR #702](https://github.com/dragginzgame/canic/pull/702), head
@@ -157,6 +160,9 @@ Current source-specific results belong in the [handoff](status/current.md).
 [Canic #513 — Adopt the generic IC Backup engine](https://github.com/dragginzgame/canic/issues/513)
 owns convergence and deletion of superseded mechanisms;
 [Canic #394 — Live same-release Fleet backup capture](https://github.com/dragginzgame/canic/issues/394)
-owns live admission. [Backup #29 — Complete original-plan execution and stage binding before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29)
-remains open for complete application acceptance. None is closed by dependency
-selection, a generic registry consumer or this preparation guide.
+owns live admission. [Canic #550](https://github.com/dragginzgame/canic/issues/550)
+owns application consistency and external-obligation acceptance.
+[Backup #29](https://github.com/dragginzgame/ic-backup/issues/29) is retired as a
+coordination tracker, with its unresolved requirements explicitly retained in
+those Canic issues. That disposition does not complete application adoption or
+enable live backup creation.

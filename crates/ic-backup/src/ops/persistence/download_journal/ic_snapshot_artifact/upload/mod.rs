@@ -126,25 +126,17 @@ fn read_chunk(
     metadata: &IcSnapshotMetadataReply<'_>,
     kind: &SnapshotDataKind,
 ) -> Result<Vec<u8>, IcSnapshotArtifactError> {
-    let values = metadata.metadata();
     let (name, length, offset, size) = match member::select(kind)? {
         member::Member::Region {
-            index,
+            region,
             offset,
             size,
-        } => {
-            let sizes = [
-                values.wasm_module_size,
-                values.wasm_memory_size,
-                values.stable_memory_size,
-            ];
-            (
-                REGIONS[index].to_owned(),
-                Some(sizes[index]),
-                offset,
-                Some(size),
-            )
-        }
+        } => (
+            REGIONS[region.index()].to_owned(),
+            Some(metadata.region_sizes()[region.index()]),
+            offset,
+            Some(size),
+        ),
         member::Member::Chunk { name } => (name, None, 0, None),
     };
     let maximum = length.unwrap_or(MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64);

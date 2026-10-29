@@ -2,7 +2,7 @@
 
 use crate::model::{
     attempt_journal::AttemptJournalRecordError,
-    data_stage_plan::{self, DataStagePlanError},
+    data_stage_plan::{self, DataStagePlanError, LearnedDataStage},
     effect_graph::EffectGraphError,
     execution_workflow::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
@@ -16,12 +16,6 @@ use crate::model::{
 };
 use thiserror::Error;
 
-#[cfg(test)]
-use crate::model::{
-    attempt_journal::AttemptBudgetRecord,
-    operation_plan::{PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest},
-};
-
 /// Exact finite data requests and their original allocation-bound ordinary child plan.
 ///
 /// Requests cover module, heap and stable regions in that order, then every known
@@ -33,8 +27,7 @@ use crate::model::{
 /// The child aggregate retains original stage ceilings and leaves spare allowance
 /// unassigned. An entirely read-free snapshot has no child plan or binding.
 pub struct IcSnapshotDownloadPlan<'workflow, 'metadata> {
-    workflow: &'workflow ExecutionWorkflowRecord,
-    sequence: u64,
+    binding: LearnedDataStage<'workflow>,
     metadata: &'metadata IcSnapshotMetadataReply<'metadata>,
     requests: Vec<IcSnapshotDataRequest<'metadata>>,
     plan: Option<OperationPlanRecord>,
@@ -70,8 +63,11 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
             requests.iter().map(IcSnapshotDataRequest::digest),
         )?;
         Ok(Self {
-            workflow,
-            sequence,
+            binding: LearnedDataStage {
+                workflow,
+                sequence,
+                evidence: metadata.digest(),
+            },
             metadata,
             requests,
             plan,
@@ -103,8 +99,7 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
             .plan
             .as_ref()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
-        binding.validate(self.workflow, plan)?;
-        if !binding.has_learned_evidence(self.sequence, &self.metadata.digest()) {
+        if !self.binding.validate(binding, plan)? {
             return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
         }
         Ok(())
@@ -128,21 +123,15 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
             .plan
             .as_ref()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
-        metadata_binding.validate(self.workflow, metadata_plan)?;
-        if !metadata_binding.matches_learned_predecessor(
-            metadata_plan,
-            self.metadata.request().digest().hash(),
-            &self.metadata.digest(),
-            &predecessors,
-        ) {
-            return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
-        }
-        Ok(ExecutionStageBindingRecord::new(
-            self.workflow,
-            self.sequence,
-            plan,
-            predecessors,
-        )?)
+        self.binding
+            .bind(
+                plan,
+                metadata_binding,
+                metadata_plan,
+                self.metadata.request().digest().hash(),
+                predecessors,
+            )?
+            .ok_or(IcSnapshotDownloadPlanningError::MetadataMismatch)
     }
 }
 
@@ -187,7 +176,7 @@ pub enum IcSnapshotDownloadPlanningError {
 }
 
 #[cfg(test)]
-pub(crate) mod tests;
+mod tests;
 
 impl From<ExtentPlanningError> for IcSnapshotDownloadPlanningError {
     fn from(error: ExtentPlanningError) -> Self {

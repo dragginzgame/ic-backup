@@ -4,7 +4,7 @@ mod extents;
 mod kind;
 mod wire;
 pub(crate) use extents::{ExtentPlanningError, planned_extents};
-pub(crate) use kind::DataExtent;
+pub(crate) use kind::{DataExtent, SnapshotRegion};
 
 use super::{
     artifacts::ArtifactChecksumRecord,
@@ -121,11 +121,11 @@ pub(crate) fn validate_kind(
 ) -> Result<(), IcSnapshotDataError> {
     match DataExtent::from(kind) {
         DataExtent::Region {
-            index,
+            region,
             offset,
             size,
         } => {
-            range(offset, size, metadata.region_sizes()[index])?;
+            range(offset, size, metadata.region_sizes()[region.index()])?;
         }
         DataExtent::Chunk { hash } => {
             if hash.len() != 32 {

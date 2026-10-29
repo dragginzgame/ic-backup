@@ -89,8 +89,6 @@ pub fn validate_settlement<'a>(
         return Err(IcSnapshotUploadSettlementError::WrongInventory);
     };
     let authority = request.authority().digest();
-    let baseline_digest = baseline.digest();
-    let inventory_digest = inventory.digest();
     let candidates = validate_pair::<IcSnapshotUploadSettlementError>(
         request.payload().target(),
         baseline,
@@ -106,17 +104,13 @@ pub fn validate_settlement<'a>(
             inventory: &settlement.inventory,
             observation_evidence: &settlement.observation_evidence,
         },
-        &InventorySettlementIdentity {
-            operation: SettlementIdentity {
-                authority: &authority,
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                challenge,
-            },
-            baseline: &baseline_digest,
-            inventory: &inventory_digest,
-            observation_evidence: &response.input().evidence,
+        &SettlementIdentity {
+            authority: &authority,
+            mutation_attempt: request.mutation_attempt(),
+            observation_attempt: request.observation_attempt(),
+            challenge,
         },
+        &response.input().evidence,
     )?;
     if let IcSnapshotUploadAttribution::Applied { snapshot_id, .. } = &settlement.attribution {
         request.mutation().validate_data_destination(snapshot_id)?;

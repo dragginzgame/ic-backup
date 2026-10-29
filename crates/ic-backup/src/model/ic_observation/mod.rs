@@ -29,9 +29,7 @@ pub struct IcObservationRequest<'a> {
     plan: &'a OperationPlanRecord,
     mutation: &'a IcManagementRequestRecord,
     payload: &'a IcManagementRequestRecord,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
-    observation_attempt: u32,
+    reservation: ObservationReservation,
 }
 
 impl<'a> IcObservationRequest<'a> {
@@ -54,16 +52,13 @@ impl<'a> IcObservationRequest<'a> {
         }
         mutation.validate_mutation_binding(authority.binding())?;
         payload.validate_observation_binding(authority.binding(), &payload.digest())?;
-        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
         let request = Self {
             plan,
             mutation,
             payload,
-            authority,
-            mutation_attempt,
-            observation_attempt,
+            reservation,
         };
-        request.validate_journal(journal)?;
         Ok(request)
     }
     /// Read the full original context, inventory and selection.
@@ -84,17 +79,17 @@ impl<'a> IcObservationRequest<'a> {
     /// Read the original operation authority and immutable attempt limits.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the original unresolved mutation attempt.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Read the original already consumed observation attempt.
     #[must_use]
     pub const fn observation_attempt(&self) -> u32 {
-        self.observation_attempt
+        self.reservation.observation_attempt
     }
     /// Recheck current exact reservations and original observation bytes without IO.
     /// # Errors
@@ -103,25 +98,20 @@ impl<'a> IcObservationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        ObservationReservation {
-            authority: &self.authority,
-            mutation_attempt: self.mutation_attempt,
-            observation_attempt: self.observation_attempt,
-            request: self.payload.digest(),
-        }
-        .validate(journal)
+        self.reservation.validate(journal)
     }
 }
 
-pub(crate) struct ObservationReservation<'a> {
-    pub authority: &'a AttemptAuthorityRecord,
+#[derive(Debug)]
+pub(crate) struct ObservationReservation {
+    pub authority: AttemptAuthorityRecord,
     pub mutation_attempt: u32,
     pub observation_attempt: u32,
     pub request: ArtifactChecksumRecord,
 }
 
 /// Read only the already consumed original attempt IDs, in mutation-first order.
-pub(crate) fn pending_attempts(
+fn pending_attempts(
     journal: &AttemptJournalRecord,
 ) -> Result<(u32, u32), IcObservationRequestError> {
     Ok((
@@ -134,12 +124,28 @@ pub(crate) fn pending_attempts(
     ))
 }
 
-impl ObservationReservation<'_> {
+impl ObservationReservation {
+    pub(crate) fn new(
+        authority: AttemptAuthorityRecord,
+        journal: &AttemptJournalRecord,
+        request: ArtifactChecksumRecord,
+    ) -> Result<Self, IcObservationRequestError> {
+        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
+        let reservation = Self {
+            authority,
+            mutation_attempt,
+            observation_attempt,
+            request,
+        };
+        reservation.validate(journal)?;
+        Ok(reservation)
+    }
+
     pub(crate) fn validate(
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        if journal.authority() != self.authority {
+        if journal.authority() != &self.authority {
             return Err(IcObservationRequestError::AuthorityMismatch);
         }
         if journal.pending_mutation() != Some(self.mutation_attempt) {

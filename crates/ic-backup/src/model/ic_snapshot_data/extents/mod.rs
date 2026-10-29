@@ -1,6 +1,6 @@
 //! One bounded declaration owner for complete ordered snapshot extents.
 
-use super::{IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES};
+use super::{IcSnapshotMetadataReply, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, SnapshotRegion};
 use ic_platform::management_canister_types::SnapshotDataKind;
 
 pub(crate) enum ExtentPlanningError {
@@ -35,15 +35,11 @@ pub(crate) fn planned_extents(
     }
     let capacity = usize::try_from(count).map_err(|_| ExtentPlanningError::CountOverflow)?;
     let mut kinds = Vec::with_capacity(capacity);
-    for (region, total) in sizes.into_iter().enumerate() {
+    for (region, total) in SnapshotRegion::ALL.into_iter().zip(sizes) {
         let mut offset = 0;
         while offset < total {
             let size = (total - offset).min(chunk_bytes);
-            kinds.push(match region {
-                0 => SnapshotDataKind::WasmModule { offset, size },
-                1 => SnapshotDataKind::WasmMemory { offset, size },
-                _ => SnapshotDataKind::StableMemory { offset, size },
-            });
+            kinds.push(region.extent(offset, size));
             offset += size;
         }
     }

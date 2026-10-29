@@ -193,7 +193,7 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
         self.check_region_custody()?;
         self.coverage.admit(reply)?;
         let index = match member::select(reply.request().kind())? {
-            member::Member::Region { index, .. } => index,
+            member::Member::Region { region, .. } => region.index(),
             member::Member::Chunk { name } => {
                 create_file(&self.directory, &name)?.write_all(reply.chunk())?;
                 self.checksums

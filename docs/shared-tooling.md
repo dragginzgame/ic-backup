@@ -29,6 +29,10 @@ Never patch snapshot payloads in place or use a moving sibling checkout. Every
 listed path is excluded from local branding and documentation rewrites; consumer
 guidance belongs in unlisted local documents.
 
+Shared permits justified narrow internal source links while snapshot payloads
+and packages remain regular files. Backup retains its stricter repository
+inventory check and existing product filesystem and custody admission.
+
 ## Required setup and offline admission
 
 `make install-tools` prepares common host and Cargo tools, fetches locked
@@ -88,15 +92,23 @@ Backup's bounded management wire adapters remain external Candid projections;
 domain and persisted records do not acquire a Candid contract. Snapshot adoption
 does not install new source scanners or qualify every existing input boundary.
 
-The reviewed Shared Tooling 0.27.3 snapshot includes the
+The reviewed Shared Tooling 0.27.6 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
 polling the full matrix or claiming its native-host qualification. Release,
 publication, deployment and application acceptance remain separate.
 
+Backup keeps its existing Linux, Apple Silicon and Intel macOS CI matrix; the
+producer's optional documentation-only job deduplication is not enabled here.
+Maintenance remains report-only and offline, with no schedule activated by this
+adoption. The revised single-tool freshness inspection is optional; copying it
+adds no automatic lookup or consumer gate.
+
 The shared validation runner owns failure summaries, bounded excerpts and atomic
-latest-log publication. Relative retained-log paths resolve from the caller,
+latest-log publication. It selects each failed-target excerpt once and prints
+details in the outer runner's final summary, retaining complete raw logs and
+the same highlighted evidence. Relative retained-log paths resolve from the caller,
 including leading-dash paths, independently of inherited `CDPATH`.
 Backup qualifies its actual callers and evidence custody;
 it keeps no alternate summary implementation. ShellCheck follows sourced helpers

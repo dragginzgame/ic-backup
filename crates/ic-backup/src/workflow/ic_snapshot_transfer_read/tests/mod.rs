@@ -2,16 +2,14 @@
 
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
+use crate::test_support::execution_workflow::{child_request, workflow};
 use crate::test_support::ready::ready;
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-        execution_workflow::{
-            ExecutionStageBindingRecord,
-            tests::{child_request, workflow},
-        },
+        execution_workflow::ExecutionStageBindingRecord,
         ic_snapshot_data::IcSnapshotDataRequest,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_update_response::IcUpdateResponseInput,

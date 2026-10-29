@@ -18,9 +18,9 @@ provide no product backend.
 `ic-backup` owns generic models, policy and local persistence; it has no Agent
 runtime dependency. `ic-backup-agent` depends on those original public request
 owners. Canic and other applications own fresh membership, permissions, consistency,
-release identity, stable source bytes and restore/fence safety. Full runners and
-installed Canic adapters remain separate work in
-[#29](https://github.com/dragginzgame/ic-backup/issues/29).
+release identity, stable source bytes and restore/fence safety. Installed Canic
+integration remains with [Canic #513](https://github.com/dragginzgame/canic/issues/513)
+and its [application acceptance owners](canic-adoption.md#required-application-acceptance).
 
 Mutation and transfer-read adapters construct the shared
 `ic_backup::model::ic_update_response::IcUpdateResponseInput`. The previous input
@@ -190,8 +190,8 @@ both libraries on Linux, Intel macOS and Apple Silicon macOS. The complete runne
 authenticated application providers, production identities/endpoints, exclusive
 never-dispatched custody, complete installed product and terminal/fence/reference
 release require application-owned acceptance.
-[#29 — Complete original-plan execution and stage binding before Canic runner adoption](https://github.com/dragginzgame/ic-backup/issues/29)
-owns the remaining acceptance consolidated from the closed transport issue.
+The remaining [application acceptance](canic-adoption.md#required-application-acceptance)
+belongs to Canic's engine, consistency and live-admission owners.
 
 Use one `AgentUpdateProvider` for mutation and source-bound upload
 ports, with retention callbacks that

@@ -38,7 +38,7 @@ impl AttemptEventRecord {
         match self {
             Self::MutationReserved { attempt } => {
                 bytes.byte(0);
-                bytes.append(&attempt.to_be_bytes());
+                bytes.u32_be(*attempt);
             }
             Self::ObservationReserved {
                 attempt,
@@ -46,8 +46,8 @@ impl AttemptEventRecord {
                 request,
             } => {
                 bytes.byte(1);
-                bytes.append(&attempt.to_be_bytes());
-                bytes.append(&mutation.to_be_bytes());
+                bytes.u32_be(*attempt);
+                bytes.u32_be(*mutation);
                 bytes.append(request.as_bytes());
             }
             Self::MutationResolved {
@@ -56,7 +56,7 @@ impl AttemptEventRecord {
                 evidence,
             } => {
                 bytes.byte(2);
-                bytes.append(&mutation.to_be_bytes());
+                bytes.u32_be(*mutation);
                 bytes.byte(match outcome {
                     MutationOutcomeRecord::Applied => 0,
                     MutationOutcomeRecord::NotApplied => 1,
@@ -70,7 +70,7 @@ impl AttemptEventRecord {
                 evidence,
             } => {
                 bytes.byte(3);
-                bytes.append(&observation.to_be_bytes());
+                bytes.u32_be(*observation);
                 bytes.append(request.as_bytes());
                 bytes.byte(match outcome {
                     ObservationOutcomeRecord::Applied => 0,
@@ -108,9 +108,19 @@ pub(super) struct Projection {
     pub next_attempt: u32,
     pub mutations_used: u32,
     pub observations_used: u32,
-    pub pending_mutation: Option<u32>,
-    pub pending_observation: Option<PendingObservation>,
-    pub applied: bool,
+    state: AttemptState,
+}
+
+// An observation can exist only while its original mutation remains pending.
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum AttemptState {
+    Idle,
+    Mutation(u32),
+    Observation {
+        mutation: u32,
+        pending: PendingObservation,
+    },
+    Applied,
 }
 
 impl Projection {
@@ -119,10 +129,29 @@ impl Projection {
             next_attempt: 1,
             mutations_used: 0,
             observations_used: 0,
-            pending_mutation: None,
-            pending_observation: None,
-            applied: false,
+            state: AttemptState::Idle,
         }
+    }
+
+    pub(super) const fn pending_mutation(&self) -> Option<u32> {
+        match self.state {
+            AttemptState::Mutation(attempt)
+            | AttemptState::Observation {
+                mutation: attempt, ..
+            } => Some(attempt),
+            AttemptState::Idle | AttemptState::Applied => None,
+        }
+    }
+
+    pub(super) const fn pending_observation(&self) -> Option<&PendingObservation> {
+        match &self.state {
+            AttemptState::Observation { pending, .. } => Some(pending),
+            _ => None,
+        }
+    }
+
+    pub(super) const fn applied(&self) -> bool {
+        matches!(self.state, AttemptState::Applied)
     }
 
     pub(super) fn apply(
@@ -130,13 +159,13 @@ impl Projection {
         event: &AttemptEventRecord,
         budget: &AttemptBudgetRecord,
     ) -> Result<(), AttemptJournalRecordError> {
-        if self.applied {
+        if self.applied() {
             return Err(AttemptJournalRecordError::AlreadyApplied);
         }
         match event {
             AttemptEventRecord::MutationReserved { attempt } => {
                 self.check_observation_ended()?;
-                if let Some(attempt) = self.pending_mutation {
+                if let Some(attempt) = self.pending_mutation() {
                     return Err(AttemptJournalRecordError::MutationPending { attempt });
                 }
                 if self.mutations_used == budget.mutations() {
@@ -144,7 +173,7 @@ impl Projection {
                 }
                 self.check_sequence(*attempt)?;
                 self.mutations_used += 1;
-                self.pending_mutation = Some(*attempt);
+                self.state = AttemptState::Mutation(*attempt);
                 self.next_attempt += 1;
             }
             AttemptEventRecord::ObservationReserved {
@@ -159,10 +188,13 @@ impl Projection {
                 }
                 self.check_sequence(*attempt)?;
                 self.observations_used += 1;
-                self.pending_observation = Some(PendingObservation {
-                    attempt: *attempt,
-                    request: request.clone(),
-                });
+                self.state = AttemptState::Observation {
+                    mutation: *mutation,
+                    pending: PendingObservation {
+                        attempt: *attempt,
+                        request: request.clone(),
+                    },
+                };
                 self.next_attempt += 1;
             }
             AttemptEventRecord::MutationResolved {
@@ -170,8 +202,10 @@ impl Projection {
             } => {
                 self.check_observation_ended()?;
                 self.check_mutation(*mutation)?;
-                self.pending_mutation = None;
-                self.applied = *outcome == MutationOutcomeRecord::Applied;
+                self.state = match outcome {
+                    MutationOutcomeRecord::Applied => AttemptState::Applied,
+                    MutationOutcomeRecord::NotApplied => AttemptState::Idle,
+                };
             }
             AttemptEventRecord::ObservationRecorded {
                 observation,
@@ -179,23 +213,18 @@ impl Projection {
                 outcome,
                 ..
             } => {
-                let pending = self
-                    .pending_observation
-                    .as_ref()
-                    .ok_or(AttemptJournalRecordError::NoPendingObservation)?;
+                let AttemptState::Observation { mutation, pending } = &self.state else {
+                    return Err(AttemptJournalRecordError::NoPendingObservation);
+                };
                 check_attempt(pending.attempt, *observation)?;
                 if pending.request != *request {
                     return Err(AttemptJournalRecordError::RequestMismatch);
                 }
-                self.pending_observation = None;
-                match outcome {
-                    ObservationOutcomeRecord::Applied => {
-                        self.pending_mutation = None;
-                        self.applied = true;
-                    }
-                    ObservationOutcomeRecord::NotApplied => self.pending_mutation = None,
-                    ObservationOutcomeRecord::Uncertain => {}
-                }
+                self.state = match outcome {
+                    ObservationOutcomeRecord::Applied => AttemptState::Applied,
+                    ObservationOutcomeRecord::NotApplied => AttemptState::Idle,
+                    ObservationOutcomeRecord::Uncertain => AttemptState::Mutation(*mutation),
+                };
             }
         }
         Ok(())
@@ -206,13 +235,13 @@ impl Projection {
     }
     fn check_mutation(&self, actual: u32) -> Result<(), AttemptJournalRecordError> {
         check_attempt(
-            self.pending_mutation
+            self.pending_mutation()
                 .ok_or(AttemptJournalRecordError::NoPendingMutation)?,
             actual,
         )
     }
     fn check_observation_ended(&self) -> Result<(), AttemptJournalRecordError> {
-        if let Some(pending) = &self.pending_observation {
+        if let Some(pending) = self.pending_observation() {
             return Err(AttemptJournalRecordError::ObservationPending {
                 attempt: pending.attempt,
             });

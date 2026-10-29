@@ -6,7 +6,7 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.27.3's committed rules, not
+This is a reviewed local snapshot of Shared Tooling 0.27.6's committed rules, not
 implicit inheritance from a moving sibling checkout.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
@@ -109,6 +109,8 @@ Product transport/runtime qualification stays separate from executable version c
 
 ## Architecture and style
 
+- Backup retains its regular-file repository inventory gate as a local choice;
+  Shared's internal-link policy does not widen product filesystem admission.
 - Rust edition 2024. Versions and dependencies inherit from the owning workspace;
   `make dependency-pins-check` enforces the shared Cargo inheritance gate.
 - Use directory modules with `mod.rs`; no `#[path]` module layout overrides.

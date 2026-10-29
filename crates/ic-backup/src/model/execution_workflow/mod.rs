@@ -72,7 +72,7 @@ impl ExecutionWorkflowRecord {
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/execution-workflow/v1\0");
-        bytes.append(self.allocation.digest().hash().as_bytes());
+        bytes.checksum(&self.allocation.digest());
         bytes.finish()
     }
 }
@@ -265,14 +265,14 @@ impl ExecutionStageBindingRecord {
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/execution-stage/v1\0");
-        bytes.append(self.workflow.hash().as_bytes());
-        bytes.append(&self.stage_sequence.to_be_bytes());
-        bytes.append(self.plan.hash().as_bytes());
-        bytes.append(&(self.predecessors.len() as u64).to_be_bytes());
+        bytes.checksum(&self.workflow);
+        bytes.u64_be(self.stage_sequence);
+        bytes.checksum(&self.plan);
+        bytes.u64_be(self.predecessors.len() as u64);
         for row in &self.predecessors {
-            bytes.append(&row.stage_sequence.to_be_bytes());
+            bytes.u64_be(row.stage_sequence);
             for digest in [&row.binding, &row.settlement, &row.learned_evidence] {
-                bytes.append(digest.hash().as_bytes());
+                bytes.checksum(digest);
             }
         }
         bytes.finish()
@@ -377,4 +377,4 @@ pub enum ExecutionWorkflowError {
 }
 
 #[cfg(test)]
-pub(crate) mod tests;
+mod tests;

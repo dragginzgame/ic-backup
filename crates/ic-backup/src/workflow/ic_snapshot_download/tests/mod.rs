@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::attempt_journal::MutationOutcomeRecord;
+use crate::test_support::ic_snapshot_download::{source, source_plan, values, workflow};
 use crate::test_support::ready::ready;
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::workflow::ic_snapshot_transfer_read::read_snapshot;
@@ -9,7 +10,6 @@ use crate::{
     model::{
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_snapshot_download::tests::{source, source_plan, values, workflow},
         ic_snapshot_metadata::IcSnapshotMetadataReply,
         ic_update_response::IcUpdateResponseInput,
     },

@@ -1,16 +1,14 @@
 //! Original spending, explicit qualification and exact learned-stage admission.
 
 use super::*;
+use crate::test_support::ic_snapshot_download::{source, source_plan, values, workflow};
 use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::MutationOutcomeRecord,
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_snapshot_download::{
-            IcSnapshotDownloadPlan,
-            tests::{source, source_plan, values, workflow},
-        },
+        ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::IcSnapshotMetadataReply,
         ic_update_response::IcUpdateResponseInput,
     },

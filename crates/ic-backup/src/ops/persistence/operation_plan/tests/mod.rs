@@ -1,15 +1,14 @@
 //! Native original plan admission, retained evidence and independent metadata bounds.
 
 use super::*;
+use crate::test_support::operation_plan::request;
 use crate::{
     model::{
         attempt_journal::AttemptBudgetRecord,
         effect_graph::{
             EffectGraphRecord, EffectNodeRecord, EffectNodeRequest, MAX_EFFECT_OPERATIONS,
         },
-        operation_plan::{
-            PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest, tests::request,
-        },
+        operation_plan::{PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
     ops::persistence::JournalLock,
     test_support::temp_dir,

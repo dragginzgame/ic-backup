@@ -11,9 +11,9 @@ use crate::{
         restore_safety::{RestoreSafetyObservation, RestoreSafetyRequest},
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, ExecutionProgressPersistenceError,
-        ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionWorkflowPersistenceError,
-        RestoreSafetyPersistenceError, read_restore_safety_requirement,
+        AttemptJournalError, ExecutionProgressPersistenceError, ExecutionStageCheckpointError,
+        ExecutionStageGuard, ExecutionWorkflowPersistenceError, RestoreSafetyPersistenceError,
+        read_restore_safety_requirement,
     },
     policy::{
         ic_mutation::{IcMutationAssociationError, IcMutationReplyView, validate_acknowledgement},
@@ -93,58 +93,50 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
     let authority = plan
         .attempt_authority(sequence)
         .map_err(IcMutationRequestError::from)?;
-    safety
-        .wire()
-        .validate_mutation_binding(authority.binding())
-        .map_err(IcMutationRequestError::from)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    journal.reserve_planned_mutation(&plan.digest())?;
-    let request = IcMutationRequest::new(plan, sequence, journal.record()?, safety.wire())?;
-    let observation = admit(&request, safety)
-        .await
-        .map_err(IcRestoreExecutionError::Admission)?;
-    validate(safety, &observation)?;
-    retain()?;
-    let acknowledgement = provider
-        .submit_mutation(&request, journal.record()?)
-        .await?;
-    let settle = async || {
-        let admitted = validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
-        retain()?;
-        let receipt = qualify(&request, &acknowledgement)
-            .await
-            .map_err(IcRestoreReplyError::Qualification)?;
-        let receipt = super::qualified_receipt::admit_applied(
-            receipt,
-            request.mutation_attempt(),
-            safety.wire().digest().hash(),
-        )
-        .ok_or(IcRestoreReplyError::ReceiptRequired)?;
-        retain()?;
-        journal.record_mutation(receipt)?;
-        retain()?;
-        let IcMutationReplyView::Lifecycle(reply) = admitted.reply() else {
-            return Err(IcRestoreReplyError::ReceiptRequired);
-        };
-        Ok(reply.digest())
-    };
-    let evidence = match settle().await {
-        Ok(evidence) => evidence,
-        Err(source) => {
-            return Err(IcRestoreExecutionError::AfterReply {
-                source,
-                acknowledgement: Box::new(acknowledgement),
-            });
-        }
-    };
-    drop(journal);
-    match stage.reconcile_checkpoint(evidence) {
-        Ok(predecessor) => Ok((acknowledgement, predecessor)),
-        Err(source) => Err(IcRestoreExecutionError::AfterReply {
-            source: IcRestoreReplyError::Checkpoint(source),
-            acknowledgement: Box::new(acknowledgement),
-        }),
-    }
+    let (acknowledgement, settlement) = super::ic_mutation::submit_with(
+        stage,
+        &authority,
+        safety.wire(),
+        provider,
+        async |request| {
+            let observation = admit(request, safety)
+                .await
+                .map_err(IcRestoreExecutionError::Admission)?;
+            validate(safety, &observation)?;
+            retain()?;
+            Ok::<_, IcRestoreExecutionError<E>>(())
+        },
+        async |journal, request, acknowledgement| {
+            let admitted = validate_acknowledgement(request, journal.record()?, acknowledgement)?;
+            retain()?;
+            let receipt = qualify(request, acknowledgement)
+                .await
+                .map_err(IcRestoreReplyError::Qualification)?;
+            let receipt = super::qualified_receipt::admit_applied(
+                receipt,
+                request.mutation_attempt(),
+                safety.wire().digest().hash(),
+            )
+            .ok_or(IcRestoreReplyError::ReceiptRequired)?;
+            retain()?;
+            journal.record_mutation(receipt)?;
+            retain()?;
+            let IcMutationReplyView::Lifecycle(reply) = admitted.reply() else {
+                return Err(IcRestoreReplyError::ReceiptRequired);
+            };
+            Ok::<_, IcRestoreReplyError<E>>(reply.digest())
+        },
+    )
+    .await?;
+    super::qualified_receipt::checkpoint_reply(
+        stage,
+        acknowledgement,
+        settlement,
+        |source, acknowledgement| IcRestoreExecutionError::AfterReply {
+            source,
+            acknowledgement,
+        },
+    )
 }
 
 /// Original restore-step failure; no variant authorizes reissue or cleanup.

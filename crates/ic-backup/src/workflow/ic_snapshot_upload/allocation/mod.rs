@@ -91,13 +91,15 @@ pub async fn allocate_snapshot<E: std::error::Error + 'static>(
     )
     .await?;
     // The upload owner releases its journal before checkpoint admission locks it again.
-    match settlement.and_then(|evidence| Ok(stage.reconcile_checkpoint(evidence)?)) {
-        Ok(predecessor) => Ok((acknowledgement, predecessor)),
-        Err(source) => Err(IcSnapshotAllocationExecutionError::AfterReply {
+    super::super::qualified_receipt::checkpoint_reply(
+        stage,
+        acknowledgement,
+        settlement,
+        |source, acknowledgement| IcSnapshotAllocationExecutionError::AfterReply {
             source,
-            acknowledgement: Box::new(acknowledgement),
-        }),
-    }
+            acknowledgement,
+        },
+    )
 }
 
 /// Allocation coordination failures retain original spending and bounded returned bytes.

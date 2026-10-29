@@ -266,19 +266,19 @@ impl<'source> IcSnapshotUploadRequest<'source> {
     #[must_use]
     pub fn binding_digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/ic-snapshot-upload-binding/v1\0");
-        bytes.append(self.source_plan.digest().hash().as_bytes());
-        bytes.append(self.source.digest().hash().as_bytes());
-        bytes.append(self.source_checksum.hash().as_bytes());
+        bytes.checksum(&self.source_plan.digest());
+        bytes.checksum(&self.source.digest());
+        bytes.checksum(&self.source_checksum);
         if let IcSnapshotUploadKind::Data {
             metadata_request, ..
         } = &self.kind
         {
             bytes.byte(1);
-            bytes.append(metadata_request.hash().as_bytes());
+            bytes.checksum(metadata_request);
         } else {
             bytes.byte(0);
         }
-        bytes.append(self.digest().hash().as_bytes());
+        bytes.checksum(&self.digest());
         bytes.finish()
     }
 }

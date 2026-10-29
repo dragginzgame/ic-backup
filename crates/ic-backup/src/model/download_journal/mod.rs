@@ -297,7 +297,7 @@ impl DownloadJournalRecord {
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/download-journal/v1\0");
         bytes.append(self.intent.as_bytes());
-        bytes.append(&(self.artifacts.len() as u64).to_be_bytes());
+        bytes.u64_be(self.artifacts.len() as u64);
         for entry in &self.artifacts {
             for value in [
                 entry.canister_id(),
@@ -305,11 +305,11 @@ impl DownloadJournalRecord {
                 entry.staging_path(),
                 entry.artifact_path(),
             ] {
-                bytes.append(&(value.len() as u32).to_be_bytes());
+                bytes.u32_be(value.len() as u32);
                 bytes.append(value.as_bytes());
             }
-            bytes.append(&entry.snapshot_taken_at_timestamp.to_be_bytes());
-            bytes.append(&entry.snapshot_total_size_bytes.to_be_bytes());
+            bytes.u64_be(entry.snapshot_taken_at_timestamp);
+            bytes.u64_be(entry.snapshot_total_size_bytes);
             bytes.byte(match entry.state {
                 ArtifactStateRecord::Created => 0,
                 ArtifactStateRecord::Downloaded => 1,
@@ -318,7 +318,7 @@ impl DownloadJournalRecord {
             });
             bytes.byte(u8::from(entry.checksum.is_some()));
             if let Some(checksum) = &entry.checksum {
-                bytes.append(checksum.hash().as_bytes());
+                bytes.checksum(checksum);
             }
         }
         bytes.finish()

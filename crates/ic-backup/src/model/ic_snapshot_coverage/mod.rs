@@ -53,10 +53,10 @@ impl<'metadata> IcSnapshotDataCoverage<'metadata> {
         }
         let (index, offset, size) = match DataExtent::from(reply.request().kind()) {
             DataExtent::Region {
-                index,
+                region,
                 offset,
                 size,
-            } => (index, offset, size),
+            } => (region.index(), offset, size),
             DataExtent::Chunk { hash } => {
                 let index = self
                     .metadata

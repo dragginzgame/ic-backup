@@ -73,13 +73,24 @@ pub(crate) fn validate_pair<'a, E>(
     baseline: &IcSnapshotReply<'_>,
     inventory: &'a IcSnapshotReply<'_>,
     claimed: &InventorySettlementIdentity<'_>,
-    expected: &InventorySettlementIdentity<'_>,
+    operation: &SettlementIdentity<'_>,
+    observation_evidence: &ArtifactChecksumRecord,
 ) -> Result<Vec<&'a IcSnapshotInfo>, E>
 where
     E: From<SnapshotInventoryDeltaError> + From<InventorySettlementMismatch>,
 {
     let candidates = compare_inventories(target, baseline, inventory)?;
-    claimed.compare(expected)?;
+    claimed.compare(&InventorySettlementIdentity {
+        operation: SettlementIdentity {
+            authority: operation.authority,
+            mutation_attempt: operation.mutation_attempt,
+            observation_attempt: operation.observation_attempt,
+            challenge: operation.challenge,
+        },
+        baseline: &baseline.digest(),
+        inventory: &inventory.digest(),
+        observation_evidence,
+    })?;
     Ok(candidates)
 }
 

@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::attempt_journal::MutationOutcomeRecord;
+use crate::ops::persistence::AttemptJournalGuard;
 use crate::test_support::ready::ready;
 use crate::{
     model::{

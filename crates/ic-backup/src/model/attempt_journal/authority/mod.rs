@@ -216,14 +216,14 @@ impl AttemptAuthorityRecord {
         ] {
             bytes.append(digest.as_bytes());
         }
-        bytes.append(&self.binding.operation_sequence.to_be_bytes());
+        bytes.u64_be(self.binding.operation_sequence);
         for principal in [&self.binding.caller, &self.binding.target] {
             // Admission bounds canonical ASCII text to at most 63 bytes.
             bytes.byte(principal.len().to_le_bytes()[0]);
             bytes.append(principal.as_bytes());
         }
-        bytes.append(&self.budget.mutations.to_be_bytes());
-        bytes.append(&self.budget.observations.to_be_bytes());
+        bytes.u32_be(self.budget.mutations);
+        bytes.u32_be(self.budget.observations);
         bytes.finish()
     }
 }
