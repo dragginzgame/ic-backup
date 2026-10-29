@@ -153,6 +153,9 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
 - local progress derived from the original plan and retained journals;
 - complete original stage-journal preparation and resume with exact ancestor history
   and unchanged pending spending;
+- reusable capture/restore operator composition through bounded original-workflow
+  advancement and typed inspection, with mandatory effect-specific admission and
+  qualification; see the [operator integration map](docs/canic-adoption.md#reusable-operator-composition);
 - async capture/load/start coordination and a configured Agent mutation provider
   requiring durable signed-ingress retention before one submission;
 - async metadata/data-read coordination and a configured Agent transfer provider,
@@ -205,7 +208,7 @@ or restore behavior.
 
 The following product components are still missing:
 
-- capture and restore runners;
+- installed application capture/restore adapters over the shared operator composition;
 - application-qualified transport/provider integration;
 - the standalone command-line application;
 - application-specific membership, authority and consistency adapters; and

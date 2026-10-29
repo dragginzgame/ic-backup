@@ -16,7 +16,7 @@ use crate::{
         read_complete_execution_workflow, read_execution_stage_occupancy, read_execution_workflow,
     },
 };
-use std::{collections::BTreeMap, future::Future};
+use std::{collections::BTreeMap, future::Future, num::NonZeroUsize};
 use thiserror::Error;
 
 /// Integration-owned exact child planning and one-shot execution of each original stage.
@@ -131,7 +131,15 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
     driver: &mut D,
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionWorkflowRunError<D::Error>> {
     create_execution_workflow(layout, workflow)?;
-    execute_remaining_stages(layout, workflow, BTreeMap::new(), &BTreeMap::new(), driver).await?;
+    execute_remaining_stages(
+        layout,
+        workflow,
+        BTreeMap::new(),
+        &BTreeMap::new(),
+        usize::MAX,
+        driver,
+    )
+    .await?;
     Ok(read_complete_execution_workflow(
         layout,
         &workflow.digest(),
@@ -158,6 +166,74 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
     retained: &BTreeMap<u64, RetainedStageEvidence>,
     driver: &mut D,
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionWorkflowRunError<D::Error>> {
+    let (workflow, completed) = admit_retained_stages(layout, expected_workflow, retained)?;
+    execute_remaining_stages(layout, &workflow, completed, retained, usize::MAX, driver).await?;
+    Ok(read_complete_execution_workflow(layout, expected_workflow)?)
+}
+
+/// Bounded operator advancement, without a second progress or spending ledger.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ExecutionWorkflowAdvance {
+    /// The selected bound was reached between settled stages; original absent stages remain.
+    Paused,
+    /// Every original stage's exact retained checkpoint passed local replay.
+    /// This grants no product terminal or source-reference release authority.
+    Complete(ExecutionWorkflowSettlementView),
+}
+
+/// Advance at most `stage_limit` absent stages of one prepared original workflow.
+///
+/// Prepare once with `create_execution_workflow`, retaining the original declarations
+/// before effects. Every call uses the same complete occupied-stage evidence admission
+/// as `run_retained_execution_workflow`. A pause happens only between settled stages,
+/// never halfway through a transfer. The limit bounds stage callbacks, not each stage's
+/// original finite effect allowance or elapsed time. All admission, custody, durable
+/// reply retention and effect-specific qualification remain mandatory driver duties.
+///
+/// Pending observations/mutations, partial preparation or changed originals refuse
+/// before any callback; the bound cannot reset them or supply resend permission.
+/// A failed/cancelled callback retains original uncertainty. Inspect it through
+/// `read_execution_workflow_progress` and reconcile through the original owners.
+/// Complete replay invokes no driver callbacks, regardless of the selected limit.
+/// # Errors
+/// Retains the existing typed preparation, checkpoint, original-evidence and driver failures.
+pub async fn advance_execution_workflow<D: ExecutionWorkflowStageDriver>(
+    layout: &BackupLayoutGuard,
+    expected_workflow: &ArtifactChecksumRecord,
+    retained: &BTreeMap<u64, RetainedStageEvidence>,
+    stage_limit: NonZeroUsize,
+    driver: &mut D,
+) -> Result<ExecutionWorkflowAdvance, ExecutionWorkflowRunError<D::Error>> {
+    let (workflow, completed) = admit_retained_stages(layout, expected_workflow, retained)?;
+    if execute_remaining_stages(
+        layout,
+        &workflow,
+        completed,
+        retained,
+        stage_limit.get(),
+        driver,
+    )
+    .await?
+    {
+        Ok(ExecutionWorkflowAdvance::Complete(
+            read_complete_execution_workflow(layout, expected_workflow)?,
+        ))
+    } else {
+        Ok(ExecutionWorkflowAdvance::Paused)
+    }
+}
+
+fn admit_retained_stages<E: std::error::Error + 'static>(
+    layout: &BackupLayoutGuard,
+    expected_workflow: &ArtifactChecksumRecord,
+    retained: &BTreeMap<u64, RetainedStageEvidence>,
+) -> Result<
+    (
+        ExecutionWorkflowRecord,
+        BTreeMap<u64, ExecutionStagePredecessorRecord>,
+    ),
+    ExecutionWorkflowRunError<E>,
+> {
     let workflow = read_execution_workflow(layout, expected_workflow)?;
     let occupied = read_execution_stage_occupancy(layout, expected_workflow)?;
     if !retained.keys().copied().eq(occupied.iter().copied()) {
@@ -191,8 +267,7 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
     if read_execution_stage_occupancy(layout, expected_workflow)? != occupied {
         return Err(ExecutionWorkflowRunError::RetainedStageSetMismatch);
     }
-    execute_remaining_stages(layout, &workflow, completed, retained, driver).await?;
-    Ok(read_complete_execution_workflow(layout, expected_workflow)?)
+    Ok((workflow, completed))
 }
 
 // Entry points finish their own create-only or retained-evidence admission before
@@ -202,12 +277,17 @@ async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
     workflow: &ExecutionWorkflowRecord,
     mut completed: BTreeMap<u64, ExecutionStagePredecessorRecord>,
     retained: &BTreeMap<u64, RetainedStageEvidence>,
+    stage_limit: usize,
     driver: &mut D,
-) -> Result<(), ExecutionWorkflowRunError<D::Error>> {
+) -> Result<bool, ExecutionWorkflowRunError<D::Error>> {
+    let mut advanced = 0;
     for node in workflow.allocation().graph().ordered_nodes() {
         let sequence = node.operation_sequence();
         if completed.contains_key(&sequence) {
             continue;
+        }
+        if advanced == stage_limit {
+            return Ok(false);
         }
         let predecessors = node
             .depends_on()
@@ -235,8 +315,9 @@ async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
         let checkpoint =
             execute_absent_stage(layout, workflow, sequence, predecessors, driver).await?;
         completed.insert(sequence, checkpoint);
+        advanced += 1;
     }
-    Ok(())
+    Ok(true)
 }
 
 async fn execute_absent_stage<D: ExecutionWorkflowStageDriver>(

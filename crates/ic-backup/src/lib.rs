@@ -21,7 +21,9 @@
 //! retain unfinished journals, artifacts, source references and fence obligations.
 //!
 //! The separate `ic-backup-agent` crate implements configured single-update transport.
-//! Complete application runners and terminal/release evidence remain integration-owned.
+//! Reusable operator composition uses the original workflow coordinator, bounded
+//! advancement and typed inspection. Applications supply exact learned bindings,
+//! effect-specific ports and qualified terminal/release evidence.
 //! Host supplies generic filesystem, process and hash capabilities; Platform supplies
 //! external IC identities, codecs and SDK boundaries. Product contracts remain local,
 //! with filesystem access and credentials on the operator host.

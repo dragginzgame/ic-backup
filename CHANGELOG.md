@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.49.1]
+
+### ➕ Added
+
+- Add bounded operator advancement and typed whole-workflow inspection through the
+  existing original plan, journal and coordinator owners. Demonstrate independent
+  capture/transfer/manifest/restore/terminal composition and map Canic's duplicate
+  engine removal ([#75 — Reusable capture/restore operator composition](https://github.com/dragginzgame/ic-backup/issues/75)).
+  Preserve mandatory application authority, exact byte custody, explicit recovery
+  and guarded release; pauses create no new allowance or retry permission.
+
+### 📚 Documentation
+
+- Correct application transport adoption guidance for delivered 0.49.0 and map
+  Canic restore findings to existing upload, original-plan and safety contracts.
+  Keep current authority, application recovery and snapshot cleanup with Canic.
+
 ## [0.49.0] - 2026-10-29
 
 ### ⚠️ Breaking

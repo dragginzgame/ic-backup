@@ -45,8 +45,9 @@ pub(crate) use execution_workflow::read_execution_stage_occupancy;
 pub use execution_workflow::{
     ExecutionStageCheckpointError, ExecutionStageGuard, ExecutionStagePreparationError,
     ExecutionStageResumeError, ExecutionStageSettlementView, ExecutionWorkflowPersistenceError,
-    ExecutionWorkflowSettlementView, create_execution_workflow, read_complete_execution_workflow,
-    read_complete_execution_workflow_locked, read_execution_workflow,
+    ExecutionWorkflowProgressError, ExecutionWorkflowSettlementView, create_execution_workflow,
+    read_complete_execution_workflow, read_complete_execution_workflow_locked,
+    read_execution_workflow, read_execution_workflow_progress,
 };
 pub use fence_obligation::{
     FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,

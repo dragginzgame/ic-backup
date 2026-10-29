@@ -23,8 +23,9 @@ application authority or complete application backup/restore safety.
 
 The [Core](../crates/ic-backup/Cargo.toml) and
 [Agent](../crates/ic-backup-agent/Cargo.toml) manifests publish two libraries.
-There is no standalone CLI package, canister,
-application runtime, general scheduler or complete backup/restore runner here.
+Reusable capture/restore operator composition uses the original workflow and journal
+owners, bounded advancement and typed inspection. There is no standalone CLI,
+canister, application runtime, general scheduler or default application provider.
 
 The ownership table follows current dependency adoptions. Historical cleanup
 findings below retain their original review sources and qualification scope.

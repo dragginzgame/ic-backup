@@ -23,7 +23,11 @@ impl Driver {
         let layout = stage.layout().map_err(error)?;
         let mut provider = AgentSnapshotTransferReadProvider::new(&transport, |request: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest<'_, '_>, prepared: &PreparedUpdate<'_>| signed(layout.root(), &ReservedUpdate::TransferRead(request), prepared).map_err(|_| ic_backup::ports::ic_observation::IcObservationProviderError::Unavailable));
         let qualify = async |request: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest<'_, '_>, reply: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse| {
-            receipt(layout.root(), request.authority().binding().operation_sequence(), request.mutation_attempt(), &request.payload().digest(), request.payload().arguments(), &reply.input().reply)
+            let receipt = receipt(layout.root(), request.authority().binding().operation_sequence(), request.mutation_attempt(), &request.payload().digest(), request.payload().arguments(), &reply.input().reply)?;
+            if self.mode == "capture-fail-partial" && stage.binding().stage_sequence() == 2 && request.authority().binding().operation_sequence() == 1 {
+                return Err(io::Error::other("fixture interrupted transfer after first admitted chunk"));
+            }
+            Ok(receipt)
         };
         if stage.binding().stage_sequence() == 1 {
             return read_snapshot_metadata(

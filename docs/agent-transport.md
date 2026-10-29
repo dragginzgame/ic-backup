@@ -134,8 +134,8 @@ without establishing an Active application fence.
 
 ## Opaque application ingress
 
-The pending #74 adapter is implemented in source; published 0.48.3 does not expose
-it. `model::application_ingress::ApplicationIngressPayload` admits a non-management
+Available since 0.49.0, the #74 application adapter uses
+`model::application_ingress::ApplicationIngressPayload` to admit a non-management
 receiver and effective target, 1..=128 exact visible ASCII method bytes, at most
 1 MiB opaque arguments and a caller-selected 1..=1 MiB raw reply ceiling. It has
 replicated update mode only. Its digest binds every field, including both principal
@@ -288,6 +288,15 @@ Every invocation retains separate private stdout/stderr, including refusals. Gra
 build, program digest, workflow, ingress, raw reply and qualification evidence stay
 in the caller-owned temporary roots on success and failure.
 
+The pending #75 composition uses bounded `advance_execution_workflow` and typed
+whole-workflow inspection. Restore pauses between the settled load and unprepared
+start stages; inspection exposes unresolved original attempts without changing files.
+The additional [operator cases](../crates/ic-backup-agent/tests/independent/operator/mod.rs)
+refuse signed-ingress retention, refuse reply retention after actual capture, and
+interrupt data transfer after one admitted chunk. Original spending and partial
+staging survive; no incomplete manifest or new restore stage is published. Fresh
+and retained reentry make no repeat capture/transfer call.
+
 This default harness qualifies candidate-library composition in an isolated
 consumer. Release-specific registry-only runs of the same program are recorded
 separately in the [handoff](status/current.md). Production application authentication,
@@ -301,6 +310,9 @@ version for both Core and Agent, with default features disabled; only the two
 workspace source identities may change to crates.io. All other selected package
 versions/sources must match the original lock. Path/Git substitutions, missing
 release packages, version drift and simulator dependencies reject.
+Registry mode requires the matching released consumer source. Working-source
+operator additions cannot be qualified against an older package merely because
+the local package version has not yet been advanced.
 
 Before selecting registry mode, explicitly cache both published packages at that
 version using `cargo info PACKAGE@VERSION --registry crates-io`. The tests do not

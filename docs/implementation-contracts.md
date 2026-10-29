@@ -123,6 +123,21 @@ to the predecessor checkpoint digest; retained overrides must name original edge
 Integrations own learned-input qualification and actual effects. Partial/pending
 originals refuse; no automatic redispatch or second spending owner is installed.
 
+`advance_execution_workflow` uses that same retained admission and execution loop
+with a positive limit on newly executed stages. `Paused` occurs between settled
+stages, before the next binding callback; it is not a failure receipt or allowance.
+Each stage still has its original finite effect bounds. Complete replay reads every
+checkpoint without driver callbacks, regardless of the limit. Cancellation/failure
+preserves original spending; changing the limit never permits redispatch.
+
+`read_execution_workflow_progress` projects every catalog stage in graph planning
+order under the held original layout. Occupied stages require exact binding,
+ancestor admission and every original child journal. Partial/missing evidence is a
+typed failure, not an absent or unused operation. Prepared rows expose both pending
+lanes through existing progress policy; absent rows imply no never-dispatched
+custody. This sequential read performs no scheduling, artifact reads or learned
+evidence inference. Applied rows do not establish checkpoint or terminal completion.
+
 ## Filesystem publication and command custody
 
 - Keep layout lifetime exclusion, 0700 parents and 0600 regular no-follow sidecars,

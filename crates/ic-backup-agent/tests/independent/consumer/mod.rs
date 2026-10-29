@@ -21,10 +21,12 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
+        read_execution_workflow_progress,
     },
     workflow::{
         execution_workflow::{
-            ExecutionWorkflowStageDriver, RetainedStageEvidence, run_retained_execution_workflow,
+            ExecutionWorkflowAdvance, ExecutionWorkflowStageDriver, RetainedStageEvidence,
+            advance_execution_workflow,
         },
         ic_snapshot_capture::capture_snapshot,
     },
@@ -186,9 +188,6 @@ impl ExecutionWorkflowStageDriver for Driver {
         sequence: u64,
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> io::Result<OperationPlanRecord> {
-        if sequence == 6 && self.mode != "start" {
-            return Err(io::ErrorKind::Interrupted.into());
-        }
         if sequence == 6 {
             self.admit()?;
             self.acceptance()?;
@@ -238,6 +237,11 @@ impl ExecutionWorkflowStageDriver for Driver {
                 let mut provider = ic_backup_agent::AgentUpdateProvider::new(
                     &transport,
                     |request: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
+                        if self.mode == "capture-fail-ingress" {
+                            return Err(
+                                ic_backup::ports::ic_mutation::IcMutationProviderError::Unavailable,
+                            );
+                        }
                         signed(root, request, prepared).map_err(|_| {
                             ic_backup::ports::ic_mutation::IcMutationProviderError::Unavailable
                         })
@@ -248,6 +252,9 @@ impl ExecutionWorkflowStageDriver for Driver {
                 })
                 .await
                 .map_err(error)?;
+                if self.mode == "capture-fail-retention" {
+                    return Err(io::Error::other("fixture durable reply retention refused"));
+                }
                 let receipt = receipt(
                     root,
                     0,
@@ -315,12 +322,10 @@ fn retained(
         }
         let binding: ExecutionStageBindingRecord =
             serde_json::from_slice(&read(&root.join("stage-binding.json"))?)?;
-        // A pending stage supplies no learned proof. It must fail local replay,
-        // never reconstruct a reply from an oracle or become new dispatch authority.
-        let learned = fs::read_to_string(root.join("learned.sha256")).map_or_else(
-            |_| Digest::from_bytes(b"pending must refuse"),
-            |s| Digest::from_hash(&s).unwrap(),
-        );
+        // Missing learned evidence is an explicit refusal, never a placeholder
+        // digest, reconstructed oracle or permission to repeat a pending effect.
+        let learned =
+            Digest::from_hash(&fs::read_to_string(root.join("learned.sha256"))?).map_err(error)?;
         result.insert(
             sequence,
             RetainedStageEvidence::new(binding.digest(), learned),
@@ -352,7 +357,17 @@ async fn run() -> io::Result<()> {
     }
     if !matches!(
         mode.as_str(),
-        "capture" | "restore" | "start" | "replay" | "lose-load"
+        "capture"
+            | "capture-continue"
+            | "restore"
+            | "start"
+            | "replay"
+            | "lose-load"
+            | "inspect-capture"
+            | "inspect-restore"
+            | "capture-fail-ingress"
+            | "capture-fail-retention"
+            | "capture-fail-partial"
     ) {
         return Err(io::ErrorKind::InvalidInput.into());
     }
@@ -366,7 +381,7 @@ async fn run() -> io::Result<()> {
         restore: restore.clone(),
         mode: mode.clone(),
     };
-    if mode == "capture" {
+    if mode == "capture" || mode.starts_with("capture-fail-") {
         for (name, original) in [("capture", &capture), ("restore", &restore)] {
             fs::DirBuilder::new().mode(0o700).create(root.join(name))?;
             create_execution_workflow(
@@ -376,31 +391,36 @@ async fn run() -> io::Result<()> {
             .map_err(error)?;
         }
     }
-    let name = if mode == "capture" {
-        "capture"
-    } else {
-        "restore"
-    };
-    let original = if mode == "capture" {
-        &capture
-    } else {
-        &restore
-    };
+    let is_capture = mode.starts_with("capture") || mode == "inspect-capture";
+    let name = if is_capture { "capture" } else { "restore" };
+    let original = if is_capture { &capture } else { &restore };
     let layout = BackupLayoutGuard::acquire(&root.join(name)).map_err(error)?;
+    let progress = read_execution_workflow_progress(&layout, &original.digest()).map_err(error)?;
+    assert_eq!(progress.workflow, original.digest());
+    assert_eq!(progress.stages.len(), original.stages().len());
+    if mode.starts_with("inspect-") {
+        serde_json::to_writer(io::stdout(), &progress)?;
+        println!();
+        return Ok(());
+    }
     if mode == "replay" {
         return driver.terminal(&layout);
     }
     let evidence = retained(&layout, original)?;
+    let limit = std::num::NonZeroUsize::new(if matches!(mode.as_str(), "restore" | "lose-load") {
+        3
+    } else {
+        usize::MAX
+    })
+    .unwrap();
     let result =
-        run_retained_execution_workflow(&layout, &original.digest(), &evidence, &mut driver).await;
+        advance_execution_workflow(&layout, &original.digest(), &evidence, limit, &mut driver)
+            .await;
     match result {
-        Ok(_) if mode == "start" => driver.terminal(&layout),
-        Ok(_) => Ok(()),
-        Err(ic_backup::workflow::execution_workflow::ExecutionWorkflowRunError::Driver(e))
-            if mode == "restore" && e.kind() == io::ErrorKind::Interrupted =>
-        {
-            Ok(())
-        }
+        Ok(ExecutionWorkflowAdvance::Complete(_)) if mode == "start" => driver.terminal(&layout),
+        Ok(ExecutionWorkflowAdvance::Complete(_)) => Ok(()),
+        Ok(ExecutionWorkflowAdvance::Paused) if mode == "restore" => Ok(()),
+        Ok(ExecutionWorkflowAdvance::Paused) => Err(io::ErrorKind::InvalidData.into()),
         Err(e) => Err(error(e)),
     }
 }

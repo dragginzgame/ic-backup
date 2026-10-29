@@ -1,10 +1,12 @@
 //! Fixed immutable stage admission using the existing layout, plan and settlement owners.
 
 mod ancestry;
+mod progress;
 mod stage;
 use ancestry::{
     acquire_stage, read_admitted_binding, read_binding, stage_path, validate_predecessors,
 };
+pub use progress::{ExecutionWorkflowProgressError, read_execution_workflow_progress};
 pub use stage::ExecutionStageGuard;
 #[cfg(test)]
 use stage::StagePreparationBarrier;

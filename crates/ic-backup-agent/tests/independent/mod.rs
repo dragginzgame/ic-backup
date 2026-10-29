@@ -3,6 +3,7 @@
 mod application;
 mod build;
 mod consumer;
+mod operator;
 
 use super::*;
 use std::{
@@ -220,6 +221,10 @@ async fn exercise(lose_load: bool) {
         "{}",
         root.display()
     );
+    operator::inspect(&fixture, &root, true).await;
+    let before = files(&root);
+    assert_eq!(child(&fixture, &root, "capture-continue").await, 0);
+    assert_eq!(files(&root), before);
     fixture.mutation(Method::StartCanister, None, false).await;
     fixture
         .pic
@@ -240,6 +245,18 @@ async fn exercise(lose_load: bool) {
         "{}",
         root.display()
     );
+    let progress = operator::inspect(&fixture, &root, false).await;
+    let rows = progress["stages"].as_array().unwrap();
+    assert_eq!(rows.last().unwrap()["state"]["state"], "unprepared");
+    let load = &rows[2]["state"]["progress"]["operations"][0];
+    assert_eq!(
+        load["attempts"]["pending_mutation"],
+        if lose_load {
+            serde_json::json!(1)
+        } else {
+            serde_json::Value::Null
+        }
+    );
     if lose_load {
         // Actual full-state verification is an oracle only in this branch. It must
         // neither settle the child's pending load nor enter its acceptance channel.
@@ -251,12 +268,7 @@ async fn exercise(lose_load: bool) {
         .unwrap();
         let before = files(&root);
         assert_eq!(child(&fixture, &root, "restore").await, 1);
-        let mut after = files(&root);
-        let mutex = root.join("restore/execution-stage-5/execution-settlement.json.lock");
-        if !before.contains_key(&mutex) {
-            assert_eq!(after.remove(&mutex), Some(vec![]));
-        }
-        assert_eq!(after, before);
+        assert_eq!(files(&root), before);
         assert!(!root.join("restore/execution-stage-6").exists());
         let references: ic_backup::model::restore_references::RestoreReferencesRecord =
             serde_json::from_slice(

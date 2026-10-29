@@ -330,14 +330,18 @@ native macOS/installed-IC qualification remain separate.
 
 The Agent suite also runs a [normal Core/Agent consumer](agent-transport.md#independent-normal-consumer)
 from a separate temporary workspace and target directory. Testkit and the actual
-application checks remain parent-owned. The two registered cases cover cold
+application checks remain parent-owned. The original two registered cases cover cold
 capture/restoration/accepted start/terminal replay and process death after an
 authenticated load with safe refusal of reentry. Both retain the original frozen
 catalogues, durable artifacts/manifest, signed ingress, raw replies and source
 references; failed process logs are never overwritten. This is candidate-path
 library qualification, not a published-product or Canic acceptance receipt.
-The [current handoff](status/current.md#canic-adoption-preparation) records the
-separate release-bound registry-only follow-up and its exact harness adaptation.
+The #75 operator composition adds typed inspection, a normal bounded pause before
+start and explicit retention/partial-output failures through that same consumer.
+Four separate opaque-application cases retain their original mutation/observation,
+process-death, bound and replay coverage. Test membership comes from registered
+cases; the [current handoff](status/current.md) records exact source/graph execution
+and keeps candidate and registry-only evidence separate.
 Published-library qualification still leaves production Canic acceptance open;
 the [adoption guide](canic-adoption.md) identifies those application responsibilities.
 

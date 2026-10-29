@@ -1,7 +1,8 @@
 //! Provider-driven steps under retained original plans and spending.
 //!
 //! Integrations supply fresh admission and authenticated providers. These bounded
-//! steps do not implement complete backup/restore or terminal/reference release.
+//! steps compose through the original workflow coordinator with bounded advancement
+//! and typed inspection. Terminal/reference release retains its separate guarded owner.
 
 #[cfg(unix)]
 pub mod execution_workflow;

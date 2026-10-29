@@ -1,4 +1,5 @@
 use super::*;
+mod operator;
 use crate::test_support::execution_workflow::{child, workflow};
 use crate::{
     model::{
