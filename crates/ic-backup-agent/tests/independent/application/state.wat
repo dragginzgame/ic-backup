@@ -1,0 +1,20 @@
+;; Isolated opaque update/readback fixture. No Root protocol or external effects.
+(module
+  (import "ic0" "msg_arg_data_copy" (func $args (param i32 i32 i32)))
+  (import "ic0" "msg_reply_data_append" (func $append (param i32 i32)))
+  (import "ic0" "msg_reply" (func $reply))
+  (memory (export "memory") 1)
+  (global $count (mut i64) (i64.const 0))
+  (func $respond
+    (i64.store (i32.const 0) (global.get $count))
+    (call $append (i32.const 0) (i32.const 16))
+    (call $reply))
+  (func (export "canister_update write")
+    (call $args (i32.const 8) (i32.const 0) (i32.const 8))
+    (call $reply))
+  (func (export "canister_update apply")
+    (call $args (i32.const 8) (i32.const 0) (i32.const 8))
+    (global.set $count (i64.add (global.get $count) (i64.const 1)))
+    (call $respond))
+  (func (export "canister_update observe") (call $respond))
+  (func (export "canister_query read") (call $respond)))

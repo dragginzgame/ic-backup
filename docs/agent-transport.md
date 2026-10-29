@@ -50,7 +50,8 @@ method replies reuse the existing core limits (metadata/status/list/lifecycle
 or a hard cycle cap. Trusted signing providers own their own resource/custody limits.
 
 `ReservedUpdate` accepts exact original mutation, recovery observation, transfer
-read, upload, allocation observation, data readback or fence-acquisition requests.
+read, upload, allocation observation, data readback, fence acquisition or opaque
+application mutation/observation requests.
 The configured provider rechecks the original current journal and signs canonical
 receiver, effective target, method and argument bytes. Hold the original guarded
 journal across its await. The mandatory retention callback receives a passive
@@ -130,6 +131,47 @@ and this adapter. Purpose-specific retained requirements/obligations are recheck
 around dispatch. Its passive success stays pending; post-reply errors retain the
 acknowledgement. The isolated actual counter fixture exercises this orchestration
 without establishing an Active application fence.
+
+## Opaque application ingress
+
+The pending #74 adapter is implemented in source; published 0.48.3 does not expose
+it. `model::application_ingress::ApplicationIngressPayload` admits a non-management
+receiver and effective target, 1..=128 exact visible ASCII method bytes, at most
+1 MiB opaque arguments and a caller-selected 1..=1 MiB raw reply ceiling. It has
+replicated update mode only. Its digest binds every field, including both principal
+identities and the reply ceiling. The application retains original bytes and owns
+its codec; Backup does not decode Wire or infer an application protocol.
+
+For a new operation, retain that payload before publishing `payload.digest()` as
+the original child plan's request. Validate its mutation binding before reserving,
+then create `ApplicationMutationRequest` from the original plan and currently held
+journal. Configure `AgentApplicationIngressProvider` with both mandatory retainers
+and await `submit_mutation`. Fresh application admission and never-dispatched
+custody must already hold. Retain the exact signed envelope/request ID under the
+original operation, reservation kind and attempt before submission, refusing any
+prior or uncertain witness. Retain exact reply bytes/request ID synchronously
+before the provider returns and before cancellable qualification work.
+
+For recovery, retain a separate exact observation payload, validate its target with
+`validate_observation_binding` before spending, reserve it through
+`reserve_planned_observation`, then construct `ApplicationObservationRequest` and
+await `submit_observation`. This uses the original observation allowance and no
+fence obligation. It is still update ingress; the application supplies an actual
+replicated observation endpoint, fresh read authority and qualified attribution.
+A returned `ApplicationIngressResponse` is passive: its payload commitment,
+request ID, raw bytes and domain-separated evidence do not record a receipt.
+
+Keep old retained request commitments unchanged. This API does not reinterpret
+custom hashes or rebuild spending from earlier layouts. Pending requests may be
+reconstructed for reconciliation, never as resend authority. Accepted responses,
+cancellation, retention failure and process death preserve original uncertainty.
+Settled replay uses the existing coordinator without signing or submission.
+`ReservedUpdate` now has two additional variants; exhaustive consumer matches
+must explicitly handle them. The independent normal consumer's
+[application adapter](../crates/ic-backup-agent/tests/independent/consumer/application/mod.rs)
+shows original stage/attempt ownership, durable retention, separately budgeted
+recovery and cold effect-free replay through real HTTP/PocketIC. Its exclusive
+single-canister custody is a fixture condition, not production Canic acceptance.
 
 ## Results and interruption
 

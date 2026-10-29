@@ -11,7 +11,7 @@ pub(crate) async fn submit_once<E>(
     request: ReservedUpdate<'_>,
     journal: &AttemptJournalRecord,
     mut retain_ingress: impl FnMut(&PreparedUpdate<'_>) -> Result<(), E>,
-    mut retain_reply: impl FnMut(&RequestId, &[u8]) -> Result<(), E>,
+    mut retain_reply: impl FnMut(&ReservedUpdate<'_>, &RequestId, &[u8]) -> Result<(), E>,
     unsupported: fn() -> E,
     indeterminate: fn() -> E,
 ) -> Result<(RequestId, Vec<u8>), E> {
@@ -55,6 +55,6 @@ pub(crate) async fn submit_once<E>(
         CallResponse::Response(_) | CallResponse::Poll(_) => return Err(indeterminate()),
     };
     // A failed post-dispatch retainer must never turn an uncertain effect into a retry.
-    retain_reply(&request_id, &reply).map_err(|_| indeterminate())?;
+    retain_reply(&prepared.request, &request_id, &reply).map_err(|_| indeterminate())?;
     Ok((request_id, reply))
 }

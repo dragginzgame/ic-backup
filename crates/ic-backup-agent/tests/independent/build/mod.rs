@@ -53,6 +53,10 @@ fn write_sources(selected: &Path) {
     for (name, bytes) in [
         ("mod.rs", include_str!("../consumer/mod.rs")),
         (
+            "application/mod.rs",
+            include_str!("../consumer/application/mod.rs"),
+        ),
+        (
             "transfer/mod.rs",
             include_str!("../consumer/transfer/mod.rs"),
         ),

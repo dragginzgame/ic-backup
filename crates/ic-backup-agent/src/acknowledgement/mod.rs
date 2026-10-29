@@ -29,7 +29,7 @@ pub(crate) async fn submit_acknowledged<'a>(
         request,
         journal,
         |prepared| retain(prepared),
-        |_, _| Ok(()),
+        |_, _, _| Ok(()),
         || IcMutationProviderError::Unsupported,
         || IcMutationProviderError::Indeterminate,
     )

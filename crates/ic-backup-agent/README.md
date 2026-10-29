@@ -45,6 +45,18 @@ its mandatory retainer receives the exact reserved request and signed preparatio
 Retain durable original identities and ingress under never-dispatched custody, refusing
 prior dispatch. Cancellation and passive replies keep both attempts pending.
 
+For opaque application updates, use Core's `ApplicationIngressPayload` and exact
+`ApplicationMutationRequest` or `ApplicationObservationRequest` after reserving
+through the original journal. `AgentApplicationIngressProvider` requires both
+signed-ingress and raw-reply retainers. Await its `submit_mutation` or
+`submit_observation`; the latter uses independently reserved observation allowance.
+Receiver, effective target, fixed update mode, exact method/arguments and reply
+ceiling are bound to the original request. Responses are passive and decode no
+application protocol. Fresh authority, never-dispatched custody, explicit receipt
+qualification, Root-paid effects and whole-operation acceptance remain application-owned.
+Update exhaustive `ReservedUpdate` matches for `ApplicationMutation` and
+`ApplicationObservation`. See the workspace [transport guide](https://github.com/dragginzgame/ic-backup/blob/main/docs/agent-transport.md).
+
 For original opaque application acquisition updates, configure
 `AgentFenceAcquisitionProvider` with both durable signed-ingress and exact raw-reply
 retainers. Await `acquire_fence` with the current guarded journal. Reply-retention

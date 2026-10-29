@@ -115,6 +115,25 @@ the host stage settles. These tests use synthetic host receipts and make no IC
 calls; they do not qualify Canic Wire, Root-paid effects, participant membership,
 fresh permissions, fencing, terminal release or actual process-death behavior.
 
+## Pending application transport adapter
+
+[#74](https://github.com/dragginzgame/ic-backup/issues/74) supplies a concrete
+Backup-owned transport gap found during Canic adoption. Its working-source
+`AgentApplicationIngressProvider` accepts Core's distinct original application
+mutation and recovery-observation requests and reuses the existing single-submit
+owner. Published 0.48.3 lacks these new APIs. The
+[transport guide](agent-transport.md#opaque-application-ingress) and
+[independent consumer](../crates/ic-backup-agent/tests/independent/consumer/application/mod.rs)
+show exact payload binding, mandatory ingress/reply retention and separately
+budgeted recovery without pretending that every Root command acquires a fence.
+
+When adopting the containing release, bind fresh child requests to the admitted
+opaque payload digest and update exhaustive `ReservedUpdate` matches for its new
+variants. Do not reinterpret PR #702's older retained commitments or replay uncertain
+ingress. Canic still owns Wire, current Root/unit authority, its production provider,
+Root-paid replay/cost, full artifact transfer and application/terminal acceptance.
+The new adapter supplies no live-create permission or automatic Applied receipt.
+
 ## Bounded implementation sequence
 
 1. Complete production Root-paid snapshot intent, finite dispatch and unknown-result

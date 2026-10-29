@@ -56,7 +56,7 @@ where
             ReservedUpdate::TransferRead(request),
             journal,
             |prepared| (self.retain)(request, prepared),
-            |_, _| Ok(()),
+            |_, _, _| Ok(()),
             || IcObservationProviderError::Unsupported,
             || IcObservationProviderError::Indeterminate,
         )

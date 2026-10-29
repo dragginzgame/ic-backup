@@ -1,5 +1,6 @@
 //! Canonical normal-consumer program; the parent owns the isolated application.
 
+mod application;
 mod restore;
 mod transfer;
 
@@ -346,6 +347,9 @@ async fn run() -> io::Result<()> {
         .to_str()
         .ok_or(io::ErrorKind::InvalidInput)?
         .to_owned();
+    if mode.starts_with("application-") {
+        return application::run(&root, &mode).await;
+    }
     if !matches!(
         mode.as_str(),
         "capture" | "restore" | "start" | "replay" | "lose-load"

@@ -1,5 +1,6 @@
 //! An independent normal consumer; Testkit and application authority stay in this parent.
 
+mod application;
 mod build;
 mod consumer;
 

@@ -61,7 +61,7 @@ where
             ReservedUpdate::FenceAcquisition(request),
             journal,
             |prepared| (self.retain_ingress)(request, prepared),
-            |request_id, reply| (self.retain_reply)(request, request_id, reply),
+            |_, request_id, reply| (self.retain_reply)(request, request_id, reply),
             || FenceAcquisitionProviderError::Unsupported,
             || FenceAcquisitionProviderError::Indeterminate,
         )

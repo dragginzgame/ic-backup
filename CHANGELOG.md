@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.49.0]
+
+### ⚠️ Breaking
+
+- Extend `ic_backup_agent::ReservedUpdate` with `ApplicationMutation` and
+  `ApplicationObservation`. Update exhaustive downstream matches for the two new
+  reservation kinds; existing management and fence providers retain their contracts.
+
+### ➕ Added
+
+- Add bounded opaque application ingress over original mutation and separately
+  reserved recovery observations, with mandatory durable signed-ingress and raw-reply
+  retention through the existing single-submit owner ([#74](https://github.com/dragginzgame/ic-backup/issues/74)).
+  Exact receiver, effective target, update mode, method, arguments and reply ceiling
+  are bound before dispatch; uncertainty never authorizes resend or new allowance.
+  Applications retain codecs, fresh authority, Root-paid effects and terminal acceptance.
+
 ## [0.48.3] - 2026-10-29
 
 ### 🔧 Tooling and dependencies

@@ -5,6 +5,10 @@
 //! actual network trust, fresh permissions, application safety and never-dispatched custody.
 //! A pending reservation or reconstructed request never grants permission to repeat a call.
 
+mod application_ingress;
+pub use application_ingress::{
+    AgentApplicationIngressProvider, ApplicationIngressProviderError, ApplicationIngressResponse,
+};
 mod fence_acquisition;
 pub use fence_acquisition::AgentFenceAcquisitionProvider;
 mod acknowledgement;
@@ -29,8 +33,9 @@ use thiserror::Error;
 
 /// Maximum HTTP body including certificate framing; method replies have smaller owner bounds.
 pub const MAX_HTTP_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
-/// Maximum opaque application fence-acquisition reply; no application interpretation is inferred.
-pub const MAX_APPLICATION_REPLY_BYTES: usize = 1024 * 1024;
+/// Maximum opaque application reply, including fence acquisition; no semantics are inferred.
+pub const MAX_APPLICATION_REPLY_BYTES: usize =
+    ic_backup::model::application_ingress::MAX_APPLICATION_INGRESS_REPLY_BYTES;
 /// Maximum retained signed ingress envelope including bounded upload bytes and signing overhead.
 pub const MAX_SIGNED_UPDATE_BYTES: usize = 3 * 1024 * 1024;
 

@@ -72,7 +72,9 @@ impl<'a> ObservationReplyBinding<'a> {
                 request: request.payload().digest(),
                 target: request.payload().target(),
             },
-            ReservedUpdate::Mutation(_)
+            ReservedUpdate::ApplicationMutation(_)
+            | ReservedUpdate::ApplicationObservation(_)
+            | ReservedUpdate::Mutation(_)
             | ReservedUpdate::TransferRead(_)
             | ReservedUpdate::Upload(_)
             | ReservedUpdate::FenceAcquisition(_) => return None,
@@ -103,7 +105,7 @@ where
             request,
             journal,
             |prepared| (self.retain)(&prepared.request, prepared),
-            |_, _| Ok(()),
+            |_, _, _| Ok(()),
             || IcObservationProviderError::Unsupported,
             || IcObservationProviderError::Indeterminate,
         )

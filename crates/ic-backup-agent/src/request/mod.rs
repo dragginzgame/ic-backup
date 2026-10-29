@@ -1,6 +1,9 @@
 //! Admission of existing reserved payload owners, without another wire encoder.
 
 use ic_backup::model::{
+    application_ingress::{
+        ApplicationIngressPayload, ApplicationMutationRequest, ApplicationObservationRequest,
+    },
     attempt_journal::AttemptJournalRecord,
     fence_acquisition::FenceAcquisitionRequest,
     ic_mutation::{IcMutationRequest, MAX_IC_MUTATION_REPLY_BYTES},
@@ -20,6 +23,10 @@ use ic_backup::model::{
 /// Recovery observations consume their independently reserved observation allowance.
 #[derive(Debug)]
 pub enum ReservedUpdate<'a> {
+    /// One original opaque application mutation, with no fence-specific semantics.
+    ApplicationMutation(&'a ApplicationMutationRequest<'a>),
+    /// One separately reserved opaque application recovery update.
+    ApplicationObservation(&'a ApplicationObservationRequest<'a>),
     /// Capture, stop, load or start.
     Mutation(&'a IcMutationRequest<'a>),
     /// Original mutation recovery status/list.
@@ -48,6 +55,14 @@ pub(super) struct Wire<'a> {
 impl ReservedUpdate<'_> {
     pub(super) fn admit(&self, journal: &AttemptJournalRecord) -> Option<Wire<'_>> {
         Some(match self {
+            Self::ApplicationMutation(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire::application(r.plan().context(), r.payload())
+            }
+            Self::ApplicationObservation(r) => {
+                r.validate_journal(journal).ok()?;
+                Wire::application(r.plan().context(), r.payload())
+            }
             Self::Mutation(r) => {
                 r.validate_journal(journal).ok()?;
                 Wire {
@@ -130,5 +145,18 @@ impl ReservedUpdate<'_> {
                 }
             }
         })
+    }
+}
+
+impl<'a> Wire<'a> {
+    fn application(context: &'a PlanContextRecord, payload: &'a ApplicationIngressPayload) -> Self {
+        Self {
+            context,
+            receiver: payload.receiver(),
+            target: payload.target(),
+            method: payload.method(),
+            arguments: payload.arguments(),
+            reply_limit: payload.reply_limit(),
+        }
     }
 }

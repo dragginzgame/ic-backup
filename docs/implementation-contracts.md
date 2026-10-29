@@ -407,6 +407,18 @@ This API performs no IC effect, application fence release or artifact deletion.
 transfer reads, recovery/readback and application acquisition. Preserve each request
 validator, reply ceiling and evidence domain. All SDK imports use Platform.
 
+Opaque application ingress uses `ApplicationIngressPayload` and distinct original
+mutation/observation request types. Bind non-management receiver and effective
+target, fixed update mode, 1..128 visible ASCII method bytes, at most 1 MiB arguments
+and a caller reply ceiling of 1 byte through 1 MiB in the original payload digest.
+Recovery uses its separately reserved digest and observation allowance; no fence semantics
+or application codec is inferred. Both synchronous durable retainers are mandatory
+in `AgentApplicationIngressProvider`. Retain exact signed bytes/ID before dispatch
+and exact bounded reply/ID before returning to cancellable qualification. Original
+reservation-kind/attempt witnesses must refuse prior or uncertain dispatch. Passive
+responses do not settle either host or Root-paid effects. Existing custom request
+hashes and pending layouts cannot be rebound into this new payload declaration.
+
 Configure exact context/caller, HTTPS or literal loopback HTTP origin, external
 trusted root and finite 1..300s timeout/ingress expiry. Keep HTTP/1, no proxy,
 redirects, HTTP/TCP retries, implicit waits/polling or root fetch. Custom Reqwest
@@ -416,7 +428,7 @@ provider resource/custody limits remain explicit integration responsibilities.
 
 Validate original journal and signer, sign without network IO, then require durable
 retention of the exact signed envelope/request ID with original plan/reservation
-before submitting once. `PreparedUpdate` is a passive retention view; no arbitrary
+before submitting once. `PreparedUpdate` is a passive retention view; no unreserved
 call, envelope re-import or reissue API exists. Certificate replies are passive;
 accepted/processing returns Indeterminate without polling. Failed/oversized/lost
 replies and retention failures preserve original spending. `TransportError` owns
