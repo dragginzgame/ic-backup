@@ -103,7 +103,7 @@ pub(super) fn checksum_ic_tree_with<E: From<IcSnapshotArtifactError>>(
     let mut checksums = Vec::with_capacity(members.len());
     for member in members {
         let actual = read_child(directory, &member)?;
-        if let Some(expected) = &member.checksum {
+        if let Some(expected) = member.checksum() {
             actual
                 .verify(expected.hash())
                 .map_err(IcSnapshotArtifactError::from)?;
@@ -129,8 +129,8 @@ fn checksum_child(
     checksum_child_with(
         directory,
         &member.name,
-        member.length,
-        member.maximum,
+        member.length(),
+        member.maximum(),
         |file, length| checksum_exact_reader(file, length),
     )
 }

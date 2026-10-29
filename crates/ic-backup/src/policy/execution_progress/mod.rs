@@ -81,6 +81,16 @@ pub struct ExecutionProgressView {
     pub operations: Vec<OperationProgressView>,
 }
 
+impl ExecutionProgressView {
+    pub(crate) const fn is_unattempted(&self) -> bool {
+        self.attempts.mutations_used == 0 && self.attempts.observations_used == 0
+    }
+
+    pub(crate) fn all_applied(&self) -> bool {
+        self.applied_operations == self.operations.len()
+    }
+}
+
 /// Admit exact complete journal coverage and project causal retained local progress.
 ///
 /// Missing journals are errors, never fresh zero-consumption declarations. Any

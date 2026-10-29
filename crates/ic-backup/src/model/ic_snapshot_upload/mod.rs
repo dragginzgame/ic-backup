@@ -4,6 +4,7 @@ use crate::model::evidence_digest::EvidenceDigest;
 use ic_platform::candid::contract;
 mod attempt;
 mod plan;
+pub(crate) use plan::UploadCompletion;
 mod reply;
 pub(crate) use attempt::original_authority;
 pub use attempt::{IcSnapshotUploadAttempt, IcSnapshotUploadAttemptError};

@@ -179,14 +179,14 @@ impl<'a, 'plan> FenceReconciliationRequest<'a, 'plan> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), FenceReconciliationRequestError> {
-        self.intent.validate_mutation(journal)?;
-        if journal.pending_observation() != Some(self.observation_attempt) {
-            return Err(FenceReconciliationRequestError::ObservationMismatch);
-        }
-        if journal.pending_observation_request() != Some(self.digest().hash()) {
-            return Err(FenceReconciliationRequestError::RequestMismatch);
-        }
-        Ok(())
+        crate::model::attempt_journal::ObservationReservation::validate_identity(
+            journal,
+            self.intent.authority(),
+            self.intent.mutation_attempt(),
+            self.observation_attempt,
+            self.digest().hash(),
+        )
+        .map_err(FenceReconciliationRequestError::from)
     }
 }
 
@@ -329,3 +329,19 @@ pub enum FenceReconciliationObservationError {
 
 #[cfg(test)]
 mod tests;
+
+impl From<crate::model::attempt_journal::ObservationReservationError>
+    for FenceReconciliationRequestError
+{
+    fn from(error: crate::model::attempt_journal::ObservationReservationError) -> Self {
+        use crate::model::attempt_journal::ObservationReservationError as Reservation;
+        match error {
+            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
+            Reservation::NoPendingMutation => Self::NoPendingMutation,
+            Reservation::NoPendingObservation => Self::NoPendingObservation,
+            Reservation::MutationMismatch => Self::MutationMismatch,
+            Reservation::ObservationMismatch => Self::ObservationMismatch,
+            Reservation::RequestMismatch => Self::RequestMismatch,
+        }
+    }
+}

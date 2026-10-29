@@ -24,15 +24,15 @@ impl Driver {
         let mut provider = AgentSnapshotTransferReadProvider::new(&transport, |request: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest<'_, '_>, prepared: &PreparedUpdate<'_>| signed(layout.root(), &ReservedUpdate::TransferRead(request), prepared).map_err(|_| ic_backup::ports::ic_observation::IcObservationProviderError::Unavailable));
         let qualify = async |request: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadRequest<'_, '_>, reply: &ic_backup::model::ic_snapshot_transfer_read::IcSnapshotTransferReadResponse| {
             let receipt = receipt(layout.root(), request.authority().binding().operation_sequence(), request.mutation_attempt(), &request.payload().digest(), request.payload().arguments(), &reply.input().reply)?;
-            if self.mode == "capture-fail-partial" && stage.binding().stage_sequence() == 2 && request.authority().binding().operation_sequence() == 1 {
+            if self.mode == "capture-fail-partial" && stage.binding().stage_sequence() == Stage::Download.sequence() && request.authority().binding().operation_sequence() == 1 {
                 return Err(io::Error::other("fixture interrupted transfer after first admitted chunk"));
             }
             Ok(receipt)
         };
-        if stage.binding().stage_sequence() == 1 {
+        if stage.binding().stage_sequence() == Stage::Metadata.sequence() {
             return read_snapshot_metadata(
                 stage,
-                1,
+                Stage::Metadata.sequence(),
                 &request,
                 &mut provider,
                 async |_| self.admit().map(|_| ()),
@@ -42,18 +42,20 @@ impl Driver {
             .map(|(_, checkpoint)| checkpoint.learned_evidence().clone())
             .map_err(error);
         }
-        let raw = self.raw(false, 1)?;
+        let raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
-        let download =
-            IcSnapshotDownloadPlan::new(&self.capture, 2, &metadata, CHUNK).map_err(error)?;
+        let download = IcSnapshotDownloadPlan::new(
+            &self.capture,
+            Stage::Download.sequence(),
+            &metadata,
+            CHUNK,
+        )
+        .map_err(error)?;
         let binding: ExecutionStageBindingRecord = serde_json::from_slice(&read(
-            &self
-                .root
-                .join("capture/execution-stage-1/stage-binding.json"),
+            &Stage::Metadata.path(&self.root).join("stage-binding.json"),
         )?)?;
         let metadata_layout =
-            BackupLayoutGuard::acquire(&self.root.join("capture/execution-stage-1"))
-                .map_err(error)?;
+            BackupLayoutGuard::acquire(&Stage::Metadata.path(&self.root)).map_err(error)?;
         let metadata_plan = read_operation_plan(&metadata_layout, binding.plan()).map_err(error)?;
         assert_eq!(
             &download
@@ -67,7 +69,7 @@ impl Driver {
         );
         drop(metadata_layout);
         let capture = self.payload(Method::TakeCanisterSnapshot, None);
-        let capture_raw = self.raw(false, 0)?;
+        let capture_raw = self.raw(Stage::Capture)?;
         let capture_reply = IcSnapshotReply::decode(&capture, &capture_raw).map_err(error)?;
         let snapshot = &capture_reply.snapshots()[0];
         layout
@@ -83,7 +85,7 @@ impl Driver {
             layout,
             stage.plan().digest().hash(),
             vec![DownloadArtifactRequest {
-                canister_id: self.config["target"].as_str().unwrap().into(),
+                canister_id: self.config.target.clone(),
                 snapshot_id: TOKEN.into(),
                 snapshot_taken_at_timestamp: snapshot.taken_at_timestamp(),
                 snapshot_total_size_bytes: snapshot.total_size(),
@@ -119,19 +121,24 @@ impl Driver {
         source: &BackupLayoutGuard,
     ) -> io::Result<OperationPlanRecord> {
         let request = self.metadata_request()?;
-        let raw = self.raw(false, 1)?;
+        let raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
-        let plan = IcSnapshotDownloadPlan::new(&self.capture, 2, &metadata, CHUNK)
-            .map_err(error)?
-            .plan()
-            .unwrap()
-            .clone();
+        let plan = IcSnapshotDownloadPlan::new(
+            &self.capture,
+            Stage::Download.sequence(),
+            &metadata,
+            CHUNK,
+        )
+        .map_err(error)?
+        .plan()
+        .unwrap()
+        .clone();
         read_operation_plan(source, &plan.digest()).map_err(error)
     }
 
     pub(super) fn destination(&self) -> io::Result<Vec<u8>> {
         let request = self.metadata_request()?;
-        let raw = self.raw(false, 1)?;
+        let raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
         let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let plan = self.source_plan(&source)?;
@@ -139,7 +146,7 @@ impl Driver {
         let upload = journal
             .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
             .map_err(error)?;
-        let raw = self.raw(true, 3)?;
+        let raw = self.raw(Stage::Allocation)?;
         let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
             return Err(io::ErrorKind::InvalidData.into());
@@ -154,7 +161,7 @@ impl Driver {
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> io::Result<OperationPlanRecord> {
         let request = self.metadata_request()?;
-        let raw = self.raw(false, 1)?;
+        let raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
         let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let source_plan = self.source_plan(&source)?;
@@ -163,21 +170,31 @@ impl Driver {
         let upload = journal
             .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
             .map_err(error)?;
-        if sequence == 3 {
-            return Ok(self.singleton(workflow, 3, &upload.binding_digest()));
+        if Stage::from_sequence(sequence)? == Stage::Allocation {
+            return Ok(self.singleton(
+                workflow,
+                Stage::Allocation.sequence(),
+                &upload.binding_digest(),
+            ));
         }
-        let raw = self.raw(true, 3)?;
+        let raw = self.raw(Stage::Allocation)?;
         let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
         let data = journal
-            .prepare_ic_snapshot_data_upload_plan(workflow, 4, TOKEN, &reply, CHUNK)
+            .prepare_ic_snapshot_data_upload_plan(
+                workflow,
+                Stage::Upload.sequence(),
+                TOKEN,
+                &reply,
+                CHUNK,
+            )
             .map_err(error)?;
         let binding: ExecutionStageBindingRecord = serde_json::from_slice(&read(
-            &self
-                .root
-                .join("restore/execution-stage-3/stage-binding.json"),
+            &Stage::Allocation
+                .path(&self.root)
+                .join("stage-binding.json"),
         )?)?;
-        let allocation = BackupLayoutGuard::acquire(&self.root.join("restore/execution-stage-3"))
-            .map_err(error)?;
+        let allocation =
+            BackupLayoutGuard::acquire(&Stage::Allocation.path(&self.root)).map_err(error)?;
         let plan = read_operation_plan(&allocation, binding.plan()).map_err(error)?;
         data.bind(&binding, &plan, predecessors.to_vec())
             .map_err(error)?;
@@ -186,7 +203,7 @@ impl Driver {
 
     pub(super) async fn upload(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let request = self.metadata_request()?;
-        let raw = self.raw(false, 1)?;
+        let raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
         let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let plan = self.source_plan(&source)?;
@@ -237,10 +254,16 @@ impl Driver {
             .map(|(_, checkpoint)| checkpoint.learned_evidence().clone())
             .map_err(error);
         }
-        let raw = self.raw(true, 3)?;
+        let raw = self.raw(Stage::Allocation)?;
         let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
         let data = journal
-            .prepare_ic_snapshot_data_upload_plan(&self.restore, 4, TOKEN, &reply, CHUNK)
+            .prepare_ic_snapshot_data_upload_plan(
+                &self.restore,
+                Stage::Upload.sequence(),
+                TOKEN,
+                &reply,
+                CHUNK,
+            )
             .map_err(error)?;
         upload_snapshot_data(
             stage,

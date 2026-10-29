@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.50.1]
+
+### 🧹 Cleanup
+
+- Consolidate retained-stage, fence and receipt admission, and make artifact and
+  upload-completion cases explicit. Preserve public APIs, record/wire bytes,
+  original spending, effect-boundary checks and retained failure evidence.
+
+### 🧪 Testing
+
+- Use typed configuration and named stages in the independent consumer while
+  preserving original stage identities, custody and failure scenarios.
+
 ## [0.50.0] - 2026-10-29
 
 ### ⚠️ Breaking

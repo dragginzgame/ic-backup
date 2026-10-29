@@ -54,45 +54,83 @@ pub(super) enum PayloadMember {
 
 pub(super) struct ExpectedMember {
     pub name: String,
-    pub length: Option<u64>,
-    pub maximum: u64,
-    pub checksum: Option<ArtifactChecksumRecord>,
-    pub payload: Option<PayloadMember>,
+    kind: MemberKind,
+}
+
+enum MemberKind {
+    Fixed {
+        length: u64,
+        checksum: ArtifactChecksumRecord,
+    },
+    Metadata {
+        checksum: ArtifactChecksumRecord,
+    },
+    Region {
+        region: SnapshotRegion,
+        length: u64,
+    },
+    Chunk {
+        hash: Sha256Digest,
+        checksum: ArtifactChecksumRecord,
+    },
+}
+
+impl ExpectedMember {
+    pub(super) fn length(&self) -> Option<u64> {
+        match self.kind {
+            MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => Some(length),
+            MemberKind::Metadata { .. } | MemberKind::Chunk { .. } => None,
+        }
+    }
+    pub(super) fn maximum(&self) -> u64 {
+        match self.kind {
+            MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => length,
+            MemberKind::Metadata { .. } => MAX_IC_SNAPSHOT_METADATA_BYTES as u64,
+            MemberKind::Chunk { .. } => MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64,
+        }
+    }
+    pub(super) fn checksum(&self) -> Option<&ArtifactChecksumRecord> {
+        match &self.kind {
+            MemberKind::Fixed { checksum, .. }
+            | MemberKind::Metadata { checksum }
+            | MemberKind::Chunk { checksum, .. } => Some(checksum),
+            MemberKind::Region { .. } => None,
+        }
+    }
+    pub(super) fn payload(&self) -> Option<PayloadMember> {
+        match self.kind {
+            MemberKind::Region { region, .. } => Some(PayloadMember::Region(region)),
+            MemberKind::Chunk { hash, .. } => Some(PayloadMember::Chunk(hash)),
+            MemberKind::Fixed { .. } | MemberKind::Metadata { .. } => None,
+        }
+    }
 }
 
 pub(super) fn expected(
     metadata: &IcSnapshotMetadataReply<'_>,
 ) -> Result<Vec<ExpectedMember>, IcSnapshotArtifactError> {
-    let argument_length = metadata.request().arguments().len() as u64;
-    let mut members = [
-        (
-            "format",
-            Some(FORMAT.len() as u64),
-            FORMAT.len() as u64,
-            ArtifactChecksumRecord::from_bytes(FORMAT),
-        ),
-        (
-            "metadata.candid",
-            None,
-            MAX_IC_SNAPSHOT_METADATA_BYTES as u64,
-            metadata.payload_checksum().clone(),
-        ),
-        (
-            "metadata-arguments.candid",
-            Some(argument_length),
-            argument_length,
-            ArtifactChecksumRecord::from_bytes(metadata.request().arguments()),
-        ),
-    ]
-    .into_iter()
-    .map(|(name, length, maximum, checksum)| ExpectedMember {
-        name: name.into(),
-        length,
-        maximum,
-        checksum: Some(checksum),
-        payload: None,
-    })
-    .collect::<Vec<_>>();
+    let mut members = vec![
+        ExpectedMember {
+            name: "format".into(),
+            kind: MemberKind::Fixed {
+                length: FORMAT.len() as u64,
+                checksum: ArtifactChecksumRecord::from_bytes(FORMAT),
+            },
+        },
+        ExpectedMember {
+            name: "metadata.candid".into(),
+            kind: MemberKind::Metadata {
+                checksum: metadata.payload_checksum().clone(),
+            },
+        },
+        ExpectedMember {
+            name: "metadata-arguments.candid".into(),
+            kind: MemberKind::Fixed {
+                length: metadata.request().arguments().len() as u64,
+                checksum: ArtifactChecksumRecord::from_bytes(metadata.request().arguments()),
+            },
+        },
+    ];
     let values = metadata.metadata();
     members.extend(
         SnapshotRegion::ALL
@@ -100,10 +138,7 @@ pub(super) fn expected(
             .zip(metadata.region_sizes())
             .map(|(region, length)| ExpectedMember {
                 name: REGIONS[region.index()].into(),
-                length: Some(length),
-                maximum: length,
-                checksum: None,
-                payload: Some(PayloadMember::Region(region)),
+                kind: MemberKind::Region { region, length },
             }),
     );
     for chunk in &values.wasm_chunk_store {
@@ -116,10 +151,10 @@ pub(super) fn expected(
         );
         members.push(ExpectedMember {
             name: chunk_name(digest),
-            length: None,
-            maximum: MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64,
-            checksum: Some(ArtifactChecksumRecord::from_digest(*digest.as_bytes())),
-            payload: Some(PayloadMember::Chunk(digest)),
+            kind: MemberKind::Chunk {
+                hash: digest,
+                checksum: ArtifactChecksumRecord::from_digest(*digest.as_bytes()),
+            },
         });
     }
     Ok(members)

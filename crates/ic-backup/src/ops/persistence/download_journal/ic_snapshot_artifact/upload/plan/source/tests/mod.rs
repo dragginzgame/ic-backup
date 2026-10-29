@@ -42,7 +42,7 @@ fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_
         .iter()
         .find(|member| {
             matches!(
-                member.payload,
+                member.payload(),
                 Some(member::PayloadMember::Region(
                     crate::model::ic_snapshot_data::SnapshotRegion::WasmModule
                 ))

@@ -106,21 +106,23 @@ async fn settle_metadata<E: std::error::Error + 'static>(
     let receipt = qualify(request, admitted.response())
         .await
         .map_err(IcSnapshotMetadataSettlementError::Qualification)?;
-    let receipt = super::qualified_receipt::admit_applied(
+    super::qualified_receipt::record_applied(
+        journal,
         receipt,
         request.mutation_attempt(),
         request.payload().digest().hash(),
+        IcSnapshotMetadataSettlementError::ReceiptRequired,
+        || {
+            let digest = match admitted.reply() {
+                IcSnapshotTransferReadReply::Metadata(metadata) => metadata.digest(),
+                IcSnapshotTransferReadReply::Data(_) => {
+                    return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
+                }
+            };
+            stage.layout()?;
+            Ok(digest)
+        },
     )
-    .ok_or(IcSnapshotMetadataSettlementError::ReceiptRequired)?;
-    let digest = match admitted.reply() {
-        IcSnapshotTransferReadReply::Metadata(metadata) => metadata.digest(),
-        IcSnapshotTransferReadReply::Data(_) => {
-            return Err(IcSnapshotMetadataSettlementError::ReceiptRequired);
-        }
-    };
-    stage.layout()?;
-    journal.record_mutation(receipt)?;
-    Ok(digest)
 }
 
 /// Metadata coordination failures retain exact original spending and returned evidence.

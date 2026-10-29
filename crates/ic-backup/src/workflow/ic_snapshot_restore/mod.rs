@@ -112,14 +112,14 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
             let receipt = qualify(request, acknowledgement)
                 .await
                 .map_err(IcRestoreReplyError::Qualification)?;
-            let receipt = super::qualified_receipt::admit_applied(
+            super::qualified_receipt::record_applied(
+                journal,
                 receipt,
                 request.mutation_attempt(),
                 safety.wire().digest().hash(),
-            )
-            .ok_or(IcRestoreReplyError::ReceiptRequired)?;
-            retain()?;
-            journal.record_mutation(receipt)?;
+                IcRestoreReplyError::ReceiptRequired,
+                retain,
+            )?;
             retain()?;
             let IcMutationReplyView::Lifecycle(reply) = admitted.reply() else {
                 return Err(IcRestoreReplyError::ReceiptRequired);

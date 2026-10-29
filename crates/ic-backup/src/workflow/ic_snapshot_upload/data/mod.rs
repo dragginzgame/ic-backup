@@ -68,7 +68,7 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
         return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch.into());
     }
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
-    if progress.attempts.mutations_used != 0 || progress.attempts.observations_used != 0 {
+    if !progress.is_unattempted() {
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);
     }
     let mut evidence = EvidenceDigest::new(b"ic-backup/ic-snapshot-data-upload/v1\0");
@@ -89,14 +89,17 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
                 let receipt = qualify(request, admitted.acknowledgement())
                     .await
                     .map_err(IcSnapshotDataUploadReplyError::Qualification)?;
-                let receipt = super::super::qualified_receipt::admit_applied(
+                super::super::qualified_receipt::record_applied(
+                    journal,
                     receipt,
                     request.mutation_attempt(),
                     payload.binding_digest().hash(),
-                )
-                .ok_or(IcSnapshotDataUploadReplyError::ReceiptRequired)?;
-                stage.layout()?;
-                journal.record_mutation(receipt)?;
+                    IcSnapshotDataUploadReplyError::ReceiptRequired,
+                    || {
+                        stage.layout()?;
+                        Ok(())
+                    },
+                )?;
                 stage.layout()?;
                 Ok::<_, IcSnapshotDataUploadReplyError<E>>(admitted.reply().digest())
             },
@@ -112,7 +115,7 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     }
     session.finish()?;
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
-    if progress.applied_operations != upload.kinds().len() {
+    if !progress.all_applied() {
         return Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted);
     }
     Ok(stage.reconcile_checkpoint(evidence.finish())?)

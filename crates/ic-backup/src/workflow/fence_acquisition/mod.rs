@@ -19,6 +19,29 @@ use crate::{
 };
 use thiserror::Error;
 
+// Shared original admission precedes every acquisition/recovery reservation.
+pub(super) fn open_original<'a, E>(
+    stage: &'a ExecutionStageGuard<'_>,
+    requirement: FenceObligationRequirement<'_>,
+    obligation: &FenceObligationRecord,
+    payload: &FenceAcquisitionPayload,
+) -> Result<AttemptJournalGuard<'a>, E>
+where
+    E: From<ExecutionWorkflowPersistenceError>
+        + From<FenceObligationPersistenceError>
+        + From<OperationPlanError>
+        + From<AttemptJournalError>
+        + From<FenceAcquisitionError>,
+{
+    let plan = stage.plan();
+    let layout = stage.layout()?;
+    read_fence_obligation(layout, plan, requirement, &obligation.digest())?;
+    let authority = plan.attempt_authority(obligation.acquisition_operation())?;
+    let journal = AttemptJournalGuard::open(layout, &authority)?;
+    original_authority(plan, obligation, journal.record()?, payload)?;
+    Ok(journal)
+}
+
 /// Reserve the original acquisition, freshly admit it and invoke one exact application update.
 ///
 /// Hold no attempt guards on entry. Retain the full original stage, every journal,
@@ -53,11 +76,12 @@ pub async fn acquire_fence<E: std::error::Error + 'static>(
     admit: impl AsyncFnOnce(&FenceAcquisitionRequest<'_>) -> Result<(), E>,
 ) -> Result<FenceAcquisitionAcknowledgement, FenceAcquisitionExecutionError<E>> {
     let plan = stage.plan();
-    let layout = stage.layout()?;
-    read_fence_obligation(layout, plan, requirement, &obligation.digest())?;
-    let authority = plan.attempt_authority(obligation.acquisition_operation())?;
-    let mut journal = AttemptJournalGuard::open(layout, &authority)?;
-    original_authority(plan, obligation, journal.record()?, payload)?;
+    let mut journal = super::fence_acquisition::open_original::<FenceAcquisitionExecutionError<E>>(
+        stage,
+        requirement,
+        obligation,
+        payload,
+    )?;
     journal.reserve_planned_mutation(&plan.digest())?;
     let request = FenceAcquisitionRequest::new(plan, obligation, journal.record()?, payload)?;
     admit(&request)

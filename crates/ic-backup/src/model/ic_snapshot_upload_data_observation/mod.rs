@@ -1,11 +1,12 @@
 //! Exact already reserved destination-data observations of unresolved uploads.
 
+use crate::model::attempt_journal::ObservationReservation;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     ic_observation::{
         IcObservationRequestError, IcObservationResponseError, IcObservationResponseInput,
-        ObservationReservation, fmt_response_input, validate_response_input,
+        fmt_response_input, validate_response_input,
     },
     ic_snapshot_data::{IcSnapshotDataRequest, MAX_IC_SNAPSHOT_DATA_REPLY_BYTES},
     ic_snapshot_upload::{
@@ -86,7 +87,8 @@ impl<'request, 'source, 'metadata>
         {
             return Err(IcSnapshotUploadDataObservationError::DestinationMetadataMismatch);
         }
-        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())
+            .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         let request = Self {
             plan,
             mutation,
@@ -139,7 +141,9 @@ impl<'request, 'source, 'metadata>
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        self.reservation.validate(journal)
+        self.reservation
+            .validate(journal)
+            .map_err(IcObservationRequestError::from)
     }
 }
 

@@ -26,8 +26,8 @@ pub(super) fn bindings(
         checksum_child_with(
             directory,
             &member.name,
-            member.length,
-            member.maximum,
+            member.length(),
+            member.maximum(),
             |file, length| {
                 member_checksum(
                     file,
@@ -60,7 +60,7 @@ fn member_checksum(
     bindings: &mut Vec<ArtifactChecksumRecord>,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotUploadArtifactError> {
     // Fixed metadata members have no payloads; zero-length regions still hash exactly.
-    let Some(payload) = member.payload else {
+    let Some(payload) = member.payload() else {
         return Ok(checksum_exact_reader(file, length)?);
     };
     let mut digest = HashingWriter::new(io::sink(), length);

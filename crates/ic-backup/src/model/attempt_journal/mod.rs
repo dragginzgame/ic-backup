@@ -3,10 +3,12 @@
 use crate::model::evidence_digest::EvidenceDigest;
 mod authority;
 mod history;
+mod observation;
 pub use authority::{
     AttemptAuthorityRecord, AttemptBudgetRecord, MAX_OPERATION_ATTEMPTS, OperationBindingRecord,
     OperationBindingRequest,
 };
+pub(crate) use observation::{ObservationReservation, ObservationReservationError};
 
 use crate::model::{
     artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},

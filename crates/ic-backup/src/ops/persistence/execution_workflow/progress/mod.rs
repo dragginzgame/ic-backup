@@ -1,10 +1,10 @@
 //! Read-only original workflow inspection through existing plan and journal admission.
 
 use super::{
-    ArtifactChecksumRecord, BINDING_FILE, BackupLayoutGuard, ExecutionProgressPersistenceError,
-    ExecutionStageBindingRecord, ExecutionWorkflowPersistenceError, MAX_EXECUTION_STAGE_BYTES,
-    ancestry::{acquire_stage, read_admitted_binding},
-    read_execution_progress, read_execution_stage_occupancy, read_execution_workflow, read_json,
+    ArtifactChecksumRecord, BackupLayoutGuard, ExecutionProgressPersistenceError,
+    ExecutionWorkflowPersistenceError,
+    ancestry::{acquire_stage, read_admitted_binding, read_current_binding, validate_predecessors},
+    read_execution_progress, read_execution_stage_occupancy, read_execution_workflow,
 };
 use crate::view::execution_workflow::{
     ExecutionStageProgressState, ExecutionStageProgressView, ExecutionWorkflowProgressView,
@@ -32,11 +32,8 @@ pub fn read_execution_workflow_progress(
         let sequence = node.operation_sequence();
         let state = if occupied.contains(&sequence) {
             let child = acquire_stage(layout, sequence)?;
-            let binding: ExecutionStageBindingRecord =
-                read_json(&child.root().join(BINDING_FILE), MAX_EXECUTION_STAGE_BYTES)
-                    .map_err(ExecutionWorkflowPersistenceError::from)?;
-            let (binding, plan) =
-                read_admitted_binding(layout, &child, &workflow, sequence, &binding.digest())?;
+            let (binding, plan) = read_current_binding(&child, &workflow, sequence)?;
+            validate_predecessors(layout, &workflow, &binding)?;
             let progress = read_execution_progress(&child, &plan.digest())?;
             read_admitted_binding(layout, &child, &workflow, sequence, &binding.digest())?;
             ExecutionStageProgressState::Prepared {

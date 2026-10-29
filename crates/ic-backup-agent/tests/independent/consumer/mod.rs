@@ -4,6 +4,11 @@ mod application;
 mod restore;
 mod transfer;
 
+mod config;
+mod stage;
+use config::Config;
+use stage::Stage;
+
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord as Digest,
@@ -120,7 +125,7 @@ fn receipt(
 
 struct Driver {
     root: PathBuf,
-    config: Value,
+    config: Config,
     capture: ExecutionWorkflowRecord,
     restore: ExecutionWorkflowRecord,
     mode: String,
@@ -130,38 +135,34 @@ impl Driver {
     fn payload(&self, method: Method, snapshot_id: Option<Vec<u8>>) -> IcManagementRequestRecord {
         IcManagementRequestRecord::new(IcManagementRequest {
             method,
-            target: self.config["target"].as_str().unwrap().into(),
+            target: self.config.target.clone(),
             snapshot_id,
         })
         .unwrap()
     }
     fn source(&self) -> PathBuf {
-        self.root.join("capture/execution-stage-2")
+        Stage::Download.path(&self.root)
     }
-    fn raw(&self, restore: bool, stage: u64) -> io::Result<Vec<u8>> {
+    fn raw(&self, stage: Stage) -> io::Result<Vec<u8>> {
         read(
-            &self
-                .root
-                .join(if restore { "restore" } else { "capture" })
-                .join(format!("execution-stage-{stage}/reply-{stage}.candid")),
+            &stage
+                .path(&self.root)
+                .join(format!("reply-{}.candid", stage.sequence())),
         )
     }
     fn metadata_request(&self) -> io::Result<IcSnapshotMetadataRequest> {
         let payload = self.payload(Method::TakeCanisterSnapshot, None);
-        let raw = self.raw(false, 0)?;
+        let raw = self.raw(Stage::Capture)?;
         let reply = IcSnapshotReply::decode(&payload, &raw).map_err(error)?;
-        IcSnapshotMetadataRequest::new(
-            self.config["target"].as_str().unwrap(),
-            reply.snapshots()[0].id(),
-        )
-        .map_err(error)
+        IcSnapshotMetadataRequest::new(&self.config.target, reply.snapshots()[0].id())
+            .map_err(error)
     }
     fn transport(&self, plan: &OperationPlanRecord) -> AgentTransport {
         AgentTransport::new(
             plan.context().clone(),
-            self.config["endpoint"].as_str().unwrap(),
+            &self.config.endpoint,
             Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(&[7; 32])),
-            serde_json::from_value(self.config["key"].clone()).unwrap(),
+            self.config.key.clone(),
             Duration::from_secs(30),
         )
         .unwrap()
@@ -174,7 +175,7 @@ impl Driver {
     ) -> OperationPlanRecord {
         let mut value = serde_json::to_value(workflow).unwrap()["allocation"].clone();
         value["graph"]["nodes"] = json!([{"operation_sequence":sequence,"depends_on":[]}]);
-        value["operations"] = json!([{"operation_sequence":sequence,"target":self.config["target"],"request":request.hash(),"budget":{"mutations":1,"observations":0}}]);
+        value["operations"] = json!([{"operation_sequence":sequence,"target":self.config.target,"request":request.hash(),"budget":{"mutations":1,"observations":0}}]);
         value["budget"] = json!({"mutations":1,"observations":0});
         serde_json::from_value(value).unwrap()
     }
@@ -188,49 +189,55 @@ impl ExecutionWorkflowStageDriver for Driver {
         sequence: u64,
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> io::Result<OperationPlanRecord> {
-        if sequence == 6 {
+        let stage = Stage::from_sequence(sequence)?;
+        if stage == Stage::Start {
             self.admit()?;
             self.acceptance()?;
         }
-        Ok(match sequence {
-            0 => self.singleton(
+        Ok(match stage {
+            Stage::Capture => self.singleton(
                 workflow,
-                0,
+                Stage::Capture.sequence(),
                 &self.payload(Method::TakeCanisterSnapshot, None).digest(),
             ),
-            1 => self.singleton(workflow, 1, &self.metadata_request()?.digest()),
-            2 => {
+            Stage::Metadata => self.singleton(
+                workflow,
+                Stage::Metadata.sequence(),
+                &self.metadata_request()?.digest(),
+            ),
+            Stage::Download => {
                 let request = self.metadata_request()?;
-                let raw = self.raw(false, 1)?;
+                let raw = self.raw(Stage::Metadata)?;
                 let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
-                IcSnapshotDownloadPlan::new(workflow, 2, &metadata, CHUNK)
+                IcSnapshotDownloadPlan::new(workflow, Stage::Download.sequence(), &metadata, CHUNK)
                     .map_err(error)?
                     .plan()
                     .unwrap()
                     .clone()
             }
-            3 | 4 => self.bind_upload(workflow, sequence, predecessors)?,
-            5 | 6 => self.singleton(
+            Stage::Allocation | Stage::Upload => {
+                self.bind_upload(workflow, sequence, predecessors)?
+            }
+            Stage::Load | Stage::Start => self.singleton(
                 workflow,
                 sequence,
                 &self
                     .payload(
-                        if sequence == 5 {
+                        if stage == Stage::Load {
                             Method::LoadCanisterSnapshot
                         } else {
                             Method::StartCanister
                         },
-                        (sequence == 5).then(|| self.destination().unwrap()),
+                        (stage == Stage::Load).then(|| self.destination().unwrap()),
                     )
                     .digest(),
             ),
-            _ => return Err(io::ErrorKind::InvalidInput.into()),
         })
     }
     async fn execute_stage(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let sequence = stage.binding().stage_sequence();
-        let learned = match sequence {
-            0 => {
+        let learned = match Stage::from_sequence(sequence)? {
+            Stage::Capture => {
                 let payload = self.payload(Method::TakeCanisterSnapshot, None);
                 let transport = self.transport(stage.plan());
                 let root = stage.layout().map_err(error)?.root();
@@ -273,10 +280,9 @@ impl ExecutionWorkflowStageDriver for Driver {
                     .map_err(error)?
                     .digest()
             }
-            1 | 2 => self.transfer(stage).await?,
-            3 | 4 => self.upload(stage).await?,
-            5 | 6 => self.restore_stage(stage).await?,
-            _ => return Err(io::ErrorKind::InvalidInput.into()),
+            Stage::Metadata | Stage::Download => self.transfer(stage).await?,
+            Stage::Allocation | Stage::Upload => self.upload(stage).await?,
+            Stage::Load | Stage::Start => self.restore_stage(stage).await?,
         };
         retain(
             &stage.layout().map_err(error)?.root().join("learned.sha256"),
@@ -286,11 +292,11 @@ impl ExecutionWorkflowStageDriver for Driver {
     }
 }
 
-fn workflow(config: &Value, restore: Option<&Digest>) -> ExecutionWorkflowRecord {
-    let nodes = if restore.is_some() {
-        vec![(3, 1), (4, 8), (5, 1), (6, 1)]
+fn workflow(config: &Config, restore: Option<&Digest>) -> ExecutionWorkflowRecord {
+    let stages = if restore.is_some() {
+        Stage::RESTORE.as_slice()
     } else {
-        vec![(0, 1), (1, 1), (2, 8)]
+        Stage::CAPTURE.as_slice()
     };
     let mut previous = None;
     let mut graph = vec![];
@@ -298,15 +304,17 @@ fn workflow(config: &Value, restore: Option<&Digest>) -> ExecutionWorkflowRecord
     let purpose = restore
         .cloned()
         .unwrap_or_else(|| Digest::from_bytes(b"independent capture original"));
-    for (sequence, mutations) in &nodes {
+    for stage in stages {
+        let sequence = stage.sequence();
+        let mutations = stage.mutations();
         graph.push(json!({"operation_sequence":sequence,"depends_on":previous.into_iter().collect::<Vec<u64>>() }));
-        operations.push(json!({"operation_sequence":sequence,"target":config["target"],"request":purpose.hash(),"budget":{"mutations":mutations,"observations":0}}));
-        previous = Some(*sequence);
+        operations.push(json!({"operation_sequence":sequence,"target":config.target,"request":purpose.hash(),"budget":{"mutations":mutations,"observations":0}}));
+        previous = Some(sequence);
     }
-    ExecutionWorkflowRecord::new(serde_json::from_value(json!({"version":1,"context":config["context"],
-        "inventory":{"version":1,"targets":[{"canister_id":config["target"],"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[config["target"]],"graph":{"version":1,"nodes":graph},"operations":operations,
-        "budget":{"mutations":nodes.iter().map(|(_,n)|n).sum::<u32>(),"observations":0}})).unwrap())
+    ExecutionWorkflowRecord::new(serde_json::from_value(json!({"version":1,"context":config.context,
+        "inventory":{"version":1,"targets":[{"canister_id":config.target,"parent_canister_id":null,"role":null,"module_hash":null}]},
+        "selected_targets":[config.target],"graph":{"version":1,"nodes":graph},"operations":operations,
+        "budget":{"mutations":stages.iter().map(|stage|stage.mutations()).sum::<u32>(),"observations":0}})).unwrap())
 }
 
 fn retained(
@@ -371,7 +379,7 @@ async fn run() -> io::Result<()> {
     ) {
         return Err(io::ErrorKind::InvalidInput.into());
     }
-    let config: Value = serde_json::from_slice(&read(&root.join("config.json"))?)?;
+    let config = Config::read(&root)?;
     let capture = workflow(&config, None);
     let restore = workflow(&config, Some(&capture.digest()));
     let mut driver = Driver {

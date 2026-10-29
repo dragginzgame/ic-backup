@@ -139,7 +139,7 @@ fn stamps(
         .iter()
         .map(|member| {
             let (_, metadata) =
-                open_regular_child(directory, &member.name, member.length, member.maximum)?;
+                open_regular_child(directory, &member.name, member.length(), member.maximum())?;
             Ok(metadata.into())
         })
         .collect()

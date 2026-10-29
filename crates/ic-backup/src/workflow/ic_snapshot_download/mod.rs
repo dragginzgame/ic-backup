@@ -77,7 +77,7 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
     }
     writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
-    if progress.attempts.mutations_used != 0 || progress.attempts.observations_used != 0 {
+    if !progress.is_unattempted() {
         return Err(IcSnapshotDownloadExecutionError::AlreadyAttempted);
     }
     for (index, payload) in download.requests().iter().enumerate() {
@@ -102,7 +102,7 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
         })?;
     }
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
-    if progress.applied_operations != download.requests().len() {
+    if !progress.all_applied() {
         return Err(IcSnapshotDownloadExecutionError::AlreadyAttempted);
     }
     writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
@@ -129,18 +129,20 @@ async fn append_qualified<'journal, 'layout, 'metadata, E: std::error::Error + '
     let receipt = qualify(request, admitted.response())
         .await
         .map_err(IcSnapshotDownloadReplyError::Qualification)?;
-    let receipt = super::qualified_receipt::admit_applied(
+    let writer = super::qualified_receipt::record_applied(
+        journal,
         receipt,
         request.mutation_attempt(),
         request.payload().digest().hash(),
-    )
-    .ok_or(IcSnapshotDownloadReplyError::ReceiptRequired)?;
-    writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
-    let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
-        return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
-    };
-    let writer = writer.append(reply)?;
-    journal.record_mutation(receipt)?;
+        IcSnapshotDownloadReplyError::ReceiptRequired,
+        || {
+            writer.validate_transfer_origin(stage.layout()?.root(), plan.digest().hash())?;
+            let IcSnapshotTransferReadReply::Data(reply) = admitted.reply() else {
+                return Err(IcSnapshotDownloadReplyError::ReceiptRequired);
+            };
+            Ok(writer.append(reply)?)
+        },
+    )?;
     stage.layout()?;
     Ok(writer)
 }

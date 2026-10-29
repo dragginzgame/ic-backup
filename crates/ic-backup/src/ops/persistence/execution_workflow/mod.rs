@@ -4,7 +4,8 @@ mod ancestry;
 mod progress;
 mod stage;
 use ancestry::{
-    acquire_stage, read_admitted_binding, read_binding, stage_path, validate_predecessors,
+    acquire_stage, read_admitted_binding, read_binding, read_current_binding, stage_path,
+    validate_predecessors,
 };
 pub use progress::{ExecutionWorkflowProgressError, read_execution_workflow_progress};
 pub use stage::ExecutionStageGuard;
@@ -200,10 +201,7 @@ fn read_complete_with(
     for allocated in workflow.stages() {
         let sequence = allocated.operation_sequence();
         let stage = acquire_stage(layout, sequence)?;
-        let binding: ExecutionStageBindingRecord =
-            read_json(&stage.root().join(BINDING_FILE), MAX_EXECUTION_STAGE_BYTES)
-                .map_err(ExecutionWorkflowPersistenceError::from)?;
-        let (binding, plan) = read_binding(&stage, &workflow, sequence, &binding.digest())?;
+        let (binding, plan) = read_current_binding(&stage, &workflow, sequence)?;
         let settlement = replay_execution_settlement(&stage, &plan.digest())?;
         read_binding(&stage, &workflow, sequence, &binding.digest())?;
         let view = ExecutionStageSettlementView {

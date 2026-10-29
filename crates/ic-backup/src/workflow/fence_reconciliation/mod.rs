@@ -4,7 +4,7 @@ use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
-        fence_acquisition::{FenceAcquisitionError, FenceAcquisitionPayload, original_authority},
+        fence_acquisition::{FenceAcquisitionError, FenceAcquisitionPayload},
         fence_obligation::FenceObligationRecord,
         fence_reconciliation::{
             FenceReconciliationIntent, FenceReconciliationObservation, FenceReconciliationRequest,
@@ -13,8 +13,8 @@ use crate::{
         operation_plan::OperationPlanError,
     },
     ops::persistence::{
-        AttemptJournalError, AttemptJournalGuard, ExecutionProgressPersistenceError,
-        ExecutionStageGuard, ExecutionWorkflowPersistenceError, FenceObligationPersistenceError,
+        AttemptJournalError, ExecutionProgressPersistenceError, ExecutionStageGuard,
+        ExecutionWorkflowPersistenceError, FenceObligationPersistenceError,
         FenceObligationRequirement, read_fence_obligation,
     },
     policy::fence_reconciliation::{FenceReconciliationError, validate},
@@ -57,11 +57,9 @@ pub async fn observe_fence_acquisition<E: std::error::Error + 'static>(
     admit: impl AsyncFnOnce(&FenceReconciliationRequest<'_, '_>) -> Result<(), E>,
 ) -> Result<FenceReconciliationObservation, FenceReconciliationExecutionError<E>> {
     let plan = stage.plan();
-    let layout = stage.layout()?;
-    read_fence_obligation(layout, plan, requirement, &obligation.digest())?;
-    let authority = plan.attempt_authority(obligation.acquisition_operation())?;
-    let mut journal = AttemptJournalGuard::open(layout, &authority)?;
-    original_authority(plan, obligation, journal.record()?, payload)?;
+    let mut journal = super::fence_acquisition::open_original::<
+        FenceReconciliationExecutionError<E>,
+    >(stage, requirement, obligation, payload)?;
     let intent = FenceReconciliationIntent::new(plan, obligation, journal.record()?, challenge)?;
     journal.reserve_planned_observation(
         &plan.digest(),
@@ -128,11 +126,9 @@ pub async fn settle_fence_acquisition_observation<E: std::error::Error + 'static
     ) -> Result<ObservationReceiptRequest, E>,
 ) -> Result<ObservationOutcomeRecord, FenceReconciliationSettlementError<E>> {
     let plan = stage.plan();
-    let layout = stage.layout()?;
-    read_fence_obligation(layout, plan, requirement, &obligation.digest())?;
-    let authority = plan.attempt_authority(obligation.acquisition_operation())?;
-    let mut journal = AttemptJournalGuard::open(layout, &authority)?;
-    original_authority(plan, obligation, journal.record()?, payload)?;
+    let mut journal = super::fence_acquisition::open_original::<
+        FenceReconciliationSettlementError<E>,
+    >(stage, requirement, obligation, payload)?;
     journal.admit_planned_progress(&plan.digest())?;
     let intent = FenceReconciliationIntent::new(plan, obligation, journal.record()?, challenge)?;
     let request = FenceReconciliationRequest::new(&intent, journal.record()?)?;

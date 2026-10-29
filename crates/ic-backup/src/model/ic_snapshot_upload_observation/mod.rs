@@ -1,8 +1,9 @@
 //! Exact reserved inventory observations of unresolved metadata uploads.
 
+use crate::model::attempt_journal::ObservationReservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
-    ic_observation::{IcObservationRequestError, ObservationReservation},
+    ic_observation::IcObservationRequestError,
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
     ic_snapshot_upload::{
         IcSnapshotUploadAttemptError, IcSnapshotUploadKind, IcSnapshotUploadRequest,
@@ -53,7 +54,8 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
         payload
             .validate_observation_binding(authority.binding(), &payload.digest())
             .map_err(IcObservationRequestError::from)?;
-        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())
+            .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         let request = Self {
             plan,
             mutation,
@@ -100,7 +102,9 @@ impl<'request, 'source> IcSnapshotUploadObservationRequest<'request, 'source> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        self.reservation.validate(journal)
+        self.reservation
+            .validate(journal)
+            .map_err(IcObservationRequestError::from)
     }
 }
 

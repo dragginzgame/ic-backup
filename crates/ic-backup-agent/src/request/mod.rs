@@ -8,6 +8,7 @@ use ic_backup::model::{
     fence_acquisition::FenceAcquisitionRequest,
     ic_mutation::{IcMutationRequest, MAX_IC_MUTATION_REPLY_BYTES},
     ic_observation::{IcObservationRequest, MAX_IC_OBSERVATION_REPLY_BYTES},
+    ic_request::IcManagementRequestRecord,
     ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
     ic_snapshot_metadata::MAX_IC_SNAPSHOT_METADATA_BYTES,
     ic_snapshot_transfer_read::{IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest},
@@ -65,25 +66,15 @@ impl ReservedUpdate<'_> {
             }
             Self::Mutation(r) => {
                 r.validate_journal(journal).ok()?;
-                Wire {
-                    context: r.plan().context(),
-                    receiver: r.payload().receiver(),
-                    target: r.payload().target(),
-                    method: r.payload().method().name(),
-                    arguments: r.payload().arguments(),
-                    reply_limit: MAX_IC_MUTATION_REPLY_BYTES,
-                }
+                Wire::management(r.plan().context(), r.payload(), MAX_IC_MUTATION_REPLY_BYTES)
             }
             Self::Observation(r) => {
                 r.validate_journal(journal).ok()?;
-                Wire {
-                    context: r.plan().context(),
-                    receiver: r.payload().receiver(),
-                    target: r.payload().target(),
-                    method: r.payload().method().name(),
-                    arguments: r.payload().arguments(),
-                    reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
-                }
+                Wire::management(
+                    r.plan().context(),
+                    r.payload(),
+                    MAX_IC_OBSERVATION_REPLY_BYTES,
+                )
             }
             Self::TransferRead(r) => {
                 r.validate_journal(journal).ok()?;
@@ -113,14 +104,11 @@ impl ReservedUpdate<'_> {
             }
             Self::UploadObservation(r) => {
                 r.validate_journal(journal).ok()?;
-                Wire {
-                    context: r.plan().context(),
-                    receiver: r.payload().receiver(),
-                    target: r.payload().target(),
-                    method: r.payload().method().name(),
-                    arguments: r.payload().arguments(),
-                    reply_limit: MAX_IC_OBSERVATION_REPLY_BYTES,
-                }
+                Wire::management(
+                    r.plan().context(),
+                    r.payload(),
+                    MAX_IC_OBSERVATION_REPLY_BYTES,
+                )
             }
             Self::UploadDataObservation(r) => {
                 r.validate_journal(journal).ok()?;
@@ -149,6 +137,21 @@ impl ReservedUpdate<'_> {
 }
 
 impl<'a> Wire<'a> {
+    fn management(
+        context: &'a PlanContextRecord,
+        payload: &'a IcManagementRequestRecord,
+        reply_limit: usize,
+    ) -> Self {
+        Self {
+            context,
+            receiver: payload.receiver(),
+            target: payload.target(),
+            method: payload.method().name(),
+            arguments: payload.arguments(),
+            reply_limit,
+        }
+    }
+
     fn application(context: &'a PlanContextRecord, payload: &'a ApplicationIngressPayload) -> Self {
         Self {
             context,

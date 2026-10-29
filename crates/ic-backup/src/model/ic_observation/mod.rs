@@ -1,5 +1,6 @@
 //! Exact already reserved IC recovery observations and bounded passive replies.
 
+use crate::model::attempt_journal::ObservationReservation;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord, MAX_OPERATION_ATTEMPTS},
@@ -52,7 +53,8 @@ impl<'a> IcObservationRequest<'a> {
         }
         mutation.validate_mutation_binding(authority.binding())?;
         payload.validate_observation_binding(authority.binding(), &payload.digest())?;
-        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())
+            .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         let request = Self {
             plan,
             mutation,
@@ -98,66 +100,9 @@ impl<'a> IcObservationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcObservationRequestError> {
-        self.reservation.validate(journal)
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct ObservationReservation {
-    pub authority: AttemptAuthorityRecord,
-    pub mutation_attempt: u32,
-    pub observation_attempt: u32,
-    pub request: ArtifactChecksumRecord,
-}
-
-/// Read only the already consumed original attempt IDs, in mutation-first order.
-fn pending_attempts(
-    journal: &AttemptJournalRecord,
-) -> Result<(u32, u32), IcObservationRequestError> {
-    Ok((
-        journal
-            .pending_mutation()
-            .ok_or(IcObservationRequestError::NoPendingMutation)?,
-        journal
-            .pending_observation()
-            .ok_or(IcObservationRequestError::NoPendingObservation)?,
-    ))
-}
-
-impl ObservationReservation {
-    pub(crate) fn new(
-        authority: AttemptAuthorityRecord,
-        journal: &AttemptJournalRecord,
-        request: ArtifactChecksumRecord,
-    ) -> Result<Self, IcObservationRequestError> {
-        let (mutation_attempt, observation_attempt) = pending_attempts(journal)?;
-        let reservation = Self {
-            authority,
-            mutation_attempt,
-            observation_attempt,
-            request,
-        };
-        reservation.validate(journal)?;
-        Ok(reservation)
-    }
-
-    pub(crate) fn validate(
-        &self,
-        journal: &AttemptJournalRecord,
-    ) -> Result<(), IcObservationRequestError> {
-        if journal.authority() != &self.authority {
-            return Err(IcObservationRequestError::AuthorityMismatch);
-        }
-        if journal.pending_mutation() != Some(self.mutation_attempt) {
-            return Err(IcObservationRequestError::MutationMismatch);
-        }
-        if journal.pending_observation() != Some(self.observation_attempt) {
-            return Err(IcObservationRequestError::ObservationMismatch);
-        }
-        if journal.pending_observation_request() != Some(self.request.hash()) {
-            return Err(IcObservationRequestError::RequestMismatch);
-        }
-        Ok(())
+        self.reservation
+            .validate(journal)
+            .map_err(IcObservationRequestError::from)
     }
 }
 
@@ -292,3 +237,19 @@ pub use settlement::{IcLifecycleAttribution, IcLifecycleSettlement};
 
 #[cfg(test)]
 mod tests;
+
+impl From<crate::model::attempt_journal::ObservationReservationError>
+    for IcObservationRequestError
+{
+    fn from(error: crate::model::attempt_journal::ObservationReservationError) -> Self {
+        use crate::model::attempt_journal::ObservationReservationError as Reservation;
+        match error {
+            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
+            Reservation::NoPendingMutation => Self::NoPendingMutation,
+            Reservation::NoPendingObservation => Self::NoPendingObservation,
+            Reservation::MutationMismatch => Self::MutationMismatch,
+            Reservation::ObservationMismatch => Self::ObservationMismatch,
+            Reservation::RequestMismatch => Self::RequestMismatch,
+        }
+    }
+}

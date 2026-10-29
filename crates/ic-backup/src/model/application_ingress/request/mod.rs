@@ -1,9 +1,9 @@
 //! Passive original application reservations; reconstructing one is never a resend permit.
 
 use super::{ApplicationIngressError, ApplicationIngressPayload};
+use crate::model::attempt_journal::ObservationReservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
-    ic_observation::ObservationReservation,
     operation_plan::OperationPlanRecord,
 };
 
@@ -101,7 +101,8 @@ impl<'a> ApplicationObservationRequest<'a> {
     ) -> Result<Self, ApplicationIngressError> {
         let authority = authority(plan, sequence, journal)?;
         payload.validate_observation_binding(authority.binding())?;
-        let reservation = ObservationReservation::new(authority, journal, payload.digest())?;
+        let reservation = ObservationReservation::new(authority, journal, payload.digest())
+            .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         Ok(Self {
             plan,
             payload,
@@ -140,7 +141,9 @@ impl<'a> ApplicationObservationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), ApplicationIngressError> {
-        self.reservation.validate(journal)?;
+        self.reservation
+            .validate(journal)
+            .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         Ok(())
     }
 }

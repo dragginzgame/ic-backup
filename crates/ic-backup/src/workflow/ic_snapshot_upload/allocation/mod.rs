@@ -78,15 +78,17 @@ pub async fn allocate_snapshot<E: std::error::Error + 'static>(
             let receipt = qualify(request, admitted.acknowledgement())
                 .await
                 .map_err(IcSnapshotAllocationSettlementError::Qualification)?;
-            let receipt = super::super::qualified_receipt::admit_applied(
+            super::super::qualified_receipt::record_applied(
+                journal,
                 receipt,
                 request.mutation_attempt(),
                 payload.binding_digest().hash(),
+                IcSnapshotAllocationSettlementError::ReceiptRequired,
+                || {
+                    stage.layout()?;
+                    Ok(admitted.reply().digest())
+                },
             )
-            .ok_or(IcSnapshotAllocationSettlementError::ReceiptRequired)?;
-            stage.layout()?;
-            journal.record_mutation(receipt)?;
-            Ok::<_, IcSnapshotAllocationSettlementError<E>>(admitted.reply().digest())
         },
     )
     .await?;

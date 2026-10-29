@@ -26,10 +26,10 @@ impl Driver {
         )
         .map_err(error)?
         .to_text();
-        if evidence["context"] != self.config["context"]
-            || evidence["target"] != self.config["target"]
+        if evidence["context"] != serde_json::to_value(&self.config.context)?
+            || evidence["target"] != self.config.target
             || evidence["controllers"] != json!([caller])
-            || evidence["module_hash"] != self.config["context"]["release"]
+            || evidence["module_hash"] != self.config.context.release()
             || evidence["status"] != serde_json::to_value(CanisterStatusType::Stopped)?
         {
             return Err(io::ErrorKind::PermissionDenied.into());
@@ -44,7 +44,7 @@ impl Driver {
         let raw = read(&self.root.join("acceptance.json"))?;
         let record: Value = serde_json::from_slice(&raw)?;
         let request = self.metadata_request()?;
-        let metadata_raw = self.raw(false, 1)?;
+        let metadata_raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &metadata_raw).map_err(error)?;
         if record["restore"] != serde_json::to_value(self.restore.digest())?
             || record["source_metadata"] != serde_json::to_value(metadata.digest())?
@@ -65,8 +65,9 @@ impl Driver {
         stage: &ExecutionStageGuard<'_>,
     ) -> io::Result<Digest> {
         let sequence = stage.binding().stage_sequence();
+        let kind = Stage::from_sequence(sequence)?;
         let destination = self.destination()?;
-        let accepted = if sequence == 6 {
+        let accepted = if kind == Stage::Start {
             Some(self.acceptance()?)
         } else {
             None
@@ -74,7 +75,7 @@ impl Driver {
         let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let source_plan = self.source_plan(&source)?;
         let request = self.metadata_request()?;
-        let metadata_raw = self.raw(false, 1)?;
+        let metadata_raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &metadata_raw).map_err(error)?;
         let journal =
             DownloadJournalGuard::open(&source, source_plan.digest().hash()).map_err(error)?;
@@ -85,18 +86,24 @@ impl Driver {
         journal
             .read_download_manifest(&source_plan, &manifest)
             .map_err(error)?;
-        let restore_source = if sequence == 5 {
+        let restore_source = if kind == Stage::Load {
             let upload = journal
                 .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
                 .map_err(error)?;
-            let allocation_raw = self.raw(true, 3)?;
+            let allocation_raw = self.raw(Stage::Allocation)?;
             let allocation = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadReply::decode(
                 &upload,
                 &allocation_raw,
             )
             .map_err(error)?;
             let data = journal
-                .prepare_ic_snapshot_data_upload_plan(&self.restore, 4, TOKEN, &allocation, CHUNK)
+                .prepare_ic_snapshot_data_upload_plan(
+                    &self.restore,
+                    Stage::Upload.sequence(),
+                    TOKEN,
+                    &allocation,
+                    CHUNK,
+                )
                 .map_err(error)?;
             IcRestoreSource::uploaded(
                 &source,
@@ -110,12 +117,12 @@ impl Driver {
         };
         drop(journal);
         let payload = self.payload(
-            if sequence == 5 {
+            if kind == Stage::Load {
                 Method::LoadCanisterSnapshot
             } else {
                 Method::StartCanister
             },
-            (sequence == 5).then_some(destination),
+            (kind == Stage::Load).then_some(destination),
         );
         let requirement = RestoreSafetyRequirementRecord::new(
             stage.plan(),
@@ -178,8 +185,7 @@ impl Driver {
                         restored_acceptance: accepted.clone(),
                     }],
                     safety: RestoreSafetyEvidence::NoIrreversibleEffects(
-                        Digest::from_hash(self.config["context"]["release"].as_str().unwrap())
-                            .map_err(error)?,
+                        Digest::from_hash(self.config.context.release()).map_err(error)?,
                     ),
                     evidence,
                     remote_observations: 0,
@@ -187,7 +193,7 @@ impl Driver {
                 .map_err(error)
             },
             async |request, acknowledgement| {
-                if sequence == 5 && self.mode == "lose-load" {
+                if kind == Stage::Load && self.mode == "lose-load" {
                     // Deliberately die after the real authenticated load and before
                     // qualifying any receipt. Retain oracle bytes separately; cold
                     // continuation must never use them to infer Applied or redispatch.
@@ -259,7 +265,7 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
         read_complete_execution_workflow_locked(self.restore, self.journal, &workflow.digest())
             .map_err(error)?;
         let request = self.driver.metadata_request()?;
-        let raw = self.driver.raw(false, 1)?;
+        let raw = self.driver.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
         let plan = self.driver.source_plan(self.source)?;
         let download =

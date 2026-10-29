@@ -6,7 +6,9 @@ use crate::{
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
-        ic_snapshot_upload::{IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError},
+        ic_snapshot_upload::{
+            IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, UploadCompletion,
+        },
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
@@ -36,7 +38,7 @@ struct UploadOrigin<'a> {
     layout: &'a BackupLayoutGuard,
     workflow: crate::model::artifacts::ArtifactChecksumRecord,
     completed: ExecutionStagePredecessorRecord,
-    allocation_receipt: Option<crate::model::artifacts::ArtifactChecksumRecord>,
+    completion: UploadCompletion,
 }
 
 impl<'a> IcRestoreSource<'a> {
@@ -72,17 +74,23 @@ impl<'a> IcRestoreSource<'a> {
         workflow_layout: &'a BackupLayoutGuard,
         completed: &ExecutionStagePredecessorRecord,
     ) -> Result<Self, IcRestoreSourceError> {
+        let stage = ExecutionStageGuard::open(
+            workflow_layout,
+            &upload.workflow_digest(),
+            completed.stage_sequence(),
+            completed.binding(),
+        )?;
+        let completion = upload.validate_completion(
+            stage.binding(),
+            stage.plan(),
+            completed.learned_evidence(),
+        )?;
         let origin = UploadOrigin {
             layout: workflow_layout,
             workflow: upload.workflow_digest(),
             completed: completed.clone(),
-            allocation_receipt: upload
-                .plan()
-                .is_none()
-                .then(|| completed.learned_evidence().clone()),
+            completion,
         };
-        let stage = origin.open()?;
-        upload.validate_completion(stage.binding(), stage.plan(), completed.learned_evidence())?;
         origin.replay(&stage)?;
         Ok(Self {
             layout,
@@ -132,14 +140,17 @@ impl UploadOrigin<'_> {
         if stage.replay_checkpoint(self.completed.learned_evidence().clone())? != self.completed {
             return Err(IcRestoreSourceError::Mismatch);
         }
-        if let Some(expected) = &self.allocation_receipt {
-            let sequence = stage.plan().operations()[0].operation_sequence();
+        if let UploadCompletion::Allocation {
+            sequence,
+            evidence: expected_evidence,
+        } = &self.completion
+        {
             let authority = stage
                 .plan()
-                .attempt_authority(sequence)
+                .attempt_authority(*sequence)
                 .map_err(|_| IcRestoreSourceError::Mismatch)?;
             let journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-            if !matches!(journal.record()?.applied_receipt(), Some(AppliedReceiptEvidence::Mutation { evidence, .. }) if evidence == expected.hash())
+            if !matches!(journal.record()?.applied_receipt(), Some(AppliedReceiptEvidence::Mutation { evidence, .. }) if evidence == expected_evidence.hash())
             {
                 return Err(IcRestoreSourceError::Mismatch);
             }

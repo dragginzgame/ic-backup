@@ -33,6 +33,16 @@ pub struct IcSnapshotDataUploadPlan<'workflow, 'request, 'source> {
     kinds: Vec<SnapshotDataKind>,
     plan: Option<OperationPlanRecord>,
 }
+// Completion records the admitted operation, never a new effect or persisted mode.
+#[derive(Clone)]
+pub(crate) enum UploadCompletion {
+    Data,
+    Allocation {
+        sequence: u64,
+        evidence: ArtifactChecksumRecord,
+    },
+}
+
 // Carry the admitted allocation and bounded extents across guarded source IO.
 // Only finish can turn their exact ordered byte bindings into a public plan.
 pub(crate) struct DataUploadPreparation<'workflow, 'request, 'source> {
@@ -121,12 +131,13 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
         binding: &ExecutionStageBindingRecord,
         plan: &OperationPlanRecord,
         learned: &ArtifactChecksumRecord,
-    ) -> Result<(), IcSnapshotDataUploadPlanningError> {
+    ) -> Result<UploadCompletion, IcSnapshotDataUploadPlanningError> {
         if let Some(expected) = self.plan() {
             self.validate_binding(binding)?;
             if plan != expected {
                 return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
             }
+            Ok(UploadCompletion::Data)
         } else {
             binding.validate(self.binding.workflow, plan)?;
             if plan.operations().len() != 1
@@ -136,8 +147,11 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
             {
                 return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
             }
+            Ok(UploadCompletion::Allocation {
+                sequence: plan.operations()[0].operation_sequence(),
+                evidence: self.binding.evidence.clone(),
+            })
         }
-        Ok(())
     }
     /// Read exact ordered source extents. Operation sequences are zero-based indices.
     #[must_use]

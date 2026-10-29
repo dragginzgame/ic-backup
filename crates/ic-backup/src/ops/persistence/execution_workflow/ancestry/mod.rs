@@ -13,13 +13,42 @@ pub(super) fn read_binding(
     sequence: u64,
     expected: &ArtifactChecksumRecord,
 ) -> Result<(ExecutionStageBindingRecord, OperationPlanRecord), ExecutionWorkflowPersistenceError> {
+    let binding = read_binding_record(layout, sequence)?;
+    if &binding.digest() != expected {
+        return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
+    }
+    admit_binding_plan(layout, workflow, binding)
+}
+
+// Opening inspection has no independently supplied binding digest. Read and admit
+// that original once; callers retain their closing digest checks around journal IO.
+pub(super) fn read_current_binding(
+    layout: &BackupLayoutGuard,
+    workflow: &ExecutionWorkflowRecord,
+    sequence: u64,
+) -> Result<(ExecutionStageBindingRecord, OperationPlanRecord), ExecutionWorkflowPersistenceError> {
+    admit_binding_plan(layout, workflow, read_binding_record(layout, sequence)?)
+}
+
+fn read_binding_record(
+    layout: &BackupLayoutGuard,
+    sequence: u64,
+) -> Result<ExecutionStageBindingRecord, ExecutionWorkflowPersistenceError> {
     layout.check_root()?;
     let binding: ExecutionStageBindingRecord =
         read_json(&layout.root().join(BINDING_FILE), MAX_EXECUTION_STAGE_BYTES)?;
     super::super::json::check_json_size(&binding, MAX_EXECUTION_STAGE_BYTES)?;
-    if binding.stage_sequence() != sequence || &binding.digest() != expected {
+    if binding.stage_sequence() != sequence {
         return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
     }
+    Ok(binding)
+}
+
+fn admit_binding_plan(
+    layout: &BackupLayoutGuard,
+    workflow: &ExecutionWorkflowRecord,
+    binding: ExecutionStageBindingRecord,
+) -> Result<(ExecutionStageBindingRecord, OperationPlanRecord), ExecutionWorkflowPersistenceError> {
     let plan = read_operation_plan(layout, binding.plan())?;
     binding.validate(workflow, &plan)?;
     Ok((binding, plan))
