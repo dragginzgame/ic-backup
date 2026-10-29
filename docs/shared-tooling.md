@@ -92,7 +92,7 @@ Backup's bounded management wire adapters remain external Candid projections;
 domain and persisted records do not acquire a Candid contract. Snapshot adoption
 does not install new source scanners or qualify every existing input boundary.
 
-The reviewed Shared Tooling 0.27.6 snapshot includes the
+The reviewed Shared Tooling 0.27.7 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -138,6 +138,13 @@ source-preparation slots and previous generations remain retained. This changes
 the build-policy digest. When a refresh changes that digest, run `make install-tools`
 once to refresh the common Cargo tools, locked Testkit CLI/server and release editor. See
 [the canonical setup guidance](local-setup.md#standard-cargo-tool-build-environment).
+
+The 0.27.7 baseline assigns shared Rust metrics and logging engines to
+`ic-metrics` and `ic-logging`. Backup currently supplies no such engine or
+instrumentation, so adoption adds no unused dependency. Diagnostic output and
+retained effect evidence keep their existing product owners. The exported change
+is limited to governance and audit guidance; producer stack/dashboard changes
+are outside Backup's selected snapshot.
 
 ## Current guard and recovery integration
 

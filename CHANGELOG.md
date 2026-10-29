@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.50.0]
+
+### ⚠️ Breaking
+
+- Move public Host artifact and filesystem error identities to IC Tooling 0.70.
+  Consumers exchanging these errors must align their direct Host dependencies
+  with the 0.70 line. Stored records and artifact bytes keep their existing format.
+
+### 🔧 Dependencies
+
+- Adopt Host libraries, Testkit and the release metadata editor 0.70.0. Testkit
+  shares Platform 0.8.1 with production dependencies; prepare the selected
+  contributor tools with `make install-tools`.
+
+- Adopt published IC Platform 0.8.1 with the existing Candid, management DTO and
+  Agent feature selections. Preserve qualified external Principal/management
+  identities, public Backup contracts and original record/wire bytes; existing
+  protocol features supply the required Principal conversions.
+
 ## [0.49.1] - 2026-10-29
 
 ### ➕ Added

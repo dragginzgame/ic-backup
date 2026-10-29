@@ -9,12 +9,21 @@ local Cargo patch supplies dependencies.
 ## Ownership and features
 
 The workspace disables defaults and selects `candid` and
-`management-canister-types`. These features include `principal`, preserving owned
-principal/account availability without another feature selection. Only Agent adds
-`agent`; an independent Core consumer remains Agent-free. Parser, executor, ic0, certification, ledger, service generation
-and CDK runtime features are unused. Production and test imports use Platform;
+`management-canister-types`. These features include `principal-external`, which
+supplies the owned `principal` capability and explicit external byte conversions.
+Platform 0.8 separates public-key self-authentication into its own optional feature;
+Backup does not use that owned helper or enable it. Only Agent adds
+`agent`; an independent Core consumer remains Agent-free. Parser, executor, ic0,
+certification, ledger, service generation and CDK runtime features are unused.
+Production and test imports use Platform;
 no local compatibility re-exports, direct upstream declarations or pin exceptions
 remain. Application protocols owned by IC Wire keep their existing representation.
+
+The selected feature families retain upstream Candid, management DTO, Agent and
+external Principal Rust identities. Platform's separately owned ICRC packaging is
+not selected by Backup. Testkit selects the same Platform 0.8 family in development.
+Independent normal consumers still qualify Core and Agent without development
+features supplying their production capabilities.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |
@@ -66,14 +75,13 @@ do not enable them. Production-tree checks and exact public-identity probes are
 separate from direct declaration checks; deployment admission belongs to the
 application's exact target/features, locked build and artifact identity.
 
-The normal and development graphs select one Platform 0.7.0 identity, including
-Testkit 0.69.0. Independent normal consumers exclude Testkit, PocketIC and WAT.
-Backup's public Host error types now belong to the 0.69 line; consumers exchanging
+Independent normal consumers exclude Testkit, PocketIC and WAT. Backup's public
+Host error types belong to the 0.70 line; consumers exchanging
 those values must align direct Host dependencies. Their fields, source chains,
 recovery behavior and serialized data retain their existing contracts.
 
-Platform 0.7 removes Candid frontend compiler exports; Backup selects neither
-the parser feature nor those exports. Management DTO 0.11.0, external principal
+Backup selects neither the parser feature nor removed Candid frontend compiler
+exports. Management DTO 0.11.0, external principal
 0.1.5, Agent identities and the consumed codecs remain unchanged. The local
 bounded status, list, metadata and data projections serve the management-canister
 protocol; test-only malformed shapes qualify rejection of that same external

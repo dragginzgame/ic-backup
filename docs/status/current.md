@@ -1,99 +1,106 @@
 # Current handoff — 2026-10-29
 
-## Local reusable operator composition
+## Shared and IC Tooling adoption
 
-Delivered **0.49.0** is `4f89df65c60d10aed970cd120e7baba5ff841aa4`, tagged
-`v0.49.0`. The working tree implements [#75 — Reusable capture/restore operator
-composition](https://github.com/dragginzgame/ic-backup/issues/75) over its existing
-workflow, plan, journal, transfer and guarded release owners. No second journal,
-operator schema, scheduler, refund or default authority provider is added.
+Delivered **0.49.1** is `920dbfb6a81d314406d947c98453dd54e7d2c265`.
+[#74](https://github.com/dragginzgame/ic-backup/issues/74) and
+[#75](https://github.com/dragginzgame/ic-backup/issues/75) are closed after delivery;
+[CI run 40877518055](https://github.com/dragginzgame/ic-backup/actions/runs/40877518055)
+passed the complete native matrix for that exact commit. That evidence belongs to
+the delivered graph, not this dependency update.
 
-`advance_execution_workflow` reuses complete retained-stage admission and the
-existing dependency/execution loop with a positive limit on new stages. It returns
-Paused between settled stages or Complete after full local checkpoint replay.
-Pending observations/mutations and partial/changed originals refuse before new
-callbacks. A different limit never authorizes redispatch. Each stage retains its
-original finite effect allowance; the limit is not a timeout or per-call budget.
+This batch adopts published **IC Tooling 0.70.0** for Host Artifacts/FS/Process,
+Testkit and the release metadata editor, preserving the preceding **IC Platform
+0.8.1** adoption. Testkit now selects Platform 0.8.1 and explicit external Principal
+conversions; development-only Platform 0.7.6 leaves the lock. No unrelated package
+version changes. Published archives match crates.io checksums and source revision
+`ecc8d61d19f0b711788f7e10e5dd728d0db6ff60`; exact registry metadata is retained at
+`/tmp/backup-tooling070-registry.json`.
 
-`read_execution_workflow_progress` projects every original stage through existing
-binding, ancestor and complete child-journal admission. Prepared rows preserve both
-pending lanes; absent rows supply no never-dispatched custody. Missing/unsafe/partial
-originals remain typed errors. The read supplies no learned evidence, checkpoint,
-artifact completeness, application acceptance or terminal authority.
+Host and Testkit Rust source is unchanged from the incoming 0.69.14 packages.
+Host's public artifact/filesystem error identities nevertheless move to the 0.70
+line; consumers exchanging them must align direct dependencies. All pending notes
+therefore move to **0.50.0**. Workspace/package versions remain **0.49.1**; changes
+are unstaged/uncommitted. No Rust source, persisted schema, wire/artifact bytes or
+recovery authority changes. No release, publication, issue mutation, sibling edit
+or live IC operation was performed.
 
-The independent normal consumer now uses this bounded operator composition through
-capture, metadata/data transfer, immutable manifest publication, source-bound upload,
-same-ID load, a normal pause before independently accepted start, and guarded source
-release. Inspection produces one passive JSON result. Missing learned evidence
-refuses explicitly, without a placeholder hash or oracle-based inference.
+Shared **0.27.7**, revision `11d519c604b1727a2bf6272557a97e770a63b29f`, is adopted
+through its canonical exporter from an isolated clean checkout of independently
+observed GitHub main. All **126 payloads** match that exact source and executable
+modes; only four governance/audit files change. Selected installers, catalogs,
+formatting and validation/release scripts are unchanged. The new observability
+contract names `ic-metrics`/`ic-logging` as shared owners. Backup has no competing
+engine or instrumentation to migrate, so no unused dependency is added. Producer
+stack/dashboard changes are outside the selection. [The review](../shared-tooling-review.json)
+and [consumer guide](../shared-tooling.md) retain scope and provenance.
 
-[The operator map](../canic-adoption.md#reusable-operator-composition) covers each
-maintained operator operation; [the Canic removal map](../canic-adoption.md#canic-engine-removal-map)
-identifies the exact generic modules/callers to replace. Read-only inspection used
-Canic `b9ed7f298bdaf8c9cceac142edf7e56b15d33208`; source fingerprints and scope are
-`/tmp/backup75-canic-source.json`. No Canic source, active restore path or old layout
-was changed. Actual Fleet/Root policy, Root-paid effects, application hooks and
-terminal acceptance remain Canic ports. No forwarding crate or copied host engine
-is the intended migration outcome.
+Management DTO **0.11.0**, external Principal **0.1.5**, Agent SDK **0.49.3**,
+Candid **0.10.39**, PocketIC **16.1.0** and Rust floor **1.91.0** remain unchanged.
+Core/Agent retain their existing Platform feature selections; no ICRC, profiler or
+owned self-authentication helper is selected. [Platform ownership](../ic-platform.md)
+and [implementation contracts](../implementation-contracts.md) remain mandatory.
+[Platform #50](https://github.com/dragginzgame/ic-platform/issues/50) retains
+separate supplier crypto/TLS qualification.
 
-Pending **0.49.1** notes cover these compatible additions and the earlier 0.49
-adoption-guidance correction. Package versions remain **0.49.0**. All local edits
-are unstaged/uncommitted; new APIs are not in the published 0.49.0 packages.
-[#74](https://github.com/dragginzgame/ic-backup/issues/74) is delivered in 0.49.0;
-#75 remains open pending delivery. No issue mutation, Git/release effect, publication
-or live IC operation was performed. GitHub remains the issue tracker.
+## Focused qualification
 
-## Focused operator qualification
+Strict Core/Agent Clippy passes for all targets/features. All **21 selected
+artifact/JSON persistence unit tests** and **six public checksum/artifact/recovery
+tests** pass. Both independent normal consumers pass on actual Rust **1.91.0**,
+including public Host error interoperability. Their graph excludes Testkit,
+PocketIC and WAT; Core also excludes Agent. Evidence is
+`target/msrv-consumers.hYmod9` and `/tmp/backup-tooling070-msrv.log`.
 
-**11 workflow unit tests pass**, including bounded pauses/cold replay, changed
-original identity, missing journals, partial preparation and pending-observation
-inspection/refusal. Strict Core/Agent Clippy passes for all targets/features.
-Warning-denied Core Rustdoc and the actual Rust **1.91.0** Agent library/Core
-normal-dependency build pass on this batch's graph.
+The independent normal-consumer PocketIC capture/transfer/manifest/upload/same-ID
+load/start/terminal-replay case passes with Testkit 0.70.0. Production graph/build
+evidence is `/tmp/ic-backup-agent-independent-build-536636-0`; authenticated fixture
+`/tmp/ic-backup-agent-pocketic-536636-1` retains original plans, journals, exact
+bytes, manifests, server/process output and replay evidence. This is candidate-path
+Linux qualification, not new registry-only, macOS, installed Canic or live
+application acceptance.
 
-All **7 independent normal-consumer registered cases pass across focused runs**:
-the complete capture/restore/start/terminal journey, process death after authenticated
-load, the new three-fixture ingress-retention/reply-retention/partial-output case,
-and four opaque application-ingress/recovery cases. Actual snapshot counts, complete
-loaded state, exact original spending, pending identities, partial Created staging,
-no incomplete manifest/start and unchanged files on refusal/replay are checked.
-The original six-pass/one-failure run remains `/tmp/backup75-independent.log`.
-Its sole failure expected a checkpoint mutex after missing learned evidence; early
-refusal now creates none. The stronger unchanged-files assertion passes in
-`/tmp/backup75-death-final.log`. Native fixture assertion/lint failures stay retained.
+Common tool setup succeeds. The initial selected Testkit setup times out safely
+behind an admitted installer owned by another repository. Supported bounded
+waiting then admits the completed 0.70.0 selection; the release editor is prepared
+through cache reuse. Offline **tools-check** passes. PocketIC assets remain 16.1.0;
+old selections and failed logs are retained. All **12 release metadata preparation
+and refusal cases** pass using the admitted 0.70.0 editor, with originals/traces in
+`target/shared-release-tests.JfUFrx`.
 
-Logs are `/tmp/backup75-*`. Initial independent build/graph evidence is
-`/tmp/ic-backup-agent-independent-build-2456269-0`, with original fixtures under
-`/tmp/ic-backup-agent-pocketic-2456269-*`. The corrected death-case build is
-`/tmp/ic-backup-agent-independent-build-2635797-0`, fixture
-`/tmp/ic-backup-agent-pocketic-2635797-1`. Keep raw process/server output, exact
-program/graph identities, manifests, source bytes, envelopes, replies and journals.
-Final formatting, links, dependency boundaries/inheritance, repository inventory and
-snapshot integrity checks are logged in `/tmp/backup75-source-checks.log`.
+Logs are `/tmp/backup-tooling070-*`; source-consistency results are retained in
+`/tmp/backup-tooling070-source-checks.log`. The graph stayed unchanged through
+validation. `/tmp/backup-tooling070-graph.sha256` binds manifest
+`07e26a5b8d321b4a998f4ff3e027bc9729a405740abdf3f047e0ffbb549897a6`
+and lock `68d8e6af070b6da4d2730ce6f7057d645067bfbe059c1df032ecf4c142ddd174`.
+No full local gate or new complete native matrix was run.
 
-These are candidate-path normal-dependency and isolated single-canister Linux
-proofs. No full local gate, unpacked archive/registry-only acceptance of the new API,
-new native macOS matrix, installed Canic migration or live application qualification
-ran. Registry mode needs the matching containing release/harness, not published
-0.49.0 with these unpublished APIs. Original Root-paid, multi-unit/fencing and
+## Earlier integration and retained evidence
+
+The preceding Platform 0.8.1 batch passed 81 IC model/application-ingress tests,
+16 HTTP tests, strict Clippy, independent MSRV consumers and a full PocketIC
+round trip on its then-current Host/Testkit 0.69.14 graph. Preserve
+`/tmp/backup-platform081-*`, `/tmp/ic-backup-agent-independent-build-3940488-0`,
+`/tmp/ic-backup-agent-pocketic-3940488-1` and `target/msrv-consumers.g00fEa`.
+The Platform archive SHA-256 remains
+`b28e5352b4a6fa35217dd5df181a5555197936477570f034a53ffd7dda221c65`, with published
+source `10c2610511d6a5525816185c999b25fd159c1d89`.
+
+Delivered operator composition uses existing plan/journal/coordinator owners;
+no second journal, scheduler or authority provider exists. The
+[operator map](../canic-adoption.md#reusable-operator-composition) and
+[Canic removal map](../canic-adoption.md#canic-engine-removal-map) retain integration
+ownership. Earlier read-only Canic inspection used
+`b9ed7f298bdaf8c9cceac142edf7e56b15d33208`, fingerprinted in
+`/tmp/backup75-canic-source.json`. Fleet/Root policy, Root-paid effects, application
+hooks and terminal acceptance remain Canic ports; multi-unit/fencing and
 external-obligation acceptance remains under Canic #513/#550/#394.
 
-## Graph, tooling and retained evidence
-
-The incoming lock already selected Host/Testkit **0.69.12** and Platform **0.7.6**.
-This batch changes no dependencies. `/tmp/backup75-graph.sha256` binds unchanged
-manifest `7d622b5590c53b3a74637f1451a756d711c4037508fdeecf37b7154798d76b69`
-and lock `1f74ee318d2bb970985f911a46b5d66dcc0584c21bf67b37e5a15b311647a353`.
-Declared Host/Testkit/editor minimums **0.69.9**, Platform **0.7.3**, management DTO
-**0.11.0**, external Principal **0.1.5**, Agent **0.49.3** and Candid **0.10.39** stay
-unchanged. Explicit setup prepared the exact 0.69.12 CLI; offline admission and
-fixture library checks retain prepared PocketIC **16.1.0** and all older bundles.
-No supplier crypto/TLS acceptance follows; [Platform #50](https://github.com/dragginzgame/ic-platform/issues/50)
-retains that distinct ownership.
-
-Shared **0.27.6**, revision `5a72359b5be19d5221334cf2c9b3204621d3f3f6`, stays
-exporter-owned with no vendored changes; [its review](../shared-tooling-review.json)
-retains original adoption evidence. Preserve `/tmp/backup74-*`,
+Preserve `/tmp/backup75-*`, original build
+`/tmp/ic-backup-agent-independent-build-2456269-0`, fixtures
+`/tmp/ic-backup-agent-pocketic-2456269-*`, corrected death-case build
+`/tmp/ic-backup-agent-independent-build-2635797-0` and fixture
+`/tmp/ic-backup-agent-pocketic-2635797-1`. Preserve `/tmp/backup74-*`,
 `/tmp/backup-049-guidance-*`, `/tmp/backup-simplify-*`, earlier independent/PocketIC
 fixtures, Canic/release/consumer journals, `/tmp/backup-reference-release-*`,
 `/tmp/backup-tooling696-*`, `/tmp/backup-platform07*`, `/tmp/backup-72*`,
