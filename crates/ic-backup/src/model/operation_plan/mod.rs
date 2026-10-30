@@ -19,7 +19,6 @@ use crate::model::{
     inventory::{InventoryRecord, InventoryRecordError, MAX_INVENTORY_TARGETS},
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum encoded input and canonical output bytes admitted by plan persistence.
@@ -125,7 +124,7 @@ impl OperationPlanRecord {
         if request.operations.len() != request.graph.nodes().len() {
             return Err(OperationPlanError::OperationCountMismatch);
         }
-        let mut used = BTreeSet::new();
+        let mut used = vec![false; request.selected_targets.len()];
         let mut allocated = AllocatedAttemptsView {
             mutations: 0,
             observations: 0,
@@ -137,16 +136,11 @@ impl OperationPlanRecord {
                     actual: operation.operation_sequence(),
                 });
             }
-            if request
+            let selected = request
                 .selected_targets
                 .binary_search_by(|target| target.as_str().cmp(operation.target()))
-                .is_err()
-            {
-                return Err(OperationPlanError::UnselectedTarget(
-                    operation.target().into(),
-                ));
-            }
-            used.insert(operation.target());
+                .map_err(|_| OperationPlanError::UnselectedTarget(operation.target().into()))?;
+            used[selected] = true;
             allocated.mutations = allocated
                 .mutations
                 .checked_add(operation.budget().mutations())
@@ -159,8 +153,8 @@ impl OperationPlanRecord {
         if !request.budget.admits(allocated) {
             return Err(OperationPlanError::AssignedBudgetExceeded);
         }
-        for id in &request.selected_targets {
-            if !used.contains(id.as_str()) {
+        for (id, used) in request.selected_targets.iter().zip(used) {
+            if !used {
                 return Err(OperationPlanError::UnusedTarget(id.clone()));
             }
         }

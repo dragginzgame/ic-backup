@@ -5,6 +5,7 @@ mod restore;
 mod transfer;
 
 mod config;
+mod evidence;
 mod stage;
 use config::Config;
 use stage::Stage;
@@ -41,7 +42,6 @@ use ic_backup::{
     },
 };
 use ic_backup_agent::{AgentTransport, PreparedUpdate, ReservedUpdate};
-use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
     fs,
@@ -331,14 +331,29 @@ fn workflow(config: &Config, restore: Option<&Digest>) -> ExecutionWorkflowRecor
     for stage in stages {
         let sequence = stage.sequence();
         let mutations = stage.mutations();
-        graph.push(json!({"operation_sequence":sequence,"depends_on":previous.into_iter().collect::<Vec<u64>>() }));
-        operations.push(json!({"operation_sequence":sequence,"target":config.target,"request":purpose.hash(),"budget":{"mutations":mutations,"observations":0}}));
+        graph.push(
+            EffectNodeRecord::new(EffectNodeRequest {
+                operation_sequence: sequence,
+                depends_on: previous.into_iter().collect(),
+            })
+            .unwrap(),
+        );
+        operations.push(
+            PlannedOperationRecord::new(PlannedOperationRequest {
+                operation_sequence: sequence,
+                target: config.target.clone(),
+                request: purpose.hash().into(),
+                budget: AttemptBudgetRecord::new(mutations, 0).unwrap(),
+            })
+            .unwrap(),
+        );
         previous = Some(sequence);
     }
-    ExecutionWorkflowRecord::new(serde_json::from_value(json!({"version":1,"context":config.context,
-        "inventory":{"version":1,"targets":[{"canister_id":config.target,"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[config.target],"graph":{"version":1,"nodes":graph},"operations":operations,
-        "budget":{"mutations":stages.iter().map(|stage|stage.mutations()).sum::<u32>(),"observations":0}})).unwrap())
+    ExecutionWorkflowRecord::new(config.plan(
+        EffectGraphRecord::new(graph).unwrap(),
+        operations,
+        PlanBudgetRecord::new(stages.iter().map(|stage| stage.mutations()).sum(), 0).unwrap(),
+    ))
 }
 
 fn retained(

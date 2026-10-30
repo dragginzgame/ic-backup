@@ -11,7 +11,6 @@ use crate::model::{
 };
 pub use crate::test_support::hex_bytes as unhex;
 use ic_platform::candid::contract;
-use serde_json::json;
 
 pub const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 pub const SOURCE_ID: &[u8] = &[0, 255, 17];
@@ -30,13 +29,41 @@ pub fn raw(name: &str) -> Vec<u8> {
 }
 
 pub fn plan(request: &str) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version":1, "context":{"network":"ab".repeat(32), "caller":"2vxsx-fae", "release":"cd".repeat(32)},
-        "inventory":{"version":1,"targets":[{"canister_id":TARGET,"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[TARGET], "graph":{"version":1,"nodes":[{"operation_sequence":7,"depends_on":[]}]},
-        "operations":[{"operation_sequence":7,"target":TARGET,"request":request,"budget":{"mutations":1,"observations":1}}],
-        "budget":{"mutations":1,"observations":1}
-    })).unwrap()
+    OperationPlanRecord::new(plan_request(request, 7, 1)).unwrap()
+}
+
+pub fn plan_request(request: &str, sequence: u64, observations: u32) -> OperationPlanRequest {
+    use crate::model::inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest};
+    let mut plan = crate::test_support::operation_plan::request();
+    plan.inventory = InventoryRecord::new(vec![
+        InventoryTargetRecord::new(&InventoryTargetRequest {
+            canister_id: TARGET.into(),
+            parent_canister_id: None,
+            role: None,
+            module_hash: None,
+        })
+        .unwrap(),
+    ])
+    .unwrap();
+    plan.graph = EffectGraphRecord::new(vec![
+        EffectNodeRecord::new(EffectNodeRequest {
+            operation_sequence: sequence,
+            depends_on: vec![],
+        })
+        .unwrap(),
+    ])
+    .unwrap();
+    plan.operations = vec![
+        PlannedOperationRecord::new(PlannedOperationRequest {
+            operation_sequence: sequence,
+            target: TARGET.into(),
+            request: request.into(),
+            budget: AttemptBudgetRecord::new(1, observations).unwrap(),
+        })
+        .unwrap(),
+    ];
+    plan.budget = PlanBudgetRecord::new(1, observations).unwrap();
+    plan
 }
 
 pub fn source_plan() -> OperationPlanRecord {

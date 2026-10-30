@@ -1,5 +1,6 @@
 //! Same-release load/start and terminal replay in the normal consumer process.
 
+use super::evidence::{AcceptanceRecord, AdmissionRecord};
 use super::*;
 use ic_backup::{
     model::restore_safety::{
@@ -20,17 +21,17 @@ use ic_platform::management_canister_types::CanisterStatusType;
 impl Driver {
     pub(super) fn admit(&self) -> io::Result<Digest> {
         let raw = read(&self.root.join(format!("admission-{}.json", self.mode)))?;
-        let evidence: Value = serde_json::from_slice(&raw)?;
+        let evidence: AdmissionRecord = serde_json::from_slice(&raw)?;
         let caller = ic_platform::agent::Identity::sender(
             &ic_platform::agent::BasicIdentity::from_raw_key(&[7; 32]),
         )
         .map_err(error)?
         .to_text();
-        if evidence["context"] != serde_json::to_value(&self.config.context)?
-            || evidence["target"] != self.config.target
-            || evidence["controllers"] != json!([caller])
-            || evidence["module_hash"] != self.config.context.release()
-            || evidence["status"] != serde_json::to_value(CanisterStatusType::Stopped)?
+        if !evidence.context.matches(&self.config.context)
+            || evidence.target != self.config.target
+            || evidence.controllers != [caller]
+            || evidence.module_hash != self.config.context.release()
+            || evidence.status != CanisterStatusType::Stopped
         {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
@@ -42,14 +43,14 @@ impl Driver {
 
     pub(super) fn acceptance(&self) -> io::Result<Digest> {
         let raw = read(&self.root.join("acceptance.json"))?;
-        let record: Value = serde_json::from_slice(&raw)?;
+        let record: AcceptanceRecord = serde_json::from_slice(&raw)?;
         let request = self.metadata_request()?;
         let metadata_raw = self.raw(Stage::Metadata)?;
         let metadata = IcSnapshotMetadataReply::decode(&request, &metadata_raw).map_err(error)?;
-        if record["restore"] != serde_json::to_value(self.restore.digest())?
-            || record["source_metadata"] != serde_json::to_value(metadata.digest())?
-            || record["destination"] != serde_json::to_value(self.destination()?)?
-            || record["complete_state"] != json!(true)
+        if !record.restore.matches(&self.restore.digest())
+            || !record.source_metadata.matches(&metadata.digest())
+            || record.destination != self.destination()?
+            || !record.complete_state
         {
             return Err(io::ErrorKind::PermissionDenied.into());
         }

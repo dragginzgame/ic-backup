@@ -19,9 +19,10 @@ use crate::{
         create_execution_workflow, read_execution_progress,
     },
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
-    test_support::ic_snapshot_upload::{data_workflow, unhex, upload_plan},
+    test_support::ic_snapshot_upload::{data_workflow, unhex},
     workflow::ic_snapshot_upload::{
-        IcSnapshotDataUploadExecutionError, IcSnapshotDataUploadReplyError, upload_snapshot_data,
+        IcSnapshotDataUploadExecutionError, IcSnapshotDataUploadReplyError,
+        IcSnapshotUploadExecutionError, upload_snapshot_data,
     },
 };
 use ic_platform::candid::contract;
@@ -65,12 +66,14 @@ fn with_data_stage_then(
     fs::create_dir(&path).unwrap();
     let workflow_layout = BackupLayoutGuard::acquire(&path).unwrap();
     create_execution_workflow(&workflow_layout, &workflow).unwrap();
-    let mut fields = serde_json::to_value(upload_plan(&payload)).unwrap();
-    fields["operations"][0]["operation_sequence"] = serde_json::json!(0);
-    fields["graph"]["nodes"][0]["operation_sequence"] = serde_json::json!(0);
-    fields["operations"][0]["budget"]["observations"] = serde_json::json!(0);
-    fields["budget"]["observations"] = serde_json::json!(0);
-    let plan = serde_json::from_value(fields).unwrap();
+    let plan = crate::model::operation_plan::OperationPlanRecord::new(
+        crate::test_support::ic_snapshot_upload::plan_request(
+            payload.binding_digest().hash(),
+            0,
+            0,
+        ),
+    )
+    .unwrap();
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
     let stage = ExecutionStageGuard::prepare(&workflow_layout, binding, plan).unwrap();
     let raw = unhex("4449444c026c01b6b897890f016d7b0100031500ff");
@@ -127,6 +130,147 @@ enum Failure {
     SourceReplacedAfterFirst,
     OccupiedCheckpoint,
 }
+impl Failure {
+    fn prepare(self, stage: &ExecutionStageGuard<'_>) {
+        if self == Self::OccupiedCheckpoint {
+            fs::write(
+                stage
+                    .layout()
+                    .unwrap()
+                    .root()
+                    .join("execution-settlement.json"),
+                b"occupied original checkpoint",
+            )
+            .unwrap();
+        }
+    }
+
+    fn admit(self) -> io::Result<()> {
+        if self == Self::Admission {
+            Err(io::Error::other("fresh admission refused"))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn qualify(
+        self,
+        source: &DownloadJournalGuard<'_>,
+        request: &IcSnapshotUploadAttempt<'_, '_>,
+        ack: &IcMutationAcknowledgement,
+        qualified: usize,
+    ) -> io::Result<MutationReceiptRequest> {
+        if self == Failure::QualificationSecond && qualified == 2 {
+            return Err(io::Error::other("original reply retention refused"));
+        }
+        let digest = IcSnapshotUploadReply::decode(request.payload(), &ack.input().reply)
+            .unwrap()
+            .digest();
+        if self == Failure::SourceAfterFirst {
+            fs::write(
+                source
+                    .layout
+                    .root()
+                    .join(format!("artifacts/{TARGET}/wasm-module.bin")),
+                [1; 5],
+            )
+            .unwrap();
+        }
+        if self == Failure::SourceReplacedAfterFirst {
+            let path = source
+                .layout
+                .root()
+                .join(format!("artifacts/{TARGET}/wasm-module.bin"));
+            let original = fs::read(&path).unwrap();
+            fs::rename(&path, source.layout.root().join("original-wasm-module.bin")).unwrap();
+            fs::write(&path, original).unwrap();
+        }
+        Ok(MutationReceiptRequest {
+            attempt: request.mutation_attempt(),
+            request: request.payload().binding_digest().hash().into(),
+            outcome: if self == Failure::WrongReceiptSecond && qualified == 2 {
+                MutationOutcomeRecord::NotApplied
+            } else {
+                MutationOutcomeRecord::Applied
+            },
+            evidence: digest.hash().into(),
+        })
+    }
+
+    fn assert_result(
+        self,
+        result: Result<
+            ExecutionStagePredecessorRecord,
+            IcSnapshotDataUploadExecutionError<io::Error>,
+        >,
+        stage: &ExecutionStageGuard<'_>,
+        operations: usize,
+    ) -> (u32, usize, usize) {
+        match self {
+            Failure::LostSecond => {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotDataUploadExecutionError::Upload(
+                        IcSnapshotUploadExecutionError::Provider(_)
+                    ))
+                ));
+                (2, 1, 2)
+            }
+            Failure::QualificationSecond => {
+                assert!(
+                    matches!(result, Err(IcSnapshotDataUploadExecutionError::AfterReply {
+                        operation_sequence: 1,
+                        source: IcSnapshotDataUploadReplyError::Qualification(_),
+                        acknowledgement,
+                    }) if acknowledgement.input().reply == crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY)
+                );
+                (2, 1, 2)
+            }
+            Failure::WrongReceiptSecond => {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotDataUploadExecutionError::AfterReply {
+                        operation_sequence: 1,
+                        source: IcSnapshotDataUploadReplyError::ReceiptRequired,
+                        ..
+                    })
+                ));
+                (2, 1, 2)
+            }
+            Failure::Admission => {
+                assert!(result.is_err());
+                (1, 0, 0)
+            }
+            Failure::SourceAfterFirst | Failure::SourceReplacedAfterFirst => {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotDataUploadExecutionError::Source(_))
+                ));
+                (1, 1, 1)
+            }
+            Failure::OccupiedCheckpoint => {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotDataUploadExecutionError::Checkpoint(_))
+                ));
+                assert_eq!(
+                    fs::read(
+                        stage
+                            .layout()
+                            .unwrap()
+                            .root()
+                            .join("execution-settlement.json")
+                    )
+                    .unwrap(),
+                    b"occupied original checkpoint"
+                );
+                (u32::try_from(operations).unwrap(), operations, operations)
+            }
+            Failure::None => unreachable!(),
+        }
+    }
+}
+
 struct Provider {
     calls: usize,
     failure: Failure,
@@ -194,49 +338,11 @@ fn complete_stage_checkpoints_exact_replies_and_rejects_whole_stage_replay() {
             &ArtifactChecksumRecord::from_bytes(&evidence)
         );
         assert_eq!(provider.calls, data.kinds().len());
-        let before: Vec<_> = (0..provider.calls)
-            .map(|i| {
-                fs::read(
-                    stage
-                        .layout()
-                        .unwrap()
-                        .root()
-                        .join(format!("attempt-{i}.json")),
-                )
-                .unwrap()
-            })
-            .collect();
         let progress =
             read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
         assert_eq!(progress.applied_operations, data.kinds().len());
         assert_eq!(progress.attempts.observations_used, 0);
-        assert!(matches!(
-            ready(upload_snapshot_data(
-                stage,
-                data,
-                source,
-                TOKEN,
-                &mut provider,
-                async |_| -> Result<(), io::Error> { panic!("Applied cannot reissue") },
-                async |_, _| -> Result<MutationReceiptRequest, io::Error> {
-                    panic!("Applied cannot resettle")
-                }
-            )),
-            Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
-        ));
-        for (i, original) in before.iter().enumerate() {
-            assert_eq!(
-                &fs::read(
-                    stage
-                        .layout()
-                        .unwrap()
-                        .root()
-                        .join(format!("attempt-{i}.json"))
-                )
-                .unwrap(),
-                original
-            );
-        }
+        assert_not_reissued(stage, data, source, &mut provider);
         assert_eq!(fs::read(source.path()).unwrap(), original);
         assert_eq!(
             stage.layout().unwrap().restore_references().unwrap(),
@@ -367,11 +473,49 @@ fn cancelled_second_write_qualification_retains_first_receipt_pending_reply_and_
         );
     });
 }
+
+fn journal_bytes(stage: &ExecutionStageGuard<'_>, operations: usize) -> Vec<Vec<u8>> {
+    (0..operations)
+        .map(|sequence| {
+            fs::read(
+                stage
+                    .layout()
+                    .unwrap()
+                    .root()
+                    .join(format!("attempt-{sequence}.json")),
+            )
+            .unwrap()
+        })
+        .collect()
+}
+
+fn assert_not_reissued(
+    stage: &ExecutionStageGuard<'_>,
+    data: &IcSnapshotDataUploadPlan<'_, '_, '_>,
+    source: &DownloadJournalGuard<'_>,
+    provider: &mut Provider,
+) {
+    let before = journal_bytes(stage, data.kinds().len());
+    let calls = provider.calls;
+    assert!(matches!(
+        ready(upload_snapshot_data(
+            stage,
+            data,
+            source,
+            TOKEN,
+            provider,
+            async |_| -> Result<(), io::Error> { panic!("consumed stage cannot reissue") },
+            async |_, _| -> Result<MutationReceiptRequest, io::Error> {
+                panic!("no new settlement")
+            },
+        )),
+        Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
+    ));
+    assert_eq!(journal_bytes(stage, data.kinds().len()), before);
+    assert_eq!(provider.calls, calls);
+}
+
 #[test]
-#[expect(
-    clippy::too_many_lines,
-    reason = "one original-source/journal chronology compares the six independent stop and preservation boundaries"
-)]
 fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evidence() {
     for failure in [
         Failure::LostSecond,
@@ -385,17 +529,7 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
         with_data_stage(|stage, data, source| {
             let source_before = fs::read(source.path()).unwrap();
             let references = stage.layout().unwrap().restore_references().unwrap();
-            if failure == Failure::OccupiedCheckpoint {
-                fs::write(
-                    stage
-                        .layout()
-                        .unwrap()
-                        .root()
-                        .join("execution-settlement.json"),
-                    b"occupied original checkpoint",
-                )
-                .unwrap();
-            }
+            failure.prepare(stage);
             let mut provider = Provider { calls: 0, failure };
             let mut qualified = 0;
             let result = ready(upload_snapshot_data(
@@ -404,156 +538,19 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
                 source,
                 TOKEN,
                 &mut provider,
-                async |_| {
-                    if failure == Failure::Admission {
-                        Err(io::Error::other("fresh admission refused"))
-                    } else {
-                        Ok(())
-                    }
-                },
+                async |_| failure.admit(),
                 async |request, ack| {
                     qualified += 1;
-                    if failure == Failure::QualificationSecond && qualified == 2 {
-                        return Err(io::Error::other("original reply retention refused"));
-                    }
-                    let digest =
-                        IcSnapshotUploadReply::decode(request.payload(), &ack.input().reply)
-                            .unwrap()
-                            .digest();
-                    if failure == Failure::SourceAfterFirst {
-                        fs::write(
-                            source
-                                .layout
-                                .root()
-                                .join(format!("artifacts/{TARGET}/wasm-module.bin")),
-                            [1; 5],
-                        )
-                        .unwrap();
-                    }
-                    if failure == Failure::SourceReplacedAfterFirst {
-                        let path = source
-                            .layout
-                            .root()
-                            .join(format!("artifacts/{TARGET}/wasm-module.bin"));
-                        let original = fs::read(&path).unwrap();
-                        fs::rename(&path, source.layout.root().join("original-wasm-module.bin"))
-                            .unwrap();
-                        fs::write(&path, original).unwrap();
-                    }
-                    Ok(MutationReceiptRequest {
-                        attempt: request.mutation_attempt(),
-                        request: request.payload().binding_digest().hash().into(),
-                        outcome: if failure == Failure::WrongReceiptSecond && qualified == 2 {
-                            MutationOutcomeRecord::NotApplied
-                        } else {
-                            MutationOutcomeRecord::Applied
-                        },
-                        evidence: digest.hash().into(),
-                    })
+                    failure.qualify(source, request, ack, qualified)
                 },
             ));
-            let (used, applied, calls) = match failure {
-                Failure::LostSecond => {
-                    assert!(matches!(result,Err(IcSnapshotDataUploadExecutionError::Upload(crate::workflow::ic_snapshot_upload::IcSnapshotUploadExecutionError::Provider(_)))));
-                    (2, 1, 2)
-                }
-                Failure::QualificationSecond => {
-                    assert!(
-                        matches!(result,Err(IcSnapshotDataUploadExecutionError::AfterReply{operation_sequence:1,source:IcSnapshotDataUploadReplyError::Qualification(_),acknowledgement}) if acknowledgement.input().reply==crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY)
-                    );
-                    (2, 1, 2)
-                }
-                Failure::WrongReceiptSecond => {
-                    assert!(matches!(
-                        result,
-                        Err(IcSnapshotDataUploadExecutionError::AfterReply {
-                            operation_sequence: 1,
-                            source: IcSnapshotDataUploadReplyError::ReceiptRequired,
-                            ..
-                        })
-                    ));
-                    (2, 1, 2)
-                }
-                Failure::Admission => {
-                    assert!(result.is_err());
-                    (1, 0, 0)
-                }
-                Failure::SourceAfterFirst | Failure::SourceReplacedAfterFirst => {
-                    assert!(matches!(
-                        result,
-                        Err(IcSnapshotDataUploadExecutionError::Source(_))
-                    ));
-                    (1, 1, 1)
-                }
-                Failure::OccupiedCheckpoint => {
-                    assert!(matches!(
-                        result,
-                        Err(IcSnapshotDataUploadExecutionError::Checkpoint(_))
-                    ));
-                    assert_eq!(
-                        fs::read(
-                            stage
-                                .layout()
-                                .unwrap()
-                                .root()
-                                .join("execution-settlement.json")
-                        )
-                        .unwrap(),
-                        b"occupied original checkpoint"
-                    );
-                    (
-                        u32::try_from(data.kinds().len()).unwrap(),
-                        data.kinds().len(),
-                        data.kinds().len(),
-                    )
-                }
-                Failure::None => unreachable!(),
-            };
+            let (used, applied, calls) = failure.assert_result(result, stage, data.kinds().len());
             let progress =
                 read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
             assert_eq!(progress.attempts.mutations_used, used);
             assert_eq!(progress.applied_operations, applied);
             assert_eq!(provider.calls, calls);
-            let before: Vec<_> = (0..data.kinds().len())
-                .map(|i| {
-                    fs::read(
-                        stage
-                            .layout()
-                            .unwrap()
-                            .root()
-                            .join(format!("attempt-{i}.json")),
-                    )
-                    .unwrap()
-                })
-                .collect();
-            assert!(matches!(
-                ready(upload_snapshot_data(
-                    stage,
-                    data,
-                    source,
-                    TOKEN,
-                    &mut provider,
-                    async |_| -> Result<(), io::Error> { panic!("consumed stage cannot reissue") },
-                    async |_, _| -> Result<MutationReceiptRequest, io::Error> {
-                        panic!("no new settlement")
-                    }
-                )),
-                Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
-            ));
-            for (i, original) in before.iter().enumerate() {
-                assert_eq!(
-                    &fs::read(
-                        stage
-                            .layout()
-                            .unwrap()
-                            .root()
-                            .join(format!("attempt-{i}.json"))
-                    )
-                    .unwrap(),
-                    original
-                );
-            }
-            assert_eq!(provider.calls, calls);
+            assert_not_reissued(stage, data, source, &mut provider);
             assert_eq!(fs::read(source.path()).unwrap(), source_before);
             assert_eq!(
                 stage.layout().unwrap().restore_references().unwrap(),
@@ -867,9 +864,14 @@ fn uploaded_restore_source_requires_complete_original_and_rejects_snapshot_subst
                         snapshot_id: Some(snapshot.clone()),
                     })
                     .unwrap();
-                    let mut fields = serde_json::to_value(upload_plan(data.metadata())).unwrap();
-                    fields["operations"][0]["request"] = serde_json::json!(wire.digest().hash());
-                    let plan = serde_json::from_value(fields).unwrap();
+                    let plan = crate::model::operation_plan::OperationPlanRecord::new(
+                        crate::test_support::ic_snapshot_upload::plan_request(
+                            wire.digest().hash(),
+                            7,
+                            1,
+                        ),
+                    )
+                    .unwrap();
                     let workflow = ExecutionWorkflowRecord::new(plan);
                     let root = root();
                     let load_layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -920,12 +922,14 @@ fn check_empty_restore_source(
         let path = root();
         let layout = BackupLayoutGuard::acquire(&path).unwrap();
         create_execution_workflow(&layout, workflow).unwrap();
-        let mut fields = serde_json::to_value(upload_plan(data.metadata())).unwrap();
-        fields["operations"][0]["operation_sequence"] = serde_json::json!(0);
-        fields["graph"]["nodes"][0]["operation_sequence"] = serde_json::json!(0);
-        fields["operations"][0]["budget"]["observations"] = serde_json::json!(0);
-        fields["budget"]["observations"] = serde_json::json!(0);
-        let plan = serde_json::from_value(fields).unwrap();
+        let plan = crate::model::operation_plan::OperationPlanRecord::new(
+            crate::test_support::ic_snapshot_upload::plan_request(
+                data.metadata().binding_digest().hash(),
+                0,
+                0,
+            ),
+        )
+        .unwrap();
         let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
         let authority = stage.plan().attempt_authority(0).unwrap();

@@ -125,6 +125,22 @@ fn duplicate_alias_missing_parent_and_cycles_reject_before_selection() {
         ]),
         Err(InventoryRecordError::Cycle(_))
     ));
+    // Canonical traversal reports the first repeated member after a noncyclic
+    // prefix; an unrelated missing parent still takes precedence over any cycle.
+    assert!(matches!(
+        InventoryRecord::new(vec![
+            target(ROOT, Some(APP), None, None),
+            target(APP, Some(WORKER), None, None),
+            target(WORKER, Some(APP), None, None),
+        ]), Err(InventoryRecordError::Cycle(id)) if id == APP
+    ));
+    assert!(matches!(
+        InventoryRecord::new(vec![
+            target(ROOT, Some(ROOT), None, None),
+            target(APP, Some(WORKER), None, None),
+        ]), Err(InventoryRecordError::MissingParent { canister_id, parent })
+            if canister_id == APP && parent == WORKER
+    ));
     assert!(matches!(
         forest().target("app"),
         Err(InventoryRecordError::InvalidPrincipal("canister_id"))

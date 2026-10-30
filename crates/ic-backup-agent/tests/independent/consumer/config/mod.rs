@@ -1,8 +1,16 @@
 //! Decode the parent-owned journey configuration once before building any plans.
 use ic_backup::model::operation_plan::PlanContextRecord;
-use serde_json::Value;
+use ic_backup::model::{
+    effect_graph::EffectGraphRecord,
+    inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
+    operation_plan::{
+        OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlannedOperationRecord,
+    },
+};
+use serde::Deserialize;
 use std::{io, path::Path};
 
+#[derive(Deserialize)]
 pub(super) struct Config {
     pub context: PlanContextRecord,
     pub target: String,
@@ -12,13 +20,34 @@ pub(super) struct Config {
 
 impl Config {
     pub(super) fn read(root: &Path) -> io::Result<Self> {
-        let value: Value = serde_json::from_slice(&super::read(&root.join("config.json"))?)?;
-        let field = |name: &str| value.get(name).cloned().unwrap_or(Value::Null);
-        Ok(Self {
-            context: serde_json::from_value(field("context"))?,
-            target: serde_json::from_value(field("target"))?,
-            endpoint: serde_json::from_value(field("endpoint"))?,
-            key: serde_json::from_value(field("key"))?,
+        Ok(serde_json::from_slice(&super::read(
+            &root.join("config.json"),
+        )?)?)
+    }
+
+    pub(super) fn plan(
+        &self,
+        graph: EffectGraphRecord,
+        operations: Vec<PlannedOperationRecord>,
+        budget: PlanBudgetRecord,
+    ) -> OperationPlanRecord {
+        OperationPlanRecord::new(OperationPlanRequest {
+            context: self.context.clone(),
+            inventory: InventoryRecord::new(vec![
+                InventoryTargetRecord::new(&InventoryTargetRequest {
+                    canister_id: self.target.clone(),
+                    parent_canister_id: None,
+                    role: None,
+                    module_hash: None,
+                })
+                .unwrap(),
+            ])
+            .unwrap(),
+            selected_targets: vec![self.target.clone()],
+            graph,
+            operations,
+            budget,
         })
+        .unwrap()
     }
 }

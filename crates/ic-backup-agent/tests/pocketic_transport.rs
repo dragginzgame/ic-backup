@@ -16,9 +16,11 @@ use ic_backup::{
             IcSnapshotUploadAttempt, IcSnapshotUploadReply, IcSnapshotUploadReplyKind,
             IcSnapshotUploadRequest,
         },
-        operation_plan::OperationPlanRecord,
+        operation_plan::{OperationPlanRecord, PlanContextRecord, PlanContextRequest},
     },
-    ops::persistence::BackupLayoutGuard,
+    ops::persistence::{
+        AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
+    },
 };
 use ic_backup_agent::{
     AgentSnapshotTransferReadProvider, AgentTransport, AgentUpdateProvider, PreparedUpdate,
@@ -279,12 +281,14 @@ impl Fixture {
     ) -> (OperationPlanRecord, BackupLayoutGuard, PathBuf) {
         self.sequence += 1;
         let sequence = self.sequence;
-        let mut value =
-            serde_json::to_value(support::plan(&self.target, digest, sequence)).unwrap();
-        value["context"]["caller"] = self.caller().to_text().into();
-        value["context"]["network"] = ArtifactChecksumRecord::from_bytes(&self.key).hash().into();
-        value["context"]["release"] = self.release.hash().into();
-        let plan: OperationPlanRecord = serde_json::from_value(value).unwrap();
+        let mut declaration = support::plan_request(&self.target, digest, sequence);
+        declaration.context = PlanContextRecord::new(&PlanContextRequest {
+            caller: self.caller().to_text(),
+            network: ArtifactChecksumRecord::from_bytes(&self.key).hash().into(),
+            release: self.release.hash().into(),
+        })
+        .unwrap();
+        let plan = OperationPlanRecord::new(declaration).unwrap();
         let root = self.root.join(format!("call-{sequence}"));
         fs::create_dir(&root).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -336,19 +340,11 @@ impl Fixture {
     }
     async fn read(&mut self, payload: IcSnapshotTransferReadPayload<'_, '_>) -> Vec<u8> {
         use ic_backup::{
-            model::execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-            ops::persistence::{
-                AttemptJournalGuard, ExecutionStageGuard, create_execution_workflow,
-            },
             ports::ic_observation::IcObservationProviderError,
             workflow::ic_snapshot_transfer_read::read_snapshot,
         };
         let (plan, layout, root) = self.original(&payload.digest());
-        let workflow = ExecutionWorkflowRecord::new(plan.clone());
-        create_execution_workflow(&layout, &workflow).unwrap();
-        let binding =
-            ExecutionStageBindingRecord::new(&workflow, self.sequence, &plan, vec![]).unwrap();
-        let stage = ExecutionStageGuard::prepare(&layout, binding, plan.clone()).unwrap();
+        let stage = prepare_stage(&layout, &plan, self.sequence);
         let transport = self.transport(&plan);
         let mut provider = AgentSnapshotTransferReadProvider::new(
             &transport,
@@ -376,31 +372,18 @@ impl Fixture {
         )
         .await
         .unwrap();
-        let guard = AttemptJournalGuard::open(
-            stage.layout().unwrap(),
-            &plan.attempt_authority(self.sequence).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+        assert_pending(&stage, self.sequence);
         let raw = response.input().reply.clone();
         fs::write(root.join("reply.candid"), &raw).unwrap();
         raw
     }
     async fn upload(&mut self, payload: &IcSnapshotUploadRequest<'_>) -> Vec<u8> {
         use ic_backup::{
-            model::execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-            ops::persistence::{
-                AttemptJournalGuard, ExecutionStageGuard, create_execution_workflow,
-            },
             ports::ic_mutation::IcMutationProviderError,
             workflow::ic_snapshot_upload::upload_snapshot,
         };
         let (plan, layout, root) = self.original(&payload.binding_digest());
-        let workflow = ExecutionWorkflowRecord::new(plan.clone());
-        create_execution_workflow(&layout, &workflow).unwrap();
-        let binding =
-            ExecutionStageBindingRecord::new(&workflow, self.sequence, &plan, vec![]).unwrap();
-        let stage = ExecutionStageGuard::prepare(&layout, binding, plan.clone()).unwrap();
+        let stage = prepare_stage(&layout, &plan, self.sequence);
         let transport = self.transport(&plan);
         let mut provider = ic_backup_agent::AgentUpdateProvider::new(
             &transport,
@@ -428,17 +411,37 @@ impl Fixture {
         )
         .await
         .unwrap();
-        let guard = AttemptJournalGuard::open(
-            stage.layout().unwrap(),
-            &plan.attempt_authority(self.sequence).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+        assert_pending(&stage, self.sequence);
         let raw = acknowledgement.input().reply.clone();
         fs::write(root.join("reply.candid"), &raw).unwrap();
         raw
     }
 }
+// Share only local preparation and retained-accounting assertions. Each caller
+// still owns fresh method-specific admission and the actual provider invocation.
+fn prepare_stage<'a>(
+    layout: &'a BackupLayoutGuard,
+    plan: &OperationPlanRecord,
+    sequence: u64,
+) -> ExecutionStageGuard<'a> {
+    use ic_backup::model::execution_workflow::{
+        ExecutionStageBindingRecord, ExecutionWorkflowRecord,
+    };
+    let workflow = ExecutionWorkflowRecord::new(plan.clone());
+    create_execution_workflow(layout, &workflow).unwrap();
+    let binding = ExecutionStageBindingRecord::new(&workflow, sequence, plan, vec![]).unwrap();
+    ExecutionStageGuard::prepare(layout, binding, plan.clone()).unwrap()
+}
+
+fn assert_pending(stage: &ExecutionStageGuard<'_>, sequence: u64) {
+    let guard = AttemptJournalGuard::open(
+        stage.layout().unwrap(),
+        &stage.plan().attempt_authority(sequence).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
+}
+
 async fn read_complete_regions(
     fixture: &mut Fixture,
     metadata: &IcSnapshotMetadataReply<'_>,

@@ -9,7 +9,6 @@ use crate::model::{
     bounded_sequence,
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum exact physical targets in one declared inventory.
@@ -64,30 +63,49 @@ impl InventoryRecord {
             version: 1,
             targets,
         };
-        for target in &record.targets {
-            if let Some(parent) = target.parent_canister_id()
-                && record.canonical_target(parent).is_none()
-            {
-                return Err(InventoryRecordError::MissingParent {
-                    canister_id: target.canister_id().into(),
-                    parent: parent.into(),
-                });
-            }
-        }
-        for target in &record.targets {
-            let mut current = Some(target);
-            let mut seen = BTreeSet::new();
-            while let Some(target) = current {
-                let id = target.canister_id();
-                if !seen.insert(id) {
-                    return Err(InventoryRecordError::Cycle(id.into()));
-                }
-                current = target
-                    .parent_canister_id()
-                    .and_then(|id| record.canonical_target(id));
-            }
-        }
+        record.validate_forest()?;
         Ok(record)
+    }
+
+    fn validate_forest(&self) -> Result<(), InventoryRecordError> {
+        // Admit every parent before walking any chain, preserving missing-parent
+        // precedence. Indices avoid repeated principal lookup along shared ancestry.
+        let parents = self
+            .targets
+            .iter()
+            .map(|target| {
+                target
+                    .parent_canister_id()
+                    .map(|parent| {
+                        self.targets
+                            .binary_search_by(|row| row.canister_id().cmp(parent))
+                            .map_err(|_| InventoryRecordError::MissingParent {
+                                canister_id: target.canister_id().into(),
+                                parent: parent.into(),
+                            })
+                    })
+                    .transpose()
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut visited = vec![None; self.targets.len()];
+        for start in 0..self.targets.len() {
+            let mut current = Some(start);
+            while let Some(index) = current {
+                if let Some(origin) = visited[index] {
+                    // A mark from this walk is a cycle; an earlier walk already
+                    // reached a root. Canonical starts preserve the reported ID.
+                    if origin == start {
+                        return Err(InventoryRecordError::Cycle(
+                            self.targets[index].canister_id().into(),
+                        ));
+                    }
+                    break;
+                }
+                visited[index] = Some(start);
+                current = parents[index];
+            }
+        }
+        Ok(())
     }
 
     /// Read targets in canonical ASCII principal order; this is not an effect order.

@@ -55,6 +55,10 @@ fn write_sources(selected: &Path) {
         ("config/mod.rs", include_str!("../consumer/config/mod.rs")),
         ("stage/mod.rs", include_str!("../consumer/stage/mod.rs")),
         (
+            "evidence/mod.rs",
+            include_str!("../consumer/evidence/mod.rs"),
+        ),
+        (
             "application/mod.rs",
             include_str!("../consumer/application/mod.rs"),
         ),
@@ -125,8 +129,8 @@ fn write_manifest(root: &Path, evidence: &Path, selected: &Path, registry: bool)
         }
     }
     write!(manifest,
-        "ic-platform = {{ version = {:?}, default-features = false, features = [\"agent\", \"candid\", \"management-canister-types\"] }}\nserde_json = {:?}\ntokio = {{ version = {:?}, features = [\"macros\", \"rt-multi-thread\"] }}\n",
-        requirement("ic-platform"), requirement("serde_json"), requirement("tokio")
+        "ic-platform = {{ version = {:?}, default-features = false, features = [\"agent\", \"candid\", \"management-canister-types\"] }}\nserde = {{ version = {:?}, features = [\"derive\"] }}\nserde_json = {:?}\ntokio = {{ version = {:?}, features = [\"macros\", \"rt-multi-thread\"] }}\n",
+        requirement("ic-platform"), requirement("serde"), requirement("serde_json"), requirement("tokio")
     ).unwrap();
     fs::write(selected.join("Cargo.toml"), manifest).unwrap();
 }

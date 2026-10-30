@@ -14,11 +14,28 @@ where
     T: Serialize,
     E: From<JournalLockError> + From<PersistenceError>,
 {
+    create_with(layout, name, limit, record, || Ok(()), create_encoded)
+}
+
+// Validation runs after encoding, under the same lock that protects publication.
+pub(super) fn create_with<T, E>(
+    layout: &BackupLayoutGuard,
+    name: &str,
+    limit: u64,
+    record: &T,
+    validate: impl FnOnce() -> Result<(), E>,
+    write: impl FnOnce(&std::path::Path, &[u8]) -> Result<(), PersistenceError>,
+) -> Result<(), E>
+where
+    T: Serialize,
+    E: From<JournalLockError> + From<PersistenceError>,
+{
     layout.check_root()?;
     let path = layout.root().join(name);
     let _lock = JournalLock::acquire(&path)?;
     let bytes = encode_json(record, limit)?;
-    create_encoded(&path, &bytes)?;
+    validate()?;
+    write(&path, &bytes)?;
     Ok(())
 }
 

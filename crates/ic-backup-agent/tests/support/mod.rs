@@ -1,13 +1,18 @@
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
+        attempt_journal::AttemptBudgetRecord,
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
-        operation_plan::OperationPlanRecord,
+        inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
+        operation_plan::{
+            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlanContextRecord,
+            PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
+        },
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_operation_plan},
 };
 use ic_platform::agent::{AnonymousIdentity, Identity};
-use serde_json::json;
 use std::{fs, path::PathBuf, sync::Arc};
 
 pub fn root(label: &str) -> PathBuf {
@@ -78,13 +83,56 @@ pub fn payload(
     })
     .unwrap()
 }
+#[allow(
+    dead_code,
+    reason = "HTTP fixtures bind the default declaration; PocketIC supplies its actual context before admission"
+)]
 pub fn plan(target: &str, digest: &ArtifactChecksumRecord, sequence: u64) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version":1,"context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},
-        "inventory":{"version":1,"targets":[{"canister_id":target,"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[target],"graph":{"version":1,"nodes":[{"operation_sequence":sequence,"depends_on":[]}]},
-        "operations":[{"operation_sequence":sequence,"target":target,"request":digest.hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
-    })).unwrap()
+    OperationPlanRecord::new(plan_request(target, digest, sequence)).unwrap()
+}
+
+pub fn plan_request(
+    target: &str,
+    digest: &ArtifactChecksumRecord,
+    sequence: u64,
+) -> OperationPlanRequest {
+    OperationPlanRequest {
+        context: PlanContextRecord::new(&PlanContextRequest {
+            network: "ab".repeat(32),
+            caller: "2vxsx-fae".into(),
+            release: "cd".repeat(32),
+        })
+        .unwrap(),
+        inventory: InventoryRecord::new(vec![
+            InventoryTargetRecord::new(&InventoryTargetRequest {
+                canister_id: target.into(),
+                parent_canister_id: None,
+                role: None,
+                module_hash: None,
+            })
+            .unwrap(),
+        ])
+        .unwrap(),
+        selected_targets: vec![target.into()],
+        graph: EffectGraphRecord::new(vec![
+            EffectNodeRecord::new(EffectNodeRequest {
+                operation_sequence: sequence,
+                depends_on: vec![],
+            })
+            .unwrap(),
+        ])
+        .unwrap(),
+        operations: vec![
+            PlannedOperationRecord::new(PlannedOperationRequest {
+                operation_sequence: sequence,
+                target: target.into(),
+                request: digest.hash().into(),
+                budget: AttemptBudgetRecord::new(1, 1).unwrap(),
+            })
+            .unwrap(),
+        ],
+        budget: PlanBudgetRecord::new(1, 1).unwrap(),
+    }
 }
 pub fn retain<'a>(
     layout: &'a BackupLayoutGuard,

@@ -205,7 +205,7 @@ pub async fn advance_execution_workflow<D: ExecutionWorkflowStageDriver>(
     driver: &mut D,
 ) -> Result<ExecutionWorkflowAdvance, ExecutionWorkflowRunError<D::Error>> {
     let (workflow, completed) = admit_retained_stages(layout, expected_workflow, retained)?;
-    if execute_remaining_stages(
+    match execute_remaining_stages(
         layout,
         &workflow,
         completed,
@@ -215,11 +215,10 @@ pub async fn advance_execution_workflow<D: ExecutionWorkflowStageDriver>(
     )
     .await?
     {
-        Ok(ExecutionWorkflowAdvance::Complete(
+        StageExecutionOutcome::Complete => Ok(ExecutionWorkflowAdvance::Complete(
             read_complete_execution_workflow(layout, expected_workflow)?,
-        ))
-    } else {
-        Ok(ExecutionWorkflowAdvance::Paused)
+        )),
+        StageExecutionOutcome::Paused => Ok(ExecutionWorkflowAdvance::Paused),
     }
 }
 
@@ -272,6 +271,11 @@ fn admit_retained_stages<E: std::error::Error + 'static>(
 
 // Entry points finish their own create-only or retained-evidence admission before
 // sharing dependency propagation and execution of only the remaining stages.
+enum StageExecutionOutcome {
+    Complete,
+    Paused,
+}
+
 async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
     layout: &BackupLayoutGuard,
     workflow: &ExecutionWorkflowRecord,
@@ -279,7 +283,7 @@ async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
     retained: &BTreeMap<u64, RetainedStageEvidence>,
     stage_limit: usize,
     driver: &mut D,
-) -> Result<bool, ExecutionWorkflowRunError<D::Error>> {
+) -> Result<StageExecutionOutcome, ExecutionWorkflowRunError<D::Error>> {
     let mut advanced = 0;
     for node in workflow.allocation().graph().ordered_nodes() {
         let sequence = node.operation_sequence();
@@ -287,7 +291,7 @@ async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
             continue;
         }
         if advanced == stage_limit {
-            return Ok(false);
+            return Ok(StageExecutionOutcome::Paused);
         }
         let predecessors = node
             .depends_on()
@@ -317,7 +321,7 @@ async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
         completed.insert(sequence, checkpoint);
         advanced += 1;
     }
-    Ok(true)
+    Ok(StageExecutionOutcome::Complete)
 }
 
 async fn execute_absent_stage<D: ExecutionWorkflowStageDriver>(

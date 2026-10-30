@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.50.3]
+
+### 🧹 Cleanup
+
+- Simplify inventory traversal, plan coverage and upload request checks. Share
+  immutable publication mechanics and make workflow pause/completion explicit,
+  preserving public errors, record bytes, custody and recovery behavior.
+
+### 🧪 Testing
+
+- Build more fixture plans through typed constructors and decode independent
+  consumer configuration and evidence into typed claims. Consolidate simulator
+  setup and upload failure assertions while retaining original evidence bytes.
+
 ## [0.50.2] - 2026-10-30
 
 ### ➕ Added

@@ -1,4 +1,9 @@
 //! Normal-dependency opaque application ingress; fixture authority is supplied by the parent.
+use super::{
+    AttemptBudgetRecord, EffectGraphRecord, EffectNodeRecord, EffectNodeRequest, PlanBudgetRecord,
+    PlannedOperationRecord, PlannedOperationRequest,
+};
+use super::{config::Config, evidence::ObservedContext};
 use super::{error, read, retain};
 use ic_backup::{
     model::{
@@ -25,18 +30,32 @@ use ic_backup_agent::{
     ReservedUpdate,
 };
 use ic_platform::agent::{BasicIdentity, RequestId};
+use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, io, path::Path, sync::Arc, time::Duration};
 
-fn payload(config: &Value, method: &str) -> ApplicationIngressPayload {
+#[derive(Deserialize)]
+struct ApplicationConfig {
+    #[serde(flatten)]
+    connection: Config,
+    reply_limit: usize,
+}
+
+#[derive(Deserialize)]
+struct ApplicationAdmission {
+    context: ObservedContext,
+    target: String,
+}
+
+fn payload(config: &ApplicationConfig, method: &str) -> ApplicationIngressPayload {
     let original = 73_u64.to_le_bytes();
     ApplicationIngressPayload::new(
-        config["target"].as_str().unwrap(),
-        config["target"].as_str().unwrap(),
+        &config.connection.target,
+        &config.connection.target,
         method,
         if method == "apply" { &original } else { &[] },
         if method == "apply" {
-            usize::try_from(config["reply_limit"].as_u64().unwrap()).unwrap()
+            config.reply_limit
         } else {
             16
         },
@@ -46,21 +65,34 @@ fn payload(config: &Value, method: &str) -> ApplicationIngressPayload {
 fn declaration(payload: &ApplicationIngressPayload) -> Value {
     json!({"receiver":payload.receiver(),"target":payload.target(),"mode":"update","method":payload.method(),"arguments":payload.arguments(),"reply_limit":payload.reply_limit()})
 }
-fn plan(config: &Value, payload: &ApplicationIngressPayload) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version":1,"context":config["context"],
-        "inventory":{"version":1,"targets":[{"canister_id":config["target"],"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[config["target"]],"graph":{"version":1,"nodes":[{"operation_sequence":0,"depends_on":[]}]},
-        "operations":[{"operation_sequence":0,"target":config["target"],"request":payload.digest().hash(),"budget":{"mutations":1,"observations":1}}],
-        "budget":{"mutations":1,"observations":1}
-    })).unwrap()
+fn plan(config: &ApplicationConfig, payload: &ApplicationIngressPayload) -> OperationPlanRecord {
+    config.connection.plan(
+        EffectGraphRecord::new(vec![
+            EffectNodeRecord::new(EffectNodeRequest {
+                operation_sequence: 0,
+                depends_on: vec![],
+            })
+            .unwrap(),
+        ])
+        .unwrap(),
+        vec![
+            PlannedOperationRecord::new(PlannedOperationRequest {
+                operation_sequence: 0,
+                target: config.connection.target.clone(),
+                request: payload.digest().hash().into(),
+                budget: AttemptBudgetRecord::new(1, 1).unwrap(),
+            })
+            .unwrap(),
+        ],
+        PlanBudgetRecord::new(1, 1).unwrap(),
+    )
 }
-fn transport(config: &Value, plan: &OperationPlanRecord) -> AgentTransport {
+fn transport(config: &ApplicationConfig, plan: &OperationPlanRecord) -> AgentTransport {
     AgentTransport::new(
         plan.context().clone(),
-        config["endpoint"].as_str().unwrap(),
+        &config.connection.endpoint,
         Arc::new(BasicIdentity::from_raw_key(&[7; 32])),
-        serde_json::from_value(config["key"].clone()).unwrap(),
+        config.connection.key.clone(),
         Duration::from_secs(30),
     )
     .unwrap()
@@ -124,7 +156,7 @@ fn qualify(response: &ApplicationIngressResponse) {
 }
 struct Driver<'a> {
     root: &'a Path,
-    config: &'a Value,
+    config: &'a ApplicationConfig,
     plan: &'a OperationPlanRecord,
     payload: &'a ApplicationIngressPayload,
     mode: &'a str,
@@ -143,9 +175,10 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
     }
     async fn execute_stage(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         self.callbacks += 1;
-        let admission: Value = serde_json::from_slice(&read(&self.root.join("admission.json"))?)?;
-        assert_eq!(admission["context"], self.config["context"]);
-        assert_eq!(admission["target"], self.config["target"]);
+        let admission: ApplicationAdmission =
+            serde_json::from_slice(&read(&self.root.join("admission.json"))?)?;
+        assert!(admission.context.matches(&self.config.connection.context));
+        assert_eq!(admission.target, self.config.connection.target);
         let authority = self.plan.attempt_authority(0).map_err(error)?;
         self.payload
             .validate_mutation_binding(authority.binding())
@@ -201,7 +234,7 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
 }
 
 pub(super) async fn run(root: &Path, mode: &str) -> io::Result<()> {
-    let config: Value = serde_json::from_slice(&read(&root.join("config.json"))?)?;
+    let config: ApplicationConfig = serde_json::from_slice(&read(&root.join("config.json"))?)?;
     let payload = payload(&config, "apply");
     let plan = plan(&config, &payload);
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
@@ -263,7 +296,7 @@ pub(super) async fn run(root: &Path, mode: &str) -> io::Result<()> {
 
 async fn observe(
     layout: &BackupLayoutGuard,
-    config: &Value,
+    config: &ApplicationConfig,
     plan: &OperationPlanRecord,
     workflow: &ExecutionWorkflowRecord,
 ) -> io::Result<()> {

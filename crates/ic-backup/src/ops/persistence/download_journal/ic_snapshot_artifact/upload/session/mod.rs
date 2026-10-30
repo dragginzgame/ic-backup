@@ -90,7 +90,7 @@ impl<'a, 'workflow, 'request, 'source> UploadSession<'a, 'workflow, 'request, 's
             .plan()
             .ok_or(IcSnapshotUploadArtifactError::SourceMismatch)?;
         if plan
-            .operation_binding(sequence)
+            .operation(sequence)
             .map_err(|_| IcSnapshotUploadArtifactError::SourceMismatch)?
             .request()
             != payload.binding_digest().hash()
