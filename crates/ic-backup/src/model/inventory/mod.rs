@@ -151,7 +151,7 @@ impl InventoryRecord {
         let count = self.targets.len() as u32;
         bytes.u32_be(count);
         for target in &self.targets {
-            append_text(&mut bytes, target.canister_id());
+            bytes.bytes_u32(target.canister_id().as_bytes());
             for field in [
                 target.parent_canister_id(),
                 target.role(),
@@ -161,22 +161,13 @@ impl InventoryRecord {
                     None => bytes.byte(0),
                     Some(value) => {
                         bytes.byte(1);
-                        append_text(&mut bytes, value);
+                        bytes.bytes_u32(value.as_bytes());
                     }
                 }
             }
         }
         bytes.finish()
     }
-}
-
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "all admitted text is bounded to at most 256 UTF-8 bytes"
-)]
-fn append_text(bytes: &mut EvidenceDigest, value: &str) {
-    bytes.u32_be(value.len() as u32);
-    bytes.append(value.as_bytes());
 }
 
 pub(super) fn check_count(count: usize) -> Result<(), InventoryRecordError> {

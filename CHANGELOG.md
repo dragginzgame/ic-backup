@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.52.1] - Unreleased
+
+### 🧹 Cleanup
+
+- Simplify original reservation errors, opaque input admission, digest framing
+  and management request construction. Keep public errors, record/wire bytes
+  and validation order unchanged.
+- Keep upload plan state, retained stage evidence and source custody observations
+  together while preserving spending, fresh checks and recovery behavior.
+
+### 🧪 Testing
+
+- Name restore and recovery failure scenarios, share fresh-stage preparation and
+  cancellation polling, and qualify combined-invalid-input error precedence.
+  Keep original plans, evidence retention and explicit cancellation points.
+
 ## [0.52.0] - 2026-10-30
 
 ### ⚠️ Breaking

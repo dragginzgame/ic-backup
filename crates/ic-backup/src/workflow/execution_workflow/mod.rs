@@ -131,15 +131,7 @@ pub async fn run_new_execution_workflow<D: ExecutionWorkflowStageDriver>(
     driver: &mut D,
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionWorkflowRunError<D::Error>> {
     create_execution_workflow(layout, workflow)?;
-    execute_remaining_stages(
-        layout,
-        workflow,
-        BTreeMap::new(),
-        &BTreeMap::new(),
-        usize::MAX,
-        driver,
-    )
-    .await?;
+    execute_remaining_stages(layout, workflow, BTreeMap::new(), usize::MAX, driver).await?;
     Ok(read_complete_execution_workflow(
         layout,
         &workflow.digest(),
@@ -167,7 +159,7 @@ pub async fn run_retained_execution_workflow<D: ExecutionWorkflowStageDriver>(
     driver: &mut D,
 ) -> Result<ExecutionWorkflowSettlementView, ExecutionWorkflowRunError<D::Error>> {
     let (workflow, completed) = admit_retained_stages(layout, expected_workflow, retained)?;
-    execute_remaining_stages(layout, &workflow, completed, retained, usize::MAX, driver).await?;
+    execute_remaining_stages(layout, &workflow, completed, usize::MAX, driver).await?;
     Ok(read_complete_execution_workflow(layout, expected_workflow)?)
 }
 
@@ -205,16 +197,7 @@ pub async fn advance_execution_workflow<D: ExecutionWorkflowStageDriver>(
     driver: &mut D,
 ) -> Result<ExecutionWorkflowAdvance, ExecutionWorkflowRunError<D::Error>> {
     let (workflow, completed) = admit_retained_stages(layout, expected_workflow, retained)?;
-    match execute_remaining_stages(
-        layout,
-        &workflow,
-        completed,
-        retained,
-        stage_limit.get(),
-        driver,
-    )
-    .await?
-    {
+    match execute_remaining_stages(layout, &workflow, completed, stage_limit.get(), driver).await? {
         StageExecutionOutcome::Complete => Ok(ExecutionWorkflowAdvance::Complete(
             read_complete_execution_workflow(layout, expected_workflow)?,
         )),
@@ -222,15 +205,18 @@ pub async fn advance_execution_workflow<D: ExecutionWorkflowStageDriver>(
     }
 }
 
-fn admit_retained_stages<E: std::error::Error + 'static>(
+// Each completed stage carries the source of its qualified outgoing edge evidence.
+struct CompletedStage<'a> {
+    checkpoint: ExecutionStagePredecessorRecord,
+    retained: Option<&'a RetainedStageEvidence>,
+}
+
+fn admit_retained_stages<'a, E: std::error::Error + 'static>(
     layout: &BackupLayoutGuard,
     expected_workflow: &ArtifactChecksumRecord,
-    retained: &BTreeMap<u64, RetainedStageEvidence>,
+    retained: &'a BTreeMap<u64, RetainedStageEvidence>,
 ) -> Result<
-    (
-        ExecutionWorkflowRecord,
-        BTreeMap<u64, ExecutionStagePredecessorRecord>,
-    ),
+    (ExecutionWorkflowRecord, BTreeMap<u64, CompletedStage<'a>>),
     ExecutionWorkflowRunError<E>,
 > {
     let workflow = read_execution_workflow(layout, expected_workflow)?;
@@ -238,7 +224,7 @@ fn admit_retained_stages<E: std::error::Error + 'static>(
     if !retained.keys().copied().eq(occupied.iter().copied()) {
         return Err(ExecutionWorkflowRunError::RetainedStageSetMismatch);
     }
-    let mut completed: BTreeMap<u64, ExecutionStagePredecessorRecord> = BTreeMap::new();
+    let mut completed = BTreeMap::new();
     for (&sequence, evidence) in retained {
         for successor in evidence.successor_evidence.keys() {
             let Ok(node) = workflow.allocation().graph().node(*successor) else {
@@ -259,7 +245,13 @@ fn admit_retained_stages<E: std::error::Error + 'static>(
             }
         }
         let checkpoint = stage.replay_checkpoint(evidence.learned_evidence.clone())?;
-        completed.insert(sequence, checkpoint);
+        completed.insert(
+            sequence,
+            CompletedStage {
+                checkpoint,
+                retained: Some(evidence),
+            },
+        );
     }
     // Recheck the namespace before invoking any integration callback. Create-only
     // stage preparation still refuses an occupied path after this preflight.
@@ -279,8 +271,7 @@ enum StageExecutionOutcome {
 async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
     layout: &BackupLayoutGuard,
     workflow: &ExecutionWorkflowRecord,
-    mut completed: BTreeMap<u64, ExecutionStagePredecessorRecord>,
-    retained: &BTreeMap<u64, RetainedStageEvidence>,
+    mut completed: BTreeMap<u64, CompletedStage<'_>>,
     stage_limit: usize,
     driver: &mut D,
 ) -> Result<StageExecutionOutcome, ExecutionWorkflowRunError<D::Error>> {
@@ -301,24 +292,30 @@ async fn execute_remaining_stages<D: ExecutionWorkflowStageDriver>(
                     completed.get(dependency).ok_or(
                         ExecutionWorkflowRunError::<D::Error>::MissingPredecessor(*dependency),
                     )?;
-                let learned = if let Some(evidence) = retained.get(dependency) {
+                let learned = if let Some(evidence) = original.retained {
                     evidence.learned_for_successor(sequence).clone()
                 } else {
                     driver
-                        .learned_for_successor(original, sequence)
+                        .learned_for_successor(&original.checkpoint, sequence)
                         .map_err(ExecutionWorkflowRunError::Driver)?
                 };
                 Ok(ExecutionStagePredecessorRecord::new(
                     *dependency,
-                    original.binding().clone(),
-                    original.settlement().clone(),
+                    original.checkpoint.binding().clone(),
+                    original.checkpoint.settlement().clone(),
                     learned,
                 ))
             })
             .collect::<Result<Vec<_>, ExecutionWorkflowRunError<D::Error>>>()?;
         let checkpoint =
             execute_absent_stage(layout, workflow, sequence, predecessors, driver).await?;
-        completed.insert(sequence, checkpoint);
+        completed.insert(
+            sequence,
+            CompletedStage {
+                checkpoint,
+                retained: None,
+            },
+        );
         advanced += 1;
     }
     Ok(StageExecutionOutcome::Complete)

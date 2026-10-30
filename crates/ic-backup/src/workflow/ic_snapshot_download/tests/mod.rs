@@ -168,11 +168,7 @@ fn raw_metadata() -> Vec<u8> {
 
 #[test]
 fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pending_reply() {
-    use std::{
-        cell::Cell,
-        io::Write,
-        task::{Context, Poll, Waker},
-    };
+    use std::{cell::Cell, io::Write};
     let workflow = workflow(256);
     let request = source();
     let raw = raw_metadata();
@@ -215,12 +211,7 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
             qualify(request, response)
         },
     ));
-    assert!(matches!(
-        future
-            .as_mut()
-            .poll(&mut Context::from_waker(Waker::noop())),
-        Poll::Pending
-    ));
+    crate::test_support::ready::assert_pending(future.as_mut());
     let authority = stage.plan().attempt_authority(1).unwrap();
     assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
     let path = stage.layout().unwrap().root().join("attempt-1.json");

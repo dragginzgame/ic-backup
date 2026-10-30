@@ -218,9 +218,7 @@ impl AttemptAuthorityRecord {
         }
         bytes.u64_be(self.binding.operation_sequence);
         for principal in [&self.binding.caller, &self.binding.target] {
-            // Admission bounds canonical ASCII text to at most 63 bytes.
-            bytes.byte(principal.len().to_le_bytes()[0]);
-            bytes.append(principal.as_bytes());
+            bytes.bytes_u8(principal.as_bytes());
         }
         bytes.u32_be(self.budget.mutations);
         bytes.u32_be(self.budget.observations);

@@ -224,7 +224,6 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
 
 #[test]
 fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() {
-    use std::{future::Future, task::Context};
     let root = temp_dir("ic-backup-restore-cancel");
     fs::create_dir(root.join("source")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -286,12 +285,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
             Ok(receipt(request, reply))
         },
     ));
-    assert!(
-        future
-            .as_mut()
-            .poll(&mut Context::from_waker(std::task::Waker::noop()))
-            .is_pending()
-    );
+    crate::test_support::ready::assert_pending(future.as_mut());
     let authority = stage.plan().attempt_authority(sequence).unwrap();
     assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
     let journal_path = stage
@@ -321,20 +315,61 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
     assert_eq!(fs::read(reply_path).unwrap(), b"DIDL\0\0");
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RestoreFailure {
+    Admission,
+    RunningTarget,
+    LostReply,
+    MalformedReply,
+    Qualification,
+    WrongReceipt,
+    ChangedRequirement,
+    OccupiedCheckpoint,
+    MissingAcceptance,
+    InactiveFence,
+    MissingControlledExecution,
+    MissingRequirement,
+}
+impl RestoreFailure {
+    const ALL: [Self; 12] = [
+        Self::Admission,
+        Self::RunningTarget,
+        Self::LostReply,
+        Self::MalformedReply,
+        Self::Qualification,
+        Self::WrongReceipt,
+        Self::ChangedRequirement,
+        Self::OccupiedCheckpoint,
+        Self::MissingAcceptance,
+        Self::InactiveFence,
+        Self::MissingControlledExecution,
+        Self::MissingRequirement,
+    ];
+    fn starts(self) -> bool {
+        matches!(
+            self,
+            Self::MissingAcceptance
+                | Self::InactiveFence
+                | Self::MissingControlledExecution
+                | Self::MissingRequirement
+        )
+    }
+}
+
 #[test]
 #[expect(
     clippy::too_many_lines,
     reason = "each fault keeps its original reservation, returned evidence and no-reissue proof together"
 )]
 fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
-    for failure in 0..12 {
+    for failure in RestoreFailure::ALL {
         let root = temp_dir("ic-backup-restore-rejection");
         fs::create_dir(root.join("source")).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
         let source = source();
         create_operation_plan(&source_layout, &source).unwrap();
-        let method = if failure >= 8 {
+        let method = if failure.starts() {
             Method::StartCanister
         } else {
             Method::LoadCanisterSnapshot
@@ -348,7 +383,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         let requirement = requirement(
             stage.plan(),
             &source,
-            if failure >= 8 {
+            if failure.starts() {
                 RestoreSafetyLaneRecord::ApplicationFenced
             } else {
                 RestoreSafetyLaneRecord::NoIrreversibleEffects
@@ -378,8 +413,8 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         let mut provider = Provider {
             calls: 0,
             reply: match failure {
-                2 => Err(IcMutationProviderError::Indeterminate),
-                3 => Ok(vec![]),
+                RestoreFailure::LostReply => Err(IcMutationProviderError::Indeterminate),
+                RestoreFailure::MalformedReply => Ok(vec![]),
                 _ => Ok(b"DIDL\0\0".to_vec()),
             },
         };
@@ -388,14 +423,14 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
             .unwrap()
             .root()
             .join("restore-safety-requirement.json");
-        if failure == 11 {
+        if failure == RestoreFailure::MissingRequirement {
             fs::rename(
                 &requirement_path,
                 requirement_path.with_extension("retained-original"),
             )
             .unwrap();
         }
-        if failure == 7 {
+        if failure == RestoreFailure::OccupiedCheckpoint {
             fs::write(
                 stage
                     .layout()
@@ -412,85 +447,115 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
             &safety,
             &mut provider,
             async |_, safety| {
-                if failure == 0 {
+                if failure == RestoreFailure::Admission {
                     return Err(io::Error::other("fresh admission refused"));
                 }
                 let mut actual = input(safety);
-                if failure == 1 {
+                if failure == RestoreFailure::RunningTarget {
                     actual.targets[0].state =
                         ic_platform::management_canister_types::CanisterStatusType::Running;
                 }
-                if failure == 6 {
+                if failure == RestoreFailure::ChangedRequirement {
                     fs::write(&requirement_path, b"{}")?;
                 }
-                if failure == 8 {
+                if failure == RestoreFailure::MissingAcceptance {
                     actual.targets[0].restored_acceptance = None;
                 }
                 if let crate::model::restore_safety::RestoreSafetyEvidence::ApplicationFenced(
                     fence,
                 ) = &mut actual.safety
                 {
-                    if failure == 9 {
+                    if failure == RestoreFailure::InactiveFence {
                         fence.state = crate::model::consistency::ApplicationFenceState::Inactive;
                     }
-                    if failure == 10 {
+                    if failure == RestoreFailure::MissingControlledExecution {
                         fence.controlled_execution = None;
                     }
                 }
                 Ok(RestoreSafetyObservation::new(actual).unwrap())
             },
             async |request, reply| {
-                if failure == 4 {
+                if failure == RestoreFailure::Qualification {
                     return Err(io::Error::other("durable qualification refused"));
                 }
                 let mut receipt = receipt(request, reply);
-                if failure == 5 {
+                if failure == RestoreFailure::WrongReceipt {
                     receipt.attempt += 1;
                 }
                 Ok(receipt)
             },
         ));
         match (failure, result) {
-            (0, Err(IcRestoreExecutionError::Admission(_)))
-            | (1, Err(IcRestoreExecutionError::Safety(RestoreSafetyError::TargetNotStopped)))
-            | (2, Err(IcRestoreExecutionError::Provider(IcMutationProviderError::Indeterminate)))
-            | (6 | 11, Err(IcRestoreExecutionError::Retention(_)))
+            (RestoreFailure::Admission, Err(IcRestoreExecutionError::Admission(_)))
             | (
-                8,
+                RestoreFailure::RunningTarget,
+                Err(IcRestoreExecutionError::Safety(RestoreSafetyError::TargetNotStopped)),
+            )
+            | (
+                RestoreFailure::LostReply,
+                Err(IcRestoreExecutionError::Provider(IcMutationProviderError::Indeterminate)),
+            )
+            | (
+                RestoreFailure::ChangedRequirement | RestoreFailure::MissingRequirement,
+                Err(IcRestoreExecutionError::Retention(_)),
+            )
+            | (
+                RestoreFailure::MissingAcceptance,
                 Err(IcRestoreExecutionError::Safety(
                     RestoreSafetyError::RestoredAcceptanceRequired,
                 )),
             )
-            | (9, Err(IcRestoreExecutionError::Safety(RestoreSafetyError::FenceNotActive)))
             | (
-                10,
+                RestoreFailure::InactiveFence,
+                Err(IcRestoreExecutionError::Safety(RestoreSafetyError::FenceNotActive)),
+            )
+            | (
+                RestoreFailure::MissingControlledExecution,
                 Err(IcRestoreExecutionError::Safety(
                     RestoreSafetyError::ControlledExecutionRequired,
                 )),
             ) => {}
             (
-                3..=5 | 7,
+                RestoreFailure::MalformedReply
+                | RestoreFailure::Qualification
+                | RestoreFailure::WrongReceipt
+                | RestoreFailure::OccupiedCheckpoint,
                 Err(IcRestoreExecutionError::AfterReply {
                     acknowledgement, ..
                 }),
             ) => assert_eq!(
                 acknowledgement.input().reply,
-                if failure == 3 {
+                if failure == RestoreFailure::MalformedReply {
                     &[][..]
                 } else {
                     &b"DIDL\0\0"[..]
                 }
             ),
-            (_, result) => panic!("boundary {failure}: {result:?}"),
+            (_, result) => panic!("boundary {failure:?}: {result:?}"),
         }
         assert_eq!(
             provider.calls,
-            usize::from(!matches!(failure, 0 | 1 | 6 | 8..=11))
+            usize::from(!matches!(
+                failure,
+                RestoreFailure::Admission
+                    | RestoreFailure::RunningTarget
+                    | RestoreFailure::ChangedRequirement
+                    | RestoreFailure::MissingAcceptance
+                    | RestoreFailure::InactiveFence
+                    | RestoreFailure::MissingControlledExecution
+                    | RestoreFailure::MissingRequirement
+            ))
         );
         let progress =
             read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-        assert_eq!(progress.attempts.mutations_used, u32::from(failure != 11));
-        assert_eq!(progress.applied_operations, usize::from(failure == 7));
+        assert_eq!(
+            progress.attempts.mutations_used,
+            u32::from(failure != RestoreFailure::MissingRequirement)
+        );
+        assert_eq!(
+            progress.applied_operations,
+            usize::from(failure == RestoreFailure::OccupiedCheckpoint)
+        );
         let original = fs::read(
             stage
                 .layout()

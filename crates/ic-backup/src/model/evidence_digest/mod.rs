@@ -33,6 +33,22 @@ impl EvidenceDigest {
         self.append(&[value]);
     }
 
+    // Callers supply already bounded model fields; the prefix width is part of each v1 contract.
+    pub(crate) fn bytes_u8(&mut self, bytes: &[u8]) {
+        self.byte(u8::try_from(bytes.len()).expect("admitted digest field fits u8"));
+        self.append(bytes);
+    }
+
+    pub(crate) fn bytes_u32(&mut self, bytes: &[u8]) {
+        self.u32_be(u32::try_from(bytes.len()).expect("admitted digest field fits u32"));
+        self.append(bytes);
+    }
+
+    pub(crate) fn bytes_u64(&mut self, bytes: &[u8]) {
+        self.u64_be(bytes.len() as u64);
+        self.append(bytes);
+    }
+
     pub(crate) fn append(&mut self, bytes: &[u8]) {
         self.writer
             .write_all(bytes)

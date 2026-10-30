@@ -316,10 +316,7 @@ fn wrong_original_challenge_and_changed_source_cannot_record_an_observation() {
 
 #[test]
 fn cancelled_non_send_qualification_keeps_exclusion_spending_and_references() {
-    use std::{
-        rc::Rc,
-        task::{Context, Poll, Waker},
-    };
+    use std::rc::Rc;
     let fixture = Fixture::new(true, false);
     let stage = fixture.stage();
     let observation = observe(&fixture, &stage);
@@ -339,12 +336,7 @@ fn cancelled_non_send_qualification_keeps_exclusion_spending_and_references() {
             Ok::<_, Infallible>(receipt(&observation, ObservationOutcomeRecord::NotApplied))
         },
     ));
-    assert!(matches!(
-        future
-            .as_mut()
-            .poll(&mut Context::from_waker(Waker::noop())),
-        Poll::Pending
-    ));
+    crate::test_support::ready::assert_pending(future.as_mut());
     assert!(
         AttemptJournalGuard::open(
             stage.layout().unwrap(),

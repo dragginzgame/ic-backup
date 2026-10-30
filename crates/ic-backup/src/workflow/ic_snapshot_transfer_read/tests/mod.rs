@@ -15,8 +15,7 @@ use crate::{
         ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
-    ops::persistence::{BackupLayoutGuard, create_execution_workflow},
-    test_support::temp_dir,
+    ops::persistence::BackupLayoutGuard,
 };
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
@@ -47,10 +46,7 @@ fn prepare(
     ExecutionStageBindingRecord,
     OperationPlanRecord,
 ) {
-    let root = temp_dir("ic-backup-transfer-step");
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = workflow();
-    create_execution_workflow(&layout, &workflow).unwrap();
     let mut child = child_request(0);
     child.operations = vec![
         PlannedOperationRecord::new(PlannedOperationRequest {
@@ -62,9 +58,12 @@ fn prepare(
         .unwrap(),
     ];
     let plan = OperationPlanRecord::new(child).unwrap();
-    let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan.clone()).unwrap();
-    drop(stage);
+    let (root, layout, binding) = crate::test_support::execution_workflow::prepare_stage(
+        "ic-backup-transfer-step",
+        &workflow,
+        0,
+        plan.clone(),
+    );
     (root, layout, binding, plan)
 }
 fn admit(
@@ -149,7 +148,6 @@ impl IcSnapshotTransferReadProvider for SuspendedProvider {
 
 #[test]
 fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() {
-    use std::task::{Context, Poll, Waker};
     let original = metadata_request();
     let wire = metadata_wire();
     let metadata = IcSnapshotMetadataReply::decode(&original, &wire).unwrap();
@@ -180,12 +178,7 @@ fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() 
                     Ok::<(), Infallible>(())
                 },
             ));
-            assert!(matches!(
-                future
-                    .as_mut()
-                    .poll(&mut Context::from_waker(Waker::noop())),
-                Poll::Pending
-            ));
+            crate::test_support::ready::assert_pending(future.as_mut());
             assert!(
                 AttemptJournalGuard::open(
                     stage.layout().unwrap(),

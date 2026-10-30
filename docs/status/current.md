@@ -1,83 +1,78 @@
 # Current handoff — 2026-10-30
 
-## Current upstream adoption
+## Current cleanup
 
-Baseline HEAD remains `6d4e675c9e083f4c92fc8ba4595086c9d8f3a536`
-(Release 0.51.1). The user requested current tooling, Platform and related
-dependencies, continuing the uncommitted 0.71/0.10 adoption. The complete pending
-batch now selects **IC Tooling 0.72.0** and **Platform 0.11.1** with draft
-**0.52.0** notes. Workspace/package versions remain **0.51.1**.
-Changes are unstaged/uncommitted; no release, publication, live operation,
-sibling mutation or artifact cleanup was performed.
+Baseline HEAD is `fd4ca267584ba8c7fc3fb28dbda9ed5ebce564dc`
+(Release **0.52.0**). All ten approved complexity reductions are implemented
+in the working tree, with draft **0.52.1** changelog notes. Workspace/package
+versions remain **0.52.0**. Changes are unstaged/uncommitted; no release,
+publication, live operation, sibling mutation or artifact cleanup was performed.
 
-Host Artifacts/FS/Process, Testkit and the release editor select **0.72.0**.
-Production and development now share one Platform **0.11.1**; the previous
-Platform 0.9/0.10 selections are removed. Unrelated locked packages are unchanged;
-`/tmp/backup-adopt072-lock-review.txt` records the exact selected-family delta.
-Candid **0.10.39**, Agent **0.49.3**, external Principal **0.1.5**, native
-management DTO **0.11.0**, PocketIC **16.1.0** and Rust floor **1.91.0** remain.
+The batch replaces positional reservation errors with a private typed error and
+exact public projections; shares opaque application/fence syntax admission and
+bounded digest framing; and constructs management arguments in one match.
+Upload data is explicitly empty or carries its original kinds and plan together.
+Completed stages carry their retained evidence origin, and source members carry
+their original custody stamps. Restore/recovery scenarios have named cases;
+simple fresh-stage fixtures and borrowed one-poll cancellation checks are shared.
 
-The incoming lock, complete dirty diff and prior handoff are retained at
-`/tmp/backup-adopt072-incoming.lock`, `-incoming.patch` and `-prior-status.md`.
-The last preserves the 0.71 batch's original **187 native/nine simulator** results,
-source graph, artifacts and evidence paths; they are not new 0.72 executions.
-The manifest/lock frozen hashes are in `/tmp/backup-adopt072-graph.sha256`.
-An initial update selector referred to Platform 0.10 after it had left the
-resolved graph; its diagnostic remains in `-cargo-update.log`. Subsequent
-locked metadata, fetch and graph admission pass without unrelated reselection.
+Public signatures, errors and their precedence, record/wire bytes, digest domains
+and framing widths remain unchanged. Original finite spending, fresh successor
+callbacks, pending-effect recovery and effect-free terminal replay remain.
+Source custody checks still collect every fresh member observation before any
+comparison, preserving IO-error precedence. Empty uploads have no placeholder
+plan. Cancellation callers retain the future and choose the exact drop point.
+The complex download fixture keeps its continuous original stage guard locally.
 
-## Provenance and compatibility
+## Dependency and tooling scope
 
-The published sparse index selects the current versions. All six package archives
-match their checksums in `/tmp/backup-adopt072-registry-proof.log`; package/source
-identities are in `-registry-sources.jsonl`. Platform source is
-`1ed69142b0337311632db540cb70e40bbf059ee6`; Tooling source is
-`8511880f26030ca70628e1c3a42d97e43d11ac37`. No sibling/path override supplies them.
-
-Host errors now have **0.72** Rust identity. Consumers exchanging Backup's public
-artifact/filesystem errors must align direct Host dependencies. Fields, source
-chains, record/wire bytes and recovery behavior remain unchanged. The pending
-minor notes describe this actual consumer requirement.
-
-Tooling's selected Rust implementation directories are unchanged from 0.71;
-`/tmp/backup-adopt072-tooling-rust.diff` is empty. Platform removes unused optional
-Wire schema modules/features; native Principal/Account representation, Candid,
-Agent and management behavior remain. Backup does not select the removed schemas
-or Testkit's optional Wire calls, so no direct Wire dependency is added.
-The [Platform boundary](../ic-platform.md) records current ownership and features.
-No Backup Rust source, transport, runtime, persisted format, spending or recovery
-transition changes were required.
+Manifest and lockfile are unchanged. Frozen hashes are in
+`/tmp/backup-simplify054-graph.sha256`; the original lock is retained at
+`/tmp/backup-simplify054-original.lock`. Host/Testkit/release editor **0.72.0**,
+Platform **0.11.1**, Candid **0.10.39**, Agent **0.49.3**, external Principal
+**0.1.5**, native management DTO **0.11.0**, PocketIC **16.1.0** and Rust floor
+**1.91.0** remain selected. No dependency update, sibling/path override or new
+runtime was introduced.
 
 Shared **0.27.11**, revision
-`62edfbd43087a718bf0283e9040676a49211976d`, is independently still current on
-GitHub main. Its reviewed **131 payloads** are unchanged and pass local integrity;
-[the original adoption review](../shared-tooling-review.json) retains its scope.
-No producer-wide suites, new gates or maintenance schedules were activated.
+`62edfbd43087a718bf0283e9040676a49211976d`, and all **131 payloads** are unchanged.
+The [adoption review](../shared-tooling-review.json) retains its original scope.
 
 ## Focused qualification
 
-Strict Clippy passes for both packages, all targets/features, with warnings denied.
-Actual Rust **1.91.0** independent Core and Agent consumers pass public Host
-conversion probes and exact normal-graph admission; Core remains Agent-free,
-and both exclude Testkit/PocketIC/WAT. Evidence: `target/msrv-consumers.XAPYPD`.
+All **216 selected native cases** pass: **178 Core unit**, **17 existing public
+integration**, **one new public error-precedence regression**, **four Agent unit**
+and **16 HTTP** cases. These cover exact hashes/codecs/bounds, empty data,
+source substitution, retained versus fresh successor evidence, cancellation,
+named restore/recovery cases and combined-invalid-input admission order.
 
-All **10 inventory/plan unit**, **13 public codec/artifact/source**, **four Agent
-unit** and **16 HTTP** cases pass: **43 selected native tests**.
-Both selected authenticated independent journeys pass: complete cold capture,
-transfer, same-ID restore/start and effect-free terminal replay; process death
-after authenticated load preserves the pending original without redispatch.
-Independent build: `/tmp/ic-backup-agent-independent-build-3496677-0`.
-Original fixture roots: `/tmp/ic-backup-agent-pocketic-3496677-1` and `-3`.
+All **15 selected real PocketIC cases** pass: **six connected Core journeys** and
+**nine Agent cases**. They exercise lost allocation/load/upload/start replies,
+cold resume, full same-ID transfer/restore, independent application/consumer
+recovery, process death, output-retention failures and wrong-root rejection.
+Application admission remains independent; these results grant no live authority.
 
-Logs use `/tmp/backup-adopt072-*`: `-clippy.log`, `-consumers.log`,
-`-core-unit.log`, `-core-public.log`, `-agent-native.log`, `-agent-pocketic.log`,
-`-setup.log`, `-testkit-routing.log`, `-source-checks.log` and `-doc-links.log`.
-Selected tools are prepared and admitted offline. Testkit routing/refusal and
-release metadata preparation/refusal pass; release fixtures remain in
-`target/shared-release-tests.v55ojY`. Formatting, dependency inheritance/boundaries,
-regular-file/license checks, Shared integrity, documentation links and diff
-checks pass. No full gate, fresh macOS matrix, registry-only release acceptance,
-installed Canic migration or live application qualification was run.
+Strict Clippy passes for Core library/tests and Agent library/HTTP/simulator
+targets with warnings denied. The initial lint log is retained; unused fixture
+imports were removed, and the inline upload-state enum has a scoped, justified
+large-variant expectation to avoid adding a heap allocation. Formatting,
+dependency inheritance/boundaries, regular-file/license checks, Shared integrity,
+documentation links and diff checks pass. Testkit/server admission was offline.
+
+Logs use `/tmp/backup-simplify054-*`: `-core.log`, `-public.log`,
+`-error-order.log`, `-agent-native.log`, `-core-pocketic.log`,
+`-agent-pocketic.log`, `-core-clippy.log`, `-core-clippy-recheck.log`,
+`-core-clippy-final.log`, `-agent-clippy.log`, `-source-checks.log`,
+`-server-check.log`, `-fmt-final.log` and `-final-checks.log`.
+Independent candidate graph/build evidence is retained at
+`/tmp/ic-backup-agent-independent-build-1127947-0`.
+Core originals are `/tmp/ic-backup-pocketic-1099290-{0,2,4,6,8,10}`;
+Agent originals and application/operator evidence use
+`/tmp/ic-backup-agent-pocketic-1127947-*`.
+
+No full CI gate, new MSRV/macOS matrix, registry-only release acceptance,
+installed Canic migration or live application qualification was run. Historical
+qualification keeps its original source/graph/host scope.
 
 ## Retained obligations and evidence
 
@@ -86,10 +81,9 @@ installed Canic migration or live application qualification was run.
 Application fencing, external obligations, pending effects, original custody and
 guarded terminal release remain integration-owned.
 
-The [previous committed handoff](https://github.com/dragginzgame/ic-backup/blob/6d4e675c9e083f4c92fc8ba4595086c9d8f3a536/docs/status/current.md)
-and retained prior-status file above preserve earlier qualification/custody history.
+The [previous committed handoff](https://github.com/dragginzgame/ic-backup/blob/fd4ca267584ba8c7fc3fb28dbda9ed5ebce564dc/docs/status/current.md)
+preserves upstream adoption and earlier qualification/custody history.
 Preserve all `/tmp/backup-*`, `/tmp/ic-backup-agent-independent-build-*`,
 `/tmp/ic-backup-agent-pocketic-*`, `/tmp/ic-backup-pocketic-*`, original Canic
 journals, `target/msrv-consumers.*`, `target/shared-release-tests.*`, validation
-failure logs and old/failed tool bundles. Historical passes retain their original
-source/graph/host scope; this summary authorizes no disposal.
+failure logs and old/failed tool bundles. This summary authorizes no disposal.

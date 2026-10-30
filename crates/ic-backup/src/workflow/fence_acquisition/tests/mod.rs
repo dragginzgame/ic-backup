@@ -455,7 +455,6 @@ impl FenceAcquisitionProvider for SuspendedProvider {
 }
 #[test]
 fn cancellation_holds_exclusion_and_retains_pending_spending_and_source_references() {
-    use std::task::{Context, Poll, Waker};
     for suspend_admission in [true, false] {
         let fixture = Fixture::new(true, false);
         let stage = fixture.stage();
@@ -474,12 +473,7 @@ fn cancellation_holds_exclusion_and_retains_pending_spending_and_source_referenc
                 Ok::<(), Infallible>(())
             },
         ));
-        assert!(matches!(
-            future
-                .as_mut()
-                .poll(&mut Context::from_waker(Waker::noop())),
-            Poll::Pending
-        ));
+        crate::test_support::ready::assert_pending(future.as_mut());
         assert!(
             AttemptJournalGuard::open(
                 stage.layout().unwrap(),

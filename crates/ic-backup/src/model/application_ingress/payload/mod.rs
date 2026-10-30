@@ -43,28 +43,17 @@ impl ApplicationIngressPayload {
         arguments: &[u8],
         reply_limit: usize,
     ) -> Result<Self, ApplicationIngressError> {
-        if arguments.len() > MAX_APPLICATION_INGRESS_ARGUMENT_BYTES {
-            return Err(ApplicationIngressError::ArgumentsTooLarge);
-        }
-        if method.is_empty()
-            || method.len() > MAX_APPLICATION_INGRESS_METHOD_BYTES
-            || !method.bytes().all(|byte| byte.is_ascii_graphic())
-        {
-            return Err(ApplicationIngressError::InvalidMethod);
-        }
+        crate::model::application_payload::validate_bytes(
+            arguments,
+            MAX_APPLICATION_INGRESS_ARGUMENT_BYTES,
+            method,
+            MAX_APPLICATION_INGRESS_METHOD_BYTES,
+        )?;
         if !(1..=MAX_APPLICATION_INGRESS_REPLY_BYTES).contains(&reply_limit) {
             return Err(ApplicationIngressError::InvalidReplyLimit);
         }
-        let admit = |value| {
-            let (text, principal) = crate::model::principal::canonical_parts(value)
-                .ok_or(ApplicationIngressError::InvalidPrincipal)?;
-            if principal.as_slice().is_empty() {
-                return Err(ApplicationIngressError::ManagementPrincipal);
-            }
-            Ok((text, principal.as_slice().to_vec()))
-        };
-        let (receiver, receiver_bytes) = admit(receiver)?;
-        let (target, target_bytes) = admit(target)?;
+        let (receiver, receiver_bytes) = crate::model::application_payload::principal(receiver)?;
+        let (target, target_bytes) = crate::model::application_payload::principal(target)?;
         Ok(Self {
             receiver,
             target,
@@ -106,13 +95,11 @@ impl ApplicationIngressPayload {
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut framing = EvidenceDigest::new(b"ic-backup/application-ingress/v1\0");
         for principal in [&self.receiver_bytes, &self.target_bytes] {
-            framing.byte(principal.len().to_le_bytes()[0]);
-            framing.append(principal);
+            framing.bytes_u8(principal);
         }
         framing.byte(1);
         for bytes in [self.method.as_bytes(), self.arguments.as_slice()] {
-            framing.u64_be(bytes.len() as u64);
-            framing.append(bytes);
+            framing.bytes_u64(bytes);
         }
         framing.u64_be(self.reply_limit as u64);
         framing.finish()

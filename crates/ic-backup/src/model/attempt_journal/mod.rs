@@ -4,7 +4,7 @@ use crate::model::evidence_digest::EvidenceDigest;
 mod authority;
 mod history;
 mod mutation;
-pub(crate) use mutation::MutationReservation;
+pub(crate) use mutation::{MutationReservation, MutationReservationError};
 mod observation;
 pub use authority::{
     AttemptAuthorityRecord, AttemptBudgetRecord, MAX_OPERATION_ATTEMPTS, OperationBindingRecord,
@@ -184,22 +184,19 @@ impl AttemptJournalRecord {
     }
     // Keep passive request admission ordered: authority, mutation, then recovery.
     // Callers retain their own public error types; this grants no dispatch authority.
-    pub(crate) fn validate_pending_mutation<E>(
+    pub(crate) fn validate_pending_mutation(
         &self,
         authority: &AttemptAuthorityRecord,
         mutation_attempt: u32,
-        authority_mismatch: E,
-        mutation_mismatch: E,
-        observation_pending: E,
-    ) -> Result<(), E> {
+    ) -> Result<(), MutationReservationError> {
         if self.authority() != authority {
-            return Err(authority_mismatch);
+            return Err(MutationReservationError::AuthorityMismatch);
         }
         if self.pending_mutation() != Some(mutation_attempt) {
-            return Err(mutation_mismatch);
+            return Err(MutationReservationError::MutationMismatch);
         }
         if self.pending_observation().is_some() {
-            return Err(observation_pending);
+            return Err(MutationReservationError::ObservationPending);
         }
         Ok(())
     }

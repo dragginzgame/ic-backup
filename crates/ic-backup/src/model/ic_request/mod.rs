@@ -83,7 +83,7 @@ impl IcManagementRequestRecord {
     pub fn new(request: IcManagementRequest) -> Result<Self, IcRequestError> {
         let (target, principal) = crate::model::principal::canonical_parts(&request.target)
             .ok_or(IcRequestError::InvalidTarget)?;
-        match (request.method, request.snapshot_id.as_deref()) {
+        let arguments = match (request.method, request.snapshot_id.as_deref()) {
             (IcManagementMethodRecord::LoadCanisterSnapshot, None) => {
                 return Err(IcRequestError::SnapshotRequired);
             }
@@ -91,12 +91,14 @@ impl IcManagementRequestRecord {
                 if !admits_snapshot_id(bytes) {
                     return Err(IcRequestError::InvalidSnapshotId);
                 }
+                encode_arguments(LoadCanisterSnapshotArgs {
+                    canister_id: principal.into(),
+                    snapshot_id: bytes.to_vec(),
+                    sender_canister_version: None,
+                })
             }
             (_, Some(_)) => return Err(IcRequestError::UnexpectedSnapshot),
-            (_, None) => {}
-        }
-        let arguments = match request.method {
-            IcManagementMethodRecord::TakeCanisterSnapshot => {
+            (IcManagementMethodRecord::TakeCanisterSnapshot, None) => {
                 encode_arguments(TakeCanisterSnapshotArgs {
                     canister_id: principal.into(),
                     replace_snapshot: None,
@@ -104,20 +106,13 @@ impl IcManagementRequestRecord {
                     sender_canister_version: None,
                 })
             }
-            IcManagementMethodRecord::LoadCanisterSnapshot => {
-                encode_arguments(LoadCanisterSnapshotArgs {
-                    canister_id: principal.into(),
-                    snapshot_id: request
-                        .snapshot_id
-                        .clone()
-                        .ok_or(IcRequestError::SnapshotRequired)?,
-                    sender_canister_version: None,
-                })
-            }
-            IcManagementMethodRecord::CanisterStatus
-            | IcManagementMethodRecord::ListCanisterSnapshots
-            | IcManagementMethodRecord::StartCanister
-            | IcManagementMethodRecord::StopCanister => encode_arguments(CanisterIdRecord {
+            (
+                IcManagementMethodRecord::CanisterStatus
+                | IcManagementMethodRecord::ListCanisterSnapshots
+                | IcManagementMethodRecord::StartCanister
+                | IcManagementMethodRecord::StopCanister,
+                None,
+            ) => encode_arguments(CanisterIdRecord {
                 canister_id: principal.into(),
             }),
         }?;
@@ -235,22 +230,11 @@ pub(super) fn management_request_digest(
 ) -> ArtifactChecksumRecord {
     let mut bytes = EvidenceDigest::new(b"ic-backup/ic-management-request/v1\0");
     bytes.byte(0); // Management receiver principal has zero raw bytes.
-    bytes.byte(target_bytes.len().to_le_bytes()[0]); // Principal <=29 raw bytes.
-    bytes.append(target_bytes);
+    bytes.bytes_u8(target_bytes);
     bytes.byte(1); // Replicated update ingress.
-    bytes.byte(method.len().to_le_bytes()[0]); // Fixed names fit one byte.
-    bytes.append(method.as_bytes());
-    append_argument_length(&mut bytes, arguments.len());
-    bytes.append(arguments);
+    bytes.bytes_u8(method.as_bytes());
+    bytes.bytes_u32(arguments);
     bytes.finish()
-}
-
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "admitted argument byte length is at most 4096"
-)]
-fn append_argument_length(bytes: &mut EvidenceDigest, length: usize) {
-    bytes.append(&(length as u32).to_be_bytes());
 }
 
 fn required_snapshot<'de, D: Deserializer<'de>>(

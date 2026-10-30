@@ -14,8 +14,8 @@ use crate::{
         ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
-    ops::persistence::{BackupLayoutGuard, create_execution_workflow},
-    test_support::{ic_mutation::reply, temp_dir},
+    ops::persistence::BackupLayoutGuard,
+    test_support::ic_mutation::reply,
 };
 use std::{convert::Infallible, fs, path::PathBuf};
 
@@ -36,7 +36,6 @@ impl IcMutationProvider for SuspendedProvider {
 
 #[test]
 fn cancellation_during_admission_or_submission_releases_lock_without_reset_or_reissue() {
-    use std::task::{Context, Poll, Waker};
     for suspend_admission in [true, false] {
         let payload = payload(IcManagementMethodRecord::TakeCanisterSnapshot);
         let (_root, layout, binding, plan) = prepare(&payload);
@@ -55,12 +54,7 @@ fn cancellation_during_admission_or_submission_releases_lock_without_reset_or_re
                 Ok::<(), Infallible>(())
             },
         ));
-        assert!(matches!(
-            future
-                .as_mut()
-                .poll(&mut Context::from_waker(Waker::noop())),
-            Poll::Pending
-        ));
+        crate::test_support::ready::assert_pending(future.as_mut());
         assert!(
             AttemptJournalGuard::open(
                 stage.layout().unwrap(),
@@ -98,10 +92,7 @@ fn prepare(
     ExecutionStageBindingRecord,
     OperationPlanRecord,
 ) {
-    let root = temp_dir("ic-backup-capture-step");
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = workflow();
-    create_execution_workflow(&layout, &workflow).unwrap();
     let mut child = child_request(0);
     child.operations = vec![
         PlannedOperationRecord::new(PlannedOperationRequest {
@@ -113,9 +104,12 @@ fn prepare(
         .unwrap(),
     ];
     let plan = OperationPlanRecord::new(child).unwrap();
-    let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan.clone()).unwrap();
-    drop(stage);
+    let (root, layout, binding) = crate::test_support::execution_workflow::prepare_stage(
+        "ic-backup-capture-step",
+        &workflow,
+        0,
+        plan.clone(),
+    );
     (root, layout, binding, plan)
 }
 fn admit(_: &IcMutationRequest<'_>) -> impl std::future::Future<Output = Result<(), Infallible>> {

@@ -6,10 +6,17 @@ mod support;
 
 use ic_backup::{
     model::{
+        application_ingress::{
+            ApplicationIngressError, ApplicationIngressPayload,
+            MAX_APPLICATION_INGRESS_ARGUMENT_BYTES,
+        },
         artifacts::ArtifactChecksumRecord as Digest,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
+        },
+        fence_acquisition::{
+            FenceAcquisitionError, FenceAcquisitionPayload, MAX_FENCE_ACQUISITION_ARGUMENT_BYTES,
         },
         operation_plan::OperationPlanRecord,
     },
@@ -25,6 +32,51 @@ use std::{collections::BTreeMap, fs, io, os::unix::fs::DirBuilderExt, path::Path
 const ROOT: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 const STAGE: u64 = 7;
 const OPERATION: u64 = 42;
+
+#[test]
+fn opaque_payload_boundaries_preserve_error_order_for_multiple_invalid_fields() {
+    let oversized =
+        vec![
+            0;
+            MAX_APPLICATION_INGRESS_ARGUMENT_BYTES.max(MAX_FENCE_ACQUISITION_ARGUMENT_BYTES) + 1
+        ];
+    assert!(matches!(
+        ApplicationIngressPayload::new("invalid", "aaaaa-aa", "", &oversized, 0),
+        Err(ApplicationIngressError::ArgumentsTooLarge)
+    ));
+    assert!(matches!(
+        ApplicationIngressPayload::new("invalid", "aaaaa-aa", "", b"", 0),
+        Err(ApplicationIngressError::InvalidMethod)
+    ));
+    assert!(matches!(
+        ApplicationIngressPayload::new("invalid", "aaaaa-aa", "apply", b"", 0),
+        Err(ApplicationIngressError::InvalidReplyLimit)
+    ));
+    assert!(matches!(
+        ApplicationIngressPayload::new("invalid", "aaaaa-aa", "apply", b"", 1),
+        Err(ApplicationIngressError::InvalidPrincipal)
+    ));
+    assert!(matches!(
+        ApplicationIngressPayload::new("aaaaa-aa", "invalid", "apply", b"", 1),
+        Err(ApplicationIngressError::ManagementPrincipal)
+    ));
+    assert!(matches!(
+        FenceAcquisitionPayload::new("invalid", "", &oversized),
+        Err(FenceAcquisitionError::ArgumentsTooLarge)
+    ));
+    assert!(matches!(
+        FenceAcquisitionPayload::new("invalid", "", b""),
+        Err(FenceAcquisitionError::InvalidMethod)
+    ));
+    assert!(matches!(
+        FenceAcquisitionPayload::new("invalid", "acquire", b""),
+        Err(FenceAcquisitionError::InvalidTarget)
+    ));
+    assert!(matches!(
+        FenceAcquisitionPayload::new("aaaaa-aa", "acquire", b""),
+        Err(FenceAcquisitionError::ManagementReceiver)
+    ));
+}
 
 fn original_plan(request: &Digest) -> OperationPlanRecord {
     support::single_operation_plan(ROOT, OPERATION, request.hash())

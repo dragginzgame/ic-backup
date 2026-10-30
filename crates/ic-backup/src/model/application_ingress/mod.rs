@@ -3,6 +3,7 @@
 //! Applications own codecs, fresh authority, whole-unit safety, original byte/command
 //! custody and qualified outcomes. These passive types grant no dispatch or resend.
 
+use crate::model::application_payload::ApplicationPayloadError as Payload;
 mod payload;
 mod request;
 pub use payload::{
@@ -60,3 +61,14 @@ pub enum ApplicationIngressError {
 
 #[cfg(test)]
 mod tests;
+
+impl From<crate::model::application_payload::ApplicationPayloadError> for ApplicationIngressError {
+    fn from(error: crate::model::application_payload::ApplicationPayloadError) -> Self {
+        match error {
+            Payload::ArgumentsTooLarge => Self::ArgumentsTooLarge,
+            Payload::InvalidMethod => Self::InvalidMethod,
+            Payload::InvalidPrincipal => Self::InvalidPrincipal,
+            Payload::ManagementPrincipal => Self::ManagementPrincipal,
+        }
+    }
+}

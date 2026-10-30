@@ -2,6 +2,7 @@
 
 use super::IcSnapshotUploadRequest;
 use crate::model::attempt_journal::MutationReservation;
+use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     operation_plan::{OperationPlanError, OperationPlanRecord},
@@ -32,14 +33,7 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         payload: &'request IcSnapshotUploadRequest<'source>,
     ) -> Result<Self, IcSnapshotUploadAttemptError> {
         let authority = original_authority(plan, operation_sequence, journal, payload)?;
-        let reservation = MutationReservation::new(
-            authority,
-            journal,
-            IcSnapshotUploadAttemptError::NoPendingMutation,
-            IcSnapshotUploadAttemptError::AuthorityMismatch,
-            IcSnapshotUploadAttemptError::MutationMismatch,
-            IcSnapshotUploadAttemptError::ObservationPending,
-        )?;
+        let reservation = MutationReservation::new(authority, journal)?;
         Ok(Self {
             plan,
             payload,
@@ -73,12 +67,7 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcSnapshotUploadAttemptError> {
-        self.reservation.validate(
-            journal,
-            IcSnapshotUploadAttemptError::AuthorityMismatch,
-            IcSnapshotUploadAttemptError::MutationMismatch,
-            IcSnapshotUploadAttemptError::ObservationPending,
-        )
+        self.reservation.validate(journal).map_err(Into::into)
     }
 }
 
@@ -135,4 +124,17 @@ pub enum IcSnapshotUploadAttemptError {
     /// Original full plan has no such operation or cannot derive its authority.
     #[error(transparent)]
     Plan(#[from] OperationPlanError),
+}
+
+impl From<crate::model::attempt_journal::MutationReservationError>
+    for IcSnapshotUploadAttemptError
+{
+    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
+        match error {
+            Reservation::NoPendingMutation => Self::NoPendingMutation,
+            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
+            Reservation::MutationMismatch => Self::MutationMismatch,
+            Reservation::ObservationPending => Self::ObservationPending,
+        }
+    }
 }

@@ -7,40 +7,32 @@ pub(crate) struct MutationReservation {
     pub mutation_attempt: u32,
 }
 impl MutationReservation {
-    pub(crate) fn new<E>(
+    pub(crate) fn new(
         authority: AttemptAuthorityRecord,
         journal: &AttemptJournalRecord,
-        missing: E,
-        authority_mismatch: E,
-        mutation_mismatch: E,
-        observation_pending: E,
-    ) -> Result<Self, E> {
-        let mutation_attempt = journal.pending_mutation().ok_or(missing)?;
+    ) -> Result<Self, MutationReservationError> {
+        let mutation_attempt = journal
+            .pending_mutation()
+            .ok_or(MutationReservationError::NoPendingMutation)?;
         let reservation = Self {
             authority,
             mutation_attempt,
         };
-        reservation.validate(
-            journal,
-            authority_mismatch,
-            mutation_mismatch,
-            observation_pending,
-        )?;
+        reservation.validate(journal)?;
         Ok(reservation)
     }
-    pub(crate) fn validate<E>(
+    pub(crate) fn validate(
         &self,
         journal: &AttemptJournalRecord,
-        authority_mismatch: E,
-        mutation_mismatch: E,
-        observation_pending: E,
-    ) -> Result<(), E> {
-        journal.validate_pending_mutation(
-            &self.authority,
-            self.mutation_attempt,
-            authority_mismatch,
-            mutation_mismatch,
-            observation_pending,
-        )
+    ) -> Result<(), MutationReservationError> {
+        journal.validate_pending_mutation(&self.authority, self.mutation_attempt)
     }
+}
+
+#[derive(Debug)]
+pub(crate) enum MutationReservationError {
+    NoPendingMutation,
+    AuthorityMismatch,
+    MutationMismatch,
+    ObservationPending,
 }

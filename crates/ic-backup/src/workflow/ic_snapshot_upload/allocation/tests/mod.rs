@@ -45,13 +45,14 @@ fn with_metadata(check: impl FnOnce(&IcSnapshotUploadRequest<'_>)) {
 fn prepare(
     payload: &IcSnapshotUploadRequest<'_>,
 ) -> (BackupLayoutGuard, ExecutionStageBindingRecord) {
-    let root = temp_dir("ic-backup-allocation-stage");
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let plan = upload_plan(payload);
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
-    create_execution_workflow(&layout, &workflow).unwrap();
-    let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![]).unwrap();
-    drop(ExecutionStageGuard::prepare(&layout, binding.clone(), plan).unwrap());
+    let (_, layout, binding) = crate::test_support::execution_workflow::prepare_stage(
+        "ic-backup-allocation-stage",
+        &workflow,
+        7,
+        plan,
+    );
     (layout, binding)
 }
 struct Provider {
@@ -119,7 +120,6 @@ fn pending(stage: &ExecutionStageGuard<'_>) {
 
 #[test]
 fn cancelled_allocation_qualification_retains_exact_reply_and_pending_original() {
-    use std::task::{Context, Poll, Waker};
     with_metadata(|payload| {
         let (layout, binding) = prepare(payload);
         let stage =
@@ -156,12 +156,7 @@ fn cancelled_allocation_qualification_retains_exact_reply_and_pending_original()
                 Ok::<_, Infallible>(receipt(request, acknowledgement))
             },
         ));
-        assert!(matches!(
-            future
-                .as_mut()
-                .poll(&mut Context::from_waker(Waker::noop())),
-            Poll::Pending
-        ));
+        crate::test_support::ready::assert_pending(future.as_mut());
         let authority = stage.plan().attempt_authority(7).unwrap();
         assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
         let journal_path = root.join("attempt-7.json");

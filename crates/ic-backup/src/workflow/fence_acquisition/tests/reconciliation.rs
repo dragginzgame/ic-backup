@@ -341,7 +341,6 @@ impl FenceReconciliationProvider for SuspendedProvider {
 }
 #[test]
 fn cancellation_during_admission_or_observation_holds_exclusion_and_retains_originals() {
-    use std::task::{Context, Poll, Waker};
     for suspend_admission in [false, true] {
         let fixture = Fixture::new(true, false);
         let stage = fixture.stage();
@@ -362,12 +361,7 @@ fn cancellation_during_admission_or_observation_holds_exclusion_and_retains_orig
                 Ok::<(), Infallible>(())
             },
         ));
-        assert!(matches!(
-            future
-                .as_mut()
-                .poll(&mut Context::from_waker(Waker::noop())),
-            Poll::Pending
-        ));
+        crate::test_support::ready::assert_pending(future.as_mut());
         assert!(
             AttemptJournalGuard::open(
                 stage.layout().unwrap(),

@@ -1,5 +1,7 @@
 //! Exact application update bytes and original fence acquisition reservation binding.
 
+use crate::model::application_payload::ApplicationPayloadError as Payload;
+use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::evidence_digest::EvidenceDigest;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -38,23 +40,16 @@ impl FenceAcquisitionPayload {
         method: &str,
         arguments: &[u8],
     ) -> Result<Self, FenceAcquisitionError> {
-        if arguments.len() > MAX_FENCE_ACQUISITION_ARGUMENT_BYTES {
-            return Err(FenceAcquisitionError::ArgumentsTooLarge);
-        }
-        if method.is_empty()
-            || method.len() > MAX_FENCE_ACQUISITION_METHOD_BYTES
-            || !method.bytes().all(|byte| byte.is_ascii_graphic())
-        {
-            return Err(FenceAcquisitionError::InvalidMethod);
-        }
-        let (target, principal) = crate::model::principal::canonical_parts(target)
-            .ok_or(FenceAcquisitionError::InvalidTarget)?;
-        if principal.as_slice().is_empty() {
-            return Err(FenceAcquisitionError::ManagementReceiver);
-        }
+        crate::model::application_payload::validate_bytes(
+            arguments,
+            MAX_FENCE_ACQUISITION_ARGUMENT_BYTES,
+            method,
+            MAX_FENCE_ACQUISITION_METHOD_BYTES,
+        )?;
+        let (target, target_bytes) = crate::model::application_payload::principal(target)?;
         Ok(Self {
             target,
-            target_bytes: principal.as_slice().to_vec(),
+            target_bytes,
             method: method.into(),
             arguments: arguments.into(),
         })
@@ -79,15 +74,10 @@ impl FenceAcquisitionPayload {
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/application-fence-acquisition/v1\0");
-        // Principal's canonical raw representation is at most 29 bytes.
-        bytes.byte(self.target_bytes.len().to_le_bytes()[0]);
-        bytes.append(&self.target_bytes);
+        bytes.bytes_u8(&self.target_bytes);
         bytes.byte(1); // Exactly one host replicated update, never a query.
-        // Visible ASCII methods are admitted at <=128 bytes, so their low byte is exact.
-        bytes.append(&u32::from(self.method.len().to_le_bytes()[0]).to_be_bytes());
-        bytes.append(self.method.as_bytes());
-        bytes.append(&(self.arguments.len() as u64).to_be_bytes());
-        bytes.append(&self.arguments);
+        bytes.bytes_u32(self.method.as_bytes());
+        bytes.bytes_u64(&self.arguments);
         bytes.finish()
     }
 }
@@ -198,13 +188,9 @@ impl<'a> FenceAcquisitionRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), FenceAcquisitionError> {
-        journal.validate_pending_mutation(
-            &self.authority,
-            self.mutation_attempt,
-            FenceAcquisitionError::AuthorityMismatch,
-            FenceAcquisitionError::MutationMismatch,
-            FenceAcquisitionError::ObservationPending,
-        )
+        journal
+            .validate_pending_mutation(&self.authority, self.mutation_attempt)
+            .map_err(Into::into)
     }
 }
 
@@ -284,3 +270,25 @@ pub enum FenceAcquisitionError {
 
 #[cfg(test)]
 mod tests;
+
+impl From<crate::model::attempt_journal::MutationReservationError> for FenceAcquisitionError {
+    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
+        match error {
+            Reservation::NoPendingMutation => Self::NoPendingMutation,
+            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
+            Reservation::MutationMismatch => Self::MutationMismatch,
+            Reservation::ObservationPending => Self::ObservationPending,
+        }
+    }
+}
+
+impl From<crate::model::application_payload::ApplicationPayloadError> for FenceAcquisitionError {
+    fn from(error: crate::model::application_payload::ApplicationPayloadError) -> Self {
+        match error {
+            Payload::ArgumentsTooLarge => Self::ArgumentsTooLarge,
+            Payload::InvalidMethod => Self::InvalidMethod,
+            Payload::InvalidPrincipal => Self::InvalidTarget,
+            Payload::ManagementPrincipal => Self::ManagementReceiver,
+        }
+    }
+}

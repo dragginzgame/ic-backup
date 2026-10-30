@@ -1,6 +1,7 @@
 //! Exact reserved IC mutation identity and bounded passive reply association.
 
 use crate::model::attempt_journal::MutationReservation;
+use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
@@ -51,14 +52,7 @@ impl<'a> IcMutationRequest<'a> {
             return Err(IcMutationRequestError::AuthorityMismatch);
         }
         payload.validate_mutation_binding(authority.binding())?;
-        let reservation = MutationReservation::new(
-            authority,
-            journal,
-            IcMutationRequestError::NoPendingMutation,
-            IcMutationRequestError::AuthorityMismatch,
-            IcMutationRequestError::MutationMismatch,
-            IcMutationRequestError::ObservationPending,
-        )?;
+        let reservation = MutationReservation::new(authority, journal)?;
         Ok(Self {
             plan,
             payload,
@@ -93,12 +87,7 @@ impl<'a> IcMutationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcMutationRequestError> {
-        self.reservation.validate(
-            journal,
-            IcMutationRequestError::AuthorityMismatch,
-            IcMutationRequestError::MutationMismatch,
-            IcMutationRequestError::ObservationPending,
-        )
+        self.reservation.validate(journal).map_err(Into::into)
     }
 }
 
@@ -178,3 +167,14 @@ pub enum IcMutationAcknowledgementError {
 
 #[cfg(test)]
 mod tests;
+
+impl From<crate::model::attempt_journal::MutationReservationError> for IcMutationRequestError {
+    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
+        match error {
+            Reservation::NoPendingMutation => Self::NoPendingMutation,
+            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
+            Reservation::MutationMismatch => Self::MutationMismatch,
+            Reservation::ObservationPending => Self::ObservationPending,
+        }
+    }
+}

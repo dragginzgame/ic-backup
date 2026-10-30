@@ -297,31 +297,26 @@ impl OperationPlanRecord {
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/operation-plan/v1\0");
         bytes.append(self.context.network().as_bytes());
-        append_principal(&mut bytes, self.context.caller());
+        bytes.bytes_u8(self.context.caller().as_bytes());
         bytes.append(self.context.release().as_bytes());
         bytes.checksum(&self.inventory.digest());
         bytes.checksum(&self.graph.digest());
         append_count(&mut bytes, self.selected_targets.len());
         for target in &self.selected_targets {
-            append_principal(&mut bytes, target);
+            bytes.bytes_u8(target.as_bytes());
         }
         bytes.u32_be(self.budget.mutations());
         bytes.u32_be(self.budget.observations());
         append_count(&mut bytes, self.operations.len());
         for operation in &self.operations {
             bytes.u64_be(operation.operation_sequence());
-            append_principal(&mut bytes, operation.target());
+            bytes.bytes_u8(operation.target().as_bytes());
             bytes.append(operation.request().as_bytes());
             bytes.u32_be(operation.budget().mutations());
             bytes.u32_be(operation.budget().observations());
         }
         bytes.finish()
     }
-}
-fn append_principal(bytes: &mut EvidenceDigest, text: &str) {
-    // Owning boundaries admit at most 63 canonical ASCII bytes, so the low byte is exact.
-    bytes.byte(text.len().to_le_bytes()[0]);
-    bytes.append(text.as_bytes());
 }
 #[expect(
     clippy::cast_possible_truncation,

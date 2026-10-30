@@ -49,13 +49,42 @@ impl RecoveryRequest<'_> {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RecoveryLane {
+    Status,
+    Capture,
+    Allocation,
+    Data,
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RecoveryMode {
+    RefuseRetention,
+    Accepted,
+    Disconnect,
+    Cancel,
+}
+impl RecoveryMode {
+    const ALL: [Self; 4] = [
+        Self::RefuseRetention,
+        Self::Accepted,
+        Self::Disconnect,
+        Self::Cancel,
+    ];
+}
+
 #[expect(
     clippy::too_many_lines,
     reason = "one chronological original-journal and signed-body trace covers all four recovery payloads and interruption modes"
 )]
-async fn exercise(lane: u8, mode: u8) {
+async fn exercise(lane: RecoveryLane, mode: RecoveryMode) {
     let root = support::root("recovery-http");
-    let mut server = Server::new(&root, "202 Accepted", vec![], mode == 2, mode == 3);
+    let mut server = Server::new(
+        &root,
+        "202 Accepted",
+        vec![],
+        mode == RecoveryMode::Disconnect,
+        mode == RecoveryMode::Cancel,
+    );
     let metadata_request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(
         &metadata_request,
@@ -82,7 +111,7 @@ async fn exercise(lane: u8, mode: u8) {
     .unwrap();
     let read = IcSnapshotDataRequest::new(&destination, kind).unwrap();
     let mutation = support::payload(
-        if lane == 0 {
+        if lane == RecoveryLane::Status {
             Method::StopCanister
         } else {
             Method::TakeCanisterSnapshot
@@ -91,7 +120,7 @@ async fn exercise(lane: u8, mode: u8) {
         None,
     );
     let observation = support::payload(
-        if lane == 0 {
+        if lane == RecoveryLane::Status {
             Method::CanisterStatus
         } else {
             Method::ListCanisterSnapshots
@@ -100,9 +129,9 @@ async fn exercise(lane: u8, mode: u8) {
         None,
     );
     let (original, digest) = match lane {
-        0 | 1 => (mutation.digest(), observation.digest()),
-        2 => (upload.binding_digest(), observation.digest()),
-        _ => (data.binding_digest(), read.digest()),
+        RecoveryLane::Status | RecoveryLane::Capture => (mutation.digest(), observation.digest()),
+        RecoveryLane::Allocation => (upload.binding_digest(), observation.digest()),
+        RecoveryLane::Data => (data.binding_digest(), read.digest()),
     };
     let plan = support::plan(TARGET, &original, 1);
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -110,11 +139,11 @@ async fn exercise(lane: u8, mode: u8) {
     guard.reserve_observation(1, digest.hash()).unwrap();
     let before = fs::read(guard.path()).unwrap();
     let request = match lane {
-        0 | 1 => RecoveryRequest::Original(
+        RecoveryLane::Status | RecoveryLane::Capture => RecoveryRequest::Original(
             IcObservationRequest::new(&plan, 1, guard.record().unwrap(), &mutation, &observation)
                 .unwrap(),
         ),
-        2 => RecoveryRequest::Upload(
+        RecoveryLane::Allocation => RecoveryRequest::Upload(
             IcSnapshotUploadObservationRequest::new(
                 &plan,
                 1,
@@ -124,7 +153,7 @@ async fn exercise(lane: u8, mode: u8) {
             )
             .unwrap(),
         ),
-        _ => RecoveryRequest::Data(
+        RecoveryLane::Data => RecoveryRequest::Data(
             IcSnapshotUploadDataObservationRequest::new(
                 &plan,
                 1,
@@ -157,7 +186,7 @@ async fn exercise(lane: u8, mode: u8) {
                 plan.attempt_authority(1).unwrap().digest()
             );
             assert!(AttemptJournalGuard::open(&layout, authority).is_err());
-            if mode == 0 || root.join("signed-ingress.cbor").exists() {
+            if mode == RecoveryMode::RefuseRetention || root.join("signed-ingress.cbor").exists() {
                 return Err(IcObservationProviderError::Unavailable);
             }
             assert!(server.requests.lock().unwrap().is_empty());
@@ -171,7 +200,7 @@ async fn exercise(lane: u8, mode: u8) {
         IcObservationProviderError::Unsupported
     );
     assert!(!root.join("signed-ingress.cbor").exists());
-    if mode == 3 {
+    if mode == RecoveryMode::Cancel {
         let mut pending = Box::pin(request.observe(&mut provider, guard.record().unwrap()));
         let sent = async {
             tokio::time::timeout(Duration::from_secs(2), async {
@@ -193,7 +222,7 @@ async fn exercise(lane: u8, mode: u8) {
                 .observe(&mut provider, guard.record().unwrap())
                 .await
                 .unwrap_err(),
-            if mode == 0 {
+            if mode == RecoveryMode::RefuseRetention {
                 IcObservationProviderError::Unavailable
             } else {
                 IcObservationProviderError::Indeterminate
@@ -211,12 +240,12 @@ async fn exercise(lane: u8, mode: u8) {
     server.finish().unwrap();
     assert_eq!(
         server.requests.lock().unwrap().len(),
-        usize::from(mode != 0)
+        usize::from(mode != RecoveryMode::RefuseRetention)
     );
     assert_eq!(fs::read(guard.path()).unwrap(), before);
     assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
     assert_eq!(guard.record().unwrap().view().pending_observation, Some(2));
-    if mode != 0 {
+    if mode != RecoveryMode::RefuseRetention {
         let requests = server.requests.lock().unwrap();
         let bytes = requests[0].complete_bytes(&root);
         let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
@@ -229,25 +258,25 @@ async fn exercise(lane: u8, mode: u8) {
 
 #[tokio::test]
 async fn status_recovery_preserves_both_attempts_and_exact_zero_or_one_submission() {
-    for mode in 0..=3 {
-        exercise(0, mode).await;
+    for mode in RecoveryMode::ALL {
+        exercise(RecoveryLane::Status, mode).await;
     }
 }
 #[tokio::test]
 async fn capture_list_recovery_preserves_both_attempts_and_exact_zero_or_one_submission() {
-    for mode in 0..=3 {
-        exercise(1, mode).await;
+    for mode in RecoveryMode::ALL {
+        exercise(RecoveryLane::Capture, mode).await;
     }
 }
 #[tokio::test]
 async fn allocation_list_recovery_preserves_both_attempts_and_exact_zero_or_one_submission() {
-    for mode in 0..=3 {
-        exercise(2, mode).await;
+    for mode in RecoveryMode::ALL {
+        exercise(RecoveryLane::Allocation, mode).await;
     }
 }
 #[tokio::test]
 async fn data_readback_recovery_preserves_both_attempts_and_exact_zero_or_one_submission() {
-    for mode in 0..=3 {
-        exercise(3, mode).await;
+    for mode in RecoveryMode::ALL {
+        exercise(RecoveryLane::Data, mode).await;
     }
 }

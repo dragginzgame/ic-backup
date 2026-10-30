@@ -28,13 +28,12 @@ fn prepare(
     workflow: &ExecutionWorkflowRecord,
     payload: &IcSnapshotMetadataRequest,
 ) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
-    let root = temp_dir("ic-backup-metadata-stage");
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    create_execution_workflow(&layout, workflow).unwrap();
-    let plan = source_plan(payload);
-    let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
-    drop(ExecutionStageGuard::prepare(&layout, binding.clone(), plan).unwrap());
-    (root, layout, binding)
+    crate::test_support::execution_workflow::prepare_stage(
+        "ic-backup-metadata-stage",
+        workflow,
+        0,
+        source_plan(payload),
+    )
 }
 struct Provider {
     calls: usize,
@@ -103,7 +102,6 @@ fn pending(stage: &ExecutionStageGuard<'_>) {
 
 #[test]
 fn cancelled_qualification_retains_reply_and_original_pending_spending() {
-    use std::task::{Context, Poll, Waker};
     let workflow = workflow(12);
     let payload = source();
     let (root, layout, binding) = prepare(&workflow, &payload);
@@ -125,12 +123,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
             std::future::pending::<Result<MutationReceiptRequest, Infallible>>().await
         },
     ));
-    assert!(matches!(
-        future
-            .as_mut()
-            .poll(&mut Context::from_waker(Waker::noop())),
-        Poll::Pending
-    ));
+    crate::test_support::ready::assert_pending(future.as_mut());
     assert!(
         AttemptJournalGuard::open(
             stage.layout().unwrap(),

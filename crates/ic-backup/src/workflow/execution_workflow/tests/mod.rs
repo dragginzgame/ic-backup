@@ -12,11 +12,7 @@ use crate::{
     ops::persistence::AttemptJournalGuard,
     test_support::{ready::ready, temp_dir},
 };
-use std::{
-    fs, io,
-    path::PathBuf,
-    task::{Context, Poll, Waker},
-};
+use std::{fs, io, path::PathBuf};
 
 struct Driver {
     calls: Vec<u64>,
@@ -594,12 +590,7 @@ fn cancellation_after_reservation_retains_original_and_refuses_reentry() {
     let workflow = workflow();
     let mut driver = SuspendedDriver { calls: 0 };
     let mut future = Box::pin(run_new_execution_workflow(&layout, &workflow, &mut driver));
-    assert!(matches!(
-        future
-            .as_mut()
-            .poll(&mut Context::from_waker(Waker::noop())),
-        Poll::Pending
-    ));
+    crate::test_support::ready::assert_pending(future.as_mut());
     drop(future);
     assert_eq!(driver.calls, 1);
     let path = root.join("execution-stage-0/attempt-42.json");

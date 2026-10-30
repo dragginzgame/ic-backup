@@ -46,13 +46,13 @@ fn with_uploads(mut check: impl FnMut(&IcSnapshotUploadRequest<'_>, Vec<u8>)) {
     check(&data, EMPTY_CANDID_REPLY.to_vec());
 }
 fn prepare(plan: OperationPlanRecord) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
-    let root = temp_dir("ic-backup-upload-step");
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
-    create_execution_workflow(&layout, &workflow).unwrap();
-    let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![]).unwrap();
-    drop(ExecutionStageGuard::prepare(&layout, binding.clone(), plan).unwrap());
-    (root, layout, binding)
+    crate::test_support::execution_workflow::prepare_stage(
+        "ic-backup-upload-step",
+        &workflow,
+        7,
+        plan,
+    )
 }
 struct Provider {
     calls: usize,
@@ -130,7 +130,6 @@ impl IcSnapshotUploadProvider for SuspendedProvider {
 
 #[test]
 fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() {
-    use std::task::{Context, Poll, Waker};
     with_uploads(|payload, _| {
         for suspend_admission in [true, false] {
             let (_, layout, binding) = prepare(upload_plan(payload));
@@ -150,12 +149,7 @@ fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() 
                     Ok::<(), Infallible>(())
                 },
             ));
-            assert!(matches!(
-                future
-                    .as_mut()
-                    .poll(&mut Context::from_waker(Waker::noop())),
-                Poll::Pending
-            ));
+            crate::test_support::ready::assert_pending(future.as_mut());
             let authority = stage.plan().attempt_authority(7).unwrap();
             assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
             let path = stage.layout().unwrap().root().join("attempt-7.json");

@@ -30,8 +30,20 @@ pub struct IcSnapshotDataUploadPlan<'workflow, 'request, 'source> {
     binding: LearnedDataStage<'workflow>,
     metadata: &'request IcSnapshotUploadRequest<'source>,
     destination: Vec<u8>,
-    kinds: Vec<SnapshotDataKind>,
-    plan: Option<OperationPlanRecord>,
+    writes: DataWrites,
+}
+
+// Empty data has neither extents nor a placeholder plan; writes retain both together.
+#[expect(
+    clippy::large_enum_variant,
+    reason = "keep the original plan inline rather than add a heap allocation to every nonempty upload"
+)]
+enum DataWrites {
+    Empty,
+    Writes {
+        kinds: Vec<SnapshotDataKind>,
+        plan: OperationPlanRecord,
+    },
 }
 // Completion records the admitted operation, never a new effect or persisted mode.
 #[derive(Clone)]
@@ -116,8 +128,13 @@ impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 's
             },
             metadata: self.metadata,
             destination: self.destination,
-            kinds: self.kinds,
-            plan,
+            writes: match plan {
+                Some(plan) => DataWrites::Writes {
+                    kinds: self.kinds,
+                    plan,
+                },
+                None => DataWrites::Empty,
+            },
         })
     }
 }
@@ -158,7 +175,10 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
     /// Read exact ordered source extents. Operation sequences are zero-based indices.
     #[must_use]
     pub fn kinds(&self) -> &[SnapshotDataKind] {
-        &self.kinds
+        match &self.writes {
+            DataWrites::Empty => &[],
+            DataWrites::Writes { kinds, .. } => kinds,
+        }
     }
     /// Read the original metadata allocation declaration and retained source association.
     #[must_use]
@@ -173,7 +193,10 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
     /// Read the immutable child plan, or None when there are no data writes.
     #[must_use]
     pub const fn plan(&self) -> Option<&OperationPlanRecord> {
-        self.plan.as_ref()
+        match &self.writes {
+            DataWrites::Empty => None,
+            DataWrites::Writes { plan, .. } => Some(plan),
+        }
     }
 
     /// Bind the exact original singleton allocation and request/raw-reply evidence.
@@ -190,8 +213,7 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
         predecessors: Vec<ExecutionStagePredecessorRecord>,
     ) -> Result<ExecutionStageBindingRecord, IcSnapshotDataUploadPlanningError> {
         let plan = self
-            .plan
-            .as_ref()
+            .plan()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
         self.binding
             .bind(
@@ -208,8 +230,7 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
         binding: &ExecutionStageBindingRecord,
     ) -> Result<(), IcSnapshotDataUploadPlanningError> {
         let plan = self
-            .plan
-            .as_ref()
+            .plan()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
         if !self.binding.validate(binding, plan)? {
             return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);

@@ -280,10 +280,6 @@ impl DownloadJournalRecord {
     /// presence byte and its 64 ASCII hash when present. Integers are big-endian.
     /// This grants no transfer, snapshot authenticity or terminal proof.
     #[must_use]
-    #[expect(
-        clippy::cast_possible_truncation,
-        reason = "record admission bounds principals, snapshot tokens and identity-derived paths below u32"
-    )]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/download-journal/v1\0");
         bytes.append(self.intent.as_bytes());
@@ -295,8 +291,7 @@ impl DownloadJournalRecord {
                 entry.staging_path(),
                 entry.artifact_path(),
             ] {
-                bytes.u32_be(value.len() as u32);
-                bytes.append(value.as_bytes());
+                bytes.bytes_u32(value.as_bytes());
             }
             bytes.u64_be(entry.snapshot_taken_at_timestamp);
             bytes.u64_be(entry.snapshot_total_size_bytes);

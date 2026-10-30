@@ -1,6 +1,7 @@
 //! Exact originally reserved metadata/data reads; no dispatch or transfer attestation.
 
 use crate::model::attempt_journal::MutationReservation;
+use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -103,14 +104,7 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
             return Err(IcSnapshotTransferReadError::AuthorityMismatch);
         }
         payload.validate_binding(&authority)?;
-        let reservation = MutationReservation::new(
-            authority,
-            journal,
-            IcSnapshotTransferReadError::NoPendingMutation,
-            IcSnapshotTransferReadError::AuthorityMismatch,
-            IcSnapshotTransferReadError::MutationMismatch,
-            IcSnapshotTransferReadError::ObservationPending,
-        )?;
+        let reservation = MutationReservation::new(authority, journal)?;
         Ok(Self {
             plan,
             payload,
@@ -144,12 +138,7 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcSnapshotTransferReadError> {
-        self.reservation.validate(
-            journal,
-            IcSnapshotTransferReadError::AuthorityMismatch,
-            IcSnapshotTransferReadError::MutationMismatch,
-            IcSnapshotTransferReadError::ObservationPending,
-        )
+        self.reservation.validate(journal).map_err(Into::into)
     }
 }
 
@@ -216,4 +205,15 @@ pub enum IcSnapshotTransferReadError {
     /// Original plan cannot derive this operation authority.
     #[error(transparent)]
     Plan(#[from] OperationPlanError),
+}
+
+impl From<crate::model::attempt_journal::MutationReservationError> for IcSnapshotTransferReadError {
+    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
+        match error {
+            Reservation::NoPendingMutation => Self::NoPendingMutation,
+            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
+            Reservation::MutationMismatch => Self::MutationMismatch,
+            Reservation::ObservationPending => Self::ObservationPending,
+        }
+    }
 }

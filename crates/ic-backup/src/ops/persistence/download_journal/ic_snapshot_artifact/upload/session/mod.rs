@@ -31,14 +31,18 @@ impl From<Metadata> for Stamp {
     }
 }
 
+struct RetainedMember {
+    member: member::ExpectedMember,
+    stamp: Stamp,
+}
+
 pub(crate) struct UploadSession<'a, 'workflow, 'request, 'source> {
     source: &'a DownloadJournalGuard<'a>,
     snapshot: &'a str,
     upload: &'a IcSnapshotDataUploadPlan<'workflow, 'request, 'source>,
     directory: File,
     path: std::path::PathBuf,
-    members: Vec<member::ExpectedMember>,
-    stamps: Vec<Stamp>,
+    members: Vec<RetainedMember>,
 }
 
 impl<'a, 'workflow, 'request, 'source> UploadSession<'a, 'workflow, 'request, 'source> {
@@ -48,14 +52,19 @@ impl<'a, 'workflow, 'request, 'source> UploadSession<'a, 'workflow, 'request, 's
         upload: &'a IcSnapshotDataUploadPlan<'workflow, 'request, 'source>,
     ) -> Result<Self, IcSnapshotUploadArtifactError> {
         let metadata = upload.metadata();
-        let (directory, members, stamps) =
+        let (directory, members) =
             source.with_upload_source(metadata.source_plan(), snapshot, metadata, |directory| {
                 let held = directory
                     .try_clone()
                     .map_err(IcSnapshotArtifactError::from)?;
                 let members = member::expected(metadata.source())?;
-                let original = stamps(directory, &members)?;
-                Ok((held, members, original))
+                let original = stamps(directory, members.iter())?;
+                let members = members
+                    .into_iter()
+                    .zip(original)
+                    .map(|(member, stamp)| RetainedMember { member, stamp })
+                    .collect();
+                Ok((held, members))
             })?;
         let entry = source
             .record
@@ -69,7 +78,6 @@ impl<'a, 'workflow, 'request, 'source> UploadSession<'a, 'workflow, 'request, 's
             directory,
             path: source.layout.root().join(entry.artifact_path()),
             members,
-            stamps,
         };
         session.check()?;
         Ok(session)
@@ -119,25 +127,33 @@ impl<'a, 'workflow, 'request, 'source> UploadSession<'a, 'workflow, 'request, 's
             .check_artifact_parent()
             .map_err(IcSnapshotArtifactError::from)?;
         check_directory_identity(&self.path, &self.directory)?;
-        if stamps(&self.directory, &self.members)? != self.stamps {
+        // Observe every member before comparing, retaining original IO-error precedence.
+        let current = stamps(
+            &self.directory,
+            self.members.iter().map(|original| &original.member),
+        )?;
+        if current
+            .iter()
+            .zip(&self.members)
+            .any(|(current, original)| current != &original.stamp)
+        {
             return Err(IcSnapshotArtifactError::CustodyChanged.into());
         }
         Ok(())
     }
 }
 
-fn stamps(
+fn stamps<'a>(
     directory: &File,
-    members: &[member::ExpectedMember],
+    members: impl Iterator<Item = &'a member::ExpectedMember> + Clone,
 ) -> Result<Vec<Stamp>, IcSnapshotArtifactError> {
     check_closed_tree(
         directory,
         members
-            .iter()
+            .clone()
             .map(|member| std::ffi::OsStr::new(&member.name)),
     )?;
     members
-        .iter()
         .map(|member| {
             let (_, metadata) =
                 open_regular_child(directory, &member.name, member.length(), member.maximum())?;

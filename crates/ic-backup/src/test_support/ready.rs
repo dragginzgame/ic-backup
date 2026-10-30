@@ -2,7 +2,7 @@
 
 use std::{
     future::Future,
-    pin::pin,
+    pin::{Pin, pin},
     task::{Context, Poll, Waker},
 };
 
@@ -12,4 +12,14 @@ pub fn ready<F: Future>(future: F) -> F::Output {
         Poll::Ready(value) => value,
         Poll::Pending => panic!("fixture unexpectedly requires an async executor"),
     }
+}
+
+/// Poll one borrowed fixture future; the caller retains ownership and chooses when to cancel.
+pub fn assert_pending<F: Future + ?Sized>(future: Pin<&mut F>) {
+    assert!(
+        future
+            .poll(&mut Context::from_waker(Waker::noop()))
+            .is_pending(),
+        "fixture unexpectedly completed"
+    );
 }

@@ -1,6 +1,7 @@
 //! Persisted records and their local invariants.
 
 pub mod application_ingress;
+mod application_payload;
 pub mod artifacts;
 pub mod attempt_journal;
 mod bounded_sequence;
