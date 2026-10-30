@@ -888,5 +888,22 @@ for input in Cargo.lock missing ../Cargo.lock; do
     attempt="$(sed -n 's/^Validation logs and timings: //p' "$checkpoint/observation.log")"
     [[ -s "$attempt/inputs-error.log" ]]
 done
+# A gate may replace the original companion while this invocation is active.
+# Input verification after that gate must still use the captured source bundle.
+frozen="$FIXTURE/frozen-checkpoint"
+mkdir "$frozen"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$frozen" scripts/ci/run-validation-targets.sh
+printf 'unchanged input\n' > "$frozen/Cargo.lock"
+cat > "$frozen/Makefile" <<'MAKE'
+replace-companion:
+	@printf 'invalid perl source {\n' > scripts/ci/validation-input-checkpoint.pl
+consume:
+	@echo consumed > consumed
+MAKE
+VALIDATION_REPOSITORY_ROOT="$frozen" VALIDATION_LOG_DIR="$frozen/logs" \
+    bash "$frozen/scripts/ci/run-validation-targets.sh" --input Cargo.lock replace-companion consume \
+    > "$frozen/result.log" 2>&1
+[[ "$(cat "$frozen/consumed")" == consumed ]]
+
 echo "validation target runner test passed"
 fixture_complete=true

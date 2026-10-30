@@ -92,7 +92,7 @@ Backup's bounded management wire adapters remain external Candid projections;
 domain and persisted records do not acquire a Candid contract. Snapshot adoption
 does not install new source scanners or qualify every existing input boundary.
 
-The reviewed Shared Tooling 0.27.7 snapshot includes the
+The reviewed Shared Tooling 0.27.11 snapshot includes the
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
 development and authorized merges. Focused checks, review and enforced GitHub
 requirements still apply. Report exact pending run/source identities without
@@ -139,12 +139,25 @@ the build-policy digest. When a refresh changes that digest, run `make install-t
 once to refresh the common Cargo tools, locked Testkit CLI/server and release editor. See
 [the canonical setup guidance](local-setup.md#standard-cargo-tool-build-environment).
 
-The 0.27.7 baseline assigns shared Rust metrics and logging engines to
+The baseline assigns shared Rust metrics and logging engines to
 `ic-metrics` and `ic-logging`. Backup currently supplies no such engine or
 instrumentation, so adoption adds no unused dependency. Diagnostic output and
-retained effect evidence keep their existing product owners. The exported change
-is limited to governance and audit guidance; producer stack/dashboard changes
-are outside Backup's selected snapshot.
+retained effect evidence keep their existing product owners. The earlier 0.27.7
+refresh changed governance and audit guidance; producer stack/dashboard changes
+remain outside Backup's selected snapshot.
+
+The 0.27.11 refresh also retains validation input checkpoints in the runner's
+declared companion closure and shares independent Cargo workspace admission
+across release metadata preparation and checks. Its publication Make adapter is
+opt-in; Backup retains its existing publication and exact-resume adapters.
+No publication or release command runs during adoption.
+
+The module/lint review found no path-based module wiring. All seven remaining
+`dead_code` allowances apply to shared integration helpers that are used in some
+test binaries and unused in others. Their local reasons retain that configuration
+scope: an unconditional expectation would fail when the helper is used.
+Unfulfilled lint expectations remain denied. Backup ships no Rust CLI or
+private native FFI owner to migrate under the refreshed guidance.
 
 ## Current guard and recovery integration
 

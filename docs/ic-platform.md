@@ -11,7 +11,7 @@ local Cargo patch supplies dependencies.
 The workspace disables defaults and selects `candid` and
 `management-canister-types`. These features include `principal-external`, which
 supplies the owned `principal` capability and explicit external byte conversions.
-Platform 0.8 separates public-key self-authentication into its own optional feature;
+Platform separates public-key self-authentication into its own optional feature;
 Backup does not use that owned helper or enable it. Only Agent adds
 `agent`; an independent Core consumer remains Agent-free. Parser, executor, ic0,
 certification, ledger, service generation and CDK runtime features are unused.
@@ -21,9 +21,20 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Testkit selects the same Platform 0.8 family in development.
+not selected by Backup. Production selects Platform 0.9. Testkit 0.70.5 still
+selects Platform 0.8 in development; its native external Principal, management DTO
+and PocketIC exports retain their upstream identities. No Platform-owned runtime
+handles cross this development boundary.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
+
+Platform 0.9 embeds its IC0/executor and declares a package-wide Cargo singleton
+guard. Even a native consumer cannot combine it with the old registry executor
+or another Platform 0.9 package identity. Consumers selecting those runtimes must
+align their dependencies before adopting this Backup family. Backup enables
+neither runtime nor executor; its native management exports still have the
+qualified upstream 0.11.0 identities. Platform's Wasm-only owned DTO changes do
+not turn these host libraries into canister libraries.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

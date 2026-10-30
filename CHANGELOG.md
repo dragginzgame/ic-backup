@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.51.0] - Unreleased
+
+### ⚠️ Breaking
+
+- Adopt IC Platform 0.9.0. Its package-wide executor singleton guard changes
+  supported consumer dependency composition: consumers using the old registry
+  executor or another Platform runtime identity must align those dependencies.
+  Native management DTOs, Agent identities and backup record/wire bytes retain
+  their existing contracts.
+
+### 🔧 Dependencies
+
+- Adopt Host libraries, Testkit and the release metadata editor 0.70.5, and the
+  reviewed Shared Tooling 0.27.11 snapshot. Prepare selected contributor tools
+  with `make install-tools`; Testkit's older Platform remains development-only.
+
 ## [0.50.4] - 2026-10-30
 
 ### 🧹 Cleanup
