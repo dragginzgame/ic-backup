@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.52.0] - Unreleased
+
+### ⚠️ Breaking
+
+- Adopt Host libraries 0.72.0. Consumers exchanging Backup's public artifact or
+  filesystem errors must align their direct Host dependencies to 0.72. Error
+  fields, source chains, record bytes and recovery behavior remain unchanged.
+
+### 🔧 Dependencies
+
+- Adopt IC Platform 0.11.1, Testkit and the release metadata editor 0.72.0.
+  Preserve native IC identities and the existing host transport; no canister
+  runtime or additional codec is enabled. Prepare contributor tools with
+  `make install-tools`.
+
 ## [0.51.1] - 2026-10-30
 
 ### 🩹 Fixed

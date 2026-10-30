@@ -21,20 +21,25 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.9. Testkit 0.70.5 still
-selects Platform 0.8 in development; its native external Principal, management DTO
-and PocketIC exports retain their upstream identities. No Platform-owned runtime
-handles cross this development boundary.
+not selected by Backup. Production and Testkit 0.72 select the same Platform 0.11
+family; native external Principal, management DTO and PocketIC exports retain
+their upstream identities. No Platform-owned runtime handles cross this boundary.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
 
-Platform 0.9 embeds its IC0/executor. Starting with the selected 0.9.1 minimum,
-the Cargo singleton guard belongs to its optional executor/runtime features.
+Platform embeds its IC0/executor. The Cargo singleton guard belongs to its
+optional executor/runtime features.
 Backup enables neither feature, so its host consumers can coexist with an
 unrelated registry executor. Consumers enabling Platform's runtime must still
 select one runtime owner. Native management exports retain the qualified
 upstream 0.11.0 identities. Platform's Wasm-only owned DTO changes do not turn
 these host libraries into canister libraries.
+
+Platform supplies prepared calls under `runtime`; Backup uses its existing host
+Agent transport and enables neither that runtime nor gzip. Platform 0.11 removes
+its optional Wire schemas; Wire owns that integration through `platform-types`.
+Backup needs neither those schemas nor Testkit's optional Wire call API, so no
+direct Wire dependency, new protocol or runtime is added.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |
@@ -87,7 +92,7 @@ separate from direct declaration checks; deployment admission belongs to the
 application's exact target/features, locked build and artifact identity.
 
 Independent normal consumers exclude Testkit, PocketIC and WAT. Backup's public
-Host error types belong to the 0.70 line; consumers exchanging
+Host error types belong to the 0.72 line; consumers exchanging
 those values must align direct Host dependencies. Their fields, source chains,
 recovery behavior and serialized data retain their existing contracts.
 
