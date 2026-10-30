@@ -28,13 +28,13 @@ handles cross this development boundary.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
 
-Platform 0.9 embeds its IC0/executor and declares a package-wide Cargo singleton
-guard. Even a native consumer cannot combine it with the old registry executor
-or another Platform 0.9 package identity. Consumers selecting those runtimes must
-align their dependencies before adopting this Backup family. Backup enables
-neither runtime nor executor; its native management exports still have the
-qualified upstream 0.11.0 identities. Platform's Wasm-only owned DTO changes do
-not turn these host libraries into canister libraries.
+Platform 0.9 embeds its IC0/executor. Starting with the selected 0.9.1 minimum,
+the Cargo singleton guard belongs to its optional executor/runtime features.
+Backup enables neither feature, so its host consumers can coexist with an
+unrelated registry executor. Consumers enabling Platform's runtime must still
+select one runtime owner. Native management exports retain the qualified
+upstream 0.11.0 identities. Platform's Wasm-only owned DTO changes do not turn
+these host libraries into canister libraries.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

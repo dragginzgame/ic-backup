@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.51.1] - Unreleased
+
+### 🩹 Fixed
+
+- Require IC Platform 0.9.1 so host consumers can coexist with an unrelated
+  registry executor. Backup selects no Platform runtime; applications enabling
+  that runtime still require one executor owner. Native IC types and backup
+  record/wire bytes remain unchanged.
+
 ## [0.51.0] - 2026-10-30
 
 ### ⚠️ Breaking
