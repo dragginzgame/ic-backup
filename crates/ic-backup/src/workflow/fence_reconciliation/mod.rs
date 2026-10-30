@@ -79,13 +79,14 @@ pub async fn observe_fence_acquisition<E: std::error::Error + 'static>(
         read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
         Ok(())
     };
-    match admit_reply() {
-        Ok(()) => Ok(observation),
-        Err(source) => Err(FenceReconciliationExecutionError::AfterReply {
+    let admitted = admit_reply();
+    super::qualified_receipt::retain_reply(observation, admitted, |source, observation| {
+        FenceReconciliationExecutionError::AfterReply {
             source,
-            observation: Box::new(observation),
-        }),
-    }
+            observation,
+        }
+    })
+    .map(|(reply, ())| reply)
 }
 
 /// Explicitly retain an independently qualified original fence-acquisition observation.

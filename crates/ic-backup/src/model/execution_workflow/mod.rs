@@ -46,7 +46,10 @@ impl TryFrom<WorkflowFields> for ExecutionWorkflowRecord {
     }
 }
 impl ExecutionWorkflowRecord {
-    pub(crate) const fn allocation(&self) -> &OperationPlanRecord {
+    /// Read original stage purposes, context and ceilings without deriving dispatch authority.
+    /// Child plans must still pass exact stage binding and complete journal admission.
+    #[must_use]
+    pub const fn allocation(&self) -> &OperationPlanRecord {
         &self.allocation
     }
     /// Retain a canonical allocation without creating journals or dispatch authority.

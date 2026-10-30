@@ -104,13 +104,14 @@ impl ExecutionProgressView {
 pub fn progress(
     request: &ExecutionProgressRequest<'_>,
 ) -> Result<ExecutionProgressView, ExecutionProgressError> {
-    Ok(progress_with_journals(request)?.0)
+    Ok(progress_with_journals(request.plan, request.journals.iter().copied())?.0)
 }
 
 // Retain the admitted original index for exact-history settlement, so that it
 // consumes the same coverage/authority proof as the public progress projection.
-pub(super) fn progress_with_journals<'a>(
-    request: &ExecutionProgressRequest<'a>,
+pub(crate) fn progress_with_journals<'a>(
+    plan: &OperationPlanRecord,
+    originals: impl ExactSizeIterator<Item = &'a AttemptJournalRecord>,
 ) -> Result<
     (
         ExecutionProgressView,
@@ -118,13 +119,12 @@ pub(super) fn progress_with_journals<'a>(
     ),
     ExecutionProgressError,
 > {
-    if request.journals.len() > MAX_EFFECT_OPERATIONS {
+    if originals.len() > MAX_EFFECT_OPERATIONS {
         return Err(ExecutionProgressError::TooManyJournals);
     }
-    let plan = request.plan;
     let intent = plan.digest();
     let mut journals = BTreeMap::new();
-    for journal in request.journals {
+    for journal in originals {
         let sequence = journal.authority().binding().operation_sequence();
         let operation = plan
             .operation(sequence)
@@ -135,7 +135,7 @@ pub(super) fn progress_with_journals<'a>(
         if !plan.matches_authority(operation, &intent, journal.authority()) {
             return Err(ExecutionProgressError::AuthorityMismatch(sequence));
         }
-        journals.insert(sequence, *journal);
+        journals.insert(sequence, journal);
     }
     for operation in plan.operations() {
         if !journals.contains_key(&operation.operation_sequence()) {

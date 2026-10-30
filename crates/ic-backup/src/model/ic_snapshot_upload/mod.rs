@@ -1,6 +1,7 @@
 //! Exact same-target snapshot upload codecs and passive original-reservation binding.
 
 use crate::model::evidence_digest::EvidenceDigest;
+use crate::model::ic_snapshot_data::DataExtent;
 use ic_platform::candid::contract;
 mod attempt;
 mod plan;
@@ -136,23 +137,18 @@ impl<'source> IcSnapshotUploadRequest<'source> {
             return Err(IcSnapshotUploadError::ChunkTooLarge);
         }
         let checksum = ArtifactChecksumRecord::from_bytes(chunk);
-        let kind = match &source_kind {
-            SnapshotDataKind::WasmModule { offset, size } => {
-                require_length(chunk, *size)?;
-                SnapshotDataOffset::WasmModule { offset: *offset }
+        let kind = match DataExtent::from(&source_kind) {
+            DataExtent::Region {
+                region,
+                offset,
+                size,
+            } => {
+                require_length(chunk, size)?;
+                region.upload_offset(offset)
             }
-            SnapshotDataKind::WasmMemory { offset, size } => {
-                require_length(chunk, *size)?;
-                SnapshotDataOffset::WasmMemory { offset: *offset }
-            }
-            SnapshotDataKind::StableMemory { offset, size } => {
-                require_length(chunk, *size)?;
-                SnapshotDataOffset::StableMemory { offset: *offset }
-            }
-            SnapshotDataKind::WasmChunk { hash } => {
+            DataExtent::Chunk { hash } => {
                 let digest = ic_host_artifacts::artifact::Sha256Digest::from_bytes(
-                    hash.as_slice()
-                        .try_into()
+                    hash.try_into()
                         .map_err(|_| IcSnapshotDataError::InvalidChunkHash)?,
                 );
                 checksum.verify(&digest.to_string())?;

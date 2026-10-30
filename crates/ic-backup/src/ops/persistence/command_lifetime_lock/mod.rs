@@ -8,7 +8,7 @@ use ic_host_process::custody::{CommandCustody, CustodyError, QuiescenceGuard};
 #[cfg(unix)]
 use std::time::Duration;
 use std::{
-    fs, io,
+    io,
     path::{Path, PathBuf},
     process::{Child, Command},
 };
@@ -189,11 +189,7 @@ fn project_error(path: &Path, error: CustodyError) -> CommandLifetimeLockError {
         }
         CustodyError::Io(error) => CommandLifetimeLockError::Io(error),
         CustodyError::Lock(RegularFileLockError::NotRegular) => {
-            let kind = match fs::symlink_metadata(path) {
-                Ok(metadata) if metadata.file_type().is_symlink() => "Symlink",
-                Ok(metadata) if metadata.is_dir() => "Directory",
-                _ => "Special",
-            };
+            let kind = super::unsafe_entry_kind(path);
             CommandLifetimeLockError::UnsafeEntry {
                 path: path.to_path_buf(),
                 kind: kind.into(),

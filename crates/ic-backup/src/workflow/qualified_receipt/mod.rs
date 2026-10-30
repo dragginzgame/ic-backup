@@ -33,6 +33,18 @@ pub(super) fn record_applied<T, E: From<AttemptJournalError>>(
     Ok(result)
 }
 
+// Keep the bounded returned reply available on every post-reply rejection.
+pub(super) fn retain_reply<R, T, E, X>(
+    reply: R,
+    result: Result<T, E>,
+    reject: impl FnOnce(E, Box<R>) -> X,
+) -> Result<(R, T), X> {
+    match result {
+        Ok(value) => Ok((reply, value)),
+        Err(source) => Err(reject(source, Box::new(reply))),
+    }
+}
+
 // Called only after the single-call coordinator has released its attempt guard.
 // Any reply survives qualification or checkpoint rejection in the caller's error.
 pub(super) fn checkpoint_reply<R, E, X>(
@@ -44,8 +56,9 @@ pub(super) fn checkpoint_reply<R, E, X>(
 where
     E: From<ExecutionStageCheckpointError>,
 {
-    match settlement.and_then(|evidence| stage.reconcile_checkpoint(evidence).map_err(E::from)) {
-        Ok(predecessor) => Ok((reply, predecessor)),
-        Err(source) => Err(reject(source, Box::new(reply))),
-    }
+    retain_reply(
+        reply,
+        settlement.and_then(|evidence| stage.reconcile_checkpoint(evidence).map_err(E::from)),
+        reject,
+    )
 }

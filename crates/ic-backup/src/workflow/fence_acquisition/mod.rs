@@ -94,13 +94,14 @@ pub async fn acquire_fence<E: std::error::Error + 'static>(
         read_fence_obligation(stage.layout()?, plan, requirement, &obligation.digest())?;
         Ok(())
     };
-    match admit_reply() {
-        Ok(()) => Ok(acknowledgement),
-        Err(source) => Err(FenceAcquisitionExecutionError::AfterReply {
+    let admitted = admit_reply();
+    super::qualified_receipt::retain_reply(acknowledgement, admitted, |source, acknowledgement| {
+        FenceAcquisitionExecutionError::AfterReply {
             source,
-            acknowledgement: Box::new(acknowledgement),
-        }),
-    }
+            acknowledgement,
+        }
+    })
+    .map(|(reply, ())| reply)
 }
 
 /// Acquisition-step failure preserving original spending, obligations and passive replies.

@@ -3,6 +3,8 @@
 use crate::model::evidence_digest::EvidenceDigest;
 mod authority;
 mod history;
+mod mutation;
+pub(crate) use mutation::MutationReservation;
 mod observation;
 pub use authority::{
     AttemptAuthorityRecord, AttemptBudgetRecord, MAX_OPERATION_ATTEMPTS, OperationBindingRecord,

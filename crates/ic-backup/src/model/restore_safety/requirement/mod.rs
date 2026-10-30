@@ -63,14 +63,10 @@ struct RequirementFields {
     source_plan_intent: String,
     source_artifacts: ArtifactChecksumRecord,
     safety: RestoreSafetyLaneRecord,
-    #[serde(deserialize_with = "required_fence")]
+    #[serde(deserialize_with = "crate::model::required_option::deserialize")]
     expected_fence: Option<RestoreFenceBindingRecord>,
 }
-fn required_fence<'de, D: serde::Deserializer<'de>>(
-    decoder: D,
-) -> Result<Option<RestoreFenceBindingRecord>, D::Error> {
-    Option::deserialize(decoder)
-}
+
 impl TryFrom<RequirementFields> for RestoreSafetyRequirementRecord {
     type Error = RestoreSafetyRequirementError;
     fn try_from(fields: RequirementFields) -> Result<Self, Self::Error> {

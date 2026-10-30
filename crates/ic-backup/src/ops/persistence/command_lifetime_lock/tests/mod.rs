@@ -10,11 +10,11 @@ use crate::{
         wait_for_child_path, wait_for_path,
     },
 };
+use std::{fs, thread, time::Instant};
 use std::{
     os::unix::fs::{PermissionsExt, symlink},
     process::Stdio,
 };
-use std::{thread, time::Instant};
 
 #[test]
 fn one_spawn_inherits_custody_without_parent_or_command_descriptor_leaks() {

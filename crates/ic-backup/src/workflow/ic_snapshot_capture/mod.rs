@@ -74,13 +74,14 @@ pub async fn capture_snapshot<E: std::error::Error + 'static>(
         },
     )
     .await?;
-    match admission {
-        Ok(()) => Ok(acknowledgement),
-        Err(source) => Err(IcSnapshotCaptureExecutionError::AfterReply {
+    let admitted = admission;
+    super::qualified_receipt::retain_reply(acknowledgement, admitted, |source, acknowledgement| {
+        IcSnapshotCaptureExecutionError::AfterReply {
             source,
-            acknowledgement: Box::new(acknowledgement),
-        }),
-    }
+            acknowledgement,
+        }
+    })
+    .map(|(reply, ())| reply)
 }
 
 /// Capture-step failures retain original spending and any bounded returned acknowledgement.

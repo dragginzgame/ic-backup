@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.50.2]
+
+### ➕ Added
+
+- Expose the immutable workflow allocation for typed child-plan construction,
+  without serialization or new journal, spending or dispatch authority.
+
+### 🧹 Cleanup
+
+- Consolidate mutation reservation, journal projection, field admission and
+  reply retention. Reuse snapshot region and session member declarations while
+  preserving exact bytes, public errors, fresh custody checks and recovery behavior.
+
 ## [0.50.1] - 2026-10-29
 
 ### 🧹 Cleanup

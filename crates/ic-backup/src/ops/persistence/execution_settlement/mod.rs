@@ -13,7 +13,7 @@ use crate::{
             MAX_EXECUTION_SETTLEMENT_BYTES,
         },
     },
-    policy::execution_settlement::{ExecutionSettlementPolicyError, validate},
+    policy::execution_settlement::{ExecutionSettlementPolicyError, validate_journals},
 };
 use std::{io, path::Path};
 use thiserror::Error;
@@ -143,8 +143,7 @@ fn validate_retained(
     let (plan, journals) = super::attempt_journal::read_original_plan_journals::<
         ExecutionSettlementPersistenceError,
     >(layout, record.plan_intent(), None)?;
-    let references: Vec<_> = journals.iter().collect();
-    validate(&plan, &references, record)?;
+    validate_journals(&plan, journals.iter(), record)?;
     layout.check_root()?;
     Ok(())
 }

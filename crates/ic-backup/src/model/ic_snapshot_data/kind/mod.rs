@@ -1,6 +1,6 @@
 //! Borrowed region/chunk classification shared by model and filesystem projections.
 
-use ic_platform::management_canister_types::SnapshotDataKind;
+use ic_platform::management_canister_types::{SnapshotDataKind, SnapshotDataOffset};
 
 /// The fixed order used by metadata, contiguous coverage and artifact regions.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -18,6 +18,14 @@ impl SnapshotRegion {
             Self::WasmModule => 0,
             Self::WasmMemory => 1,
             Self::StableMemory => 2,
+        }
+    }
+
+    pub(crate) const fn upload_offset(self, offset: u64) -> SnapshotDataOffset {
+        match self {
+            Self::WasmModule => SnapshotDataOffset::WasmModule { offset },
+            Self::WasmMemory => SnapshotDataOffset::WasmMemory { offset },
+            Self::StableMemory => SnapshotDataOffset::StableMemory { offset },
         }
     }
 

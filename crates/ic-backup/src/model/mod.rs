@@ -36,6 +36,7 @@ pub mod membership;
 mod observed_targets;
 pub mod operation_plan;
 mod principal;
+mod required_option;
 pub mod restore_references;
 pub mod restore_safety;
 pub mod snapshot_read;

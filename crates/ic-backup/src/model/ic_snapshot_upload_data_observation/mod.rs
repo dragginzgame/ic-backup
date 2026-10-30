@@ -69,21 +69,10 @@ impl<'request, 'source, 'metadata>
             return Err(IcSnapshotUploadDataObservationError::ReadbackMismatch);
         }
         let actual = payload.metadata().metadata();
-        let original = mutation.source().metadata();
-        let actual_sizes = [
-            actual.wasm_module_size,
-            actual.wasm_memory_size,
-            actual.stable_memory_size,
-        ];
-        let original_sizes = [
-            original.wasm_module_size,
-            original.wasm_memory_size,
-            original.stable_memory_size,
-        ];
         if !matches!(
             actual.source,
             Some(ic_platform::management_canister_types::SnapshotSource::MetadataUpload(_))
-        ) || actual_sizes != original_sizes
+        ) || payload.metadata().region_sizes() != mutation.source().region_sizes()
         {
             return Err(IcSnapshotUploadDataObservationError::DestinationMetadataMismatch);
         }

@@ -1,6 +1,7 @@
 //! Original pending reservations over exact already retained upload payloads.
 
 use super::IcSnapshotUploadRequest;
+use crate::model::attempt_journal::MutationReservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     operation_plan::{OperationPlanError, OperationPlanRecord},
@@ -12,8 +13,7 @@ use thiserror::Error;
 pub struct IcSnapshotUploadAttempt<'request, 'source> {
     plan: &'request OperationPlanRecord,
     payload: &'request IcSnapshotUploadRequest<'source>,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
+    reservation: MutationReservation,
 }
 
 impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
@@ -32,17 +32,19 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         payload: &'request IcSnapshotUploadRequest<'source>,
     ) -> Result<Self, IcSnapshotUploadAttemptError> {
         let authority = original_authority(plan, operation_sequence, journal, payload)?;
-        let mutation_attempt = journal
-            .pending_mutation()
-            .ok_or(IcSnapshotUploadAttemptError::NoPendingMutation)?;
-        let attempt = Self {
+        let reservation = MutationReservation::new(
+            authority,
+            journal,
+            IcSnapshotUploadAttemptError::NoPendingMutation,
+            IcSnapshotUploadAttemptError::AuthorityMismatch,
+            IcSnapshotUploadAttemptError::MutationMismatch,
+            IcSnapshotUploadAttemptError::ObservationPending,
+        )?;
+        Ok(Self {
             plan,
             payload,
-            authority,
-            mutation_attempt,
-        };
-        attempt.validate_journal(journal)?;
-        Ok(attempt)
+            reservation,
+        })
     }
     /// Read the exact retained full original plan, context and allowances.
     #[must_use]
@@ -57,12 +59,12 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
     /// Read original plan-derived authority; it grants no fresh effect.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the already consumed original mutation number.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Recheck exact current authority and reservation before passive association.
     /// # Errors
@@ -71,9 +73,8 @@ impl<'request, 'source> IcSnapshotUploadAttempt<'request, 'source> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcSnapshotUploadAttemptError> {
-        journal.validate_pending_mutation(
-            &self.authority,
-            self.mutation_attempt,
+        self.reservation.validate(
+            journal,
             IcSnapshotUploadAttemptError::AuthorityMismatch,
             IcSnapshotUploadAttemptError::MutationMismatch,
             IcSnapshotUploadAttemptError::ObservationPending,

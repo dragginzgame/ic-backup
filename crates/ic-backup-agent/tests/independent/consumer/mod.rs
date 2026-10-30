@@ -12,7 +12,8 @@ use stage::Stage;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord as Digest,
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::{AttemptBudgetRecord, MutationOutcomeRecord, MutationReceiptRequest},
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
         },
@@ -22,7 +23,10 @@ use ic_backup::{
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_reply::IcSnapshotReply,
-        operation_plan::OperationPlanRecord,
+        operation_plan::{
+            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlannedOperationRecord,
+            PlannedOperationRequest,
+        },
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
@@ -173,11 +177,31 @@ impl Driver {
         sequence: u64,
         request: &Digest,
     ) -> OperationPlanRecord {
-        let mut value = serde_json::to_value(workflow).unwrap()["allocation"].clone();
-        value["graph"]["nodes"] = json!([{"operation_sequence":sequence,"depends_on":[]}]);
-        value["operations"] = json!([{"operation_sequence":sequence,"target":self.config.target,"request":request.hash(),"budget":{"mutations":1,"observations":0}}]);
-        value["budget"] = json!({"mutations":1,"observations":0});
-        serde_json::from_value(value).unwrap()
+        let original = workflow.allocation();
+        OperationPlanRecord::new(OperationPlanRequest {
+            context: original.context().clone(),
+            inventory: original.inventory().clone(),
+            selected_targets: original.selected_targets().to_vec(),
+            graph: EffectGraphRecord::new(vec![
+                EffectNodeRecord::new(EffectNodeRequest {
+                    operation_sequence: sequence,
+                    depends_on: vec![],
+                })
+                .unwrap(),
+            ])
+            .unwrap(),
+            operations: vec![
+                PlannedOperationRecord::new(PlannedOperationRequest {
+                    operation_sequence: sequence,
+                    target: self.config.target.clone(),
+                    request: request.hash().into(),
+                    budget: AttemptBudgetRecord::new(1, 0).unwrap(),
+                })
+                .unwrap(),
+            ],
+            budget: PlanBudgetRecord::new(1, 0).unwrap(),
+        })
+        .unwrap()
     }
 }
 

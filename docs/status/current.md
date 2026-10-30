@@ -1,75 +1,89 @@
 # Current handoff — 2026-10-29
 
-## Complexity refactor after 0.50.0
+## Further complexity refactor after 0.50.1
 
-Baseline HEAD is `da08504d7ed8f22966fcf1eaa8e5fb8bc13eeaa1` (Release 0.50.0).
-The user authorized all ten source-review simplifications. This batch changes
-private implementation and independent-consumer fixtures; public signatures,
-errors, record/wire bytes, original spending and application authority remain intact.
-Pending **0.50.1** notes cover the batch; package versions remain **0.50.0**.
-Changes are unstaged/uncommitted. No dependency, snapshot payload, sibling,
-Git/release, publication, issue or live IC effect was performed.
+Baseline HEAD is `794d65b92e3dd3c2d19c893bd3102114e8f397f9` (Release 0.50.1).
+The user authorized all ten further source-review simplifications. Pending
+**0.50.2** notes cover this compatible batch; package versions remain **0.50.1**.
+All changes are unstaged/uncommitted. The incoming dirty Cargo.lock is preserved
+byte-for-byte; this batch changes no dependency, snapshot payload, sibling,
+Git/release state, issue, publication or live IC state.
 
-Opening stage inspection reads/adopts each binding once, retaining its closing
-expected-digest and ancestor checks around journal IO. Fence acquisition,
-observation and settlement share original obligation/authority/journal/payload
-admission. Their separate reservations, fresh admission and qualification remain
-explicit. Pending-observation identity moves to attempt accounting, including
-fence reconciliation, with existing public error projections and ordering.
+`ExecutionWorkflowRecord::allocation` is now a public read-only original-plan
+accessor. The independent normal consumer constructs its singleton child plans
+through existing typed model constructors, without serializing or editing workflow
+JSON. The catalog still supplies only purposes/ceilings; original stage binding,
+complete journals, learned input qualification and fresh authority remain required.
+The new API is local candidate source, not an API in the published baseline.
 
-Applied-receipt matching and recording share one owner; domain preparation stays
-between matching and recording. Download appends exact bytes before recording;
-restore re-admits source/requirements before and after the receipt. Checkpoints
-still follow journal-guard release. Transfer loops share pure untouched/all-Applied
-progress predicates without changing original plan coverage or execution order.
+Mutation, transfer-read, upload and application requests share a neutral pending
+mutation binding, preserving original payload admission and public error order.
+Upload data uses the existing region classifier for wire offsets; readback reuses
+metadata region-size projection. Sessions retain immutable member declarations
+while freshly admitting the closed tree, file identities/metadata and each exact
+payload around every write. No file observation or content digest is cached as
+new authority. Existing source read-count measurements remain unchanged.
 
-Upload completion explicitly distinguishes a completed data stage from an empty
-upload's exact allocation receipt and operation. Artifact members explicitly
-carry fixed metadata, bounded metadata reply, region or chunk obligations, retaining
-names, bounds, checksums and original read ordering. Agent management wire
-projection shares its existing payload owner and keeps per-lane reply ceilings.
-
-The independent consumer decodes its journey configuration once into typed fields.
-Named stage declarations own unchanged IDs 0..6, allowances, workflow grouping
-and retained paths; planning and dispatch use those names. The isolated build
-emits both new fixture modules. Opaque application protocols, separate fixture
-authority and original failure modes remain unchanged.
+Download artifact admission checks bounds, sorts once and detects adjacent duplicate
+principals without another set. Internal progress/settlement paths consume borrowed
+journal iterators; public request APIs and complete coverage/causality checks remain
+unchanged. Persisted nullable fields share strict presence decoding; absent fields
+still reject. Journal/command lock errors share only unsafe-entry classification.
+Capture/fence and checkpoint paths share returned-reply ownership on error, retaining
+all original guards and leaving decoded transfer borrowing with its existing owner.
+Public errors, record/wire bytes, spending and recovery semantics are unchanged.
 
 ## Focused qualification
 
 Strict Core/Agent Clippy passes for all targets/features with warnings denied.
-All **147 selected Core model/policy/workflow/artifact cases**, **11 original
-workflow coordinator cases** and **16 Agent HTTP boundary cases** pass. These
-include exact error and byte identity, changed originals, pending/partial evidence,
-empty uploads, maximum metadata/chunks, bounded streaming, source substitution,
-receipt mismatch, cancellation and effect-free replay. The existing linear source
-read-count checks also pass; no new performance or throughput claim is made.
+All **180 selected Core cases** pass across request identities, upload codecs,
+nullable records, inventory, progress/settlement, workflow reply retention,
+artifact/session behavior and actual journal/descendant custody. Existing maximum
+chunk/region and linear byte-read checks pass. All **16 Agent HTTP boundary cases**
+pass with exact request bytes, bounded replies, retained uncertainty and single
+submission behavior. No new throughput or timing claim is made.
 
-All **seven independent normal-consumer PocketIC cases** pass: the complete
-capture/transfer/manifest/upload/same-ID load/start/terminal journey, death after
-an authenticated load, operator ingress/reply-retention and partial-transfer
-failures, plus four opaque application/recovery cases. Build/normal-graph evidence
-is `/tmp/ic-backup-agent-independent-build-2604704-0`. Original fixtures are
-`/tmp/ic-backup-agent-pocketic-2604704-*`, including complete journey `-9`, load
-process death `-11` and operator failures `-13`, `-15`, `-17`. Preserve exact plans,
-journals, envelopes, replies, source bytes, manifests and raw server/process output.
+All **seven independent normal-consumer PocketIC cases** pass: complete capture,
+transfer, manifest, source-bound upload, same-ID load/start and terminal replay;
+process death after authenticated load; operator ingress/reply-retention and partial
+transfer failures; and four opaque application/recovery cases. The independent
+build/normal-graph evidence is `/tmp/ic-backup-agent-independent-build-1755641-0`.
+Original fixtures are `/tmp/ic-backup-agent-pocketic-1755641-*`, including complete
+journey `-9`, load process death `-11` and operator failures `-13`, `-15`, `-17`.
+Preserve original plans, journals, envelopes, replies, byte trees, manifests and
+raw process/server output. The production consumer excludes Testkit/PocketIC/WAT.
 
-Logs are `/tmp/backup-simplify050-*`; the first Clippy log retains a corrected
-fixture caller compile error. Final lint is `-clippy-final.log`, native checks
-`-core.log`, `-operator.log`, `-http.log`, and simulator checks `-independent.log`.
-Source-consistency results are retained in `-source-checks.log`. The root graph
-stayed fixed: `/tmp/backup-simplify050-graph.sha256` binds manifest
-`730cd25645b766b5329ab6468c348207250ccb4fec9fce5020c3441489f96a3b`
-and lock `1a11ec8969f779d4c1bd2ce38d9efc7d8b07b0d468e4895d0334464b9194481c`.
-No full local gate, new MSRV/native macOS matrix, registry-only product acceptance,
-installed Canic migration or live application qualification was run.
+Logs are `/tmp/backup-simplify051-*`: `-clippy.log`, `-core.log`, `-http.log`,
+`-independent.log`, `-rustdoc.log` and `-source-checks.log`. The missing initial
+0.70.2 CLI admission is retained in `-server-check.log`; explicit selected setup
+passes through verified cache reuse in `-server-setup.log`, preserving the PocketIC
+16.1.0 assets and older selections. Simulator startup separately admits assets
+offline through the locked library.
 
-## Tooling baseline and retained evidence
+The graph stayed fixed throughout validation. `/tmp/backup-simplify051-graph.sha256`
+binds manifest `d8645d6e456d8f8dd1f006f43aae16c64f496237941857c8c3f7781e92dd94dc`
+and lock `2038a6b872c1b82ca7410d449dda6a5b6311d820209aff91ad1298cae6ba779c`.
+Selected Platform **0.8.2**, Host/Testkit **0.70.2**, Candid **0.10.39**, Agent SDK
+**0.49.3**, external Principal **0.1.5**, management DTO **0.11.0**, PocketIC
+**16.1.0** and Rust floor **1.91.0** remain unchanged. Incoming UTF dependencies
+remain unchanged too. No full local gate, new MSRV/native macOS matrix,
+registry-only product acceptance, installed Canic migration or live application
+qualification was run.
 
-Host Artifacts/FS/Process, Testkit and the release editor remain **0.70.0**;
-Platform remains **0.8.1**, management DTO **0.11.0**, external Principal **0.1.5**,
-Agent SDK **0.49.3**, Candid **0.10.39**, PocketIC **16.1.0** and Rust floor
-**1.91.0**. Shared **0.27.7**, revision
+## Earlier complexity evidence
+
+The preceding ten-refactor batch is included in the baseline source. Preserve
+`/tmp/backup-simplify050-*`, independent build
+`/tmp/ic-backup-agent-independent-build-2604704-0` and original fixtures
+`/tmp/ic-backup-agent-pocketic-2604704-*`. Its 147 Core, 11 coordinator, 16 HTTP and
+seven independent simulator cases retain their original source and graph scope.
+Its corrected fixture caller compile error remains retained. These older results
+are not new qualification of this batch or its incoming dependency updates.
+
+## Earlier tooling and integration evidence
+
+The earlier 0.70.0 tooling and Platform 0.8.1 adoption receipts retain their
+original source/graph scope. Current selections are recorded above. Shared **0.27.7**, revision
 `11d519c604b1727a2bf6272557a97e770a63b29f`, retains all 126 exact payloads.
 [The review](../shared-tooling-review.json) owns unchanged tooling provenance;
 [implementation contracts](../implementation-contracts.md) and

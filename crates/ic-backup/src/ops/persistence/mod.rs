@@ -152,3 +152,13 @@ pub enum PersistenceError {
         kind: String,
     },
 }
+
+// Diagnostic projection only; Host remains the regular-file admission owner.
+#[cfg(unix)]
+fn unsafe_entry_kind(path: &std::path::Path) -> &'static str {
+    match std::fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_symlink() => "Symlink",
+        Ok(metadata) if metadata.is_dir() => "Directory",
+        _ => "Special",
+    }
+}

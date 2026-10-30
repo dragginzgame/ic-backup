@@ -9,7 +9,6 @@ use super::{
     bounded_sequence,
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::BTreeSet;
 use thiserror::Error;
 
 /// Maximum artifact entries in a local download journal.
@@ -100,14 +99,8 @@ struct ArtifactFields {
     staging_path: String,
     artifact_path: String,
     state: ArtifactStateRecord,
-    #[serde(deserialize_with = "required_checksum")]
+    #[serde(deserialize_with = "crate::model::required_option::deserialize")]
     checksum: Option<ArtifactChecksumRecord>,
-}
-
-fn required_checksum<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> Result<Option<ArtifactChecksumRecord>, D::Error> {
-    Option::deserialize(deserializer)
 }
 
 impl TryFrom<ArtifactFields> for DownloadArtifactRecord {
@@ -234,10 +227,7 @@ impl TryFrom<JournalFields> for DownloadJournalRecord {
                 fields.version,
             ));
         }
-        validate_entries(&fields.artifacts)?;
-        fields
-            .artifacts
-            .sort_by(|left, right| left.canister_id.cmp(&right.canister_id));
+        validate_entries(&mut fields.artifacts)?;
         Ok(Self {
             version: 1,
             intent: canonical_hash(&fields.intent)?,
@@ -376,18 +366,21 @@ fn normalize_principal(value: &str) -> Result<String, DownloadJournalRecordError
     super::principal::canonical_text(value).ok_or(DownloadJournalRecordError::InvalidPrincipal)
 }
 
-fn validate_entries(entries: &[DownloadArtifactRecord]) -> Result<(), DownloadJournalRecordError> {
+fn validate_entries(
+    entries: &mut [DownloadArtifactRecord],
+) -> Result<(), DownloadJournalRecordError> {
     if entries.is_empty() {
         return Err(DownloadJournalRecordError::EmptyArtifacts);
     }
     if entries.len() > MAX_DOWNLOAD_ARTIFACTS {
         return Err(DownloadJournalRecordError::TooManyArtifacts);
     }
-    let mut identities = BTreeSet::new();
-    for entry in entries {
-        if !identities.insert(entry.canister_id()) {
-            return Err(DownloadJournalRecordError::DuplicateCanister);
-        }
+    entries.sort_by(|left, right| left.canister_id.cmp(&right.canister_id));
+    if entries
+        .windows(2)
+        .any(|pair| pair[0].canister_id == pair[1].canister_id)
+    {
+        return Err(DownloadJournalRecordError::DuplicateCanister);
     }
     Ok(())
 }

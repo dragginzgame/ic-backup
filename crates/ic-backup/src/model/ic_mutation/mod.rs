@@ -1,5 +1,6 @@
 //! Exact reserved IC mutation identity and bounded passive reply association.
 
+use crate::model::attempt_journal::MutationReservation;
 use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
@@ -28,8 +29,7 @@ pub const MAX_IC_MUTATION_REPLY_BYTES: usize =
 pub struct IcMutationRequest<'a> {
     plan: &'a OperationPlanRecord,
     payload: &'a IcManagementRequestRecord,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
+    reservation: MutationReservation,
 }
 
 impl<'a> IcMutationRequest<'a> {
@@ -51,17 +51,19 @@ impl<'a> IcMutationRequest<'a> {
             return Err(IcMutationRequestError::AuthorityMismatch);
         }
         payload.validate_mutation_binding(authority.binding())?;
-        let mutation_attempt = journal
-            .pending_mutation()
-            .ok_or(IcMutationRequestError::NoPendingMutation)?;
-        let request = Self {
+        let reservation = MutationReservation::new(
+            authority,
+            journal,
+            IcMutationRequestError::NoPendingMutation,
+            IcMutationRequestError::AuthorityMismatch,
+            IcMutationRequestError::MutationMismatch,
+            IcMutationRequestError::ObservationPending,
+        )?;
+        Ok(Self {
             plan,
             payload,
-            authority,
-            mutation_attempt,
-        };
-        request.validate_journal(journal)?;
-        Ok(request)
+            reservation,
+        })
     }
 
     /// Read original full context, inventory, selection and dependency declarations.
@@ -77,12 +79,12 @@ impl<'a> IcMutationRequest<'a> {
     /// Read canonical original identity and immutable mutation/observation limits.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the original already consumed mutation attempt number.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Recheck the exact current pending reservation without IO or effect admission.
     /// # Errors
@@ -91,9 +93,8 @@ impl<'a> IcMutationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcMutationRequestError> {
-        journal.validate_pending_mutation(
-            &self.authority,
-            self.mutation_attempt,
+        self.reservation.validate(
+            journal,
             IcMutationRequestError::AuthorityMismatch,
             IcMutationRequestError::MutationMismatch,
             IcMutationRequestError::ObservationPending,

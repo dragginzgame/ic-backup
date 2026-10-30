@@ -7,7 +7,7 @@ use crate::{
         operation_plan::OperationPlanError,
     },
     policy::execution_progress::{
-        ExecutionProgressError, ExecutionProgressRequest, ExecutionProgressView, progress,
+        ExecutionProgressError, ExecutionProgressView, progress_with_journals,
     },
 };
 use thiserror::Error;
@@ -36,11 +36,7 @@ pub(super) fn read_with_current(
     let (plan, journals) = super::attempt_journal::read_original_plan_journals::<
         ExecutionProgressPersistenceError,
     >(layout, expected_plan, current)?;
-    let references: Vec<_> = journals.iter().collect();
-    Ok(progress(&ExecutionProgressRequest {
-        plan: &plan,
-        journals: &references,
-    })?)
+    Ok(progress_with_journals(&plan, journals.iter())?.0)
 }
 
 /// Typed local evidence or reservation rejection; no failure resets original spending.

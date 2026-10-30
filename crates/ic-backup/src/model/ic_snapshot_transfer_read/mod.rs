@@ -1,5 +1,6 @@
 //! Exact originally reserved metadata/data reads; no dispatch or transfer attestation.
 
+use crate::model::attempt_journal::MutationReservation;
 use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -83,8 +84,7 @@ impl<'request> IcSnapshotTransferReadPayload<'request, '_> {
 pub struct IcSnapshotTransferReadRequest<'request, 'metadata> {
     plan: &'request OperationPlanRecord,
     payload: IcSnapshotTransferReadPayload<'request, 'metadata>,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
+    reservation: MutationReservation,
 }
 
 impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
@@ -103,17 +103,19 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
             return Err(IcSnapshotTransferReadError::AuthorityMismatch);
         }
         payload.validate_binding(&authority)?;
-        let mutation_attempt = journal
-            .pending_mutation()
-            .ok_or(IcSnapshotTransferReadError::NoPendingMutation)?;
-        let request = Self {
+        let reservation = MutationReservation::new(
+            authority,
+            journal,
+            IcSnapshotTransferReadError::NoPendingMutation,
+            IcSnapshotTransferReadError::AuthorityMismatch,
+            IcSnapshotTransferReadError::MutationMismatch,
+            IcSnapshotTransferReadError::ObservationPending,
+        )?;
+        Ok(Self {
             plan,
             payload,
-            authority,
-            mutation_attempt,
-        };
-        request.validate_journal(journal)?;
-        Ok(request)
+            reservation,
+        })
     }
     /// Read full original context, inventory, graph and allowances.
     #[must_use]
@@ -128,12 +130,12 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
     /// Read the full original operation authority.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the already consumed replicated-update attempt.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Recheck original reservation before passive response association.
     /// # Errors
@@ -142,9 +144,8 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), IcSnapshotTransferReadError> {
-        journal.validate_pending_mutation(
-            &self.authority,
-            self.mutation_attempt,
+        self.reservation.validate(
+            journal,
             IcSnapshotTransferReadError::AuthorityMismatch,
             IcSnapshotTransferReadError::MutationMismatch,
             IcSnapshotTransferReadError::ObservationPending,

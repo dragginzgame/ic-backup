@@ -1,6 +1,7 @@
 //! Passive original application reservations; reconstructing one is never a resend permit.
 
 use super::{ApplicationIngressError, ApplicationIngressPayload};
+use crate::model::attempt_journal::MutationReservation;
 use crate::model::attempt_journal::ObservationReservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
@@ -15,8 +16,7 @@ use crate::model::{
 pub struct ApplicationMutationRequest<'a> {
     plan: &'a OperationPlanRecord,
     payload: &'a ApplicationIngressPayload,
-    authority: AttemptAuthorityRecord,
-    mutation_attempt: u32,
+    reservation: MutationReservation,
 }
 impl<'a> ApplicationMutationRequest<'a> {
     /// Bind original exact opaque bytes to the current pending mutation.
@@ -30,17 +30,19 @@ impl<'a> ApplicationMutationRequest<'a> {
     ) -> Result<Self, ApplicationIngressError> {
         let authority = authority(plan, sequence, journal)?;
         payload.validate_mutation_binding(authority.binding())?;
-        let mutation_attempt = journal
-            .pending_mutation()
-            .ok_or(ApplicationIngressError::NoPendingMutation)?;
-        let request = Self {
+        let reservation = MutationReservation::new(
+            authority,
+            journal,
+            ApplicationIngressError::NoPendingMutation,
+            ApplicationIngressError::AuthorityMismatch,
+            ApplicationIngressError::MutationMismatch,
+            ApplicationIngressError::ObservationPending,
+        )?;
+        Ok(Self {
             plan,
             payload,
-            authority,
-            mutation_attempt,
-        };
-        request.validate_journal(journal)?;
-        Ok(request)
+            reservation,
+        })
     }
     /// Read the complete original plan/context and inventory.
     #[must_use]
@@ -55,12 +57,12 @@ impl<'a> ApplicationMutationRequest<'a> {
     /// Read full original authority and finite allowances.
     #[must_use]
     pub const fn authority(&self) -> &AttemptAuthorityRecord {
-        &self.authority
+        &self.reservation.authority
     }
     /// Read the already consumed mutation attempt.
     #[must_use]
     pub const fn mutation_attempt(&self) -> u32 {
-        self.mutation_attempt
+        self.reservation.mutation_attempt
     }
     /// Recheck current exact original reservation without authorizing dispatch.
     /// # Errors
@@ -69,9 +71,8 @@ impl<'a> ApplicationMutationRequest<'a> {
         &self,
         journal: &AttemptJournalRecord,
     ) -> Result<(), ApplicationIngressError> {
-        journal.validate_pending_mutation(
-            &self.authority,
-            self.mutation_attempt,
+        self.reservation.validate(
+            journal,
             ApplicationIngressError::AuthorityMismatch,
             ApplicationIngressError::MutationMismatch,
             ApplicationIngressError::ObservationPending,

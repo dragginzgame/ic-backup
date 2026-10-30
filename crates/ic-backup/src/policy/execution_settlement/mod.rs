@@ -6,8 +6,7 @@ use crate::{
         operation_plan::OperationPlanRecord,
     },
     policy::execution_progress::{
-        self, ExecutionProgressError, ExecutionProgressRequest, ExecutionProgressView,
-        OperationProgressState,
+        self, ExecutionProgressError, ExecutionProgressView, OperationProgressState,
     },
 };
 use thiserror::Error;
@@ -28,11 +27,18 @@ pub fn validate(
     journals: &[&AttemptJournalRecord],
     settlement: &ExecutionSettlementRecord,
 ) -> Result<ExecutionProgressView, ExecutionSettlementPolicyError> {
+    validate_journals(plan, journals.iter().copied(), settlement)
+}
+
+pub(crate) fn validate_journals<'a>(
+    plan: &OperationPlanRecord,
+    journals: impl ExactSizeIterator<Item = &'a AttemptJournalRecord>,
+    settlement: &ExecutionSettlementRecord,
+) -> Result<ExecutionProgressView, ExecutionSettlementPolicyError> {
     if &plan.digest() != settlement.plan_intent() {
         return Err(ExecutionSettlementPolicyError::IntentMismatch);
     }
-    let (view, actual) =
-        execution_progress::progress_with_journals(&ExecutionProgressRequest { plan, journals })?;
+    let (view, actual) = execution_progress::progress_with_journals(plan, journals)?;
     if let Some(operation) = view
         .operations
         .iter()

@@ -2,7 +2,7 @@
 
 use super::InventoryRecordError;
 use crate::model::artifacts::canonical_hash;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Maximum optional role size in UTF-8 bytes, without role-based authority semantics.
 pub const MAX_INVENTORY_ROLE_BYTES: usize = 256;
@@ -34,16 +34,14 @@ pub struct InventoryTargetRecord {
 #[serde(deny_unknown_fields)]
 struct TargetFields {
     canister_id: String,
-    #[serde(deserialize_with = "required_text")]
+    #[serde(deserialize_with = "crate::model::required_option::deserialize")]
     parent_canister_id: Option<String>,
-    #[serde(deserialize_with = "required_text")]
+    #[serde(deserialize_with = "crate::model::required_option::deserialize")]
     role: Option<String>,
-    #[serde(deserialize_with = "required_text")]
+    #[serde(deserialize_with = "crate::model::required_option::deserialize")]
     module_hash: Option<String>,
 }
-fn required_text<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
-    Option::deserialize(deserializer)
-}
+
 impl TryFrom<TargetFields> for InventoryTargetRecord {
     type Error = InventoryRecordError;
     fn try_from(fields: TargetFields) -> Result<Self, Self::Error> {

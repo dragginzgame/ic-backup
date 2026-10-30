@@ -106,12 +106,7 @@ fn acquire_supported(path: &Path, journal: PathBuf) -> Result<JournalLock, Journ
     let file = open_private_regular_lock_file(path).map_err(|error| match error {
         RegularFileLockError::NotRegular => JournalLockError::UnsafeEntry {
             lock_path: path.to_string_lossy().to_string(),
-            kind: match fs::symlink_metadata(path) {
-                Ok(metadata) if metadata.file_type().is_symlink() => "Symlink",
-                Ok(metadata) if metadata.is_dir() => "Directory",
-                _ => "Special",
-            }
-            .to_owned(),
+            kind: super::unsafe_entry_kind(path).to_owned(),
         },
         error => JournalLockError::Io(error.into()),
     })?;
