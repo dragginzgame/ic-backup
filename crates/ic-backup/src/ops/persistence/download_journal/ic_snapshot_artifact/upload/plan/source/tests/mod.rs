@@ -76,25 +76,21 @@ fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_
             read_bytes: 0,
             largest_request: 0,
         };
-        let mut remaining = kinds.iter().peekable();
-        let mut bindings = vec![];
-        let result = member_checksum(
-            &mut reader,
-            module,
-            length as u64,
-            &upload,
-            DESTINATION_ID,
-            &mut remaining,
-            &mut bindings,
-        );
+        let mut scan = BindingScan {
+            metadata: &upload,
+            destination: DESTINATION_ID,
+            remaining: kinds.iter().peekable(),
+            bindings: vec![],
+        };
+        let result = scan.member_checksum(&mut reader, module, length as u64);
         if delta == 0 {
             assert_eq!(result.unwrap(), ArtifactChecksumRecord::from_bytes(&bytes));
             assert_eq!(reader.read_bytes, length);
-            assert!(remaining.next().is_none());
+            assert!(scan.remaining.next().is_none());
             for ((kind, chunk), binding) in kinds
                 .iter()
                 .zip(bytes.chunks(MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES))
-                .zip(&bindings)
+                .zip(&scan.bindings)
             {
                 let expected =
                     IcSnapshotUploadRequest::data(&upload, DESTINATION_ID, kind.clone(), chunk)

@@ -27,7 +27,6 @@ pub use transfer_read::AgentSnapshotTransferReadProvider;
 
 use ic_backup::model::operation_plan::PlanContextRecord;
 use ic_platform::agent::{Agent, Identity, RequestId};
-use ic_platform::principal::ExternalPrincipal;
 use std::{sync::Arc, time::Duration};
 use thiserror::Error;
 
@@ -104,18 +103,15 @@ impl AgentTransport {
     }
 }
 
-/// Non-cloneable signed update tied to its fixed transport and borrowed original evidence.
+/// Non-cloneable signed update evidence borrowing its exact original request.
 ///
 /// Dropping, cancelling or failing submission grants no refund or repeat-call authority.
 /// There is deliberately no envelope re-import/reissue API. Retained bytes are recovery
 /// evidence; a successor call needs separate qualified admission and original accounting.
 pub struct PreparedUpdate<'a> {
-    transport: &'a AgentTransport,
     request: ReservedUpdate<'a>,
-    target: ExternalPrincipal,
     envelope: Vec<u8>,
     request_id: RequestId,
-    reply_limit: usize,
 }
 impl PreparedUpdate<'_> {
     /// Read the exact signed bytes to retain durably before dispatch; contains opaque sensitive arguments.

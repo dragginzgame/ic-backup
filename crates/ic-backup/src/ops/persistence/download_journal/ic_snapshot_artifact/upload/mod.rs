@@ -126,24 +126,29 @@ fn read_chunk(
     metadata: &IcSnapshotMetadataReply<'_>,
     kind: &SnapshotDataKind,
 ) -> Result<Vec<u8>, IcSnapshotArtifactError> {
-    let (name, length, offset, size) = match member::select(kind)? {
+    match member::select(kind)? {
         member::Member::Region {
             region,
             offset,
             size,
-        } => (
-            REGIONS[region.index()].to_owned(),
-            Some(metadata.region_sizes()[region.index()]),
-            offset,
-            Some(size),
-        ),
-        member::Member::Chunk { name } => (name, None, 0, None),
-    };
-    let maximum = length.unwrap_or(MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64);
-    let (mut file, original) = open_regular_child(directory, &name, length, maximum)?;
-    file.seek(SeekFrom::Start(offset))?;
-    let size = size.unwrap_or(original.len());
-    read_chunk_bytes(file, size)
+        } => {
+            let length = metadata.region_sizes()[region.index()];
+            let (mut file, _) =
+                open_regular_child(directory, REGIONS[region.index()], Some(length), length)?;
+            file.seek(SeekFrom::Start(offset))?;
+            read_chunk_bytes(file, size)
+        }
+        member::Member::Chunk { name } => {
+            let (mut file, original) = open_regular_child(
+                directory,
+                &name,
+                None,
+                MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64,
+            )?;
+            file.seek(SeekFrom::Start(0))?;
+            read_chunk_bytes(file, original.len())
+        }
+    }
 }
 
 // Both individual preparation and batch binding buffer one exact admitted chunk.

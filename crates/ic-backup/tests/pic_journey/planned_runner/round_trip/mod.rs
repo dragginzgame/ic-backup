@@ -61,8 +61,15 @@ pub(super) struct RestoreProgress {
     pub(super) source_binding: ExecutionStageBindingRecord,
     pub(super) source_plan: OperationPlanRecord,
     pub(super) source: Downloaded,
-    pub(super) allocation: Option<(ExecutionStageBindingRecord, OperationPlanRecord, Vec<u8>)>,
+    pub(super) allocation: Option<RetainedAllocation>,
     pub(super) acceptance: Option<ArtifactChecksumRecord>,
+}
+
+// Keep original allocation identity and raw reply evidence visibly associated.
+pub(super) struct RetainedAllocation {
+    binding: ExecutionStageBindingRecord,
+    plan: OperationPlanRecord,
+    raw_reply: Vec<u8>,
 }
 
 fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
@@ -153,12 +160,13 @@ impl CompleteDriver {
             plan["budget"]["observations"] = json!(0);
             serde_json::from_value(plan).unwrap()
         } else {
-            let (binding, plan, raw) = retained.allocation.as_ref().unwrap();
-            let reply = IcSnapshotUploadReply::decode(&upload, raw).unwrap();
+            let allocation = retained.allocation.as_ref().unwrap();
+            let reply = IcSnapshotUploadReply::decode(&upload, &allocation.raw_reply).unwrap();
             let data = journal
                 .prepare_ic_snapshot_data_upload_plan(workflow, 13, TOKEN, &reply, 32 * 1024)
                 .unwrap();
-            data.bind(binding, plan, predecessors.to_vec()).unwrap();
+            data.bind(&allocation.binding, &allocation.plan, predecessors.to_vec())
+                .unwrap();
             data.plan().unwrap().clone()
         }
     }
@@ -219,25 +227,25 @@ impl CompleteDriver {
                 qualify,
             ))
             .map(|(ack, checkpoint)| {
-                retained.allocation = Some((
-                    stage.binding().clone(),
-                    stage.plan().clone(),
-                    ack.input().reply.clone(),
-                ));
+                retained.allocation = Some(RetainedAllocation {
+                    binding: stage.binding().clone(),
+                    plan: stage.plan().clone(),
+                    raw_reply: ack.input().reply.clone(),
+                });
                 checkpoint.learned_evidence().clone()
             })
             .map_err(|error| io::Error::other(error.to_string()))
         } else {
-            let (binding, allocation_plan, raw) = retained.allocation.as_ref().unwrap();
-            let reply = IcSnapshotUploadReply::decode(&upload, raw).unwrap();
+            let allocation = retained.allocation.as_ref().unwrap();
+            let reply = IcSnapshotUploadReply::decode(&upload, &allocation.raw_reply).unwrap();
             let data = journal
                 .prepare_ic_snapshot_data_upload_plan(&self.workflow, 13, TOKEN, &reply, 32 * 1024)
                 .unwrap();
             assert_eq!(
                 &data
                     .bind(
-                        binding,
-                        allocation_plan,
+                        &allocation.binding,
+                        &allocation.plan,
                         stage.binding().predecessors().to_vec()
                     )
                     .unwrap(),
@@ -300,9 +308,11 @@ impl CompleteDriver {
         let upload = journal
             .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
             .unwrap();
-        let reply =
-            IcSnapshotUploadReply::decode(&upload, &retained.allocation.as_ref().unwrap().2)
-                .unwrap();
+        let reply = IcSnapshotUploadReply::decode(
+            &upload,
+            &retained.allocation.as_ref().unwrap().raw_reply,
+        )
+        .unwrap();
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
             panic!("allocation reply")
         };
@@ -389,8 +399,8 @@ impl CompleteDriver {
             let upload = journal
                 .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
                 .unwrap();
-            let (_, _, raw) = retained.allocation.as_ref().unwrap();
-            let allocation = IcSnapshotUploadReply::decode(&upload, raw).unwrap();
+            let original = retained.allocation.as_ref().unwrap();
+            let allocation = IcSnapshotUploadReply::decode(&upload, &original.raw_reply).unwrap();
             let data = journal
                 .prepare_ic_snapshot_data_upload_plan(
                     &self.workflow,
@@ -558,10 +568,59 @@ fn retained(
     evidence
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "rebuild solely from exact original source, argument/reply bytes, allocation and post-load evidence before continuation"
-)]
+// Callers keep the original source layout and download journal excluded across
+// both replay phases. Every request and raw reply is checked against its owner.
+fn replay_chunks(download: &IcSnapshotDownloadPlan<'_, '_>, source_root: &Path) -> Vec<Vec<u8>> {
+    download
+        .requests()
+        .iter()
+        .enumerate()
+        .map(|(i, request)| {
+            assert_eq!(
+                fs::read(source_root.join(format!("data-{i}-arguments.candid"))).unwrap(),
+                request.arguments()
+            );
+            let raw = fs::read(source_root.join(format!("data-{i}.candid"))).unwrap();
+            IcSnapshotDataReply::decode(request, &raw)
+                .unwrap()
+                .chunk()
+                .to_vec()
+        })
+        .collect()
+}
+
+fn replay_allocation(
+    layout: &BackupLayoutGuard,
+    journal: &DownloadJournalGuard<'_>,
+    source_plan: &OperationPlanRecord,
+    metadata: &IcSnapshotMetadataReply<'_>,
+) -> Option<RetainedAllocation> {
+    let root = layout.root().join("execution-stage-11");
+    if !root.exists() {
+        return None;
+    }
+    let binding: ExecutionStageBindingRecord =
+        read_json(&root.join("stage-binding.json"), MAX_EXECUTION_STAGE_BYTES).unwrap();
+    let allocation_layout = BackupLayoutGuard::acquire(&root).unwrap();
+    let plan = read_operation_plan(&allocation_layout, binding.plan()).unwrap();
+    let upload = journal
+        .prepare_ic_snapshot_upload_metadata(source_plan, TOKEN, metadata)
+        .unwrap();
+    assert_eq!(
+        fs::read(allocation_layout.root().join("upload-11-arguments.candid")).unwrap(),
+        upload.arguments()
+    );
+    assert_eq!(
+        plan.operations()[0].request(),
+        upload.binding_digest().hash()
+    );
+    Some(RetainedAllocation {
+        binding,
+        plan,
+        raw_reply: fs::read(allocation_layout.root().join("upload-11.candid")).unwrap(),
+    })
+}
+
 fn rebuild(
     backend: Backend,
     layout: &BackupLayoutGuard,
@@ -598,47 +657,8 @@ fn rebuild(
             .unwrap(),
         *journal.record().unwrap()
     );
-    let chunks = download
-        .requests()
-        .iter()
-        .enumerate()
-        .map(|(i, request)| {
-            assert_eq!(
-                fs::read(source_root.join(format!("data-{i}-arguments.candid"))).unwrap(),
-                request.arguments()
-            );
-            let raw = fs::read(source_root.join(format!("data-{i}.candid"))).unwrap();
-            IcSnapshotDataReply::decode(request, &raw)
-                .unwrap()
-                .chunk()
-                .to_vec()
-        })
-        .collect();
-    let binding = |sequence| {
-        read_json::<ExecutionStageBindingRecord>(
-            &layout
-                .root()
-                .join(format!("execution-stage-{sequence}/stage-binding.json")),
-            MAX_EXECUTION_STAGE_BYTES,
-        )
-        .unwrap()
-    };
-    let allocation = if layout.root().join("execution-stage-11").exists() {
-        let b = binding(11);
-        let l = BackupLayoutGuard::acquire(&layout.root().join("execution-stage-11")).unwrap();
-        let p = read_operation_plan(&l, b.plan()).unwrap();
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
-            .unwrap();
-        assert_eq!(
-            fs::read(l.root().join("upload-11-arguments.candid")).unwrap(),
-            upload.arguments()
-        );
-        assert_eq!(p.operations()[0].request(), upload.binding_digest().hash());
-        Some((b, p, fs::read(l.root().join("upload-11.candid")).unwrap()))
-    } else {
-        None
-    };
+    let chunks = replay_chunks(&download, &source_root);
+    let allocation = replay_allocation(layout, &journal, &source_plan, &metadata);
     let acceptance = fs::read_to_string(
         layout
             .root()

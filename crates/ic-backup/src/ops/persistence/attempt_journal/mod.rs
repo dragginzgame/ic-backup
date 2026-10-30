@@ -1,9 +1,9 @@
 //! Exclusive durable attempt reservations and exact receipt retention; no transport.
 
-use super::json::{check_json_size, create_encoded, encode_json, write_encoded};
+use super::json::{create_encoded, encode_json, read_record, write_encoded};
 use super::{
     BackupLayoutGuard, ExecutionProgressPersistenceError, JournalLock, JournalLockError,
-    OperationPlanPersistenceError, PersistenceError, read_json, read_operation_plan,
+    OperationPlanPersistenceError, PersistenceError, read_operation_plan,
 };
 use crate::model::artifacts::ArtifactChecksumRecord;
 use crate::model::attempt_journal::{
@@ -59,8 +59,7 @@ impl<'a> AttemptJournalGuard<'a> {
         layout.check_root()?;
         let path = journal_path(layout, expected);
         let lock = JournalLock::acquire(&path)?;
-        let record: AttemptJournalRecord = read_json(&path, MAX_ATTEMPT_JOURNAL_BYTES)?;
-        check_json_size(&record, MAX_ATTEMPT_JOURNAL_BYTES)?;
+        let record: AttemptJournalRecord = read_record(&path, MAX_ATTEMPT_JOURNAL_BYTES)?;
         if record.authority() != expected {
             return Err(AttemptJournalError::AuthorityMismatch);
         }

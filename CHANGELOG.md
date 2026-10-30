@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.50.4]
+
+### 🧹 Cleanup
+
+- Consolidate bounded record reads and exact context comparisons, and simplify
+  settlement outcomes, single-stage validation and source-byte preparation.
+  Keep public APIs, original bytes, admission order and recovery safeguards.
+- Keep submission metadata local while retaining the original signed request
+  evidence and single-dispatch behavior.
+
+### 🧪 Testing
+
+- Make retained allocation evidence explicit and separate cold reconstruction's
+  chunk and allocation replay checks, preserving source exclusion and raw evidence.
+
 ## [0.50.3] - 2026-10-30
 
 ### 🧹 Cleanup

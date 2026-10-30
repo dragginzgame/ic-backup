@@ -5,6 +5,7 @@ use crate::{AgentTransport, PreparedUpdate, ReservedUpdate};
 use ic_backup::model::attempt_journal::AttemptJournalRecord;
 use ic_platform::Principal;
 use ic_platform::agent::{CallResponse, RequestId};
+use ic_platform::principal::ExternalPrincipal;
 
 pub(crate) async fn submit_once<E>(
     transport: &AgentTransport,
@@ -34,24 +35,21 @@ pub(crate) async fn submit_once<E>(
         return Err(unsupported());
     }
     let reply_limit = wire.reply_limit;
+    let target: ExternalPrincipal = target.into();
     let prepared = PreparedUpdate {
-        transport,
         request,
-        target: target.into(),
         envelope: signed.signed_update,
         request_id: signed.request_id,
-        reply_limit,
     };
     retain_ingress(&prepared)?;
     let request_id = prepared.request_id;
-    let response = prepared
-        .transport
+    let response = transport
         .agent
-        .update_signed(prepared.target, prepared.envelope)
+        .update_signed(target, prepared.envelope)
         .await
         .map_err(|_| indeterminate())?;
     let reply = match response {
-        CallResponse::Response(reply) if reply.len() <= prepared.reply_limit => reply,
+        CallResponse::Response(reply) if reply.len() <= reply_limit => reply,
         CallResponse::Response(_) | CallResponse::Poll(_) => return Err(indeterminate()),
     };
     // A failed post-dispatch retainer must never turn an uncertain effect into a retry.

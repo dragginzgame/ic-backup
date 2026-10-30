@@ -4,7 +4,7 @@ use super::{
     ArtifactChecksumRecord, BINDING_FILE, BTreeMap, BackupLayoutGuard, Entry,
     ExecutionStageBindingRecord, ExecutionWorkflowPersistenceError, ExecutionWorkflowRecord,
     MAX_EXECUTION_STAGE_BYTES, OperationPlanRecord, PathBuf, PersistenceError, fs,
-    read_execution_settlement, read_json, read_operation_plan,
+    read_execution_settlement, read_operation_plan, read_record,
 };
 
 pub(super) fn read_binding(
@@ -36,8 +36,7 @@ fn read_binding_record(
 ) -> Result<ExecutionStageBindingRecord, ExecutionWorkflowPersistenceError> {
     layout.check_root()?;
     let binding: ExecutionStageBindingRecord =
-        read_json(&layout.root().join(BINDING_FILE), MAX_EXECUTION_STAGE_BYTES)?;
-    super::super::json::check_json_size(&binding, MAX_EXECUTION_STAGE_BYTES)?;
+        read_record(&layout.root().join(BINDING_FILE), MAX_EXECUTION_STAGE_BYTES)?;
     if binding.stage_sequence() != sequence {
         return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
     }

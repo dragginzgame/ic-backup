@@ -182,14 +182,15 @@ pub(crate) fn progress_with_journals<'a>(
             attempts,
         });
     }
+    let applied_operations = operations
+        .iter()
+        .filter(|operation| operation.attempts.applied)
+        .count();
     Ok((
         ExecutionProgressView {
             intent,
             graph: plan.graph().digest(),
-            applied_operations: journals
-                .keys()
-                .filter(|sequence| is_applied(sequence))
-                .count(),
+            applied_operations,
             attempts: totals,
             operations,
         },

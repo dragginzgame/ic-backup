@@ -140,15 +140,17 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
             Ok(UploadCompletion::Data)
         } else {
             binding.validate(self.binding.workflow, plan)?;
-            if plan.operations().len() != 1
-                || plan.operations()[0].target() != self.metadata.target()
-                || plan.operations()[0].request() != self.metadata.binding_digest().hash()
+            let [operation] = plan.operations() else {
+                return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+            };
+            if operation.target() != self.metadata.target()
+                || operation.request() != self.metadata.binding_digest().hash()
                 || learned != &self.binding.evidence
             {
                 return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
             }
             Ok(UploadCompletion::Allocation {
-                sequence: plan.operations()[0].operation_sequence(),
+                sequence: operation.operation_sequence(),
                 evidence: self.binding.evidence.clone(),
             })
         }

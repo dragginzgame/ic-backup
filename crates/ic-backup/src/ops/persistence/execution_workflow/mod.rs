@@ -12,11 +12,12 @@ pub use stage::ExecutionStageGuard;
 #[cfg(test)]
 use stage::StagePreparationBarrier;
 
+use super::json::read_record;
 use super::{
     AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, ExecutionProgressPersistenceError,
     ExecutionSettlementCheckpointError, ExecutionSettlementPersistenceError, JournalLock,
     JournalLockError, OperationPlanPersistenceError, PersistenceError, read_execution_progress,
-    read_execution_settlement, read_json, read_operation_plan, reconcile_execution_settlement,
+    read_execution_settlement, read_operation_plan, reconcile_execution_settlement,
     replay_execution_settlement,
 };
 use crate::model::{
@@ -182,8 +183,7 @@ pub fn read_complete_execution_workflow_locked(
     read_complete_with(layout, expected, || {
         layout.check_root()?;
         let workflow: ExecutionWorkflowRecord =
-            read_json(journal.journal(), MAX_EXECUTION_WORKFLOW_BYTES)?;
-        super::json::check_json_size(&workflow, MAX_EXECUTION_WORKFLOW_BYTES)?;
+            read_record(journal.journal(), MAX_EXECUTION_WORKFLOW_BYTES)?;
         if &workflow.digest() != expected {
             return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
         }

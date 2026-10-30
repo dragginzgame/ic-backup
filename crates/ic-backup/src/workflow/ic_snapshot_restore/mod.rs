@@ -75,7 +75,10 @@ pub async fn restore_snapshot<E: std::error::Error + 'static>(
 {
     let plan = stage.plan();
     let sequence = safety.binding().operation_sequence();
-    if plan.operations().len() != 1 || plan.operations()[0].operation_sequence() != sequence {
+    let [operation] = plan.operations() else {
+        return Err(IcRestoreExecutionError::OriginalMismatch);
+    };
+    if operation.operation_sequence() != sequence {
         return Err(IcRestoreExecutionError::OriginalMismatch);
     }
     let retain = || {

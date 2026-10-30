@@ -287,9 +287,7 @@ impl OperationPlanRecord {
             && binding.operation_sequence() == operation.operation_sequence()
             && binding.target() == operation.target()
             && binding.request() == operation.request();
-        let context_matches = binding.network() == self.context.network()
-            && binding.caller() == self.context.caller()
-            && binding.release() == self.context.release();
+        let context_matches = self.context.binding_mismatch(binding).is_none();
         identity_matches && context_matches && authority.budget() == operation.budget()
     }
     /// Hash the entire canonical declaration using the maintained nonrecursive v1 encoding.

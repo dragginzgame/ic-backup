@@ -1,6 +1,6 @@
 //! Explicit fresh local artifact checks, borrowing journal and layout exclusion.
 
-use super::super::json::check_json_size;
+use super::super::json::read_record;
 use super::{DownloadJournalError, DownloadJournalGuard};
 use crate::{
     model::{
@@ -10,9 +10,7 @@ use crate::{
     },
     ops::{
         artifacts::{ArtifactError, checksum_directory},
-        persistence::{
-            OperationPlanPersistenceError, PersistenceError, read_json, read_operation_plan,
-        },
+        persistence::{OperationPlanPersistenceError, PersistenceError, read_operation_plan},
     },
     policy::download_integrity::{DownloadIntegrityPolicyError, DurableDownloadView, validate},
 };
@@ -55,8 +53,8 @@ impl DownloadJournalGuard<'_> {
     }
 
     pub(super) fn require_unchanged_integrity_journal(&self) -> Result<(), DownloadIntegrityError> {
-        let retained: DownloadJournalRecord = read_json(&self.path(), MAX_DOWNLOAD_JOURNAL_BYTES)?;
-        check_json_size(&retained, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        let retained: DownloadJournalRecord =
+            read_record(&self.path(), MAX_DOWNLOAD_JOURNAL_BYTES)?;
         if retained != self.record {
             return Err(DownloadIntegrityError::JournalChanged);
         }

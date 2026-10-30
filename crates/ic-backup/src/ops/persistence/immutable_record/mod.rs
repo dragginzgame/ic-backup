@@ -1,7 +1,7 @@
 //! Shared local sequence for immutable bounded declarations.
 
-use super::json::{check_json_size, create_encoded, encode_json};
-use super::{BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, read_json};
+use super::json::{create_encoded, encode_json, read_record};
+use super::{BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError};
 use serde::{Serialize, de::DeserializeOwned};
 
 pub(super) fn create<T, E>(
@@ -88,8 +88,7 @@ where
     layout.check_root()?;
     let path = layout.root().join(name);
     let _lock = JournalLock::acquire(&path)?;
-    let record: T = read_json(&path, limit)?;
-    check_json_size(&record, limit)?;
+    let record: T = read_record(&path, limit)?;
     validate(&record)?;
     Ok(record)
 }

@@ -70,10 +70,11 @@ pub async fn read_snapshot_metadata<E: std::error::Error + 'static>(
     ),
     IcSnapshotMetadataExecutionError<E>,
 > {
-    let operations = stage.plan().operations();
-    if operations.len() != 1
-        || operations[0].operation_sequence() != operation_sequence
-        || operations[0].request() != payload.digest().hash()
+    let [operation] = stage.plan().operations() else {
+        return Err(IcSnapshotMetadataExecutionError::OriginalMismatch);
+    };
+    if operation.operation_sequence() != operation_sequence
+        || operation.request() != payload.digest().hash()
     {
         return Err(IcSnapshotMetadataExecutionError::OriginalMismatch);
     }

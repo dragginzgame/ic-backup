@@ -2,6 +2,7 @@
 
 use super::OperationPlanError;
 use crate::model::artifacts::canonical_hash;
+use crate::model::attempt_journal::OperationBindingRecord;
 use serde::{Deserialize, Serialize};
 
 /// Passive integration-owned exact execution context declarations.
@@ -40,6 +41,22 @@ impl TryFrom<ContextFields> for PlanContextRecord {
     }
 }
 impl PlanContextRecord {
+    // Complete context equality has one ordered field comparison owner. Source
+    // network/release-only checks intentionally retain their separate contract.
+    pub(crate) fn binding_mismatch(
+        &self,
+        binding: &OperationBindingRecord,
+    ) -> Option<&'static str> {
+        if self.network() != binding.network() {
+            Some("network")
+        } else if self.caller() != binding.caller() {
+            Some("caller")
+        } else if self.release() != binding.release() {
+            Some("release")
+        } else {
+            None
+        }
+    }
     /// Canonicalize exact declarations without IO or fresh authorization.
     ///
     /// # Errors

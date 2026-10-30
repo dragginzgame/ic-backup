@@ -14,10 +14,9 @@ pub use integrity::DownloadIntegrityError;
 pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
 
-use super::json::{check_json_size, create_encoded, encode_json, write_encoded};
+use super::json::{create_encoded, encode_json, read_record, write_encoded};
 use super::{
     BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, commit_artifact_directory,
-    read_json,
 };
 use crate::{
     model::{
@@ -83,8 +82,7 @@ impl<'a> DownloadJournalGuard<'a> {
         let expected = canonical_hash(expected_intent).map_err(DownloadJournalRecordError::from)?;
         let path = layout.root().join(JOURNAL_FILE);
         let lock = JournalLock::acquire(&path)?;
-        let record: DownloadJournalRecord = read_json(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
-        check_json_size(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+        let record: DownloadJournalRecord = read_record(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         if record.intent() != expected {
             return Err(DownloadJournalError::IntentMismatch);
         }

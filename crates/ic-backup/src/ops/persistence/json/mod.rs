@@ -96,6 +96,17 @@ where
     }
 }
 
+// Existing record owners require both bounded input and bounded canonical output.
+// Keep model decoding before size admission and leave locking/identity to callers.
+pub(super) fn read_record<T>(path: &Path, max_bytes: u64) -> Result<T, PersistenceError>
+where
+    T: DeserializeOwned + Serialize,
+{
+    let record = read_json(path, max_bytes)?;
+    check_json_size(&record, max_bytes)?;
+    Ok(record)
+}
+
 #[cfg(unix)]
 fn record_read_error(
     error: ic_host_artifacts::artifact::ArtifactError,

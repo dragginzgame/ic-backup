@@ -121,19 +121,44 @@ impl<'a> From<&'a IcSnapshotUploadAttribution> for InventoryAttribution<'a> {
     }
 }
 
+// A snapshot index exists only for an explicitly attributed Applied claim.
+#[derive(Debug)]
+pub(crate) enum InventorySettlementOutcome {
+    Applied(usize),
+    NotApplied,
+    Uncertain,
+}
+
+impl InventorySettlementOutcome {
+    pub const fn outcome(&self) -> ObservationOutcomeRecord {
+        match self {
+            Self::Applied(_) => ObservationOutcomeRecord::Applied,
+            Self::NotApplied => ObservationOutcomeRecord::NotApplied,
+            Self::Uncertain => ObservationOutcomeRecord::Uncertain,
+        }
+    }
+
+    pub const fn snapshot_index(&self) -> Option<usize> {
+        match self {
+            Self::Applied(index) => Some(*index),
+            Self::NotApplied | Self::Uncertain => None,
+        }
+    }
+}
+
 pub(crate) fn admitted_outcome(
     inventory: &IcSnapshotReply<'_>,
     candidates: &[&IcSnapshotInfo],
     attribution: InventoryAttribution<'_>,
-) -> Result<(ObservationOutcomeRecord, Option<usize>), ()> {
+) -> Result<InventorySettlementOutcome, ()> {
     match attribution {
         InventoryAttribution::Applied(snapshot_id) => {
             new_candidate_index(inventory, candidates, snapshot_id)
-                .map(|index| (ObservationOutcomeRecord::Applied, Some(index)))
+                .map(InventorySettlementOutcome::Applied)
                 .ok_or(())
         }
-        InventoryAttribution::NotApplied => Ok((ObservationOutcomeRecord::NotApplied, None)),
-        InventoryAttribution::Unresolved => Ok((ObservationOutcomeRecord::Uncertain, None)),
+        InventoryAttribution::NotApplied => Ok(InventorySettlementOutcome::NotApplied),
+        InventoryAttribution::Unresolved => Ok(InventorySettlementOutcome::Uncertain),
     }
 }
 

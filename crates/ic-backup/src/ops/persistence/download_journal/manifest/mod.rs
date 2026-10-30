@@ -1,6 +1,6 @@
 //! Immutable local download declarations using the existing v1 journal schema.
 
-use super::super::json::{check_json_size, create_encoded, encode_json};
+use super::super::json::{create_encoded, encode_json, read_record};
 use super::{DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard};
 use crate::{
     model::{
@@ -9,8 +9,7 @@ use crate::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
-        BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, read_json,
-        read_operation_plan,
+        BackupLayoutGuard, JournalLock, JournalLockError, PersistenceError, read_operation_plan,
     },
     policy::download_integrity::validate,
 };
@@ -109,8 +108,7 @@ fn read_manifest_record(
     expected: &ArtifactChecksumRecord,
 ) -> Result<DownloadJournalRecord, DownloadManifestError> {
     let path = layout.root().join(MANIFEST_FILE);
-    let record: DownloadJournalRecord = read_json(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
-    check_json_size(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
+    let record: DownloadJournalRecord = read_record(&path, MAX_DOWNLOAD_JOURNAL_BYTES)?;
     if &record.digest() != expected {
         return Err(DownloadManifestError::DigestMismatch);
     }

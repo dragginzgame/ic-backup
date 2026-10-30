@@ -18,7 +18,7 @@ use crate::{
         },
         inventory_settlement::{
             InventoryAttribution, InventorySettlementIdentity, InventorySettlementMismatch,
-            admitted_outcome, validate_pair,
+            InventorySettlementOutcome, admitted_outcome, validate_pair,
         },
         settlement_identity::SettlementIdentity,
         snapshot_inventory_delta::SnapshotInventoryDeltaError,
@@ -32,14 +32,13 @@ pub struct IcSnapshotUploadSettlementView<'a> {
     observation: IcObservationResponseView<'a>,
     baseline: &'a IcSnapshotReply<'a>,
     settlement: &'a IcSnapshotUploadSettlement,
-    allocated_snapshot: Option<usize>,
-    outcome: ObservationOutcomeRecord,
+    resolution: InventorySettlementOutcome,
 }
 impl<'a> IcSnapshotUploadSettlementView<'a> {
     /// Read the passive claim; only a qualified integration may record it.
     #[must_use]
     pub const fn outcome(&self) -> ObservationOutcomeRecord {
-        self.outcome
+        self.resolution.outcome()
     }
     /// Read the original independently retained baseline.
     #[must_use]
@@ -60,7 +59,7 @@ impl<'a> IcSnapshotUploadSettlementView<'a> {
     #[must_use]
     pub fn allocated_snapshot(&self) -> Option<&IcSnapshotInfo> {
         self.observation
-            .inventory_snapshot(self.allocated_snapshot?)
+            .inventory_snapshot(self.resolution.snapshot_index()?)
     }
 }
 
@@ -115,7 +114,7 @@ pub fn validate_settlement<'a>(
     if let IcSnapshotUploadAttribution::Applied { snapshot_id, .. } = &settlement.attribution {
         request.mutation().validate_data_destination(snapshot_id)?;
     }
-    let (outcome, allocated_snapshot) = admitted_outcome(
+    let resolution = admitted_outcome(
         inventory,
         &candidates,
         InventoryAttribution::from(&settlement.attribution),
@@ -125,8 +124,7 @@ pub fn validate_settlement<'a>(
         observation,
         baseline,
         settlement,
-        allocated_snapshot,
-        outcome,
+        resolution,
     })
 }
 

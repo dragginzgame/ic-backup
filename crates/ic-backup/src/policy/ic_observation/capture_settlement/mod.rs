@@ -15,7 +15,7 @@ use crate::{
     policy::{
         inventory_settlement::{
             InventoryAttribution, InventorySettlementIdentity, InventorySettlementMismatch,
-            admitted_outcome, validate_pair,
+            InventorySettlementOutcome, admitted_outcome, validate_pair,
         },
         settlement_identity::SettlementIdentity,
         snapshot_inventory_delta::SnapshotInventoryDeltaError,
@@ -32,14 +32,13 @@ pub struct IcCaptureSettlementView<'a> {
     observation: IcObservationResponseView<'a>,
     baseline: &'a IcSnapshotReply<'a>,
     settlement: &'a IcCaptureSettlement,
-    captured_snapshot: Option<usize>,
-    outcome: ObservationOutcomeRecord,
+    resolution: InventorySettlementOutcome,
 }
 impl<'a> IcCaptureSettlementView<'a> {
     /// Read the independent claim; integration qualification precedes explicit recording.
     #[must_use]
     pub const fn outcome(&self) -> ObservationOutcomeRecord {
-        self.outcome
+        self.resolution.outcome()
     }
     /// Read the original independently retained full baseline.
     #[must_use]
@@ -59,7 +58,8 @@ impl<'a> IcCaptureSettlementView<'a> {
     /// Read only the explicitly attributed new descriptor, without singleton inference.
     #[must_use]
     pub fn captured_snapshot(&self) -> Option<&IcSnapshotInfo> {
-        self.observation.inventory_snapshot(self.captured_snapshot?)
+        self.observation
+            .inventory_snapshot(self.resolution.snapshot_index()?)
     }
 }
 
@@ -119,7 +119,7 @@ pub fn validate_capture_settlement<'a>(
         },
         &response.input().evidence,
     )?;
-    let (outcome, captured_snapshot) = admitted_outcome(
+    let resolution = admitted_outcome(
         inventory,
         &candidates,
         InventoryAttribution::from(&settlement.attribution),
@@ -129,8 +129,7 @@ pub fn validate_capture_settlement<'a>(
         observation,
         baseline,
         settlement,
-        captured_snapshot,
-        outcome,
+        resolution,
     })
 }
 

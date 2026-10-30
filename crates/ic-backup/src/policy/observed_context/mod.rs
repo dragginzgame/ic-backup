@@ -16,7 +16,7 @@ pub(super) fn admit_request_context<E>(
     if observed_request != expected {
         return Err(request_error);
     }
-    if let Some(field) = first_mismatch(binding, observed_context) {
+    if let Some(field) = observed_context.binding_mismatch(binding) {
         return Err(context_error(field));
     }
     Ok(())
@@ -45,19 +45,4 @@ pub(super) fn admit_limit<E>(
         return Err(limit_error(limit, reported));
     }
     Ok(())
-}
-
-pub(super) fn first_mismatch(
-    binding: &OperationBindingRecord,
-    observed: &PlanContextRecord,
-) -> Option<&'static str> {
-    if observed.network() != binding.network() {
-        Some("network")
-    } else if observed.caller() != binding.caller() {
-        Some("caller")
-    } else if observed.release() != binding.release() {
-        Some("release")
-    } else {
-        None
-    }
 }

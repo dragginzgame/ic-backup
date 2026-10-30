@@ -82,7 +82,7 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
             .allocation
             .as_ref()
             .ok_or(io::ErrorKind::InvalidData)?
-            .2;
+            .raw_reply;
         let reply = IcSnapshotUploadReply::decode(&upload, allocation).map_err(io::Error::other)?;
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
             return Err(io::ErrorKind::InvalidData.into());
