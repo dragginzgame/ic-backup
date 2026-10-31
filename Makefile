@@ -3,7 +3,7 @@ SHELL := /bin/bash
 export CARGO_TARGET_DIR := $(CURDIR)/target
 LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server install-release-editor
 LOCAL_TOOL_CHECK_TARGETS := testkit-server-check release-editor-check
-RELEASE_EDITOR_VERSION := 0.72.0
+RELEASE_EDITOR_VERSION := 0.72.1
 export RELEASE_EDITOR_MAX_BYTES := 8388608
 RELEASE_EDITOR_COMMAND = bash "$(CURDIR)/scripts/dev/install-rust-tools.sh" --consumer "$(CURDIR)" \
     --package ic-build --version "$(RELEASE_EDITOR_VERSION)" --bin ic-build-release-metadata --profile debug --features cli

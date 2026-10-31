@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.52.2] - Unreleased
+
+### 🔧 Dependencies
+
+- Adopt IC Host, Testkit and the release metadata editor 0.72.1. Their consumed
+  Rust implementations and dependency requirements are unchanged; public types,
+  record bytes and recovery behavior retain their contracts. Refresh contributor
+  tooling with `make install-tools`.
+- Adopt IC Platform 0.12.0 with the existing host feature selection and native
+  Candid, management DTO and Agent type contracts. Its consumed Rust source is
+  unchanged; the optional gzip identity change requires no Backup migration.
+
 ## [0.52.1] - 2026-10-30
 
 ### 🧹 Cleanup
