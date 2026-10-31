@@ -153,12 +153,7 @@ impl IcSnapshotTransferReadResponse {
     /// # Errors
     /// Rejects invalid attempt, excessive bytes and invalid target principals.
     pub fn new(mut input: IcUpdateResponseInput) -> Result<Self, IcSnapshotTransferReadError> {
-        input.admit(
-            MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
-            IcSnapshotTransferReadError::InvalidAttempt,
-            IcSnapshotTransferReadError::ReplyTooLarge,
-            IcSnapshotTransferReadError::InvalidTarget,
-        )?;
+        input.admit(MAX_IC_SNAPSHOT_DATA_REPLY_BYTES)?;
         Ok(Self { input })
     }
     /// Read exact retained claims and raw bytes; no mutable access is exposed.
@@ -214,6 +209,24 @@ impl From<crate::model::attempt_journal::MutationReservationError> for IcSnapsho
             Reservation::AuthorityMismatch => Self::AuthorityMismatch,
             Reservation::MutationMismatch => Self::MutationMismatch,
             Reservation::ObservationPending => Self::ObservationPending,
+        }
+    }
+}
+
+impl From<crate::model::ic_update_response::UpdateResponseAdmissionError>
+    for IcSnapshotTransferReadError
+{
+    fn from(error: crate::model::ic_update_response::UpdateResponseAdmissionError) -> Self {
+        match error {
+            crate::model::ic_update_response::UpdateResponseAdmissionError::InvalidAttempt => {
+                Self::InvalidAttempt
+            }
+            crate::model::ic_update_response::UpdateResponseAdmissionError::ReplyTooLarge => {
+                Self::ReplyTooLarge
+            }
+            crate::model::ic_update_response::UpdateResponseAdmissionError::InvalidTarget => {
+                Self::InvalidTarget
+            }
         }
     }
 }

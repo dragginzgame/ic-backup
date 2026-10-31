@@ -194,6 +194,14 @@ impl OperationPlanRecord {
     pub fn operations(&self) -> &[PlannedOperationRecord] {
         &self.operations
     }
+    // Exact singleton sequence admission only; callers retain payload and method checks.
+    pub(crate) fn singleton_operation(&self, sequence: u64) -> Option<&PlannedOperationRecord> {
+        match self.operations() {
+            [operation] if operation.operation_sequence() == sequence => Some(operation),
+            _ => None,
+        }
+    }
+
     /// Read original aggregate attempt ceilings.
     #[must_use]
     pub const fn budget(&self) -> &PlanBudgetRecord {

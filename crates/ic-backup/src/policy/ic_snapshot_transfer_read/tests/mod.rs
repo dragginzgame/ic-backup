@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
+use crate::test_support::response_fault::ResponseFault;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
@@ -176,63 +177,36 @@ fn actual_claims_attempt_and_bounded_wire_fail_without_settlement() {
     journal.reserve_mutation().unwrap();
     let before = journal.clone();
     let request = IcSnapshotTransferReadRequest::new(&plan, 7, &journal, payload).unwrap();
-    for change in 0..8 {
+    for change in ResponseFault::IDENTITY
+        .into_iter()
+        .chain([ResponseFault::InvalidWire, ResponseFault::OversizedMetadata])
+    {
         let mut input = fields(&request, metadata_wire());
-        match change {
-            0 => input.authority = hash("12"),
-            1 => input.mutation_attempt = 2,
-            2..=4 => {
-                let mut context = serde_json::to_value(&input.context).unwrap();
-                let (key, value) = match change {
-                    2 => ("network", hash("12").hash().to_owned()),
-                    3 => ("caller", "aaaaa-aa".into()),
-                    _ => ("release", hash("12").hash().to_owned()),
-                };
-                context[key] = serde_json::json!(value);
-                input.context = serde_json::from_value(context).unwrap();
-            }
-            5 => input.target = "aaaaa-aa".into(),
-            6 => input.reply = b"DIDL\0\0".to_vec(),
-            _ => input.reply = vec![0; MAX_IC_SNAPSHOT_METADATA_BYTES + 1],
-        }
-        // Later failures coexist so the original denial priority is observable.
-        if change == 0 {
-            input.mutation_attempt = 2;
-        }
-        if change < 2 {
-            let mut context = serde_json::to_value(&input.context).unwrap();
-            context["release"] = serde_json::json!("12".repeat(32));
-            input.context = serde_json::from_value(context).unwrap();
-        }
-        if change < 5 {
-            input.target = "aaaaa-aa".into();
-        }
-        if change < 6 {
-            input.reply = b"invalid wire".to_vec();
-        }
+        change.apply_with_later_failures(&mut input, hash("12"));
         let response = IcSnapshotTransferReadResponse::new(input).unwrap();
         let error = validate_response(&request, &journal, &response).unwrap_err();
         assert!(match change {
-            0 => matches!(
+            ResponseFault::Authority => matches!(
                 error,
                 IcSnapshotTransferReadAssociationError::Identity(
                     ResponseIdentityMismatch::Authority
                 )
             ),
-            1 => matches!(
+            ResponseFault::Attempt => matches!(
                 error,
                 IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Attempt)
             ),
-            2..=4 => matches!(
+            ResponseFault::Network | ResponseFault::Caller | ResponseFault::Release => matches!(
                 error,
                 IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Context)
             ),
-            5 => matches!(
+            ResponseFault::Target => matches!(
                 error,
                 IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Target)
             ),
-            6 => matches!(error, IcSnapshotTransferReadAssociationError::Metadata(_)),
-            _ => matches!(
+            ResponseFault::InvalidWire =>
+                matches!(error, IcSnapshotTransferReadAssociationError::Metadata(_)),
+            ResponseFault::OversizedMetadata => matches!(
                 error,
                 IcSnapshotTransferReadAssociationError::Metadata(
                     IcSnapshotMetadataError::ReplyTooLarge

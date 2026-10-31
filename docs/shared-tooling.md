@@ -8,6 +8,18 @@ contracts, qualification selection, ordered Testkit extension, release metadata
 adapter and exact recovery receipt checks. Owner CI and successful setup do not
 qualify Backup behavior or authorize a release.
 
+Shared 0.27.12 keeps reusable core upgrades separate from framework integration
+constraints. Backup has no Canic runtime or control-plane dependency. Its current
+Testkit qualification graph coexists with the selected production Platform, so
+this adoption needs no integration workspace split or public versioning change.
+Independent normal consumers and authenticated composition checks retain their
+separate proof responsibilities.
+
+Shared's publication adapter now accepts structured Cargo path and feature
+options. It remains opt-in; Backup retains its existing local publication and
+exact release-recovery adapters. Snapshot refresh alone activates no publication
+command or additional release effect.
+
 ## Reviewed sources
 
 [The snapshot manifest](../.shared-tooling.snapshot) binds the committed revision,

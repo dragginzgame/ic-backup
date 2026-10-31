@@ -1,100 +1,106 @@
 # Current handoff — 2026-10-31
 
-## Current dependency adoption
+## Current cleanup and pending adoption
 
-Baseline HEAD is `2c34f91ce7fbca0277f719f36fd84b37ace98562`
-(Release **0.52.1**). The pending batch adopts production Platform **0.12.0**
-alongside the earlier Host Artifacts/FS/Process, Testkit and release editor
-**0.72.1** adoption. Draft **0.52.2** notes remain a compatible patch: Backup
-exposes the unchanged native external IC types, while Platform's owned Principal
-is internal. Workspace/package versions remain **0.52.1**.
-Changes are unstaged/uncommitted. No release, publication, live operation,
-sibling mutation or artifact cleanup was performed.
+Baseline HEAD remains `d8c3c1669b127b60d0bda68c58a3b343f015855b`
+(Release **0.52.2**). All ten approved complexity reductions are implemented
+alongside the pending Platform **0.13.0** and Shared Tooling **0.27.12** adoption.
+Draft **0.52.3** notes include the complete batch; own workspace/package versions
+remain **0.52.2**. Changes are unstaged/uncommitted. No release, publication,
+live operation, sibling mutation or artifact cleanup was performed.
 
-Platform adoption adds only the **0.12.0** facade package and adjusts dependency
-edges. Testkit **0.72.1** still requires Platform **0.11.1** in the development
-graph; it has no Agent feature after the split. Independent normal consumers
-resolve only Platform **0.12.0**. No macro/runtime-guard package or executor/gzip
-feature is enabled by either normal consumer. See [the boundary](../ic-platform.md).
+The cleanup gives single submission and passive response admission private typed
+failure causes with exact existing public projections. A model predicate owns
+singleton sequence admission while each workflow retains its method/payload
+checks. Complete original journal-set admission is separated from progress
+projection, retaining count-before-hash and authority/coverage/error order.
 
-Existing Host/Testkit, Log **0.4.35**, WAT **1.263.0**, Wast **263.0.0** and
-wasm-encoder/parser **0.263.0** selections are preserved. Candid **0.10.39**,
-Agent **0.49.3**, external Principal **0.1.5**, native management DTO **0.11.0**,
-PocketIC **16.1.0** and Rust floor **1.91.0** remain unchanged. Shared **0.27.11**,
-revision `62edfbd43087a718bf0283e9040676a49211976d`, retains all **131 payloads**.
+The independent fixture parses commands once through Clap-backed named modes;
+known spellings, failure exit 1, native path bytes and original witness filenames
+remain. Typed parent configuration writers retain canonical JSON key ordering.
+Shared singleton construction preserves each caller's original context,
+inventory, selection and budgets. One configuration owner constructs transport
+with the original signer, trust and timeout. Fresh metadata evidence owns its
+request/raw bytes and supplies borrowing decode; every call still reads originals
+freshly. Named fence and response-fault cases retain the original combined-invalid
+claims, explicit cancellation points and independent error assertions.
 
-The incoming lock/manifest/diff and prior handoff are retained at
-`/tmp/backup-platform012-incoming.lock`, `-incoming.toml`, `-incoming.patch` and
-`-prior-status.md`. Exact adoption deltas, package identities and frozen hashes
-are in `-lock-review.json`, `-package-identities.json` and `-graph.sha256`.
+Public library signatures/errors, record/wire bytes, hash framing, original finite
+spending and recovery semantics remain. No product mode, receipt inference,
+retry, custody cache or default admission was introduced. Application admission,
+source stability and terminal/reference release retain their independent owners.
 
-## Provenance and compatibility
+## Dependency and source scope
 
-The published index selects **0.12.0**. Facade, macro and runtime-guard archives
-match registry checksums and source revision
-`7d9927f49320b06922fcd4dc745f8229f5a371fc`; only the facade enters Backup's graph.
-Proof and original indexes are `/tmp/backup-platform012-registry-proof.json`
-and `-index-*.jsonl`; verified archives/source remain under the same prefix.
+Clap **4.6.7** uses only `derive` and `std` with defaults disabled. It belongs to
+Agent development and the private independent journey executable, whose direct
+requirement is projected from the root catalog. Neither published library's
+normal graph contains Clap or simulator dependencies. Clap declares Rust 1.85;
+the library floor remains **1.91.0**.
 
-All **89 Rust files** in the facade archive are identical to **0.11.1**.
-The published manifest updates its own version, optional macro/runtime coupling
-and optional gzip's Host requirement from 0.71 to 0.72. Backup selects neither
-gzip nor runtime; public Candid/management/Agent suppliers and codec behavior
-remain. Platform's owned Principal has a new dependency identity internally;
-Backup's public boundaries retain external principal/DTO/SDK identities.
-Review: `-source-review.json` and `-manifests.diff`.
-No Backup Rust, record/wire format, spending or recovery changes were required.
+Only five parser packages are added: Clap/builder/derive **4.6.7**, clap_lex
+**1.1.1** and anstyle **1.0.14**. Every pre-existing package/version/source/checksum
+is preserved; only Agent's development edge changes. All five cached archives
+match their lockfile checksums. Original lock/manifest/diff and prior handoff are
+retained under `/tmp/backup-cleanup.KZGm6J/`: `incoming.lock`, `incoming.toml`,
+`incoming.patch` and `prior-status.md`. Exact graph review, archive proof and frozen
+inputs are `lock-review.json`, `parser-archives.json` and `inputs.sha256`.
 
-The earlier Tooling review remains in `/tmp/backup-adopt0721-*`: all five archives
-match registry checksums and their **293 Rust files** match 0.72.0. Its original
-incoming lock/diff and prior handoff remain retained. No sibling/path override
-supplies either adoption.
+Pending Shared revision `69a8b92a1a892b17d355ec853ca63faa9599a928` and all
+**132 payloads** are unchanged by cleanup. [The adoption review](../shared-tooling-review.json)
+and retained prior handoff preserve its earlier qualification scope. Platform
+**0.13.0**, Testkit/Host/editor **0.72.1**, Candid **0.10.39**, Agent **0.49.3**,
+external Principal **0.1.5**, native management DTO **0.11.0** and PocketIC
+**16.1.0** remain selected. Testkit keeps Platform **0.11.1** in development;
+normal consumers select only **0.13.0**. No sibling/path override supplies them.
 
-## Focused qualification
+## Fresh focused qualification
 
-Both independent consumers pass on actual Rust **1.91.0**, including public Host
-error probes and exact normal-graph admission. Core is Agent-free; both exclude
-Testkit/PocketIC/WAT and select only Platform **0.12.0** with the intended features.
-Evidence: `target/msrv-consumers.762XEr` and
-`/tmp/backup-platform012-consumer-features.json`.
+Core library/tests and Agent library/HTTP/simulator targets pass strict Clippy
+with warnings denied. Initial lint logs remain retained: the named-case wildcard,
+fixture import/constructor, item order and chronological function length were
+corrected without new lint suppressions. The initial formatting diagnostic remains
+at `/tmp/formatting.lqpGeT`; final formatting passes.
 
-Strict Clippy passes for both packages, all targets/features, with warnings denied.
-All **103 selected native cases** pass: **72 Core unit**, **11 public codec/
-identity/selection** and **four Agent unit plus 16 HTTP** cases. These include
-principal normalization, independent wire/hash goldens, codec/bounds rejection,
-empty upload/data behavior and original pending/cancellation accounting.
+All **111 selected native cases** pass: **82 Core unit**, **six public Core**,
+**four Agent unit**, **16 HTTP** and **three native consumer CLI/evidence** cases.
+They cover complete journal/causality admission, public progress/settlement,
+response error order and limits, singleton mismatch, pending/Applied refusal,
+receipt/checkpoint cancellation, named fault matrices, exact zero/one submission,
+native path bytes and independently rejected forged evidence.
 
-Both selected authenticated independent PocketIC journeys pass: cold capture,
-transfer, same-ID restore/start and effect-free terminal replay; process death
-after authenticated load retains the pending original without redispatch.
-Independent candidate graph/build evidence:
-`/tmp/ic-backup-agent-independent-build-3306690-0`.
-Original fixture roots: `/tmp/ic-backup-agent-pocketic-3306690-1` and `-3`.
+Both independent public consumers pass on actual Rust **1.91.0**, with exact
+normal-graph admission and public Host error probes. Evidence:
+`target/msrv-consumers.JSd65y` and `normal-graphs.json` in the cleanup evidence
+directory. Both exclude Clap/Testkit/PocketIC/WAT; Core excludes Agent.
 
-Locked fetch, offline metadata, selected Testkit/server/editor admission,
-formatting, dependency inheritance/boundaries, regular-file/license checks,
-Shared integrity, documentation links and diff checks pass. Logs use
-`/tmp/backup-platform012-*`: `-update.log`, `-fetch.log`, `-consumers.log`,
-`-clippy.log`, `-core-unit.log`, `-core-public.log`, `-agent-native.log`,
-`-agent-pocketic.log`, `-tools-check.log`, `-source-checks.log` and `-final-checks.log`.
-The unchanged Tooling routing/release-preparation evidence remains at
-`/tmp/backup-adopt0721-testkit-routing.log`, `-release-preparation.log` and
-`target/shared-release-tests.StpDk3`; these are prior executions, not new runs.
+All **nine selected real PocketIC cases** pass: seven independent consumer,
+application and operator journeys, actual full Agent transfer/same-ID restore,
+and wrong-root rejection. These exercise command modes, cold reconstruction,
+retention/partial-output failures, death after authenticated load, separately
+accounted recovery and effect-free replay. Independent build evidence:
+`/tmp/ic-backup-agent-independent-build-1940691-0`.
+Original roots and application/operator evidence:
+`/tmp/ic-backup-agent-pocketic-1940691-*` (including application roots `-1`/`-7`,
+cold/death `-9`/`-11` and operator `-13`/`-15`/`-17`).
 
-No full CI gate, full MSRV/macOS matrix, registry-only release acceptance,
-installed Canic migration or live application qualification was run.
+Logs in `/tmp/backup-cleanup.KZGm6J/` include `metadata-preparation.log`,
+`fetch.log`, `core-clippy.log`, `core-clippy-recheck.log`, `agent-clippy.log`,
+`agent-clippy-recheck.log`, `agent-clippy-final.log`, `agent-clippy-parser.log`,
+`core-unit.log`, `core-public.log`, `agent-native.log`, `consumer-native.log`,
+`consumers.log`, `agent-pocketic.log`, `source-checks.log`, `fmt*.log` and
+`final-checks.log`. Formatting, local links, dependency inheritance/boundaries,
+regular-file/licenses, Shared integrity and diff/frozen-input checks pass.
+No full CI gate, full MSRV/macOS matrix, producer-wide suite, registry-only
+release acceptance, installed Canic migration or live qualification was run.
 
-## Retained obligations and evidence
+## Retained obligations and history
 
 [Implementation contracts](../implementation-contracts.md) and the
 [operator map](../canic-adoption.md#reusable-operator-composition) remain canonical.
-Application fencing, external obligations, pending effects, original custody and
-guarded terminal release remain integration-owned.
-
-The [previous committed handoff](https://github.com/dragginzgame/ic-backup/blob/2c34f91ce7fbca0277f719f36fd84b37ace98562/docs/status/current.md)
-preserves cleanup and earlier qualification/custody history. Historical passes
-retain their original source/graph/host scope. Preserve all `/tmp/backup-*`,
-`/tmp/ic-backup-agent-independent-build-*`, `/tmp/ic-backup-agent-pocketic-*`,
-`/tmp/ic-backup-pocketic-*`, original Canic journals, `target/msrv-consumers.*`,
-`target/shared-release-tests.*`, validation failure logs and old/failed tool
-bundles. This summary authorizes no disposal.
+The [previous committed handoff](https://github.com/dragginzgame/ic-backup/blob/d8c3c1669b127b60d0bda68c58a3b343f015855b/docs/status/current.md)
+and `prior-status.md` above preserve earlier source/graph/host qualification.
+Preserve all `/tmp/backup-*`, `/tmp/ic-backup-agent-independent-build-*`,
+`/tmp/ic-backup-agent-pocketic-*`, `/tmp/ic-backup-pocketic-*`, original Canic
+journals, `target/msrv-consumers.*`, `target/shared-release-tests.*`, validation
+failure logs and old/failed tool bundles. This summary authorizes no disposal.

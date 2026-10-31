@@ -15,6 +15,7 @@ pub mod local_restore_source;
 pub mod membership;
 pub mod operation_plan;
 pub mod ready;
+pub mod response_fault;
 pub mod restore_safety;
 pub mod snapshot_read;
 

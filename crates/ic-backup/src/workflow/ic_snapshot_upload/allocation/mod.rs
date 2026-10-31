@@ -60,11 +60,11 @@ pub async fn allocate_snapshot<E: std::error::Error + 'static>(
     (IcMutationAcknowledgement, ExecutionStagePredecessorRecord),
     IcSnapshotAllocationExecutionError<E>,
 > {
-    let [operation] = stage.plan().operations() else {
-        return Err(IcSnapshotAllocationExecutionError::OriginalMismatch);
-    };
+    let operation = stage
+        .plan()
+        .singleton_operation(operation_sequence)
+        .ok_or(IcSnapshotAllocationExecutionError::OriginalMismatch)?;
     if !matches!(payload.kind(), IcSnapshotUploadKind::Metadata)
-        || operation.operation_sequence() != operation_sequence
         || operation.request() != payload.binding_digest().hash()
     {
         return Err(IcSnapshotAllocationExecutionError::OriginalMismatch);

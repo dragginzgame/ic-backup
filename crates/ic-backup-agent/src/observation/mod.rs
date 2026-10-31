@@ -106,8 +106,6 @@ where
             journal,
             |prepared| (self.retain)(&prepared.request, prepared),
             |_, _, _| Ok(()),
-            || IcObservationProviderError::Unsupported,
-            || IcObservationProviderError::Indeterminate,
         )
         .await?;
         let evidence = crate::reply_evidence::reply_evidence(

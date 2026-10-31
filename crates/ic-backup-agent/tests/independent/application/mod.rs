@@ -25,12 +25,11 @@ async fn exercise(mode: &str) {
     let mut fixture = Fixture::with_wasm(identity, include_str!("state.wat")).await;
     let root = fixture.root.join("application-consumer");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
-    let config = serde_json::json!({"target":fixture.target,"endpoint":fixture.endpoint,"key":fixture.key,"reply_limit":if mode=="application-small" {8} else {16},"context":{"network":ArtifactChecksumRecord::from_bytes(&fixture.key).hash(),"caller":fixture.caller().to_text(),"release":fixture.release.hash()}});
-    consumer::retain(
-        &root.join("config.json"),
-        &serde_json::to_vec(&config).unwrap(),
-    )
-    .unwrap();
+    let config = consumer::ApplicationConfig {
+        connection: connection_config(&fixture),
+        reply_limit: if mode == "application-small" { 8 } else { 16 },
+    };
+    write_config(&root, &config);
     // Independently account this fixture's fresh actual controller/release probe.
     let payload = support::payload(Method::CanisterStatus, &fixture.target, None);
     let (plan, layout, _) = fixture.original(&payload.digest());
@@ -48,7 +47,7 @@ async fn exercise(mode: &str) {
         .to_string(),
         fixture.release.hash()
     );
-    consumer::retain(&root.join("admission.json"), &serde_json::to_vec(&serde_json::json!({"context":config["context"],"target":fixture.target,"controllers":status.settings.controllers})).unwrap()).unwrap();
+    consumer::retain(&root.join("admission.json"), &serde_json::to_vec(&serde_json::json!({"context":config.connection.context,"target":fixture.target,"controllers":status.settings.controllers})).unwrap()).unwrap();
     assert_eq!(
         child(&fixture, &root, mode).await,
         if mode == "application-die" {

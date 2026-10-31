@@ -23,22 +23,25 @@ pub struct IcUpdateResponseInput {
     pub evidence: ArtifactChecksumRecord,
 }
 
+pub(crate) enum UpdateResponseAdmissionError {
+    InvalidAttempt,
+    ReplyTooLarge,
+    InvalidTarget,
+}
+
 impl IcUpdateResponseInput {
-    pub(crate) fn admit<E>(
+    pub(crate) fn admit(
         &mut self,
         max_reply_bytes: usize,
-        invalid_attempt: E,
-        reply_too_large: E,
-        invalid_target: E,
-    ) -> Result<(), E> {
+    ) -> Result<(), UpdateResponseAdmissionError> {
         if self.mutation_attempt == 0 || self.mutation_attempt > MAX_OPERATION_ATTEMPTS {
-            return Err(invalid_attempt);
+            return Err(UpdateResponseAdmissionError::InvalidAttempt);
         }
         if self.reply.len() > max_reply_bytes {
-            return Err(reply_too_large);
+            return Err(UpdateResponseAdmissionError::ReplyTooLarge);
         }
-        self.target =
-            crate::model::principal::canonical_text(&self.target).ok_or(invalid_target)?;
+        self.target = crate::model::principal::canonical_text(&self.target)
+            .ok_or(UpdateResponseAdmissionError::InvalidTarget)?;
         Ok(())
     }
 

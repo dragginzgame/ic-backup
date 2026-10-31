@@ -500,6 +500,12 @@ requirements projected from Core's production metadata. It compiles the checksum
 error conversion and publication-error payload through those consumer-selected
 identities, catching split Host versions without hard-coded fixture pins.
 
+The independent journey executable uses Clap for its private command input,
+with its requirement projected from Agent's development catalog. Its own normal
+dependencies include this parser; neither published library's production graph
+includes Clap. Fixture graph admission still preserves the selected package
+identities and excludes Testkit, PocketIC and WAT.
+
 This adoption inspected locked normal/build graphs for both libraries with default
 features across all three supported target triples. None contained the excluded
 packages. Cross-target Cargo trees are source/graph inspection, not native macOS

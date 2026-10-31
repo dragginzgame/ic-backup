@@ -11,15 +11,37 @@ use ic_backup::{
 use ic_backup_agent::{AgentFenceAcquisitionProvider, AgentTransport, PreparedUpdate};
 use std::{fs, time::Duration};
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum FenceFailure {
+    RefuseIngress,
+    Accepted,
+    Disconnect,
+    Cancel,
+}
+impl FenceFailure {
+    const ALL: [Self; 4] = [
+        Self::RefuseIngress,
+        Self::Accepted,
+        Self::Disconnect,
+        Self::Cancel,
+    ];
+}
+
 #[tokio::test]
 #[expect(
     clippy::too_many_lines,
     reason = "keep original custody and exact HTTP cancellation trace chronological"
 )]
 async fn original_fence_update_requires_retention_and_never_reissues_after_cancellation() {
-    for mode in 0..4 {
+    for mode in FenceFailure::ALL {
         let root = support::root("fence-http");
-        let mut server = Server::new(&root, "202 Accepted", vec![], mode == 2, mode == 3);
+        let mut server = Server::new(
+            &root,
+            "202 Accepted",
+            vec![],
+            mode == FenceFailure::Disconnect,
+            mode == FenceFailure::Cancel,
+        );
         let payload =
             FenceAcquisitionPayload::new(TARGET, "acquire_fixture", b"original opaque unit")
                 .unwrap();
@@ -47,7 +69,8 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
             |actual: &FenceAcquisitionRequest<'_>, prepared: &PreparedUpdate<'_>| {
                 assert_eq!(actual.obligation(), request.obligation());
                 assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
-                if mode == 0 || root.join("signed-ingress.cbor").exists() {
+                if mode == FenceFailure::RefuseIngress || root.join("signed-ingress.cbor").exists()
+                {
                     return Err(FenceAcquisitionProviderError::Unavailable);
                 }
                 assert!(server.requests.lock().unwrap().is_empty());
@@ -64,7 +87,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
             FenceAcquisitionProviderError::Unsupported
         );
         assert!(!root.join("signed-ingress.cbor").exists());
-        if mode == 3 {
+        if mode == FenceFailure::Cancel {
             let mut pending = Box::pin(provider.acquire_fence(&request, guard.record().unwrap()));
             let sent = async {
                 tokio::time::timeout(Duration::from_secs(2), async {
@@ -86,7 +109,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
                     .acquire_fence(&request, guard.record().unwrap())
                     .await
                     .unwrap_err(),
-                if mode == 0 {
+                if mode == FenceFailure::RefuseIngress {
                     FenceAcquisitionProviderError::Unavailable
                 } else {
                     FenceAcquisitionProviderError::Indeterminate
@@ -103,7 +126,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
         server.finish().unwrap();
         assert_eq!(
             server.requests.lock().unwrap().len(),
-            usize::from(mode != 0)
+            usize::from(mode != FenceFailure::RefuseIngress)
         );
         assert_eq!(fs::read(guard.path()).unwrap(), before);
         assert_eq!(
@@ -111,7 +134,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
             original_obligation
         );
         assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
-        if mode != 0 {
+        if mode != FenceFailure::RefuseIngress {
             let requests = server.requests.lock().unwrap();
             let bytes = requests[0].complete_bytes(&root);
             let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();

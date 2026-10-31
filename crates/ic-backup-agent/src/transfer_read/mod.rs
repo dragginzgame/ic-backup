@@ -57,8 +57,6 @@ where
             journal,
             |prepared| (self.retain)(request, prepared),
             |_, _, _| Ok(()),
-            || IcObservationProviderError::Unsupported,
-            || IcObservationProviderError::Indeterminate,
         )
         .await?;
         let evidence = crate::reply_evidence::reply_evidence(
@@ -77,5 +75,14 @@ where
             evidence,
         })
         .map_err(|_| IcObservationProviderError::Indeterminate)
+    }
+}
+
+impl From<crate::submission::SubmissionFailure> for IcObservationProviderError {
+    fn from(error: crate::submission::SubmissionFailure) -> Self {
+        match error {
+            crate::submission::SubmissionFailure::Unsupported => Self::Unsupported,
+            crate::submission::SubmissionFailure::Indeterminate => Self::Indeterminate,
+        }
     }
 }

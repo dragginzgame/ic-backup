@@ -617,6 +617,9 @@ contracts; ordinary development does not require rereading these mechanics.
   established groupings and coordinated versions under the
   [workspace versioning guidance](rust-workspaces.md#coordinated-versions-and-workspace-boundaries);
   prefer release batching and verified consumer adoption over another split.
+  Apply the [core and integration graph boundary](rust-workspaces.md#core-and-integration-graph-boundary)
+  when adapter or qualification dependencies block an otherwise valid core upgrade;
+  coordinated versions do not override that boundary.
   Apply the
   [Cargo dependency rules](cargo-dependencies.md): every direct dependency
   is declared in root `[workspace.dependencies]`, and every child manifest uses

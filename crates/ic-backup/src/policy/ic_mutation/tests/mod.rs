@@ -1,5 +1,6 @@
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
+use crate::test_support::response_fault::ResponseFault;
 use crate::{
     model::{
         ic_request::IcManagementMethodRecord as Method, ic_update_response::IcUpdateResponseInput,
@@ -66,51 +67,22 @@ fn different_authority_attempt_actual_context_and_target_reject() {
     let original = original(Method::StopCanister);
     let request =
         IcMutationRequest::new(&original.plan, 7, &original.journal, &original.payload).unwrap();
-    for change in 0..6 {
+    for change in ResponseFault::IDENTITY {
         let mut fields = input(&request);
-        match change {
-            0 => fields.authority = hash("12"),
-            1 => fields.mutation_attempt = 2,
-            2..=4 => {
-                let mut context = serde_json::to_value(&fields.context).unwrap();
-                let (field, value) = match change {
-                    2 => ("network", hash("12").hash().to_string()),
-                    3 => ("caller", "aaaaa-aa".into()),
-                    _ => ("release", hash("12").hash().to_string()),
-                };
-                context[field] = serde_json::json!(value);
-                fields.context = serde_json::from_value(context).unwrap();
-            }
-            _ => fields.target = "aaaaa-aa".into(),
-        }
-        // Later failures coexist so the original denial priority is observable.
-        if change == 0 {
-            fields.mutation_attempt = 2;
-        }
-        if change < 2 {
-            let mut context = serde_json::to_value(&fields.context).unwrap();
-            context["release"] = serde_json::json!("12".repeat(32));
-            fields.context = serde_json::from_value(context).unwrap();
-        }
-        if change < 5 {
-            fields.target = "aaaaa-aa".into();
-        }
-        if change < 6 {
-            fields.reply = b"invalid wire".to_vec();
-        }
+        change.apply_with_later_failures(&mut fields, hash("12"));
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error =
             validate_acknowledgement(&request, &original.journal, &acknowledgement).unwrap_err();
         assert!(match change {
-            0 => matches!(
+            ResponseFault::Authority => matches!(
                 error,
                 IcMutationAssociationError::Identity(ResponseIdentityMismatch::Authority)
             ),
-            1 => matches!(
+            ResponseFault::Attempt => matches!(
                 error,
                 IcMutationAssociationError::Identity(ResponseIdentityMismatch::Attempt)
             ),
-            2..=4 => matches!(
+            ResponseFault::Network | ResponseFault::Caller | ResponseFault::Release => matches!(
                 error,
                 IcMutationAssociationError::Identity(ResponseIdentityMismatch::Context)
             ),

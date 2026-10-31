@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.52.3] - Unreleased
+
+### 🧹 Cleanup
+
+- Centralize private transport and response-admission errors, singleton sequence
+  matching and complete journal-set admission. Preserve public errors, validation
+  precedence, original accounting and returned evidence.
+- Share independent consumer configuration, transport, singleton plans and fresh
+  metadata evidence. Keep original context, budgets, bytes and custody checks.
+
+### 🧪 Testing
+
+- Parse private consumer commands with test-only Clap and name remaining fence
+  and response-fault scenarios. Preserve command spellings, native path bytes,
+  failure exits, cancellation points and combined-invalid-input checks.
+
+### 🔧 Dependencies
+
+- Adopt IC Platform 0.13.0 with the existing native IC types and host feature
+  selection. Backup already uses Host directly and needs no migration for the
+  removed Platform gzip facade.
+- Adopt the reviewed Shared Tooling 0.27.12 snapshot, including integration-stack
+  ownership guidance and structured options for its opt-in publication adapter.
+  Keep Backup's existing publication and exact release-recovery adapters.
+
 ## [0.52.2] - 2026-10-31
 
 ### 🔧 Dependencies

@@ -30,8 +30,6 @@ pub(crate) async fn submit_acknowledged<'a>(
         journal,
         |prepared| retain(prepared),
         |_, _, _| Ok(()),
-        || IcMutationProviderError::Unsupported,
-        || IcMutationProviderError::Indeterminate,
     )
     .await?;
     let evidence = crate::reply_evidence::reply_evidence(
@@ -50,4 +48,13 @@ pub(crate) async fn submit_acknowledged<'a>(
         evidence,
     })
     .map_err(|_| IcMutationProviderError::Indeterminate)
+}
+
+impl From<crate::submission::SubmissionFailure> for IcMutationProviderError {
+    fn from(error: crate::submission::SubmissionFailure) -> Self {
+        match error {
+            crate::submission::SubmissionFailure::Unsupported => Self::Unsupported,
+            crate::submission::SubmissionFailure::Indeterminate => Self::Indeterminate,
+        }
+    }
 }

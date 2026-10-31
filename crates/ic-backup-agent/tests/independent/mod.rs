@@ -93,12 +93,38 @@ async fn grant(fixture: &mut Fixture, root: &Path, mode: &str) {
     )
     .to_string();
     assert_eq!(module_hash, fixture.release.hash());
-    let config: serde_json::Value =
-        serde_json::from_slice(&fs::read(root.join("config.json")).unwrap()).unwrap();
-    let raw = serde_json::to_vec(&serde_json::json!({"context":config["context"],"target":fixture.target,"module_hash":module_hash,"controllers":status.settings.controllers.iter().map(ic_platform::principal::ExternalPrincipal::to_text).collect::<Vec<_>>(),"status":status.status})).unwrap();
+    let config = consumer::Config::read(root).unwrap();
+    let raw = serde_json::to_vec(&serde_json::json!({"context":config.context,"target":fixture.target,"module_hash":module_hash,"controllers":status.settings.controllers.iter().map(ic_platform::principal::ExternalPrincipal::to_text).collect::<Vec<_>>(),"status":status.status})).unwrap();
     consumer::retain(&evidence.join("actual-status.json"), &raw).unwrap();
     consumer::retain(&root.join(format!("admission-{mode}.json")), &raw).unwrap();
     assert_eq!(fs::read(journal.path()).unwrap(), before);
+}
+
+fn connection_config(fixture: &Fixture) -> consumer::Config {
+    use ic_backup::model::operation_plan::{PlanContextRecord, PlanContextRequest};
+    consumer::Config {
+        context: PlanContextRecord::new(&PlanContextRequest {
+            network: ArtifactChecksumRecord::from_bytes(&fixture.key)
+                .hash()
+                .into(),
+            caller: fixture.caller().to_text(),
+            release: fixture.release.hash().into(),
+        })
+        .unwrap(),
+        target: fixture.target.clone(),
+        endpoint: fixture.endpoint.clone(),
+        key: fixture.key.clone(),
+    }
+}
+
+fn write_config(root: &Path, config: &impl serde::Serialize) {
+    // Retain the original JSON object's canonical key ordering and create-only custody.
+    let value = serde_json::to_value(config).unwrap();
+    consumer::retain(
+        &root.join("config.json"),
+        &serde_json::to_vec(&value).unwrap(),
+    )
+    .unwrap();
 }
 
 fn files(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
@@ -208,12 +234,8 @@ async fn exercise(lose_load: bool) {
     std::os::unix::fs::DirBuilderExt::mode(&mut fs::DirBuilder::new(), 0o700)
         .create(&root)
         .unwrap();
-    let config = serde_json::json!({"target":fixture.target,"endpoint":fixture.endpoint,"key":fixture.key,"context":{"network":ArtifactChecksumRecord::from_bytes(&fixture.key).hash(),"caller":fixture.caller().to_text(),"release":fixture.release.hash()}});
-    consumer::retain(
-        &root.join("config.json"),
-        &serde_json::to_vec(&config).unwrap(),
-    )
-    .unwrap();
+    let config = connection_config(&fixture);
+    write_config(&root, &config);
     grant(&mut fixture, &root, "capture").await;
     assert_eq!(
         child(&fixture, &root, "capture").await,

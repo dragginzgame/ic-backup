@@ -197,7 +197,11 @@ one only with a concrete reason why an expectation cannot work. Follow the
 Use root-owned workspace dependencies and versions, reviewed shared tooling,
 explicit setup and the product's declared compiler/host requirements. External
 IC dependencies go through `ic-platform`; npm SDK Core uses
-`@tokostudios/ic-platform`. Do not add Python tooling. Read the applicable
+`@tokostudios/ic-platform`. Keep reusable cores independently upgradable;
+adapters own their matching integration stacks and must not impose consumer
+framework dependencies on core development. Follow the
+[core and integration graph boundary](rules/rust-workspaces.md#core-and-integration-graph-boundary).
+Do not add Python tooling. Read the applicable
 [workspace/tooling contracts](rules/engineering-details.md#rust-workspaces-and-portable-tooling)
 for manifests, dependencies, hooks, installers or shared snapshots, and the
 [Rust hygiene guide](docs/principles/rust-code-hygiene.md) for Rust implementation.

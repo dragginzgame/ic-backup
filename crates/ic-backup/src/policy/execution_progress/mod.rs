@@ -119,31 +119,7 @@ pub(crate) fn progress_with_journals<'a>(
     ),
     ExecutionProgressError,
 > {
-    if originals.len() > MAX_EFFECT_OPERATIONS {
-        return Err(ExecutionProgressError::TooManyJournals);
-    }
-    let intent = plan.digest();
-    let mut journals = BTreeMap::new();
-    for journal in originals {
-        let sequence = journal.authority().binding().operation_sequence();
-        let operation = plan
-            .operation(sequence)
-            .map_err(|_| ExecutionProgressError::UnknownOperation(sequence))?;
-        if journals.contains_key(&sequence) {
-            return Err(ExecutionProgressError::DuplicateJournal(sequence));
-        }
-        if !plan.matches_authority(operation, &intent, journal.authority()) {
-            return Err(ExecutionProgressError::AuthorityMismatch(sequence));
-        }
-        journals.insert(sequence, journal);
-    }
-    for operation in plan.operations() {
-        if !journals.contains_key(&operation.operation_sequence()) {
-            return Err(ExecutionProgressError::MissingJournal(
-                operation.operation_sequence(),
-            ));
-        }
-    }
+    let (intent, journals) = admit_journals(plan, originals)?;
     let is_applied = |sequence: &u64| {
         journals
             .get(sequence)
@@ -197,6 +173,45 @@ pub(crate) fn progress_with_journals<'a>(
         journals,
     ))
 }
+// Admit complete original coverage before deriving any causal state or totals.
+fn admit_journals<'a>(
+    plan: &OperationPlanRecord,
+    originals: impl ExactSizeIterator<Item = &'a AttemptJournalRecord>,
+) -> Result<
+    (
+        ArtifactChecksumRecord,
+        BTreeMap<u64, &'a AttemptJournalRecord>,
+    ),
+    ExecutionProgressError,
+> {
+    if originals.len() > MAX_EFFECT_OPERATIONS {
+        return Err(ExecutionProgressError::TooManyJournals);
+    }
+    let intent = plan.digest();
+    let mut journals = BTreeMap::new();
+    for journal in originals {
+        let sequence = journal.authority().binding().operation_sequence();
+        let operation = plan
+            .operation(sequence)
+            .map_err(|_| ExecutionProgressError::UnknownOperation(sequence))?;
+        if journals.contains_key(&sequence) {
+            return Err(ExecutionProgressError::DuplicateJournal(sequence));
+        }
+        if !plan.matches_authority(operation, &intent, journal.authority()) {
+            return Err(ExecutionProgressError::AuthorityMismatch(sequence));
+        }
+        journals.insert(sequence, journal);
+    }
+    for operation in plan.operations() {
+        if !journals.contains_key(&operation.operation_sequence()) {
+            return Err(ExecutionProgressError::MissingJournal(
+                operation.operation_sequence(),
+            ));
+        }
+    }
+    Ok((intent, journals))
+}
+
 impl ExecutionAttemptTotalsView {
     fn add(&mut self, attempts: &AttemptJournalView) -> Result<(), ExecutionProgressError> {
         self.mutations_used = sum(self.mutations_used, attempts.mutations_used)?;

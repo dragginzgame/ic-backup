@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.27.11
+# version	0.27.12
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	62edfbd43087a718bf0283e9040676a49211976d
+revision	69a8b92a1a892b17d355ec853ca63faa9599a928
 # entrypoint	docs/verification-helpers.md
 # entrypoint	scripts/ci/check-documentation-links.pl
 # entrypoint	scripts/ci/test-documentation-links.pl
@@ -127,13 +127,13 @@ file	36f36552df36ea6e082f1fd1f14661d40b281ea01294ffda2eb6c6ec91bc6907	x	scripts/
 file	9495336bbafd7a82d7446246c85571e5ccb5f17674ad92c83f008275f11c1201	x	scripts/ci/verify-shared-tooling-snapshot.sh
 file	100ec624bbd1c8bcd6b3b73cfaa23742ad8bc05b920c0908ca0f93ad5defd392	x	scripts/ci/run-validation-targets.sh
 file	b6c3a6fdfcb0da52ac2cc5be22a60bb1869ac92e9f26c6946f7e0e29201e19d2	x	scripts/ci/test-validation-target-runner.sh
-file	c8fdb02f6838e6b40f555b91a03cdf5c707d909fe83d11861979124841cf2ba5	-	DRAGGINZGAME.md
+file	d060cded57ee9e04c77676502193f2d1eb36554dd06fc16e8d3504ba011f4cb0	-	DRAGGINZGAME.md
 file	f5b493200ef3aaa2f08b27b4a644345005d5e86431dc4cb33fd27844056f5ff0	-	rules/changelogs.md
 file	9567eeaba8dc34c56f5da8e32910b0db57aa43606a6e08109615d1476a356c94	-	docs/releases.md
 file	8e72d1bf484eee8c8ec079ab65be7c5718f46117952a41fe9cbcf6ad3abf4bd3	x	scripts/ci/run-release.sh
 file	918815a81861abd80684fea14f71cb5a298644317afc0f5860a3d1b6506a0a16	x	scripts/ci/next-release-version.sh
 file	1316c76e83c65a39d9cca45992433d71bcb9473a7a0af1da4cb09f8a7026f52f	-	scripts/ci/finalize-release-changelog.awk
-file	661dc6af2c80754005b6bbfbd463d408af2ea33c02ffa2710d6bc6a125f535df	-	rules/cargo-dependencies.md
+file	9daff77cdb7874103c4787e1bc40f8fefcfca5952e926831cc810709785bc1d8	-	rules/cargo-dependencies.md
 file	c957bb6465df829fa7aea4c8bdb9e7200bf5dd7f17776c0d57fcdf23eba634c3	-	rules/git-hooks.md
 file	f6d100137dcf1097c807286fc5e028e9a49e15725164488ccc903643ceee4f45	x	.githooks/pre-commit
 file	9976e6cd4e60bfa86298f4b4209f5ffde0651105feef208a9c5ea9c90a432f2d	x	scripts/dev/install-git-hooks.sh
@@ -143,7 +143,7 @@ file	1063002468575e2f821cfec71524bde06a64634bf30455d64d2d9fed872969d6	-	docs/tag
 file	40f31a19d6115411ebffe7c26e3ed30b8af7eead10dd4830de8d5a9312291222	x	scripts/ci/read-cargo-workspace-version.sh
 file	a52db278800a9f02d85a6b8a780a9b1eed860c49d5442cef9db1f7f9d7ddee0a	x	scripts/ci/check-format-tools.sh
 file	0783ea58a6cee35779890f67474820f3b4b740e6c15ec210bb2948616f695a7b	-	scripts/distribution/governance-files.txt
-file	3208b97cc151df9e098abfbf6b1f8d4cf63b51ee5dfa4d940377ccf2b7170498	-	rules/rust-workspaces.md
+file	223abf9eae555e1742ad4391f9afcf12be49bc1d83393362a816852a57aaca6d	-	rules/rust-workspaces.md
 file	1c1712e19d3c8328a4664776dc4faf6d4b081ee7e4010a57e46f0a93829f4c17	-	make/tools.mk
 file	d68abbb5f4a7d03e89b4e5969a545f541c9a122dd2bd6429fc4a99e046f7871a	x	scripts/dev/cloc.sh
 file	9e32385247296ce95d2b15b1290c64e6b6dff15716c1c139f21ab5e5128f4be3	x	scripts/ci/check-make-execution.sh
@@ -201,9 +201,9 @@ file	9aa52699f4f7f8069cddd6b6ec295afc7a781e48b09bf104d2fff8f262a4720d	-	scripts/
 file	393ec7669f6aeae293aaf0d1e8288a28d520aa687ea1e235ed1791ee0d294325	-	docs/ci-change-selection.md
 file	c8693a4bc058f31c1592c86e7037f0ed02a9719a8a0269038e0a45e16ca93c0b	-	scripts/ci/validation-input-checkpoint.pl
 file	ec0ee173807556f931a08a173fc4e38397f26bab00539b748b829cb24d310138	x	scripts/ci/prepare-script-fixture.sh
-file	0101c42aed2c8c3e12edf73b97956137bf222933d4e3e6c3578056432f00fc5e	-	rules/engineering-details.md
+file	7985ab33c2b9705563bf6754bbe2cf80f0373791a19908701dbdf0b0bacca1e4	-	rules/engineering-details.md
 file	e3aed908dd9b08bf93255328bb056bed57298dab39944e3726aad2726548e653	-	rules/rpc-budgets.md
-file	510115bd4aaa4a943c1aabc3885c4bb48b1b486036005d0c484a2608126b2880	-	docs/cargo-publication.md
+file	a1c267df38605b71e16bc6ae5f26f407d4d8b1d52d6812f9e89dc135217d2e36	-	docs/cargo-publication.md
 file	d7b179f9ceaec6e11c690c975b61f91bedc80526415f71571615064db14f0c9c	x	scripts/ci/check-release-tag.sh
 file	d2670d079e6fe54ccb72f0f6fab328723bf1baf7829b852ba8157cc9ddebd27b	x	scripts/ci/validate-release-inputs.pl
 file	c10514df9c63541c1e86633c6311d9448d06426cd33b93e4dd289e743fc2e4c6	-	scripts/ci/select-rust-formatting-sources.sh
@@ -211,7 +211,7 @@ file	172ab2415f4816bdad7955720ef45445b4bd81283c928d7ef2ee3de9064b69b5	x	scripts/
 file	d517344568e02a638cd19b99bfbcc63f000a0cf1df7b7713f901f52518b1e2ee	x	scripts/ci/formatting-evidence.sh
 file	b19096b9a5cbf7b27df3438bfde431c5053e9e6c64dda7dd35e9d24083349c16	-	docs/tool-catalog-bindings.md
 file	4594fcf9c2bd3d30302a750361394c2aa81dd6807f77a64c5e0be9142e83a72f	x	scripts/ci/run-rust-formatting.pl
-file	b564cb3459364ca7569d85630e53a649870ab6107148d2a9bf0a15bfc0cbc0c3	-	make/cargo-publication.mk
+file	27e4279cd48e0c40597aba3f25f4ec06faf69c77882968b21f28719790825258	-	make/cargo-publication.mk
 file	1b01f4b482fb85986d1ffab592626ccbfec187ac7a5133ab946b0acd51a18381	-	scripts/ci/check-release-delivery.sh
 file	eeeca9e6e7b92b888fd6547733d6136f0e7e9859d37c983f8048e60551a15c39	-	scripts/ci/StableVersion.pm
 file	e00937f22bd31231993ae9c1d7eda844227b39529466d017de44dbc1f0618026	-	scripts/ci/cargo-workspace-members.jq
@@ -224,6 +224,7 @@ file	2beef826c896ffa7661268cf4ba10679ecdfaa65decf49084f6221fc07a05e33	-	licenses
 file	16fc6813b2bb7f10c15c576e51053d68f1cf4f159402a2ba3c7c5f539654ddd3	-	licenses/prior-mit-notice.txt
 file	ffab807c6e7ecfa18e354e65201ee53cb40b8c376fcbad319bfc4a9e615dc46d	-	scripts/ci/shared-companions.sh
 file	ce27820fc6256fc417d3606dfcc8b850256c3f36a1a29132be587d49aceb82d4	-	scripts/ci/RustSource.pm
-file	4f1c2f7fe0b63fe075abf441629d874a505ab77db6a8807dbc62213c84eb4fc8	-	scripts/ci/cargo-publication-adapter.sh
+file	d7db019a2c4576e4af02b50009418ecf819f1091dc29b6f72dcc236ef34db097	-	scripts/ci/cargo-publication-adapter.sh
 file	ec46c51af7fc2b7ef2959343331e6aa9efb40904d55f5c5b5a43cb446736f9a8	-	scripts/ci/cargo-publication-selection.pl
-file	bb6b526aaa03153cc0ddc974a04fdab83af003ab7d34053c15807e822ef99d49	x	scripts/ci/run-cargo-publication.sh
+file	a38b6c7690bf00d9de14f2a76ec6f56a65c4694dc5d5d7d18533feac2d15780a	-	scripts/ci/cargo-publication-paths.sh
+file	ebb267fa5bf0b326b6b96ed6a4c362f5f3dbcfc5805d30c20e880288ec3001d0	x	scripts/ci/run-cargo-publication.sh

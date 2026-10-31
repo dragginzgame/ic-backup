@@ -106,12 +106,7 @@ impl IcMutationAcknowledgement {
     /// # Errors
     /// Rejects zero/excessive attempts, oversized raw replies and invalid principals.
     pub fn new(mut input: IcUpdateResponseInput) -> Result<Self, IcMutationAcknowledgementError> {
-        input.admit(
-            MAX_IC_MUTATION_REPLY_BYTES,
-            IcMutationAcknowledgementError::InvalidAttempt,
-            IcMutationAcknowledgementError::ReplyTooLarge,
-            IcMutationAcknowledgementError::InvalidTarget,
-        )?;
+        input.admit(MAX_IC_MUTATION_REPLY_BYTES)?;
         Ok(Self { input })
     }
     /// Read canonical passive association fields and exact raw reply, without mutation access.
@@ -175,6 +170,24 @@ impl From<crate::model::attempt_journal::MutationReservationError> for IcMutatio
             Reservation::AuthorityMismatch => Self::AuthorityMismatch,
             Reservation::MutationMismatch => Self::MutationMismatch,
             Reservation::ObservationPending => Self::ObservationPending,
+        }
+    }
+}
+
+impl From<crate::model::ic_update_response::UpdateResponseAdmissionError>
+    for IcMutationAcknowledgementError
+{
+    fn from(error: crate::model::ic_update_response::UpdateResponseAdmissionError) -> Self {
+        match error {
+            crate::model::ic_update_response::UpdateResponseAdmissionError::InvalidAttempt => {
+                Self::InvalidAttempt
+            }
+            crate::model::ic_update_response::UpdateResponseAdmissionError::ReplyTooLarge => {
+                Self::ReplyTooLarge
+            }
+            crate::model::ic_update_response::UpdateResponseAdmissionError::InvalidTarget => {
+                Self::InvalidTarget
+            }
         }
     }
 }

@@ -44,9 +44,8 @@ impl Driver {
     pub(super) fn acceptance(&self) -> io::Result<Digest> {
         let raw = read(&self.root.join("acceptance.json"))?;
         let record: AcceptanceRecord = serde_json::from_slice(&raw)?;
-        let request = self.metadata_request()?;
-        let metadata_raw = self.raw(Stage::Metadata)?;
-        let metadata = IcSnapshotMetadataReply::decode(&request, &metadata_raw).map_err(error)?;
+        let original = self.metadata_evidence()?;
+        let metadata = original.decode()?;
         if !record.restore.matches(&self.restore.digest())
             || !record.source_metadata.matches(&metadata.digest())
             || record.destination != self.destination()?
@@ -75,9 +74,8 @@ impl Driver {
         };
         let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let source_plan = self.source_plan(&source)?;
-        let request = self.metadata_request()?;
-        let metadata_raw = self.raw(Stage::Metadata)?;
-        let metadata = IcSnapshotMetadataReply::decode(&request, &metadata_raw).map_err(error)?;
+        let original = self.metadata_evidence()?;
+        let metadata = original.decode()?;
         let journal =
             DownloadJournalGuard::open(&source, source_plan.digest().hash()).map_err(error)?;
         journal
@@ -114,7 +112,7 @@ impl Driver {
             )
             .map_err(error)?
         } else {
-            IcRestoreSource::existing(&source, &source_plan, &request)
+            IcRestoreSource::existing(&source, &source_plan, &original.request)
         };
         drop(journal);
         let payload = self.payload(
@@ -155,7 +153,7 @@ impl Driver {
             },
         )
         .map_err(error)?;
-        let transport = self.transport(stage.plan());
+        let transport = self.config.transport(stage.plan());
         let root = stage.layout().map_err(error)?.root();
         retain(&root.join("intent.candid"), payload.arguments())?;
         let mut provider = ic_backup_agent::AgentUpdateProvider::new(
@@ -194,7 +192,7 @@ impl Driver {
                 .map_err(error)
             },
             async |request, acknowledgement| {
-                if kind == Stage::Load && self.mode == "lose-load" {
+                if kind == Stage::Load && self.mode == Mode::LoseLoad {
                     // Deliberately die after the real authenticated load and before
                     // qualifying any receipt. Retain oracle bytes separately; cold
                     // continuation must never use them to infer Applied or redispatch.
@@ -265,9 +263,8 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
         }
         read_complete_execution_workflow_locked(self.restore, self.journal, &workflow.digest())
             .map_err(error)?;
-        let request = self.driver.metadata_request()?;
-        let raw = self.driver.raw(Stage::Metadata)?;
-        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+        let original = self.driver.metadata_evidence()?;
+        let metadata = original.decode()?;
         let plan = self.driver.source_plan(self.source)?;
         let download =
             DownloadJournalGuard::open(self.source, plan.digest().hash()).map_err(error)?;

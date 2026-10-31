@@ -16,7 +16,7 @@ ic-backup = { version = "0.52.2", path = "crates/ic-backup" }
 ic-host-artifacts = { version = "0.72.1", default-features = false }
 ic-host-fs = { version = "0.72.1", default-features = false }
 ic-host-process = { version = "0.72.1", default-features = false }
-ic-platform = { version = "0.12.0", default-features = false, features = ["candid", "management-canister-types"] }
+ic-platform = { version = "0.13.0", default-features = false, features = ["candid", "management-canister-types"] }
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls"] }
 rustix = { version = "1.1.4", features = ["fs"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -26,6 +26,7 @@ thiserror = "2.0"
 tokio = { version = "1.50", features = ["rt-multi-thread", "macros"] }
 
 # Tests and tooling only
+clap = { version = "4.6.7", default-features = false, features = ["derive", "std"] }
 ic-testkit = "0.72.1"
 
 [workspace.lints.rust]

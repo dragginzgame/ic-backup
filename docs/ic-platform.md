@@ -21,7 +21,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.12; Testkit 0.72 retains
+not selected by Backup. Production selects Platform 0.13; Testkit 0.72 retains
 Platform 0.11 as a development dependency. Native external Principal, management
 DTO and PocketIC exports retain their upstream identities across both selections.
 No Platform-owned runtime handles cross this boundary.
@@ -37,16 +37,16 @@ upstream 0.11.0 identities. Platform's Wasm-only owned DTO changes do not turn
 these host libraries into canister libraries.
 
 Platform supplies prepared calls under `runtime`; Backup uses its existing host
-Agent transport and enables neither that runtime nor gzip. Platform 0.11 removes
+Agent transport with that runtime disabled. Platform 0.11 removes
 its optional Wire schemas; Wire owns that integration through `platform-types`.
 Backup needs neither those schemas nor Testkit's optional Wire call API, so no
 direct Wire dependency, new protocol or runtime is added.
 
-Platform 0.12 updates its optional gzip facade to Host 0.72. Backup does not
-select that feature; the consumed Rust implementation and external type suppliers
-are unchanged from 0.11.1. Platform's owned Principal has the new dependency
-identity internally, while Backup's public principal, DTO and SDK boundaries
-retain the qualified external types.
+Platform 0.13 removes its gzip facade; generic artifact codecs belong directly to
+Host Artifacts. Backup already consumes Host directly and needs no codec migration.
+The consumed native IC implementation and external type suppliers are unchanged.
+Platform's owned Principal has the new dependency identity internally, while
+Backup's public principal, DTO and SDK boundaries retain the qualified external types.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

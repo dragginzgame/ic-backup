@@ -1,9 +1,6 @@
 //! Normal-dependency opaque application ingress; fixture authority is supplied by the parent.
-use super::{
-    AttemptBudgetRecord, EffectGraphRecord, EffectNodeRecord, EffectNodeRequest, PlanBudgetRecord,
-    PlannedOperationRecord, PlannedOperationRequest,
-};
-use super::{config::Config, evidence::ObservedContext};
+use super::evidence::ObservedContext;
+use super::{ApplicationConfig, AttemptBudgetRecord, command::Mode};
 use super::{error, read, retain};
 use ic_backup::{
     model::{
@@ -25,21 +22,13 @@ use ic_backup::{
     },
 };
 use ic_backup_agent::{
-    AgentApplicationIngressProvider, AgentTransport,
-    ApplicationIngressProviderError as ProviderError, ApplicationIngressResponse, PreparedUpdate,
-    ReservedUpdate,
+    AgentApplicationIngressProvider, ApplicationIngressProviderError as ProviderError,
+    ApplicationIngressResponse, PreparedUpdate, ReservedUpdate,
 };
-use ic_platform::agent::{BasicIdentity, RequestId};
+use ic_platform::agent::RequestId;
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::{collections::BTreeMap, io, path::Path, sync::Arc, time::Duration};
-
-#[derive(Deserialize)]
-struct ApplicationConfig {
-    #[serde(flatten)]
-    connection: Config,
-    reply_limit: usize,
-}
+use std::{collections::BTreeMap, io, path::Path};
 
 #[derive(Deserialize)]
 struct ApplicationAdmission {
@@ -66,37 +55,13 @@ fn declaration(payload: &ApplicationIngressPayload) -> Value {
     json!({"receiver":payload.receiver(),"target":payload.target(),"mode":"update","method":payload.method(),"arguments":payload.arguments(),"reply_limit":payload.reply_limit()})
 }
 fn plan(config: &ApplicationConfig, payload: &ApplicationIngressPayload) -> OperationPlanRecord {
-    config.connection.plan(
-        EffectGraphRecord::new(vec![
-            EffectNodeRecord::new(EffectNodeRequest {
-                operation_sequence: 0,
-                depends_on: vec![],
-            })
-            .unwrap(),
-        ])
-        .unwrap(),
-        vec![
-            PlannedOperationRecord::new(PlannedOperationRequest {
-                operation_sequence: 0,
-                target: config.connection.target.clone(),
-                request: payload.digest().hash().into(),
-                budget: AttemptBudgetRecord::new(1, 1).unwrap(),
-            })
-            .unwrap(),
-        ],
-        PlanBudgetRecord::new(1, 1).unwrap(),
+    config.connection.singleton(
+        0,
+        &payload.digest(),
+        AttemptBudgetRecord::new(1, 1).unwrap(),
     )
 }
-fn transport(config: &ApplicationConfig, plan: &OperationPlanRecord) -> AgentTransport {
-    AgentTransport::new(
-        plan.context().clone(),
-        &config.connection.endpoint,
-        Arc::new(BasicIdentity::from_raw_key(&[7; 32])),
-        config.connection.key.clone(),
-        Duration::from_secs(30),
-    )
-    .unwrap()
-}
+
 fn lane(request: &ReservedUpdate<'_>) -> &'static str {
     match request {
         ReservedUpdate::ApplicationMutation(_) => "mutation",
@@ -125,12 +90,12 @@ fn ingress(
 }
 fn reply(
     root: &Path,
-    mode: &str,
+    mode: Mode,
     request: &ReservedUpdate<'_>,
     id: &RequestId,
     bytes: &[u8],
 ) -> Result<(), ProviderError> {
-    if mode == "application-refuse-reply" {
+    if mode == Mode::ApplicationRefuseReply {
         return Err(ProviderError::Unavailable);
     }
     retain(&root.join(format!("{}-reply.bin", lane(request))), bytes)
@@ -140,7 +105,7 @@ fn reply(
         id.to_string().as_bytes(),
     )
     .map_err(|_| ProviderError::Unavailable)?;
-    if mode == "application-die" {
+    if mode == Mode::ApplicationDie {
         std::process::exit(75);
     }
     Ok(())
@@ -159,7 +124,7 @@ struct Driver<'a> {
     config: &'a ApplicationConfig,
     plan: &'a OperationPlanRecord,
     payload: &'a ApplicationIngressPayload,
-    mode: &'a str,
+    mode: Mode,
     callbacks: usize,
 }
 impl ExecutionWorkflowStageDriver for Driver<'_> {
@@ -195,7 +160,7 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
             self.payload,
         )
         .map_err(error)?;
-        let transport = transport(self.config, self.plan);
+        let transport = self.config.connection.transport(self.plan);
         let root = stage.layout().map_err(error)?.root();
         let mut provider = AgentApplicationIngressProvider::new(
             &transport,
@@ -233,17 +198,14 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
     }
 }
 
-pub(super) async fn run(root: &Path, mode: &str) -> io::Result<()> {
+pub(super) async fn run(root: &Path, mode: Mode) -> io::Result<()> {
     let config: ApplicationConfig = serde_json::from_slice(&read(&root.join("config.json"))?)?;
     let payload = payload(&config, "apply");
     let plan = plan(&config, &payload);
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
     let layout = BackupLayoutGuard::acquire(root).map_err(error)?;
     let original = declaration(&payload);
-    if matches!(
-        mode,
-        "application-init" | "application-die" | "application-small" | "application-refuse-reply"
-    ) {
+    if mode.starts_application() {
         retain(
             &root.join("original-payload.json"),
             &serde_json::to_vec(&original)?,
@@ -255,7 +217,7 @@ pub(super) async fn run(root: &Path, mode: &str) -> io::Result<()> {
         }
     }
 
-    if mode == "application-observe" {
+    if mode == Mode::ApplicationObserve {
         return observe(&layout, &config, &plan, &workflow).await;
     }
     let mut driver = Driver {
@@ -266,15 +228,12 @@ pub(super) async fn run(root: &Path, mode: &str) -> io::Result<()> {
         mode,
         callbacks: 0,
     };
-    if matches!(
-        mode,
-        "application-init" | "application-die" | "application-small" | "application-refuse-reply"
-    ) {
+    if mode.starts_application() {
         run_new_execution_workflow(&layout, &workflow, &mut driver)
             .await
             .map_err(error)?;
         assert_eq!(driver.callbacks, 2);
-    } else if matches!(mode, "application-replay" | "application-resume") {
+    } else if matches!(mode, Mode::ApplicationReplay | Mode::ApplicationResume) {
         let binding: ExecutionStageBindingRecord =
             serde_json::from_slice(&read(&root.join("execution-stage-0/stage-binding.json"))?)?;
         let learned =
@@ -323,14 +282,14 @@ async fn observe(
     let request =
         ApplicationObservationRequest::new(plan, 0, journal.record().map_err(error)?, &payload)
             .map_err(error)?;
-    let transport = transport(config, plan);
+    let transport = config.connection.transport(plan);
     let mut provider = AgentApplicationIngressProvider::new(
         &transport,
         |request: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
             ingress(root, request, prepared)
         },
         |request: &ReservedUpdate<'_>, id: &RequestId, bytes: &[u8]| {
-            reply(root, "application-observe", request, id, bytes)
+            reply(root, Mode::ApplicationObserve, request, id, bytes)
         },
     );
     let response = provider

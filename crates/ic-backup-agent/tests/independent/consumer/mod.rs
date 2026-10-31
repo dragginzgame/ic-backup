@@ -4,10 +4,14 @@ mod application;
 mod restore;
 mod transfer;
 
+mod command;
 mod config;
 mod evidence;
+mod metadata;
 mod stage;
-use config::Config;
+use clap::Parser;
+use command::{Arguments, Mode};
+pub(super) use config::{ApplicationConfig, Config};
 use stage::Stage;
 
 use ic_backup::{
@@ -22,11 +26,10 @@ use ic_backup::{
             IcManagementMethodRecord as Method, IcManagementRequest, IcManagementRequestRecord,
         },
         ic_snapshot_download::IcSnapshotDownloadPlan,
-        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+        ic_snapshot_metadata::IcSnapshotMetadataRequest,
         ic_snapshot_reply::IcSnapshotReply,
         operation_plan::{
-            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlannedOperationRecord,
-            PlannedOperationRequest,
+            OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest,
         },
     },
     ops::persistence::{
@@ -41,15 +44,13 @@ use ic_backup::{
         ic_snapshot_capture::capture_snapshot,
     },
 };
-use ic_backup_agent::{AgentTransport, PreparedUpdate, ReservedUpdate};
+use ic_backup_agent::{PreparedUpdate, ReservedUpdate};
 use std::{
     collections::BTreeMap,
     fs,
     io::{self, Read, Write},
     os::unix::fs::{DirBuilderExt, OpenOptionsExt},
     path::{Path, PathBuf},
-    sync::Arc,
-    time::Duration,
 };
 
 const TOKEN: &str = "independent-original";
@@ -132,7 +133,7 @@ struct Driver {
     config: Config,
     capture: ExecutionWorkflowRecord,
     restore: ExecutionWorkflowRecord,
-    mode: String,
+    mode: Mode,
 }
 
 impl Driver {
@@ -161,47 +162,19 @@ impl Driver {
         IcSnapshotMetadataRequest::new(&self.config.target, reply.snapshots()[0].id())
             .map_err(error)
     }
-    fn transport(&self, plan: &OperationPlanRecord) -> AgentTransport {
-        AgentTransport::new(
-            plan.context().clone(),
-            &self.config.endpoint,
-            Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(&[7; 32])),
-            self.config.key.clone(),
-            Duration::from_secs(30),
-        )
-        .unwrap()
-    }
     fn singleton(
         &self,
         workflow: &ExecutionWorkflowRecord,
         sequence: u64,
         request: &Digest,
     ) -> OperationPlanRecord {
-        let original = workflow.allocation();
-        OperationPlanRecord::new(OperationPlanRequest {
-            context: original.context().clone(),
-            inventory: original.inventory().clone(),
-            selected_targets: original.selected_targets().to_vec(),
-            graph: EffectGraphRecord::new(vec![
-                EffectNodeRecord::new(EffectNodeRequest {
-                    operation_sequence: sequence,
-                    depends_on: vec![],
-                })
-                .unwrap(),
-            ])
-            .unwrap(),
-            operations: vec![
-                PlannedOperationRecord::new(PlannedOperationRequest {
-                    operation_sequence: sequence,
-                    target: self.config.target.clone(),
-                    request: request.hash().into(),
-                    budget: AttemptBudgetRecord::new(1, 0).unwrap(),
-                })
-                .unwrap(),
-            ],
-            budget: PlanBudgetRecord::new(1, 0).unwrap(),
-        })
-        .unwrap()
+        config::singleton(
+            workflow.allocation(),
+            sequence,
+            &self.config.target,
+            request,
+            AttemptBudgetRecord::new(1, 0).unwrap(),
+        )
     }
 }
 
@@ -230,9 +203,8 @@ impl ExecutionWorkflowStageDriver for Driver {
                 &self.metadata_request()?.digest(),
             ),
             Stage::Download => {
-                let request = self.metadata_request()?;
-                let raw = self.raw(Stage::Metadata)?;
-                let metadata = IcSnapshotMetadataReply::decode(&request, &raw).map_err(error)?;
+                let original = self.metadata_evidence()?;
+                let metadata = original.decode()?;
                 IcSnapshotDownloadPlan::new(workflow, Stage::Download.sequence(), &metadata, CHUNK)
                     .map_err(error)?
                     .plan()
@@ -263,12 +235,12 @@ impl ExecutionWorkflowStageDriver for Driver {
         let learned = match Stage::from_sequence(sequence)? {
             Stage::Capture => {
                 let payload = self.payload(Method::TakeCanisterSnapshot, None);
-                let transport = self.transport(stage.plan());
+                let transport = self.config.transport(stage.plan());
                 let root = stage.layout().map_err(error)?.root();
                 let mut provider = ic_backup_agent::AgentUpdateProvider::new(
                     &transport,
                     |request: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
-                        if self.mode == "capture-fail-ingress" {
+                        if self.mode == Mode::CaptureFailIngress {
                             return Err(
                                 ic_backup::ports::ic_mutation::IcMutationProviderError::Unavailable,
                             );
@@ -283,7 +255,7 @@ impl ExecutionWorkflowStageDriver for Driver {
                 })
                 .await
                 .map_err(error)?;
-                if self.mode == "capture-fail-retention" {
+                if self.mode == Mode::CaptureFailRetention {
                     return Err(io::Error::other("fixture durable reply retention refused"));
                 }
                 let receipt = receipt(
@@ -390,33 +362,10 @@ pub(super) async fn entry() {
 }
 
 async fn run() -> io::Result<()> {
-    let args: Vec<_> = std::env::args_os().collect();
-    if args.len() != 3 {
-        return Err(io::ErrorKind::InvalidInput.into());
-    }
-    let root = PathBuf::from(&args[2]);
-    let mode = args[1]
-        .to_str()
-        .ok_or(io::ErrorKind::InvalidInput)?
-        .to_owned();
-    if mode.starts_with("application-") {
-        return application::run(&root, &mode).await;
-    }
-    if !matches!(
-        mode.as_str(),
-        "capture"
-            | "capture-continue"
-            | "restore"
-            | "start"
-            | "replay"
-            | "lose-load"
-            | "inspect-capture"
-            | "inspect-restore"
-            | "capture-fail-ingress"
-            | "capture-fail-retention"
-            | "capture-fail-partial"
-    ) {
-        return Err(io::ErrorKind::InvalidInput.into());
+    let Arguments { mode, root } =
+        Arguments::try_parse().map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;
+    if mode.is_application() {
+        return application::run(&root, mode).await;
     }
     let config = Config::read(&root)?;
     let capture = workflow(&config, None);
@@ -426,9 +375,9 @@ async fn run() -> io::Result<()> {
         config,
         capture: capture.clone(),
         restore: restore.clone(),
-        mode: mode.clone(),
+        mode,
     };
-    if mode == "capture" || mode.starts_with("capture-fail-") {
+    if mode.creates_workflows() {
         for (name, original) in [("capture", &capture), ("restore", &restore)] {
             fs::DirBuilder::new().mode(0o700).create(root.join(name))?;
             create_execution_workflow(
@@ -438,23 +387,23 @@ async fn run() -> io::Result<()> {
             .map_err(error)?;
         }
     }
-    let is_capture = mode.starts_with("capture") || mode == "inspect-capture";
+    let is_capture = mode.is_capture();
     let name = if is_capture { "capture" } else { "restore" };
     let original = if is_capture { &capture } else { &restore };
     let layout = BackupLayoutGuard::acquire(&root.join(name)).map_err(error)?;
     let progress = read_execution_workflow_progress(&layout, &original.digest()).map_err(error)?;
     assert_eq!(progress.workflow, original.digest());
     assert_eq!(progress.stages.len(), original.stages().len());
-    if mode.starts_with("inspect-") {
+    if mode.is_inspection() {
         serde_json::to_writer(io::stdout(), &progress)?;
         println!();
         return Ok(());
     }
-    if mode == "replay" {
+    if mode == Mode::Replay {
         return driver.terminal(&layout);
     }
     let evidence = retained(&layout, original)?;
-    let limit = std::num::NonZeroUsize::new(if matches!(mode.as_str(), "restore" | "lose-load") {
+    let limit = std::num::NonZeroUsize::new(if matches!(mode, Mode::Restore | Mode::LoseLoad) {
         3
     } else {
         usize::MAX
@@ -464,9 +413,11 @@ async fn run() -> io::Result<()> {
         advance_execution_workflow(&layout, &original.digest(), &evidence, limit, &mut driver)
             .await;
     match result {
-        Ok(ExecutionWorkflowAdvance::Complete(_)) if mode == "start" => driver.terminal(&layout),
+        Ok(ExecutionWorkflowAdvance::Complete(_)) if mode == Mode::Start => {
+            driver.terminal(&layout)
+        }
         Ok(ExecutionWorkflowAdvance::Complete(_)) => Ok(()),
-        Ok(ExecutionWorkflowAdvance::Paused) if mode == "restore" => Ok(()),
+        Ok(ExecutionWorkflowAdvance::Paused) if mode == Mode::Restore => Ok(()),
         Ok(ExecutionWorkflowAdvance::Paused) => Err(io::ErrorKind::InvalidData.into()),
         Err(e) => Err(error(e)),
     }

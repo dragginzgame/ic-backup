@@ -1,5 +1,6 @@
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
+use crate::test_support::response_fault::ResponseFault;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -117,56 +118,29 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
         snapshot_id: DESTINATION_ID.to_vec(),
     })
     .unwrap();
-    for change in 0..7 {
+    for change in ResponseFault::IDENTITY
+        .into_iter()
+        .chain([ResponseFault::InvalidWire])
+    {
         let before = journal.clone();
         let mut fields = input(&request, reply.clone());
-        match change {
-            0 => fields.authority = ArtifactChecksumRecord::from_bytes(b"wrong"),
-            1 => fields.mutation_attempt = 2,
-            2..=4 => {
-                let mut context = serde_json::to_value(&fields.context).unwrap();
-                let (field, value) = match change {
-                    2 => ("network", "12".repeat(32)),
-                    3 => ("caller", "aaaaa-aa".into()),
-                    _ => ("release", "12".repeat(32)),
-                };
-                context[field] = serde_json::json!(value);
-                fields.context = serde_json::from_value(context).unwrap();
-            }
-            5 => fields.target = "aaaaa-aa".into(),
-            _ => fields.reply = b"DIDL\0\0".to_vec(),
-        }
-        // Later failures coexist so the original denial priority is observable.
-        if change == 0 {
-            fields.mutation_attempt = 2;
-        }
-        if change < 2 {
-            let mut context = serde_json::to_value(&fields.context).unwrap();
-            context["release"] = serde_json::json!("12".repeat(32));
-            fields.context = serde_json::from_value(context).unwrap();
-        }
-        if change < 5 {
-            fields.target = "aaaaa-aa".into();
-        }
-        if change < 6 {
-            fields.reply = b"invalid wire".to_vec();
-        }
+        change.apply_with_later_failures(&mut fields, ArtifactChecksumRecord::from_bytes(b"wrong"));
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error = validate_acknowledgement(&request, &journal, &acknowledgement).unwrap_err();
         assert!(match change {
-            0 => matches!(
+            ResponseFault::Authority => matches!(
                 error,
                 IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Authority)
             ),
-            1 => matches!(
+            ResponseFault::Attempt => matches!(
                 error,
                 IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Attempt)
             ),
-            2..=4 => matches!(
+            ResponseFault::Network | ResponseFault::Caller | ResponseFault::Release => matches!(
                 error,
                 IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Context)
             ),
-            5 => matches!(
+            ResponseFault::Target => matches!(
                 error,
                 IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Target)
             ),

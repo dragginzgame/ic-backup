@@ -63,12 +63,8 @@ async fn failure(mode: &str) {
     std::os::unix::fs::DirBuilderExt::mode(&mut fs::DirBuilder::new(), 0o700)
         .create(&root)
         .unwrap();
-    let config = serde_json::json!({"target":fixture.target,"endpoint":fixture.endpoint,"key":fixture.key,"context":{"network":ArtifactChecksumRecord::from_bytes(&fixture.key).hash(),"caller":fixture.caller().to_text(),"release":fixture.release.hash()}});
-    consumer::retain(
-        &root.join("config.json"),
-        &serde_json::to_vec(&config).unwrap(),
-    )
-    .unwrap();
+    let config = connection_config(&fixture);
+    write_config(&root, &config);
     grant(&mut fixture, &root, mode).await;
     assert_eq!(snapshot_count(&mut fixture).await, 0);
     assert_eq!(child(&fixture, &root, mode).await, 1, "{}", root.display());

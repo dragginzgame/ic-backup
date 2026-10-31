@@ -74,7 +74,8 @@ apps/
 
 ## Coordinated versions and workspace boundaries
 
-Keep established workspace groupings and their coordinated versions by default.
+Keep established workspace groupings and their coordinated versions by default,
+subject to the [core and integration graph boundary](#core-and-integration-graph-boundary).
 One release identity reduces internal version combinations and lets related
 packages qualify changes together. It does not merge package responsibilities,
 enable optional features or update downstream lockfiles automatically.
@@ -82,9 +83,10 @@ enable optional features or update downstream lockfiles automatically.
 - Judge a proposed merge or split by actual shared types, dependency direction,
   consumer upgrades and release obligations. Similar names or occasional
   unchanged members in a release are insufficient reasons to reorganize.
-- Before proposing independent versions or another workspace migration, show a
-  recurring maintenance problem, why a local fix or release batching is
-  insufficient, and the total migration and qualification cost for consumers.
+- For independent public versions or workspace migrations beyond the scoped
+  integration isolation below, show a recurring maintenance problem, why a local
+  fix or release batching is insufficient, and the total migration and
+  qualification cost for consumers.
   Preserve approved independent graphs and require explicit maintainer agreement
   for a boundary or versioning-policy change.
 - Prefer batching related, already-planned breaking changes into one coordinated
@@ -96,6 +98,51 @@ enable optional features or update downstream lockfiles automatically.
   adoption, a common dependency or a common owner does not require fleet-wide
   version synchronization. Verify adoption through the consumer's
   [selected dependency graphs](../docs/cargo-graph-checks.md#coordinated-release-adoption).
+
+## Core and integration graph boundary
+
+Reusable engines own their core contracts; adapters and applications own the
+composition of those contracts with a framework or deployment stack. An adapter
+may require matching Platform, Wire, Memory, runtime and framework identities.
+Those requirements belong to that integration, not automatically to every core
+library it consumes. Preserve dependencies required by the core's actual public
+types, behavior and retained-data contracts.
+
+- Keep consumer-framework dependencies out of reusable core libraries and their
+  ordinary tests. Put framework-specific mounting, lifecycle, deployment and
+  composed endpoint qualification at the adapter/application owner or an
+  explicitly scoped integration harness. A `dev-dependency`, CLI, example or
+  unpublished member can create the same maintenance constraint as a runtime
+  dependency; inspect actual callers rather than dependency-role comments alone.
+- Preserve real core regression coverage. Replacing a framework-hosted test means
+  retaining its engine invariant in owner-local tests and its composition proof
+  at the integration boundary; moving a test is not permission to drop that proof.
+- Before declaring a core upgrade blocked, name the package, target/features,
+  conflicting identities and introducing paths. Distinguish a core contract
+  change from an adapter's compatibility constraint. Do not require unrelated
+  consumers or every workspace to adopt one fleet-wide dependency generation.
+- Prefer deleting an unused edge or moving a composition test to its existing
+  adapter owner. If a maintained adapter, tool or qualification stack still
+  blocks an otherwise valid core upgrade, isolate its resolving workspace and
+  lockfile. Cargo resolves workspace members together, including optional and
+  development dependencies; `default-members`, `-p`, feature gates and comments
+  alone do not establish independent lockfile resolution. See
+  [Cargo's resolver contract](https://doc.rust-lang.org/cargo/reference/resolver.html#features).
+- This rule permits a separate integration workspace for that demonstrated
+  constraint. Record its root, package scope, reason, lockfile and focused
+  qualification commands in the local overlay. Keep existing package identities,
+  approved physical layouts and coordinated public versions; unrelated workspace
+  migrations or independent public versioning still require maintainer agreement.
+- An integration may retain an older qualified matching stack while the core
+  advances. Its evidence qualifies only its selected source/dependency identities.
+  A path dependency on current core source must be qualified again when those
+  inputs change; an old integration pass cannot qualify the new core. Keep core
+  and integration checks explicit, with required integration acceptance attached
+  to the affected adapter/product change rather than every unrelated core edit.
+- Preserve actual runtime singleton, exposed-type, wire/storage and lifecycle
+  obligations within each composed graph. Isolation does not authorize bypassing
+  a guard, claiming incompatible types interoperate, retaining compatibility
+  shims, publishing unqualified combinations or skipping release-owned gates.
 
 ## Workspace member roles
 
@@ -127,8 +174,10 @@ layout.
 ## Independent workspaces and exceptions
 
 The default is one workspace and one selected lockfile. A separate maintained
-workspace requires a maintainer-approved exception in the local `AGENTS.md`,
-naming its root, package scope, reason, lockfile and validation coverage. Preserve
+workspace requires either the documented integration isolation allowed by the
+[core boundary rule](#core-and-integration-graph-boundary) or a maintainer-approved
+exception in the local `AGENTS.md`, naming its root, package scope, reason,
+lockfile and validation coverage. Preserve
 existing approved dependency-graph boundaries; layout standardisation alone
 does not authorize merging their graphs or upgrading their dependencies.
 
@@ -153,15 +202,20 @@ on 2026-10-07, following reversal of the crates-only moves. IcyDB may keep:
 
 This is an approved physical-layout exception. It requires no relocation into
 `crates/` or `apps/` as part of shared-tooling adoption or routine maintenance.
-Keep the virtual root, one selected workspace graph and lockfile, root-owned
-versions/dependencies, package identities and complete member coverage. These
-requirements apply across all four trees; directory names do not waive them.
+Keep the virtual core root, its selected graph and lockfile, root-owned
+versions/dependencies, package identities and complete member coverage. The
+[core boundary rule](#core-and-integration-graph-boundary) permits documented
+integration isolation when a consumer stack blocks core adoption; this does not
+require flattening the four approved trees or redesigning the public packages.
+Each maintained workspace retains its own catalog, lockfile and member coverage;
+directory names do not waive those requirements.
 
 Record the approval's reference during normal governance adoption. That
 documentation step does not make permission to retain the layout conditional on
-another approval or a package move. Any proposed IcyDB layout redesign must be
-clearly labelled optional feedback, explain a concrete problem, benefit and
-migration cost, and receive separate explicit maintainer approval before edits.
+another approval or a package move. Physical-layout redesign beyond the documented
+integration isolation above must be clearly labelled optional feedback, explain
+a concrete problem, benefit and migration cost, and receive separate explicit
+maintainer approval before edits.
 
 ## Adoption and verification
 

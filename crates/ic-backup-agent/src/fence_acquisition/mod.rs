@@ -62,8 +62,6 @@ where
             journal,
             |prepared| (self.retain_ingress)(request, prepared),
             |_, request_id, reply| (self.retain_reply)(request, request_id, reply),
-            || FenceAcquisitionProviderError::Unsupported,
-            || FenceAcquisitionProviderError::Indeterminate,
         )
         .await?;
         let evidence = crate::reply_evidence::reply_evidence(
@@ -79,5 +77,14 @@ where
             evidence,
         )
         .map_err(|_| FenceAcquisitionProviderError::Indeterminate)
+    }
+}
+
+impl From<crate::submission::SubmissionFailure> for FenceAcquisitionProviderError {
+    fn from(error: crate::submission::SubmissionFailure) -> Self {
+        match error {
+            crate::submission::SubmissionFailure::Unsupported => Self::Unsupported,
+            crate::submission::SubmissionFailure::Indeterminate => Self::Indeterminate,
+        }
     }
 }
