@@ -45,10 +45,11 @@ impl<'a> FenceReconciliationIntent<'a> {
         challenge: ArtifactChecksumRecord,
     ) -> Result<Self, FenceReconciliationRequestError> {
         obligation.validate_plan(plan)?;
-        let authority = plan.attempt_authority(obligation.acquisition_operation())?;
-        if journal.authority() != &authority {
-            return Err(FenceReconciliationRequestError::AuthorityMismatch);
-        }
+        let authority = plan.attempt_authority_for_journal(
+            obligation.acquisition_operation(),
+            journal,
+            FenceReconciliationRequestError::AuthorityMismatch,
+        )?;
         let mutation_attempt = journal
             .pending_mutation()
             .ok_or(FenceReconciliationRequestError::NoPendingMutation)?;

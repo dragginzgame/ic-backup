@@ -435,10 +435,21 @@ fn malformed_and_wrong_target_acknowledgements_retain_original_bytes_without_rec
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
+enum Drift {
+    Admission,
+    StageAfterReply,
+    LayoutAfterReply,
+}
+
 #[test]
 fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retains_acknowledgement()
 {
-    for boundary in 0..3 {
+    for boundary in [
+        Drift::Admission,
+        Drift::StageAfterReply,
+        Drift::LayoutAfterReply,
+    ] {
         let payload = payload(IcManagementMethodRecord::TakeCanisterSnapshot);
         let (root, layout, binding, _) = prepare(&payload);
         let stage =
@@ -448,9 +459,9 @@ fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retain
         let raw = reply(payload.method());
         let mut provider = Provider::new(Ok(raw.clone()));
         match boundary {
-            1 => provider.change_stage = Some(path.clone()),
-            2 => provider.replace_layout = Some(stage_root.clone()),
-            _ => {}
+            Drift::StageAfterReply => provider.change_stage = Some(path.clone()),
+            Drift::LayoutAfterReply => provider.replace_layout = Some(stage_root.clone()),
+            Drift::Admission => {}
         }
         let error = ready(capture_snapshot(
             &stage,
@@ -458,7 +469,7 @@ fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retain
             &payload,
             &mut provider,
             async |_| {
-                if boundary == 0 {
+                if boundary == Drift::Admission {
                     fs::write(&path, b"{}").unwrap();
                 }
                 Ok::<(), Infallible>(())
@@ -466,19 +477,23 @@ fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retain
         ))
         .unwrap_err();
         match error {
-            IcSnapshotCaptureExecutionError::Stage(_) if boundary == 0 => {}
+            IcSnapshotCaptureExecutionError::Stage(_) if boundary == Drift::Admission => {}
             IcSnapshotCaptureExecutionError::AfterReply {
                 source: IcSnapshotCaptureReplyError::Stage(_),
                 acknowledgement,
-            } if boundary == 1 => assert_eq!(acknowledgement.input().reply, raw),
+            } if boundary == Drift::StageAfterReply => {
+                assert_eq!(acknowledgement.input().reply, raw);
+            }
             IcSnapshotCaptureExecutionError::AfterReply {
                 source: IcSnapshotCaptureReplyError::Journal(_),
                 acknowledgement,
-            } if boundary == 2 => assert_eq!(acknowledgement.input().reply, raw),
+            } if boundary == Drift::LayoutAfterReply => {
+                assert_eq!(acknowledgement.input().reply, raw);
+            }
             other => panic!("unexpected boundary failure: {other:?}"),
         }
-        assert_eq!(provider.calls, usize::from(boundary != 0));
-        let retained = if boundary == 2 {
+        assert_eq!(provider.calls, usize::from(boundary != Drift::Admission));
+        let retained = if boundary == Drift::LayoutAfterReply {
             stage_root.with_extension("retained-original")
         } else {
             stage_root

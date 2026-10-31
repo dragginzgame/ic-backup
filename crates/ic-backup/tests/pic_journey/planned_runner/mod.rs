@@ -5,6 +5,7 @@ use round_trip::RestoreProgress;
 pub(super) use round_trip::change_live_state;
 pub(crate) use round_trip::run_round_trip;
 
+use super::evidence::{MetadataEvidence, retain_bytes};
 use super::stage::Stage;
 use super::{
     Fault,
@@ -31,7 +32,7 @@ use ic_backup::{
         },
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_download::IcSnapshotDownloadPlan,
-        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+        ic_snapshot_metadata::IcSnapshotMetadataRequest,
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
         operation_plan::OperationPlanRecord,
     },
@@ -51,13 +52,8 @@ use ic_backup::{
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 use std::{
-    collections::BTreeMap,
-    convert::Infallible,
-    fs,
-    future::Future,
-    io::{self, Write},
-    os::unix::fs::DirBuilderExt,
-    path::Path,
+    collections::BTreeMap, convert::Infallible, fs, future::Future, io,
+    os::unix::fs::DirBuilderExt, path::Path,
 };
 
 pub(crate) fn run(lose_reply: bool) {
@@ -89,7 +85,7 @@ pub(crate) fn run(lose_reply: bool) {
         },
         data_failure: ReadFailure::None,
         snapshot: None,
-        raw_metadata: None,
+        metadata: None,
         stages: Vec::new(),
         stop_before: None,
         restore: None,
@@ -135,7 +131,7 @@ struct CompleteDriver {
     capture_failure: CaptureFailure,
     data_failure: ReadFailure,
     snapshot: Option<IcSnapshotInfo>,
-    raw_metadata: Option<Vec<u8>>,
+    metadata: Option<MetadataEvidence>,
     stages: Vec<u64>,
     stop_before: Option<u64>,
     restore: Option<RestoreProgress>,
@@ -232,7 +228,10 @@ impl CompleteDriver {
             },
         ))
         .map_err(|error| io::Error::other(error.to_string()))?;
-        self.raw_metadata = Some(response.input().reply.clone());
+        self.metadata = Some(MetadataEvidence {
+            request,
+            raw: response.input().reply.clone(),
+        });
         Ok(checkpoint.learned_evidence().clone())
     }
 
@@ -242,10 +241,9 @@ impl CompleteDriver {
     )]
     fn data(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
         let snapshot = self.snapshot.as_ref().unwrap();
-        let request =
-            IcSnapshotMetadataRequest::new(&self.backend.target.to_text(), snapshot.id()).unwrap();
-        let raw = self.raw_metadata.as_ref().unwrap();
-        let metadata = IcSnapshotMetadataReply::decode(&request, raw).unwrap();
+        let evidence = self.metadata.as_ref().unwrap();
+        let raw = &evidence.raw;
+        let metadata = evidence.decode().unwrap();
         let download =
             IcSnapshotDownloadPlan::new(&self.workflow, 9, &metadata, 32 * 1024).unwrap();
         let plan = download.plan().unwrap();
@@ -386,13 +384,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                 self.backend.plan(&request.digest(), 7)
             }
             Stage::Download => {
-                let snapshot = self.snapshot.as_ref().unwrap();
-                let request =
-                    IcSnapshotMetadataRequest::new(&self.backend.target.to_text(), snapshot.id())
-                        .unwrap();
-                let metadata =
-                    IcSnapshotMetadataReply::decode(&request, self.raw_metadata.as_ref().unwrap())
-                        .unwrap();
+                let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
                 IcSnapshotDownloadPlan::new(workflow, 9, &metadata, 32 * 1024)
                     .unwrap()
                     .plan()
@@ -446,13 +438,6 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     }
 }
 
-fn retain_bytes(layout: &BackupLayoutGuard, name: &str, bytes: &[u8]) {
-    let file = fs::File::create(layout.root().join(name)).unwrap();
-    (&file).write_all(bytes).unwrap();
-    file.sync_all().unwrap();
-    fs::File::open(layout.root()).unwrap().sync_all().unwrap();
-}
-
 pub(crate) fn run_complete(data_failure: ReadFailure) {
     complete_capture(data_failure);
 }
@@ -464,7 +449,7 @@ pub(super) fn capture_source() -> super::CapturedSource {
         backend: driver.backend,
         plan: source.source_plan,
         snapshot: driver.snapshot.unwrap(),
-        raw_metadata: driver.raw_metadata.unwrap(),
+        raw_metadata: driver.metadata.unwrap().raw,
         source: source.source,
     }
 }
@@ -493,7 +478,7 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
         capture_failure: CaptureFailure::None,
         data_failure,
         snapshot: None,
-        raw_metadata: None,
+        metadata: None,
         stages: Vec::new(),
         stop_before: None,
         restore: None,
@@ -538,7 +523,7 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
 struct RetainedCapture {
     stages: BTreeMap<u64, RetainedStageEvidence>,
     snapshot: IcSnapshotInfo,
-    raw_metadata: Vec<u8>,
+    metadata: MetadataEvidence,
 }
 
 fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
@@ -558,7 +543,11 @@ fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
         metadata_request.arguments()
     );
     let raw_metadata = fs::read(root.join("execution-stage-7/metadata.candid")).unwrap();
-    let metadata_reply = IcSnapshotMetadataReply::decode(&metadata_request, &raw_metadata).unwrap();
+    let metadata = MetadataEvidence {
+        request: metadata_request,
+        raw: raw_metadata,
+    };
+    let metadata_reply = metadata.decode().unwrap();
     let capture_journal: AttemptJournalRecord = read_json(
         &root.join("execution-stage-0/attempt-0.json"),
         MAX_ATTEMPT_JOURNAL_BYTES,
@@ -576,7 +565,7 @@ fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
         MAX_ATTEMPT_JOURNAL_BYTES,
     )
     .unwrap();
-    let metadata_wire_checksum = ArtifactChecksumRecord::from_bytes(&raw_metadata);
+    let metadata_wire_checksum = ArtifactChecksumRecord::from_bytes(&metadata.raw);
     assert_eq!(
         metadata_journal.applied_receipt(),
         Some(AppliedReceiptEvidence::Mutation {
@@ -612,7 +601,7 @@ fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
     RetainedCapture {
         stages: retained,
         snapshot,
-        raw_metadata,
+        metadata,
     }
 }
 
@@ -689,7 +678,7 @@ pub(crate) fn run_retained() {
         capture_failure: CaptureFailure::None,
         data_failure: ReadFailure::None,
         snapshot: None,
-        raw_metadata: None,
+        metadata: None,
         stages: Vec::new(),
         stop_before: Some(9),
         restore: None,
@@ -704,7 +693,7 @@ pub(crate) fn run_retained() {
     let RetainedCapture {
         stages: retained,
         snapshot,
-        raw_metadata,
+        metadata: evidence,
     } = read_retained_prefix(&root, &driver.backend);
     let capture_edge = ArtifactChecksumRecord::from_bytes(snapshot.id());
     refuse_changed_retained_capture_edges(
@@ -726,7 +715,7 @@ pub(crate) fn run_retained() {
         capture_failure: CaptureFailure::None,
         data_failure: ReadFailure::None,
         snapshot: Some(snapshot),
-        raw_metadata: Some(raw_metadata),
+        metadata: Some(evidence),
         stages: Vec::new(),
         stop_before: None,
         restore: None,

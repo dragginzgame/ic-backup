@@ -7,13 +7,17 @@ use ic_backup::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        attempt_journal::{AttemptBudgetRecord, MutationOutcomeRecord, MutationReceiptRequest},
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_upload::{
             IcSnapshotUploadAttempt, IcSnapshotUploadKind, IcSnapshotUploadReply,
             IcSnapshotUploadReplyKind, IcSnapshotUploadRequest,
+        },
+        operation_plan::{
+            OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest,
         },
     },
     ops::persistence::{
@@ -26,8 +30,7 @@ use ic_backup::{
         IcSnapshotUploadExecutionError, allocate_snapshot, upload_snapshot, upload_snapshot_data,
     },
 };
-use serde_json::json;
-use std::{collections::BTreeSet, convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt};
+use std::{collections::BTreeSet, convert::Infallible, fs, os::unix::fs::DirBuilderExt};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum Failure {
@@ -119,10 +122,11 @@ fn retain_reply(
     sequence: u64,
     acknowledgement: &IcMutationAcknowledgement,
 ) {
-    let file = fs::File::create(layout.root().join(format!("reply-{sequence}.candid"))).unwrap();
-    (&file).write_all(&acknowledgement.input().reply).unwrap();
-    file.sync_all().unwrap();
-    fs::File::open(layout.root()).unwrap().sync_all().unwrap();
+    super::evidence::retain_bytes(
+        layout,
+        &format!("reply-{sequence}.candid"),
+        &acknowledgement.input().reply,
+    );
 }
 fn allocation(
     backend: &Backend,
@@ -130,19 +134,33 @@ fn allocation(
     data_count: usize,
 ) -> ExecutionWorkflowRecord {
     let count = u32::try_from(data_count).unwrap();
-    let mut plan = serde_json::to_value(backend.plan(&metadata.binding_digest(), 0)).unwrap();
-    plan["graph"]["nodes"] = json!([
-        {"operation_sequence":0,"depends_on":[]}, {"operation_sequence":7,"depends_on":[0]}
-    ]);
-    let mut data = plan["operations"][0].clone();
-    data["operation_sequence"] = json!(7);
-    data["request"] =
-        json!(ArtifactChecksumRecord::from_bytes(b"original full data allocation").hash());
-    data["budget"] = json!({"mutations":count,"observations":0});
-    plan["operations"][0]["budget"] = json!({"mutations":1,"observations":0});
-    plan["operations"].as_array_mut().unwrap().push(data);
-    plan["budget"] = json!({"mutations":count+1,"observations":0});
-    ExecutionWorkflowRecord::new(serde_json::from_value(plan).unwrap())
+    let mut plan = backend.plan_request(&metadata.binding_digest(), 0, 0);
+    plan.graph = EffectGraphRecord::new(vec![
+        EffectNodeRecord::new(EffectNodeRequest {
+            operation_sequence: 0,
+            depends_on: vec![],
+        })
+        .unwrap(),
+        EffectNodeRecord::new(EffectNodeRequest {
+            operation_sequence: 7,
+            depends_on: vec![0],
+        })
+        .unwrap(),
+    ])
+    .unwrap();
+    plan.operations.push(
+        PlannedOperationRecord::new(PlannedOperationRequest {
+            operation_sequence: 7,
+            target: backend.target.to_text(),
+            request: ArtifactChecksumRecord::from_bytes(b"original full data allocation")
+                .hash()
+                .into(),
+            budget: AttemptBudgetRecord::new(count, 0).unwrap(),
+        })
+        .unwrap(),
+    );
+    plan.budget = PlanBudgetRecord::new(count + 1, 0).unwrap();
+    ExecutionWorkflowRecord::new(OperationPlanRecord::new(plan).unwrap())
 }
 fn assert_failed(
     stage: ExecutionStageGuard<'_>,
@@ -247,11 +265,7 @@ pub(crate) fn run(failure: Failure) {
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, &workflow).unwrap();
-    let mut metadata_plan =
-        serde_json::to_value(backend.plan(&upload.binding_digest(), 0)).unwrap();
-    metadata_plan["operations"][0]["budget"]["observations"] = json!(0);
-    metadata_plan["budget"]["observations"] = json!(0);
-    let metadata_plan = serde_json::from_value(metadata_plan).unwrap();
+    let metadata_plan = backend.plan_with_observations(&upload.binding_digest(), 0, 0);
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &metadata_plan, vec![]).unwrap();
     let stage = ExecutionStageGuard::prepare(&layout, binding, metadata_plan).unwrap();
     stage

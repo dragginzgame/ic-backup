@@ -105,10 +105,11 @@ pub fn original_authority(
     payload: &FenceAcquisitionPayload,
 ) -> Result<AttemptAuthorityRecord, FenceAcquisitionError> {
     obligation.validate_plan(plan)?;
-    let authority = plan.attempt_authority(obligation.acquisition_operation())?;
-    if journal.authority() != &authority {
-        return Err(FenceAcquisitionError::AuthorityMismatch);
-    }
+    let authority = plan.attempt_authority_for_journal(
+        obligation.acquisition_operation(),
+        journal,
+        FenceAcquisitionError::AuthorityMismatch,
+    )?;
     if payload.target() != authority.binding().target() {
         return Err(FenceAcquisitionError::TargetMismatch);
     }

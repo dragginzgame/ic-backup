@@ -77,10 +77,11 @@ pub(crate) fn original_authority(
     journal: &AttemptJournalRecord,
     payload: &IcSnapshotUploadRequest<'_>,
 ) -> Result<AttemptAuthorityRecord, IcSnapshotUploadAttemptError> {
-    let authority = plan.attempt_authority(operation_sequence)?;
-    if journal.authority() != &authority {
-        return Err(IcSnapshotUploadAttemptError::AuthorityMismatch);
-    }
+    let authority = plan.attempt_authority_for_journal(
+        operation_sequence,
+        journal,
+        IcSnapshotUploadAttemptError::AuthorityMismatch,
+    )?;
     if payload.target() != authority.binding().target()
         || payload.binding_digest().hash() != authority.binding().request()
     {

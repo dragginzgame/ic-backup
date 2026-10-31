@@ -89,18 +89,6 @@ fn receipt(
         &response.input().evidence,
     )
 }
-fn pending(stage: &ExecutionStageGuard<'_>) {
-    let progress =
-        read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-    assert_eq!(progress.attempts.mutations_used, 1);
-    assert_eq!(progress.applied_operations, 0);
-    let guard = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &stage.plan().attempt_authority(42).unwrap(),
-    )
-    .unwrap();
-    assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
-}
 
 #[test]
 fn cancelled_qualification_retains_reply_and_original_pending_spending() {
@@ -136,7 +124,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
     let path = stage.layout().unwrap().root().join("attempt-42.json");
     let before = fs::read(&path).unwrap();
     drop(future);
-    pending(&stage);
+    crate::test_support::execution_workflow::assert_pending(&stage, 42);
     assert_eq!(provider.calls, 1);
     assert_eq!(
         fs::read(&retained).unwrap(),
@@ -241,7 +229,7 @@ fn lost_and_malformed_metadata_stop_pending_without_checkpoint_or_data_stage() {
             ))
             .is_err()
         );
-        pending(&stage);
+        crate::test_support::execution_workflow::assert_pending(&stage, 42);
         assert_eq!(provider.calls, 1);
         assert!(!layout.root().join("execution-stage-7").exists());
         assert!(
@@ -276,7 +264,7 @@ fn qualification_rejection_retains_returned_bytes_and_pending_original() {
         panic!("qualification must reject")
     };
     assert_eq!(response.input().reply, expected);
-    pending(&stage);
+    crate::test_support::execution_workflow::assert_pending(&stage, 42);
 }
 
 #[test]
@@ -311,7 +299,7 @@ fn non_applied_wrong_attempt_and_wrong_request_receipts_cannot_checkpoint() {
                 ..
             })
         ));
-        pending(&stage);
+        crate::test_support::execution_workflow::assert_pending(&stage, 42);
     }
 }
 
@@ -502,7 +490,7 @@ fn fresh_admission_and_invalid_receipt_evidence_keep_original_pending() {
             ));
             assert_eq!(provider.calls, 1);
         }
-        pending(&stage);
+        crate::test_support::execution_workflow::assert_pending(&stage, 42);
     }
 }
 

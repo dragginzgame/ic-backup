@@ -152,6 +152,15 @@ impl Backend {
         sequence: u64,
         observations: u32,
     ) -> OperationPlanRecord {
+        OperationPlanRecord::new(self.plan_request(digest, sequence, observations)).unwrap()
+    }
+
+    pub fn plan_request(
+        &self,
+        digest: &ArtifactChecksumRecord,
+        sequence: u64,
+        observations: u32,
+    ) -> OperationPlanRequest {
         let network = ArtifactChecksumRecord::from_bytes(
             format!(
                 "explicit PocketIC instance {} at {}",
@@ -160,7 +169,7 @@ impl Backend {
             )
             .as_bytes(),
         );
-        OperationPlanRecord::new(OperationPlanRequest {
+        OperationPlanRequest {
             context: PlanContextRecord::new(&PlanContextRequest {
                 network: network.hash().into(),
                 caller: ExternalPrincipal::anonymous().to_text(),
@@ -196,8 +205,7 @@ impl Backend {
                 .unwrap(),
             ],
             budget: PlanBudgetRecord::new(1, observations).unwrap(),
-        })
-        .unwrap()
+        }
     }
 
     pub fn layout(&self, index: u64) -> BackupLayoutGuard {

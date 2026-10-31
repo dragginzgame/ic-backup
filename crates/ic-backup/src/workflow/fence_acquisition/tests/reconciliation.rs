@@ -1,6 +1,6 @@
 //! Reuse original capture/restore fixtures to qualify one observation without settlement.
 
-use super::{Fixture, ready};
+use super::{AfterReplyFault, Fixture, OriginalFault, ready};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -201,10 +201,15 @@ fn both_purposes_match_passive_claims_and_preserve_failures_without_settlement_o
 
 #[test]
 fn changed_payload_missing_originals_and_no_mutation_refuse_before_observation_spending() {
-    for boundary in 0..4 {
+    for boundary in [
+        OriginalFault::ChangedPayload,
+        OriginalFault::MissingObligation,
+        OriginalFault::MissingJournal,
+        OriginalFault::NoPendingMutation,
+    ] {
         let fixture = Fixture::new(false, false);
         let stage = fixture.stage();
-        if boundary != 3 {
+        if boundary != OriginalFault::NoPendingMutation {
             pending(&fixture, &stage, true);
         }
         let root = stage.layout().unwrap().root();
@@ -215,8 +220,9 @@ fn changed_payload_missing_originals_and_no_mutation_refuse_before_observation_s
             fixture.payload.arguments(),
         )
         .unwrap();
-        if boundary == 1 || boundary == 2 {
-            let name = if boundary == 1 {
+        if boundary == OriginalFault::MissingObligation || boundary == OriginalFault::MissingJournal
+        {
+            let name = if boundary == OriginalFault::MissingObligation {
                 "fence-obligation.json"
             } else {
                 "attempt-42.json"
@@ -229,7 +235,7 @@ fn changed_payload_missing_originals_and_no_mutation_refuse_before_observation_s
                 &stage,
                 fixture.requirement(),
                 &fixture.obligation,
-                if boundary == 0 {
+                if boundary == OriginalFault::ChangedPayload {
                     &changed
                 } else {
                     &fixture.payload
@@ -244,7 +250,7 @@ fn changed_payload_missing_originals_and_no_mutation_refuse_before_observation_s
         );
         assert_eq!(provider.calls, 0);
         assert_eq!(
-            fs::read(root.join(if boundary == 2 {
+            fs::read(root.join(if boundary == OriginalFault::MissingJournal {
                 "retained-attempt-42.json"
             } else {
                 "attempt-42.json"
@@ -394,18 +400,24 @@ fn cancellation_during_admission_or_observation_holds_exclusion_and_retains_orig
 
 #[test]
 fn after_reply_association_stage_and_obligation_errors_keep_returned_evidence() {
-    for boundary in 0..3 {
+    for boundary in [
+        AfterReplyFault::Association,
+        AfterReplyFault::Stage,
+        AfterReplyFault::Obligation,
+    ] {
         let fixture = Fixture::new(false, false);
         let stage = fixture.stage();
         pending(&fixture, &stage, true);
         let root = stage.layout().unwrap().root();
         let mut provider = Provider::new(None);
-        provider.mismatch = boundary == 0;
-        if boundary != 0 {
+        provider.mismatch = boundary == AfterReplyFault::Association;
+        if boundary != AfterReplyFault::Association {
             provider.change = Some(root.join(match boundary {
-                1 => "stage-binding.json",
-                2 => "fence-obligation.json",
-                _ => "attempt-42.json",
+                AfterReplyFault::Stage => "stage-binding.json",
+                AfterReplyFault::Obligation => "fence-obligation.json",
+                AfterReplyFault::Association => {
+                    unreachable!("association does not replace evidence")
+                }
             }));
         }
         let error = ready(observe_fence_acquisition(
@@ -423,17 +435,17 @@ fn after_reply_association_stage_and_obligation_errors_keep_returned_evidence() 
                 source: FenceReconciliationReplyError::Association(_),
                 observation,
                 ..
-            } if boundary == 0 => observation,
+            } if boundary == AfterReplyFault::Association => observation,
             FenceReconciliationExecutionError::AfterReply {
                 source: FenceReconciliationReplyError::Stage(_),
                 observation,
                 ..
-            } if boundary == 1 => observation,
+            } if boundary == AfterReplyFault::Stage => observation,
             FenceReconciliationExecutionError::AfterReply {
                 source: FenceReconciliationReplyError::Obligation(_),
                 observation,
                 ..
-            } if boundary == 2 => observation,
+            } if boundary == AfterReplyFault::Obligation => observation,
             other => panic!("unexpected post-reply failure: {other:?}"),
         };
         assert_eq!(

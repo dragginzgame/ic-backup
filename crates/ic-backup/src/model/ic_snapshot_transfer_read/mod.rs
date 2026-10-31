@@ -99,10 +99,11 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         journal: &AttemptJournalRecord,
         payload: IcSnapshotTransferReadPayload<'request, 'metadata>,
     ) -> Result<Self, IcSnapshotTransferReadError> {
-        let authority = plan.attempt_authority(operation_sequence)?;
-        if journal.authority() != &authority {
-            return Err(IcSnapshotTransferReadError::AuthorityMismatch);
-        }
+        let authority = plan.attempt_authority_for_journal(
+            operation_sequence,
+            journal,
+            IcSnapshotTransferReadError::AuthorityMismatch,
+        )?;
         payload.validate_binding(&authority)?;
         let reservation = MutationReservation::new(authority, journal)?;
         Ok(Self {

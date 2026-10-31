@@ -109,10 +109,7 @@ fn receipt(
     )
 }
 fn pending(stage: &ExecutionStageGuard<'_>) {
-    let progress =
-        read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-    assert_eq!(progress.attempts.mutations_used, 1);
-    assert_eq!(progress.applied_operations, 0);
+    crate::test_support::execution_workflow::assert_pending(stage, 7);
     assert!(
         stage
             .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
@@ -332,19 +329,30 @@ fn data_sequence_and_multi_operation_stages_refuse_before_spending_or_provider()
     });
 }
 
+#[derive(Debug, Eq, PartialEq)]
+enum AllocationFailure {
+    LostReply,
+    MalformedReply,
+    Unqualified,
+}
+
 #[test]
 fn lost_malformed_or_unqualified_allocation_cannot_checkpoint_or_reissue() {
     with_metadata(|payload| {
-        for failure in 0..3 {
+        for failure in [
+            AllocationFailure::LostReply,
+            AllocationFailure::MalformedReply,
+            AllocationFailure::Unqualified,
+        ] {
             let (layout, binding) = prepare(payload);
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
             let mut provider = Provider::new();
-            if failure == 0 {
+            if failure == AllocationFailure::LostReply {
                 provider.reply = Err(IcMutationProviderError::Indeterminate);
             }
-            if failure == 1 {
+            if failure == AllocationFailure::MalformedReply {
                 provider.reply = Ok(vec![]);
             }
             let result = ready(allocate_snapshot(
@@ -354,11 +362,15 @@ fn lost_malformed_or_unqualified_allocation_cannot_checkpoint_or_reissue() {
                 &mut provider,
                 async |_| Ok::<_, io::Error>(()),
                 async |_, _| {
-                    assert_eq!(failure, 2, "unadmitted replies never reach qualification");
+                    assert_eq!(
+                        failure,
+                        AllocationFailure::Unqualified,
+                        "unadmitted replies never reach qualification"
+                    );
                     Err(io::Error::other("no authentic durable originals"))
                 },
             ));
-            if failure == 2 {
+            if failure == AllocationFailure::Unqualified {
                 let Err(IcSnapshotAllocationExecutionError::AfterReply {
                     source: IcSnapshotAllocationSettlementError::Qualification(_),
                     acknowledgement,

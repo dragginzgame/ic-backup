@@ -10,11 +10,12 @@ use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_mutation::{IcMutationAcknowledgement, IcMutationRequest},
         ic_request::{IcManagementMethodRecord as Method, IcManagementRequestRecord},
         ic_snapshot_metadata::IcSnapshotMetadataReply,
-        operation_plan::OperationPlanRecord,
+        operation_plan::{OperationPlanRecord, PlanBudgetRecord},
         restore_safety::{
             RestoreSafetyEvidence, RestoreSafetyLaneRecord, RestoreSafetyObservation,
             RestoreSafetyObservationInput, RestoreSafetyRequest, RestoreSafetyRequestInput,
@@ -29,7 +30,6 @@ use ic_backup::{
     workflow::ic_snapshot_restore::{IcRestoreExecutionError, IcRestoreSource, restore_snapshot},
 };
 use ic_platform::management_canister_types::CanisterStatusType;
-use serde_json::json;
 use std::{
     cell::RefCell,
     fs,
@@ -130,14 +130,25 @@ pub(super) fn run(
     let start = management(backend, Method::StartCanister, None);
     let load_plan = child(backend, &load, 17);
     let start_plan = child(backend, &start, 3);
-    let mut allocation = serde_json::to_value(&load_plan).unwrap();
-    allocation["graph"]["nodes"] = json!([{"operation_sequence":17,"depends_on":[]},{"operation_sequence":3,"depends_on":[17]}]);
-    allocation["operations"]
-        .as_array_mut()
-        .unwrap()
-        .push(serde_json::to_value(&start_plan).unwrap()["operations"][0].clone());
-    allocation["budget"]["mutations"] = json!(2);
-    let workflow = ExecutionWorkflowRecord::new(serde_json::from_value(allocation).unwrap());
+    let mut allocation = backend.plan_request(&load.digest(), 17, 0);
+    allocation.graph = EffectGraphRecord::new(vec![
+        EffectNodeRecord::new(EffectNodeRequest {
+            operation_sequence: 17,
+            depends_on: vec![],
+        })
+        .unwrap(),
+        EffectNodeRecord::new(EffectNodeRequest {
+            operation_sequence: 3,
+            depends_on: vec![17],
+        })
+        .unwrap(),
+    ])
+    .unwrap();
+    allocation
+        .operations
+        .push(start_plan.operations()[0].clone());
+    allocation.budget = PlanBudgetRecord::new(2, 0).unwrap();
+    let workflow = ExecutionWorkflowRecord::new(OperationPlanRecord::new(allocation).unwrap());
     let root = backend.root.join("original-restore-workflow");
     fs::create_dir(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();

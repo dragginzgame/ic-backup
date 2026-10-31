@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.53.1] - Unreleased
+
+### 🧹 Cleanup
+
+- Share private original plan/journal authority matching and separate restore
+  lifecycle checks from fence admission. Preserve public errors, validation
+  order, original spending and all load/start safety requirements.
+
+### 🧪 Testing
+
+- Use typed upload/restore plans and shared retained metadata evidence in Core
+  PocketIC fixtures. Keep fresh recovery reads, exact verification JSON and
+  independent terminal acceptance checks.
+- Name HTTP response, retention and native failure cases; share captured-body,
+  pending-journal and durable evidence helpers. Preserve exact signed ingress,
+  cancellation points, synchronization and refusal/replay assertions.
+
+### ⬆️ Dependencies
+
+- Adopt Host Artifacts/FS/Process 0.73.2 and Platform 0.15.3. Preserve the existing
+  Host error identities, canonical Principal supplier, native management codecs
+  and transport behavior; no consumer migration is required.
+- Adopt Testkit 0.75.1 and its arithmetic-only Metrics 0.24.1 dependency. Keep
+  native Wire metadata disabled and the authenticated PocketIC server at 16.1.0.
+- Contributor setup: repeat `make install-testkit-server` to prepare the newly
+  selected Testkit CLI; prior CLI receipts cannot satisfy the updated selection.
+
 ## [0.53.0] - 2026-10-31
 
 ### ⚠️ Breaking

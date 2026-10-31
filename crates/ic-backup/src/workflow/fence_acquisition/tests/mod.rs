@@ -297,9 +297,28 @@ fn both_purposes_preserve_pending_originals_on_acknowledgement_and_provider_fail
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
+enum OriginalFault {
+    ChangedPayload,
+    MissingObligation,
+    MissingJournal,
+    NoPendingMutation,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+enum AfterReplyFault {
+    Association,
+    Stage,
+    Obligation,
+}
+
 #[test]
 fn original_binding_missing_obligation_and_missing_journal_reject_before_spending() {
-    for boundary in 0..3 {
+    for boundary in [
+        OriginalFault::ChangedPayload,
+        OriginalFault::MissingObligation,
+        OriginalFault::MissingJournal,
+    ] {
         let fixture = Fixture::new(false, false);
         let stage = fixture.stage();
         let layout = stage.layout().unwrap();
@@ -310,8 +329,8 @@ fn original_binding_missing_obligation_and_missing_journal_reject_before_spendin
             fixture.payload.arguments(),
         )
         .unwrap();
-        if boundary != 0 {
-            let name = if boundary == 1 {
+        if boundary != OriginalFault::ChangedPayload {
+            let name = if boundary == OriginalFault::MissingObligation {
                 "fence-obligation.json"
             } else {
                 "attempt-42.json"
@@ -327,7 +346,7 @@ fn original_binding_missing_obligation_and_missing_journal_reject_before_spendin
             &stage,
             fixture.requirement(),
             &fixture.obligation,
-            if boundary == 0 {
+            if boundary == OriginalFault::ChangedPayload {
                 &changed
             } else {
                 &fixture.payload
@@ -339,7 +358,7 @@ fn original_binding_missing_obligation_and_missing_journal_reject_before_spendin
         ));
         assert!(result.is_err());
         assert_eq!(provider.calls, 0);
-        let journal = if boundary == 2 {
+        let journal = if boundary == OriginalFault::MissingJournal {
             "retained-attempt-42.json"
         } else {
             "attempt-42.json"
@@ -537,14 +556,18 @@ fn changed_requirement_before_dispatch_preserves_reservation_without_provider_ca
 
 #[test]
 fn after_reply_association_stage_and_obligation_rejections_retain_acknowledgement() {
-    for boundary in 0..3 {
+    for boundary in [
+        AfterReplyFault::Association,
+        AfterReplyFault::Stage,
+        AfterReplyFault::Obligation,
+    ] {
         let fixture = Fixture::new(false, false);
         let stage = fixture.stage();
         let root = stage.layout().unwrap().root().to_path_buf();
         let mut provider = Provider::new(None);
-        provider.mismatch = boundary == 0;
-        if boundary != 0 {
-            provider.change = Some(root.join(if boundary == 1 {
+        provider.mismatch = boundary == AfterReplyFault::Association;
+        if boundary != AfterReplyFault::Association {
+            provider.change = Some(root.join(if boundary == AfterReplyFault::Stage {
                 "stage-binding.json"
             } else {
                 "fence-obligation.json"
@@ -564,17 +587,17 @@ fn after_reply_association_stage_and_obligation_rejections_retain_acknowledgemen
                 source: FenceAcquisitionReplyError::Association(_),
                 acknowledgement,
                 ..
-            } if boundary == 0 => acknowledgement,
+            } if boundary == AfterReplyFault::Association => acknowledgement,
             FenceAcquisitionExecutionError::AfterReply {
                 source: FenceAcquisitionReplyError::Stage(_),
                 acknowledgement,
                 ..
-            } if boundary == 1 => acknowledgement,
+            } if boundary == AfterReplyFault::Stage => acknowledgement,
             FenceAcquisitionExecutionError::AfterReply {
                 source: FenceAcquisitionReplyError::Obligation(_),
                 acknowledgement,
                 ..
-            } if boundary == 2 => acknowledgement,
+            } if boundary == AfterReplyFault::Obligation => acknowledgement,
             other => panic!("unexpected post-reply error: {other:?}"),
         };
         assert_eq!(

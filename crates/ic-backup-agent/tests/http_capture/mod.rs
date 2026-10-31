@@ -24,6 +24,20 @@ impl CapturedRequest {
         );
         &self.bytes
     }
+    pub(super) fn body(&self, root: &Path) -> &[u8] {
+        let bytes = self.complete_bytes(root);
+        let end = bytes
+            .windows(4)
+            .position(|part| part == b"\r\n\r\n")
+            .expect("complete capture has an HTTP header terminator");
+        &bytes[end + 4..]
+    }
+    pub(super) fn assert_signed_ingress(&self, root: &Path) {
+        assert_eq!(
+            self.body(root),
+            fs::read(root.join("signed-ingress.cbor")).unwrap()
+        );
+    }
     pub(super) fn retain(&self, root: &Path, index: usize) -> io::Result<()> {
         fs::write(root.join(format!("http-request-{index}.bin")), &self.bytes)?;
         let failure = match &self.failure {

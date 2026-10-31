@@ -31,8 +31,11 @@ async fn exercise(recovery: bool, mode: &str) {
         &root,
         "202 Accepted",
         vec![],
-        mode == "lost",
-        mode == "cancelled",
+        match mode {
+            "lost" => super::ResponseBehavior::Disconnect,
+            "cancelled" => super::ResponseBehavior::DelayedResponse,
+            _ => super::ResponseBehavior::Respond,
+        },
     );
     let payload =
         ApplicationIngressPayload::new(TARGET, TARGET, "apply", b"original opaque bytes", 128)
@@ -151,7 +154,12 @@ async fn finish_call(
 #[tokio::test]
 async fn changed_context_and_original_journal_refuse_before_signing_or_http() {
     let root = support::root("application-admission");
-    let mut server = Server::new(&root, "202 Accepted", vec![], false, false);
+    let mut server = Server::new(
+        &root,
+        "202 Accepted",
+        vec![],
+        super::ResponseBehavior::Respond,
+    );
     let payload = ApplicationIngressPayload::new(TARGET, TARGET, "apply", b"opaque", 128).unwrap();
     let plan = support::plan(TARGET, &payload.digest(), 1);
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -212,14 +220,5 @@ async fn changed_context_and_original_journal_refuse_before_signing_or_http() {
 
 fn assert_signed_request(server: &Server, root: &std::path::Path) {
     let requests = server.requests.lock().unwrap();
-    let bytes = requests[0].complete_bytes(root);
-    let body = bytes
-        .windows(4)
-        .position(|part| part == b"\r\n\r\n")
-        .unwrap()
-        + 4;
-    assert_eq!(
-        &bytes[body..],
-        fs::read(root.join("signed-ingress.cbor")).unwrap()
-    );
+    requests[0].assert_signed_ingress(root);
 }

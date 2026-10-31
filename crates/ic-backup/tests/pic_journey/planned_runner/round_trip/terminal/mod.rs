@@ -2,10 +2,10 @@
 
 use super::{
     ArtifactChecksumRecord, BackupLayoutGuard, CompleteDriver, DownloadJournalGuard,
-    ExecutionWorkflowRecord, IcSnapshotMetadataReply, IcSnapshotMetadataRequest,
-    IcSnapshotUploadReply, IcSnapshotUploadReplyKind, Method, Path, TOKEN, files, fs, io,
-    management, read_complete_execution_workflow,
+    ExecutionWorkflowRecord, IcSnapshotUploadReply, IcSnapshotUploadReplyKind, Method, Path, TOKEN,
+    files, fs, io, management, read_complete_execution_workflow,
 };
+use crate::pic_journey::evidence::PostLoadAcceptanceRecord;
 use ic_backup::{
     ops::persistence::{
         JournalLock, RestoreReferenceReleaseError, RestoreReferenceReleaseOutcome,
@@ -46,23 +46,13 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
             .restore
             .as_ref()
             .ok_or(io::ErrorKind::InvalidData)?;
-        let request = IcSnapshotMetadataRequest::new(
-            &self.driver.backend.target.to_text(),
-            self.driver
-                .snapshot
-                .as_ref()
-                .ok_or(io::ErrorKind::InvalidData)?
-                .id(),
-        )
-        .map_err(io::Error::other)?;
-        let metadata = IcSnapshotMetadataReply::decode(
-            &request,
-            self.driver
-                .raw_metadata
-                .as_ref()
-                .ok_or(io::ErrorKind::InvalidData)?,
-        )
-        .map_err(io::Error::other)?;
+        let metadata = self
+            .driver
+            .metadata
+            .as_ref()
+            .ok_or(io::ErrorKind::InvalidData)?
+            .decode()
+            .map_err(io::Error::other)?;
         let download = DownloadJournalGuard::open(self.source, source.source_plan.digest().hash())
             .map_err(io::Error::other)?;
         require(
@@ -89,14 +79,10 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
         };
         let load = self.restore.root().join("execution-stage-17");
         require(fs::read(load.join("fixture-accepted.sha256"))? == accepted.hash().as_bytes())?;
-        let verification: serde_json::Value = serde_json::from_slice(&fs::read(
+        let verification: PostLoadAcceptanceRecord = serde_json::from_slice(&fs::read(
             self.driver.backend.root.join("post-load-verification.json"),
         )?)?;
-        require(
-            verification["original_source_metadata"] == serde_json::to_value(metadata.digest())?
-                && verification["loaded_destination"] == serde_json::to_value(snapshot_id)?
-                && verification["complete_state_evidence"] == serde_json::to_value(accepted)?,
-        )?;
+        require(verification.matches(&metadata.digest(), snapshot_id, accepted))?;
         for sequence in [17, 3] {
             let stage = self
                 .restore

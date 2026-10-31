@@ -1,4 +1,4 @@
-//! Shared original-plan fixture builders; assertions remain beside their owners.
+//! Shared original-plan fixture builders and pending-spending assertions.
 
 use crate::model::execution_workflow::*;
 use crate::model::{
@@ -57,4 +57,21 @@ pub(crate) fn prepare_stage(
     let binding = ExecutionStageBindingRecord::new(workflow, sequence, &plan, vec![]).unwrap();
     drop(ExecutionStageGuard::prepare(&layout, binding.clone(), plan).unwrap());
     (root, layout, binding)
+}
+
+/// Check one consumed, unapplied original mutation; scenario evidence stays local.
+pub(crate) fn assert_pending(stage: &ExecutionStageGuard<'_>, sequence: u64) {
+    let progress = crate::ops::persistence::read_execution_progress(
+        stage.layout().unwrap(),
+        &stage.plan().digest(),
+    )
+    .unwrap();
+    assert_eq!(progress.attempts.mutations_used, 1);
+    assert_eq!(progress.applied_operations, 0);
+    let journal = crate::ops::persistence::AttemptJournalGuard::open(
+        stage.layout().unwrap(),
+        &stage.plan().attempt_authority(sequence).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
 }

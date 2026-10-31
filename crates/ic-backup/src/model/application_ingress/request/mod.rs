@@ -29,7 +29,11 @@ impl<'a> ApplicationMutationRequest<'a> {
         journal: &AttemptJournalRecord,
         payload: &'a ApplicationIngressPayload,
     ) -> Result<Self, ApplicationIngressError> {
-        let authority = authority(plan, sequence, journal)?;
+        let authority = plan.attempt_authority_for_journal(
+            sequence,
+            journal,
+            ApplicationIngressError::AuthorityMismatch,
+        )?;
         payload.validate_mutation_binding(authority.binding())?;
         let reservation = MutationReservation::new(authority, journal)?;
         Ok(Self {
@@ -89,7 +93,11 @@ impl<'a> ApplicationObservationRequest<'a> {
         journal: &AttemptJournalRecord,
         payload: &'a ApplicationIngressPayload,
     ) -> Result<Self, ApplicationIngressError> {
-        let authority = authority(plan, sequence, journal)?;
+        let authority = plan.attempt_authority_for_journal(
+            sequence,
+            journal,
+            ApplicationIngressError::AuthorityMismatch,
+        )?;
         payload.validate_observation_binding(authority.binding())?;
         let reservation = ObservationReservation::new(authority, journal, payload.digest())
             .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
@@ -136,18 +144,6 @@ impl<'a> ApplicationObservationRequest<'a> {
             .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         Ok(())
     }
-}
-
-fn authority(
-    plan: &OperationPlanRecord,
-    sequence: u64,
-    journal: &AttemptJournalRecord,
-) -> Result<AttemptAuthorityRecord, ApplicationIngressError> {
-    let authority = plan.attempt_authority(sequence)?;
-    if journal.authority() != &authority {
-        return Err(ApplicationIngressError::AuthorityMismatch);
-    }
-    Ok(authority)
 }
 
 impl From<crate::model::attempt_journal::MutationReservationError> for ApplicationIngressError {

@@ -2,6 +2,7 @@
 
 use ic_platform::candid::contract;
 mod backend;
+mod evidence;
 pub(super) mod planned_download;
 mod planned_restore;
 pub(super) mod planned_runner;
@@ -467,7 +468,18 @@ fn verify_loaded(
     assert_ne!(actual, destination);
     assert_ne!(actual, metadata.request().snapshot_id());
     let evidence = verify_destination(backend, metadata, actual, original_chunks);
-    fs::write(backend.root.join("post-load-verification.json"), serde_json::to_vec_pretty(&serde_json::json!({"original_source_metadata":metadata.digest(),"loaded_destination":destination,"verification_operation_sequence":sequence,"verification_snapshot_id":actual,"complete_state_evidence":evidence})).unwrap()).unwrap();
+    let verification = evidence::PostLoadVerificationRecord::new(
+        &metadata.digest(),
+        destination,
+        sequence,
+        actual,
+        &evidence,
+    );
+    fs::write(
+        backend.root.join("post-load-verification.json"),
+        serde_json::to_vec_pretty(&verification).unwrap(),
+    )
+    .unwrap();
     evidence
 }
 

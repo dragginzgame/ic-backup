@@ -47,10 +47,11 @@ impl<'a> IcMutationRequest<'a> {
         journal: &AttemptJournalRecord,
         payload: &'a IcManagementRequestRecord,
     ) -> Result<Self, IcMutationRequestError> {
-        let authority = plan.attempt_authority(operation_sequence)?;
-        if journal.authority() != &authority {
-            return Err(IcMutationRequestError::AuthorityMismatch);
-        }
+        let authority = plan.attempt_authority_for_journal(
+            operation_sequence,
+            journal,
+            IcMutationRequestError::AuthorityMismatch,
+        )?;
         payload.validate_mutation_binding(authority.binding())?;
         let reservation = MutationReservation::new(authority, journal)?;
         Ok(Self {

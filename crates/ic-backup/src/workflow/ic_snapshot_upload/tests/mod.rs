@@ -105,17 +105,6 @@ fn admit(
 ) -> impl std::future::Future<Output = Result<(), Infallible>> {
     std::future::ready(Ok(()))
 }
-fn pending(stage: &ExecutionStageGuard<'_>) {
-    let view = read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-    assert_eq!(view.attempts.mutations_used, 1);
-    assert_eq!(view.applied_operations, 0);
-    let journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &stage.plan().attempt_authority(7).unwrap(),
-    )
-    .unwrap();
-    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
-}
 
 struct SuspendedProvider {
     calls: usize,
@@ -159,7 +148,7 @@ fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() 
             let path = stage.layout().unwrap().root().join("attempt-7.json");
             let original = fs::read(&path).unwrap();
             drop(future);
-            pending(&stage);
+            crate::test_support::execution_workflow::assert_pending(&stage, 7);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
@@ -202,7 +191,7 @@ fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_suc
         .unwrap();
         assert_eq!(response.input().reply, raw);
         assert_eq!(provider.calls, 1);
-        pending(&stage);
+        crate::test_support::execution_workflow::assert_pending(&stage, 7);
         assert!(
             ready(upload_snapshot(
                 &stage,
@@ -244,7 +233,7 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
                 ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)),
                 Err(IcSnapshotUploadExecutionError::Provider(_))
             ));
-            pending(&stage);
+            crate::test_support::execution_workflow::assert_pending(&stage, 7);
             let original = fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap();
             drop(stage);
             let (stage, progress) =
@@ -295,7 +284,7 @@ fn malformed_or_mismatched_reply_retains_exact_returned_bytes_and_pending_spendi
                 panic!("passive association must reject")
             };
             assert_eq!(acknowledgement.input().reply, expected);
-            pending(&stage);
+            crate::test_support::execution_workflow::assert_pending(&stage, 7);
             assert_eq!(provider.calls, 1);
         }
     });
@@ -320,7 +309,7 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
             )),
             Err(IcSnapshotUploadExecutionError::Admission(_))
         ));
-        pending(&stage);
+        crate::test_support::execution_workflow::assert_pending(&stage, 7);
         assert_eq!(provider.calls, 0);
     });
 }

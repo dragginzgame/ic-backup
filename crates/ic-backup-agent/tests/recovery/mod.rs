@@ -82,8 +82,11 @@ async fn exercise(lane: RecoveryLane, mode: RecoveryMode) {
         &root,
         "202 Accepted",
         vec![],
-        mode == RecoveryMode::Disconnect,
-        mode == RecoveryMode::Cancel,
+        match mode {
+            RecoveryMode::Disconnect => super::ResponseBehavior::Disconnect,
+            RecoveryMode::Cancel => super::ResponseBehavior::DelayedResponse,
+            _ => super::ResponseBehavior::Respond,
+        },
     );
     let metadata_request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(
@@ -247,12 +250,7 @@ async fn exercise(lane: RecoveryLane, mode: RecoveryMode) {
     assert_eq!(guard.record().unwrap().view().pending_observation, Some(2));
     if mode != RecoveryMode::RefuseRetention {
         let requests = server.requests.lock().unwrap();
-        let bytes = requests[0].complete_bytes(&root);
-        let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
-        assert_eq!(
-            &bytes[end + 4..],
-            fs::read(root.join("signed-ingress.cbor")).unwrap()
-        );
+        requests[0].assert_signed_ingress(&root);
     }
 }
 

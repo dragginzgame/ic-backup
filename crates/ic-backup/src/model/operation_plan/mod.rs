@@ -11,8 +11,8 @@ pub use operation::{PlannedOperationRecord, PlannedOperationRequest};
 use crate::model::{
     artifacts::{ArtifactChecksumRecord, ChecksumError},
     attempt_journal::{
-        AttemptAuthorityRecord, AttemptJournalRecordError, OperationBindingRecord,
-        OperationBindingRequest,
+        AttemptAuthorityRecord, AttemptJournalRecord, AttemptJournalRecordError,
+        OperationBindingRecord, OperationBindingRequest,
     },
     bounded_sequence,
     effect_graph::{EffectGraphRecord, MAX_EFFECT_OPERATIONS},
@@ -236,6 +236,21 @@ impl OperationPlanRecord {
         let operation = self.operation(sequence)?;
         self.authority_for_operation(operation, &self.digest())
     }
+    // Match the original journal before payload/reservation admission. Callers retain
+    // their public error identity and choose when this ordered check occurs.
+    pub(crate) fn attempt_authority_for_journal<E: From<OperationPlanError>>(
+        &self,
+        sequence: u64,
+        journal: &AttemptJournalRecord,
+        mismatch: E,
+    ) -> Result<AttemptAuthorityRecord, E> {
+        let authority = self.attempt_authority(sequence)?;
+        if journal.authority() != &authority {
+            return Err(mismatch);
+        }
+        Ok(authority)
+    }
+
     /// Derive every original authority in canonical sequence order with one full plan hash.
     ///
     /// This avoids repeated full-plan encoding for bounded complete evidence scans.

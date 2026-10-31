@@ -39,8 +39,11 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
             &root,
             "202 Accepted",
             vec![],
-            mode == FenceFailure::Disconnect,
-            mode == FenceFailure::Cancel,
+            match mode {
+                FenceFailure::Disconnect => super::ResponseBehavior::Disconnect,
+                FenceFailure::Cancel => super::ResponseBehavior::DelayedResponse,
+                _ => super::ResponseBehavior::Respond,
+            },
         );
         let payload =
             FenceAcquisitionPayload::new(TARGET, "acquire_fixture", b"original opaque unit")
@@ -136,12 +139,7 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
         assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
         if mode != FenceFailure::RefuseIngress {
             let requests = server.requests.lock().unwrap();
-            let bytes = requests[0].complete_bytes(&root);
-            let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
-            assert_eq!(
-                &bytes[end + 4..],
-                fs::read(root.join("signed-ingress.cbor")).unwrap()
-            );
+            requests[0].assert_signed_ingress(&root);
         }
     }
 }

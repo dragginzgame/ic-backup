@@ -109,36 +109,44 @@ pub fn validate<'a>(
         observation.remote_observations(),
         |limit, reported| RestoreSafetyError::ObservationLimitExceeded { limit, reported },
     )?;
-    let before_start = request.wire().method() == IcManagementMethodRecord::StartCanister;
-    let lifecycle_matches = observation.targets().iter().all(|target| {
-        if before_start && target.target != binding.target() {
-            target.state != CanisterStatusType::Stopping
-        } else {
-            target.state == CanisterStatusType::Stopped
-        }
-    });
-    if !lifecycle_matches {
-        return Err(RestoreSafetyError::TargetNotStopped);
-    }
-    if before_start
-        && observation
-            .targets()
-            .iter()
-            .any(|target| target.restored_acceptance.is_none())
-    {
-        return Err(RestoreSafetyError::RestoredAcceptanceRequired);
-    }
-    validate_safety(requirement, observation.safety(), before_start)?;
+    let method = request.wire().method();
+    validate_targets(method, binding.target(), observation.targets())?;
+    validate_safety(requirement, observation.safety(), method)?;
     Ok(RestoreSafetyView {
         request: digest,
         requirement: requirement.digest(),
         observation,
     })
 }
+// Load requires the complete selected set stopped. Start allows previously
+// restored peers to run, but requires acceptance for the complete selected set.
+fn validate_targets(
+    method: IcManagementMethodRecord,
+    current_target: &str,
+    targets: &[TargetRestoreEvidence],
+) -> Result<(), RestoreSafetyError> {
+    if !targets.iter().all(|target| match method {
+        IcManagementMethodRecord::StartCanister if target.target != current_target => {
+            target.state != CanisterStatusType::Stopping
+        }
+        _ => target.state == CanisterStatusType::Stopped,
+    }) {
+        return Err(RestoreSafetyError::TargetNotStopped);
+    }
+    if method == IcManagementMethodRecord::StartCanister
+        && targets
+            .iter()
+            .any(|target| target.restored_acceptance.is_none())
+    {
+        return Err(RestoreSafetyError::RestoredAcceptanceRequired);
+    }
+    Ok(())
+}
+
 fn validate_safety(
     requirement: &RestoreSafetyRequirementRecord,
     evidence: &RestoreSafetyEvidence,
-    before_start: bool,
+    method: IcManagementMethodRecord,
 ) -> Result<(), RestoreSafetyError> {
     match (requirement.safety(), evidence) {
         (_, RestoreSafetyEvidence::Unresolved(_)) => {
@@ -168,7 +176,9 @@ fn validate_safety(
             if fence.state != ApplicationFenceState::Active {
                 return Err(RestoreSafetyError::FenceNotActive);
             }
-            if before_start && fence.controlled_execution.is_none() {
+            if method == IcManagementMethodRecord::StartCanister
+                && fence.controlled_execution.is_none()
+            {
                 return Err(RestoreSafetyError::ControlledExecutionRequired);
             }
         }

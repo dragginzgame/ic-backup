@@ -22,7 +22,7 @@ use ic_backup::{
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_data::IcSnapshotDataReply,
         ic_snapshot_download::IcSnapshotDownloadPlan,
-        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+        ic_snapshot_metadata::IcSnapshotMetadataReply,
         ic_snapshot_upload::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind},
         operation_plan::OperationPlanRecord,
         restore_safety::{
@@ -105,13 +105,7 @@ impl CompleteDriver {
                 0,
             );
         }
-        let request = IcSnapshotMetadataRequest::new(
-            &self.backend.target.to_text(),
-            self.snapshot.as_ref().unwrap().id(),
-        )
-        .unwrap();
-        let metadata =
-            IcSnapshotMetadataReply::decode(&request, self.raw_metadata.as_ref().unwrap()).unwrap();
+        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
         let layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
         let journal =
             DownloadJournalGuard::open(&layout, retained.source_plan.digest().hash()).unwrap();
@@ -154,13 +148,7 @@ impl CompleteDriver {
         stage: &ExecutionStageGuard<'_>,
     ) -> io::Result<ArtifactChecksumRecord> {
         let retained = self.restore.as_mut().unwrap();
-        let request = IcSnapshotMetadataRequest::new(
-            &self.backend.target.to_text(),
-            self.snapshot.as_ref().unwrap().id(),
-        )
-        .unwrap();
-        let metadata =
-            IcSnapshotMetadataReply::decode(&request, self.raw_metadata.as_ref().unwrap()).unwrap();
+        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
         let layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
         let journal =
             DownloadJournalGuard::open(&layout, retained.source_plan.digest().hash()).unwrap();
@@ -274,13 +262,7 @@ impl CompleteDriver {
 
     fn destination(&self) -> Vec<u8> {
         let retained = self.restore.as_ref().unwrap();
-        let request = IcSnapshotMetadataRequest::new(
-            &self.backend.target.to_text(),
-            self.snapshot.as_ref().unwrap().id(),
-        )
-        .unwrap();
-        let metadata =
-            IcSnapshotMetadataReply::decode(&request, self.raw_metadata.as_ref().unwrap()).unwrap();
+        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
         let layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
         let journal =
             DownloadJournalGuard::open(&layout, retained.source_plan.digest().hash()).unwrap();
@@ -310,13 +292,7 @@ impl CompleteDriver {
         let destination = self.destination();
         let payload = self.restore_payload(sequence);
         let retained = self.restore.as_mut().unwrap();
-        let request = IcSnapshotMetadataRequest::new(
-            &self.backend.target.to_text(),
-            self.snapshot.as_ref().unwrap().id(),
-        )
-        .unwrap();
-        let metadata =
-            IcSnapshotMetadataReply::decode(&request, self.raw_metadata.as_ref().unwrap()).unwrap();
+        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
         let source_layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
         let journal =
             DownloadJournalGuard::open(&source_layout, retained.source_plan.digest().hash())
@@ -397,7 +373,7 @@ impl CompleteDriver {
             )
             .unwrap()
         } else {
-            IcRestoreSource::existing(&source_layout, &retained.source_plan, &request)
+            IcRestoreSource::existing(&source_layout, &retained.source_plan, metadata.request())
         };
         let backend = RefCell::new(&mut self.backend);
         let mut provider = RestoreProvider {
@@ -613,11 +589,10 @@ fn rebuild(
 ) -> CompleteDriver {
     let RetainedCapture {
         snapshot,
-        raw_metadata,
+        metadata: evidence,
         ..
     } = read_retained_prefix(capture_layout.root(), &backend);
-    let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
+    let metadata = evidence.decode().unwrap();
     let original_capture = super::allocated_workflow(&backend);
     let original_capture =
         read_execution_workflow(capture_layout, &original_capture.digest()).unwrap();
@@ -659,7 +634,7 @@ fn rebuild(
         capture_failure: super::CaptureFailure::None,
         data_failure: super::ReadFailure::None,
         snapshot: Some(snapshot),
-        raw_metadata: Some(raw_metadata),
+        metadata: Some(evidence),
         stages: Vec::new(),
         stop_before,
         restore: Some(RestoreProgress {
@@ -730,7 +705,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         capture_failure: super::CaptureFailure::None,
         data_failure: super::ReadFailure::None,
         snapshot: None,
-        raw_metadata: None,
+        metadata: None,
         stages: Vec::new(),
         stop_before: None,
         restore: None,
@@ -877,7 +852,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
             capture_failure: super::CaptureFailure::None,
             data_failure: super::ReadFailure::None,
             snapshot: None,
-            raw_metadata: None,
+            metadata: None,
             stages: Vec::new(),
             stop_before: Some(0),
             restore: None,

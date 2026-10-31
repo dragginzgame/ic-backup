@@ -47,10 +47,11 @@ impl<'a> IcObservationRequest<'a> {
         mutation: &'a IcManagementRequestRecord,
         payload: &'a IcManagementRequestRecord,
     ) -> Result<Self, IcObservationRequestError> {
-        let authority = plan.attempt_authority(operation_sequence)?;
-        if journal.authority() != &authority {
-            return Err(IcObservationRequestError::AuthorityMismatch);
-        }
+        let authority = plan.attempt_authority_for_journal(
+            operation_sequence,
+            journal,
+            IcObservationRequestError::AuthorityMismatch,
+        )?;
         mutation.validate_mutation_binding(authority.binding())?;
         payload.validate_observation_binding(authority.binding(), &payload.digest())?;
         let reservation = ObservationReservation::new(authority, journal, payload.digest())

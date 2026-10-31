@@ -21,13 +21,17 @@ use ic_backup_agent::{AgentTransport, MAX_HTTP_RESPONSE_BYTES, TransportError};
 
 #[tokio::test]
 async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or_lost_pending() {
-    for (label, refuse, discard) in [
-        ("retention-refused", true, false),
-        ("accepted", false, false),
-        ("lost", false, true),
+    for (label, retention, response) in [
+        (
+            "retention-refused",
+            Retention::Refuse,
+            ResponseBehavior::Respond,
+        ),
+        ("accepted", Retention::Allow, ResponseBehavior::Respond),
+        ("lost", Retention::Allow, ResponseBehavior::Disconnect),
     ] {
         let root = support::root(label);
-        let mut server = Server::new(&root, "202 Accepted", vec![], discard, false);
+        let mut server = Server::new(&root, "202 Accepted", vec![], response);
         let payload = support::payload(Method::StopCanister, TARGET, None);
         let plan = support::plan(TARGET, &payload.digest(), 1);
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -51,7 +55,7 @@ async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or
                 assert_eq!(actual.authority().digest(), request.authority().digest());
                 assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
                 assert!(server.requests.lock().unwrap().is_empty());
-                if refuse {
+                if retention == Retention::Refuse {
                     return Err(IcMutationProviderError::Unavailable);
                 }
                 support::retain_signed(&root, prepared).unwrap();
@@ -63,23 +67,21 @@ async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or
             .await;
         assert_eq!(
             result.unwrap_err(),
-            if refuse {
+            if retention == Retention::Refuse {
                 IcMutationProviderError::Unavailable
             } else {
                 IcMutationProviderError::Indeterminate
             }
         );
         server.finish().unwrap();
-        assert_eq!(server.requests.lock().unwrap().len(), usize::from(!refuse));
+        assert_eq!(
+            server.requests.lock().unwrap().len(),
+            usize::from(retention == Retention::Allow)
+        );
         assert_eq!(fs::read(guard.path()).unwrap(), before);
-        if !refuse {
+        if retention == Retention::Allow {
             let requests = server.requests.lock().unwrap();
-            let bytes = requests[0].complete_bytes(&root);
-            let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
-            assert_eq!(
-                &bytes[end + 4..],
-                fs::read(root.join("signed-ingress.cbor")).unwrap()
-            );
+            requests[0].assert_signed_ingress(&root);
         }
     }
 }
@@ -97,13 +99,25 @@ async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failu
             ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
         },
     };
-    for (label, refuse, discard) in [
-        ("transfer-retention-refused", true, false),
-        ("transfer-accepted", false, false),
-        ("transfer-lost", false, true),
+    for (label, retention, response) in [
+        (
+            "transfer-retention-refused",
+            Retention::Refuse,
+            ResponseBehavior::Respond,
+        ),
+        (
+            "transfer-accepted",
+            Retention::Allow,
+            ResponseBehavior::Respond,
+        ),
+        (
+            "transfer-lost",
+            Retention::Allow,
+            ResponseBehavior::Disconnect,
+        ),
     ] {
         let root = support::root(label);
-        let mut server = Server::new(&root, "202 Accepted", vec![], discard, false);
+        let mut server = Server::new(&root, "202 Accepted", vec![], response);
         let payload = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
         let plan = support::plan(TARGET, &payload.digest(), 1);
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -130,7 +144,7 @@ async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failu
                 assert_eq!(actual.authority().digest(), request.authority().digest());
                 assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
                 assert!(server.requests.lock().unwrap().is_empty());
-                if refuse {
+                if retention == Retention::Refuse {
                     return Err(IcObservationProviderError::Unavailable);
                 }
                 support::retain_signed(&root, prepared).unwrap();
@@ -142,23 +156,21 @@ async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failu
             .await;
         assert_eq!(
             result.unwrap_err(),
-            if refuse {
+            if retention == Retention::Refuse {
                 IcObservationProviderError::Unavailable
             } else {
                 IcObservationProviderError::Indeterminate
             }
         );
         server.finish().unwrap();
-        assert_eq!(server.requests.lock().unwrap().len(), usize::from(!refuse));
+        assert_eq!(
+            server.requests.lock().unwrap().len(),
+            usize::from(retention == Retention::Allow)
+        );
         assert_eq!(fs::read(guard.path()).unwrap(), before);
-        if !refuse {
+        if retention == Retention::Allow {
             let requests = server.requests.lock().unwrap();
-            let bytes = requests[0].complete_bytes(&root);
-            let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
-            assert_eq!(
-                &bytes[end + 4..],
-                fs::read(root.join("signed-ingress.cbor")).unwrap()
-            );
+            requests[0].assert_signed_ingress(&root);
         }
     }
 }
@@ -207,13 +219,25 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
     )
     .unwrap();
     for payload in [&upload, &data] {
-        for (label, refuse, discard) in [
-            ("upload-retention-refused", true, false),
-            ("upload-accepted", false, false),
-            ("upload-lost", false, true),
+        for (label, retention, response) in [
+            (
+                "upload-retention-refused",
+                Retention::Refuse,
+                ResponseBehavior::Respond,
+            ),
+            (
+                "upload-accepted",
+                Retention::Allow,
+                ResponseBehavior::Respond,
+            ),
+            (
+                "upload-lost",
+                Retention::Allow,
+                ResponseBehavior::Disconnect,
+            ),
         ] {
             let root = support::root(label);
-            let mut server = Server::new(&root, "202 Accepted", vec![], discard, false);
+            let mut server = Server::new(&root, "202 Accepted", vec![], response);
             let plan = support::plan(TARGET, &payload.binding_digest(), 1);
             let layout = BackupLayoutGuard::acquire(&root).unwrap();
             let guard = support::retain(&layout, &plan, 1);
@@ -237,7 +261,7 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
                     assert_eq!(actual.authority().digest(), request.authority().digest());
                     assert!(AttemptJournalGuard::open(&layout, actual.authority()).is_err());
                     assert!(server.requests.lock().unwrap().is_empty());
-                    if refuse {
+                    if retention == Retention::Refuse {
                         return Err(IcMutationProviderError::Unavailable);
                     }
                     support::retain_signed(&root, prepared).unwrap();
@@ -249,26 +273,37 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
                 .await;
             assert_eq!(
                 result.unwrap_err(),
-                if refuse {
+                if retention == Retention::Refuse {
                     IcMutationProviderError::Unavailable
                 } else {
                     IcMutationProviderError::Indeterminate
                 }
             );
             server.finish().unwrap();
-            assert_eq!(server.requests.lock().unwrap().len(), usize::from(!refuse));
+            assert_eq!(
+                server.requests.lock().unwrap().len(),
+                usize::from(retention == Retention::Allow)
+            );
             assert_eq!(fs::read(guard.path()).unwrap(), original);
-            if !refuse {
+            if retention == Retention::Allow {
                 let requests = server.requests.lock().unwrap();
-                let bytes = requests[0].complete_bytes(&root);
-                let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
-                assert_eq!(
-                    &bytes[end + 4..],
-                    fs::read(root.join("signed-ingress.cbor")).unwrap()
-                );
+                requests[0].assert_signed_ingress(&root);
             }
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ResponseBehavior {
+    Respond,
+    Disconnect,
+    DelayedResponse,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Retention {
+    Allow,
+    Refuse,
 }
 
 struct Server {
@@ -279,7 +314,7 @@ struct Server {
     root: PathBuf,
 }
 impl Server {
-    fn new(root: &Path, status: &str, body: Vec<u8>, discard: bool, delay: bool) -> Self {
+    fn new(root: &Path, status: &str, body: Vec<u8>, behavior: ResponseBehavior) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
         let endpoint = format!("http://{}/", listener.local_addr().unwrap());
@@ -301,10 +336,10 @@ impl Server {
                         capture.retain(&evidence, requests.len())?;
                         requests.push(capture);
                         drop(requests);
-                        if !complete || discard {
+                        if !complete || behavior == ResponseBehavior::Disconnect {
                             continue;
                         }
-                        if delay {
+                        if behavior == ResponseBehavior::DelayedResponse {
                             thread::sleep(Duration::from_millis(1200));
                         }
                         stream.set_write_timeout(Some(Duration::from_secs(3)))?;
@@ -370,30 +405,24 @@ impl Drop for Server {
 
 #[tokio::test]
 async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep_spending() {
-    for (label, status, body, discard, delay) in [
-        ("accepted", "202 Accepted", vec![], false, false),
-        ("throttled", "429 Too Many Requests", vec![], false, false),
-        (
-            "unavailable",
-            "503 Service Unavailable",
-            vec![],
-            false,
-            false,
-        ),
-        ("redirect", "307 Temporary Redirect", vec![], false, false),
-        ("malformed", "200 OK", vec![255], false, false),
+    use ResponseBehavior::{DelayedResponse, Disconnect, Respond};
+    for (label, status, body, response) in [
+        ("accepted", "202 Accepted", vec![], Respond),
+        ("throttled", "429 Too Many Requests", vec![], Respond),
+        ("unavailable", "503 Service Unavailable", vec![], Respond),
+        ("redirect", "307 Temporary Redirect", vec![], Respond),
+        ("malformed", "200 OK", vec![255], Respond),
         (
             "oversize",
             "200 OK",
             vec![0; MAX_HTTP_RESPONSE_BYTES + 1],
-            false,
-            false,
+            Respond,
         ),
-        ("lost", "200 OK", vec![], true, false),
-        ("timeout", "200 OK", vec![], false, true),
+        ("lost", "200 OK", vec![], Disconnect),
+        ("timeout", "200 OK", vec![], DelayedResponse),
     ] {
         let root = support::root(label);
-        let mut server = Server::new(&root, status, body, discard, delay);
+        let mut server = Server::new(&root, status, body, response);
         let payload = support::payload(Method::StopCanister, TARGET, None);
         let plan = support::plan(TARGET, &payload.digest(), 1);
         fs::create_dir(root.join("layout")).unwrap();
@@ -448,8 +477,7 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
         let requests = server.requests.lock().unwrap();
         assert_eq!(requests.len(), 1, "{label}");
         let bytes = requests[0].complete_bytes(&root);
-        let end = bytes.windows(4).position(|p| p == b"\r\n\r\n").unwrap();
-        assert_eq!(&bytes[end + 4..], envelope);
+        assert_eq!(requests[0].body(&root), envelope);
         assert!(
             bytes.starts_with(format!("POST /api/v4/canister/{TARGET}/call HTTP/1.1").as_bytes())
         );
@@ -461,7 +489,7 @@ async fn accepted_errors_disconnect_timeout_and_bounds_make_one_request_and_keep
 #[tokio::test]
 async fn context_and_stale_reservations_reject_before_network() {
     let root = support::root("admission");
-    let mut server = Server::new(&root, "202 Accepted", vec![], false, false);
+    let mut server = Server::new(&root, "202 Accepted", vec![], ResponseBehavior::Respond);
     let payload = support::payload(Method::StopCanister, TARGET, None);
     let plan = support::plan(TARGET, &payload.digest(), 1);
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
