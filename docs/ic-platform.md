@@ -21,10 +21,11 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.13; Testkit 0.72 retains
-Platform 0.11 as a development dependency. Native external Principal, management
-DTO and PocketIC exports retain their upstream identities across both selections.
-No Platform-owned runtime handles cross this boundary.
+not selected by Backup. Production and Testkit 0.75 select Platform 0.15.2,
+which re-exports the canonical owned Principal from Platform Types 0.15.1.
+Backup keeps its Platform imports; no direct Types dependency or runtime handle
+is introduced. Native external Principal, management DTO and PocketIC exports
+retain their qualified upstream identities.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
 
@@ -44,14 +45,17 @@ direct Wire dependency, new protocol or runtime is added.
 
 Platform 0.13 removes its gzip facade; generic artifact codecs belong directly to
 Host Artifacts. Backup already consumes Host directly and needs no codec migration.
-The consumed native IC implementation and external type suppliers are unchanged.
-Platform's owned Principal has the new dependency identity internally, while
-Backup's public principal, DTO and SDK boundaries retain the qualified external types.
+The consumed native codecs and external type suppliers are unchanged. Platform
+0.14 moved owned Principal/Account definitions into its canonical Types supplier;
+0.15 aligned that supplier's generation. Platform 0.15.2 keeps the facade paths
+while Types 0.15.1 owns Principal representation, normalization, Serde and explicit
+external conversions. Backup's public principal, DTO and SDK boundaries retain
+the qualified external types.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |
 | Candid contracts and bounded decoding mechanics | Platform; Backup selects method-specific byte/work/skip/type/header limits |
-| Internal principal admission | Platform-owned root `Principal`; Backup enforces bounded canonical text/raw bytes |
+| Internal principal admission | Platform root `Principal`, re-exported from canonical Types; Backup enforces bounded canonical text/raw bytes |
 | External Candid/SDK principals | Platform contract/external exports over qualified upstream 0.1.5, with explicit boundary conversions |
 | All 24 snapshot/status/transfer/upload DTOs | Platform management exports over exactly upstream 0.11.0 |
 | Native SDK identities and operations | Platform Agent exports, including PEM |
@@ -99,7 +103,7 @@ separate from direct declaration checks; deployment admission belongs to the
 application's exact target/features, locked build and artifact identity.
 
 Independent normal consumers exclude Testkit, PocketIC and WAT. Backup's public
-Host error types belong to the 0.72 line; consumers exchanging
+Host error types belong to the 0.73 line; consumers exchanging
 those values must align direct Host dependencies. Their fields, source chains,
 recovery behavior and serialized data retain their existing contracts.
 

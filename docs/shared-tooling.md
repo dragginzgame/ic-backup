@@ -8,7 +8,7 @@ contracts, qualification selection, ordered Testkit extension, release metadata
 adapter and exact recovery receipt checks. Owner CI and successful setup do not
 qualify Backup behavior or authorize a release.
 
-Shared 0.27.12 keeps reusable core upgrades separate from framework integration
+The reviewed baseline keeps reusable core upgrades separate from framework integration
 constraints. Backup has no Canic runtime or control-plane dependency. Its current
 Testkit qualification graph coexists with the selected production Platform, so
 this adoption needs no integration workspace split or public versioning change.
@@ -19,6 +19,20 @@ Shared's publication adapter now accepts structured Cargo path and feature
 options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
+
+The current source is commit `143a9abb9ae81feae9400ff3844b03b1ddfdd75a`,
+independently selected from upstream main and exported from a clean isolated
+checkout. Its committed VERSION is **0.27.21**, while its commit title and leading
+notes say **0.27.22**. The snapshot preserves the source's label and exact revision;
+no uncommitted sibling version edit supplies provenance.
+
+This refresh adds explicit release-group metadata helpers and their dependency
+checks. Backup retains one coordinated release group, workspace-version
+inheritance and its root changelog; no group policy or ledger split is needed.
+Common host/Rust/IC executable catalogs are unchanged. Backup explicitly selects
+Build **0.73.1** for its release editor and locked Testkit **0.75.0** for setup and
+offline server admission. New baseline delivery and explicit-cleanup guidance does
+not execute a release or remove retained artifacts.
 
 ## Reviewed sources
 

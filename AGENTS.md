@@ -6,8 +6,9 @@ This file is normative for automated agents and contributors working in
 ## Shared baseline and local overlay
 
 Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot of Shared Tooling 0.27.12's committed rules, not
-implicit inheritance from a moving sibling checkout.
+This is a reviewed local snapshot at Shared Tooling commit `143a9abb9ae81feae9400ff3844b03b1ddfdd75a`,
+not implicit inheritance from a moving sibling checkout. Its committed VERSION is
+0.27.21; the commit title is 0.27.22.
 [The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
 tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
 describe the review. Refresh deliberately; never edit vendored tooling in place.
@@ -95,8 +96,9 @@ public compatibility assessment, native checks and separately applicable
 authenticated IC qualification. Core and Agent consume those identities only
 through Platform; direct management DTO declarations are forbidden.
 
-`ic-platform::Principal` owns internal principal admission. Platform supplies
-its owned representation; required Candid DTOs and external SDK calls use
+`ic-platform::Principal` owns internal principal admission through its canonical
+`ic-platform-types` identity supplier. Backup imports that representation only
+through Platform; required Candid DTOs and external SDK calls use
 Platform's `candid::contract::Principal` or `principal::ExternalPrincipal` exports
 over upstream 0.1.5, with explicit boundary conversions. No direct principal pin
 or exception remains. Changes require normalization, identity/hash regression

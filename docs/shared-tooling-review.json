@@ -1,51 +1,177 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "69a8b92a1a892b17d355ec853ca63faa9599a928",
-  "label": "0.27.12",
+  "revision": "143a9abb9ae81feae9400ff3844b03b1ddfdd75a",
+  "label": "0.27.21",
+  "commit_title": "0.27.22",
   "reviewed_on": "2026-10-31",
-  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/d8c3c1669b127b60d0bda68c58a3b343f015855b/docs/shared-tooling-review.json",
+  "previous_review": "https://github.com/dragginzgame/ic-backup/blob/4a071b6d781a1c6a7025d719fb0a57322c95db25/docs/shared-tooling-review.json",
   "consumer_baseline": {
-    "commit": "d8c3c1669b127b60d0bda68c58a3b343f015855b",
-    "version": "0.52.2",
-    "pending_notes": "0.52.3",
-    "worktree": "unstaged and uncommitted"
+    "commit": "4a071b6d781a1c6a7025d719fb0a57322c95db25",
+    "version": "0.52.3",
+    "pending_notes": "0.53.0",
+    "worktree": "unstaged and uncommitted; package versions unchanged"
   },
   "provenance": {
-    "source_selection": "GitHub main independently selected the full revision. The clean isolated /tmp/backup-platform013-shared-source checkout supplies its committed exporter and trusted verifier; VERSION is 0.27.12.",
-    "export": "Canonical impact and refresh retain the existing entrypoint set and export 132 payloads: eight updates, one addition, no removals. Paired --source/--revision verification compares every byte and executable mode with the selected commit. Offline manifest integrity is separate.",
-    "initial_refusal": "The first preview refused a .git suffix difference in the isolated origin URL. No consumer files were changed; the origin spelling was aligned with the existing canonical source URL and the preview passed. Both logs remain retained.",
-    "platform": "Published ic-platform 0.13.0 archive matches its sparse-index checksum and source bb0e2ae0bc851f48fcbcd071dbacf7236bbc2b1b. /tmp/backup-adopt013-platform-proof.json and -platform.diff retain the comparison with 0.12.0. No sibling/path override supplies it."
+    "source_selection": "GitHub main independently selected the full revision. The clean isolated /tmp/backup-adopt-upstream.sKsOIs/shared-source checkout supplies the committed exporter and trusted verifier. Dirty sibling edits are excluded.",
+    "version_label": "The committed VERSION is 0.27.21 while the commit title and leading changelog heading say 0.27.22. Preserve the exporter-owned source label and exact revision; no local correction or claim of a finalized 0.27.22 release.",
+    "export": "Canonical impact and refresh reuse the existing entrypoints: 134 payloads, two required additions, no removals. Paired --source/--revision verification compares all bytes and modes with the independently selected commit. Common executable catalogs are unchanged.",
+    "registry": "All seven adopted direct/tool crate archives match retained crates.io sparse-index checksums; every archived src file matches its recorded committed sibling source. See archive-proof.json and committed-source-proof.json in the evidence directory.",
+    "registry_archives": [
+      {
+        "package": "ic-platform",
+        "version": "0.15.2",
+        "checksum": "213f5c314af4d94f4f3236534e10c8f3c8639d143c81be4af612bd732990cc37",
+        "source": {
+          "git": {
+            "sha1": "3587cd2633b5c94fd7ebf9dea3eefdb0433ea59d"
+          },
+          "path_in_vcs": "crates/ic-platform"
+        }
+      },
+      {
+        "package": "ic-platform-types",
+        "version": "0.15.1",
+        "checksum": "de0b5a4e7dff6d2c8ec7a58e5673f7348a49e90232add1eb31fec0bba5f4252e",
+        "source": {
+          "git": {
+            "sha1": "668e44f70455b3118859f81ec1b7aa23de7db63a"
+          },
+          "path_in_vcs": "crates/ic-platform-types"
+        }
+      },
+      {
+        "package": "ic-host-artifacts",
+        "version": "0.73.1",
+        "checksum": "c16a107497531b26280ee7721eb2c0f8779571a58617649a952b7928f46d007e",
+        "source": {
+          "git": {
+            "sha1": "3b095515ed2b2020d700b5bf0e90c0c4459f5454"
+          },
+          "path_in_vcs": "crates/ic-host-artifacts"
+        }
+      },
+      {
+        "package": "ic-host-fs",
+        "version": "0.73.1",
+        "checksum": "0b07ff732b11713e23174cadd5941bdbf40c1c7c869c31e42167136f448eb75e",
+        "source": {
+          "git": {
+            "sha1": "3b095515ed2b2020d700b5bf0e90c0c4459f5454"
+          },
+          "path_in_vcs": "crates/ic-host-fs"
+        }
+      },
+      {
+        "package": "ic-host-process",
+        "version": "0.73.1",
+        "checksum": "47eedfec6c05f36dac29a5e99b50698833a1eb8b962fb961db4f39338ff052fa",
+        "source": {
+          "git": {
+            "sha1": "3b095515ed2b2020d700b5bf0e90c0c4459f5454"
+          },
+          "path_in_vcs": "crates/ic-host-process"
+        }
+      },
+      {
+        "package": "ic-testkit",
+        "version": "0.75.0",
+        "checksum": "ff3c217401d18600438061512496e31ac775f492a6dddf9ff46b32cebf294e61",
+        "source": {
+          "git": {
+            "sha1": "c40c66b92120dbfb745219bf8f4e2a34bb3ce1f4"
+          },
+          "path_in_vcs": "crates/ic-testkit"
+        }
+      },
+      {
+        "package": "ic-build",
+        "version": "0.73.1",
+        "checksum": "22693384e5d45b0aef3e0d0e41272dba02ed37f40a39f84a734b690d3701a6a4",
+        "source": {
+          "git": {
+            "sha1": "3b095515ed2b2020d700b5bf0e90c0c4459f5454"
+          },
+          "path_in_vcs": "crates/ic-build"
+        }
+      }
+    ],
+    "committed_sources": [
+      {
+        "package": "ic-platform",
+        "version": "0.15.2",
+        "revision": "3587cd2633b5c94fd7ebf9dea3eefdb0433ea59d",
+        "exact_source_files": 112
+      },
+      {
+        "package": "ic-platform-types",
+        "version": "0.15.1",
+        "revision": "668e44f70455b3118859f81ec1b7aa23de7db63a",
+        "exact_source_files": 10
+      },
+      {
+        "package": "ic-host-artifacts",
+        "version": "0.73.1",
+        "revision": "3b095515ed2b2020d700b5bf0e90c0c4459f5454",
+        "exact_source_files": 32
+      },
+      {
+        "package": "ic-host-fs",
+        "version": "0.73.1",
+        "revision": "3b095515ed2b2020d700b5bf0e90c0c4459f5454",
+        "exact_source_files": 63
+      },
+      {
+        "package": "ic-host-process",
+        "version": "0.73.1",
+        "revision": "3b095515ed2b2020d700b5bf0e90c0c4459f5454",
+        "exact_source_files": 52
+      },
+      {
+        "package": "ic-testkit",
+        "version": "0.75.0",
+        "revision": "c40c66b92120dbfb745219bf8f4e2a34bb3ce1f4",
+        "exact_source_files": 28
+      },
+      {
+        "package": "ic-build",
+        "version": "0.73.1",
+        "revision": "3b095515ed2b2020d700b5bf0e90c0c4459f5454",
+        "exact_source_files": 71
+      }
+    ]
   },
   "reviewed_changes": [
-    "Core/integration guidance preserves independent core upgrades and integration-owned compatibility stacks. Backup has no Canic runtime/control-plane dependencies and no demonstrated resolving-workspace blocker; no workspace split or public versioning change is required.",
-    "The publication adapter accepts explicit manifest/target paths, feature selections and check-only dirty admission as literal arguments. The runner reuses a new path-admission companion and rechecks source/path authority before dispatch.",
-    "The publication adapter remains opt-in. Backup declares no CARGO_PUBLISH_PACKAGES and keeps its existing publication, ordered Testkit setup and mandatory exact resume receipt adapters. No publication/release effect or new gate is activated.",
-    "Host, Rust and optional IC executable catalogs are unchanged. Explicit common/consumer setup and offline checks pass; existing and failed tool bundles remain retained.",
-    "Platform 0.13 removes only the unselected gzip module and its root exports from Rust source. Consumed native Principal/Candid/management/Agent implementations and external suppliers remain unchanged. Backup already consumes Host directly and enables no runtime.",
-    "Testkit retains Platform 0.11.1 in development. Normal Core/Agent consumers select only Platform 0.13.0; Core excludes Agent and both exclude Testkit, PocketIC and WAT. No runtime singleton is weakened or bypassed."
+    "Platform 0.15.2 re-exports canonical owned Principal/Account identities from Types 0.15.1. The old Principal implementation and canonical supplier differ only in documentation. Backup retains Platform-only imports and explicit external conversions; native Candid 0.10.39, Principal 0.1.5, Agent 0.49.3 and management DTO 0.11.0 identities are unchanged.",
+    "Host Artifacts and Process production src is identical to 0.72.1; FS changes only an upstream test. Public Host error identities still move to 0.73, requiring direct consumers to align dependencies. Draft 0.53.0 records this compatibility change without changing package versions.",
+    "Testkit 0.75.0 shares Platform 0.15.2/Types 0.15.1 and arithmetic-only Metrics 0.23.2. Optional Wire remains disabled. Server requirement reporting is exposed separately from exact asset provisioning; Backup retains offline asset admission and original managed lifecycle/custody. PocketIC remains 16.1.0.",
+    "Build 0.73.1 supports explicit group rendering and narrows internal build-cache target classification. Backup keeps coordinated workspace rendering; actual metadata-preparation and exact-receipt fixtures pass with the selected editor.",
+    "Shared adds explicit release-group helpers, catalog admission and tag/plan scoping. Backup retains one coordinated version, root changelog and inherited member versions; no release-group policy, ledger split, new publication adapter or PR-delivery lane is activated.",
+    "The canonical Principal supplier exception permits ic_principal only at Platform Types. Backup keeps its stricter direct IC boundaries. New delivery/cleanup guidance activates no release or cleanup in this adoption."
   ],
   "consumer_changes": [
-    "Raise the root Platform requirement to 0.13.0 and replace only its production lock selection. Preserve Host/Testkit/editor 0.72.1 and all unrelated package identities.",
-    "Refresh the local overlay, Shared guidance, Platform boundary, adoption review and handoff. Draft 0.52.3 is a compatible patch because the removed gzip facade was unused and public external types/bytes are unchanged; own versions remain 0.52.2.",
-    "No Backup Rust, record/wire, spending, custody, retry or recovery transition changes. No staging, commit, release, publication, sibling mutation or live IC effect."
+    "Adopt Host Artifacts/FS/Process 0.73.1, Platform 0.15.2 and Testkit 0.75.0 through workspace registry requirements. Select Build 0.73.1 independently for the installed release editor.",
+    "Replace only the sibling lock selections; add canonical Types and Testkit arithmetic Metrics. Preserve every unrelated package/version/source/checksum. Remove obsolete Platform 0.11.1 and 0.13.0 entries. All non-workspace dependencies remain registry-selected.",
+    "Refresh the local overlay, Platform/Shared guidance, adoption review, changelog and handoff. No Backup Rust, protocol/schema, custody, spending, retry or recovery code changes. No staging, commit, release, publication, sibling mutation or live IC operation."
   ],
   "validation": {
-    "source_proof": "/tmp/backup-adopt013-shared-proof.log",
-    "impact": "/tmp/backup-adopt013-shared-impact-canonical.log",
-    "export": "/tmp/backup-adopt013-shared-refresh.log",
-    "setup": [
-      "/tmp/backup-adopt013-setup.log",
-      "/tmp/backup-adopt013-tools-check.log"
+    "evidence_directory": "/tmp/backup-adopt-upstream.sKsOIs",
+    "source_proof": "shared-proof.log",
+    "impact": "shared-impact.log",
+    "export": "shared-refresh.log",
+    "preparation": [
+      "update.log",
+      "fetch.log",
+      "metadata.json",
+      "consumer-preparation.log",
+      "setup.log",
+      "tools-check.log"
     ],
-    "consumer_qualification": [
-      "Independent Core/Agent consumers pass on actual Rust 1.91.0 with exact graph and public Host type probes: -consumers.log; target/msrv-consumers.WQdPD8; -consumer-features.json.",
-      "Strict both-package all-target/all-feature Clippy passes: -clippy.log.",
-      "103 native cases pass: 72 Core unit, 11 public codec/identity/selection, four Agent unit and 16 HTTP cases: -core-unit.log, -core-public.log and -agent-native.log.",
-      "Two authenticated independent simulator journeys pass: cold capture/transfer/same-ID restore and effect-free terminal replay; death after authenticated load retains pending originals without redispatch: -agent-pocketic.log. Build /tmp/ic-backup-agent-independent-build-1128134-0; fixture roots /tmp/ic-backup-agent-pocketic-1128134-1 and -3.",
-      "Consumer exact snapshot/tamper, graph refusal, changed-input stopping and failure retention pass: -tooling.log. Testkit routing/refusal and failure-evidence custody pass: -testkit-routing.log and -failure-evidence.log.",
-      "Release preparation/refusal and exact receipt/resume checks pass in isolated substitutes: -release-preparation.log and -release-receipts.log; target/shared-release-tests.NuSKQ0 and target/shared-release-tests.PBt3gO.",
-      "Formatting, documentation, dependency inheritance/boundaries, regular-file/licenses and snapshot checks pass: -source-checks.log. Changed publication shell files pass ShellCheck: -shell-check.log. Final documentation/diff/frozen-input checks: -final-checks.log. Log suffixes in this list use /tmp/backup-adopt013 as their prefix."
-    ],
-    "limits": "Focused Linux evidence only. No producer-wide suites, full CI gate, full MSRV/macOS matrix, registry-only release acceptance, installed Canic migration, publication, deployment or live IC operation."
+    "graphs": "graph-policy.log, six *-graph.json production target observations and three consumers/*/normal-graph.json observations pass. The read-only graph helper runs from the retained trusted committed source; it is not a new maintained consumer entrypoint. Root and independent locked metadata pass. Normal libraries exclude simulator/WAT/Clap/runtime guard; Core excludes Agent.",
+    "lint": "clippy.log passes both packages/all targets/all features with -D warnings. consumer-checks.log passes all three independent consumers with Clippy and both public consumer probes on actual Rust 1.91.0. shell-check.log passes shell/Perl syntax and ShellCheck.",
+    "native": "native.log: 153 cases pass (122 selected Core units, 11 public cases, four Agent units and 16 HTTP cases), including canonical identity/hash and exact codec/bounds, artifact/custody/recovery and signed-retention behavior.",
+    "simulator": "core-pocketic.log and agent-pocketic.log: five real cases pass, covering connected same-ID round trip, independent cold capture/restore/terminal replay, death after authenticated load, complete Agent transfer/restore and wrong-root refusal. Core root /tmp/ic-backup-pocketic-2364636-0; Agent roots /tmp/ic-backup-agent-pocketic-2402392-*; independent build /tmp/ic-backup-agent-independent-build-2402392-0.",
+    "tooling": "tooling.log passes consumer snapshot/tamper, dependency/graph refusals, changed-input stopping, failure retention and Testkit routing. release-preparation.log and release-receipts.log pass isolated metadata and exact resume/receipt checks; target/shared-release-tests.FmJgd9 and target/shared-release-tests.6CWn2D retain command traces.",
+    "artifacts": "codec-artifacts.log records successful read-only metadata/data/upload fixture --check commands; no regeneration. Final formatting, local links, regular-file/licenses, source proof, diff and 506 frozen source/build inputs are checked in final-checks.log.",
+    "limits": "Focused Linux qualification only; cross-target graph inspection is not native macOS evidence. No full CI/MSRV/macOS matrix, package/registry-only release acceptance, installed Canic migration, publication, deployment or live IC operation."
   }
 }

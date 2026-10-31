@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.53.0] - Unreleased
+
+### ⚠️ Breaking
+
+- Adopt Host Artifacts/FS/Process 0.73.1. Consumers exchanging public checksum or
+  publication errors must align direct Host dependencies to the 0.73 family.
+  Error payloads, source chains, record bytes and recovery behavior are preserved.
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.15.2 with canonical Types 0.15.1 and Testkit 0.75.0. Keep the
+  existing Platform imports, native management codecs and authenticated simulator
+  contract; no direct Types or Wire dependency is required.
+- Select Build 0.73.1 for the release editor and refresh Shared Tooling from
+  committed revision `143a9ab`, preserving its source VERSION label 0.27.21
+  (commit title 0.27.22). Retain coordinated Backup releases and exact resume checks.
+
 ## [0.52.3] - 2026-10-31
 
 ### 🧹 Cleanup
