@@ -1,8 +1,6 @@
 //! One bounded upload session: full admission, exact payload commitments and closing verification.
 
-use super::super::{
-    check_closed_tree, check_directory_identity, member, verification::open_regular_child,
-};
+use super::super::{check_closed_tree, check_directory_identity, member};
 use super::{
     DownloadJournalGuard, File, IcSnapshotArtifactError, IcSnapshotDataUploadPlan,
     IcSnapshotUploadArtifactError, IcSnapshotUploadRequest, read_chunk,
@@ -155,8 +153,7 @@ fn stamps<'a>(
     )?;
     members
         .map(|member| {
-            let (_, metadata) =
-                open_regular_child(directory, &member.name, member.length(), member.maximum())?;
+            let (_, metadata) = member.open(directory)?;
             Ok(metadata.into())
         })
         .collect()

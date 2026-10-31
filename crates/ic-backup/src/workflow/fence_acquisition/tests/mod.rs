@@ -1,6 +1,10 @@
 //! Native orchestration/custody fixtures; no application fence semantics or IC effects.
 
 use super::*;
+use crate::model::attempt_journal::AttemptBudgetRecord;
+use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
+use crate::test_support::operation_plan::{declaration, graph, operation_request};
+
 use crate::test_support::execution_workflow::{child_request, workflow};
 use crate::{
     model::{
@@ -63,10 +67,13 @@ impl Fixture {
             identity: ArtifactChecksumRecord::from_bytes(b"original fence"),
             membership_revision: ArtifactChecksumRecord::from_bytes(b"original membership"),
         };
-        let mut source = serde_json::to_value(&plan).unwrap();
-        source["operations"][0]["request"] =
-            serde_json::json!(ArtifactChecksumRecord::from_bytes(b"source request").hash());
-        let source = serde_json::from_value(source).unwrap();
+        let mut source = declaration(&plan);
+        let mut operation = operation_request(&source.operations[0]);
+        operation.request = ArtifactChecksumRecord::from_bytes(b"source request")
+            .hash()
+            .into();
+        source.operations[0] = PlannedOperationRecord::new(operation).unwrap();
+        let source = OperationPlanRecord::new(source).unwrap();
         create_operation_plan(&source_layout, &source).unwrap();
         let safety = RestoreSafetyRequirementRecord::new(
             &plan,
@@ -586,29 +593,26 @@ fn planned_stage(
     payload: &FenceAcquisitionPayload,
     dependency: bool,
 ) -> (ExecutionWorkflowRecord, OperationPlanRecord) {
-    let mut allocation = serde_json::to_value(workflow().allocation()).unwrap();
-    let mut child =
-        serde_json::to_value(OperationPlanRecord::new(child_request(0)).unwrap()).unwrap();
-    child["operations"][0]["request"] = serde_json::json!(payload.digest().hash());
+    let mut allocation = declaration(workflow().allocation());
+    let mut child = child_request(0);
+    let mut operation = operation_request(&child.operations[0]);
+    operation.request = payload.digest().hash().into();
+    child.operations[0] = PlannedOperationRecord::new(operation.clone()).unwrap();
     if dependency {
-        allocation["operations"][0]["budget"]["mutations"] = serde_json::json!(2);
-        allocation["budget"]["mutations"] = serde_json::json!(4);
-        child["graph"]["nodes"][0]["depends_on"] = serde_json::json!([43]);
-        child["graph"]["nodes"]
-            .as_array_mut()
-            .unwrap()
-            .push(serde_json::json!({"operation_sequence":43,"depends_on":[]}));
-        let mut prerequisite = child["operations"][0].clone();
-        prerequisite["operation_sequence"] = serde_json::json!(43);
-        prerequisite["budget"]["observations"] = serde_json::json!(0);
-        child["operations"]
-            .as_array_mut()
-            .unwrap()
-            .push(prerequisite);
-        child["budget"]["mutations"] = serde_json::json!(2);
+        let mut stage = operation_request(&allocation.operations[0]);
+        stage.budget = AttemptBudgetRecord::new(2, stage.budget.observations()).unwrap();
+        allocation.operations[0] = PlannedOperationRecord::new(stage).unwrap();
+        allocation.budget = PlanBudgetRecord::new(4, allocation.budget.observations()).unwrap();
+        child.graph = graph([(42, vec![43]), (43, vec![])]);
+        operation.operation_sequence = 43;
+        operation.budget = AttemptBudgetRecord::new(operation.budget.mutations(), 0).unwrap();
+        child
+            .operations
+            .push(PlannedOperationRecord::new(operation).unwrap());
+        child.budget = PlanBudgetRecord::new(2, child.budget.observations()).unwrap();
     }
-    let workflow = ExecutionWorkflowRecord::new(serde_json::from_value(allocation).unwrap());
-    let plan: OperationPlanRecord = serde_json::from_value(child).unwrap();
+    let workflow = ExecutionWorkflowRecord::new(OperationPlanRecord::new(allocation).unwrap());
+    let plan = OperationPlanRecord::new(child).unwrap();
     (workflow, plan)
 }
 

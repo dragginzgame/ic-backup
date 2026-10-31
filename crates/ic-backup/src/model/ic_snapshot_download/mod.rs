@@ -2,7 +2,7 @@
 
 use crate::model::{
     attempt_journal::AttemptJournalRecordError,
-    data_stage_plan::{self, DataStagePlanError, LearnedDataStage},
+    data_stage_plan::{self, DataStagePlanError, LearnedDataStage, LearnedDataStageError},
     effect_graph::EffectGraphError,
     execution_workflow::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
@@ -99,10 +99,7 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
             .plan
             .as_ref()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
-        if !self.binding.validate(binding, plan)? {
-            return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
-        }
-        Ok(())
+        Ok(self.binding.validate(binding, plan)?)
     }
     /// Bind the exact original metadata stage and reply evidence before stage creation.
     ///
@@ -130,8 +127,8 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
                 metadata_plan,
                 self.metadata.request().digest().hash(),
                 predecessors,
-            )?
-            .ok_or(IcSnapshotDownloadPlanningError::MetadataMismatch)
+            )
+            .map_err(Into::into)
     }
 }
 
@@ -173,6 +170,15 @@ pub enum IcSnapshotDownloadPlanningError {
     /// Existing per-operation budget owner rejected.
     #[error(transparent)]
     Budget(#[from] AttemptJournalRecordError),
+}
+
+impl From<LearnedDataStageError> for IcSnapshotDownloadPlanningError {
+    fn from(error: LearnedDataStageError) -> Self {
+        match error {
+            LearnedDataStageError::Workflow(error) => Self::Workflow(error),
+            LearnedDataStageError::Mismatch => Self::MetadataMismatch,
+        }
+    }
 }
 
 #[cfg(test)]

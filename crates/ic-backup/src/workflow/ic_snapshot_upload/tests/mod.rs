@@ -1,6 +1,10 @@
 //! Exact original upload spending and one-call custody; no live backend or source proof.
 
 use super::*;
+use crate::model::attempt_journal::AttemptBudgetRecord;
+use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
+use crate::test_support::operation_plan::{declaration, graph, operation_request};
+
 use crate::test_support::ready::ready;
 use crate::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use crate::{
@@ -325,13 +329,30 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
 fn changed_payload_source_network_or_release_reject_before_spending() {
     with_uploads(|payload, raw| {
         for field in ["request", "network", "release"] {
-            let mut plan = serde_json::to_value(upload_plan(payload)).unwrap();
+            let mut plan = declaration(&upload_plan(payload));
             if field == "request" {
-                plan["operations"][0]["request"] = serde_json::json!("00".repeat(32));
+                let mut operation = operation_request(&plan.operations[0]);
+                operation.request = "00".repeat(32);
+                plan.operations[0] = PlannedOperationRecord::new(operation).unwrap();
             } else {
-                plan["context"][field] = serde_json::json!("00".repeat(32));
+                plan.context = crate::model::operation_plan::PlanContextRecord::new(
+                    &crate::model::operation_plan::PlanContextRequest {
+                        network: if field == "network" {
+                            "00".repeat(32)
+                        } else {
+                            plan.context.network().into()
+                        },
+                        caller: plan.context.caller().into(),
+                        release: if field == "release" {
+                            "00".repeat(32)
+                        } else {
+                            plan.context.release().into()
+                        },
+                    },
+                )
+                .unwrap();
             }
-            let (_, layout, binding) = prepare(serde_json::from_value(plan).unwrap());
+            let (_, layout, binding) = prepare(OperationPlanRecord::new(plan).unwrap());
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
@@ -448,21 +469,22 @@ fn changed_stage_before_dispatch_or_after_reply_preserves_original_reservation()
 #[test]
 fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowledgement() {
     with_uploads(|payload, raw| {
-        let mut child = serde_json::to_value(upload_plan(payload)).unwrap();
+        let mut child = declaration(&upload_plan(payload));
         let mut allocation = child.clone();
-        allocation["operations"][0]["budget"]["mutations"] = serde_json::json!(2);
-        allocation["budget"]["mutations"] = serde_json::json!(2);
-        let workflow = ExecutionWorkflowRecord::new(serde_json::from_value(allocation).unwrap());
-        child["budget"]["mutations"] = serde_json::json!(2);
-        child["graph"]["nodes"] = serde_json::json!([
-            {"operation_sequence":7,"depends_on":[]},
-            {"operation_sequence":8,"depends_on":[7]}
-        ]);
-        let mut second = child["operations"][0].clone();
-        second["operation_sequence"] = serde_json::json!(8);
-        second["budget"]["observations"] = serde_json::json!(0);
-        child["operations"].as_array_mut().unwrap().push(second);
-        let plan = serde_json::from_value(child).unwrap();
+        let mut stage = operation_request(&allocation.operations[0]);
+        stage.budget = AttemptBudgetRecord::new(2, stage.budget.observations()).unwrap();
+        allocation.operations[0] = PlannedOperationRecord::new(stage).unwrap();
+        allocation.budget = PlanBudgetRecord::new(2, allocation.budget.observations()).unwrap();
+        let workflow = ExecutionWorkflowRecord::new(OperationPlanRecord::new(allocation).unwrap());
+        child.budget = PlanBudgetRecord::new(2, child.budget.observations()).unwrap();
+        child.graph = graph([(7, vec![]), (8, vec![7])]);
+        let mut second = operation_request(&child.operations[0]);
+        second.operation_sequence = 8;
+        second.budget = AttemptBudgetRecord::new(second.budget.mutations(), 0).unwrap();
+        child
+            .operations
+            .push(PlannedOperationRecord::new(second).unwrap());
+        let plan = OperationPlanRecord::new(child).unwrap();
         let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![]).unwrap();
         let root = temp_dir("ic-backup-upload-prerequisite");
         let layout = BackupLayoutGuard::acquire(&root).unwrap();

@@ -11,7 +11,6 @@ use crate::{
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_snapshot_metadata::IcSnapshotMetadataReply,
-        ic_update_response::IcUpdateResponseInput,
     },
     ops::persistence::{BackupLayoutGuard, DownloadJournalGuard, create_execution_workflow},
     ports::ic_observation::IcObservationProviderError,
@@ -91,9 +90,15 @@ fn artifacts<'a>(
     )
     .unwrap()
 }
+#[derive(Clone, Copy)]
+enum ReadFailure {
+    None,
+    Lost { call: usize },
+    Malformed { call: usize },
+}
 struct Provider {
     calls: usize,
-    failure: Option<(usize, bool)>,
+    failure: ReadFailure,
 }
 impl IcSnapshotTransferReadProvider for Provider {
     fn read_snapshot(
@@ -124,21 +129,21 @@ impl IcSnapshotTransferReadProvider for Provider {
                 SnapshotDataKind::WasmChunk { .. } => vec![],
             };
             let raw = match self.failure {
-                Some((failed, false)) if failed == index => {
+                ReadFailure::Lost { call } if call == index => {
                     return Err(IcObservationProviderError::Indeterminate);
                 }
-                Some((failed, true)) if failed == index => vec![],
+                ReadFailure::Malformed { call } if call == index => vec![],
                 _ => contract::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
             };
-            Ok(IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: payload.target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                reply: raw,
-            })
-            .unwrap())
+            Ok(
+                IcSnapshotTransferReadResponse::new(crate::test_support::update::input(
+                    request.authority(),
+                    request.mutation_attempt(),
+                    request.plan().context(),
+                    raw,
+                ))
+                .unwrap(),
+            )
         })())
     }
 }
@@ -155,12 +160,11 @@ fn qualify(
     request: &IcSnapshotTransferReadRequest<'_, '_>,
     response: &IcSnapshotTransferReadResponse,
 ) -> Result<MutationReceiptRequest, Infallible> {
-    Ok(MutationReceiptRequest {
-        attempt: request.mutation_attempt(),
-        request: request.payload().digest().hash().into(),
-        outcome: MutationOutcomeRecord::Applied,
-        evidence: response.input().evidence.hash().into(),
-    })
+    Ok(crate::test_support::update::applied_receipt(
+        request.mutation_attempt(),
+        &request.payload().digest(),
+        &response.input().evidence,
+    ))
 }
 fn raw_metadata() -> Vec<u8> {
     contract::encode_one(values()).unwrap()
@@ -189,7 +193,7 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
         .unwrap();
     let mut provider = Provider {
         calls: 0,
-        failure: None,
+        failure: ReadFailure::None,
     };
     let qualified = Cell::new(0);
     let mut future = Box::pin(download_snapshot(
@@ -271,7 +275,7 @@ fn streams_every_exact_region_and_known_chunk_with_explicit_receipts_then_publis
         .unwrap();
     let mut provider = Provider {
         calls: 0,
-        failure: None,
+        failure: ReadFailure::None,
     };
     let checksum = ready(download_snapshot(
         &stage,
@@ -322,7 +326,10 @@ fn streams_every_exact_region_and_known_chunk_with_explicit_receipts_then_publis
 
 #[test]
 fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pending_original() {
-    for malformed in [false, true] {
+    for failure in [
+        ReadFailure::Lost { call: 1 },
+        ReadFailure::Malformed { call: 1 },
+    ] {
         let workflow = workflow(256);
         let request = source();
         let raw = raw_metadata();
@@ -337,10 +344,7 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
             .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
             .unwrap();
         let path = writer.path().to_path_buf();
-        let mut provider = Provider {
-            calls: 0,
-            failure: Some((1, malformed)),
-        };
+        let mut provider = Provider { calls: 0, failure };
         let error = ready(download_snapshot(
             &stage,
             &download,
@@ -350,7 +354,7 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
             async |request, response| qualify(request, response),
         ))
         .unwrap_err();
-        if malformed {
+        if matches!(failure, ReadFailure::Malformed { .. }) {
             assert!(matches!(
                 error,
                 IcSnapshotDownloadExecutionError::Read(
@@ -428,7 +432,7 @@ fn qualification_rejection_retains_exact_response_and_does_not_append_or_record_
     let path = writer.path().to_path_buf();
     let mut provider = Provider {
         calls: 0,
-        failure: None,
+        failure: ReadFailure::None,
     };
     let error = ready(download_snapshot(
         &stage,
@@ -482,7 +486,7 @@ fn changed_receipt_or_negative_outcome_rejects_before_append_and_retains_pending
         let path = writer.path().to_path_buf();
         let mut provider = Provider {
             calls: 0,
-            failure: None,
+            failure: ReadFailure::None,
         };
         let error = ready(download_snapshot(
             &stage,
@@ -557,7 +561,7 @@ fn consumed_missing_or_held_originals_never_enter_fresh_admission_or_provider() 
             .unwrap();
         let mut provider = Provider {
             calls: 0,
-            failure: None,
+            failure: ReadFailure::None,
         };
         let error = ready(download_snapshot(
             &stage,
@@ -601,7 +605,7 @@ fn stage_or_local_byte_drift_during_qualification_retains_reply_and_pending_atte
         let path = writer.path().to_path_buf();
         let mut provider = Provider {
             calls: 0,
-            failure: None,
+            failure: ReadFailure::None,
         };
         let error = ready(download_snapshot(
             &stage,
@@ -697,7 +701,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
         };
         let mut provider = Provider {
             calls: 0,
-            failure: None,
+            failure: ReadFailure::None,
         };
         let error = ready(download_snapshot(
             &stage,
@@ -752,7 +756,7 @@ fn receipt_persistence_failure_retains_appended_bytes_reply_and_original_pending
     let retained = journal_path.with_extension("retained-original");
     let mut provider = Provider {
         calls: 0,
-        failure: None,
+        failure: ReadFailure::None,
     };
     let error = ready(download_snapshot(
         &stage,

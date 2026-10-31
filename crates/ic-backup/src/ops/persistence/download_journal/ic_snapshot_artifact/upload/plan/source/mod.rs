@@ -27,13 +27,9 @@ pub(super) fn bindings(
         bindings: Vec::with_capacity(kinds.len()),
     };
     let checksum = checksum_ic_tree_with(directory, metadata.source(), |directory, member| {
-        checksum_child_with(
-            directory,
-            &member.name,
-            member.length(),
-            member.maximum(),
-            |file, length| scan.member_checksum(file, member, length),
-        )
+        checksum_child_with(directory, member, |file, length| {
+            scan.member_checksum(file, member, length)
+        })
     })?;
     if scan.remaining.next().is_some() {
         return Err(IcSnapshotArtifactError::IncompleteCoverage.into());

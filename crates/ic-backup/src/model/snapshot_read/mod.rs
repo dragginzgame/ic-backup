@@ -132,10 +132,10 @@ impl<'a> SnapshotReadRequest<'a> {
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/snapshot-read/v1\0");
         bytes.append(self.binding.intent().as_bytes());
-        bytes.append(&self.binding.operation_sequence().to_be_bytes());
-        bytes.append(self.wire.digest().hash().as_bytes());
-        bytes.append(self.challenge.hash().as_bytes());
-        bytes.append(&self.max_remote_observations.to_be_bytes());
+        bytes.u64_be(self.binding.operation_sequence());
+        bytes.checksum(&self.wire.digest());
+        bytes.checksum(&self.challenge);
+        bytes.u32_be(self.max_remote_observations);
         bytes.finish()
     }
 }

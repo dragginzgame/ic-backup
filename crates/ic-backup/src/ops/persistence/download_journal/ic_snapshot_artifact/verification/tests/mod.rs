@@ -55,25 +55,27 @@ fn exact_stream_preserves_original_io_error() {
 fn callback_reads_reject_same_length_replacement_and_retain_both_files() {
     let root = crate::test_support::temp_dir("ic-backup-batch-child-identity");
     let directory = File::open(&root).unwrap();
-    let path = root.join("region.bin");
+    let request = crate::test_support::ic_snapshot_download::source();
+    let raw = ic_platform::candid::contract::encode_one(
+        crate::test_support::ic_snapshot_download::values(),
+    )
+    .unwrap();
+    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+    let member = member::expected(&metadata).unwrap().remove(0);
+    let path = root.join(&member.name);
     let original = root.join("retained.bin");
-    std::fs::write(&path, b"abc").unwrap();
-    let result = checksum_child_with::<IcSnapshotArtifactError>(
-        &directory,
-        "region.bin",
-        Some(3),
-        3,
-        |file, length| {
+    std::fs::write(&path, super::super::FORMAT).unwrap();
+    let result =
+        checksum_child_with::<IcSnapshotArtifactError>(&directory, &member, |file, length| {
             let checksum = checksum_exact_reader(file, length)?;
             std::fs::rename(&path, &original)?;
-            std::fs::write(&path, b"abc")?;
+            std::fs::write(&path, super::super::FORMAT)?;
             Ok(checksum)
-        },
-    );
+        });
     assert!(matches!(
         result,
         Err(IcSnapshotArtifactError::CustodyChanged)
     ));
-    assert_eq!(std::fs::read(path).unwrap(), b"abc");
-    assert_eq!(std::fs::read(original).unwrap(), b"abc");
+    assert_eq!(std::fs::read(path).unwrap(), super::super::FORMAT);
+    assert_eq!(std::fs::read(original).unwrap(), super::super::FORMAT);
 }

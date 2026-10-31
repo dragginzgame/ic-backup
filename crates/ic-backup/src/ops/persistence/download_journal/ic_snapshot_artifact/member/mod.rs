@@ -76,13 +76,25 @@ enum MemberKind {
 }
 
 impl ExpectedMember {
-    pub(super) fn length(&self) -> Option<u64> {
+    // All expected-tree consumers open with the name and bounds owned by this declaration.
+    pub(super) fn open(
+        &self,
+        directory: &super::File,
+    ) -> Result<(super::File, std::fs::Metadata), IcSnapshotArtifactError> {
+        super::verification::open_regular_child(
+            directory,
+            &self.name,
+            self.length(),
+            self.maximum(),
+        )
+    }
+    fn length(&self) -> Option<u64> {
         match self.kind {
             MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => Some(length),
             MemberKind::Metadata { .. } | MemberKind::Chunk { .. } => None,
         }
     }
-    pub(super) fn maximum(&self) -> u64 {
+    fn maximum(&self) -> u64 {
         match self.kind {
             MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => length,
             MemberKind::Metadata { .. } => MAX_IC_SNAPSHOT_METADATA_BYTES as u64,

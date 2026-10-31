@@ -18,6 +18,7 @@ pub mod ready;
 pub mod response_fault;
 pub mod restore_safety;
 pub mod snapshot_read;
+pub mod update;
 
 /// Decode independent fixture bytes without a production encoder or silent truncation.
 pub fn hex_bytes(hex: &str) -> Vec<u8> {

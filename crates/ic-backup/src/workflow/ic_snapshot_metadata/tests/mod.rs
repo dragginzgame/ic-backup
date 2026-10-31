@@ -1,6 +1,10 @@
 //! Original spending, explicit qualification and exact learned-stage admission.
 
 use super::*;
+use crate::model::attempt_journal::AttemptBudgetRecord;
+use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
+use crate::test_support::operation_plan::{declaration, graph, operation_request};
+
 use crate::test_support::ic_snapshot_download::{source, source_plan, values, workflow};
 use crate::test_support::ready::ready;
 use crate::{
@@ -10,7 +14,6 @@ use crate::{
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::IcSnapshotMetadataReply,
-        ic_update_response::IcUpdateResponseInput,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
     ports::ic_observation::IcObservationProviderError,
@@ -59,15 +62,15 @@ impl IcSnapshotTransferReadProvider for Provider {
             request.validate_journal(journal).unwrap();
             self.calls += 1;
             let raw = self.reply.clone()?;
-            Ok(IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                reply: raw,
-            })
-            .unwrap())
+            Ok(
+                IcSnapshotTransferReadResponse::new(crate::test_support::update::input(
+                    request.authority(),
+                    request.mutation_attempt(),
+                    request.plan().context(),
+                    raw,
+                ))
+                .unwrap(),
+            )
         })())
     }
 }
@@ -80,12 +83,11 @@ fn receipt(
     request: &IcSnapshotTransferReadRequest<'_, '_>,
     response: &IcSnapshotTransferReadResponse,
 ) -> MutationReceiptRequest {
-    MutationReceiptRequest {
-        attempt: request.mutation_attempt(),
-        request: request.payload().digest().hash().into(),
-        outcome: MutationOutcomeRecord::Applied,
-        evidence: response.input().evidence.hash().into(),
-    }
+    crate::test_support::update::applied_receipt(
+        request.mutation_attempt(),
+        &request.payload().digest(),
+        &response.input().evidence,
+    )
 }
 fn pending(stage: &ExecutionStageGuard<'_>) {
     let progress =
@@ -506,20 +508,21 @@ fn fresh_admission_and_invalid_receipt_evidence_keep_original_pending() {
 
 #[test]
 fn multi_operation_stage_rejects_before_any_original_spending() {
-    let mut allocation = serde_json::to_value(workflow(12).allocation()).unwrap();
-    allocation["operations"][0]["budget"]["mutations"] = serde_json::json!(2);
-    let workflow = ExecutionWorkflowRecord::new(serde_json::from_value(allocation).unwrap());
+    let mut allocation = declaration(workflow(12).allocation());
+    let mut stage = operation_request(&allocation.operations[0]);
+    stage.budget = AttemptBudgetRecord::new(2, stage.budget.observations()).unwrap();
+    allocation.operations[0] = PlannedOperationRecord::new(stage).unwrap();
+    let workflow = ExecutionWorkflowRecord::new(OperationPlanRecord::new(allocation).unwrap());
     let payload = source();
-    let mut child = serde_json::to_value(source_plan(&payload)).unwrap();
-    child["graph"]["nodes"] = serde_json::json!([
-        {"operation_sequence":42,"depends_on":[]},
-        {"operation_sequence":43,"depends_on":[]}
-    ]);
-    let mut second = child["operations"][0].clone();
-    second["operation_sequence"] = serde_json::json!(43);
-    child["operations"].as_array_mut().unwrap().push(second);
-    child["budget"]["mutations"] = serde_json::json!(2);
-    let plan = serde_json::from_value(child).unwrap();
+    let mut child = declaration(&source_plan(&payload));
+    child.graph = graph([(42, vec![]), (43, vec![])]);
+    let mut second = operation_request(&child.operations[0]);
+    second.operation_sequence = 43;
+    child
+        .operations
+        .push(PlannedOperationRecord::new(second).unwrap());
+    child.budget = PlanBudgetRecord::new(2, child.budget.observations()).unwrap();
+    let plan = OperationPlanRecord::new(child).unwrap();
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &plan, vec![]).unwrap();
     let root = temp_dir("ic-backup-singleton-metadata");
     let layout = BackupLayoutGuard::acquire(&root).unwrap();

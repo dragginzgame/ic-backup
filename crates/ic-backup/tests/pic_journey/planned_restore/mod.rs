@@ -94,10 +94,7 @@ fn child(
     payload: &IcManagementRequestRecord,
     sequence: u64,
 ) -> OperationPlanRecord {
-    let mut value = serde_json::to_value(backend.plan(&payload.digest(), sequence)).unwrap();
-    value["operations"][0]["budget"]["observations"] = json!(0);
-    value["budget"]["observations"] = json!(0);
-    serde_json::from_value(value).unwrap()
+    backend.plan_with_observations(&payload.digest(), sequence, 0)
 }
 
 #[expect(

@@ -6,13 +6,19 @@ use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{
-            AttemptJournalRecordError, MutationOutcomeRecord, MutationReceiptRequest,
+            AttemptBudgetRecord, AttemptJournalRecordError, MutationOutcomeRecord,
+            MutationReceiptRequest,
         },
+        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         ic_snapshot_transfer_read::{
             IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
             IcSnapshotTransferReadResponse,
         },
-        operation_plan::OperationPlanRecord,
+        inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
+        operation_plan::{
+            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlanContextRecord,
+            PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
+        },
     },
     ops::persistence::{
         AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, create_operation_plan,
@@ -137,6 +143,15 @@ impl Backend {
     }
 
     pub fn plan(&self, digest: &ArtifactChecksumRecord, sequence: u64) -> OperationPlanRecord {
+        self.plan_with_observations(digest, sequence, 1)
+    }
+
+    pub fn plan_with_observations(
+        &self,
+        digest: &ArtifactChecksumRecord,
+        sequence: u64,
+        observations: u32,
+    ) -> OperationPlanRecord {
         let network = ArtifactChecksumRecord::from_bytes(
             format!(
                 "explicit PocketIC instance {} at {}",
@@ -145,12 +160,44 @@ impl Backend {
             )
             .as_bytes(),
         );
-        serde_json::from_value(json!({
-            "version":1,"context":{"network":network.hash(),"caller":ExternalPrincipal::anonymous().to_text(),"release":self.release.hash()},
-            "inventory":{"version":1,"targets":[{"canister_id":self.target.to_text(),"parent_canister_id":null,"role":null,"module_hash":self.release.hash()}]},
-            "selected_targets":[self.target.to_text()],"graph":{"version":1,"nodes":[{"operation_sequence":sequence,"depends_on":[]}]},
-            "operations":[{"operation_sequence":sequence,"target":self.target.to_text(),"request":digest.hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
-        })).unwrap()
+        OperationPlanRecord::new(OperationPlanRequest {
+            context: PlanContextRecord::new(&PlanContextRequest {
+                network: network.hash().into(),
+                caller: ExternalPrincipal::anonymous().to_text(),
+                release: self.release.hash().into(),
+            })
+            .unwrap(),
+            inventory: InventoryRecord::new(vec![
+                InventoryTargetRecord::new(&InventoryTargetRequest {
+                    canister_id: self.target.to_text(),
+                    parent_canister_id: None,
+                    role: None,
+                    module_hash: Some(self.release.hash().into()),
+                })
+                .unwrap(),
+            ])
+            .unwrap(),
+            selected_targets: vec![self.target.to_text()],
+            graph: EffectGraphRecord::new(vec![
+                EffectNodeRecord::new(EffectNodeRequest {
+                    operation_sequence: sequence,
+                    depends_on: vec![],
+                })
+                .unwrap(),
+            ])
+            .unwrap(),
+            operations: vec![
+                PlannedOperationRecord::new(PlannedOperationRequest {
+                    operation_sequence: sequence,
+                    target: self.target.to_text(),
+                    request: digest.hash().into(),
+                    budget: AttemptBudgetRecord::new(1, observations).unwrap(),
+                })
+                .unwrap(),
+            ],
+            budget: PlanBudgetRecord::new(1, observations).unwrap(),
+        })
+        .unwrap()
     }
 
     pub fn layout(&self, index: u64) -> BackupLayoutGuard {

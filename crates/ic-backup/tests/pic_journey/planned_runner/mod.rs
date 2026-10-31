@@ -5,6 +5,7 @@ use round_trip::RestoreProgress;
 pub(super) use round_trip::change_live_state;
 pub(crate) use round_trip::run_round_trip;
 
+use super::stage::Stage;
 use super::{
     Fault,
     backend::Backend,
@@ -356,8 +357,11 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     ) -> Result<OperationPlanRecord, Self::Error> {
         assert_eq!(workflow, &self.workflow);
         self.binds.push(sequence);
-        assert_eq!(predecessors.len(), usize::from(!matches!(sequence, 0 | 11)));
-        if sequence == 7 {
+        assert_eq!(
+            predecessors.len(),
+            usize::from(Stage::from_sequence(sequence).predecessor().is_some())
+        );
+        if Stage::from_sequence(sequence) == Stage::Metadata {
             let snapshot = self.snapshot.as_ref().unwrap();
             if predecessors[0].stage_sequence() != 0
                 || predecessors[0].learned_evidence()
@@ -369,19 +373,19 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
         if self.stop_before == Some(sequence) {
             return Err(io::Error::other("fixture interruption before absent stage"));
         }
-        Ok(match sequence {
-            0 => {
+        Ok(match Stage::from_sequence(sequence) {
+            Stage::Capture => {
                 let payload = management(&self.backend, Method::TakeCanisterSnapshot, None);
                 self.backend.plan(&payload.digest(), 0)
             }
-            7 => {
+            Stage::Metadata => {
                 let snapshot = self.snapshot.as_ref().unwrap();
                 let request =
                     IcSnapshotMetadataRequest::new(&self.backend.target.to_text(), snapshot.id())
                         .unwrap();
                 self.backend.plan(&request.digest(), 7)
             }
-            9 => {
+            Stage::Download => {
                 let snapshot = self.snapshot.as_ref().unwrap();
                 let request =
                     IcSnapshotMetadataRequest::new(&self.backend.target.to_text(), snapshot.id())
@@ -395,8 +399,9 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                     .unwrap()
                     .clone()
             }
-            11 | 13 | 17 | 3 => self.bind_restore(workflow, sequence, predecessors),
-            _ => panic!("fixed original stage"),
+            Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
+                self.bind_restore(workflow, sequence, predecessors)
+            }
         })
     }
 
@@ -406,13 +411,12 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     ) -> impl Future<Output = Result<ArtifactChecksumRecord, Self::Error>> {
         let sequence = stage.binding().stage_sequence();
         self.stages.push(sequence);
-        let result = match sequence {
-            0 => self.capture(stage),
-            7 => self.metadata(stage),
-            9 => self.data(stage),
-            11 | 13 => self.upload(stage),
-            17 | 3 => self.restore(stage),
-            _ => panic!("fixed original stage"),
+        let result = match Stage::from_sequence(sequence) {
+            Stage::Capture => self.capture(stage),
+            Stage::Metadata => self.metadata(stage),
+            Stage::Download => self.data(stage),
+            Stage::Allocation | Stage::Upload => self.upload(stage),
+            Stage::Load | Stage::Start => self.restore(stage),
         };
         if let Ok(evidence) = &result {
             retain_bytes(
@@ -429,7 +433,11 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
         predecessor: &ExecutionStagePredecessorRecord,
         successor_sequence: u64,
     ) -> Result<ArtifactChecksumRecord, Self::Error> {
-        if (predecessor.stage_sequence(), successor_sequence) == (0, 7) {
+        if (
+            Stage::from_sequence(predecessor.stage_sequence()),
+            Stage::from_sequence(successor_sequence),
+        ) == (Stage::Capture, Stage::Metadata)
+        {
             return Ok(ArtifactChecksumRecord::from_bytes(
                 self.snapshot.as_ref().unwrap().id(),
             ));
@@ -527,14 +535,13 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
     driver
 }
 
-fn read_retained_prefix(
-    root: &Path,
-    backend: &Backend,
-) -> (
-    BTreeMap<u64, RetainedStageEvidence>,
-    IcSnapshotInfo,
-    Vec<u8>,
-) {
+struct RetainedCapture {
+    stages: BTreeMap<u64, RetainedStageEvidence>,
+    snapshot: IcSnapshotInfo,
+    raw_metadata: Vec<u8>,
+}
+
+fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
     let capture_payload = management(backend, Method::TakeCanisterSnapshot, None);
     assert_eq!(
         fs::read(root.join("execution-stage-0/capture-arguments.candid")).unwrap(),
@@ -602,7 +609,11 @@ fn read_retained_prefix(
             RetainedStageEvidence::new(binding(7), metadata_reply.digest()),
         ),
     ]);
-    (retained, snapshot, raw_metadata)
+    RetainedCapture {
+        stages: retained,
+        snapshot,
+        raw_metadata,
+    }
 }
 
 fn refuse_changed_retained_capture_edges(
@@ -690,7 +701,11 @@ pub(crate) fn run_retained() {
     let capture = fs::read(root.join("execution-stage-0/attempt-0.json")).unwrap();
     let metadata = fs::read(root.join("execution-stage-7/attempt-7.json")).unwrap();
     let calls = driver.backend.calls;
-    let (retained, snapshot, raw_metadata) = read_retained_prefix(&root, &driver.backend);
+    let RetainedCapture {
+        stages: retained,
+        snapshot,
+        raw_metadata,
+    } = read_retained_prefix(&root, &driver.backend);
     let capture_edge = ArtifactChecksumRecord::from_bytes(snapshot.id());
     refuse_changed_retained_capture_edges(
         &root,

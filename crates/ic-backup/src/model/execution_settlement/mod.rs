@@ -111,11 +111,11 @@ impl ExecutionSettlementRecord {
     #[must_use]
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/execution-settlement/v1\0");
-        bytes.append(self.plan_intent.hash().as_bytes());
-        bytes.append(&(self.journals.len() as u64).to_be_bytes());
+        bytes.checksum(&self.plan_intent);
+        bytes.u64_be(self.journals.len() as u64);
         for row in &self.journals {
-            bytes.append(&row.operation_sequence.to_be_bytes());
-            bytes.append(row.history.hash().as_bytes());
+            bytes.u64_be(row.operation_sequence);
+            bytes.checksum(&row.history);
         }
         bytes.finish()
     }

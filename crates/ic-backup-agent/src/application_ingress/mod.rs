@@ -176,6 +176,15 @@ where
     }
 }
 
+impl From<crate::submission::SubmissionFailure> for ApplicationIngressProviderError {
+    fn from(error: crate::submission::SubmissionFailure) -> Self {
+        match error {
+            crate::submission::SubmissionFailure::Unsupported => Self::Unsupported,
+            crate::submission::SubmissionFailure::Indeterminate => Self::Indeterminate,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,14 +200,5 @@ mod tests {
         assert!(!debug.contains("private application reply"));
         assert!(!debug.contains(&format!("{:?}", response.reply())));
         assert!(debug.contains("reply_bytes: 25"));
-    }
-}
-
-impl From<crate::submission::SubmissionFailure> for ApplicationIngressProviderError {
-    fn from(error: crate::submission::SubmissionFailure) -> Self {
-        match error {
-            crate::submission::SubmissionFailure::Unsupported => Self::Unsupported,
-            crate::submission::SubmissionFailure::Indeterminate => Self::Indeterminate,
-        }
     }
 }

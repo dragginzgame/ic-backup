@@ -126,28 +126,22 @@ fn checksum_child(
     directory: &File,
     member: &member::ExpectedMember,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
-    checksum_child_with(
-        directory,
-        &member.name,
-        member.length(),
-        member.maximum(),
-        |file, length| checksum_exact_reader(file, length),
-    )
+    checksum_child_with(directory, member, |file, length| {
+        checksum_exact_reader(file, length)
+    })
 }
 
 pub(super) fn checksum_child_with<E: From<IcSnapshotArtifactError>>(
     directory: &File,
-    name: &str,
-    length: Option<u64>,
-    maximum: u64,
+    member: &member::ExpectedMember,
     read: impl FnOnce(&mut File, u64) -> Result<ArtifactChecksumRecord, E>,
 ) -> Result<ArtifactChecksumRecord, E> {
     let flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
-    let (mut file, original) = open_regular_child(directory, name, length, maximum)?;
+    let (mut file, original) = member.open(directory)?;
     let checksum = read(&mut file, original.len())?;
     let held = file.metadata().map_err(IcSnapshotArtifactError::from)?;
     let current = File::from(
-        unix_fs::openat(directory, name, flags, Mode::empty())
+        unix_fs::openat(directory, member.name.as_str(), flags, Mode::empty())
             .map_err(io::Error::from)
             .map_err(IcSnapshotArtifactError::from)?,
     )

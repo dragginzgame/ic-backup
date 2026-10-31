@@ -2,13 +2,14 @@
 
 mod terminal;
 
+use super::super::stage::{self, Stage};
 use super::super::{
     Backend, Downloaded, Fault, lifecycle, management,
     planned_restore::Provider as RestoreProvider,
     planned_upload::{Failure, Provider as UploadProvider},
     status, verify_destination, verify_loaded,
 };
-use super::{CompleteDriver, read_retained_prefix, retain_bytes};
+use super::{CompleteDriver, RetainedCapture, read_retained_prefix, retain_bytes};
 use crate::{ready::ready, support::read_json};
 use ic_backup::{
     model::{
@@ -55,7 +56,6 @@ use std::{
 };
 
 use super::super::TOKEN;
-const STAGES: [u64; 7] = [0, 7, 9, 11, 13, 17, 3];
 
 pub(super) struct RestoreProgress {
     pub(super) source_binding: ExecutionStageBindingRecord,
@@ -77,22 +77,7 @@ fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
     let purpose = ArtifactChecksumRecord::from_bytes(
         format!("restore exact original capture {}", source.hash()).as_bytes(),
     );
-    let mut plan = serde_json::to_value(backend.plan(&purpose, 11)).unwrap();
-    plan["graph"]["nodes"] = json!([]);
-    plan["operations"] = json!([]);
-    for (sequence, previous, mutations) in [(11, 9, 1), (13, 11, 64), (17, 13, 1), (3, 17, 1)] {
-        plan["graph"]["nodes"]
-            .as_array_mut()
-            .unwrap()
-            .push(json!({"operation_sequence":sequence,"depends_on":if sequence == 11 { vec![] } else { vec![previous] }}));
-        plan["operations"].as_array_mut().unwrap().push(json!({
-            "operation_sequence":sequence,"target":backend.target.to_text(),
-            "request": if sequence == 11 { purpose.clone() } else { ArtifactChecksumRecord::from_bytes(format!("original round-trip stage {sequence}").as_bytes()) }.hash(),
-            "budget":{"mutations":mutations,"observations":0}
-        }));
-    }
-    plan["budget"] = json!({"mutations":67,"observations":0});
-    ExecutionWorkflowRecord::new(serde_json::from_value(plan).unwrap())
+    stage::catalog(backend, &Stage::RESTORE, &purpose)
 }
 
 // Deliberate fixture mutation after the original capture, independently accounted
@@ -113,15 +98,12 @@ impl CompleteDriver {
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> OperationPlanRecord {
         let retained = self.restore.as_ref().unwrap();
-        if matches!(sequence, 17 | 3) {
-            let mut plan = serde_json::to_value(
-                self.backend
-                    .plan(&self.restore_payload(sequence).digest(), sequence),
-            )
-            .unwrap();
-            plan["operations"][0]["budget"]["observations"] = json!(0);
-            plan["budget"]["observations"] = json!(0);
-            return serde_json::from_value(plan).unwrap();
+        if matches!(Stage::from_sequence(sequence), Stage::Load | Stage::Start) {
+            return self.backend.plan_with_observations(
+                &self.restore_payload(sequence).digest(),
+                sequence,
+                0,
+            );
         }
         let request = IcSnapshotMetadataRequest::new(
             &self.backend.target.to_text(),
@@ -136,7 +118,7 @@ impl CompleteDriver {
         let upload = journal
             .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
             .unwrap();
-        if sequence == 11 {
+        if Stage::from_sequence(sequence) == Stage::Allocation {
             assert_eq!(predecessors, []);
             assert_eq!(
                 retained.source_binding.plan(),
@@ -153,12 +135,8 @@ impl CompleteDriver {
                 )
                 .hash()
             );
-            let mut plan =
-                serde_json::to_value(self.backend.plan(&upload.binding_digest(), sequence))
-                    .unwrap();
-            plan["operations"][0]["budget"]["observations"] = json!(0);
-            plan["budget"]["observations"] = json!(0);
-            serde_json::from_value(plan).unwrap()
+            self.backend
+                .plan_with_observations(&upload.binding_digest(), sequence, 0)
         } else {
             let allocation = retained.allocation.as_ref().unwrap();
             let reply = IcSnapshotUploadReply::decode(&upload, &allocation.raw_reply).unwrap();
@@ -211,7 +189,8 @@ impl CompleteDriver {
             let reply = IcSnapshotUploadReply::decode(request.payload(), &acknowledgement.input().reply).unwrap();
             Ok::<_, Infallible>(MutationReceiptRequest { attempt: request.mutation_attempt(), request: request.payload().binding_digest().hash().into(), outcome: MutationOutcomeRecord::Applied, evidence: reply.digest().hash().into() })
         };
-        let result = if stage.binding().stage_sequence() == 11 {
+        let result = if Stage::from_sequence(stage.binding().stage_sequence()) == Stage::Allocation
+        {
             ready(allocate_snapshot(
                 stage,
                 11,
@@ -284,12 +263,12 @@ impl CompleteDriver {
         let destination = self.destination();
         management(
             &self.backend,
-            if sequence == 17 {
+            if Stage::from_sequence(sequence) == Stage::Load {
                 Method::LoadCanisterSnapshot
             } else {
                 Method::StartCanister
             },
-            (sequence == 17).then_some(destination),
+            (Stage::from_sequence(sequence) == Stage::Load).then_some(destination),
         )
     }
 
@@ -350,7 +329,7 @@ impl CompleteDriver {
         );
         // These are separately planned/reserved qualification calls, never hidden
         // calls inside a product provider or inferred upload/load receipts.
-        if sequence == 17 {
+        if Stage::from_sequence(sequence) == Stage::Load {
             verify_destination(
                 &mut self.backend,
                 &metadata,
@@ -395,7 +374,7 @@ impl CompleteDriver {
             },
         )
         .unwrap();
-        let restore_source = if sequence == 17 {
+        let restore_source = if Stage::from_sequence(sequence) == Stage::Load {
             let upload = journal
                 .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
                 .unwrap();
@@ -482,7 +461,7 @@ impl CompleteDriver {
         ))
         .map_err(|error| io::Error::other(error.to_string()))?;
         assert_eq!(acknowledgement.input().reply, b"DIDL\0\0");
-        if sequence == 17 {
+        if Stage::from_sequence(sequence) == Stage::Load {
             let acceptance = verify_loaded(
                 &mut backend.borrow_mut(),
                 &metadata,
@@ -522,7 +501,7 @@ fn retained(
     backend: &Backend,
 ) -> BTreeMap<u64, RetainedStageEvidence> {
     let mut evidence = if workflow.stage(0).is_ok() {
-        read_retained_prefix(layout.root(), backend).0
+        read_retained_prefix(layout.root(), backend).stages
     } else {
         BTreeMap::new()
     };
@@ -537,7 +516,10 @@ fn retained(
                 .exists()
         })
     {
-        if matches!(sequence, 0 | 7) {
+        if matches!(
+            Stage::from_sequence(sequence),
+            Stage::Capture | Stage::Metadata
+        ) {
             continue;
         }
         let binding: ExecutionStageBindingRecord = read_json(
@@ -629,7 +611,11 @@ fn rebuild(
     stop_before: Option<u64>,
     failure: Failure,
 ) -> CompleteDriver {
-    let (_, snapshot, raw_metadata) = read_retained_prefix(capture_layout.root(), &backend);
+    let RetainedCapture {
+        snapshot,
+        raw_metadata,
+        ..
+    } = read_retained_prefix(capture_layout.root(), &backend);
     let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
     let original_capture = super::allocated_workflow(&backend);
@@ -860,7 +846,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
             .unwrap();
         assert_eq!(operation.attempts.pending_mutation, Some(1));
         assert_eq!(operation.attempts.mutations_remaining, 0);
-        if sequence == 13 {
+        if Stage::from_sequence(sequence) == Stage::Upload {
             assert_eq!(progress.applied_operations, 1);
         }
         let source = driver.restore.as_ref().unwrap();
@@ -870,7 +856,14 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         terminal::check(&driver, &layout, &capture_layout, false);
     } else {
         let complete = result.unwrap();
-        assert_eq!(executed, STAGES);
+        assert_eq!(
+            executed,
+            Stage::CAPTURE
+                .into_iter()
+                .chain(Stage::RESTORE)
+                .map(Stage::sequence)
+                .collect::<Vec<_>>()
+        );
         driver.backend.assert_state(42);
         let before = files(&custody_root);
         let evidence = retained(&layout, &workflow, &driver.backend);

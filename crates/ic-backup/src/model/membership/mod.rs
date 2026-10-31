@@ -103,13 +103,13 @@ impl<'a> MembershipObservationRequest<'a> {
     pub fn digest(&self) -> ArtifactChecksumRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/membership-request/v1\0");
         bytes.append(self.binding.intent().as_bytes());
-        bytes.append(&self.binding.operation_sequence().to_be_bytes());
-        bytes.append(self.challenge.hash().as_bytes());
+        bytes.u64_be(self.binding.operation_sequence());
+        bytes.checksum(&self.challenge);
         bytes.byte(match self.boundary {
             MembershipBoundary::BeforeEffect => 0,
             MembershipBoundary::AfterEffect => 1,
         });
-        bytes.append(&self.max_remote_observations.to_be_bytes());
+        bytes.u32_be(self.max_remote_observations);
         bytes.finish()
     }
 }

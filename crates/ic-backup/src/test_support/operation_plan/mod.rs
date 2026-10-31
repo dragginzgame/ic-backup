@@ -67,3 +67,40 @@ pub(crate) fn operation(
     })
     .expect("operation")
 }
+
+/// Copy a valid declaration for typed fixture changes, without a JSON round trip.
+pub(crate) fn declaration(plan: &OperationPlanRecord) -> OperationPlanRequest {
+    OperationPlanRequest {
+        context: plan.context().clone(),
+        inventory: plan.inventory().clone(),
+        selected_targets: plan.selected_targets().to_vec(),
+        graph: plan.graph().clone(),
+        operations: plan.operations().to_vec(),
+        budget: plan.budget().clone(),
+    }
+}
+
+pub(crate) fn operation_request(operation: &PlannedOperationRecord) -> PlannedOperationRequest {
+    PlannedOperationRequest {
+        operation_sequence: operation.operation_sequence(),
+        target: operation.target().into(),
+        request: operation.request().into(),
+        budget: operation.budget().clone(),
+    }
+}
+
+pub(crate) fn graph(nodes: impl IntoIterator<Item = (u64, Vec<u64>)>) -> EffectGraphRecord {
+    EffectGraphRecord::new(
+        nodes
+            .into_iter()
+            .map(|(operation_sequence, depends_on)| {
+                EffectNodeRecord::new(EffectNodeRequest {
+                    operation_sequence,
+                    depends_on,
+                })
+                .unwrap()
+            })
+            .collect(),
+    )
+    .unwrap()
+}

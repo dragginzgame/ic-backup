@@ -1,5 +1,6 @@
 //! Real bounded downloads under one original workflow; this is an isolated test driver.
 
+use super::stage::{self, Stage};
 use super::{Fault, backend::Backend, lifecycle, management, status};
 use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
@@ -40,7 +41,6 @@ use ic_backup::{
     },
 };
 use ic_platform::management_canister_types::CanisterStatusType;
-use serde_json::json;
 use std::{convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt, path::Path};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -145,22 +145,11 @@ impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
 }
 
 pub(super) fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
-    let mut allocation = serde_json::to_value(
-        backend.plan(&ArtifactChecksumRecord::from_bytes(b"capture contract"), 0),
+    stage::catalog(
+        backend,
+        &Stage::CAPTURE,
+        &ArtifactChecksumRecord::from_bytes(b"capture contract"),
     )
-    .unwrap();
-    allocation["graph"]["nodes"] = json!([
-        {"operation_sequence":0,"depends_on":[]},
-        {"operation_sequence":7,"depends_on":[0]},
-        {"operation_sequence":9,"depends_on":[7]}
-    ]);
-    allocation["operations"] = json!([
-        {"operation_sequence":0,"target":backend.target.to_text(),"request":ArtifactChecksumRecord::from_bytes(b"capture contract").hash(),"budget":{"mutations":1,"observations":1}},
-        {"operation_sequence":7,"target":backend.target.to_text(),"request":ArtifactChecksumRecord::from_bytes(b"metadata contract").hash(),"budget":{"mutations":1,"observations":1}},
-        {"operation_sequence":9,"target":backend.target.to_text(),"request":ArtifactChecksumRecord::from_bytes(b"complete original metadata data reads").hash(),"budget":{"mutations":64,"observations":0}}
-    ]);
-    allocation["budget"] = json!({"mutations":66,"observations":2});
-    ExecutionWorkflowRecord::new(serde_json::from_value(allocation).unwrap())
 }
 fn record_applied(journal: &mut AttemptJournalGuard<'_>, evidence: &ArtifactChecksumRecord) {
     let record = journal.record().unwrap();

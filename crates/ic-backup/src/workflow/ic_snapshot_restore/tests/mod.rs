@@ -1,7 +1,9 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
-use crate::model::attempt_journal::MutationOutcomeRecord;
+use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
+use crate::test_support::operation_plan::{declaration, graph, operation_request};
+
 use crate::ops::persistence::AttemptJournalGuard;
 use crate::test_support::ready::ready;
 use crate::{
@@ -11,7 +13,6 @@ use crate::{
         ic_lifecycle_reply::IcLifecycleReply,
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
-        ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
         restore_safety::{RestoreSafetyLaneRecord, RestoreSafetyRequestInput},
     },
@@ -40,14 +41,14 @@ fn existing<'a>(
 }
 
 fn single(method: Method) -> OperationPlanRecord {
-    let mut value = serde_json::to_value(plan()).unwrap();
+    let original = plan();
     let index = usize::from(method == Method::StartCanister);
-    let operation = value["operations"][index].clone();
-    let sequence = operation["operation_sequence"].clone();
-    value["operations"] = serde_json::json!([operation]);
-    value["graph"]["nodes"] = serde_json::json!([{"operation_sequence":sequence,"depends_on":[]}]);
-    value["budget"] = serde_json::json!({"mutations":1,"observations":1});
-    serde_json::from_value(value).unwrap()
+    let operation = original.operations()[index].clone();
+    let mut request = declaration(&original);
+    request.graph = graph([(operation.operation_sequence(), vec![])]);
+    request.operations = vec![operation];
+    request.budget = PlanBudgetRecord::new(1, 1).unwrap();
+    OperationPlanRecord::new(request).unwrap()
 }
 struct Provider {
     calls: usize,
@@ -64,15 +65,15 @@ impl IcMutationProvider for Provider {
             request.validate_journal(journal).unwrap();
             self.calls += 1;
             let reply = self.reply.clone()?;
-            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap())
+            Ok(
+                IcMutationAcknowledgement::new(crate::test_support::update::input(
+                    request.authority(),
+                    request.mutation_attempt(),
+                    request.plan().context(),
+                    reply,
+                ))
+                .unwrap(),
+            )
         })())
     }
 }
@@ -80,12 +81,11 @@ fn receipt(
     request: &IcMutationRequest<'_>,
     reply: &IcMutationAcknowledgement,
 ) -> MutationReceiptRequest {
-    MutationReceiptRequest {
-        attempt: request.mutation_attempt(),
-        request: request.payload().digest().hash().into(),
-        outcome: MutationOutcomeRecord::Applied,
-        evidence: reply.input().evidence.hash().into(),
-    }
+    crate::test_support::update::applied_receipt(
+        request.mutation_attempt(),
+        &request.payload().digest(),
+        &reply.input().evidence,
+    )
 }
 
 #[test]
@@ -607,9 +607,11 @@ fn independently_valid_load_plan_cannot_rebind_the_admitted_snapshot_source() {
         snapshot_id: Some(vec![88, 99]),
     })
     .unwrap();
-    let mut fields = serde_json::to_value(single(Method::LoadCanisterSnapshot)).unwrap();
-    fields["operations"][0]["request"] = serde_json::json!(other.digest().hash());
-    let plan: OperationPlanRecord = serde_json::from_value(fields).unwrap();
+    let mut fields = declaration(&single(Method::LoadCanisterSnapshot));
+    let mut operation = operation_request(&fields.operations[0]);
+    operation.request = other.digest().hash().into();
+    fields.operations[0] = PlannedOperationRecord::new(operation).unwrap();
+    let plan = OperationPlanRecord::new(fields).unwrap();
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
     create_execution_workflow(&layout, &workflow).unwrap();
     let sequence = plan.operations()[0].operation_sequence();

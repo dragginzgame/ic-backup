@@ -26,9 +26,12 @@ impl LearnedDataStage<'_> {
         &self,
         binding: &ExecutionStageBindingRecord,
         plan: &OperationPlanRecord,
-    ) -> Result<bool, ExecutionWorkflowError> {
+    ) -> Result<(), LearnedDataStageError> {
         binding.validate(self.workflow, plan)?;
-        Ok(binding.has_learned_evidence(self.sequence, &self.evidence))
+        if !binding.has_learned_evidence(self.sequence, &self.evidence) {
+            return Err(LearnedDataStageError::Mismatch);
+        }
+        Ok(())
     }
 
     pub fn bind(
@@ -38,7 +41,7 @@ impl LearnedDataStage<'_> {
         source_plan: &OperationPlanRecord,
         source_request: &str,
         predecessors: Vec<ExecutionStagePredecessorRecord>,
-    ) -> Result<Option<ExecutionStageBindingRecord>, ExecutionWorkflowError> {
+    ) -> Result<ExecutionStageBindingRecord, LearnedDataStageError> {
         source_binding.validate(self.workflow, source_plan)?;
         if !source_binding.matches_learned_predecessor(
             source_plan,
@@ -46,14 +49,25 @@ impl LearnedDataStage<'_> {
             &self.evidence,
             &predecessors,
         ) {
-            return Ok(None);
+            return Err(LearnedDataStageError::Mismatch);
         }
-        Ok(Some(ExecutionStageBindingRecord::new(
+        Ok(ExecutionStageBindingRecord::new(
             self.workflow,
             self.sequence,
             plan,
             predecessors,
-        )?))
+        )?)
+    }
+}
+
+// Preserve structural workflow failures separately from learned-evidence mismatch.
+pub(crate) enum LearnedDataStageError {
+    Workflow(ExecutionWorkflowError),
+    Mismatch,
+}
+impl From<ExecutionWorkflowError> for LearnedDataStageError {
+    fn from(error: ExecutionWorkflowError) -> Self {
+        Self::Workflow(error)
     }
 }
 

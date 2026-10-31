@@ -16,6 +16,23 @@ use ic_backup::{
 };
 use ic_backup_agent::{AgentSnapshotTransferReadProvider, AgentUpdateProvider};
 
+// Own one freshly admitted source scope; returned journals borrow this held layout.
+// No source or metadata evidence is cached between driver calls.
+struct RetainedSource {
+    layout: BackupLayoutGuard,
+    plan: OperationPlanRecord,
+}
+impl RetainedSource {
+    fn open(driver: &Driver) -> io::Result<Self> {
+        let layout = BackupLayoutGuard::acquire(&driver.source()).map_err(error)?;
+        let plan = driver.source_plan(&layout)?;
+        Ok(Self { layout, plan })
+    }
+    fn journal(&self) -> io::Result<DownloadJournalGuard<'_>> {
+        DownloadJournalGuard::open(&self.layout, self.plan.digest().hash()).map_err(error)
+    }
+}
+
 impl Driver {
     pub(super) async fn transfer(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let request = self.metadata_request()?;
@@ -139,11 +156,10 @@ impl Driver {
     pub(super) fn destination(&self) -> io::Result<Vec<u8>> {
         let original = self.metadata_evidence()?;
         let metadata = original.decode()?;
-        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
-        let plan = self.source_plan(&source)?;
-        let journal = DownloadJournalGuard::open(&source, plan.digest().hash()).map_err(error)?;
+        let source = RetainedSource::open(self)?;
+        let journal = source.journal()?;
         let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
+            .prepare_ic_snapshot_upload_metadata(&source.plan, TOKEN, &metadata)
             .map_err(error)?;
         let raw = self.raw(Stage::Allocation)?;
         let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
@@ -161,12 +177,10 @@ impl Driver {
     ) -> io::Result<OperationPlanRecord> {
         let original = self.metadata_evidence()?;
         let metadata = original.decode()?;
-        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
-        let source_plan = self.source_plan(&source)?;
-        let journal =
-            DownloadJournalGuard::open(&source, source_plan.digest().hash()).map_err(error)?;
+        let source = RetainedSource::open(self)?;
+        let journal = source.journal()?;
         let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
+            .prepare_ic_snapshot_upload_metadata(&source.plan, TOKEN, &metadata)
             .map_err(error)?;
         if Stage::from_sequence(sequence)? == Stage::Allocation {
             return Ok(self.singleton(
@@ -202,18 +216,17 @@ impl Driver {
     pub(super) async fn upload(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let original = self.metadata_evidence()?;
         let metadata = original.decode()?;
-        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
-        let plan = self.source_plan(&source)?;
-        let journal = DownloadJournalGuard::open(&source, plan.digest().hash()).map_err(error)?;
+        let source = RetainedSource::open(self)?;
+        let journal = source.journal()?;
         let manifest = journal.record().map_err(error)?.digest();
         journal
-            .read_download_manifest(&plan, &manifest)
+            .read_download_manifest(&source.plan, &manifest)
             .map_err(error)?;
         journal
-            .verify_ic_snapshot_artifact(&plan, TOKEN, &metadata)
+            .verify_ic_snapshot_artifact(&source.plan, TOKEN, &metadata)
             .map_err(error)?;
         let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
+            .prepare_ic_snapshot_upload_metadata(&source.plan, TOKEN, &metadata)
             .map_err(error)?;
         let transport = self.config.transport(stage.plan());
         let root = stage.layout().map_err(error)?.root();

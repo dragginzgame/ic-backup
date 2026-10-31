@@ -10,11 +10,20 @@
 - Share independent consumer configuration, transport, singleton plans and fresh
   metadata evidence. Keep original context, budgets, bytes and custody checks.
 
+- Give private learned-stage failures and artifact-member admission one owner;
+  consistently use existing digest framing helpers. Preserve public errors,
+  filesystem checks and exact evidence bytes.
+
 ### 🧪 Testing
 
 - Parse private consumer commands with test-only Clap and name remaining fence
   and response-fault scenarios. Preserve command spellings, native path bytes,
   failure exits, cancellation points and combined-invalid-input checks.
+- Keep Agent library-test item ordering compatible with strict all-target Clippy.
+
+- Build valid workflow fixtures through typed declarations and name stage and
+  download-failure cases. Share passive replies, explicit receipts and scoped
+  retained-source reconstruction while preserving independent assertions.
 
 ### 🔧 Dependencies
 

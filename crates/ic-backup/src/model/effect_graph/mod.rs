@@ -105,10 +105,10 @@ impl EffectGraphRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/effect-graph/v1\0");
         append_count(&mut bytes, self.nodes.len());
         for node in &self.nodes {
-            bytes.append(&node.operation_sequence().to_be_bytes());
+            bytes.u64_be(node.operation_sequence());
             append_count(&mut bytes, node.depends_on().len());
             for dependency in node.depends_on() {
-                bytes.append(&dependency.to_be_bytes());
+                bytes.u64_be(*dependency);
             }
         }
         bytes.finish()
@@ -120,7 +120,7 @@ impl EffectGraphRecord {
     reason = "validated operation/dependency counts are at most 8192"
 )]
 fn append_count(bytes: &mut EvidenceDigest, count: usize) {
-    bytes.append(&(count as u32).to_be_bytes());
+    bytes.u32_be(count as u32);
 }
 
 fn topological_order(nodes: &[EffectNodeRecord]) -> Result<Vec<usize>, EffectGraphError> {

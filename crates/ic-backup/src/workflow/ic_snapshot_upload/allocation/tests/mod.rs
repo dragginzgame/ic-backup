@@ -1,6 +1,10 @@
 //! Explicit allocation qualification and retained original spending/checkpoint evidence.
 
 use super::*;
+use crate::model::attempt_journal::AttemptBudgetRecord;
+use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
+use crate::test_support::operation_plan::{declaration, graph, operation_request};
+
 use crate::test_support::ready::ready;
 use crate::{
     model::{
@@ -9,7 +13,6 @@ use crate::{
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_upload::IcSnapshotUploadReply,
-        ic_update_response::IcUpdateResponseInput,
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, create_execution_workflow, read_execution_progress,
@@ -78,15 +81,15 @@ impl IcSnapshotUploadProvider for Provider {
             request.validate_journal(journal).unwrap();
             self.calls += 1;
             let reply = self.reply.clone()?;
-            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap())
+            Ok(
+                IcMutationAcknowledgement::new(crate::test_support::update::input(
+                    request.authority(),
+                    request.mutation_attempt(),
+                    request.plan().context(),
+                    reply,
+                ))
+                .unwrap(),
+            )
         })())
     }
 }
@@ -99,12 +102,11 @@ fn receipt(
     request: &IcSnapshotUploadAttempt<'_, '_>,
     acknowledgement: &IcMutationAcknowledgement,
 ) -> MutationReceiptRequest {
-    MutationReceiptRequest {
-        attempt: request.mutation_attempt(),
-        request: request.payload().binding_digest().hash().into(),
-        outcome: MutationOutcomeRecord::Applied,
-        evidence: acknowledgement.input().evidence.hash().into(),
-    }
+    crate::test_support::update::applied_receipt(
+        request.mutation_attempt(),
+        &request.payload().binding_digest(),
+        &acknowledgement.input().evidence,
+    )
 }
 fn pending(stage: &ExecutionStageGuard<'_>) {
     let progress =
@@ -297,20 +299,21 @@ fn data_sequence_and_multi_operation_stages_refuse_before_spending_or_provider()
         );
         let root = temp_dir("ic-backup-multi-allocation");
         let multi_layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let mut value = serde_json::to_value(upload_plan(payload)).unwrap();
-        let mut op = value["operations"][0].clone();
-        op["operation_sequence"] = serde_json::json!(8);
-        value["operations"].as_array_mut().unwrap().push(op);
-        value["graph"]["nodes"]
-            .as_array_mut()
-            .unwrap()
-            .push(serde_json::json!({"operation_sequence":8,"depends_on":[7]}));
-        value["budget"] = serde_json::json!({"mutations":4,"observations":2});
-        let plan = serde_json::from_value(value).unwrap();
-        let mut allocation = serde_json::to_value(upload_plan(payload)).unwrap();
-        allocation["operations"][0]["budget"] = serde_json::json!({"mutations":4,"observations":2});
-        allocation["budget"] = serde_json::json!({"mutations":4,"observations":2});
-        let workflow = ExecutionWorkflowRecord::new(serde_json::from_value(allocation).unwrap());
+        let mut value = declaration(&upload_plan(payload));
+        let mut operation = operation_request(&value.operations[0]);
+        operation.operation_sequence = 8;
+        value
+            .operations
+            .push(PlannedOperationRecord::new(operation).unwrap());
+        value.graph = graph([(7, vec![]), (8, vec![7])]);
+        value.budget = PlanBudgetRecord::new(4, 2).unwrap();
+        let plan = OperationPlanRecord::new(value).unwrap();
+        let mut allocation = declaration(&upload_plan(payload));
+        let mut stage = operation_request(&allocation.operations[0]);
+        stage.budget = AttemptBudgetRecord::new(4, 2).unwrap();
+        allocation.operations[0] = PlannedOperationRecord::new(stage).unwrap();
+        allocation.budget = PlanBudgetRecord::new(4, 2).unwrap();
+        let workflow = ExecutionWorkflowRecord::new(OperationPlanRecord::new(allocation).unwrap());
         create_execution_workflow(&multi_layout, &workflow).unwrap();
         let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![]).unwrap();
         let multi = ExecutionStageGuard::prepare(&multi_layout, binding, plan).unwrap();

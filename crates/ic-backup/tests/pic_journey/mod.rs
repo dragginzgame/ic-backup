@@ -7,6 +7,7 @@ mod planned_restore;
 pub(super) mod planned_runner;
 pub(super) mod planned_upload;
 mod recovery;
+mod stage;
 
 use backend::Backend;
 use ic_backup::{

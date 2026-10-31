@@ -7,7 +7,7 @@ use super::{
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::AttemptJournalRecordError,
-    data_stage_plan::{self, DataStagePlanError, LearnedDataStage},
+    data_stage_plan::{self, DataStagePlanError, LearnedDataStage, LearnedDataStageError},
     effect_graph::EffectGraphError,
     execution_workflow::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
@@ -222,8 +222,8 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
                 allocation_plan,
                 self.metadata.binding_digest().hash(),
                 predecessors,
-            )?
-            .ok_or(IcSnapshotDataUploadPlanningError::OriginalMismatch)
+            )
+            .map_err(Into::into)
     }
     pub(crate) fn validate_binding(
         &self,
@@ -232,10 +232,7 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
         let plan = self
             .plan()
             .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
-        if !self.binding.validate(binding, plan)? {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
-        }
-        Ok(())
+        Ok(self.binding.validate(binding, plan)?)
     }
 }
 
@@ -297,6 +294,15 @@ impl From<DataStagePlanError> for IcSnapshotDataUploadPlanningError {
             DataStagePlanError::Graph(error) => Self::Graph(error),
             DataStagePlanError::Plan(error) => Self::Plan(error),
             DataStagePlanError::Budget(error) => Self::Budget(error),
+        }
+    }
+}
+
+impl From<LearnedDataStageError> for IcSnapshotDataUploadPlanningError {
+    fn from(error: LearnedDataStageError) -> Self {
+        match error {
+            LearnedDataStageError::Workflow(error) => Self::Workflow(error),
+            LearnedDataStageError::Mismatch => Self::OriginalMismatch,
         }
     }
 }

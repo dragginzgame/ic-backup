@@ -194,15 +194,15 @@ impl RestoreSafetyRequirementRecord {
         let mut bytes = EvidenceDigest::new(b"ic-backup/restore-safety-requirement/v1\0");
         bytes.append(self.plan_intent.as_bytes());
         bytes.append(self.source_plan_intent.as_bytes());
-        bytes.append(self.source_artifacts.hash().as_bytes());
+        bytes.checksum(&self.source_artifacts);
         bytes.byte(match self.safety {
             RestoreSafetyLaneRecord::NoIrreversibleEffects => 0,
             RestoreSafetyLaneRecord::ApplicationFenced => 1,
         });
         if let Some(fence) = &self.expected_fence {
-            bytes.append(fence.identity.hash().as_bytes());
-            bytes.append(fence.membership_revision.hash().as_bytes());
-            bytes.append(fence.external_obligations_revision.hash().as_bytes());
+            bytes.checksum(&fence.identity);
+            bytes.checksum(&fence.membership_revision);
+            bytes.checksum(&fence.external_obligations_revision);
         }
         bytes.finish()
     }
