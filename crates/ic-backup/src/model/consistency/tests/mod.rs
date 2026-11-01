@@ -53,6 +53,14 @@ fn closed_requirement_normalizes_intent_and_matches_independent_binary_goldens()
 
 #[test]
 fn request_binds_guarantee_operation_challenge_boundary_fence_and_original_allowances() {
+    #[derive(Clone, Copy)]
+    enum RequestFault {
+        Challenge,
+        Boundary,
+        Operation,
+        MoreObservations,
+        NoObservations,
+    }
     let plan = plan();
     for (guarantee, expected) in [
         (
@@ -76,14 +84,20 @@ fn request_binds_guarantee_operation_challenge_boundary_fence_and_original_allow
         assert_eq!(request.challenge(), &hash("12"));
         assert_eq!(request.boundary(), ConsistencyBoundary::BeforeCapture);
         assert_eq!(request.max_remote_observations(), 1);
-        for variant in 0..5 {
+        for fault in [
+            RequestFault::Challenge,
+            RequestFault::Boundary,
+            RequestFault::Operation,
+            RequestFault::MoreObservations,
+            RequestFault::NoObservations,
+        ] {
             let mut params = parameters(guarantee);
-            match variant {
-                0 => params.challenge = hash("34"),
-                1 => params.boundary = ConsistencyBoundary::AfterCapture,
-                2 => params.operation_sequence = 0,
-                3 => params.max_remote_observations = 2,
-                _ => params.max_remote_observations = 0,
+            match fault {
+                RequestFault::Challenge => params.challenge = hash("34"),
+                RequestFault::Boundary => params.boundary = ConsistencyBoundary::AfterCapture,
+                RequestFault::Operation => params.operation_sequence = 0,
+                RequestFault::MoreObservations => params.max_remote_observations = 2,
+                RequestFault::NoObservations => params.max_remote_observations = 0,
             }
             assert_ne!(
                 request.digest(),

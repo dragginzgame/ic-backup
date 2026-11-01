@@ -6,7 +6,8 @@ use crate::{
         operation_plan::OperationPlanRecord,
     },
     policy::execution_progress::{
-        self, ExecutionProgressError, ExecutionProgressView, OperationProgressState,
+        self, AdmittedProgress, ExecutionProgressError, ExecutionProgressView,
+        OperationProgressState,
     },
 };
 use thiserror::Error;
@@ -38,7 +39,10 @@ pub(crate) fn validate_journals<'a>(
     if &plan.digest() != settlement.plan_intent() {
         return Err(ExecutionSettlementPolicyError::IntentMismatch);
     }
-    let (view, actual) = execution_progress::progress_with_journals(plan, journals)?;
+    let AdmittedProgress {
+        view,
+        journals: actual,
+    } = execution_progress::progress_with_journals(plan, journals)?;
     if let Some(operation) = view
         .operations
         .iter()

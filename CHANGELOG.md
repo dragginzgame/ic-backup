@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.53.5]
+
+### 🧹 Cleanup
+
+- Narrow Agent's private submission routes to their supported request families and
+  name the shared progress-admission result, preserving existing public contracts
+  and retained reply evidence.
+
+### 🧪 Testing
+
+- Reuse journey stage identities, give failed-stage expectations explicit operation
+  and optional successor fields, and name consistency-request fault cases while
+  retaining the original numeric identities, assertions and golden values.
+
 ## [0.53.4] - 2026-11-01
 
 ### ⬆️ Dependencies

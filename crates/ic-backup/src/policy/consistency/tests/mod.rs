@@ -54,18 +54,34 @@ fn admits_only_original_lane_and_requires_every_exact_target_stopped() {
 
 #[test]
 fn rejects_stale_boundary_challenge_or_fence_and_changed_actual_revision() {
+    #[derive(Clone, Copy)]
+    enum RequestFault {
+        Challenge,
+        Boundary,
+        FenceIdentity,
+        MembershipRevision,
+    }
     let plan = plan();
     let guarantee = ConsistencyGuaranteeRecord::ApplicationCoordinated;
     let requirement = ConsistencyRequirementRecord::new(&plan, guarantee);
     let request = ConsistencyRequest::new(&plan, &requirement, parameters(guarantee)).unwrap();
     let observation = ConsistencyObservation::new(input(&request)).unwrap();
-    for variant in 0..4 {
+    for fault in [
+        RequestFault::Challenge,
+        RequestFault::Boundary,
+        RequestFault::FenceIdentity,
+        RequestFault::MembershipRevision,
+    ] {
         let mut params = parameters(guarantee);
-        match variant {
-            0 => params.challenge = hash("34"),
-            1 => params.boundary = ConsistencyBoundary::AfterCapture,
-            2 => params.expected_fence.as_mut().unwrap().identity = hash("90"),
-            _ => params.expected_fence.as_mut().unwrap().membership_revision = hash("90"),
+        match fault {
+            RequestFault::Challenge => params.challenge = hash("34"),
+            RequestFault::Boundary => params.boundary = ConsistencyBoundary::AfterCapture,
+            RequestFault::FenceIdentity => {
+                params.expected_fence.as_mut().unwrap().identity = hash("90");
+            }
+            RequestFault::MembershipRevision => {
+                params.expected_fence.as_mut().unwrap().membership_revision = hash("90");
+            }
         }
         let changed = ConsistencyRequest::new(&plan, &requirement, params).unwrap();
         assert_eq!(

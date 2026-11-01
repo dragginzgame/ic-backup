@@ -89,6 +89,45 @@ pub struct AgentApplicationIngressProvider<'a, I, R> {
     retain_ingress: I,
     retain_reply: R,
 }
+// The public entrypoints select exactly one original application reservation lane.
+enum ApplicationRequest<'a> {
+    Mutation(&'a ApplicationMutationRequest<'a>),
+    Observation(&'a ApplicationObservationRequest<'a>),
+}
+
+struct ApplicationReplyBinding {
+    authority: ArtifactChecksumRecord,
+    payload: ArtifactChecksumRecord,
+    attempts: [u32; 2],
+    domain: &'static [u8],
+}
+
+impl<'a> ApplicationRequest<'a> {
+    fn reserved(self) -> ReservedUpdate<'a> {
+        match self {
+            Self::Mutation(request) => ReservedUpdate::ApplicationMutation(request),
+            Self::Observation(request) => ReservedUpdate::ApplicationObservation(request),
+        }
+    }
+
+    fn reply_binding(&self) -> ApplicationReplyBinding {
+        match self {
+            Self::Mutation(request) => ApplicationReplyBinding {
+                authority: request.authority().digest(),
+                payload: request.payload().digest(),
+                attempts: [request.mutation_attempt(), 0],
+                domain: b"ic-backup-agent.application-mutation-reply.v1\0",
+            },
+            Self::Observation(request) => ApplicationReplyBinding {
+                authority: request.authority().digest(),
+                payload: request.payload().digest(),
+                attempts: [request.mutation_attempt(), request.observation_attempt()],
+                domain: b"ic-backup-agent.application-observation-reply.v1\0",
+            },
+        }
+    }
+}
+
 impl<'a, I, R> AgentApplicationIngressProvider<'a, I, R> {
     /// Bind exact configured transport and both mandatory durable retainers without effects.
     pub const fn new(transport: &'a AgentTransport, retain_ingress: I, retain_reply: R) -> Self {
@@ -115,7 +154,7 @@ where
         request: &ApplicationMutationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<ApplicationIngressResponse, ApplicationIngressProviderError> {
-        self.submit(ReservedUpdate::ApplicationMutation(request), journal)
+        self.submit(ApplicationRequest::Mutation(request), journal)
             .await
     }
     /// Submit one independently reserved recovery observation through update ingress.
@@ -126,49 +165,39 @@ where
         request: &ApplicationObservationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<ApplicationIngressResponse, ApplicationIngressProviderError> {
-        self.submit(ReservedUpdate::ApplicationObservation(request), journal)
+        self.submit(ApplicationRequest::Observation(request), journal)
             .await
     }
     async fn submit(
         &mut self,
-        request: ReservedUpdate<'_>,
+        request: ApplicationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<ApplicationIngressResponse, ApplicationIngressProviderError> {
-        let (authority, payload, attempts, domain): (_, _, _, &[u8]) = match &request {
-            ReservedUpdate::ApplicationMutation(r) => (
-                r.authority(),
-                r.payload(),
-                [r.mutation_attempt(), 0],
-                b"ic-backup-agent.application-mutation-reply.v1\0",
-            ),
-            ReservedUpdate::ApplicationObservation(r) => (
-                r.authority(),
-                r.payload(),
-                [r.mutation_attempt(), r.observation_attempt()],
-                b"ic-backup-agent.application-observation-reply.v1\0",
-            ),
-            _ => return Err(ApplicationIngressProviderError::Unsupported),
-        };
-        let payload = payload.digest();
-        let binding = ArtifactChecksumRecord::from_bytes(
+        let binding = request.reply_binding();
+        let commitment = ArtifactChecksumRecord::from_bytes(
             &[
-                authority.digest().hash().as_bytes(),
-                payload.hash().as_bytes(),
+                binding.authority.hash().as_bytes(),
+                binding.payload.hash().as_bytes(),
             ]
             .concat(),
         );
         let (request_id, reply) = crate::submission::submit_once(
             self.transport,
-            request,
+            request.reserved(),
             journal,
             |prepared| (self.retain_ingress)(&prepared.request, prepared),
             |request, id, reply| (self.retain_reply)(request, id, reply),
         )
         .await?;
-        let evidence =
-            crate::reply_evidence::reply_evidence(domain, &binding, &attempts, &request_id, &reply);
+        let evidence = crate::reply_evidence::reply_evidence(
+            binding.domain,
+            &commitment,
+            &binding.attempts,
+            &request_id,
+            &reply,
+        );
         Ok(ApplicationIngressResponse {
-            request: payload,
+            request: binding.payload,
             request_id,
             reply,
             evidence,

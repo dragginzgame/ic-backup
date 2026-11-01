@@ -36,7 +36,7 @@ pub(super) fn read_with_current(
     let (plan, journals) = super::attempt_journal::read_original_plan_journals::<
         ExecutionProgressPersistenceError,
     >(layout, expected_plan, current)?;
-    Ok(progress_with_journals(&plan, journals.iter())?.0)
+    Ok(progress_with_journals(&plan, journals.iter())?.view)
 }
 
 /// Typed local evidence or reservation rejection; no failure resets original spending.

@@ -72,6 +72,14 @@ pub(super) struct RetainedAllocation {
     raw_reply: Vec<u8>,
 }
 
+// Stage identity and child-operation identity are distinct; Start has no successor.
+#[derive(Clone, Copy)]
+struct FailureExpectation {
+    stage: Stage,
+    operation_sequence: u64,
+    successor: Option<Stage>,
+}
+
 fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
     let source = super::allocated_workflow(backend).digest();
     let purpose = ArtifactChecksumRecord::from_bytes(
@@ -119,7 +127,10 @@ impl CompleteDriver {
                 &retained.source_plan.digest()
             );
             assert_eq!(
-                workflow.stage(11).unwrap().request(),
+                workflow
+                    .stage(Stage::Allocation.sequence())
+                    .unwrap()
+                    .request(),
                 ArtifactChecksumRecord::from_bytes(
                     format!(
                         "restore exact original capture {}",
@@ -135,7 +146,13 @@ impl CompleteDriver {
             let allocation = retained.allocation.as_ref().unwrap();
             let reply = IcSnapshotUploadReply::decode(&upload, &allocation.raw_reply).unwrap();
             let data = journal
-                .prepare_ic_snapshot_data_upload_plan(workflow, 13, TOKEN, &reply, 32 * 1024)
+                .prepare_ic_snapshot_data_upload_plan(
+                    workflow,
+                    Stage::Upload.sequence(),
+                    TOKEN,
+                    &reply,
+                    32 * 1024,
+                )
                 .unwrap();
             data.bind(&allocation.binding, &allocation.plan, predecessors.to_vec())
                 .unwrap();
@@ -181,7 +198,7 @@ impl CompleteDriver {
         {
             ready(allocate_snapshot(
                 stage,
-                11,
+                Stage::Allocation.sequence(),
                 &upload,
                 &mut provider,
                 async |request| {
@@ -206,7 +223,13 @@ impl CompleteDriver {
             let allocation = retained.allocation.as_ref().unwrap();
             let reply = IcSnapshotUploadReply::decode(&upload, &allocation.raw_reply).unwrap();
             let data = journal
-                .prepare_ic_snapshot_data_upload_plan(&self.workflow, 13, TOKEN, &reply, 32 * 1024)
+                .prepare_ic_snapshot_data_upload_plan(
+                    &self.workflow,
+                    Stage::Upload.sequence(),
+                    TOKEN,
+                    &reply,
+                    32 * 1024,
+                )
                 .unwrap();
             assert_eq!(
                 &data
@@ -359,7 +382,7 @@ impl CompleteDriver {
             let data = journal
                 .prepare_ic_snapshot_data_upload_plan(
                     &self.workflow,
-                    13,
+                    Stage::Upload.sequence(),
                     TOKEN,
                     &allocation,
                     32 * 1024,
@@ -476,7 +499,7 @@ fn retained(
     workflow: &ExecutionWorkflowRecord,
     backend: &Backend,
 ) -> BTreeMap<u64, RetainedStageEvidence> {
-    let mut evidence = if workflow.stage(0).is_ok() {
+    let mut evidence = if workflow.stage(Stage::Capture.sequence()).is_ok() {
         read_retained_prefix(layout.root(), backend).stages
     } else {
         BTreeMap::new()
@@ -553,7 +576,8 @@ fn replay_allocation(
     source_plan: &OperationPlanRecord,
     metadata: &IcSnapshotMetadataReply<'_>,
 ) -> Option<RetainedAllocation> {
-    let root = layout.root().join("execution-stage-11");
+    let sequence = Stage::Allocation.sequence();
+    let root = layout.root().join(format!("execution-stage-{sequence}"));
     if !root.exists() {
         return None;
     }
@@ -565,7 +589,12 @@ fn replay_allocation(
         .prepare_ic_snapshot_upload_metadata(source_plan, TOKEN, metadata)
         .unwrap();
     assert_eq!(
-        fs::read(allocation_layout.root().join("upload-11-arguments.candid")).unwrap(),
+        fs::read(
+            allocation_layout
+                .root()
+                .join(format!("upload-{sequence}-arguments.candid"))
+        )
+        .unwrap(),
         upload.arguments()
     );
     assert_eq!(
@@ -575,7 +604,12 @@ fn replay_allocation(
     Some(RetainedAllocation {
         binding,
         plan,
-        raw_reply: fs::read(allocation_layout.root().join("upload-11.candid")).unwrap(),
+        raw_reply: fs::read(
+            allocation_layout
+                .root()
+                .join(format!("upload-{sequence}.candid")),
+        )
+        .unwrap(),
     })
 }
 
@@ -596,8 +630,16 @@ fn rebuild(
     let original_capture = super::allocated_workflow(&backend);
     let original_capture =
         read_execution_workflow(capture_layout, &original_capture.digest()).unwrap();
-    let download = IcSnapshotDownloadPlan::new(&original_capture, 9, &metadata, 32 * 1024).unwrap();
-    let source_root = capture_layout.root().join("execution-stage-9");
+    let download = IcSnapshotDownloadPlan::new(
+        &original_capture,
+        Stage::Download.sequence(),
+        &metadata,
+        32 * 1024,
+    )
+    .unwrap();
+    let source_root = capture_layout
+        .root()
+        .join(format!("execution-stage-{}", Stage::Download.sequence()));
     let source_layout = BackupLayoutGuard::acquire(&source_root).unwrap();
     let source_plan =
         read_operation_plan(&source_layout, &download.plan().unwrap().digest()).unwrap();
@@ -620,11 +662,10 @@ fn rebuild(
     );
     let chunks = replay_chunks(&download, &source_root);
     let allocation = replay_allocation(layout, &journal, &source_plan, &metadata);
-    let acceptance = fs::read_to_string(
-        layout
-            .root()
-            .join("execution-stage-17/fixture-accepted.sha256"),
-    )
+    let acceptance = fs::read_to_string(layout.root().join(format!(
+        "execution-stage-{}/fixture-accepted.sha256",
+        Stage::Load.sequence()
+    )))
     .ok()
     .map(|hash| ArtifactChecksumRecord::from_hash(&hash).unwrap());
     CompleteDriver {
@@ -732,12 +773,16 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
     }
     driver.workflow = workflow.clone();
     driver.stages.clear();
-    driver.stop_before = interrupt.then_some(11);
+    driver.stop_before = interrupt.then_some(Stage::Allocation.sequence());
     let mut result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
     executed.extend_from_slice(&driver.stages);
     if interrupt {
         assert!(failure == Failure::None);
-        for stop in [Some(17), Some(3), None] {
+        for stop in [
+            Some(Stage::Load.sequence()),
+            Some(Stage::Start.sequence()),
+            None,
+        ] {
             assert!(result.is_err());
             assert!(
                 !root
@@ -763,14 +808,31 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         }
     }
     let expected_failure = match failure {
-        Failure::MetadataLost => Some((11, 11, 13)),
-        Failure::DataLostSecond => Some((13, 1, 17)),
-        Failure::LoadLost => Some((17, 17, 3)),
-        Failure::StartLost => Some((3, 3, u64::MAX)),
+        Failure::MetadataLost => Some(FailureExpectation {
+            stage: Stage::Allocation,
+            operation_sequence: Stage::Allocation.sequence(),
+            successor: Some(Stage::Upload),
+        }),
+        Failure::DataLostSecond => Some(FailureExpectation {
+            stage: Stage::Upload,
+            operation_sequence: 1,
+            successor: Some(Stage::Load),
+        }),
+        Failure::LoadLost => Some(FailureExpectation {
+            stage: Stage::Load,
+            operation_sequence: Stage::Load.sequence(),
+            successor: Some(Stage::Start),
+        }),
+        Failure::StartLost => Some(FailureExpectation {
+            stage: Stage::Start,
+            operation_sequence: Stage::Start.sequence(),
+            successor: None,
+        }),
         Failure::None => None,
         _ => panic!("selected round-trip fault"),
     };
-    if let Some((sequence, operation, successor)) = expected_failure {
+    if let Some(expected) = expected_failure {
+        let sequence = expected.stage.sequence();
         assert!(result.is_err());
         let before = files(&custody_root);
         let calls = driver.backend.calls;
@@ -804,7 +866,13 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
                 path.display()
             );
         }
-        assert!(!root.join(format!("execution-stage-{successor}")).exists());
+        if let Some(successor) = expected.successor {
+            assert!(
+                !root
+                    .join(format!("execution-stage-{}", successor.sequence()))
+                    .exists()
+            );
+        }
         assert!(read_complete_execution_workflow(&layout, &original_workflow).is_err());
         let binding: ExecutionStageBindingRecord = read_json(
             &root.join(format!("execution-stage-{sequence}/stage-binding.json")),
@@ -817,11 +885,11 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         let operation = progress
             .operations
             .iter()
-            .find(|row| row.operation_sequence == operation)
+            .find(|row| row.operation_sequence == expected.operation_sequence)
             .unwrap();
         assert_eq!(operation.attempts.pending_mutation, Some(1));
         assert_eq!(operation.attempts.mutations_remaining, 0);
-        if Stage::from_sequence(sequence) == Stage::Upload {
+        if expected.stage == Stage::Upload {
             assert_eq!(progress.applied_operations, 1);
         }
         let source = driver.restore.as_ref().unwrap();
@@ -854,7 +922,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
             snapshot: None,
             metadata: None,
             stages: Vec::new(),
-            stop_before: Some(0),
+            stop_before: Some(Stage::Capture.sequence()),
             restore: None,
             restore_failure: Failure::None,
         };
@@ -907,7 +975,7 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         "scope":"isolated application with separately accounted fixture setup/verification",
         "capture":capture_workflow.digest(), "restore":original_workflow,
         "target":driver.backend.target.to_text(), "executed_stages":executed,
-        "completed":failure == Failure::None, "pending_stage":expected_failure.map(|(stage, _, _)| stage),
+        "completed":failure == Failure::None, "pending_stage":expected_failure.map(|expected| expected.stage.sequence()),
         "fixture_source_reference_released":failure == Failure::None,
         "management_calls":driver.backend.calls,
     })).unwrap());

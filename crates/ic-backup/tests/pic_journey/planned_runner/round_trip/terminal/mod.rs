@@ -2,8 +2,8 @@
 
 use super::{
     ArtifactChecksumRecord, BackupLayoutGuard, CompleteDriver, DownloadJournalGuard,
-    ExecutionWorkflowRecord, IcSnapshotUploadReply, IcSnapshotUploadReplyKind, Method, Path, TOKEN,
-    files, fs, io, management, read_complete_execution_workflow,
+    ExecutionWorkflowRecord, IcSnapshotUploadReply, IcSnapshotUploadReplyKind, Method, Path, Stage,
+    TOKEN, files, fs, io, management, read_complete_execution_workflow,
 };
 use crate::pic_journey::evidence::PostLoadAcceptanceRecord;
 use ic_backup::{
@@ -77,25 +77,29 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
             return Err(io::ErrorKind::InvalidData.into());
         };
-        let load = self.restore.root().join("execution-stage-17");
+        let load = self
+            .restore
+            .root()
+            .join(format!("execution-stage-{}", Stage::Load.sequence()));
         require(fs::read(load.join("fixture-accepted.sha256"))? == accepted.hash().as_bytes())?;
         let verification: PostLoadAcceptanceRecord = serde_json::from_slice(&fs::read(
             self.driver.backend.root.join("post-load-verification.json"),
         )?)?;
         require(verification.matches(&metadata.digest(), snapshot_id, accepted))?;
-        for sequence in [17, 3] {
+        for kind in [Stage::Load, Stage::Start] {
+            let sequence = kind.sequence();
             let stage = self
                 .restore
                 .root()
                 .join(format!("execution-stage-{sequence}"));
             let request = management(
                 &self.driver.backend,
-                if sequence == 17 {
+                if kind == Stage::Load {
                     Method::LoadCanisterSnapshot
                 } else {
                     Method::StartCanister
                 },
-                (sequence == 17).then(|| snapshot_id.clone()),
+                (kind == Stage::Load).then(|| snapshot_id.clone()),
             );
             require(
                 fs::read(stage.join("restore-arguments.candid"))? == request.arguments()

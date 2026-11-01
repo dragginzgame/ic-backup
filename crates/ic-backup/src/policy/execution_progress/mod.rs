@@ -104,7 +104,13 @@ impl ExecutionProgressView {
 pub fn progress(
     request: &ExecutionProgressRequest<'_>,
 ) -> Result<ExecutionProgressView, ExecutionProgressError> {
-    Ok(progress_with_journals(request.plan, request.journals.iter().copied())?.0)
+    Ok(progress_with_journals(request.plan, request.journals.iter().copied())?.view)
+}
+
+// Both values derive from the same complete original journal admission.
+pub(crate) struct AdmittedProgress<'a> {
+    pub(crate) view: ExecutionProgressView,
+    pub(crate) journals: BTreeMap<u64, &'a AttemptJournalRecord>,
 }
 
 // Retain the admitted original index for exact-history settlement, so that it
@@ -112,13 +118,7 @@ pub fn progress(
 pub(crate) fn progress_with_journals<'a>(
     plan: &OperationPlanRecord,
     originals: impl ExactSizeIterator<Item = &'a AttemptJournalRecord>,
-) -> Result<
-    (
-        ExecutionProgressView,
-        BTreeMap<u64, &'a AttemptJournalRecord>,
-    ),
-    ExecutionProgressError,
-> {
+) -> Result<AdmittedProgress<'a>, ExecutionProgressError> {
     let (intent, journals) = admit_journals(plan, originals)?;
     let is_applied = |sequence: &u64| {
         journals
@@ -162,8 +162,8 @@ pub(crate) fn progress_with_journals<'a>(
         .iter()
         .filter(|operation| operation.attempts.applied)
         .count();
-    Ok((
-        ExecutionProgressView {
+    Ok(AdmittedProgress {
+        view: ExecutionProgressView {
             intent,
             graph: plan.graph().digest(),
             applied_operations,
@@ -171,7 +171,7 @@ pub(crate) fn progress_with_journals<'a>(
             operations,
         },
         journals,
-    ))
+    })
 }
 // Admit complete original coverage before deriving any causal state or totals.
 fn admit_journals<'a>(
