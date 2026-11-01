@@ -21,16 +21,18 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production and Testkit 0.76.0 select Platform 0.16.0,
-which re-exports the canonical owned Principal from Platform Types 0.15.1.
+not selected by Backup. Production and Testkit 0.77.0 select Platform 0.17.0,
+which re-exports the canonical owned Principal from Platform Types 0.16.0.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
-is introduced. Native external Principal, management DTO and PocketIC exports
-retain their qualified upstream identities.
+is introduced. Native external Principal, management DTO and Agent SDK exports
+retain their qualified upstream identities. Development-only PocketIC clients now
+belong to Platform's maintained `ic-platform-pocket-ic` package; Testkit shares
+those client identities.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
 
-Platform embeds its IC0/executor. The Cargo singleton guard belongs to its
-optional executor/runtime features.
+Platform exports IC0/executor through its owned runtime package. The Cargo
+singleton guard belongs to its optional executor/runtime features.
 Backup enables neither feature, so its host consumers can coexist with an
 unrelated registry executor. Consumers enabling Platform's runtime must still
 select one runtime owner. Native management exports retain the qualified
@@ -58,10 +60,18 @@ SDK exports and explicitly names upstream external certificate/hash-tree types;
 Backup needs no conversion or new feature. Consumed Candid, native management,
 Principal and Agent identities remain unchanged.
 
-The selected Host Artifacts/FS/Process 0.73.4 source bytes are unchanged from
-0.73.3. Their existing compatible workspace requirements remain; no public Host
-identity or Rust migration is introduced. Testkit 0.76.0 keeps its source unchanged
-from 0.75.2 while aligning Platform and the Host/Metrics dependency selections.
+Platform 0.17 moves its native PocketIC client into a maintained package while
+preserving the facade imports. It also selects Types 0.16; the changed optional
+self-authentication implementation is not enabled by Backup. The consumed Candid,
+management, external Principal and Agent facade source is unchanged. Internal
+Principal normalization, hashes and wire contracts retain their existing behavior;
+Backup exposes no owned Principal API requiring a consumer migration.
+
+The workspace requires Host Artifacts/FS/Process 0.73.5 and currently resolves
+0.73.6. Consumers sharing Host types must align their
+selected versions. Testkit 0.77.0 keeps its source unchanged from 0.76.2 while
+aligning Platform and the Host dependencies. Its optional Wire requirement remains
+outside Backup's graph.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

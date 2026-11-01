@@ -490,9 +490,10 @@ Fixture WAT compilation uses `ic_host_artifacts::wasm_text::compile` with explic
 aliases and development/build/target-specific edges, alongside the IC boundaries.
 
 Independent MSRV and unpacked-package consumers reuse `consumer-graph.jq` to
-reject `ic-testkit`, `pocket-ic` and `wat` anywhere in their normal graph by resolved
-package identity, so renaming an edge does not evade admission. Adding another
-test-only catalog entry requires reviewing and updating that explicit policy;
+reject `ic-testkit`, `pocket-ic`, `ic-platform-pocket-ic` and `wat` anywhere in
+their normal graph by resolved package identity, so renaming an edge does not
+evade admission. Adding another test-only catalog entry requires reviewing and
+updating that explicit policy;
 comments are not an automatically interpreted exclusion list. The dependency-pin
 check enforces source/version declarations and inheritance, not these roles.
 The Core MSRV consumer also imports Host Artifacts and FS directly using the

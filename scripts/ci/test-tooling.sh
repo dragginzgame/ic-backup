@@ -105,7 +105,7 @@ cp "$graph/original.json" "$graph/selected.json"
 jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/original.json" '
     include "consumer-graph"; original_graph_admitted($original[0]; "consumer")
 ' "$graph/selected.json" > /dev/null
-for dependency in ic-testkit pocket-ic wat; do
+for dependency in ic-testkit pocket-ic ic-platform-pocket-ic wat; do
     jq --arg name "$dependency" '
         .packages += [{name:$name, version:"1.0.0", source:"registry"}]
         | .resolve = {nodes:[{id:"runtime", deps:[{name:"renamed_tool", pkg:$name}]}]}
@@ -129,13 +129,14 @@ jq '.packages |= map(.source = "registry+https://github.com/rust-lang/crates.io-
 jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/release-original.json" '
     include "consumer-graph"; published_graph_admitted($original[0]; "consumer")
 ' "$graph/release-selected.json" >/dev/null
-for mutation in version path git runtime simulator missing; do
+for mutation in version path git runtime simulator owned-simulator missing; do
     jq --arg mutation "$mutation" '
         if $mutation == "version" then .packages[0].version = "0.42.0"
         elif $mutation == "path" then .packages[0].source = null
         elif $mutation == "git" then .packages[0].source = "git+https://example.invalid/backup"
         elif $mutation == "runtime" then .packages[2].version = "2.0.0"
         elif $mutation == "simulator" then .packages += [{name:"pocket-ic", version:"16.1.0", source:"registry+https://github.com/rust-lang/crates.io-index"}]
+        elif $mutation == "owned-simulator" then .packages += [{name:"ic-platform-pocket-ic", version:"0.17.0", source:"registry+https://github.com/rust-lang/crates.io-index"}]
         else .packages |= map(select(.name != "ic-backup-agent")) end
     ' "$graph/release-selected.json" > "$graph/release-refused.json"
     if jq -L "$ROOT/scripts/ci" -e --slurpfile original "$graph/release-original.json" '

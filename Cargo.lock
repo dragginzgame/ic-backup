@@ -279,7 +279,7 @@ dependencies = [
  "ahash",
  "hashbrown 0.15.5",
  "once_cell",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "web-time",
 ]
 
@@ -417,7 +417,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b60b5124979fccd9addd89d8b97a1d6eebb4950694520c75ddd722535ea443f"
 dependencies = [
  "nix",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1156,7 +1156,7 @@ dependencies = [
  "serde_repr",
  "sha2 0.10.9",
  "stop-token",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "time",
  "tokio",
  "tower-service",
@@ -1176,7 +1176,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1193,7 +1193,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "tokio",
 ]
 
@@ -1222,15 +1222,15 @@ dependencies = [
  "ic_principal",
  "pem",
  "rand 0.8.8",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "zeroize",
 ]
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.73.4"
+version = "0.73.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41bdc2aa8b0cfbc72fa798e6a4a65f249dcde80fd2dc7707b47bca736e255fcb"
+checksum = "499c5dcde4cc97e49f2f653e6234639752f9b179ae387c6872ee6e5cc194fdce"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
@@ -1239,20 +1239,20 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.73.4"
+version = "0.73.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "990b17b24378995addafcb8d6d7b0823a7e0992821e6e3976ce3c085bc9874a5"
+checksum = "ff18ef5150d939d6789e6b16cf174fc792e5267fbe39e94b1564f4a9e94c929d"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "ic-host-process"
-version = "0.73.4"
+version = "0.73.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "125cedca7225d1e7546fb263d1b27e4b7a3932a02665d2b191603b125841abd4"
+checksum = "c4e77b081784d8c08ec11b49ebd62489debbabe38c52d2e9bd0abcaa4230267f"
 dependencies = [
  "command-fds",
  "ic-host-artifacts",
@@ -1285,49 +1285,88 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.24.4"
+version = "0.24.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a6018917ffc653f1ef13e4a09c1aaf10e273b00ec3fe341aef93442d2106f11"
+checksum = "974bab94f2b55223260c5c74d6c5797206e4f5286635a66f3b4606c04eaf04d4"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "ic-platform"
-version = "0.16.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d35ff1252b77bf7d9b6495ac90f4c03ccac66520765a38267e425000a16e1e4b"
+checksum = "813bed7d93c0adc82b80157f4ccbb0b31260f8764fa3b7695fadaf9bcd14e241"
 dependencies = [
  "candid",
  "ic-agent",
  "ic-certification",
  "ic-management-canister-types 0.11.0",
+ "ic-platform-pocket-ic",
+ "ic-platform-runtime",
  "ic-platform-types",
  "ic_principal",
- "pocket-ic",
  "serde",
  "serde_bytes",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
-name = "ic-platform-types"
-version = "0.15.1"
+name = "ic-platform-pocket-ic"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de0b5a4e7dff6d2c8ec7a58e5673f7348a49e90232add1eb31fec0bba5f4252e"
+checksum = "259cca738ece85627683ebef5df14a5b04cc0db4c59182f780f92e7e15902f8f"
+dependencies = [
+ "backon",
+ "base64 0.22.1",
+ "candid",
+ "flate2",
+ "hex",
+ "ic-certification",
+ "ic-management-canister-types 0.8.0",
+ "ic-transport-types",
+ "reqwest",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+ "sha2 0.10.9",
+ "slog",
+ "strum",
+ "strum_macros",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "ic-platform-runtime"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67e0cef9c254622a92fadff2cc0ef287fa4fe2a489328a97ac4740de00a71f04"
+
+[[package]]
+name = "ic-platform-types"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "235a930ed63426af24eaac83d8e164e051ee4f1113ae225acbbea6f61fd34198"
 dependencies = [
  "crc32fast",
  "data-encoding",
  "ic_principal",
  "serde",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "ic-testkit"
-version = "0.76.0"
+version = "0.77.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c9e84475c2c4a85466848d36694882cbeb3d1732819871acc3900d93862dde7"
+checksum = "2896692dad358d2db4c3d94d1ca8e2e2932e2becc38ee57ef789638cbfbaae93"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1335,7 +1374,7 @@ dependencies = [
  "ic-metrics",
  "ic-platform",
  "libc",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "tokio",
 ]
 
@@ -1354,7 +1393,7 @@ dependencies = [
  "serde_cbor",
  "serde_repr",
  "sha2 0.10.9",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1537,7 +1576,7 @@ dependencies = [
  "jni-sys",
  "log",
  "simd_cesu8",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "walkdir",
  "windows-link",
 ]
@@ -1926,38 +1965,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
-name = "pocket-ic"
-version = "16.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85135917c845e8fc132f5eca3a0a8cbab696477a5fee3c2dda168a0797f81e1c"
-dependencies = [
- "backon",
- "base64 0.22.1",
- "candid",
- "flate2",
- "hex",
- "ic-certification",
- "ic-management-canister-types 0.8.0",
- "ic-transport-types",
- "reqwest",
- "schemars",
- "semver",
- "serde",
- "serde_cbor",
- "serde_json",
- "sha2 0.10.9",
- "slog",
- "strum",
- "strum_macros",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "potential_utf"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2034,7 +2041,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "socket2",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "tokio",
  "tracing",
  "web-time",
@@ -2057,7 +2064,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "tinyvec",
  "tracing",
  "web-time",
@@ -2798,11 +2805,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.18"
+version = "2.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
+checksum = "09e52cb86a36cede5cb101bf8908837b3e4c6e5e59fe7fd85c23fb56200d189e"
 dependencies = [
- "thiserror-impl 2.0.18",
+ "thiserror-impl 2.0.21",
 ]
 
 [[package]]
@@ -2818,13 +2825,13 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.18"
+version = "2.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
+checksum = "fe5197923287db20a58125f0bc85c062f7f2c892de97b18c356f9efb14b28524"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.119",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -2998,7 +3005,7 @@ checksum = "050686193eb999b4bb3bc2acfa891a13da00f79734704c4b8b4ef1a10b368a3c"
 dependencies = [
  "crossbeam-channel",
  "symlink",
- "thiserror 2.0.18",
+ "thiserror 2.0.21",
  "time",
  "tracing-subscriber",
 ]

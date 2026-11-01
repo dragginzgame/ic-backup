@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.53.6]
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.17.0 and Testkit 0.77.0 alongside the Host Artifacts/FS/Process
+  0.73.5 requirements. Preserve the existing public APIs, backup contracts and
+  authenticated PocketIC 16.1.0 server. Independent consumer admission excludes
+  Platform's maintained PocketIC client from production graphs.
+
 ## [0.53.5] - 2026-11-01
 
 ### 🧹 Cleanup

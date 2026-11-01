@@ -4,7 +4,9 @@ def original_graph_admitted($original; $consumer):
     all(.packages[] | select(.name != $consumer);
         . as $package | any($original.packages[];
             .name == $package.name and .version == $package.version and .source == $package.source))
-    and all(.packages[]; .name != "ic-testkit" and .name != "pocket-ic" and .name != "wat");
+    and all(.packages[];
+        .name != "ic-testkit" and .name != "pocket-ic"
+        and .name != "ic-platform-pocket-ic" and .name != "wat");
 
 # Release qualification changes only the two workspace libraries to their exact
 # crates.io identities. Every other selected package must keep its original source
