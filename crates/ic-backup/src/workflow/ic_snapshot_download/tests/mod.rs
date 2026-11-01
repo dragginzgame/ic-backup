@@ -531,7 +531,17 @@ fn changed_receipt_or_negative_outcome_rejects_before_append_and_retains_pending
 
 #[test]
 fn consumed_missing_or_held_originals_never_enter_fresh_admission_or_provider() {
-    for variant in 0..3 {
+    #[derive(Clone, Copy)]
+    enum OriginalFault {
+        Consumed,
+        Missing,
+        Held,
+    }
+    for fault in [
+        OriginalFault::Consumed,
+        OriginalFault::Missing,
+        OriginalFault::Held,
+    ] {
         let root = with_download(
             |DownloadFixture {
                  stage,
@@ -543,17 +553,17 @@ fn consumed_missing_or_held_originals_never_enter_fresh_admission_or_provider() 
                 let authority = stage.plan().attempt_authority(0).unwrap();
                 let mut held =
                     AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
-                if variant == 0 {
+                if matches!(fault, OriginalFault::Consumed) {
                     held.reserve_planned_mutation(&stage.plan().digest())
                         .unwrap();
                 }
-                let held = if variant == 2 {
+                let held = if matches!(fault, OriginalFault::Held) {
                     Some(held)
                 } else {
                     drop(held);
                     None
                 };
-                if variant == 1 {
+                if matches!(fault, OriginalFault::Missing) {
                     let path = stage.layout().unwrap().root().join("attempt-0.json");
                     fs::rename(&path, path.with_extension("retained-original")).unwrap();
                 }
@@ -648,9 +658,22 @@ fn stage_or_local_byte_drift_during_qualification_retains_reply_and_pending_atte
     }
 }
 
+#[derive(Clone, Copy)]
+enum WriterFault {
+    Metadata,
+    Intent,
+    Coverage,
+    ReadFree,
+}
+
 #[test]
 fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_without_spending() {
-    for variant in 0..4 {
+    for fault in [
+        WriterFault::Metadata,
+        WriterFault::Intent,
+        WriterFault::Coverage,
+        WriterFault::ReadFree,
+    ] {
         let root = with_download(
             |DownloadFixture {
                  stage,
@@ -665,12 +688,12 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
                 other.wasm_module_size += 1;
                 let other_raw = contract::encode_one(other).unwrap();
                 let other_metadata = IcSnapshotMetadataReply::decode(request, &other_raw).unwrap();
-                let (selected_metadata, selected_raw) = if variant == 0 {
+                let (selected_metadata, selected_raw) = if matches!(fault, WriterFault::Metadata) {
                     (&other_metadata, &other_raw)
                 } else {
                     (metadata, raw)
                 };
-                let intent = if variant == 1 {
+                let intent = if matches!(fault, WriterFault::Intent) {
                     "44".repeat(32)
                 } else {
                     stage.plan().digest().hash().into()
@@ -679,7 +702,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
                 let mut writer = artifacts
                     .stage_ic_snapshot_artifact(TOKEN, selected_metadata, selected_raw)
                     .unwrap();
-                if variant == 2 {
+                if matches!(fault, WriterFault::Coverage) {
                     let raw =
                         contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![7; 32] })
                             .unwrap();
@@ -699,7 +722,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
                 let empty_metadata = IcSnapshotMetadataReply::decode(request, &empty_raw).unwrap();
                 let empty_download =
                     IcSnapshotDownloadPlan::new(workflow, 7, &empty_metadata, 32).unwrap();
-                let selected = if variant == 3 {
+                let selected = if matches!(fault, WriterFault::ReadFree) {
                     &empty_download
                 } else {
                     download

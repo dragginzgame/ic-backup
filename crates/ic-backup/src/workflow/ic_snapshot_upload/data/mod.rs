@@ -74,9 +74,9 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     let mut evidence = EvidenceDigest::new(b"ic-backup/ic-snapshot-data-upload/v1\0");
     evidence.append(plan.digest().hash().as_bytes());
     let session = source.upload_session(snapshot, upload)?;
-    for (index, kind) in upload.kinds().iter().enumerate() {
-        let sequence =
-            u64::try_from(index).map_err(|_| IcSnapshotDataUploadPlanningError::CountOverflow)?;
+    // Preparation binds each kind to one ordered operation in this same plan.
+    for (operation, kind) in plan.operations().iter().zip(upload.kinds()) {
+        let sequence = operation.operation_sequence();
         let payload = session.prepare(sequence, kind.clone())?;
         // The single-call owner rechecks the exact full source/context/request before spending.
         let (acknowledgement, settlement) = upload_snapshot_with(

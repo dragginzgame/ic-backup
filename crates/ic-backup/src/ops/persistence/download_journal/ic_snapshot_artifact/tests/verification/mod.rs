@@ -92,34 +92,6 @@ fn plan() -> OperationPlanRecord {
     })).unwrap()
 }
 
-fn retained<'a>(
-    layout: &'a BackupLayoutGuard,
-    plan: &OperationPlanRecord,
-    metadata: &IcSnapshotMetadataReply<'_>,
-    raw: &[u8],
-) -> DownloadJournalGuard<'a> {
-    create_operation_plan(layout, plan).unwrap();
-    let mut guard = DownloadJournalGuard::create(
-        layout,
-        plan.digest().hash(),
-        vec![DownloadArtifactRequest {
-            canister_id: TARGET.into(),
-            snapshot_id: TOKEN.into(),
-            snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-            snapshot_total_size_bytes: u64::MAX,
-        }],
-    )
-    .unwrap();
-    complete(
-        guard
-            .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
-            .unwrap(),
-    )
-    .finish()
-    .unwrap();
-    guard
-}
-
 #[test]
 fn explicit_retained_verification_keeps_exact_metadata_journal_and_plan_bytes() {
     let root = root();
@@ -314,13 +286,22 @@ fn maximum_chunks_and_region_bytes_verify_without_an_aggregate_buffer() {
 
 #[test]
 fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity() {
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    enum ForgedTreeFault {
+        Extent,
+        Format,
+        Metadata,
+        Arguments,
+        Chunk,
+        ExtraDirectory,
+    }
     for case in [
-        "extent",
-        "format",
-        "metadata",
-        "arguments",
-        "chunk",
-        "extra-directory",
+        ForgedTreeFault::Extent,
+        ForgedTreeFault::Format,
+        ForgedTreeFault::Metadata,
+        ForgedTreeFault::Arguments,
+        ForgedTreeFault::Chunk,
+        ForgedTreeFault::ExtraDirectory,
     ] {
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -333,19 +314,19 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         let hash = &metadata.metadata().wasm_chunk_store[0].hash;
         let hash = Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap());
         let path = match case {
-            "extent" => directory.join(REGIONS[0]),
-            "format" => directory.join("format"),
-            "metadata" => directory.join("metadata.candid"),
-            "arguments" => directory.join("metadata-arguments.candid"),
-            "chunk" => directory.join(format!("chunk-{hash}.bin")),
-            _ => directory.join("extra-empty"),
+            ForgedTreeFault::Extent => directory.join(REGIONS[0]),
+            ForgedTreeFault::Format => directory.join("format"),
+            ForgedTreeFault::Metadata => directory.join("metadata.candid"),
+            ForgedTreeFault::Arguments => directory.join("metadata-arguments.candid"),
+            ForgedTreeFault::Chunk => directory.join(format!("chunk-{hash}.bin")),
+            ForgedTreeFault::ExtraDirectory => directory.join("extra-empty"),
         };
-        if case == "extra-directory" {
+        if case == ForgedTreeFault::ExtraDirectory {
             fs::create_dir(&path).unwrap();
         } else {
             fs::write(
                 &path,
-                if case == "extent" {
+                if case == ForgedTreeFault::Extent {
                     b"wrong extent".as_slice()
                 } else {
                     b"wrong".as_slice()
@@ -362,22 +343,24 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         let bytes = fs::read(guard.path()).unwrap();
         let result = guard.verify_ic_snapshot_artifact(&plan, TOKEN, &metadata);
         match case {
-            "extent" | "format" | "arguments" => assert!(
-                matches!(result, Err(IcSnapshotArtifactError::FileShape)),
-                "{case}: {result:?}"
-            ),
-            "metadata" | "chunk" => assert!(
+            ForgedTreeFault::Extent | ForgedTreeFault::Format | ForgedTreeFault::Arguments => {
+                assert!(
+                    matches!(result, Err(IcSnapshotArtifactError::FileShape)),
+                    "{case:?}: {result:?}"
+                );
+            }
+            ForgedTreeFault::Metadata | ForgedTreeFault::Chunk => assert!(
                 matches!(
                     result,
                     Err(IcSnapshotArtifactError::Checksum(
                         ChecksumError::ChecksumMismatch { .. }
                     ))
                 ),
-                "{case}: {result:?}"
+                "{case:?}: {result:?}"
             ),
-            _ => assert!(
+            ForgedTreeFault::ExtraDirectory => assert!(
                 matches!(result, Err(IcSnapshotArtifactError::UnexpectedEntry)),
-                "{case}: {result:?}"
+                "{case:?}: {result:?}"
             ),
         }
         assert_eq!(fs::read(guard.path()).unwrap(), bytes);

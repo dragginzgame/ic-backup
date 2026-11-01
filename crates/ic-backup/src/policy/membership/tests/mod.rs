@@ -1,6 +1,7 @@
 //! Pure exact-result admission; fixtures certify no actual membership or IC effects.
 
 use super::*;
+use crate::test_support::response_fault::ContextFault;
 use crate::{
     model::{
         inventory::{InventoryTargetRecord, InventoryTargetRequest},
@@ -109,18 +110,12 @@ fn rejects_actually_observed_network_caller_and_release_mismatch() {
         1,
     )
     .unwrap();
-    for field in ["network", "caller", "release"] {
+    for fault in ContextFault::ALL {
         let mut observed = observation(&request);
-        let mut value = serde_json::to_value(&observed.context).unwrap();
-        value[field] = serde_json::json!(if field == "caller" {
-            "aaaaa-aa".into()
-        } else {
-            "89".repeat(32)
-        });
-        observed.context = serde_json::from_value(value).unwrap();
+        fault.apply(&mut observed.context, &"89".repeat(32));
         assert_eq!(
             validate(&request, &observed).unwrap_err(),
-            MembershipError::ContextMismatch(field)
+            MembershipError::ContextMismatch(fault.field())
         );
     }
 }

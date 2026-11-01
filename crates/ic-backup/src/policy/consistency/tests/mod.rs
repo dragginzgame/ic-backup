@@ -1,11 +1,9 @@
 //! Pure actual consistency matching; native evidence never proves an active application fence.
 
 use super::*;
+use crate::test_support::response_fault::ContextFault;
 use crate::{
-    model::{
-        consistency::{ConsistencyBoundary, ConsistencyRequirementRecord},
-        operation_plan::{PlanContextRecord, PlanContextRequest},
-    },
+    model::consistency::{ConsistencyBoundary, ConsistencyRequirementRecord},
     test_support::{
         consistency::{fence, input, parameters},
         membership::{hash, plan},
@@ -117,29 +115,12 @@ fn rejects_actual_context_full_inventory_and_missing_or_extra_selected_targets()
         ConsistencyRequirementRecord::new(&plan, ConsistencyGuaranteeRecord::PerCanister);
     let request =
         ConsistencyRequest::new(&plan, &requirement, parameters(requirement.guarantee())).unwrap();
-    for field in ["network", "caller", "release"] {
+    for fault in ContextFault::ALL {
         let mut data = input(&request);
-        data.context = PlanContextRecord::new(&PlanContextRequest {
-            network: if field == "network" {
-                "90".repeat(32)
-            } else {
-                plan.context().network().into()
-            },
-            caller: if field == "caller" {
-                "aaaaa-aa".into()
-            } else {
-                plan.context().caller().into()
-            },
-            release: if field == "release" {
-                "90".repeat(32)
-            } else {
-                plan.context().release().into()
-            },
-        })
-        .unwrap();
+        fault.apply(&mut data.context, &"90".repeat(32));
         assert_eq!(
             validate(&request, &ConsistencyObservation::new(data).unwrap()).unwrap_err(),
-            ConsistencyError::ContextMismatch(field)
+            ConsistencyError::ContextMismatch(fault.field())
         );
     }
     let mut data = input(&request);

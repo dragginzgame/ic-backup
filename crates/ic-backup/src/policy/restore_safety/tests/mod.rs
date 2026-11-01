@@ -6,7 +6,9 @@ use crate::{
     model::{operation_plan::OperationPlanRecord, restore_safety::*},
     test_support::{
         membership::{APP, hash},
-        restore_safety::{fence, input, parameters, plan, requirement, source, wire},
+        restore_safety::{
+            RestoreFenceFault, fence, input, parameters, plan, requirement, source, wire,
+        },
     },
 };
 use serde_json::json;
@@ -209,26 +211,15 @@ fn unresolved_obligations_lane_changes_inactive_or_rebound_fences_deny() {
         parameters(wire.method()),
     )
     .unwrap();
-    for variant in 0..4 {
+    for fault in RestoreFenceFault::ALL {
         let mut data = input(&request);
         let mut changed = fence();
-        let error = match variant {
-            0 => {
-                changed.binding.identity = hash("34");
-                RestoreSafetyError::FenceMismatch
-            }
-            1 => {
-                changed.binding.membership_revision = hash("34");
-                RestoreSafetyError::MembershipRevisionMismatch
-            }
-            2 => {
-                changed.binding.external_obligations_revision = hash("34");
-                RestoreSafetyError::ExternalObligationsRevisionMismatch
-            }
-            _ => {
-                changed.state = ApplicationFenceState::Inactive;
-                RestoreSafetyError::FenceNotActive
-            }
+        fault.apply(&mut changed, hash("34"));
+        let error = match fault {
+            RestoreFenceFault::Identity => RestoreSafetyError::FenceMismatch,
+            RestoreFenceFault::Membership => RestoreSafetyError::MembershipRevisionMismatch,
+            RestoreFenceFault::External => RestoreSafetyError::ExternalObligationsRevisionMismatch,
+            RestoreFenceFault::Inactive => RestoreSafetyError::FenceNotActive,
         };
         data.safety = RestoreSafetyEvidence::ApplicationFenced(Box::new(changed));
         assert_eq!(

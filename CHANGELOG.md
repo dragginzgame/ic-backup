@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.53.3]
+
+### 🧹 Cleanup
+
+- Execute snapshot data transfers using their stored plan sequences, preserving
+  original admission, spending and settlement checks.
+
+### 🧪 Testing
+
+- Share durable-artifact setup and named fence/context faults. Replace numeric
+  admission cases, string corruption cases and positional progress expectations
+  with explicit types while preserving the original scenarios and evidence.
+
 ## [0.53.2] - 2026-11-01
 
 ### 🧪 Testing

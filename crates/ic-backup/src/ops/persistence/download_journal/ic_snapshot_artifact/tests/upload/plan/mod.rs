@@ -189,7 +189,7 @@ impl Failure {
         >,
         stage: &ExecutionStageGuard<'_>,
         operations: usize,
-    ) -> (u32, usize, usize) {
+    ) -> ExpectedProgress {
         match self {
             Failure::LostSecond => {
                 assert!(matches!(
@@ -198,7 +198,11 @@ impl Failure {
                         IcSnapshotUploadExecutionError::Provider(_)
                     ))
                 ));
-                (2, 1, 2)
+                ExpectedProgress {
+                    mutations_used: 2,
+                    applied_operations: 1,
+                    provider_calls: 2,
+                }
             }
             Failure::QualificationSecond => {
                 assert!(
@@ -208,7 +212,11 @@ impl Failure {
                         acknowledgement,
                     }) if acknowledgement.input().reply == crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY)
                 );
-                (2, 1, 2)
+                ExpectedProgress {
+                    mutations_used: 2,
+                    applied_operations: 1,
+                    provider_calls: 2,
+                }
             }
             Failure::WrongReceiptSecond => {
                 assert!(matches!(
@@ -219,18 +227,30 @@ impl Failure {
                         ..
                     })
                 ));
-                (2, 1, 2)
+                ExpectedProgress {
+                    mutations_used: 2,
+                    applied_operations: 1,
+                    provider_calls: 2,
+                }
             }
             Failure::Admission => {
                 assert!(result.is_err());
-                (1, 0, 0)
+                ExpectedProgress {
+                    mutations_used: 1,
+                    applied_operations: 0,
+                    provider_calls: 0,
+                }
             }
             Failure::SourceAfterFirst | Failure::SourceReplacedAfterFirst => {
                 assert!(matches!(
                     result,
                     Err(IcSnapshotDataUploadExecutionError::Source(_))
                 ));
-                (1, 1, 1)
+                ExpectedProgress {
+                    mutations_used: 1,
+                    applied_operations: 1,
+                    provider_calls: 1,
+                }
             }
             Failure::OccupiedCheckpoint => {
                 assert!(matches!(
@@ -248,11 +268,21 @@ impl Failure {
                     .unwrap(),
                     b"occupied original checkpoint"
                 );
-                (u32::try_from(operations).unwrap(), operations, operations)
+                ExpectedProgress {
+                    mutations_used: u32::try_from(operations).unwrap(),
+                    applied_operations: operations,
+                    provider_calls: operations,
+                }
             }
             Failure::None => unreachable!(),
         }
     }
+}
+
+struct ExpectedProgress {
+    mutations_used: u32,
+    applied_operations: usize,
+    provider_calls: usize,
 }
 
 struct Provider {
@@ -528,12 +558,12 @@ fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evi
                     failure.qualify(source, request, ack, qualified)
                 },
             ));
-            let (used, applied, calls) = failure.assert_result(result, stage, data.kinds().len());
+            let expected = failure.assert_result(result, stage, data.kinds().len());
             let progress =
                 read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-            assert_eq!(progress.attempts.mutations_used, used);
-            assert_eq!(progress.applied_operations, applied);
-            assert_eq!(provider.calls, calls);
+            assert_eq!(progress.attempts.mutations_used, expected.mutations_used);
+            assert_eq!(progress.applied_operations, expected.applied_operations);
+            assert_eq!(provider.calls, expected.provider_calls);
             assert_not_reissued(stage, data, source, &mut provider);
             assert_eq!(fs::read(source.path()).unwrap(), source_before);
             assert_eq!(

@@ -17,7 +17,7 @@ use crate::{
     ops::persistence::{BackupLayoutGuard, commit_artifact_directory},
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
-use fixture::{CreatedArtifact, with_created};
+use fixture::{CreatedArtifact, retained, with_created};
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::management_canister_types::{
     ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,

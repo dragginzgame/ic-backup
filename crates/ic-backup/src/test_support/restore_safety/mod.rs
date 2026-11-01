@@ -167,3 +167,33 @@ pub fn input(request: &RestoreSafetyRequest<'_>) -> RestoreSafetyObservationInpu
     }
 }
 use crate::model::artifacts::ArtifactChecksumRecord;
+
+/// The four independently rejected drifts of a restore fence.
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum RestoreFenceFault {
+    Identity,
+    Membership,
+    External,
+    Inactive,
+}
+impl RestoreFenceFault {
+    pub(crate) const ALL: [Self; 4] = [
+        Self::Identity,
+        Self::Membership,
+        Self::External,
+        Self::Inactive,
+    ];
+
+    pub(crate) fn apply(
+        self,
+        fence: &mut RestoreFenceEvidence,
+        wrong_hash: ArtifactChecksumRecord,
+    ) {
+        match self {
+            Self::Identity => fence.binding.identity = wrong_hash,
+            Self::Membership => fence.binding.membership_revision = wrong_hash,
+            Self::External => fence.binding.external_obligations_revision = wrong_hash,
+            Self::Inactive => fence.state = ApplicationFenceState::Inactive,
+        }
+    }
+}

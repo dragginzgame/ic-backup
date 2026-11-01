@@ -27,34 +27,6 @@ fn upload_values() -> ReadCanisterSnapshotMetadataResult {
     values
 }
 
-fn retained<'layout>(
-    layout: &'layout BackupLayoutGuard,
-    plan: &crate::model::operation_plan::OperationPlanRecord,
-    metadata: &IcSnapshotMetadataReply<'_>,
-    raw: &[u8],
-) -> DownloadJournalGuard<'layout> {
-    create_operation_plan(layout, plan).unwrap();
-    let mut guard = DownloadJournalGuard::create(
-        layout,
-        plan.digest().hash(),
-        vec![DownloadArtifactRequest {
-            canister_id: TARGET.into(),
-            snapshot_id: TOKEN.into(),
-            snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-            snapshot_total_size_bytes: u64::MAX,
-        }],
-    )
-    .unwrap();
-    complete(
-        guard
-            .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
-            .unwrap(),
-    )
-    .finish()
-    .unwrap();
-    guard
-}
-
 #[test]
 fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty_values() {
     let root = root();
@@ -140,15 +112,26 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
 
 #[test]
 fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retained() {
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    enum SourceFault {
+        Changed,
+        Missing,
+        Symlink,
+        Fifo,
+        Directory,
+        Extra,
+        Metadata,
+        Layout,
+    }
     for case in [
-        "changed",
-        "missing",
-        "symlink",
-        "fifo",
-        "directory",
-        "extra",
-        "metadata",
-        "layout",
+        SourceFault::Changed,
+        SourceFault::Missing,
+        SourceFault::Symlink,
+        SourceFault::Fifo,
+        SourceFault::Directory,
+        SourceFault::Extra,
+        SourceFault::Metadata,
+        SourceFault::Layout,
     ] {
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -163,25 +146,30 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
         let before = fs::read(guard.path()).unwrap();
         let directory = root.join(format!("artifacts/{TARGET}"));
         let module = directory.join(REGIONS[0]);
-        if matches!(case, "missing" | "symlink" | "fifo" | "directory") {
+        if matches!(
+            case,
+            SourceFault::Missing
+                | SourceFault::Symlink
+                | SourceFault::Fifo
+                | SourceFault::Directory
+        ) {
             fs::remove_file(&module).unwrap();
         }
         match case {
-            "changed" => fs::write(&module, [42; 5]).unwrap(),
-            "symlink" => symlink(directory.join(REGIONS[1]), &module).unwrap(),
-            "fifo" => create_private_fifo(&module),
-            "directory" => fs::create_dir(&module).unwrap(),
-            "extra" => fs::write(directory.join("extra"), []).unwrap(),
-            "metadata" => fs::write(directory.join("metadata.candid"), []).unwrap(),
-            "layout" => {
+            SourceFault::Changed => fs::write(&module, [42; 5]).unwrap(),
+            SourceFault::Symlink => symlink(directory.join(REGIONS[1]), &module).unwrap(),
+            SourceFault::Fifo => create_private_fifo(&module),
+            SourceFault::Directory => fs::create_dir(&module).unwrap(),
+            SourceFault::Extra => fs::write(directory.join("extra"), []).unwrap(),
+            SourceFault::Metadata => fs::write(directory.join("metadata.candid"), []).unwrap(),
+            SourceFault::Layout => {
                 fs::rename(
                     root.join("operation-plan.json"),
                     root.join("retained-plan.json"),
                 )
                 .unwrap();
             }
-            "missing" => {}
-            _ => unreachable!(),
+            SourceFault::Missing => {}
         }
         assert!(matches!(
             guard.prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata),
@@ -202,10 +190,10 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
             guard.record().unwrap().artifacts()[0].state(),
             ArtifactStateRecord::Durable
         );
-        if case == "missing" {
+        if case == SourceFault::Missing {
             assert!(!module.exists());
         }
-        if case == "changed" {
+        if case == SourceFault::Changed {
             assert_eq!(fs::read(module).unwrap(), [42; 5]);
         }
     }

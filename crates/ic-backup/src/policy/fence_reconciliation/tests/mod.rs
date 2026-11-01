@@ -6,7 +6,7 @@ use crate::{
         consistency,
         fence_reconciliation::{input, original, reserve},
         membership::hash,
-        restore_safety,
+        restore_safety::{self, RestoreFenceFault},
     },
 };
 use serde_json::json;
@@ -212,14 +212,9 @@ fn restore_acquisition_rejects_changed_original_fence_and_external_revisions() {
     )
     .unwrap();
     let request = FenceReconciliationRequest::new(&intent, &original.journal).unwrap();
-    for field in ["identity", "membership", "external", "inactive"] {
+    for fault in RestoreFenceFault::ALL {
         let mut fence = restore_safety::fence();
-        match field {
-            "identity" => fence.binding.identity = hash("ef"),
-            "membership" => fence.binding.membership_revision = hash("ef"),
-            "external" => fence.binding.external_obligations_revision = hash("ef"),
-            _ => fence.state = ApplicationFenceState::Inactive,
-        }
+        fault.apply(&mut fence, hash("ef"));
         let mut actual = input(&request);
         actual.settlement = FenceReconciliationEvidence::AcquiredRestore {
             fence: Box::new(fence),
@@ -232,17 +227,20 @@ fn restore_acquisition_rejects_changed_original_fence_and_external_revisions() {
         )
         .unwrap_err();
         assert!(matches!(
-            (field, error),
-            ("identity", FenceReconciliationError::FenceMismatch)
-                | (
-                    "membership",
-                    FenceReconciliationError::MembershipRevisionMismatch
-                )
-                | (
-                    "external",
-                    FenceReconciliationError::ExternalObligationsRevisionMismatch
-                )
-                | ("inactive", FenceReconciliationError::FenceNotActive)
+            (fault, error),
+            (
+                RestoreFenceFault::Identity,
+                FenceReconciliationError::FenceMismatch
+            ) | (
+                RestoreFenceFault::Membership,
+                FenceReconciliationError::MembershipRevisionMismatch
+            ) | (
+                RestoreFenceFault::External,
+                FenceReconciliationError::ExternalObligationsRevisionMismatch
+            ) | (
+                RestoreFenceFault::Inactive,
+                FenceReconciliationError::FenceNotActive
+            )
         ));
     }
 }

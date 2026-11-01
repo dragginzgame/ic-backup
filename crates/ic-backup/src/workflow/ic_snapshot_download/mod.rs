@@ -80,10 +80,9 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
     if !progress.is_unattempted() {
         return Err(IcSnapshotDownloadExecutionError::AlreadyAttempted);
     }
-    for (index, payload) in download.requests().iter().enumerate() {
-        // Planning already bounded the ordinal by the original stage allowance.
-        let sequence =
-            u64::try_from(index).map_err(|_| IcSnapshotDownloadPlanningError::CountOverflow)?;
+    // The plan constructor pairs each request with one ordered operation.
+    for (operation, payload) in plan.operations().iter().zip(download.requests()) {
+        let sequence = operation.operation_sequence();
         let (response, result) = read_snapshot_with(
             stage,
             sequence,
