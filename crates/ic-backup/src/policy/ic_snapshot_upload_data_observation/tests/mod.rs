@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::response_fault::ObservationFault;
 use crate::{
     model::{artifacts::ArtifactChecksumRecord, ic_observation::IcObservationResponse},
     test_support::{
@@ -91,41 +92,20 @@ fn actual_authority_attempt_digest_context_and_target_drift_reuse_typed_claim_de
             let request =
                 IcSnapshotUploadDataObservationRequest::new(plan, 7, journal, upload, read)
                     .unwrap();
-            for change in 0..8 {
+            for fault in ObservationFault::ALL {
                 let mut fields = input(&request, &[42; 2]);
-                match change {
-                    0 => fields.authority = ArtifactChecksumRecord::from_bytes(b"other"),
-                    1 => {
-                        fields.mutation_attempt = 2;
-                        fields.observation_attempt = 3;
-                    }
-                    2 => fields.observation_attempt = 3,
-                    3 => fields.request = ArtifactChecksumRecord::from_bytes(b"other"),
-                    4..=6 => {
-                        let mut context = serde_json::to_value(&fields.context).unwrap();
-                        let (key, value) = match change {
-                            4 => ("network", "12".repeat(32)),
-                            5 => ("caller", "aaaaa-aa".into()),
-                            _ => ("release", "12".repeat(32)),
-                        };
-                        context[key] = serde_json::json!(value);
-                        fields.context = serde_json::from_value(context).unwrap();
-                    }
-                    _ => fields.target = "aaaaa-aa".into(),
-                }
+                fault.apply(
+                    &mut fields,
+                    ArtifactChecksumRecord::from_bytes(b"other"),
+                    ArtifactChecksumRecord::from_bytes(b"other"),
+                );
                 let response = IcSnapshotUploadDataObservationResponse::new(fields).unwrap();
                 let IcSnapshotUploadDataObservationAssociationError::Association(error) =
                     validate_response(&request, journal, &response).unwrap_err()
                 else {
                     panic!("canonical claim denial")
                 };
-                assert!(match change {
-                    0 => matches!(error, IcObservationAssociationError::AuthorityMismatch),
-                    1..=2 => matches!(error, IcObservationAssociationError::AttemptMismatch),
-                    3 => matches!(error, IcObservationAssociationError::RequestMismatch),
-                    4..=6 => matches!(error, IcObservationAssociationError::ContextMismatch),
-                    _ => matches!(error, IcObservationAssociationError::TargetMismatch),
-                });
+                fault.assert_error(&error);
             }
         },
     );

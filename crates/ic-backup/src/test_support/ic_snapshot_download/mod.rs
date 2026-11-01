@@ -11,17 +11,7 @@ use crate::model::{
 use ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult;
 
 pub(crate) fn values() -> ReadCanisterSnapshotMetadataResult {
-    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
-        "../../model/ic_snapshot_metadata/tests/golden.json"
-    ))
-    .unwrap();
-    let hex = cases
-        .iter()
-        .find(|case| case["name"] == "data-source")
-        .unwrap()["reply_hex"]
-        .as_str()
-        .unwrap();
-    let bytes = crate::test_support::hex_bytes(hex);
+    let bytes = crate::test_support::ic_snapshot_metadata::raw("data-source");
     let mut values: ReadCanisterSnapshotMetadataResult =
         ic_platform::candid::decode_one(&bytes, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 64;

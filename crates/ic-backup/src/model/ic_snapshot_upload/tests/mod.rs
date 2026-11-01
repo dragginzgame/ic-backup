@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::ic_request::MAX_IC_SNAPSHOT_ID_BYTES;
+use crate::test_support::ic_snapshot_metadata::raw;
 use ic_platform::candid::contract;
 
 #[test]
@@ -82,7 +83,7 @@ use crate::{
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
     },
     test_support::ic_snapshot_upload::{
-        DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, unhex, upload_plan,
+        DESTINATION_ID, SOURCE_ID, TARGET, source_plan, unhex, upload_plan,
     },
 };
 use ic_platform::management_canister_types::UploadCanisterSnapshotMetadataResult;

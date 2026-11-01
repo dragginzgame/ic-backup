@@ -1,92 +1,99 @@
 //! Changed original region files stop further writes without repairing evidence.
 
+use super::file_change::Replacement;
 use super::*;
-use ic_platform::candid::contract;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RegionFault {
+    Replaced,
+    Symlink,
+    Directory,
+    Missing,
+    Truncated,
+    Extended,
+}
 
 #[test]
 fn changed_region_identity_or_extent_stops_an_unrelated_append_without_writes() {
     for action in [
-        "replaced",
-        "symlink",
-        "directory",
-        "missing",
-        "truncated",
-        "extended",
+        RegionFault::Replaced,
+        RegionFault::Symlink,
+        RegionFault::Directory,
+        RegionFault::Missing,
+        RegionFault::Truncated,
+        RegionFault::Extended,
     ] {
-        let root = root();
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = contract::encode_one(values()).unwrap();
-        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
-        let original = fs::read(journal.path()).unwrap();
-        let writer = journal
-            .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
-            .unwrap();
-        let writer = append(
-            writer,
-            SnapshotDataKind::WasmModule { offset: 0, size: 1 },
-            vec![8],
-        )
-        .unwrap();
-        let path = writer.path().to_owned();
-        let region = path.join(REGIONS[0]);
-        let retained = root.join("retained-module");
-        match action {
-            "replaced" | "symlink" | "directory" | "missing" => {
-                fs::rename(&region, &retained).unwrap();
+        let root = with_created(
+            |CreatedArtifact {
+                 root,
+                 raw,
+                 metadata,
+                 mut journal,
+                 ..
+             }| {
+                let original = fs::read(journal.path()).unwrap();
+                let writer = journal
+                    .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
+                    .unwrap();
+                let writer = append(
+                    writer,
+                    SnapshotDataKind::WasmModule { offset: 0, size: 1 },
+                    vec![8],
+                )
+                .unwrap();
+                let path = writer.path().to_owned();
+                let region = path.join(REGIONS[0]);
+                let retained = root.join("retained-module");
                 match action {
-                    "replaced" => fs::write(&region, [8]).unwrap(),
-                    "symlink" => symlink(&retained, &region).unwrap(),
-                    "directory" => fs::create_dir(&region).unwrap(),
-                    "missing" => {}
-                    _ => unreachable!(),
+                    RegionFault::Replaced => Replacement::File(&[8]).apply(&region, &retained),
+                    RegionFault::Symlink => Replacement::Symlink.apply(&region, &retained),
+                    RegionFault::Directory => Replacement::Directory.apply(&region, &retained),
+                    RegionFault::Missing => Replacement::Missing.apply(&region, &retained),
+                    RegionFault::Truncated => fs::write(&region, []).unwrap(),
+                    RegionFault::Extended => fs::write(&region, [8, 99]).unwrap(),
                 }
-            }
-            "truncated" => fs::write(&region, []).unwrap(),
-            "extended" => fs::write(&region, [8, 99]).unwrap(),
-            _ => unreachable!(),
-        }
-        let error = append(
-            writer,
-            SnapshotDataKind::WasmMemory { offset: 0, size: 1 },
-            vec![42],
-        )
-        .expect_err("changed original region must stop further writes");
-        if action == "missing" {
-            assert!(
-                matches!(error, IcSnapshotArtifactError::Io(ref error) if error.kind() == io::ErrorKind::NotFound)
-            );
-        } else {
-            assert!(matches!(error, IcSnapshotArtifactError::FileShape));
-        }
-        assert_eq!(fs::read(path.join(REGIONS[1])).unwrap(), [] as [u8; 0]);
-        assert_eq!(fs::read(path.join(REGIONS[2])).unwrap(), [] as [u8; 0]);
-        if retained.exists() {
-            assert_eq!(fs::read(&retained).unwrap(), [8]);
-        }
-        match action {
-            "replaced" | "symlink" => assert_eq!(fs::read(&region).unwrap(), [8]),
-            "directory" => assert_eq!(fs::read_dir(&region).unwrap().count(), 0),
-            "missing" => assert!(!region.exists()),
-            "truncated" => assert_eq!(fs::read(&region).unwrap(), [] as [u8; 0]),
-            "extended" => assert_eq!(fs::read(&region).unwrap(), [8, 99]),
-            _ => unreachable!(),
-        }
-        assert_eq!(fs::read(journal.path()).unwrap(), original);
-        assert_eq!(
-            journal.record().unwrap().artifacts()[0].state(),
-            ArtifactStateRecord::Created
+                let error = append(
+                    writer,
+                    SnapshotDataKind::WasmMemory { offset: 0, size: 1 },
+                    vec![42],
+                )
+                .expect_err("changed original region must stop further writes");
+                if action == RegionFault::Missing {
+                    assert!(
+                        matches!(error, IcSnapshotArtifactError::Io(ref error) if error.kind() == io::ErrorKind::NotFound)
+                    );
+                } else {
+                    assert!(matches!(error, IcSnapshotArtifactError::FileShape));
+                }
+                assert_eq!(fs::read(path.join(REGIONS[1])).unwrap(), [] as [u8; 0]);
+                assert_eq!(fs::read(path.join(REGIONS[2])).unwrap(), [] as [u8; 0]);
+                if retained.exists() {
+                    assert_eq!(fs::read(&retained).unwrap(), [8]);
+                }
+                match action {
+                    RegionFault::Replaced | RegionFault::Symlink => {
+                        assert_eq!(fs::read(&region).unwrap(), [8]);
+                    }
+                    RegionFault::Directory => assert_eq!(fs::read_dir(&region).unwrap().count(), 0),
+                    RegionFault::Missing => assert!(!region.exists()),
+                    RegionFault::Truncated => assert_eq!(fs::read(&region).unwrap(), [] as [u8; 0]),
+                    RegionFault::Extended => assert_eq!(fs::read(&region).unwrap(), [8, 99]),
+                }
+                assert_eq!(fs::read(journal.path()).unwrap(), original);
+                assert_eq!(
+                    journal.record().unwrap().artifacts()[0].state(),
+                    ArtifactStateRecord::Created
+                );
+                assert!(!root.join(format!("artifacts/{TARGET}")).exists());
+                assert!(
+                    journal
+                        .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
+                        .is_err()
+                );
+                assert_eq!(fs::read(journal.path()).unwrap(), original);
+                drop(journal);
+            },
         );
-        assert!(!root.join(format!("artifacts/{TARGET}")).exists());
-        assert!(
-            journal
-                .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
-                .is_err()
-        );
-        assert_eq!(fs::read(journal.path()).unwrap(), original);
-        drop(journal);
-        drop(layout);
         fs::remove_dir_all(root).unwrap();
     }
 }

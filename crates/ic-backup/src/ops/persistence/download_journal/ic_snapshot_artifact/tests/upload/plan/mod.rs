@@ -79,23 +79,7 @@ fn with_data_stage_then(
     let raw = unhex("4449444c026c01b6b897890f016d7b0100031500ff");
     let allocation = IcSnapshotUploadReply::decode(&payload, &raw).unwrap();
     // Local receipt/persistence setup only; authentic IC attribution is tested separately.
-    let mut journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &stage.plan().attempt_authority(0).unwrap(),
-    )
-    .unwrap();
-    journal
-        .reserve_planned_mutation(&stage.plan().digest())
-        .unwrap();
-    journal
-        .record_mutation(MutationReceiptRequest {
-            attempt: 1,
-            request: payload.binding_digest().hash().into(),
-            outcome: MutationOutcomeRecord::Applied,
-            evidence: allocation.digest().hash().into(),
-        })
-        .unwrap();
-    drop(journal);
+    crate::test_support::execution_workflow::record_applied(&stage, 0, allocation.digest().hash());
     let predecessor = stage.reconcile_checkpoint(allocation.digest()).unwrap();
     let data = source
         .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, chunk_bytes)
@@ -932,26 +916,12 @@ fn check_empty_restore_source(
         .unwrap();
         let binding = ExecutionStageBindingRecord::new(workflow, 0, &plan, vec![]).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
-        let authority = stage.plan().attempt_authority(0).unwrap();
-        let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
-        journal
-            .reserve_planned_mutation(&stage.plan().digest())
-            .unwrap();
-        journal
-            .record_mutation(MutationReceiptRequest {
-                attempt: 1,
-                request: data.metadata().binding_digest().hash().into(),
-                outcome: MutationOutcomeRecord::Applied,
-                evidence: if matches {
-                    allocation.digest()
-                } else {
-                    ArtifactChecksumRecord::from_bytes(b"different allocation reply")
-                }
-                .hash()
-                .into(),
-            })
-            .unwrap();
-        drop(journal);
+        let evidence = if matches {
+            allocation.digest()
+        } else {
+            ArtifactChecksumRecord::from_bytes(b"different allocation reply")
+        };
+        crate::test_support::execution_workflow::record_applied(&stage, 0, evidence.hash());
         // Learned evidence is not authenticated merely by checkpoint replay.
         let completed = stage.reconcile_checkpoint(allocation.digest()).unwrap();
         drop(stage);

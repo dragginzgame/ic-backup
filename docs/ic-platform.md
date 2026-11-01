@@ -21,7 +21,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production and Testkit 0.75.1 select Platform 0.15.3,
+not selected by Backup. Production and Testkit 0.75.2 select Platform 0.15.3,
 which re-exports the canonical owned Principal from Platform Types 0.15.1.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and PocketIC exports
@@ -52,9 +52,9 @@ while Types 0.15.1 owns Principal representation, normalization, Serde and expli
 external conversions. Backup's public principal, DTO and SDK boundaries retain
 the qualified external types.
 
-Host Artifacts/FS/Process 0.73.2 and Platform 0.15.3 retain the preceding patches'
-production source bytes and external IC dependency identities. Host Process changes
-only an upstream version-probe test. Backup requires these patches through its
+Host Artifacts/FS/Process 0.73.3 and Platform 0.15.3 preserve the consumed production
+interfaces and external IC dependency identities. The Host source bytes are
+unchanged from 0.73.2. Backup requires these patches through its
 workspace catalog; it needs no Rust migration, new feature or public type change.
 
 | Surface | Owner and maintained constraint |

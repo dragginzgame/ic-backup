@@ -5,14 +5,40 @@ const ROOT: &str = "aaaaa-aa";
 const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 
 fn plan(targets: &[String]) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version":1, "context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},
-        "inventory":{"version":1,"targets":targets.iter().map(|id|json!({"canister_id":id,"parent_canister_id":null,"role":null,"module_hash":null})).collect::<Vec<_>>()},
-        "selected_targets":targets,
-        "graph":{"version":1,"nodes":targets.iter().enumerate().map(|(i,_)|json!({"operation_sequence":i,"depends_on":[]})).collect::<Vec<_>>()},
-        "operations":targets.iter().enumerate().map(|(i,id)|json!({"operation_sequence":i,"target":id,"request":"ef".repeat(32),"budget":{"mutations":1,"observations":0}})).collect::<Vec<_>>(),
-        "budget":{"mutations":targets.len(),"observations":0}
-    })).expect("bounded original plan")
+    use crate::model::inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest};
+    use crate::model::operation_plan::PlanBudgetRecord;
+    use crate::test_support::operation_plan::{graph, operation, request};
+
+    let mut declaration = request();
+    declaration.inventory = InventoryRecord::new(
+        targets
+            .iter()
+            .map(|id| {
+                InventoryTargetRecord::new(&InventoryTargetRequest {
+                    canister_id: id.clone(),
+                    parent_canister_id: None,
+                    role: None,
+                    module_hash: None,
+                })
+                .unwrap()
+            })
+            .collect(),
+    )
+    .unwrap();
+    declaration.selected_targets = targets.to_vec();
+    declaration.graph = graph(
+        targets
+            .iter()
+            .enumerate()
+            .map(|(index, _)| (u64::try_from(index).unwrap(), vec![])),
+    );
+    declaration.operations = targets
+        .iter()
+        .enumerate()
+        .map(|(index, id)| operation(u64::try_from(index).unwrap(), id, "ef", 1, 0))
+        .collect();
+    declaration.budget = PlanBudgetRecord::new(u32::try_from(targets.len()).unwrap(), 0).unwrap();
+    OperationPlanRecord::new(declaration).expect("bounded original plan")
 }
 
 fn journal(

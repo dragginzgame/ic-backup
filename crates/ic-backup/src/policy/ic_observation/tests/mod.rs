@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::response_fault::ObservationFault;
 use crate::{
     model::ic_request::IcManagementMethodRecord as Method,
     test_support::{
@@ -87,37 +88,12 @@ fn actual_authority_attempt_payload_context_and_target_drift_are_typed_denials()
         &original.payload,
     )
     .unwrap();
-    for change in 0..8 {
+    for fault in ObservationFault::ALL {
         let mut fields = input(&request);
-        match change {
-            0 => fields.authority = hash("12"),
-            1 => {
-                fields.mutation_attempt = 2;
-                fields.observation_attempt = 3;
-            }
-            2 => fields.observation_attempt = 3,
-            3 => fields.request = hash("12"),
-            4..=6 => {
-                let mut context = serde_json::to_value(&fields.context).unwrap();
-                let (field, value) = match change {
-                    4 => ("network", hash("12").hash().to_string()),
-                    5 => ("caller", "aaaaa-aa".into()),
-                    _ => ("release", hash("12").hash().to_string()),
-                };
-                context[field] = serde_json::json!(value);
-                fields.context = serde_json::from_value(context).unwrap();
-            }
-            _ => fields.target = "aaaaa-aa".into(),
-        }
+        fault.apply(&mut fields, hash("12"), hash("12"));
         let response = IcObservationResponse::new(fields).unwrap();
         let error = validate_response(&request, &original.journal, &response).unwrap_err();
-        assert!(match change {
-            0 => matches!(error, IcObservationAssociationError::AuthorityMismatch),
-            1..=2 => matches!(error, IcObservationAssociationError::AttemptMismatch),
-            3 => matches!(error, IcObservationAssociationError::RequestMismatch),
-            4..=6 => matches!(error, IcObservationAssociationError::ContextMismatch),
-            _ => matches!(error, IcObservationAssociationError::TargetMismatch),
-        });
+        fault.assert_error(&error);
     }
 }
 

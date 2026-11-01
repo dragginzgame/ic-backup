@@ -1,13 +1,84 @@
 //! Fresh retained format, metadata, extent and closed-tree admission on native files.
 
+use super::file_change::Replacement;
 use super::*;
 use crate::{
     model::operation_plan::OperationPlanRecord,
     ops::persistence::{DownloadIntegrityError, create_operation_plan},
-    test_support::create_private_fifo,
 };
 use ic_platform::candid::contract;
 use serde_json::json;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum VerificationFault {
+    Changed,
+    Truncated,
+    Long,
+    Format,
+    Metadata,
+    Arguments,
+    Chunk,
+    Missing,
+    Extra,
+    EmptyDirectory,
+    Directory,
+    Symlink,
+    Fifo,
+    HugeChunk,
+    HugeMetadata,
+}
+
+impl VerificationFault {
+    fn apply(self, root: &std::path::Path, directory: &std::path::Path, chunk: &std::path::Path) {
+        let module = directory.join(REGIONS[0]);
+        match self {
+            Self::Changed => fs::write(&module, [11; 5]).unwrap(),
+            Self::Truncated => fs::write(&module, [8; 4]).unwrap(),
+            Self::Long => fs::write(&module, [8; 6]).unwrap(),
+            Self::Format => {
+                fs::write(directory.join("format"), b"incorrect format").unwrap();
+            }
+            Self::Metadata => {
+                fs::write(directory.join("metadata.candid"), b"wrong metadata").unwrap();
+            }
+            Self::Arguments => fs::write(
+                directory.join("metadata-arguments.candid"),
+                b"wrong request",
+            )
+            .unwrap(),
+            Self::Chunk => fs::write(chunk, [17, 255, 0]).unwrap(),
+            Self::Extra => fs::write(directory.join("extra"), b"").unwrap(),
+            Self::EmptyDirectory => {
+                fs::create_dir(directory.join("extra-empty")).unwrap();
+            }
+            Self::HugeChunk | Self::HugeMetadata => {
+                let path = if self == Self::HugeChunk {
+                    chunk.to_owned()
+                } else {
+                    directory.join("metadata.candid")
+                };
+                File::options()
+                    .write(true)
+                    .open(path)
+                    .unwrap()
+                    .set_len(MAX_IC_SNAPSHOT_METADATA_BYTES as u64 + 1)
+                    .unwrap();
+            }
+            Self::Missing => {
+                Replacement::Missing.apply(&module, &root.join("retained-module"));
+            }
+            Self::Directory => {
+                Replacement::Directory.apply(&module, &root.join("retained-module"));
+            }
+            Self::Symlink => {
+                Replacement::Symlink.apply(&module, &root.join("retained-module"));
+            }
+            Self::Fifo => {
+                Replacement::Fifo.apply(&module, &root.join("retained-module"));
+            }
+        }
+    }
+}
 
 fn plan() -> OperationPlanRecord {
     serde_json::from_value(json!({
@@ -86,21 +157,21 @@ fn explicit_retained_verification_keeps_exact_metadata_journal_and_plan_bytes() 
 #[test]
 fn changed_unsafe_missing_extra_and_unbounded_children_reject_without_repair() {
     for case in [
-        "changed",
-        "truncated",
-        "long",
-        "format",
-        "metadata",
-        "arguments",
-        "chunk",
-        "missing",
-        "extra",
-        "empty-directory",
-        "directory",
-        "symlink",
-        "fifo",
-        "huge-chunk",
-        "huge-metadata",
+        VerificationFault::Changed,
+        VerificationFault::Truncated,
+        VerificationFault::Long,
+        VerificationFault::Format,
+        VerificationFault::Metadata,
+        VerificationFault::Arguments,
+        VerificationFault::Chunk,
+        VerificationFault::Missing,
+        VerificationFault::Extra,
+        VerificationFault::EmptyDirectory,
+        VerificationFault::Directory,
+        VerificationFault::Symlink,
+        VerificationFault::Fifo,
+        VerificationFault::HugeChunk,
+        VerificationFault::HugeMetadata,
     ] {
         let root = root();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -111,70 +182,43 @@ fn changed_unsafe_missing_extra_and_unbounded_children_reject_without_repair() {
         let guard = retained(&layout, &plan, &metadata, &raw);
         let journal_bytes = fs::read(guard.path()).unwrap();
         let directory = root.join(format!("artifacts/{TARGET}"));
-        let module = directory.join(REGIONS[0]);
         let hash = &metadata.metadata().wasm_chunk_store[0].hash;
         let hash = Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap());
         let chunk = directory.join(format!("chunk-{hash}.bin"));
-        match case {
-            "changed" => fs::write(&module, [11; 5]).unwrap(),
-            "truncated" => fs::write(&module, [8; 4]).unwrap(),
-            "long" => fs::write(&module, [8; 6]).unwrap(),
-            "format" => fs::write(directory.join("format"), b"incorrect format").unwrap(),
-            "metadata" => fs::write(directory.join("metadata.candid"), b"wrong metadata").unwrap(),
-            "arguments" => fs::write(
-                directory.join("metadata-arguments.candid"),
-                b"wrong request",
-            )
-            .unwrap(),
-            "chunk" => fs::write(&chunk, [17, 255, 0]).unwrap(),
-            "extra" => fs::write(directory.join("extra"), b"").unwrap(),
-            "empty-directory" => fs::create_dir(directory.join("extra-empty")).unwrap(),
-            "huge-chunk" | "huge-metadata" => {
-                let path = if case == "huge-chunk" {
-                    chunk
-                } else {
-                    directory.join("metadata.candid")
-                };
-                File::options()
-                    .write(true)
-                    .open(path)
-                    .unwrap()
-                    .set_len(MAX_IC_SNAPSHOT_METADATA_BYTES as u64 + 1)
-                    .unwrap();
-            }
-            _ => {
-                fs::rename(&module, root.join("retained-module")).unwrap();
-                match case {
-                    "missing" => {}
-                    "directory" => fs::create_dir(&module).unwrap(),
-                    "symlink" => symlink(root.join("retained-module"), &module).unwrap(),
-                    "fifo" => create_private_fifo(&module),
-                    _ => unreachable!(),
-                }
-            }
-        }
+        case.apply(&root, &directory, &chunk);
         let result = guard.verify_ic_snapshot_artifact(&plan, TOKEN, &metadata);
         match case {
-            "changed" | "metadata" | "chunk" => assert!(
-                matches!(
-                    result,
-                    Err(IcSnapshotArtifactError::Checksum(
-                        ChecksumError::ChecksumMismatch { .. }
-                    ))
-                ),
-                "{case}: {result:?}"
-            ),
-            "missing" | "extra" | "empty-directory" => assert!(
+            VerificationFault::Changed | VerificationFault::Metadata | VerificationFault::Chunk => {
+                assert!(
+                    matches!(
+                        result,
+                        Err(IcSnapshotArtifactError::Checksum(
+                            ChecksumError::ChecksumMismatch { .. }
+                        ))
+                    ),
+                    "{case:?}: {result:?}"
+                );
+            }
+            VerificationFault::Missing
+            | VerificationFault::Extra
+            | VerificationFault::EmptyDirectory => assert!(
                 matches!(result, Err(IcSnapshotArtifactError::UnexpectedEntry)),
-                "{case}: {result:?}"
+                "{case:?}: {result:?}"
             ),
-            "symlink" => assert!(
+            VerificationFault::Symlink => assert!(
                 matches!(result, Err(IcSnapshotArtifactError::Io(_))),
-                "{case}: {result:?}"
+                "{case:?}: {result:?}"
             ),
-            _ => assert!(
+            VerificationFault::Truncated
+            | VerificationFault::Long
+            | VerificationFault::Format
+            | VerificationFault::Arguments
+            | VerificationFault::Directory
+            | VerificationFault::Fifo
+            | VerificationFault::HugeChunk
+            | VerificationFault::HugeMetadata => assert!(
                 matches!(result, Err(IcSnapshotArtifactError::FileShape)),
-                "{case}: {result:?}"
+                "{case:?}: {result:?}"
             ),
         }
         assert_eq!(fs::read(guard.path()).unwrap(), journal_bytes);

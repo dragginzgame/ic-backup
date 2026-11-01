@@ -2,12 +2,13 @@
 use ic_platform::candid::contract;
 mod plan;
 use super::*;
+use crate::test_support::ic_snapshot_metadata::raw as upload_raw;
 use crate::{
     model::ic_snapshot_upload::{IcSnapshotUploadError, IcSnapshotUploadRequest},
     ops::persistence::{IcSnapshotUploadArtifactError, create_operation_plan},
     test_support::{
         create_private_fifo,
-        ic_snapshot_upload::{DESTINATION_ID, raw as upload_raw, source_plan},
+        ic_snapshot_upload::{DESTINATION_ID, source_plan},
     },
 };
 use ic_platform::management_canister_types::{

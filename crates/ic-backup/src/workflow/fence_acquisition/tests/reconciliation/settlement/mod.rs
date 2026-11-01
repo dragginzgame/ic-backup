@@ -1,6 +1,6 @@
 //! Explicit application qualification and one original receipt, without provider effects.
 
-use super::{Fixture, Provider, admit, challenge, evidence, pending, ready};
+use super::{Fixture, Provider, Purpose, admit, challenge, evidence, pending, ready};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -82,13 +82,13 @@ fn applied(
 
 #[test]
 fn exact_qualified_outcomes_survive_reopen_without_refunds_reentry_or_release() {
-    for restore in [false, true] {
+    for purpose in Purpose::ALL {
         for outcome in [
             ObservationOutcomeRecord::Applied,
             ObservationOutcomeRecord::NotApplied,
             ObservationOutcomeRecord::Uncertain,
         ] {
-            let fixture = Fixture::new(restore, false);
+            let fixture = Fixture::new(purpose, false);
             let stage = fixture.stage();
             let mut observation = observe(&fixture, &stage);
             if outcome == ObservationOutcomeRecord::Applied {
@@ -185,7 +185,7 @@ fn exact_qualified_outcomes_survive_reopen_without_refunds_reentry_or_release() 
 #[test]
 fn qualification_and_every_receipt_mismatch_preserve_both_pending_attempts() {
     for mismatch in 0..5 {
-        let fixture = Fixture::new(true, false);
+        let fixture = Fixture::new(Purpose::Restore, false);
         let stage = fixture.stage();
         let observation = observe(&fixture, &stage);
         let before = evidence(&stage, &fixture);
@@ -244,7 +244,7 @@ fn satisfy_prerequisite(fixture: &Fixture, stage: &ExecutionStageGuard<'_>) {
 #[test]
 fn complete_original_coverage_is_rechecked_before_and_after_qualification() {
     for during in [false, true] {
-        let fixture = Fixture::new(false, true);
+        let fixture = Fixture::new(Purpose::Capture, true);
         let stage = fixture.stage();
         satisfy_prerequisite(&fixture, &stage);
         let observation = observe(&fixture, &stage);
@@ -282,7 +282,7 @@ fn complete_original_coverage_is_rechecked_before_and_after_qualification() {
 #[test]
 fn wrong_original_challenge_and_changed_source_cannot_record_an_observation() {
     for source_change in [false, true] {
-        let fixture = Fixture::new(true, false);
+        let fixture = Fixture::new(Purpose::Restore, false);
         let stage = fixture.stage();
         let observation = observe(&fixture, &stage);
         let before = evidence(&stage, &fixture);
@@ -317,7 +317,7 @@ fn wrong_original_challenge_and_changed_source_cannot_record_an_observation() {
 #[test]
 fn cancelled_non_send_qualification_keeps_exclusion_spending_and_references() {
     use std::rc::Rc;
-    let fixture = Fixture::new(true, false);
+    let fixture = Fixture::new(Purpose::Restore, false);
     let stage = fixture.stage();
     let observation = observe(&fixture, &stage);
     let before = evidence(&stage, &fixture);
@@ -354,7 +354,7 @@ fn cancelled_non_send_qualification_keeps_exclusion_spending_and_references() {
 
 #[test]
 fn failed_publication_preserves_original_journal_and_borrowed_observation() {
-    let fixture = Fixture::new(false, false);
+    let fixture = Fixture::new(Purpose::Capture, false);
     let stage = fixture.stage();
     let observation = observe(&fixture, &stage);
     let before = evidence(&stage, &fixture);

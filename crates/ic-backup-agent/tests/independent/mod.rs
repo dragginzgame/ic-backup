@@ -6,6 +6,7 @@ mod consumer;
 mod operator;
 
 use super::*;
+use consumer::Mode;
 use std::{
     collections::BTreeMap,
     os::unix::fs::OpenOptionsExt,
@@ -25,30 +26,50 @@ async fn normal_consumer_death_after_authenticated_load_preserves_pending_withou
     exercise(true).await;
 }
 
-async fn child(fixture: &Fixture, root: &Path, mode: &str) -> i32 {
+struct CommandResult {
+    status: i32,
+    stdout: PathBuf,
+    stderr: PathBuf,
+}
+
+impl CommandResult {
+    fn assert_status(&self, expected: i32) {
+        assert_eq!(
+            self.status,
+            expected,
+            "stdout: {}; stderr: {}",
+            self.stdout.display(),
+            self.stderr.display()
+        );
+    }
+}
+
+async fn child(fixture: &Fixture, root: &Path, mode: Mode) -> CommandResult {
     static COMMAND: AtomicU64 = AtomicU64::new(0);
     let binary = build::binary().clone();
     let sequence = COMMAND.fetch_add(1, Ordering::Relaxed);
-    let output = |extension| {
+    let path = |extension| {
+        fixture
+            .root
+            .join(format!("consumer-{sequence}-{mode}.{extension}"))
+    };
+    let stdout_path = path("stdout");
+    let stderr_path = path("stderr");
+    let output = |path: &Path| {
         fs::OpenOptions::new()
             .write(true)
             .create_new(true)
             .mode(0o600)
-            .open(
-                fixture
-                    .root
-                    .join(format!("consumer-{sequence}-{mode}.{extension}")),
-            )
+            .open(path)
             .unwrap()
     };
-    let stdout = output("stdout");
-    let stderr = output("stderr");
+    let stdout = output(&stdout_path);
+    let stderr = output(&stderr_path);
     let root = root.to_owned();
-    let mode = mode.to_owned();
-    tokio::task::spawn_blocking(move || {
+    let status = tokio::task::spawn_blocking(move || {
         let mut process = ic_host_process::child::OwnedChild::spawn(
             Command::new(binary)
-                .arg(mode)
+                .arg(mode.to_string())
                 .arg(root)
                 .stdout(Stdio::from(stdout))
                 .stderr(Stdio::from(stderr)),
@@ -68,15 +89,25 @@ async fn child(fixture: &Fixture, root: &Path, mode: &str) -> i32 {
         }
     })
     .await
-    .unwrap()
+    .unwrap();
+    CommandResult {
+        status,
+        stdout: stdout_path,
+        stderr: stderr_path,
+    }
 }
 
-async fn grant(fixture: &mut Fixture, root: &Path, mode: &str) {
+async fn grant(fixture: &mut Fixture, root: &Path, mode: Mode) {
     // A fresh actual control/lifecycle observation is separately reserved before
     // its call. It grants no mutation or retry spending to the consumer.
     let payload = support::payload(Method::CanisterStatus, &fixture.target, None);
-    let (plan, layout, evidence) = fixture.original(&payload.digest());
-    let journal = support::retain(&layout, &plan, fixture.sequence);
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&payload.digest());
+    let evidence = layout.root().to_path_buf();
+    let journal = support::retain(&layout, &plan, sequence);
     let before = fs::read(journal.path()).unwrap();
     let status = fixture
         .pic
@@ -236,16 +267,13 @@ async fn exercise(lose_load: bool) {
         .unwrap();
     let config = connection_config(&fixture);
     write_config(&root, &config);
-    grant(&mut fixture, &root, "capture").await;
-    assert_eq!(
-        child(&fixture, &root, "capture").await,
-        0,
-        "{}",
-        root.display()
-    );
+    grant(&mut fixture, &root, Mode::Capture).await;
+    child(&fixture, &root, Mode::Capture).await.assert_status(0);
     operator::inspect(&fixture, &root, true).await;
     let before = files(&root);
-    assert_eq!(child(&fixture, &root, "capture-continue").await, 0);
+    child(&fixture, &root, Mode::CaptureContinue)
+        .await
+        .assert_status(0);
     assert_eq!(files(&root), before);
     fixture.mutation(Method::StartCanister, None, false).await;
     fixture
@@ -259,14 +287,15 @@ async fn exercise(lose_load: bool) {
         .await
         .unwrap();
     fixture.mutation(Method::StopCanister, None, false).await;
-    let mode = if lose_load { "lose-load" } else { "restore" };
+    let mode = if lose_load {
+        Mode::LoseLoad
+    } else {
+        Mode::Restore
+    };
     grant(&mut fixture, &root, mode).await;
-    assert_eq!(
-        child(&fixture, &root, mode).await,
-        if lose_load { 75 } else { 0 },
-        "{}",
-        root.display()
-    );
+    child(&fixture, &root, mode)
+        .await
+        .assert_status(if lose_load { 75 } else { 0 });
     let progress = operator::inspect(&fixture, &root, false).await;
     let rows = progress["stages"].as_array().unwrap();
     assert_eq!(rows.last().unwrap()["state"]["state"], "unprepared");
@@ -289,7 +318,7 @@ async fn exercise(lose_load: bool) {
         )
         .unwrap();
         let before = files(&root);
-        assert_eq!(child(&fixture, &root, "restore").await, 1);
+        child(&fixture, &root, Mode::Restore).await.assert_status(1);
         assert_eq!(files(&root), before);
         assert!(!root.join("restore/execution-stage-6").exists());
         let references: ic_backup::model::restore_references::RestoreReferencesRecord =
@@ -313,9 +342,9 @@ async fn exercise(lose_load: bool) {
         assert_eq!(journal.view().pending_mutation, Some(1));
         assert_eq!(journal.view().mutations_remaining, 0);
     } else {
-        grant(&mut fixture, &root, "start").await;
+        grant(&mut fixture, &root, Mode::Start).await;
         let before = files(&root);
-        assert_eq!(child(&fixture, &root, "start").await, 1);
+        child(&fixture, &root, Mode::Start).await.assert_status(1);
         assert_eq!(files(&root), before);
         assert!(!root.join("restore/execution-stage-6").exists());
         let acceptance = verify(&mut fixture, &root).await;
@@ -324,12 +353,7 @@ async fn exercise(lose_load: bool) {
             &serde_json::to_vec(&acceptance).unwrap(),
         )
         .unwrap();
-        assert_eq!(
-            child(&fixture, &root, "start").await,
-            0,
-            "{}",
-            root.display()
-        );
+        child(&fixture, &root, Mode::Start).await.assert_status(0);
         let restored = fixture
             .pic
             .query_call(
@@ -342,7 +366,7 @@ async fn exercise(lose_load: bool) {
             .unwrap();
         assert_eq!(restored, [42_u64.to_le_bytes(); 3].concat());
         let before = files(&root);
-        assert_eq!(child(&fixture, &root, "replay").await, 0);
+        child(&fixture, &root, Mode::Replay).await.assert_status(0);
         assert_eq!(files(&root), before);
     }
     let executable =

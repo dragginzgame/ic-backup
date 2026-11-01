@@ -3,7 +3,7 @@
 //! membership mutation, release endpoint or external work. These conditions are
 //! qualified here, never inferred for an application or installed as a default.
 
-use super::{Fixture, support, support::retain_bytes as retain};
+use super::{Fixture, OriginalCall, support, support::retain_bytes as retain};
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -98,8 +98,11 @@ async fn run(reply: Reply) {
     .concat();
     let payload =
         FenceAcquisitionPayload::new(&fixture.target, "acquire", original.as_bytes()).unwrap();
-    let (plan, layout, _workflow_root) = fixture.original(&payload.digest());
-    let sequence = fixture.sequence;
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&payload.digest());
     let authority = plan.attempt_authority(sequence).unwrap();
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
     create_execution_workflow(&layout, &workflow).unwrap();

@@ -3,6 +3,7 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
+use crate::test_support::ic_snapshot_metadata::raw;
 use crate::test_support::operation_plan::{declaration, graph, operation_request};
 
 use crate::test_support::ready::ready;
@@ -19,9 +20,7 @@ use crate::{
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
     test_support::{
-        ic_snapshot_upload::{
-            DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, unhex, upload_plan,
-        },
+        ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, source_plan, unhex, upload_plan},
         temp_dir,
     },
 };

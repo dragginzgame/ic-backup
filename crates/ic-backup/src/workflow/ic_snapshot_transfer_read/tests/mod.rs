@@ -22,18 +22,7 @@ use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, Sna
 use std::{convert::Infallible, fs, path::PathBuf};
 
 fn metadata_wire() -> Vec<u8> {
-    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
-        "../../../model/ic_snapshot_metadata/tests/golden.json"
-    ))
-    .unwrap();
-    crate::test_support::hex_bytes(
-        cases
-            .iter()
-            .find(|row| row["name"] == "data-source")
-            .unwrap()["reply_hex"]
-            .as_str()
-            .unwrap(),
-    )
+    crate::test_support::ic_snapshot_metadata::raw("data-source")
 }
 fn metadata_request() -> IcSnapshotMetadataRequest {
     IcSnapshotMetadataRequest::new(workflow().stage(0).unwrap().target(), &[0, 255, 128]).unwrap()

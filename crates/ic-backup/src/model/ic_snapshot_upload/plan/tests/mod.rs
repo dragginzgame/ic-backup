@@ -1,9 +1,10 @@
 //! Original allowance thresholds, canonical complete extents and exact learned binding.
 use super::*;
+use crate::test_support::ic_snapshot_metadata::raw;
 use crate::{
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
     test_support::ic_snapshot_upload::{
-        SOURCE_ID, TARGET, data_workflow, raw, source_plan, unhex, upload_plan,
+        SOURCE_ID, TARGET, data_workflow, source_plan, unhex, upload_plan,
     },
 };
 use ic_platform::candid::contract;

@@ -2,6 +2,8 @@
 
 use ic_platform::candid::contract;
 mod custody;
+mod file_change;
+mod fixture;
 mod upload;
 mod verification;
 
@@ -15,6 +17,7 @@ use crate::{
     ops::persistence::{BackupLayoutGuard, commit_artifact_directory},
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
+use fixture::{CreatedArtifact, with_created};
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::management_canister_types::{
     ChunkHash, ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
@@ -30,15 +33,7 @@ const TOKEN: &str = "opaque-backend-token";
 const INTENT: &str = "abababababababababababababababababababababababababababababababab";
 
 fn values() -> ReadCanisterSnapshotMetadataResult {
-    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
-        "../../../../../model/ic_snapshot_metadata/tests/golden.json"
-    ))
-    .unwrap();
-    let case = cases
-        .iter()
-        .find(|case| case["name"] == "data-source")
-        .unwrap();
-    let raw = crate::test_support::hex_bytes(case["reply_hex"].as_str().unwrap());
+    let raw = crate::test_support::ic_snapshot_metadata::raw("data-source");
     let mut values: ReadCanisterSnapshotMetadataResult =
         ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 5;
@@ -134,70 +129,74 @@ fn complete<'a, 'b, 'c>(
 
 #[test]
 fn interleaved_bytes_metadata_and_empty_chunks_publish_under_the_original_journal() {
-    let root = root();
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = contract::encode_one(values()).unwrap();
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
-    let writer = journal
-        .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
-        .unwrap();
-    assert_eq!(
-        writer.path().file_name().unwrap(),
-        format!("{TARGET}.tmp").as_str()
+    let root = with_created(
+        |CreatedArtifact {
+             root,
+             layout,
+             request,
+             raw,
+             metadata,
+             mut journal,
+         }| {
+            let writer = journal
+                .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
+                .unwrap();
+            assert_eq!(
+                writer.path().file_name().unwrap(),
+                format!("{TARGET}.tmp").as_str()
+            );
+            assert_eq!(
+                fs::metadata(writer.path()).unwrap().permissions().mode() & 0o777,
+                0o700
+            );
+            let writer = complete(writer);
+            assert!(writer.coverage().complete().is_some());
+            for entry in fs::read_dir(writer.path()).unwrap() {
+                assert_eq!(
+                    entry.unwrap().metadata().unwrap().permissions().mode() & 0o777,
+                    0o600
+                );
+            }
+            let expected = checksum_directory(writer.path()).unwrap();
+            let checksum = writer.finish().unwrap();
+            assert_eq!(checksum, expected);
+            let canonical = root.join(format!("artifacts/{TARGET}"));
+            assert_eq!(
+                fs::read(canonical.join("wasm-module.bin")).unwrap(),
+                [8, 8, 10, 10, 10]
+            );
+            assert_eq!(fs::read(canonical.join("wasm-memory.bin")).unwrap(), [7; 3]);
+            assert_eq!(fs::read(canonical.join("stable-memory.bin")).unwrap(), [9]);
+            assert_eq!(fs::read(canonical.join("metadata.candid")).unwrap(), *raw);
+            assert_eq!(
+                fs::read(canonical.join("metadata-arguments.candid")).unwrap(),
+                request.arguments()
+            );
+            assert_eq!(
+                fs::read(canonical.join("format")).unwrap(),
+                b"ic-backup/ic-snapshot-artifact/v1\n"
+            );
+            for chunk in [vec![0, 255, 17], vec![]] {
+                let name = format!("chunk-{:x}.bin", Sha256::digest(&chunk));
+                assert_eq!(fs::read(canonical.join(name)).unwrap(), chunk);
+            }
+            assert_eq!(checksum_directory(&canonical).unwrap(), checksum);
+            let entry = &journal.record().unwrap().artifacts()[0];
+            assert_eq!(entry.state(), ArtifactStateRecord::Durable);
+            assert_eq!(entry.snapshot_id(), TOKEN);
+            assert_eq!(entry.snapshot_total_size_bytes(), u64::MAX);
+            assert_eq!(entry.checksum(), Some(&checksum));
+            assert!(matches!(
+                journal.stage_ic_snapshot_artifact(TOKEN, metadata, raw),
+                Err(IcSnapshotArtifactError::OriginalMismatch)
+            ));
+            drop(journal);
+            fs::rename(&canonical, root.join("retained-canonical")).unwrap();
+            let journal = DownloadJournalGuard::open(layout, INTENT).unwrap();
+            assert!(journal.record().unwrap().resume_view().is_complete);
+            drop(journal);
+        },
     );
-    assert_eq!(
-        fs::metadata(writer.path()).unwrap().permissions().mode() & 0o777,
-        0o700
-    );
-    let writer = complete(writer);
-    assert!(writer.coverage().complete().is_some());
-    for entry in fs::read_dir(writer.path()).unwrap() {
-        assert_eq!(
-            entry.unwrap().metadata().unwrap().permissions().mode() & 0o777,
-            0o600
-        );
-    }
-    let expected = checksum_directory(writer.path()).unwrap();
-    let checksum = writer.finish().unwrap();
-    assert_eq!(checksum, expected);
-    let canonical = root.join(format!("artifacts/{TARGET}"));
-    assert_eq!(
-        fs::read(canonical.join("wasm-module.bin")).unwrap(),
-        [8, 8, 10, 10, 10]
-    );
-    assert_eq!(fs::read(canonical.join("wasm-memory.bin")).unwrap(), [7; 3]);
-    assert_eq!(fs::read(canonical.join("stable-memory.bin")).unwrap(), [9]);
-    assert_eq!(fs::read(canonical.join("metadata.candid")).unwrap(), raw);
-    assert_eq!(
-        fs::read(canonical.join("metadata-arguments.candid")).unwrap(),
-        request.arguments()
-    );
-    assert_eq!(
-        fs::read(canonical.join("format")).unwrap(),
-        b"ic-backup/ic-snapshot-artifact/v1\n"
-    );
-    for chunk in [vec![0, 255, 17], vec![]] {
-        let name = format!("chunk-{:x}.bin", Sha256::digest(&chunk));
-        assert_eq!(fs::read(canonical.join(name)).unwrap(), chunk);
-    }
-    assert_eq!(checksum_directory(&canonical).unwrap(), checksum);
-    let entry = &journal.record().unwrap().artifacts()[0];
-    assert_eq!(entry.state(), ArtifactStateRecord::Durable);
-    assert_eq!(entry.snapshot_id(), TOKEN);
-    assert_eq!(entry.snapshot_total_size_bytes(), u64::MAX);
-    assert_eq!(entry.checksum(), Some(&checksum));
-    assert!(matches!(
-        journal.stage_ic_snapshot_artifact(TOKEN, &metadata, &raw),
-        Err(IcSnapshotArtifactError::OriginalMismatch)
-    ));
-    drop(journal);
-    fs::rename(&canonical, root.join("retained-canonical")).unwrap();
-    let journal = DownloadJournalGuard::open(&layout, INTENT).unwrap();
-    assert!(journal.record().unwrap().resume_view().is_complete);
-    drop(journal);
-    drop(layout);
     fs::remove_dir_all(root).unwrap();
 }
 
@@ -216,105 +215,110 @@ fn partial_drop_and_coverage_rejections_retain_bytes_without_completion_or_recre
         "duplicate-chunk",
         "io",
     ] {
-        let root = root();
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = contract::encode_one(values()).unwrap();
-        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
-        let original = fs::read(journal.path()).unwrap();
-        let writer = journal
-            .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
-            .unwrap();
-        let writer = append(
-            writer,
-            SnapshotDataKind::WasmModule { offset: 0, size: 2 },
-            vec![8; 2],
-        )
-        .unwrap();
-        let path = writer.path().to_owned();
-        match action {
-            "drop" => drop(writer),
-            "finish" => assert!(matches!(
-                writer.finish(),
-                Err(IcSnapshotArtifactError::IncompleteCoverage)
-            )),
-            "gap" => assert!(matches!(
-                append(
-                    writer,
-                    SnapshotDataKind::WasmModule { offset: 3, size: 1 },
-                    vec![1]
-                ),
-                Err(IcSnapshotArtifactError::Coverage(
-                    IcSnapshotDataCoverageError::NoncontiguousRange
-                ))
-            )),
-            "duplicate" => assert!(matches!(
-                append(
-                    writer,
-                    SnapshotDataKind::WasmModule { offset: 0, size: 2 },
-                    vec![1; 2]
-                ),
-                Err(IcSnapshotArtifactError::Coverage(
-                    IcSnapshotDataCoverageError::NoncontiguousRange
-                ))
-            )),
-            "mixed" => {
-                let different = IcSnapshotMetadataRequest::new(TARGET, &[1]).unwrap();
-                let metadata = IcSnapshotMetadataReply::decode(&different, &raw).unwrap();
-                let request = IcSnapshotDataRequest::new(
-                    &metadata,
-                    SnapshotDataKind::StableMemory { offset: 0, size: 1 },
-                )
-                .unwrap();
-                let raw = contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![1] })
+        let root = with_created(
+            |CreatedArtifact {
+                 raw,
+                 metadata,
+                 mut journal,
+                 ..
+             }| {
+                let original = fs::read(journal.path()).unwrap();
+                let writer = journal
+                    .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
                     .unwrap();
-                let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
-                assert!(matches!(
-                    writer.append(&reply),
-                    Err(IcSnapshotArtifactError::Coverage(
-                        IcSnapshotDataCoverageError::MetadataMismatch
-                    ))
-                ));
-            }
-            "duplicate-chunk" => {
-                let hash = metadata.metadata().wasm_chunk_store[1].hash.clone();
                 let writer = append(
                     writer,
-                    SnapshotDataKind::WasmChunk { hash: hash.clone() },
-                    vec![],
+                    SnapshotDataKind::WasmModule { offset: 0, size: 2 },
+                    vec![8; 2],
                 )
                 .unwrap();
-                assert!(matches!(
-                    append(writer, SnapshotDataKind::WasmChunk { hash }, vec![]),
-                    Err(IcSnapshotArtifactError::Coverage(
-                        IcSnapshotDataCoverageError::DuplicateChunk
-                    ))
-                ));
-            }
-            "io" => {
-                // A real read-only descriptor makes the next write fail on every Unix host.
-                let mut writer = writer;
-                writer.regions[0] =
-                    HashingWriter::new(File::open(path.join("wasm-module.bin")).unwrap(), u64::MAX);
-                assert!(matches!(
-                    append(
-                        writer,
-                        SnapshotDataKind::WasmModule { offset: 2, size: 1 },
-                        vec![1]
-                    ),
-                    Err(IcSnapshotArtifactError::Io(_))
-                ));
-            }
-            _ => unreachable!(),
-        }
-        assert_eq!(fs::read(path.join("wasm-module.bin")).unwrap(), [8; 2]);
-        assert_eq!(fs::read(journal.path()).unwrap(), original);
-        assert!(
-            matches!(journal.stage_ic_snapshot_artifact(TOKEN, &metadata, &raw), Err(IcSnapshotArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::AlreadyExists)
+                let path = writer.path().to_owned();
+                match action {
+                    "drop" => drop(writer),
+                    "finish" => assert!(matches!(
+                        writer.finish(),
+                        Err(IcSnapshotArtifactError::IncompleteCoverage)
+                    )),
+                    "gap" => assert!(matches!(
+                        append(
+                            writer,
+                            SnapshotDataKind::WasmModule { offset: 3, size: 1 },
+                            vec![1]
+                        ),
+                        Err(IcSnapshotArtifactError::Coverage(
+                            IcSnapshotDataCoverageError::NoncontiguousRange
+                        ))
+                    )),
+                    "duplicate" => assert!(matches!(
+                        append(
+                            writer,
+                            SnapshotDataKind::WasmModule { offset: 0, size: 2 },
+                            vec![1; 2]
+                        ),
+                        Err(IcSnapshotArtifactError::Coverage(
+                            IcSnapshotDataCoverageError::NoncontiguousRange
+                        ))
+                    )),
+                    "mixed" => {
+                        let different = IcSnapshotMetadataRequest::new(TARGET, &[1]).unwrap();
+                        let metadata = IcSnapshotMetadataReply::decode(&different, raw).unwrap();
+                        let request = IcSnapshotDataRequest::new(
+                            &metadata,
+                            SnapshotDataKind::StableMemory { offset: 0, size: 1 },
+                        )
+                        .unwrap();
+                        let raw =
+                            contract::encode_one(ReadCanisterSnapshotDataResult { chunk: vec![1] })
+                                .unwrap();
+                        let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
+                        assert!(matches!(
+                            writer.append(&reply),
+                            Err(IcSnapshotArtifactError::Coverage(
+                                IcSnapshotDataCoverageError::MetadataMismatch
+                            ))
+                        ));
+                    }
+                    "duplicate-chunk" => {
+                        let hash = metadata.metadata().wasm_chunk_store[1].hash.clone();
+                        let writer = append(
+                            writer,
+                            SnapshotDataKind::WasmChunk { hash: hash.clone() },
+                            vec![],
+                        )
+                        .unwrap();
+                        assert!(matches!(
+                            append(writer, SnapshotDataKind::WasmChunk { hash }, vec![]),
+                            Err(IcSnapshotArtifactError::Coverage(
+                                IcSnapshotDataCoverageError::DuplicateChunk
+                            ))
+                        ));
+                    }
+                    "io" => {
+                        // A real read-only descriptor makes the next write fail on every Unix host.
+                        let mut writer = writer;
+                        writer.regions[0] = HashingWriter::new(
+                            File::open(path.join("wasm-module.bin")).unwrap(),
+                            u64::MAX,
+                        );
+                        assert!(matches!(
+                            append(
+                                writer,
+                                SnapshotDataKind::WasmModule { offset: 2, size: 1 },
+                                vec![1]
+                            ),
+                            Err(IcSnapshotArtifactError::Io(_))
+                        ));
+                    }
+                    _ => unreachable!(),
+                }
+                assert_eq!(fs::read(path.join("wasm-module.bin")).unwrap(), [8; 2]);
+                assert_eq!(fs::read(journal.path()).unwrap(), original);
+                assert!(
+                    matches!(journal.stage_ic_snapshot_artifact(TOKEN, metadata, raw), Err(IcSnapshotArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::AlreadyExists)
+                );
+                drop(journal);
+            },
         );
-        drop(journal);
-        drop(layout);
         fs::remove_dir_all(root).unwrap();
     }
 }
@@ -330,62 +334,69 @@ fn changed_unsafe_extra_and_missing_files_reject_before_any_journal_transition()
         "symlink",
         "occupied-chunk",
     ] {
-        let root = root();
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = contract::encode_one(values()).unwrap();
-        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
-        let original = fs::read(journal.path()).unwrap();
-        let writer = journal
-            .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
-            .unwrap();
-        let path = writer.path().to_owned();
-        if action == "occupied-chunk" {
-            let hash = &metadata.metadata().wasm_chunk_store[0].hash;
-            fs::write(
-                path.join(format!(
-                    "chunk-{}.bin",
-                    Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap())
-                )),
-                b"original occupied bytes",
-            )
-            .unwrap();
-            assert!(
-                matches!(append(writer, SnapshotDataKind::WasmChunk { hash: hash.clone() }, vec![0, 255, 17]), Err(IcSnapshotArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::AlreadyExists)
-            );
-        } else {
-            let writer = complete(writer);
-            match action {
-                "changed" => fs::write(path.join("wasm-module.bin"), [0; 5]).unwrap(),
-                "truncated" => fs::write(path.join("stable-memory.bin"), []).unwrap(),
-                "extra" => fs::write(path.join("unexpected"), [0]).unwrap(),
-                "empty-directory" => fs::create_dir(path.join("unexpected")).unwrap(),
-                "missing" => fs::remove_file(path.join("metadata.candid")).unwrap(),
-                "symlink" => {
-                    fs::rename(path.join("wasm-memory.bin"), root.join("retained-memory")).unwrap();
-                    symlink(root.join("retained-memory"), path.join("wasm-memory.bin")).unwrap();
+        let root = with_created(
+            |CreatedArtifact {
+                 root,
+                 raw,
+                 metadata,
+                 mut journal,
+                 ..
+             }| {
+                let original = fs::read(journal.path()).unwrap();
+                let writer = journal
+                    .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
+                    .unwrap();
+                let path = writer.path().to_owned();
+                if action == "occupied-chunk" {
+                    let hash = &metadata.metadata().wasm_chunk_store[0].hash;
+                    fs::write(
+                        path.join(format!(
+                            "chunk-{}.bin",
+                            Sha256Digest::from_bytes(hash.as_slice().try_into().unwrap())
+                        )),
+                        b"original occupied bytes",
+                    )
+                    .unwrap();
+                    assert!(
+                        matches!(append(writer, SnapshotDataKind::WasmChunk { hash: hash.clone() }, vec![0, 255, 17]), Err(IcSnapshotArtifactError::Io(ref error)) if error.kind() == io::ErrorKind::AlreadyExists)
+                    );
+                } else {
+                    let writer = complete(writer);
+                    match action {
+                        "changed" => fs::write(path.join("wasm-module.bin"), [0; 5]).unwrap(),
+                        "truncated" => fs::write(path.join("stable-memory.bin"), []).unwrap(),
+                        "extra" => fs::write(path.join("unexpected"), [0]).unwrap(),
+                        "empty-directory" => fs::create_dir(path.join("unexpected")).unwrap(),
+                        "missing" => fs::remove_file(path.join("metadata.candid")).unwrap(),
+                        "symlink" => {
+                            fs::rename(path.join("wasm-memory.bin"), root.join("retained-memory"))
+                                .unwrap();
+                            symlink(root.join("retained-memory"), path.join("wasm-memory.bin"))
+                                .unwrap();
+                        }
+                        _ => unreachable!(),
+                    }
+                    let error = writer.finish().unwrap_err();
+                    match action {
+                        "changed" | "truncated" => assert!(matches!(
+                            error,
+                            IcSnapshotArtifactError::Checksum(
+                                ChecksumError::ChecksumMismatch { .. }
+                            )
+                        )),
+                        "extra" | "empty-directory" | "missing" => {
+                            assert!(matches!(error, IcSnapshotArtifactError::UnexpectedEntry));
+                        }
+                        "symlink" => assert!(matches!(error, IcSnapshotArtifactError::Artifact(_))),
+                        _ => unreachable!(),
+                    }
                 }
-                _ => unreachable!(),
-            }
-            let error = writer.finish().unwrap_err();
-            match action {
-                "changed" | "truncated" => assert!(matches!(
-                    error,
-                    IcSnapshotArtifactError::Checksum(ChecksumError::ChecksumMismatch { .. })
-                )),
-                "extra" | "empty-directory" | "missing" => {
-                    assert!(matches!(error, IcSnapshotArtifactError::UnexpectedEntry));
-                }
-                "symlink" => assert!(matches!(error, IcSnapshotArtifactError::Artifact(_))),
-                _ => unreachable!(),
-            }
-        }
-        assert_eq!(fs::read(journal.path()).unwrap(), original);
-        assert!(path.exists());
-        assert!(!root.join(format!("artifacts/{TARGET}")).exists());
-        drop(journal);
-        drop(layout);
+                assert_eq!(fs::read(journal.path()).unwrap(), original);
+                assert!(path.exists());
+                assert!(!root.join(format!("artifacts/{TARGET}")).exists());
+                drop(journal);
+            },
+        );
         fs::remove_dir_all(root).unwrap();
     }
 }

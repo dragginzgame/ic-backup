@@ -10,7 +10,8 @@ mod evidence;
 mod metadata;
 mod stage;
 use clap::Parser;
-use command::{Arguments, Mode};
+use command::Arguments;
+pub(super) use command::Mode;
 pub(super) use config::{ApplicationConfig, Config};
 use stage::Stage;
 

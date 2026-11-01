@@ -1,10 +1,7 @@
 use super::*;
-use crate::test_support::execution_workflow::{child, workflow};
+use crate::test_support::execution_workflow::{child, record_applied, workflow};
 use crate::{
-    model::{
-        attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-        execution_workflow::ExecutionStagePredecessorRecord,
-    },
+    model::execution_workflow::ExecutionStagePredecessorRecord,
     ops::persistence::{AttemptJournalGuard, read_execution_progress},
     test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
@@ -41,20 +38,7 @@ fn settle_first(
 ) -> ExecutionStagePredecessorRecord {
     let stage =
         ExecutionStageGuard::open(layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let plan = stage.plan();
-    let stage_layout = stage.layout().unwrap();
-    let mut journal =
-        AttemptJournalGuard::open(stage_layout, &plan.attempt_authority(42).unwrap()).unwrap();
-    let attempt = journal.reserve_planned_mutation(&plan.digest()).unwrap();
-    journal
-        .record_mutation(MutationReceiptRequest {
-            attempt,
-            request: plan.operation(42).unwrap().request().into(),
-            outcome: MutationOutcomeRecord::Applied,
-            evidence: "12".repeat(32),
-        })
-        .unwrap();
-    drop(journal);
+    record_applied(&stage, 42, &"12".repeat(32));
     stage
         .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"snapshot ID and metadata evidence",

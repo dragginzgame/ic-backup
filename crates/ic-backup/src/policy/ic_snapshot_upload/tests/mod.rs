@@ -1,5 +1,6 @@
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
+use crate::test_support::ic_snapshot_metadata::raw;
 use crate::test_support::response_fault::ResponseFault;
 use crate::{
     model::{
@@ -9,7 +10,7 @@ use crate::{
         ic_update_response::IcUpdateResponseInput,
     },
     test_support::ic_snapshot_upload::{
-        DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, upload_plan,
+        DESTINATION_ID, SOURCE_ID, TARGET, source_plan, upload_plan,
     },
 };
 use ic_platform::candid::contract;

@@ -1,25 +1,21 @@
 //! Native exact update acknowledgement/failure recovery; no application or IC effects.
 
+mod fence_originals;
 mod ready;
 mod support;
+use fence_originals::RestoreOriginals as Originals;
 
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         fence_acquisition::*,
-        fence_obligation::FenceObligationRecord,
         fence_reconciliation::{FenceReconciliationIntent, FenceReconciliationRequest},
         operation_plan::OperationPlanRecord,
         restore_references::RestoreReferencesRecord,
-        restore_safety::{
-            RestoreFenceBindingRecord, RestoreSafetyLaneRecord, RestoreSafetyRequirementRecord,
-            RestoreSafetyRequirementRequest,
-        },
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, FenceObligationRequirement,
-        create_fence_obligation, create_operation_plan, create_restore_safety_requirement,
-        read_fence_obligation,
+        AttemptJournalGuard, BackupLayoutGuard, create_fence_obligation, create_operation_plan,
+        create_restore_safety_requirement, read_fence_obligation,
     },
     policy::fence_acquisition::validate_acknowledgement,
     ports::fence_acquisition::{FenceAcquisitionProvider, FenceAcquisitionProviderError},
@@ -31,64 +27,20 @@ const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 fn hash(pair: &str) -> ArtifactChecksumRecord {
     ArtifactChecksumRecord::from_hash(&pair.repeat(32)).unwrap()
 }
-struct Originals {
-    payload: FenceAcquisitionPayload,
-    plan: OperationPlanRecord,
-    source: OperationPlanRecord,
-    requirement: RestoreSafetyRequirementRecord,
-    obligation: FenceObligationRecord,
-}
-impl Originals {
-    fn new() -> Self {
-        let payload = FenceAcquisitionPayload::new(
-            TARGET,
-            "native_acquire",
-            b"opaque original application bytes",
-        )
-        .unwrap();
-        let plan: OperationPlanRecord = serde_json::from_value(json!({
+fn originals() -> (FenceAcquisitionPayload, Originals) {
+    let payload = FenceAcquisitionPayload::new(
+        TARGET,
+        "native_acquire",
+        b"opaque original application bytes",
+    )
+    .unwrap();
+    let plan: OperationPlanRecord = serde_json::from_value(json!({
             "version":1,"context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},
             "inventory":{"version":1,"targets":[{"canister_id":TARGET,"parent_canister_id":null,"role":null,"module_hash":null}]},
             "selected_targets":[TARGET],"graph":{"version":1,"nodes":[{"operation_sequence":0,"depends_on":[]}]},
             "operations":[{"operation_sequence":0,"target":TARGET,"request":payload.digest().hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
         })).unwrap();
-        let mut source = serde_json::to_value(&plan).unwrap();
-        source["operations"][0]["request"] = json!(hash("ef").hash());
-        let source = serde_json::from_value(source).unwrap();
-        let requirement = RestoreSafetyRequirementRecord::new(
-            &plan,
-            &source,
-            RestoreSafetyRequirementRequest {
-                source_artifacts: hash("12"),
-                safety: RestoreSafetyLaneRecord::ApplicationFenced,
-                expected_fence: Some(RestoreFenceBindingRecord {
-                    identity: hash("56"),
-                    membership_revision: hash("78"),
-                    external_obligations_revision: hash("90"),
-                }),
-            },
-        )
-        .unwrap();
-        let obligation =
-            FenceObligationRecord::for_restore(&plan, &source, &requirement, 0).unwrap();
-        Self {
-            payload,
-            plan,
-            source,
-            requirement,
-            obligation,
-        }
-    }
-    fn retained<'a>(
-        &'a self,
-        source_layout: &'a BackupLayoutGuard,
-    ) -> FenceObligationRequirement<'a> {
-        FenceObligationRequirement::Restore {
-            source_layout,
-            source: &self.source,
-            requirement: &self.requirement,
-        }
-    }
+    (payload, Originals::new(plan, 0))
 }
 
 /// Passive native port fixture logs one call and returns association/failure only.
@@ -135,17 +87,13 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
         Some(FenceAcquisitionProviderError::Unsupported),
         Some(FenceAcquisitionProviderError::Indeterminate),
     ] {
-        let originals = Originals::new();
+        let (payload, originals) = originals();
         let root = support::temp_root("ic-backup-native-acquisition");
         fs::create_dir_all(root.join("source")).unwrap();
         fs::create_dir(root.join("restore")).unwrap();
         // Native fixture custody only; real integrations qualify durable original byte retention.
-        fs::write(
-            root.join("request.arguments"),
-            originals.payload.arguments(),
-        )
-        .unwrap();
-        fs::write(root.join("request.method"), originals.payload.method()).unwrap();
+        fs::write(root.join("request.arguments"), payload.arguments()).unwrap();
+        fs::write(root.join("request.method"), payload.method()).unwrap();
         let layout = BackupLayoutGuard::acquire(&root.join("restore")).unwrap();
         let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
         create_operation_plan(&layout, &originals.plan).unwrap();
@@ -167,7 +115,7 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
         create_fence_obligation(
             &layout,
             &originals.plan,
-            originals.retained(&source_layout),
+            originals.input(&source_layout),
             &originals.obligation,
         )
         .unwrap();
@@ -182,7 +130,7 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
             &originals.plan,
             &originals.obligation,
             journal.record().unwrap(),
-            &originals.payload,
+            &payload,
         )
         .unwrap();
         let mut provider = NativeProvider {
@@ -203,7 +151,7 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
                 TARGET.into(),
                 mutation,
                 "native_acquire".into(),
-                originals.payload.arguments().into()
+                payload.arguments().into()
             )]
         );
         assert_eq!(fs::read(journal.path()).unwrap(), bytes);
@@ -222,7 +170,14 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
         drop(source_layout);
         drop(layout);
 
-        assert_retained_recovery(&root, &originals, mutation, &references, &obligation_bytes);
+        assert_retained_recovery(
+            &root,
+            &originals,
+            &payload,
+            mutation,
+            &references,
+            &obligation_bytes,
+        );
         // Reconstruction and reconciliation reservation invoke no second acquisition.
         assert_eq!(provider.calls.len(), 1);
         fs::remove_dir_all(root).unwrap();
@@ -232,6 +187,7 @@ fn every_native_acknowledgement_and_failure_preserves_pending_originals_through_
 fn assert_retained_recovery(
     root: &Path,
     originals: &Originals,
+    expected_payload: &FenceAcquisitionPayload,
     mutation: u32,
     references: &RestoreReferencesRecord,
     obligation_bytes: &[u8],
@@ -241,7 +197,7 @@ fn assert_retained_recovery(
     let retained = read_fence_obligation(
         &layout,
         &originals.plan,
-        originals.retained(&source_layout),
+        originals.input(&source_layout),
         &originals.obligation.digest(),
     )
     .unwrap();
@@ -257,7 +213,7 @@ fn assert_retained_recovery(
         &payload,
     )
     .unwrap();
-    assert_eq!(recovered.payload().digest(), originals.payload.digest());
+    assert_eq!(recovered.payload().digest(), expected_payload.digest());
     assert_eq!(recovered.mutation_attempt(), mutation);
     assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
     let intent = FenceReconciliationIntent::new(

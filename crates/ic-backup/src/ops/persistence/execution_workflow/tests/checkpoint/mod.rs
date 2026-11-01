@@ -8,22 +8,7 @@ use crate::ops::persistence::{
 use std::os::unix::fs::MetadataExt;
 
 fn apply(stage: &ExecutionStageGuard<'_>) {
-    let mut journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &stage.plan().attempt_authority(42).unwrap(),
-    )
-    .unwrap();
-    let attempt = journal
-        .reserve_planned_mutation(&stage.plan().digest())
-        .unwrap();
-    journal
-        .record_mutation(MutationReceiptRequest {
-            attempt,
-            request: stage.plan().operation(42).unwrap().request().into(),
-            outcome: MutationOutcomeRecord::Applied,
-            evidence: "12".repeat(32),
-        })
-        .unwrap();
+    record_applied(stage, 42, &"12".repeat(32));
 }
 #[test]
 fn exact_predecessor_admits_successor_and_retains_original_checkpoint_and_spending() {

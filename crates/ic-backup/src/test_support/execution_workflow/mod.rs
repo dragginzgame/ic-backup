@@ -75,3 +75,26 @@ pub(crate) fn assert_pending(stage: &ExecutionStageGuard<'_>, sequence: u64) {
     .unwrap();
     assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
 }
+
+/// Native fixture settlement only; callers choose exact receipt evidence and checkpoint separately.
+pub(crate) fn record_applied(stage: &ExecutionStageGuard<'_>, sequence: u64, evidence: &str) {
+    use crate::model::attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest};
+    use crate::ops::persistence::AttemptJournalGuard;
+    let mut journal = AttemptJournalGuard::open(
+        stage.layout().unwrap(),
+        &stage.plan().attempt_authority(sequence).unwrap(),
+    )
+    .unwrap();
+    let attempt = journal
+        .reserve_planned_mutation(&stage.plan().digest())
+        .unwrap();
+    journal
+        .record_mutation(MutationReceiptRequest {
+            attempt,
+            request: stage.plan().operation(sequence).unwrap().request().into(),
+            outcome: MutationOutcomeRecord::Applied,
+            evidence: evidence.into(),
+        })
+        .unwrap();
+    // Journal exclusion ends before the caller enters checkpoint admission.
+}

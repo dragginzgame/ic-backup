@@ -10,23 +10,12 @@ use crate::model::{
     },
 };
 pub use crate::test_support::hex_bytes as unhex;
+use crate::test_support::ic_snapshot_metadata::raw;
 use ic_platform::candid::contract;
 
 pub const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 pub const SOURCE_ID: &[u8] = &[0, 255, 17];
 pub const DESTINATION_ID: &[u8] = &[21, 0, 255];
-
-pub fn raw(name: &str) -> Vec<u8> {
-    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
-        "../../model/ic_snapshot_metadata/tests/golden.json"
-    ))
-    .unwrap();
-    unhex(
-        cases.iter().find(|case| case["name"] == name).unwrap()["reply_hex"]
-            .as_str()
-            .unwrap(),
-    )
-}
 
 pub fn plan(request: &str) -> OperationPlanRecord {
     OperationPlanRecord::new(plan_request(request, 7, 1)).unwrap()

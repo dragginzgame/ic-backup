@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::response_fault::ObservationFault;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -59,37 +60,16 @@ fn authority_attempt_request_context_and_actual_target_drift_are_typed_denials()
     with_observation(|plan, upload, list, journal| {
         let request =
             IcSnapshotUploadObservationRequest::new(plan, 7, journal, upload, list).unwrap();
-        for change in 0..8 {
+        for fault in ObservationFault::ALL {
             let mut input = observation_input(&request);
-            match change {
-                0 => input.authority = ArtifactChecksumRecord::from_bytes(b"other authority"),
-                1 => {
-                    input.mutation_attempt = 2;
-                    input.observation_attempt = 3;
-                }
-                2 => input.observation_attempt = 3,
-                3 => input.request = ArtifactChecksumRecord::from_bytes(b"other list"),
-                4..=6 => {
-                    let mut context = serde_json::to_value(&input.context).unwrap();
-                    let (field, value) = match change {
-                        4 => ("network", "12".repeat(32)),
-                        5 => ("caller", "aaaaa-aa".into()),
-                        _ => ("release", "12".repeat(32)),
-                    };
-                    context[field] = serde_json::json!(value);
-                    input.context = serde_json::from_value(context).unwrap();
-                }
-                _ => input.target = "aaaaa-aa".into(),
-            }
+            fault.apply(
+                &mut input,
+                ArtifactChecksumRecord::from_bytes(b"other authority"),
+                ArtifactChecksumRecord::from_bytes(b"other list"),
+            );
             let response = IcObservationResponse::new(input).unwrap();
             let error = validate_response(&request, journal, &response).unwrap_err();
-            assert!(match change {
-                0 => matches!(error, IcObservationAssociationError::AuthorityMismatch),
-                1..=2 => matches!(error, IcObservationAssociationError::AttemptMismatch),
-                3 => matches!(error, IcObservationAssociationError::RequestMismatch),
-                4..=6 => matches!(error, IcObservationAssociationError::ContextMismatch),
-                _ => matches!(error, IcObservationAssociationError::TargetMismatch),
-            });
+            fault.assert_error(&error);
         }
     });
 }

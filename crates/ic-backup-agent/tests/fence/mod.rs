@@ -28,10 +28,6 @@ impl FenceFailure {
 }
 
 #[tokio::test]
-#[expect(
-    clippy::too_many_lines,
-    reason = "keep original custody and exact HTTP cancellation trace chronological"
-)]
 async fn original_fence_update_requires_retention_and_never_reissues_after_cancellation() {
     for mode in FenceFailure::ALL {
         let root = support::root("fence-http");
@@ -91,21 +87,11 @@ async fn original_fence_update_requires_retention_and_never_reissues_after_cance
         );
         assert!(!root.join("signed-ingress.cbor").exists());
         if mode == FenceFailure::Cancel {
-            let mut pending = Box::pin(provider.acquire_fence(&request, guard.record().unwrap()));
-            let sent = async {
-                tokio::time::timeout(Duration::from_secs(2), async {
-                    while server.requests.lock().unwrap().is_empty() {
-                        tokio::time::sleep(Duration::from_millis(5)).await;
-                    }
-                })
-                .await
-                .unwrap();
-            };
-            tokio::select! {
-                result = &mut pending => panic!("delayed original finished before cancellation: {result:?}"),
-                () = sent => {}
-            }
-            drop(pending);
+            super::http_capture::cancel_after_capture(
+                provider.acquire_fence(&request, guard.record().unwrap()),
+                &server.requests,
+            )
+            .await;
         } else {
             assert_eq!(
                 provider

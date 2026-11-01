@@ -1,12 +1,9 @@
 //! Current read paths, exact context binding and refusal without IO.
 
 use super::*;
+use crate::test_support::response_fault::ContextFault;
 use crate::{
-    model::{
-        control_authority::ControllerSet,
-        operation_plan::{PlanContextRecord, PlanContextRequest},
-        snapshot_read::SnapshotViewerSet,
-    },
+    model::{control_authority::ControllerSet, snapshot_read::SnapshotViewerSet},
     test_support::{
         control_authority::{plan, stop},
         membership::{APP, hash},
@@ -98,29 +95,12 @@ fn rejects_stale_request_actual_context_target_and_excess_call_reporting() {
         validate(&fresh, &observation).unwrap_err(),
         SnapshotReadError::RequestMismatch
     );
-    for field in ["network", "caller", "release"] {
+    for fault in ContextFault::ALL {
         let mut data = input(&request);
-        data.context = PlanContextRecord::new(&PlanContextRequest {
-            network: if field == "network" {
-                "56".repeat(32)
-            } else {
-                plan.context().network().into()
-            },
-            caller: if field == "caller" {
-                "aaaaa-aa".into()
-            } else {
-                plan.context().caller().into()
-            },
-            release: if field == "release" {
-                "56".repeat(32)
-            } else {
-                plan.context().release().into()
-            },
-        })
-        .unwrap();
+        fault.apply(&mut data.context, &"56".repeat(32));
         assert_eq!(
             validate(&request, &SnapshotReadObservation::new(data).unwrap()).unwrap_err(),
-            SnapshotReadError::ContextMismatch(field)
+            SnapshotReadError::ContextMismatch(fault.field())
         );
     }
     let mut data = input(&request);

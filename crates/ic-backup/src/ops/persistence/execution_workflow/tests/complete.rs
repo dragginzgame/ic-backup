@@ -17,23 +17,7 @@ fn every_original_stage_is_required_and_exact_checkpoint_rows_are_replayed() {
     let binding =
         ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![first_row.clone()]).unwrap();
     let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan).unwrap();
-    let mut journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &stage.plan().attempt_authority(42).unwrap(),
-    )
-    .unwrap();
-    let attempt = journal
-        .reserve_planned_mutation(&stage.plan().digest())
-        .unwrap();
-    journal
-        .record_mutation(MutationReceiptRequest {
-            attempt,
-            request: stage.plan().operation(42).unwrap().request().into(),
-            outcome: MutationOutcomeRecord::Applied,
-            evidence: "56".repeat(32),
-        })
-        .unwrap();
-    drop(journal);
+    record_applied(&stage, 42, &"56".repeat(32));
     let second_row = stage
         .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"second learned evidence",

@@ -12,7 +12,7 @@ pub(super) struct Arguments {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
-pub(super) enum Mode {
+pub(crate) enum Mode {
     ApplicationDie,
     ApplicationInit,
     ApplicationObserve,

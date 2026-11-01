@@ -4,13 +4,13 @@ use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
 use crate::test_support::operation_plan::{declaration, graph, operation_request};
+use crate::test_support::{response_fault::ReceiptFault, retained_reply::write_synced};
 
 use crate::test_support::ic_snapshot_download::{source, source_plan, values, workflow};
 use crate::test_support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::MutationOutcomeRecord,
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::IcSnapshotMetadataReply,
@@ -20,12 +20,7 @@ use crate::{
     test_support::temp_dir,
 };
 use ic_platform::candid::contract;
-use std::{
-    convert::Infallible,
-    fs,
-    io::{self, Write},
-    path::PathBuf,
-};
+use std::{convert::Infallible, fs, io, path::PathBuf};
 
 fn prepare(
     workflow: &ExecutionWorkflowRecord,
@@ -106,9 +101,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
         &mut provider,
         admit,
         async |_, response| {
-            let file = fs::File::create(&retained).unwrap();
-            (&file).write_all(&response.input().reply).unwrap();
-            file.sync_all().unwrap();
+            let _file = write_synced(&retained, &response.input().reply).unwrap();
             fs::File::open(&root).unwrap().sync_all().unwrap();
             std::future::pending::<Result<MutationReceiptRequest, Infallible>>().await
         },
@@ -164,9 +157,11 @@ fn explicit_receipt_checkpoints_exact_metadata_and_admits_original_data_stage() 
                 AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
             );
             // Simulate integration-owned durable original reply retention before receipt.
-            let file = fs::File::create(root.join("retained-metadata.candid")).unwrap();
-            (&file).write_all(&response.input().reply).unwrap();
-            file.sync_all().unwrap();
+            let _file = write_synced(
+                &root.join("retained-metadata.candid"),
+                &response.input().reply,
+            )
+            .unwrap();
             Ok::<_, Infallible>(receipt(request, response))
         },
     ))
@@ -269,7 +264,11 @@ fn qualification_rejection_retains_returned_bytes_and_pending_original() {
 
 #[test]
 fn non_applied_wrong_attempt_and_wrong_request_receipts_cannot_checkpoint() {
-    for field in 0..3 {
+    for fault in [
+        ReceiptFault::NotApplied,
+        ReceiptFault::Attempt,
+        ReceiptFault::Request,
+    ] {
         let workflow = workflow(12);
         let payload = source();
         let (_, layout, binding) = prepare(&workflow, &payload);
@@ -284,11 +283,7 @@ fn non_applied_wrong_attempt_and_wrong_request_receipts_cannot_checkpoint() {
             admit,
             async |request, response| {
                 let mut receipt = receipt(request, response);
-                match field {
-                    0 => receipt.outcome = MutationOutcomeRecord::NotApplied,
-                    1 => receipt.attempt += 1,
-                    _ => receipt.request = "00".repeat(32),
-                }
+                fault.apply(&mut receipt, &"00".repeat(32));
                 Ok::<_, Infallible>(receipt)
             },
         ));

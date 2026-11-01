@@ -30,21 +30,52 @@ use std::{convert::Infallible, fs, path::PathBuf};
 
 mod reconciliation;
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum Purpose {
+    Capture,
+    Restore,
+}
+impl Purpose {
+    const ALL: [Self; 2] = [Self::Capture, Self::Restore];
+}
+
+enum Requirement {
+    Capture {
+        consistency: ConsistencyRequirementRecord,
+        fence: ApplicationFenceBinding,
+    },
+    Restore {
+        source: Box<OperationPlanRecord>,
+        safety: RestoreSafetyRequirementRecord,
+    },
+}
+impl Requirement {
+    fn input<'a>(&'a self, source_layout: &'a BackupLayoutGuard) -> FenceObligationRequirement<'a> {
+        match self {
+            Self::Capture { consistency, fence } => FenceObligationRequirement::Capture {
+                requirement: consistency,
+                fence,
+            },
+            Self::Restore { source, safety } => FenceObligationRequirement::Restore {
+                source_layout,
+                source,
+                requirement: safety,
+            },
+        }
+    }
+}
+
 struct Fixture {
     layout: BackupLayoutGuard,
     source_layout: BackupLayoutGuard,
     binding: ExecutionStageBindingRecord,
     plan: OperationPlanRecord,
-    source: OperationPlanRecord,
     payload: FenceAcquisitionPayload,
-    consistency: ConsistencyRequirementRecord,
-    fence: ApplicationFenceBinding,
-    safety: RestoreSafetyRequirementRecord,
+    requirement: Requirement,
     obligation: FenceObligationRecord,
-    restore: bool,
 }
 impl Fixture {
-    fn new(restore: bool, dependency: bool) -> Self {
+    fn new(purpose: Purpose, dependency: bool) -> Self {
         let root = temp_dir("ic-backup-fence-step");
         fs::create_dir(root.join("source")).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -91,67 +122,60 @@ impl Fixture {
             },
         )
         .unwrap();
-        let obligation = if restore {
-            source_layout
-                .retain_restore(
-                    &stage.layout().unwrap().root().join("attempt-42.json"),
-                    plan.digest().hash(),
+        let (obligation, requirement) = match purpose {
+            Purpose::Restore => {
+                source_layout
+                    .retain_restore(
+                        &stage.layout().unwrap().root().join("attempt-42.json"),
+                        plan.digest().hash(),
+                    )
+                    .unwrap();
+                create_restore_safety_requirement(
+                    stage.layout().unwrap(),
+                    &source_layout,
+                    &plan,
+                    &source,
+                    &safety,
                 )
                 .unwrap();
-            create_restore_safety_requirement(
-                stage.layout().unwrap(),
-                &source_layout,
-                &plan,
-                &source,
-                &safety,
-            )
-            .unwrap();
-            FenceObligationRecord::for_restore(&plan, &source, &safety, 42).unwrap()
-        } else {
-            create_consistency_requirement(stage.layout().unwrap(), &plan, &consistency).unwrap();
-            FenceObligationRecord::for_capture(&plan, &consistency, 42, &fence).unwrap()
-        };
-        let requirement = if restore {
-            FenceObligationRequirement::Restore {
-                source_layout: &source_layout,
-                source: &source,
-                requirement: &safety,
+                let obligation =
+                    FenceObligationRecord::for_restore(&plan, &source, &safety, 42).unwrap();
+                (
+                    obligation,
+                    Requirement::Restore {
+                        source: Box::new(source),
+                        safety,
+                    },
+                )
             }
-        } else {
-            FenceObligationRequirement::Capture {
-                requirement: &consistency,
-                fence: &fence,
+            Purpose::Capture => {
+                create_consistency_requirement(stage.layout().unwrap(), &plan, &consistency)
+                    .unwrap();
+                let obligation =
+                    FenceObligationRecord::for_capture(&plan, &consistency, 42, &fence).unwrap();
+                (obligation, Requirement::Capture { consistency, fence })
             }
         };
-        create_fence_obligation(stage.layout().unwrap(), &plan, requirement, &obligation).unwrap();
+        create_fence_obligation(
+            stage.layout().unwrap(),
+            &plan,
+            requirement.input(&source_layout),
+            &obligation,
+        )
+        .unwrap();
         drop(stage);
         Self {
             layout,
             source_layout,
             binding,
             plan,
-            source,
             payload,
-            consistency,
-            fence,
-            safety,
+            requirement,
             obligation,
-            restore,
         }
     }
     fn requirement(&self) -> FenceObligationRequirement<'_> {
-        if self.restore {
-            FenceObligationRequirement::Restore {
-                source_layout: &self.source_layout,
-                source: &self.source,
-                requirement: &self.safety,
-            }
-        } else {
-            FenceObligationRequirement::Capture {
-                requirement: &self.consistency,
-                fence: &self.fence,
-            }
-        }
+        self.requirement.input(&self.source_layout)
     }
     fn stage(&self) -> ExecutionStageGuard<'_> {
         ExecutionStageGuard::open(
@@ -232,14 +256,14 @@ fn assert_pending(stage: &ExecutionStageGuard<'_>, plan: &OperationPlanRecord) -
 
 #[test]
 fn both_purposes_preserve_pending_originals_on_acknowledgement_and_provider_failure() {
-    for restore in [false, true] {
+    for purpose in Purpose::ALL {
         for failure in [
             None,
             Some(FenceAcquisitionProviderError::Unavailable),
             Some(FenceAcquisitionProviderError::Unsupported),
             Some(FenceAcquisitionProviderError::Indeterminate),
         ] {
-            let fixture = Fixture::new(restore, false);
+            let fixture = Fixture::new(purpose, false);
             let stage = fixture.stage();
             let original =
                 fs::read(stage.layout().unwrap().root().join("fence-obligation.json")).unwrap();
@@ -319,7 +343,7 @@ fn original_binding_missing_obligation_and_missing_journal_reject_before_spendin
         OriginalFault::MissingObligation,
         OriginalFault::MissingJournal,
     ] {
-        let fixture = Fixture::new(false, false);
+        let fixture = Fixture::new(Purpose::Capture, false);
         let stage = fixture.stage();
         let layout = stage.layout().unwrap();
         let before = fs::read(layout.root().join("attempt-42.json")).unwrap();
@@ -370,7 +394,7 @@ fn original_binding_missing_obligation_and_missing_journal_reject_before_spendin
 #[test]
 fn complete_journal_coverage_and_applied_prerequisites_are_required() {
     for missing in [false, true] {
-        let fixture = Fixture::new(false, true);
+        let fixture = Fixture::new(Purpose::Capture, true);
         let stage = fixture.stage();
         let layout = stage.layout().unwrap();
         let before = fs::read(layout.root().join("attempt-42.json")).unwrap();
@@ -434,7 +458,7 @@ fn complete_journal_coverage_and_applied_prerequisites_are_required() {
 
 #[test]
 fn admission_failure_consumes_original_without_dispatch_or_reentry() {
-    let fixture = Fixture::new(true, false);
+    let fixture = Fixture::new(Purpose::Restore, false);
     let stage = fixture.stage();
     let mut provider = Provider::new(None);
     let result = ready(acquire_fence(
@@ -482,7 +506,7 @@ impl FenceAcquisitionProvider for SuspendedProvider {
 #[test]
 fn cancellation_holds_exclusion_and_retains_pending_spending_and_source_references() {
     for suspend_admission in [true, false] {
-        let fixture = Fixture::new(true, false);
+        let fixture = Fixture::new(Purpose::Restore, false);
         let stage = fixture.stage();
         let references = fixture.source_layout.restore_references().unwrap();
         let mut provider = SuspendedProvider { calls: 0 };
@@ -531,7 +555,7 @@ fn cancellation_holds_exclusion_and_retains_pending_spending_and_source_referenc
 
 #[test]
 fn changed_requirement_before_dispatch_preserves_reservation_without_provider_call() {
-    let fixture = Fixture::new(true, false);
+    let fixture = Fixture::new(Purpose::Restore, false);
     let stage = fixture.stage();
     let path = fixture.source_layout.root().join("operation-plan.json");
     let mut provider = Provider::new(None);
@@ -561,7 +585,7 @@ fn after_reply_association_stage_and_obligation_rejections_retain_acknowledgemen
         AfterReplyFault::Stage,
         AfterReplyFault::Obligation,
     ] {
-        let fixture = Fixture::new(false, false);
+        let fixture = Fixture::new(Purpose::Capture, false);
         let stage = fixture.stage();
         let root = stage.layout().unwrap().root().to_path_buf();
         let mut provider = Provider::new(None);
@@ -641,7 +665,7 @@ fn planned_stage(
 
 #[test]
 fn replaced_layout_after_reply_retains_journal_and_acknowledgement() {
-    let fixture = Fixture::new(true, false);
+    let fixture = Fixture::new(Purpose::Restore, false);
     let stage = fixture.stage();
     let root = stage.layout().unwrap().root().to_path_buf();
     let references = fixture.source_layout.restore_references().unwrap();

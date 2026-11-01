@@ -51,14 +51,22 @@ async fn original_capture_stage_awaits_accounted_fresh_admission_then_retains_on
     // Exclusive fixture custody proves it has never been dispatched. Its pending
     // accounting is retained independently; it is not a recovery observation.
     let status_payload = support::payload(Method::CanisterStatus, &fixture.target, None);
-    let (status_plan, status_layout, status_root) = fixture.original(&status_payload.digest());
-    let status_guard = support::retain(&status_layout, &status_plan, fixture.sequence);
+    let OriginalCall {
+        plan: status_plan,
+        layout: status_layout,
+        sequence: status_sequence,
+    } = fixture.original(&status_payload.digest());
+    let status_root = status_layout.root().to_path_buf();
+    let status_guard = support::retain(&status_layout, &status_plan, status_sequence);
     let status_path = status_guard.path().clone();
     let original_status = fs::read(&status_path).unwrap();
     drop(status_guard);
     let payload = support::payload(Method::TakeCanisterSnapshot, &fixture.target, None);
-    let (plan, layout, _root) = fixture.original(&payload.digest());
-    let sequence = fixture.sequence;
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&payload.digest());
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
     create_execution_workflow(&layout, &workflow).unwrap();
     let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
@@ -160,6 +168,13 @@ async fn original_capture_stage_awaits_accounted_fresh_admission_then_retains_on
         original
     );
     assert_eq!(fs::read(status_path).unwrap(), original_status);
+}
+
+// Keep the exact original operation identity with its guarded call directory.
+struct OriginalCall {
+    plan: OperationPlanRecord,
+    layout: BackupLayoutGuard,
+    sequence: u64,
 }
 
 struct Fixture {
@@ -275,10 +290,7 @@ impl Fixture {
             .unwrap()
             .into()
     }
-    fn original(
-        &mut self,
-        digest: &ArtifactChecksumRecord,
-    ) -> (OperationPlanRecord, BackupLayoutGuard, PathBuf) {
+    fn original(&mut self, digest: &ArtifactChecksumRecord) -> OriginalCall {
         self.sequence += 1;
         let sequence = self.sequence;
         let mut declaration = support::plan_request(&self.target, digest, sequence);
@@ -292,7 +304,11 @@ impl Fixture {
         let root = self.root.join(format!("call-{sequence}"));
         fs::create_dir(&root).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        (plan, layout, root)
+        OriginalCall {
+            plan,
+            layout,
+            sequence,
+        }
     }
     fn transport(&self, plan: &OperationPlanRecord) -> AgentTransport {
         AgentTransport::new(
@@ -311,12 +327,16 @@ impl Fixture {
         lose: bool,
     ) -> (OperationPlanRecord, Vec<u8>) {
         let payload = support::payload(method, &self.target, id);
-        let (plan, layout, root) = self.original(&payload.digest());
-        let guard = support::retain(&layout, &plan, self.sequence);
+        let OriginalCall {
+            plan,
+            layout,
+            sequence,
+        } = self.original(&payload.digest());
+        let root = layout.root().to_path_buf();
+        let guard = support::retain(&layout, &plan, sequence);
         let before = fs::read(guard.path()).unwrap();
         let request =
-            IcMutationRequest::new(&plan, self.sequence, guard.record().unwrap(), &payload)
-                .unwrap();
+            IcMutationRequest::new(&plan, sequence, guard.record().unwrap(), &payload).unwrap();
         let transport = self.transport(&plan);
         let mut provider = AgentUpdateProvider::new(
             &transport,
@@ -343,8 +363,13 @@ impl Fixture {
             ports::ic_observation::IcObservationProviderError,
             workflow::ic_snapshot_transfer_read::read_snapshot,
         };
-        let (plan, layout, root) = self.original(&payload.digest());
-        let stage = prepare_stage(&layout, &plan, self.sequence);
+        let OriginalCall {
+            plan,
+            layout,
+            sequence,
+        } = self.original(&payload.digest());
+        let root = layout.root().to_path_buf();
+        let stage = prepare_stage(&layout, &plan, sequence);
         let transport = self.transport(&plan);
         let mut provider = AgentSnapshotTransferReadProvider::new(
             &transport,
@@ -353,26 +378,19 @@ impl Fixture {
                     .map_err(|_| IcObservationProviderError::Unavailable)
             },
         );
-        let response = read_snapshot(
-            &stage,
-            self.sequence,
-            payload,
-            &mut provider,
-            async |request| {
-                assert_eq!(request.plan().context(), plan.context());
-                // This controlled stopped fixture retains original snapshot identity,
-                // controller/read access and exclusive never-dispatched ingress custody.
-                tokio::task::yield_now().await;
-                assert!(
-                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
-                        .is_err()
-                );
-                Ok::<(), std::io::Error>(())
-            },
-        )
+        let response = read_snapshot(&stage, sequence, payload, &mut provider, async |request| {
+            assert_eq!(request.plan().context(), plan.context());
+            // This controlled stopped fixture retains original snapshot identity,
+            // controller/read access and exclusive never-dispatched ingress custody.
+            tokio::task::yield_now().await;
+            assert!(
+                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
+            );
+            Ok::<(), std::io::Error>(())
+        })
         .await
         .unwrap();
-        assert_pending(&stage, self.sequence);
+        assert_pending(&stage, sequence);
         let raw = response.input().reply.clone();
         fs::write(root.join("reply.candid"), &raw).unwrap();
         raw
@@ -382,8 +400,13 @@ impl Fixture {
             ports::ic_mutation::IcMutationProviderError,
             workflow::ic_snapshot_upload::upload_snapshot,
         };
-        let (plan, layout, root) = self.original(&payload.binding_digest());
-        let stage = prepare_stage(&layout, &plan, self.sequence);
+        let OriginalCall {
+            plan,
+            layout,
+            sequence,
+        } = self.original(&payload.binding_digest());
+        let root = layout.root().to_path_buf();
+        let stage = prepare_stage(&layout, &plan, sequence);
         let transport = self.transport(&plan);
         let mut provider = ic_backup_agent::AgentUpdateProvider::new(
             &transport,
@@ -392,12 +415,8 @@ impl Fixture {
                     .map_err(|_| IcMutationProviderError::Unavailable)
             },
         );
-        let acknowledgement = upload_snapshot(
-            &stage,
-            self.sequence,
-            payload,
-            &mut provider,
-            async |request| {
+        let acknowledgement =
+            upload_snapshot(&stage, sequence, payload, &mut provider, async |request| {
                 assert_eq!(request.plan().context(), plan.context());
                 // Only this isolated fixture owns the authenticated complete source,
                 // allocation attribution, controller and never-dispatched ingress custody.
@@ -407,11 +426,10 @@ impl Fixture {
                         .is_err()
                 );
                 Ok::<(), std::io::Error>(())
-            },
-        )
-        .await
-        .unwrap();
-        assert_pending(&stage, self.sequence);
+            })
+            .await
+            .unwrap();
+        assert_pending(&stage, sequence);
         let raw = acknowledgement.input().reply.clone();
         fs::write(root.join("reply.candid"), &raw).unwrap();
         raw
@@ -590,11 +608,16 @@ async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserv
 async fn wrong_trusted_root_rejects_actual_reply_without_settling_applied_stop() {
     let mut fixture = Fixture::new(support::identity()).await;
     let payload = support::payload(Method::StopCanister, &fixture.target, None);
-    let (plan, layout, root) = fixture.original(&payload.digest());
-    let guard = support::retain(&layout, &plan, fixture.sequence);
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&payload.digest());
+    let root = layout.root().to_path_buf();
+    let guard = support::retain(&layout, &plan, sequence);
     let before = fs::read(guard.path()).unwrap();
     let request =
-        IcMutationRequest::new(&plan, fixture.sequence, guard.record().unwrap(), &payload).unwrap();
+        IcMutationRequest::new(&plan, sequence, guard.record().unwrap(), &payload).unwrap();
     let mut key = fixture.key.clone();
     *key.last_mut().unwrap() ^= 1;
     let transport = AgentTransport::new(
@@ -779,8 +802,12 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
     let upload = IcSnapshotUploadRequest::metadata(&source_plan, &metadata, &checksum).unwrap();
     let destination;
     {
-        let (plan, layout, root) = fixture.original(&upload.binding_digest());
-        let sequence = fixture.sequence;
+        let OriginalCall {
+            plan,
+            layout,
+            sequence,
+        } = fixture.original(&upload.binding_digest());
+        let root = layout.root().to_path_buf();
         let mut journal = support::retain(&layout, &plan, sequence);
         let transport = fixture.transport(&plan);
         let mut mutations = AgentUpdateProvider::new(
@@ -871,8 +898,12 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
     assert_eq!(bytes.len(), 1024 * 1024);
     let data = IcSnapshotUploadRequest::data(&upload, &destination, kind.clone(), bytes).unwrap();
     let read = IcSnapshotDataRequest::new(&destination_metadata, kind.clone()).unwrap();
-    let (plan, layout, root) = fixture.original(&data.binding_digest());
-    let sequence = fixture.sequence;
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&data.binding_digest());
+    let root = layout.root().to_path_buf();
     let mut journal = support::retain(&layout, &plan, sequence);
     let transport = fixture.transport(&plan);
     let mut mutations = AgentUpdateProvider::new(
@@ -977,8 +1008,11 @@ async fn configured_application_update_retains_empty_reply_without_claiming_acti
         // opaque transport and custody only; no whole-unit acquisition is inferred.
         let payload =
             FenceAcquisitionPayload::new(&fixture.target, "write", &value.to_le_bytes()).unwrap();
-        let (plan, layout, _root) = fixture.original(&payload.digest());
-        let sequence = fixture.sequence;
+        let OriginalCall {
+            plan,
+            layout,
+            sequence,
+        } = fixture.original(&payload.digest());
         let workflow = ExecutionWorkflowRecord::new(plan.clone());
         create_execution_workflow(&layout, &workflow).unwrap();
         let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();

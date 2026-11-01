@@ -1,6 +1,7 @@
 //! Pure controller-membership evidence admission; no fresh permissions or IC effects.
 
 use super::*;
+use crate::test_support::response_fault::ContextFault;
 use crate::{
     model::control_authority::ControllerSet,
     test_support::{
@@ -50,18 +51,12 @@ fn rejects_observed_context_target_and_reported_call_mismatches() {
     let wire = stop();
     let plan = plan(&wire);
     let request = ControlObservationRequest::new(&plan, 7, &wire, hash("12"), 1).unwrap();
-    for field in ["network", "caller", "release"] {
+    for fault in ContextFault::ALL {
         let mut data = input(&request);
-        let mut value = serde_json::to_value(&data.context).unwrap();
-        value[field] = serde_json::json!(if field == "caller" {
-            "aaaaa-aa".into()
-        } else {
-            "56".repeat(32)
-        });
-        data.context = serde_json::from_value(value).unwrap();
+        fault.apply(&mut data.context, &"56".repeat(32));
         assert_eq!(
             validate(&request, &ControlObservation::new(data).unwrap()).unwrap_err(),
-            ControlAuthorityError::ContextMismatch(field)
+            ControlAuthorityError::ContextMismatch(fault.field())
         );
     }
     let mut data = input(&request);

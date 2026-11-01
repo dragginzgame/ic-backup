@@ -1,24 +1,21 @@
 //! Public reserved acquisition reconciliation and late-reply recovery; no IC/fence backend.
 
+mod fence_originals;
 mod ready;
 mod support;
+use fence_originals::RestoreOriginals as Originals;
 
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
-        fence_obligation::FenceObligationRecord,
         fence_reconciliation::*,
         operation_plan::OperationPlanRecord,
-        restore_safety::{
-            RestoreFenceBindingRecord, RestoreSafetyLaneRecord, RestoreSafetyRequirementRecord,
-            RestoreSafetyRequirementRequest,
-        },
+        restore_safety::RestoreFenceBindingRecord,
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, FenceObligationRequirement,
-        create_fence_obligation, create_operation_plan, create_restore_safety_requirement,
-        read_fence_obligation,
+        AttemptJournalGuard, BackupLayoutGuard, create_fence_obligation, create_operation_plan,
+        create_restore_safety_requirement, read_fence_obligation,
     },
     policy::fence_reconciliation::{FenceReconciliationError, validate},
     ports::fence_reconciliation::{FenceReconciliationProvider, FenceReconciliationProviderError},
@@ -38,49 +35,7 @@ fn plan() -> OperationPlanRecord {
         "operations":[{"operation_sequence":0,"target":"renrk-eyaaa-aaaaa-aaada-cai","request":request.hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
     })).unwrap()
 }
-struct Originals {
-    plan: OperationPlanRecord,
-    source: OperationPlanRecord,
-    requirement: RestoreSafetyRequirementRecord,
-    obligation: FenceObligationRecord,
-}
-impl Originals {
-    fn new() -> Self {
-        let plan = plan();
-        let mut source = serde_json::to_value(&plan).unwrap();
-        source["operations"][0]["request"] = json!(hash("ef").hash());
-        let source = serde_json::from_value(source).unwrap();
-        let requirement = RestoreSafetyRequirementRecord::new(
-            &plan,
-            &source,
-            RestoreSafetyRequirementRequest {
-                source_artifacts: hash("12"),
-                safety: RestoreSafetyLaneRecord::ApplicationFenced,
-                expected_fence: Some(RestoreFenceBindingRecord {
-                    identity: hash("56"),
-                    membership_revision: hash("78"),
-                    external_obligations_revision: hash("90"),
-                }),
-            },
-        )
-        .unwrap();
-        let obligation =
-            FenceObligationRecord::for_restore(&plan, &source, &requirement, 0).unwrap();
-        Self {
-            plan,
-            source,
-            requirement,
-            obligation,
-        }
-    }
-    fn input<'a>(&'a self, source_layout: &'a BackupLayoutGuard) -> FenceObligationRequirement<'a> {
-        FenceObligationRequirement::Restore {
-            source_layout,
-            source: &self.source,
-            requirement: &self.requirement,
-        }
-    }
-}
+
 fn prepare(root: &Path, original: &Originals) {
     fs::create_dir_all(root.join("source")).unwrap();
     fs::create_dir(root.join("restore")).unwrap();
@@ -169,7 +124,7 @@ impl FenceReconciliationProvider for LocalEvidenceProvider {
 }
 fn fixture_provider(failure: Option<FenceReconciliationProviderError>) -> LocalEvidenceProvider {
     LocalEvidenceProvider {
-        original: Originals::new(),
+        original: Originals::new(plan(), 0),
         reply: FenceReconciliationEvidence::Unresolved {
             uncertainty: hash("cd"),
         },
@@ -229,7 +184,7 @@ fn provider_failures_preserve_exact_pending_spending_and_accept_late_reply_witho
         let authority = provider.original.plan.attempt_authority(0).unwrap();
         let journal = AttemptJournalGuard::open(&layout, &authority).unwrap();
         let before = fs::read(journal.path()).unwrap();
-        let original = Originals::new();
+        let original = Originals::new(plan(), 0);
         let intent = FenceReconciliationIntent::new(
             &original.plan,
             &original.obligation,
@@ -361,7 +316,7 @@ fn every_settled_native_claim_persists_exact_receipt_without_fence_or_source_rel
         let root = support::temp_root("ic-backup-public-fence-reconciliation");
         let mut provider = fixture_provider(None);
         provider.reply = native_claim(outcome);
-        let original = Originals::new();
+        let original = Originals::new(plan(), 0);
         prepare(&root, &original);
         let obligation = fs::read(root.join("restore/fence-obligation.json")).unwrap();
         let requirement = fs::read(root.join("restore/restore-safety-requirement.json")).unwrap();
@@ -445,7 +400,7 @@ fn cancelled_reconciliation_keeps_selected_guard_and_both_pending_originals() {
             std::future::pending().await
         }
     }
-    let original = Originals::new();
+    let original = Originals::new(plan(), 0);
     let root = support::temp_root("interrupted-fence-reconciliation");
     prepare(&root, &original);
     let obligation = fs::read(root.join("restore/fence-obligation.json")).unwrap();

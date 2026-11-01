@@ -1,8 +1,11 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
+use crate::test_support::retained_reply::write_synced;
+mod fixture;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
 use crate::test_support::operation_plan::{declaration, graph, operation_request};
+use fixture::RestoreFixture;
 
 use crate::ops::persistence::AttemptJournalGuard;
 use crate::test_support::ready::ready;
@@ -25,10 +28,7 @@ use crate::{
         temp_dir,
     },
 };
-use std::{
-    fs,
-    io::{self, Write},
-};
+use std::{fs, io};
 
 fn existing<'a>(
     layout: &'a BackupLayoutGuard,
@@ -95,36 +95,18 @@ fn receipt(
 )]
 fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
     for method in [Method::LoadCanisterSnapshot, Method::StartCanister] {
-        let root = temp_dir("ic-backup-restore-step");
-        fs::create_dir(root.join("source")).unwrap();
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
-        let source = source();
-        create_operation_plan(&source_layout, &source).unwrap();
-        let plan = single(method);
-        let workflow = ExecutionWorkflowRecord::new(plan.clone());
-        create_execution_workflow(&layout, &workflow).unwrap();
-        let sequence = plan.operations()[0].operation_sequence();
-        let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
-        let stage = ExecutionStageGuard::prepare(&layout, binding.clone(), plan).unwrap();
-        let requirement = requirement(
-            stage.plan(),
-            &source,
+        let fixture = RestoreFixture::new(
+            "ic-backup-restore-step",
+            method,
             RestoreSafetyLaneRecord::ApplicationFenced,
         );
-        create_restore_safety_requirement(
-            stage.layout().unwrap(),
-            &source_layout,
-            stage.plan(),
-            &source,
-            &requirement,
-        )
-        .unwrap();
+        let sequence = fixture.sequence;
+        let stage = fixture.stage();
         let payload = wire(method);
         let safety = RestoreSafetyRequest::new(
             stage.plan(),
-            &source,
-            &requirement,
+            &fixture.source,
+            &fixture.requirement,
             &payload,
             RestoreSafetyRequestInput {
                 operation_sequence: sequence,
@@ -139,7 +121,7 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         };
         let (reply, checkpoint) = ready(restore_snapshot(
             &stage,
-            existing(&source_layout, &source),
+            existing(&fixture.source_layout, &fixture.source),
             &safety,
             &mut provider,
             async |request, safety| {
@@ -154,10 +136,10 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
                     AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
                         .is_err()
                 );
-                let file =
-                    fs::File::create(stage.layout().unwrap().root().join("retained-reply.candid"))?;
-                (&file).write_all(&reply.input().reply)?;
-                file.sync_all()?;
+                let _file = write_synced(
+                    &stage.layout().unwrap().root().join("retained-reply.candid"),
+                    &reply.input().reply,
+                )?;
                 fs::File::open(stage.layout().unwrap().root())?.sync_all()?;
                 Ok(receipt(request, reply))
             },
@@ -172,9 +154,13 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         assert_eq!(provider.calls, 1);
         drop(safety);
         drop(stage);
-        let (stage, progress) =
-            ExecutionStageGuard::resume(&layout, binding.workflow(), sequence, &binding.digest())
-                .unwrap();
+        let (stage, progress) = ExecutionStageGuard::resume(
+            &fixture.layout,
+            fixture.binding.workflow(),
+            sequence,
+            &fixture.binding.digest(),
+        )
+        .unwrap();
         assert_eq!(progress.applied_operations, 1);
         let original = fs::read(
             stage
@@ -186,8 +172,8 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         .unwrap();
         let safety = RestoreSafetyRequest::new(
             stage.plan(),
-            &source,
-            &requirement,
+            &fixture.source,
+            &fixture.requirement,
             &payload,
             RestoreSafetyRequestInput {
                 operation_sequence: sequence,
@@ -199,7 +185,7 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
         assert!(
             ready(restore_snapshot(
                 &stage,
-                existing(&source_layout, &source),
+                existing(&fixture.source_layout, &fixture.source),
                 &safety,
                 &mut provider,
                 async |_, _| -> Result<_, io::Error> { panic!("Applied never admits") },
@@ -224,36 +210,18 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
 
 #[test]
 fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() {
-    let root = temp_dir("ic-backup-restore-cancel");
-    fs::create_dir(root.join("source")).unwrap();
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
-    let source = source();
-    create_operation_plan(&source_layout, &source).unwrap();
-    let plan = single(Method::LoadCanisterSnapshot);
-    let sequence = plan.operations()[0].operation_sequence();
-    let workflow = ExecutionWorkflowRecord::new(plan.clone());
-    create_execution_workflow(&layout, &workflow).unwrap();
-    let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
-    let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
-    let requirement = requirement(
-        stage.plan(),
-        &source,
+    let fixture = RestoreFixture::new(
+        "ic-backup-restore-cancel",
+        Method::LoadCanisterSnapshot,
         RestoreSafetyLaneRecord::NoIrreversibleEffects,
     );
-    create_restore_safety_requirement(
-        stage.layout().unwrap(),
-        &source_layout,
-        stage.plan(),
-        &source,
-        &requirement,
-    )
-    .unwrap();
+    let sequence = fixture.sequence;
+    let stage = fixture.stage();
     let payload = wire(Method::LoadCanisterSnapshot);
     let safety = RestoreSafetyRequest::new(
         stage.plan(),
-        &source,
-        &requirement,
+        &fixture.source,
+        &fixture.requirement,
         &payload,
         RestoreSafetyRequestInput {
             operation_sequence: sequence,
@@ -266,10 +234,10 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
         calls: 0,
         reply: Ok(b"DIDL\0\0".to_vec()),
     };
-    let reply_path = root.join("retained-reply.candid");
+    let reply_path = fixture.root.join("retained-reply.candid");
     let mut future = Box::pin(restore_snapshot(
         &stage,
-        existing(&source_layout, &source),
+        existing(&fixture.source_layout, &fixture.source),
         &safety,
         &mut provider,
         async |_, safety| Ok::<_, io::Error>(RestoreSafetyObservation::new(input(safety)).unwrap()),
@@ -277,10 +245,8 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
             assert!(
                 AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
             );
-            let file = fs::File::create(&reply_path)?;
-            (&file).write_all(&reply.input().reply)?;
-            file.sync_all()?;
-            fs::File::open(&root)?.sync_all()?;
+            let _file = write_synced(&reply_path, &reply.input().reply)?;
+            fs::File::open(&fixture.root)?.sync_all()?;
             std::future::pending::<()>().await;
             Ok(receipt(request, reply))
         },
@@ -302,7 +268,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
     assert!(
         ready(restore_snapshot(
             &stage,
-            existing(&source_layout, &source),
+            existing(&fixture.source_layout, &fixture.source),
             &safety,
             &mut provider,
             async |_, _| -> Result<_, io::Error> { panic!("pending never readmits") },
@@ -363,45 +329,27 @@ impl RestoreFailure {
 )]
 fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
     for failure in RestoreFailure::ALL {
-        let root = temp_dir("ic-backup-restore-rejection");
-        fs::create_dir(root.join("source")).unwrap();
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();
-        let source = source();
-        create_operation_plan(&source_layout, &source).unwrap();
         let method = if failure.starts() {
             Method::StartCanister
         } else {
             Method::LoadCanisterSnapshot
         };
-        let plan = single(method);
-        let sequence = plan.operations()[0].operation_sequence();
-        let workflow = ExecutionWorkflowRecord::new(plan.clone());
-        create_execution_workflow(&layout, &workflow).unwrap();
-        let binding = ExecutionStageBindingRecord::new(&workflow, sequence, &plan, vec![]).unwrap();
-        let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
-        let requirement = requirement(
-            stage.plan(),
-            &source,
+        let fixture = RestoreFixture::new(
+            "ic-backup-restore-rejection",
+            method,
             if failure.starts() {
                 RestoreSafetyLaneRecord::ApplicationFenced
             } else {
                 RestoreSafetyLaneRecord::NoIrreversibleEffects
             },
         );
-        create_restore_safety_requirement(
-            stage.layout().unwrap(),
-            &source_layout,
-            stage.plan(),
-            &source,
-            &requirement,
-        )
-        .unwrap();
+        let sequence = fixture.sequence;
+        let stage = fixture.stage();
         let payload = wire(method);
         let safety = RestoreSafetyRequest::new(
             stage.plan(),
-            &source,
-            &requirement,
+            &fixture.source,
+            &fixture.requirement,
             &payload,
             RestoreSafetyRequestInput {
                 operation_sequence: sequence,
@@ -443,7 +391,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         }
         let result = ready(restore_snapshot(
             &stage,
-            existing(&source_layout, &source),
+            existing(&fixture.source_layout, &fixture.source),
             &safety,
             &mut provider,
             async |_, safety| {
@@ -568,7 +516,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
         assert!(
             ready(restore_snapshot(
                 &stage,
-                existing(&source_layout, &source),
+                existing(&fixture.source_layout, &fixture.source),
                 &safety,
                 &mut provider,
                 async |_, _| -> Result<_, io::Error> { panic!("pending never admits") },

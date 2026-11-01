@@ -3,33 +3,23 @@ use super::*;
 
 pub(super) async fn inspect(fixture: &Fixture, root: &Path, capture: bool) -> serde_json::Value {
     let mode = if capture {
-        "inspect-capture"
+        Mode::InspectCapture
     } else {
-        "inspect-restore"
+        Mode::InspectRestore
     };
     let before = files(root);
-    assert_eq!(child(fixture, root, mode).await, 0, "{}", root.display());
+    let result = child(fixture, root, mode).await;
+    result.assert_status(0);
     assert_eq!(files(root), before);
-    let outputs: Vec<_> = fs::read_dir(&fixture.root)
-        .unwrap()
-        .map(|e| e.unwrap().path())
-        .filter(|p| {
-            p.file_name()
-                .unwrap()
-                .to_string_lossy()
-                .ends_with(&format!("-{mode}.stdout"))
-        })
-        .collect();
-    assert_eq!(outputs.len(), 1);
-    serde_json::from_slice(&fs::read(&outputs[0]).unwrap()).unwrap()
+    serde_json::from_slice(&fs::read(result.stdout).unwrap()).unwrap()
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_operator_retention_and_partial_output_failures_preserve_originals() {
     for mode in [
-        "capture-fail-ingress",
-        "capture-fail-retention",
-        "capture-fail-partial",
+        Mode::CaptureFailIngress,
+        Mode::CaptureFailRetention,
+        Mode::CaptureFailPartial,
     ] {
         failure(mode).await;
     }
@@ -37,8 +27,13 @@ async fn normal_consumer_operator_retention_and_partial_output_failures_preserve
 
 async fn snapshot_count(fixture: &mut Fixture) -> usize {
     let payload = support::payload(Method::ListCanisterSnapshots, &fixture.target, None);
-    let (plan, layout, evidence) = fixture.original(&payload.digest());
-    let _guard = support::retain(&layout, &plan, fixture.sequence);
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&payload.digest());
+    let evidence = layout.root().to_path_buf();
+    let _guard = support::retain(&layout, &plan, sequence);
     let snapshots = fixture
         .pic
         .list_canister_snapshots(fixture.principal(), Some(fixture.caller()))
@@ -52,7 +47,7 @@ async fn snapshot_count(fixture: &mut Fixture) -> usize {
     snapshots.len()
 }
 
-async fn failure(mode: &str) {
+async fn failure(mode: Mode) {
     build::binary();
     let mut fixture = Fixture::new(Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(
         &[7; 32],
@@ -67,9 +62,13 @@ async fn failure(mode: &str) {
     write_config(&root, &config);
     grant(&mut fixture, &root, mode).await;
     assert_eq!(snapshot_count(&mut fixture).await, 0);
-    assert_eq!(child(&fixture, &root, mode).await, 1, "{}", root.display());
+    child(&fixture, &root, mode).await.assert_status(1);
     let progress = inspect(&fixture, &root, true).await;
-    let stage = if mode == "capture-fail-partial" { 2 } else { 0 };
+    let stage = if mode == Mode::CaptureFailPartial {
+        2
+    } else {
+        0
+    };
     let row = &progress["stages"][stage]["state"]["progress"];
     assert_eq!(
         row["attempts"]["mutations_used"],
@@ -80,12 +79,14 @@ async fn failure(mode: &str) {
     assert_eq!(pending["pending_mutation"], 1);
     assert_eq!(pending["mutations_remaining"], 0);
     let before = files(&root);
-    assert_eq!(child(&fixture, &root, "capture-continue").await, 1);
-    assert_eq!(child(&fixture, &root, "capture").await, 1);
+    child(&fixture, &root, Mode::CaptureContinue)
+        .await
+        .assert_status(1);
+    child(&fixture, &root, Mode::Capture).await.assert_status(1);
     assert_eq!(files(&root), before);
     assert_eq!(
         snapshot_count(&mut fixture).await,
-        usize::from(mode != "capture-fail-ingress")
+        usize::from(mode != Mode::CaptureFailIngress)
     );
     if stage == 2 {
         partial(&root);

@@ -4,22 +4,22 @@ use std::os::unix::fs::DirBuilderExt;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_application_update_and_completed_replay_are_effect_free() {
-    exercise("application-init").await;
+    exercise(Mode::ApplicationInit).await;
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_application_process_death_retains_original_and_separately_observes() {
-    exercise("application-die").await;
+    exercise(Mode::ApplicationDie).await;
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_application_reply_bound_preserves_pending_without_resend() {
-    exercise("application-small").await;
+    exercise(Mode::ApplicationSmall).await;
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_application_reply_retention_failure_preserves_pending() {
-    exercise("application-refuse-reply").await;
+    exercise(Mode::ApplicationRefuseReply).await;
 }
 
-async fn exercise(mode: &str) {
+async fn exercise(mode: Mode) {
     build::binary();
     let identity = Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(&[7; 32]));
     let mut fixture = Fixture::with_wasm(identity, include_str!("state.wat")).await;
@@ -27,13 +27,21 @@ async fn exercise(mode: &str) {
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let config = consumer::ApplicationConfig {
         connection: connection_config(&fixture),
-        reply_limit: if mode == "application-small" { 8 } else { 16 },
+        reply_limit: if mode == Mode::ApplicationSmall {
+            8
+        } else {
+            16
+        },
     };
     write_config(&root, &config);
     // Independently account this fixture's fresh actual controller/release probe.
     let payload = support::payload(Method::CanisterStatus, &fixture.target, None);
-    let (plan, layout, _) = fixture.original(&payload.digest());
-    let _guard = support::retain(&layout, &plan, fixture.sequence);
+    let OriginalCall {
+        plan,
+        layout,
+        sequence,
+    } = fixture.original(&payload.digest());
+    let _guard = support::retain(&layout, &plan, sequence);
     let status = fixture
         .pic
         .canister_status(fixture.principal(), Some(fixture.caller()))
@@ -48,35 +56,30 @@ async fn exercise(mode: &str) {
         fixture.release.hash()
     );
     consumer::retain(&root.join("admission.json"), &serde_json::to_vec(&serde_json::json!({"context":config.connection.context,"target":fixture.target,"controllers":status.settings.controllers})).unwrap()).unwrap();
-    assert_eq!(
-        child(&fixture, &root, mode).await,
-        if mode == "application-die" {
+    child(&fixture, &root, mode)
+        .await
+        .assert_status(if mode == Mode::ApplicationDie {
             75
         } else {
-            i32::from(mode != "application-init")
-        },
-        "{}",
-        root.display()
-    );
-    assert_eq!(
-        state(&fixture).await,
-        [1_u64.to_le_bytes(), 73_u64.to_le_bytes()].concat()
-    );
+            i32::from(mode != Mode::ApplicationInit)
+        });
+    assert_once_applied(&fixture).await;
     let journal = root.join("execution-stage-0/attempt-0.json");
     let original = fs::read(&journal).unwrap();
-    if mode != "application-init" {
+    if mode != Mode::ApplicationInit {
         let record: ic_backup::model::attempt_journal::AttemptJournalRecord =
             serde_json::from_slice(&original).unwrap();
         assert_eq!(record.view().pending_mutation, Some(1));
         assert_eq!(record.view().mutations_used, 1);
-        assert_eq!(child(&fixture, &root, "application-resume").await, 1);
-        assert_eq!(child(&fixture, &root, "application-init").await, 1);
+        child(&fixture, &root, Mode::ApplicationResume)
+            .await
+            .assert_status(1);
+        child(&fixture, &root, Mode::ApplicationInit)
+            .await
+            .assert_status(1);
         assert_eq!(fs::read(&journal).unwrap(), original);
-        assert_eq!(
-            state(&fixture).await,
-            [1_u64.to_le_bytes(), 73_u64.to_le_bytes()].concat()
-        );
-        if mode != "application-die" {
+        assert_once_applied(&fixture).await;
+        if mode != Mode::ApplicationDie {
             assert!(!root.join("execution-stage-0/mutation-reply.bin").exists());
             return;
         }
@@ -84,7 +87,9 @@ async fn exercise(mode: &str) {
             fs::read(root.join("execution-stage-0/mutation-reply.bin")).unwrap(),
             state(&fixture).await
         );
-        assert_eq!(child(&fixture, &root, "application-observe").await, 0);
+        child(&fixture, &root, Mode::ApplicationObserve)
+            .await
+            .assert_status(0);
         let record: ic_backup::model::attempt_journal::AttemptJournalRecord =
             serde_json::from_slice(&fs::read(&journal).unwrap()).unwrap();
         assert!(record.view().applied);
@@ -101,16 +106,23 @@ async fn exercise(mode: &str) {
         );
     }
     let before = files(&root);
-    assert_eq!(child(&fixture, &root, "application-replay").await, 0);
-    assert_eq!(child(&fixture, &root, "application-replay").await, 0);
+    child(&fixture, &root, Mode::ApplicationReplay)
+        .await
+        .assert_status(0);
+    child(&fixture, &root, Mode::ApplicationReplay)
+        .await
+        .assert_status(0);
     assert_eq!(files(&root), before);
-    assert_eq!(
-        state(&fixture).await,
-        [1_u64.to_le_bytes(), 73_u64.to_le_bytes()].concat()
-    );
+    assert_once_applied(&fixture).await;
     eprintln!(
         "Independent opaque application evidence retained: {}",
         root.display()
+    );
+}
+async fn assert_once_applied(fixture: &Fixture) {
+    assert_eq!(
+        state(fixture).await,
+        [1_u64.to_le_bytes(), 73_u64.to_le_bytes()].concat()
     );
 }
 async fn state(fixture: &Fixture) -> Vec<u8> {

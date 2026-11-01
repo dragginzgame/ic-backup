@@ -17,26 +17,55 @@ use ic_backup_agent::{
 use ic_platform::agent::RequestId;
 use std::{fs, sync::Arc, time::Duration};
 
-#[tokio::test]
-async fn application_updates_and_recovery_retain_once_and_preserve_pending_on_every_failure() {
-    for recovery in [false, true] {
-        for mode in ["refuse", "accepted", "lost", "cancelled"] {
-            exercise(recovery, mode).await;
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Lane {
+    Mutation,
+    Recovery,
+}
+impl Lane {
+    const ALL: [Self; 2] = [Self::Mutation, Self::Recovery];
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Failure {
+    Refused,
+    Accepted,
+    Disconnected,
+    Cancelled,
+}
+impl Failure {
+    const ALL: [Self; 4] = [
+        Self::Refused,
+        Self::Accepted,
+        Self::Disconnected,
+        Self::Cancelled,
+    ];
+    fn response(self) -> super::ResponseBehavior {
+        match self {
+            Self::Refused | Self::Accepted => super::ResponseBehavior::Respond,
+            Self::Disconnected => super::ResponseBehavior::Disconnect,
+            Self::Cancelled => super::ResponseBehavior::DelayedResponse,
+        }
+    }
+    fn expected_error(self) -> Error {
+        match self {
+            Self::Refused => Error::Unavailable,
+            Self::Accepted | Self::Disconnected | Self::Cancelled => Error::Indeterminate,
         }
     }
 }
-async fn exercise(recovery: bool, mode: &str) {
+
+#[tokio::test]
+async fn application_updates_and_recovery_retain_once_and_preserve_pending_on_every_failure() {
+    for lane in Lane::ALL {
+        for mode in Failure::ALL {
+            exercise(lane, mode).await;
+        }
+    }
+}
+async fn exercise(lane: Lane, mode: Failure) {
     let root = support::root("application-http");
-    let mut server = Server::new(
-        &root,
-        "202 Accepted",
-        vec![],
-        match mode {
-            "lost" => super::ResponseBehavior::Disconnect,
-            "cancelled" => super::ResponseBehavior::DelayedResponse,
-            _ => super::ResponseBehavior::Respond,
-        },
-    );
+    let mut server = Server::new(&root, "202 Accepted", vec![], mode.response());
     let payload =
         ApplicationIngressPayload::new(TARGET, TARGET, "apply", b"original opaque bytes", 128)
             .unwrap();
@@ -46,7 +75,7 @@ async fn exercise(recovery: bool, mode: &str) {
     let plan = support::plan(TARGET, &payload.digest(), 1);
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let mut guard = support::retain(&layout, &plan, 1);
-    if recovery {
+    if lane == Lane::Recovery {
         guard
             .reserve_planned_observation(&plan.digest(), 1, read.digest().hash())
             .unwrap();
@@ -65,9 +94,9 @@ async fn exercise(recovery: bool, mode: &str) {
         |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
             assert_eq!(
                 matches!(actual, ReservedUpdate::ApplicationObservation(_)),
-                recovery
+                lane == Lane::Recovery
             );
-            if mode == "refuse" || root.join("signed-ingress.cbor").exists() {
+            if mode == Failure::Refused || root.join("signed-ingress.cbor").exists() {
                 return Err(Error::Unavailable);
             }
             support::retain_signed(&root, prepared).map_err(|_| Error::Unavailable)
@@ -77,7 +106,7 @@ async fn exercise(recovery: bool, mode: &str) {
         },
     );
     let submit = async {
-        if recovery {
+        if lane == Lane::Recovery {
             let request =
                 ApplicationObservationRequest::new(&plan, 1, guard.record().unwrap(), &read)
                     .unwrap();
@@ -94,7 +123,7 @@ async fn exercise(recovery: bool, mode: &str) {
         }
     };
     finish_call(submit, mode, &server.requests).await;
-    let result = if recovery {
+    let result = if lane == Lane::Recovery {
         let request =
             ApplicationObservationRequest::new(&plan, 1, guard.record().unwrap(), &read).unwrap();
         provider
@@ -111,43 +140,28 @@ async fn exercise(recovery: bool, mode: &str) {
     server.finish().unwrap();
     assert_eq!(
         server.requests.lock().unwrap().len(),
-        usize::from(mode != "refuse")
+        usize::from(mode != Failure::Refused)
     );
-    if mode != "refuse" {
+    if mode != Failure::Refused {
         assert_signed_request(&server, &root);
     }
     assert_eq!(fs::read(guard.path()).unwrap(), before);
     assert_eq!(guard.record().unwrap().view().pending_mutation, Some(1));
     assert_eq!(
         guard.record().unwrap().view().pending_observation.is_some(),
-        recovery
+        lane == Lane::Recovery
     );
 }
 
 async fn finish_call(
     call: impl std::future::Future<Output = Result<ic_backup_agent::ApplicationIngressResponse, Error>>,
-    mode: &str,
+    mode: Failure,
     requests: &std::sync::Mutex<Vec<super::http_capture::CapturedRequest>>,
 ) {
-    let mut call = Box::pin(call);
-    if mode == "cancelled" {
-        tokio::select! {
-            result = &mut call => panic!("original completed before cancellation: {result:?}"),
-            () = async {
-                tokio::time::timeout(Duration::from_secs(2), async {
-                    while requests.lock().unwrap().is_empty() { tokio::time::sleep(Duration::from_millis(5)).await; }
-                }).await.unwrap();
-            } => {}
-        }
+    if mode == Failure::Cancelled {
+        super::http_capture::cancel_after_capture(call, requests).await;
     } else {
-        assert_eq!(
-            call.await.unwrap_err(),
-            if mode == "refuse" {
-                Error::Unavailable
-            } else {
-                Error::Indeterminate
-            }
-        );
+        assert_eq!(call.await.unwrap_err(), mode.expected_error());
     }
 }
 

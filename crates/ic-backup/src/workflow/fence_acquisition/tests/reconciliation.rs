@@ -1,6 +1,6 @@
 //! Reuse original capture/restore fixtures to qualify one observation without settlement.
 
-use super::{AfterReplyFault, Fixture, OriginalFault, ready};
+use super::{AfterReplyFault, Fixture, OriginalFault, Purpose, ready};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -129,21 +129,21 @@ impl FenceReconciliationProvider for Provider {
 
 #[test]
 fn both_purposes_match_passive_claims_and_preserve_failures_without_settlement_or_reentry() {
-    for restore in [false, true] {
+    for purpose in Purpose::ALL {
         for failure in [
             None,
             Some(FenceReconciliationProviderError::Unavailable),
             Some(FenceReconciliationProviderError::Unsupported),
             Some(FenceReconciliationProviderError::Indeterminate),
         ] {
-            let fixture = Fixture::new(restore, false);
+            let fixture = Fixture::new(purpose, false);
             let stage = fixture.stage();
             pending(&fixture, &stage, true);
             let originals =
                 fs::read(stage.layout().unwrap().root().join("fence-obligation.json")).unwrap();
             let references = fixture.source_layout.restore_references().unwrap();
             let mut provider = Provider::new(failure);
-            provider.unresolved = restore;
+            provider.unresolved = purpose == Purpose::Restore;
             let result = ready(observe_fence_acquisition(
                 &stage,
                 fixture.requirement(),
@@ -207,7 +207,7 @@ fn changed_payload_missing_originals_and_no_mutation_refuse_before_observation_s
         OriginalFault::MissingJournal,
         OriginalFault::NoPendingMutation,
     ] {
-        let fixture = Fixture::new(false, false);
+        let fixture = Fixture::new(Purpose::Capture, false);
         let stage = fixture.stage();
         if boundary != OriginalFault::NoPendingMutation {
             pending(&fixture, &stage, true);
@@ -264,7 +264,7 @@ fn changed_payload_missing_originals_and_no_mutation_refuse_before_observation_s
 #[test]
 fn complete_original_coverage_and_applied_prerequisite_are_required() {
     for missing in [false, true] {
-        let fixture = Fixture::new(false, true);
+        let fixture = Fixture::new(Purpose::Capture, true);
         let stage = fixture.stage();
         pending(&fixture, &stage, false);
         let root = stage.layout().unwrap().root();
@@ -297,7 +297,7 @@ fn complete_original_coverage_and_applied_prerequisite_are_required() {
 #[test]
 fn admission_failure_and_changed_requirement_keep_observation_pending_without_dispatch() {
     for change in [false, true] {
-        let fixture = Fixture::new(false, false);
+        let fixture = Fixture::new(Purpose::Capture, false);
         let stage = fixture.stage();
         pending(&fixture, &stage, true);
         let mut provider = Provider::new(None);
@@ -348,7 +348,7 @@ impl FenceReconciliationProvider for SuspendedProvider {
 #[test]
 fn cancellation_during_admission_or_observation_holds_exclusion_and_retains_originals() {
     for suspend_admission in [false, true] {
-        let fixture = Fixture::new(true, false);
+        let fixture = Fixture::new(Purpose::Restore, false);
         let stage = fixture.stage();
         pending(&fixture, &stage, true);
         let references = fixture.source_layout.restore_references().unwrap();
@@ -405,7 +405,7 @@ fn after_reply_association_stage_and_obligation_errors_keep_returned_evidence() 
         AfterReplyFault::Stage,
         AfterReplyFault::Obligation,
     ] {
-        let fixture = Fixture::new(false, false);
+        let fixture = Fixture::new(Purpose::Capture, false);
         let stage = fixture.stage();
         pending(&fixture, &stage, true);
         let root = stage.layout().unwrap().root();
@@ -458,7 +458,7 @@ fn after_reply_association_stage_and_obligation_errors_keep_returned_evidence() 
 
 #[test]
 fn replaced_restore_layout_retains_original_observation_and_source_references() {
-    let fixture = Fixture::new(true, false);
+    let fixture = Fixture::new(Purpose::Restore, false);
     let stage = fixture.stage();
     pending(&fixture, &stage, true);
     let root = stage.layout().unwrap().root().to_path_buf();

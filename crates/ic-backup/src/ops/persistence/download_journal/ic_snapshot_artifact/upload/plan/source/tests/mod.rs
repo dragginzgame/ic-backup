@@ -1,10 +1,11 @@
 //! Local bounded byte hashing and payload binding; no management effects.
 
 use super::*;
+use crate::test_support::ic_snapshot_metadata::raw;
 use crate::{
     model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES,
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-    test_support::ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan},
+    test_support::ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, source_plan},
 };
 use ic_platform::candid::contract;
 use std::io::Cursor;

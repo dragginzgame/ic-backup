@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.53.2] - Unreleased
+
+### 🧪 Testing
+
+- Share bounded HTTP cancellation and type application failure scenarios. Keep
+  exact captured ingress, all original cases and pending-spending assertions.
+- Share native restore/download/artifact setup, fence originals, named observation,
+  receipt/context faults and Applied-journal preparation. Keep exact error order,
+  bytes, directory syncs, cancellation points and explicit cleanup at test sites.
+- Group capture/restore fixture requirements by purpose and build valid integrity
+  plans through typed declarations. Preserve independent record-corruption checks.
+- Give metadata golden-vector loading a neutral fixture owner and capture each
+  Agent call's plan, guarded layout and sequence together, including independent
+  consumers. Production APIs and backup contracts are unchanged.
+- Reuse the consumer command enum in parent fixtures and return exact retained
+  stdout/stderr paths with each exit status. Preserve argv, native path bytes,
+  process-death behavior, pending spending and effect-free replay.
+
+### ⬆️ Dependencies
+
+- Adopt Host Artifacts/FS/Process 0.73.3 and Testkit 0.75.2. Preserve public Host
+  types, original backup contracts and the authenticated PocketIC 16.1.0 server.
+  Testkit uses Host's bounded port-file reader for managed startup.
+- Qualify Testkit's already-resolved arithmetic-only Metrics 0.24.3. Consumed
+  arithmetic source is unchanged; optional Wire metadata stays disabled.
+- Contributor setup: repeat `make install-testkit-server` to prepare the exact
+  newly selected CLI; older receipts remain retained.
+
 ## [0.53.1] - 2026-10-31
 
 ### 🧹 Cleanup

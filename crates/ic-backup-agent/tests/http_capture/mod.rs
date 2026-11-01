@@ -5,7 +5,9 @@ use ic_host_process::testing::http::{
     HttpCapture, HttpCaptureFailure, HttpContentLength, capture_http_request,
 };
 use serde_json::json;
-use std::{fs, io, net::TcpStream, path::Path, time::Duration};
+use std::{
+    fmt::Debug, fs, future::Future, io, net::TcpStream, path::Path, sync::Mutex, time::Duration,
+};
 
 const MAX_HEADER_BYTES: usize = 16 * 1024;
 
@@ -68,6 +70,28 @@ pub(super) fn capture(stream: &mut TcpStream, budget: Duration) -> CapturedReque
         HttpContentLength::Required,
     );
     CapturedRequest { bytes, failure }
+}
+
+/// Cancel only after actual request capture while the original call remains polled.
+/// The caller keeps its journal guard; returning drops the pending call without retry.
+pub(super) async fn cancel_after_capture<F: Future>(call: F, requests: &Mutex<Vec<CapturedRequest>>)
+where
+    F::Output: Debug,
+{
+    let mut pending = Box::pin(call);
+    let sent = async {
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while requests.lock().unwrap().is_empty() {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        })
+        .await
+        .unwrap();
+    };
+    tokio::select! {
+        result = &mut pending => panic!("original completed before cancellation: {result:?}"),
+        () = sent => {}
+    }
 }
 
 #[cfg(test)]

@@ -33,23 +33,11 @@ fn settled_stage(
     let binding =
         ExecutionStageBindingRecord::new(workflow, sequence, &plan, predecessors).unwrap();
     let stage = ExecutionStageGuard::prepare(layout, binding, plan).unwrap();
-    let current = stage.layout().unwrap();
-    let mut journal =
-        AttemptJournalGuard::open(current, &stage.plan().attempt_authority(42).unwrap()).unwrap();
-    let attempt = journal
-        .reserve_planned_mutation(&stage.plan().digest())
-        .unwrap();
-    journal
-        .record_mutation(MutationReceiptRequest {
-            attempt,
-            request: stage.plan().operation(42).unwrap().request().into(),
-            outcome: MutationOutcomeRecord::Applied,
-            evidence: ArtifactChecksumRecord::from_bytes(&sequence.to_be_bytes())
-                .hash()
-                .into(),
-        })
-        .unwrap();
-    drop(journal);
+    record_applied(
+        &stage,
+        42,
+        ArtifactChecksumRecord::from_bytes(&sequence.to_be_bytes()).hash(),
+    );
     stage
         .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(
             b"fixture learned evidence",
@@ -175,23 +163,7 @@ fn ancestor_drift_before_or_after_checkpoint_retains_child_and_refuses_predecess
     for after_publication in [false, true] {
         let (root, layout, _, binding) = retained_chain();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan(9)).unwrap();
-        let mut journal = AttemptJournalGuard::open(
-            stage.layout().unwrap(),
-            &stage.plan().attempt_authority(42).unwrap(),
-        )
-        .unwrap();
-        let attempt = journal
-            .reserve_planned_mutation(&stage.plan().digest())
-            .unwrap();
-        journal
-            .record_mutation(MutationReceiptRequest {
-                attempt,
-                request: stage.plan().operation(42).unwrap().request().into(),
-                outcome: MutationOutcomeRecord::Applied,
-                evidence: "12".repeat(32),
-            })
-            .unwrap();
-        drop(journal);
+        record_applied(&stage, 42, &"12".repeat(32));
         let original = fs::read(root.join("execution-stage-9/attempt-42.json")).unwrap();
         let ancestor = root.join("execution-stage-0/attempt-42.json");
         let change = || {

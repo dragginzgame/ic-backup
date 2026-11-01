@@ -204,21 +204,11 @@ async fn exercise(lane: RecoveryLane, mode: RecoveryMode) {
     );
     assert!(!root.join("signed-ingress.cbor").exists());
     if mode == RecoveryMode::Cancel {
-        let mut pending = Box::pin(request.observe(&mut provider, guard.record().unwrap()));
-        let sent = async {
-            tokio::time::timeout(Duration::from_secs(2), async {
-                while server.requests.lock().unwrap().is_empty() {
-                    tokio::time::sleep(Duration::from_millis(5)).await;
-                }
-            })
-            .await
-            .unwrap();
-        };
-        tokio::select! {
-            result = &mut pending => panic!("delayed original finished before cancellation: {result:?}"),
-            () = sent => {}
-        }
-        drop(pending);
+        super::http_capture::cancel_after_capture(
+            request.observe(&mut provider, guard.record().unwrap()),
+            &server.requests,
+        )
+        .await;
     } else {
         assert_eq!(
             request

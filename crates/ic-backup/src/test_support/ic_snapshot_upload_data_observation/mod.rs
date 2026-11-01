@@ -1,5 +1,6 @@
 //! Independently declared original source/destination data; no simulated IC effects.
 
+use crate::test_support::ic_snapshot_metadata::raw;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -12,7 +13,7 @@ use crate::{
         operation_plan::OperationPlanRecord,
     },
     test_support::ic_snapshot_upload::{
-        DESTINATION_ID, SOURCE_ID, TARGET, raw, source_plan, upload_plan,
+        DESTINATION_ID, SOURCE_ID, TARGET, source_plan, upload_plan,
     },
 };
 use ic_platform::candid::contract;

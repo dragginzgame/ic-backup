@@ -1,6 +1,7 @@
 //! Pure boundary matching and typed unsafe denials; no application/IC observations.
 
 use super::*;
+use crate::test_support::response_fault::ContextFault;
 use crate::{
     model::{operation_plan::OperationPlanRecord, restore_safety::*},
     test_support::{
@@ -67,18 +68,12 @@ fn changed_actual_context_full_inventory_source_or_selection_rejects() {
         parameters(wire.method()),
     )
     .unwrap();
-    for (field, replacement) in [
-        ("network", json!("34".repeat(32))),
-        ("caller", json!("aaaaa-aa")),
-        ("release", json!("34".repeat(32))),
-    ] {
+    for fault in ContextFault::ALL {
         let mut data = input(&request);
-        let mut context = serde_json::to_value(&data.context).unwrap();
-        context[field] = replacement;
-        data.context = serde_json::from_value(context).unwrap();
+        fault.apply(&mut data.context, &"34".repeat(32));
         assert_eq!(
             validate(&request, &RestoreSafetyObservation::new(data).unwrap()).unwrap_err(),
-            RestoreSafetyError::ContextMismatch(field)
+            RestoreSafetyError::ContextMismatch(fault.field())
         );
     }
     let mut data = input(&request);

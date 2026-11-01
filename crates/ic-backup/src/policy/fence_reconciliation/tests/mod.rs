@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::response_fault::ContextFault;
 use crate::{
     model::{attempt_journal::ObservationReceiptRequest, fence_reconciliation::*},
     test_support::{
@@ -86,15 +87,9 @@ fn exact_request_attempts_context_inventory_selection_and_single_call_bound_reje
             Err(FenceReconciliationError::AttemptMismatch)
         ));
     }
-    for (field, replacement) in [
-        ("network", json!(hash("90").hash())),
-        ("caller", json!("aaaaa-aa")),
-        ("release", json!(hash("90").hash())),
-    ] {
+    for fault in ContextFault::ALL {
         let mut actual = input(&request);
-        let mut context = serde_json::to_value(&actual.context).unwrap();
-        context[field] = replacement;
-        actual.context = serde_json::from_value(context).unwrap();
+        fault.apply(&mut actual.context, hash("90").hash());
         assert!(matches!(
             validate(
                 &request,
