@@ -1,8 +1,8 @@
 //! Pure same-source and current application safety matching; no IO, effects or settlement.
 
+use super::restore_fence::{self, RestoreFenceMismatch};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
-    consistency::ApplicationFenceState,
     ic_request::IcManagementMethodRecord,
     restore_safety::{
         RestoreFenceEvidence, RestoreSafetyEvidence, RestoreSafetyLaneRecord,
@@ -163,19 +163,16 @@ fn validate_safety(
             let original = requirement
                 .expected_fence()
                 .ok_or(RestoreSafetyError::FenceMismatch)?;
-            if fence.binding.identity != original.identity {
-                return Err(RestoreSafetyError::FenceMismatch);
-            }
-            if fence.binding.membership_revision != original.membership_revision {
-                return Err(RestoreSafetyError::MembershipRevisionMismatch);
-            }
-            if fence.binding.external_obligations_revision != original.external_obligations_revision
-            {
-                return Err(RestoreSafetyError::ExternalObligationsRevisionMismatch);
-            }
-            if fence.state != ApplicationFenceState::Active {
-                return Err(RestoreSafetyError::FenceNotActive);
-            }
+            restore_fence::validate(original, fence).map_err(|mismatch| match mismatch {
+                RestoreFenceMismatch::Identity => RestoreSafetyError::FenceMismatch,
+                RestoreFenceMismatch::MembershipRevision => {
+                    RestoreSafetyError::MembershipRevisionMismatch
+                }
+                RestoreFenceMismatch::ExternalObligationsRevision => {
+                    RestoreSafetyError::ExternalObligationsRevisionMismatch
+                }
+                RestoreFenceMismatch::Inactive => RestoreSafetyError::FenceNotActive,
+            })?;
             if method == IcManagementMethodRecord::StartCanister
                 && fence.controlled_execution.is_none()
             {

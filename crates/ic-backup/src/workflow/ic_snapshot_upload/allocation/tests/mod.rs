@@ -3,16 +3,13 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::ic_snapshot_metadata::raw;
 use crate::test_support::operation_plan::{declaration, graph, operation_request};
 
-use crate::test_support::ready::ready;
+use crate::test_support::{ready::ready, response_fault::ReceiptFault};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        attempt_journal::MutationOutcomeRecord,
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
-        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_snapshot_upload::IcSnapshotUploadReply,
     },
     ops::persistence::{
@@ -20,7 +17,7 @@ use crate::{
     },
     ports::ic_mutation::IcMutationProviderError,
     test_support::{
-        ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, source_plan, unhex, upload_plan},
+        ic_snapshot_upload::{DESTINATION_ID, unhex, upload_plan},
         temp_dir,
     },
 };
@@ -32,17 +29,10 @@ use std::{
 };
 
 fn with_metadata(check: impl FnOnce(&IcSnapshotUploadRequest<'_>)) {
-    let plan = source_plan();
-    let request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let raw = raw("upload-source");
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let payload = IcSnapshotUploadRequest::metadata(
-        &plan,
-        &metadata,
+    crate::test_support::ic_snapshot_upload::with_metadata_upload(
         &ArtifactChecksumRecord::from_bytes(b"retained source tree"),
-    )
-    .unwrap();
-    check(&payload);
+        check,
+    );
 }
 fn prepare(
     payload: &IcSnapshotUploadRequest<'_>,
@@ -411,8 +401,18 @@ fn lost_malformed_or_unqualified_allocation_cannot_checkpoint_or_reissue() {
 
 #[test]
 fn wrong_or_invalid_receipts_retain_reply_and_original_pending_spending() {
+    #[derive(Clone, Copy)]
+    enum AllocationReceiptFault {
+        Receipt(ReceiptFault),
+        InvalidEvidence,
+    }
     with_metadata(|payload| {
-        for field in 0..4 {
+        for fault in [
+            AllocationReceiptFault::Receipt(ReceiptFault::NotApplied),
+            AllocationReceiptFault::Receipt(ReceiptFault::Attempt),
+            AllocationReceiptFault::Receipt(ReceiptFault::Request),
+            AllocationReceiptFault::InvalidEvidence,
+        ] {
             let (layout, binding) = prepare(payload);
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
@@ -426,11 +426,11 @@ fn wrong_or_invalid_receipts_retain_reply_and_original_pending_spending() {
                 admit,
                 async |request, acknowledgement| {
                     let mut receipt = receipt(request, acknowledgement);
-                    match field {
-                        0 => receipt.outcome = MutationOutcomeRecord::NotApplied,
-                        1 => receipt.attempt += 1,
-                        2 => receipt.request = "00".repeat(32),
-                        _ => receipt.evidence.clear(),
+                    match fault {
+                        AllocationReceiptFault::Receipt(fault) => {
+                            fault.apply(&mut receipt, &"00".repeat(32));
+                        }
+                        AllocationReceiptFault::InvalidEvidence => receipt.evidence.clear(),
                     }
                     Ok::<_, Infallible>(receipt)
                 },
@@ -446,7 +446,7 @@ fn wrong_or_invalid_receipts_retain_reply_and_original_pending_spending() {
                 acknowledgement.input().reply,
                 provider.reply.clone().unwrap()
             );
-            if field == 3 {
+            if matches!(fault, AllocationReceiptFault::InvalidEvidence) {
                 assert!(matches!(
                     source,
                     IcSnapshotAllocationSettlementError::Journal(_)

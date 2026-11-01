@@ -21,6 +21,7 @@ pub mod membership;
 mod observed_context;
 mod response_identity;
 pub use response_identity::ResponseIdentityMismatch;
+mod restore_fence;
 pub mod restore_safety;
 pub mod selection;
 mod settlement_identity;

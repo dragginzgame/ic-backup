@@ -1,5 +1,6 @@
 //! Pure reserved-observation and original-acquisition attribution matching; no settlement IO.
 
+use super::restore_fence::{self, RestoreFenceMismatch};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::{AttemptJournalRecord, ObservationOutcomeRecord},
@@ -124,17 +125,16 @@ fn match_claim(
             },
             FenceReconciliationEvidence::AcquiredRestore { fence, .. },
         ) => {
-            if fence.binding.identity != original.identity {
-                return Err(FenceReconciliationError::FenceMismatch);
-            }
-            if fence.binding.membership_revision != original.membership_revision {
-                return Err(FenceReconciliationError::MembershipRevisionMismatch);
-            }
-            if fence.binding.external_obligations_revision != original.external_obligations_revision
-            {
-                return Err(FenceReconciliationError::ExternalObligationsRevisionMismatch);
-            }
-            active(fence.state)?;
+            restore_fence::validate(original, fence).map_err(|mismatch| match mismatch {
+                RestoreFenceMismatch::Identity => FenceReconciliationError::FenceMismatch,
+                RestoreFenceMismatch::MembershipRevision => {
+                    FenceReconciliationError::MembershipRevisionMismatch
+                }
+                RestoreFenceMismatch::ExternalObligationsRevision => {
+                    FenceReconciliationError::ExternalObligationsRevisionMismatch
+                }
+                RestoreFenceMismatch::Inactive => FenceReconciliationError::FenceNotActive,
+            })?;
             Ok(ObservationOutcomeRecord::Applied)
         }
         _ => Err(FenceReconciliationError::PurposeMismatch),

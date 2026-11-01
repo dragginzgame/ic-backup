@@ -100,7 +100,7 @@ impl CompleteDriver {
         let retained = self.restore.as_ref().unwrap();
         if matches!(Stage::from_sequence(sequence), Stage::Load | Stage::Start) {
             return self.backend.plan_with_observations(
-                &self.restore_payload(sequence).digest(),
+                &self.restore_payload(sequence, self.destination()).digest(),
                 sequence,
                 0,
             );
@@ -247,8 +247,8 @@ impl CompleteDriver {
     fn restore_payload(
         &self,
         sequence: u64,
+        destination: Vec<u8>,
     ) -> ic_backup::model::ic_request::IcManagementRequestRecord {
-        let destination = self.destination();
         management(
             &self.backend,
             if Stage::from_sequence(sequence) == Stage::Load {
@@ -290,7 +290,7 @@ impl CompleteDriver {
     ) -> io::Result<ArtifactChecksumRecord> {
         let sequence = stage.binding().stage_sequence();
         let destination = self.destination();
-        let payload = self.restore_payload(sequence);
+        let payload = self.restore_payload(sequence, destination.clone());
         let retained = self.restore.as_mut().unwrap();
         let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
         let source_layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();

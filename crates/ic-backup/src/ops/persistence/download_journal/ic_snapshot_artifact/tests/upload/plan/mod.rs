@@ -35,20 +35,21 @@ fn with_data_stage(
         &DownloadJournalGuard<'_>,
     ),
 ) {
-    with_data_stage_then(4, check, |_, _, _| {});
+    with_data_stage_then(4, check, |_, _, _, ()| {});
 }
 
-fn with_data_stage_then(
+fn with_data_stage_then<T>(
     chunk_bytes: u64,
     check: impl FnOnce(
         &ExecutionStageGuard<'_>,
         &IcSnapshotDataUploadPlan<'_, '_, '_>,
         &DownloadJournalGuard<'_>,
-    ),
+    ) -> T,
     after: impl FnOnce(
         &BackupLayoutGuard,
         &IcSnapshotDataUploadPlan<'_, '_, '_>,
         &DownloadJournalGuard<'_>,
+        T,
     ),
 ) {
     let root = root();
@@ -99,9 +100,9 @@ fn with_data_stage_then(
             original.digest().hash(),
         )
         .unwrap();
-    check(&stage, &data, &source);
+    let proof = check(&stage, &data, &source);
     drop(stage);
-    after(&workflow_layout, &data, &source);
+    after(&workflow_layout, &data, &source, proof);
 }
 #[derive(Clone, Copy, PartialEq)]
 enum Failure {
@@ -823,7 +824,7 @@ fn complete_upload_reads_are_linear_in_bytes_for_different_chunk_counts() {
                 assert_eq!(reads, 3 * total + payload);
                 assert!(data.kinds().len() > 1);
             },
-            |_, _, _| {},
+            |_, _, _, ()| {},
         );
     }
 }
@@ -837,11 +838,10 @@ fn uploaded_restore_source_requires_complete_original_and_rejects_snapshot_subst
         workflow::ic_snapshot_restore::{IcRestoreSource, IcRestoreSourceError},
     };
     for completed in [false, true] {
-        let predecessor = std::cell::RefCell::new(None);
         with_data_stage_then(
             4,
             |stage, data, source| {
-                let proof = if completed {
+                if completed {
                     complete_data(stage, data, source)
                 } else {
                     let mut journal = AttemptJournalGuard::open(
@@ -858,19 +858,16 @@ fn uploaded_restore_source_requires_complete_original_and_rejects_snapshot_subst
                         ArtifactChecksumRecord::from_bytes(b"unsettled"),
                         ArtifactChecksumRecord::from_bytes(b"not applied"),
                     )
-                };
-                *predecessor.borrow_mut() = Some(proof);
+                }
             },
-            |layout, data, source| {
-                let proof = predecessor.borrow();
-                let result =
-                    IcRestoreSource::uploaded(source.layout, data, layout, proof.as_ref().unwrap());
+            |layout, data, source, proof| {
+                let result = IcRestoreSource::uploaded(source.layout, data, layout, &proof);
                 if !completed {
                     assert!(matches!(result, Err(IcRestoreSourceError::Checkpoint(_))));
                     return;
                 }
                 let original = result.unwrap();
-                check_changed_upload_plan(source, data, layout, proof.as_ref().unwrap());
+                check_changed_upload_plan(source, data, layout, &proof);
                 for snapshot in [data.destination().to_vec(), vec![88, 99]] {
                     let wire = IcManagementRequestRecord::new(IcManagementRequest {
                         method: IcManagementMethodRecord::LoadCanisterSnapshot,

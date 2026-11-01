@@ -3,10 +3,9 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::ic_snapshot_metadata::raw;
 use crate::test_support::operation_plan::{declaration, graph, operation_request};
 
-use crate::test_support::ready::ready;
+use crate::test_support::{ready::ready, response_fault::ContextFault};
 use crate::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use crate::{
     model::{
@@ -14,13 +13,12 @@ use crate::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_lifecycle_reply::EMPTY_CANDID_REPLY,
-        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
     test_support::{
-        ic_snapshot_upload::{DESTINATION_ID, SOURCE_ID, TARGET, source_plan, unhex, upload_plan},
+        ic_snapshot_upload::{DESTINATION_ID, unhex, upload_plan},
         temp_dir,
     },
 };
@@ -28,25 +26,20 @@ use ic_platform::management_canister_types::SnapshotDataKind;
 use std::{convert::Infallible, fs, io, path::PathBuf};
 
 fn with_uploads(mut check: impl FnMut(&IcSnapshotUploadRequest<'_>, Vec<u8>)) {
-    let plan = source_plan();
-    let request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let raw = raw("upload-source");
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let upload = IcSnapshotUploadRequest::metadata(
-        &plan,
-        &metadata,
+    crate::test_support::ic_snapshot_upload::with_metadata_upload(
         &ArtifactChecksumRecord::from_bytes(b"declared source tree"),
-    )
-    .unwrap();
-    let data = IcSnapshotUploadRequest::data(
-        &upload,
-        DESTINATION_ID,
-        SnapshotDataKind::WasmModule { offset: 0, size: 3 },
-        &[7, 8, 9],
-    )
-    .unwrap();
-    check(&upload, unhex("4449444c026c01b6b897890f016d7b0100031500ff"));
-    check(&data, EMPTY_CANDID_REPLY.to_vec());
+        |upload| {
+            let data = IcSnapshotUploadRequest::data(
+                upload,
+                DESTINATION_ID,
+                SnapshotDataKind::WasmModule { offset: 0, size: 3 },
+                &[7, 8, 9],
+            )
+            .unwrap();
+            check(upload, unhex("4449444c026c01b6b897890f016d7b0100031500ff"));
+            check(&data, EMPTY_CANDID_REPLY.to_vec());
+        },
+    );
 }
 fn prepare(plan: OperationPlanRecord) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
@@ -315,30 +308,25 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
 
 #[test]
 fn changed_payload_source_network_or_release_reject_before_spending() {
+    #[derive(Clone, Copy)]
+    enum PlanFault {
+        Request,
+        Context(ContextFault),
+    }
     with_uploads(|payload, raw| {
-        for field in ["request", "network", "release"] {
+        for fault in [
+            PlanFault::Request,
+            PlanFault::Context(ContextFault::Network),
+            PlanFault::Context(ContextFault::Release),
+        ] {
             let mut plan = declaration(&upload_plan(payload));
-            if field == "request" {
-                let mut operation = operation_request(&plan.operations[0]);
-                operation.request = "00".repeat(32);
-                plan.operations[0] = PlannedOperationRecord::new(operation).unwrap();
-            } else {
-                plan.context = crate::model::operation_plan::PlanContextRecord::new(
-                    &crate::model::operation_plan::PlanContextRequest {
-                        network: if field == "network" {
-                            "00".repeat(32)
-                        } else {
-                            plan.context.network().into()
-                        },
-                        caller: plan.context.caller().into(),
-                        release: if field == "release" {
-                            "00".repeat(32)
-                        } else {
-                            plan.context.release().into()
-                        },
-                    },
-                )
-                .unwrap();
+            match fault {
+                PlanFault::Request => {
+                    let mut operation = operation_request(&plan.operations[0]);
+                    operation.request = "00".repeat(32);
+                    plan.operations[0] = PlannedOperationRecord::new(operation).unwrap();
+                }
+                PlanFault::Context(context) => context.apply(&mut plan.context, &"00".repeat(32)),
             }
             let (_, layout, binding) = prepare(OperationPlanRecord::new(plan).unwrap());
             let stage =

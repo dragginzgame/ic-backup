@@ -62,6 +62,20 @@ pub fn upload_plan(payload: &IcSnapshotUploadRequest<'_>) -> OperationPlanRecord
     plan(payload.binding_digest().hash())
 }
 
+/// Keep the original source/metadata owners alive for one scoped upload declaration.
+pub fn with_metadata_upload(
+    checksum: &crate::model::artifacts::ArtifactChecksumRecord,
+    check: impl FnOnce(&IcSnapshotUploadRequest<'_>),
+) {
+    use crate::model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest};
+    let source = source_plan();
+    let request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
+    let bytes = raw("upload-source");
+    let metadata = IcSnapshotMetadataReply::decode(&request, &bytes).unwrap();
+    let upload = IcSnapshotUploadRequest::metadata(&source, &metadata, checksum).unwrap();
+    check(&upload);
+}
+
 /// Borrow independent original declarations without returning self-referential fixtures.
 pub fn with_observation(
     check: impl FnOnce(
@@ -75,27 +89,25 @@ pub fn with_observation(
         artifacts::ArtifactChecksumRecord,
         attempt_journal::AttemptJournalRecord,
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
-        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
     };
-    let source = source_plan();
-    let original = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let bytes = raw("upload-source");
-    let metadata = IcSnapshotMetadataReply::decode(&original, &bytes).unwrap();
-    let checksum = ArtifactChecksumRecord::from_bytes(b"retained declared source");
-    let upload = IcSnapshotUploadRequest::metadata(&source, &metadata, &checksum).unwrap();
-    let plan = upload_plan(&upload);
-    let list = IcManagementRequestRecord::new(IcManagementRequest {
-        method: IcManagementMethodRecord::ListCanisterSnapshots,
-        target: TARGET.into(),
-        snapshot_id: None,
-    })
-    .unwrap();
-    let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
-    journal.reserve_mutation().unwrap();
-    journal
-        .reserve_observation(1, list.digest().hash())
-        .unwrap();
-    check(&plan, &upload, &list, &journal);
+    with_metadata_upload(
+        &ArtifactChecksumRecord::from_bytes(b"retained declared source"),
+        |upload| {
+            let plan = upload_plan(upload);
+            let list = IcManagementRequestRecord::new(IcManagementRequest {
+                method: IcManagementMethodRecord::ListCanisterSnapshots,
+                target: TARGET.into(),
+                snapshot_id: None,
+            })
+            .unwrap();
+            let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
+            journal.reserve_mutation().unwrap();
+            journal
+                .reserve_observation(1, list.digest().hash())
+                .unwrap();
+            check(&plan, upload, &list, &journal);
+        },
+    );
 }
 
 pub fn observation_input(

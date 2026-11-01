@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.53.4]
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.16.0 and Testkit 0.76.0, retaining the existing management,
+  Principal and Agent interfaces and authenticated PocketIC 16.1.0 server.
+  Align Testkit with the selected Host 0.73.4 and arithmetic-only Metrics 0.24.4.
+
+### 🧹 Cleanup
+
+- Share ordered restore-fence matching while preserving purpose-specific errors
+  and load/start safety requirements.
+
+### 🧪 Testing
+
+- Share upload metadata setup and pass checkpoint evidence directly between fixture
+  phases. Name receipt and plan faults, and reuse the connected restore fixture's
+  already-derived destination without repeating source reconstruction.
+
 ## [0.53.3] - 2026-11-01
 
 ### 🧹 Cleanup
