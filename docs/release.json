@@ -1,14 +1,14 @@
 {
    "date" : "2026-11-02",
    "files" : {
-      "CHANGELOG.md" : "6247b67e44d72125c6f9823a4b36e319ec217ddeb99703d2c2e3aad726efab8a",
-      "Cargo.lock" : "a71c2942ef4186f21bca5ec620c7060aeff0fc31d61ea97ae3febd47fa54251e",
-      "Cargo.toml" : "499e3b5fcac26cf091ab13357a2b7ecc73956ce22cfcd4369d6cee6374d80689",
+      "CHANGELOG.md" : "910a13ab78ce3047963ffae6f72c5aa716f48b48005de53af190a5cc302ba229",
+      "Cargo.lock" : "ff2fc434527db1b9fc2af9e43a08b268c54cd16ae230e770aea615be6554c35e",
+      "Cargo.toml" : "f103855010fee7abfbe63aafca50bafbbe08668d5dfee874f9a9ef1a1bf990fe",
       "crates/ic-backup-agent/Cargo.toml" : "bdbd6850daae7b4eb44a44030c60004113a1f56d92096611056ea7f19023c82a",
       "crates/ic-backup/Cargo.toml" : "ff0c25177f64cbae551ee32ccbe7d4d27fc5bf6a5e8b5f56d29c51e9dae8c7da"
    },
    "gate" : "release-verify",
    "schema" : 1,
-   "source" : "9fcb3c3a84989dba1fe89438510ccda355696db2",
-   "version" : "0.55.1"
+   "source" : "7efeafef4fdd44e37083e0584b34d64de8f180a8",
+   "version" : "0.55.2"
 }
