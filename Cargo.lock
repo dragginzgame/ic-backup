@@ -102,9 +102,9 @@ dependencies = [
 
 [[package]]
 name = "async-lock"
-version = "3.4.2"
+version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290f7f2596bd5b78a9fec8088ccd89180d7f9f55b94b0576823bbbdc72ee8311"
+checksum = "0876700b0d007ad25d5508865a4259c3af9af6d296bf663a0d586d0bc3369f6f"
 dependencies = [
  "event-listener 5.4.2",
  "event-listener-strategy",
@@ -1352,9 +1352,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.79.0"
+version = "0.80.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a41b6b870564d4e76f2f17cde8f6827889a185f8c85a0b796f7c6a302398540f"
+checksum = "7209222e592fff03b2255dea3cfdd5a55dadd2b3b677206df1e5bf94ebcf1211"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",

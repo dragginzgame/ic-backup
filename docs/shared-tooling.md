@@ -39,7 +39,7 @@ The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
 pin; no local exception is needed.
 Backup retains one coordinated release group, workspace-version inheritance and
 its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.74.0** is selected as the release editor and locked Testkit **0.79.0** owns
+Build **0.74.0** is selected as the release editor and locked Testkit **0.80.0** owns
 simulator setup and offline admission. The accompanying Host/Platform dependency
 adoption and public Host identity migration are documented separately in
 [the Platform boundary](ic-platform.md). Snapshot adoption changes no

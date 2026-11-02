@@ -5,12 +5,12 @@
   "commit_title": "0.27.27",
   "reviewed_on": "2026-11-02",
   "previous_revision": "fd9390ef797bfad8aaa05fdba8fcddec753b572c",
-  "previous_review_evidence": "/tmp/backup-platform-testkit-refresh.lw0kvf7w/before/docs/shared-tooling-review.json",
+  "previous_review_evidence": "/tmp/backup-testkit-refresh.jXzVq3jM/before/docs/shared-tooling-review.json",
   "consumer_baseline": {
-    "commit": "7a4ca85bfce44a210967dc1fd8d377f219d673bb",
-    "version": "0.54.0",
-    "pending_notes": "0.55.0",
-    "worktree": "Incoming Host/Platform/Shared adoption and four completed simplifications preserved; Testkit alignment remains uncommitted."
+    "commit": "3944f3d9825a103027717e3040d4a6fc2c55fcb4",
+    "version": "0.55.0",
+    "pending_notes": "0.55.1",
+    "worktree": "Adopt Testkit 0.80.0; preserve the incoming async-lock 3.5.0 lockfile update. No own-version bump or delivery."
   },
   "provenance": {
     "source_selection": "GitHub refs/heads/main independently selected the full commit. The canonical exporter and trusted verifier run from a clean isolated detached checkout; no sibling working-tree changes enter the snapshot.",
@@ -37,14 +37,14 @@
       "ic-build-release-metadata": "ic-build 0.74.0"
     },
     "development": {
-      "ic-testkit": "0.79.0",
+      "ic-testkit": "0.80.0",
       "ic-platform": "0.18.0 with development-only pocket-ic feature; no simulator alias",
       "ic-platform-pocket-ic": "0.18.0 through Platform and Testkit",
       "ic-metrics": "0.26.1 transitively, no features enabled"
     },
-    "lock_scope": "Scoped Testkit 0.79.0 resolution adds the new Testkit, Metrics 0.26.1, Platform PocketIC 0.18.0 and target-specific Runtime 0.18.0. It removes old Host 0.73.6, Platform/client 0.17, Types 0.16, Runtime 0.17.1, Metrics 0.25.1, Testkit 0.78 and management DTO 0.8.0. Existing package checksums remain unchanged; no unrelated version updates.",
+    "lock_scope": "Latest scoped update replaces only Testkit 0.79.0 with 0.80.0; all other incoming dependency records remain unchanged, including async-lock 3.5.0. Earlier unified Host/Platform/Types/Metrics adoption is now in the 0.55.0 source baseline.",
     "compatibility": "Public Host error identities move from 0.73 to 0.74, requiring callers sharing those types to align. Pending notes promote to 0.55.0 without changing own package versions. Consumed native Candid, management DTO 0.11.0, external Principal 0.1.5 and Agent 0.49.3 sources/identities remain unchanged; changed Types self-authentication is disabled.",
-    "simulator_compatibility": "The published client 0.18 replaces its old management DTO 0.8 supplier with canonical 0.11.0. Both fresh real simulator selections pass with the existing exact production codecs. Testkit managed startup and production server-assets code remain unchanged; authenticated PocketIC 16.1.0 is retained. Metrics changes affect optional Wire code; no Metrics features or Wire adapter are enabled."
+    "simulator_compatibility": "All 30 Testkit src files are byte-identical between authenticated 0.79.0 and 0.80.0 archives. The normalized manifest changes the optional Wire requirement 0.14 to 0.15; Backup enables only the empty default feature and no Wire package is resolved. Platform/client 0.18, canonical management DTO 0.11.0 and authenticated PocketIC 16.1.0 remain selected."
   },
   "consumer_decisions": [
     "Keep one coordinated Backup release group and the complete positional CI/release gate. The new group-plan parser is available as a derived companion but no plan or omission mapping is enabled.",
@@ -54,16 +54,14 @@
     "Preserve the four accepted refactors, all original journals/artifacts, effect authority and exact recovery. No own-version bump, staging, release, publication, sibling work or cleanup is part of adoption."
   ],
   "qualification": {
-    "evidence_directory": "/tmp/backup-platform-testkit-refresh.lw0kvf7w",
-    "previous_evidence_directory": "/tmp/backup-upstream-refresh.ti730kq7",
-    "setup": "setup.log passes explicit setup and prepares the locked Testkit 0.79 CLI while retaining PocketIC 16.1.0 and Build 0.74.0. admission.log records actual Rust/Cargo 1.99.1 and passes offline tools, inheritance and IC boundary admission.",
-    "lint": "clippy-corrected.log passes both libraries, all targets/features, -D warnings. Initial clippy.log retains the one stale simulator-alias import; it was corrected before refreezing inputs and repeating qualification.",
-    "production_graph": "production-graph-proof.json and target/msrv-consumers.qt1xpQ pass both independent normal consumers on Rust 1.99.1, exact Host 0.74 public errors and no old Host/Platform or simulator reachability.",
-    "archives": "consumers-package.log and target/package-check.jPV73u qualify both exact normalized archives together on the original normal graph, with licenses and digest verification.",
-    "product": "core-pocketic.log passes all six connected original-workflow cases; agent-pocketic.log passes real Agent capture, complete transfer, upload and same-ID restore on the new published client. Earlier focused Host/codec/HTTP evidence remains in the previous evidence directory; those unchanged boundaries were not rerun.",
-    "tooling": "testkit-routing.log passes actual setup/check routing and refusal fixtures. shared-source-proof.log rechecks all 144 exact payloads against the unchanged latest Shared revision. Earlier consumer runner and Build metadata preparation evidence remains retained.",
-    "inputs": "qualified-inputs-corrected.json and qualified-input-comparison.json show all 854 source/lock inputs unchanged across successful qualification. Review/handoff documentation is updated afterward and receives focused checks.",
-    "limits": "Focused Linux qualification; no full CI/release gate, native macOS, installed Canic or live IC operation. No staging, commit, own-version bump, release, registry upload, sibling edits or cleanup.",
-    "checks": "final-checks.log records final formatting, documentation links, snapshot integrity, repository-file admission, review JSON and whitespace checks."
+    "evidence_directory": "/tmp/backup-testkit-refresh.jXzVq3jM",
+    "previous_evidence_directory": "/tmp/backup-platform-testkit-refresh.lw0kvf7w",
+    "source": "selection.json, archive-source-proof.json and normalized-manifest.diff authenticate the published Testkit 0.80.0 checksum/VCS identity and prove unchanged Rust sources. lock-scope-proof.json and feature-proof.json establish bounded resolution and disabled Wire.",
+    "setup": "testkit-setup.log passes exact CLI compilation/receipt admission and retains authenticated PocketIC 16.1.0. server-admission-complete.log passes offline admission. The earlier server-admission.log retains a refusal while setup still owned its lock; qualification continued only after setup completed.",
+    "lint": "admission.log records actual rustc/Cargo 1.99.1 and passes inheritance/IC boundary admission; clippy.log passes both libraries, all targets/features, with -D warnings.",
+    "product": "core-pocketic.log passes all six connected original-workflow cases; agent-pocketic.log passes real Agent capture, complete transfer, upload and same-ID restore. testkit-routing.log passes actual setup/check routing and refusal fixtures.",
+    "inputs": "qualified-inputs.json and qualified-input-comparison.json prove all 854 captured inputs unchanged across qualification. Review/handoff updates afterward receive focused documentation checks.",
+    "checks": "final-checks.log records formatting, links, shared snapshot integrity, repository/license admission, review JSON and whitespace checks.",
+    "limits": "Focused Linux qualification. No new full CI/release gate, independent package/MSRV consumer rerun, native macOS, Canic or live IC acceptance. Earlier consumer evidence remains retained in the previous review. No staging, commit, own-version bump, release, publication, sibling edits or cleanup."
   }
 }

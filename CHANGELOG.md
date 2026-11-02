@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.55.1]
+
+### ⬆️ Dependencies
+
+- Adopt Testkit 0.80.0. Retain the shared Platform 0.18 client, authenticated
+  PocketIC 16.1.0 server and existing simulator custody. The optional Wire
+  adapter remains disabled.
+
 ## [0.55.0] - 2026-11-02
 
 ### ⚠️ Breaking
