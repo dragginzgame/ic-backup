@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.55.0]
+
+### ⚠️ Breaking
+
+- Adopt Host Artifacts, FS and Process 0.74.1. Consumers exchanging Backup's
+  public Host error types must align their direct Host dependencies to 0.74.
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.18.0, release editor 0.74.0 and Shared Tooling 0.27.27.
+- Adopt Testkit 0.79.0 and arithmetic-only Metrics 0.26.1, sharing Platform's
+  0.18 simulator client and removing the older development-only dependency
+  stack. PocketIC 16.1.0 remains the authenticated server selection.
+
+### 🧹 Cleanup
+
+- Derive Agent submission routing and reply identity together, preserving the
+  existing evidence domains, attempt identities and retention behavior.
+
+### 🧪 Testing
+
+- Share connected-journey driver construction and fresh restore-source setup.
+  Name the six supported round-trip scenarios while retaining separate tests,
+  original journals, exact byte checks and effect-free replay assertions.
+
 ## [0.54.0] - 2026-11-02
 
 ### ⚠️ Breaking

@@ -1,93 +1,85 @@
 # Current handoff — 2026-11-02
 
-## Shared Tooling 0.27.26
+## Upstream adoption, pending 0.55.0
 
-Adopted commit `e84252f5740bacd708359580455ea2b6fd67df38`, independently
-selected from GitHub main and exported from a clean isolated checkout. The
-canonical preview/refresh retains existing entrypoints and derives **141**
-payloads: seven additions, eighteen updates, no removals. Paired source/revision
-verification proves exact bytes and executable modes; no payload was patched.
-The committed version is 0.27.26; upstream notes remain labelled Unreleased.
+Platform **0.18.0** and Shared Tooling **0.27.27** at
+`651f5f7acb2e3055abd51ba5f835a2112801666a` remain latest at selection and are
+reverified. Adopted published Testkit **0.79.0** and its arithmetic-only Metrics
+**0.26.1** dependency. Testkit now shares Platform/client 0.18, canonical Types
+**0.17.0** and Host Artifacts/FS/Process **0.74.1**. Remove the temporary simulator
+alias and old Host 0.73, Platform/client 0.17, Types 0.16 and Metrics 0.25 stack.
+Platform's `pocket-ic` feature remains development-only. Optional Wire and runtime
+features remain disabled. Both suites retain authenticated **PocketIC 16.1.0**.
 
-The shared Rust **1.99.1** policy now matches Backup's existing floor and pin;
-the obsolete local exception is removed. Common executable catalogs, workspace
-manifests, lockfile, compiler pin and product Rust are unchanged from task entry.
-Platform's ownership guidance preserves the current facade use for external
-DTOs, hashing and Agent transport. No new crate dependency, runtime owner or
-application deployment obligation was introduced.
+The new published simulator client uses canonical management DTO **0.11.0**;
+its old 0.8 supplier leaves the lock. Production Candid, management DTOs, external
+Principal **0.1.5** and Agent **0.49.3** remain unchanged. Scoped resolution adds
+only the new Testkit/Metrics/client and target-specific Runtime generation;
+existing package checksums remain unchanged. No sibling patch was added.
 
-Explicit setup adopts the new native-input identity, registers this checkout's
-current tool requirements and trims successful compilation scratch after
-executable/receipt admission. Common tools and Testkit reuse matching generations;
-Build **0.73.1** is rebuilt and admitted. Existing generations and failed evidence
-remain retained. No store reclamation, legacy migration, product compiler-cache
-maintenance or artifact cleanup was run. Contributors should rerun
-`make install-tools`, then `make tools-check`, after adopting this snapshot.
+The earlier Host 0.74.1 and release editor Build **0.74.0** adoption remains.
+Own versions stay **0.54.0**; pending notes remain **0.55.0** because public Host
+error identities move from 0.73 to 0.74. Consumers exchanging those types must
+align direct Host dependencies. The minimum and pinned compiler remain
+**Rust 1.99.1**, with actual rustc/Cargo identities recorded before qualification.
 
-The baseline keeps work/delivery with each requested repository owner. No sibling
-source contribution or unsolicited adoption PR was made. Backup retains its
-coordinated release group, default released-version mode, local publication and
-metadata adapters, and mandatory exact resume receipt check. Optional group
-proof reuse and bootstrap observation are not activated.
+## Shared Tooling
+
+All **144** canonical payloads are rechecked byte-for-byte and by executable
+mode against the independently selected latest commit. The previous canonical
+refresh added three and updated six files, including an explicit exporter root
+for the linked validation-runner guide. No vendored payload is patched or
+re-exported by this Testkit update. Common executable catalogs remain unchanged.
+
+Backup retains its complete positional CI/release gate, coordinated release
+group and mandatory exact resume receipt check. The optional group-plan mode
+remains disabled. [The review](../shared-tooling-review.json) and
+[consumer guide](../shared-tooling.md) record provenance and decisions.
 
 ## Focused qualification
 
-[The adoption review](../shared-tooling-review.json) records provenance,
-decisions and evidence at `/tmp/backup-shared-refresh.qlg7i32c/`.
+Latest evidence is `/tmp/backup-platform-testkit-refresh.lw0kvf7w/`: incoming
+sources/diff, registry selections, authenticated archives/VCS identities, source
+comparisons, frozen inputs and successful qualification logs are retained.
 
-- Explicit setup and complete offline tool admission pass. The existing native
-  shared-tool reuse CI step passes locally, including download refusal,
-  application flag/wrapper isolation and exact binary reuse.
-- Snapshot/source proof, Cargo inheritance and dependency boundaries,
-  ShellCheck, new Perl helper syntax, formatting and local links pass.
-- Consumer fixtures pass actual Make boundary composition, changed-input and
-  graph refusal, snapshot tamper/evidence retention and Testkit routing.
-- Release preparation and exact receipt/resume selections pass using isolated
-  substitutes. Registered cases remain in `target/shared-release-tests.ljD0Ga`
-  and `target/shared-release-tests.0VJDDY`; no real release effects occurred.
-- Captured inputs stayed unchanged during qualification. Review/handoff edits
-  after those checks receive focused link, JSON, snapshot and diff checks.
+- Explicit setup and offline compiler/tool/inheritance/boundary admission pass.
+  Locked Testkit 0.79 CLI preparation retains the original authenticated server
+  and existing Build editor (`setup.log`, `admission.log`).
+- Strict both-library all-target/all-feature Clippy passes
+  (`clippy-corrected.log`). The initial stale-alias import failure is retained;
+  successful qualification uses refrozen corrected inputs.
+- Both independent normal consumers pass on Rust 1.99.1, including exact Host
+  error probes, Core's Agent exclusion and simulator/WAT exclusion. Evidence is
+  `target/msrv-consumers.qt1xpQ` and `production-graph-proof.json`.
+- Both exact normalized archives compile together with graph/license/digest
+  admission (`consumers-package.log`, `target/package-check.jPV73u`).
+- All six connected Core PocketIC cases and the real Agent capture/complete
+  transfer/upload/same-ID restore pass (`core-pocketic.log`, `agent-pocketic.log`).
+  Actual Testkit setup/check routing and refusal fixtures pass separately.
+- All 854 captured source/lock inputs remain unchanged across qualification.
+  Review/handoff edits afterward receive focused formatting/link/snapshot checks.
 
-This is fresh Linux tooling qualification. No new full repository gate, product
-runtime/PocketIC suite or native macOS run was executed for the snapshot refresh.
-Earlier full CI remains scoped to its recorded source and locked graph.
+Earlier Host/filesystem, exact codec, sixteen HTTP, consumer runner and twelve
+Build editor preparation checks remain at `/tmp/backup-upstream-refresh.ti730kq7/`;
+those unchanged boundaries are not presented as freshly rerun here. This is
+focused Linux qualification, not a full CI/release gate, native macOS, installed
+Canic or live IC acceptance. No staging, commit, own-version bump, release,
+publication, sibling edits or cleanup occurred. Preserve journals, referenced
+artifacts, unfinished recovery, tool generations and failed evidence.
 
-## 0.54 delivery source
+## Preserved earlier work
 
-The maintainer requested deployment of the complete **0.54.0** batch to
-`origin/main` and crates.io. This source uses **0.53.6** package metadata and an
-undated **0.54.0** draft; the standard minor-release runner owns their finalization.
-The generated [release receipt](../release.json), annotated Git tag and registry
-observations own the actual delivery result. Existing
-Testkit **0.78.0**, arithmetic-only Metrics **0.25.1**, compiler and publication
-changes remain intact. The incoming graph includes `cc` **1.11.0** and
-`crc32fast` **1.5.4**; this adoption performed no dependency update or downgrade.
+The four accepted simplifications remain intact: common journey driver
+construction, fresh restore-source contexts, one Agent routing/reply-binding
+decision and six named round-trip scenarios with separate registrations.
+Incoming evidence is `/tmp/backup-four-simplifications.tm9_9hks/`. Original digest
+domains, attempt identities, bytes, recovery and effect-free replay remain.
 
-[#77 — Adopt Rust 1.99.1 and consolidate compiler qualification](https://github.com/dragginzgame/ic-backup/issues/77)
-and
-[#76 — Reuse shared Cargo publication attempt mechanics behind local admission](https://github.com/dragginzgame/ic-backup/issues/76)
-are included in the authorized delivery batch. Compiler admission records
-actual Cargo/rustc identities before native qualification. Independent normal
-consumers, archive-pair builds and the Agent journey select the declared compiler;
-Linux, Apple Silicon and Intel macOS jobs remain in CI. Publication retains exact
-source/arguments/outcomes behind the local release lock and Clippy gate;
-interrupted attempts require explicit reconciliation before redispatch.
-
-Earlier qualification remains at `/tmp/backup-issue77.aut8qyhh/` and
-`/tmp/backup-054-readiness.336t_398/`. The latter records a passing complete local
-`make ci` on its frozen inputs, including both real PocketIC suites, independent
-consumers and normalized package archives. The incoming handoff and previous
-adoption review are preserved under this refresh's `before/`.
-
-[Hosted CI run 41331009274](https://github.com/dragginzgame/ic-backup/actions/runs/41331009274)
-passed all three native hosts for main commit
-`fff0b4654844dc53539a726fd319a6af5abbe272` only. Fresh native macOS evidence requires the delivered-source CI run.
-The release workflow must perform its complete local gate before version
-preparation and atomic branch/tag push, followed by separate registry publication.
-No live IC backup/restore or artifact cleanup is part of this delivery. Preserve unfinished journals, referenced artifacts,
-original publication attempts and required recovery evidence.
+The completed **0.54.0** delivery and issues #76/#77 closure remain owned by
+[the release receipt](../release.json), GitHub and
+`/tmp/backup-deploy-054.qme75qrm/`. That delivery does not authorize releasing this
+pending batch. The incoming handoff is retained in the latest evidence `before/`.
 
 [Implementation contracts](../implementation-contracts.md),
 [the Platform boundary](../ic-platform.md) and
-[the operator map](../canic-adoption.md#reusable-operator-composition) remain
-canonical.
+[the operator map](../canic-adoption.md#reusable-operator-composition) remain canonical.

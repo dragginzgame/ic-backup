@@ -103,27 +103,26 @@ struct ApplicationReplyBinding {
 }
 
 impl<'a> ApplicationRequest<'a> {
-    fn reserved(self) -> ReservedUpdate<'a> {
+    fn into_submission(self) -> (ReservedUpdate<'a>, ApplicationReplyBinding) {
         match self {
-            Self::Mutation(request) => ReservedUpdate::ApplicationMutation(request),
-            Self::Observation(request) => ReservedUpdate::ApplicationObservation(request),
-        }
-    }
-
-    fn reply_binding(&self) -> ApplicationReplyBinding {
-        match self {
-            Self::Mutation(request) => ApplicationReplyBinding {
-                authority: request.authority().digest(),
-                payload: request.payload().digest(),
-                attempts: [request.mutation_attempt(), 0],
-                domain: b"ic-backup-agent.application-mutation-reply.v1\0",
-            },
-            Self::Observation(request) => ApplicationReplyBinding {
-                authority: request.authority().digest(),
-                payload: request.payload().digest(),
-                attempts: [request.mutation_attempt(), request.observation_attempt()],
-                domain: b"ic-backup-agent.application-observation-reply.v1\0",
-            },
+            Self::Mutation(request) => (
+                ReservedUpdate::ApplicationMutation(request),
+                ApplicationReplyBinding {
+                    authority: request.authority().digest(),
+                    payload: request.payload().digest(),
+                    attempts: [request.mutation_attempt(), 0],
+                    domain: b"ic-backup-agent.application-mutation-reply.v1\0",
+                },
+            ),
+            Self::Observation(request) => (
+                ReservedUpdate::ApplicationObservation(request),
+                ApplicationReplyBinding {
+                    authority: request.authority().digest(),
+                    payload: request.payload().digest(),
+                    attempts: [request.mutation_attempt(), request.observation_attempt()],
+                    domain: b"ic-backup-agent.application-observation-reply.v1\0",
+                },
+            ),
         }
     }
 }
@@ -173,7 +172,7 @@ where
         request: ApplicationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<ApplicationIngressResponse, ApplicationIngressProviderError> {
-        let binding = request.reply_binding();
+        let (request, binding) = request.into_submission();
         let commitment = ArtifactChecksumRecord::from_bytes(
             &[
                 binding.authority.hash().as_bytes(),
@@ -183,7 +182,7 @@ where
         );
         let (request_id, reply) = crate::submission::submit_once(
             self.transport,
-            request.reserved(),
+            request,
             journal,
             |prepared| (self.retain_ingress)(&prepared.request, prepared),
             |request, id, reply| (self.retain_reply)(request, id, reply),

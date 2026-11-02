@@ -21,13 +21,15 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production and Testkit 0.78.0 select Platform 0.17.0,
-which re-exports the canonical owned Principal from Platform Types 0.16.0.
+not selected by Backup. Production selects Platform 0.18.0, which re-exports the
+canonical owned Principal from Platform Types 0.17.0.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
 retain their qualified upstream identities. Development-only PocketIC clients now
-belong to Platform's maintained `ic-platform-pocket-ic` package; Testkit shares
-those client identities.
+belong to Platform's maintained `ic-platform-pocket-ic` package. Testkit 0.79.0
+and Backup share Platform/client 0.18 and canonical Types 0.17 identities.
+The temporary older simulator alias is removed; the `pocket-ic` feature remains
+development-only and never enters a normal consumer.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
 
@@ -67,11 +69,17 @@ management, external Principal and Agent facade source is unchanged. Internal
 Principal normalization, hashes and wire contracts retain their existing behavior;
 Backup exposes no owned Principal API requiring a consumer migration.
 
-The workspace requires Host Artifacts/FS/Process 0.73.5 and currently resolves
-0.73.6. Consumers sharing Host types must align their selected versions.
-Testkit 0.78.0 keeps its Rust source unchanged from 0.77.0; arithmetic-only
-Metrics 0.25.1 keeps its Rust source and dependencies unchanged from 0.25.0.
-Their optional Wire requirements remain outside Backup's graph.
+Platform 0.18 removes its unused stable-structures facade. Backup enables none of
+that feature, and the consumed Candid, management DTO, external Principal and
+Agent adapter sources remain unchanged. Types 0.17 supplies the production owned
+Principal, shared by the simulator stack through the same published supplier.
+
+The workspace requires and resolves Host Artifacts/FS/Process 0.74.1. Consumers
+sharing public Host error types must align their direct selections to 0.74.
+Testkit 0.79.0 now selects Host 0.74.1, Platform/client 0.18 and arithmetic-only
+Metrics 0.26.1. Their optional Wire requirements remain outside Backup's graph.
+The old Host 0.73, Platform 0.17, Types 0.16 and Metrics 0.25 packages are no longer
+required by the development graph.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |
@@ -116,15 +124,15 @@ generators emit no old Candid/CDK paths.
 
 Candid and the SDK remain necessary production transitives. Upstream management
 DTOs and Agent enable Candid defaults, including printer machinery. The complete
-development graph retains PocketIC's management DTO 0.8 separately from the
-qualified production 0.11 identity. Simulator clients remain development-only.
+development client now shares the qualified management DTO 0.11 identity;
+the older 0.8 package is removed. Simulator clients remain development-only.
 CLI features are selected only for separately installed tools; library dependencies
 do not enable them. Production-tree checks and exact public-identity probes are
 separate from direct declaration checks; deployment admission belongs to the
 application's exact target/features, locked build and artifact identity.
 
 Independent normal consumers exclude Testkit, PocketIC and WAT. Backup's public
-Host error types belong to the 0.73 line; consumers exchanging
+Host error types belong to the 0.74 line; consumers exchanging
 those values must align direct Host dependencies. Their fields, source chains,
 recovery behavior and serialized data retain their existing contracts.
 

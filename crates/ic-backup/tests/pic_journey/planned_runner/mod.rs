@@ -3,7 +3,7 @@
 mod round_trip;
 use round_trip::RestoreProgress;
 pub(super) use round_trip::change_live_state;
-pub(crate) use round_trip::run_round_trip;
+pub(crate) use round_trip::{RoundTripScenario, run_round_trip};
 
 use super::evidence::{MetadataEvidence, retain_bytes};
 use super::stage::Stage;
@@ -74,22 +74,11 @@ pub(crate) fn run(lose_reply: bool) {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let payload = management(&backend, Method::TakeCanisterSnapshot, None);
     let workflow = ExecutionWorkflowRecord::new(backend.plan(&payload.digest(), 0));
-    let mut driver = CompleteDriver {
-        backend,
-        workflow: workflow.clone(),
-        binds: Vec::new(),
-        capture_failure: if lose_reply {
-            CaptureFailure::Lost
-        } else {
-            CaptureFailure::None
-        },
-        data_failure: ReadFailure::None,
-        snapshot: None,
-        metadata: None,
-        stages: Vec::new(),
-        stop_before: None,
-        restore: None,
-        restore_failure: super::planned_upload::Failure::None,
+    let mut driver = CompleteDriver::new(backend, &workflow);
+    driver.capture_failure = if lose_reply {
+        CaptureFailure::Lost
+    } else {
+        CaptureFailure::None
     };
     let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
     assert_eq!(driver.binds, [0]);
@@ -138,6 +127,36 @@ struct CompleteDriver {
     restore_failure: super::planned_upload::Failure,
 }
 impl CompleteDriver {
+    fn new(backend: Backend, workflow: &ExecutionWorkflowRecord) -> Self {
+        Self {
+            backend,
+            workflow: workflow.clone(),
+            binds: Vec::new(),
+            capture_failure: CaptureFailure::None,
+            data_failure: ReadFailure::None,
+            snapshot: None,
+            metadata: None,
+            stages: Vec::new(),
+            stop_before: None,
+            restore: None,
+            restore_failure: super::planned_upload::Failure::None,
+        }
+    }
+
+    fn from_retained(
+        backend: Backend,
+        workflow: &ExecutionWorkflowRecord,
+        snapshot: IcSnapshotInfo,
+        metadata: MetadataEvidence,
+        restore: Option<RestoreProgress>,
+    ) -> Self {
+        Self {
+            snapshot: Some(snapshot),
+            metadata: Some(metadata),
+            restore,
+            ..Self::new(backend, workflow)
+        }
+    }
     fn capture(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
         let payload = management(&self.backend, Method::TakeCanisterSnapshot, None);
         let context = stage.plan().context().clone();
@@ -471,19 +490,8 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
     let root = backend.root.join("complete-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let mut driver = CompleteDriver {
-        backend,
-        workflow: workflow.clone(),
-        binds: Vec::new(),
-        capture_failure: CaptureFailure::None,
-        data_failure,
-        snapshot: None,
-        metadata: None,
-        stages: Vec::new(),
-        stop_before: None,
-        restore: None,
-        restore_failure: super::planned_upload::Failure::None,
-    };
+    let mut driver = CompleteDriver::new(backend, &workflow);
+    driver.data_failure = data_failure;
     let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
     assert_eq!(driver.stages, [0, 7, 9]);
     let calls = driver.backend.calls;
@@ -671,19 +679,8 @@ pub(crate) fn run_retained() {
     let root = backend.root.join("retained-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let mut driver = CompleteDriver {
-        backend,
-        workflow: workflow.clone(),
-        binds: Vec::new(),
-        capture_failure: CaptureFailure::None,
-        data_failure: ReadFailure::None,
-        snapshot: None,
-        metadata: None,
-        stages: Vec::new(),
-        stop_before: Some(9),
-        restore: None,
-        restore_failure: super::planned_upload::Failure::None,
-    };
+    let mut driver = CompleteDriver::new(backend, &workflow);
+    driver.stop_before = Some(9);
     assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
     assert_eq!(driver.stages, [0, 7]);
     assert!(!root.join("execution-stage-9").exists());
@@ -708,19 +705,7 @@ pub(crate) fn run_retained() {
     // Drop the original driver state. Rebuild only from retained raw replies,
     // exact original bindings and the still-running isolated backend.
     let backend = driver.backend;
-    let mut resumed = CompleteDriver {
-        backend,
-        workflow: workflow.clone(),
-        binds: Vec::new(),
-        capture_failure: CaptureFailure::None,
-        data_failure: ReadFailure::None,
-        snapshot: Some(snapshot),
-        metadata: Some(evidence),
-        stages: Vec::new(),
-        stop_before: None,
-        restore: None,
-        restore_failure: super::planned_upload::Failure::None,
-    };
+    let mut resumed = CompleteDriver::from_retained(backend, &workflow, snapshot, evidence, None);
     let view = ready(run_retained_execution_workflow(
         &layout,
         &workflow.digest(),

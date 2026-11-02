@@ -1228,9 +1228,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.73.6"
+version = "0.74.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "499c5dcde4cc97e49f2f653e6234639752f9b179ae387c6872ee6e5cc194fdce"
+checksum = "c6dd0344ca1c055fbf0f6a6f9a050a68f5cb8f9456d6d5bcef4f9ed97c8190a4"
 dependencies = [
  "flate2",
  "sha2 0.10.9",
@@ -1239,9 +1239,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.73.6"
+version = "0.74.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff18ef5150d939d6789e6b16cf174fc792e5267fbe39e94b1564f4a9e94c929d"
+checksum = "a1cb75dfee73b1dcd609a559ddcd1f0d7c2933047c89a9e2d6a8a33c8b7acb12"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1250,26 +1250,15 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.73.6"
+version = "0.74.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4e77b081784d8c08ec11b49ebd62489debbabe38c52d2e9bd0abcaa4230267f"
+checksum = "fe482a2bae4eeda3c6e8b632e3f41235fe3752ef23557526fe57b6e41a5bf826"
 dependencies = [
  "command-fds",
  "ic-host-artifacts",
  "ic-host-fs",
  "libc",
  "rustix",
-]
-
-[[package]]
-name = "ic-management-canister-types"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3"
-dependencies = [
- "candid",
- "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -1285,25 +1274,24 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.25.1"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "081b1f0ada80283b9fe61c3f5355f98d8bff2a11f03a8fa3411c7dbd40100c57"
+checksum = "388d6a3f76fbb6ac07795b4d2211a9a846ba3aa4b94d51be81018ecb3298cda5"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "ic-platform"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "813bed7d93c0adc82b80157f4ccbb0b31260f8764fa3b7695fadaf9bcd14e241"
+checksum = "d30f602f1c07916c28ad455050a68b47a71a5ada61a26f163ec8195f6f2acbda"
 dependencies = [
  "candid",
  "ic-agent",
  "ic-certification",
- "ic-management-canister-types 0.11.0",
+ "ic-management-canister-types",
  "ic-platform-pocket-ic",
- "ic-platform-runtime",
  "ic-platform-types",
  "ic_principal",
  "serde",
@@ -1313,9 +1301,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform-pocket-ic"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "259cca738ece85627683ebef5df14a5b04cc0db4c59182f780f92e7e15902f8f"
+checksum = "d2cbf0577257c1aae8666801e9f1eab887762b6d16140a3e1c861c27b824bc15"
 dependencies = [
  "backon",
  "base64 0.22.1",
@@ -1323,7 +1311,7 @@ dependencies = [
  "flate2",
  "hex",
  "ic-certification",
- "ic-management-canister-types 0.8.0",
+ "ic-management-canister-types",
  "ic-transport-types",
  "reqwest",
  "schemars",
@@ -1345,15 +1333,15 @@ dependencies = [
 
 [[package]]
 name = "ic-platform-runtime"
-version = "0.17.1"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67e0cef9c254622a92fadff2cc0ef287fa4fe2a489328a97ac4740de00a71f04"
+checksum = "4fdb0b3fee215166a704b9eb6be076adbf9d406e1b9156e65a9ee53abe6b5489"
 
 [[package]]
 name = "ic-platform-types"
-version = "0.16.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "235a930ed63426af24eaac83d8e164e051ee4f1113ae225acbbea6f61fd34198"
+checksum = "93be2c8e9d20de7c0b45960689a5f0cf759a385b470affc7cad5bbf43fb1d892"
 dependencies = [
  "crc32fast",
  "data-encoding",
@@ -1364,15 +1352,17 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.78.0"
+version = "0.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1c4b7fc43e70b3ec8766b3eaee41a8e48aa0674935f0ab1e9060b2efaa92562"
+checksum = "a41b6b870564d4e76f2f17cde8f6827889a185f8c85a0b796f7c6a302398540f"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
  "ic-metrics",
  "ic-platform",
+ "ic-platform-runtime",
+ "ic-platform-types",
  "libc",
  "thiserror 2.0.21",
  "tokio",

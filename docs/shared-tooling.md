@@ -20,25 +20,36 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The current source is Shared Tooling **0.27.26**, commit
-`e84252f5740bacd708359580455ea2b6fd67df38`,
+The current source is Shared Tooling **0.27.27**, commit
+`651f5f7acb2e3055abd51ba5f835a2112801666a`,
 independently selected from upstream main and exported from a clean isolated
 checkout. The exporter preserves its committed version label and exact revision;
 uncommitted sibling edits supply no provenance.
 
-This refresh aligns the shared compiler policy with Backup's adopted Rust
-**1.99.1** floor and pin, so the earlier local exception is no longer needed.
+This revision advances from `fd9390e` with **144 selected payloads**. The shared
+validation runner adds source-bound release-group plans through an opt-in
+interface and its new companion. Backup retains its existing positional targets,
+complete release gate and original validation/receipt ownership; no group plan,
+stage omission or proof-reuse mode is enabled. Common executable catalogs and
+installer/build policy bytes are unchanged by this Shared refresh. The linked
+runner guide is explicitly selected through the exporter because the new shared
+group guide references it without declaring that documentation companion.
+
+The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
+pin; no local exception is needed.
 Backup retains one coordinated release group, workspace-version inheritance and
 its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.73.1** remains the release editor and locked Testkit **0.78.0** owns
-simulator setup and offline admission. Snapshot adoption changes no crate
-dependency, product API or backup/restore contract.
+Build **0.74.0** is selected as the release editor and locked Testkit **0.79.0** owns
+simulator setup and offline admission. The accompanying Host/Platform dependency
+adoption and public Host identity migration are documented separately in
+[the Platform boundary](ic-platform.md). Snapshot adoption changes no
+backup/restore contract.
 
 Cargo tool setup now fingerprints managed native build inputs rather than every
 installed Linux application, records each checkout's current tool requirements,
 and discards successful compilation scratch after executable/receipt admission.
-Run `make install-tools` after this refresh, then `make tools-check`; changed
-build identities require new selections. Existing executable generations and
+After installer/build-identity changes, run `make install-tools`, then
+`make tools-check`; changed build identities require new selections. Existing executable generations and
 failed bundles remain retained. Explicit store reclamation and compiler-cache
 maintenance are separate owner operations under the
 [shared maintenance contract](tool-store-maintenance.md); adoption runs neither.

@@ -53,40 +53,41 @@ enum ObservationRequest<'a> {
 }
 
 impl<'a> ObservationRequest<'a> {
-    fn reply_binding(&self) -> ObservationReplyBinding<'a> {
+    fn into_submission(self) -> (ReservedUpdate<'a>, ObservationReplyBinding<'a>) {
         match self {
-            Self::Management(request) => ObservationReplyBinding {
-                domain: b"ic-backup-agent.observation-reply.v1\0",
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                request: request.payload().digest(),
-                target: request.payload().target(),
-            },
-            Self::Upload(request) => ObservationReplyBinding {
-                domain: b"ic-backup-agent.upload-observation-reply.v1\0",
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                request: request.payload().digest(),
-                target: request.payload().target(),
-            },
-            Self::UploadData(request) => ObservationReplyBinding {
-                domain: b"ic-backup-agent.upload-data-observation-reply.v1\0",
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                observation_attempt: request.observation_attempt(),
-                request: request.payload().digest(),
-                target: request.payload().target(),
-            },
-        }
-    }
-
-    fn reserved(self) -> ReservedUpdate<'a> {
-        match self {
-            Self::Management(request) => ReservedUpdate::Observation(request),
-            Self::Upload(request) => ReservedUpdate::UploadObservation(request),
-            Self::UploadData(request) => ReservedUpdate::UploadDataObservation(request),
+            Self::Management(request) => (
+                ReservedUpdate::Observation(request),
+                ObservationReplyBinding {
+                    domain: b"ic-backup-agent.observation-reply.v1\0",
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    request: request.payload().digest(),
+                    target: request.payload().target(),
+                },
+            ),
+            Self::Upload(request) => (
+                ReservedUpdate::UploadObservation(request),
+                ObservationReplyBinding {
+                    domain: b"ic-backup-agent.upload-observation-reply.v1\0",
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    request: request.payload().digest(),
+                    target: request.payload().target(),
+                },
+            ),
+            Self::UploadData(request) => (
+                ReservedUpdate::UploadDataObservation(request),
+                ObservationReplyBinding {
+                    domain: b"ic-backup-agent.upload-data-observation-reply.v1\0",
+                    authority: request.authority().digest(),
+                    mutation_attempt: request.mutation_attempt(),
+                    observation_attempt: request.observation_attempt(),
+                    request: request.payload().digest(),
+                    target: request.payload().target(),
+                },
+            ),
         }
     }
 }
@@ -107,10 +108,10 @@ where
         request: ObservationRequest<'_>,
         journal: &AttemptJournalRecord,
     ) -> Result<IcObservationResponseInput, IcObservationProviderError> {
-        let binding = request.reply_binding();
+        let (request, binding) = request.into_submission();
         let (id, reply) = crate::submission::submit_once(
             self.transport,
-            request.reserved(),
+            request,
             journal,
             |prepared| (self.retain)(&prepared.request, prepared),
             |_, _, _| Ok(()),

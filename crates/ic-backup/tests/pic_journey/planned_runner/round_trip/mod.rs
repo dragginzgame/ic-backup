@@ -9,7 +9,9 @@ use super::super::{
     planned_upload::{Failure, Provider as UploadProvider},
     status, verify_destination, verify_loaded,
 };
-use super::{CompleteDriver, RetainedCapture, read_retained_prefix, retain_bytes};
+use super::{
+    CompleteDriver, MetadataEvidence, RetainedCapture, read_retained_prefix, retain_bytes,
+};
 use crate::{ready::ready, support::read_json};
 use ic_backup::{
     model::{
@@ -23,7 +25,9 @@ use ic_backup::{
         ic_snapshot_data::IcSnapshotDataReply,
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::IcSnapshotMetadataReply,
-        ic_snapshot_upload::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind},
+        ic_snapshot_upload::{
+            IcSnapshotUploadReply, IcSnapshotUploadReplyKind, IcSnapshotUploadRequest,
+        },
         operation_plan::OperationPlanRecord,
         restore_safety::{
             RestoreSafetyEvidence, RestoreSafetyLaneRecord, RestoreSafetyObservation,
@@ -65,11 +69,61 @@ pub(super) struct RestoreProgress {
     pub(super) acceptance: Option<ArtifactChecksumRecord>,
 }
 
+// Each invocation decodes the original evidence and acquires a fresh source layout.
+// Journals and upload declarations borrow this context; no admission is cached.
+struct RestoreSourceContext<'a> {
+    plan: &'a OperationPlanRecord,
+    metadata: IcSnapshotMetadataReply<'a>,
+    layout: BackupLayoutGuard,
+}
+impl<'a> RestoreSourceContext<'a> {
+    fn open(root: &Path, plan: &'a OperationPlanRecord, evidence: &'a MetadataEvidence) -> Self {
+        let metadata = evidence.decode().unwrap();
+        let layout = BackupLayoutGuard::acquire(root).unwrap();
+        Self {
+            plan,
+            metadata,
+            layout,
+        }
+    }
+
+    fn journal(&self) -> DownloadJournalGuard<'_> {
+        DownloadJournalGuard::open(&self.layout, self.plan.digest().hash()).unwrap()
+    }
+
+    fn upload(&self, journal: &DownloadJournalGuard<'_>) -> IcSnapshotUploadRequest<'_> {
+        journal
+            .prepare_ic_snapshot_upload_metadata(self.plan, TOKEN, &self.metadata)
+            .unwrap()
+    }
+}
+
 // Keep original allocation identity and raw reply evidence visibly associated.
 pub(super) struct RetainedAllocation {
     binding: ExecutionStageBindingRecord,
     plan: OperationPlanRecord,
     raw_reply: Vec<u8>,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum RoundTripScenario {
+    Complete,
+    Interrupted,
+    MetadataLost,
+    DataLostSecond,
+    LoadLost,
+    StartLost,
+}
+impl RoundTripScenario {
+    fn failure(self) -> Failure {
+        match self {
+            Self::Complete | Self::Interrupted => Failure::None,
+            Self::MetadataLost => Failure::MetadataLost,
+            Self::DataLostSecond => Failure::DataLostSecond,
+            Self::LoadLost => Failure::LoadLost,
+            Self::StartLost => Failure::StartLost,
+        }
+    }
 }
 
 // Stage identity and child-operation identity are distinct; Start has no successor.
@@ -113,13 +167,13 @@ impl CompleteDriver {
                 0,
             );
         }
-        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
-        let layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
-        let journal =
-            DownloadJournalGuard::open(&layout, retained.source_plan.digest().hash()).unwrap();
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
-            .unwrap();
+        let source = RestoreSourceContext::open(
+            &retained.source.root,
+            &retained.source_plan,
+            self.metadata.as_ref().unwrap(),
+        );
+        let journal = source.journal();
+        let upload = source.upload(&journal);
         if Stage::from_sequence(sequence) == Stage::Allocation {
             assert_eq!(predecessors, []);
             assert_eq!(
@@ -165,10 +219,13 @@ impl CompleteDriver {
         stage: &ExecutionStageGuard<'_>,
     ) -> io::Result<ArtifactChecksumRecord> {
         let retained = self.restore.as_mut().unwrap();
-        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
-        let layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
-        let journal =
-            DownloadJournalGuard::open(&layout, retained.source_plan.digest().hash()).unwrap();
+        let source = RestoreSourceContext::open(
+            &retained.source.root,
+            &retained.source_plan,
+            self.metadata.as_ref().unwrap(),
+        );
+        let journal = source.journal();
+        let layout = &source.layout;
         assert_eq!(
             journal
                 .read_download_manifest(&retained.source_plan, &retained.source.manifest)
@@ -177,9 +234,7 @@ impl CompleteDriver {
         );
         let original = fs::read(journal.path()).unwrap();
         let references = fs::read(layout.root().join("restore-references.json")).unwrap();
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
-            .unwrap();
+        let upload = source.upload(&journal);
         let mut provider = UploadProvider {
             backend: &mut self.backend,
             failure: self.restore_failure,
@@ -285,13 +340,13 @@ impl CompleteDriver {
 
     fn destination(&self) -> Vec<u8> {
         let retained = self.restore.as_ref().unwrap();
-        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
-        let layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
-        let journal =
-            DownloadJournalGuard::open(&layout, retained.source_plan.digest().hash()).unwrap();
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
-            .unwrap();
+        let source = RestoreSourceContext::open(
+            &retained.source.root,
+            &retained.source_plan,
+            self.metadata.as_ref().unwrap(),
+        );
+        let journal = source.journal();
+        let upload = source.upload(&journal);
         let reply = IcSnapshotUploadReply::decode(
             &upload,
             &retained.allocation.as_ref().unwrap().raw_reply,
@@ -315,14 +370,17 @@ impl CompleteDriver {
         let destination = self.destination();
         let payload = self.restore_payload(sequence, destination.clone());
         let retained = self.restore.as_mut().unwrap();
-        let metadata = self.metadata.as_ref().unwrap().decode().unwrap();
-        let source_layout = BackupLayoutGuard::acquire(&retained.source.root).unwrap();
-        let journal =
-            DownloadJournalGuard::open(&source_layout, retained.source_plan.digest().hash())
-                .unwrap();
+        let source = RestoreSourceContext::open(
+            &retained.source.root,
+            &retained.source_plan,
+            self.metadata.as_ref().unwrap(),
+        );
+        let metadata = &source.metadata;
+        let source_layout = &source.layout;
+        let journal = source.journal();
         assert_eq!(
             journal
-                .verify_ic_snapshot_artifact(&retained.source_plan, TOKEN, &metadata)
+                .verify_ic_snapshot_artifact(&retained.source_plan, TOKEN, metadata)
                 .unwrap(),
             retained.source.checksum
         );
@@ -331,7 +389,7 @@ impl CompleteDriver {
         if Stage::from_sequence(sequence) == Stage::Load {
             verify_destination(
                 &mut self.backend,
-                &metadata,
+                metadata,
                 &destination,
                 &retained.source.chunks,
             );
@@ -349,7 +407,7 @@ impl CompleteDriver {
         .unwrap();
         create_restore_safety_requirement(
             stage.layout().unwrap(),
-            &source_layout,
+            source_layout,
             stage.plan(),
             &retained.source_plan,
             &requirement,
@@ -374,9 +432,7 @@ impl CompleteDriver {
         )
         .unwrap();
         let restore_source = if Stage::from_sequence(sequence) == Stage::Load {
-            let upload = journal
-                .prepare_ic_snapshot_upload_metadata(&retained.source_plan, TOKEN, &metadata)
-                .unwrap();
+            let upload = source.upload(&journal);
             let original = retained.allocation.as_ref().unwrap();
             let allocation = IcSnapshotUploadReply::decode(&upload, &original.raw_reply).unwrap();
             let data = journal
@@ -389,14 +445,14 @@ impl CompleteDriver {
                 )
                 .unwrap();
             IcRestoreSource::uploaded(
-                &source_layout,
+                source_layout,
                 &data,
                 stage.workflow_layout(),
                 &stage.binding().predecessors()[0],
             )
             .unwrap()
         } else {
-            IcRestoreSource::existing(&source_layout, &retained.source_plan, metadata.request())
+            IcRestoreSource::existing(source_layout, &retained.source_plan, metadata.request())
         };
         let backend = RefCell::new(&mut self.backend);
         let mut provider = RestoreProvider {
@@ -463,7 +519,7 @@ impl CompleteDriver {
         if Stage::from_sequence(sequence) == Stage::Load {
             let acceptance = verify_loaded(
                 &mut backend.borrow_mut(),
-                &metadata,
+                metadata,
                 &destination,
                 &retained.source.chunks,
             );
@@ -668,17 +724,12 @@ fn rebuild(
     )))
     .ok()
     .map(|hash| ArtifactChecksumRecord::from_hash(&hash).unwrap());
-    CompleteDriver {
+    let mut driver = CompleteDriver::from_retained(
         backend,
-        workflow: workflow.clone(),
-        binds: Vec::new(),
-        capture_failure: super::CaptureFailure::None,
-        data_failure: super::ReadFailure::None,
-        snapshot: Some(snapshot),
-        metadata: Some(evidence),
-        stages: Vec::new(),
-        stop_before,
-        restore: Some(RestoreProgress {
+        workflow,
+        snapshot,
+        evidence,
+        Some(RestoreProgress {
             source_binding: read_json(
                 &source_root.join("stage-binding.json"),
                 MAX_EXECUTION_STAGE_BYTES,
@@ -694,15 +745,18 @@ fn rebuild(
             allocation,
             acceptance,
         }),
-        restore_failure: failure,
-    }
+    );
+    driver.stop_before = stop_before;
+    driver.restore_failure = failure;
+    driver
 }
 
 #[expect(
     clippy::too_many_lines,
     reason = "keep original intents, interruption custody, refusal and completed replay in one qualification trace"
 )]
-pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
+pub(crate) fn run_round_trip(scenario: RoundTripScenario) {
+    let failure = scenario.failure();
     let mut backend = Backend::new();
     assert!(
         lifecycle(
@@ -739,19 +793,8 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         "fixture-restore-allocation.json",
         &serde_json::to_vec(&workflow).unwrap(),
     );
-    let mut driver = CompleteDriver {
-        backend,
-        workflow: capture_workflow.clone(),
-        binds: Vec::new(),
-        capture_failure: super::CaptureFailure::None,
-        data_failure: super::ReadFailure::None,
-        snapshot: None,
-        metadata: None,
-        stages: Vec::new(),
-        stop_before: None,
-        restore: None,
-        restore_failure: failure,
-    };
+    let mut driver = CompleteDriver::new(backend, &capture_workflow);
+    driver.restore_failure = failure;
     let captured = ready(run_new_execution_workflow(
         &capture_layout,
         &capture_workflow,
@@ -773,11 +816,11 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
     }
     driver.workflow = workflow.clone();
     driver.stages.clear();
-    driver.stop_before = interrupt.then_some(Stage::Allocation.sequence());
+    driver.stop_before =
+        matches!(scenario, RoundTripScenario::Interrupted).then_some(Stage::Allocation.sequence());
     let mut result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
     executed.extend_from_slice(&driver.stages);
-    if interrupt {
-        assert!(failure == Failure::None);
+    if let RoundTripScenario::Interrupted = scenario {
         for stop in [
             Some(Stage::Load.sequence()),
             Some(Stage::Start.sequence()),
@@ -913,19 +956,8 @@ pub(crate) fn run_round_trip(failure: Failure, interrupt: bool) {
         let calls = driver.backend.calls;
         // Forget all learned in-memory state: completed replay must invoke no driver.
         let backend = driver.backend;
-        driver = CompleteDriver {
-            backend,
-            workflow: workflow.clone(),
-            binds: Vec::new(),
-            capture_failure: super::CaptureFailure::None,
-            data_failure: super::ReadFailure::None,
-            snapshot: None,
-            metadata: None,
-            stages: Vec::new(),
-            stop_before: Some(Stage::Capture.sequence()),
-            restore: None,
-            restore_failure: Failure::None,
-        };
+        driver = CompleteDriver::new(backend, &workflow);
+        driver.stop_before = Some(Stage::Capture.sequence());
         assert_eq!(
             ready(run_retained_execution_workflow(
                 &layout,
