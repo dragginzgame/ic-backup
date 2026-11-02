@@ -13,7 +13,7 @@ use clap::Parser;
 pub(super) use command::Mode;
 use command::{Action, Arguments};
 pub(super) use config::{ApplicationConfig, Config};
-use stage::Stage;
+pub(super) use stage::Stage;
 
 use ic_backup::{
     model::{

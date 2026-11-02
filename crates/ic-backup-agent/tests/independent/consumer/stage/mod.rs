@@ -6,7 +6,7 @@ use std::{
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 #[repr(u64)]
-pub(super) enum Stage {
+pub(in super::super) enum Stage {
     Capture = 0,
     Metadata = 1,
     Download = 2,

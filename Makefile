@@ -17,7 +17,7 @@ RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
-CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links shell-check fmt-check clippy tooling-check release-check hooks-check test doc check-msrv package
+CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links shell-check fmt-check golden-check clippy tooling-check release-check hooks-check test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
@@ -28,7 +28,7 @@ CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-c
         tags tasks test tooling-check validate version
 .PHONY: dependency-boundaries-check dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 .PHONY: install-release-editor release-editor-check repository-files-check
-.PHONY: compiler-check
+.PHONY: compiler-check golden-check
 
 help:
 	@echo "check                       Compile this library's native targets"
@@ -48,6 +48,7 @@ help:
 	@echo "fmt                         Sort Cargo manifests and format Rust"
 	@echo "fmt-check                   Check Cargo ordering and Rust formatting"
 	@echo "format-tools-check          Check prepared Cargo formatters offline"
+	@echo "golden-check                Check independent snapshot vectors and contract JSON"
 	@echo "help                        Show available commands"
 	@echo "hooks-check                 Test the pre-commit formatter"
 	@echo "host-tools-check            Verify local jq/yq/ripgrep/cloc offline"
@@ -117,6 +118,11 @@ deps:
 
 doc:
 	+RUSTDOCFLAGS="-D warnings" cargo doc --offline --locked -p ic-backup -p ic-backup-agent --no-deps --all-features
+
+golden-check:
+	perl scripts/dev/generate-snapshot-metadata.pl --check
+	perl scripts/dev/generate-snapshot-data.pl --check
+	perl scripts/dev/generate-snapshot-upload.pl --check
 
 ensure-clean:
 	+@$(RELEASE) ensure-clean

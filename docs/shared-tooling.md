@@ -20,20 +20,25 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The current source is Shared Tooling **0.27.27**, commit
-`651f5f7acb2e3055abd51ba5f835a2112801666a`,
-independently selected from upstream main and exported from a clean isolated
-checkout. The exporter preserves its committed version label and exact revision;
+The current source is Shared Tooling **0.27.28**, commit
+`03b5d9a47beac9767ced96008a9e7b450b61a82a`, the merged
+[inventory fix PR](https://github.com/dragginzgame/shared-tooling/pull/348).
+The canonical exporter uses that exact commit from a clean isolated checkout;
 uncommitted sibling edits supply no provenance.
 
-This revision advances from `fd9390e` with **144 selected payloads**. The shared
-validation runner adds source-bound release-group plans through an opt-in
-interface and its new companion. Backup retains its existing positional targets,
-complete release gate and original validation/receipt ownership; no group plan,
-stage omission or proof-reuse mode is enabled. Common executable catalogs and
-installer/build policy bytes are unchanged by this Shared refresh. The linked
-runner guide is explicitly selected through the exporter because the new shared
-group guide references it without declaring that documentation companion.
+This revision advances from `651f5f7`, retaining **144 selected payloads** with
+seven updates and no additions or retirements. Owned-tree inventory now refuses
+traversal errors instead of returning a partial tree. Compiler-cache operations
+reject incomplete scans; tool-store maintenance protects unreadable generations.
+The producer's two maintenance fixtures cover both callers and retained evidence.
+
+The accompanying governance changes allow private path-only development helpers
+in independent release groups and narrowly owned benchmark statistics without a
+Metrics dependency. Backup keeps its coordinated workspace, existing dependencies
+and complete positional release gate; no private helper, group plan, stage omission
+or proof-reuse mode is enabled. Common executable catalogs and installer/build
+identity policy are unchanged. The release-group guide now declares the runner
+guide as a companion; Backup also retains its existing explicit selection.
 
 The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
 pin; no local exception is needed.

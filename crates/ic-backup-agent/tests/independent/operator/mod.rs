@@ -14,6 +14,43 @@ pub(super) async fn inspect(fixture: &Fixture, root: &Path, capture: bool) -> se
     serde_json::from_slice(&fs::read(result.stdout).unwrap()).unwrap()
 }
 
+// Match opaque identities rather than treating allocation order as an index.
+pub(super) fn stage_row(progress: &serde_json::Value, stage: Stage) -> &serde_json::Value {
+    progress["stages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["stage_sequence"].as_u64() == Some(stage.sequence()))
+        .expect("declared stage is present in progress")
+}
+
+pub(super) fn operation_row(progress: &serde_json::Value, sequence: u64) -> &serde_json::Value {
+    progress["operations"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["operation_sequence"].as_u64() == Some(sequence))
+        .expect("declared operation is present in progress")
+}
+
+#[test]
+fn inspection_matches_original_sequences_in_reordered_progress() {
+    let progress = serde_json::json!({"stages": [
+        {"stage_sequence": 6, "state": {"state": "unprepared"}},
+        {"stage_sequence": 5, "state": {"state": "prepared", "progress": {"operations": [
+            {"operation_sequence": 21, "attempts": {"pending_mutation": null}},
+            {"operation_sequence": 8, "attempts": {"pending_mutation": 1}}
+        ]}}}
+    ]});
+    assert_eq!(
+        stage_row(&progress, Stage::Start)["state"]["state"],
+        "unprepared"
+    );
+    let load = &stage_row(&progress, Stage::Load)["state"]["progress"];
+    assert_eq!(operation_row(load, 8)["attempts"]["pending_mutation"], 1);
+    assert!(operation_row(load, 21)["attempts"]["pending_mutation"].is_null());
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_operator_retention_and_partial_output_failures_preserve_originals() {
     for mode in [
@@ -65,17 +102,20 @@ async fn failure(mode: Mode) {
     child(&fixture, &root, mode).await.assert_status(1);
     let progress = inspect(&fixture, &root, true).await;
     let stage = if mode == Mode::CaptureFailPartial {
-        2
+        Stage::Download
     } else {
-        0
+        Stage::Capture
     };
-    let row = &progress["stages"][stage]["state"]["progress"];
+    let row = &stage_row(&progress, stage)["state"]["progress"];
     assert_eq!(
         row["attempts"]["mutations_used"],
-        if stage == 2 { 2 } else { 1 }
+        if stage == Stage::Download { 2 } else { 1 }
     );
-    let pending = &row["operations"][usize::from(stage == 2)]["attempts"];
-    assert_eq!(row["applied_operations"], usize::from(stage == 2));
+    let pending = &operation_row(row, u64::from(stage == Stage::Download))["attempts"];
+    assert_eq!(
+        row["applied_operations"],
+        usize::from(stage == Stage::Download)
+    );
     assert_eq!(pending["pending_mutation"], 1);
     assert_eq!(pending["mutations_remaining"], 0);
     let before = files(&root);
@@ -88,15 +128,16 @@ async fn failure(mode: Mode) {
         snapshot_count(&mut fixture).await,
         usize::from(mode != Mode::CaptureFailIngress)
     );
-    if stage == 2 {
+    if stage == Stage::Download {
         partial(&root);
     }
     assert!(
-        !root
-            .join("capture/execution-stage-2/download-manifest.json")
+        !Stage::Download
+            .path(&root)
+            .join("download-manifest.json")
             .exists()
     );
-    assert!(!root.join("restore/execution-stage-3").exists());
+    assert!(!Stage::Allocation.path(&root).exists());
     eprintln!(
         "Independent operator failure evidence retained: {}",
         fixture.root.display()
@@ -104,7 +145,7 @@ async fn failure(mode: Mode) {
 }
 
 fn partial(root: &Path) {
-    let stage = root.join("capture/execution-stage-2");
+    let stage = Stage::Download.path(root);
     let record: ic_backup::model::download_journal::DownloadJournalRecord =
         serde_json::from_slice(&fs::read(stage.join("download-journal.json")).unwrap()).unwrap();
     let artifact = &record.artifacts()[0];

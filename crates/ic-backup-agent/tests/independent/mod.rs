@@ -6,7 +6,7 @@ mod consumer;
 mod operator;
 
 use super::*;
-use consumer::Mode;
+use consumer::{Mode, Stage};
 use std::{
     collections::BTreeMap,
     os::unix::fs::OpenOptionsExt,
@@ -174,11 +174,21 @@ fn files(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
 
 async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
     let payload = support::payload(Method::TakeCanisterSnapshot, &fixture.target, None);
-    let original = fs::read(root.join("capture/execution-stage-0/reply-0.candid")).unwrap();
+    let original = fs::read(
+        Stage::Capture
+            .path(root)
+            .join(format!("reply-{}.candid", Stage::Capture.sequence())),
+    )
+    .unwrap();
     let original = IcSnapshotReply::decode(&payload, &original).unwrap();
     let original_request =
         IcSnapshotMetadataRequest::new(&fixture.target, original.snapshots()[0].id()).unwrap();
-    let raw = fs::read(root.join("capture/execution-stage-1/reply-1.candid")).unwrap();
+    let raw = fs::read(
+        Stage::Metadata
+            .path(root)
+            .join(format!("reply-{}.candid", Stage::Metadata.sequence())),
+    )
+    .unwrap();
     let expected = IcSnapshotMetadataReply::decode(&original_request, &raw).unwrap();
     let (_, raw) = fixture
         .mutation(Method::TakeCanisterSnapshot, None, false)
@@ -210,7 +220,7 @@ async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
             .unwrap();
     let download = ic_backup::model::ic_snapshot_download::IcSnapshotDownloadPlan::new(
         &capture,
-        2,
+        Stage::Download.sequence(),
         &expected,
         1024 * 1024,
     )
@@ -221,8 +231,12 @@ async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
         .map(|(_, bytes)| ArtifactChecksumRecord::from_bytes(bytes))
         .collect();
     for (index, (request, (kind, bytes))) in download.requests().iter().zip(chunks).enumerate() {
-        let raw =
-            fs::read(root.join(format!("capture/execution-stage-2/reply-{index}.candid"))).unwrap();
+        let raw = fs::read(
+            Stage::Download
+                .path(root)
+                .join(format!("reply-{index}.candid")),
+        )
+        .unwrap();
         let reply = IcSnapshotDataReply::decode(request, &raw).unwrap();
         assert_eq!(
             ic_platform::candid::contract::encode_one(request.kind()).unwrap(),
@@ -233,7 +247,7 @@ async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
     let restore: ic_backup::model::execution_workflow::ExecutionWorkflowRecord =
         serde_json::from_slice(&fs::read(root.join("restore/execution-workflow.json")).unwrap())
             .unwrap();
-    let arguments = fs::read(root.join("restore/execution-stage-5/intent.candid")).unwrap();
+    let arguments = fs::read(Stage::Load.path(root).join("intent.candid")).unwrap();
     let args: ic_platform::management_canister_types::LoadCanisterSnapshotArgs =
         ic_platform::candid::decode_one(
             &arguments,
@@ -297,9 +311,12 @@ async fn exercise(lose_load: bool) {
         .await
         .assert_status(if lose_load { 75 } else { 0 });
     let progress = operator::inspect(&fixture, &root, false).await;
-    let rows = progress["stages"].as_array().unwrap();
-    assert_eq!(rows.last().unwrap()["state"]["state"], "unprepared");
-    let load = &rows[2]["state"]["progress"]["operations"][0];
+    assert_eq!(
+        operator::stage_row(&progress, Stage::Start)["state"]["state"],
+        "unprepared"
+    );
+    let load_progress = &operator::stage_row(&progress, Stage::Load)["state"]["progress"];
+    let load = operator::operation_row(load_progress, Stage::Load.sequence());
     assert_eq!(
         load["attempts"]["pending_mutation"],
         if lose_load {
@@ -320,10 +337,10 @@ async fn exercise(lose_load: bool) {
         let before = files(&root);
         child(&fixture, &root, Mode::Restore).await.assert_status(1);
         assert_eq!(files(&root), before);
-        assert!(!root.join("restore/execution-stage-6").exists());
+        assert!(!Stage::Start.path(&root).exists());
         let references: ic_backup::model::restore_references::RestoreReferencesRecord =
             serde_json::from_slice(
-                &fs::read(root.join("capture/execution-stage-2/restore-references.json")).unwrap(),
+                &fs::read(Stage::Download.path(&root).join("restore-references.json")).unwrap(),
             )
             .unwrap();
         let original: ic_backup::model::execution_workflow::ExecutionWorkflowRecord =
@@ -336,7 +353,12 @@ async fn exercise(lose_load: bool) {
             && entry.authority() == original.digest().hash()));
         let journal: ic_backup::model::attempt_journal::AttemptJournalRecord =
             serde_json::from_slice(
-                &fs::read(root.join("restore/execution-stage-5/attempt-5.json")).unwrap(),
+                &fs::read(
+                    Stage::Load
+                        .path(&root)
+                        .join(format!("attempt-{}.json", Stage::Load.sequence())),
+                )
+                .unwrap(),
             )
             .unwrap();
         assert_eq!(journal.view().pending_mutation, Some(1));
@@ -346,7 +368,7 @@ async fn exercise(lose_load: bool) {
         let before = files(&root);
         child(&fixture, &root, Mode::Start).await.assert_status(1);
         assert_eq!(files(&root), before);
-        assert!(!root.join("restore/execution-stage-6").exists());
+        assert!(!Stage::Start.path(&root).exists());
         let acceptance = verify(&mut fixture, &root).await;
         consumer::retain(
             &root.join("acceptance.json"),

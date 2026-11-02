@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.55.3]
+
+### ⬆️ Dependencies
+
+- Refresh locked Host Artifacts, FS and Process to 0.74.2.
+
+### 🩹 Fixed
+
+- Adopt Shared Tooling's refusal of incomplete maintenance inventories after
+  traversal errors, preserving unreadable trees and compiler-cache age evidence.
+
+### 🧹 Cleanup
+
+- Remove the bounded-record decoder's forwarding layer while preserving count,
+  aggregate and malformed-input admission.
+
+### 🧪 Testing
+
+- Check independent metadata, data and upload golden generators in the normal
+  validation gate, rejecting drift in their vectors and contract JSON.
+- Reuse the independent consumer's stage catalog for parent fixture paths and
+  inspect progress by original stage/operation identity rather than array position.
+
 ## [0.55.2] - 2026-11-02
 
 ### ⬆️ Dependencies

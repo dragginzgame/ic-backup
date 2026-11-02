@@ -584,6 +584,7 @@ adoption, retained evidence and Testkit command routing. Its proof owners are:
 | --- | --- |
 | Exact snapshot bytes/modes and tamper refusal | `shared-tooling-check`, `scripts/ci/test-tooling.sh` |
 | Input-change stop, later-stage refusal and original failure retention | `scripts/ci/test-tooling.sh`, `make release-check` |
+| Independent snapshot vectors and contract JSON match their generators | `golden-check`; `scripts/ci/test-tooling.sh` rejects drift in every generated output |
 | Local documentation, pins and package graph | `check-doc-links`, `dependency-pins-check`, `check`, `package` |
 | Prepared host/IC/Cargo/Testkit tools and formatting | `tools-check`, `testkit-server-check`, `fmt-check`, `hooks-check` |
 | Evidence checksum/archive behavior and Testkit CLI routing | `tooling-check`'s three retained focused fixtures |

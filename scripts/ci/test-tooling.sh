@@ -28,6 +28,41 @@ finish() {
 }
 trap finish EXIT
 
+# Exercise the actual gate against valid JSON that differs from each generator's
+# exact output. Vector decoding alone does not check the maintained contract JSON.
+golden="$FIXTURE/golden"
+mkdir "$golden"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$golden" \
+    Makefile make/consumer.mk scripts/dev/SnapshotGolden.pm \
+    scripts/dev/generate-snapshot-metadata.pl scripts/dev/generate-snapshot-data.pl \
+    scripts/dev/generate-snapshot-upload.pl \
+    crates/ic-backup/src/model/ic_snapshot_metadata/tests/golden.json \
+    crates/ic-backup/src/model/ic_snapshot_data/tests/golden.json \
+    crates/ic-backup/src/model/ic_snapshot_upload/tests/golden.json \
+    docs/contracts/ic-snapshot-metadata.json docs/contracts/ic-snapshot-data.json \
+    docs/contracts/ic-snapshot-upload.json
+cat >> "$golden/Makefile" <<'MAKE'
+.PHONY: fixture-ci-targets
+fixture-ci-targets:
+	@printf '%s\n' $(CI_TARGETS)
+MAKE
+make --no-print-directory -s -C "$golden" fixture-ci-targets > "$golden/ci-targets.log"
+grep -Fx golden-check "$golden/ci-targets.log" >/dev/null
+make --no-print-directory -s -C "$golden" golden-check > "$golden/passing.log" 2>&1
+for family in metadata data upload; do
+    for output in "crates/ic-backup/src/model/ic_snapshot_$family/tests/golden.json" \
+        "docs/contracts/ic-snapshot-$family.json"; do
+        printf '\n' >> "$golden/$output"
+        if make --no-print-directory -s -C "$golden" golden-check > "$golden/rejected.log" 2>&1; then
+            echo "golden gate accepted changed output: $output" >&2; exit 1
+        fi
+        grep -F "generated content differs: $output" "$golden/rejected.log" >/dev/null
+        cp "$ROOT/$output" "$golden/$output"
+    done
+done
+make --no-print-directory -s -C "$golden" golden-check > "$golden/restored.log" 2>&1
+echo 'Consumer golden parity: PASS (all vector and contract outputs reject drift).'
+
 # Exercise this consumer's actual CI recipe, without compilation or duplicate
 # recipes. Only these unique targets substitute the graph-edit/next-stage effects.
 checkpoint="$FIXTURE/input-checkpoint"

@@ -12,7 +12,7 @@ where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
 {
-    deserialize_with::<D, T, _, _, _, _, LIMIT>(deserializer, expected, overflow, |_| {
+    deserialize_checked::<D, T, _, _, LIMIT>(deserializer, expected, overflow, |_| {
         Ok::<(), std::convert::Infallible>(())
     })
 }
@@ -27,23 +27,6 @@ pub(super) fn deserialize_checked<'de, D, T, C, F, const LIMIT: usize>(
 where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
-    C: fmt::Display,
-    F: FnMut(&T) -> Result<(), C>,
-{
-    deserialize_with::<D, T, _, _, C, F, LIMIT>(deserializer, expected, overflow, check)
-}
-
-fn deserialize_with<'de, D, T, X, E, C, F, const LIMIT: usize>(
-    deserializer: D,
-    expected: X,
-    overflow: E,
-    check: F,
-) -> Result<Vec<T>, D::Error>
-where
-    D: Deserializer<'de>,
-    T: Deserialize<'de>,
-    X: fmt::Display,
-    E: fmt::Display,
     C: fmt::Display,
     F: FnMut(&T) -> Result<(), C>,
 {

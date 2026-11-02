@@ -1,78 +1,50 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "651f5f7acb2e3055abd51ba5f835a2112801666a",
-  "label": "0.27.27",
-  "commit_title": "0.27.27",
+  "revision": "03b5d9a47beac9767ced96008a9e7b450b61a82a",
+  "label": "0.27.28",
+  "commit_title": "Merge pull request #348 from dragginzgame/fix/owned-tree-traversal",
   "reviewed_on": "2026-11-02",
-  "previous_revision": "fd9390ef797bfad8aaa05fdba8fcddec753b572c",
-  "previous_review_evidence": "/tmp/backup-deploy-0552.0OuUpHJW/before/docs/shared-tooling-review.json",
+  "previous_revision": "651f5f7acb2e3055abd51ba5f835a2112801666a",
+  "previous_review_evidence": "/tmp/backup-audit-fixes.PfeuvfwT/adoption-before/docs/shared-tooling-review.json",
   "consumer_baseline": {
-    "commit": "2b26bbe169237f5a4c82f3fbdfcebc8b23a6a3ed",
-    "version": "0.55.1",
-    "pending_notes": "0.55.2",
-    "worktree": "Seven accepted simplifications and incoming Testkit 0.80.1/Runtime 0.18.1 lockfile refresh prepared for the explicitly requested 0.55.2 delivery."
+    "commit": "5f94655f779431349393274e98f616fe580b0867",
+    "version": "0.55.2",
+    "pending_notes": "0.55.3",
+    "worktree": "Preserve the earlier accepted cleanup and staged Host 0.74.2 lockfile update. Add independent golden parity admission and adopt the delivered supplier inventory fix; do not stage or commit Backup."
+  },
+  "supplier_delivery": {
+    "pr": "https://github.com/dragginzgame/shared-tooling/pull/348",
+    "head": "833b66a52f3fe4312319ce9d2a283b638b44c149",
+    "merge": "03b5d9a47beac9767ced96008a9e7b450b61a82a",
+    "authority": "The user explicitly authorized opening and merging this source fix PR, then adopting its committed revision here. No supplier release, tag or package publication was requested or performed.",
+    "protection": "pr-protection.json and main-rules.json record no required branch reviews/checks or active main rulesets. Exact-head normal merge used no admin bypass. The author retained repository admin permission.",
+    "hosted_ci": "PR native/lint jobs were still in progress when merge was admitted. They are not passing native qualification; no wait for optional CI was added."
   },
   "provenance": {
-    "source_selection": "GitHub refs/heads/main independently selected the full commit. The canonical exporter and trusted verifier run from a clean isolated detached checkout; no sibling working-tree changes enter the snapshot.",
+    "source_selection": "Fetch and verify the authorized merged PR revision from GitHub in the isolated source clone. Detach that exact clean commit before canonical export; no sibling working-checkout changes enter the snapshot.",
     "export": {
       "payloads": 144,
-      "added": 3,
-      "updated": 6,
+      "added": 0,
+      "updated": 7,
       "removed": 0,
-      "entrypoints": "Existing roots retained; add docs/validation-runner.md explicitly because the new shared group guide links it without a companion declaration. Export its canonical bytes; do not patch vendored documents."
+      "entrypoints": "Retain all existing recorded roots. No takeover or hand-edited payload/manifest."
     },
-    "verification": "The original canonical export is retained. shared-source-proof.log in the latest evidence directory rechecks all 144 payload bytes and executable modes against the independently selected latest commit 651f5f7; no newer Shared revision or executable snapshot is selected.",
-    "archives": "Earlier Host/Platform/Build archive and Types comparisons remain under /tmp/backup-upstream-refresh.ti730kq7. Latest testkit-archive-proof.json and transitive-archive-proof.json authenticate Testkit 0.79.0, old/new PocketIC clients and Metrics against registry checksums and record their VCS identities.",
-    "catalogs": "Common host/Rust/IC executable catalogs and installer/build policy bytes are unchanged by this Shared revision."
-  },
-  "dependency_adoption": {
-    "production": {
-      "ic-host-artifacts": "0.74.1",
-      "ic-host-fs": "0.74.1",
-      "ic-host-process": "0.74.1",
-      "ic-platform": "0.18.0",
-      "ic-platform-types": "0.17.0 (through Platform only)"
-    },
-    "tools": {
-      "ic-build-release-metadata": "ic-build 0.74.0"
-    },
-    "development": {
-      "ic-testkit": "0.80.1 locked; manifest requirement remains ^0.80.0",
-      "ic-platform": "0.18.0 with development-only pocket-ic feature; no simulator alias",
-      "ic-platform-pocket-ic": "0.18.0 through Platform and Testkit",
-      "ic-platform-runtime": "0.18.1, target-specific Testkit dependency; host runtime features remain disabled"
-    },
-    "lock_scope": "The incoming lockfile replaces Testkit 0.80.0 with 0.80.1 and target-specific Runtime 0.18.0 with 0.18.1, removing Metrics 0.26.1. Release preparation preserves that exact lock selection; no dependency resolution/update is performed.",
-    "compatibility": "The Host 0.73 to 0.74 public-error identity migration was delivered in 0.55.0. This 0.55.2 patch preserves Host 0.74.1, Platform 0.18.0, Types 0.17.0, Candid/management DTO 0.11.0/external Principal 0.1.5/Agent 0.49.3 identities and product schemas. No new consumer migration.",
-    "simulator_compatibility": "Authenticated Testkit 0.80.1 archive comparison changes only src/benchmark/analysis.rs and removes the Metrics dependency. All PocketIC source files match 0.80.0 byte-for-byte; authenticated server 16.1.0 and Platform/client 0.18 remain selected. Wire remains disabled."
+    "verification": "adopted-source-proof.json compares every payload byte, SHA-256 and executable state with the merged commit. installed-inventory-proof.json verifies the actual adopted helper refuses unreadable/missing trees and retains original evidence.",
+    "catalogs": "Common executable catalogs, build-identity policy and setup recipes are unchanged. Offline tools-check passes without installation or reclamation."
   },
   "consumer_decisions": [
-    "Keep one coordinated Backup release group and the complete positional CI/release gate. The new group-plan parser is available as a derived companion but no plan or omission mapping is enabled.",
-    "Share the published Platform 0.18 facade/client, Types 0.17 and Host 0.74.1 across production and Testkit. Remove the temporary simulator alias; keep pocket-ic and Testkit on development edges only.",
-    "Independent normal consumers admit only new production Host/Platform versions and exclude the old simulator stack, Testkit, PocketIC and WAT. Public Host type probes retain exact producer/error identities.",
-    "Prepare the new Build 0.74.0 CLI through existing setup and qualify real metadata preparation; keep Testkit's authenticated PocketIC 16.1.0 server and old/failed bundles.",
-    "Preserve the four accepted refactors, all original journals/artifacts, effect authority and exact recovery. No own-version bump, staging, release, publication, sibling work or cleanup is part of adoption."
+    "OwnedTree inventory now makes traversal warnings fatal. Compiler-cache reporting/removal refuses partial ownership evidence; tool-store maintenance protects unreadable generations.",
+    "Review the preceding 0.27.28 governance and release-group changes: private path-only development helpers are allowed; ordinary private benchmark statistics need no Metrics dependency. Backup adds neither private members nor dependencies.",
+    "Retain one coordinated workspace, the complete positional CI/release gate, exact resume receipt check and existing public identities. Do not enable release-group proof reuse, omitted stages or a group plan.",
+    "Run the existing metadata/data/upload golden generators with --check through golden-check in normal CI. The consumer fixture verifies CI membership and rejects drift in all six vector/contract outputs.",
+    "Keep Rust minimum and exact development/release pin at 1.99.1. Preserve own versions, lock selections, staging, journals, artifacts, retained evidence and tool generations."
   ],
   "qualification": {
-    "evidence_directory": "/tmp/backup-testkit-refresh.jXzVq3jM",
-    "previous_evidence_directory": "/tmp/backup-platform-testkit-refresh.lw0kvf7w",
-    "source": "selection.json, archive-source-proof.json and normalized-manifest.diff authenticate the published Testkit 0.80.0 checksum/VCS identity and prove unchanged Rust sources. lock-scope-proof.json and feature-proof.json establish bounded resolution and disabled Wire.",
-    "setup": "testkit-setup.log passes exact CLI compilation/receipt admission and retains authenticated PocketIC 16.1.0. server-admission-complete.log passes offline admission. The earlier server-admission.log retains a refusal while setup still owned its lock; qualification continued only after setup completed.",
-    "lint": "admission.log records actual rustc/Cargo 1.99.1 and passes inheritance/IC boundary admission; clippy.log passes both libraries, all targets/features, with -D warnings.",
-    "product": "core-pocketic.log passes all six connected original-workflow cases; agent-pocketic.log passes real Agent capture, complete transfer, upload and same-ID restore. testkit-routing.log passes actual setup/check routing and refusal fixtures.",
-    "inputs": "qualified-inputs.json and qualified-input-comparison.json prove all 854 captured inputs unchanged across qualification. Review/handoff updates afterward receive focused documentation checks.",
-    "checks": "final-checks.log records formatting, links, shared snapshot integrity, repository/license admission, review JSON and whitespace checks.",
-    "limits": "Focused Linux qualification. No new full CI/release gate, independent package/MSRV consumer rerun, native macOS, Canic or live IC acceptance. Earlier consumer evidence remains retained in the previous review. No staging, commit, own-version bump, release, publication, sibling edits or cleanup.",
-    "scope_note": "This object retains historical Testkit 0.80.0 adoption evidence. Current fixture qualification and authorized release preparation are recorded below and in docs/status/current.md."
-  },
-  "release_preparation": {
-    "requested_version": "0.55.2",
-    "evidence_directory": "/tmp/backup-deploy-0552.0OuUpHJW",
-    "archive_proof": "testkit-source-proof.json authenticates the exact locked 0.80.1 checksum and VCS identity; testkit-manifest.diff records the dependency removal.",
-    "focused_evidence": [
-      "/tmp/backup-four-fixture-simplifications.k78vvo9k",
-      "/tmp/backup-three-simplifications.i_p7q3h0"
-    ],
-    "gate": "The standard complete release gate, source commit/tag/push and registry verification will produce their own retained logs and receipt; focused evidence alone is not delivery acceptance."
+    "evidence_directory": "/tmp/backup-audit-fixes.PfeuvfwT",
+    "supplier": "Both maintenance fixtures, focused ShellCheck, Perl syntax, version check and whitespace checks pass. The new compiler-cache regression fails with the original helper. Qualified source/test bytes are identical in the contribution and merged revisions.",
+    "consumer": "Offline tool/snapshot/dependency admission, golden parity with six rejection cases, consumer tooling, hook fixtures and the release-adapter suite all pass. Exact logs: adoption-admission.log, adopted-consumer-tooling.log, adopted-hooks.log and adopted-release-adapter.log.",
+    "checks": "Final formatting, documentation links, snapshot/source proof, review JSON, repository/license and whitespace checks are recorded with this batch.",
+    "inputs": "adoption-inputs-before.json and preserved-adoption-inputs.json record unchanged Cargo manifests/lock and incoming index. No dependency updates or Backup Git delivery effects occur.",
+    "limits": "Focused tooling qualification on Linux. No new full CI/release gate, product Rust/simulator qualification, native macOS, installed Canic or live IC acceptance. The incoming Host 0.74.2 lock update is preserved but not independently qualified by this tooling batch."
   }
 }

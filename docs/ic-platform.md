@@ -74,9 +74,9 @@ that feature, and the consumed Candid, management DTO, external Principal and
 Agent adapter sources remain unchanged. Types 0.17 supplies the production owned
 Principal, shared by the simulator stack through the same published supplier.
 
-The workspace requires and resolves Host Artifacts/FS/Process 0.74.1. Consumers
+The workspace requires Host Artifacts/FS/Process 0.74.1 and resolves 0.74.2. Consumers
 sharing public Host error types must align their direct selections to 0.74.
-Locked Testkit 0.80.1 selects Host 0.74.1 and Platform/client 0.18, and removes
+Locked Testkit 0.80.1 shares Host 0.74.2 and Platform/client 0.18, and removes
 its Metrics dependency. Its PocketIC source is unchanged from 0.80.0; optional
 Wire remains outside Backup's graph. The old Host 0.73, Platform 0.17, Types 0.16
 and both Metrics generations are no longer required by the development graph.
