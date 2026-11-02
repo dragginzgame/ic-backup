@@ -142,6 +142,6 @@ passed before cleanup. Focused post-change checks cover snapshot byte goldens,
 empty/interleaved/maximum regions, changed descriptors and extents, corrupted
 same-length content, retained journals, publication/recovery and real PocketIC
 transfer/upload/restore. Independent consumers check the normal dependency graph
-and Rust 1.91 without simulator feature unification. Exact commands, results and
+and the declared compiler floor without simulator feature unification. Exact commands, results and
 remaining host coverage are recorded in the [current handoff](status/current.md).
 No complete local release gate or sibling suite is implied by this audit.

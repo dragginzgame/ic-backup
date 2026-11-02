@@ -1,102 +1,91 @@
-# Current handoff — 2026-11-01
+# Current handoff — 2026-11-02
 
-## Published Platform and Testkit adoption
+## Shared Tooling 0.27.26
 
-The workspace now requires Platform **0.17.0** and Testkit **0.77.0**, resolving
-both from crates.io. Their shared native PocketIC client is the maintained
-**ic-platform-pocket-ic 0.17.0** package; canonical owned Principal comes from
-**Types 0.16.0**. This resolves the previous published Testkit/client mismatch.
-The former blocked attempt and original handoff are archived under this batch's
-`before/`; candidate-only proofs retain their original scope.
+Adopted commit `e84252f5740bacd708359580455ea2b6fd67df38`, independently
+selected from GitHub main and exported from a clean isolated checkout. The
+canonical preview/refresh retains existing entrypoints and derives **141**
+payloads: seven additions, eighteen updates, no removals. Paired source/revision
+verification proves exact bytes and executable modes; no payload was patched.
+The committed version is 0.27.26; upstream notes remain labelled Unreleased.
 
-Official metadata and checksum-verified old/new archives are retained in
-`/tmp/backup-platform-testkit-adopt.j3pankrp/`. Testkit's Rust source is identical
-to **0.76.2**. Platform's consumed Candid, management, external Principal and Agent
-facade files are unchanged from **0.16.0**. Types changes concern optional
-self-authentication; Backup selects only `principal-external`. Principal admission,
-identity/hash behavior, external SDK types and management wire contracts retain
-their existing behavior. No product Rust migration or public owned Principal API
-change is required. Own versions remain **0.53.5**; the compatible **0.53.6** draft
-records the dependency batch. Changes remain unstaged/uncommitted.
+The shared Rust **1.99.1** policy now matches Backup's existing floor and pin;
+the obsolete local exception is removed. Common executable catalogs, workspace
+manifests, lockfile, compiler pin and product Rust are unchanged from task entry.
+Platform's ownership guidance preserves the current facade use for external
+DTOs, hashing and Agent transport. No new crate dependency, runtime owner or
+application deployment obligation was introduced.
 
-Only the required Platform/Types/Testkit supplier entries changed in the incoming
-lockfile: the old registry PocketIC client is replaced by the owned client, and
-the target-dependent owned Runtime **0.17.1** entry is added. Scoped online Cargo
-updates and locked fetch preserved every unrelated selected package. Host
-Artifacts/FS/Process stay at the incoming **0.73.6** selections under **0.73.5**
-requirements; arithmetic-only Metrics stays **0.24.6**. Optional Wire remains
-unselected. Runtime is absent from both production host graphs.
+Explicit setup adopts the new native-input identity, registers this checkout's
+current tool requirements and trims successful compilation scratch after
+executable/receipt admission. Common tools and Testkit reuse matching generations;
+Build **0.73.1** is rebuilt and admitted. Existing generations and failed evidence
+remain retained. No store reclamation, legacy migration, product compiler-cache
+maintenance or artifact cleanup was run. Contributors should rerun
+`make install-tools`, then `make tools-check`, after adopting this snapshot.
 
-Independent normal and published-consumer admission now rejects the maintained
-PocketIC package by resolved identity alongside Testkit, registry PocketIC and
-WAT. Existing fixture cases exercise the new identity, including renamed edges.
-No vendored Shared files or runtime/product policies were changed.
+The baseline keeps work/delivery with each requested repository owner. No sibling
+source contribution or unsolicited adoption PR was made. Backup retains its
+coordinated release group, default released-version mode, local publication and
+metadata adapters, and mandatory exact resume receipt check. Optional group
+proof reuse and bootstrap observation are not activated.
 
-## Fresh focused qualification
+## Focused qualification
 
-Evidence is `/tmp/backup-platform-testkit-adopt.j3pankrp/`: incoming copies/diff,
-registry metadata and verified archives, source/manifest comparisons, full locked
-metadata, production trees, graph proofs, frozen inputs and command logs.
+[The adoption review](../shared-tooling-review.json) records provenance,
+decisions and evidence at `/tmp/backup-shared-refresh.qlg7i32c/`.
 
-- Strict both-package all-target/all-feature Clippy passes (`clippy.log`).
-- Formatting, Cargo inheritance/pins, direct IC dependency boundaries and local
-  documentation links pass (`source-checks.log`, final handoff checks). The actual
-  Linux normal/build trees retain one Platform/Types/Candid/management/Principal
-  identity, with Agent only in Agent; simulator/runtime/Wire/Metrics/WAT/CLI
-  packages are excluded (`production-graph-proof.json`). The reviewed snapshot
-  has no generic graph helper; its failed attempted invocation is retained and
-  actual locked Cargo observations supply the explicit proof instead.
-- Both graph-admission fixture sections pass (`graph-fixtures.log`); this runs the
-  affected native and published consumer cases without unrelated tooling suites.
-- Both independent normal consumers pass on actual Rust **1.91.0**
-  (`msrv-consumers.log`, `target/msrv-consumers.g5qufG/`). Core also checks public
-  Host checksum/publication error identities. This is not a full MSRV matrix.
-- All **12 selected Core contract tests** pass (`core-contract-tests.log`), covering
-  canonical principal aliases, exact request bytes, inventory/authority hashes,
-  malformed declarations and admission bounds.
-- Both real Core PocketIC cases pass (`core-pocketic.log`): original same-ID
-  capture/restore/effect-free replay and resume at allocation/load/start. Their
-  retained roots are `/tmp/ic-backup-pocketic-3442151-{0,1}`.
-- The independent normal Agent consumer passes real authenticated cold capture,
-  restore acceptance and terminal replay (`agent-pocketic.log`). Its retained
-  roots are `/tmp/ic-backup-agent-pocketic-3463653-1` and
-  `/tmp/ic-backup-agent-independent-build-3463653-0`. Together with the Core
-  cases, all **15 selected tests** pass on the published dependency graph.
+- Explicit setup and complete offline tool admission pass. The existing native
+  shared-tool reuse CI step passes locally, including download refusal,
+  application flag/wrapper isolation and exact binary reuse.
+- Snapshot/source proof, Cargo inheritance and dependency boundaries,
+  ShellCheck, new Perl helper syntax, formatting and local links pass.
+- Consumer fixtures pass actual Make boundary composition, changed-input and
+  graph refusal, snapshot tamper/evidence retention and Testkit routing.
+- Release preparation and exact receipt/resume selections pass using isolated
+  substitutes. Registered cases remain in `target/shared-release-tests.ljD0Ga`
+  and `target/shared-release-tests.0VJDDY`; no real release effects occurred.
+- Captured inputs stayed unchanged during qualification. Review/handoff edits
+  after those checks receive focused link, JSON, snapshot and diff checks.
 
-The exact locked Testkit **0.77.0** CLI is prepared and its offline server check
-passes. The first setup attempt timed out behind an active shared installer for
-another consumer; its failure log is retained. After that owner finished, retry
-reused its admitted cache. The authenticated PocketIC server remains **16.1.0**;
-old/failed bundles and original fixture evidence remain retained. Both simulator
-suites authenticate assets through the selected Testkit library before startup.
-Frozen Rust/manifest/lock/graph inputs match the passing validation.
+This is fresh Linux tooling qualification. No new full repository gate, product
+runtime/PocketIC suite or native macOS run was executed for the snapshot refresh.
+Earlier full CI remains scoped to its recorded source and locked graph.
 
-No full repository CI/release gate, normalized registry package acceptance, fresh
-native macOS matrix, installed-IC or live Canic qualification was run. Focused
-native consumers and actual simulator cases qualify this graph; they do not grant
-generic application or live effect authority.
+## 0.54 delivery source
 
-## Preserved baseline and evidence
+The maintainer requested deployment of the complete **0.54.0** batch to
+`origin/main` and crates.io. This source uses **0.53.6** package metadata and an
+undated **0.54.0** draft; the standard minor-release runner owns their finalization.
+The generated [release receipt](../release.json), annotated Git tag and registry
+observations own the actual delivery result. Existing
+Testkit **0.78.0**, arithmetic-only Metrics **0.25.1**, compiler and publication
+changes remain intact. The incoming graph includes `cc` **1.11.0** and
+`crc32fast` **1.5.4**; this adoption performed no dependency update or downgrade.
 
-The user-released source baseline remains **0.53.5**, commit `74c9a0e`. The four
-previous simplifications and their **74 focused passes** retain their original
-proof under `/tmp/backup-four-cleanup.4kn9mu5z/`. The prior Host/Testkit receipt is
-`/tmp/backup-host-testkit-update.vxhtct1w/`; prior Platform candidate work is
-`/tmp/backup-platform-adopt.oex0l5i7/`, with its upstream draft PR #306. Those
-historical states are not current publication or adoption blockers.
+[#77 — Adopt Rust 1.99.1 and consolidate compiler qualification](https://github.com/dragginzgame/ic-backup/issues/77)
+and
+[#76 — Reuse shared Cargo publication attempt mechanics behind local admission](https://github.com/dragginzgame/ic-backup/issues/76)
+are included in the authorized delivery batch. Compiler admission records
+actual Cargo/rustc identities before native qualification. Independent normal
+consumers, archive-pair builds and the Agent journey select the declared compiler;
+Linux, Apple Silicon and Intel macOS jobs remain in CI. Publication retains exact
+source/arguments/outcomes behind the local release lock and Clippy gate;
+interrupted attempts require explicit reconciliation before redispatch.
 
-The explicitly delegated **0.53.4** delivery remains
-`/tmp/backup-platform-testkit-deploy.44nom2x5/`, including independently verified
-registry/VCS identities at `959b2d8`. No new release/publication was requested or
-executed here. Existing release receipts retain their original scope.
+Earlier qualification remains at `/tmp/backup-issue77.aut8qyhh/` and
+`/tmp/backup-054-readiness.336t_398/`. The latter records a passing complete local
+`make ci` on its frozen inputs, including both real PocketIC suites, independent
+consumers and normalized package archives. The incoming handoff and previous
+adoption review are preserved under this refresh's `before/`.
 
-Other identities stay Candid **0.10.39**, native Agent **0.49.3**, external
-Principal **0.1.5**, native management DTO **0.11.0** and Build editor **0.73.1**.
-Shared remains `143a9ab`; its snapshot and payloads were not refreshed. Earlier
-fixture, failure, custody and recovery evidence stays recorded in the archived
-incoming handoff. Preserve original journals, referenced artifacts, simulator/
-consumer roots and old/failed bundles. No staging, commits, publication, sibling
-mutation, live IC effects or cleanup occurred in this batch.
+[Hosted CI run 41331009274](https://github.com/dragginzgame/ic-backup/actions/runs/41331009274)
+passed all three native hosts for main commit
+`fff0b4654844dc53539a726fd319a6af5abbe272` only. Fresh native macOS evidence requires the delivered-source CI run.
+The release workflow must perform its complete local gate before version
+preparation and atomic branch/tag push, followed by separate registry publication.
+No live IC backup/restore or artifact cleanup is part of this delivery. Preserve unfinished journals, referenced artifacts,
+original publication attempts and required recovery evidence.
 
 [Implementation contracts](../implementation-contracts.md),
 [the Platform boundary](../ic-platform.md) and

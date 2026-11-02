@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+# Shared companions: scripts/ci/check-rust-toolchain.sh
 .DEFAULT_GOAL := help
 export CARGO_TARGET_DIR := $(CURDIR)/target
 LOCAL_TOOL_INSTALL_TARGETS := deps install-testkit-server install-release-editor
@@ -16,7 +17,7 @@ RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
-CI_TARGETS := shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links shell-check fmt-check clippy tooling-check release-check hooks-check check test doc check-msrv package
+CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links shell-check fmt-check clippy tooling-check release-check hooks-check test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
@@ -27,16 +28,18 @@ CI_TARGETS := shared-tooling-check tools-check repository-files-check dependency
         tags tasks test tooling-check validate version
 .PHONY: dependency-boundaries-check dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 .PHONY: install-release-editor release-editor-check repository-files-check
+.PHONY: compiler-check
 
 help:
 	@echo "check                       Compile this library's native targets"
 	@echo "check-cargo-tool-versions   Inspect Cargo tool versions online without installing"
 	@echo "check-doc-links             Check maintained local Markdown targets"
-	@echo "check-msrv                  Check Rust 1.91.0 and independent consumers"
+	@echo "check-msrv                  Check independent consumers on the declared compiler"
 	@echo "ci                          Run the full gate against prepared dependencies"
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
 	@echo "cloc                        Report Rust workspace source and test LOC"
+	@echo "compiler-check              Admit and record Cargo/rustc against local compiler policy"
 	@echo "dependency-boundaries-check Check direct IC and WAT dependency ownership"
 	@echo "dependency-pins-check       Check dependency declarations and exceptions"
 	@echo "deps                        Fetch locked dependencies"
@@ -85,7 +88,11 @@ help:
 
 # Refuse a missing/changed selected CLI before native qualification, including
 # parallel standalone invocations. Validation never provisions it implicitly.
-check check-msrv clippy test: testkit-server-check
+check clippy test: testkit-server-check
+check clippy test doc package: compiler-check
+
+compiler-check:
+	bash scripts/ci/check-rust-toolchain.sh
 
 check:
 	+cargo check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
@@ -94,10 +101,7 @@ check-doc-links:
 	bash scripts/ci/check-doc-links.sh
 
 check-msrv:
-	RUSTUP_AUTO_INSTALL=0 rustc +1.91.0 --version
-	+RUSTUP_AUTO_INSTALL=0 cargo +1.91.0 --version
-	+RUSTUP_AUTO_INSTALL=0 cargo +1.91.0 check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features
-	+bash scripts/ci/check-msrv-consumers.sh 1.91.0
+	+bash scripts/ci/check-msrv-consumers.sh
 
 ci:
 	+@bash scripts/ci/run-validation-targets.sh --fail-fast --input Cargo.toml --input Cargo.lock $(CI_TARGETS)
@@ -253,6 +257,7 @@ tasks:
 
 # Shared owns generic checksum/archive matrices; this gate qualifies Backup callers.
 tooling-check: shared-tooling-check
+	bash scripts/ci/test-rust-toolchain.sh
 	bash scripts/ci/test-tooling.sh
 	bash scripts/ci/test-testkit-commands.sh
 	bash scripts/ci/test-failure-evidence.sh

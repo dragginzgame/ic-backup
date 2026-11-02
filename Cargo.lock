@@ -320,9 +320,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.10.0"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86e055fa6e3e40ad6187ba25b6855eeb635d5271f8e0f0e1e9a5826b8d75bea0"
+checksum = "375989decec1a0fa424442bed520fa12ede43a48475ce8c7417d2c69b32b5f6b"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -471,9 +471,9 @@ dependencies = [
 
 [[package]]
 name = "crc32fast"
-version = "1.5.3"
+version = "1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ba106e844045ddc02c20768ac4b0b7cb45f2cc2ecbd833ac9f5dacb183c2055"
+checksum = "5f97d3416d5337d15c4b0d78c8c91df922ca143f57ec20e2d1c188333047ef04"
 dependencies = [
  "cfg-if",
 ]
@@ -1285,9 +1285,9 @@ dependencies = [
 
 [[package]]
 name = "ic-metrics"
-version = "0.24.6"
+version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "974bab94f2b55223260c5c74d6c5797206e4f5286635a66f3b4606c04eaf04d4"
+checksum = "081b1f0ada80283b9fe61c3f5355f98d8bff2a11f03a8fa3411c7dbd40100c57"
 dependencies = [
  "serde",
 ]
@@ -1364,9 +1364,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.77.0"
+version = "0.78.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2896692dad358d2db4c3d94d1ca8e2e2932e2becc38ee57ef789638cbfbaae93"
+checksum = "d1c4b7fc43e70b3ec8766b3eaee41a8e48aa0674935f0ab1e9060b2efaa92562"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",

@@ -54,7 +54,7 @@ requests/replies, journals and obligations remain retained.
 
 ## Current simulator dependency boundary
 
-Testkit 0.77.0 owns managed server startup, authenticated assets and harness
+Testkit 0.78.0 owns managed server startup, authenticated assets and harness
 extensions. Simulator clients and DTOs come directly from published
 `ic_platform::pocket_ic`; both libraries enable Platform's `pocket-ic` feature only
 in development dependencies. Platform 0.17.0 exports its maintained
@@ -63,7 +63,7 @@ No forwarding module or production simulator dependency is retained. The existin
 exact management bytes, bounded calls, signed transport, original journals and
 independent readback assertions remain local.
 
-Testkit selects arithmetic-only Metrics 0.24.6 with defaults disabled. Neither
+Testkit selects arithmetic-only Metrics 0.25.1 with defaults disabled. Neither
 Metrics' native Wire metadata nor Testkit's optional Wire interface is enabled.
 Both dependencies remain outside the production library graphs. The locked
 Testkit package also selects its exact managed CLI; after a Testkit update, run

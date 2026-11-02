@@ -17,7 +17,7 @@ finish() {
 trap finish EXIT
 mkdir -p "$fixture/consumer/make" "$fixture/consumer/scripts/ci" "$fixture/bin" "$fixture/cli"
 bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$fixture/consumer" \
-    Makefile make/consumer.mk
+    Makefile make/consumer.mk Cargo.toml rust-toolchain.toml
 cat > "$fixture/consumer/Cargo.lock" <<'LOCK'
 version = 4
 
@@ -29,6 +29,10 @@ LOCK
 cat > "$fixture/bin/cargo" <<'CARGO'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ "$*" == '--version --verbose' ]]; then
+    printf 'cargo %s\nrelease: %s\n' "${TESTKIT_COMMAND_COMPILER_VERSION:-$TESTKIT_COMMAND_COMPILER}" "${TESTKIT_COMMAND_COMPILER_VERSION:-$TESTKIT_COMMAND_COMPILER}"
+    exit 0
+fi
 if [[ "${TESTKIT_COMMAND_JOBSERVER:-0}" == 1 ]]; then
     if [[ "${MAKEFLAGS:-}" =~ --jobserver-(auth|fds)=([0-9]+),([0-9]+) ]]; then
         reader="${BASH_REMATCH[2]}"; writer="${BASH_REMATCH[3]}"
@@ -102,7 +106,14 @@ printf 'server %s\n' "$1" >> "$TESTKIT_COMMAND_ORDER"
 [[ ${TESTKIT_COMMAND_SERVER_FAILURE:-0} == 0 ]] || exit 23
 printf '%s\n' "$TESTKIT_COMMAND_SERVER"
 CLI
-chmod +x "$fixture/bin/cargo" "$fixture/bin/bash" "$fixture/cli/ic-testkit-server"
+cat > "$fixture/bin/rustc" <<'RUSTC'
+#!/usr/bin/env bash
+printf 'rustc %s\nrelease: %s\n' "$TESTKIT_COMMAND_COMPILER" "$TESTKIT_COMMAND_COMPILER"
+RUSTC
+export TESTKIT_COMMAND_COMPILER
+TESTKIT_COMMAND_COMPILER="$(yq -p toml -o json '.toolchain.channel' "$ROOT/rust-toolchain.toml" | jq -er '.')"
+export RUSTC="$fixture/bin/rustc"
+chmod +x "$fixture/bin/rustc" "$fixture/bin/cargo" "$fixture/bin/bash" "$fixture/cli/ic-testkit-server"
 export TESTKIT_COMMAND_INSTALL="$fixture/install.log"
 export TESTKIT_COMMAND_CALLS="$fixture/calls.log"
 export TESTKIT_COMMAND_ORDER="$fixture/order.log"
@@ -157,7 +168,7 @@ done
 # every dependent compiler/test invocation without installing anything.
 for failure in TESTKIT_COMMAND_INSTALL_FAILURE TESTKIT_COMMAND_SERVER_FAILURE; do
     : > "$TESTKIT_COMMAND_ORDER"
-    if env -u MAKEFLAGS -u MFLAGS -u MAKELEVEL -u MAKEFILES "$failure=1" make --silent --no-print-directory -C "$fixture/consumer" -j4 check clippy test check-msrv > "$fixture/parallel-$failure.log" 2>&1; then exit 1; fi
+    if env -u MAKEFLAGS -u MFLAGS -u MAKELEVEL -u MAKEFILES "$failure=1" make --silent --no-print-directory -C "$fixture/consumer" -j4 check clippy test > "$fixture/parallel-$failure.log" 2>&1; then exit 1; fi
     if grep -q '^build ' "$TESTKIT_COMMAND_ORDER"; then exit 1; fi
     tail -n 1 "$TESTKIT_COMMAND_INSTALL" | grep -F -- '--check' >/dev/null
 done
@@ -166,6 +177,11 @@ TESTKIT_COMMAND_JOBSERVER=1 run_make -j4 check clippy > "$fixture/parallel-succe
 [[ "$(head -n 1 "$TESTKIT_COMMAND_ORDER")" == 'server check' ]] || exit 1
 [[ "$(grep -c '^server ' "$TESTKIT_COMMAND_ORDER")" == 1 ]] || exit 1
 [[ "$(grep -c '^build ' "$TESTKIT_COMMAND_ORDER")" == 2 ]] || exit 1
+# A compiler identity mismatch must stop real Make's native recipes as well.
+: > "$TESTKIT_COMMAND_ORDER"
+if TESTKIT_COMMAND_COMPILER_VERSION=0.0.0 run_make -j4 check clippy > "$fixture/compiler-mismatch.log" 2>&1; then exit 1; fi
+if grep -q '^build ' "$TESTKIT_COMMAND_ORDER"; then exit 1; fi
+grep -F 'compiler admission refused' "$fixture/compiler-mismatch.log" >/dev/null
 # The actual consumer aggregate includes locked fetch before Testkit setup;
 # parallel Make must preserve required host/Cargo order without optional IC tools.
 : > "$TESTKIT_COMMAND_ORDER"

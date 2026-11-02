@@ -62,8 +62,8 @@
     "test_lockfile_rejection": "Consumer package lock selection/missing/duplicate and failing/empty manifest or lock helper output refuse before replacement",
     "test_rejected_preparation": "Actual product metadata/gate/original-source/fmt refusal and retained inputs/cache",
     "test_staging": "Actual public Make selection refusal and retired local command boundary; no fixture effects",
-    "test_publish": "Separate current registry admission with/without tag and unchanged local metadata",
-    "test_publish_failure": "Separate registry dry-run failure preserves local metadata",
+    "test_publish": "Actual publication Make entry point, fixed roster/registry and exact shared intent/arguments/statuses with or without a release tag; unchanged local metadata and cache",
+    "test_publish_failure": "Failed Cargo dry run retains the original Cargo status/log and releases completed locks without metadata mutation",
     "test_invalid_release": "Actual tag-check adapter admits exact receipt/notes/current source and refuses drift",
     "test_validation_custody": "Missing original validation or changed member metadata prevents adapter recovery",
     "test_early_plan_retry": "Fresh normal release supersedes the same candidate plan without parsing it; Backup retains earlier validation bytes before recording fresh proof.",
@@ -77,7 +77,11 @@
     "test_committed_preparation_retry": "Actual Backup Make/metadata adapter starts fresh from unchanged or manually bumped committed metadata; failed gates preserve original validation and metadata backups, and other candidate plans remain unchanged.",
     "test_clippy_gate": "Actual release-verify/CI target roster and Clippy recipe, with preparation/downstream effects substituted; serial/parallel success and failure prove early ordering, unchanged lint scope and no later work/publication after refusal. Publication exclusion and metadata/cache custody remain checked.",
     "test_selected_tool_preflight": "Actual Backup aggregate orders common host/Cargo, locked fetch, Testkit and editor without optional IC installer fixtures; retry, offline/network refusal, invalid CLI, selected lock and required common/prerequisite failures retain original source, tools and evidence. Selected Build/Testkit substitutes require the explicit cli feature.",
-    "test_prepared_explicit_resume": "One actual Make-to-adapter lost-commit recovery: exact receipt/validation, frozen metadata/history, completed original candidate and cache custody"
+    "test_prepared_explicit_resume": "One actual Make-to-adapter lost-commit recovery: exact receipt/validation, frozen metadata/history, completed original candidate and cache custody",
+    "test_publication_admission": "Actual local publication caller refuses metadata/eligibility/source/outer-lock/unsupported-option failures without Cargo dispatch",
+    "test_publication_options": "Inherited shared adapter settings cannot widen the legacy publication roster, registry, features, verification or dirty-source options",
+    "test_publication_already_published": "Cargo already-published refusal remains one exact full-roster attempt; no lookup inference, skipping or automatic retry",
+    "test_publication_interruption": "Actual shared runner interrupted after simulated registry effects retains its dispatch evidence/lock and blocks redispatch after the outer lock releases; explicit fixture operator reconciliation archives the stopped lock before a fresh dry run, preserving original evidence"
   },
   "retained_git_substitute": "Required by actual selected historical receipts: immutable full product trees, source/member/lock/notes/receipt reads, descendant proofs and remote tag association. Generic phase and Git-effect matrices remain upstream; explicit local recovery and fresh attempts retain separate assertions.",
   "evidence": "target/release-fixture-052-review",

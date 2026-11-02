@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/check-rust-toolchain.sh
 # Common offline graph preparation for independent Cargo consumer fixtures.
 # Callers own their temporary directory, manifest, API probe and extra admission.
 
 consumer_fixture_cargo() {
-    local rust_version="$1"
-    shift
-    if [[ -n "$rust_version" ]]; then
-        cargo "+$rust_version" "$@"
-    else
-        cargo "$@"
+    local root="$1" rust_version="$2"
+    shift 2
+    if [[ -z "$rust_version" ]]; then
+        rust_version="$(bash "$root/scripts/ci/check-rust-toolchain.sh")" || return "$?"
     fi
+    cargo "+$rust_version" "$@"
 }
 
 consumer_fixture_snapshot() {
     local root="$1" fixture="$2" rust_version="$3"
     cp "$root/Cargo.lock" "$fixture/original.lock"
-    consumer_fixture_cargo "$rust_version" metadata --offline --locked \
+    consumer_fixture_cargo "$root" "$rust_version" metadata --offline --locked \
         --manifest-path "$root/Cargo.toml" --format-version 1 > "$fixture/original.json"
 }
 
@@ -27,7 +27,7 @@ consumer_fixture_prepare() {
     }
     cp "$fixture/original.lock" "$selected/Cargo.lock"
     # Preparation may prune unused packages and add only the fixture root.
-    consumer_fixture_cargo "$rust_version" metadata --offline \
+    consumer_fixture_cargo "$root" "$rust_version" metadata --offline \
         --manifest-path "$selected/Cargo.toml" --format-version 1 \
         > "$selected/metadata.json" 2> "$selected/preparation.log"
     jq -L "$root/scripts/ci" -e --arg consumer "$consumer" \

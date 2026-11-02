@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/check-rust-toolchain.sh
 set -euo pipefail
 
 # Qualify each public library independently, without dev-feature unification.
 # Preparation and checks are offline; never install a compiler or alter root locks.
-[[ $# == 1 && "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-    echo 'usage: check-msrv-consumers.sh <qualified-msrv>' >&2; exit 2;
-}
-msrv="$1"
+[[ $# == 0 ]] || { echo 'usage: check-msrv-consumers.sh' >&2; exit 2; }
 ROOT="${BASH_SOURCE[0]}"
 [[ "$ROOT" == /* ]] || ROOT="$PWD/$ROOT"
 ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 source "$ROOT/scripts/ci/consumer-fixture.sh"
+msrv="$(bash "$ROOT/scripts/ci/check-rust-toolchain.sh")"
 mkdir -p "$ROOT/target"
 fixture="$(mktemp -d "${TMPDIR:-$ROOT/target}/msrv-consumers.XXXXXX")"
 finish() {

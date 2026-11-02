@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Shared companions: scripts/ci/cargo-publication-selection.pl scripts/ci/run-cargo-publication.sh
 set -euo pipefail
 
 # Consumer metadata, validation evidence and read-only inspection. All Git
@@ -136,9 +137,30 @@ lock_release() {
     trap 'rm -f "$PUBLICATION_STATE/lock/owner"; rmdir "$PUBLICATION_STATE/lock"' EXIT
 }
 publish() {
+    [[ $# -le 1 ]] || fail 'expected publish [--dry-run]'
     case "${1:-}" in ''|--dry-run) ;; *) fail 'expected publish [--dry-run]' ;; esac
+    local mode=publish parent="$PUBLICATION_STATE/publication" source selection status=0 package
+    local arguments=()
+    [[ "${1:-}" != --dry-run ]] || mode=check
+    source="$(git rev-parse --verify HEAD)"
     make --no-print-directory clippy || return "$?"
-    cargo publish --locked --registry crates-io -p ic-backup -p ic-backup-agent ${1:+"$1"}
+    [[ ! -L "$parent" ]] || fail 'publication evidence is symlinked'
+    mkdir -p "$parent"
+    selection="$(mktemp -d "$parent/selection.XXXXXX")"
+    printf 'Publication selection evidence: %s\n' "$selection"
+    printf '%s\n' "$source" > "$selection/source"
+    cargo metadata --no-deps --locked --offline --format-version 1 \
+        > "$selection/metadata.json" 2> "$selection/metadata.stderr" || status=$?
+    printf '%s\n' "$status" > "$selection/metadata-status"
+    cat "$selection/metadata.stderr" >&2 || :
+    [[ "$status" == 0 ]] || return "$status"
+    perl "$ROOT/scripts/ci/cargo-publication-selection.pl" "$selection/metadata.json" \
+        'ic-backup ic-backup-agent' 'ic-backup ic-backup-agent' crates-io > "$selection/packages.nul"
+    while IFS= read -r -d '' package; do arguments+=(--package "$package"); done < "$selection/packages.nul"
+    # Every fresh attempt shares one parent lock, independently of our wider
+    # release exclusion. Shared owns Cargo arguments, dispatch and result custody.
+    bash "$ROOT/scripts/ci/run-cargo-publication.sh" "$mode" \
+        "$parent/$mode.${selection##*/}" "$source" crates-io "${arguments[@]}"
 }
 command="${1:-}"
 shift || true
@@ -178,6 +200,6 @@ case "$command" in
         state="$(git rev-parse --git-path release-state)"
         [[ ! -L "$state" && ! -L "$state/$requested.validation.json" ]] || fail 'resumed validation is symlinked'
         perl "$DATA" resume-validation-check "$state/$requested.validation.json" "$requested" --commit "$selected" ;;
-    publish) lock_release; publish "${1:-}" ;;
+    publish) lock_release; publish "$@" ;;
     *) fail 'expected version, plan, ensure-clean, preflight, prepare, prepared-check, commit-check, committed-check, tagged-check, push-check, validation-record, files, tag-check, resume-check, or publish' ;;
 esac

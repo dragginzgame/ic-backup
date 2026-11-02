@@ -1,19 +1,22 @@
 # AGENTS.md
 
+For scope, delegated delivery, validation, compiler support and reporting, use
+[Shared policy at e84252f](https://github.com/dragginzgame/shared-tooling/blob/e84252f5740bacd708359580455ea2b6fd67df38/DRAGGINZGAME.md)
+and its revision-bound references over older snapshot or local-guide wording.
+This includes Rust 1.99.1 as minimum and pinned development/release compiler;
+check local declarations and qualification before claiming adoption is complete.
+Product-specific safeguards and scoped permissions below remain binding.
+This policy reference does not refresh executable snapshots.
+
 This file is normative for automated agents and contributors working in
 `ic-backup`.
 
 ## Shared baseline and local overlay
 
-Apply the engineering sections of [the Dragginzgame baseline](DRAGGINZGAME.md).
-This is a reviewed local snapshot at Shared Tooling commit `143a9abb9ae81feae9400ff3844b03b1ddfdd75a`,
-not implicit inheritance from a moving sibling checkout. Its committed VERSION is
-0.27.21; the commit title is 0.27.22.
-[The snapshot manifest](.shared-tooling.snapshot) binds the common baseline and
-tooling to one committed revision; [adoption and provenance](docs/shared-tooling.md)
-describe the review. Refresh deliberately; never edit vendored tooling in place.
-Exclude every path declared in `.shared-tooling.snapshot` from local branding
-and documentation rewrites; keep consumer guidance in unlisted local documents.
+Apply the installed [baseline](DRAGGINZGAME.md). The
+[snapshot manifest](.shared-tooling.snapshot) records exact files and revision;
+[adoption and provenance](docs/shared-tooling.md) records its review. Never edit
+snapshot payloads during local branding or documentation changes.
 
 This file is the product-specific overlay: backup contracts, effect targets,
 numeric bounds, consumer adapters, supported hosts and qualification gates stay local.
@@ -108,6 +111,14 @@ These are reviewed compatibility constraints, not universal exact-pin policy.
 Shared tools use the vendored version/checksum owners under `ci/`; local setup is
 explicit through `make install-tools`, and `make tools-check` never installs.
 Product transport/runtime qualification stays separate from executable version checks.
+
+## Compiler qualification
+
+Root `rust-version` and the exact `rust-toolchain.toml` channel implement the
+approved shared compiler policy. Admission records actual Cargo/rustc identities
+before native qualification; retain historical compiler qualification evidence.
+Tool retention follows the reviewed shared setup policy; product artifacts,
+journals and recovery evidence retain their local custody requirements.
 
 ## Architecture and style
 

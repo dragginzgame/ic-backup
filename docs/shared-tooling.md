@@ -20,19 +20,34 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The current source is commit `143a9abb9ae81feae9400ff3844b03b1ddfdd75a`,
+The current source is Shared Tooling **0.27.26**, commit
+`e84252f5740bacd708359580455ea2b6fd67df38`,
 independently selected from upstream main and exported from a clean isolated
-checkout. Its committed VERSION is **0.27.21**, while its commit title and leading
-notes say **0.27.22**. The snapshot preserves the source's label and exact revision;
-no uncommitted sibling version edit supplies provenance.
+checkout. The exporter preserves its committed version label and exact revision;
+uncommitted sibling edits supply no provenance.
 
-This refresh adds explicit release-group metadata helpers and their dependency
-checks. Backup retains one coordinated release group, workspace-version
-inheritance and its root changelog; no group policy or ledger split is needed.
-Common host/Rust/IC executable catalogs are unchanged. Backup explicitly selects
-Build **0.73.1** for its release editor and locked Testkit **0.75.0** for setup and
-offline server admission. New baseline delivery and explicit-cleanup guidance does
-not execute a release or remove retained artifacts.
+This refresh aligns the shared compiler policy with Backup's adopted Rust
+**1.99.1** floor and pin, so the earlier local exception is no longer needed.
+Backup retains one coordinated release group, workspace-version inheritance and
+its root changelog. Common host/Rust/IC executable catalogs are unchanged;
+Build **0.73.1** remains the release editor and locked Testkit **0.78.0** owns
+simulator setup and offline admission. Snapshot adoption changes no crate
+dependency, product API or backup/restore contract.
+
+Cargo tool setup now fingerprints managed native build inputs rather than every
+installed Linux application, records each checkout's current tool requirements,
+and discards successful compilation scratch after executable/receipt admission.
+Run `make install-tools` after this refresh, then `make tools-check`; changed
+build identities require new selections. Existing executable generations and
+failed bundles remain retained. Explicit store reclamation and compiler-cache
+maintenance are separate owner operations under the
+[shared maintenance contract](tool-store-maintenance.md); adoption runs neither.
+
+The adopted baseline keeps cross-repository work and delivery with each requested
+owner; it grants no standing sibling adoption/PR authority. Platform's capability
+ownership guidance preserves Backup's facade use for management DTOs, Candid,
+hashes and Agent transport. Optional group proof reuse, bootstrap observation
+and pending-VERSION release modes are not activated by this adoption.
 
 ## Reviewed sources
 

@@ -33,8 +33,6 @@ jobs:
           echo "SHARED_TOOLING_STORE=$RUNNER_TEMP/ic-backup-tool-store" >> "$GITHUB_ENV"
       - name: Install the pinned development toolchain
         run: rustup show active-toolchain
-      - name: Install the minimum supported Rust toolchain
-        run: rustup toolchain install 1.91.0 --profile minimal
       - name: Install the reviewed Linux ShellCheck
         if: runner.os == 'Linux'
         run: |

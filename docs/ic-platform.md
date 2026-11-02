@@ -21,7 +21,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production and Testkit 0.77.0 select Platform 0.17.0,
+not selected by Backup. Production and Testkit 0.78.0 select Platform 0.17.0,
 which re-exports the canonical owned Principal from Platform Types 0.16.0.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
@@ -68,10 +68,10 @@ Principal normalization, hashes and wire contracts retain their existing behavio
 Backup exposes no owned Principal API requiring a consumer migration.
 
 The workspace requires Host Artifacts/FS/Process 0.73.5 and currently resolves
-0.73.6. Consumers sharing Host types must align their
-selected versions. Testkit 0.77.0 keeps its source unchanged from 0.76.2 while
-aligning Platform and the Host dependencies. Its optional Wire requirement remains
-outside Backup's graph.
+0.73.6. Consumers sharing Host types must align their selected versions.
+Testkit 0.78.0 keeps its Rust source unchanged from 0.77.0; arithmetic-only
+Metrics 0.25.1 keeps its Rust source and dependencies unchanged from 0.25.0.
+Their optional Wire requirements remain outside Backup's graph.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

@@ -159,6 +159,7 @@ fn prepare_graph(root: &Path, evidence: &Path, selected: &Path, registry: bool) 
 fn compile(selected: &Path, evidence: &Path) {
     run_logged(
         Command::new("cargo")
+            .arg(format!("+{}", env!("CARGO_PKG_RUST_VERSION")))
             .args(["build", "--offline", "--locked", "--manifest-path"])
             .arg(selected.join("Cargo.toml"))
             .env("CARGO_TARGET_DIR", evidence.join("target"))

@@ -19,20 +19,25 @@ unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 metadata_only=false
 receipts_only=false
 preparation_only=false
+publication_only=false
 if [[ "$#" == 1 && "$1" == --metadata-only ]]; then
     metadata_only=true
 elif [[ "$#" == 1 && "$1" == --receipts-only ]]; then
     receipts_only=true
 elif [[ "$#" == 1 && "$1" == --preparation-only ]]; then
     preparation_only=true
+elif [[ "$#" == 1 && "$1" == --publication-only ]]; then
+    publication_only=true
 elif [[ "$#" != 0 ]]; then
-    echo 'usage: test-release.sh [--metadata-only|--preparation-only|--receipts-only]' >&2
+    echo 'usage: test-release.sh [--metadata-only|--preparation-only|--publication-only|--receipts-only]' >&2
     exit 2
 fi
 TEST_REAL_MAKE="$(command -v make)"
 TEST_REAL_GIT="$(command -v git)"
 TEST_REAL_CARGO="$(command -v cargo)"
 export TEST_REAL_MAKE TEST_REAL_GIT TEST_REAL_CARGO
+TEST_COMPILER="$(yq -p toml -o json '.toolchain.channel' "$ROOT/rust-toolchain.toml" | jq -er '.')"
+export TEST_COMPILER
 TEST_RELEASE_EDITOR="$("$TEST_REAL_MAKE" --no-print-directory -s -C "$ROOT" release-editor-check)"
 export TEST_RELEASE_EDITOR CARGO_RELEASE_METADATA_EDITOR="$TEST_RELEASE_EDITOR"
 export CARGO_RELEASE_METADATA_MAX_BYTES=1048576
@@ -73,19 +78,20 @@ create_fixture() {
     mkdir -p "$FIXTURE/scripts/release" "$FIXTURE/scripts/ci" "$FIXTURE/crates/ic-backup/src" "$FIXTURE/docs" "$FIXTURE/target/debug"
     mkdir -p "$FIXTURE/make"
     bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$FIXTURE" \
-        Makefile make/consumer.mk scripts/release/release.sh scripts/release/release-data.pl \
+        Makefile make/consumer.mk rust-toolchain.toml scripts/release/release.sh scripts/release/release-data.pl \
         scripts/ci/check-release-source.sh scripts/ci/check-release-tag.sh \
         scripts/ci/next-release-version.sh scripts/ci/validate-release-inputs.pl \
         scripts/ci/read-cargo-workspace-version.sh scripts/ci/finalize-release-changelog.awk \
         scripts/ci/cargo-release-metadata.sh scripts/ci/cargo-workspace-members.jq \
         scripts/ci/compare-stable-versions.pl
     cd "$FIXTURE"
-    cat > Cargo.toml <<'TOML'
+    cat > Cargo.toml <<TOML
 [workspace]
 members = ["crates/ic-backup"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
+rust-version = "$TEST_COMPILER"
 publish = ["crates-io"]
 TOML
     cat > crates/ic-backup/Cargo.toml <<'TOML'
@@ -184,6 +190,7 @@ TOOL
     export VALIDATION_REPOSITORY_ROOT="$FIXTURE" VALIDATION_FAILURE_LOG_DIR="$FIXTURE/target/validation-failures" GITHUB_STEP_SUMMARY="$FIXTURE/target/summary.md"
     unset YQ
     unset TEST_CLIPPY_FAIL TEST_CLIPPY_ORDER TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_FAIL TEST_METADATA_FAIL TEST_PUSH_FAIL TEST_FETCH_FAIL TEST_PUBLISH_FAIL TEST_LOST_EFFECT TEST_GATE_DIRTY TEST_GATE_HEAD TEST_DESTINATION TEST_PREPARED_FORMAT_FAIL TEST_REMOTE_FAIL TEST_TOOL_FAIL TEST_SERVER_FAIL TEST_COMMON_TOOL_FAIL CARGO_NET_OFFLINE
+    unset TEST_PUBLICATION_METADATA TEST_PUBLICATION_SOURCE TEST_PUBLICATION_ALREADY TEST_PUBLICATION_INTERRUPT
 }
 expect_failure() {
     local status
@@ -254,7 +261,7 @@ case "$1" in
     status)
         ending='\n'
         case " $* " in *' -z '*) ending='\0' ;; esac
-        if [[ "${TEST_DIRTY:-0}" == 1 ]]; then
+        if [[ "${TEST_DIRTY:-0}" == 1 || -e target/publication-dirty ]]; then
             printf " M src/changed.rs$ending"
         elif [[ -d "target/commits/$(head)" ]]; then
             for file in Cargo.toml Cargo.lock CHANGELOG.md docs/release.json crates/ic-backup/Cargo.toml; do
@@ -388,6 +395,7 @@ cat > "$TEMPORARY/bin/cargo" <<'STUB'
 set -euo pipefail
 printf 'cargo %s\n' "$*" >> "$TEST_LOG"
 case "$*" in
+    '--version --verbose') printf 'cargo %s\nrelease: %s\n' "$TEST_COMPILER" "$TEST_COMPILER" ;;
     'locate-project --workspace --message-format plain --manifest-path '*) exec "$TEST_REAL_CARGO" "$@" ;;
     'sort --workspace --check --grouped') exec "$TEST_REAL_CARGO" "$@" ;;
     'metadata --locked --offline --format-version 1')
@@ -395,12 +403,42 @@ case "$*" in
         jq -n --arg version "$version" '{workspace_members:["fixture"],packages:[{id:"fixture",name:"ic-backup",version:$version,source:null}]}' ;;
     'fetch --locked') echo fetch >> "$TEST_EFFECTS"; [[ "${TEST_FETCH_FAIL:-0}" != 1 ]] || exit 7; touch target/mock-cache ;;
     'clippy --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features -- -D warnings')
-        echo clippy >> "$TEST_EFFECTS"; [[ "${TEST_CLIPPY_FAIL:-0}" != 1 ]] || exit 23 ;;
+        echo clippy >> "$TEST_EFFECTS"
+        [[ "${TEST_CLIPPY_FAIL:-0}" != 1 ]] || exit 23
+        case "${TEST_PUBLICATION_SOURCE:-}" in
+            head) echo eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee > target/mock-head ;;
+            dirty) touch target/publication-dirty ;;
+        esac ;;
     'check --offline --locked -p ic-backup -p ic-backup-agent --all-targets --all-features') [[ -f target/mock-cache ]] || exit 7; echo check >> "$TEST_EFFECTS" ;;
     'metadata --offline --locked --no-deps --format-version 1') [[ "${TEST_METADATA_FAIL:-0}" != 1 ]] || exit 7; echo '{}' ;;
-    'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent'|'publish --locked --registry crates-io -p ic-backup -p ic-backup-agent --dry-run')
-        if [[ "${TEST_PUBLISH_FAIL:-0}" == 1 ]]; then exit 101; fi
-        echo publish >> "$TEST_EFFECTS" ;;
+    'metadata --no-deps --locked --offline --format-version 1')
+        version="$(yq -p toml -o json '.workspace.package.version' Cargo.toml | jq -r .)"
+        jq -n --arg version "$version" --arg fault "${TEST_PUBLICATION_METADATA:-}" '{
+            version:1,workspace_members:["core","agent"],packages:[
+                {id:"core",name:"ic-backup",version:$version,source:null,publish:["crates-io"]},
+                {id:"agent",name:"ic-backup-agent",version:$version,source:null,publish:["crates-io"]}
+            ]
+        } | if $fault == "missing" then .packages |= map(select(.id != "agent"))
+            elif $fault == "private" then .packages[1].publish = []
+            elif $fault == "version" then .packages[1].version = "0.1.0-beta.1"
+            else . end'
+        [[ "${TEST_PUBLICATION_METADATA:-}" != failed-output ]] || exit 8 ;;
+    'publish --locked --registry crates-io --package ic-backup@'*' --package ic-backup-agent@'*)
+        version="$(yq -p toml -o json '.workspace.package.version' Cargo.toml | jq -r .)"
+        [[ "$*" == "publish --locked --registry crates-io --package ic-backup@$version --package ic-backup-agent@$version" ||
+           "$*" == "publish --locked --registry crates-io --package ic-backup@$version --package ic-backup-agent@$version --dry-run" ]] || exit 97
+        if [[ "${TEST_PUBLISH_FAIL:-0}" == 1 ]]; then echo 'registry upload refused' >&2; exit 101; fi
+        if [[ "${TEST_PUBLICATION_ALREADY:-0}" == 1 ]]; then echo 'exact version already published' >&2; exit 101; fi
+        echo publish >> "$TEST_EFFECTS"
+        printf 'Cargo publication output retained\n'
+        if [[ "${*: -1}" != --dry-run ]]; then
+            printf '%s\n' "ic-backup@$version" "ic-backup-agent@$version" >> target/publication-registry
+        fi
+        if [[ "${TEST_PUBLICATION_INTERRUPT:-0}" == 1 ]]; then
+            [[ "$(cat target/release-state/publication/.cargo-publication.lock/owner)" == "$PPID" ]] || exit 97
+            kill -TERM "$PPID"
+            exit 143
+        fi ;;
     *) echo "unsupported Cargo substitute: $*" >&2; exit 97 ;;
 esac
 STUB
@@ -706,6 +744,7 @@ test_publish() {
     : > "$TEST_EFFECTS"
     "$TEST_REAL_MAKE" --no-print-directory publish
     [[ "$(cat "$TEST_EFFECTS")" == $'clippy\npublish' && "$(fingerprint)" == "$before" ]] || exit 1
+    assert_publication_evidence publish 0
     assert_cache_retained
 }
 test_publish_failure() {
@@ -713,6 +752,101 @@ test_publish_failure() {
     expect_failure "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
     assert_unchanged
     [[ "$(cat "$TEST_EFFECTS")" == clippy ]] || exit 1
+    assert_publication_evidence check 101
+}
+publication_attempt() {
+    local attempts=(target/release-state/publication/"$1".selection.*)
+    [[ "${#attempts[@]}" == 1 && -d "${attempts[0]}" ]] || return 1
+    printf '%s\n' "${attempts[0]}"
+}
+assert_publication_evidence() {
+    local mode="$1" status="$2" attempt current
+    attempt="$(publication_attempt "$mode")"
+    current="$(perl scripts/release/release-data.pl version)"
+    printf '%s\n' "$mode" "$(git rev-parse HEAD)" crates-io \
+        "ic-backup@$current" "ic-backup-agent@$current" > target/expected-intent
+    cmp target/expected-intent "$attempt/intent"
+    printf '%s\0' cargo publish --locked --registry crates-io \
+        --package "ic-backup@$current" --package "ic-backup-agent@$current" > target/expected-arguments
+    [[ "$mode" != check ]] || printf '%s\0' --dry-run >> target/expected-arguments
+    cmp target/expected-arguments "$attempt/arguments"
+    [[ "$(cat "$attempt/dispatch")" == started && "$(cat "$attempt/cargo-status")" == "$status" &&
+       "$(cat "$attempt/log-status")" == 0 && "$(cat "$attempt/status")" == "$status" ]] || exit 1
+    [[ -s "$attempt/cargo.log" && ! -d target/release-state/publication/.cargo-publication.lock &&
+       ! -d target/release-state/lock ]] || exit 1
+}
+test_publication_admission() {
+    before="$(fingerprint)"
+    case "$1" in
+        missing|private|version|failed-output) export TEST_PUBLICATION_METADATA="$1" ;;
+        head|dirty) export TEST_PUBLICATION_SOURCE="$1" ;;
+        outer-lock)
+            mkdir -p target/release-state/lock
+            printf 'retained-owner\n' > target/release-state/lock/owner ;;
+        options)
+            expect_failure bash scripts/release/release.sh publish --dry-run --no-verify
+            [[ ! -s "$TEST_EFFECTS" ]] || exit 1
+            assert_unchanged
+            return ;;
+    esac
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory publish
+    if grep -F 'cargo publish ' "$TEST_LOG"; then exit 1; fi
+    case "$1" in
+        outer-lock)
+            [[ "$(cat target/release-state/lock/owner)" == retained-owner && ! -s "$TEST_EFFECTS" ]] || exit 1 ;;
+        *) [[ "$(cat "$TEST_EFFECTS")" == clippy ]] || exit 1 ;;
+    esac
+    [[ ! -d target/release-state/publication/.cargo-publication.lock ]] || exit 1
+    assert_unchanged
+}
+test_publication_options() {
+    before="$(fingerprint)"
+    # The legacy entry point admits only its fixed pair, registry and defaults.
+    # General-purpose shared adapter environment must not widen that contract.
+    CARGO_PUBLISH_SELECTION=unrelated CARGO_PUBLISH_REGISTRY=other \
+    CARGO_PUBLISH_ALL_FEATURES=1 CARGO_PUBLISH_CHECK_ALLOW_DIRTY=1 \
+    CARGO_PUBLISH_FEATURES=unreviewed CARGO_PUBLISH_MANIFEST_PATH=outside \
+    CARGO_PUBLISH_TARGET_DIR=outside CARGO_PUBLISH_NO_DEFAULT_FEATURES=1 \
+    CARGO_PUBLISH_MAKE=false CARGO_PUBLISH_VERIFY_TARGETS=unrelated \
+        "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
+    assert_publication_evidence check 0
+    assert_unchanged
+}
+test_publication_already_published() {
+    before="$(fingerprint)"; export TEST_PUBLICATION_ALREADY=1
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory publish
+    assert_publication_evidence publish 101
+    [[ "$(grep -c '^cargo publish ' "$TEST_LOG")" == 1 && ! -e target/publication-registry ]] || exit 1
+    grep -F 'exact version already published' "$(publication_attempt publish)/cargo.log" >/dev/null
+    assert_unchanged
+}
+test_publication_interruption() {
+    local attempt lock
+    before="$(fingerprint)"; export TEST_PUBLICATION_INTERRUPT=1
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory publish
+    attempt="$(publication_attempt publish)"
+    lock=target/release-state/publication/.cargo-publication.lock
+    [[ -f "$attempt/dispatch" && ! -e "$attempt/status" && -d "$lock" && ! -d target/release-state/lock ]] || exit 1
+    cp -R "$attempt" target/original-publication-attempt
+    unset TEST_PUBLICATION_INTERRUPT
+    expect_failure "$TEST_REAL_MAKE" --no-print-directory publish
+    [[ "$(grep -c '^cargo publish ' "$TEST_LOG")" == 1 ]] || exit 1
+    diff -r target/original-publication-attempt "$attempt"
+
+    # Explicit fixture operator reconciliation, not an adapter recovery action:
+    # observe the complete simulated registry receipt and the stopped lock owner,
+    # then archive that lock and request only a fresh validation-only attempt.
+    printf '%s\n' ic-backup@0.1.0 ic-backup-agent@0.1.0 > target/expected-registry
+    cmp target/expected-registry target/publication-registry
+    if kill -0 "$(cat "$lock/owner")" 2>/dev/null; then echo 'publication owner still active' >&2; exit 1; fi
+    mv "$lock" target/release-state/publication/reconciled.lock
+    "$TEST_REAL_MAKE" --no-print-directory publish-dry-run
+    assert_publication_evidence check 0
+    cmp target/expected-registry target/publication-registry
+    diff -r target/original-publication-attempt "$attempt"
+    [[ -f target/release-state/publication/reconciled.lock/owner ]] || exit 1
+    assert_unchanged
+    assert_cache_retained
 }
 test_clippy_gate() {
     local entry="$1" jobs="$2" outcome="$3"
@@ -1228,6 +1362,31 @@ if [[ "$metadata_only" == true ]]; then
     exit 0
 fi
 
+run_publication_cases() {
+    for state in no-release tagged; do run_case "publish-$state" test_publish "$state"; done
+    run_case publish-failure test_publish_failure
+    for fault in missing private version failed-output head dirty outer-lock options; do
+        run_case "publication-$fault" test_publication_admission "$fault"
+    done
+    run_case publication-fixed-options test_publication_options
+    run_case publication-already-published test_publication_already_published
+    run_case publication-interruption test_publication_interruption
+    for entry in publish publish-dry-run; do
+        for jobs in 1 4; do
+            for outcome in success failure; do
+                run_case "clippy-$entry-$jobs-$outcome" test_clippy_gate "$entry" "$jobs" "$outcome"
+            done
+        done
+    done
+}
+
+if [[ "$publication_only" == true ]]; then
+    run_publication_cases
+    echo 'publication admission, shared attempt evidence and explicit recovery checks passed'
+    fixture_complete=true
+    exit 0
+fi
+
 for outcome in success failure; do
     run_case "dependency-$outcome" test_dependency_bootstrap "$outcome"
     run_case "nested-dependency-$outcome" test_nested_dependency_bootstrap "$outcome"
@@ -1240,13 +1399,10 @@ for mode in empty missing imported bumped failed-output empty-output; do run_cas
 run_preparation_cases
 for failure in TEST_FETCH_FAIL TEST_GATE_FAIL TEST_METADATA_FAIL TEST_DIRTY TEST_TAG_EXISTS TEST_GATE_DIRTY TEST_GATE_HEAD TEST_PREPARED_FORMAT_FAIL; do run_case "reject-$failure" test_rejected_preparation "$failure"; done
 run_case staging test_staging
-for state in no-release tagged; do run_case "publish-$state" test_publish "$state"; done
-run_case publish-failure test_publish_failure
-for entry in release-verify publish publish-dry-run; do
-    for jobs in 1 4; do
-        for outcome in success failure; do
-            run_case "clippy-$entry-$jobs-$outcome" test_clippy_gate "$entry" "$jobs" "$outcome"
-        done
+run_publication_cases
+for jobs in 1 4; do
+    for outcome in success failure; do
+        run_case "clippy-release-verify-$jobs-$outcome" test_clippy_gate release-verify "$jobs" "$outcome"
     done
 done
 for drift in notes tag head; do run_case "completed-$drift" test_invalid_release "$drift"; done

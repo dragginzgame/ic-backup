@@ -50,7 +50,7 @@ This detects changes at checkpoints rather than isolating files during a target.
 Automatic CI runs for main pushes and pull requests. An atomic main/tag release
 selects one complete native matrix for that source; the tag does not repeat it.
 Distinct main commits retain their own runs. Every selected run keeps Linux,
-Intel macOS, Apple Silicon, MSRV, simulator and shell-portability checks.
+Intel macOS, Apple Silicon, independent consumers, simulator and shell-portability checks.
 
 Ordinary development and authorized merges follow the baseline's
 [asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence). Complete
@@ -312,9 +312,16 @@ and recovery checks use the `fixture_roots` and `fence_reconciliation` targets.
 Unix FIFO fixtures require the standard `mkfifo -m 600` utility and verify its
 resulting type and permissions on Linux/macOS.
 
-Install the workspace MSRV separately before `make check-msrv`. That target checks
-all targets/features and each library in an independent consumer without Testkit
-feature unification. Fixtures seed the original lock, prepare only their own locks
+The workspace minimum and development/release pin are both Rust 1.99.1.
+`make compiler-check` reads the local Cargo and toolchain declarations, requires
+them to agree, and retains successful actual Cargo/rustc version observations
+under `target/compiler-admission.*`. It never installs a compiler or repairs a
+policy mismatch. Native Make compilation, lint, test, documentation and package
+entry points require this admission; standalone consumer/package scripts do too.
+
+`make check-msrv` now checks each library in an independent consumer on that same
+compiler, without Testkit feature unification. It no longer repeats the workspace
+all-target pass or requires the development-only simulator CLI. Fixtures seed the original lock, prepare only their own locks
 offline and reject changes to selected package/version/source identities. Native
 macOS evidence remains separate from Linux; the supported product runs on a host.
 
@@ -350,8 +357,7 @@ entries do not establish IC Backup qualification.
 | Windows and non-Bash shells | No supported product lane |
 | Complete backup/restore | Unimplemented; no host has end-to-end product qualification |
 
-The pinned Rust 1.99.1 development toolchain, Rust 1.91.0 minimum compiler,
-rustfmt and Clippy are required on
+The pinned Rust 1.99.1 compiler, rustfmt and Clippy are required on
 each native host. Repository tooling requires Git, GNU Make, Bash, Perl with core
 JSON::PP and Digest::SHA, ripgrep, flock, ShellCheck, cargo-sort 2.1.4 and either `sha256sum` or
 `shasum`. Native process fixtures also require Python 3. The standard Unix utilities
@@ -364,7 +370,7 @@ tools and Homebrew, then run `brew install flock make ripgrep shellcheck`; provi
 Python 3 if it is absent. Add Homebrew GNU Make to the current shell with
 `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`. Install Rust through
 rustup, then run `rustup show active-toolchain` and
-`rustup toolchain install 1.91.0 --profile minimal` in this checkout. Install the
+`make compiler-check` in this checkout after preparing the declared host tools. Install the
 reviewed manifest formatter after `source ci/tool-versions.env` with
 `cargo install cargo-sort --version "$SHARED_TOOLING_CARGO_SORT_VERSION" --locked`,
 then run `make install-hooks` once per clone or after updating the hook contract.
@@ -381,7 +387,17 @@ evidence that the pending native macOS runs passed.
 workspace after `cargo sort --workspace`; `fmt-check` independently checks both
 manifest ordering and Rust formatting with the same pinned cargo-sort version.
 `shell-check`, `release-check` and `hooks-check`
-validate contributor tooling. `shared-tooling-check` verifies the exact local
+validate contributor tooling.
+
+CI retains all three native hosts and their simulator/shell checks. The old
+1.91 installation and duplicate workspace minimum-compiler pass are removed.
+All-target/all-feature Clippy supplies workspace compilation; the independent
+Core/Agent consumers and normalized archive-pair build remain separate proofs.
+The existing `library` job identity is unchanged, so required-check dependencies
+need no rename. No Wasm or deployed-canister lane belonged to these host libraries.
+Cargo still compiles their external proc macros on the selected native compiler.
+
+ `shared-tooling-check` verifies the exact local
 snapshot; `tooling-check` tests its integrity and CI diagnostics without network
 or compilation. [Shared adoption](shared-tooling.md) identifies the reviewed
 source and the product overlay. `version` and `release-plan` inspect release

@@ -54,6 +54,11 @@ another lane. Ordinary contributions continue through authorized PRs.
 | `make publish-dry-run` | Run Cargo registry admission without uploading | Maintainer |
 | `make publish` | Upload the current package to crates.io | Maintainer |
 
+The minimum and development/release compiler are the same exact local policy.
+`compiler-check` records Cargo/rustc identities before the CI/release targets;
+Clippy and independent consumer/archive proofs all use that compiler. Setup
+prepares only the pinned toolchain; there is no separate older compiler lane.
+
 The sequential CI/release gate runs the existing `make clippy` after tool,
 dependency, source and formatting admission, before product checks, test suites
 and packaging. Clippy still selects both packages, all targets/features and
@@ -284,11 +289,41 @@ metadata, overwrite a tag, force-push or fall back to separate branch/tag pushes
 
 ## Registry publication
 
-`make publish` delegates both current libraries, in dependency order, to Cargo with
-`--locked --registry crates-io`; the packages inherit publication policy from the
-workspace. `make publish-dry-run` performs that admission without uploading. Neither
-command uses changelog presentation, release receipt or local tag as a registry gate.
-Both share release exclusion and perform no repository version or Git transaction.
+`make publish` and `make publish-dry-run` retain Backup's fixed two-library roster,
+crates.io registry and release/publication exclusion. Clippy runs first. Successful
+locked offline metadata then admits both local workspace packages and their registry
+eligibility through the reviewed shared selection projector. Each selected package
+has an exact `NAME@VERSION` selector. The original source commit is captured before
+Clippy and checked by the shared attempt runner before Cargo dispatch. Upload
+requires a clean Git source; dry runs retain Cargo's normal dirty-source refusal.
+
+The [shared publication runner](cargo-publication.md#calling-contract) constructs
+one `cargo publish --locked --registry crates-io` command and retains its exact
+arguments, source/package intent, combined output and Cargo/logger statuses.
+`publish-dry-run` selects its check mode, adding only `--dry-run`. There are no
+feature, dirty-source, verification or package-subset overrides on Backup's entry
+points. Cargo still owns dependency ordering, packaging, verification and upload.
+Neither command uses changelog presentation, release receipt or local tag as a
+registry gate, and neither changes versions or performs a Git transaction.
+
+Evidence lives under the Git state directory's `release-state/publication/`.
+Each invocation retains a fresh `selection.*` directory with the original source,
+metadata stdout/stderr/status and NUL-separated selectors, followed by a fresh
+`publish.selection.*` or `check.selection.*` attempt. All attempts use that same
+parent's `.cargo-publication.lock`; this is separate from Backup's wider
+`release-state/lock`, which covers admission and validation as before.
+
+Completed attempts release the shared lock and preserve all evidence. An interrupted
+attempt retains its shared lock; a dispatch marker without completed statuses is
+an unknown outcome. Even if the wider Backup lock has been released, a new command
+cannot dispatch through that retained shared lock. SIGKILL can leave either lock.
+Inspect both owners and the original attempt, then reconcile the exact selected
+versions with registry/provenance evidence before manually archiving a stopped
+owner's lock or selecting any fresh command. No automatic retry, lock stealing,
+resume-package inference or evidence cleanup is provided. A zero Cargo status is
+command completion, not independent registry acceptance; an already-published
+version remains Cargo's refusal, without skipping or retrying packages.
+
 A successful repository push proves neither crates.io publication nor downstream
 adoption. Follow-up publication is an explicit maintainer action.
 
@@ -313,6 +348,17 @@ This selection does not execute a release in the working repository.
 manifest/lockfile rendering fixtures, including multi-package ownership, alternate
 TOML layouts, Unicode paths and rejected candidates. Effects stay in isolated
 fixtures; original metadata is retained on failure.
+
+`bash scripts/release/test-release.sh --publication-only` selects the actual local
+publication Make callers with Git/Cargo/registry effects substituted. It covers
+exact source/package/argument evidence, tagged and untagged publication, serial
+and parallel Clippy ordering, failed metadata/eligibility/lint, changed or dirty
+source, fixed options, already-published refusal and interruption. The recovery
+case proves a retained shared lock blocks redispatch after Backup's lock releases,
+then explicitly simulates an operator reconciling the complete registry receipt,
+archiving the stopped owner's lock and requesting a fresh dry run. Original
+attempt and lock evidence remain intact. No live upload or real checkout release
+is performed.
 
 `make release-check` exercises actual consumer Make entry points and the reviewed
 runner with Git/Cargo substitutes. It covers

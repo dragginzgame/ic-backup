@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.54.0]
+
+### ⚠️ Breaking
+
+- Require Rust 1.99.1 or newer for both libraries and pin development/release work
+  to 1.99.1. Consumers on older Rust must upgrade before adopting 0.54.
+  CI uses one compiler while retaining native-host and independent-consumer checks.
+  ([#77 — Adopt Rust 1.99.1 and consolidate compiler qualification](https://github.com/dragginzgame/ic-backup/issues/77))
+
+### ⬆️ Dependencies
+
+- Adopt Testkit 0.78.0 and its arithmetic-only Metrics 0.25.1 dependency, retaining
+  the existing simulator integration and authenticated PocketIC 16.1.0 server.
+
+### 🔧 Changed
+
+- Adopt Shared Tooling 0.27.26. Tool setup tracks native build inputs and current
+  checkout requirements, then discards successful compilation scratch while
+  retaining admitted executables and receipts. Contributors should rerun
+  `make install-tools` after updating.
+
+- Retain publication arguments, source/package identities, output and outcomes
+  through Shared Tooling, preserving Backup's release lock, Clippy gate and fixed
+  registry/package policy. Interrupted attempts block redispatch until their
+  retained evidence and registry state are explicitly reconciled. ([#76 — Reuse shared Cargo publication attempt mechanics behind local admission](https://github.com/dragginzgame/ic-backup/issues/76))
+
 ## [0.53.6] - 2026-11-01
 
 ### ⬆️ Dependencies
