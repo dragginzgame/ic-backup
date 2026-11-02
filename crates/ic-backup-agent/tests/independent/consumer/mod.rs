@@ -10,8 +10,8 @@ mod evidence;
 mod metadata;
 mod stage;
 use clap::Parser;
-use command::Arguments;
 pub(super) use command::Mode;
+use command::{Action, Arguments};
 pub(super) use config::{ApplicationConfig, Config};
 use stage::Stage;
 
@@ -146,6 +146,18 @@ impl Driver {
         })
         .unwrap()
     }
+
+    fn restore_payload(
+        &self,
+        stage: Stage,
+        destination: impl FnOnce() -> io::Result<Vec<u8>>,
+    ) -> io::Result<IcManagementRequestRecord> {
+        match stage {
+            Stage::Load => Ok(self.payload(Method::LoadCanisterSnapshot, Some(destination()?))),
+            Stage::Start => Ok(self.payload(Method::StartCanister, None)),
+            _ => Err(io::ErrorKind::InvalidInput.into()),
+        }
+    }
     fn source(&self) -> PathBuf {
         Stage::Download.path(&self.root)
     }
@@ -218,16 +230,7 @@ impl ExecutionWorkflowStageDriver for Driver {
             Stage::Load | Stage::Start => self.singleton(
                 workflow,
                 sequence,
-                &self
-                    .payload(
-                        if stage == Stage::Load {
-                            Method::LoadCanisterSnapshot
-                        } else {
-                            Method::StartCanister
-                        },
-                        (stage == Stage::Load).then(|| self.destination().unwrap()),
-                    )
-                    .digest(),
+                &self.restore_payload(stage, || self.destination())?.digest(),
             ),
         })
     }
@@ -365,9 +368,19 @@ pub(super) async fn entry() {
 async fn run() -> io::Result<()> {
     let Arguments { mode, root } =
         Arguments::try_parse().map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;
-    if mode.is_application() {
-        return application::run(&root, mode).await;
-    }
+    let action = mode.action();
+    let (is_capture, create) = match action {
+        Action::ApplicationNew | Action::ApplicationObserve | Action::ApplicationRetained => {
+            return application::run(&root, mode, action).await;
+        }
+        Action::CaptureNew => (true, true),
+        Action::CaptureContinue | Action::InspectCapture => (true, false),
+        Action::InspectRestore
+        | Action::LoseLoad
+        | Action::Replay
+        | Action::Restore
+        | Action::Start => (false, false),
+    };
     let config = Config::read(&root)?;
     let capture = workflow(&config, None);
     let restore = workflow(&config, Some(&capture.digest()));
@@ -378,7 +391,7 @@ async fn run() -> io::Result<()> {
         restore: restore.clone(),
         mode,
     };
-    if mode.creates_workflows() {
+    if create {
         for (name, original) in [("capture", &capture), ("restore", &restore)] {
             fs::DirBuilder::new().mode(0o700).create(root.join(name))?;
             create_execution_workflow(
@@ -388,37 +401,37 @@ async fn run() -> io::Result<()> {
             .map_err(error)?;
         }
     }
-    let is_capture = mode.is_capture();
     let name = if is_capture { "capture" } else { "restore" };
     let original = if is_capture { &capture } else { &restore };
     let layout = BackupLayoutGuard::acquire(&root.join(name)).map_err(error)?;
     let progress = read_execution_workflow_progress(&layout, &original.digest()).map_err(error)?;
     assert_eq!(progress.workflow, original.digest());
     assert_eq!(progress.stages.len(), original.stages().len());
-    if mode.is_inspection() {
+    if matches!(action, Action::InspectCapture | Action::InspectRestore) {
         serde_json::to_writer(io::stdout(), &progress)?;
         println!();
         return Ok(());
     }
-    if mode == Mode::Replay {
+    if action == Action::Replay {
         return driver.terminal(&layout);
     }
     let evidence = retained(&layout, original)?;
-    let limit = std::num::NonZeroUsize::new(if matches!(mode, Mode::Restore | Mode::LoseLoad) {
-        3
-    } else {
-        usize::MAX
-    })
-    .unwrap();
+    let limit =
+        std::num::NonZeroUsize::new(if matches!(action, Action::Restore | Action::LoseLoad) {
+            3
+        } else {
+            usize::MAX
+        })
+        .unwrap();
     let result =
         advance_execution_workflow(&layout, &original.digest(), &evidence, limit, &mut driver)
             .await;
     match result {
-        Ok(ExecutionWorkflowAdvance::Complete(_)) if mode == Mode::Start => {
+        Ok(ExecutionWorkflowAdvance::Complete(_)) if action == Action::Start => {
             driver.terminal(&layout)
         }
         Ok(ExecutionWorkflowAdvance::Complete(_)) => Ok(()),
-        Ok(ExecutionWorkflowAdvance::Paused) if mode == Mode::Restore => Ok(()),
+        Ok(ExecutionWorkflowAdvance::Paused) if action == Action::Restore => Ok(()),
         Ok(ExecutionWorkflowAdvance::Paused) => Err(io::ErrorKind::InvalidData.into()),
         Err(e) => Err(error(e)),
     }

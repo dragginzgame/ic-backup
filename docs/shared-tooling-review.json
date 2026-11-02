@@ -5,12 +5,12 @@
   "commit_title": "0.27.27",
   "reviewed_on": "2026-11-02",
   "previous_revision": "fd9390ef797bfad8aaa05fdba8fcddec753b572c",
-  "previous_review_evidence": "/tmp/backup-testkit-refresh.jXzVq3jM/before/docs/shared-tooling-review.json",
+  "previous_review_evidence": "/tmp/backup-deploy-0552.0OuUpHJW/before/docs/shared-tooling-review.json",
   "consumer_baseline": {
-    "commit": "3944f3d9825a103027717e3040d4a6fc2c55fcb4",
-    "version": "0.55.0",
-    "pending_notes": "0.55.1",
-    "worktree": "Adopt Testkit 0.80.0; preserve the incoming async-lock 3.5.0 lockfile update. No own-version bump or delivery."
+    "commit": "2b26bbe169237f5a4c82f3fbdfcebc8b23a6a3ed",
+    "version": "0.55.1",
+    "pending_notes": "0.55.2",
+    "worktree": "Seven accepted simplifications and incoming Testkit 0.80.1/Runtime 0.18.1 lockfile refresh prepared for the explicitly requested 0.55.2 delivery."
   },
   "provenance": {
     "source_selection": "GitHub refs/heads/main independently selected the full commit. The canonical exporter and trusted verifier run from a clean isolated detached checkout; no sibling working-tree changes enter the snapshot.",
@@ -37,14 +37,14 @@
       "ic-build-release-metadata": "ic-build 0.74.0"
     },
     "development": {
-      "ic-testkit": "0.80.0",
+      "ic-testkit": "0.80.1 locked; manifest requirement remains ^0.80.0",
       "ic-platform": "0.18.0 with development-only pocket-ic feature; no simulator alias",
       "ic-platform-pocket-ic": "0.18.0 through Platform and Testkit",
-      "ic-metrics": "0.26.1 transitively, no features enabled"
+      "ic-platform-runtime": "0.18.1, target-specific Testkit dependency; host runtime features remain disabled"
     },
-    "lock_scope": "Latest scoped update replaces only Testkit 0.79.0 with 0.80.0; all other incoming dependency records remain unchanged, including async-lock 3.5.0. Earlier unified Host/Platform/Types/Metrics adoption is now in the 0.55.0 source baseline.",
-    "compatibility": "Public Host error identities move from 0.73 to 0.74, requiring callers sharing those types to align. Pending notes promote to 0.55.0 without changing own package versions. Consumed native Candid, management DTO 0.11.0, external Principal 0.1.5 and Agent 0.49.3 sources/identities remain unchanged; changed Types self-authentication is disabled.",
-    "simulator_compatibility": "All 30 Testkit src files are byte-identical between authenticated 0.79.0 and 0.80.0 archives. The normalized manifest changes the optional Wire requirement 0.14 to 0.15; Backup enables only the empty default feature and no Wire package is resolved. Platform/client 0.18, canonical management DTO 0.11.0 and authenticated PocketIC 16.1.0 remain selected."
+    "lock_scope": "The incoming lockfile replaces Testkit 0.80.0 with 0.80.1 and target-specific Runtime 0.18.0 with 0.18.1, removing Metrics 0.26.1. Release preparation preserves that exact lock selection; no dependency resolution/update is performed.",
+    "compatibility": "The Host 0.73 to 0.74 public-error identity migration was delivered in 0.55.0. This 0.55.2 patch preserves Host 0.74.1, Platform 0.18.0, Types 0.17.0, Candid/management DTO 0.11.0/external Principal 0.1.5/Agent 0.49.3 identities and product schemas. No new consumer migration.",
+    "simulator_compatibility": "Authenticated Testkit 0.80.1 archive comparison changes only src/benchmark/analysis.rs and removes the Metrics dependency. All PocketIC source files match 0.80.0 byte-for-byte; authenticated server 16.1.0 and Platform/client 0.18 remain selected. Wire remains disabled."
   },
   "consumer_decisions": [
     "Keep one coordinated Backup release group and the complete positional CI/release gate. The new group-plan parser is available as a derived companion but no plan or omission mapping is enabled.",
@@ -62,6 +62,17 @@
     "product": "core-pocketic.log passes all six connected original-workflow cases; agent-pocketic.log passes real Agent capture, complete transfer, upload and same-ID restore. testkit-routing.log passes actual setup/check routing and refusal fixtures.",
     "inputs": "qualified-inputs.json and qualified-input-comparison.json prove all 854 captured inputs unchanged across qualification. Review/handoff updates afterward receive focused documentation checks.",
     "checks": "final-checks.log records formatting, links, shared snapshot integrity, repository/license admission, review JSON and whitespace checks.",
-    "limits": "Focused Linux qualification. No new full CI/release gate, independent package/MSRV consumer rerun, native macOS, Canic or live IC acceptance. Earlier consumer evidence remains retained in the previous review. No staging, commit, own-version bump, release, publication, sibling edits or cleanup."
+    "limits": "Focused Linux qualification. No new full CI/release gate, independent package/MSRV consumer rerun, native macOS, Canic or live IC acceptance. Earlier consumer evidence remains retained in the previous review. No staging, commit, own-version bump, release, publication, sibling edits or cleanup.",
+    "scope_note": "This object retains historical Testkit 0.80.0 adoption evidence. Current fixture qualification and authorized release preparation are recorded below and in docs/status/current.md."
+  },
+  "release_preparation": {
+    "requested_version": "0.55.2",
+    "evidence_directory": "/tmp/backup-deploy-0552.0OuUpHJW",
+    "archive_proof": "testkit-source-proof.json authenticates the exact locked 0.80.1 checksum and VCS identity; testkit-manifest.diff records the dependency removal.",
+    "focused_evidence": [
+      "/tmp/backup-four-fixture-simplifications.k78vvo9k",
+      "/tmp/backup-three-simplifications.i_p7q3h0"
+    ],
+    "gate": "The standard complete release gate, source commit/tag/push and registry verification will produce their own retained logs and receipt; focused evidence alone is not delivery acceptance."
   }
 }

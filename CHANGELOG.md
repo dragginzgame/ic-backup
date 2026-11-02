@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.55.2]
+
+### ⬆️ Dependencies
+
+- Refresh locked Testkit to 0.80.1 and its target-specific Runtime selection to
+  0.18.1. Testkit no longer brings Metrics into the development graph; the
+  authenticated PocketIC 16.1.0 server remains selected.
+
+### 🧪 Testing
+
+- Resolve independent-consumer command actions exhaustively and share
+  upload/restore reply-fault descriptions with their expected operation positions.
+- Carry read-failure positions with their outcomes and derive round-trip fault
+  expectations directly from the selected scenario.
+- Share fresh Agent source preparation and load/start payload construction,
+  retaining original byte evidence, custody checks and separate recovery cases.
+
+### 🧹 Cleanup
+
+- Derive artifact-member exact lengths and maximum bounds together before
+  the existing guarded regular-file open.
+
 ## [0.55.1] - 2026-11-02
 
 ### ⬆️ Dependencies

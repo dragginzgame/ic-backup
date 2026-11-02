@@ -32,42 +32,43 @@ pub(crate) enum Mode {
     Restore,
     Start,
 }
+// Derived execution actions; fault-specific modes retain their original names and evidence.
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(super) enum Action {
+    ApplicationNew,
+    ApplicationObserve,
+    ApplicationRetained,
+    CaptureNew,
+    CaptureContinue,
+    InspectCapture,
+    InspectRestore,
+    LoseLoad,
+    Replay,
+    Restore,
+    Start,
+}
+
 impl Mode {
-    pub(super) fn is_application(self) -> bool {
-        matches!(
-            self,
+    pub(super) fn action(self) -> Action {
+        match self {
             Self::ApplicationDie
-                | Self::ApplicationInit
-                | Self::ApplicationObserve
-                | Self::ApplicationRefuseReply
-                | Self::ApplicationReplay
-                | Self::ApplicationResume
-                | Self::ApplicationSmall
-        )
-    }
-    pub(super) fn creates_workflows(self) -> bool {
-        matches!(
-            self,
+            | Self::ApplicationInit
+            | Self::ApplicationRefuseReply
+            | Self::ApplicationSmall => Action::ApplicationNew,
+            Self::ApplicationObserve => Action::ApplicationObserve,
+            Self::ApplicationReplay | Self::ApplicationResume => Action::ApplicationRetained,
             Self::Capture
-                | Self::CaptureFailIngress
-                | Self::CaptureFailPartial
-                | Self::CaptureFailRetention
-        )
-    }
-    pub(super) fn is_capture(self) -> bool {
-        self.creates_workflows() || matches!(self, Self::CaptureContinue | Self::InspectCapture)
-    }
-    pub(super) fn is_inspection(self) -> bool {
-        matches!(self, Self::InspectCapture | Self::InspectRestore)
-    }
-    pub(super) fn starts_application(self) -> bool {
-        matches!(
-            self,
-            Self::ApplicationInit
-                | Self::ApplicationDie
-                | Self::ApplicationSmall
-                | Self::ApplicationRefuseReply
-        )
+            | Self::CaptureFailIngress
+            | Self::CaptureFailPartial
+            | Self::CaptureFailRetention => Action::CaptureNew,
+            Self::CaptureContinue => Action::CaptureContinue,
+            Self::InspectCapture => Action::InspectCapture,
+            Self::InspectRestore => Action::InspectRestore,
+            Self::LoseLoad => Action::LoseLoad,
+            Self::Replay => Action::Replay,
+            Self::Restore => Action::Restore,
+            Self::Start => Action::Start,
+        }
     }
 }
 

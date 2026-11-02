@@ -26,7 +26,7 @@ canonical owned Principal from Platform Types 0.17.0.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
 retain their qualified upstream identities. Development-only PocketIC clients now
-belong to Platform's maintained `ic-platform-pocket-ic` package. Testkit 0.80.0
+belong to Platform's maintained `ic-platform-pocket-ic` package. Testkit 0.80.1
 and Backup share Platform/client 0.18 and canonical Types 0.17 identities.
 The temporary older simulator alias is removed; the `pocket-ic` feature remains
 development-only and never enters a normal consumer.
@@ -76,10 +76,10 @@ Principal, shared by the simulator stack through the same published supplier.
 
 The workspace requires and resolves Host Artifacts/FS/Process 0.74.1. Consumers
 sharing public Host error types must align their direct selections to 0.74.
-Testkit 0.80.0 now selects Host 0.74.1, Platform/client 0.18 and arithmetic-only
-Metrics 0.26.1. Their optional Wire requirements remain outside Backup's graph.
-The old Host 0.73, Platform 0.17, Types 0.16 and Metrics 0.25 packages are no longer
-required by the development graph.
+Locked Testkit 0.80.1 selects Host 0.74.1 and Platform/client 0.18, and removes
+its Metrics dependency. Its PocketIC source is unchanged from 0.80.0; optional
+Wire remains outside Backup's graph. The old Host 0.73, Platform 0.17, Types 0.16
+and both Metrics generations are no longer required by the development graph.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

@@ -46,9 +46,17 @@ use std::{convert::Infallible, fs, io::Write, os::unix::fs::DirBuilderExt, path:
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum ReadFailure {
     None,
-    Lost,
-    LostFirst,
-    Malformed,
+    Lost(usize),
+    Malformed(usize),
+}
+
+impl ReadFailure {
+    pub(super) fn position(self) -> Option<usize> {
+        match self {
+            Self::None => None,
+            Self::Lost(index) | Self::Malformed(index) => Some(index),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -114,7 +122,6 @@ pub(super) struct ReadProvider<'a> {
     pub(super) failure: ReadFailure,
     pub(super) oracle: &'a Path,
     pub(super) calls: usize,
-    pub(super) fail_at: usize,
 }
 impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
     fn read_snapshot(
@@ -129,12 +136,12 @@ impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
             let index = self.calls;
             self.calls += 1;
             let response = ready(self.backend.read_snapshot(request, journal))?;
-            if self.failure == ReadFailure::None || index != self.fail_at {
+            if self.failure.position() != Some(index) {
                 return Ok(response);
             }
             // Retained fixture oracle is never outcome/retry evidence for the workflow.
             fs::write(self.oracle, &response.input().reply).unwrap();
-            if matches!(self.failure, ReadFailure::Lost | ReadFailure::LostFirst) {
+            if matches!(self.failure, ReadFailure::Lost(_)) {
                 return Err(IcObservationProviderError::Indeterminate);
             }
             let mut input = response.input().clone();
@@ -402,7 +409,6 @@ pub(crate) fn run(failure: ReadFailure) {
         failure,
         oracle: &oracle,
         calls: 0,
-        fail_at: usize::from(failure != ReadFailure::LostFirst),
     };
     let result = ready(download_snapshot(
         &stage,
@@ -434,14 +440,12 @@ pub(crate) fn run(failure: ReadFailure) {
     ));
     assert_eq!(
         provider.calls,
-        if failure == ReadFailure::None {
-            download.requests().len()
-        } else {
-            usize::from(failure != ReadFailure::LostFirst) + 1
-        }
+        failure
+            .position()
+            .map_or(download.requests().len(), |index| index + 1)
     );
-    if failure != ReadFailure::None {
-        if failure == ReadFailure::Malformed {
+    if let Some(index) = failure.position() {
+        if matches!(failure, ReadFailure::Malformed(_)) {
             let Err(IcSnapshotDownloadExecutionError::Read(
                 IcSnapshotTransferReadExecutionError::AfterReply {
                     source: IcSnapshotTransferReadReplyError::Association(_),
@@ -462,7 +466,7 @@ pub(crate) fn run(failure: ReadFailure) {
                 ))
             ));
         }
-        let pending = u64::from(failure != ReadFailure::LostFirst);
+        let pending = u64::try_from(index).unwrap();
         let dispatched = u32::try_from(pending + 1).unwrap();
         let view = read_execution_progress(stage_layout, &plan.digest()).unwrap();
         assert_eq!(view.attempts.mutations_used, dispatched);
@@ -570,7 +574,7 @@ pub(crate) fn run(failure: ReadFailure) {
 }
 
 pub(crate) fn metadata_failure(failure: ReadFailure) {
-    assert!(failure != ReadFailure::None);
+    assert_eq!(failure.position(), Some(0));
     let (mut backend, layout, workflow) = prepare();
     let (snapshot, capture) =
         capture(&mut backend, &layout, &workflow, CaptureFailure::None).unwrap();
@@ -598,7 +602,6 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
         failure,
         oracle: &oracle,
         calls: 0,
-        fail_at: 0,
     };
     let result = ready(read_snapshot_metadata(
         &stage,
@@ -608,7 +611,7 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
         async |_| Ok::<_, Infallible>(()),
         async |_, _| -> Result<_, Infallible> { panic!("lost/malformed metadata cannot qualify") },
     ));
-    if failure == ReadFailure::Lost {
+    if matches!(failure, ReadFailure::Lost(_)) {
         assert!(matches!(
             result,
             Err(IcSnapshotMetadataExecutionError::Read(

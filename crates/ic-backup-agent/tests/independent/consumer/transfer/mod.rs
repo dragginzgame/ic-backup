@@ -5,7 +5,10 @@ use ic_backup::ports::ic_mutation::IcMutationProviderError;
 use ic_backup::{
     model::{
         download_journal::DownloadArtifactRequest,
-        ic_snapshot_upload::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind},
+        ic_snapshot_metadata::IcSnapshotMetadataReply,
+        ic_snapshot_upload::{
+            IcSnapshotUploadReply, IcSnapshotUploadReplyKind, IcSnapshotUploadRequest,
+        },
     },
     ops::persistence::{DownloadJournalGuard, read_operation_plan},
     workflow::{
@@ -18,18 +21,33 @@ use ic_backup_agent::{AgentSnapshotTransferReadProvider, AgentUpdateProvider};
 
 // Own one freshly admitted source scope; returned journals borrow this held layout.
 // No source or metadata evidence is cached between driver calls.
-struct RetainedSource {
+struct RetainedSource<'a> {
     layout: BackupLayoutGuard,
     plan: OperationPlanRecord,
+    metadata: IcSnapshotMetadataReply<'a>,
 }
-impl RetainedSource {
-    fn open(driver: &Driver) -> io::Result<Self> {
+impl<'a> RetainedSource<'a> {
+    fn open(driver: &Driver, original: &'a metadata::MetadataEvidence) -> io::Result<Self> {
+        let metadata = original.decode()?;
         let layout = BackupLayoutGuard::acquire(&driver.source()).map_err(error)?;
-        let plan = driver.source_plan(&layout)?;
-        Ok(Self { layout, plan })
+        let plan = driver.source_plan(&layout, &metadata)?;
+        Ok(Self {
+            layout,
+            plan,
+            metadata,
+        })
     }
     fn journal(&self) -> io::Result<DownloadJournalGuard<'_>> {
         DownloadJournalGuard::open(&self.layout, self.plan.digest().hash()).map_err(error)
+    }
+
+    fn upload(
+        &self,
+        journal: &DownloadJournalGuard<'_>,
+    ) -> io::Result<IcSnapshotUploadRequest<'_>> {
+        journal
+            .prepare_ic_snapshot_upload_metadata(&self.plan, TOKEN, &self.metadata)
+            .map_err(error)
     }
 }
 
@@ -137,30 +155,22 @@ impl Driver {
     pub(super) fn source_plan(
         &self,
         source: &BackupLayoutGuard,
+        metadata: &IcSnapshotMetadataReply<'_>,
     ) -> io::Result<OperationPlanRecord> {
-        let original = self.metadata_evidence()?;
-        let metadata = original.decode()?;
-        let plan = IcSnapshotDownloadPlan::new(
-            &self.capture,
-            Stage::Download.sequence(),
-            &metadata,
-            CHUNK,
-        )
-        .map_err(error)?
-        .plan()
-        .unwrap()
-        .clone();
+        let plan =
+            IcSnapshotDownloadPlan::new(&self.capture, Stage::Download.sequence(), metadata, CHUNK)
+                .map_err(error)?
+                .plan()
+                .unwrap()
+                .clone();
         read_operation_plan(source, &plan.digest()).map_err(error)
     }
 
     pub(super) fn destination(&self) -> io::Result<Vec<u8>> {
         let original = self.metadata_evidence()?;
-        let metadata = original.decode()?;
-        let source = RetainedSource::open(self)?;
+        let source = RetainedSource::open(self, &original)?;
         let journal = source.journal()?;
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&source.plan, TOKEN, &metadata)
-            .map_err(error)?;
+        let upload = source.upload(&journal)?;
         let raw = self.raw(Stage::Allocation)?;
         let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
@@ -176,12 +186,9 @@ impl Driver {
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> io::Result<OperationPlanRecord> {
         let original = self.metadata_evidence()?;
-        let metadata = original.decode()?;
-        let source = RetainedSource::open(self)?;
+        let source = RetainedSource::open(self, &original)?;
         let journal = source.journal()?;
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&source.plan, TOKEN, &metadata)
-            .map_err(error)?;
+        let upload = source.upload(&journal)?;
         if Stage::from_sequence(sequence)? == Stage::Allocation {
             return Ok(self.singleton(
                 workflow,
@@ -215,19 +222,16 @@ impl Driver {
 
     pub(super) async fn upload(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let original = self.metadata_evidence()?;
-        let metadata = original.decode()?;
-        let source = RetainedSource::open(self)?;
+        let source = RetainedSource::open(self, &original)?;
         let journal = source.journal()?;
         let manifest = journal.record().map_err(error)?.digest();
         journal
             .read_download_manifest(&source.plan, &manifest)
             .map_err(error)?;
         journal
-            .verify_ic_snapshot_artifact(&source.plan, TOKEN, &metadata)
+            .verify_ic_snapshot_artifact(&source.plan, TOKEN, &source.metadata)
             .map_err(error)?;
-        let upload = journal
-            .prepare_ic_snapshot_upload_metadata(&source.plan, TOKEN, &metadata)
-            .map_err(error)?;
+        let upload = source.upload(&journal)?;
         let transport = self.config.transport(stage.plan());
         let root = stage.layout().map_err(error)?.root();
         let mut provider = AgentUpdateProvider::new(

@@ -115,13 +115,41 @@ pub(crate) enum RoundTripScenario {
     StartLost,
 }
 impl RoundTripScenario {
-    fn failure(self) -> Failure {
+    fn failure(self) -> (Failure, Option<FailureExpectation>) {
         match self {
-            Self::Complete | Self::Interrupted => Failure::None,
-            Self::MetadataLost => Failure::MetadataLost,
-            Self::DataLostSecond => Failure::DataLostSecond,
-            Self::LoadLost => Failure::LoadLost,
-            Self::StartLost => Failure::StartLost,
+            Self::Complete | Self::Interrupted => (Failure::None, None),
+            Self::MetadataLost => (
+                Failure::MetadataLost,
+                Some(FailureExpectation {
+                    stage: Stage::Allocation,
+                    operation_sequence: Stage::Allocation.sequence(),
+                    successor: Some(Stage::Upload),
+                }),
+            ),
+            Self::DataLostSecond => (
+                Failure::DataLostSecond,
+                Some(FailureExpectation {
+                    stage: Stage::Upload,
+                    operation_sequence: 1,
+                    successor: Some(Stage::Load),
+                }),
+            ),
+            Self::LoadLost => (
+                Failure::LoadLost,
+                Some(FailureExpectation {
+                    stage: Stage::Load,
+                    operation_sequence: Stage::Load.sequence(),
+                    successor: Some(Stage::Start),
+                }),
+            ),
+            Self::StartLost => (
+                Failure::StartLost,
+                Some(FailureExpectation {
+                    stage: Stage::Start,
+                    operation_sequence: Stage::Start.sequence(),
+                    successor: None,
+                }),
+            ),
         }
     }
 }
@@ -156,13 +184,14 @@ impl CompleteDriver {
     pub(super) fn bind_restore(
         &self,
         workflow: &ExecutionWorkflowRecord,
-        sequence: u64,
+        kind: Stage,
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> OperationPlanRecord {
+        let sequence = kind.sequence();
         let retained = self.restore.as_ref().unwrap();
-        if matches!(Stage::from_sequence(sequence), Stage::Load | Stage::Start) {
+        if matches!(kind, Stage::Load | Stage::Start) {
             return self.backend.plan_with_observations(
-                &self.restore_payload(sequence, self.destination()).digest(),
+                &self.restore_payload(kind, self.destination()).digest(),
                 sequence,
                 0,
             );
@@ -174,7 +203,7 @@ impl CompleteDriver {
         );
         let journal = source.journal();
         let upload = source.upload(&journal);
-        if Stage::from_sequence(sequence) == Stage::Allocation {
+        if kind == Stage::Allocation {
             assert_eq!(predecessors, []);
             assert_eq!(
                 retained.source_binding.plan(),
@@ -324,18 +353,18 @@ impl CompleteDriver {
 
     fn restore_payload(
         &self,
-        sequence: u64,
+        kind: Stage,
         destination: Vec<u8>,
     ) -> ic_backup::model::ic_request::IcManagementRequestRecord {
-        management(
-            &self.backend,
-            if Stage::from_sequence(sequence) == Stage::Load {
-                Method::LoadCanisterSnapshot
-            } else {
-                Method::StartCanister
-            },
-            (Stage::from_sequence(sequence) == Stage::Load).then_some(destination),
-        )
+        match kind {
+            Stage::Load => management(
+                &self.backend,
+                Method::LoadCanisterSnapshot,
+                Some(destination),
+            ),
+            Stage::Start => management(&self.backend, Method::StartCanister, None),
+            _ => panic!("restore payload requires load or start"),
+        }
     }
 
     fn destination(&self) -> Vec<u8> {
@@ -367,8 +396,9 @@ impl CompleteDriver {
         stage: &ExecutionStageGuard<'_>,
     ) -> io::Result<ArtifactChecksumRecord> {
         let sequence = stage.binding().stage_sequence();
+        let kind = Stage::from_sequence(sequence);
         let destination = self.destination();
-        let payload = self.restore_payload(sequence, destination.clone());
+        let payload = self.restore_payload(kind, destination.clone());
         let retained = self.restore.as_mut().unwrap();
         let source = RestoreSourceContext::open(
             &retained.source.root,
@@ -386,7 +416,7 @@ impl CompleteDriver {
         );
         // These are separately planned/reserved qualification calls, never hidden
         // calls inside a product provider or inferred upload/load receipts.
-        if Stage::from_sequence(sequence) == Stage::Load {
+        if kind == Stage::Load {
             verify_destination(
                 &mut self.backend,
                 metadata,
@@ -431,7 +461,7 @@ impl CompleteDriver {
             },
         )
         .unwrap();
-        let restore_source = if Stage::from_sequence(sequence) == Stage::Load {
+        let restore_source = if kind == Stage::Load {
             let upload = source.upload(&journal);
             let original = retained.allocation.as_ref().unwrap();
             let allocation = IcSnapshotUploadReply::decode(&upload, &original.raw_reply).unwrap();
@@ -516,7 +546,7 @@ impl CompleteDriver {
         ))
         .map_err(|error| io::Error::other(error.to_string()))?;
         assert_eq!(acknowledgement.input().reply, b"DIDL\0\0");
-        if Stage::from_sequence(sequence) == Stage::Load {
+        if kind == Stage::Load {
             let acceptance = verify_loaded(
                 &mut backend.borrow_mut(),
                 metadata,
@@ -756,7 +786,7 @@ fn rebuild(
     reason = "keep original intents, interruption custody, refusal and completed replay in one qualification trace"
 )]
 pub(crate) fn run_round_trip(scenario: RoundTripScenario) {
-    let failure = scenario.failure();
+    let (failure, expected_failure) = scenario.failure();
     let mut backend = Backend::new();
     assert!(
         lifecycle(
@@ -850,30 +880,6 @@ pub(crate) fn run_round_trip(scenario: RoundTripScenario) {
             }
         }
     }
-    let expected_failure = match failure {
-        Failure::MetadataLost => Some(FailureExpectation {
-            stage: Stage::Allocation,
-            operation_sequence: Stage::Allocation.sequence(),
-            successor: Some(Stage::Upload),
-        }),
-        Failure::DataLostSecond => Some(FailureExpectation {
-            stage: Stage::Upload,
-            operation_sequence: 1,
-            successor: Some(Stage::Load),
-        }),
-        Failure::LoadLost => Some(FailureExpectation {
-            stage: Stage::Load,
-            operation_sequence: Stage::Load.sequence(),
-            successor: Some(Stage::Start),
-        }),
-        Failure::StartLost => Some(FailureExpectation {
-            stage: Stage::Start,
-            operation_sequence: Stage::Start.sequence(),
-            successor: None,
-        }),
-        Failure::None => None,
-        _ => panic!("selected round-trip fault"),
-    };
     if let Some(expected) = expected_failure {
         let sequence = expected.stage.sequence();
         assert!(result.is_err());

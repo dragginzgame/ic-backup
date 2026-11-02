@@ -81,25 +81,14 @@ impl ExpectedMember {
         &self,
         directory: &super::File,
     ) -> Result<(super::File, std::fs::Metadata), IcSnapshotArtifactError> {
-        super::verification::open_regular_child(
-            directory,
-            &self.name,
-            self.length(),
-            self.maximum(),
-        )
-    }
-    fn length(&self) -> Option<u64> {
-        match self.kind {
-            MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => Some(length),
-            MemberKind::Metadata { .. } | MemberKind::Chunk { .. } => None,
-        }
-    }
-    fn maximum(&self) -> u64 {
-        match self.kind {
-            MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => length,
-            MemberKind::Metadata { .. } => MAX_IC_SNAPSHOT_METADATA_BYTES as u64,
-            MemberKind::Chunk { .. } => MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64,
-        }
+        let (length, maximum) = match self.kind {
+            MemberKind::Fixed { length, .. } | MemberKind::Region { length, .. } => {
+                (Some(length), length)
+            }
+            MemberKind::Metadata { .. } => (None, MAX_IC_SNAPSHOT_METADATA_BYTES as u64),
+            MemberKind::Chunk { .. } => (None, MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64),
+        };
+        super::verification::open_regular_child(directory, &self.name, length, maximum)
     }
     pub(super) fn checksum(&self) -> Option<&ArtifactChecksumRecord> {
         match &self.kind {

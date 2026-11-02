@@ -1,6 +1,9 @@
 //! Normal-dependency opaque application ingress; fixture authority is supplied by the parent.
 use super::evidence::ObservedContext;
-use super::{ApplicationConfig, AttemptBudgetRecord, command::Mode};
+use super::{
+    ApplicationConfig, AttemptBudgetRecord,
+    command::{Action, Mode},
+};
 use super::{error, read, retain};
 use ic_backup::{
     model::{
@@ -198,14 +201,14 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
     }
 }
 
-pub(super) async fn run(root: &Path, mode: Mode) -> io::Result<()> {
+pub(super) async fn run(root: &Path, mode: Mode, action: Action) -> io::Result<()> {
     let config: ApplicationConfig = serde_json::from_slice(&read(&root.join("config.json"))?)?;
     let payload = payload(&config, "apply");
     let plan = plan(&config, &payload);
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
     let layout = BackupLayoutGuard::acquire(root).map_err(error)?;
     let original = declaration(&payload);
-    if mode.starts_application() {
+    if action == Action::ApplicationNew {
         retain(
             &root.join("original-payload.json"),
             &serde_json::to_vec(&original)?,
@@ -217,7 +220,7 @@ pub(super) async fn run(root: &Path, mode: Mode) -> io::Result<()> {
         }
     }
 
-    if mode == Mode::ApplicationObserve {
+    if action == Action::ApplicationObserve {
         return observe(&layout, &config, &plan, &workflow).await;
     }
     let mut driver = Driver {
@@ -228,12 +231,12 @@ pub(super) async fn run(root: &Path, mode: Mode) -> io::Result<()> {
         mode,
         callbacks: 0,
     };
-    if mode.starts_application() {
+    if action == Action::ApplicationNew {
         run_new_execution_workflow(&layout, &workflow, &mut driver)
             .await
             .map_err(error)?;
         assert_eq!(driver.callbacks, 2);
-    } else if matches!(mode, Mode::ApplicationReplay | Mode::ApplicationResume) {
+    } else if action == Action::ApplicationRetained {
         let binding: ExecutionStageBindingRecord =
             serde_json::from_slice(&read(&root.join("execution-stage-0/stage-binding.json"))?)?;
         let learned =

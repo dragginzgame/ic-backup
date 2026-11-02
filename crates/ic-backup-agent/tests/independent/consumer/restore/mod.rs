@@ -73,9 +73,9 @@ impl Driver {
             None
         };
         let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
-        let source_plan = self.source_plan(&source)?;
         let original = self.metadata_evidence()?;
         let metadata = original.decode()?;
+        let source_plan = self.source_plan(&source, &metadata)?;
         let journal =
             DownloadJournalGuard::open(&source, source_plan.digest().hash()).map_err(error)?;
         journal
@@ -115,14 +115,7 @@ impl Driver {
             IcRestoreSource::existing(&source, &source_plan, &original.request)
         };
         drop(journal);
-        let payload = self.payload(
-            if kind == Stage::Load {
-                Method::LoadCanisterSnapshot
-            } else {
-                Method::StartCanister
-            },
-            (kind == Stage::Load).then_some(destination),
-        );
+        let payload = self.restore_payload(kind, || Ok(destination))?;
         let requirement = RestoreSafetyRequirementRecord::new(
             stage.plan(),
             &source_plan,
@@ -265,7 +258,7 @@ impl RestoreTerminalEvidenceProvider for Terminal<'_> {
             .map_err(error)?;
         let original = self.driver.metadata_evidence()?;
         let metadata = original.decode()?;
-        let plan = self.driver.source_plan(self.source)?;
+        let plan = self.driver.source_plan(self.source, &metadata)?;
         let download =
             DownloadJournalGuard::open(self.source, plan.digest().hash()).map_err(error)?;
         download

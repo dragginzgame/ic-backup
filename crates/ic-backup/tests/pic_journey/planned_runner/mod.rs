@@ -298,7 +298,6 @@ impl CompleteDriver {
             failure: self.data_failure,
             oracle: &oracle,
             calls: 0,
-            fail_at: 1,
         };
         let mut chunks = Vec::new();
         let checksum = ready(download_snapshot(
@@ -374,11 +373,12 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
     ) -> Result<OperationPlanRecord, Self::Error> {
         assert_eq!(workflow, &self.workflow);
         self.binds.push(sequence);
+        let kind = Stage::from_sequence(sequence);
         assert_eq!(
             predecessors.len(),
-            usize::from(Stage::from_sequence(sequence).predecessor().is_some())
+            usize::from(kind.predecessor().is_some())
         );
-        if Stage::from_sequence(sequence) == Stage::Metadata {
+        if kind == Stage::Metadata {
             let snapshot = self.snapshot.as_ref().unwrap();
             if predecessors[0].stage_sequence() != 0
                 || predecessors[0].learned_evidence()
@@ -390,7 +390,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
         if self.stop_before == Some(sequence) {
             return Err(io::Error::other("fixture interruption before absent stage"));
         }
-        Ok(match Stage::from_sequence(sequence) {
+        Ok(match kind {
             Stage::Capture => {
                 let payload = management(&self.backend, Method::TakeCanisterSnapshot, None);
                 self.backend.plan(&payload.digest(), 0)
@@ -411,7 +411,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                     .clone()
             }
             Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
-                self.bind_restore(workflow, sequence, predecessors)
+                self.bind_restore(workflow, kind, predecessors)
             }
         })
     }
@@ -508,7 +508,10 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
         );
     } else {
         assert!(result.is_err());
-        let path = root.join("execution-stage-9/attempt-1.json");
+        let path = root.join(format!(
+            "execution-stage-9/attempt-{}.json",
+            data_failure.position().unwrap()
+        ));
         let original = fs::read(&path).unwrap();
         assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
         assert_eq!(driver.stages, [0, 7, 9]);

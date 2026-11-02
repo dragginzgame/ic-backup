@@ -1,5 +1,6 @@
 //! Actual original allocation and complete data stages using the public coordinators.
 
+use super::stage::Stage;
 use super::{Backend, CapturedSource, TOKEN, extents, planned_runner, verify_destination};
 use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
@@ -47,6 +48,53 @@ pub(crate) enum Failure {
     StartLost,
     StartMalformed,
 }
+#[derive(Clone, Copy)]
+pub(super) enum ReplyFault {
+    Lost,
+    Malformed,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct ReplyFailure {
+    pub(super) stage: Stage,
+    pub(super) operation: Option<u64>,
+    outcome: ReplyFault,
+}
+
+impl Failure {
+    pub(super) fn reply(self) -> Option<ReplyFailure> {
+        let (stage, operation, outcome) = match self {
+            Self::None | Self::DataAllowance => return None,
+            Self::MetadataLost => (Stage::Allocation, None, ReplyFault::Lost),
+            Self::MetadataMalformed => (Stage::Allocation, None, ReplyFault::Malformed),
+            Self::DataLost => (Stage::Upload, None, ReplyFault::Lost),
+            Self::DataMalformed => (Stage::Upload, None, ReplyFault::Malformed),
+            Self::DataLostSecond => (Stage::Upload, Some(1), ReplyFault::Lost),
+            Self::DataMalformedSecond => (Stage::Upload, Some(1), ReplyFault::Malformed),
+            Self::LoadLost => (Stage::Load, None, ReplyFault::Lost),
+            Self::LoadMalformed => (Stage::Load, None, ReplyFault::Malformed),
+            Self::StartLost => (Stage::Start, None, ReplyFault::Lost),
+            Self::StartMalformed => (Stage::Start, None, ReplyFault::Malformed),
+        };
+        Some(ReplyFailure {
+            stage,
+            operation,
+            outcome,
+        })
+    }
+
+    pub(super) fn reply_at(self, stage: Stage, sequence: u64) -> Option<ReplyFault> {
+        self.reply()
+            .filter(|failure| {
+                failure.stage == stage
+                    && failure
+                        .operation
+                        .is_none_or(|original| original == sequence)
+            })
+            .map(|failure| failure.outcome)
+    }
+}
+
 pub(super) struct Provider<'a> {
     pub(super) backend: &'a mut Backend,
     pub(super) failure: Failure,
@@ -76,24 +124,14 @@ impl IcSnapshotUploadProvider for Provider<'_> {
             let raw = self
                 .backend
                 .management(payload.method(), payload.arguments());
-            let metadata = matches!(payload.kind(), IcSnapshotUploadKind::Metadata);
-            let lost = matches!(
-                (metadata, self.failure),
-                (true, Failure::MetadataLost) | (false, Failure::DataLost)
-            );
-            let lost = lost
-                || (self.failure == Failure::DataLostSecond
-                    && !metadata
-                    && request.authority().binding().operation_sequence() == 1);
-            let malformed = matches!(
-                (metadata, self.failure),
-                (true, Failure::MetadataMalformed) | (false, Failure::DataMalformed)
-            );
-            let malformed = malformed
-                || (self.failure == Failure::DataMalformedSecond
-                    && !metadata
-                    && request.authority().binding().operation_sequence() == 1);
-            if lost || malformed {
+            let stage = match payload.kind() {
+                IcSnapshotUploadKind::Metadata => Stage::Allocation,
+                IcSnapshotUploadKind::Data { .. } => Stage::Upload,
+            };
+            let fault = self
+                .failure
+                .reply_at(stage, request.authority().binding().operation_sequence());
+            if fault.is_some() {
                 // The independent test oracle never enters outcome/destination admission.
                 fs::write(
                     self.backend.root.join("discarded-upload-oracle.candid"),
@@ -101,10 +139,11 @@ impl IcSnapshotUploadProvider for Provider<'_> {
                 )
                 .unwrap();
             }
-            if lost {
-                return Err(IcMutationProviderError::Indeterminate);
-            }
-            let reply = if malformed { vec![] } else { raw };
+            let reply = match fault {
+                Some(ReplyFault::Lost) => return Err(IcMutationProviderError::Indeterminate),
+                Some(ReplyFault::Malformed) => vec![],
+                None => raw,
+            };
             IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
@@ -307,7 +346,7 @@ pub(crate) fn run(failure: Failure) {
             })
         },
     ));
-    if matches!(failure, Failure::MetadataLost | Failure::MetadataMalformed) {
+    if failure.reply_at(Stage::Allocation, 0).is_some() {
         let result = match result {
             Err(IcSnapshotAllocationExecutionError::Upload(source)) => Err(source),
             Ok((acknowledgement, _)) => Ok(acknowledgement),
@@ -392,17 +431,8 @@ pub(crate) fn run(failure: Failure) {
             })
         },
     ));
-    if matches!(
-        failure,
-        Failure::DataLost
-            | Failure::DataMalformed
-            | Failure::DataLostSecond
-            | Failure::DataMalformedSecond
-    ) {
-        let pending = u64::from(matches!(
-            failure,
-            Failure::DataLostSecond | Failure::DataMalformedSecond
-        ));
+    if let Some(fault) = failure.reply().filter(|fault| fault.stage == Stage::Upload) {
+        let pending = fault.operation.unwrap_or(0);
         assert_data_failed(
             stage,
             &layout,

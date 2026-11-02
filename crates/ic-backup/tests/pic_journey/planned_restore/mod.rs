@@ -4,6 +4,7 @@ use super::{
     Backend, Downloaded, Fault, lifecycle, management, planned_upload::Failure, status,
     verify_loaded,
 };
+use super::{planned_upload::ReplyFault, stage::Stage};
 use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
@@ -60,23 +61,22 @@ impl IcMutationProvider for Provider<'_, '_> {
                 request.payload().method().name(),
                 request.payload().arguments(),
             );
-            let lost = matches!(
-                (request.payload().method(), self.failure),
-                (Method::LoadCanisterSnapshot, Failure::LoadLost)
-                    | (Method::StartCanister, Failure::StartLost)
-            );
-            let malformed = matches!(
-                (request.payload().method(), self.failure),
-                (Method::LoadCanisterSnapshot, Failure::LoadMalformed)
-                    | (Method::StartCanister, Failure::StartMalformed)
-            );
-            if lost || malformed {
+            let stage = match request.payload().method() {
+                Method::LoadCanisterSnapshot => Stage::Load,
+                Method::StartCanister => Stage::Start,
+                _ => panic!("restore provider requires load or start"),
+            };
+            let fault = self
+                .failure
+                .reply_at(stage, request.authority().binding().operation_sequence());
+            if fault.is_some() {
                 fs::write(backend.root.join("discarded-restore-oracle.candid"), &raw).unwrap();
             }
-            if lost {
-                return Err(IcMutationProviderError::Indeterminate);
-            }
-            let reply = if malformed { vec![] } else { raw };
+            let reply = match fault {
+                Some(ReplyFault::Lost) => return Err(IcMutationProviderError::Indeterminate),
+                Some(ReplyFault::Malformed) => vec![],
+                None => raw,
+            };
             Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
@@ -281,11 +281,10 @@ pub(super) fn run(
                 })
             },
         ));
-        if matches!(
-            (sequence, failure),
-            (17, Failure::LoadLost | Failure::LoadMalformed)
-                | (3, Failure::StartLost | Failure::StartMalformed)
-        ) {
+        if failure
+            .reply_at(Stage::from_sequence(sequence), sequence)
+            .is_some()
+        {
             match result {
                 Err(IcRestoreExecutionError::Provider(IcMutationProviderError::Indeterminate)) => {}
                 Err(IcRestoreExecutionError::AfterReply {

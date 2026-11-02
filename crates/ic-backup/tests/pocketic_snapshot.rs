@@ -23,7 +23,7 @@ fn original_workflow_runner_completes_capture_metadata_and_data_artifact() {
 
 #[test]
 fn original_workflow_runner_lost_data_retains_prefix_and_refuses_redispatch() {
-    pic_journey::planned_runner::run_complete(pic_journey::planned_download::ReadFailure::Lost);
+    pic_journey::planned_runner::run_complete(pic_journey::planned_download::ReadFailure::Lost(1));
 }
 
 #[test]
@@ -37,11 +37,11 @@ fn planned_download_uses_one_original_stage_and_publishes_complete_artifact() {
 }
 #[test]
 fn planned_download_lost_reply_retains_pending_stage_and_partial_bytes() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Lost);
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Lost(1));
 }
 #[test]
 fn planned_download_malformed_reply_retains_pending_stage_without_followup() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Malformed);
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Malformed(1));
 }
 
 #[test]
@@ -95,20 +95,20 @@ fn lost_load_and_status_replies_keep_pending_reservations_and_stop_before_restar
 
 #[test]
 fn planned_download_lost_first_reply_retains_created_bytes_without_followup() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::LostFirst);
+    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Lost(0));
 }
 
 #[test]
 fn planned_metadata_lost_reply_retains_pending_without_data_stage_or_reissue() {
     pic_journey::planned_download::metadata_failure(
-        pic_journey::planned_download::ReadFailure::Lost,
+        pic_journey::planned_download::ReadFailure::Lost(0),
     );
 }
 
 #[test]
 fn planned_metadata_malformed_reply_retains_bytes_without_data_stage_or_reissue() {
     pic_journey::planned_download::metadata_failure(
-        pic_journey::planned_download::ReadFailure::Malformed,
+        pic_journey::planned_download::ReadFailure::Malformed(0),
     );
 }
 
