@@ -1,14 +1,14 @@
 {
-   "date" : "2026-11-02",
+   "date" : "2026-11-03",
    "files" : {
-      "CHANGELOG.md" : "4e49033308b4c61b722a28b5cd0bd722867f7c2d6ca2fdc53bc2b7b516ddeb4e",
-      "Cargo.lock" : "c157d47713b2cb138f9547e3cd2d29d326d8544099c220acc164d0445f174099",
-      "Cargo.toml" : "f256447e8fa9ba2f4ad169d92075aaee7f0eb0b1960c7967505c308a65698160",
-      "crates/ic-backup-agent/Cargo.toml" : "bdbd6850daae7b4eb44a44030c60004113a1f56d92096611056ea7f19023c82a",
+      "CHANGELOG.md" : "164a4349c19e9632321792667eaca279046e84fda87107dd2605d547acf40dff",
+      "Cargo.lock" : "70bd44e2f3255b9e91032ef66b0f5e5ae3cd246121e7fdae3a5313cbbe28a113",
+      "Cargo.toml" : "1dd2b9175ad071a686a4f21c5cc5b697e689629410c60b3ac66b42f957e0ec6c",
+      "crates/ic-backup-agent/Cargo.toml" : "fffd37a9e8dee2cdaa55d06f2c54e6ffd8610c81804fe99618d89c34028c965d",
       "crates/ic-backup/Cargo.toml" : "ff0c25177f64cbae551ee32ccbe7d4d27fc5bf6a5e8b5f56d29c51e9dae8c7da"
    },
    "gate" : "release-verify",
    "schema" : 1,
-   "source" : "9c64e635012dd144a6b8dfdb7aa47fafc7e2902a",
-   "version" : "0.55.3"
+   "source" : "249c7f5ed8a22fbfe7bbd9e9498a4db73353062e",
+   "version" : "0.56.0"
 }
