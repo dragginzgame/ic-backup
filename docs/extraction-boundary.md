@@ -1351,8 +1351,8 @@ consistency/effect evidence, command custody and terminal admission remain pendi
 ### Fresh original local restore-source verification
 
 The optional `policy::local_restore_source` join/view and
-`DownloadJournalGuard::verify_local_restore_source` are retired in 
-0.56.0. No execution coordinator or maintained Canic adapter called them. Their
+`DownloadJournalGuard::verify_local_restore_source` are retired in 0.56.0.
+No execution coordinator or maintained Canic adapter called them. Their
 [contract](contracts/local-restore-source.json) and
 [source inspection](local-restore-source.json) remain historical evidence, not
 current APIs or fresh qualification. This cut changes no journal, requirement,
