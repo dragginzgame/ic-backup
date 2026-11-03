@@ -21,13 +21,14 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.18.0, which re-exports the
-canonical owned Principal from Platform Types 0.17.0.
+not selected by Backup. Production selects Platform 0.20.0, which re-exports the
+canonical owned Principal from Platform Types 0.18.0.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
 retain their qualified upstream identities. Development-only PocketIC clients now
-belong to Platform's maintained `ic-platform-pocket-ic` package. Testkit 0.80.1
-and Backup share Platform/client 0.18 and canonical Types 0.17 identities.
+belong to Platform's maintained `ic-platform-pocket-ic` package. Backup selects
+client 0.20; Testkit 0.82.0 retains Platform/client 0.19. Both select canonical
+Types 0.18, and no client identity crosses the managed server boundary.
 The temporary older simulator alias is removed; the `pocket-ic` feature remains
 development-only and never enters a normal consumer.
 Independent normal consumers still qualify Core and Agent without development
@@ -84,16 +85,23 @@ qualified through Backup's own checks.
 
 The workspace requires Host Artifacts/FS/Process 0.74.1 and resolves 0.74.2. Consumers
 sharing public Host error types must align their direct selections to 0.74.
-Locked Testkit 0.80.2 still selects Platform/client 0.18, Types 0.17 and
-target-specific Runtime 0.18.1. Those older packages remain in the development
-graph until Testkit publishes its own adoption; they are absent from both
-production graphs. Each fixture uses Testkit's `start_managed_server` for bounded
-readiness, raw outputs and owned cleanup, then constructs Platform 0.19's client
-at that exact server URL. No old/new client or owned Principal value crosses that
-boundary. The async fixture starts the synchronous server owner on a blocking
-worker. Platform builders and operations now return checked results; expected
-canister rejections are extracted from `ClientError::Canister`, preserving the
-original structured reply rather than accepting transport failure. Uncertain
+Platform 0.20's facade source is unchanged; its development feature selects client
+0.20 with bounded snapshot-transfer helpers and `ClientError::ResponseTooLarge`.
+Backup retains its exact management ingress, method-specific response bounds and
+original accounting rather than adopting a second snapshot workflow.
+Locked Testkit 0.82.0 still selects Platform/client 0.19, Types 0.18 and
+target-specific Runtime 0.19.0. Its source is unchanged from 0.81; the new Wire
+0.16 dependency is optional and remains disabled. The older development-only
+Platform/client 0.18, Types 0.17 and Strum 0.26 packages remain removed. Testkit
+is development-only; neither production graph gains simulator or runtime features.
+Each fixture uses Testkit's `start_managed_server` for bounded readiness, original
+raw output files and cleanup, then constructs Platform's 0.20 client at that exact
+server URL. The async fixture starts the synchronous server owner on a blocking
+worker. Explicit fixture field order retains client-before-server teardown.
+No old/new client value crosses this boundary. Platform operations return checked
+results; expected canister rejections are extracted from `ClientError::Canister`,
+preserving the original structured reply rather than accepting transport failure.
+Testkit retains typed startup failures instead of panic-string adapters. Uncertain
 calls are never replayed. Authenticated server selection remains Testkit-owned
 PocketIC 16.1.0; optional Wire and Metrics remain outside Backup's graph.
 

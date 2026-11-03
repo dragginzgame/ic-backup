@@ -246,6 +246,7 @@ impl Fixture {
             .await
             .expect("managed server startup worker")
             .expect("bounded Testkit-managed server");
+        // No client identity crosses Testkit's server-only boundary.
         let mut pic = builder
             .with_server_url(server.url().parse().unwrap())
             .build_async()

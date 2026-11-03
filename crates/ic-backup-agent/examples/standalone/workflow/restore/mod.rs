@@ -3,13 +3,12 @@
 use super::{
     Application, BackupLayoutGuard, CHUNK, Digest, Driver, ExecutionStageGuard,
     ExecutionWorkflowRecord, Path, PreparedUpdate, Reply, ReservedUpdate, Stage, TOKEN, error, io,
-    retain,
+    retain, transfer::RetainedSource,
 };
 use ic_backup::{
     model::restore_safety::{RestoreSafetyRequest, RestoreSafetyRequestInput},
     ops::persistence::{
-        DownloadJournalGuard, JournalLock, RestoreReferenceReleaseOutcome,
-        RestoreTerminalEvidenceProvider, create_restore_safety_requirement,
+        JournalLock, RestoreTerminalEvidenceProvider, create_restore_safety_requirement,
         read_complete_execution_workflow_locked,
     },
     view::restore_reference_release::TerminalRestoreEvidence,
@@ -40,22 +39,22 @@ impl<A: Application> Driver<'_, A> {
         } else {
             None
         };
-        let source = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let source_layout = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let original = self.metadata_evidence()?;
-        let metadata = original.decode()?;
-        let source_plan = self.source_plan(&source, &metadata)?;
-        let journal =
-            DownloadJournalGuard::open(&source, source_plan.digest().hash()).map_err(error)?;
+        let source = RetainedSource::open(self, &source_layout, &original)?;
+        let source_plan = &source.plan;
+        let metadata = &source.metadata;
+        let journal = source.journal()?;
         journal
-            .verify_ic_snapshot_artifact(&source_plan, TOKEN, &metadata)
+            .verify_ic_snapshot_artifact(source_plan, TOKEN, metadata)
             .map_err(error)?;
         let manifest = journal.record().map_err(error)?.digest();
         journal
-            .read_download_manifest(&source_plan, &manifest)
+            .read_download_manifest(source_plan, &manifest)
             .map_err(error)?;
         let restore_source = if kind == Stage::Load {
             let upload = journal
-                .prepare_ic_snapshot_upload_metadata(&source_plan, TOKEN, &metadata)
+                .prepare_ic_snapshot_upload_metadata(source_plan, TOKEN, metadata)
                 .map_err(error)?;
             let allocation_raw = self.raw(Stage::Allocation)?;
             let allocation = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadReply::decode(
@@ -73,37 +72,37 @@ impl<A: Application> Driver<'_, A> {
                 )
                 .map_err(error)?;
             IcRestoreSource::uploaded(
-                &source,
+                source.layout,
                 &data,
                 stage.workflow_layout(),
                 &stage.binding().predecessors()[0],
             )
             .map_err(error)?
         } else {
-            IcRestoreSource::existing(&source, &source_plan, &original.request)
+            IcRestoreSource::existing(source.layout, source_plan, &original.request)
         };
         drop(journal);
         let payload = self.restore_payload(kind, || Ok(destination))?;
         let requirement =
             self.application
-                .restore_requirement(stage.plan(), &source_plan, &manifest)?;
+                .restore_requirement(stage.plan(), source_plan, &manifest)?;
         requirement
-            .validate_plans(stage.plan(), &source_plan)
+            .validate_plans(stage.plan(), source_plan)
             .map_err(error)?;
         if requirement.source_artifacts() != &manifest {
             return Err(io::ErrorKind::InvalidInput.into());
         }
         create_restore_safety_requirement(
             stage.layout().map_err(error)?,
-            &source,
+            source.layout,
             stage.plan(),
-            &source_plan,
+            source_plan,
             &requirement,
         )
         .map_err(error)?;
         let safety = RestoreSafetyRequest::new(
             stage.plan(),
-            &source_plan,
+            source_plan,
             &requirement,
             &payload,
             RestoreSafetyRequestInput {
@@ -168,23 +167,7 @@ impl<A: Application> Driver<'_, A> {
             source: &source,
             accepted,
         };
-        let before = source.restore_references().map_err(error)?;
-        let unrelated: Vec<_> = before
-            .entries()
-            .iter()
-            .filter(|entry| entry.journal() != journal.journal())
-            .cloned()
-            .collect();
-        let expected = if before.entries().len() == unrelated.len() {
-            RestoreReferenceReleaseOutcome::AlreadyReleased
-        } else {
-            RestoreReferenceReleaseOutcome::Released
-        };
-        if source.release_restore(&journal, &provider).map_err(error)? != expected
-            || source.restore_references().map_err(error)?.entries() != unrelated
-        {
-            return Err(io::ErrorKind::InvalidData.into());
-        }
+        source.release_restore(&journal, &provider).map_err(error)?;
         Ok(())
     }
 }
@@ -206,35 +189,21 @@ impl<A: Application> RestoreTerminalEvidenceProvider for Terminal<'_, '_, A> {
         read_complete_execution_workflow_locked(self.restore, self.journal, &workflow.digest())
             .map_err(error)?;
         let original = self.driver.metadata_evidence()?;
-        let metadata = original.decode()?;
-        let plan = self.driver.source_plan(self.source, &metadata)?;
-        let download =
-            DownloadJournalGuard::open(self.source, plan.digest().hash()).map_err(error)?;
+        let source = RetainedSource::open(self.driver, self.source, &original)?;
+        let download = source.journal()?;
         download
-            .verify_ic_snapshot_artifact(&plan, TOKEN, &metadata)
+            .verify_ic_snapshot_artifact(&source.plan, TOKEN, &source.metadata)
             .map_err(error)?;
         download
-            .read_download_manifest(&plan, &download.record().map_err(error)?.digest())
+            .read_download_manifest(&source.plan, &download.record().map_err(error)?.digest())
             .map_err(error)?;
         // Re-admit acceptance through the already-held source journal. Calling
         // Driver::destination here would attempt to reacquire the same source lock.
-        let upload = download
-            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
-            .map_err(error)?;
-        let raw = self.driver.raw(Stage::Allocation)?;
-        let allocation =
-            ic_backup::model::ic_snapshot_upload::IcSnapshotUploadReply::decode(&upload, &raw)
-                .map_err(error)?;
-        let ic_backup::model::ic_snapshot_upload::IcSnapshotUploadReplyKind::Metadata {
-            snapshot_id,
-        } = allocation.kind()
-        else {
-            return Err(io::ErrorKind::InvalidData.into());
-        };
+        let snapshot_id = source.destination(self.driver, &download)?;
         if self
             .driver
             .application
-            .acceptance(&workflow, &metadata, snapshot_id)?
+            .acceptance(&workflow, &source.metadata, &snapshot_id)?
             != self.accepted
         {
             return Err(io::ErrorKind::InvalidData.into());

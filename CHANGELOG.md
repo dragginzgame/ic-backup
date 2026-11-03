@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.56.1]
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.20.0 and Testkit 0.82.0, retaining canonical Types 0.18 and
+  authenticated PocketIC 16.1.0. Keep the independently released simulator client
+  separate from Testkit's managed server custody.
+
+### 🧹 Cleanup
+
+- Share fresh source handling across standalone upload, restore and terminal
+  acceptance, retaining explicit layout and journal custody. Keep reference-release
+  assertions in consumer qualification alongside the guarded release owner.
+
+### 🧪 Testing
+
+- Reuse real capture, metadata, download and original fixture preparation across
+  focused fault cases and workflow coordination. Preserve distinct malformed/lost-reply,
+  original-spending, cold-continuation and retained-reference checks.
+- Compare restored-state metadata through one explicit projection, preserving
+  floating-point global bits and optional settings.
+
 ## [0.56.0] - 2026-11-03
 
 ### ⚠️ Breaking

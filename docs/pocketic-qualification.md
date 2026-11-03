@@ -54,18 +54,22 @@ requests/replies, journals and obligations remain retained.
 
 ## Current simulator dependency boundary
 
-Testkit 0.78.0 owns managed server startup, authenticated assets and harness
+Testkit 0.82.0 owns managed server startup, authenticated assets and harness
 extensions. Simulator clients and DTOs come directly from published
 `ic_platform::pocket_ic`; both libraries enable Platform's `pocket-ic` feature only
-in development dependencies. Platform 0.17.0 exports its maintained
-`ic-platform-pocket-ic` 0.17.0 client; Testkit uses the same identities.
+in development dependencies. Platform 0.20.0 exports its maintained
+`ic-platform-pocket-ic` 0.20.0 client; Testkit still uses client 0.19. Both select
+canonical Types 0.18. Each fixture keeps Testkit's bounded `start_managed_server`
+owner and constructs Platform's client at its returned URL; the async fixture
+starts that synchronous server owner on a blocking worker. Client types never cross
+the boundary. Preserve typed client failures, original output paths and explicit
+client-before-server teardown custody.
 No forwarding module or production simulator dependency is retained. The existing
 exact management bytes, bounded calls, signed transport, original journals and
 independent readback assertions remain local.
 
-Testkit selects arithmetic-only Metrics 0.25.1 with defaults disabled. Neither
-Metrics' native Wire metadata nor Testkit's optional Wire interface is enabled.
-Both dependencies remain outside the production library graphs. The locked
+Testkit has no Metrics dependency, and its optional Wire interface is disabled.
+The authenticated server remains PocketIC 16.1.0. The locked
 Testkit package also selects its exact managed CLI; after a Testkit update, run
 `make install-testkit-server` before the offline admission check.
 

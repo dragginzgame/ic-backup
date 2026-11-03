@@ -9,6 +9,7 @@ pub(super) mod planned_runner;
 pub(super) mod planned_upload;
 mod recovery;
 mod stage;
+mod steps;
 
 use backend::Backend;
 use ic_backup::{
@@ -355,40 +356,22 @@ fn verify_destination(
     ));
     let destination_metadata =
         IcSnapshotMetadataReply::decode(&destination_request, &destination_raw).unwrap();
-    assert_eq!(
-        destination_metadata.metadata().certified_data,
-        metadata.metadata().certified_data
-    );
-    assert_eq!(
-        contract::encode_one(&destination_metadata.metadata().globals).unwrap(),
-        contract::encode_one(&metadata.metadata().globals).unwrap()
-    );
-    let source = metadata.metadata();
-    let actual = destination_metadata.metadata();
-    assert_eq!(
-        [
-            actual.wasm_module_size,
-            actual.wasm_memory_size,
-            actual.stable_memory_size
-        ],
-        [
-            source.wasm_module_size,
-            source.wasm_memory_size,
-            source.stable_memory_size
-        ]
-    );
-    assert_eq!(
-        contract::encode_one(&actual.wasm_chunk_store).unwrap(),
-        contract::encode_one(&source.wasm_chunk_store).unwrap()
-    );
-    assert_eq!(
-        contract::encode_one(&actual.global_timer).unwrap(),
-        contract::encode_one(&source.global_timer).unwrap()
-    );
-    assert_eq!(
-        contract::encode_one(&actual.on_low_wasm_memory_hook_status).unwrap(),
-        contract::encode_one(&source.on_low_wasm_memory_hook_status).unwrap()
-    );
+    // Compare exactly the original restored-state fields. Timestamp/source identity
+    // may differ after upload; Candid bytes preserve floating-point global bits.
+    let [actual, expected] = [destination_metadata.metadata(), metadata.metadata()].map(|m| {
+        contract::encode_one((
+            &m.certified_data,
+            &m.globals,
+            m.wasm_module_size,
+            m.wasm_memory_size,
+            m.stable_memory_size,
+            &m.wasm_chunk_store,
+            &m.global_timer,
+            &m.on_low_wasm_memory_hook_status,
+        ))
+        .unwrap()
+    });
+    assert_eq!(actual, expected);
     let mut evidence = vec![metadata.digest(), destination_metadata.digest()];
     for (kind, expected) in kinds.iter().zip(original_chunks) {
         let request = IcSnapshotDataRequest::new(&destination_metadata, kind.clone()).unwrap();

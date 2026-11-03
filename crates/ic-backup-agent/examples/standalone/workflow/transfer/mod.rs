@@ -26,27 +26,27 @@ use ic_backup_agent::{AgentSnapshotTransferReadProvider, AgentUpdateProvider};
 
 // Own one freshly admitted source scope; returned journals borrow this held layout.
 // No source or metadata evidence is cached between driver calls.
-struct RetainedSource<'a> {
-    layout: BackupLayoutGuard,
-    plan: OperationPlanRecord,
-    metadata: IcSnapshotMetadataReply<'a>,
+pub(super) struct RetainedSource<'layout, 'metadata> {
+    pub(super) layout: &'layout BackupLayoutGuard,
+    pub(super) plan: OperationPlanRecord,
+    pub(super) metadata: IcSnapshotMetadataReply<'metadata>,
 }
-impl<'a> RetainedSource<'a> {
-    fn open(
+impl<'layout, 'metadata> RetainedSource<'layout, 'metadata> {
+    pub(super) fn open(
         driver: &Driver<'_, impl Application>,
-        original: &'a metadata::MetadataEvidence,
+        layout: &'layout BackupLayoutGuard,
+        original: &'metadata metadata::MetadataEvidence,
     ) -> io::Result<Self> {
         let metadata = original.decode()?;
-        let layout = BackupLayoutGuard::acquire(&driver.source()).map_err(error)?;
-        let plan = driver.source_plan(&layout, &metadata)?;
+        let plan = driver.source_plan(layout, &metadata)?;
         Ok(Self {
             layout,
             plan,
             metadata,
         })
     }
-    fn journal(&self) -> io::Result<DownloadJournalGuard<'_>> {
-        DownloadJournalGuard::open(&self.layout, self.plan.digest().hash()).map_err(error)
+    pub(super) fn journal(&self) -> io::Result<DownloadJournalGuard<'_>> {
+        DownloadJournalGuard::open(self.layout, self.plan.digest().hash()).map_err(error)
     }
 
     fn upload(
@@ -56,6 +56,20 @@ impl<'a> RetainedSource<'a> {
         journal
             .prepare_ic_snapshot_upload_metadata(&self.plan, TOKEN, &self.metadata)
             .map_err(error)
+    }
+
+    pub(super) fn destination(
+        &self,
+        driver: &Driver<'_, impl Application>,
+        journal: &DownloadJournalGuard<'_>,
+    ) -> io::Result<Vec<u8>> {
+        let upload = self.upload(journal)?;
+        let raw = driver.raw(Stage::Allocation)?;
+        let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
+        let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
+            return Err(io::ErrorKind::InvalidData.into());
+        };
+        Ok(snapshot_id.clone())
     }
 }
 
@@ -188,15 +202,10 @@ impl<A: Application> Driver<'_, A> {
 
     pub(super) fn destination(&self) -> io::Result<Vec<u8>> {
         let original = self.metadata_evidence()?;
-        let source = RetainedSource::open(self, &original)?;
+        let layout = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let source = RetainedSource::open(self, &layout, &original)?;
         let journal = source.journal()?;
-        let upload = source.upload(&journal)?;
-        let raw = self.raw(Stage::Allocation)?;
-        let reply = IcSnapshotUploadReply::decode(&upload, &raw).map_err(error)?;
-        let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = reply.kind() else {
-            return Err(io::ErrorKind::InvalidData.into());
-        };
-        Ok(snapshot_id.clone())
+        source.destination(self, &journal)
     }
 
     pub(super) fn bind_upload(
@@ -206,7 +215,8 @@ impl<A: Application> Driver<'_, A> {
         predecessors: &[ExecutionStagePredecessorRecord],
     ) -> io::Result<OperationPlanRecord> {
         let original = self.metadata_evidence()?;
-        let source = RetainedSource::open(self, &original)?;
+        let layout = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let source = RetainedSource::open(self, &layout, &original)?;
         let journal = source.journal()?;
         let upload = source.upload(&journal)?;
         if Stage::from_sequence(sequence)? == Stage::Allocation {
@@ -243,7 +253,8 @@ impl<A: Application> Driver<'_, A> {
     pub(super) async fn upload(&self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let kind = Stage::from_sequence(stage.binding().stage_sequence())?;
         let original = self.metadata_evidence()?;
-        let source = RetainedSource::open(self, &original)?;
+        let layout = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let source = RetainedSource::open(self, &layout, &original)?;
         let journal = source.journal()?;
         let manifest = journal.record().map_err(error)?.digest();
         journal

@@ -113,6 +113,7 @@ impl Backend {
         }
         .start_managed_server()
         .expect("bounded Testkit-managed server");
+        // Testkit owns the server; Platform owns this independently released client.
         let pic = builder
             .with_server_url(server.url().parse().unwrap())
             .build()

@@ -1,23 +1,153 @@
 # Current handoff — 2026-11-03
 
-## Selected delivery: 0.56.0
+## Selected delivery: 0.56.1
 
-The user requested deployment of the complete reviewed batch to
-`dragginzgame/ic-backup` main and annotated `v0.56.0`, followed by crates.io
-publication of both **ic-backup** and **ic-backup-agent**. The minor increment
-covers the public API removals and matches the pending notes. The standard direct
-release runner owns full validation, version/receipt preparation, commit/tag and
-atomic push. Publication is a separate recorded command after Git delivery.
+The user requested deployment of the complete pending compatible batch to
+`dragginzgame/ic-backup` main with annotated `v0.56.1`, followed by crates.io
+publication of **ic-backup** and **ic-backup-agent**. This includes the shared
+fixture/standalone cleanup and published Platform 0.20.0/Testkit 0.82.0 adoption.
+The standard direct release runner owns complete validation, patch metadata and
+receipt preparation, commit/tag and atomic push; publication follows separately.
+No further dependency update is selected during release qualification.
 
-This handoff records the selected inputs before release preparation. The generated
-[release receipt](../release.json) and completed command/registry observations
-establish actual delivery, rather than this preparation note. Evidence is
-`/tmp/backup-deploy-0560.xagghlwi/`: original tree/index state, source/plan records,
-release/publication logs and final registry provenance. The selected registry
-versions and remote tag were absent at admission; main matched the local 0.55.3
-release. No dependency refresh is selected during release qualification.
+Evidence is `/tmp/backup-deploy-0561/`: incoming source archive/diff, selected
+source and release plan, release/publication logs and final registry observations.
+At admission, remote main matched the delivered 0.56.0 baseline; the selected tag
+and both registry versions were absent. This preparation note establishes no
+completion: the generated [receipt](../release.json) and completed Git/registry
+observations establish actual delivery.
 
-## Current batch: Platform 0.19 adoption
+## Current dependency adoption: Platform 0.20.0 and Testkit 0.82.0
+
+The pending 0.56.1 batch now requires published Platform **0.20.0** and Testkit
+**0.82.0**. Verified archives bind Platform to release source
+`cc8214bf6e2a3dcbe1649c1cd4e71d8a44925bdf` and Testkit to
+`e644afe09f0fa9ef248db6f98b3efa461de9f890`. All 121 Platform facade source files
+and 30 Testkit source files are byte-identical to their previous releases.
+Platform changes only its development client requirement to **0.20.0**; canonical
+Types **0.18.0**, Runtime **0.19.0** and external Principal, management DTO and
+Agent identities are unchanged. Testkit changes only its disabled optional Wire
+requirement to 0.16. Host and Shared Tooling remain selected as before.
+
+Testkit still selects Platform/client **0.19**. Those stay development-only;
+fixtures use its bounded `start_managed_server` and construct the independently
+released Platform 0.20 client at that URL. The async fixture uses a blocking worker
+for synchronous server startup. No client identity crosses the boundary, and
+explicit field order keeps client teardown ahead of the owned server. Original
+server output, admitted binary digest, topology and request/startup bounds remain.
+No client-specific snapshot helper, retry, reset or funding policy is adopted.
+
+Evidence is `target/platform-testkit-adoption-0561/`: incoming pending changes,
+original manifests/lock, registry metadata, verified old/new archives and source
+comparisons, exact lock delta, CLI/server setup and focused qualification.
+Qualification on pinned Rust **1.99.1** passes strict Core/Agent library, simulator
+target and standalone-example Clippy; **164** model identity/hash/codec/bounds
+regressions; all **34** Core and **28** Agent simulator cases; exact Testkit
+CLI/server setup and offline admission; dependency inheritance/boundaries;
+formatting and maintained links. Registered selections and final input hashes
+are retained in `qualification.json`.
+
+Independent normal Core and Agent consumers pass without development-feature
+unification (`target/msrv-consumers.Q5Z5LJ/`). Their production graphs select
+Platform **0.20.0** and Types **0.18.0** without simulator/runtime packages; Core
+remains Agent-free. No public type identity or persisted-data migration is needed
+for the consumed facade exports. Earlier logs below retain their original source
+and dependency selections. Native macOS and live Canic acceptance remain separate;
+no full release gate, release or publication is selected.
+
+## Latest fixture cleanup for pending 0.56.1
+
+Four capture/download entry paths share the same accounted stop/status setup.
+Focused download and workflow-runner fixtures share private artifact-directory,
+reference and journal preparation with their exact original tokens and observed
+snapshot metadata. Each caller still selects its unfinished restore location and
+retains its own fault, byte/reference and cold-replay assertions. Reference
+retention precedes journal creation. The restore readback oracle compares the same
+certified data, global bits, region sizes, chunk store, timer and hook fields in
+one explicit Candid projection; timestamp/source differences remain outside it.
+
+Strict Clippy and all **34** registered Core PocketIC cases pass on pinned Rust
+**1.99.1** with Testkit **0.81.0**. Evidence is `target/fixture-cleanup-0561/`,
+including original inputs, retained first lint failure, final lint/simulator logs
+and source-bound case membership. Formatting and maintained links pass. Agent and
+production source/dependencies are unchanged from the qualification below; no
+public API or Canic integration migration is introduced. Work remains local and
+uncommitted, without a new release gate or delivery.
+
+## Earlier fixture-step cleanup and standalone source custody
+
+Core's focused capture/download cases and original workflow driver now use one
+real capture, metadata and data-transfer fixture implementation. Each case retains
+its original fault, exact spending, byte/reference preservation and cold-resume
+assertions. Captured raw oracle bytes remain separate from qualified returned
+evidence. Metadata/data qualification durably retains exact arguments and replies
+before explicit Applied receipts; source byte oracles remain independently decoded.
+
+The standalone example reuses its existing private source helper under explicitly
+held layout guards for upload, restore and terminal acceptance. Terminal admission
+borrows the original source guard/journal; it does not reacquire a held source lock
+or cache admission across driver calls. Reference-set and release replay assertions
+remain in the independent consumer and guarded release owner's qualification,
+rather than the example's release wrapper. Fresh acceptance and all primitive
+source, manifest, safety and terminal checks remain in their original order.
+
+This cleanup preserves public APIs, package versions and v1 records. Canic's
+integration tests remain with Canic; this batch requires no consumer API migration.
+Pending compatible notes are under [0.56.1](../../CHANGELOG.md).
+
+Focused Linux qualification on pinned Rust **1.99.1** passes strict Clippy for
+the Core PocketIC target, Agent PocketIC target and standalone example, all **34**
+Core simulator cases and all **16** selected independent-consumer cases. These
+include normal capture/restore, stage-by-stage cold continuation, signed/reply
+retention failures, partial output, lost replies, changed acceptance and unrelated
+unfinished restore references. Evidence is `target/cleanup-flows-0560/`, including
+the original source archive, compiler, lint and simulator logs. No complete release
+gate or new delivery was selected for this development batch. These logs precede
+the separate Testkit adoption below.
+
+## Earlier Testkit 0.81.0 adoption
+
+The workspace now requires published Testkit **0.81.0**. Its verified registry
+archive matches checksum
+`2019970678905d4fb434778447c70a4a675b33afd5e56ff983d2a9a32f6633a8`
+and release source `4b023d5e3b2cdac0424f17d37b2bacc3f186c44a`.
+Testkit now shares Backup's Platform/client **0.19.0** and canonical Types
+**0.18.0**. The older Platform/client 0.18, Types 0.17 and Strum 0.26 packages
+leave the development lock; target-specific Runtime advances to **0.19.0**.
+Production dependencies, external management/Principal/Agent identities, Host
+**0.74.2**, Shared Tooling and the authenticated **16.1.0** server stay selected.
+
+The synchronous and async fixtures use Testkit's published `build_instance` and
+`build_instance_async`, retaining the existing topology, request/startup bounds,
+original output files and explicit client-before-server drop order. The temporary
+server-only URL bridge and blocking startup worker are removed. Exact CLI setup
+and offline admission use the newly locked Testkit selection; earlier tool and
+fixture evidence remains retained. No retry, reset, funding policy or permissive
+application admission is adopted.
+
+Adoption evidence is `target/testkit-adoption-0561/`: incoming cleanup diff and
+manifest/lock, old/new verified registry archives, source review, selected CLI and
+server setup/admission, dependency delta and focused qualification. Qualification
+passes on pinned Rust **1.99.1**: strict Clippy for both simulator targets and the
+standalone example, all **34** Core and **28** Agent cases (including the **16**
+independent-consumer cases), exact Testkit CLI/server setup and offline admission,
+dependency inheritance/boundaries, formatting and maintained links. The two normal
+production trees retain Platform 0.19/Types 0.18 without Testkit, PocketIC or runtime;
+Core remains Agent-free. The registered cases and final input hashes are recorded
+in `qualification.json`. The earlier cleanup logs do not qualify this changed graph.
+No full release gate, native macOS or live Canic acceptance is claimed.
+
+## Delivered 0.56.0
+
+Release **0.56.0**, commit `b6be0a15157f058d4babd11bcbd4aa836515f3a0`, was
+atomically pushed to `main` with annotated `v0.56.0`; both libraries were published
+to crates.io. The [receipt](../release.json), complete Linux release gate and exact
+registry archive checksums/source identities are retained in
+`/tmp/backup-deploy-0560.xagghlwi/`, including `release.log`, `publication.log`,
+`registry-verification.json` and `delivery-result.json`. Those proofs qualify the
+delivered source, not the subsequent development batch.
+
+## Delivered Platform 0.19 adoption
 
 The user requested the new published Platform. Root now requires **ic-platform
 0.19.0**, resolving canonical Types **0.18.0** and development PocketIC client
@@ -59,10 +189,10 @@ checks pass. Full release gates, native macOS, live IC and installed Canic
 acceptance remain separate. These focused development checks do not replace the
 selected complete release gate.
 
-## Selected 0.56.0 source batch
+## Delivered 0.56.0 source batch
 
-The selected source includes all reviewed cleanup and standalone work. The runner
-prepares both package versions from **0.55.3** to **0.56.0**;
+The delivered source includes all reviewed cleanup and standalone work. The runner
+prepared both package versions from **0.55.3** to **0.56.0**;
 [the 0.56.0 notes](../../CHANGELOG.md) document the breaking API
 cuts and migrations. No journal, persisted schema, hash domain or attempt/recovery
 authority is changed by this Platform adoption.

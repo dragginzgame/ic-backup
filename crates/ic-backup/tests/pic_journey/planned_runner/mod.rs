@@ -3,13 +3,9 @@
 use super::evidence::{MetadataEvidence, retain_bytes};
 use super::stage::Stage;
 use super::{
-    Fault,
     backend::Backend,
-    lifecycle, management,
-    planned_download::{
-        CaptureFailure, CaptureProvider, ReadFailure, ReadProvider, workflow as allocated_workflow,
-    },
-    status,
+    management,
+    planned_download::{CaptureFailure, ReadFailure, workflow as allocated_workflow},
 };
 use crate::ready::ready;
 use crate::support::read_json;
@@ -18,9 +14,7 @@ use ic_backup::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{
             AppliedReceiptEvidence, AttemptJournalRecord, MAX_ATTEMPT_JOURNAL_BYTES,
-            MutationOutcomeRecord, MutationReceiptRequest,
         },
-        download_journal::DownloadArtifactRequest,
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
             MAX_EXECUTION_STAGE_BYTES,
@@ -31,39 +25,16 @@ use ic_backup::{
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
         operation_plan::OperationPlanRecord,
     },
-    ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
-        read_complete_execution_workflow,
-    },
-    workflow::{
-        execution_workflow::{
-            ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
-            run_new_execution_workflow, run_retained_execution_workflow,
-        },
-        ic_snapshot_capture::capture_snapshot,
-        ic_snapshot_download::download_snapshot,
-        ic_snapshot_metadata::read_snapshot_metadata,
+    ops::persistence::{BackupLayoutGuard, ExecutionStageGuard, read_complete_execution_workflow},
+    workflow::execution_workflow::{
+        ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
+        run_new_execution_workflow, run_retained_execution_workflow,
     },
 };
-use ic_platform::management_canister_types::CanisterStatusType;
-use std::{
-    collections::BTreeMap, convert::Infallible, fs, future::Future, io,
-    os::unix::fs::DirBuilderExt, path::Path,
-};
+use std::{collections::BTreeMap, fs, future::Future, io, os::unix::fs::DirBuilderExt, path::Path};
 
 pub(crate) fn run(lose_reply: bool) {
-    let mut backend = Backend::new();
-    assert!(
-        lifecycle(
-            &mut backend,
-            Method::StopCanister,
-            None,
-            Fault::None,
-            |_| None
-        )
-        .is_none()
-    );
-    status(&mut backend, CanisterStatusType::Stopped);
+    let backend = super::steps::stopped_backend();
     let root = backend.root.join("one-shot-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -149,99 +120,19 @@ impl CompleteDriver {
         }
     }
     fn capture(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
-        let payload = management(&self.backend, Method::TakeCanisterSnapshot, None);
-        let context = stage.plan().context().clone();
-        let oracle = stage.layout().unwrap().root().join("capture.candid");
-        let mut provider = CaptureProvider {
-            backend: &mut self.backend,
-            failure: self.capture_failure,
-            oracle: &oracle,
-            submitted: false,
-        };
-        retain_bytes(
-            stage.layout().unwrap(),
-            "capture-arguments.candid",
-            payload.arguments(),
-        );
-        let acknowledgement = ready(capture_snapshot(
-            stage,
-            0,
-            &payload,
-            &mut provider,
-            async |request| {
-                assert_eq!(request.plan().context(), &context);
-                assert_eq!(request.payload().digest(), payload.digest());
-                Ok::<(), Infallible>(())
-            },
-        ))
-        .map_err(|error| io::Error::other(error.to_string()))?;
-        assert!(provider.submitted);
-        retain_bytes(
-            stage.layout().unwrap(),
-            "capture.candid",
-            &acknowledgement.input().reply,
-        );
-        let reply = IcSnapshotReply::decode(&payload, &acknowledgement.input().reply)
-            .map_err(|error| io::Error::other(error.to_string()))?;
-        assert_eq!(reply.snapshots().len(), 1);
-        let mut journal = AttemptJournalGuard::open(
-            stage.layout().unwrap(),
-            &stage.plan().attempt_authority(0).unwrap(),
-        )
-        .unwrap();
-        let attempt = journal.record().unwrap().view().pending_mutation.unwrap();
-        journal
-            .record_mutation(MutationReceiptRequest {
-                attempt,
-                request: payload.digest().hash().into(),
-                outcome: MutationOutcomeRecord::Applied,
-                evidence: reply.digest().hash().into(),
-            })
-            .unwrap();
-        self.snapshot = Some(reply.snapshots()[0].clone());
-        drop(journal);
-        Ok(reply.digest())
+        let (snapshot, evidence) =
+            super::steps::capture(&mut self.backend, stage, self.capture_failure)
+                .map_err(io::Error::other)?;
+        self.snapshot = Some(snapshot);
+        Ok(evidence)
     }
 
     fn metadata(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
         let snapshot = self.snapshot.as_ref().unwrap();
         let request =
             IcSnapshotMetadataRequest::new(&self.backend.target.to_text(), snapshot.id()).unwrap();
-        let context = stage.plan().context().clone();
-        let (response, checkpoint) = ready(read_snapshot_metadata(
-            stage,
-            7,
-            &request,
-            &mut self.backend,
-            async |read| {
-                assert_eq!(read.plan().context(), &context);
-                assert_eq!(read.payload().digest(), request.digest());
-                Ok::<(), Infallible>(())
-            },
-            async |read, response| {
-                retain_bytes(
-                    stage.layout().unwrap(),
-                    "metadata-arguments.candid",
-                    read.payload().arguments(),
-                );
-                retain_bytes(
-                    stage.layout().unwrap(),
-                    "metadata.candid",
-                    &response.input().reply,
-                );
-                Ok::<_, Infallible>(MutationReceiptRequest {
-                    attempt: read.mutation_attempt(),
-                    request: read.payload().digest().hash().into(),
-                    outcome: MutationOutcomeRecord::Applied,
-                    evidence: response.input().evidence.hash().into(),
-                })
-            },
-        ))
-        .map_err(|error| io::Error::other(error.to_string()))?;
-        self.metadata = Some(MetadataEvidence {
-            request,
-            raw: response.input().reply.clone(),
-        });
+        let (metadata, checkpoint) = super::steps::metadata(&mut self.backend, stage, request)?;
+        self.metadata = Some(metadata);
         Ok(checkpoint.learned_evidence().clone())
     }
 
@@ -255,78 +146,26 @@ impl CompleteDriver {
         let plan = download.plan().unwrap();
         assert_eq!(stage.plan(), plan);
         let layout = stage.layout().unwrap();
-        fs::DirBuilder::new()
-            .mode(0o700)
-            .create(layout.root().join("artifacts"))?;
-        layout
-            .retain_restore(
-                &self.backend.root.join("unfinished-runner-restore.json"),
-                plan.digest().hash(),
-            )
-            .unwrap();
         let token = super::TOKEN;
-        let mut artifacts = DownloadJournalGuard::create(
+        let mut artifacts = super::steps::artifact_journal(
             layout,
-            plan.digest().hash(),
-            vec![DownloadArtifactRequest {
-                canister_id: self.backend.target.to_text(),
-                snapshot_id: token.into(),
-                snapshot_taken_at_timestamp: snapshot.taken_at_timestamp(),
-                snapshot_total_size_bytes: snapshot.total_size(),
-            }],
-        )
-        .unwrap();
+            plan,
+            &self.backend.target.to_text(),
+            snapshot,
+            token,
+            &self.backend.root.join("unfinished-runner-restore.json"),
+        )?;
         let writer = artifacts
             .stage_ic_snapshot_artifact(token, &metadata, raw)
             .unwrap();
-        let oracle = layout.root().join("discarded-data.candid");
-        let mut provider = ReadProvider {
-            backend: &mut self.backend,
-            failure: self.data_failure,
-            oracle: &oracle,
-            calls: 0,
-        };
-        let mut chunks = Vec::new();
-        let checksum = ready(download_snapshot(
+        let (checksum, chunks) = super::steps::download(
+            &mut self.backend,
             stage,
             &download,
             writer,
-            &mut provider,
-            async |read| {
-                assert_eq!(read.plan().context(), plan.context());
-                Ok::<(), Infallible>(())
-            },
-            async |read, response| {
-                let sequence = read.authority().binding().operation_sequence();
-                retain_bytes(
-                    layout,
-                    &format!("data-{sequence}-arguments.candid"),
-                    read.payload().arguments(),
-                );
-                chunks.push(
-                    crate::pic_journey::IcSnapshotDataReply::decode(
-                        &download.requests()[usize::try_from(sequence).unwrap()],
-                        &response.input().reply,
-                    )
-                    .unwrap()
-                    .chunk()
-                    .to_vec(),
-                );
-                retain_bytes(
-                    layout,
-                    &format!("data-{sequence}.candid"),
-                    &response.input().reply,
-                );
-                Ok::<_, Infallible>(MutationReceiptRequest {
-                    attempt: read.mutation_attempt(),
-                    request: read.payload().digest().hash().into(),
-                    outcome: MutationOutcomeRecord::Applied,
-                    evidence: response.input().evidence.hash().into(),
-                })
-            },
-        ))
-        .map_err(|error| io::Error::other(error.to_string()))?;
-        assert_eq!(provider.calls, download.requests().len());
+            self.data_failure,
+        )
+        .map_err(io::Error::other)?;
         assert_eq!(
             artifacts
                 .verify_ic_snapshot_artifact(plan, token, &metadata)
@@ -459,18 +298,7 @@ pub(super) fn capture_source() -> super::CapturedSource {
 }
 
 fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
-    let mut backend = Backend::new();
-    assert!(
-        lifecycle(
-            &mut backend,
-            Method::StopCanister,
-            None,
-            Fault::None,
-            |_| None
-        )
-        .is_none()
-    );
-    status(&mut backend, CanisterStatusType::Stopped);
+    let backend = super::steps::stopped_backend();
     let workflow = allocated_workflow(&backend);
     let root = backend.root.join("complete-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
@@ -651,18 +479,7 @@ fn refuse_changed_retained_capture_edges(
 }
 
 pub(crate) fn run_retained() {
-    let mut backend = Backend::new();
-    assert!(
-        lifecycle(
-            &mut backend,
-            Method::StopCanister,
-            None,
-            Fault::None,
-            |_| None
-        )
-        .is_none()
-    );
-    status(&mut backend, CanisterStatusType::Stopped);
+    let backend = super::steps::stopped_backend();
     let workflow = allocated_workflow(&backend);
     let root = backend.root.join("retained-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
