@@ -1,6 +1,10 @@
 //! Public host-ingress accounting for application-owned dispatchers.
 //! Native fixture evidence only: no Wire codec, Canic authority or IC effects are qualified.
 
+use ic_backup::ops::persistence::create_execution_workflow;
+use ic_backup::workflow::execution_workflow::advance_execution_workflow;
+use std::num::NonZeroUsize;
+
 mod ready;
 mod support;
 
@@ -23,7 +27,6 @@ use ic_backup::{
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard},
     workflow::execution_workflow::{
         ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
-        run_new_execution_workflow, run_retained_execution_workflow,
     },
 };
 use serde_json::json;
@@ -217,8 +220,15 @@ fn exact_application_ingress_settles_only_host_accounting_and_replays_without_ca
     let (root, workflow, mut driver) = setup();
     let paid = fs::read(root.join("root-paid-effect.json")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root.join("workflow")).unwrap();
-    let settled =
-        ready::ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let settled = ready::ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ))
+    .unwrap();
     let binding = driver.binding.as_ref().unwrap().digest();
     let learned = Digest::from_bytes(b"fixture-qualified host reply; not paid-effect settlement");
     let retained = BTreeMap::from([(STAGE, RetainedStageEvidence::new(binding.clone(), learned))]);
@@ -239,10 +249,11 @@ fn exact_application_ingress_settles_only_host_accounting_and_replays_without_ca
     let mut cold = ApplicationDriver::new(root.clone(), driver.plan, driver.request);
     let layout = BackupLayoutGuard::acquire(&root.join("workflow")).unwrap();
     assert_eq!(
-        ready::ready(run_retained_execution_workflow(
+        ready::ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
             &mut cold
         ))
         .unwrap(),
@@ -262,8 +273,15 @@ fn lost_root_ingress_reply_preserves_original_pending_attempt_and_refuses_contin
     driver.lose_reply = true;
     let paid = fs::read(root.join("root-paid-effect.json")).unwrap();
     let layout = BackupLayoutGuard::acquire(&root.join("workflow")).unwrap();
+    create_execution_workflow(&layout, &workflow).unwrap();
     assert!(matches!(
-        ready::ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
+        ready::ready(advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &BTreeMap::new(),
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )),
         Err(ExecutionWorkflowRunError::Driver(_))
     ));
     let binding = driver.binding.as_ref().unwrap().digest();
@@ -285,10 +303,11 @@ fn lost_root_ingress_reply_preserves_original_pending_attempt_and_refuses_contin
     // Neither an invented learned digest nor an empty retained set settles an
     // occupied pending stage. Recovery must use its original observation allowance.
     assert!(matches!(
-        ready::ready(run_retained_execution_workflow(
+        ready::ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &BTreeMap::new(),
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
             &mut cold
         )),
         Err(ExecutionWorkflowRunError::RetainedStageSetMismatch)
@@ -298,18 +317,16 @@ fn lost_root_ingress_reply_preserves_original_pending_attempt_and_refuses_contin
         RetainedStageEvidence::new(binding, Digest::from_bytes(b"unqualified")),
     )]);
     assert!(matches!(
-        ready::ready(run_retained_execution_workflow(
+        ready::ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
             &mut cold
         )),
         Err(ExecutionWorkflowRunError::Checkpoint(_))
     ));
-    assert!(matches!(
-        ready::ready(run_new_execution_workflow(&layout, &workflow, &mut cold)),
-        Err(ExecutionWorkflowRunError::Workflow(_))
-    ));
+    assert!(create_execution_workflow(&layout, &workflow).is_err());
     assert_eq!(cold.callbacks, 0);
     assert_eq!(fs::read(path).unwrap(), bytes);
     assert_eq!(fs::read(root.join("host-dispatch.json")).unwrap(), witness);
@@ -339,8 +356,9 @@ fn substituted_original_envelope_refuses_before_stage_allocation_or_dispatch() {
         )
         .unwrap();
         let layout = BackupLayoutGuard::acquire(&root.join("workflow")).unwrap();
+        create_execution_workflow(&layout, &workflow).unwrap();
         assert!(matches!(
-            ready::ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
+            ready::ready(advance_execution_workflow(&layout, &workflow.digest(), &BTreeMap::new(), NonZeroUsize::new(workflow.stages().len()).unwrap(), &mut driver)),
             Err(ExecutionWorkflowRunError::Driver(error)) if error.kind() == io::ErrorKind::PermissionDenied
         ));
         assert_eq!(driver.callbacks, 1);

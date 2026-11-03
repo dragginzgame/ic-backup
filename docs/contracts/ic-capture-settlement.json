@@ -2,8 +2,8 @@
   "schema": 1,
   "kind": "Passive independently qualified original capture settlement over an already reserved successful list; no persisted schema",
   "claim_owners": [
-    "model::ic_observation::IcCaptureSettlement",
-    "model::ic_observation::IcCaptureAttribution"
+    "model::inventory_settlement::IcInventorySettlement",
+    "model::inventory_settlement::IcInventoryAttribution"
   ],
   "admission_owner": "policy::ic_observation::validate_capture_settlement",
   "view_owner": "policy::ic_observation::IcCaptureSettlementView",

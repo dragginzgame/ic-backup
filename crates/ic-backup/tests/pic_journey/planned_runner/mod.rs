@@ -1,5 +1,9 @@
 //! Public workflow coordination against actual managed `PocketIC` ingress.
 
+use ic_backup::ops::persistence::create_execution_workflow;
+use ic_backup::workflow::execution_workflow::advance_execution_workflow;
+use std::num::NonZeroUsize;
+
 use super::evidence::{MetadataEvidence, retain_bytes};
 use super::stage::Stage;
 use super::{
@@ -9,6 +13,7 @@ use super::{
 };
 use crate::ready::ready;
 use crate::support::read_json;
+use ic_backup::workflow::execution_workflow::ExecutionWorkflowAdvance;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -28,7 +33,6 @@ use ic_backup::{
     ops::persistence::{BackupLayoutGuard, ExecutionStageGuard, read_complete_execution_workflow},
     workflow::execution_workflow::{
         ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
-        run_new_execution_workflow, run_retained_execution_workflow,
     },
 };
 use std::{collections::BTreeMap, fs, future::Future, io, os::unix::fs::DirBuilderExt, path::Path};
@@ -46,7 +50,14 @@ pub(crate) fn run(lose_reply: bool) {
     } else {
         CaptureFailure::None
     };
-    let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let result = ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ));
     assert_eq!(driver.binds, [0]);
     assert_eq!(driver.stages, [0]);
     if lose_reply {
@@ -57,14 +68,16 @@ pub(crate) fn run(lose_reply: bool) {
         assert_eq!(journal.view().pending_mutation, Some(1));
         assert_eq!(journal.view().mutations_remaining, 0);
         let calls = driver.backend.calls;
-        assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
+        assert!(create_execution_workflow(&layout, &workflow).is_err());
         assert_eq!(driver.binds, [0]);
         assert_eq!(driver.stages, [0]);
         assert_eq!(driver.backend.calls, calls);
         assert_eq!(fs::read(&path).unwrap(), original);
         assert!(read_complete_execution_workflow(&layout, &workflow.digest()).is_err());
     } else {
-        let view = result.unwrap();
+        let ExecutionWorkflowAdvance::Complete(view) = result.unwrap() else {
+            panic!("expected complete workflow")
+        };
         assert_eq!(view.stages().len(), 1);
         let calls = driver.backend.calls;
         assert_eq!(
@@ -305,11 +318,20 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let mut driver = CompleteDriver::new(backend, &workflow);
     driver.data_failure = data_failure;
-    let result = ready(run_new_execution_workflow(&layout, &workflow, &mut driver));
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let result = ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ));
     assert_eq!(driver.stages, [0, 7, 9]);
     let calls = driver.backend.calls;
     if data_failure == ReadFailure::None {
-        let view = result.unwrap();
+        let ExecutionWorkflowAdvance::Complete(view) = result.unwrap() else {
+            panic!("expected complete workflow")
+        };
         assert_eq!(view.stages().len(), 3);
         assert_eq!(
             read_complete_execution_workflow(&layout, &workflow.digest()).unwrap(),
@@ -326,7 +348,7 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
             data_failure.position().unwrap()
         ));
         let original = fs::read(&path).unwrap();
-        assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
+        assert!(create_execution_workflow(&layout, &workflow).is_err());
         assert_eq!(driver.stages, [0, 7, 9]);
         assert_eq!(fs::read(&path).unwrap(), original);
         assert!(
@@ -456,11 +478,12 @@ fn refuse_changed_retained_capture_edges(
         let mut supplied = retained.clone();
         supplied.insert(0, evidence);
         assert!(matches!(
-            ready(run_retained_execution_workflow(
+            ready(advance_execution_workflow(
                 layout,
                 &workflow.digest(),
                 &supplied,
-                driver,
+                NonZeroUsize::new(workflow.stages().len()).unwrap(),
+                driver
             )),
             Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
         ));
@@ -486,7 +509,17 @@ pub(crate) fn run_retained() {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let mut driver = CompleteDriver::new(backend, &workflow);
     driver.stop_before = Some(9);
-    assert!(ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).is_err());
+    create_execution_workflow(&layout, &workflow).unwrap();
+    assert!(matches!(
+        ready(advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &BTreeMap::new(),
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )),
+        Err(ExecutionWorkflowRunError::Driver(_))
+    ));
     assert_eq!(driver.stages, [0, 7]);
     assert!(!root.join("execution-stage-9").exists());
     let capture = fs::read(root.join("execution-stage-0/attempt-0.json")).unwrap();
@@ -511,13 +544,16 @@ pub(crate) fn run_retained() {
     // exact original bindings and the still-running isolated backend.
     let backend = driver.backend;
     let mut resumed = CompleteDriver::from_retained(backend, &workflow, snapshot, evidence);
-    let view = ready(run_retained_execution_workflow(
+    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
         &layout,
         &workflow.digest(),
         &retained,
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
         &mut resumed,
     ))
-    .unwrap();
+    .unwrap() else {
+        panic!("expected complete workflow")
+    };
     assert_eq!(resumed.stages, [9]);
     assert!(resumed.backend.calls > calls);
     assert_eq!(

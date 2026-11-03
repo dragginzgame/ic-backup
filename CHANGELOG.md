@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.57.0] - Unreleased
+
+### ⚠️ Breaking
+
+- Share capture/allocation claims through `model::inventory_settlement::{IcInventorySettlement,
+  IcInventoryAttribution}`. Keep method-specific validation, views, errors and source-ID exclusion.
+- Remove `run_new_execution_workflow` and `run_retained_execution_workflow`. Create original
+  workflow intent once, then use `advance_execution_workflow` with explicit retained evidence
+  and a positive stage limit; handle `Paused` and `Complete` explicitly.
+- Remove fresh arbitrary-directory `record_downloaded` completion. Fresh IC artifacts use
+  the complete writer; existing v1 `Downloaded` journals retain `verify_artifact` recovery.
+- Remove public passive `read_snapshot` and `upload_snapshot` workflow wrappers. Use complete
+  metadata/download and allocation/data-upload coordinators, or the existing reserved-request
+  provider boundary when implementing an integration-owned workflow.
+
+### 🧪 Testing
+
+- Preserve original dispatch, cancellation, uncertain-effect, inventory attribution and local
+  publication recovery coverage while migrating consumers to the consolidated APIs.
+
 ## [0.56.1] - 2026-11-03
 
 ### ⬆️ Dependencies

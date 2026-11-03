@@ -1,4 +1,7 @@
 //! Normal-dependency opaque application ingress; fixture authority is supplied by the parent.
+use ic_backup::ops::persistence::create_execution_workflow;
+use ic_backup::workflow::execution_workflow::advance_execution_workflow;
+
 use super::evidence::ObservedContext;
 use super::{
     ApplicationConfig, AttemptBudgetRecord,
@@ -19,10 +22,7 @@ use ic_backup::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard},
-    workflow::execution_workflow::{
-        ExecutionWorkflowStageDriver, RetainedStageEvidence, run_new_execution_workflow,
-        run_retained_execution_workflow,
-    },
+    workflow::execution_workflow::{ExecutionWorkflowStageDriver, RetainedStageEvidence},
 };
 use ic_backup_agent::{
     AgentApplicationIngressProvider, ApplicationIngressProviderError as ProviderError,
@@ -232,9 +232,20 @@ pub(super) async fn run(root: &Path, mode: Mode, action: Action) -> io::Result<(
         callbacks: 0,
     };
     if action == Action::ApplicationNew {
-        run_new_execution_workflow(&layout, &workflow, &mut driver)
-            .await
-            .map_err(error)?;
+        create_execution_workflow(&layout, &workflow).map_err(error)?;
+        let outcome = advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &BTreeMap::new(),
+            std::num::NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )
+        .await
+        .map_err(error)?;
+        assert!(matches!(
+            outcome,
+            ic_backup::workflow::execution_workflow::ExecutionWorkflowAdvance::Complete(_)
+        ));
         assert_eq!(driver.callbacks, 2);
     } else if action == Action::ApplicationRetained {
         let binding: ExecutionStageBindingRecord =
@@ -242,14 +253,22 @@ pub(super) async fn run(root: &Path, mode: Mode, action: Action) -> io::Result<(
         let learned =
             Digest::from_bytes(&read(&root.join("execution-stage-0/mutation-reply.bin"))?);
         let retained = BTreeMap::from([(0, RetainedStageEvidence::new(binding.digest(), learned))]);
-        let result =
-            run_retained_execution_workflow(&layout, &workflow.digest(), &retained, &mut driver)
-                .await;
+        let result = advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &retained,
+            std::num::NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )
+        .await;
         assert_eq!(
             driver.callbacks, 0,
             "settled replay/pending refusal never reaches signing or submission"
         );
-        result.map_err(error)?;
+        assert!(matches!(
+            result.map_err(error)?,
+            ic_backup::workflow::execution_workflow::ExecutionWorkflowAdvance::Complete(_)
+        ));
     } else {
         return Err(io::ErrorKind::InvalidInput.into());
     }

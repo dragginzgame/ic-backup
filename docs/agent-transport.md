@@ -88,24 +88,24 @@ dependency. The configured Agent needs a network/timer executor.
 
 `AgentSnapshotTransferReadProvider` implements the async metadata/data-read port
 with the same mandatory durable signed-envelope/request-ID retainer. It rechecks
-the currently guarded journal before one exact update. Await `read_snapshot`,
+the currently guarded journal before one exact update. Await
 `read_snapshot_metadata` and `download_snapshot`; admission and independent
 metadata/data qualification callbacks are async. Qualifiers retain each exact reply
 before awaiting cancellable work. Dropping a download preserves partial files,
 earlier Applied receipts and its current pending reservation. There is no partial
 resume or implicit repeat call. Real Agent simulator reads exercise this adapter
-and the single-read coordinator; the Testkit fixture separately exercises the
+under explicit original guards; the Testkit fixture separately exercises the
 metadata/download loop. Neither supplies a default application qualification lane.
 
 `AgentUpdateProvider` implements source-bound metadata/data uploads with
 the same mandatory signed-ingress retention and current guarded record admission.
-Await `upload_snapshot`, `allocate_snapshot` and `upload_snapshot_data`; fresh
+Await `allocate_snapshot` and `upload_snapshot_data`; fresh
 admission and independent qualification are async. Integrations qualify authentic
 complete source, exclusive destination attribution, current controllers and stable
 byte/command custody. Retain exact replies before cancellable qualification work.
 Cancellation preserves source evidence, earlier receipts and pending spending;
 neither allocation nor a partially settled data stage can reenter dispatch. Actual
-Agent simulator metadata/data uploads use the adapter and single-upload coordinator;
+Agent simulator metadata/data uploads use the adapter under explicit original guards;
 the Testkit fixture separately exercises allocation and complete data-stage loops.
 
 Configure `AgentObservationProvider` for all three separately accounted recovery

@@ -28,9 +28,9 @@ fn claims(
     request: &IcSnapshotUploadObservationRequest<'_, '_>,
     baseline: &IcSnapshotReply<'_>,
     response: &IcObservationResponse,
-    attribution: IcSnapshotUploadAttribution,
-) -> IcSnapshotUploadSettlement {
-    IcSnapshotUploadSettlement {
+    attribution: IcInventoryAttribution,
+) -> IcInventorySettlement {
+    IcInventorySettlement {
         authority: request.authority().digest(),
         mutation_attempt: 1,
         observation_attempt: 2,
@@ -44,14 +44,14 @@ fn claims(
         evidence: ArtifactChecksumRecord::from_bytes(b"synthetic local qualification only"),
     }
 }
-fn applied(id: &[u8]) -> IcSnapshotUploadAttribution {
-    IcSnapshotUploadAttribution::Applied {
+fn applied(id: &[u8]) -> IcInventoryAttribution {
+    IcInventoryAttribution::Applied {
         snapshot_id: id.into(),
         attribution: ArtifactChecksumRecord::from_bytes(b"exclusive allocation declaration"),
     }
 }
-fn unresolved() -> IcSnapshotUploadAttribution {
-    IcSnapshotUploadAttribution::Unresolved {
+fn unresolved() -> IcInventoryAttribution {
+    IcInventoryAttribution::Unresolved {
         uncertainty: ArtifactChecksumRecord::from_bytes(
             b"settled authenticated uncertainty declaration",
         ),
@@ -105,7 +105,7 @@ fn zero_one_many_candidates_require_claims_and_explicit_transitions_never_refund
             let response = response(&request, (1..=count).map(|id| snapshot(&[id])).collect());
             for attribution in [
                 unresolved(),
-                IcSnapshotUploadAttribution::NotApplied {
+                IcInventoryAttribution::NotApplied {
                     exclusion: ArtifactChecksumRecord::from_bytes(
                         b"excludes transient allocation deletion",
                     ),

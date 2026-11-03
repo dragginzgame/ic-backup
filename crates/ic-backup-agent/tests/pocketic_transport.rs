@@ -369,7 +369,7 @@ impl Fixture {
     async fn read(&mut self, payload: IcSnapshotTransferReadPayload<'_, '_>) -> Vec<u8> {
         use ic_backup::{
             ports::ic_observation::IcObservationProviderError,
-            workflow::ic_snapshot_transfer_read::read_snapshot,
+            ports::ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
         };
         let OriginalCall {
             plan,
@@ -386,18 +386,26 @@ impl Fixture {
                     .map_err(|_| IcObservationProviderError::Unavailable)
             },
         );
-        let response = read_snapshot(&stage, sequence, payload, &mut provider, async |request| {
-            assert_eq!(request.plan().context(), plan.context());
-            // This controlled stopped fixture retains original snapshot identity,
-            // controller/read access and exclusive never-dispatched ingress custody.
-            tokio::task::yield_now().await;
-            assert!(
-                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
-            );
-            Ok::<(), std::io::Error>(())
-        })
-        .await
+        let authority = plan.attempt_authority(sequence).unwrap();
+        let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+        journal.reserve_planned_mutation(&plan.digest()).unwrap();
+        let request =
+            IcSnapshotTransferReadRequest::new(&plan, sequence, journal.record().unwrap(), payload)
+                .unwrap();
+        assert_eq!(request.plan().context(), plan.context());
+        tokio::task::yield_now().await;
+        assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+        let response = provider
+            .read_snapshot(&request, journal.record().unwrap())
+            .await
+            .unwrap();
+        ic_backup::policy::ic_snapshot_transfer_read::validate_response(
+            &request,
+            journal.record().unwrap(),
+            &response,
+        )
         .unwrap();
+        drop(journal);
         assert_pending(&stage, sequence);
         let raw = response.input().reply.clone();
         fs::write(root.join("reply.candid"), &raw).unwrap();
@@ -406,7 +414,7 @@ impl Fixture {
     async fn upload(&mut self, payload: &IcSnapshotUploadRequest<'_>) -> Vec<u8> {
         use ic_backup::{
             ports::ic_mutation::IcMutationProviderError,
-            workflow::ic_snapshot_upload::upload_snapshot,
+            ports::ic_snapshot_upload::IcSnapshotUploadProvider,
         };
         let OriginalCall {
             plan,
@@ -423,20 +431,26 @@ impl Fixture {
                     .map_err(|_| IcMutationProviderError::Unavailable)
             },
         );
-        let acknowledgement =
-            upload_snapshot(&stage, sequence, payload, &mut provider, async |request| {
-                assert_eq!(request.plan().context(), plan.context());
-                // Only this isolated fixture owns the authenticated complete source,
-                // allocation attribution, controller and never-dispatched ingress custody.
-                tokio::task::yield_now().await;
-                assert!(
-                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
-                        .is_err()
-                );
-                Ok::<(), std::io::Error>(())
-            })
+        let authority = plan.attempt_authority(sequence).unwrap();
+        let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
+        journal.reserve_planned_mutation(&plan.digest()).unwrap();
+        let request =
+            IcSnapshotUploadAttempt::new(&plan, sequence, journal.record().unwrap(), payload)
+                .unwrap();
+        assert_eq!(request.plan().context(), plan.context());
+        tokio::task::yield_now().await;
+        assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+        let acknowledgement = provider
+            .submit_upload(&request, journal.record().unwrap())
             .await
             .unwrap();
+        ic_backup::policy::ic_snapshot_upload::validate_acknowledgement(
+            &request,
+            journal.record().unwrap(),
+            &acknowledgement,
+        )
+        .unwrap();
+        drop(journal);
         assert_pending(&stage, sequence);
         let raw = acknowledgement.input().reply.clone();
         fs::write(root.join("reply.candid"), &raw).unwrap();

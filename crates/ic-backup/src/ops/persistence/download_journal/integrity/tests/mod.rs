@@ -57,8 +57,7 @@ fn guard<'a>(
     if durable {
         for target in [ROOT, APP] {
             let snapshot = format!("snap-{target}");
-            guard
-                .record_downloaded(target, &snapshot)
+            super::super::tests::retain_downloaded_fixture(&mut guard, target, &snapshot)
                 .expect("local complete-artifact attestation");
             guard
                 .verify_artifact(target, &snapshot)

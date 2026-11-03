@@ -120,7 +120,9 @@ Hold no attempt guards during checkpoint admission. Read-only replay never write
 Checkpoints prove local settlement only, not authentic receipts, cross-journal
 chronology, backend completeness, application safety or terminal release.
 
-Fresh workflow execution refuses occupied evidence before driver callbacks.
+Create the original workflow once with `create_execution_workflow`; occupied evidence
+refuses without replacement. Use `advance_execution_workflow` for fresh execution
+and all subsequent continuation.
 Retained continuation requires the complete integration-supplied occupied-stage
 set and replays every settled checkpoint before any new driver callback. Validate
 frozen predecessor commitments for each exact successor edge. New edges default
@@ -128,7 +130,7 @@ to the predecessor checkpoint digest; retained overrides must name original edge
 Integrations own learned-input qualification and actual effects. Partial/pending
 originals refuse; no automatic redispatch or second spending owner is installed.
 
-`advance_execution_workflow` uses that same retained admission and execution loop
+`advance_execution_workflow` uses the canonical retained admission and execution loop
 with a positive limit on newly executed stages. `Paused` occurs between settled
 stages, before the next binding callback; it is not a failure receipt or allowance.
 Each stage still has its original finite effect bounds. Complete replay reads every
@@ -256,6 +258,9 @@ reads; known empty chunks still need exact replies. Reconstructed coverage start
 empty and supplies no partial-transfer resume or journal authority.
 
 The private v1 artifact writer retains exact metadata wire/arguments and fixed files.
+Fresh completion uses this writer. Arbitrary-directory completion attestation is
+retired; retained v1 `Downloaded` entries keep checksum verification and publication
+recovery through `verify_artifact` and `finalize_artifact`.
 Host FS creates no-follow named files and synchronizes the staging directory before
 returning; content still needs its own sync and qualification. Regions use Host
 `HashingWriter<File>` while Backup checks held identities, exact extents and original
@@ -364,6 +369,10 @@ coexist. Its local completed-workflow replay supplies no product terminal or
 reference-release authority. See [qualification scope](pocketic-qualification.md#connected-original-capture-and-restore-workflows).
 
 ## Explicit recovery settlement
+
+Capture and allocation share passive `model::inventory_settlement` claims.
+Method-specific validators, views and errors retain capture/allocation binding and
+allocation source-ID exclusion; shared data supplies no new effect authority.
 
 Recovery observations bind full original plans, original mutation bytes and both
 already reserved attempt IDs to exact status/list/readback arguments. Preserve

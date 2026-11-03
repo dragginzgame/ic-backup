@@ -13,9 +13,6 @@ use crate::model::{
 };
 use thiserror::Error;
 
-mod settlement;
-pub use settlement::{IcSnapshotUploadAttribution, IcSnapshotUploadSettlement};
-
 /// Original metadata-upload intent and its already spent exact list observation.
 ///
 /// This declaration supplies no dispatch permission, authentication or allocation

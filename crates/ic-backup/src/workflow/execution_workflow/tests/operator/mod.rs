@@ -1,4 +1,6 @@
 //! Bounded advancement and inspection use the original local journal owners.
+use std::collections::BTreeMap;
+
 use super::*;
 use crate::{
     ops::persistence::{ExecutionWorkflowProgressError, read_execution_workflow_progress},

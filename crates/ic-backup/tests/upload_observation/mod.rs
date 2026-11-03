@@ -1,5 +1,7 @@
 //! Refusal and retained passive inventories; no management effect simulation.
 
+use ic_backup::model::inventory_settlement::{IcInventoryAttribution, IcInventorySettlement};
+
 use crate::support::create_json_durable;
 use crate::support::read_json;
 use ic_backup::{
@@ -13,10 +15,7 @@ use ic_backup::{
         },
         ic_snapshot_reply::IcSnapshotReply,
         ic_snapshot_upload::IcSnapshotUploadRequest,
-        ic_snapshot_upload_observation::{
-            IcSnapshotUploadAttribution, IcSnapshotUploadObservationRequest,
-            IcSnapshotUploadSettlement,
-        },
+        ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest,
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard},
@@ -189,7 +188,7 @@ fn retained_settlement(
         IcSnapshotUploadObservationRequest::new(plan, 7, &original, upload, &list).unwrap();
     let response = passive_inventory(&request, 2);
     let challenge = ArtifactChecksumRecord::from_bytes(b"fresh local qualification challenge");
-    let settlement = IcSnapshotUploadSettlement {
+    let settlement = IcInventorySettlement {
         authority: request.authority().digest(),
         mutation_attempt: 1,
         observation_attempt: 2,
@@ -199,7 +198,7 @@ fn retained_settlement(
             .unwrap()
             .digest(),
         observation_evidence: response.input().evidence.clone(),
-        attribution: IcSnapshotUploadAttribution::Unresolved {
+        attribution: IcInventoryAttribution::Unresolved {
             uncertainty: ArtifactChecksumRecord::from_bytes(b"synthetic settled uncertainty"),
         },
         evidence: ArtifactChecksumRecord::from_bytes(

@@ -1,5 +1,7 @@
 //! Native reserved-observation recovery evidence; no simulated or live IC effects.
 
+use ic_backup::model::inventory_settlement::{IcInventoryAttribution, IcInventorySettlement};
+
 use ic_platform::candid::contract;
 mod ready;
 mod support;
@@ -12,9 +14,8 @@ use ic_backup::{
         },
         ic_lifecycle_reply::IcLifecycleReply,
         ic_observation::{
-            IcCaptureAttribution, IcCaptureSettlement, IcLifecycleAttribution,
-            IcLifecycleSettlement, IcObservationRequest, IcObservationResponse,
-            IcObservationResponseInput,
+            IcLifecycleAttribution, IcLifecycleSettlement, IcObservationRequest,
+            IcObservationResponse, IcObservationResponseInput,
         },
         ic_request::{
             IcManagementMethodRecord as Method, IcManagementRequest, IcManagementRequestRecord,
@@ -487,18 +488,18 @@ fn record_qualified_capture_claim(
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     let proof = ArtifactChecksumRecord::from_bytes(b"synthetic native capture qualification");
     let attribution = match outcome {
-        ObservationOutcomeRecord::Applied => IcCaptureAttribution::Applied {
+        ObservationOutcomeRecord::Applied => IcInventoryAttribution::Applied {
             snapshot_id: vec![255],
             attribution: proof.clone(),
         },
-        ObservationOutcomeRecord::NotApplied => IcCaptureAttribution::NotApplied {
+        ObservationOutcomeRecord::NotApplied => IcInventoryAttribution::NotApplied {
             exclusion: proof.clone(),
         },
-        ObservationOutcomeRecord::Uncertain => IcCaptureAttribution::Unresolved {
+        ObservationOutcomeRecord::Uncertain => IcInventoryAttribution::Unresolved {
             uncertainty: proof.clone(),
         },
     };
-    let claim = IcCaptureSettlement {
+    let claim = IcInventorySettlement {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         observation_attempt: request.observation_attempt(),

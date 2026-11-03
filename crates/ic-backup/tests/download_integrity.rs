@@ -132,6 +132,7 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
     let source_root = root.join("source");
     let restore_root = root.join("restore");
     fs::create_dir(&source_root).unwrap();
+    fs::create_dir(source_root.join("artifacts")).unwrap();
     fs::create_dir(&restore_root).unwrap();
     let source_layout = BackupLayoutGuard::acquire(&source_root).unwrap();
     let layout = BackupLayoutGuard::acquire(&restore_root).unwrap();
@@ -154,13 +155,8 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
     )
     .unwrap();
     for target in [ROOT, APP] {
-        let staging = source_root.join(format!("artifacts/{target}.tmp"));
-        fs::create_dir_all(&staging).unwrap();
-        fs::write(staging.join("heap.bin"), target.as_bytes()).unwrap();
         let snapshot = format!("snapshot-{target}");
-        journal.record_downloaded(target, &snapshot).unwrap();
-        journal.verify_artifact(target, &snapshot).unwrap();
-        journal.finalize_artifact(target, &snapshot).unwrap();
+        support::finish_ic_artifact(&mut journal, target, &snapshot, target.as_bytes());
     }
     let manifest = journal.publish_download_manifest(&source).unwrap();
     let requirement = retain_requirement(&layout, &source_layout, &restore, &source, manifest);
@@ -202,7 +198,7 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
         &requirement,
     );
     // ROOT is outside the restore subset; the complete source still must be checked.
-    let published = source_root.join(format!("artifacts/{ROOT}/heap.bin"));
+    let published = source_root.join(format!("artifacts/{ROOT}/wasm-module.bin"));
     fs::write(&published, b"changed published bytes").unwrap();
     journal
         .read_download_manifest(&source, requirement.source_artifacts())

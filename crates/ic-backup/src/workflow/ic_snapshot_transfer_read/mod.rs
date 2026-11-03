@@ -22,49 +22,6 @@ use crate::{
 };
 use thiserror::Error;
 
-/// Durably reserve one original planned read, freshly admit it and invoke its provider once.
-///
-/// Hold no attempt guards on entry. The selected original journal remains locked
-/// through admission, dispatch and passive response association. Missing originals,
-/// pending attempts and unfulfilled prerequisites reject before provider invocation.
-/// This only accepts a newly reserved attempt; reconstructed pending requests are
-/// never dispatched. Every failure after reservation retains its consumed allowance.
-/// Admission and provider submission are awaited under that same selected guard.
-/// Dropping the future releases the guard without refunding or granting reentry.
-///
-/// `admit` must qualify actual fresh method-specific access, original metadata/raw-ID
-/// custody, current application requirements and exclusive never-dispatched command
-/// custody for this exact request. There is no default admission. Any remote preflight
-/// calls require their own prior accounting. The provider retains its existing
-/// authenticated single-update contract, without retries or hidden observations.
-///
-/// The returned bounded reply has only structural association. Integrations must
-/// independently authenticate it and explicitly use the existing journal receipt
-/// owner to record a qualified outcome. Even success leaves the attempt pending.
-/// No artifact, complete-transfer, fence or terminal/reference-release proof follows.
-/// # Errors
-/// Rejects changed originals, payloads, spending, fresh admission, provider failure
-/// or malformed/mismatched replies. Replies returned before a later rejection are
-/// retained in the error. No failure grants a repeat call, refund or cleanup.
-pub async fn read_snapshot<E: std::error::Error + 'static>(
-    stage: &ExecutionStageGuard<'_>,
-    operation_sequence: u64,
-    payload: IcSnapshotTransferReadPayload<'_, '_>,
-    provider: &mut impl IcSnapshotTransferReadProvider,
-    admit: impl AsyncFnOnce(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
-) -> Result<IcSnapshotTransferReadResponse, IcSnapshotTransferReadExecutionError<E>> {
-    let (response, ()) = read_snapshot_with(
-        stage,
-        operation_sequence,
-        payload,
-        provider,
-        admit,
-        async |_, _, _| (),
-    )
-    .await?;
-    Ok(response)
-}
-
 // Complete a compound read while its original guard and decoded reply remain alive.
 // The continuation owns qualification and append/receipt ordering; checkpointing
 // happens only after this function has released the selected journal guard.

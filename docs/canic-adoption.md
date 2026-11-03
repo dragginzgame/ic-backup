@@ -59,7 +59,7 @@ and acceptance into production.
 
 | Concern | Existing Backup interface | Canic responsibility |
 | --- | --- | --- |
-| Frozen operation and learned stages | `ExecutionWorkflowRecord`, `ExecutionWorkflowStageDriver`, `run_retained_execution_workflow` | Bind exact Fleet/network/release/current unit and authenticate predecessor evidence |
+| Frozen operation and learned stages | `ExecutionWorkflowRecord`, `ExecutionWorkflowStageDriver`, `advance_execution_workflow` | Bind exact Fleet/network/release/current unit and authenticate predecessor evidence |
 | Original effect accounting | `OperationPlanRecord`, `ExecutionStageGuard`, `AttemptJournalGuard` | Allocate once; use the same authority across interruption; retain exact commands/bytes |
 | Direct management capture and transfer | `capture_snapshot`, metadata/download plans and source-bound upload steps | Select this lane only when the actual host caller has the required direct authority |
 | Application Root ingress | Original stage/attempt guards and `AgentApplicationIngressProvider` | Own Wire encoding and current authority; account Root-paid management effects through Canic's existing runtime owner |
@@ -108,7 +108,7 @@ adapter or new accounting layer:
 5. On interruption, reopen the same binding and complete journal set. Pending
    occupied stages refuse both fresh execution and retained continuation before new
    callbacks. Resolve their original observations/effects first. Once settled,
-   `RetainedStageEvidence` and `run_retained_execution_workflow` admit exact cold
+   `RetainedStageEvidence` and `advance_execution_workflow` admit exact cold
    continuation without redispatching settled stages.
 
 Run `cargo test --offline --locked -p ic-backup --test application_ingress` for the
@@ -119,6 +119,22 @@ no callbacks. Independently retained Root-paid evidence stays unchanged even aft
 the host stage settles. These tests use synthetic host receipts and make no IC
 calls; they do not qualify Canic Wire, Root-paid effects, participant membership,
 fresh permissions, fencing, terminal release or actual process-death behavior.
+
+### Workflow API migration
+
+Replace fresh `run_new_execution_workflow` calls with explicit
+`create_execution_workflow(&layout, &workflow)` once, followed by
+`advance_execution_workflow(&layout, &workflow.digest(), &retained, stage_limit, &mut driver)`.
+The initial retained set is empty. Replace `run_retained_execution_workflow` with
+the same advancement call using the complete original `RetainedStageEvidence` set.
+`stage_limit` is a positive `NonZeroUsize`; callers handle `Paused` between settled
+stages or extract the settlement view from `ExecutionWorkflowAdvance::Complete`.
+Do not create again on cold resume or treat `Paused` as completion.
+
+Canic's checkpoint unit tests and Root application-checkpoint simulator retain their
+integration-specific regression coverage. Their old entry-point calls require this
+source migration before adopting the new API. Backup's local tests qualify the new
+interface; they do not qualify the unchanged Canic checkout.
 
 ## Application transport adapter
 

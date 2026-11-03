@@ -191,9 +191,7 @@ fn immutable_download_manifest_replay_retains_unfinished_restore_references() {
     let obligation = fs::read(root.join("restore/fence-obligation.json")).unwrap();
     let target = &source.selected_targets()[0];
     let snapshot = "Original-Snapshot";
-    let staging = root.join(format!("source/artifacts/{target}.tmp"));
-    fs::create_dir_all(&staging).unwrap();
-    fs::write(staging.join("heap.bin"), b"retained native fixture bytes").unwrap();
+    fs::create_dir(root.join("source/artifacts")).unwrap();
     let mut journal = DownloadJournalGuard::create(
         &source_layout,
         source.digest().hash(),
@@ -205,9 +203,12 @@ fn immutable_download_manifest_replay_retains_unfinished_restore_references() {
         }],
     )
     .unwrap();
-    journal.record_downloaded(target, snapshot).unwrap();
-    journal.verify_artifact(target, snapshot).unwrap();
-    journal.finalize_artifact(target, snapshot).unwrap();
+    support::finish_ic_artifact(
+        &mut journal,
+        target,
+        snapshot,
+        b"retained native fixture bytes",
+    );
     let record = journal.record().unwrap().clone();
     let digest = journal.publish_download_manifest(&source).unwrap();
     let bytes = fs::read(root.join("source/download-manifest.json")).unwrap();

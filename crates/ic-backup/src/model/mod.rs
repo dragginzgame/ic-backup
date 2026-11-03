@@ -32,6 +32,7 @@ pub mod ic_snapshot_upload_data_observation;
 pub mod ic_snapshot_upload_observation;
 pub mod ic_update_response;
 pub mod inventory;
+pub mod inventory_settlement;
 mod journal_path;
 mod observed_targets;
 pub mod operation_plan;

@@ -15,7 +15,6 @@ use ic_backup::{
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-        ic_snapshot_transfer_read::IcSnapshotTransferReadPayload,
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
@@ -26,7 +25,7 @@ use ic_backup::{
         ic_snapshot_capture::{IcSnapshotCaptureExecutionError, capture_snapshot},
         ic_snapshot_download::IcSnapshotDownloadExecutionError,
         ic_snapshot_metadata::{IcSnapshotMetadataExecutionError, read_snapshot_metadata},
-        ic_snapshot_transfer_read::{IcSnapshotTransferReadExecutionError, read_snapshot},
+        ic_snapshot_transfer_read::IcSnapshotTransferReadExecutionError,
     },
 };
 use std::{convert::Infallible, fs, os::unix::fs::DirBuilderExt};
@@ -230,34 +229,12 @@ pub(crate) fn run(failure: ReadFailure) {
             artifacts.record().unwrap().artifacts()[0].state(),
             ArtifactStateRecord::Created
         );
-        assert!(
-            ready(read_snapshot(
-                &stage,
-                pending + 1,
-                IcSnapshotTransferReadPayload::Data(
-                    &download.requests()[usize::try_from(pending + 1).unwrap()]
-                ),
-                &mut backend,
-                async |_| -> Result<(), Infallible> {
-                    panic!("pending prerequisite rejects before admission")
-                },
-            ))
-            .is_err()
-        );
-        assert!(
-            ready(read_snapshot(
-                &stage,
-                pending,
-                IcSnapshotTransferReadPayload::Data(
-                    &download.requests()[usize::try_from(pending).unwrap()]
-                ),
-                &mut backend,
-                async |_| -> Result<(), Infallible> {
-                    panic!("pending read cannot dispatch again")
-                },
-            ))
-            .is_err()
-        );
+        // The same complete-plan owner rejects both pending reentry and its successor.
+        for sequence in [pending + 1, pending] {
+            let authority = plan.attempt_authority(sequence).unwrap();
+            let mut journal = AttemptJournalGuard::open(stage_layout, &authority).unwrap();
+            assert!(journal.reserve_planned_mutation(&plan.digest()).is_err());
+        }
         let original =
             fs::read(stage_layout.root().join(format!("attempt-{pending}.json"))).unwrap();
         let artifact_bytes = fs::read(artifacts.path()).unwrap();

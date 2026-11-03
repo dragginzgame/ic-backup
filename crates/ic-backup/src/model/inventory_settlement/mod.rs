@@ -1,31 +1,31 @@
-//! Passive independently qualified original snapshot-capture claims.
+//! Passive independently qualified original snapshot-creation claims.
 
 use crate::model::artifacts::ArtifactChecksumRecord;
 use std::fmt;
 
-/// Independent original capture attribution; candidate cardinality supplies no claim.
+/// Independent original capture or allocation attribution; candidate cardinality supplies no claim.
 #[derive(Clone)]
-pub enum IcCaptureAttribution {
-    /// Exclusive attribution to the exact original capture, retained through observation.
+pub enum IcInventoryAttribution {
+    /// Exclusive attribution to the exact original capture or allocation, retained through observation.
     Applied {
-        /// Exact newly captured raw ID, distinct from every retained baseline ID.
+        /// Exact new raw ID, distinct from every retained baseline ID.
         snapshot_id: Vec<u8>,
         /// Qualified evidence excluding independent creation by other writers.
         attribution: ArtifactChecksumRecord,
     },
-    /// The original capture never applied, including no transient capture then deletion.
+    /// The original capture or allocation never applied, including no transient creation then deletion.
     NotApplied {
         /// Qualified exclusion; an empty inventory delta is insufficient.
         exclusion: ArtifactChecksumRecord,
     },
-    /// An actually settled authenticated list cannot resolve the original capture.
+    /// An actually settled authenticated list cannot resolve the original capture or allocation.
     Unresolved {
         /// Settled uncertainty; lost, unavailable or malformed replies stay pending.
         uncertainty: ArtifactChecksumRecord,
     },
 }
 
-impl fmt::Debug for IcCaptureAttribution {
+impl fmt::Debug for IcInventoryAttribution {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Applied {
@@ -50,15 +50,15 @@ impl fmt::Debug for IcCaptureAttribution {
 
 /// Passive claims bound to original reservations and independently retained inventories.
 ///
-/// Integrations retain the full original baseline before capture and authenticate
+/// Integrations retain the full original baseline before mutation and authenticate
 /// actual context/target, chronology, freshness, permissions, custody and attribution.
 /// `evidence` binds all fields and their qualification. No persisted proof flag,
 /// spending owner or receipt is introduced.
 #[derive(Clone, Debug)]
-pub struct IcCaptureSettlement {
+pub struct IcInventorySettlement {
     /// Complete original plan/operation/immutable allowance digest.
     pub authority: ArtifactChecksumRecord,
-    /// Exact original pending capture attempt.
+    /// Exact original pending capture or allocation attempt.
     pub mutation_attempt: u32,
     /// Exact already consumed pending list observation attempt.
     pub observation_attempt: u32,
@@ -71,7 +71,7 @@ pub struct IcCaptureSettlement {
     /// Exact opaque evidence retained with the passive list response.
     pub observation_evidence: ArtifactChecksumRecord,
     /// Independently qualified outcome, never inferred from candidate count.
-    pub attribution: IcCaptureAttribution,
+    pub attribution: IcInventoryAttribution,
     /// Complete retained integration qualification evidence.
     pub evidence: ArtifactChecksumRecord,
 }

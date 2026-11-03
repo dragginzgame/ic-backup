@@ -1,4 +1,6 @@
 use super::*;
+use crate::ops::persistence::create_execution_workflow;
+use std::num::NonZeroUsize;
 mod operator;
 use crate::test_support::execution_workflow::{child, workflow};
 use crate::{
@@ -155,7 +157,17 @@ fn dependencies_run_in_topological_order_and_complete_originals_replay() {
         publish_at: Some(7),
         edge_overrides: BTreeMap::new(),
     };
-    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ))
+    .unwrap() else {
+        panic!("expected complete workflow")
+    };
     assert_eq!(driver.calls, [7, 0]);
     assert_eq!(view.workflow(), &workflow.digest());
     assert_eq!(
@@ -185,17 +197,21 @@ fn lost_reply_stops_and_reentry_cannot_invoke_the_driver_again() {
         publish_at: None,
         edge_overrides: BTreeMap::new(),
     };
+    create_execution_workflow(&layout, &workflow).unwrap();
     assert!(matches!(
-        ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
+        ready(advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &BTreeMap::new(),
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )),
         Err(ExecutionWorkflowRunError::Driver(_))
     ));
     assert_eq!(driver.calls, [0]);
     let journal = root.join("execution-stage-0/attempt-42.json");
     let original = fs::read(&journal).unwrap();
-    assert!(matches!(
-        ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
-        Err(ExecutionWorkflowRunError::Workflow(_))
-    ));
+    assert!(create_execution_workflow(&layout, &workflow).is_err());
     assert_eq!(driver.calls, [0]);
     assert_eq!(fs::read(&journal).unwrap(), original);
     assert!(!root.join("execution-stage-7").exists());
@@ -215,8 +231,15 @@ fn retained_run_replays_settled_stage_before_executing_absent_successor() {
         publish_at: None,
         edge_overrides: BTreeMap::new(),
     };
+    create_execution_workflow(&layout, &workflow).unwrap();
     assert!(matches!(
-        ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
+        ready(advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &BTreeMap::new(),
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )),
         Err(ExecutionWorkflowRunError::Driver(_))
     ));
     assert_eq!(driver.calls, [0]);
@@ -239,13 +262,16 @@ fn retained_run_replays_settled_stage_before_executing_absent_successor() {
         (0, 7),
         ArtifactChecksumRecord::from_bytes(b"changed driver commitment"),
     );
-    let view = ready(run_retained_execution_workflow(
+    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
         &layout,
         &workflow.digest(),
         &retained,
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
         &mut driver,
     ))
-    .unwrap();
+    .unwrap() else {
+        panic!("expected complete workflow")
+    };
     assert_eq!(driver.calls, [0, 7]);
     assert_eq!(fs::read(journal).unwrap(), original);
     assert_eq!(view.stages().len(), workflow.stages().len());
@@ -274,18 +300,26 @@ fn retained_run_refuses_missing_or_pending_stage_before_driver_callback() {
         publish_at: None,
         edge_overrides: BTreeMap::new(),
     };
+    create_execution_workflow(&layout, &workflow).unwrap();
     assert!(matches!(
-        ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
+        ready(advance_execution_workflow(
+            &layout,
+            &workflow.digest(),
+            &BTreeMap::new(),
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver,
+        )),
         Err(ExecutionWorkflowRunError::Driver(_))
     ));
     let journal = root.join("execution-stage-0/attempt-42.json");
     let original = fs::read(&journal).unwrap();
     assert!(matches!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &BTreeMap::new(),
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         )),
         Err(ExecutionWorkflowRunError::RetainedStageSetMismatch)
     ));
@@ -298,11 +332,12 @@ fn retained_run_refuses_missing_or_pending_stage_before_driver_callback() {
         ),
     )]);
     assert!(matches!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         )),
         Err(ExecutionWorkflowRunError::Checkpoint(_))
     ));
@@ -323,7 +358,17 @@ fn occupied_successor_refuses_changed_learned_predecessor_before_callbacks() {
         publish_at: None,
         edge_overrides: BTreeMap::new(),
     };
-    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ))
+    .unwrap() else {
+        panic!("expected complete workflow")
+    };
     assert_eq!(driver.calls, [0, 7]);
     let binding = |sequence| {
         view.stages()
@@ -356,11 +401,12 @@ fn occupied_successor_refuses_changed_learned_predecessor_before_callbacks() {
         RetainedStageEvidence::new(binding(0), ArtifactChecksumRecord::from_bytes(b"forged")),
     );
     assert!(matches!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         )),
         Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
     ));
@@ -374,14 +420,15 @@ fn occupied_successor_refuses_changed_learned_predecessor_before_callbacks() {
         ),
     );
     assert_eq!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         ))
         .unwrap(),
-        view
+        ExecutionWorkflowAdvance::Complete(view)
     );
     assert_eq!(driver.calls, [0, 7]);
     drop(layout);
@@ -402,7 +449,17 @@ fn retained_run_admits_exact_edge_commitment_distinct_from_stage_checkpoint() {
         publish_at: None,
         edge_overrides: BTreeMap::from([((0, 7), edge.clone())]),
     };
-    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ))
+    .unwrap() else {
+        panic!("expected complete workflow")
+    };
     assert_eq!(driver.calls, [0, 7]);
     let binding = |sequence| {
         view.stages()
@@ -433,14 +490,15 @@ fn retained_run_admits_exact_edge_commitment_distinct_from_stage_checkpoint() {
     let journal = root.join("execution-stage-0/attempt-42.json");
     let original = fs::read(&journal).unwrap();
     assert_eq!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         ))
         .unwrap(),
-        view
+        ExecutionWorkflowAdvance::Complete(view)
     );
     let mut forged = retained.clone();
     forged.insert(
@@ -451,11 +509,12 @@ fn retained_run_admits_exact_edge_commitment_distinct_from_stage_checkpoint() {
         )])),
     );
     assert!(matches!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &forged,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         )),
         Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
     ));
@@ -466,11 +525,12 @@ fn retained_run_admits_exact_edge_commitment_distinct_from_stage_checkpoint() {
             .with_successor_evidence(BTreeMap::from([(99, edge)])),
     );
     assert!(matches!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &forged,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         )),
         Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(0))
     ));
@@ -493,7 +553,17 @@ fn one_original_stage_can_bind_distinct_learned_commitments_to_two_successors() 
         publish_at: None,
         edge_overrides: BTreeMap::from([((0, 7), edge_7.clone()), ((0, 9), edge_9.clone())]),
     };
-    let view = ready(run_new_execution_workflow(&layout, &workflow, &mut driver)).unwrap();
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
+        &layout,
+        &workflow.digest(),
+        &BTreeMap::new(),
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ))
+    .unwrap() else {
+        panic!("expected complete workflow")
+    };
     assert_eq!(driver.calls, [0, 7, 9]);
     let binding = |sequence| {
         view.stages()
@@ -537,14 +607,15 @@ fn one_original_stage_can_bind_distinct_learned_commitments_to_two_successors() 
         ),
     ]);
     assert_eq!(
-        ready(run_retained_execution_workflow(
+        ready(advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &retained,
-            &mut driver,
+            NonZeroUsize::new(workflow.stages().len()).unwrap(),
+            &mut driver
         ))
         .unwrap(),
-        view
+        ExecutionWorkflowAdvance::Complete(view)
     );
     assert_eq!(driver.calls, [0, 7, 9]);
     drop(layout);
@@ -589,16 +660,22 @@ fn cancellation_after_reservation_retains_original_and_refuses_reentry() {
     let (root, layout) = layout("ic-backup-run-workflow-cancelled");
     let workflow = workflow();
     let mut driver = SuspendedDriver { calls: 0 };
-    let mut future = Box::pin(run_new_execution_workflow(&layout, &workflow, &mut driver));
+    create_execution_workflow(&layout, &workflow).unwrap();
+    let digest = workflow.digest();
+    let retained = BTreeMap::new();
+    let mut future = Box::pin(advance_execution_workflow(
+        &layout,
+        &digest,
+        &retained,
+        NonZeroUsize::new(workflow.stages().len()).unwrap(),
+        &mut driver,
+    ));
     crate::test_support::ready::assert_pending(future.as_mut());
     drop(future);
     assert_eq!(driver.calls, 1);
     let path = root.join("execution-stage-0/attempt-42.json");
     let original = fs::read(&path).unwrap();
-    assert!(matches!(
-        ready(run_new_execution_workflow(&layout, &workflow, &mut driver)),
-        Err(ExecutionWorkflowRunError::Workflow(_))
-    ));
+    assert!(create_execution_workflow(&layout, &workflow).is_err());
     assert_eq!(driver.calls, 1);
     assert_eq!(fs::read(&path).unwrap(), original);
     assert!(!root.join("execution-stage-7").exists());

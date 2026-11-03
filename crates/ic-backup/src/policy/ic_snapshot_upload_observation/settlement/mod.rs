@@ -7,18 +7,15 @@ use crate::{
         ic_observation::IcObservationResponse,
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
         ic_snapshot_upload::IcSnapshotUploadError,
-        ic_snapshot_upload_observation::{
-            IcSnapshotUploadAttribution, IcSnapshotUploadObservationRequest,
-            IcSnapshotUploadSettlement,
-        },
+        ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest,
     },
     policy::{
         ic_observation::{
             IcObservationAssociationError, IcObservationReplyView, IcObservationResponseView,
         },
         inventory_settlement::{
-            InventoryAttribution, InventorySettlementIdentity, InventorySettlementMismatch,
-            InventorySettlementOutcome, admitted_outcome, validate_pair,
+            InventorySettlementIdentity, InventorySettlementMismatch, InventorySettlementOutcome,
+            admitted_outcome, validate_pair,
         },
         settlement_identity::SettlementIdentity,
         snapshot_inventory_delta::SnapshotInventoryDeltaError,
@@ -26,12 +23,15 @@ use crate::{
 };
 use thiserror::Error;
 
+use crate::model::inventory_settlement::IcInventoryAttribution;
+use crate::model::inventory_settlement::IcInventorySettlement;
+
 /// Exact local evidence and passive attribution; never an authenticated receipt.
 #[derive(Debug)]
 pub struct IcSnapshotUploadSettlementView<'a> {
     observation: IcObservationResponseView<'a>,
     baseline: &'a IcSnapshotReply<'a>,
-    settlement: &'a IcSnapshotUploadSettlement,
+    settlement: &'a IcInventorySettlement,
     resolution: InventorySettlementOutcome,
 }
 impl<'a> IcSnapshotUploadSettlementView<'a> {
@@ -52,7 +52,7 @@ impl<'a> IcSnapshotUploadSettlementView<'a> {
     }
     /// Read the complete retained integration claims.
     #[must_use]
-    pub const fn settlement(&self) -> &'a IcSnapshotUploadSettlement {
+    pub const fn settlement(&self) -> &'a IcInventorySettlement {
         self.settlement
     }
     /// Read only the explicitly attributed new descriptor, with no singleton inference.
@@ -81,7 +81,7 @@ pub fn validate_settlement<'a>(
     baseline: &'a IcSnapshotReply<'a>,
     response: &'a IcObservationResponse,
     challenge: &ArtifactChecksumRecord,
-    settlement: &'a IcSnapshotUploadSettlement,
+    settlement: &'a IcInventorySettlement,
 ) -> Result<IcSnapshotUploadSettlementView<'a>, IcSnapshotUploadSettlementError> {
     let observation = validate_response(request, journal, response)?;
     let IcObservationReplyView::Inventory(inventory) = observation.reply() else {
@@ -111,15 +111,11 @@ pub fn validate_settlement<'a>(
         },
         &response.input().evidence,
     )?;
-    if let IcSnapshotUploadAttribution::Applied { snapshot_id, .. } = &settlement.attribution {
+    if let IcInventoryAttribution::Applied { snapshot_id, .. } = &settlement.attribution {
         request.mutation().validate_data_destination(snapshot_id)?;
     }
-    let resolution = admitted_outcome(
-        inventory,
-        &candidates,
-        InventoryAttribution::from(&settlement.attribution),
-    )
-    .map_err(|()| IcSnapshotUploadSettlementError::NotNewCandidate)?;
+    let resolution = admitted_outcome(inventory, &candidates, &settlement.attribution)
+        .map_err(|()| IcSnapshotUploadSettlementError::NotNewCandidate)?;
     Ok(IcSnapshotUploadSettlementView {
         observation,
         baseline,

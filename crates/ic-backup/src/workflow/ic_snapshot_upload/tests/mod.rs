@@ -122,7 +122,7 @@ fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() 
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
             let mut provider = SuspendedProvider { calls: 0 };
-            let mut future = Box::pin(upload_snapshot(
+            let mut future = Box::pin(dispatch_pending(
                 &stage,
                 7,
                 payload,
@@ -142,7 +142,7 @@ fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() 
             drop(future);
             crate::test_support::execution_workflow::assert_pending(&stage, 7);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
-            assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
+            assert!(ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert_eq!(fs::read(path).unwrap(), original);
         }
@@ -156,7 +156,7 @@ fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_suc
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let mut provider = Provider::new(raw.clone());
-        let response = ready(upload_snapshot(
+        let response = ready(dispatch_pending(
             &stage,
             7,
             payload,
@@ -185,7 +185,7 @@ fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_suc
         assert_eq!(provider.calls, 1);
         crate::test_support::execution_workflow::assert_pending(&stage, 7);
         assert!(
-            ready(upload_snapshot(
+            ready(dispatch_pending(
                 &stage,
                 7,
                 payload,
@@ -222,7 +222,7 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
             let mut provider = Provider::new(raw.clone());
             provider.reply = Err(failure);
             assert!(matches!(
-                ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)),
+                ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)),
                 Err(IcSnapshotUploadExecutionError::Provider(_))
             ));
             crate::test_support::execution_workflow::assert_pending(&stage, 7);
@@ -241,7 +241,7 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
                 original
             );
             assert!(
-                ready(upload_snapshot(
+                ready(dispatch_pending(
                     &stage,
                     7,
                     payload,
@@ -271,7 +271,7 @@ fn malformed_or_mismatched_reply_retains_exact_returned_bytes_and_pending_spendi
             let Err(IcSnapshotUploadExecutionError::AfterReply {
                 source: IcSnapshotUploadReplyError::Association(_),
                 acknowledgement,
-            }) = ready(upload_snapshot(&stage, 7, payload, &mut provider, admit))
+            }) = ready(dispatch_pending(&stage, 7, payload, &mut provider, admit))
             else {
                 panic!("passive association must reject")
             };
@@ -290,7 +290,7 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let mut provider = Provider::new(raw);
         assert!(matches!(
-            ready(upload_snapshot(
+            ready(dispatch_pending(
                 &stage,
                 7,
                 payload,
@@ -334,7 +334,7 @@ fn changed_payload_source_network_or_release_reject_before_spending() {
                     .unwrap();
             let mut provider = Provider::new(raw.clone());
             assert!(matches!(
-                ready(upload_snapshot(
+                ready(dispatch_pending(
                     &stage,
                     7,
                     payload,
@@ -367,7 +367,7 @@ fn held_missing_and_applied_journals_never_grant_dispatch() {
             &stage.plan().attempt_authority(7).unwrap(),
         )
         .unwrap();
-        assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
+        assert!(ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).is_err());
         journal
             .reserve_planned_mutation(&stage.plan().digest())
             .unwrap();
@@ -383,9 +383,9 @@ fn held_missing_and_applied_journals_never_grant_dispatch() {
             .unwrap();
         let path = journal.path().clone();
         drop(journal);
-        assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
+        assert!(ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).is_err());
         fs::rename(&path, path.with_extension("retained-original")).unwrap();
-        assert!(ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).is_err());
+        assert!(ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 0);
     });
 }
@@ -403,7 +403,7 @@ fn changed_stage_before_dispatch_or_after_reply_preserves_original_reservation()
             if after_reply {
                 provider.change = Some(path.clone());
             }
-            let result = ready(upload_snapshot(
+            let result = ready(dispatch_pending(
                 &stage,
                 7,
                 payload,
@@ -467,9 +467,9 @@ fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowled
         create_execution_workflow(&layout, &workflow).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
         let mut provider = Provider::new(raw);
-        assert!(ready(upload_snapshot(&stage, 8, payload, &mut provider, admit)).is_err());
-        ready(upload_snapshot(&stage, 7, payload, &mut provider, admit)).unwrap();
-        assert!(ready(upload_snapshot(&stage, 8, payload, &mut provider, admit)).is_err());
+        assert!(ready(dispatch_pending(&stage, 8, payload, &mut provider, admit)).is_err());
+        ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).unwrap();
+        assert!(ready(dispatch_pending(&stage, 8, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 1);
         let second = AttemptJournalGuard::open(
             stage.layout().unwrap(),
@@ -494,7 +494,27 @@ fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowled
             })
             .unwrap();
         drop(first);
-        ready(upload_snapshot(&stage, 8, payload, &mut provider, admit)).unwrap();
+        ready(dispatch_pending(&stage, 8, payload, &mut provider, admit)).unwrap();
         assert_eq!(provider.calls, 2);
     });
+}
+
+// Exercise shared dispatch without a receipt; production stage coordinators supply qualification.
+async fn dispatch_pending<E: std::error::Error + 'static>(
+    stage: &ExecutionStageGuard<'_>,
+    operation_sequence: u64,
+    payload: &IcSnapshotUploadRequest<'_>,
+    provider: &mut impl IcSnapshotUploadProvider,
+    admit: impl AsyncFnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
+) -> Result<IcMutationAcknowledgement, IcSnapshotUploadExecutionError<E>> {
+    let (acknowledgement, ()) = upload_snapshot_with(
+        stage,
+        operation_sequence,
+        payload,
+        provider,
+        admit,
+        async |_, _, _| (),
+    )
+    .await?;
+    Ok(acknowledgement)
 }

@@ -1,5 +1,7 @@
 //! Common exact identity and explicit new-candidate checks for inventory settlements.
 
+use crate::model::inventory_settlement::IcInventoryAttribution;
+
 use super::{
     settlement_identity::{SettlementIdentity, SettlementIdentityMismatch},
     snapshot_inventory_delta::{SnapshotInventoryDeltaError, compare_inventories},
@@ -7,9 +9,7 @@ use super::{
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::ObservationOutcomeRecord,
-    ic_observation::IcCaptureAttribution,
     ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
-    ic_snapshot_upload_observation::IcSnapshotUploadAttribution,
 };
 
 pub(crate) struct InventorySettlementIdentity<'a> {
@@ -94,33 +94,6 @@ where
     Ok(candidates)
 }
 
-#[derive(Clone, Copy)]
-pub(crate) enum InventoryAttribution<'a> {
-    Applied(&'a [u8]),
-    NotApplied,
-    Unresolved,
-}
-
-impl<'a> From<&'a IcCaptureAttribution> for InventoryAttribution<'a> {
-    fn from(value: &'a IcCaptureAttribution) -> Self {
-        match value {
-            IcCaptureAttribution::Applied { snapshot_id, .. } => Self::Applied(snapshot_id),
-            IcCaptureAttribution::NotApplied { .. } => Self::NotApplied,
-            IcCaptureAttribution::Unresolved { .. } => Self::Unresolved,
-        }
-    }
-}
-
-impl<'a> From<&'a IcSnapshotUploadAttribution> for InventoryAttribution<'a> {
-    fn from(value: &'a IcSnapshotUploadAttribution) -> Self {
-        match value {
-            IcSnapshotUploadAttribution::Applied { snapshot_id, .. } => Self::Applied(snapshot_id),
-            IcSnapshotUploadAttribution::NotApplied { .. } => Self::NotApplied,
-            IcSnapshotUploadAttribution::Unresolved { .. } => Self::Unresolved,
-        }
-    }
-}
-
 // A snapshot index exists only for an explicitly attributed Applied claim.
 #[derive(Debug)]
 pub(crate) enum InventorySettlementOutcome {
@@ -149,16 +122,16 @@ impl InventorySettlementOutcome {
 pub(crate) fn admitted_outcome(
     inventory: &IcSnapshotReply<'_>,
     candidates: &[&IcSnapshotInfo],
-    attribution: InventoryAttribution<'_>,
+    attribution: &IcInventoryAttribution,
 ) -> Result<InventorySettlementOutcome, ()> {
     match attribution {
-        InventoryAttribution::Applied(snapshot_id) => {
+        IcInventoryAttribution::Applied { snapshot_id, .. } => {
             new_candidate_index(inventory, candidates, snapshot_id)
                 .map(InventorySettlementOutcome::Applied)
                 .ok_or(())
         }
-        InventoryAttribution::NotApplied => Ok(InventorySettlementOutcome::NotApplied),
-        InventoryAttribution::Unresolved => Ok(InventorySettlementOutcome::Uncertain),
+        IcInventoryAttribution::NotApplied { .. } => Ok(InventorySettlementOutcome::NotApplied),
+        IcInventoryAttribution::Unresolved { .. } => Ok(InventorySettlementOutcome::Uncertain),
     }
 }
 

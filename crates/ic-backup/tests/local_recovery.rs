@@ -113,7 +113,7 @@ fn public_download_journal_adopts_publication_before_retained_progress() {
     fs::create_dir(root.join("artifacts")).expect("artifact parent");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");
     let intent = ArtifactChecksumRecord::from_bytes(b"caller-owned exact transfer intent");
-    let mut guard = DownloadJournalGuard::create(
+    let guard = DownloadJournalGuard::create(
         &layout,
         intent.hash(),
         vec![DownloadArtifactRequest {
@@ -137,9 +137,13 @@ fn public_download_journal_adopts_publication_before_retained_progress() {
             .expect("checksum native fixture")
             .as_bytes(),
     );
-    guard
-        .record_downloaded(entry.canister_id(), entry.snapshot_id())
-        .expect("caller attests completed transfer");
+    // Seed an existing v1 Downloaded journal; fresh completion uses the IC writer.
+    let mut retained = serde_json::to_value(guard.record().unwrap()).unwrap();
+    retained["artifacts"][0]["state"] = serde_json::json!("Downloaded");
+    let path = guard.path();
+    drop(guard);
+    fs::write(&path, serde_json::to_vec_pretty(&retained).unwrap()).unwrap();
+    let mut guard = DownloadJournalGuard::open(&layout, intent.hash()).unwrap();
     guard
         .verify_artifact(entry.canister_id(), entry.snapshot_id())
         .expect("verify exact local bytes");

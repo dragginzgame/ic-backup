@@ -107,26 +107,10 @@ impl<'a> DownloadJournalGuard<'a> {
         self.layout.root().join(JOURNAL_FILE)
     }
 
-    /// Retain the caller's complete-download attestation for the exact snapshot.
+    /// Recover a retained `Downloaded` entry by verifying its staged bytes.
     ///
-    /// Requires a safe existing staging directory. The caller must already have
-    /// validated complete backend metadata/extent coverage and command quiescence;
-    /// traversability alone does not establish IC transfer completeness.
-    /// # Errors
-    /// Rejects identity/state conflicts, unsafe or missing staging and failed persistence.
-    pub fn record_downloaded(
-        &mut self,
-        canister: &str,
-        snapshot: &str,
-    ) -> Result<(), DownloadJournalError> {
-        let next = self.next(canister, snapshot, ArtifactTransition::Downloaded)?;
-        self.check_artifact_parent()?;
-        let entry = next.artifact(canister, snapshot)?;
-        checksum_directory(&self.layout.root().join(entry.staging_path()))?;
-        self.store(next, write_encoded)
-    }
-
-    /// Verify staged bytes and durably retain their canonical checksum.
+    /// Fresh IC artifacts complete through `IcSnapshotArtifactWriter::finish`.
+    /// This operation preserves verification for existing v1 download journals.
     ///
     /// # Errors
     /// Rejects wrong identity/state, unsafe or missing bytes and failed persistence.

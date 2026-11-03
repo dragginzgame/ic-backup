@@ -33,56 +33,6 @@ use crate::{
 };
 use thiserror::Error;
 
-/// Durably reserve one exact original upload, freshly admit it and submit once.
-///
-/// Prepare the retained stage and every original journal before entry; hold no attempt
-/// guards. Guarded source preparation and exact metadata/tree/payload retention precede
-/// the upload plan. Data bytes and their independently attributed destination must be
-/// bound before that data stage is published, within its original workflow allocation.
-/// This checks the canonical full source/upload context and binding before spending,
-/// then delegates reservation/prerequisites to the existing complete-plan owner.
-/// Missing, pending, Applied or exhausted originals never reach provider invocation.
-///
-/// The mandatory fallible `admit` callback qualifies authentic complete source bytes,
-/// actual fresh controllers and application/restore requirements, exact metadata/data
-/// destination attribution, stable source/payload custody and exclusive never-dispatched
-/// command custody. It runs under the selected journal lock; remote preflight requires
-/// its own prior accounting. Local checks grant no byte fence or allocation authority.
-/// The existing provider sends only the exact accounted replicated update, with no
-/// batching, retries, hidden observations or implicit funding. No default is installed.
-/// Await admission and submission under the selected original guard. Cancellation
-/// releases exclusion without changing spending or permitting reentry. The provider
-/// receives the currently guarded original journal; the core supplies no executor.
-///
-/// Re-admit original stage/ancestor evidence before and after dispatch and check the
-/// bounded acknowledgement through the canonical upload policy/decoder. Success
-/// remains pending; integrations independently authenticate attribution and retain
-/// exact replies before explicitly recording receipts with the existing journal owner.
-/// A returned ID/empty reply alone grants no allocation outcome, learned data authority,
-/// complete transfer, load/start admission, terminal or fence/source-reference release.
-/// # Errors
-/// Rejects changed originals/payload/context, spending, fresh admission, provider or
-/// reply failures. Post-reservation failures retain consumption; post-reply rejections
-/// retain the bounded acknowledgement. No failure grants redispatch/refund/cleanup.
-pub async fn upload_snapshot<E: std::error::Error + 'static>(
-    stage: &ExecutionStageGuard<'_>,
-    operation_sequence: u64,
-    payload: &IcSnapshotUploadRequest<'_>,
-    provider: &mut impl IcSnapshotUploadProvider,
-    admit: impl AsyncFnOnce(&IcSnapshotUploadAttempt<'_, '_>) -> Result<(), E>,
-) -> Result<IcMutationAcknowledgement, IcSnapshotUploadExecutionError<E>> {
-    let (acknowledgement, ()) = upload_snapshot_with(
-        stage,
-        operation_sequence,
-        payload,
-        provider,
-        admit,
-        async |_, _, _| (),
-    )
-    .await?;
-    Ok(acknowledgement)
-}
-
 // Complete compound uploads under their original guard using the admitted reply.
 // Return before checkpointing, which must run after journal exclusion is released.
 async fn upload_snapshot_with<E: std::error::Error + 'static, T>(

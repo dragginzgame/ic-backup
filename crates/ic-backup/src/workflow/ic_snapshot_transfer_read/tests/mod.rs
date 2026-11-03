@@ -155,7 +155,7 @@ fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() 
                 ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest())
                     .unwrap();
             let mut provider = SuspendedProvider { calls: 0 };
-            let mut future = Box::pin(read_snapshot(
+            let mut future = Box::pin(dispatch_pending(
                 &stage,
                 42,
                 payload,
@@ -180,7 +180,7 @@ fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() 
             drop(future);
             assert_pending(&stage, &plan);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
-            assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
+            assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert_eq!(fs::read(path).unwrap(), before);
         }
@@ -214,7 +214,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let mut provider = Provider::new(Ok(raw.clone()));
-        let response = ready(read_snapshot(
+        let response = ready(dispatch_pending(
             &stage,
             42,
             payload,
@@ -241,7 +241,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         assert_eq!(provider.calls, 1);
         assert_pending(&stage, &plan);
         assert!(
-            ready(read_snapshot(
+            ready(dispatch_pending(
                 &stage,
                 42,
                 payload,
@@ -268,7 +268,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
             })
             .unwrap();
         drop(journal);
-        assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
+        assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, 1);
         stage
             .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(&raw))
@@ -291,7 +291,7 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
     let mut provider = Provider::new(Ok(metadata_wire()));
     let other = IcSnapshotMetadataRequest::new(request.target(), &[1]).unwrap();
     assert!(matches!(
-        ready(read_snapshot(
+        ready(dispatch_pending(
             &stage,
             42,
             IcSnapshotTransferReadPayload::Metadata(&other),
@@ -303,7 +303,7 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
         ))
     ));
     assert!(matches!(
-        ready(read_snapshot(&stage, 99, payload, &mut provider, admit)),
+        ready(dispatch_pending(&stage, 99, payload, &mut provider, admit)),
         Err(IcSnapshotTransferReadExecutionError::Plan(_))
     ));
     let held = AttemptJournalGuard::open(
@@ -312,14 +312,14 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
     )
     .unwrap();
     assert!(matches!(
-        ready(read_snapshot(&stage, 42, payload, &mut provider, admit)),
+        ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)),
         Err(IcSnapshotTransferReadExecutionError::Journal(_))
     ));
     drop(held);
     assert_eq!(fs::read(&path).unwrap(), original);
     fs::remove_file(&path).unwrap();
     assert!(matches!(
-        ready(read_snapshot(&stage, 42, payload, &mut provider, admit)),
+        ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)),
         Err(IcSnapshotTransferReadExecutionError::Journal(_))
     ));
     assert!(!path.exists());
@@ -338,7 +338,7 @@ fn fresh_admission_rejection_retains_spending_without_provider_or_redispatch() {
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let mut provider = Provider::new(Ok(metadata_wire()));
     assert!(matches!(
-        ready(read_snapshot(
+        ready(dispatch_pending(
             &stage,
             42,
             payload,
@@ -348,7 +348,7 @@ fn fresh_admission_rejection_retains_spending_without_provider_or_redispatch() {
         Err(IcSnapshotTransferReadExecutionError::Admission(_))
     ));
     assert_pending(&stage, &plan);
-    assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
+    assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 0);
     drop(stage);
     drop(layout);
@@ -369,7 +369,7 @@ fn each_provider_failure_retains_pending_original_across_resume_without_reissue(
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let mut provider = Provider::new(Err(failure));
         assert!(
-            matches!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)), Err(IcSnapshotTransferReadExecutionError::Provider(actual)) if actual == failure)
+            matches!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)), Err(IcSnapshotTransferReadExecutionError::Provider(actual)) if actual == failure)
         );
         assert_pending(&stage, &plan);
         let path = stage.layout().unwrap().root().join("attempt-42.json");
@@ -378,7 +378,7 @@ fn each_provider_failure_retains_pending_original_across_resume_without_reissue(
         let (stage, progress) =
             ExecutionStageGuard::resume(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         assert_eq!(progress.attempts.mutations_used, 1);
-        assert!(ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).is_err());
+        assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
         assert_eq!(fs::read(&path).unwrap(), original);
         assert_eq!(provider.calls, 1);
         drop(stage);
@@ -396,7 +396,7 @@ fn malformed_reply_retains_returned_bytes_and_original_pending_reservation() {
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let raw = b"invalid bounded candid".to_vec();
     let mut provider = Provider::new(Ok(raw.clone()));
-    let error = ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).unwrap_err();
+    let error = ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).unwrap_err();
     let IcSnapshotTransferReadExecutionError::AfterReply {
         source: IcSnapshotTransferReadReplyError::Association(_),
         response,
@@ -427,7 +427,7 @@ fn changed_stage_at_admission_stops_dispatch_and_changed_stage_after_reply_retai
         if after_reply {
             provider.change_stage = Some(path.clone());
         }
-        let error = ready(read_snapshot(
+        let error = ready(dispatch_pending(
             &stage,
             42,
             payload,
@@ -480,7 +480,7 @@ fn wrong_claim_and_replaced_layout_retain_reply_without_outcome_or_repair() {
         } else {
             provider.target = Some("aaaaa-aa");
         }
-        let error = ready(read_snapshot(&stage, 42, payload, &mut provider, admit)).unwrap_err();
+        let error = ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).unwrap_err();
         let response = match error {
             IcSnapshotTransferReadExecutionError::AfterReply {
                 source: IcSnapshotTransferReadReplyError::Journal(_),
@@ -512,4 +512,24 @@ fn wrong_claim_and_replaced_layout_retain_reply_without_outcome_or_repair() {
         drop(layout);
         fs::remove_dir_all(root).unwrap();
     }
+}
+
+// Exercise shared dispatch without a receipt; production stage coordinators supply qualification.
+async fn dispatch_pending<E: std::error::Error + 'static>(
+    stage: &ExecutionStageGuard<'_>,
+    operation_sequence: u64,
+    payload: IcSnapshotTransferReadPayload<'_, '_>,
+    provider: &mut impl IcSnapshotTransferReadProvider,
+    admit: impl AsyncFnOnce(&IcSnapshotTransferReadRequest<'_, '_>) -> Result<(), E>,
+) -> Result<IcSnapshotTransferReadResponse, IcSnapshotTransferReadExecutionError<E>> {
+    let (response, ()) = read_snapshot_with(
+        stage,
+        operation_sequence,
+        payload,
+        provider,
+        admit,
+        async |_, _, _| (),
+    )
+    .await?;
+    Ok(response)
 }

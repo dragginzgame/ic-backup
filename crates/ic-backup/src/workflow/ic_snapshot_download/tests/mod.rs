@@ -6,7 +6,7 @@ use crate::test_support::ic_snapshot_download::{source, source_plan, values, wor
 use crate::test_support::ready::ready;
 use crate::test_support::{response_fault::ReceiptFault, retained_reply::write_synced};
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
-use crate::workflow::ic_snapshot_transfer_read::read_snapshot;
+use crate::workflow::ic_snapshot_transfer_read::read_snapshot_with;
 use crate::{
     model::{
         download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
@@ -234,12 +234,13 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
                     .is_err()
             );
             assert!(
-                ready(read_snapshot(
+                ready(read_snapshot_with(
                     &stage,
                     1,
                     IcSnapshotTransferReadPayload::Data(&download.requests()[1]),
                     &mut provider,
                     admit,
+                    async |_, _, _| ()
                 ))
                 .is_err()
             );

@@ -28,7 +28,7 @@ use ic_backup::{
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
     workflow::ic_snapshot_upload::{
         IcSnapshotAllocationExecutionError, IcSnapshotDataUploadExecutionError,
-        IcSnapshotUploadExecutionError, allocate_snapshot, upload_snapshot, upload_snapshot_data,
+        IcSnapshotUploadExecutionError, allocate_snapshot, upload_snapshot_data,
     },
 };
 use std::{collections::BTreeSet, convert::Infallible, fs, os::unix::fs::DirBuilderExt};
@@ -237,15 +237,16 @@ fn assert_failed(
     assert_eq!(view.attempts.mutations_used, 1);
     assert_eq!(view.applied_operations, 0);
     let calls = provider.backend.calls;
+    let authority = stage.plan().attempt_authority(sequence).unwrap();
+    let mut journal =
+        ic_backup::ops::persistence::AttemptJournalGuard::open(stage.layout().unwrap(), &authority)
+            .unwrap();
+    IcSnapshotUploadAttempt::new(stage.plan(), sequence, journal.record().unwrap(), payload)
+        .unwrap();
     assert!(
-        ready(upload_snapshot(
-            &stage,
-            sequence,
-            payload,
-            provider,
-            async |_| -> Result<(), Infallible> { panic!("pending upload never reissues") }
-        ))
-        .is_err()
+        journal
+            .reserve_planned_mutation(&stage.plan().digest())
+            .is_err()
     );
     assert_eq!(provider.backend.calls, calls);
     assert_eq!(

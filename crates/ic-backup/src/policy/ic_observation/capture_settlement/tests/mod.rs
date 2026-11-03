@@ -62,8 +62,8 @@ fn claims(
     request: &IcObservationRequest<'_>,
     baseline: &IcSnapshotReply<'_>,
     response: &IcObservationResponse,
-) -> IcCaptureSettlement {
-    IcCaptureSettlement {
+) -> IcInventorySettlement {
+    IcInventorySettlement {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         observation_attempt: request.observation_attempt(),
@@ -73,7 +73,7 @@ fn claims(
             .unwrap()
             .digest(),
         observation_evidence: response.input().evidence.clone(),
-        attribution: IcCaptureAttribution::Unresolved {
+        attribution: IcInventoryAttribution::Unresolved {
             uncertainty: hash("78"),
         },
         evidence: hash("90"),
@@ -93,7 +93,7 @@ fn explicit_new_id_attribution_preserves_exact_originals_and_spending() {
     ))
     .unwrap();
     let mut claim = claims(&request, &baseline, &response);
-    claim.attribution = IcCaptureAttribution::Applied {
+    claim.attribution = IcInventoryAttribution::Applied {
         snapshot_id: vec![3],
         attribution: hash("78"),
     };
@@ -137,13 +137,13 @@ fn cardinality_never_infers_outcomes_and_only_new_bounded_ids_can_be_attributed(
         let mut claim = claims(&request, &baseline, &response);
         for (attribution, outcome) in [
             (
-                IcCaptureAttribution::NotApplied {
+                IcInventoryAttribution::NotApplied {
                     exclusion: hash("78"),
                 },
                 ObservationOutcomeRecord::NotApplied,
             ),
             (
-                IcCaptureAttribution::Unresolved {
+                IcInventoryAttribution::Unresolved {
                     uncertainty: hash("78"),
                 },
                 ObservationOutcomeRecord::Uncertain,
@@ -165,7 +165,7 @@ fn cardinality_never_infers_outcomes_and_only_new_bounded_ids_can_be_attributed(
             assert_eq!(original.journal, before);
         }
         for id in [vec![], vec![1], vec![99], vec![0; 257]] {
-            claim.attribution = IcCaptureAttribution::Applied {
+            claim.attribution = IcInventoryAttribution::Applied {
                 snapshot_id: id,
                 attribution: hash("78"),
             };
@@ -186,7 +186,7 @@ fn cardinality_never_infers_outcomes_and_only_new_bounded_ids_can_be_attributed(
     let response =
         IcObservationResponse::new(input(&request, vec![snapshot(&[1]), snapshot(&id)])).unwrap();
     let mut claim = claims(&request, &baseline, &response);
-    claim.attribution = IcCaptureAttribution::Applied {
+    claim.attribution = IcInventoryAttribution::Applied {
         snapshot_id: id.clone(),
         attribution: hash("78"),
     };

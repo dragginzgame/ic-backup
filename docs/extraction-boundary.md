@@ -376,15 +376,15 @@ retry or paid-call authority.
 
 `DownloadJournalGuard` borrows `BackupLayoutGuard` and exclusively locks the fixed
 `download-journal.json`. Creation never replaces evidence; opening validates
-bounded retained records under the expected exact intent digest. Staging belongs
-to the caller. `record_downloaded` requires a safe directory and records the
-caller's completed-transfer attestation; it cannot prove complete IC metadata or
-that a command tree ended. The integration must supply both before calling it.
-`verify_artifact` computes actual staged bytes through the extracted secure
-directory checksum implementation. `finalize_artifact` publishes or adopts only
+bounded retained records under the expected exact intent digest. Fresh IC completion
+uses `stage_ic_snapshot_artifact` and `IcSnapshotArtifactWriter::finish`, requiring
+exact original metadata and complete extent coverage before checksum and publication.
+There is no fresh arbitrary-directory completion attestation. `verify_artifact`
+remains for retained v1 `Downloaded` entries: it computes actual staged bytes through
+the secure directory checksum owner. `finalize_artifact` publishes or adopts only
 the matching verified tree, then durably advances the journal. The fixed artifact
 parent must be an existing nonsymlink directory; all cooperating writers use
-layout exclusion. No staging deletion/redownload or remote command occurs here.
+layout exclusion. No staging deletion, redownload or remote command occurs here.
 
 Any attempted persistence failure or artifact-commit failure disables that guard
 until it is dropped and retained evidence reopened. A publication may have
@@ -1839,8 +1839,8 @@ pending spending, originals, source references and application/fence obligations
 Lost replies need qualified reconciliation; local reopen invokes no provider.
 
 Native refusal tests exercise exact retained local bytes. The configured Agent
-upload adapter additionally exercises metadata/data updates through the public
-single-upload coordinator against the actual simulator. The Testkit driver separately
+upload adapter additionally exercises metadata/data updates under explicitly held
+original reservations against the actual simulator. The Testkit driver separately
 qualifies allocation and complete data-stage coordination for its isolated fixture.
 These do not install a default application runner, prove complete production upload
 or grant release authority. See [the port contract](contracts/ic-snapshot-upload-port.json)
@@ -2022,7 +2022,7 @@ See [the contract](contracts/ic-lifecycle-settlement.json),
 
 ### Exact independently qualified capture settlement
 
-`IcCaptureSettlement` and `IcCaptureAttribution` are passive original capture
+`inventory_settlement::IcInventorySettlement` and `IcInventoryAttribution` are passive original capture
 claims over an already reserved successful exact list observation.
 `policy::ic_observation::validate_capture_settlement` reuses full original
 plan/authority/capture bytes, current reservations, actual response association,
@@ -2231,34 +2231,27 @@ It preserves all ordinary original-digest, strict decoding and checkpoint checks
 The caller retains the guard throughout; no local settlement becomes application
 acceptance or reference-release permission.
 
-`run_new_execution_workflow` coordinates a new allocation and exact child stages
-in declared topological order. The integration supplies each learned child plan,
-fresh effect-boundary admission, authenticated request/reply retention, explicit
-original Applied receipts and the opaque learned-evidence digest. Canonical owners
-prepare all original journals before the stage callback and reconcile its exact
-checkpoint afterward. Before binding a successor, the driver may qualify a
-distinct learned digest for that original edge; the default uses the predecessor
-checkpoint digest. This callback is effect-free and does not grant dispatch
-authority. Success rereads the complete local workflow view. Failure
-or cancellation retains all original stages, pending attempts, artifacts and
-references; a repeated call refuses the occupied workflow before any driver
-callback. Recovery uses the separate exact reopen/reconciliation owners. This
-one-shot coordinator grants no automatic retry, product completion, application
-safety, terminal receipt or fence/reference release. It changes no v1 record,
-digest or allowance.
+Create the original allocation once through `create_execution_workflow`, which
+refuses occupied evidence. `advance_execution_workflow` is the sole coordination
+entry point for both fresh execution and retained continuation. Each call names
+the original workflow digest, the complete integration-qualified occupied-stage
+set and a positive limit on newly executed stages. `Paused` occurs only between
+settled stages; `Complete` contains the reread complete local settlement view.
 
-`run_retained_execution_workflow` reads the existing allocation and preflights
-the complete occupied stage set under its held layout. The integration supplies
-each occupied binding identity and independently qualified learned-evidence
-digest. Every occupied stage must replay its original all-Applied checkpoint
-before a driver callback; missing identities, partial preparation and pending
-attempts refuse. An occupied successor also refuses when its original binding
-commits a different learned digest for a supplied predecessor edge. Retained
-evidence may supply distinct qualified commitments per outgoing original edge;
-unknown edges refuse before callbacks. Without an override, the predecessor
-checkpoint digest is used. Only genuinely absent successors may be prepared through the
-same create-only owners. Absence is not proof of no earlier dispatch, and the
-driver remains responsible for fresh effect authority and authenticated custody.
+The coordinator preflights every occupied stage before driver callbacks. Each must
+replay its original all-Applied checkpoint; missing identities, partial preparation
+and pending attempts refuse. Occupied successors must commit the exact qualified
+learned evidence for every original predecessor edge. Overrides name original edges;
+otherwise the predecessor checkpoint digest is used. Only absent successors may be
+prepared through the existing create-only owners, in declared topological order.
+
+Integrations supply exact child plans, fresh effect-boundary admission, authenticated
+request/reply retention, explicit original Applied receipts and learned evidence.
+Canonical owners prepare every original journal before callbacks and reconcile
+checkpoints afterward. Edge qualification is effect-free. Failure and cancellation
+retain original stages, spending, artifacts and references. Absence does not prove
+never-dispatched custody; no bound change grants retry, new allowance, application
+acceptance, product completion or terminal/fence/reference release.
 
 The workflow and binding use separate NUL-terminated v1 digest domains. Workflow
 hashing retains the full canonical allocation digest. Stage hashing retains exact
@@ -2364,7 +2357,7 @@ See the [mutation port contract](contracts/ic-mutation-port.json).
 
 ### Provider-driven snapshot transfer read step
 
-`workflow::ic_snapshot_transfer_read::read_snapshot` coordinates exactly one
+The private shared transfer-read engine coordinates exactly one
 metadata/data replicated update under `ExecutionStageGuard`. Payload target/wire
 binding reuses the model owner before spending. The existing selected journal is
 opened, never created, and canonical `reserve_planned_mutation` admits the complete
@@ -2380,7 +2373,8 @@ preflight work needs its own prior accounting. The existing provider owns actual
 authentication and a single exact ingress, without hidden calls or retries. These
 sequential local checks do not fence noncooperating filesystem actors.
 
-Success returns an immutable bounded raw response and leaves spending pending.
+The shared read engine associates an immutable bounded response while spending remains pending;
+public stage continuations then qualify it and explicitly record receipts.
 Only separately authenticated integration evidence may enter the existing receipt
 owner. Lost, unavailable, unsupported or malformed replies never refund consumption,
 settle uncertainty or permit repetition; a second invocation rejects the pending
@@ -2390,18 +2384,18 @@ fence obligation or source reference changes beyond the original reservation.
 Original 1,024-attempt, 4 KiB argument, 1 MiB metadata and 2 MiB raw-data limits and
 all decoder quotas remain with their existing owners.
 
-The public simulator download fixture now uses this step for metadata and every
+The public simulator download fixture uses the complete stage coordinators for metadata and every
 planned data call. Complete artifact publication and lost/malformed second-read
 retention are qualified for that isolated stopped application only. This installs
-one callable coordination step, not a complete backup/restore runner or default
-Agent provider. Applications still own full transfer, fresh membership/consistency,
+shared internal dispatch, while public metadata and download coordinators own
+qualification, receipts and completion. Applications still own full transfer, fresh membership/consistency,
 restore safety, stable custody and terminal/fence/reference release. See
 [application acceptance](canic-adoption.md#required-application-acceptance) and the
 [port contract](contracts/ic-snapshot-transfer-read-port.json).
 
 ### Original metadata-stage coordination
 
-The transfer-read provider and single-read/metadata/download coordinators are async.
+The transfer-read provider and metadata/download coordinators are async.
 Providers receive the currently guarded original journal; selected exclusion spans
 admission/submission or independent qualification awaits. The configured
 `AgentSnapshotTransferReadProvider` requires durable exact signed-envelope/request-ID
@@ -2409,14 +2403,14 @@ retention before one update. Qualifiers retain replies before cancellable work.
 Cancellation releases exclusion while preserving consumed pending/Applied spending,
 earlier download receipts and partial files; reentry cannot dispatch a pending read.
 No runtime dependency, `Send` bound, new schema or automatic receipt is introduced.
-Actual Agent simulator reads use the configured adapter and single-read coordinator;
+Actual Agent simulator reads use the configured adapter under explicit original guards;
 the Testkit driver separately qualifies the complete metadata/download loop.
 
 `workflow::ic_snapshot_metadata::read_snapshot_metadata` accepts exactly one
-original metadata operation under its retained stage. Reuse `read_snapshot` for
+original metadata operation under its retained stage. Reuse the private read engine for
 complete original-journal admission, durable reservation, fresh integration admission
-and one provider call. Reopen the selected journal, re-admit the bounded response,
-then require an independently qualified exact Applied receipt. Qualification owns
+and one provider call. Keep the selected journal locked through bounded response
+admission and independently qualified exact Applied receipt preparation. Qualification owns
 actual authentication/attribution and durable retention of original request/reply
 bytes before returning; no default callback or new byte store is installed.
 
@@ -2445,7 +2439,7 @@ original mutation/observation consumption before a provider call. Complete origi
 journal admission still owns missing/held evidence. A read-free plan creates no
 placeholder operation; it is refused by this data-stage entrypoint.
 
-For each original ordinal, reuse `read_snapshot` for durable reservation, mandatory
+For each original ordinal, reuse the private read engine for durable reservation, mandatory
 fresh read admission and one provider invocation. Reopen the selected original
 journal, re-admit the exact bounded response and require an integration-qualified
 exact Applied receipt. The integration independently authenticates attribution;
@@ -2475,17 +2469,17 @@ obligations.
 
 ### Original snapshot upload coordination
 
-Upload, allocation and complete data-upload coordinators are async. Admission and
+Allocation and complete data-upload coordinators are async. Admission and
 independent qualification retain selected journal exclusion across awaits. The
 configured `AgentUpdateProvider` requires durable exact signed-envelope/
 request-ID retention before one metadata/data update. Retain original replies before
 cancellable qualification. Cancellation preserves source bytes/references, earlier
 Applied receipts and pending spending; it grants no allocation or data-stage reentry.
 The core adds no runtime, `Send` bound, record, accounting owner or default application
-lane. Actual Agent simulator uploads use the adapter and single-upload coordinator;
+lane. Actual Agent simulator uploads use the adapter under explicit original guards;
 the Testkit driver separately exercises allocation and complete data-stage loops.
 
-`workflow::ic_snapshot_upload::upload_snapshot` admits exact canonical source/upload
+The private shared upload engine admits exact canonical source/upload
 context and payload binding before spending. Open the existing journal, reserve
 through complete original-plan admission and hold the selected lock through fresh
 integration admission, one provider call and passive bounded reply checks. Re-admit
@@ -2500,7 +2494,8 @@ preparation precedes retained upload intent; pure declarations or reconstructed
 attempts provide no such authority. Each metadata/data update remains independently
 accounted, without replacement/deletion, batching, hidden observations or retries.
 
-Success retains pending spending. Returned metadata IDs and canonical empty data
+The shared upload engine leaves spending pending until its public stage continuation
+qualifies the response and records an explicit receipt. Returned metadata IDs and canonical empty data
 acknowledgements never create automatic outcomes, learned data authority or complete
 transfer. The existing explicit receipt owner alone records qualified evidence.
 Association and post-reply errors retain exact bounded acknowledgements. No new
@@ -2734,7 +2729,7 @@ existing comparison owners retain authority/attempt/challenge order, followed by
 inventory evidence where applicable. Full-baseline admission still precedes
 inventory identity comparison. Domain-specific attribution and byte checks remain.
 
-Passive `IcSnapshotUploadSettlement` and `IcSnapshotUploadAttribution` bind the
+Passive `inventory_settlement::IcInventorySettlement` and `IcInventoryAttribution` bind the
 full original upload authority, both still-pending attempts, a current challenge,
 exact independently retained baseline/current list digests and opaque observation
 evidence. Pure `policy::ic_snapshot_upload_observation::validate_settlement` reuses

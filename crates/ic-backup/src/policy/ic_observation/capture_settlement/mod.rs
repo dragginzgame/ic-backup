@@ -1,5 +1,9 @@
 //! Pure admission of independently qualified original capture settlement.
 
+#[cfg(test)]
+use crate::model::inventory_settlement::IcInventoryAttribution;
+use crate::model::inventory_settlement::IcInventorySettlement;
+
 use super::{
     IcObservationAssociationError, IcObservationReplyView, IcObservationResponseView,
     validate_response,
@@ -8,14 +12,14 @@ use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{AttemptJournalRecord, ObservationOutcomeRecord},
-        ic_observation::{IcCaptureSettlement, IcObservationRequest, IcObservationResponse},
+        ic_observation::{IcObservationRequest, IcObservationResponse},
         ic_request::IcManagementMethodRecord as Method,
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
     },
     policy::{
         inventory_settlement::{
-            InventoryAttribution, InventorySettlementIdentity, InventorySettlementMismatch,
-            InventorySettlementOutcome, admitted_outcome, validate_pair,
+            InventorySettlementIdentity, InventorySettlementMismatch, InventorySettlementOutcome,
+            admitted_outcome, validate_pair,
         },
         settlement_identity::SettlementIdentity,
         snapshot_inventory_delta::SnapshotInventoryDeltaError,
@@ -23,15 +27,12 @@ use crate::{
 };
 use thiserror::Error;
 
-#[cfg(test)]
-use crate::model::ic_observation::IcCaptureAttribution;
-
 /// Matched passive capture claim and exact inventories; never an authenticated receipt.
 #[derive(Debug)]
 pub struct IcCaptureSettlementView<'a> {
     observation: IcObservationResponseView<'a>,
     baseline: &'a IcSnapshotReply<'a>,
-    settlement: &'a IcCaptureSettlement,
+    settlement: &'a IcInventorySettlement,
     resolution: InventorySettlementOutcome,
 }
 impl<'a> IcCaptureSettlementView<'a> {
@@ -52,7 +53,7 @@ impl<'a> IcCaptureSettlementView<'a> {
     }
     /// Read the complete retained integration claims.
     #[must_use]
-    pub const fn settlement(&self) -> &'a IcCaptureSettlement {
+    pub const fn settlement(&self) -> &'a IcInventorySettlement {
         self.settlement
     }
     /// Read only the explicitly attributed new descriptor, without singleton inference.
@@ -84,7 +85,7 @@ pub fn validate_capture_settlement<'a>(
     baseline: &'a IcSnapshotReply<'a>,
     response: &'a IcObservationResponse,
     challenge: &ArtifactChecksumRecord,
-    settlement: &'a IcCaptureSettlement,
+    settlement: &'a IcInventorySettlement,
 ) -> Result<IcCaptureSettlementView<'a>, IcCaptureSettlementError> {
     if request.mutation().method() != Method::TakeCanisterSnapshot
         || request.payload().method() != Method::ListCanisterSnapshots
@@ -119,12 +120,8 @@ pub fn validate_capture_settlement<'a>(
         },
         &response.input().evidence,
     )?;
-    let resolution = admitted_outcome(
-        inventory,
-        &candidates,
-        InventoryAttribution::from(&settlement.attribution),
-    )
-    .map_err(|()| IcCaptureSettlementError::NotNewCandidate)?;
+    let resolution = admitted_outcome(inventory, &candidates, &settlement.attribution)
+        .map_err(|()| IcCaptureSettlementError::NotNewCandidate)?;
     Ok(IcCaptureSettlementView {
         observation,
         baseline,

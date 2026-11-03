@@ -50,7 +50,7 @@ fn prepare() -> (PathBuf, BackupLayoutGuard, OperationPlanRecord) {
     .unwrap();
     for id in plan.selected_targets() {
         let snapshot = format!("Snap-{id}");
-        journal.record_downloaded(id, &snapshot).unwrap();
+        super::super::tests::retain_downloaded_fixture(&mut journal, id, &snapshot).unwrap();
         journal.verify_artifact(id, &snapshot).unwrap();
         journal.finalize_artifact(id, &snapshot).unwrap();
     }

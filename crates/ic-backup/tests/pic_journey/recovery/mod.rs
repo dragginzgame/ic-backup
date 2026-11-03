@@ -1,5 +1,7 @@
 //! Reserved real recovery under exclusive simulator fixture custody.
 
+use ic_backup::model::inventory_settlement::{IcInventoryAttribution, IcInventorySettlement};
+
 mod lifecycle;
 pub(super) use lifecycle::lifecycle;
 
@@ -8,10 +10,7 @@ use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{AttemptJournalRecordError, ObservationReceiptRequest},
-        ic_observation::{
-            IcCaptureAttribution, IcCaptureSettlement, IcObservationRequest, IcObservationResponse,
-            IcObservationResponseInput,
-        },
+        ic_observation::{IcObservationRequest, IcObservationResponse, IcObservationResponseInput},
         ic_request::IcManagementRequestRecord,
         ic_snapshot_reply::IcSnapshotReply,
     },
@@ -75,7 +74,7 @@ pub(super) fn capture(
     let challenge = ArtifactChecksumRecord::from_bytes(
         format!("fresh capture recovery {}:{index}", plan.digest().hash()).as_bytes(),
     );
-    let settlement = IcCaptureSettlement {
+    let settlement = IcInventorySettlement {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         observation_attempt: request.observation_attempt(),
@@ -83,7 +82,7 @@ pub(super) fn capture(
         baseline: baseline.digest(),
         inventory: inventory.digest(),
         observation_evidence: evidence.clone(),
-        attribution: IcCaptureAttribution::Applied {
+        attribution: IcInventoryAttribution::Applied {
             snapshot_id: snapshot.id().to_vec(),
             attribution: evidence.clone(),
         },
@@ -119,10 +118,7 @@ pub(super) fn allocation(
     baseline: &IcSnapshotReply<'_>,
 ) -> Vec<u8> {
     use ic_backup::{
-        model::ic_snapshot_upload_observation::{
-            IcSnapshotUploadAttribution, IcSnapshotUploadObservationRequest,
-            IcSnapshotUploadSettlement,
-        },
+        model::ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest,
         policy::ic_snapshot_upload_observation::validate_settlement,
     };
     let plan = backend.retained_plan(index);
@@ -185,7 +181,7 @@ pub(super) fn allocation(
     let challenge = ArtifactChecksumRecord::from_bytes(
         format!("fresh allocation recovery {}:{index}", plan.digest().hash()).as_bytes(),
     );
-    let settlement = IcSnapshotUploadSettlement {
+    let settlement = IcInventorySettlement {
         authority: request.authority().digest(),
         mutation_attempt: request.mutation_attempt(),
         observation_attempt: request.observation_attempt(),
@@ -193,7 +189,7 @@ pub(super) fn allocation(
         baseline: baseline.digest(),
         inventory: inventory.digest(),
         observation_evidence: evidence.clone(),
-        attribution: IcSnapshotUploadAttribution::Applied {
+        attribution: IcInventoryAttribution::Applied {
             snapshot_id: allocated.id().to_vec(),
             attribution: evidence.clone(),
         },

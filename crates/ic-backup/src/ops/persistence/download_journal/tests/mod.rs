@@ -38,6 +38,16 @@ fn fixture() -> PathBuf {
     root
 }
 
+// Seed historical v1 evidence; fresh product completion uses the IC artifact writer.
+pub(super) fn retain_downloaded_fixture(
+    guard: &mut DownloadJournalGuard<'_>,
+    canister: &str,
+    snapshot: &str,
+) -> Result<(), DownloadJournalError> {
+    let next = guard.next(canister, snapshot, ArtifactTransition::Downloaded)?;
+    guard.store(next, write_encoded)
+}
+
 #[test]
 fn reopen_validates_exact_digest_text_before_locking_without_changing_evidence() {
     let root = fixture();
@@ -81,13 +91,12 @@ fn exact_guarded_lifecycle_and_local_terminal_replay_preserve_bytes() {
         0o600
     );
     assert!(matches!(
-        guard.record_downloaded(CANISTER, "wrong-snapshot"),
+        retain_downloaded_fixture(&mut guard, CANISTER, "wrong-snapshot"),
         Err(DownloadJournalError::Record(
             DownloadJournalRecordError::SnapshotMismatch
         ))
     ));
-    guard
-        .record_downloaded("AAAAA-AA", SNAPSHOT)
+    retain_downloaded_fixture(&mut guard, "AAAAA-AA", SNAPSHOT)
         .expect("retained complete download");
     guard
         .verify_artifact(CANISTER, SNAPSHOT)
@@ -137,9 +146,7 @@ fn changed_bytes_reject_publication_without_resetting_evidence() {
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");
     let mut guard =
         DownloadJournalGuard::create(&layout, INTENT, vec![request()]).expect("journal");
-    guard
-        .record_downloaded(CANISTER, SNAPSHOT)
-        .expect("download");
+    retain_downloaded_fixture(&mut guard, CANISTER, SNAPSHOT).expect("download");
     guard.verify_artifact(CANISTER, SNAPSHOT).expect("verify");
     let retained = fs::read(guard.path()).expect("verified evidence");
     fs::write(
@@ -199,9 +206,8 @@ fn failed_write_keeps_previous_bytes_and_requires_retained_recovery() {
         guard.record().expect("created").artifacts()[0].state(),
         ArtifactStateRecord::Created
     );
-    guard
-        .record_downloaded(CANISTER, SNAPSHOT)
-        .expect("local attestation can proceed after recovery");
+    retain_downloaded_fixture(&mut guard, CANISTER, SNAPSHOT)
+        .expect("seed retained fixture after recovery");
     drop(guard);
     drop(layout);
     fs::remove_dir_all(root).expect("clean successful fixture");
@@ -317,11 +323,12 @@ fn unsafe_paths_and_corrupt_journals_reject_without_overwriting() {
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");
     let mut guard =
         DownloadJournalGuard::create(&layout, INTENT, vec![request()]).expect("journal");
+    retain_downloaded_fixture(&mut guard, CANISTER, SNAPSHOT).unwrap();
     let original = fs::read(guard.path()).expect("original");
     fs::rename(root.join("artifacts"), root.join("retained-artifacts")).expect("retain original");
     symlink(root.join("retained-artifacts"), root.join("artifacts")).expect("unsafe parent");
     assert!(matches!(
-        guard.record_downloaded(CANISTER, SNAPSHOT),
+        guard.verify_artifact(CANISTER, SNAPSHOT),
         Err(DownloadJournalError::UnsafeArtifactParent { .. })
     ));
     assert_eq!(fs::read(guard.path()).expect("unchanged"), original);
@@ -331,7 +338,7 @@ fn unsafe_paths_and_corrupt_journals_reject_without_overwriting() {
     fs::rename(&stage, root.join("retained-staging")).expect("retain stage");
     symlink(root.join("retained-staging"), &stage).expect("unsafe leaf");
     assert!(matches!(
-        guard.record_downloaded(CANISTER, SNAPSHOT),
+        guard.verify_artifact(CANISTER, SNAPSHOT),
         Err(DownloadJournalError::Artifact(_))
     ));
     let path = guard.path();
@@ -368,7 +375,7 @@ fn byte_limits_and_replaced_layouts_reject_before_progress() {
     fs::rename(&root, root.with_extension("retained")).expect("retain original root");
     fs::create_dir(&root).expect("replacement root");
     assert!(matches!(
-        guard.record_downloaded(CANISTER, SNAPSHOT),
+        retain_downloaded_fixture(&mut guard, CANISTER, SNAPSHOT),
         Err(DownloadJournalError::Persistence(
             PersistenceError::LayoutChanged { .. }
         ))
@@ -413,9 +420,7 @@ fn owner_death_after_directory_publication_reconciles_without_download_retry() {
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");
     let mut guard =
         DownloadJournalGuard::create(&layout, INTENT, vec![request()]).expect("journal");
-    guard
-        .record_downloaded(CANISTER, SNAPSHOT)
-        .expect("download");
+    retain_downloaded_fixture(&mut guard, CANISTER, SNAPSHOT).expect("download");
     guard.verify_artifact(CANISTER, SNAPSHOT).expect("verify");
     let verified = fs::read(guard.path()).expect("original retained bytes");
     drop(guard);

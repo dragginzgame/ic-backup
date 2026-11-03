@@ -147,3 +147,75 @@ pub(crate) fn single_operation_plan(
     })
     .unwrap()
 }
+
+/// Complete a native byte fixture through the actual IC artifact writer (no IC calls).
+#[cfg(unix)]
+#[allow(
+    dead_code,
+    reason = "shared support compiles in unrelated integration binaries"
+)]
+pub(crate) fn finish_ic_artifact(
+    journal: &mut ic_backup::ops::persistence::DownloadJournalGuard<'_>,
+    target: &str,
+    token: &str,
+    bytes: &[u8],
+) {
+    use ic_backup::model::{
+        ic_snapshot_data::{IcSnapshotDataReply, IcSnapshotDataRequest},
+        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
+    };
+    use ic_platform::{
+        candid::contract,
+        management_canister_types::{
+            ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
+        },
+    };
+    let sources: Vec<serde_json::Value> = serde_json::from_str(include_str!(
+        "../../src/model/ic_snapshot_metadata/tests/golden.json"
+    ))
+    .unwrap();
+    let source = sources
+        .iter()
+        .find(|source| source["name"] == "data-source")
+        .unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
+        &hex_bytes(source["reply_hex"].as_str().unwrap()),
+        WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
+    values.taken_at_timestamp = journal
+        .record()
+        .unwrap()
+        .artifacts()
+        .iter()
+        .find(|entry| entry.canister_id() == target && entry.snapshot_id() == token)
+        .unwrap()
+        .snapshot_taken_at_timestamp();
+    values.wasm_module_size = u64::try_from(bytes.len()).unwrap();
+    values.wasm_memory_size = 0;
+    values.stable_memory_size = 0;
+    values.wasm_chunk_store.clear();
+    let raw = contract::encode_one(values).unwrap();
+    let request = IcSnapshotMetadataRequest::new(target, &[0, 255, 17]).unwrap();
+    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+    let data = IcSnapshotDataRequest::new(
+        &metadata,
+        SnapshotDataKind::WasmModule {
+            offset: 0,
+            size: u64::try_from(bytes.len()).unwrap(),
+        },
+    )
+    .unwrap();
+    let raw_reply = contract::encode_one(ReadCanisterSnapshotDataResult {
+        chunk: bytes.to_vec(),
+    })
+    .unwrap();
+    let reply = IcSnapshotDataReply::decode(&data, &raw_reply).unwrap();
+    journal
+        .stage_ic_snapshot_artifact(token, &metadata, &raw)
+        .unwrap()
+        .append(&reply)
+        .unwrap()
+        .finish()
+        .unwrap();
+}
