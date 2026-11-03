@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_support::{fence_acquisition::original, membership::hash};
+use crate::test_support::{fence_acquisition::original, operation_plan::hash};
 
 #[test]
 fn acknowledgement_association_preserves_pending_mutation_and_consumed_spending() {

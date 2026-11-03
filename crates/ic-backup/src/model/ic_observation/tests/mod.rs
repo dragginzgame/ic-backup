@@ -6,7 +6,7 @@ use crate::{
     },
     test_support::{
         ic_observation::{input, original},
-        membership::hash,
+        operation_plan::hash,
     },
 };
 

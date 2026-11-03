@@ -4,6 +4,8 @@ mod application;
 mod build;
 mod consumer;
 mod operator;
+mod restore_failures;
+mod terminal;
 
 use super::*;
 use consumer::{Mode, Stage};
@@ -18,12 +20,12 @@ use std::{
 
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_cold_capture_restore_acceptance_and_terminal_replay() {
-    exercise(false).await;
+    exercise(Mode::Restore).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_death_after_authenticated_load_preserves_pending_without_redispatch() {
-    exercise(true).await;
+    exercise(Mode::LoseLoad).await;
 }
 
 struct CommandResult {
@@ -145,6 +147,7 @@ fn connection_config(fixture: &Fixture) -> consumer::Config {
         target: fixture.target.clone(),
         endpoint: fixture.endpoint.clone(),
         key: fixture.key.clone(),
+        identity_seed: [7; 32],
     }
 }
 
@@ -263,15 +266,16 @@ async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
     serde_json::json!({"restore":restore.digest(),"source_metadata":expected.digest(),"destination":args.snapshot_id,"verification_metadata":actual.digest(),"region_hashes":region_hashes,"complete_state":true})
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "keep cold process boundaries, real application acceptance and lost-reply custody in one qualification trace"
-)]
-async fn exercise(lose_load: bool) {
+#[tokio::test(flavor = "multi_thread")]
+async fn normal_consumer_cold_reentry_after_each_restore_stage_preserves_originals() {
+    exercise(Mode::RestoreStep).await;
+}
+
+async fn captured(identity_seed: [u8; 32]) -> (Fixture, PathBuf) {
     let _: fn() = consumer::entry;
     build::binary();
     let mut fixture = Fixture::new(Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(
-        &[7; 32],
+        &identity_seed,
     )))
     .await;
     fixture.mutation(Method::StopCanister, None, false).await;
@@ -279,7 +283,8 @@ async fn exercise(lose_load: bool) {
     std::os::unix::fs::DirBuilderExt::mode(&mut fs::DirBuilder::new(), 0o700)
         .create(&root)
         .unwrap();
-    let config = connection_config(&fixture);
+    let mut config = connection_config(&fixture);
+    config.identity_seed = identity_seed;
     write_config(&root, &config);
     grant(&mut fixture, &root, Mode::Capture).await;
     child(&fixture, &root, Mode::Capture).await.assert_status(0);
@@ -301,15 +306,41 @@ async fn exercise(lose_load: bool) {
         .await
         .unwrap();
     fixture.mutation(Method::StopCanister, None, false).await;
-    let mode = if lose_load {
-        Mode::LoseLoad
+    (fixture, root)
+}
+
+async fn exercise(mode: Mode) {
+    let lose_load = mode == Mode::LoseLoad;
+    let (mut fixture, root) = captured(if mode == Mode::Restore {
+        [9; 32]
     } else {
-        Mode::Restore
-    };
+        [7; 32]
+    })
+    .await;
     grant(&mut fixture, &root, mode).await;
-    child(&fixture, &root, mode)
-        .await
-        .assert_status(if lose_load { 75 } else { 0 });
+    let steps = if mode == Mode::RestoreStep { 3 } else { 1 };
+    for step in 0..steps {
+        let original = files(&root);
+        child(&fixture, &root, mode)
+            .await
+            .assert_status(if lose_load { 75 } else { 0 });
+        if mode == Mode::RestoreStep {
+            for (path, bytes) in original {
+                assert_eq!(fs::read(path).unwrap(), bytes);
+            }
+            let progress = operator::inspect(&fixture, &root, false).await;
+            for (index, stage) in Stage::RESTORE.into_iter().enumerate() {
+                assert_eq!(
+                    operator::stage_row(&progress, stage)["state"]["state"],
+                    if index <= step {
+                        "prepared"
+                    } else {
+                        "unprepared"
+                    }
+                );
+            }
+        }
+    }
     let progress = operator::inspect(&fixture, &root, false).await;
     assert_eq!(
         operator::stage_row(&progress, Stage::Start)["state"]["state"],
@@ -364,32 +395,7 @@ async fn exercise(lose_load: bool) {
         assert_eq!(journal.view().pending_mutation, Some(1));
         assert_eq!(journal.view().mutations_remaining, 0);
     } else {
-        grant(&mut fixture, &root, Mode::Start).await;
-        let before = files(&root);
-        child(&fixture, &root, Mode::Start).await.assert_status(1);
-        assert_eq!(files(&root), before);
-        assert!(!Stage::Start.path(&root).exists());
-        let acceptance = verify(&mut fixture, &root).await;
-        consumer::retain(
-            &root.join("acceptance.json"),
-            &serde_json::to_vec(&acceptance).unwrap(),
-        )
-        .unwrap();
-        child(&fixture, &root, Mode::Start).await.assert_status(0);
-        let restored = fixture
-            .pic
-            .query_call(
-                fixture.principal(),
-                ic_platform::principal::ExternalPrincipal::anonymous(),
-                "read",
-                vec![],
-            )
-            .await
-            .unwrap();
-        assert_eq!(restored, [42_u64.to_le_bytes(); 3].concat());
-        let before = files(&root);
-        child(&fixture, &root, Mode::Replay).await.assert_status(0);
-        assert_eq!(files(&root), before);
+        terminal::complete(&mut fixture, &root).await;
     }
     let executable =
         ic_host_fs::read::hash_file_no_follow(build::binary(), 512 * 1024 * 1024).unwrap();

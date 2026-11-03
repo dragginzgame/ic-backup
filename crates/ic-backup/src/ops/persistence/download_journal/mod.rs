@@ -3,7 +3,6 @@
 #[cfg(unix)]
 mod ic_snapshot_artifact;
 mod integrity;
-mod local_restore_source;
 mod manifest;
 #[cfg(unix)]
 pub use ic_snapshot_artifact::{
@@ -11,7 +10,6 @@ pub use ic_snapshot_artifact::{
     IcSnapshotUploadArtifactError,
 };
 pub use integrity::DownloadIntegrityError;
-pub use local_restore_source::LocalRestoreSourceError;
 pub use manifest::{DownloadManifestError, read_download_manifest};
 
 use super::json::{create_encoded, encode_json, read_record, write_encoded};

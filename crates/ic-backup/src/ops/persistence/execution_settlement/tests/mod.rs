@@ -8,7 +8,7 @@ use crate::{
     test_support::{
         execution_settlement::{applied, record},
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
-        membership::plan,
+        operation_plan::plan,
         temp_dir,
     },
 };

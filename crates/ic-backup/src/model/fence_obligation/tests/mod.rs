@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::{
-    membership::{hash, plan},
+    operation_plan::{hash, plan},
     restore_safety,
 };
 use serde_json::json;

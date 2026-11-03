@@ -104,3 +104,12 @@ pub(crate) fn graph(nodes: impl IntoIterator<Item = (u64, Vec<u64>)>) -> EffectG
     )
     .unwrap()
 }
+
+pub fn plan() -> OperationPlanRecord {
+    OperationPlanRecord::new(request()).expect("original qualified plan fixture")
+}
+
+pub fn hash(pair: &str) -> crate::model::artifacts::ArtifactChecksumRecord {
+    crate::model::artifacts::ArtifactChecksumRecord::from_hash(&pair.repeat(32))
+        .expect("opaque exact SHA-256")
+}

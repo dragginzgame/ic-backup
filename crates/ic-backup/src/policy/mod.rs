@@ -1,7 +1,6 @@
 //! Pure decisions over validated declarations; no IO, scheduling or persisted mutations.
 
 pub mod consistency;
-pub mod control_authority;
 pub mod download_integrity;
 pub mod execution_progress;
 pub mod execution_settlement;
@@ -16,8 +15,6 @@ pub mod ic_snapshot_upload_data_observation;
 pub mod ic_snapshot_upload_observation;
 mod inventory_settlement;
 pub use inventory_settlement::InventorySettlementMismatch;
-pub mod local_restore_source;
-pub mod membership;
 mod observed_context;
 mod response_identity;
 pub use response_identity::ResponseIdentityMismatch;
@@ -27,4 +24,3 @@ pub mod selection;
 mod settlement_identity;
 pub use settlement_identity::SettlementIdentityMismatch;
 pub mod snapshot_inventory_delta;
-pub mod snapshot_read;

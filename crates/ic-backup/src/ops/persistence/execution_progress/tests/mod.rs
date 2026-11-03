@@ -10,7 +10,7 @@ use crate::{
     },
     policy::execution_progress::OperationProgressState,
     test_support::{
-        membership::{hash, plan},
+        operation_plan::{hash, plan},
         temp_dir,
     },
 };

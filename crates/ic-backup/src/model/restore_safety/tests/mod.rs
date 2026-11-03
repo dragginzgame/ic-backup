@@ -4,7 +4,7 @@ use super::*;
 use crate::{
     model::ic_request::IcManagementRequest,
     test_support::{
-        membership::{APP, hash},
+        operation_plan::{APP, hash},
         restore_safety::{binding, input, parameters, plan, requirement, source, wire},
     },
 };

@@ -169,6 +169,9 @@ async fn run(reply: Reply) {
         )
         .await
         .unwrap_err();
+    let ic_platform::pocket_ic::ClientError::Canister(rejected) = rejected else {
+        panic!("expected the original canister rejection, got {rejected:?}");
+    };
     assert_eq!(
         rejected.reject_code,
         ic_platform::pocket_ic::RejectCode::CanisterReject

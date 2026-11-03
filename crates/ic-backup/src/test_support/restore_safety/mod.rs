@@ -13,8 +13,8 @@ use crate::{
         restore_safety::*,
     },
     test_support::{
-        control_authority::wires,
-        membership::{APP, hash},
+        ic_mutation::wires,
+        operation_plan::{APP, hash},
     },
 };
 use ic_platform::management_canister_types::CanisterStatusType;
@@ -41,7 +41,7 @@ pub fn source() -> OperationPlanRecord {
     )
 }
 fn fixture_plan(caller: &str, methods: &[(u64, IcManagementMethodRecord)]) -> OperationPlanRecord {
-    let original = super::membership::plan();
+    let original = super::operation_plan::plan();
     let nodes = methods
         .iter()
         .enumerate()

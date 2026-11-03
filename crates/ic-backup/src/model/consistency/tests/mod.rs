@@ -3,7 +3,7 @@
 use super::*;
 use crate::test_support::{
     consistency::{input, parameters},
-    membership::{APP, hash, plan},
+    operation_plan::{APP, hash, plan},
 };
 use serde_json::json;
 

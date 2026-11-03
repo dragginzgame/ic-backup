@@ -11,7 +11,7 @@ use crate::{
         ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
     },
-    test_support::{control_authority, membership::hash},
+    test_support::{ic_mutation, operation_plan::hash},
 };
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
@@ -33,8 +33,7 @@ fn metadata_wire() -> Vec<u8> {
 }
 
 fn plan(payload: IcSnapshotTransferReadPayload<'_, '_>) -> OperationPlanRecord {
-    let mut value =
-        serde_json::to_value(control_authority::plan(&control_authority::stop())).unwrap();
+    let mut value = serde_json::to_value(ic_mutation::plan(&ic_mutation::stop())).unwrap();
     value["operations"][1]["request"] = serde_json::json!(payload.digest().hash());
     serde_json::from_value(value).unwrap()
 }
@@ -56,7 +55,7 @@ fn fields(
 #[test]
 fn original_metadata_and_data_associate_without_receipts_or_new_spending() {
     let metadata_request =
-        IcSnapshotMetadataRequest::new(control_authority::stop().target(), &[0, 255, 128]).unwrap();
+        IcSnapshotMetadataRequest::new(ic_mutation::stop().target(), &[0, 255, 128]).unwrap();
     let raw = metadata_wire();
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, &raw).unwrap();
     let data = IcSnapshotDataRequest::new(
@@ -114,7 +113,7 @@ fn original_metadata_and_data_associate_without_receipts_or_new_spending() {
 #[test]
 fn changed_original_payload_authority_and_current_reservations_reject() {
     let metadata_request =
-        IcSnapshotMetadataRequest::new(control_authority::stop().target(), &[0, 255, 128]).unwrap();
+        IcSnapshotMetadataRequest::new(ic_mutation::stop().target(), &[0, 255, 128]).unwrap();
     let payload = IcSnapshotTransferReadPayload::Metadata(&metadata_request);
     let plan = plan(payload);
     let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
@@ -170,7 +169,7 @@ fn changed_original_payload_authority_and_current_reservations_reject() {
 #[test]
 fn actual_claims_attempt_and_bounded_wire_fail_without_settlement() {
     let metadata_request =
-        IcSnapshotMetadataRequest::new(control_authority::stop().target(), &[0, 255, 128]).unwrap();
+        IcSnapshotMetadataRequest::new(ic_mutation::stop().target(), &[0, 255, 128]).unwrap();
     let payload = IcSnapshotTransferReadPayload::Metadata(&metadata_request);
     let plan = plan(payload);
     let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
@@ -239,7 +238,7 @@ fn actual_claims_attempt_and_bounded_wire_fail_without_settlement() {
 #[test]
 fn data_length_hash_and_method_mismatch_use_existing_decoder_errors() {
     let metadata_request =
-        IcSnapshotMetadataRequest::new(control_authority::stop().target(), &[0, 255, 128]).unwrap();
+        IcSnapshotMetadataRequest::new(ic_mutation::stop().target(), &[0, 255, 128]).unwrap();
     let raw = metadata_wire();
     let metadata = IcSnapshotMetadataReply::decode(&metadata_request, &raw).unwrap();
     for kind in [
@@ -286,7 +285,7 @@ fn data_length_hash_and_method_mismatch_use_existing_decoder_errors() {
 #[test]
 fn full_bounded_data_and_empty_known_chunks_keep_original_byte_and_hash_limits() {
     let metadata_request =
-        IcSnapshotMetadataRequest::new(control_authority::stop().target(), &[0, 255, 128]).unwrap();
+        IcSnapshotMetadataRequest::new(ic_mutation::stop().target(), &[0, 255, 128]).unwrap();
     let mut values: ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult =
         ic_platform::candid::decode_one(&metadata_wire(), crate::test_support::WIRE_ORACLE_LIMITS)
             .unwrap();

@@ -104,24 +104,26 @@ impl Backend {
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
-        let owned = PocketIcStartupConfig::Spawn {
+        let server = PocketIcStartupConfig::Spawn {
             server_binary: binary,
             timeout: Duration::from_secs(120),
             server_hard_ttl: None,
             server_idle_ttl: None,
             server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
         }
-        .build_instance(builder)
-        .unwrap();
-        let (pic, server) = owned.into_parts();
-        let server = server.expect("spawn mode owns the managed server");
+        .start_managed_server()
+        .expect("bounded Testkit-managed server");
+        let pic = builder
+            .with_server_url(server.url().parse().unwrap())
+            .build()
+            .expect("fallible Platform client on the managed server");
         let wasm = fs::read(root.join("original.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
         // Explicit simulator fixture setup, outside backup/restore authority.
-        let target = pic.create_canister();
-        pic.add_cycles(target, 100_000_000_000_000);
-        pic.install_canister(target, wasm, vec![], None);
+        let target = pic.create_canister().unwrap();
+        pic.add_cycles(target, 100_000_000_000_000).unwrap();
+        pic.install_canister(target, wasm, vec![], None).unwrap();
         pic.upload_chunk(target, None, b"retained chunk-store state".to_vec())
             .unwrap();
         fs::create_dir(root.join("calls")).unwrap();

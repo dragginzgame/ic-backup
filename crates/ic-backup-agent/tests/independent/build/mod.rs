@@ -55,10 +55,9 @@ fn write_sources(selected: &Path) {
         ("config/mod.rs", include_str!("../consumer/config/mod.rs")),
         ("command/mod.rs", include_str!("../consumer/command/mod.rs")),
         (
-            "metadata/mod.rs",
-            include_str!("../consumer/metadata/mod.rs"),
+            "config/tests/mod.rs",
+            include_str!("../consumer/config/tests/mod.rs"),
         ),
-        ("stage/mod.rs", include_str!("../consumer/stage/mod.rs")),
         (
             "evidence/mod.rs",
             include_str!("../consumer/evidence/mod.rs"),
@@ -68,10 +67,37 @@ fn write_sources(selected: &Path) {
             include_str!("../consumer/application/mod.rs"),
         ),
         (
-            "transfer/mod.rs",
-            include_str!("../consumer/transfer/mod.rs"),
+            "authority/mod.rs",
+            include_str!("../consumer/authority/mod.rs"),
         ),
-        ("restore/mod.rs", include_str!("../consumer/restore/mod.rs")),
+        (
+            "standalone/mod.rs",
+            include_str!("../../../examples/standalone/workflow/mod.rs"),
+        ),
+        (
+            "standalone/application/mod.rs",
+            include_str!("../../../examples/standalone/workflow/application/mod.rs"),
+        ),
+        (
+            "standalone/connection/mod.rs",
+            include_str!("../../../examples/standalone/workflow/connection/mod.rs"),
+        ),
+        (
+            "standalone/metadata/mod.rs",
+            include_str!("../../../examples/standalone/workflow/metadata/mod.rs"),
+        ),
+        (
+            "standalone/restore/mod.rs",
+            include_str!("../../../examples/standalone/workflow/restore/mod.rs"),
+        ),
+        (
+            "standalone/stage/mod.rs",
+            include_str!("../../../examples/standalone/workflow/stage/mod.rs"),
+        ),
+        (
+            "standalone/transfer/mod.rs",
+            include_str!("../../../examples/standalone/workflow/transfer/mod.rs"),
+        ),
     ] {
         let path = selected.join("src/consumer").join(name);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -137,6 +163,12 @@ fn write_manifest(root: &Path, evidence: &Path, selected: &Path, registry: bool)
         "ic-platform = {{ version = {:?}, default-features = false, features = [\"agent\", \"candid\", \"management-canister-types\"] }}\nserde = {{ version = {:?}, features = [\"derive\"] }}\nserde_json = {:?}\ntokio = {{ version = {:?}, features = [\"macros\", \"rt-multi-thread\"] }}\n",
         requirement("ic-platform"), requirement("serde"), requirement("serde_json"), requirement("tokio")
     ).unwrap();
+    writeln!(
+        manifest,
+        "ic-host-fs = {{ version = {:?}, default-features = false }}",
+        requirement("ic-host-fs")
+    )
+    .unwrap();
     writeln!(
         manifest,
         "clap = {{ version = {:?}, default-features = false, features = [\"derive\", \"std\"] }}",

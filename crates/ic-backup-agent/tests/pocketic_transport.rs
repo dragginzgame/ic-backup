@@ -235,24 +235,30 @@ impl Fixture {
             .with_nns_subnet()
             .with_state_dir(root.join("simulator"))
             .with_max_request_time_ms(Some(60_000));
-        let owned = PocketIcStartupConfig::Spawn {
+        let startup = PocketIcStartupConfig::Spawn {
             server_binary: binary,
             timeout: Duration::from_secs(120),
             server_hard_ttl: None,
             server_idle_ttl: None,
             server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
-        }
-        .build_instance_async(builder)
-        .await
-        .unwrap();
-        let (mut pic, server) = owned.into_parts();
-        let server = server.expect("spawn mode owns the managed server");
-        let target = pic.create_canister().await;
-        pic.add_cycles(target, 100_000_000_000_000).await;
+        };
+        let server = tokio::task::spawn_blocking(move || startup.start_managed_server())
+            .await
+            .expect("managed server startup worker")
+            .expect("bounded Testkit-managed server");
+        let mut pic = builder
+            .with_server_url(server.url().parse().unwrap())
+            .build_async()
+            .await
+            .expect("fallible Platform client on the managed server");
+        let target = pic.create_canister().await.unwrap();
+        pic.add_cycles(target, 100_000_000_000_000).await.unwrap();
         let wasm = fs::read(root.join("original.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
-        pic.install_canister(target, wasm, vec![], None).await;
+        pic.install_canister(target, wasm, vec![], None)
+            .await
+            .unwrap();
         pic.update_call(
             target,
             ic_platform::principal::ExternalPrincipal::anonymous(),
@@ -264,10 +270,11 @@ impl Fixture {
         pic.set_controllers(target, None, vec![identity.sender().unwrap()])
             .await
             .unwrap();
-        let key = pic.root_key().await.unwrap();
+        let key = pic.root_key().await.unwrap().expect("NNS root key");
         let endpoint = pic
             .make_live_with_params(None, None, Some(vec!["127.0.0.1".into()]), None)
             .await
+            .unwrap()
             .to_string();
         fs::write(root.join("trusted-root.der"), &key).unwrap();
         Self {

@@ -4,7 +4,7 @@ use super::*;
 use crate::{
     model::consistency::ConsistencyGuaranteeRecord,
     ops::persistence::JournalLock,
-    test_support::{membership::plan, temp_dir},
+    test_support::{operation_plan::plan, temp_dir},
 };
 use std::{
     fs, io,

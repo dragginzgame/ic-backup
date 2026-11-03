@@ -22,20 +22,6 @@ pub(super) fn admit_request_context<E>(
     Ok(())
 }
 
-pub(super) fn admit_target_limit<E>(
-    binding: &OperationBindingRecord,
-    observed_target: &str,
-    limit: u32,
-    reported: u32,
-    target_error: E,
-    limit_error: impl FnOnce(u32, u32) -> E,
-) -> Result<(), E> {
-    if observed_target != binding.target() {
-        return Err(target_error);
-    }
-    admit_limit(limit, reported, limit_error)
-}
-
 pub(super) fn admit_limit<E>(
     limit: u32,
     reported: u32,

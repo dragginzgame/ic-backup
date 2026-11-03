@@ -3,7 +3,7 @@ use crate::{
     model::attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
     test_support::{
         fence_acquisition::original,
-        membership::{APP, hash},
+        operation_plan::{APP, hash},
     },
 };
 use serde_json::json;

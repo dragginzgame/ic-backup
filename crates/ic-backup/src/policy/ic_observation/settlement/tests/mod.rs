@@ -9,7 +9,7 @@ use crate::{
     test_support::{
         ic_mutation,
         ic_observation::{self, Original},
-        membership::hash,
+        operation_plan::hash,
     },
 };
 use ic_platform::candid::contract;

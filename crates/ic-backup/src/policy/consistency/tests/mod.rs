@@ -6,7 +6,7 @@ use crate::{
     model::consistency::{ConsistencyBoundary, ConsistencyRequirementRecord},
     test_support::{
         consistency::{fence, input, parameters},
-        membership::{hash, plan},
+        operation_plan::{hash, plan},
     },
 };
 
@@ -200,7 +200,7 @@ fn zero_and_max_call_reporting_do_not_change_original_allowances() {
 fn every_member_of_a_multi_target_selection_requires_stopped_evidence() {
     let mut value = serde_json::to_value(plan()).unwrap();
     value["selected_targets"] =
-        serde_json::json!(["aaaaa-aa", crate::test_support::membership::APP]);
+        serde_json::json!(["aaaaa-aa", crate::test_support::operation_plan::APP]);
     value["operations"][0]["target"] = serde_json::json!("aaaaa-aa");
     let plan = serde_json::from_value(value).unwrap();
     for guarantee in [

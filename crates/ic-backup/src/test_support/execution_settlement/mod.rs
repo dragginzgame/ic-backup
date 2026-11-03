@@ -6,7 +6,7 @@ use crate::{
         execution_settlement::{ExecutionSettlementJournalRecord, ExecutionSettlementRecord},
         operation_plan::OperationPlanRecord,
     },
-    test_support::membership,
+    test_support::operation_plan,
 };
 
 pub fn journals(plan: &OperationPlanRecord) -> Vec<AttemptJournalRecord> {
@@ -29,7 +29,7 @@ pub fn applied(plan: &OperationPlanRecord) -> Vec<AttemptJournalRecord> {
                 attempt,
                 request: journal.authority().binding().request().into(),
                 outcome: MutationOutcomeRecord::Applied,
-                evidence: membership::hash("12").hash().into(),
+                evidence: operation_plan::hash("12").hash().into(),
             })
             .unwrap();
     }

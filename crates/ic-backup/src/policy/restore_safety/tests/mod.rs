@@ -5,7 +5,7 @@ use crate::test_support::response_fault::ContextFault;
 use crate::{
     model::{operation_plan::OperationPlanRecord, restore_safety::*},
     test_support::{
-        membership::{APP, hash},
+        operation_plan::{APP, hash},
         restore_safety::{
             RestoreFenceFault, fence, input, parameters, plan, requirement, source, wire,
         },

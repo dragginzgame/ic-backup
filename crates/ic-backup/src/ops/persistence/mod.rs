@@ -29,7 +29,7 @@ pub use consistency::{
 };
 pub use download_journal::{
     DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard, DownloadManifestError,
-    LocalRestoreSourceError, read_download_manifest,
+    read_download_manifest,
 };
 #[cfg(unix)]
 pub use download_journal::{

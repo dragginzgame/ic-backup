@@ -1,7 +1,7 @@
 //! Passive whole-selection consistency fixtures; no management or application backend.
 
 use crate::model::consistency::*;
-use crate::test_support::membership::hash;
+use crate::test_support::operation_plan::hash;
 
 pub fn parameters(guarantee: ConsistencyGuaranteeRecord) -> ConsistencyRequestInput {
     ConsistencyRequestInput {

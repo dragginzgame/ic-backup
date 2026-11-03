@@ -1,7 +1,7 @@
 use super::*;
 use crate::test_support::{
     execution_settlement::{applied, record},
-    membership::{hash, plan},
+    operation_plan::{hash, plan},
 };
 use serde_json::json;
 

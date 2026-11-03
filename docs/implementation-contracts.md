@@ -16,6 +16,9 @@ to manifests and the lockfile, migration history to the
   Applications own membership, routing, release identity, quiescence, fencing and
   external-effect settlement. No standalone CLI or complete application runner is
   installed by these libraries.
+  The maintained [standalone Rust example](../crates/ic-backup-agent/examples/standalone/README.md)
+  assembles the existing complete flow with explicit identity/trust and required
+  application callbacks; qualification supplies those callbacks in a fixture adapter.
 - Restore targets the same existing canister IDs on the same network and release.
   Creation, relocation, cross-release migration and identity rebinding require
   separate authority. Keep one maintained product protocol/schema generation, v1;
@@ -170,20 +173,19 @@ evidence inference. Applied rows do not establish checkpoint or terminal complet
 
 ## Application admission and fencing
 
-Membership requests bind original plans, independent challenges and actual full
-inventory/context. Their 1,024 descriptive remote-observation ceiling is not spending
-authority. Mandatory async workflow admission callbacks obtain fresh evidence and invoke the
-corresponding pure policy; no synchronous observation-provider interface is installed.
-Integrations own authentication, freshness, prior per-call accounting and
-opaque revision meaning; matching revisions do not prove continuity or a fence.
+Integrations qualify actual current membership, direct caller-controller authority
+and snapshot-read permissions in mandatory fresh-admission callbacks. These
+callbacks have no default and every remote check needs its own original accounting.
+The optional membership/control/read request-observation helpers are removed; no
+execution coordinator relied on them or changes its admission/dispatch ordering.
+Matching revisions do not prove continuity or a fence; Root proxies, subnet-admin
+exceptions and status/log visibility never supply direct controller authority.
+Public or exact allowed-viewer snapshot-read permission remains a distinct fact.
 
-Control observations require the selected caller itself in the complete canonical
-controller set, at most 10, with exact request/context/target and descriptive call
-limits. Root proxies, subnet-admin exceptions or read/status visibility do not
-supply this lane. Snapshot-read observations separately admit public or exact
-viewer access (at most 10 viewers); unobserved controllers, status/log flags and
-Root configuration cannot substitute. Actual fresh permission providers remain
-integration-owned.
+`ControllerSet` retains canonical, unique controller identities, its ten-entry
+bound and the existing public errors used by status decoding. Original lifecycle
+and snapshot codec bounds, fresh safety/consistency requirements, byte custody
+and no-redispatch obligations remain mandatory.
 
 Consistency requires exact full inventory/selection, every target stopped and the
 requested lane. Coordinated capture additionally needs the original Active fence
@@ -272,10 +274,13 @@ reads and closing directory/file/journal identity/extent admission.
 
 Manifest publication verifies original-plan-bound bytes before create-only
 publication. Replay admits only exact retained local declarations and never reads
-trees or calls providers. Fresh local restore-source verification binds both plans,
-requirement, exact manifest and unchanged journal under both layout lifetimes;
-check every original source artifact, including outside a restore subset. Generic
-integration artifact digests keep their meaning. Preserve 1 KiB requirements,
+trees or calls providers. Integrations that bind a local manifest for restoration
+compose the existing requirement, manifest and fresh artifact-verification owners.
+Hold both layouts and the original source journal, admit both plans/requirement
+and exact manifest before and after fresh verification, and check every original
+source artifact, including outside a restore subset. The optional join/view is
+retired; the underlying checks remain. Generic integration artifact digests keep
+their meaning. Preserve 1 KiB requirements,
 1 MiB IO, 1,024 artifacts and 256-byte tokens. Source/manifest verification never
 changes progress, references or allowance.
 
@@ -351,7 +356,7 @@ placeholder data stage. Same-workflow loads require that exact upload predecesso
 separate restore workflows retain explicit source provenance. These local checks
 authenticate no backend bytes or application fact and supply no new authority.
 
-The connected fixture freezes separate capture and restore catalogues before
+The standalone Core/Agent consumer freezes separate capture and restore catalogues before
 capture, binding restore's purpose to the original capture allocation and its
 learned requests to exact retained source evidence. The source layout is outside
 the restore catalogue's ancestor chain, so source custody and ancestor locks can

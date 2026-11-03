@@ -245,7 +245,8 @@ Both ports preserve their own admission, reply limits and evidence domains.
 ## Independent normal consumer
 
 The [consumer harness](../crates/ic-backup-agent/tests/independent/mod.rs) runs in
-`pocketic_transport`. It builds the [canonical consumer program](../crates/ic-backup-agent/tests/independent/consumer/mod.rs)
+`pocketic_transport`. Its fixture entrypoint builds the exact
+[standalone example assembly](../crates/ic-backup-agent/examples/standalone/README.md)
 in a temporary independent workspace, deriving its external requirements and MSRV
 from the owning package and using the candidate Core/Agent paths. The existing
 offline consumer graph checker requires unchanged resolved package identities and
@@ -259,6 +260,12 @@ module hash. The parent retains exclusive instance/controller custody throughout
 the phase; no other application effect occurs while the child runs. The inspected
 program has one fixed target and no timers, outbound calls, payments or fence.
 These are explicit fixture conditions, not generic authority or safety defaults.
+The application adapter owns those facts and every fault mode. The supported
+assembly receives an explicit caller-supplied identity/trust root and has required
+callbacks for authority, durable qualification, the actual restore-safety lane,
+acceptance and terminal evidence. The successful journey uses a different supplied
+signer; input regressions reject signer/context mismatch, malformed targets and
+absent trust before effects.
 
 Both workflow catalogues are retained before capture. The consumer uses public
 coordinators, original stage journals, durable metadata/data transfer and artifact
@@ -278,11 +285,14 @@ The terminal provider freshly replays complete settlement under its held journal
 lock and checks source bytes/manifest before exact reference release. Cold terminal
 replay changes no files and signs/submits no new request.
 
-A second case exits the consumer after the actual authenticated load response,
-before an Applied receipt. Independently observed complete restored state remains
+Lost-reply cases exit the consumer after authenticated allocation, second upload,
+load or start responses, before an Applied receipt. Another case continues in a
+fresh process after each settled restore stage. Independently observed complete restored state remains
 an oracle outside its acceptance channel. Original pending spending, exhausted
 allowance, signed intent, source bytes and reference survive. A new process refuses
-before another dispatch or start stage. Parent process cleanup uses Host ownership
+before another dispatch or successor stage. An unrelated unfinished restore
+reference survives successful release, and substituted acceptance refuses even
+on already-released terminal replay. Parent process cleanup uses Host ownership
 with a finite caller-selected deadline; it is not settlement of an IC effect.
 Every invocation retains separate private stdout/stderr, including refusals. Graph,
 build, program digest, workflow, ingress, raw reply and qualification evidence stay

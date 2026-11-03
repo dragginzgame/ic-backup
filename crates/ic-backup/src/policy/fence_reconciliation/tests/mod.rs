@@ -5,7 +5,7 @@ use crate::{
     test_support::{
         consistency,
         fence_reconciliation::{input, original, reserve},
-        membership::hash,
+        operation_plan::hash,
         restore_safety::{self, RestoreFenceFault},
     },
 };
@@ -297,7 +297,7 @@ fn original_with_two_observations() -> crate::test_support::fence_reconciliation
         },
         fence_obligation::FenceObligationRecord,
     };
-    let mut value = serde_json::to_value(crate::test_support::membership::plan()).unwrap();
+    let mut value = serde_json::to_value(crate::test_support::operation_plan::plan()).unwrap();
     value["operations"][0]["budget"]["observations"] = json!(2);
     value["budget"]["observations"] = json!(3);
     let plan = serde_json::from_value(value).unwrap();

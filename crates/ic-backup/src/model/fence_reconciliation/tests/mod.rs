@@ -3,7 +3,7 @@ use crate::{
     model::attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
     test_support::{
         fence_reconciliation::{input, original, reserve},
-        membership::hash,
+        operation_plan::hash,
     },
 };
 use serde_json::json;

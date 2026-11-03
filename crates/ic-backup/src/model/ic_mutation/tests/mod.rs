@@ -7,7 +7,7 @@ use crate::{
     },
     test_support::{
         ic_mutation::{input, original},
-        membership::hash,
+        operation_plan::hash,
     },
 };
 

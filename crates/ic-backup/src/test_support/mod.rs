@@ -1,7 +1,6 @@
 //! Local filesystem regression helpers, independent of IC executors.
 
 pub mod consistency;
-pub mod control_authority;
 pub mod execution_settlement;
 pub mod execution_workflow;
 pub mod fence_acquisition;
@@ -12,14 +11,11 @@ pub mod ic_snapshot_download;
 pub mod ic_snapshot_metadata;
 pub mod ic_snapshot_upload;
 pub mod ic_snapshot_upload_data_observation;
-pub mod local_restore_source;
-pub mod membership;
 pub mod operation_plan;
 pub mod ready;
 pub mod response_fault;
 pub mod restore_safety;
 pub mod retained_reply;
-pub mod snapshot_read;
 pub mod update;
 
 /// Decode independent fixture bytes without a production encoder or silent truncation.

@@ -72,14 +72,30 @@ Backup exposes no owned Principal API requiring a consumer migration.
 Platform 0.18 removes its unused stable-structures facade. Backup enables none of
 that feature, and the consumed Candid, management DTO, external Principal and
 Agent adapter sources remain unchanged. Types 0.17 supplies the production owned
-Principal, shared by the simulator stack through the same published supplier.
+Principal in that earlier graph.
+
+Platform 0.19 selects Types 0.18 and the fallible PocketIC client 0.19. Published
+archive review found the consumed Candid, native management, external Principal
+and Agent facade sources unchanged; Types' Principal implementation is also
+unchanged. Types' Account subaccount byte encoding changed, but Backup imports or
+serializes no Account/Subaccount and needs no record migration for that cut.
+Principal normalization, record hashes and method-specific wire bounds remain
+qualified through Backup's own checks.
 
 The workspace requires Host Artifacts/FS/Process 0.74.1 and resolves 0.74.2. Consumers
 sharing public Host error types must align their direct selections to 0.74.
-Locked Testkit 0.80.1 shares Host 0.74.2 and Platform/client 0.18, and removes
-its Metrics dependency. Its PocketIC source is unchanged from 0.80.0; optional
-Wire remains outside Backup's graph. The old Host 0.73, Platform 0.17, Types 0.16
-and both Metrics generations are no longer required by the development graph.
+Locked Testkit 0.80.2 still selects Platform/client 0.18, Types 0.17 and
+target-specific Runtime 0.18.1. Those older packages remain in the development
+graph until Testkit publishes its own adoption; they are absent from both
+production graphs. Each fixture uses Testkit's `start_managed_server` for bounded
+readiness, raw outputs and owned cleanup, then constructs Platform 0.19's client
+at that exact server URL. No old/new client or owned Principal value crosses that
+boundary. The async fixture starts the synchronous server owner on a blocking
+worker. Platform builders and operations now return checked results; expected
+canister rejections are extracted from `ClientError::Canister`, preserving the
+original structured reply rather than accepting transport failure. Uncertain
+calls are never replayed. Authenticated server selection remains Testkit-owned
+PocketIC 16.1.0; optional Wire and Metrics remain outside Backup's graph.
 
 | Surface | Owner and maintained constraint |
 | --- | --- |

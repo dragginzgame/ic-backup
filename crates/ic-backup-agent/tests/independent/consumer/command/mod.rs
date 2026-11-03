@@ -1,4 +1,5 @@
 //! Closed fixture command syntax; parsed once without changing product authority.
+use super::Stage;
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
@@ -27,9 +28,13 @@ pub(crate) enum Mode {
     CaptureFailRetention,
     InspectCapture,
     InspectRestore,
+    LoseAllocation,
     LoseLoad,
+    LoseStart,
+    LoseUploadSecond,
     Replay,
     Restore,
+    RestoreStep,
     Start,
 }
 // Derived execution actions; fault-specific modes retain their original names and evidence.
@@ -42,13 +47,24 @@ pub(super) enum Action {
     CaptureContinue,
     InspectCapture,
     InspectRestore,
-    LoseLoad,
+    LoseReply,
     Replay,
     Restore,
+    RestoreStep,
     Start,
 }
 
 impl Mode {
+    pub(in super::super) fn lost_reply(self) -> Option<(Stage, u64)> {
+        match self {
+            Self::LoseAllocation => Some((Stage::Allocation, Stage::Allocation.sequence())),
+            Self::LoseLoad => Some((Stage::Load, Stage::Load.sequence())),
+            Self::LoseStart => Some((Stage::Start, Stage::Start.sequence())),
+            Self::LoseUploadSecond => Some((Stage::Upload, 1)),
+            _ => None,
+        }
+    }
+
     pub(super) fn action(self) -> Action {
         match self {
             Self::ApplicationDie
@@ -64,9 +80,12 @@ impl Mode {
             Self::CaptureContinue => Action::CaptureContinue,
             Self::InspectCapture => Action::InspectCapture,
             Self::InspectRestore => Action::InspectRestore,
-            Self::LoseLoad => Action::LoseLoad,
+            Self::LoseAllocation | Self::LoseLoad | Self::LoseStart | Self::LoseUploadSecond => {
+                Action::LoseReply
+            }
             Self::Replay => Action::Replay,
             Self::Restore => Action::Restore,
+            Self::RestoreStep => Action::RestoreStep,
             Self::Start => Action::Start,
         }
     }

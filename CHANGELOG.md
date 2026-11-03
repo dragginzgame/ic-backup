@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.56.0]
+
+### ⚠️ Breaking
+
+- Remove the optional membership, controller-observation and snapshot-read
+  preflight helper APIs. Integrations keep fresh authority checks in their
+  mandatory admission callbacks. Canonical controller-set validation and all
+  journal, snapshot and restore-safety contracts remain.
+- Remove the optional local restore-source join and selected-artifact view.
+  Fresh verification remains available through the existing manifest, artifact
+  integrity and restore-safety owners.
+
+### ➕ Added
+
+- Promote the complete standalone backup/restore assembly into a maintained Rust
+  example with explicit signer/trust and mandatory application authority,
+  qualification, safety, acceptance and terminal callbacks. Reuse original
+  catalogs/journals and guarded release without adding a scheduler or protocol.
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.19.0 and canonical Types 0.18.0. Retain the qualified external
+  Principal, management DTO 0.11.0 and Agent 0.49.3 identities.
+
+### 🧪 Testing
+
+- Consolidate complete backup/restore journeys in the standalone Core/Agent
+  consumer. Preserve cold continuation, lost allocation/upload/load/start replies,
+  fresh terminal acceptance and unrelated unfinished restore references.
+- Combine the public local-source and integrity recovery journeys, preserving
+  different source callers, subset restores, corruption outside the subset,
+  exhausted attempts and retained fence/reference evidence. Keep fault matrices
+  with their manifest, integrity and safety owners.
+- Qualify the exact standalone example through the independent normal consumer.
+  Keep fault modes and fixed keys in the fixture adapter; use a different supplied
+  signer in the successful journey and reject signer/context or missing-trust inputs.
+- Adopt Platform's fallible PocketIC 0.19 client with explicit operation failures
+  and typed canister-rejection evidence. Testkit retains managed server startup,
+  output custody and cleanup through its published server-only API.
+
+### 🧭 Migration Notes
+
+- Replace removed optional preflight helpers with integration-owned fresh checks
+  in the existing mandatory callbacks; see the
+  [current admission contract](docs/extraction-boundary.md#current-membership-controller-and-read-admission).
+  Existing persisted journals and recovery evidence keep their original format.
+- Replace local-source convenience calls with explicit guarded composition;
+  [source verification](docs/extraction-boundary.md#fresh-original-local-restore-source-verification)
+  documents before/after admission and the separate fresh byte check.
+
 ## [0.55.3] - 2026-11-02
 
 ### ⬆️ Dependencies

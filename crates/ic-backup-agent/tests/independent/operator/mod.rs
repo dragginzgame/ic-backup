@@ -62,7 +62,7 @@ async fn normal_consumer_operator_retention_and_partial_output_failures_preserve
     }
 }
 
-async fn snapshot_count(fixture: &mut Fixture) -> usize {
+pub(super) async fn snapshot_count(fixture: &mut Fixture) -> usize {
     let payload = support::payload(Method::ListCanisterSnapshots, &fixture.target, None);
     let OriginalCall {
         plan,

@@ -273,84 +273,76 @@ Each Core fixture retains the admitted server digest and the original
 `Cargo.lock`. Focused result records obtain the server version from Testkit and
 bind the copied lock's SHA-256 for the exact client/dependency selection. There
 is no separately maintained client version label or second server selection.
+Both suites use Testkit's published server-only startup and Platform 0.19's
+fallible client at the returned URL. The server keeps bounded startup/output
+and owned cleanup; client construction and operations refuse typed failures.
+Testkit's older client dependencies stay private to its development-only package.
 
 ## Connected original capture and restore workflows
 
-The [existing workflow driver](../crates/ic-backup/tests/pic_journey/planned_runner/mod.rs)
-now connects capture, metadata/data download and durable manifest publication to
-allocation, data upload, same-ID load, full stopped-state verification and start.
-Its [round-trip cases](../crates/ic-backup/tests/pic_journey/planned_runner/round_trip/mod.rs)
-use the public coordinators and existing actual-ingress upload/restore providers.
-No production API, dependency or application safety default is added.
+The [maintained standalone assembly](../crates/ic-backup-agent/examples/standalone/README.md)
+is the canonical complete journey. The normal consumer supplies its
+[fixture application adapter](../crates/ic-backup-agent/tests/independent/consumer/authority/mod.rs). It runs from a separate temporary workspace and
+target directory with ordinary library dependencies. Testkit and the application's
+fresh checks stay in the parent. The Core suite retains focused capture, transfer,
+restore, malformed-reply and recovery cases without a second complete driver.
 
-Capture and restore have separate original catalogues and layout ancestry. Freeze
-both allocations before capture: capture has 66 mutations/two observations and
-restore has 67 mutations/zero observations, including original 64-call data-stage
-ceilings. Unassigned headroom supplies no retry. The restore purpose commits the
-capture catalogue; learned child plans additionally bind exact original metadata,
-source plan/manifest and actual allocated destination. Preserve the captured source
-layout guard during restore; ancestor re-admission acquires the restore stages'
-separate layout locks. A source held inside the same catalogue's ancestor chain
-would contend with those locks.
+Capture and restore have separate original catalogues and layout ancestry, both
+frozen before capture. Restore's purpose commits the capture catalogue; learned
+child plans bind exact original metadata, source plan/manifest and allocated
+destination. The source layout is outside restore's ancestor chain so its custody
+can coexist with stage locks. Every dispatch consumes its original bounded
+attempt before authenticated Agent ingress. Parent-owned setup and verification
+calls use separately retained accounting, outside workflow allowances.
 
-The fixture deliberately changes live state from 42 to 99 and clears its chunk
-store after capture. Those setup operations and fresh verification observations
-have independently retained per-call plans; they are outside the workflow-stage
-allowances. Loading must restore the original complete module, heap, stable,
-global/certified metadata and chunk bytes before start. The inspected one-owner
-program has no timers, outbound work or irreversible obligations. Its authority
-and acceptance do not establish a production application lane.
+The parent changes live state from 42 to 99 after capture. Before accepted start,
+independent stopped-state readback compares complete module, heap, stable,
+global/certified metadata and chunk bytes with the original capture. The inspected
+one-owner program has no timers, outbound work or irreversible obligations. These
+facts do not establish a production application's safety lane.
+The canonical Agent fixture has an empty chunk store. Core's focused restore
+cases additionally clear a nonempty live chunk store and verify restoration of
+the original stored chunk bytes.
 
-Cold continuation discards the driver before allocation, load and start, then
-rebuilds only from exact retained request/reply bytes, original plans/bindings,
-manifest, allocation and post-load acceptance. Every settled prefix's records and
-artifacts remain unchanged. Discarded allocation, second data-write, load and start
-replies keep the original mutation pending with no remaining allowance. Fresh and
-retained reentry invoke no new provider or successor. A denied checkpoint read may
-allocate its empty mutex sidecar; it changes no product record or artifact.
+Registered [journey cases](../crates/ic-backup-agent/tests/independent/mod.rs)
+cover complete cold capture/restore/accepted start/terminal replay, process death
+after authenticated load and cold continuation after every restore stage. Each
+continuation reconstructs the consumer from original retained bytes, catalogues,
+manifest, allocation and post-load acceptance; settled prefixes remain unchanged.
+[Additional lost-reply cases](../crates/ic-backup-agent/tests/independent/restore_failures/mod.rs)
+cover allocation, the second data upload and start. Each discards a real reply
+after its effect and before settlement. Its original attempt stays pending with
+no allowance left; retained reentry refuses without preparing a successor or
+changing original files. Oracle reply bytes grant no recovery authority.
 
-Completed replay discards all learned driver state, reopens both exact catalogues
-and invokes no callbacks or management calls. All retained file bytes stay unchanged.
-The [fixture terminal provider](../crates/ic-backup/tests/pic_journey/planned_runner/round_trip/terminal/mod.rs)
-extends this journey through guarded source-reference release. After cold evidence
-reconstruction, it replays the complete restore under the original held journal
-lock, verifies the source artifact/manifest and binds stopped post-load acceptance
-to the source metadata, actual upload destination and exact load/start bytes.
-Withholding or substituting application acceptance refuses even when every stage
-is Applied. Lost allocation, data, load and start replies retain the reference and
-all original bytes. Success changes only the reference record; immediate release
-replay changes no files and makes no remote calls. An independent unfinished
-restore's reference remains present, continuing to block pruning. Even already-released replay
-must freshly qualify acceptance. No artifact or remote snapshot is deleted.
-
-This in-process fixture creates no external backup commands; its complete command
-set is empty. The inspected program has no timers, outbound work, payments or
-application fence. Native process tests separately cover active descendants and
+The consumer's [terminal provider](../crates/ic-backup-agent/examples/standalone/workflow/restore/mod.rs)
+replays the complete workflow under its original journal lock, verifies source
+artifact/manifest provenance and requires fresh exact post-load acceptance. The
+[parent terminal checks](../crates/ic-backup-agent/tests/independent/terminal/mod.rs)
+withhold and substitute acceptance before start, preserve an unrelated unfinished
+restore reference after release, and reject changed acceptance even on
+already-released replay. Successful replay changes no file bytes. No artifact or
+remote snapshot is deleted. The in-process Agent requests create no external
+backup commands; native process tests separately cover descendant custody and
 retained command identities. These facts do not install a production terminal
 provider or qualify another application's obligations or fencing.
 
-Each case retains `fixture-connected-result.json` alongside its original catalogue
-and evidence. Canic integration, independent installed-consumer acceptance and
-native macOS/installed-IC qualification remain separate.
-
 ## Independent authenticated consumer processes
 
-The Agent suite also runs a [normal Core/Agent consumer](agent-transport.md#independent-normal-consumer)
-from a separate temporary workspace and target directory. Testkit and the actual
-application checks remain parent-owned. The original two registered cases cover cold
-capture/restoration/accepted start/terminal replay and process death after an
-authenticated load with safe refusal of reentry. Both retain the original frozen
-catalogues, durable artifacts/manifest, signed ingress, raw replies and source
-references; failed process logs are never overwritten. This is candidate-path
+The [independent normal consumer](agent-transport.md#independent-normal-consumer)
+retains original frozen catalogues, durable artifacts/manifest, signed ingress,
+raw replies, source references and separately named failed process logs. Complete
+journey cases above share that existing consumer. Operator cases add typed
+inspection, bounded pause before start and retention/partial-output failures;
+opaque-application cases preserve mutation/observation, process-death, bound and
+replay coverage. Test membership comes from registered cases rather than a
+maintained aggregate count.
+
+The [current handoff](status/current.md) records exact source/graph execution and
+keeps candidate and registry-only evidence separate. This is candidate-path
 library qualification, not a published-product or Canic acceptance receipt.
-The #75 operator composition adds typed inspection, a normal bounded pause before
-start and explicit retention/partial-output failures through that same consumer.
-Four separate opaque-application cases retain their original mutation/observation,
-process-death, bound and replay coverage. Test membership comes from registered
-cases; the [current handoff](status/current.md) records exact source/graph execution
-and keeps candidate and registry-only evidence separate.
-Published-library qualification still leaves production Canic acceptance open;
-the [adoption guide](canic-adoption.md) identifies those application responsibilities.
+Installed Canic, native macOS and installed-IC qualification remain separate; the
+[adoption guide](canic-adoption.md) identifies application responsibilities.
 
 ## Reproduce and retain evidence
 

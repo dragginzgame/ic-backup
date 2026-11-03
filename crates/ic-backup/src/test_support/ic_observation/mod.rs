@@ -9,7 +9,7 @@ use crate::{
         },
         operation_plan::OperationPlanRecord,
     },
-    test_support::{ic_mutation, membership::hash},
+    test_support::{ic_mutation, operation_plan::hash},
 };
 
 pub struct Original {

@@ -4,7 +4,7 @@ use crate::{
     model::ic_request::IcManagementMethodRecord as Method,
     test_support::{
         ic_observation::{input, original},
-        membership::hash,
+        operation_plan::hash,
     },
 };
 use ic_platform::candid::contract;

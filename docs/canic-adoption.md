@@ -176,10 +176,11 @@ journal, scheduler, retry transition or default authority provider.
 | Same-ID load and accepted start | Bind `RestoreSafetyRequirementRecord` and `IcRestoreSource::uploaded`, then use `restore_snapshot` for the original load/start stages. Application acceptance after load must be qualified before preparing or dispatching start. An original safety lane is explicit; fixture-exclusive custody is not its default. |
 | Terminal/reference release | Hold the exact original workflow `JournalLock`, replay complete local settlement and provide actual application/effect/command evidence through `RestoreTerminalEvidenceProvider`. `BackupLayoutGuard::release_restore` remains the guarded release owner; completed release replay makes no remote calls. |
 
-The [normal consumer](../crates/ic-backup-agent/tests/independent/consumer/mod.rs)
-is the executable assembly, built with normal Core/Agent dependencies in a separate
-workspace. Its [transfer](../crates/ic-backup-agent/tests/independent/consumer/transfer/mod.rs)
-and [restore](../crates/ic-backup-agent/tests/independent/consumer/restore/mod.rs)
+The [standalone Rust example](../crates/ic-backup-agent/examples/standalone/README.md)
+is the maintained assembly. The normal consumer builds its exact sources with
+normal Core/Agent dependencies in a separate workspace and supplies a fixture
+application adapter. Its [transfer](../crates/ic-backup-agent/examples/standalone/workflow/transfer/mod.rs)
+and [restore](../crates/ic-backup-agent/examples/standalone/workflow/restore/mod.rs)
 adapters use those existing APIs through capture, complete byte publication,
 source-bound upload, load, stopped-state acceptance, start and guarded release.
 Restore advancement pauses normally before start; a later invocation supplies

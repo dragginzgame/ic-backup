@@ -1,10 +1,5 @@
 //! Public workflow coordination against actual managed `PocketIC` ingress.
 
-mod round_trip;
-use round_trip::RestoreProgress;
-pub(super) use round_trip::change_live_state;
-pub(crate) use round_trip::{RoundTripScenario, run_round_trip};
-
 use super::evidence::{MetadataEvidence, retain_bytes};
 use super::stage::Stage;
 use super::{
@@ -123,8 +118,7 @@ struct CompleteDriver {
     metadata: Option<MetadataEvidence>,
     stages: Vec<u64>,
     stop_before: Option<u64>,
-    restore: Option<RestoreProgress>,
-    restore_failure: super::planned_upload::Failure,
+    source: Option<(OperationPlanRecord, super::Downloaded)>,
 }
 impl CompleteDriver {
     fn new(backend: Backend, workflow: &ExecutionWorkflowRecord) -> Self {
@@ -138,8 +132,7 @@ impl CompleteDriver {
             metadata: None,
             stages: Vec::new(),
             stop_before: None,
-            restore: None,
-            restore_failure: super::planned_upload::Failure::None,
+            source: None,
         }
     }
 
@@ -148,12 +141,10 @@ impl CompleteDriver {
         workflow: &ExecutionWorkflowRecord,
         snapshot: IcSnapshotInfo,
         metadata: MetadataEvidence,
-        restore: Option<RestoreProgress>,
     ) -> Self {
         Self {
             snapshot: Some(snapshot),
             metadata: Some(metadata),
-            restore,
             ..Self::new(backend, workflow)
         }
     }
@@ -254,10 +245,6 @@ impl CompleteDriver {
         Ok(checkpoint.learned_evidence().clone())
     }
 
-    #[expect(
-        clippy::too_many_lines,
-        reason = "retain exact request/reply bytes, append/receipt chronology and published source custody in one trace"
-    )]
     fn data(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
         let snapshot = self.snapshot.as_ref().unwrap();
         let evidence = self.metadata.as_ref().unwrap();
@@ -347,18 +334,15 @@ impl CompleteDriver {
             checksum
         );
         let manifest = artifacts.publish_download_manifest(plan).unwrap();
-        self.restore = Some(RestoreProgress {
-            source_binding: stage.binding().clone(),
-            source_plan: plan.clone(),
-            source: super::Downloaded {
+        self.source = Some((
+            plan.clone(),
+            super::Downloaded {
                 root: layout.root().into(),
                 checksum,
                 manifest: manifest.clone(),
                 chunks,
             },
-            allocation: None,
-            acceptance: None,
-        });
+        ));
         Ok(manifest)
     }
 }
@@ -411,7 +395,7 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                     .clone()
             }
             Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
-                self.bind_restore(workflow, kind, predecessors)
+                return Err(io::Error::other("capture fixture has no restore stages"));
             }
         })
     }
@@ -426,8 +410,9 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
             Stage::Capture => self.capture(stage),
             Stage::Metadata => self.metadata(stage),
             Stage::Download => self.data(stage),
-            Stage::Allocation | Stage::Upload => self.upload(stage),
-            Stage::Load | Stage::Start => self.restore(stage),
+            Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
+                Err(io::Error::other("capture fixture has no restore stages"))
+            }
         };
         if let Ok(evidence) = &result {
             retain_bytes(
@@ -463,13 +448,13 @@ pub(crate) fn run_complete(data_failure: ReadFailure) {
 
 pub(super) fn capture_source() -> super::CapturedSource {
     let mut driver = complete_capture(ReadFailure::None);
-    let source = driver.restore.take().unwrap();
+    let (plan, source) = driver.source.take().unwrap();
     super::CapturedSource {
         backend: driver.backend,
-        plan: source.source_plan,
+        plan,
         snapshot: driver.snapshot.unwrap(),
         raw_metadata: driver.metadata.unwrap().raw,
-        source: source.source,
+        source,
     }
 }
 
@@ -708,7 +693,7 @@ pub(crate) fn run_retained() {
     // Drop the original driver state. Rebuild only from retained raw replies,
     // exact original bindings and the still-running isolated backend.
     let backend = driver.backend;
-    let mut resumed = CompleteDriver::from_retained(backend, &workflow, snapshot, evidence, None);
+    let mut resumed = CompleteDriver::from_retained(backend, &workflow, snapshot, evidence);
     let view = ready(run_retained_execution_workflow(
         &layout,
         &workflow.digest(),

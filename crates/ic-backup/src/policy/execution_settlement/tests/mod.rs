@@ -6,7 +6,7 @@ use crate::{
     },
     test_support::{
         execution_settlement::{applied, journals, record},
-        membership::{hash, plan},
+        operation_plan::{hash, plan},
     },
 };
 use serde_json::json;

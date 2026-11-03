@@ -182,9 +182,9 @@ pub(super) fn run(fault: Fault) {
             recover_upload(&mut backend, &plan, &journal, &metadata, fault);
         }
         Fault::Load | Fault::LoadObservation => {
-            planned_runner::change_live_state(&mut backend);
+            change_live_state(&mut backend);
             // Original native snapshot suffices for lifecycle recovery; uploaded destinations
-            // and full transfer/load/start composition are checked by the connected runner.
+            // and full transfer/load/start composition are checked by the Agent consumer.
             pending = lifecycle(
                 &mut backend,
                 Method::LoadCanisterSnapshot,
@@ -507,4 +507,14 @@ fn readback_requires_complete_expected_chunks_before_management_calls() {
         backend.calls, calls,
         "refuse before another management call"
     );
+}
+
+// Deliberate fixture mutation after the original capture, independently accounted
+// through Backend's retained per-call plans. This is not a product workflow step.
+fn change_live_state(backend: &mut Backend) {
+    assert!(lifecycle(backend, Method::StartCanister, None, Fault::None, |_| None).is_none());
+    backend.write_state(99);
+    backend.assert_state(99);
+    backend.clear_fixture_chunk_store();
+    assert!(lifecycle(backend, Method::StopCanister, None, Fault::None, |_| None).is_none());
 }

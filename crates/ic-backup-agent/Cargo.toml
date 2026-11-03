@@ -29,3 +29,8 @@ tokio.workspace = true
 
 [lints]
 workspace = true
+
+[[example]]
+name = "standalone"
+path = "examples/standalone/lib.rs"
+crate-type = ["rlib"]

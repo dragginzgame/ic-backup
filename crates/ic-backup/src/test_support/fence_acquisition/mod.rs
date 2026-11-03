@@ -5,7 +5,7 @@ use crate::{
         attempt_journal::AttemptJournalRecord, fence_acquisition::*, fence_obligation::*,
         operation_plan::OperationPlanRecord,
     },
-    test_support::membership::{self, APP},
+    test_support::operation_plan::{self, APP},
 };
 use serde_json::json;
 
@@ -18,7 +18,7 @@ pub struct Original {
 pub fn original(restore: bool) -> Original {
     let payload =
         FenceAcquisitionPayload::new(APP, "acquire_fence", b"native opaque acquisition").unwrap();
-    let mut plan = serde_json::to_value(membership::plan()).unwrap();
+    let mut plan = serde_json::to_value(operation_plan::plan()).unwrap();
     plan["operations"][0]["request"] = json!(payload.digest().hash());
     let plan: OperationPlanRecord = serde_json::from_value(plan).unwrap();
     let obligation = super::fence_reconciliation::obligation(&plan, restore);

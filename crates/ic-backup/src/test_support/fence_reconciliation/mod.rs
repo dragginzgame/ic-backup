@@ -8,7 +8,7 @@ use crate::{
     },
     test_support::{
         consistency,
-        membership::{hash, plan},
+        operation_plan::{hash, plan},
         restore_safety,
     },
 };
