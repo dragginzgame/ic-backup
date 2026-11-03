@@ -21,8 +21,8 @@ use thiserror::Error;
 /// Allocate one new snapshot through an exact singleton original metadata stage.
 ///
 /// Prepare the retained workflow/stage and complete original journals first; hold no
-/// attempt guards. Reuse [`super::upload_snapshot`] for exact source/payload binding, durable
-/// spending, mandatory fresh `admit` and one provider invocation. A pending or Applied
+/// attempt guards. The shared upload engine checks exact source/payload binding and
+/// durably reserves spending before mandatory fresh `admit` and one provider call. A pending or Applied
 /// allocation never dispatches again, including after failed checkpoint publication.
 ///
 /// The mandatory `qualify` callback runs under the original journal lock. It must
