@@ -1,13 +1,25 @@
 # Current handoff — 2026-11-04
 
-## Selected delivery
+## Completed delivery
 
-The user requested deployment of the completed dependency/tooling/test-layout
-batch. Select compatible **0.57.1** for both libraries, with the established direct
-`origin/main` Git release and crates.io publication. Root package versions are
-still 0.57.0 before the release runner. The complete gate must pass before
-version preparation; the generated [receipt](../release.json), saved release plan
-and registry evidence own completion. No live backup/restore is selected.
+**0.57.1** is released on `origin/main` with annotated tag `v0.57.1`, both pointing
+at release commit `40d9e3234df06df589ef591786e3a77ce2aa43b7` before this handoff
+update. Both `ic-backup` and `ic-backup-agent` 0.57.1 are published on crates.io.
+The complete Linux release gate passed against source `8edede0`; the committed
+[receipt](../release.json) binds the original source, inputs, date and version.
+
+Independent registry/archive checks verified non-yanked versions, exact SHA-256,
+release VCS identity and all 328 Core / 53 Agent non-generated source files:
+
+- Core: `56df47c36747441b7e2cd446a4b49966cc2374b44e6d67bfd07b726872a7f921`.
+- Agent: `05566ffe9fd74d0d7c01ccd5035a53560b17c041225b73c617d79a6168569430`.
+
+Release/publication logs, downloaded archives and source verification are retained
+under `target/deploy-0571.ytcigfjv/`. Saved Git release/validation evidence is under
+`.git/release-state/0.57.1.*`; publication selection and command evidence is under
+`.git/release-state/publication/{selection.mMJuGH,publish.selection.mMJuGH}`.
+The annotated release tag remains on its original release commit; this handoff
+records delivery only. No live backup/restore is selected.
 
 ## Implemented batch
 
@@ -49,7 +61,7 @@ Shared/Testkit evidence: `target/shared-tooling-adoption.fdd2862x/`,
 `target/testkit-084-adoption.vh8s9xnx/` and
 `target/testkit-adoption-0571.bijimlj5/`. Prior locked inputs passed strict Clippy,
 510 unit cases, 62 simulator cases, consumer/tooling/hooks/metadata checks and
-independent consumers. The new release must qualify its exact combined source.
+independent consumers. The completed release gate freshly qualified the combined source.
 Preserve prior input snapshots, failed logs, compiler evidence and tool generations.
 
 Previously delivered **0.57.0** is commit `97671f3`; both libraries and its
