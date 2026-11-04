@@ -49,32 +49,42 @@ async fn upload_snapshot_with<E: std::error::Error + 'static, T>(
 ) -> Result<(IcMutationAcknowledgement, T), IcSnapshotUploadExecutionError<E>> {
     let plan = stage.plan();
     let authority = plan.attempt_authority(operation_sequence)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    original_authority(plan, operation_sequence, journal.record()?, payload)?;
-    journal.reserve_planned_mutation(&plan.digest())?;
-    let request =
-        IcSnapshotUploadAttempt::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request)
-        .await
-        .map_err(IcSnapshotUploadExecutionError::Admission)?;
-    stage.layout()?;
-    let acknowledgement = provider.submit_upload(&request, journal.record()?).await?;
-    let admit_reply = || {
-        let admitted = validate_acknowledgement(&request, journal.record()?, &acknowledgement)?;
-        stage.layout()?;
-        Ok::<_, IcSnapshotUploadReplyError>(admitted)
-    };
-    let admitted = match admit_reply() {
-        Ok(admitted) => admitted,
-        Err(source) => {
-            return Err(IcSnapshotUploadExecutionError::AfterReply {
-                source,
-                acknowledgement: Box::new(acknowledgement),
-            });
+    let (acknowledgement, result) = super::ic_mutation::execute_reserved(
+        stage,
+        &authority,
+        |journal| {
+            original_authority(plan, operation_sequence, journal, payload)?;
+            Ok::<_, IcSnapshotUploadExecutionError<E>>(())
+        },
+        |journal| {
+            Ok(IcSnapshotUploadAttempt::new(
+                plan,
+                operation_sequence,
+                journal,
+                payload,
+            )?)
+        },
+        async |request| {
+            admit(request)
+                .await
+                .map_err(IcSnapshotUploadExecutionError::Admission)?;
+            stage.layout()?;
+            Ok(())
+        },
+        async |request, journal| Ok(provider.submit_upload(request, journal).await?),
+        async |journal, request, acknowledgement| {
+            let admitted = validate_acknowledgement(request, journal.record()?, acknowledgement)?;
+            stage.layout()?;
+            Ok::<_, IcSnapshotUploadReplyError>(complete(journal, request, &admitted).await)
+        },
+    )
+    .await?;
+    super::qualified_receipt::retain_reply(acknowledgement, result, |source, acknowledgement| {
+        IcSnapshotUploadExecutionError::AfterReply {
+            source,
+            acknowledgement,
         }
-    };
-    let result = complete(&mut journal, &request, &admitted).await;
-    Ok((acknowledgement, result))
+    })
 }
 
 /// Upload-step failures retain original spending and any bounded returned acknowledgement.

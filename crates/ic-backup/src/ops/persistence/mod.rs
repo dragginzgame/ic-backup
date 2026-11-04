@@ -3,12 +3,10 @@
 mod artifact_commit;
 mod attempt_journal;
 mod command_lifetime_lock;
-mod consistency;
 mod download_journal;
 mod execution_progress;
 mod execution_settlement;
 mod execution_workflow;
-mod fence_obligation;
 mod immutable_record;
 mod journal_lock;
 mod journal_path;
@@ -23,9 +21,6 @@ pub use attempt_journal::{AttemptJournalError, AttemptJournalGuard};
 pub use command_lifetime_lock::{
     COMMAND_CUSTODY_DESCRIPTOR_ENV, CommandLifetimeLock, CommandLifetimeLockError,
     CommandQuiescenceGuard,
-};
-pub use consistency::{
-    ConsistencyPersistenceError, create_consistency_requirement, read_consistency_requirement,
 };
 pub use download_journal::{
     DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard, DownloadManifestError,
@@ -49,10 +44,6 @@ pub use execution_workflow::{
     read_complete_execution_workflow, read_complete_execution_workflow_locked,
     read_execution_workflow, read_execution_workflow_progress,
 };
-pub use fence_obligation::{
-    FenceObligationPersistenceError, FenceObligationRequirement, create_fence_obligation,
-    read_fence_obligation,
-};
 pub use journal_lock::{JournalLock, JournalLockError};
 pub(crate) use json::read_json;
 pub use layout_lifetime::{BackupLayoutGuard, MAX_RESTORE_REFERENCE_BYTES};
@@ -75,6 +66,15 @@ use thiserror::Error;
 /// Typed local persistence failure.
 #[derive(Debug, Error)]
 pub enum PersistenceError {
+    /// A retired application requirement/obligation must be recovered by its original owner.
+    /// The record remains untouched; missing files never grant fresh authority.
+    #[error(
+        "retired application state at {path:?}; retain all evidence and recover with ic-backup 0.57.1 and the original integration before upgrading"
+    )]
+    RetiredApplicationState {
+        /// Existing retired declaration; no contents were inferred or converted.
+        path: std::path::PathBuf,
+    },
     /// An existing layout path no longer denotes the held directory.
     #[error("backup layout changed while held: {path:?}")]
     LayoutChanged {

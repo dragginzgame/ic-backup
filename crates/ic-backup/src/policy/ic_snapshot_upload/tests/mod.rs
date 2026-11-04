@@ -162,7 +162,9 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
     assert!(matches!(
         validate_acknowledgement(&request, &journal, &acknowledgement),
         Err(IcSnapshotUploadAssociationError::Reservation(
-            IcSnapshotUploadAttemptError::ObservationPending
+            IcSnapshotUploadAttemptError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::ObservationPending
+            )
         ))
     ));
     assert_eq!(journal, before);

@@ -46,18 +46,24 @@ fn unknown_operation_and_changed_original_authority_are_typed_denials() {
     // Wrong authority wins even when the supplied journal also lacks the mutation.
     assert!(matches!(
         request.validate_journal(&other),
-        Err(IcMutationRequestError::AuthorityMismatch)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+        ))
     ));
     assert!(matches!(
         IcMutationRequest::new(&original.plan, 7, &other, &original.payload),
-        Err(IcMutationRequestError::AuthorityMismatch)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+        ))
     ));
     let mut changed = serde_json::to_value(&original.plan).unwrap();
     changed["operations"][1]["budget"]["mutations"] = serde_json::json!(1);
     let changed: OperationPlanRecord = serde_json::from_value(changed).unwrap();
     assert!(matches!(
         IcMutationRequest::new(&changed, 7, &original.journal, &original.payload),
-        Err(IcMutationRequestError::AuthorityMismatch)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+        ))
     ));
 }
 
@@ -105,7 +111,9 @@ fn absent_replaced_settled_and_recovering_reservations_do_not_admit_dispatch() {
     let empty = AttemptJournalRecord::new(original.journal.authority().clone());
     assert!(matches!(
         IcMutationRequest::new(&original.plan, 7, &empty, &original.payload),
-        Err(IcMutationRequestError::NoPendingMutation)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::NoPendingMutation
+        ))
     ));
     let request =
         IcMutationRequest::new(&original.plan, 7, &original.journal, &original.payload).unwrap();
@@ -120,12 +128,16 @@ fn absent_replaced_settled_and_recovering_reservations_do_not_admit_dispatch() {
         .unwrap();
     assert!(matches!(
         request.validate_journal(&original.journal),
-        Err(IcMutationRequestError::MutationMismatch)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::MutationMismatch
+        ))
     ));
     original.journal.reserve_mutation().unwrap();
     assert!(matches!(
         request.validate_journal(&original.journal),
-        Err(IcMutationRequestError::MutationMismatch)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::MutationMismatch
+        ))
     ));
     original
         .journal
@@ -135,12 +147,16 @@ fn absent_replaced_settled_and_recovering_reservations_do_not_admit_dispatch() {
     let before = original.journal.clone();
     assert!(matches!(
         request.validate_journal(&original.journal),
-        Err(IcMutationRequestError::MutationMismatch)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::MutationMismatch
+        ))
     ));
     assert_eq!(original.journal, before);
     assert!(matches!(
         IcMutationRequest::new(&original.plan, 7, &original.journal, &original.payload),
-        Err(IcMutationRequestError::ObservationPending)
+        Err(IcMutationRequestError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::ObservationPending
+        ))
     ));
     assert_eq!(original.journal.view().mutations_remaining, 0);
 }

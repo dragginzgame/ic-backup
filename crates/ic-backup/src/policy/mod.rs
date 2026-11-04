@@ -1,12 +1,8 @@
 //! Pure decisions over validated declarations; no IO, scheduling or persisted mutations.
 
-pub mod consistency;
 pub mod download_integrity;
 pub mod execution_progress;
 pub mod execution_settlement;
-pub mod fence_acquisition;
-pub mod fence_obligation;
-pub mod fence_reconciliation;
 pub mod ic_mutation;
 pub mod ic_observation;
 pub mod ic_snapshot_transfer_read;

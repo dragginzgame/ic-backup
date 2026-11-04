@@ -9,7 +9,7 @@ use super::{
     verification::open_regular_child, with_artifact_directory,
 };
 use crate::model::{
-    ic_snapshot_data::{MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES, validate_kind},
+    ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES,
     ic_snapshot_metadata::IcSnapshotMetadataReply,
     ic_snapshot_upload::{
         IcSnapshotDataUploadPlan, IcSnapshotUploadError, IcSnapshotUploadRequest,
@@ -50,39 +50,6 @@ impl DownloadJournalGuard<'_> {
         Ok(IcSnapshotUploadRequest::metadata(
             plan, metadata, &checksum,
         )?)
-    }
-
-    /// Read one bounded exact source extent/chunk and encode a distinct destination ID.
-    ///
-    /// Fresh full IC-tree verification before/after descriptor-relative reading binds
-    /// actual bytes to the original metadata/checksum and guarded source plan/journal.
-    /// This is an explicit local byte operation, not resume or a transfer-completion view.
-    /// Only one <=1 MiB chunk is buffered; no aggregate region or allowance is allocated.
-    /// The caller qualifies destination allocation and retains the new exact data intent
-    /// before its own reservation. No source/restore reference, journal or fence changes.
-    /// # Errors
-    /// Rejects wrong source declaration, ranges/hash/IDs, changed/unsafe files or custody,
-    /// short reads, encoding failures and mismatching retained original evidence.
-    pub fn prepare_ic_snapshot_upload_data<'source>(
-        &self,
-        plan: &OperationPlanRecord,
-        snapshot: &str,
-        metadata_upload: &IcSnapshotUploadRequest<'source>,
-        snapshot_id: &[u8],
-        source_kind: SnapshotDataKind,
-    ) -> Result<IcSnapshotUploadRequest<'source>, IcSnapshotUploadArtifactError> {
-        let metadata = metadata_upload.source();
-        metadata_upload.validate_data_destination(snapshot_id)?;
-        validate_kind(metadata, &source_kind).map_err(IcSnapshotUploadError::from)?;
-        self.with_upload_source(plan, snapshot, metadata_upload, |directory| {
-            let chunk = read_chunk(directory, metadata, &source_kind)?;
-            Ok(IcSnapshotUploadRequest::data(
-                metadata_upload,
-                snapshot_id,
-                source_kind,
-                &chunk,
-            )?)
-        })
     }
 
     fn with_upload_source<T>(
@@ -184,3 +151,6 @@ pub enum IcSnapshotUploadArtifactError {
     #[error(transparent)]
     Upload(#[from] IcSnapshotUploadError),
 }
+
+#[cfg(test)]
+mod tests;

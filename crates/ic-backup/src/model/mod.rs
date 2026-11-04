@@ -1,12 +1,10 @@
 //! Persisted records and their local invariants.
 
 pub mod application_ingress;
-mod application_payload;
 pub mod artifacts;
 pub mod attempt_journal;
 mod bounded_sequence;
 pub mod command_custody;
-pub mod consistency;
 pub mod control_authority;
 mod data_stage_plan;
 pub mod download_journal;
@@ -14,9 +12,6 @@ pub mod effect_graph;
 pub(crate) mod evidence_digest;
 pub mod execution_settlement;
 pub mod execution_workflow;
-pub mod fence_acquisition;
-pub mod fence_obligation;
-pub mod fence_reconciliation;
 pub mod ic_lifecycle_reply;
 pub mod ic_mutation;
 pub mod ic_observation;

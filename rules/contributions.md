@@ -40,9 +40,10 @@ protections. Optional hosted CI is not a reason to add a PR or approval round.
 
 The [authorization table](#agent-authorization) defines Git and release effects.
 Inspect wrappers and Make targets for those effects before running them.
-Implementation and validation alone do not authorize staging, commits, release
-metadata, tags, pushes or publication. Disposable validation fixtures may exercise
-those operations only in their documented test repositories.
+Beyond the pending notes and Shared Tooling `VERSION` preparation above,
+implementation and validation alone do not authorize staging, commits, package
+version changes, tags, pushes or publication. Disposable validation fixtures may
+exercise those operations only in their documented test repositories.
 
 Carry established authority forward without repeated permission. During ordinary
 implementation, “keep going”, “finish this”, “prepare the release”, a release
@@ -84,16 +85,22 @@ PR approval. Approval of those phrases alone is not a location exception.
   (`~/projects`, currently `/home/adam/projects`).** This includes clones,
   worktrees, contribution containers, release copies, scratch and evidence
   directories, regardless of their name.
-- Additional checkout locations anywhere require explicit approval of the exact
-  absolute path. A new top-level projects directory additionally requires the
+- Additional implementation or delivery checkout locations anywhere require
+  explicit approval of the exact absolute path. A new top-level projects directory
+  additionally requires the
   user to explicitly authorize that directory creation as an exception to this
   rule. Generic fix, PR, release, ship, deploy, continuation or isolation authority
   does not supply that exception. A busy/dirty checkout or failed preflight is
   not permission to create a sibling clone. Coordinate or report the blocker.
   Previous approval for one path does not authorize another or a new container.
+  One explicit approval covering the path and directory creation satisfies both
+  requirements; do not ask twice for the same exception.
 - Keep disposable validation artifacts under the owning repository's `target/`
-  according to the scratch rules; never move unique lasting work there or into
-  `/tmp`. Existing auxiliary checkouts are not precedent for creating more.
+  according to the scratch rules. An authorized test may create disposable Git
+  repositories there without a working-checkout exception, provided they contain
+  only reproducible fixture inputs and never become an implementation, release
+  or handoff location. Never move unique lasting work there or into `/tmp`.
+  Existing auxiliary checkouts are not precedent for creating more.
   Before proposing retirement, account for unique commits, dirty/untracked work,
   active users and retained release evidence; this rule does not authorize deletion.
 - Keep lasting changes in the normal checkout or an explicitly approved durable
@@ -215,8 +222,9 @@ Explicit read-only and no-push instructions remain binding.
   delivery workflow. Do not create one just to obtain CI, transport a patch or
   finish ordinary implementation. Routine version/lock/snapshot adoption stays
   with its receiving owner unless explicitly included in the task.
-- Use a topic branch in the agreed normal checkout after coordinating with its
-  active owner. A PR request does not authorize taking over another session.
+- For a requested or required PR, use a topic branch in the agreed normal checkout
+  after coordinating with its active owner. A PR request does not authorize
+  taking over another session.
   If that checkout is unavailable, follow the
   [checkout-location contract](#durable-work-and-checkout-location) before
   creating another. Never carry another contributor's dirty work into the PR.

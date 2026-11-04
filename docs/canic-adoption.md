@@ -63,7 +63,7 @@ and acceptance into production.
 | Original effect accounting | `OperationPlanRecord`, `ExecutionStageGuard`, `AttemptJournalGuard` | Allocate once; use the same authority across interruption; retain exact commands/bytes |
 | Direct management capture and transfer | `capture_snapshot`, metadata/download plans and source-bound upload steps | Select this lane only when the actual host caller has the required direct authority |
 | Application Root ingress | Original stage/attempt guards and `AgentApplicationIngressProvider` | Own Wire encoding and current authority; account Root-paid management effects through Canic's existing runtime owner |
-| Signed transport | Agent application, management, transfer-read, recovery and fence-acquisition providers | Select identity, endpoint and trust root; retain exact ingress/replies; qualify observations |
+| Signed transport | Agent application, management, transfer-read and recovery providers | Select identity, endpoint and trust root; retain exact ingress/replies; qualify observations |
 | Restore and source lifetime | Restore-safety requests, guarded reference release and terminal evidence | Whole-unit fencing, current external obligations, post-load acceptance and safe release |
 
 Choose the actual management dispatcher before connecting transport. Backup's
@@ -290,3 +290,36 @@ owns application consistency and external-obligation acceptance.
 coordination tracker, with its unresolved requirements explicitly retained in
 those Canic issues. That disposition does not complete application adoption or
 enable live backup creation.
+
+## 0.58 API migration
+
+Current inspected Canic production code uses application ingress, stage advancement
+and the existing accounting owners. It calls none of the retired fence/consistency
+APIs, single-chunk source preparation or per-successor learned overrides; no Canic
+source change accompanies this cut. This source inspection is not installed-consumer
+or deployed acceptance evidence.
+
+For other integrations, use mandatory application admission and independently
+accounted application ingress for fresh fencing protocols; preserve whole-unit and
+outside-snapshot obligations. `ApplicationFenceState` now belongs to
+`model::restore_safety`; existing restore requirement bytes and rejection rules stay.
+Use complete data-upload planning and `upload_snapshot_data` for guarded source IO.
+One checkpoint learned commitment now feeds every successor.
+
+Before upgrading, reconcile unfinished fence/consistency declarations and distinct
+per-edge continuations with **0.57.1 and the original integration**. Keep every
+original journal, binding, artifact, signed request/reply and obligation. New guarded
+operations refuse retired declaration files, and advancement refuses distinct-edge
+continuations before callbacks. Do not delete the files, replace payload hashes or
+regenerate plans to pass admission. The new library supplies no automatic migration,
+fence release, accounting reset or cleanup. Start fresh current workflows only after
+explicit application-owned disposition of prior obligations.
+
+Mutation reservation failures now use one public accounting-owned type,
+`model::attempt_journal::MutationReservationError`. Match `Reservation(cause)` on
+`ApplicationIngressError`, `IcMutationRequestError`, `IcSnapshotTransferReadError`
+or `IcSnapshotUploadAttemptError`, then match the cause: `AuthorityMismatch`,
+`NoPendingMutation`, `MutationMismatch` or `ObservationPending`. The original typed
+cause is also available through `std::error::Error::source`. The corresponding flat
+request-error variants are removed. Observation-specific denials keep their current
+owners. No record bytes, allowance or dispatch permission changes with this API cut.

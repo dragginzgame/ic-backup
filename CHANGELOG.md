@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.58.0] - Unreleased
+
+### ⚠️ Breaking
+
+- Match mutation reservation failures through each request error's `Reservation`
+  variant and `model::attempt_journal::MutationReservationError`. Application,
+  management, transfer-read and upload requests retain the exact typed accounting
+  cause instead of separate copies of its variants. Record formats and spending
+  behavior are unchanged.
+- Retire the unused capture-consistency and application-fence acquisition/reconciliation
+  APIs and Agent adapter. Keep application admission and fenced restore safety explicit.
+  Layouts containing `consistency-requirement.json` or `fence-obligation.json` refuse
+  use without changing evidence; finish their recovery with 0.57.1 and the original
+  integration before upgrading. No automatic conversion, reset or cleanup is provided.
+- Carry one checkpoint learned commitment to every successor; remove per-successor
+  driver/retained overrides. Existing distinct-edge continuations refuse before
+  callbacks instead of rebinding; recover those originals with 0.57.1.
+- Remove public single-chunk source preparation. Use complete data-upload planning and
+  `upload_snapshot_data`; integrations owning exact bytes can use the pure payload codec.
+- Import `ApplicationFenceState` from `model::restore_safety`; its meanings and the
+  existing fenced-restore requirements are unchanged.
+
+### 🧹 Cleanup
+
+- Localize opaque payload checks to application ingress and use one validated
+  immutable-record read path, preserving admission order, bounds and digest bytes.
+- Share original mutation reservation, typed admission and single dispatch across
+  management, snapshot-read and upload workflows while retaining exact reply errors,
+  continuous journal exclusion and checkpoint ordering.
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.22.0 for production, retaining Testkit's separate Platform 0.21
+  dependency and the existing Principal, management DTO and Agent identities.
+- Adopt Runtime 0.19.1 through Testkit's Wasm-only IC0 dependency. Backup's normal
+  host graphs remain runtime-free; no direct Runtime dependency is added.
+- Require Host Artifacts/FS/Process 0.74.3 and Testkit 0.84.1; select the published
+  Build 0.74.2 release editor. Preserve the incoming lockfile and existing IC wire,
+  artifact, journal and recovery contracts.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.29.4 at `628ccc7`, adding bounded retained-state admission
+  around release hooks while preserving existing release evidence.
+
 ## [0.57.1] - 2026-11-04
 
 ### 🛠️ Tooling

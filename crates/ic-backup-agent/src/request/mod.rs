@@ -5,7 +5,6 @@ use ic_backup::model::{
         ApplicationIngressPayload, ApplicationMutationRequest, ApplicationObservationRequest,
     },
     attempt_journal::AttemptJournalRecord,
-    fence_acquisition::FenceAcquisitionRequest,
     ic_mutation::{IcMutationRequest, MAX_IC_MUTATION_REPLY_BYTES},
     ic_observation::{IcObservationRequest, MAX_IC_OBSERVATION_REPLY_BYTES},
     ic_request::IcManagementRequestRecord,
@@ -40,8 +39,6 @@ pub enum ReservedUpdate<'a> {
     UploadObservation(&'a IcSnapshotUploadObservationRequest<'a, 'a>),
     /// Original data write recovery readback.
     UploadDataObservation(&'a IcSnapshotUploadDataObservationRequest<'a, 'a, 'a>),
-    /// One application-owned fence acquisition update.
-    FenceAcquisition(&'a FenceAcquisitionRequest<'a>),
 }
 
 pub(super) struct Wire<'a> {
@@ -119,17 +116,6 @@ impl ReservedUpdate<'_> {
                     method: r.payload().method(),
                     arguments: r.payload().arguments(),
                     reply_limit: MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
-                }
-            }
-            Self::FenceAcquisition(r) => {
-                r.validate_journal(journal).ok()?;
-                Wire {
-                    context: r.plan().context(),
-                    receiver: r.payload().target(),
-                    target: r.payload().target(),
-                    method: r.payload().method(),
-                    arguments: r.payload().arguments(),
-                    reply_limit: crate::MAX_APPLICATION_REPLY_BYTES,
                 }
             }
         })

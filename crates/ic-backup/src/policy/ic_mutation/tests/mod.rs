@@ -130,7 +130,9 @@ fn method_specific_invalid_wire_and_stale_recovery_journal_reject() {
         assert!(matches!(
             validate_acknowledgement(&request, &original.journal, &acknowledgement),
             Err(IcMutationAssociationError::Reservation(
-                IcMutationRequestError::ObservationPending
+                IcMutationRequestError::Reservation(
+                    crate::model::attempt_journal::MutationReservationError::ObservationPending
+                )
             ))
         ));
         assert_eq!(original.journal.view().pending_observation, Some(2));

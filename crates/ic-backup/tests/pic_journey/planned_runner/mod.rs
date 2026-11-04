@@ -133,11 +133,11 @@ impl CompleteDriver {
         }
     }
     fn capture(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
-        let (snapshot, evidence) =
-            super::steps::capture(&mut self.backend, stage, self.capture_failure)
-                .map_err(io::Error::other)?;
+        let (snapshot, _) = super::steps::capture(&mut self.backend, stage, self.capture_failure)
+            .map_err(io::Error::other)?;
+        let learned = ArtifactChecksumRecord::from_bytes(snapshot.id());
         self.snapshot = Some(snapshot);
-        Ok(evidence)
+        Ok(learned)
     }
 
     fn metadata(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
@@ -274,23 +274,6 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
             );
         }
         std::future::ready(result)
-    }
-
-    fn learned_for_successor(
-        &mut self,
-        predecessor: &ExecutionStagePredecessorRecord,
-        successor_sequence: u64,
-    ) -> Result<ArtifactChecksumRecord, Self::Error> {
-        if (
-            Stage::from_sequence(predecessor.stage_sequence()),
-            Stage::from_sequence(successor_sequence),
-        ) == (Stage::Capture, Stage::Metadata)
-        {
-            return Ok(ArtifactChecksumRecord::from_bytes(
-                self.snapshot.as_ref().unwrap().id(),
-            ));
-        }
-        Ok(predecessor.learned_evidence().clone())
     }
 }
 
@@ -435,8 +418,9 @@ fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
     let retained = BTreeMap::from([
         (
             0,
-            RetainedStageEvidence::new(binding(0), capture_reply.digest()).with_successor_evidence(
-                BTreeMap::from([(7, ArtifactChecksumRecord::from_bytes(snapshot.id()))]),
+            RetainedStageEvidence::new(
+                binding(0),
+                ArtifactChecksumRecord::from_bytes(snapshot.id()),
             ),
         ),
         (
@@ -465,14 +449,10 @@ fn refuse_changed_retained_capture_edges(
         MAX_EXECUTION_STAGE_BYTES,
     )
     .unwrap();
-    let original = retained.get(&0).unwrap();
-    let changed = [
-        RetainedStageEvidence::new(
-            binding.digest(),
-            ArtifactChecksumRecord::from_bytes(b"wrong"),
-        ),
-        original.clone().with_successor_evidence(BTreeMap::new()),
-    ];
+    let changed = [RetainedStageEvidence::new(
+        binding.digest(),
+        ArtifactChecksumRecord::from_bytes(b"wrong"),
+    )];
     let calls = driver.backend.calls;
     for evidence in changed {
         let mut supplied = retained.clone();

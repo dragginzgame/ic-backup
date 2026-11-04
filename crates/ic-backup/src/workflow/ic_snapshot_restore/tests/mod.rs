@@ -414,7 +414,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
                 ) = &mut actual.safety
                 {
                     if failure == RestoreFailure::InactiveFence {
-                        fence.state = crate::model::consistency::ApplicationFenceState::Inactive;
+                        fence.state = crate::model::restore_safety::ApplicationFenceState::Inactive;
                     }
                     if failure == RestoreFailure::MissingControlledExecution {
                         fence.controlled_execution = None;

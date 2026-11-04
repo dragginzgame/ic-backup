@@ -55,26 +55,6 @@ where
     Ok(())
 }
 
-pub(super) fn read<T, E>(
-    layout: &BackupLayoutGuard,
-    name: &str,
-    limit: u64,
-    matches_original: impl FnOnce(&T) -> bool,
-    mismatch: impl FnOnce() -> E,
-) -> Result<T, E>
-where
-    T: DeserializeOwned + Serialize,
-    E: From<JournalLockError> + From<PersistenceError>,
-{
-    read_with(layout, name, limit, |record| {
-        if matches_original(record) {
-            Ok(())
-        } else {
-            Err(mismatch())
-        }
-    })
-}
-
 pub(super) fn read_with<T, E>(
     layout: &BackupLayoutGuard,
     name: &str,

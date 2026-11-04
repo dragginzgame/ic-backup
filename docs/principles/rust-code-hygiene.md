@@ -37,9 +37,10 @@ Use the library's existing capabilities before adding custom argument handling.
 
 ## Metrics and logging
 
-Follow the mandatory [observability contract](../../rules/engineering-details.md#metrics-and-logging):
-use `ic-metrics` and `ic-logging`, keep application adapters thin, and resolve
-capability gaps through issues and improvements in IC Observability.
+Follow the [observability contract](../../rules/engineering-details.md#metrics-and-logging)
+for application-tree instrumentation and logging. Metrics does not own general
+math, benchmark calculations or report decoding; Canic's adapter owns metrics
+transport and endpoint projection.
 
 ## Documentation and comments
 

@@ -29,10 +29,19 @@ impl MutationReservation {
     }
 }
 
-#[derive(Debug)]
-pub(crate) enum MutationReservationError {
+/// Exact original pending-mutation refusal; no variant spends or authorizes a call.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
+pub enum MutationReservationError {
+    /// No original unresolved mutation is retained.
+    #[error("original mutation requires a pending reservation")]
     NoPendingMutation,
+    /// Full original authority, including immutable allowances, differs.
+    #[error("original mutation reservation authority mismatch")]
     AuthorityMismatch,
+    /// The original pending mutation changed or settled after binding.
+    #[error("original mutation reservation changed or settled")]
     MutationMismatch,
+    /// Separately accounted observation recovery is pending.
+    #[error("original mutation reservation has a pending observation")]
     ObservationPending,
 }

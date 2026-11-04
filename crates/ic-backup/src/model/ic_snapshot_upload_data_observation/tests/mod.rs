@@ -173,7 +173,9 @@ fn original_authority_payload_and_pending_reservation_drift_are_typed_denials() 
             assert!(matches!(
                 IcSnapshotUploadDataObservationRequest::new(&other, 7, journal, upload, read),
                 Err(IcSnapshotUploadDataObservationError::Upload(
-                    IcSnapshotUploadAttemptError::AuthorityMismatch
+                    IcSnapshotUploadAttemptError::Reservation(
+                        crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+                    )
                 ))
             ));
             let mut different = AttemptJournalRecord::new(other.attempt_authority(7).unwrap());

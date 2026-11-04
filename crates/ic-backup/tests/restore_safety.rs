@@ -6,9 +6,9 @@ mod support;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
-        consistency::ApplicationFenceState,
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
         operation_plan::OperationPlanRecord,
+        restore_safety::ApplicationFenceState,
         restore_safety::*,
     },
     ops::persistence::{

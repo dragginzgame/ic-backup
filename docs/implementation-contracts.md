@@ -65,6 +65,16 @@ record-specific operations. Finite generic JSON value writers are test fixtures.
 
 ## Records, plans and spending
 
+Layouts containing `consistency-requirement.json` or `fence-obligation.json` are
+retired application-workflow evidence. Every guarded root check refuses them before
+record use or spending, including malformed records and symlinks. Keep their bytes,
+journals, references and external obligations. Complete or reconcile them with
+0.57.1 and the original qualified integration before upgrading; do not remove the
+marker, rebuild plans or re-sign payloads to bypass admission. No migration or
+cleanup is performed. Fresh integrations own fencing through their application
+contract, accounted ingress and mandatory admission; fenced restore checks remain.
+
+
 Preserve these bounds, strict version/field admission and canonical encodings:
 
 | Owner | Maintained limits and identity |
@@ -75,7 +85,7 @@ Preserve these bounds, strict version/field admission and canonical encodings:
 | Attempt journal | 1,024 combined attempts, 2,048 events, 1 MiB IO; immutable authority/budgets and chronological reservations/receipts |
 | Workflow/stage binding | 1 MiB workflow, 512 KiB binding, 1,024 predecessors; exact catalog purpose/target/ceilings and learned child plan |
 | Execution settlement | 8,192 rows, 2 MiB IO; full original plan plus exact complete chronological journal fingerprints |
-| Consistency, fence obligation, restore requirement | Strict immutable v1, 1 KiB IO; exact original plans and requirement/fence/revision bindings |
+| Restore requirement | Strict immutable v1, 1 KiB IO; exact original plans and requirement/fence/revision bindings |
 | Download manifest | Existing v1 download-journal schema, 1 MiB IO, 1,024 artifacts, 256-byte tokens; exact metadata, derived paths and checksums |
 
 Preserve hash domains, field order, length framing and integer byte order,
@@ -85,6 +95,14 @@ duplicate rows reject through Host's `DirectoryChecksumError` with Backup's erro
 projection. Declaration hashing performs no IO or durability check. Checksum JSON
 still requires/emits `algorithm: "sha256"` in its original field order even though
 memory retains only the normalized hash. Independent tests may use `sha2`.
+
+`MutationReservationError` is the sole public pending-mutation refusal owner.
+Application, management, transfer-read and upload request errors carry it through
+`Reservation`; retain exact causes and check order before any effect. Payload
+admission still checks argument size, method, reply bound, receiver and target in
+that order. Immutable record reads retain root admission, journal locking, bounded
+read/model decoding, canonical-output size admission and typed validation under the
+same lock. Error/API consolidation grants no reservation or retry permission.
 
 A physical inventory does not imply dispatch/lifecycle order. Progress requires
 exact complete original journal coverage, authority/context/request/limits and
@@ -109,7 +127,8 @@ inspection stays distinct from complete-journal resume.
 
 Stage admission checks every transitive ancestor's retained binding/plan and exact
 Applied settlement histories, iteratively bounded by catalog size. Shared edges
-must agree on binding/settlement; learned-input commitments remain edge-specific.
+must agree on binding/settlement; advancement carries one checkpoint learned
+commitment to every successor.
 Recheck original stage/ancestors around effects and after checkpoint publication.
 
 `reconcile_execution_settlement` and `ExecutionStageGuard::reconcile_checkpoint`
@@ -125,8 +144,9 @@ refuses without replacement. Use `advance_execution_workflow` for fresh executio
 and all subsequent continuation.
 Retained continuation requires the complete integration-supplied occupied-stage
 set and replays every settled checkpoint before any new driver callback. Validate
-frozen predecessor commitments for each exact successor edge. New edges default
-to the predecessor checkpoint digest; retained overrides must name original edges.
+frozen predecessor commitments against each original checkpoint. A retained distinct
+edge refuses before callbacks; it is never rebound to the current commitment.
+Recover such originals with 0.57.1 and the original integration.
 Integrations own learned-input qualification and actual effects. Partial/pending
 originals refuse; no automatic redispatch or second spending owner is installed.
 

@@ -1,10 +1,7 @@
 //! Local filesystem regression helpers, independent of IC executors.
 
-pub mod consistency;
 pub mod execution_settlement;
 pub mod execution_workflow;
-pub mod fence_acquisition;
-pub mod fence_reconciliation;
 pub mod ic_mutation;
 pub mod ic_observation;
 pub mod ic_snapshot_download;

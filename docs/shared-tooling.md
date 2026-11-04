@@ -20,18 +20,23 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The selected source is Shared Tooling **0.29.3**, committed revision
-`1fa2d90879650780d23ad8f045f5825771b696ad`, observed on upstream main.
-This is a committed snapshot selection, not a claim that a matching version tag
-has been published. The canonical exporter reads that exact commit; unrelated
-uncommitted supplier work contributes no payloads.
+The selected source is Shared Tooling **0.29.4**, committed revision
+`628ccc75d813bfd9bae777bfbaef55838d25b1b2`, observed on upstream main.
+The canonical exporter reads that exact committed source. The refresh from
+`1fa2d90` retains **149 payloads**: eight updates, one addition and 140 unchanged
+files. Common executable catalogs and Rust 1.99.1 declarations are unchanged.
 
-The refresh advances from `03b5d9a`, retaining **148 payloads**: 20 updates,
-four additions and 124 unchanged files. Common executable catalogs remain byte
-identical. Reviewed changes transfer the native PocketIC exception to Testkit,
-centralize validation evidence, fix UTF-8 text admission and Bash 3.2 manifest-order
-failure propagation, and clarify test source layout, dependency roles and scope.
-Backup's pending Testkit 0.84 migration already fits the new native-client owner.
+The release runner now checks retained Git-side tool state before locks and around
+consumer hooks. Its read-only checker enforces a 512 MiB aggregate budget, a 32 MiB
+per-file budget, a 30-day age bound on bulk evidence, and rejects embedded build/
+cache/checkout directories or symlinks. It preserves all evidence on refusal.
+Backup's current release/publication state passes admission. This refresh performs
+no release, cleanup, dependency update or product Rust change. The retention and
+checkout policy clarifications do not authorize deleting journals or artifacts.
+
+The earlier 0.29.3 adoption transferred the native-client ownership exception to
+Testkit and aligned Backup's test source layout. That completed migration is
+retained; standalone host-driven backup/restore and existing safety contracts remain.
 
 The test rule accepts both `tests.rs` and `tests/`; existing test directories need
 no bulk rename. Backup externalizes the two remaining production-file inline test
@@ -53,7 +58,7 @@ The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
 pin; no local exception is needed.
 Backup retains one coordinated release group, workspace-version inheritance and
 its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.74.0** is selected as the release editor and locked Testkit **0.84.1** owns
+Build **0.74.2** is selected as the release editor and locked Testkit **0.84.1** owns
 simulator setup and offline admission. The accompanying Host/Platform dependency
 adoption and public Host identity migration are documented separately in
 [the Platform boundary](ic-platform.md). Snapshot adoption changes no

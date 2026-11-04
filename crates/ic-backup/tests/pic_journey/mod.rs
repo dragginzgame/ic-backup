@@ -251,9 +251,37 @@ fn recover_upload(
         let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
         let destination_metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let kind = extents(metadata).into_iter().next().unwrap();
-        let payload = journal
-            .prepare_ic_snapshot_upload_data(plan, TOKEN, &upload, &destination, kind.clone())
+        // This recovery fixture owns the exact previously published source bytes.
+        // Complete upload sessions qualify production source IO separately.
+        let ic_platform::management_canister_types::SnapshotDataKind::WasmModule { offset, size } =
+            &kind
+        else {
+            panic!("fixture begins with its Wasm module extent");
+        };
+        let entry = journal
+            .record()
+            .unwrap()
+            .artifacts()
+            .iter()
+            .find(|entry| entry.canister_id() == backend.target.to_text())
             .unwrap();
+        let bytes = ic_host_fs::read::read_file_no_follow(
+            &journal
+                .path()
+                .parent()
+                .unwrap()
+                .join(entry.artifact_path())
+                .join("wasm-module.bin"),
+            usize::try_from(metadata.metadata().wasm_module_size).unwrap(),
+        )
+        .unwrap();
+        let payload = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest::data(
+            &upload,
+            &destination,
+            kind.clone(),
+            &bytes[usize::try_from(*offset).unwrap()..usize::try_from(offset + size).unwrap()],
+        )
+        .unwrap();
         let (sequence, raw) = backend.call(
             payload.method(),
             payload.arguments(),

@@ -4,7 +4,8 @@ use crate::model::evidence_digest::EvidenceDigest;
 mod authority;
 mod history;
 mod mutation;
-pub(crate) use mutation::{MutationReservation, MutationReservationError};
+pub(crate) use mutation::MutationReservation;
+pub use mutation::MutationReservationError;
 mod observation;
 pub use authority::{
     AttemptAuthorityRecord, AttemptBudgetRecord, MAX_OPERATION_ATTEMPTS, OperationBindingRecord,

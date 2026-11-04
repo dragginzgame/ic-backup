@@ -6,8 +6,6 @@
 
 #[cfg(unix)]
 pub mod execution_workflow;
-pub mod fence_acquisition;
-pub mod fence_reconciliation;
 mod ic_mutation;
 pub mod ic_snapshot_capture;
 #[cfg(unix)]

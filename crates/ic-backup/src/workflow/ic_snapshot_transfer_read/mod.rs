@@ -40,31 +40,36 @@ pub(super) async fn read_snapshot_with<E: std::error::Error + 'static, T>(
     let plan = stage.plan();
     let authority = plan.attempt_authority(operation_sequence)?;
     payload.validate_binding(&authority)?;
-    let mut journal = AttemptJournalGuard::open(stage.layout()?, &authority)?;
-    journal.reserve_planned_mutation(&plan.digest())?;
-    let request =
-        IcSnapshotTransferReadRequest::new(plan, operation_sequence, journal.record()?, payload)?;
-    admit(&request)
-        .await
-        .map_err(IcSnapshotTransferReadExecutionError::Admission)?;
-    stage.layout()?;
-    let response = provider.read_snapshot(&request, journal.record()?).await?;
-    let admit_reply = || {
-        let admitted = validate_response(&request, journal.record()?, &response)?;
-        stage.layout()?;
-        Ok::<_, IcSnapshotTransferReadReplyError>(admitted)
-    };
-    let admitted = match admit_reply() {
-        Ok(admitted) => admitted,
-        Err(source) => {
-            return Err(IcSnapshotTransferReadExecutionError::AfterReply {
-                source,
-                response: Box::new(response),
-            });
-        }
-    };
-    let result = complete(&mut journal, &request, &admitted).await;
-    Ok((response, result))
+    let (response, result) = super::ic_mutation::execute_reserved(
+        stage,
+        &authority,
+        |_| Ok::<_, IcSnapshotTransferReadExecutionError<E>>(()),
+        |journal| {
+            Ok(IcSnapshotTransferReadRequest::new(
+                plan,
+                operation_sequence,
+                journal,
+                payload,
+            )?)
+        },
+        async |request| {
+            admit(request)
+                .await
+                .map_err(IcSnapshotTransferReadExecutionError::Admission)?;
+            stage.layout()?;
+            Ok(())
+        },
+        async |request, journal| Ok(provider.read_snapshot(request, journal).await?),
+        async |journal, request, response| {
+            let admitted = validate_response(request, journal.record()?, response)?;
+            stage.layout()?;
+            Ok::<_, IcSnapshotTransferReadReplyError>(complete(journal, request, &admitted).await)
+        },
+    )
+    .await?;
+    super::qualified_receipt::retain_reply(response, result, |source, response| {
+        IcSnapshotTransferReadExecutionError::AfterReply { source, response }
+    })
 }
 
 /// Typed step failures retain original spending; returned raw replies remain available.

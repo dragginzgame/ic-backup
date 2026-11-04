@@ -308,7 +308,7 @@ coverage. Goldens qualify bytes and bounds, not transport or application authori
 Public integration journeys allocate directories through
 `crates/ic-backup/tests/support/mod.rs`, print each path and retain failed evidence.
 Only successful fixtures explicitly remove their own directories. Fixture allocation
-and recovery checks use the `fixture_roots` and `fence_reconciliation` targets.
+and recovery checks use the `fixture_roots` and `application_ingress` targets.
 Unix FIFO fixtures require the standard `mkfifo -m 600` utility and verify its
 resulting type and permissions on Linux/macOS.
 

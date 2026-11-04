@@ -43,17 +43,20 @@ impl ApplicationIngressPayload {
         arguments: &[u8],
         reply_limit: usize,
     ) -> Result<Self, ApplicationIngressError> {
-        crate::model::application_payload::validate_bytes(
-            arguments,
-            MAX_APPLICATION_INGRESS_ARGUMENT_BYTES,
-            method,
-            MAX_APPLICATION_INGRESS_METHOD_BYTES,
-        )?;
+        if arguments.len() > MAX_APPLICATION_INGRESS_ARGUMENT_BYTES {
+            return Err(ApplicationIngressError::ArgumentsTooLarge);
+        }
+        if method.is_empty()
+            || method.len() > MAX_APPLICATION_INGRESS_METHOD_BYTES
+            || !method.bytes().all(|byte| byte.is_ascii_graphic())
+        {
+            return Err(ApplicationIngressError::InvalidMethod);
+        }
         if !(1..=MAX_APPLICATION_INGRESS_REPLY_BYTES).contains(&reply_limit) {
             return Err(ApplicationIngressError::InvalidReplyLimit);
         }
-        let (receiver, receiver_bytes) = crate::model::application_payload::principal(receiver)?;
-        let (target, target_bytes) = crate::model::application_payload::principal(target)?;
+        let (receiver, receiver_bytes) = principal(receiver)?;
+        let (target, target_bytes) = principal(target)?;
         Ok(Self {
             receiver,
             target,
@@ -151,4 +154,13 @@ impl fmt::Debug for ApplicationIngressPayload {
             .field("reply_limit", &self.reply_limit)
             .finish_non_exhaustive()
     }
+}
+
+fn principal(value: &str) -> Result<(String, Vec<u8>), ApplicationIngressError> {
+    let (text, principal) = crate::model::principal::canonical_parts(value)
+        .ok_or(ApplicationIngressError::InvalidPrincipal)?;
+    if principal.as_slice().is_empty() {
+        return Err(ApplicationIngressError::ManagementPrincipal);
+    }
+    Ok((text, principal.as_slice().to_vec()))
 }

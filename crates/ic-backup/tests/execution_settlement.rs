@@ -8,7 +8,6 @@ use ic_backup::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         download_journal::DownloadArtifactRequest,
         execution_settlement::{ExecutionSettlementJournalRecord, ExecutionSettlementRecord},
-        fence_obligation::FenceObligationRecord,
         operation_plan::OperationPlanRecord,
         restore_safety::{
             RestoreFenceBindingRecord, RestoreSafetyLaneRecord, RestoreSafetyRequirementRecord,
@@ -16,10 +15,9 @@ use ic_backup::{
         },
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, FenceObligationRequirement,
-        create_fence_obligation, create_operation_plan, create_restore_safety_requirement,
-        read_download_manifest, read_execution_progress, read_execution_settlement,
-        reconcile_execution_settlement,
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, create_operation_plan,
+        create_restore_safety_requirement, read_download_manifest, read_execution_progress,
+        read_execution_settlement, reconcile_execution_settlement,
     },
 };
 use serde_json::json;
@@ -52,7 +50,7 @@ fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fres
         .retain_restore(&root.join("restore/attempt-0.json"), plan.digest().hash())
         .unwrap();
     let references = source_layout.restore_references().unwrap();
-    let obligation_bytes = fs::read(root.join("restore/fence-obligation.json")).unwrap();
+    let obligation_bytes = fs::read(root.join("restore/application-obligation.json")).unwrap();
     // Passive native operation receipts exercise local owners, not actual application effects.
     let mut rows = Vec::new();
     let mut journal_bytes = Vec::new();
@@ -94,7 +92,7 @@ fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fres
     let bytes = fs::read(root.join("restore/execution-settlement.json")).unwrap();
     assert_eq!(source_layout.restore_references().unwrap(), references);
     assert_eq!(
-        fs::read(root.join("restore/fence-obligation.json")).unwrap(),
+        fs::read(root.join("restore/application-obligation.json")).unwrap(),
         obligation_bytes
     );
     drop(layout);
@@ -112,7 +110,7 @@ fn all_applied_local_replay_retains_exact_spending_fence_and_source_without_fres
         );
         assert_eq!(source_layout.restore_references().unwrap(), references);
         assert_eq!(
-            fs::read(root.join("restore/fence-obligation.json")).unwrap(),
+            fs::read(root.join("restore/application-obligation.json")).unwrap(),
             obligation_bytes
         );
         for (path, original) in &journal_bytes {
@@ -157,16 +155,9 @@ fn retain_originals(
     )
     .unwrap();
     create_restore_safety_requirement(layout, source_layout, plan, &source, &requirement).unwrap();
-    let obligation = FenceObligationRecord::for_restore(plan, &source, &requirement, 0).unwrap();
-    create_fence_obligation(
-        layout,
-        plan,
-        FenceObligationRequirement::Restore {
-            source_layout,
-            source: &source,
-            requirement: &requirement,
-        },
-        &obligation,
+    fs::write(
+        layout.root().join("application-obligation.json"),
+        b"original integration-owned fence and external-obligation evidence",
     )
     .unwrap();
     source
@@ -188,7 +179,7 @@ fn immutable_download_manifest_replay_retains_unfinished_restore_references() {
         )
         .unwrap();
     let references = source_layout.restore_references().unwrap();
-    let obligation = fs::read(root.join("restore/fence-obligation.json")).unwrap();
+    let obligation = fs::read(root.join("restore/application-obligation.json")).unwrap();
     let target = &source.selected_targets()[0];
     let snapshot = "Original-Snapshot";
     fs::create_dir(root.join("source/artifacts")).unwrap();
@@ -238,7 +229,7 @@ fn immutable_download_manifest_replay_retains_unfinished_restore_references() {
         );
         assert_eq!(source_layout.restore_references().unwrap(), references);
         assert_eq!(
-            fs::read(root.join("restore/fence-obligation.json")).unwrap(),
+            fs::read(root.join("restore/application-obligation.json")).unwrap(),
             obligation
         );
     }

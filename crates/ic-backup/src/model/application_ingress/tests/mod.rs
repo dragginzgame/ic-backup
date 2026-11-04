@@ -120,7 +120,9 @@ fn changed_fields_cannot_replace_original_mutation_or_recovery_bytes() {
     let mut journal = AttemptJournalRecord::new(authority.clone());
     assert!(matches!(
         ApplicationMutationRequest::new(&plan, 0, &journal, &payload),
-        Err(ApplicationIngressError::NoPendingMutation)
+        Err(ApplicationIngressError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::NoPendingMutation
+        ))
     ));
     journal.reserve_mutation().unwrap();
     let mutation = ApplicationMutationRequest::new(&plan, 0, &journal, &payload).unwrap();
@@ -147,7 +149,9 @@ fn changed_fields_cannot_replace_original_mutation_or_recovery_bytes() {
         .unwrap();
     assert!(matches!(
         mutation.validate_journal(&journal),
-        Err(ApplicationIngressError::ObservationPending)
+        Err(ApplicationIngressError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::ObservationPending
+        ))
     ));
     let recovery = ApplicationObservationRequest::new(&plan, 0, &journal, &read).unwrap();
     assert_eq!(

@@ -3,7 +3,6 @@
 //! Applications own codecs, fresh authority, whole-unit safety, original byte/command
 //! custody and qualified outcomes. These passive types grant no dispatch or resend.
 
-use crate::model::application_payload::ApplicationPayloadError as Payload;
 mod payload;
 mod request;
 pub use payload::{
@@ -18,6 +17,9 @@ use thiserror::Error;
 /// Exact opaque update or original reservation admission failed; no spending changes.
 #[derive(Debug, Error)]
 pub enum ApplicationIngressError {
+    /// Original reservation denial, retaining the canonical typed accounting cause.
+    #[error("original mutation reservation rejected: {0}")]
+    Reservation(#[from] crate::model::attempt_journal::MutationReservationError),
     /// The receiver or effective routing target is not an admitted application principal.
     #[error("invalid application ingress principal")]
     InvalidPrincipal,
@@ -33,24 +35,12 @@ pub enum ApplicationIngressError {
     /// Caller-selected reply ceiling must be 1..=1 MiB and is bound into the original digest.
     #[error("invalid application ingress reply limit")]
     InvalidReplyLimit,
-    /// Original journal differs from the complete plan-derived authority.
-    #[error("application ingress authority mismatch")]
-    AuthorityMismatch,
     /// Effective target differs from the original operation.
     #[error("application ingress target mismatch")]
     TargetMismatch,
     /// Receiver, target, fixed update mode, method, bytes or reply ceiling changed.
     #[error("application ingress payload mismatch")]
     PayloadMismatch,
-    /// No original mutation reservation is pending.
-    #[error("application ingress requires a pending mutation")]
-    NoPendingMutation,
-    /// The original mutation was replaced or settled.
-    #[error("application ingress mutation mismatch")]
-    MutationMismatch,
-    /// Recovery is pending; the original mutation cannot be submitted through this lane.
-    #[error("application ingress observation is pending")]
-    ObservationPending,
     /// Exact separately reserved recovery identity failed admission.
     #[error(transparent)]
     Observation(#[from] IcObservationRequestError),
@@ -61,14 +51,3 @@ pub enum ApplicationIngressError {
 
 #[cfg(test)]
 mod tests;
-
-impl From<crate::model::application_payload::ApplicationPayloadError> for ApplicationIngressError {
-    fn from(error: crate::model::application_payload::ApplicationPayloadError) -> Self {
-        match error {
-            Payload::ArgumentsTooLarge => Self::ArgumentsTooLarge,
-            Payload::InvalidMethod => Self::InvalidMethod,
-            Payload::InvalidPrincipal => Self::InvalidPrincipal,
-            Payload::ManagementPrincipal => Self::ManagementPrincipal,
-        }
-    }
-}

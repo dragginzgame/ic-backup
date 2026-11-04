@@ -2,7 +2,6 @@
 
 use super::IcSnapshotUploadRequest;
 use crate::model::attempt_journal::MutationReservation;
-use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
     operation_plan::{OperationPlanError, OperationPlanRecord},
@@ -80,7 +79,9 @@ pub(crate) fn original_authority(
     let authority = plan.attempt_authority_for_journal(
         operation_sequence,
         journal,
-        IcSnapshotUploadAttemptError::AuthorityMismatch,
+        IcSnapshotUploadAttemptError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::AuthorityMismatch,
+        ),
     )?;
     if payload.target() != authority.binding().target()
         || payload.binding_digest().hash() != authority.binding().request()
@@ -104,38 +105,16 @@ pub(crate) fn source_context_matches(
 /// Original upload reservation rejection; no variant changes spending or recovery.
 #[derive(Debug, Error)]
 pub enum IcSnapshotUploadAttemptError {
+    /// Original reservation denial, retaining the canonical typed accounting cause.
+    #[error("original mutation reservation rejected: {0}")]
+    Reservation(#[from] crate::model::attempt_journal::MutationReservationError),
     /// Upload intent changes the original source network or release identity.
     #[error("snapshot upload source network or release differs")]
     SourceContextMismatch,
-    /// Original full-plan authority/context/operation/allowances differ.
-    #[error("snapshot upload original authority mismatch")]
-    AuthorityMismatch,
     /// Exact canonical target or original source/wire binding digest differs.
     #[error("snapshot upload original payload mismatch")]
     PayloadMismatch,
-    /// No original unresolved mutation was reserved.
-    #[error("snapshot upload requires an original pending mutation")]
-    NoPendingMutation,
-    /// Original mutation has changed or already settled.
-    #[error("snapshot upload original mutation differs")]
-    MutationMismatch,
-    /// An already reserved recovery observation prevents original submission association.
-    #[error("snapshot upload recovery observation is pending")]
-    ObservationPending,
     /// Original full plan has no such operation or cannot derive its authority.
     #[error(transparent)]
     Plan(#[from] OperationPlanError),
-}
-
-impl From<crate::model::attempt_journal::MutationReservationError>
-    for IcSnapshotUploadAttemptError
-{
-    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
-        match error {
-            Reservation::NoPendingMutation => Self::NoPendingMutation,
-            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
-            Reservation::MutationMismatch => Self::MutationMismatch,
-            Reservation::ObservationPending => Self::ObservationPending,
-        }
-    }
 }

@@ -145,7 +145,17 @@ impl BackupLayoutGuard {
 
     pub(super) fn check_root(&self) -> Result<(), PersistenceError> {
         match ic_host_fs::durable::admit_directory(&self.root, &self.directory) {
-            Ok(()) => Ok(()),
+            Ok(()) => {
+                for name in ["consistency-requirement.json", "fence-obligation.json"] {
+                    let path = self.root.join(name);
+                    match fs::symlink_metadata(&path) {
+                        Ok(_) => return Err(PersistenceError::RetiredApplicationState { path }),
+                        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+                        Err(error) => return Err(error.into()),
+                    }
+                }
+                Ok(())
+            }
             Err(error) if error.kind() == io::ErrorKind::InvalidInput => {
                 Err(PersistenceError::LayoutChanged {
                     path: self.root.clone(),

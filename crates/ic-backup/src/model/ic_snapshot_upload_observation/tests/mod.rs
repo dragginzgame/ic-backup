@@ -98,7 +98,9 @@ fn original_plan_source_payload_and_allowance_drift_reject() {
             assert!(matches!(
                 IcSnapshotUploadObservationRequest::new(&changed, 7, journal, upload, list),
                 Err(IcSnapshotUploadObservationError::Upload(
-                    IcSnapshotUploadAttemptError::AuthorityMismatch
+                    IcSnapshotUploadAttemptError::Reservation(
+                        crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+                    )
                 ))
             ));
             let mut changed_journal =

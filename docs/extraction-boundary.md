@@ -960,74 +960,22 @@ current implementation or fresh qualification.
 
 ### Original consistency requirements and current capture/fence checks
 
-`model::consistency::ConsistencyRequirementRecord` retains exactly v1 `version`,
-canonical `plan_intent` and explicit `guarantee` (`per_canister` or
-`application_coordinated`). Missing/unknown fields, obsolete flag names and other
-versions reject. The original full plan intent binds context/inventory/selection/
-graph/requests/allowances. A domain-separated hash binds that intent and guarantee;
-neither the declaration nor its digest proves current consistency. See
-[the v1 schema and binary goldens](contracts/consistency-requirement.schema.json).
+The 0.58 API cut retires this independent application framework. New integrations
+own fresh consistency/fencing decisions in their mandatory admission callbacks and
+may use accounted `ApplicationIngressPayload` updates for application protocols.
+No callback or matching digest supplies default permission or fence custody.
 
-`create_consistency_requirement` requires the exact original plan already retained
-in the held layout, then durably creates fixed `consistency-requirement.json` under
-journal exclusion with no replacement. Reads require the exact expected requirement
-digest and original retained plan; raw input and canonical output are bounded to
-1 KiB. Missing/corrupt/changed evidence cannot silently downgrade or recreate the
-original requirement. Lost local create replies reconcile by an exact retained read.
-This storage owns no fence, fresh allowance or dispatch authority.
+Guarded layout operations reject any retained `consistency-requirement.json` or
+`fence-obligation.json` entry before record use/spending, including malformed bytes
+and symlinks. They preserve original bytes, pending attempts, references and
+obligations. Finish reconciliation with **0.57.1 and the original integration**
+before upgrading; do not delete markers, recreate plans or reinterpret/sign original
+fence payloads as the new application ingress protocol. There is no migration,
+reset or cleanup API. Fenced same-release restore remains supported through its
+original safety requirement and qualified application evidence.
 
-Ephemeral `ConsistencyRequest` binds the original requirement/operation, caller-owned
-challenge, explicit BeforeCapture/AfterCapture boundary, 0–1,024 descriptive remote-call
-ceiling and optional exact expected `ApplicationFenceBinding`. Per-canister requests
-require no fence; coordinated requests require the retained fence identity AND original
-membership revision recovered by the integration's durable obligation owner. Constructors
-match declarations but inspect no retained fence evidence and interpret no capture wire
-payload. The original mutation digest and allowances remain unchanged. The request hash
-binds both expected fence fields. Requests, parameters, observations, target/fence
-evidence and views have no Serde/default or persisted fresh-authority admission.
-
-Model observation admission canonicalizes/sorts a nonempty set of at most 1,024
-unique actual physical targets backed by the actual inventory. Passive provider input
-retains current request, actual canonical context/full inventory, exact selected target
-state and opaque stopped/drained evidence, actual membership revision, explicit evidence
-lane, opaque qualified observation evidence and reported calls. Coordinated evidence
-includes actual Active/Inactive fence state, identity, revision and required whole-unit
-write/membership/timer/external-work fencing and drained-work evidence digests.
-No parent/component ordering or unit grouping implies a distributed checkpoint.
-
-Application consistency admission observes existing obligations, with no
-installed/default implementation or acquisition/release API. Providers qualify actual
-authenticated context/selection/state, drain and continuously retained whole-selection
-fencing across capture/interruption. Fresh challenges, timing, custody, evidence meaning
-and prior approved per-call accounting remain integration-owned. Unknown custody fails;
-known inactive fences produce denial. Unavailable or unsupported integrations reject before effects;
-an indeterminate result retains consumed allowance/evidence and obligations, then stops without
-retry/reset/release. Failure, timeout, process death or dropping model values must not
-release the integration's fence. Terminal replay invokes no provider.
-
-Pure `policy::consistency::validate` matches exact current request/context/full inventory/
-selection/call reporting, requires every selected target Stopped and the exact original
-guarantee. Coordinated results must have the exact retained Active fence, with both actual
-and fence revisions equal to the original retained revision. It performs no IO, serialization,
-provider calls, plan/journal transition, dispatch, restart or release. Opaque evidence hashes
-are integration attestations, not signatures or independently proven active fencing.
-Sequential stops and before/after identity/revision equality cannot prove continuity.
-The observed lifecycle names follow the
-[primary management interface](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/);
-their actual backend decoding/qualification remains unimplemented. See
-[the typed current consistency contract](contracts/consistency-port.json).
-
-Fresh native cases cover strict records and independent hash goldens, original plan/
-budget/request sensitivity, fence/challenge/boundary/revision binding, inactive fences,
-running/stopping members, complete inventory drift including unselected metadata,
-exact selection/lane mismatches, canonical aliases/duplicates and 1,024-target admission.
-Local persistence tests cover original requirement retention/no downgrade, contention,
-1 KiB raw bounds, malformed/rebound records, symlinks and replaced layouts. A public
-native provider fixture reopens original requirement and spent pending journals,
-rejects stale/wrong-fence results and preserves exact retained integration obligation
-fixture bytes after fence mismatch and guard drop. These establish local contracts only;
-application fence acquisition/release, actual lifecycle/drain/continuous custody,
-capture completion and same-release restore/external-payment settlement remain pending.
+[The frozen 0.57.1 contract](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#original-consistency-requirements-and-current-capturefence-checks) retains its schema,
+hash domains, qualification and original recovery ordering.
 
 ### Original restore safety requirements and current load/start checks
 
@@ -1110,193 +1058,30 @@ no runner, framework mapping or hash-only restored verification was copied.
 
 ### Original application fence obligation retention
 
-`model::fence_obligation::FenceObligationRecord` is the immutable v1 declaration
-for the full original selected unit. It binds the canonical original plan digest,
-explicit application acquisition sequence and exact purpose. Capture binds the
-original coordinated requirement, fence identity and membership revision. Restore
-derives its original requirement and fence/membership/external-obligation revisions
-from the existing fenced safety owner, including source/artifact identity. Per-canister
-capture and no-irreversible-effects restore lanes reject; absent operations and
-zero original mutation allowances reject. The physical operation target describes
-routing, never whole-unit coverage or authority. Integrations qualify the opaque
-application request's exact semantics and chosen identity before dispatch.
+This API is retired. Preserve retained obligations and use 0.57.1 with the original
+integration for unfinished recovery; never reinterpret a payload or reset spending.
+The current guarded layout refuses retired declarations without changing them.
 
-The strict [schema and independent binary goldens](contracts/fence-obligation.schema.json)
-reject unknown/missing fields, other versions, invalid checksums and invented
-purposes. SHA-256 uses the NUL-terminated `ic-backup/fence-obligation/v1` domain,
-64 ASCII original intent bytes, big-endian u64 acquisition sequence, purpose byte
-(capture=0, restore=1), then 64 ASCII requirement, fence identity and membership
-revision bytes. Restore appends 64 ASCII external-obligations revision bytes.
-Mutable status, receipts and release flags are absent.
-
-`create_fence_obligation` publishes fixed `fence-obligation.json` with no replacement
-under layout and journal exclusion. `read_fence_obligation` admits raw/canonical
-1 KiB bounds, the expected digest and exact original plan/requirement bindings.
-Capture checks the retained consistency requirement; restore checks both retained
-plans/unchanged layout guards and the retained restore safety requirement. Changed,
-missing, malformed, oversized, unsafe or rebound evidence rejects without repair.
-Local lost publication replies reconcile through the exact read, never recreation.
-Publish this declaration before acquisition reservation/dispatch. Source-reference
-retention remains separately required before restore journals/effects.
-
-`policy::fence_obligation::acquisition_progress` checks exact original journal
-authority, including context, request, operation and both original limits, and
-returns its existing `AttemptJournalView`. No second spending counter/state machine
-exists. Missing evidence cannot be passed as zero consumption. Lost observation
-replies stay pending; settled Uncertain observations leave the mutation unresolved
-and no outcome refunds attempts. Full dependency admission remains with
-`execution_progress`; this projection proves no cross-journal chronology or receipt
-authenticity. Applied acquisition evidence is not fresh Active custody. Pending,
-Applied, NotApplied and Uncertain outcomes all retain the original obligation.
-There is no automatic release/disposition on drop, timeout or process death.
-
-Fresh native tests cover strict schema/goldens, purpose/lane/source/revision/plan
-binding, original authority/allowance denial, immutable publication, retained
-requirements, both layouts, private permissions, contention, unsafe and excessive
-bytes. A public filesystem journey reopens exhausted pending acquisition and
-observation reservations, records each passive native settled outcome and preserves
-exact obligation/journal bytes and unfinished source references through drop/reopen.
-These are local persistence/recovery checks, not application/IC effects. No
-`ConsistencyCoordinator` implementation, authenticated reconciliation, signing,
-dispatch, current Active proof, terminal proof or fence/reference release is
-implemented. [Fresh Canic inspection](fence-obligation-source.json) copies no code
-and supplies no generic application-fence release qualification.
+[The frozen 0.57.1 contract](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#original-application-fence-obligation-retention) retains its schema,
+hash domains, qualification and original recovery ordering.
 
 ### Reserved fence acquisition reconciliation
 
-`model::fence_reconciliation::FenceReconciliationIntent` binds the retained original
-obligation and full-plan-derived acquisition authority, including original limits,
-to an existing pending mutation and caller-owned challenge. Intent hashing precedes
-observation reservation; `FenceReconciliationRequest` requires that exact pending
-observation. The journal's `pending_observation_request` reads its existing validated
-projection without changing v1 records, counters or transitions. Structural admission
-is not a dispatch permit; durable custody and no prior dispatch remain integration-owned.
+This API is retired. Preserve retained obligations and use 0.57.1 with the original
+integration for unfinished recovery; never reinterpret a payload or reset spending.
+The current guarded layout refuses retired declarations without changing them.
 
-The [typed contract and independent binary goldens](contracts/fence-reconciliation-port.json)
-hash the NUL-terminated `ic-backup/fence-reconciliation/v1` domain, lowercase ASCII
-obligation/authority hashes, big-endian u32 mutation attempt and challenge hash.
-Actual results bind both mutation and observation IDs separately, rejecting replay
-across reservations even when a challenge is reused. Passive observations require
-canonical unique actual targets within 1,024 entries and the existing combined
-1,024-attempt bound. The single-remote-observation descriptive ceiling grants no
-call allowance or fresh permissions; batching paid calls under one reservation is forbidden.
-
-`policy::fence_reconciliation::validate` rechecks the unchanged current journal and
-matches exact actual context, full original inventory, selected unit and request/IDs.
-Acquired capture/restore evidence reuses existing whole-unit safety fields, requiring
-the exact Active fence and original revisions plus exclusive original-request
-attribution. Restore additionally retains rewind-independent custody and replay
-safety; fresh load/start admission remains separate. Current absence or inactivity
-cannot establish nonapplication: negative evidence must exclude transient acquisition
-and release. Only an authenticated settled observation can claim unresolved uncertainty.
-
-The returned view is a passive outcome claim. It performs no IO, serialization,
-provider call or automatic journal receipt. Only a separately qualified integration
-can submit an actual receipt to existing guarded transition owners. Provider failure,
-drop or process death leaves the observation pending and spent; retained late replies
-may be admitted without another provider call. All outcomes retain obligations and
-source references, with no refund, acquisition retry or fence/reference release.
-Terminal replay invokes no provider. There is no installed authenticated provider,
-acquisition/release implementation or terminal proof.
-
-Ten focused unit cases and two public native recovery journeys cover exact identities,
-bounds, negative/uncertain claims, replay rejection, all provider failures, exhausted
-spending, late replies and reopen retention. Passive native fixtures qualify local
-contracts and persistence only. [Fresh Canic inspection](fence-reconciliation-source.json)
-copies no product code and supplies no generic application-fence attribution proof;
-actual freshness, authenticated association, exclusive chronology, accounting and
-custody require application/backend qualification.
+[The frozen 0.57.1 contract](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#reserved-fence-acquisition-reconciliation) retains its schema,
+hash domains, qualification and original recovery ordering.
 
 ### Exact application fence acquisition requests
 
-`model::fence_acquisition::FenceAcquisitionPayload` owns an immutable exact
-application receiver/method/argument envelope. Receiver equals effective routing
-target; the management canister is excluded. Method spelling is 1..128 visible ASCII
-bytes and opaque arguments are at most 1 MiB, checked before copying. Debug output
-retains length but excludes argument content. There is no query/default/proxy lane
-or generic application argument codec. Integrations own retained original bytes and
-their whole-unit purpose/fence/revision semantics; the routing target narrows no scope.
+This API is retired. Preserve retained obligations and use 0.57.1 with the original
+integration for unfinished recovery; never reinterpret a payload or reset spending.
+The current guarded layout refuses retired declarations without changing them.
 
-The [typed contract and independent goldens](contracts/fence-acquisition-port.json)
-specify SHA-256 over the NUL-terminated `ic-backup/application-fence-acquisition/v1`
-domain, u8 principal length/raw canonical identity, fixed update byte 1, big-endian
-u32 method length/exact bytes and u64 argument length/exact bytes. Payload construction
-precedes the plan; later original plan/requirement/obligation owners bind the payload
-without recursive hashes. No persisted schema, counter or new accounting owner is added.
-
-`FenceAcquisitionRequest` validates exact original obligation/plan and journal
-authority/limits, payload target/digest and already pending mutation. A pending
-observation rejects mutation association; current journal admission is rechecked for
-acknowledgements. The structural request supplies no fresh dispatch permission or
-proof of no earlier dispatch. Qualified integrations must retain original inputs
-and source references, establish actual context/whole-unit membership/permissions,
-application semantics, prerequisites, exclusive custody and no prior dispatch before
-one original accounted update. Hidden retries, batching, proxy/query substitutions,
-funding and extra remote observations are forbidden within that invocation.
-
-`FenceAcquisitionAcknowledgement` is passive full authority/attempt/reply-evidence
-association. Pure `validate_acknowledgement` performs no IO, serialization, provider
-call or transition and returns no outcome. An associated acknowledgement proves no
-acquisition, actual authentication, Active custody, exclusive attribution or negative
-effect. Qualified direct settlement remains integration-owned through existing
-journal transition owners. Provider failures, drop and death retain pending spent
-attempts, obligations and source references. Unknown dispatch/lost replies require
-reserved reconciliation; request reconstruction never authorizes another mutation.
-Terminal replay remains provider-free; no installed provider, live effects or release
-API is implemented.
-
-Focused native cases cover independent envelope bytes, canonical targets, bounds,
-original authority/budget drift, pending/settled/recovering requests and passive
-acknowledgement association. A public native journey retains exact inputs, obligations
-and references across acknowledgements/all provider errors, reopen and handoff to
-reserved reconciliation without another mutation invocation. These fixtures establish
-local association/persistence only. [Fresh Canic inspection](fence-acquisition-source.json)
-imports no production code, default command, effect flag or dispatch/outcome proof.
-Actual application/IC backend qualification remains required.
-
-`workflow::fence_acquisition::acquire_fence` opens the exact prepared stage's
-original acquisition journal and reuses complete-plan reservation, including all
-original journals and Applied prerequisites. `original_authority` owns payload/
-obligation/authority checks before spending and is also used by request construction.
-The step reopens the exact retained purpose-specific requirement and obligation,
-including the source plan/layout for restore, before reservation, after fresh
-admission and after reply. Stage/ancestor checks bracket the same effect boundaries.
-
-Selected journal exclusion spans both awaits. Mandatory application admission
-qualifies current whole-unit permissions, purpose/argument semantics, original
-fence/revisions and never-dispatched command custody; preflight calls need their
-own prior accounting. Success is passive and remains pending. Cancellation,
-admission/provider failures and changed originals retain spending, obligations and
-source references. Post-reply typed errors retain the acknowledgement. No direct
-receipt, acquisition/Active proof, hidden observation, new record or terminal/
-fence/reference-release authority is produced.
-
-Native checks exercise both purposes, complete original journal coverage and
-prerequisites, cancellation, rejected admission, missing/changed originals and
-post-reply custody failures. The actual configured Agent journey uses this public
-step for one isolated opaque counter update and failed reply retention after
-application, with no reissue. It proves transport/orchestration and retained pending
-spending, never whole-unit application fence semantics or Active custody.
-
-`workflow::fence_reconciliation::observe_fence_acquisition` joins the same retained
-originals to one already-pending acquisition mutation. Canonical payload/authority
-admission precedes the existing complete-plan observation reservation; no new record
-or accounting owner is added. Selected journal exclusion spans fresh application
-admission and one observation-provider await. Stage/ancestor and purpose-specific
-requirement/obligation checks bracket dispatch, including both source and restore
-layouts/plans. Post-reply typed errors retain the complete returned observation.
-Both fence coordinators return one `AfterReply` variant containing the original
-reply and a typed Journal, Association, Stage or Obligation cause. The ordered
-admission checks and retained pending attempts are unchanged.
-
-Success returns matched passive claims without recording an outcome. Both attempts
-remain pending after success, cancellation and failure; another challenge cannot
-redispatch a pending observation. The guarded journal record supplies existing
-exclusion semantics, not fresh proof of noncooperating journal-byte custody. Native
-provider substitutes qualify both purposes, original coverage/prerequisites,
-cancellation, rejection, reentry and returned-evidence retention. No installed Agent
-application-observation method, whole-unit fence/attribution proof, automatic
-receipt, acquisition retry, Active fence or terminal/fence/reference release follows.
+[The frozen 0.57.1 contract](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#exact-application-fence-acquisition-requests) retains its schema,
+hash domains, qualification and original recovery ordering.
 
 ### Immutable local download manifests
 
@@ -1404,7 +1189,7 @@ permission, automatic receipt, Active fence or terminal/release permit is suppli
 The operation-bound generic copy, publication and retained-copy verification APIs
 were removed in the pending 0.27.0 hard cut. IC snapshot upload preparation reads
 bounded extents directly from verified original snapshot artifacts through
-`DownloadJournalGuard::prepare_ic_snapshot_upload_data`; it does not create a
+the complete `upload_snapshot_data` coordinator; it does not create a
 second restore tree. Source references, original journals and safety admission
 remain required.
 
@@ -1418,6 +1203,14 @@ The [frozen copy contract](contracts/local-restore-artifact.json),
 evidence, not current executable contracts.
 
 ### Exact originally reserved IC mutation updates
+
+The four mutation request APIs carry canonical pending-mutation failures through
+`Reservation(model::attempt_journal::MutationReservationError)`. The public cause
+preserves missing mutation, changed authority, replaced/settled mutation and pending
+observation distinctions, including a typed standard error source. Former flat
+request-error copies are removed in the 0.58 API cut; observation-specific failures
+remain with their current owners. Validation order, wire hashes and record formats
+are unchanged.
 
 `model::ic_mutation::IcMutationRequest` derives the exact original operation authority
 from the complete plan and binds an existing pending mutation to the unchanged
@@ -1781,19 +1574,15 @@ Integration-owned allocation attribution and cross-operation accounting are not
 inferred from an ID, matching declarations or a passive acknowledgement.
 
 The explicit `DownloadJournalGuard::prepare_ic_snapshot_upload_metadata` entry point
-uses existing full retained source-plan/journal and complete Durable selected-set
-admission, then verifies the exact opt-in IC tree. `prepare_ic_snapshot_upload_data`
-requires unchanged original evidence/checksum, verifies before/after reading a fixed
-direct child through no-follow/nonblocking descriptors, and encodes one exact source
-slice or known chunk. Existing checks reject changed, missing, extra or unsafe files.
-The already selected descriptor/offset and exact `take` extent use shared
-`read_reader` for bounded, fallibly allocated collection. The existing 1 MiB
-ceiling and exact returned-length check still apply; original IO errors pass
-through, and allocation failures use the existing typed IO boundary. See
-[the shared primitive review](ic-host-tools-adoption.json).
-No record, progress, allowance, obligation, source reference or artifact changes.
-The checks are sequential and hold no future noncooperating byte custody. Ordinary
-resume stays artifact-free and supplies no upload input or permit.
+admits the original source-plan/journal and complete Durable selection, then verifies
+the exact IC tree. Complete data-plan preparation and `upload_snapshot_data` own
+bounded source-byte reading, per-operation payload commitments, descriptor custody
+and closing verification. Public single-chunk source preparation is removed.
+Integrations retaining exact bytes may construct the pure `IcSnapshotUploadRequest`
+payload, with their own original source admission and custody; this grants no dispatch
+permission or accounting. The native regression fixtures still qualify the production
+bounded reader/encoder and complete guarded upload sessions. No record, progress,
+allowance, obligation, reference or artifact changes during preparation.
 
 `IcSnapshotUploadReply` admits an exact metadata ID through the existing bounded raw-ID
 visitor, or the lifecycle owner's canonical empty Candid tuple for data. Metadata
@@ -2240,10 +2029,10 @@ settled stages; `Complete` contains the reread complete local settlement view.
 
 The coordinator preflights every occupied stage before driver callbacks. Each must
 replay its original all-Applied checkpoint; missing identities, partial preparation
-and pending attempts refuse. Occupied successors must commit the exact qualified
-learned evidence for every original predecessor edge. Overrides name original edges;
-otherwise the predecessor checkpoint digest is used. Only absent successors may be
-prepared through the existing create-only owners, in declared topological order.
+and pending attempts refuse. Every occupied successor must carry its predecessor's
+original checkpoint learned commitment. Distinct retained edge commitments refuse
+before driver callbacks and must finish recovery with 0.57.1 and the original
+integration. Advancement never rebinds their records or resets spending.
 
 Integrations supply exact child plans, fresh effect-boundary admission, authenticated
 request/reply retention, explicit original Applied receipts and learned evidence.
@@ -2823,42 +2612,18 @@ host limits. Core model/policy contracts still install no provider or generic ru
 
 ### Async application-fence boundary
 
-Application acquisition and separately reserved reconciliation now return futures
-and accept the current original guarded journal. Caller-held exclusion spans awaits;
-failed/cancelled observations preserve both pending attempts and restore references.
-`AgentFenceAcquisitionProvider` reuses exact existing payload/preparation/one-submit
-owners with mandatory durable ingress and bounded raw-reply retainers. A failure
-after dispatch remains Indeterminate. Passive evidence hashes bind original authority,
-attempt, ingress ID and reply bytes, without settlement or Active custody.
-Actual reconciliation read methods, whole-unit permissions/purpose/revisions and
-outside-snapshot restore safety remain application-owned. Frozen v1 records and
-original attempt/argument/reply bounds are unchanged; no release API follows.
+This API is retired. Preserve retained obligations and use 0.57.1 with the original
+integration for unfinished recovery; never reinterpret a payload or reset spending.
+The current guarded layout refuses retired declarations without changing them.
+
+[The frozen 0.57.1 contract](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#async-application-fence-boundary) retains its schema,
+hash domains, qualification and original recovery ordering.
 
 ### Explicit original fence-observation settlement
 
-`workflow::fence_reconciliation::settle_fence_acquisition_observation` admits the
-exact retained stage/ancestors, requirement/obligation and acquisition bytes before
-reconstructing the already pending observation from its original challenge. Supply
-the retained returned observation, including an authenticated late reply; this step
-calls no provider and reserves nothing. Complete original plan/journal coverage is
-checked before qualification and again before durable recording, using sequential
-locks while the selected journal stays excluded. Missing evidence never means unused
-allowance. Both source and restore layout lifetimes remain held.
+This API is retired. Preserve retained obligations and use 0.57.1 with the original
+integration for unfinished recovery; never reinterpret a payload or reset spending.
+The current guarded layout refuses retired declarations without changing them.
 
-The mandatory async callback independently qualifies authenticated completion,
-exclusive acquisition attribution or nonapplication/settled uncertainty, actual
-whole-unit/outside-snapshot custody and durably retained request/result evidence.
-Its `ObservationReceiptRequest` must exactly match the passive observation’s attempt,
-request, outcome and evidence. `AttemptJournalGuard::record_planned_observation`
-delegates publication to the existing receipt owner after complete-plan admission.
-No record, digest or accounting owner is added.
-
-Applied/NotApplied close the mutation; Uncertain closes only its observation. No
-allowance is refunded. Reentry with the same settled observation rejects before
-qualification. Cancellation or pre-write rejection retains both pending attempts.
-Publication or closing-admission failures may leave a retained receipt; reopen
-original accounting to reconcile rather than repeating dispatch or assuming no
-settlement. The borrowed observation remains available on every error. Stable
-noncooperating byte custody remains integration-owned. All obligations and source
-references remain; no current Active custody, checkpoint, terminal proof, capture/
-load/start permission, fence/reference release or prune follows.
+[The frozen 0.57.1 contract](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#explicit-original-fence-observation-settlement) retains its schema,
+hash domains, qualification and original recovery ordering.

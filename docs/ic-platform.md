@@ -21,7 +21,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.21.0, which re-exports the
+not selected by Backup. Production selects Platform 0.22.0, which re-exports the
 canonical owned Principal from Platform Types 0.18.0.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
@@ -34,9 +34,16 @@ remain private to tests and never enter a normal consumer.
 Platform 0.21 removes the unused PocketIC facade; the prior Testkit migration
 already supplies its replacement. Verified published archives retain identical
 Candid, native management, Principal and Agent adapter source and dependencies.
-The production and development graphs now share one Platform 0.21.0 identity.
+Testkit 0.84.1 retains its own Platform 0.21.0 dependency; production selects 0.22.0.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
+
+Platform 0.22 restores optional cryptography and certification implementations to
+registry dependencies. Backup selects neither feature family. Its Candid,
+management and principal modules are unchanged; Agent exports its certificate and
+tree through the same upstream SDK identities instead of direct certification
+re-exports. Management DTO 0.11.0, external Principal 0.1.5, Types 0.18.0 and Agent
+0.49.3 remain selected. No local codec, record or transport migration is needed.
 
 Platform exports IC0/executor through its owned runtime package. The Cargo
 singleton guard belongs to its optional executor/runtime features.
@@ -87,15 +94,23 @@ serializes no Account/Subaccount and needs no record migration for that cut.
 Principal normalization, record hashes and method-specific wire bounds remain
 qualified through Backup's own checks.
 
-The workspace requires Host Artifacts/FS/Process 0.74.1 and resolves 0.74.2. Consumers
+The workspace requires and resolves Host Artifacts/FS/Process 0.74.3. Consumers
 sharing public Host error types must align their direct selections to 0.74.
-Platform 0.21 is the production facade selection. Backup already uses Testkit's
+Verified 0.74.3 archives preserve Artifacts source exactly; FS/Process changes
+relocate unit tests and private fixture helpers, with runtime behavior unchanged.
+The release metadata editor selects published Build 0.74.2; its CLI and consumed
+release-metadata owner are byte-identical to 0.74.0. Build 0.74.3 is not selected
+because it was not published when this adoption was reviewed. Testkit's root
+minimum now agrees with its existing locked 0.84.1 selection. This update supplies
+no new runtime mechanism replacing Backup's remaining safety machinery.
+Platform 0.22 is the production facade selection. Backup already uses Testkit's
 client, so removal of Platform's simulator feature requires no further migration.
 Backup retains its exact management ingress, method-specific response bounds and
 original accounting rather than adopting a second snapshot workflow.
 Testkit 0.84 embeds the maintained client previously supplied by Platform's
 0.20 client package. Locked Testkit 0.84.1 and Backup's production dependencies
-now share Platform 0.21.0. Canonical Types 0.18 and the same external DTO identities
+select separate Platform 0.21.0 and 0.22.0 packages. Canonical Types 0.18 and the
+same external DTO identities
 remain selected. Testkit 0.84.1's Rust
 source matches reviewed 0.84.0. Review against the earlier client found namespace,
 lint and formatting changes in production source; its client failure fixture also
@@ -105,8 +120,14 @@ is MIT AND Apache-2.0. No client implementation is copied into Backup.
 The older Platform/client packages and unused `zlib-rs` leave the development lock.
 Testkit uses the Rust backend for gzip; no compressed-byte identity is inferred
 from source similarity. Other package versions/checksums remain selected. Canonical
-Types 0.18 and target-specific Runtime 0.19.0 remain; optional Wire/Metrics stay
+Types 0.18 and target-specific Runtime 0.19.1 remain; optional Wire/Metrics stay
 disabled. Neither production graph gains simulator or runtime features.
+Runtime 0.19.1 is selected through Testkit's Wasm-only `ic0` dependency. Its
+published archive matches the registry checksum and source commit `74a5071`;
+the selected IC0 source is byte-identical to 0.19.0. Changes relocate tests in
+unselected CDK modules. All three supported normal host target graphs exclude
+Runtime for both Backup libraries. No direct Runtime declaration or executor
+feature is needed.
 Both fixtures use Testkit's `build_instance` / `build_instance_async` with their
 original topology, state directory, request bound and retained raw output files.
 Its existing 120-second startup deadline covers readiness and instance creation.

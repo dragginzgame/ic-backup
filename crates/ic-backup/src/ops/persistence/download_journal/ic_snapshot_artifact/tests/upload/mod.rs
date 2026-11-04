@@ -80,7 +80,7 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
     ];
     for (kind, expected) in cases {
         let payload = guard
-            .prepare_ic_snapshot_upload_data(&plan, TOKEN, &upload, DESTINATION_ID, kind)
+            .prepare_source_fixture_chunk(&plan, TOKEN, &upload, DESTINATION_ID, kind)
             .unwrap();
         let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
             payload.arguments(),
@@ -176,7 +176,7 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
             Err(IcSnapshotUploadArtifactError::Artifact(_))
         ));
         assert!(matches!(
-            guard.prepare_ic_snapshot_upload_data(
+            guard.prepare_source_fixture_chunk(
                 &plan,
                 TOKEN,
                 &upload,
@@ -219,7 +219,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
     )
     .unwrap();
     assert!(matches!(
-        guard.prepare_ic_snapshot_upload_data(
+        guard.prepare_source_fixture_chunk(
             &plan,
             TOKEN,
             &wrong,
@@ -230,7 +230,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
     ));
     let other = crate::tests::support::ic_snapshot_upload::plan(&"12".repeat(32));
     assert!(matches!(
-        guard.prepare_ic_snapshot_upload_data(
+        guard.prepare_source_fixture_chunk(
             &other,
             TOKEN,
             &upload,
@@ -240,7 +240,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
         Err(IcSnapshotUploadArtifactError::SourceMismatch)
     ));
     assert!(matches!(
-        guard.prepare_ic_snapshot_upload_data(
+        guard.prepare_source_fixture_chunk(
             &plan,
             TOKEN,
             &upload,
@@ -252,7 +252,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
         ))
     ));
     assert!(matches!(
-        guard.prepare_ic_snapshot_upload_data(
+        guard.prepare_source_fixture_chunk(
             &plan,
             TOKEN,
             &upload,
@@ -328,7 +328,7 @@ fn maximum_bounded_descriptor_slice_does_not_buffer_the_whole_region() {
         .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
         .unwrap();
     let payload = guard
-        .prepare_ic_snapshot_upload_data(
+        .prepare_source_fixture_chunk(
             &plan,
             TOKEN,
             &upload,

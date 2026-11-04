@@ -159,15 +159,15 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     assert!(attempts.reserve_mutation().is_err());
 
     // The test declares an independently qualified destination; the passive reply supplied no permit.
-    let data = downloads
-        .prepare_ic_snapshot_upload_data(
-            &original,
-            TOKEN,
-            &upload,
-            DESTINATION,
-            SnapshotDataKind::WasmModule { offset: 1, size: 2 },
-        )
-        .unwrap();
+    // The integration retains these exact source bytes; complete workflow source IO
+    // is qualified separately by upload_snapshot_data and its guarded session.
+    let data = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest::data(
+        &upload,
+        DESTINATION,
+        SnapshotDataKind::WasmModule { offset: 1, size: 2 },
+        &[42; 2],
+    )
+    .unwrap();
     let args: UploadCanisterSnapshotDataArgs =
         ic_platform::candid::decode_one(data.arguments(), support::WIRE_ORACLE_LIMITS).unwrap();
     assert_eq!(args.chunk, [42; 2]);
@@ -235,15 +235,15 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let upload = downloads
         .prepare_ic_snapshot_upload_metadata(&retained, TOKEN, &metadata)
         .unwrap();
-    let data = downloads
-        .prepare_ic_snapshot_upload_data(
-            &retained,
-            TOKEN,
-            &upload,
-            DESTINATION,
-            SnapshotDataKind::WasmModule { offset: 1, size: 2 },
-        )
-        .unwrap();
+    // The integration retains these exact source bytes; complete workflow source IO
+    // is qualified separately by upload_snapshot_data and its guarded session.
+    let data = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest::data(
+        &upload,
+        DESTINATION,
+        SnapshotDataKind::WasmModule { offset: 1, size: 2 },
+        &[42; 2],
+    )
+    .unwrap();
     assert_eq!(data.binding_digest(), payload_digest);
     assert_eq!(
         data_attempts.record().unwrap().view().pending_mutation,

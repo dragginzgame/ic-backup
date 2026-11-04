@@ -1,7 +1,7 @@
 //! Ordered passive restore-fence matching; callers retain purpose-specific denials.
 
 use crate::model::{
-    consistency::ApplicationFenceState,
+    restore_safety::ApplicationFenceState,
     restore_safety::{RestoreFenceBindingRecord, RestoreFenceEvidence},
 };
 

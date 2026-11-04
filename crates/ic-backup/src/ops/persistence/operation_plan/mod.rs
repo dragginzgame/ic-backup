@@ -44,12 +44,16 @@ pub fn read_operation_plan(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<OperationPlanRecord, OperationPlanPersistenceError> {
-    immutable_record::read(
+    immutable_record::read_with(
         layout,
         "operation-plan.json",
         MAX_OPERATION_PLAN_BYTES,
-        |record: &OperationPlanRecord| &record.digest() == expected,
-        || OperationPlanPersistenceError::DigestMismatch,
+        |record: &OperationPlanRecord| {
+            if &record.digest() != expected {
+                return Err(OperationPlanPersistenceError::DigestMismatch);
+            }
+            Ok(())
+        },
     )
 }
 

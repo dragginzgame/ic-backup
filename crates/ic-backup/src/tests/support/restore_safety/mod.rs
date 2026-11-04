@@ -3,13 +3,13 @@
 use crate::{
     model::{
         attempt_journal::AttemptBudgetRecord,
-        consistency::ApplicationFenceState,
         effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
         ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
         operation_plan::{
             OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlanContextRecord,
             PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
         },
+        restore_safety::ApplicationFenceState,
         restore_safety::*,
     },
     tests::support::{

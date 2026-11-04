@@ -1,7 +1,6 @@
 //! Exact originally reserved metadata/data reads; no dispatch or transfer attestation.
 
 use crate::model::attempt_journal::MutationReservation;
-use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
@@ -102,7 +101,9 @@ impl<'request, 'metadata> IcSnapshotTransferReadRequest<'request, 'metadata> {
         let authority = plan.attempt_authority_for_journal(
             operation_sequence,
             journal,
-            IcSnapshotTransferReadError::AuthorityMismatch,
+            IcSnapshotTransferReadError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::AuthorityMismatch,
+            ),
         )?;
         payload.validate_binding(&authority)?;
         let reservation = MutationReservation::new(authority, journal)?;
@@ -174,21 +175,12 @@ impl fmt::Debug for IcSnapshotTransferReadResponse {
 /// Structural read rejection; every denial retains original accounting and evidence.
 #[derive(Debug, Error)]
 pub enum IcSnapshotTransferReadError {
-    /// Current journal differs from full original authority.
-    #[error("snapshot transfer read authority differs")]
-    AuthorityMismatch,
+    /// Original reservation denial, retaining the canonical typed accounting cause.
+    #[error("original mutation reservation rejected: {0}")]
+    Reservation(#[from] crate::model::attempt_journal::MutationReservationError),
     /// Original target or exact wire digest differs.
     #[error("snapshot transfer read payload differs")]
     PayloadMismatch,
-    /// No original replicated-update reservation is pending.
-    #[error("snapshot transfer read requires a pending original update")]
-    NoPendingMutation,
-    /// Original update was changed or settled.
-    #[error("snapshot transfer read original attempt differs")]
-    MutationMismatch,
-    /// Existing recovery observation remains pending.
-    #[error("snapshot transfer read recovery observation is pending")]
-    ObservationPending,
     /// Attempt is outside the existing 1..=1,024 bound.
     #[error("invalid snapshot transfer read attempt")]
     InvalidAttempt,
@@ -201,17 +193,6 @@ pub enum IcSnapshotTransferReadError {
     /// Original plan cannot derive this operation authority.
     #[error(transparent)]
     Plan(#[from] OperationPlanError),
-}
-
-impl From<crate::model::attempt_journal::MutationReservationError> for IcSnapshotTransferReadError {
-    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
-        match error {
-            Reservation::NoPendingMutation => Self::NoPendingMutation,
-            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
-            Reservation::MutationMismatch => Self::MutationMismatch,
-            Reservation::ObservationPending => Self::ObservationPending,
-        }
-    }
 }
 
 impl From<crate::model::ic_update_response::UpdateResponseAdmissionError>

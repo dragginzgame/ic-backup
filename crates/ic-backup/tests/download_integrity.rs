@@ -8,7 +8,6 @@ use ic_backup::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
         download_journal::DownloadArtifactRequest,
-        fence_obligation::FenceObligationRecord,
         operation_plan::OperationPlanRecord,
         restore_safety::{
             RestoreFenceBindingRecord, RestoreSafetyLaneRecord, RestoreSafetyRequirementRecord,
@@ -17,8 +16,7 @@ use ic_backup::{
     },
     ops::persistence::{
         AttemptJournalGuard, BackupLayoutGuard, DownloadIntegrityError, DownloadJournalGuard,
-        FenceObligationRequirement, create_fence_obligation, create_operation_plan,
-        create_restore_safety_requirement, read_restore_safety_requirement,
+        create_operation_plan, create_restore_safety_requirement, read_restore_safety_requirement,
     },
 };
 use serde_json::json;
@@ -65,16 +63,9 @@ fn retain_requirement(
     .unwrap();
     create_restore_safety_requirement(layout, source_layout, restore, source, &requirement)
         .unwrap();
-    let obligation = FenceObligationRecord::for_restore(restore, source, &requirement, 7).unwrap();
-    create_fence_obligation(
-        layout,
-        restore,
-        FenceObligationRequirement::Restore {
-            source_layout,
-            source,
-            requirement: &requirement,
-        },
-        &obligation,
+    fs::write(
+        layout.root().join("application-obligation.json"),
+        b"original integration-owned fence and external-obligation evidence",
     )
     .unwrap();
     requirement
@@ -183,7 +174,7 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
         "restore/operation-plan.json",
         "restore/attempt-7.json",
         "restore/restore-safety-requirement.json",
-        "restore/fence-obligation.json",
+        "restore/application-obligation.json",
     ];
     let original: Vec<_> = names
         .iter()

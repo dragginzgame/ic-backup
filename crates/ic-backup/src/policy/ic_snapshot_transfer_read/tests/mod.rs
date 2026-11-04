@@ -80,7 +80,9 @@ fn original_metadata_and_data_associate_without_receipts_or_new_spending() {
         let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
         assert!(matches!(
             IcSnapshotTransferReadRequest::new(&plan, 7, &journal, payload),
-            Err(IcSnapshotTransferReadError::NoPendingMutation)
+            Err(IcSnapshotTransferReadError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::NoPendingMutation
+            ))
         ));
         journal.reserve_mutation().unwrap();
         let before = journal.clone();
@@ -140,14 +142,18 @@ fn changed_original_payload_authority_and_current_reservations_reject() {
     let other = AttemptJournalRecord::new(plan.attempt_authority(0).unwrap());
     assert!(matches!(
         request.validate_journal(&other),
-        Err(IcSnapshotTransferReadError::AuthorityMismatch)
+        Err(IcSnapshotTransferReadError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+        ))
     ));
     let mut recovery = journal.clone();
     recovery.reserve_observation(1, hash("56").hash()).unwrap();
     assert!(matches!(
         validate_response(&request, &recovery, &response),
         Err(IcSnapshotTransferReadAssociationError::Reservation(
-            IcSnapshotTransferReadError::ObservationPending
+            IcSnapshotTransferReadError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::ObservationPending
+            )
         ))
     ));
     journal
@@ -161,7 +167,9 @@ fn changed_original_payload_authority_and_current_reservations_reject() {
     assert!(matches!(
         validate_response(&request, &journal, &response),
         Err(IcSnapshotTransferReadAssociationError::Reservation(
-            IcSnapshotTransferReadError::MutationMismatch
+            IcSnapshotTransferReadError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::MutationMismatch
+            )
         ))
     ));
 }

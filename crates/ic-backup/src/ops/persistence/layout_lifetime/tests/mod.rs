@@ -439,3 +439,63 @@ fn process_death_before_or_after_reference_publication_retains_exact_evidence() 
         fs::remove_dir_all(parent).expect("clean successful fixture");
     }
 }
+
+#[test]
+fn retired_application_declarations_refuse_without_reinterpreting_or_spending() {
+    use crate::ops::persistence::{AttemptJournalGuard, create_operation_plan};
+    for name in ["consistency-requirement.json", "fence-obligation.json"] {
+        for bytes in [
+            b"{\"version\":1,\"original\":true}".as_slice(),
+            b"malformed retained bytes\0",
+        ] {
+            let root = temp_dir("ic-backup-retired-application-record");
+            let layout = BackupLayoutGuard::acquire(&root).unwrap();
+            let plan = crate::tests::support::operation_plan::plan();
+            create_operation_plan(&layout, &plan).unwrap();
+            let authority = plan.attempt_authority(0).unwrap();
+            let mut journal = AttemptJournalGuard::create(&layout, authority.clone()).unwrap();
+            journal.reserve_mutation().unwrap();
+            let journal_path = journal.path();
+            let journal_bytes = fs::read(&journal_path).unwrap();
+            layout
+                .retain_restore(&root.join("external-restore.json"), plan.digest().hash())
+                .unwrap();
+            let references = fs::read(root.join("restore-references.json")).unwrap();
+            let path = root.join(name);
+            fs::write(&path, bytes).unwrap();
+            assert!(
+                matches!(layout.check_root(), Err(PersistenceError::RetiredApplicationState { path: actual }) if actual == path)
+            );
+            assert!(journal.reserve_mutation().is_err());
+            drop(journal);
+            assert!(AttemptJournalGuard::open(&layout, &authority).is_err());
+            assert!(create_operation_plan(&layout, &plan).is_err());
+            assert!(layout.restore_references().is_err());
+            assert_eq!(fs::read(&path).unwrap(), bytes);
+            assert_eq!(fs::read(journal_path).unwrap(), journal_bytes);
+            assert_eq!(
+                fs::read(root.join("restore-references.json")).unwrap(),
+                references
+            );
+            drop(layout);
+            fs::remove_dir_all(root).unwrap();
+        }
+    }
+}
+
+#[test]
+fn retired_application_marker_symlink_is_refused_without_following_or_replacing_it() {
+    let root = temp_dir("ic-backup-retired-application-link");
+    let layout = BackupLayoutGuard::acquire(&root).unwrap();
+    let outside = root.join("external-original");
+    fs::write(&outside, b"retained external original").unwrap();
+    let path = root.join("fence-obligation.json");
+    symlink(&outside, &path).unwrap();
+    assert!(
+        matches!(layout.check_root(), Err(PersistenceError::RetiredApplicationState { path: actual }) if actual == path)
+    );
+    assert!(fs::symlink_metadata(path).unwrap().file_type().is_symlink());
+    assert_eq!(fs::read(outside).unwrap(), b"retained external original");
+    drop(layout);
+    fs::remove_dir_all(root).unwrap();
+}

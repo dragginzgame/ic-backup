@@ -14,7 +14,6 @@ fn driver() -> Driver {
         fail_at: None,
         stop_before: None,
         publish_at: None,
-        edge_overrides: BTreeMap::new(),
     }
 }
 fn limit() -> NonZeroUsize {

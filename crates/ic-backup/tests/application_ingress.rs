@@ -19,9 +19,6 @@ use ic_backup::{
         execution_workflow::{
             ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
         },
-        fence_acquisition::{
-            FenceAcquisitionError, FenceAcquisitionPayload, MAX_FENCE_ACQUISITION_ARGUMENT_BYTES,
-        },
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard},
@@ -38,11 +35,7 @@ const OPERATION: u64 = 42;
 
 #[test]
 fn opaque_payload_boundaries_preserve_error_order_for_multiple_invalid_fields() {
-    let oversized =
-        vec![
-            0;
-            MAX_APPLICATION_INGRESS_ARGUMENT_BYTES.max(MAX_FENCE_ACQUISITION_ARGUMENT_BYTES) + 1
-        ];
+    let oversized = vec![0; MAX_APPLICATION_INGRESS_ARGUMENT_BYTES + 1];
     assert!(matches!(
         ApplicationIngressPayload::new("invalid", "aaaaa-aa", "", &oversized, 0),
         Err(ApplicationIngressError::ArgumentsTooLarge)
@@ -62,22 +55,6 @@ fn opaque_payload_boundaries_preserve_error_order_for_multiple_invalid_fields() 
     assert!(matches!(
         ApplicationIngressPayload::new("aaaaa-aa", "invalid", "apply", b"", 1),
         Err(ApplicationIngressError::ManagementPrincipal)
-    ));
-    assert!(matches!(
-        FenceAcquisitionPayload::new("invalid", "", &oversized),
-        Err(FenceAcquisitionError::ArgumentsTooLarge)
-    ));
-    assert!(matches!(
-        FenceAcquisitionPayload::new("invalid", "", b""),
-        Err(FenceAcquisitionError::InvalidMethod)
-    ));
-    assert!(matches!(
-        FenceAcquisitionPayload::new("invalid", "acquire", b""),
-        Err(FenceAcquisitionError::InvalidTarget)
-    ));
-    assert!(matches!(
-        FenceAcquisitionPayload::new("aaaaa-aa", "acquire", b""),
-        Err(FenceAcquisitionError::ManagementReceiver)
     ));
 }
 
@@ -368,4 +345,28 @@ fn substituted_original_envelope_refuses_before_stage_allocation_or_dispatch() {
         drop(layout);
         fs::remove_dir_all(root).unwrap();
     }
+}
+
+#[test]
+fn public_pending_reservation_failure_keeps_its_typed_accounting_source() {
+    use ic_backup::model::{
+        application_ingress::ApplicationMutationRequest,
+        attempt_journal::{AttemptJournalRecord, MutationReservationError},
+    };
+    let payload = ApplicationIngressPayload::new(ROOT, ROOT, "apply", b"original", 128).unwrap();
+    let plan = original_plan(&payload.digest());
+    let journal = AttemptJournalRecord::new(plan.attempt_authority(OPERATION).unwrap());
+    let error = ApplicationMutationRequest::new(&plan, OPERATION, &journal, &payload).unwrap_err();
+    assert!(matches!(
+        error,
+        ApplicationIngressError::Reservation(MutationReservationError::NoPendingMutation)
+    ));
+    assert_eq!(
+        std::error::Error::source(&error)
+            .unwrap()
+            .downcast_ref::<MutationReservationError>(),
+        Some(&MutationReservationError::NoPendingMutation)
+    );
+    assert_eq!(journal.view().mutations_used, 0);
+    assert_eq!(journal.view().pending_mutation, None);
 }

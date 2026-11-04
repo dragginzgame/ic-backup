@@ -225,6 +225,9 @@ Keep plain `cargo clean` able to remove the owning workspace's entire `target/`
 directory. Put workspace build/test scratch and generated fixtures beneath
 `target/`; use `.tmp/` or other outside-target scratch only for a documented
 technical need. Artifact retention must not narrow explicit cleanup.
+Keep `.git` free of build trees and bulk retired-checkout archives. Git-side
+tool state needs explicit size/retention limits under the artifact contract;
+preserving evidence must not silently preserve every compiler output.
 
 ## IC stable-memory governance
 

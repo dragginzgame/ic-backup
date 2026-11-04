@@ -9,7 +9,6 @@ pub use requirement::{
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     attempt_journal::OperationBindingRecord,
-    consistency::ApplicationFenceState,
     evidence_digest::EvidenceDigest,
     ic_request::{IcManagementMethodRecord, IcManagementRequestRecord, IcRequestError},
     inventory::{InventoryRecord, MAX_INVENTORY_TARGETS},
@@ -17,6 +16,15 @@ use crate::model::{
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 use thiserror::Error;
+
+/// Actually observed application fence state; never serialized authority.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ApplicationFenceState {
+    /// Exact retained fence is qualified active with continuous custody.
+    Active,
+    /// The retained fence is known inactive; restore is denied.
+    Inactive,
+}
 
 /// Maximum descriptive remote observations per invocation; no spending allowance.
 pub const MAX_RESTORE_SAFETY_REMOTE_OBSERVATIONS: u32 = 1024;

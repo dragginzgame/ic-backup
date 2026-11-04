@@ -10,8 +10,9 @@ select `full` without fetching. An empty comparison also selects `full`.
 
 Consumers own an exact, reviewed list of Markdown paths that are prose only.
 There are no globs. The classifier reads identical policy bytes from both
-compared commits, never an uncommitted list. Unknown paths, policy/workflow/code
-changes, executable files and symlinks select full CI. Renames are checked as
+compared commits, never an uncommitted list. Apart from the explicit `VERSION`
+exception below, unknown paths select full CI. Policy/workflow/code changes,
+executable files and symlinks always select full CI. Renames are checked as
 both deletion and addition. Do not list Markdown used by `include_str!`, doctests,
 generation, packaging or other executable/build contracts; the extension alone
 is not proof. Keep the classifier and workflow under normal code review: this

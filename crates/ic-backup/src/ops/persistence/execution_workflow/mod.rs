@@ -103,12 +103,16 @@ pub fn read_execution_workflow(
     layout: &BackupLayoutGuard,
     expected: &ArtifactChecksumRecord,
 ) -> Result<ExecutionWorkflowRecord, ExecutionWorkflowPersistenceError> {
-    super::immutable_record::read(
+    super::immutable_record::read_with(
         layout,
         WORKFLOW_FILE,
         MAX_EXECUTION_WORKFLOW_BYTES,
-        |record: &ExecutionWorkflowRecord| &record.digest() == expected,
-        || ExecutionWorkflowPersistenceError::DigestMismatch,
+        |record: &ExecutionWorkflowRecord| {
+            if &record.digest() != expected {
+                return Err(ExecutionWorkflowPersistenceError::DigestMismatch);
+            }
+            Ok(())
+        },
     )
 }
 

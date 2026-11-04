@@ -2,7 +2,6 @@
 
 use super::{ApplicationIngressError, ApplicationIngressPayload};
 use crate::model::attempt_journal::MutationReservation;
-use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::attempt_journal::ObservationReservation;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
@@ -32,7 +31,9 @@ impl<'a> ApplicationMutationRequest<'a> {
         let authority = plan.attempt_authority_for_journal(
             sequence,
             journal,
-            ApplicationIngressError::AuthorityMismatch,
+            ApplicationIngressError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::AuthorityMismatch,
+            ),
         )?;
         payload.validate_mutation_binding(authority.binding())?;
         let reservation = MutationReservation::new(authority, journal)?;
@@ -96,7 +97,9 @@ impl<'a> ApplicationObservationRequest<'a> {
         let authority = plan.attempt_authority_for_journal(
             sequence,
             journal,
-            ApplicationIngressError::AuthorityMismatch,
+            ApplicationIngressError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::AuthorityMismatch,
+            ),
         )?;
         payload.validate_observation_binding(authority.binding())?;
         let reservation = ObservationReservation::new(authority, journal, payload.digest())
@@ -143,16 +146,5 @@ impl<'a> ApplicationObservationRequest<'a> {
             .validate(journal)
             .map_err(crate::model::ic_observation::IcObservationRequestError::from)?;
         Ok(())
-    }
-}
-
-impl From<crate::model::attempt_journal::MutationReservationError> for ApplicationIngressError {
-    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
-        match error {
-            Reservation::NoPendingMutation => Self::NoPendingMutation,
-            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
-            Reservation::MutationMismatch => Self::MutationMismatch,
-            Reservation::ObservationPending => Self::ObservationPending,
-        }
     }
 }

@@ -183,8 +183,6 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
   complete data-stage planning and independently qualified receipt coordination;
 - original same-ID load/start steps with fresh application safety, explicit qualified
   receipts and retained source requirements; complete application runners remain pending;
-- per-guard host timing summaries and bounded prepared chunk-size distributions using `ic-metrics`, with
-  diagnostics kept separate from retained progress, spending and completion evidence;
 - contracts for exact originally reserved IC updates and bounded passive reply
   association, preserving pending spending without automatic settlement;
 - exact reserved status/snapshot-list observation contracts that retain both attempt
@@ -192,9 +190,8 @@ transport at `crates/ic-backup-agent`. The implemented foundation includes:
 - fresh verification of durable local backup files against their original plan;
 - retained same-release source/safety requirements and application evidence checks
   before snapshot load or controlled start;
-- retained original application fence obligations and exact acquisition-journal
-  recovery, exact application update envelopes and reserved reconciliation checks
-  across interruption;
+- exact application update envelopes and separately reserved recovery under
+  integration-owned fencing and retained obligations;
 - immutable original execution settlement checkpoints with exact journal histories
   for local replay;
 - immutable manifests of the exact verified local download set, with local record

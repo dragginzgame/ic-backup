@@ -480,7 +480,9 @@ fn original_full_source_intent_pending_mutation_and_independent_data_spending_ar
     let mut journal = AttemptJournalRecord::new(plan.attempt_authority(7).unwrap());
     assert!(matches!(
         IcSnapshotUploadAttempt::new(&plan, 7, &journal, &upload),
-        Err(IcSnapshotUploadAttemptError::NoPendingMutation)
+        Err(IcSnapshotUploadAttemptError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::NoPendingMutation
+        ))
     ));
     let mutation = journal.reserve_mutation().unwrap();
     let original = journal.clone();
@@ -512,7 +514,9 @@ fn original_full_source_intent_pending_mutation_and_independent_data_spending_ar
     data_journal.reserve_mutation().unwrap();
     assert!(matches!(
         IcSnapshotUploadAttempt::new(&plan, 7, &data_journal, &upload),
-        Err(IcSnapshotUploadAttemptError::AuthorityMismatch)
+        Err(IcSnapshotUploadAttemptError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::AuthorityMismatch
+        ))
     ));
     assert!(matches!(
         IcSnapshotUploadAttempt::new(&plan, 8, &journal, &upload),
@@ -525,7 +529,9 @@ fn original_full_source_intent_pending_mutation_and_independent_data_spending_ar
         .unwrap();
     assert!(matches!(
         attempt.validate_journal(&journal),
-        Err(IcSnapshotUploadAttemptError::ObservationPending)
+        Err(IcSnapshotUploadAttemptError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::ObservationPending
+        ))
     ));
     let mut settled = original;
     settled
@@ -538,7 +544,9 @@ fn original_full_source_intent_pending_mutation_and_independent_data_spending_ar
         .unwrap();
     assert!(matches!(
         attempt.validate_journal(&settled),
-        Err(IcSnapshotUploadAttemptError::MutationMismatch)
+        Err(IcSnapshotUploadAttemptError::Reservation(
+            crate::model::attempt_journal::MutationReservationError::MutationMismatch
+        ))
     ));
     assert_eq!(settled.view().mutations_remaining, 0);
     let mut changed = serde_json::to_value(&plan).unwrap();

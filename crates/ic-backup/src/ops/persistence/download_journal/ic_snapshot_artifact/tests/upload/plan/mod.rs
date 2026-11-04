@@ -658,7 +658,7 @@ fn batch_bindings_match_canonical_payloads_and_preserve_retained_records() {
             .iter()
             .map(|kind| {
                 source
-                    .prepare_ic_snapshot_upload_data(
+                    .prepare_source_fixture_chunk(
                         data.metadata().source_plan(),
                         TOKEN,
                         data.metadata(),
@@ -738,7 +738,7 @@ fn batch_plans_empty_regions_and_known_empty_chunks_without_placeholder_writes()
         }
         if let Some(plan) = data.plan() {
             let payload = source
-                .prepare_ic_snapshot_upload_data(
+                .prepare_source_fixture_chunk(
                     upload.source_plan(),
                     TOKEN,
                     &upload,

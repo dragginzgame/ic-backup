@@ -1,7 +1,6 @@
 //! Exact reserved IC mutation identity and bounded passive reply association.
 
 use crate::model::attempt_journal::MutationReservation;
-use crate::model::attempt_journal::MutationReservationError as Reservation;
 use crate::model::ic_update_response::IcUpdateResponseInput;
 use crate::model::{
     attempt_journal::{AttemptAuthorityRecord, AttemptJournalRecord},
@@ -50,7 +49,9 @@ impl<'a> IcMutationRequest<'a> {
         let authority = plan.attempt_authority_for_journal(
             operation_sequence,
             journal,
-            IcMutationRequestError::AuthorityMismatch,
+            IcMutationRequestError::Reservation(
+                crate::model::attempt_journal::MutationReservationError::AuthorityMismatch,
+            ),
         )?;
         payload.validate_mutation_binding(authority.binding())?;
         let reservation = MutationReservation::new(authority, journal)?;
@@ -127,18 +128,9 @@ impl fmt::Debug for IcMutationAcknowledgement {
 /// Original reservation denial; no variant consumes, refunds or grants call authority.
 #[derive(Debug, Error)]
 pub enum IcMutationRequestError {
-    /// Journal differs from full original plan/context/operation/request/allowance identity.
-    #[error("IC mutation original authority mismatch")]
-    AuthorityMismatch,
-    /// There is no unresolved original mutation reservation.
-    #[error("IC mutation requires a pending original mutation")]
-    NoPendingMutation,
-    /// Current pending mutation changed or was settled after binding.
-    #[error("IC mutation original attempt mismatch")]
-    MutationMismatch,
-    /// Recovery observation is pending; association cannot bypass its original owner.
-    #[error("IC mutation has a pending recovery observation")]
-    ObservationPending,
+    /// Original reservation denial, retaining the canonical typed accounting cause.
+    #[error("original mutation reservation rejected: {0}")]
+    Reservation(#[from] crate::model::attempt_journal::MutationReservationError),
     /// Exact closed method, target or original Candid payload digest differs.
     #[error(transparent)]
     Payload(#[from] IcRequestError),
@@ -163,17 +155,6 @@ pub enum IcMutationAcknowledgementError {
 
 #[cfg(test)]
 mod tests;
-
-impl From<crate::model::attempt_journal::MutationReservationError> for IcMutationRequestError {
-    fn from(error: crate::model::attempt_journal::MutationReservationError) -> Self {
-        match error {
-            Reservation::NoPendingMutation => Self::NoPendingMutation,
-            Reservation::AuthorityMismatch => Self::AuthorityMismatch,
-            Reservation::MutationMismatch => Self::MutationMismatch,
-            Reservation::ObservationPending => Self::ObservationPending,
-        }
-    }
-}
 
 impl From<crate::model::ic_update_response::UpdateResponseAdmissionError>
     for IcMutationAcknowledgementError

@@ -9,8 +9,6 @@ mod application_ingress;
 pub use application_ingress::{
     AgentApplicationIngressProvider, ApplicationIngressProviderError, ApplicationIngressResponse,
 };
-mod fence_acquisition;
-pub use fence_acquisition::AgentFenceAcquisitionProvider;
 mod acknowledgement;
 mod endpoint;
 mod observation;
