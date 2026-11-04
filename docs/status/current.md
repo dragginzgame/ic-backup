@@ -1,14 +1,17 @@
 # Current handoff — 2026-11-04
 
-## Current 0.58 cleanup
+## Delivered 0.58.0
 
-The user authorized the four large cuts, then current IC Tooling and three further
-simplifications. Pending **0.58.0** notes cover the public API cuts; package versions
-remain delivered **0.57.1** before release preparation. The user has now selected
-deployment of this complete batch as **0.58.0**, both crates, to `origin/main`,
-annotated `v0.58.0` and crates.io. Source commitment and the full release gate
-precede preparation; the release receipt and verified remote/registry state own
-the delivered outcome. Evidence is retained in `target/deploy-0580.b8b51qgs/`.
+Both crates are published as **0.58.0**. Release commit
+`dc1a0dbb301b50b42ac3ace013b13df14b46ae63` and annotated `v0.58.0` are verified on
+`origin/main`; the [receipt](../release.json) binds source `1358f7a` and its complete
+Linux release gate. All **554 test cases** pass, with no failures or ignored cases,
+including both simulator suites. Clippy, tools, source/format admission, release/
+hook fixtures, Rustdocs, independent consumers and archive compilation pass.
+Publication separately passes Cargo verification and the mandatory lint gate.
+Independent downloads match registry checksums, release provenance and all **341
+non-generated source files**. Evidence is in `target/deploy-0580.b8b51qgs/` and
+`.git/release-state/`. No native macOS, live IC or installed Canic acceptance is claimed.
 
 `model::attempt_journal::MutationReservationError` now owns the four original
 pending-mutation refusals. Application, management, transfer-read and upload request
@@ -48,7 +51,8 @@ to removed APIs or flat reservation-error matches; installed acceptance is separ
 
 Host Artifacts/FS/Process **0.74.3**, Testkit **0.84.1** and Build release editor
 **0.74.2** are explicitly selected. The incoming lockfile already selected Host
-0.74.3 and remains byte-identical. Published archives/VCS were verified; Artifacts
+0.74.3; release preparation changes only Backup's package versions. Published
+archives/VCS were verified; Artifacts
 and consumed editor source are unchanged, while FS/Process relocate tests. Tool
 and editor admission, 34 focused native cases, normal consumers and actual editor
 preparation fixtures pass in `target/tooling-adoption-058.v843s4en/`.
@@ -60,7 +64,7 @@ See [the adoption review](../shared-tooling-review.json). Rust stays **1.99.1**;
 Production Platform is now **0.22.0**; Testkit retains **0.21.0**. Types **0.18.0**
 and authenticated PocketIC **16.1.0** remain.
 Runtime **0.19.1** is adopted through Testkit's Wasm-only IC0 edge; the incoming
-lockfile already selected it and is preserved. The published checksum/source
+lockfile already selected it; release preparation preserves that selection. The published checksum/source
 commit `74a5071` and unchanged selected IC0 source are verified. Six normal graphs
 (both libraries on Linux and both macOS architectures) exclude Runtime; the Wasm
 development graph enables only IC0. Rust 1.99.1 admission passes. Evidence is in
@@ -76,7 +80,7 @@ edge rewrites from resolution are reverted to their incoming selections. Strict
 library Clippy, 16 request/lifecycle codec and bounds cases, independent Core/Agent
 consumers (`target/msrv-consumers.3G7EQ2/`) and the focused HTTP signed-retention,
 single-dispatch/lost-reply case pass on Rust 1.99.1. No new simulator, macOS native,
-live IC or full release qualification is claimed. The index remains untouched.
+live IC or full release qualification was claimed by that focused adoption.
 
 Cleanup proof is `target/request-cleanup-058.m2dcuayv/`: pre-edit archive, untouched
 index/Cargo hashes, retained first compile failure, strict both-package all-target/
@@ -88,15 +92,14 @@ retired-layout/artifact/restore checks and 22 selected simulator cases, includin
 cold standalone same-ID restore, process death, lost replies and terminal replay,
 in `target/scope-cut-058.zh17kmds/`. Its failed simulator assertion and corrected
 single-case retry remain retained. The request/error simplification changes no IC
-effect, record bytes or protocol; no new simulator, macOS, live IC or installed
-Canic qualification and no complete release gate are claimed for this batch.
+effect, record bytes or protocol. These earlier focused receipts retain their
+original input identities and scope; the final release gate freshly qualifies the
+combined Linux source and dependency selection.
 
-## Delivered baseline
+## Previous baseline and custody
 
-Delivered **0.57.1** is release commit `40d9e3234df06df589ef591786e3a77ce2aa43b7`
-with annotated `v0.57.1`; both published archives match registry checksums and all
-non-generated source files. Handoff commit `bba30fe` followed on main. The committed
-[receipt](../release.json) binds source `8edede0` and its full Linux release gate;
-publication/source evidence remains in `target/deploy-0571.ytcigfjv/` and
+Previous **0.57.1** is release commit `40d9e32` with annotated `v0.57.1`, source
+`8edede0` and handoff `bba30fe`. Its original receipt remains in Git history;
+publication/source evidence stays in `target/deploy-0571.ytcigfjv/` and
 `.git/release-state/`. Preserve original/failed qualification, unfinished journals,
 referenced/partial artifacts, obligations and tool generations.
