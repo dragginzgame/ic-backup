@@ -9,8 +9,6 @@ use ancestry::{
 };
 pub use progress::{ExecutionWorkflowProgressError, read_execution_workflow_progress};
 pub use stage::ExecutionStageGuard;
-#[cfg(test)]
-use stage::StagePreparationBarrier;
 
 use super::json::read_record;
 use super::{

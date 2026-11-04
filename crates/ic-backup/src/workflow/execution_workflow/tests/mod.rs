@@ -2,7 +2,7 @@ use super::*;
 use crate::ops::persistence::create_execution_workflow;
 use std::num::NonZeroUsize;
 mod operator;
-use crate::test_support::execution_workflow::{child, workflow};
+use crate::tests::support::execution_workflow::{child, workflow};
 use crate::{
     model::{
         attempt_journal::{AttemptBudgetRecord, MutationOutcomeRecord, MutationReceiptRequest},
@@ -12,7 +12,7 @@ use crate::{
         },
     },
     ops::persistence::AttemptJournalGuard,
-    test_support::{ready::ready, temp_dir},
+    tests::support::{ready::ready, temp_dir},
 };
 use std::{fs, io, path::PathBuf};
 
@@ -105,7 +105,7 @@ fn layout(prefix: &str) -> (PathBuf, BackupLayoutGuard) {
 }
 
 fn branched_workflow() -> ExecutionWorkflowRecord {
-    let mut request = crate::test_support::operation_plan::request();
+    let mut request = crate::tests::support::operation_plan::request();
     request.graph = EffectGraphRecord::new(
         [(0, vec![]), (7, vec![0]), (9, vec![0])]
             .into_iter()
@@ -135,7 +135,7 @@ fn branched_workflow() -> ExecutionWorkflowRecord {
 #[test]
 fn dependencies_run_in_topological_order_and_complete_originals_replay() {
     let (root, layout) = layout("ic-backup-run-workflow");
-    let mut request = crate::test_support::operation_plan::request();
+    let mut request = crate::tests::support::operation_plan::request();
     request.graph = EffectGraphRecord::new(
         [(0, vec![7]), (7, vec![])]
             .into_iter()
@@ -670,7 +670,7 @@ fn cancellation_after_reservation_retains_original_and_refuses_reentry() {
         NonZeroUsize::new(workflow.stages().len()).unwrap(),
         &mut driver,
     ));
-    crate::test_support::ready::assert_pending(future.as_mut());
+    crate::tests::support::ready::assert_pending(future.as_mut());
     drop(future);
     assert_eq!(driver.calls, 1);
     let path = root.join("execution-stage-0/attempt-42.json");

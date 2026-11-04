@@ -30,7 +30,7 @@ impl RestoreFixture {
         method: IcManagementMethodRecord,
         lane: RestoreSafetyLaneRecord,
     ) -> Self {
-        let root = crate::test_support::temp_dir(prefix);
+        let root = crate::tests::support::temp_dir(prefix);
         fs::create_dir(root.join("source")).unwrap();
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         let source_layout = BackupLayoutGuard::acquire(&root.join("source")).unwrap();

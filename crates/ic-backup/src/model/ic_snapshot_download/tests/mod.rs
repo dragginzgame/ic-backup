@@ -8,7 +8,7 @@ use ic_platform::candid::contract;
 use ic_platform::management_canister_types::{ChunkHash, SnapshotDataKind};
 use sha2::Digest;
 
-use crate::test_support::ic_snapshot_download::*;
+use crate::tests::support::ic_snapshot_download::*;
 
 fn predecessor(
     binding: &ExecutionStageBindingRecord,

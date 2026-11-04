@@ -3,7 +3,7 @@
 use super::*;
 use crate::{
     model::restore_references::RestoreReferenceError,
-    test_support::{
+    tests::support::{
         create_private_fifo, hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
         temp_dir,
     },
@@ -387,7 +387,7 @@ fn process_death_before_or_after_reference_publication_retains_exact_evidence() 
         let mut child = Command::new(std::env::current_exe().expect("test executable"))
             .args(["--exact", "ops::persistence::layout_lifetime::tests::process_death_before_or_after_reference_publication_retains_exact_evidence", "--nocapture"])
             .env(ROOT_ENV, &parent).env(SIDE_ENV, side).spawn().expect("spawn owner");
-        crate::test_support::wait_for_child_path(
+        crate::tests::support::wait_for_child_path(
             &mut child,
             &parent.join("barrier-ready"),
             "reference publication",

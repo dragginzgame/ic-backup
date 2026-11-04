@@ -4,7 +4,7 @@ use crate::{
         attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
         consistency::*,
     },
-    test_support::operation_plan::{hash, plan},
+    tests::support::operation_plan::{hash, plan},
 };
 use serde_json::json;
 

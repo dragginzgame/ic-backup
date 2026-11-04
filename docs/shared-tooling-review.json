@@ -1,50 +1,117 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "03b5d9a47beac9767ced96008a9e7b450b61a82a",
-  "label": "0.27.28",
-  "commit_title": "Merge pull request #348 from dragginzgame/fix/owned-tree-traversal",
-  "reviewed_on": "2026-11-02",
-  "previous_revision": "651f5f7acb2e3055abd51ba5f835a2112801666a",
-  "previous_review_evidence": "/tmp/backup-audit-fixes.PfeuvfwT/adoption-before/docs/shared-tooling-review.json",
+  "revision": "1fa2d90879650780d23ad8f045f5825771b696ad",
+  "label": "0.29.3",
+  "commit_title": "stuff",
+  "reviewed_on": "2026-11-04",
+  "previous_revision": "03b5d9a47beac9767ced96008a9e7b450b61a82a",
   "consumer_baseline": {
-    "commit": "5f94655f779431349393274e98f616fe580b0867",
-    "version": "0.55.2",
-    "pending_notes": "0.55.3",
-    "worktree": "Preserve the earlier accepted cleanup and staged Host 0.74.2 lockfile update. Add independent golden parity admission and adopt the delivered supplier inventory fix; do not stage or commit Backup."
-  },
-  "supplier_delivery": {
-    "pr": "https://github.com/dragginzgame/shared-tooling/pull/348",
-    "head": "833b66a52f3fe4312319ce9d2a283b638b44c149",
-    "merge": "03b5d9a47beac9767ced96008a9e7b450b61a82a",
-    "authority": "The user explicitly authorized opening and merging this source fix PR, then adopting its committed revision here. No supplier release, tag or package publication was requested or performed.",
-    "protection": "pr-protection.json and main-rules.json record no required branch reviews/checks or active main rulesets. Exact-head normal merge used no admin bypass. The author retained repository admin permission.",
-    "hosted_ci": "PR native/lint jobs were still in progress when merge was admitted. They are not passing native qualification; no wait for optional CI was added."
+    "commit": "97671f3b28670251b50f4a4176e155b99b446d25",
+    "version": "0.57.0",
+    "pending_notes": "0.57.1",
+    "preserved_work": "Existing Testkit client migration, fixture ownership and dependency changes remain in the normal checkout; no staging, commit or release."
   },
   "provenance": {
-    "source_selection": "Fetch and verify the authorized merged PR revision from GitHub in the isolated source clone. Detach that exact clean commit before canonical export; no sibling working-checkout changes enter the snapshot.",
+    "selection": "Observed exact upstream main commit; canonical export from clean committed source objects. Uncommitted supplier changes excluded. Version label is not a published-tag claim.",
     "export": {
-      "payloads": 144,
-      "added": 0,
-      "updated": 7,
-      "removed": 0,
-      "entrypoints": "Retain all existing recorded roots. No takeover or hand-edited payload/manifest."
+      "payloads": 148,
+      "added": 4,
+      "updated": 20,
+      "unchanged": 124,
+      "removed": 0
     },
-    "verification": "adopted-source-proof.json compares every payload byte, SHA-256 and executable state with the merged commit. installed-inventory-proof.json verifies the actual adopted helper refuses unreadable/missing trees and retains original evidence.",
-    "catalogs": "Common executable catalogs, build-identity policy and setup recipes are unchanged. Offline tools-check passes without installation or reclamation."
+    "verification": "Every exported byte and executable mode matches the independently selected commit; see source-verification.log.",
+    "catalogs": "ci/tool-versions.env and ci/ic-tools.tsv are byte-identical to the incoming snapshot."
   },
   "consumer_decisions": [
-    "OwnedTree inventory now makes traversal warnings fatal. Compiler-cache reporting/removal refuses partial ownership evidence; tool-store maintenance protects unreadable generations.",
-    "Review the preceding 0.27.28 governance and release-group changes: private path-only development helpers are allowed; ordinary private benchmark statistics need no Metrics dependency. Backup adds neither private members nor dependencies.",
-    "Retain one coordinated workspace, the complete positional CI/release gate, exact resume receipt check and existing public identities. Do not enable release-group proof reuse, omitted stages or a group plan.",
-    "Run the existing metadata/data/upload golden generators with --check through golden-check in normal CI. The consumer fixture verifies CI membership and rejects drift in all six vector/contract outputs.",
-    "Keep Rust minimum and exact development/release pin at 1.99.1. Preserve own versions, lock selections, staging, journals, artifacts, retained evidence and tool generations."
+    "Keep 85 existing test directories. Both tests.rs and tests/ are valid; no blanket flattening is required.",
+    "Move two production-file inline unit-test modules to tests.rs. Move Core shared support, three regression modules and read-count implementation beneath tests/. Keep tiny cfg(test) reader wiring at real IO boundaries.",
+    "Preserve all 510 registered library cases. Update 11 module-qualified names, including exact child-process selectors; preserve all 626 file-inventoried test functions.",
+    "Label mixed production/test dependency usage without changing parsed manifest values or selecting dependencies.",
+    "The pending Testkit native-client migration meets the new narrow upstream IC ownership exception. Production DTO/codecs remain Platform-owned; Metrics is absent.",
+    "Keep one coordinated workspace and its full release gate. Do not enable independent groups, proof reuse, reduced CI or a new runtime scanner.",
+    "Apply current normal-checkout/location policy for future implementation and delivery. The exporter source is disposable adoption evidence, not a lasting contribution checkout."
   ],
+  "dependency_coordination": {
+    "observation": "A concurrent update changed Cargo.lock to Testkit 0.84.1 and added development Platform 0.21.0. Both lock snapshots retained. The user requested keeping updates running, then confirmed completion and selected final validation.",
+    "selection": "final-cargo-inputs.json freezes the completed user-selected inputs. qualify.py checks their hashes before and after every Rust check. This adoption does not overwrite the incoming dependency update.",
+    "testkit_review": "0.84.1 archive and VCS verified; Rust source is byte-identical to reviewed 0.84.0. Production Platform remains 0.20.0."
+  },
   "qualification": {
-    "evidence_directory": "/tmp/backup-audit-fixes.PfeuvfwT",
-    "supplier": "Both maintenance fixtures, focused ShellCheck, Perl syntax, version check and whitespace checks pass. The new compiler-cache regression fails with the original helper. Qualified source/test bytes are identical in the contribution and merged revisions.",
-    "consumer": "Offline tool/snapshot/dependency admission, golden parity with six rejection cases, consumer tooling, hook fixtures and the release-adapter suite all pass. Exact logs: adoption-admission.log, adopted-consumer-tooling.log, adopted-hooks.log and adopted-release-adapter.log.",
-    "checks": "Final formatting, documentation links, snapshot/source proof, review JSON, repository/license and whitespace checks are recorded with this batch.",
-    "inputs": "adoption-inputs-before.json and preserved-adoption-inputs.json record unchanged Cargo manifests/lock and incoming index. No dependency updates or Backup Git delivery effects occur.",
-    "limits": "Focused tooling qualification on Linux. No new full CI/release gate, product Rust/simulator qualification, native macOS, installed Canic or live IC acceptance. The incoming Host 0.74.2 lock update is preserved but not independently qualified by this tooling batch."
+    "evidence_directory": "/home/adam/projects/ic-backup/target/shared-tooling-adoption.fdd2862x",
+    "checks": [
+      "snapshot/source bytes and modes",
+      "consumer tooling integration",
+      "pre-commit hook integration",
+      "release adapter metadata-only cases",
+      "compiler/tool/dependency/repository admission",
+      "strict Clippy for both crates/all targets/features",
+      "506 Core and 4 Agent library tests",
+      "34 Core and 28 Agent simulator cases",
+      "independent normal Core/Agent consumers",
+      "formatting and maintained links"
+    ],
+    "normal_consumers": "target/msrv-consumers.jYWEfG",
+    "compiler": "1.99.1",
+    "limits": "Focused Linux qualification, not a full release gate, native macOS, installed Canic or live IC acceptance."
+  },
+  "file_based_loc": {
+    "before": {
+      "manifest": "/home/adam/projects/ic-backup/Cargo.toml",
+      "crates": [
+        {
+          "crate": "ic-backup",
+          "runtime_loc": 18322,
+          "test_loc": 37723,
+          "test_pct": 67.3,
+          "test_fns": 578,
+          "inline_fns": 11
+        },
+        {
+          "crate": "ic-backup-agent",
+          "runtime_loc": 2208,
+          "test_loc": 5158,
+          "test_pct": 70.0,
+          "test_fns": 48,
+          "inline_fns": 3
+        }
+      ],
+      "totals": {
+        "runtime_loc": 20530,
+        "test_loc": 42881,
+        "test_pct": 67.6,
+        "test_fns": 626,
+        "inline_fns": 14
+      }
+    },
+    "after": {
+      "manifest": "/home/adam/projects/ic-backup/Cargo.toml",
+      "crates": [
+        {
+          "crate": "ic-backup",
+          "runtime_loc": 16486,
+          "test_loc": 39568,
+          "test_pct": 70.6,
+          "test_fns": 578,
+          "inline_fns": 0
+        },
+        {
+          "crate": "ic-backup-agent",
+          "runtime_loc": 2163,
+          "test_loc": 5201,
+          "test_pct": 70.6,
+          "test_fns": 48,
+          "inline_fns": 0
+        }
+      ],
+      "totals": {
+        "runtime_loc": 18649,
+        "test_loc": 44769,
+        "test_pct": 70.6,
+        "test_fns": 626,
+        "inline_fns": 0
+      }
+    },
+    "interpretation": "Test source is reclassified by file location; this is not deletion of production behavior."
   }
 }

@@ -2,7 +2,7 @@ use super::*;
 use crate::{
     model::consistency::ConsistencyGuaranteeRecord,
     ops::persistence::JournalLock,
-    test_support::{
+    tests::support::{
         operation_plan::{hash, plan},
         restore_safety, temp_dir,
     },

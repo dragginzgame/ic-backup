@@ -3,9 +3,9 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::operation_plan::{declaration, graph, operation_request};
 
-use crate::test_support::{ready::ready, response_fault::ReceiptFault};
+use crate::tests::support::{ready::ready, response_fault::ReceiptFault};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -16,7 +16,7 @@ use crate::{
         AttemptJournalGuard, BackupLayoutGuard, create_execution_workflow, read_execution_progress,
     },
     ports::ic_mutation::IcMutationProviderError,
-    test_support::{
+    tests::support::{
         ic_snapshot_upload::{DESTINATION_ID, unhex, upload_plan},
         temp_dir,
     },
@@ -29,7 +29,7 @@ use std::{
 };
 
 fn with_metadata(check: impl FnOnce(&IcSnapshotUploadRequest<'_>)) {
-    crate::test_support::ic_snapshot_upload::with_metadata_upload(
+    crate::tests::support::ic_snapshot_upload::with_metadata_upload(
         &ArtifactChecksumRecord::from_bytes(b"retained source tree"),
         check,
     );
@@ -39,7 +39,7 @@ fn prepare(
 ) -> (BackupLayoutGuard, ExecutionStageBindingRecord) {
     let plan = upload_plan(payload);
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
-    let (_, layout, binding) = crate::test_support::execution_workflow::prepare_stage(
+    let (_, layout, binding) = crate::tests::support::execution_workflow::prepare_stage(
         "ic-backup-allocation-stage",
         &workflow,
         7,
@@ -71,7 +71,7 @@ impl IcSnapshotUploadProvider for Provider {
             self.calls += 1;
             let reply = self.reply.clone()?;
             Ok(
-                IcMutationAcknowledgement::new(crate::test_support::update::input(
+                IcMutationAcknowledgement::new(crate::tests::support::update::input(
                     request.authority(),
                     request.mutation_attempt(),
                     request.plan().context(),
@@ -91,14 +91,14 @@ fn receipt(
     request: &IcSnapshotUploadAttempt<'_, '_>,
     acknowledgement: &IcMutationAcknowledgement,
 ) -> MutationReceiptRequest {
-    crate::test_support::update::applied_receipt(
+    crate::tests::support::update::applied_receipt(
         request.mutation_attempt(),
         &request.payload().binding_digest(),
         &acknowledgement.input().evidence,
     )
 }
 fn pending(stage: &ExecutionStageGuard<'_>) {
-    crate::test_support::execution_workflow::assert_pending(stage, 7);
+    crate::tests::support::execution_workflow::assert_pending(stage, 7);
     assert!(
         stage
             .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"not qualified"))
@@ -144,7 +144,7 @@ fn cancelled_allocation_qualification_retains_exact_reply_and_pending_original()
                 Ok::<_, Infallible>(receipt(request, acknowledgement))
             },
         ));
-        crate::test_support::ready::assert_pending(future.as_mut());
+        crate::tests::support::ready::assert_pending(future.as_mut());
         let authority = stage.plan().attempt_authority(7).unwrap();
         assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
         let journal_path = root.join("attempt-7.json");

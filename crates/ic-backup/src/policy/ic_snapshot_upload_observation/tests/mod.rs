@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_support::response_fault::ObservationFault;
+use crate::tests::support::response_fault::ObservationFault;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -7,7 +7,7 @@ use crate::{
         ic_snapshot_reply::IcSnapshotReply,
     },
     policy::ic_observation::IcObservationReplyView,
-    test_support::ic_snapshot_upload::{observation_input, with_observation},
+    tests::support::ic_snapshot_upload::{observation_input, with_observation},
 };
 use ic_platform::candid::contract;
 

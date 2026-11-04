@@ -1,8 +1,8 @@
 use super::*;
-use crate::test_support::response_fault::ObservationFault;
+use crate::tests::support::response_fault::ObservationFault;
 use crate::{
     model::ic_request::IcManagementMethodRecord as Method,
-    test_support::{
+    tests::support::{
         ic_observation::{input, original},
         operation_plan::hash,
     },

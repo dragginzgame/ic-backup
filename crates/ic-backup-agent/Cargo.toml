@@ -21,7 +21,6 @@ clap.workspace = true
 ic-host-artifacts = { workspace = true, features = ["wasm-text"] }
 ic-host-fs = { workspace = true, features = ["test-support"] }
 ic-host-process = { workspace = true, features = ["test-support"] }
-ic-platform = { workspace = true, features = ["pocket-ic"] }
 ic-testkit.workspace = true
 serde.workspace = true
 serde_json.workspace = true

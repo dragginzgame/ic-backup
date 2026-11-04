@@ -2,9 +2,9 @@
 
 use super::*;
 mod fixture;
-use crate::test_support::ic_snapshot_download::{source, source_plan, values, workflow};
-use crate::test_support::ready::ready;
-use crate::test_support::{response_fault::ReceiptFault, retained_reply::write_synced};
+use crate::tests::support::ic_snapshot_download::{source, source_plan, values, workflow};
+use crate::tests::support::ready::ready;
+use crate::tests::support::{response_fault::ReceiptFault, retained_reply::write_synced};
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::workflow::ic_snapshot_transfer_read::read_snapshot_with;
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     },
     ops::persistence::{BackupLayoutGuard, DownloadJournalGuard, create_execution_workflow},
     ports::ic_observation::IcObservationProviderError,
-    test_support::temp_dir,
+    tests::support::temp_dir,
 };
 use fixture::{DownloadFixture, with_download, writer};
 use ic_platform::candid::contract;
@@ -36,7 +36,7 @@ fn prepare(
     let binding = ExecutionStageBindingRecord::new(workflow, 0, &original, vec![]).unwrap();
     let metadata_stage =
         ExecutionStageGuard::prepare(&layout, binding.clone(), original.clone()).unwrap();
-    crate::test_support::execution_workflow::record_applied(
+    crate::tests::support::execution_workflow::record_applied(
         &metadata_stage,
         42,
         metadata.digest().hash(),
@@ -126,7 +126,7 @@ impl IcSnapshotTransferReadProvider for Provider {
                 _ => contract::encode_one(ReadCanisterSnapshotDataResult { chunk }).unwrap(),
             };
             Ok(
-                IcSnapshotTransferReadResponse::new(crate::test_support::update::input(
+                IcSnapshotTransferReadResponse::new(crate::tests::support::update::input(
                     request.authority(),
                     request.mutation_attempt(),
                     request.plan().context(),
@@ -150,7 +150,7 @@ fn qualify(
     request: &IcSnapshotTransferReadRequest<'_, '_>,
     response: &IcSnapshotTransferReadResponse,
 ) -> Result<MutationReceiptRequest, Infallible> {
-    Ok(crate::test_support::update::applied_receipt(
+    Ok(crate::tests::support::update::applied_receipt(
         request.mutation_attempt(),
         &request.payload().digest(),
         &response.input().evidence,
@@ -206,7 +206,7 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
                     qualify(request, response)
                 },
             ));
-            crate::test_support::ready::assert_pending(future.as_mut());
+            crate::tests::support::ready::assert_pending(future.as_mut());
             let authority = stage.plan().attempt_authority(1).unwrap();
             assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
             let path = stage.layout().unwrap().root().join("attempt-1.json");

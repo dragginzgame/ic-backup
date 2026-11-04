@@ -54,16 +54,16 @@ requests/replies, journals and obligations remain retained.
 
 ## Current simulator dependency boundary
 
-Testkit 0.82.0 owns managed server startup, authenticated assets and harness
-extensions. Simulator clients and DTOs come directly from published
-`ic_platform::pocket_ic`; both libraries enable Platform's `pocket-ic` feature only
-in development dependencies. Platform 0.20.0 exports its maintained
-`ic-platform-pocket-ic` 0.20.0 client; Testkit still uses client 0.19. Both select
-canonical Types 0.18. Each fixture keeps Testkit's bounded `start_managed_server`
-owner and constructs Platform's client at its returned URL; the async fixture
-starts that synchronous server owner on a blocking worker. Client types never cross
-the boundary. Preserve typed client failures, original output paths and explicit
-client-before-server teardown custody.
+Testkit 0.84 (currently locked to 0.84.1) owns the maintained `ic_testkit::pocket_ic` client, managed
+server startup, authenticated assets and harness extensions. Both libraries use
+that published client directly in simulator tests, with no Platform simulator
+feature or separate client package. Production management DTOs remain Platform's
+qualified 0.11.0 identities; canonical Types remains 0.18.
+Each fixture uses Testkit's bounded `build_instance` / `build_instance_async`,
+retaining its original topology, state directory and output files. The managed
+owner stays intact through fixture setup, then transfers the client/server pair
+into explicit client-before-server field order. Preserve typed client failures,
+original output paths and managed cleanup custody.
 No forwarding module or production simulator dependency is retained. The existing
 exact management bytes, bounded calls, signed transport, original journals and
 independent readback assertions remain local.
@@ -277,10 +277,11 @@ Each Core fixture retains the admitted server digest and the original
 `Cargo.lock`. Focused result records obtain the server version from Testkit and
 bind the copied lock's SHA-256 for the exact client/dependency selection. There
 is no separately maintained client version label or second server selection.
-Both suites use Testkit's published server-only startup and Platform 0.19's
-fallible client at the returned URL. The server keeps bounded startup/output
-and owned cleanup; client construction and operations refuse typed failures.
-Testkit's older client dependencies stay private to its development-only package.
+Both suites use Testkit's published synchronous/asynchronous managed instance
+builders and maintained client. One startup deadline covers readiness and instance
+creation; subsequent operations keep their explicit request bounds. Startup,
+client construction and operations retain typed failures, raw output and owned
+server cleanup. Simulator packages remain development-only.
 
 ## Connected original capture and restore workflows
 

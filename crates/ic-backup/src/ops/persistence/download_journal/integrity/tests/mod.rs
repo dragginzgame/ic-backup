@@ -4,7 +4,7 @@ use super::*;
 use crate::{
     model::download_journal::{ArtifactStateRecord, DownloadArtifactRequest},
     ops::persistence::{BackupLayoutGuard, create_operation_plan},
-    test_support::temp_dir,
+    tests::support::temp_dir,
 };
 use serde_json::json;
 use std::{fs, io, os::unix::fs::symlink, path::PathBuf};

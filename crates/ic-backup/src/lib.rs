@@ -36,4 +36,4 @@ pub mod view;
 pub mod workflow;
 
 #[cfg(test)]
-mod test_support;
+mod tests;

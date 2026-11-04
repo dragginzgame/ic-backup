@@ -1,7 +1,7 @@
 # AGENTS.md
 
 For scope, delegated delivery, validation, compiler support and reporting, use
-[Shared policy at 03b5d9a](https://github.com/dragginzgame/shared-tooling/blob/03b5d9a47beac9767ced96008a9e7b450b61a82a/DRAGGINZGAME.md)
+[Shared policy at 1fa2d90](https://github.com/dragginzgame/shared-tooling/blob/1fa2d90879650780d23ad8f045f5825771b696ad/DRAGGINZGAME.md)
 and its revision-bound references over older snapshot or local-guide wording.
 This includes Rust 1.99.1 as minimum and pinned development/release compiler;
 check local declarations and qualification before claiming adoption is complete.
@@ -64,9 +64,10 @@ or dependencies on Canic runtime/control-plane crates.
 
 ## Simulator qualification
 
-Simulator fixtures use published `ic-platform::pocket_ic` clients and DTOs for
-exact management ingress and async gateway qualification. Published `ic-testkit`
-owns the harness extensions; Platform's `pocket-ic` feature is development-only.
+Simulator fixtures use published `ic_testkit::pocket_ic` clients and DTOs for exact
+management ingress and async gateway qualification. Testkit owns the maintained
+client and harness extensions; both remain development-only. Production external
+management identities and codecs continue to be imported only through Platform.
 Testkit's explicit managed server owns bounded readiness/cleanup and retains raw
 output in each caller-owned fixture directory. No baseline reuse/reset, funding
 policy, hidden snapshot retry or receipt inference is adopted. Preserve original
@@ -126,7 +127,9 @@ journals and recovery evidence retain their local custody requirements.
   Shared's internal-link policy does not widen product filesystem admission.
 - Rust edition 2024. Versions and dependencies inherit from the owning workspace;
   `make dependency-pins-check` enforces the shared Cargo inheritance gate.
-- Use directory modules with `mod.rs`; no `#[path]` module layout overrides.
+- Use directory modules with `mod.rs` for production code. Tests and test-only
+  helpers use `tests.rs` or a `tests/` directory with ordinary module discovery;
+  no `#[path]` module layout overrides.
 - DTOs are passive boundary data; persisted schema types end in `Record`; views
   are read-only projections. Requests do not implement non-neutral `Default`.
 - CLI delegates to workflow; workflow calls pure policy and ops; ops accesses

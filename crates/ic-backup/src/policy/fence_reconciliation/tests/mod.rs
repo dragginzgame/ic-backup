@@ -1,8 +1,8 @@
 use super::*;
-use crate::test_support::response_fault::ContextFault;
+use crate::tests::support::response_fault::ContextFault;
 use crate::{
     model::{attempt_journal::ObservationReceiptRequest, fence_reconciliation::*},
-    test_support::{
+    tests::support::{
         consistency,
         fence_reconciliation::{input, original, reserve},
         operation_plan::hash,
@@ -290,14 +290,14 @@ fn old_result_cannot_replay_after_observation_settlement_or_under_new_reservatio
         Err(FenceReconciliationError::AttemptMismatch)
     ));
 }
-fn original_with_two_observations() -> crate::test_support::fence_reconciliation::Original {
+fn original_with_two_observations() -> crate::tests::support::fence_reconciliation::Original {
     use crate::model::{
         consistency::{
             ApplicationFenceBinding, ConsistencyGuaranteeRecord, ConsistencyRequirementRecord,
         },
         fence_obligation::FenceObligationRecord,
     };
-    let mut value = serde_json::to_value(crate::test_support::operation_plan::plan()).unwrap();
+    let mut value = serde_json::to_value(crate::tests::support::operation_plan::plan()).unwrap();
     value["operations"][0]["budget"]["observations"] = json!(2);
     value["budget"]["observations"] = json!(3);
     let plan = serde_json::from_value(value).unwrap();
@@ -316,7 +316,7 @@ fn original_with_two_observations() -> crate::test_support::fence_reconciliation
     .unwrap();
     let mut journal = AttemptJournalRecord::new(plan.attempt_authority(0).unwrap());
     journal.reserve_mutation().unwrap();
-    crate::test_support::fence_reconciliation::Original {
+    crate::tests::support::fence_reconciliation::Original {
         plan,
         obligation,
         journal,

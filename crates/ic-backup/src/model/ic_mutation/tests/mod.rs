@@ -5,7 +5,7 @@ use crate::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         ic_request::{IcManagementMethodRecord as Method, IcManagementRequest},
     },
-    test_support::{
+    tests::support::{
         ic_mutation::{input, original},
         operation_plan::hash,
     },

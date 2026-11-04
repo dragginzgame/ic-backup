@@ -7,7 +7,7 @@ const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 fn plan(targets: &[String]) -> OperationPlanRecord {
     use crate::model::inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest};
     use crate::model::operation_plan::PlanBudgetRecord;
-    use crate::test_support::operation_plan::{graph, operation, request};
+    use crate::tests::support::operation_plan::{graph, operation, request};
 
     let mut declaration = request();
     declaration.inventory = InventoryRecord::new(

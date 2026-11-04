@@ -4,7 +4,7 @@ use crate::{
         MutationOutcomeRecord, MutationReceiptRequest, ObservationOutcomeRecord,
         ObservationReceiptRequest,
     },
-    test_support::{
+    tests::support::{
         execution_settlement::{applied, journals, record},
         operation_plan::{hash, plan},
     },

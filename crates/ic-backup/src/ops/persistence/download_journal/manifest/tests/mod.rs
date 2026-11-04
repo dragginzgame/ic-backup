@@ -7,7 +7,7 @@ use crate::{
         create_operation_plan,
         json::{DurableWriteBarrier, publish_bytes_at_barriers},
     },
-    test_support::{
+    tests::support::{
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
         operation_plan::{hash, plan},
         temp_dir,
@@ -24,7 +24,7 @@ use std::{
 fn prepare() -> (PathBuf, BackupLayoutGuard, OperationPlanRecord) {
     let root = temp_dir("ic-backup-download-manifest");
     let mut value = serde_json::to_value(plan()).unwrap();
-    value["selected_targets"] = json!(["aaaaa-aa", crate::test_support::operation_plan::APP]);
+    value["selected_targets"] = json!(["aaaaa-aa", crate::tests::support::operation_plan::APP]);
     value["operations"][0]["target"] = json!("aaaaa-aa");
     let plan: OperationPlanRecord = serde_json::from_value(value).unwrap();
     for id in plan.selected_targets() {

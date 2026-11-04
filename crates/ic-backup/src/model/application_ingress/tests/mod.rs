@@ -8,7 +8,7 @@ use crate::model::{
     ic_observation::IcObservationRequestError,
     operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
 };
-use crate::test_support::operation_plan::{APP, request};
+use crate::tests::support::operation_plan::{APP, request};
 use sha2::{Digest, Sha256};
 
 fn payload(method: &str) -> ApplicationIngressPayload {

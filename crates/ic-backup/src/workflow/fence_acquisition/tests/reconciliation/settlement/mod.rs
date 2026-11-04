@@ -58,7 +58,7 @@ fn applied(
             membership_revision,
             ..
         } => {
-            let mut fence = crate::test_support::consistency::fence();
+            let mut fence = crate::tests::support::consistency::fence();
             fence.identity = identity.clone();
             fence.membership_revision = membership_revision.clone();
             FenceReconciliationEvidence::AcquiredCapture {
@@ -69,7 +69,7 @@ fn applied(
         FenceObligationScopeRecord::Restore {
             fence: original, ..
         } => {
-            let mut fence = crate::test_support::restore_safety::fence();
+            let mut fence = crate::tests::support::restore_safety::fence();
             fence.binding = original.clone();
             FenceReconciliationEvidence::AcquiredRestore {
                 fence: Box::new(fence),
@@ -336,7 +336,7 @@ fn cancelled_non_send_qualification_keeps_exclusion_spending_and_references() {
             Ok::<_, Infallible>(receipt(&observation, ObservationOutcomeRecord::NotApplied))
         },
     ));
-    crate::test_support::ready::assert_pending(future.as_mut());
+    crate::tests::support::ready::assert_pending(future.as_mut());
     assert!(
         AttemptJournalGuard::open(
             stage.layout().unwrap(),

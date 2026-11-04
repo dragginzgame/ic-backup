@@ -26,11 +26,11 @@ use ic_backup_agent::{
     AgentSnapshotTransferReadProvider, AgentTransport, AgentUpdateProvider, PreparedUpdate,
     ReservedUpdate,
 };
-use ic_platform::{
-    management_canister_types::{CanisterStatusType, SnapshotDataKind},
+use ic_platform::management_canister_types::{CanisterStatusType, SnapshotDataKind};
+use ic_testkit::{
+    pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIcBuilder, nonblocking::PocketIc},
 };
-use ic_testkit::pic::{PocketIcManagedServer, PocketIcStartupConfig};
 use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -242,16 +242,11 @@ impl Fixture {
             server_idle_ttl: None,
             server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
         };
-        let server = tokio::task::spawn_blocking(move || startup.start_managed_server())
+        let mut managed = startup
+            .build_instance_async(builder)
             .await
-            .expect("managed server startup worker")
-            .expect("bounded Testkit-managed server");
-        // No client identity crosses Testkit's server-only boundary.
-        let mut pic = builder
-            .with_server_url(server.url().parse().unwrap())
-            .build_async()
-            .await
-            .expect("fallible Platform client on the managed server");
+            .expect("bounded Testkit-managed async instance");
+        let pic = managed.instance_mut();
         let target = pic.create_canister().await.unwrap();
         pic.add_cycles(target, 100_000_000_000_000).await.unwrap();
         let wasm = fs::read(root.join("original.wasm")).unwrap();
@@ -278,6 +273,8 @@ impl Fixture {
             .unwrap()
             .to_string();
         fs::write(root.join("trusted-root.der"), &key).unwrap();
+        let (pic, server) = managed.into_parts();
+        let server = server.expect("Spawn retains its managed server");
         Self {
             pic,
             _server: server,

@@ -1,7 +1,7 @@
 //! Real retained-source IO and original journal failures; no IC effect simulation.
 use super::*;
 use crate::model::ic_update_response::IcUpdateResponseInput;
-use crate::test_support::ready::ready;
+use crate::tests::support::ready::ready;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
@@ -19,7 +19,7 @@ use crate::{
         create_execution_workflow, read_execution_progress,
     },
     ports::{ic_mutation::IcMutationProviderError, ic_snapshot_upload::IcSnapshotUploadProvider},
-    test_support::ic_snapshot_upload::{data_workflow, unhex},
+    tests::support::ic_snapshot_upload::{data_workflow, unhex},
     workflow::ic_snapshot_upload::{
         IcSnapshotDataUploadExecutionError, IcSnapshotDataUploadReplyError,
         IcSnapshotUploadExecutionError, upload_snapshot_data,
@@ -68,7 +68,7 @@ fn with_data_stage_then<T>(
     let workflow_layout = BackupLayoutGuard::acquire(&path).unwrap();
     create_execution_workflow(&workflow_layout, &workflow).unwrap();
     let plan = crate::model::operation_plan::OperationPlanRecord::new(
-        crate::test_support::ic_snapshot_upload::plan_request(
+        crate::tests::support::ic_snapshot_upload::plan_request(
             payload.binding_digest().hash(),
             0,
             0,
@@ -80,7 +80,11 @@ fn with_data_stage_then<T>(
     let raw = unhex("4449444c026c01b6b897890f016d7b0100031500ff");
     let allocation = IcSnapshotUploadReply::decode(&payload, &raw).unwrap();
     // Local receipt/persistence setup only; authentic IC attribution is tested separately.
-    crate::test_support::execution_workflow::record_applied(&stage, 0, allocation.digest().hash());
+    crate::tests::support::execution_workflow::record_applied(
+        &stage,
+        0,
+        allocation.digest().hash(),
+    );
     let predecessor = stage.reconcile_checkpoint(allocation.digest()).unwrap();
     let data = source
         .prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &allocation, chunk_bytes)
@@ -819,7 +823,7 @@ fn complete_upload_reads_are_linear_in_bytes_for_different_chunk_counts() {
                         })
                         .sum::<u64>();
                 let (_, reads) =
-                    super::super::super::read_count::measure(|| complete_data(stage, data, source));
+                    super::super::read_count::measure(|| complete_data(stage, data, source));
                 // Two complete admission passes and one closing pass, plus each exact payload once.
                 assert_eq!(reads, 3 * total + payload);
                 assert!(data.kinds().len() > 1);
@@ -876,7 +880,7 @@ fn uploaded_restore_source_requires_complete_original_and_rejects_snapshot_subst
                     })
                     .unwrap();
                     let plan = crate::model::operation_plan::OperationPlanRecord::new(
-                        crate::test_support::ic_snapshot_upload::plan_request(
+                        crate::tests::support::ic_snapshot_upload::plan_request(
                             wire.digest().hash(),
                             7,
                             1,
@@ -934,7 +938,7 @@ fn check_empty_restore_source(
         let layout = BackupLayoutGuard::acquire(&path).unwrap();
         create_execution_workflow(&layout, workflow).unwrap();
         let plan = crate::model::operation_plan::OperationPlanRecord::new(
-            crate::test_support::ic_snapshot_upload::plan_request(
+            crate::tests::support::ic_snapshot_upload::plan_request(
                 data.metadata().binding_digest().hash(),
                 0,
                 0,
@@ -948,7 +952,7 @@ fn check_empty_restore_source(
         } else {
             ArtifactChecksumRecord::from_bytes(b"different allocation reply")
         };
-        crate::test_support::execution_workflow::record_applied(&stage, 0, evidence.hash());
+        crate::tests::support::execution_workflow::record_applied(&stage, 0, evidence.hash());
         // Learned evidence is not authenticated merely by checkpoint replay.
         let completed = stage.reconcile_checkpoint(allocation.digest()).unwrap();
         drop(stage);

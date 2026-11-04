@@ -6,7 +6,7 @@ use crate::{
         AttemptBudgetRecord, ObservationOutcomeRecord, OperationBindingRecord,
         OperationBindingRequest,
     },
-    test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
+    tests::support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use std::{
     fs, io,

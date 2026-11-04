@@ -4,7 +4,7 @@ use crate::model::{
     operation_plan::{PlanBudgetRecord, PlannedOperationRequest},
 };
 
-use crate::test_support::execution_workflow::*;
+use crate::tests::support::execution_workflow::*;
 
 fn predecessor() -> ExecutionStagePredecessorRecord {
     ExecutionStagePredecessorRecord::new(

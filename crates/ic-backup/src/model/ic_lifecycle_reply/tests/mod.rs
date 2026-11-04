@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::model::{control_authority::MAX_CONTROLLERS, ic_request::IcManagementRequest};
-use crate::test_support::hex_bytes as bytes;
+use crate::tests::support::hex_bytes as bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::{CandidType, Principal};
 use ic_platform::management_canister_types::{
@@ -84,7 +84,7 @@ fn every_registered_independent_wire_and_hash_fixture_uses_production_admission(
         assert_eq!(reply.request(), &request);
         if let Some(expected_status) = case.status {
             let official: Status =
-                ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS)
+                ic_platform::candid::decode_one(&raw, crate::tests::support::WIRE_ORACLE_LIMITS)
                     .expect("upstream status enum/projection");
             assert_eq!(official.status, expected_status);
             let IcLifecycleReplyKind::Status(info) = reply.kind() else {
@@ -103,7 +103,7 @@ fn every_registered_independent_wire_and_hash_fixture_uses_production_admission(
             official.sort();
             assert_eq!(official, expected);
         } else {
-            ic_platform::candid::decode_args::<()>(&raw, crate::test_support::WIRE_ORACLE_LIMITS)
+            ic_platform::candid::decode_args::<()>(&raw, crate::tests::support::WIRE_ORACLE_LIMITS)
                 .expect("official empty tuple");
             assert_eq!(reply.kind(), &IcLifecycleReplyKind::Acknowledgement);
         }
@@ -151,7 +151,7 @@ fn accepts_complete_pinned_sdk_status_without_claiming_unprojected_metadata() {
     assert_eq!(
         ic_platform::candid::decode_one::<CanisterStatusResult>(
             &raw,
-            crate::test_support::WIRE_ORACLE_LIMITS
+            crate::tests::support::WIRE_ORACLE_LIMITS
         )
         .expect("official full result"),
         value
@@ -460,7 +460,7 @@ fn rejects_excess_type_tables_and_huge_declared_controller_count() {
     assert_eq!(
         ic_platform::candid::decode_one::<Status>(
             &excessive,
-            crate::test_support::WIRE_ORACLE_LIMITS
+            crate::tests::support::WIRE_ORACLE_LIMITS
         )
         .expect("valid unused types")
         .status,

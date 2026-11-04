@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
-use crate::test_support::response_fault::ResponseFault;
+use crate::tests::support::response_fault::ResponseFault;
 use crate::{
     model::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
@@ -11,7 +11,7 @@ use crate::{
         ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
     },
-    test_support::{ic_mutation, operation_plan::hash},
+    tests::support::{ic_mutation, operation_plan::hash},
 };
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
@@ -22,7 +22,7 @@ fn metadata_wire() -> Vec<u8> {
         "../../../model/ic_snapshot_metadata/tests/golden.json"
     ))
     .unwrap();
-    crate::test_support::hex_bytes(
+    crate::tests::support::hex_bytes(
         cases
             .iter()
             .find(|case| case["name"] == "data-source")
@@ -287,8 +287,11 @@ fn full_bounded_data_and_empty_known_chunks_keep_original_byte_and_hash_limits()
     let metadata_request =
         IcSnapshotMetadataRequest::new(ic_mutation::stop().target(), &[0, 255, 128]).unwrap();
     let mut values: ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&metadata_wire(), crate::test_support::WIRE_ORACLE_LIMITS)
-            .unwrap();
+        ic_platform::candid::decode_one(
+            &metadata_wire(),
+            crate::tests::support::WIRE_ORACLE_LIMITS,
+        )
+        .unwrap();
     values.wasm_module_size =
         crate::model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES as u64;
     values.wasm_chunk_store = vec![ic_platform::management_canister_types::ChunkHash {

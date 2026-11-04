@@ -3,9 +3,9 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::operation_plan::{declaration, graph, operation_request};
 
-use crate::test_support::execution_workflow::{child_request, workflow};
+use crate::tests::support::execution_workflow::{child_request, workflow};
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -24,7 +24,7 @@ use crate::{
         BackupLayoutGuard, create_consistency_requirement, create_execution_workflow,
         create_fence_obligation, create_operation_plan, create_restore_safety_requirement,
     },
-    test_support::{ready::ready, temp_dir},
+    tests::support::{ready::ready, temp_dir},
 };
 use std::{convert::Infallible, fs, path::PathBuf};
 
@@ -523,7 +523,7 @@ fn cancellation_holds_exclusion_and_retains_pending_spending_and_source_referenc
                 Ok::<(), Infallible>(())
             },
         ));
-        crate::test_support::ready::assert_pending(future.as_mut());
+        crate::tests::support::ready::assert_pending(future.as_mut());
         assert!(
             AttemptJournalGuard::open(
                 stage.layout().unwrap(),

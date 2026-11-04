@@ -260,7 +260,7 @@ fn maximum_chunks_and_region_bytes_verify_without_an_aggregate_buffer() {
     );
     let mut extreme = ic_platform::candid::decode_one::<ReadCanisterSnapshotMetadataResult>(
         &raw,
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap();
     extreme.stable_memory_size = u64::MAX;
@@ -339,7 +339,7 @@ fn matching_forged_tree_checksums_cannot_bypass_metadata_shape_or_chunk_identity
         record["artifacts"][0]["checksum"] = serde_json::to_value(&checksum).unwrap();
         guard.record = serde_json::from_value(record).unwrap();
         // Deliberately corrupt both retained declarations; shape/evidence remains independent.
-        crate::test_support::write_json_durable(&guard.path(), &guard.record).unwrap();
+        crate::tests::support::write_json_durable(&guard.path(), &guard.record).unwrap();
         let bytes = fs::read(guard.path()).unwrap();
         let result = guard.verify_ic_snapshot_artifact(&plan, TOKEN, &metadata);
         match case {

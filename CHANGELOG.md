@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.57.1] - Unreleased
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.29.3 at committed revision `1fa2d90`, including Testkit's
+  native client ownership and the focused validation/release evidence fixes.
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.21.0, unifying production and Testkit on one facade version
+  while retaining the existing Principal, management DTO and Agent identities.
+- Adopt Testkit 0.84 and its maintained PocketIC client. Remove Platform's
+  simulator feature and the separate client package; keep authenticated PocketIC
+  16.1.0 and the existing fixture bounds and custody.
+
+### 🧹 Cleanup
+
+- Move inline unit tests and shared test-only fixtures, regression cases and read
+  accounting into `tests.rs` / `tests/`, preserving checks and ordinary module
+  discovery while making file-based production/test counts accurate.
+
+- Construct simulator instances through Testkit's synchronous/asynchronous managed
+  builders, retaining original bounds, output files and server custody while removing
+  the temporary client URL bridge and blocking startup worker.
+
 ## [0.57.0] - 2026-11-03
 
 ### ⚠️ Breaking

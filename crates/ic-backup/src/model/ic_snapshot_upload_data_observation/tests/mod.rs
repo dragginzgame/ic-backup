@@ -4,7 +4,7 @@ use crate::{
         attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
     },
-    test_support::{
+    tests::support::{
         ic_snapshot_upload::{SOURCE_ID, TARGET, unhex},
         ic_snapshot_upload_data_observation::{input, with_original},
     },

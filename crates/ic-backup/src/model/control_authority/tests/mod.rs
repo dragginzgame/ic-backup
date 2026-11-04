@@ -43,7 +43,7 @@ fn normalizes_known_sets_and_rejects_duplicates_malformed_and_excessive_entries(
 
 #[test]
 fn exact_original_caller_membership_does_not_delegate_to_other_controllers() {
-    let plan = crate::test_support::operation_plan::plan();
+    let plan = crate::tests::support::operation_plan::plan();
     let binding = plan.operation_binding(7).unwrap();
     assert!(
         ControllerSet::new(vec![binding.caller().to_uppercase()])

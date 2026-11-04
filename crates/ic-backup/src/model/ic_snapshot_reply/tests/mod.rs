@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::model::ic_request::{IcManagementRequest, MAX_IC_SNAPSHOT_ID_BYTES};
-use crate::test_support::hex_bytes as bytes;
+use crate::tests::support::hex_bytes as bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::CandidType;
 use ic_platform::management_canister_types::Snapshot;
@@ -62,14 +62,14 @@ fn admits_every_registered_independent_wire_and_evidence_digest() {
             vec![
                 ic_platform::candid::decode_one::<Snapshot>(
                     &raw,
-                    crate::test_support::WIRE_ORACLE_LIMITS,
+                    crate::tests::support::WIRE_ORACLE_LIMITS,
                 )
                 .expect("official capture shape"),
             ]
         } else {
             ic_platform::candid::decode_one::<Vec<Snapshot>>(
                 &raw,
-                crate::test_support::WIRE_ORACLE_LIMITS,
+                crate::tests::support::WIRE_ORACLE_LIMITS,
             )
             .expect("official inventory shape")
         };
@@ -297,7 +297,7 @@ fn rejects_excess_type_tables_and_huge_declared_sequences() {
     assert_eq!(
         ic_platform::candid::decode_one::<Snapshot>(
             &excess,
-            crate::test_support::WIRE_ORACLE_LIMITS
+            crate::tests::support::WIRE_ORACLE_LIMITS
         )
         .expect("valid unused types"),
         snapshot(vec![1])

@@ -8,7 +8,7 @@ use crate::{
         ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_REPLY_BYTES,
         ic_snapshot_transfer_read::{IcSnapshotTransferReadError, IcSnapshotTransferReadResponse},
     },
-    test_support::ic_mutation::{input, original},
+    tests::support::ic_mutation::{input, original},
 };
 
 #[test]

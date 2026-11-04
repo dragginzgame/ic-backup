@@ -5,7 +5,7 @@ use crate::{
         MutationOutcomeRecord, MutationReceiptRequest, ObservationOutcomeRecord,
         ObservationReceiptRequest,
     },
-    test_support::{
+    tests::support::{
         execution_settlement::{applied, record},
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier,
         operation_plan::plan,

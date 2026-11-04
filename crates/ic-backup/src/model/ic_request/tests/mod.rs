@@ -45,7 +45,7 @@ fn binding(record: &IcManagementRequestRecord) -> OperationBindingRecord {
 fn matches_independent_candid_bytes_and_domain_separated_wire_goldens() {
     for case in cases() {
         let record = request(case.method, &case.target, case.snapshot_id.clone());
-        let expected = crate::test_support::hex_bytes(&case.arguments_hex);
+        let expected = crate::tests::support::hex_bytes(&case.arguments_hex);
         assert_eq!(record.arguments(), expected, "{}", case.method.name());
         assert_eq!(
             record.digest().hash(),
@@ -73,7 +73,7 @@ fn decodes_exact_host_ingress_shapes_using_pinned_official_types() {
             IcManagementMethodRecord::TakeCanisterSnapshot => {
                 let decoded: TakeCanisterSnapshotArgs = ic_platform::candid::decode_one(
                     record.arguments(),
-                    crate::test_support::WIRE_ORACLE_LIMITS,
+                    crate::tests::support::WIRE_ORACLE_LIMITS,
                 )
                 .expect("official capture argument type");
                 assert_eq!(decoded.canister_id.to_text(), record.target());
@@ -85,7 +85,7 @@ fn decodes_exact_host_ingress_shapes_using_pinned_official_types() {
             IcManagementMethodRecord::LoadCanisterSnapshot => {
                 let decoded: LoadCanisterSnapshotArgs = ic_platform::candid::decode_one(
                     record.arguments(),
-                    crate::test_support::WIRE_ORACLE_LIMITS,
+                    crate::tests::support::WIRE_ORACLE_LIMITS,
                 )
                 .expect("official load argument type");
                 assert_eq!(decoded.canister_id.to_text(), record.target());
@@ -96,7 +96,7 @@ fn decodes_exact_host_ingress_shapes_using_pinned_official_types() {
             _ => {
                 let decoded: CanisterIdRecord = ic_platform::candid::decode_one(
                     record.arguments(),
-                    crate::test_support::WIRE_ORACLE_LIMITS,
+                    crate::tests::support::WIRE_ORACLE_LIMITS,
                 )
                 .expect("official target argument type");
                 assert_eq!(decoded.canister_id.to_text(), record.target());

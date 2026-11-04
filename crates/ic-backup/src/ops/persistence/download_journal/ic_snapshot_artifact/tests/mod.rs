@@ -1,6 +1,8 @@
 //! Actual private filesystem streaming and durable interruption recovery; no IC backend.
 
 use ic_platform::candid::contract;
+pub(super) mod read_count;
+
 mod custody;
 mod file_change;
 mod fixture;
@@ -15,7 +17,7 @@ use crate::{
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
     },
     ops::persistence::{BackupLayoutGuard, commit_artifact_directory},
-    test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
+    tests::support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use fixture::{CreatedArtifact, retained, with_created};
 use ic_host_artifacts::artifact::Sha256Digest;
@@ -33,9 +35,9 @@ const TOKEN: &str = "opaque-backend-token";
 const INTENT: &str = "abababababababababababababababababababababababababababababababab";
 
 fn values() -> ReadCanisterSnapshotMetadataResult {
-    let raw = crate::test_support::ic_snapshot_metadata::raw("data-source");
+    let raw = crate::tests::support::ic_snapshot_metadata::raw("data-source");
     let mut values: ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
+        ic_platform::candid::decode_one(&raw, crate::tests::support::WIRE_ORACLE_LIMITS).unwrap();
     values.wasm_module_size = 5;
     values.wasm_memory_size = 3;
     values.stable_memory_size = 1;

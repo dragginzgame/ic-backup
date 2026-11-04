@@ -4,7 +4,7 @@ use crate::{
         attempt_journal::ObservationReceiptRequest,
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
     },
-    test_support::ic_snapshot_upload::{SOURCE_ID, TARGET, observation_input, with_observation},
+    tests::support::ic_snapshot_upload::{SOURCE_ID, TARGET, observation_input, with_observation},
 };
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::Snapshot;

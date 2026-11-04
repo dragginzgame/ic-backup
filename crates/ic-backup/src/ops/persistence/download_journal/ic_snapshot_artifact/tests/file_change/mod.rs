@@ -1,6 +1,6 @@
 //! Native path replacements retain the original file before changing its shape.
 
-use crate::test_support::create_private_fifo;
+use crate::tests::support::create_private_fifo;
 use std::{fs, os::unix::fs::symlink, path::Path};
 
 pub(super) enum Replacement<'a> {

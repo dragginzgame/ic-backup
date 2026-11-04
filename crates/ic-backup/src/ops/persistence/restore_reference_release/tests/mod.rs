@@ -1,11 +1,11 @@
 //! Real filesystem/custody checks around an integration-owned terminal validator.
 
 use super::*;
-use crate::test_support::write_json_durable;
+use crate::tests::support::write_json_durable;
 use crate::{
     model::{artifacts::ArtifactChecksumRecord, command_custody::CommandCustodyRecord},
     ops::persistence::CommandLifetimeLock,
-    test_support::temp_dir,
+    tests::support::temp_dir,
 };
 use serde::{Deserialize, Serialize};
 use std::{

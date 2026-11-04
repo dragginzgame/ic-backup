@@ -6,7 +6,7 @@ use crate::{
         ic_observation::{IcObservationRequest, IcObservationResponseInput},
         ic_request::{IcManagementRequest, IcManagementRequestRecord},
     },
-    test_support::{
+    tests::support::{
         ic_mutation,
         ic_observation::{self, Original},
         operation_plan::hash,

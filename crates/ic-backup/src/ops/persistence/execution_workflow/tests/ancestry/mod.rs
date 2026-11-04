@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_support::execution_workflow::child_request;
+use crate::tests::support::execution_workflow::child_request;
 use serde_json::json;
 
 fn catalog() -> ExecutionWorkflowRecord {

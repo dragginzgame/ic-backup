@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     model::attempt_journal::ObservationReceiptRequest,
-    test_support::ic_snapshot_upload_data_observation::{input, with_original},
+    tests::support::ic_snapshot_upload_data_observation::{input, with_original},
 };
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::SnapshotDataKind;
@@ -164,7 +164,7 @@ fn changed_destination_metadata_cannot_reuse_identical_read_arguments_and_raw_da
 fn known_empty_chunk_uses_existing_hash_decoder_and_no_new_allowance() {
     with_original(
         SnapshotDataKind::WasmChunk {
-            hash: crate::test_support::ic_snapshot_upload::unhex(
+            hash: crate::tests::support::ic_snapshot_upload::unhex(
                 ArtifactChecksumRecord::from_bytes(&[]).hash(),
             ),
         },

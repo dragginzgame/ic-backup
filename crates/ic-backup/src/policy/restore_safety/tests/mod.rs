@@ -1,10 +1,10 @@
 //! Pure boundary matching and typed unsafe denials; no application/IC observations.
 
 use super::*;
-use crate::test_support::response_fault::ContextFault;
+use crate::tests::support::response_fault::ContextFault;
 use crate::{
     model::{operation_plan::OperationPlanRecord, restore_safety::*},
-    test_support::{
+    tests::support::{
         operation_plan::{APP, hash},
         restore_safety::{
             RestoreFenceFault, fence, input, parameters, plan, requirement, source, wire,

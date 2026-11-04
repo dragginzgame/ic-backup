@@ -1,8 +1,8 @@
 use super::*;
-use crate::test_support::response_fault::ObservationFault;
+use crate::tests::support::response_fault::ObservationFault;
 use crate::{
     model::{artifacts::ArtifactChecksumRecord, ic_observation::IcObservationResponse},
-    test_support::{
+    tests::support::{
         ic_snapshot_upload::unhex,
         ic_snapshot_upload_data_observation::{input, with_original},
     },

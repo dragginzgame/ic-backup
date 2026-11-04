@@ -10,7 +10,7 @@ use crate::model::{
     effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
     operation_plan::{OperationPlanRequest, PlanBudgetRecord},
 };
-use crate::test_support::operation_plan::request;
+use crate::tests::support::operation_plan::request;
 
 fn plan() -> OperationPlanRecord {
     OperationPlanRecord::new(request()).expect("original plan")

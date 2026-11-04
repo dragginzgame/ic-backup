@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest};
-use crate::test_support::hex_bytes;
+use crate::tests::support::hex_bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::CandidType;
 use ic_platform::management_canister_types::{
@@ -54,7 +54,7 @@ fn admits_every_registered_exact_argument_reply_and_metadata_evidence_digest() {
         );
         let args: ReadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
             request.arguments(),
-            crate::test_support::WIRE_ORACLE_LIMITS,
+            crate::tests::support::WIRE_ORACLE_LIMITS,
         )
         .unwrap();
         assert_eq!(args.canister_id.to_text(), source.target());
@@ -72,7 +72,8 @@ fn admits_every_registered_exact_argument_reply_and_metadata_evidence_digest() {
         let raw = hex_bytes(&case.reply_hex);
         let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
         let official: ReadCanisterSnapshotDataResult =
-            ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
+            ic_platform::candid::decode_one(&raw, crate::tests::support::WIRE_ORACLE_LIMITS)
+                .unwrap();
         assert_eq!(official.chunk, case.chunk);
         assert_eq!(reply.chunk(), case.chunk);
         assert_eq!(reply.chunk_checksum().hash(), case.chunk_checksum);
@@ -94,9 +95,11 @@ fn region(index: usize, offset: u64, size: u64) -> SnapshotDataKind {
 #[test]
 fn checked_ranges_reject_zero_excess_overflow_and_wrong_metadata_region() {
     let source = metadata_request();
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&metadata_bytes(), crate::test_support::WIRE_ORACLE_LIMITS)
-            .unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
+        &metadata_bytes(),
+        crate::tests::support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     values.wasm_module_size = 0;
     values.wasm_memory_size = 64;
     values.stable_memory_size = u64::MAX;
@@ -195,9 +198,11 @@ fn actual_chunk_and_raw_bounds_include_valid_maximum_ranges_and_stored_chunks() 
     let source = metadata_request();
     let chunk = vec![19; MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES];
     let checksum = sha2::Sha256::digest(&chunk);
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&metadata_bytes(), crate::test_support::WIRE_ORACLE_LIMITS)
-            .unwrap();
+    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
+        &metadata_bytes(),
+        crate::tests::support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     values.wasm_module_size = 1024 * 1024;
     values.wasm_chunk_store = vec![ChunkHash {
         hash: checksum.to_vec(),
@@ -243,7 +248,7 @@ fn retains_metadata_and_raw_wire_identity_separately_from_matching_data_bytes() 
     let raw_metadata = metadata_bytes();
     let original = IcSnapshotMetadataReply::decode(&source, &raw_metadata).unwrap();
     let mut values: ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&raw_metadata, crate::test_support::WIRE_ORACLE_LIMITS)
+        ic_platform::candid::decode_one(&raw_metadata, crate::tests::support::WIRE_ORACLE_LIMITS)
             .unwrap();
     values.taken_at_timestamp -= 1;
     let changed =

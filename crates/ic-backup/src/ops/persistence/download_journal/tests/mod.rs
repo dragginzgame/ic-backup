@@ -7,7 +7,7 @@ use crate::{
         artifacts::ChecksumError,
         download_journal::{ArtifactStateRecord, ResumeAction},
     },
-    test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
+    tests::support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use std::{
     os::unix::fs::{PermissionsExt, symlink},

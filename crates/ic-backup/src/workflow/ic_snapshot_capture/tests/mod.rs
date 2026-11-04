@@ -2,8 +2,8 @@
 
 use super::*;
 use crate::ops::persistence::AttemptJournalGuard;
-use crate::test_support::execution_workflow::{child_request, workflow};
-use crate::test_support::ready::ready;
+use crate::tests::support::execution_workflow::{child_request, workflow};
+use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use crate::{
     model::{
@@ -15,7 +15,7 @@ use crate::{
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
     ops::persistence::BackupLayoutGuard,
-    test_support::ic_mutation::reply,
+    tests::support::ic_mutation::reply,
 };
 use std::{convert::Infallible, fs, path::PathBuf};
 
@@ -54,7 +54,7 @@ fn cancellation_during_admission_or_submission_releases_lock_without_reset_or_re
                 Ok::<(), Infallible>(())
             },
         ));
-        crate::test_support::ready::assert_pending(future.as_mut());
+        crate::tests::support::ready::assert_pending(future.as_mut());
         assert!(
             AttemptJournalGuard::open(
                 stage.layout().unwrap(),
@@ -104,7 +104,7 @@ fn prepare(
         .unwrap(),
     ];
     let plan = OperationPlanRecord::new(child).unwrap();
-    let (root, layout, binding) = crate::test_support::execution_workflow::prepare_stage(
+    let (root, layout, binding) = crate::tests::support::execution_workflow::prepare_stage(
         "ic-backup-capture-step",
         &workflow,
         0,

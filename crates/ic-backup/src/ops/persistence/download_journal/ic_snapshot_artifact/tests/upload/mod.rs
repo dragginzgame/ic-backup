@@ -2,11 +2,11 @@
 use ic_platform::candid::contract;
 mod plan;
 use super::*;
-use crate::test_support::ic_snapshot_metadata::raw as upload_raw;
+use crate::tests::support::ic_snapshot_metadata::raw as upload_raw;
 use crate::{
     model::ic_snapshot_upload::{IcSnapshotUploadError, IcSnapshotUploadRequest},
     ops::persistence::{IcSnapshotUploadArtifactError, create_operation_plan},
-    test_support::{
+    tests::support::{
         create_private_fifo,
         ic_snapshot_upload::{DESTINATION_ID, source_plan},
     },
@@ -18,7 +18,7 @@ use ic_platform::management_canister_types::{
 fn upload_values() -> ReadCanisterSnapshotMetadataResult {
     let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
         &upload_raw("upload-source"),
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap();
     values.wasm_module_size = 5;
@@ -43,7 +43,7 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
         .unwrap();
     let args: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
         upload.arguments(),
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap();
     assert_eq!(args.replace_snapshot, None);
@@ -84,7 +84,7 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
             .unwrap();
         let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
             payload.arguments(),
-            crate::test_support::WIRE_ORACLE_LIMITS,
+            crate::tests::support::WIRE_ORACLE_LIMITS,
         )
         .unwrap();
         assert_eq!(args.chunk, expected);
@@ -228,7 +228,7 @@ fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reje
         ),
         Err(IcSnapshotUploadArtifactError::SourceMismatch)
     ));
-    let other = crate::test_support::ic_snapshot_upload::plan(&"12".repeat(32));
+    let other = crate::tests::support::ic_snapshot_upload::plan(&"12".repeat(32));
     assert!(matches!(
         guard.prepare_ic_snapshot_upload_data(
             &other,
@@ -341,7 +341,7 @@ fn maximum_bounded_descriptor_slice_does_not_buffer_the_whole_region() {
         .unwrap();
     let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
         payload.arguments(),
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap();
     assert_eq!(args.chunk, vec![43; MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES]);

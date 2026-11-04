@@ -4,7 +4,7 @@ use crate::{
         attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
         ic_request::{IcManagementRequest, IcRequestError},
     },
-    test_support::ic_snapshot_upload::{DESTINATION_ID, TARGET, with_observation},
+    tests::support::ic_snapshot_upload::{DESTINATION_ID, TARGET, with_observation},
 };
 
 #[test]

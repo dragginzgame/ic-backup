@@ -4,7 +4,7 @@ use super::*;
 use crate::{
     model::restore_safety::RestoreSafetyLaneRecord,
     ops::persistence::JournalLock,
-    test_support::{
+    tests::support::{
         restore_safety::{plan, requirement, source},
         temp_dir,
     },

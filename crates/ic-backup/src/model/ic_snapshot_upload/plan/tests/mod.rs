@@ -1,9 +1,9 @@
 //! Original allowance thresholds, canonical complete extents and exact learned binding.
 use super::*;
-use crate::test_support::ic_snapshot_metadata::raw;
+use crate::tests::support::ic_snapshot_metadata::raw;
 use crate::{
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-    test_support::ic_snapshot_upload::{
+    tests::support::ic_snapshot_upload::{
         SOURCE_ID, TARGET, data_workflow, source_plan, unhex, upload_plan,
     },
 };
@@ -29,7 +29,7 @@ fn with_values(
 fn values() -> ReadCanisterSnapshotMetadataResult {
     ic_platform::candid::decode_one(
         &raw("upload-source"),
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap()
 }

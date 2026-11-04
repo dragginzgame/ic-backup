@@ -1,14 +1,14 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
-use crate::test_support::retained_reply::write_synced;
+use crate::tests::support::retained_reply::write_synced;
 mod fixture;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::operation_plan::{declaration, graph, operation_request};
 use fixture::RestoreFixture;
 
 use crate::ops::persistence::AttemptJournalGuard;
-use crate::test_support::ready::ready;
+use crate::tests::support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -23,7 +23,7 @@ use crate::{
         BackupLayoutGuard, create_execution_workflow, create_operation_plan,
         create_restore_safety_requirement, read_execution_progress,
     },
-    test_support::{
+    tests::support::{
         restore_safety::{input, plan, requirement, source, wire},
         temp_dir,
     },
@@ -66,7 +66,7 @@ impl IcMutationProvider for Provider {
             self.calls += 1;
             let reply = self.reply.clone()?;
             Ok(
-                IcMutationAcknowledgement::new(crate::test_support::update::input(
+                IcMutationAcknowledgement::new(crate::tests::support::update::input(
                     request.authority(),
                     request.mutation_attempt(),
                     request.plan().context(),
@@ -81,7 +81,7 @@ fn receipt(
     request: &IcMutationRequest<'_>,
     reply: &IcMutationAcknowledgement,
 ) -> MutationReceiptRequest {
-    crate::test_support::update::applied_receipt(
+    crate::tests::support::update::applied_receipt(
         request.mutation_attempt(),
         &request.payload().digest(),
         &reply.input().evidence,
@@ -251,7 +251,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
             Ok(receipt(request, reply))
         },
     ));
-    crate::test_support::ready::assert_pending(future.as_mut());
+    crate::tests::support::ready::assert_pending(future.as_mut());
     let authority = stage.plan().attempt_authority(sequence).unwrap();
     assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
     let journal_path = stage

@@ -1,9 +1,10 @@
+use super::stage::StagePreparationBarrier;
 use super::*;
-use crate::test_support::execution_workflow::{child, record_applied, workflow};
+use crate::tests::support::execution_workflow::{child, record_applied, workflow};
 use crate::{
     model::execution_workflow::ExecutionStagePredecessorRecord,
     ops::persistence::{AttemptJournalGuard, read_execution_progress},
-    test_support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
+    tests::support::{hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir},
 };
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::process::Command;

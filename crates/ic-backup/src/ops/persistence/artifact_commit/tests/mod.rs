@@ -1,7 +1,9 @@
+mod regressions;
+
 use super::{ArtifactCommitOutcome, supported::*};
 use crate::{
     ops::{artifacts::checksum_directory, persistence::PersistenceError},
-    test_support::temp_dir,
+    tests::support::temp_dir,
 };
 
 use std::{fs, io};

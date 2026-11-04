@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     model::attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
-    test_support::{
+    tests::support::{
         fence_reconciliation::{input, original, reserve},
         operation_plan::hash,
     },

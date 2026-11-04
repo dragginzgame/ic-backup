@@ -9,7 +9,7 @@ use crate::{
         AttemptJournalGuard, attempt_journal::read_original_journals, create_operation_plan,
     },
     policy::execution_progress::OperationProgressState,
-    test_support::{
+    tests::support::{
         operation_plan::{hash, plan},
         temp_dir,
     },

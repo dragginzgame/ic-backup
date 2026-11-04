@@ -2,8 +2,8 @@
 
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
-use crate::test_support::execution_workflow::{child_request, workflow};
-use crate::test_support::ready::ready;
+use crate::tests::support::execution_workflow::{child_request, workflow};
+use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::{
     model::{
@@ -22,7 +22,7 @@ use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, Sna
 use std::{convert::Infallible, fs, path::PathBuf};
 
 fn metadata_wire() -> Vec<u8> {
-    crate::test_support::ic_snapshot_metadata::raw("data-source")
+    crate::tests::support::ic_snapshot_metadata::raw("data-source")
 }
 fn metadata_request() -> IcSnapshotMetadataRequest {
     IcSnapshotMetadataRequest::new(workflow().stage(0).unwrap().target(), &[0, 255, 128]).unwrap()
@@ -47,7 +47,7 @@ fn prepare(
         .unwrap(),
     ];
     let plan = OperationPlanRecord::new(child).unwrap();
-    let (root, layout, binding) = crate::test_support::execution_workflow::prepare_stage(
+    let (root, layout, binding) = crate::tests::support::execution_workflow::prepare_stage(
         "ic-backup-transfer-step",
         &workflow,
         0,
@@ -167,7 +167,7 @@ fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() 
                     Ok::<(), Infallible>(())
                 },
             ));
-            crate::test_support::ready::assert_pending(future.as_mut());
+            crate::tests::support::ready::assert_pending(future.as_mut());
             assert!(
                 AttemptJournalGuard::open(
                     stage.layout().unwrap(),

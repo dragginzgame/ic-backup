@@ -2,10 +2,10 @@
 
 use super::*;
 use crate::model::command_custody::MAX_COMMAND_CUSTODY_RECORD_BYTES;
-use crate::test_support::create_json_durable;
+use crate::tests::support::create_json_durable;
 use crate::{
     ops::persistence::read_json,
-    test_support::{
+    tests::support::{
         hold_at_acknowledged_barrier, kill_child_at_acknowledged_barrier, temp_dir,
         wait_for_child_path, wait_for_path,
     },

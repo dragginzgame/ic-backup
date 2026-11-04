@@ -1,7 +1,7 @@
 //! Immutable original declarations, independently encoded requests and bounded targets.
 
 use super::*;
-use crate::test_support::{
+use crate::tests::support::{
     consistency::{input, parameters},
     operation_plan::{APP, hash, plan},
 };

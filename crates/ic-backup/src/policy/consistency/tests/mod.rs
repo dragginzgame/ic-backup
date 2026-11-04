@@ -1,10 +1,10 @@
 //! Pure actual consistency matching; native evidence never proves an active application fence.
 
 use super::*;
-use crate::test_support::response_fault::ContextFault;
+use crate::tests::support::response_fault::ContextFault;
 use crate::{
     model::consistency::{ConsistencyBoundary, ConsistencyRequirementRecord},
-    test_support::{
+    tests::support::{
         consistency::{fence, input, parameters},
         operation_plan::{hash, plan},
     },
@@ -200,7 +200,7 @@ fn zero_and_max_call_reporting_do_not_change_original_allowances() {
 fn every_member_of_a_multi_target_selection_requires_stopped_evidence() {
     let mut value = serde_json::to_value(plan()).unwrap();
     value["selected_targets"] =
-        serde_json::json!(["aaaaa-aa", crate::test_support::operation_plan::APP]);
+        serde_json::json!(["aaaaa-aa", crate::tests::support::operation_plan::APP]);
     value["operations"][0]["target"] = serde_json::json!("aaaaa-aa");
     let plan = serde_json::from_value(value).unwrap();
     for guarantee in [

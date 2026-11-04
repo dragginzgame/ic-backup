@@ -17,11 +17,17 @@ select affected approved groups, semantic-version increments and dependency orde
 and execute necessary preparation and delivery without per-command confirmation.
 Preparing code/notes, asking how to deploy or checking readiness does not itself
 authorize execution. Preserve explicit target restrictions and required protections.
+Before execution, disclose the working checkout and branch, remote destination
+and release effects. Direct integration-branch pushes and alternate delivery
+checkouts need explicit authorization under the linked contribution rules; a
+generic deployment request does not silently select either. Preserve unique edits
+under the [durable work contract](../rules/contributions.md#durable-work-and-checkout-location).
 
 The names, version arithmetic and recovery contract are shared across repositories.
 Each repository supplies its canonical version source, metadata file set,
-validation gate, branch, remote and explicit delivery policy. Direct delivery is
-the default; [PR delivery](#pr-delivery) adds review and fresh merged-commit
+validation gate, branch, remote and explicit delivery policy. The runner defaults
+to direct delivery; this is executable behavior, not agent authorization to push.
+[PR delivery](#pr-delivery) adds review and fresh merged-commit
 validation before tagging. A repository
 without package metadata may use a dedicated version file; otherwise it uses
 its latest finalized changelog version. Shared Tooling owns its current local
@@ -1048,6 +1054,10 @@ do not patch vendored scripts or silently use an unrelated executable. The
 Shared's selected IC Build 0.73.0 editor with its explicit `cli` feature. Direct
 producer integration qualification may select a compiled candidate explicitly;
 that evidence is not registry delivery or installed-tool admission.
+
+For manifest-order status propagation and selected-commit checks, run
+`bash scripts/ci/test-cargo-release-groups.sh --case ordering`. This focused case
+needs no compiled editor; the full entrypoint retains the integration matrix.
 
 Publication remains separate. Use the consumer's explicit selected package batch
 with the existing publication adapter; it admits each package's own version and

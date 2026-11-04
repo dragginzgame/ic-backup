@@ -1,8 +1,6 @@
 //! Stream artifact bytes through descriptor-based no-follow traversal.
 
 #[cfg(test)]
-mod regressions;
-#[cfg(test)]
 mod tests;
 
 use crate::model::artifacts::ArtifactChecksumRecord;

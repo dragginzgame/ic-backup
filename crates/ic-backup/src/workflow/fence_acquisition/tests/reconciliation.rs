@@ -367,7 +367,7 @@ fn cancellation_during_admission_or_observation_holds_exclusion_and_retains_orig
                 Ok::<(), Infallible>(())
             },
         ));
-        crate::test_support::ready::assert_pending(future.as_mut());
+        crate::tests::support::ready::assert_pending(future.as_mut());
         assert!(
             AttemptJournalGuard::open(
                 stage.layout().unwrap(),

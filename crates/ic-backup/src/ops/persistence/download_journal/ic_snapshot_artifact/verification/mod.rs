@@ -163,7 +163,7 @@ pub(super) fn checksum_exact_reader<R: Read>(
     length: u64,
 ) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
     #[cfg(test)]
-    let reader = super::read_count::Reader(reader);
+    let reader = super::tests::read_count::Reader(reader);
     let identity = hash_exact_reader(reader, length).map_err(|error| match error {
         InputError::LimitExceeded { .. } | InputError::LengthMismatch { .. } => {
             IcSnapshotArtifactError::FileShape

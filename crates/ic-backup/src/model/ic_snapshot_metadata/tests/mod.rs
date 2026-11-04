@@ -1,6 +1,6 @@
 use super::*;
 use crate::model::ic_request::MAX_IC_SNAPSHOT_ID_BYTES;
-use crate::test_support::hex_bytes;
+use crate::tests::support::hex_bytes;
 use ic_platform::candid::contract;
 use ic_platform::candid::contract::{CandidType, Nat, Reserved};
 use ic_platform::management_canister_types::{
@@ -42,7 +42,8 @@ fn admits_every_registered_independent_wire_and_evidence_digest() {
         let raw = hex_bytes(&case.reply_hex);
         let reply = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let official: ReadCanisterSnapshotMetadataResult =
-            ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap();
+            ic_platform::candid::decode_one(&raw, crate::tests::support::WIRE_ORACLE_LIMITS)
+                .unwrap();
         assert_eq!(
             contract::encode_one(reply.metadata()).unwrap(),
             contract::encode_one(official).unwrap()
@@ -91,7 +92,7 @@ fn exact_arguments_normalization_and_independent_digests() {
     let request = request();
     let args: ReadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
         request.arguments(),
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap();
     assert_eq!(args.canister_id.to_text(), request.target());

@@ -20,31 +20,40 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The current source is Shared Tooling **0.27.28**, commit
-`03b5d9a47beac9767ced96008a9e7b450b61a82a`, the merged
-[inventory fix PR](https://github.com/dragginzgame/shared-tooling/pull/348).
-The canonical exporter uses that exact commit from a clean isolated checkout;
-uncommitted sibling edits supply no provenance.
+The selected source is Shared Tooling **0.29.3**, committed revision
+`1fa2d90879650780d23ad8f045f5825771b696ad`, observed on upstream main.
+This is a committed snapshot selection, not a claim that a matching version tag
+has been published. The canonical exporter reads that exact commit; unrelated
+uncommitted supplier work contributes no payloads.
 
-This revision advances from `651f5f7`, retaining **144 selected payloads** with
-seven updates and no additions or retirements. Owned-tree inventory now refuses
-traversal errors instead of returning a partial tree. Compiler-cache operations
-reject incomplete scans; tool-store maintenance protects unreadable generations.
-The producer's two maintenance fixtures cover both callers and retained evidence.
+The refresh advances from `03b5d9a`, retaining **148 payloads**: 20 updates,
+four additions and 124 unchanged files. Common executable catalogs remain byte
+identical. Reviewed changes transfer the native PocketIC exception to Testkit,
+centralize validation evidence, fix UTF-8 text admission and Bash 3.2 manifest-order
+failure propagation, and clarify test source layout, dependency roles and scope.
+Backup's pending Testkit 0.84 migration already fits the new native-client owner.
 
-The accompanying governance changes allow private path-only development helpers
-in independent release groups and narrowly owned benchmark statistics without a
-Metrics dependency. Backup keeps its coordinated workspace, existing dependencies
-and complete positional release gate; no private helper, group plan, stage omission
-or proof-reuse mode is enabled. Common executable catalogs and installer/build
-identity policy are unchanged. The release-group guide now declares the runner
-guide as a companion; Backup also retains its existing explicit selection.
+The test rule accepts both `tests.rs` and `tests/`; existing test directories need
+no bulk rename. Backup externalizes the two remaining production-file inline test
+modules and places shared fixtures, regressions and the read-count probe beneath
+`tests/`. Original test bodies, byte assertions and process-death coverage remain;
+child-process selectors follow their relocated module names. Small conditional
+read wrappers stay at the real IO boundaries so the probe measures production reads.
+Production modules keep their directory layout and introduce no `#[path]` override.
+
+Backup keeps its single coordinated release, root changelog and existing complete
+release gate. Group validation plans, additional checkouts and reduced CI paths
+are not enabled by this refresh. Metrics is absent; no unrelated math/reporting
+dependency is added. The catalog now labels shared production/test dependencies
+explicitly without changing its parsed values, versions, features or lockfile.
+Further supplier refreshes remain explicit maintenance rather than an automatic
+response to each upstream release.
 
 The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
 pin; no local exception is needed.
 Backup retains one coordinated release group, workspace-version inheritance and
 its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.74.0** is selected as the release editor and locked Testkit **0.80.1** owns
+Build **0.74.0** is selected as the release editor and locked Testkit **0.84.1** owns
 simulator setup and offline admission. The accompanying Host/Platform dependency
 adoption and public Host identity migration are documented separately in
 [the Platform boundary](ic-platform.md). Snapshot adoption changes no

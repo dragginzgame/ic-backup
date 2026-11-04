@@ -30,11 +30,11 @@ use ic_backup::{
         ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
     },
 };
-use ic_platform::{
+use ic_platform::principal::ExternalPrincipal;
+use ic_testkit::{
+    pic::{PocketIcManagedServer, PocketIcStartupConfig},
     pocket_ic::{PocketIc, PocketIcBuilder, common::rest::RawEffectivePrincipal},
-    principal::ExternalPrincipal,
 };
-use ic_testkit::pic::{PocketIcManagedServer, PocketIcStartupConfig};
 use serde_json::json;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -104,20 +104,16 @@ impl Backend {
             .with_max_request_time_ms(Some(60_000))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
-        let server = PocketIcStartupConfig::Spawn {
+        let managed = PocketIcStartupConfig::Spawn {
             server_binary: binary,
             timeout: Duration::from_secs(120),
             server_hard_ttl: None,
             server_idle_ttl: None,
             server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
         }
-        .start_managed_server()
-        .expect("bounded Testkit-managed server");
-        // Testkit owns the server; Platform owns this independently released client.
-        let pic = builder
-            .with_server_url(server.url().parse().unwrap())
-            .build()
-            .expect("fallible Platform client on the managed server");
+        .build_instance(builder)
+        .expect("bounded Testkit-managed instance");
+        let pic = managed.instance();
         let wasm = fs::read(root.join("original.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
@@ -128,6 +124,8 @@ impl Backend {
         pic.upload_chunk(target, None, b"retained chunk-store state".to_vec())
             .unwrap();
         fs::create_dir(root.join("calls")).unwrap();
+        let (pic, server) = managed.into_parts();
+        let server = server.expect("Spawn retains its managed server");
         let backend = Self {
             pic,
             _server: server,

@@ -1,11 +1,11 @@
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
-use crate::test_support::response_fault::ResponseFault;
+use crate::tests::support::response_fault::ResponseFault;
 use crate::{
     model::{
         ic_request::IcManagementMethodRecord as Method, ic_update_response::IcUpdateResponseInput,
     },
-    test_support::{
+    tests::support::{
         ic_mutation::{input, original},
         operation_plan::hash,
     },

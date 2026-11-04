@@ -53,11 +53,11 @@ fn exact_stream_preserves_original_io_error() {
 
 #[test]
 fn callback_reads_reject_same_length_replacement_and_retain_both_files() {
-    let root = crate::test_support::temp_dir("ic-backup-batch-child-identity");
+    let root = crate::tests::support::temp_dir("ic-backup-batch-child-identity");
     let directory = File::open(&root).unwrap();
-    let request = crate::test_support::ic_snapshot_download::source();
+    let request = crate::tests::support::ic_snapshot_download::source();
     let raw = ic_platform::candid::contract::encode_one(
-        crate::test_support::ic_snapshot_download::values(),
+        crate::tests::support::ic_snapshot_download::values(),
     )
     .unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();

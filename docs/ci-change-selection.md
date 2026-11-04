@@ -20,6 +20,17 @@ is an optimization, not a security boundary against workflow authors.
 Submodule identity changes always select full CI, even when local Git settings
 normally hide them. Relative-diff settings cannot narrow the compared paths.
 
+Shared Tooling opts into `--allow-version-bump` for its root `VERSION` convention.
+Alongside reviewed prose, a changed `VERSION` may use the reduced path only when
+`CHANGELOG.md` is also changed and allowlisted. Both committed endpoints must have
+regular non-executable version/changelog files, canonical stable versions and
+matching first changelog headings; historical headings must be older than their
+own top version. The version must increase. Missing files, mismatches, malformed
+versions, rollbacks and mixed code changes select full CI. Uncommitted repairs
+cannot influence the decision. This option does not admit Cargo manifests or
+other release metadata, and is off by default for consumers. The normal version
+check still runs; release/tag qualification is unchanged.
+
 Use a cheap classification job with complete comparison history. Keep stable
 required job names and run a real documentation check on the docs path. Avoid
 workflow-level path filters that leave required checks pending. If classification

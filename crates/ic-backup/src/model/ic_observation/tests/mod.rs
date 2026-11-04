@@ -4,7 +4,7 @@ use crate::{
         attempt_journal::{ObservationOutcomeRecord, ObservationReceiptRequest},
         ic_request::{IcManagementMethodRecord as Method, IcManagementRequest},
     },
-    test_support::{
+    tests::support::{
         ic_observation::{input, original},
         operation_plan::hash,
     },

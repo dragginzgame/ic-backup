@@ -155,7 +155,7 @@ fn read_chunk(
 // Full-tree verification and closing custody checks remain with their callers.
 fn read_chunk_bytes(reader: impl Read, size: u64) -> Result<Vec<u8>, IcSnapshotArtifactError> {
     #[cfg(test)]
-    let reader = super::read_count::Reader(reader);
+    let reader = super::tests::read_count::Reader(reader);
     let limit = usize::try_from(size)
         .ok()
         .filter(|size| *size <= MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES)

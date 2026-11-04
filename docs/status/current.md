@@ -1,90 +1,60 @@
-# Current handoff — 2026-11-03
+# Current handoff — 2026-11-04
 
-## Selected delivery: 0.57.0
+## Selected delivery
 
-The user requested deployment of all four API consolidation cuts to
-`dragginzgame/ic-backup` main with annotated `v0.57.0`, followed by crates.io
-publication of **ic-backup** and **ic-backup-agent**. The standard direct runner
-owns complete qualification and release metadata, commit/tag and atomic push;
-registry publication follows separately. No dependency update is selected.
+The user requested deployment of the completed dependency/tooling/test-layout
+batch. Select compatible **0.57.1** for both libraries, with the established direct
+`origin/main` Git release and crates.io publication. Root package versions are
+still 0.57.0 before the release runner. The complete gate must pass before
+version preparation; the generated [receipt](../release.json), saved release plan
+and registry evidence own completion. No live backup/restore is selected.
 
-Delivery evidence is `/tmp/backup-deploy-0570.tndhcsav/`, including the incoming
-source archive, reviewed roster, destination/registry observations, release plan
-and release/publication logs. This selection is not completion: the generated
-[receipt](../release.json) and final Git/registry observations establish delivery.
-Breaking notes are under [0.57.0](../../CHANGELOG.md).
+## Implemented batch
 
-## API consolidation
+Production and Testkit share published **Platform 0.21.0**. Verified archive
+checksums/VCS and all 115 retained non-PocketIC source files match the prior
+facade's behavior. Types 0.18, management DTO 0.11.0, Agent SDK 0.49.3,
+target-specific Runtime 0.19.0 and Host 0.74.2 remain selected. No product public
+type, schema, wire/hash, authority or custody migration accompanies this update.
 
-- Capture and metadata-allocation recovery share passive
-  `model::inventory_settlement::{IcInventoryAttribution, IcInventorySettlement}`.
-  Their method-specific validators, views and errors remain separate, including
-  allocation's source-ID exclusion. The duplicate policy conversion is removed.
-- `create_execution_workflow` publishes original intent once;
-  `advance_execution_workflow` is the sole coordinator for fresh and retained work.
-  Callers supply original evidence and a positive stage limit, handling `Paused`
-  and `Complete` explicitly. The two unbounded convenience entry points are removed.
-- Fresh arbitrary-directory `record_downloaded` attestation is removed. Fresh IC
-  artifacts use the complete writer. Existing v1 `Downloaded` records retain
-  checksum verification and publication recovery; states and their wire names remain.
-- Public passive read/upload workflow wrappers are removed. Complete metadata,
-  download, allocation and data-upload coordinators share the original private
-  dispatch engines. Transport qualification uses explicit reserved-request/provider
-  boundaries; private test helpers retain the engines' pending-response fault cases.
+Testkit **0.84.1** owns the maintained simulator client and managed synchronous/
+asynchronous builders; Platform's simulator feature and separate client package
+leave Backup's development graph. Keep the managed instance intact through setup,
+then transfer its client/server into explicit client-before-server fixture fields.
+Original topology, request/startup bounds, raw logs and fixture custody remain.
+Authenticated PocketIC stays **16.1.0**; no reset, retry or funding policy is adopted.
 
-Production Rust is reduced by **279 lines**, including the new shared claim module.
-Original v1 schemas, digest domains, bounds, spending, byte/reference custody,
-uncertain-effect reconciliation and standalone backup/restore remain unchanged.
-Native fixtures use the complete IC byte writer or explicitly seeded historical
-records; they qualify filesystem/process behavior, not management effects.
+Shared Tooling **0.29.3** selects committed revision `1fa2d90`, excluding dirty
+supplier changes. This is a source selection, not a matching-tag publication claim.
+Its 148 exported payloads pass exact byte/mode review; executable catalogs are
+unchanged. See the [adoption review](../shared-tooling-review.json). Keep the
+coordinated workspace and complete release gate; no proof reuse or reduced CI.
 
-## Qualification and consumer action
+Two inline Agent unit modules now use `tests.rs`; Core shared fixtures, three
+regression modules and read-count implementation live beneath `tests/`. Keep the
+85 existing test directories and small reader bindings at real IO boundaries.
+All 510 registered unit cases and 626 inventoried test functions remain; 11
+qualified paths and exact child-process selectors changed with their relocation.
+The 1,881 LOC reclassification is test layout, not removal of runtime behavior.
 
-Evidence is `target/api-consolidation-0570/`: original tracked source archive and
-lock, caller inventory, retained first failures, focused logs and final input/case
-identities. Pinned/minimum Rust **1.99.1** is admitted. Focused qualification passes:
+## Evidence and limits
 
-- Strict Core/Agent library, test-target and standalone-example Clippy.
-- **117** workflow, **6** capture-settlement, **7** allocation-settlement and **53**
-  download-journal unit cases; **14** affected native integration cases.
-- All **34** Core and **28** Agent simulator cases, including the Agent suite's
-  **16** registered independent-consumer cases. Original partial output, lost or
-  malformed replies, cold continuation and reference retention remain covered.
-- Separate normal Core and Agent consumers on Rust **1.99.1**, without development
-  feature unification (`target/msrv-consumers.kHxTOA/`).
-- Formatting, maintained links, dependency inheritance and dependency boundaries.
+Platform evidence: `target/platform-021-adoption.l5sacyet/`. Focused Rust 1.99.1
+checks pass 78 IC model codec/bounds/hash cases, five inventory cases, complete
+Agent transfer/restore, untrusted-root rejection, lost-stop-reply recovery and
+independent normal Core/Agent consumers (`target/msrv-consumers.5aM1UU/`). Retain
+the initial sandbox socket failure beside the passing network-enabled run.
 
-Canic's checkpoint unit tests and Root application-checkpoint simulator still call
-retired workflow entry points. Keep those tests and migrate their calls using the
-[workflow API migration](../canic-adoption.md#workflow-api-migration). That checkout
-was inspected read-only and is unchanged; installed Canic acceptance is outstanding.
-These focused checks qualify the development batch. The selected release runner
-performs the separate complete local gate; native macOS and live IC acceptance
-remain separate.
+Shared/Testkit evidence: `target/shared-tooling-adoption.fdd2862x/`,
+`target/testkit-084-adoption.vh8s9xnx/` and
+`target/testkit-adoption-0571.bijimlj5/`. Prior locked inputs passed strict Clippy,
+510 unit cases, 62 simulator cases, consumer/tooling/hooks/metadata checks and
+independent consumers. The new release must qualify its exact combined source.
+Preserve prior input snapshots, failed logs, compiler evidence and tool generations.
 
-## Delivered baseline and unchanged dependencies
-
-Release **0.56.1**, commit `8880639418bed4a741123f7401ef206dc47bb6b0`, was
-atomically pushed to main with annotated `v0.56.1`; both libraries were published
-to crates.io and their archive checksums/VCS identities verified. Complete local
-Linux release qualification and delivery/publication evidence remain in
-`/tmp/backup-deploy-0561/`, including `delivery-result.json`, `release.log` and
-`publication.log`. The [receipt](../release.json) records that delivered source;
-it does not qualify this subsequent local API change.
-
-The delivered baseline package versions are **0.56.1**; the selected release
-advances both to **0.57.0**. The incoming Cargo.lock matches development admission. Platform
-**0.20.0**, canonical Types **0.18.0**, Testkit **0.82.0**, Host **0.74.2** and
-Shared Tooling **0.27.28** at `03b5d9a47beac9767ced96008a9e7b450b61a82a` remain
-selected. Both simulator fixtures retain Testkit's owned managed server and the
-Platform 0.20 client at its URL, with original readiness/cleanup/output bounds,
-explicit client-before-server drop order and authenticated server **16.1.0**.
-Testkit's older Platform/client and target-specific Runtime remain development-only.
-Production graphs remain simulator/runtime-free; Core remains Agent-free.
-
-Earlier qualification remains retained in `target/platform-testkit-adoption-0561/`,
-`target/testkit-adoption-0561/`, `target/fixture-cleanup-0561/`,
-`target/cleanup-flows-0560/`, `/tmp/backup-deploy-0560.xagghlwi/` and
-`/tmp/backup-deploy-0553.ZSoQWjKL/`. Preserve original/failed bundles, compiler
-admission evidence, unfinished journals, referenced/partial artifacts and source
-references. No live backup/restore or product/store cleanup is selected.
+Previously delivered **0.57.0** is commit `97671f3`; both libraries and its
+annotated tag were published. The [Canic migration](../canic-adoption.md#workflow-api-migration)
+remains relevant to that API consolidation. Canic owns integration-specific tests;
+this batch makes no Canic source contribution. Native macOS, live IC and installed
+Canic acceptance are separate from local Linux qualification. Preserve unfinished
+journals, referenced/partial artifacts and recovery evidence.

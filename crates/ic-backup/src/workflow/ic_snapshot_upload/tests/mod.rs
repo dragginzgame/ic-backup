@@ -3,9 +3,9 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::operation_plan::{declaration, graph, operation_request};
 
-use crate::test_support::{ready::ready, response_fault::ContextFault};
+use crate::tests::support::{ready::ready, response_fault::ContextFault};
 use crate::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use crate::{
     model::{
@@ -17,7 +17,7 @@ use crate::{
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
-    test_support::{
+    tests::support::{
         ic_snapshot_upload::{DESTINATION_ID, unhex, upload_plan},
         temp_dir,
     },
@@ -26,7 +26,7 @@ use ic_platform::management_canister_types::SnapshotDataKind;
 use std::{convert::Infallible, fs, io, path::PathBuf};
 
 fn with_uploads(mut check: impl FnMut(&IcSnapshotUploadRequest<'_>, Vec<u8>)) {
-    crate::test_support::ic_snapshot_upload::with_metadata_upload(
+    crate::tests::support::ic_snapshot_upload::with_metadata_upload(
         &ArtifactChecksumRecord::from_bytes(b"declared source tree"),
         |upload| {
             let data = IcSnapshotUploadRequest::data(
@@ -43,7 +43,7 @@ fn with_uploads(mut check: impl FnMut(&IcSnapshotUploadRequest<'_>, Vec<u8>)) {
 }
 fn prepare(plan: OperationPlanRecord) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
     let workflow = ExecutionWorkflowRecord::new(plan.clone());
-    crate::test_support::execution_workflow::prepare_stage(
+    crate::tests::support::execution_workflow::prepare_stage(
         "ic-backup-upload-step",
         &workflow,
         7,
@@ -134,13 +134,13 @@ fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() 
                     Ok::<(), Infallible>(())
                 },
             ));
-            crate::test_support::ready::assert_pending(future.as_mut());
+            crate::tests::support::ready::assert_pending(future.as_mut());
             let authority = stage.plan().attempt_authority(7).unwrap();
             assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
             let path = stage.layout().unwrap().root().join("attempt-7.json");
             let original = fs::read(&path).unwrap();
             drop(future);
-            crate::test_support::execution_workflow::assert_pending(&stage, 7);
+            crate::tests::support::execution_workflow::assert_pending(&stage, 7);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert!(ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
@@ -183,7 +183,7 @@ fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_suc
         .unwrap();
         assert_eq!(response.input().reply, raw);
         assert_eq!(provider.calls, 1);
-        crate::test_support::execution_workflow::assert_pending(&stage, 7);
+        crate::tests::support::execution_workflow::assert_pending(&stage, 7);
         assert!(
             ready(dispatch_pending(
                 &stage,
@@ -225,7 +225,7 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
                 ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)),
                 Err(IcSnapshotUploadExecutionError::Provider(_))
             ));
-            crate::test_support::execution_workflow::assert_pending(&stage, 7);
+            crate::tests::support::execution_workflow::assert_pending(&stage, 7);
             let original = fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap();
             drop(stage);
             let (stage, progress) =
@@ -276,7 +276,7 @@ fn malformed_or_mismatched_reply_retains_exact_returned_bytes_and_pending_spendi
                 panic!("passive association must reject")
             };
             assert_eq!(acknowledgement.input().reply, expected);
-            crate::test_support::execution_workflow::assert_pending(&stage, 7);
+            crate::tests::support::execution_workflow::assert_pending(&stage, 7);
             assert_eq!(provider.calls, 1);
         }
     });
@@ -301,7 +301,7 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
             )),
             Err(IcSnapshotUploadExecutionError::Admission(_))
         ));
-        crate::test_support::execution_workflow::assert_pending(&stage, 7);
+        crate::tests::support::execution_workflow::assert_pending(&stage, 7);
         assert_eq!(provider.calls, 0);
     });
 }

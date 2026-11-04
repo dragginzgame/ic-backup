@@ -1,5 +1,7 @@
+mod regressions;
+
 use super::*;
-use crate::test_support::temp_dir;
+use crate::tests::support::temp_dir;
 use std::fs;
 
 // Ensure directory checksums are stable regardless of file creation order.

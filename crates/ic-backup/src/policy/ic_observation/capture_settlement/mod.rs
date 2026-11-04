@@ -1,7 +1,5 @@
 //! Pure admission of independently qualified original capture settlement.
 
-#[cfg(test)]
-use crate::model::inventory_settlement::IcInventoryAttribution;
 use crate::model::inventory_settlement::IcInventorySettlement;
 
 use super::{

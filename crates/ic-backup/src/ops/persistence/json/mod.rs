@@ -185,6 +185,4 @@ pub(super) fn publish_bytes_at_barriers(
 // -----------------------------------------------------------------------------
 
 #[cfg(test)]
-mod regressions;
-#[cfg(test)]
 mod tests;

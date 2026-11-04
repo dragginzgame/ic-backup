@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::model::ic_request::MAX_IC_SNAPSHOT_ID_BYTES;
-use crate::test_support::ic_snapshot_metadata::raw;
+use crate::tests::support::ic_snapshot_metadata::raw;
 use ic_platform::candid::contract;
 
 #[test]
@@ -82,7 +82,7 @@ use crate::{
         attempt_journal::{AttemptJournalRecord, MutationOutcomeRecord, MutationReceiptRequest},
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
     },
-    test_support::ic_snapshot_upload::{
+    tests::support::ic_snapshot_upload::{
         DESTINATION_ID, SOURCE_ID, TARGET, source_plan, unhex, upload_plan,
     },
 };
@@ -111,7 +111,7 @@ fn maximum_globals_and_exact_source_evidence_bind_without_optional_coercion_or_d
     assert_ne!(metadata.digest(), alternate.digest());
     assert_eq!(upload.digest(), alternate_upload.digest());
     assert_ne!(upload.binding_digest(), alternate_upload.binding_digest());
-    let other_plan = crate::test_support::ic_snapshot_upload::plan(&"12".repeat(32));
+    let other_plan = crate::tests::support::ic_snapshot_upload::plan(&"12".repeat(32));
     let other = IcSnapshotUploadRequest::metadata(&other_plan, &metadata, &checksum).unwrap();
     assert_eq!(upload.digest(), other.digest());
     assert_ne!(upload.binding_digest(), other.binding_digest());
@@ -122,7 +122,7 @@ fn maximum_globals_and_exact_source_evidence_bind_without_optional_coercion_or_d
     let maximum = IcSnapshotUploadRequest::metadata(&source_plan, &maximum, &checksum).unwrap();
     let args: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
         maximum.arguments(),
-        crate::test_support::WIRE_ORACLE_LIMITS,
+        crate::tests::support::WIRE_ORACLE_LIMITS,
     )
     .unwrap();
     assert_eq!(args.globals.len(), 4096);
@@ -160,7 +160,7 @@ fn exact_sdk_metadata_globals_bits_options_and_source_bound_intent() {
         let upload = IcSnapshotUploadRequest::metadata(&plan, &metadata, &checksum).unwrap();
         let values: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
             upload.arguments(),
-            crate::test_support::WIRE_ORACLE_LIMITS,
+            crate::tests::support::WIRE_ORACLE_LIMITS,
         )
         .unwrap();
         let original = metadata.metadata();
@@ -248,7 +248,7 @@ fn every_region_known_chunks_zero_chunks_and_maximum_arguments_keep_exact_bytes(
         let data = IcSnapshotUploadRequest::data(&upload, DESTINATION_ID, kind, SOURCE_ID).unwrap();
         let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
             data.arguments(),
-            crate::test_support::WIRE_ORACLE_LIMITS,
+            crate::tests::support::WIRE_ORACLE_LIMITS,
         )
         .unwrap();
         assert_eq!(args.chunk, SOURCE_ID);
@@ -269,9 +269,11 @@ fn every_region_known_chunks_zero_chunks_and_maximum_arguments_keep_exact_bytes(
         &[],
     )
     .unwrap();
-    let args: UploadCanisterSnapshotDataArgs =
-        ic_platform::candid::decode_one(empty.arguments(), crate::test_support::WIRE_ORACLE_LIMITS)
-            .unwrap();
+    let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+        empty.arguments(),
+        crate::tests::support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     assert_eq!(args.chunk, [] as [u8; 0]);
     assert!(matches!(
         IcSnapshotUploadRequest::data(
@@ -295,9 +297,11 @@ fn every_region_known_chunks_zero_chunks_and_maximum_arguments_keep_exact_bytes(
     .unwrap();
     assert!(data.arguments().len() > MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES);
     assert!(data.arguments().len() <= MAX_IC_SNAPSHOT_UPLOAD_ARGUMENT_BYTES);
-    let args: UploadCanisterSnapshotDataArgs =
-        ic_platform::candid::decode_one(data.arguments(), crate::test_support::WIRE_ORACLE_LIMITS)
-            .unwrap();
+    let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+        data.arguments(),
+        crate::tests::support::WIRE_ORACLE_LIMITS,
+    )
+    .unwrap();
     assert_eq!(args.chunk, large);
 }
 

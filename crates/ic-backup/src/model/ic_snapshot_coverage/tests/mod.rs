@@ -17,8 +17,8 @@ fn source() -> ReadCanisterSnapshotMetadataResult {
         .iter()
         .find(|case| case["name"] == "data-source")
         .unwrap();
-    let raw = crate::test_support::hex_bytes(case["reply_hex"].as_str().unwrap());
-    ic_platform::candid::decode_one(&raw, crate::test_support::WIRE_ORACLE_LIMITS).unwrap()
+    let raw = crate::tests::support::hex_bytes(case["reply_hex"].as_str().unwrap());
+    ic_platform::candid::decode_one(&raw, crate::tests::support::WIRE_ORACLE_LIMITS).unwrap()
 }
 
 fn region(index: usize, offset: u64, size: u64) -> SnapshotDataKind {

@@ -3,7 +3,7 @@
 use super::*;
 use crate::model::effect_graph::{EffectNodeRecord, EffectNodeRequest};
 
-use crate::test_support::operation_plan::*;
+use crate::tests::support::operation_plan::*;
 
 #[test]
 fn canonical_digest_and_authority_bind_every_owner_without_recursive_intent() {

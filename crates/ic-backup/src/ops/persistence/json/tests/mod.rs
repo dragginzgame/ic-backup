@@ -1,6 +1,8 @@
+mod regressions;
+
 use super::*;
-use crate::test_support::temp_dir;
-use crate::test_support::{create_json_durable, write_json_durable};
+use crate::tests::support::temp_dir;
+use crate::tests::support::{create_json_durable, write_json_durable};
 use ic_host_fs::durable::NamedWriteError;
 use serde::Serializer;
 use std::fs;

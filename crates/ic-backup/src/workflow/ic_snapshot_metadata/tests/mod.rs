@@ -3,11 +3,11 @@
 use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
-use crate::test_support::operation_plan::{declaration, graph, operation_request};
-use crate::test_support::{response_fault::ReceiptFault, retained_reply::write_synced};
+use crate::tests::support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::{response_fault::ReceiptFault, retained_reply::write_synced};
 
-use crate::test_support::ic_snapshot_download::{source, source_plan, values, workflow};
-use crate::test_support::ready::ready;
+use crate::tests::support::ic_snapshot_download::{source, source_plan, values, workflow};
+use crate::tests::support::ready::ready;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -17,7 +17,7 @@ use crate::{
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
     ports::ic_observation::IcObservationProviderError,
-    test_support::temp_dir,
+    tests::support::temp_dir,
 };
 use ic_platform::candid::contract;
 use std::{convert::Infallible, fs, io, path::PathBuf};
@@ -26,7 +26,7 @@ fn prepare(
     workflow: &ExecutionWorkflowRecord,
     payload: &IcSnapshotMetadataRequest,
 ) -> (PathBuf, BackupLayoutGuard, ExecutionStageBindingRecord) {
-    crate::test_support::execution_workflow::prepare_stage(
+    crate::tests::support::execution_workflow::prepare_stage(
         "ic-backup-metadata-stage",
         workflow,
         0,
@@ -58,7 +58,7 @@ impl IcSnapshotTransferReadProvider for Provider {
             self.calls += 1;
             let raw = self.reply.clone()?;
             Ok(
-                IcSnapshotTransferReadResponse::new(crate::test_support::update::input(
+                IcSnapshotTransferReadResponse::new(crate::tests::support::update::input(
                     request.authority(),
                     request.mutation_attempt(),
                     request.plan().context(),
@@ -78,7 +78,7 @@ fn receipt(
     request: &IcSnapshotTransferReadRequest<'_, '_>,
     response: &IcSnapshotTransferReadResponse,
 ) -> MutationReceiptRequest {
-    crate::test_support::update::applied_receipt(
+    crate::tests::support::update::applied_receipt(
         request.mutation_attempt(),
         &request.payload().digest(),
         &response.input().evidence,
@@ -106,7 +106,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
             std::future::pending::<Result<MutationReceiptRequest, Infallible>>().await
         },
     ));
-    crate::test_support::ready::assert_pending(future.as_mut());
+    crate::tests::support::ready::assert_pending(future.as_mut());
     assert!(
         AttemptJournalGuard::open(
             stage.layout().unwrap(),
@@ -117,7 +117,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
     let path = stage.layout().unwrap().root().join("attempt-42.json");
     let before = fs::read(&path).unwrap();
     drop(future);
-    crate::test_support::execution_workflow::assert_pending(&stage, 42);
+    crate::tests::support::execution_workflow::assert_pending(&stage, 42);
     assert_eq!(provider.calls, 1);
     assert_eq!(
         fs::read(&retained).unwrap(),
@@ -224,7 +224,7 @@ fn lost_and_malformed_metadata_stop_pending_without_checkpoint_or_data_stage() {
             ))
             .is_err()
         );
-        crate::test_support::execution_workflow::assert_pending(&stage, 42);
+        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
         assert_eq!(provider.calls, 1);
         assert!(!layout.root().join("execution-stage-7").exists());
         assert!(
@@ -259,7 +259,7 @@ fn qualification_rejection_retains_returned_bytes_and_pending_original() {
         panic!("qualification must reject")
     };
     assert_eq!(response.input().reply, expected);
-    crate::test_support::execution_workflow::assert_pending(&stage, 42);
+    crate::tests::support::execution_workflow::assert_pending(&stage, 42);
 }
 
 #[test]
@@ -294,7 +294,7 @@ fn non_applied_wrong_attempt_and_wrong_request_receipts_cannot_checkpoint() {
                 ..
             })
         ));
-        crate::test_support::execution_workflow::assert_pending(&stage, 42);
+        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
     }
 }
 
@@ -485,7 +485,7 @@ fn fresh_admission_and_invalid_receipt_evidence_keep_original_pending() {
             ));
             assert_eq!(provider.calls, 1);
         }
-        crate::test_support::execution_workflow::assert_pending(&stage, 42);
+        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
     }
 }
 

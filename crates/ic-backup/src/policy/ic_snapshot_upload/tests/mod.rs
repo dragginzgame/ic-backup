@@ -1,7 +1,7 @@
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
-use crate::test_support::ic_snapshot_metadata::raw;
-use crate::test_support::response_fault::ResponseFault;
+use crate::tests::support::ic_snapshot_metadata::raw;
+use crate::tests::support::response_fault::ResponseFault;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -9,7 +9,7 @@ use crate::{
         ic_snapshot_upload::{IcSnapshotUploadReplyKind, IcSnapshotUploadRequest},
         ic_update_response::IcUpdateResponseInput,
     },
-    test_support::ic_snapshot_upload::{
+    tests::support::ic_snapshot_upload::{
         DESTINATION_ID, SOURCE_ID, TARGET, source_plan, upload_plan,
     },
 };

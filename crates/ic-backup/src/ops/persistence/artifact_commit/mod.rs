@@ -50,9 +50,4 @@ mod supported;
     test,
     any(target_os = "linux", target_os = "android", target_vendor = "apple")
 ))]
-mod regressions;
-#[cfg(all(
-    test,
-    any(target_os = "linux", target_os = "android", target_vendor = "apple")
-))]
 mod tests;

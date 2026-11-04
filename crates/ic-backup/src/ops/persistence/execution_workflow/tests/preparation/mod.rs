@@ -4,7 +4,7 @@ use crate::model::{
     effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
     operation_plan::{PlanBudgetRecord, PlannedOperationRecord, PlannedOperationRequest},
 };
-use crate::test_support::execution_workflow::child_request;
+use crate::tests::support::execution_workflow::child_request;
 use serde_json::json;
 
 pub(super) fn catalog() -> ExecutionWorkflowRecord {

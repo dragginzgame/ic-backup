@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     model::attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
-    test_support::{
+    tests::support::{
         fence_acquisition::original,
         operation_plan::{APP, hash},
     },
@@ -16,7 +16,7 @@ fn independent_goldens_bind_raw_receiver_mode_method_lengths_and_exact_bytes() {
     .unwrap();
     for golden in contract["digest_goldens"].as_array().unwrap() {
         let hex = golden["arguments_hex"].as_str().unwrap();
-        let arguments = crate::test_support::hex_bytes(hex);
+        let arguments = crate::tests::support::hex_bytes(hex);
         let payload = FenceAcquisitionPayload::new(
             golden["target"].as_str().unwrap(),
             golden["method"].as_str().unwrap(),
@@ -24,7 +24,7 @@ fn independent_goldens_bind_raw_receiver_mode_method_lengths_and_exact_bytes() {
         )
         .unwrap();
         let hex = golden["principal_hex"].as_str().unwrap();
-        let principal = crate::test_support::hex_bytes(hex);
+        let principal = crate::tests::support::hex_bytes(hex);
         assert_eq!(payload.target_bytes, principal);
         assert_eq!(payload.digest().hash(), golden["sha256"].as_str().unwrap());
     }
