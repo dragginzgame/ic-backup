@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.57.1] - Unreleased
+## [0.57.1] - 2026-11-04
 
 ### 🛠️ Tooling
 
