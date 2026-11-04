@@ -1,5 +1,22 @@
 # Current handoff — 2026-11-04
 
+## Pending 0.58.1
+
+The user selected **0.58.1** delivery of both crates to `origin/main`, annotated
+`v0.58.1` and crates.io. Versions remain **0.58.0** before release preparation.
+The incoming lock now selects Testkit **0.85.1** and Types **0.18.1**. Their
+published archives/checksums and sources `3d371d7` / `2307ec3` are verified in
+`target/deploy-0581.qy4t0oqc/`. Testkit's 56 Rust files match 0.85.0; it shares
+Platform **0.22.0** with production, removing 0.21. Types explicitly enables
+external Principal Serde, already supplied here through Candid, without changing
+canonical identity, normalization or bytes. Production Rust is unchanged.
+
+Earlier focused proof in `target/testkit-085-adoption.u14w4_wb/` retains its actual
+0.85.0 / Types 0.18.0 inputs: exact CLI, offline admission, both simulator Clippy
+targets and four real-server complete/lost-reply cases passed. Existing managed
+builders supply the required endpoint; PocketIC **16.1.0**, bounds and fixture
+custody remain. The full release gate must freshly qualify the final input graph.
+
 ## Delivered 0.58.0
 
 Both crates are published as **0.58.0**. Release commit
@@ -49,8 +66,8 @@ to removed APIs or flat reservation-error matches; installed acceptance is separ
 
 ## Current tooling and evidence
 
-Host Artifacts/FS/Process **0.74.3**, Testkit **0.84.1** and Build release editor
-**0.74.2** are explicitly selected. The incoming lockfile already selected Host
+Host Artifacts/FS/Process **0.74.3**, Testkit **0.85.1** and Build release editor
+**0.74.2** are explicitly selected. The earlier tooling adoption's lockfile selected Host
 0.74.3; release preparation changes only Backup's package versions. Published
 archives/VCS were verified; Artifacts
 and consumed editor source are unchanged, while FS/Process relocate tests. Tool
@@ -61,7 +78,7 @@ Shared Tooling **0.29.4 at `628ccc7`** is adopted canonically: 149 payloads, eig
 updates and one addition. Current retained-state admission, source/mode integrity,
 changed-script checks and consumer receipt/recovery fixtures pass without cleanup.
 See [the adoption review](../shared-tooling-review.json). Rust stays **1.99.1**;
-Production Platform is now **0.22.0**; Testkit retains **0.21.0**. Types **0.18.0**
+Production and Testkit now share Platform **0.22.0**. Types **0.18.1**
 and authenticated PocketIC **16.1.0** remain.
 Runtime **0.19.1** is adopted through Testkit's Wasm-only IC0 edge; the incoming
 lockfile already selected it; release preparation preserves that selection. The published checksum/source

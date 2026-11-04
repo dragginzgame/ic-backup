@@ -1169,7 +1169,7 @@ dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
- "ic-platform 0.22.0",
+ "ic-platform",
  "ic-testkit",
  "rustix",
  "serde",
@@ -1187,7 +1187,7 @@ dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
- "ic-platform 0.22.0",
+ "ic-platform",
  "ic-testkit",
  "reqwest",
  "serde",
@@ -1273,19 +1273,6 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e87f01cbae3cc6cbd5b0ffc705c9086618817e4f0045ce67821e3fcbbc338670"
-dependencies = [
- "candid",
- "ic-management-canister-types",
- "ic-platform-types",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "ic-platform"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b0b5b5a8399051037aeb0f6d0832b8191eef1f7c9e727a9cf9baed951fc968"
@@ -1306,9 +1293,9 @@ checksum = "7c056aa5a27492a89aa4df178f76b0af555ac1acfa18bcef236f663ab1ce7b71"
 
 [[package]]
 name = "ic-platform-types"
-version = "0.18.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f95791d7eff0804a23182f131b976293f0f0184b237a63cfb741c1f63a60fb91"
+checksum = "aa881498e10a94f06602424148b166e685170cd9afe0b0f377fb849b47c7bc6f"
 dependencies = [
  "crc32fast",
  "data-encoding",
@@ -1320,28 +1307,26 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.84.1"
+version = "0.85.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42d50a3d60e605a6cc7cb42589c32dc51ff3f4eecd70ed159e46944d86476eda"
+checksum = "cf1947d60280dd91d84083c2cbf5e51ede06c03ce7f744cb58dbbde239c03002"
 dependencies = [
  "backon",
  "base64 0.23.1",
  "candid",
- "flate2",
  "hex",
  "ic-certification",
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
  "ic-management-canister-types",
- "ic-platform 0.21.0",
+ "ic-platform",
  "ic-platform-runtime",
  "ic-platform-types",
  "ic-transport-types",
  "libc",
  "reqwest",
  "schemars",
- "semver",
  "serde",
  "serde_cbor",
  "serde_json",
@@ -2432,10 +2417,6 @@ name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
-dependencies = [
- "serde",
- "serde_core",
-]
 
 [[package]]
 name = "serde"

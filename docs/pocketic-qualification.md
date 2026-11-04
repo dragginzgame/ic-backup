@@ -23,7 +23,7 @@ reference custody continue to qualify through the maintained restore workflows.
 
 ## Current simulator dependency boundary
 
-Testkit 0.84 (currently locked to 0.84.1) owns the maintained `ic_testkit::pocket_ic` client, managed
+Testkit 0.85.1 owns the maintained `ic_testkit::pocket_ic` client, managed
 server startup, authenticated assets and harness extensions. Both libraries use
 that published client directly in simulator tests, with no Platform simulator
 feature or separate client package. Production management DTOs remain Platform's
@@ -33,6 +33,9 @@ retaining its original topology, state directory and output files. The managed
 owner stays intact through fixture setup, then transfers the client/server pair
 into explicit client-before-server field order. Preserve typed client failures,
 original output paths and managed cleanup custody.
+Testkit 0.85 requires an explicit client endpoint and removes implicit server
+launch/download. The managed builders supply that endpoint from the admitted
+server; Backup uses no client-owned launcher or endpoint-free constructor.
 No forwarding module or production simulator dependency is retained. The existing
 exact management bytes, bounded calls, signed transport, original journals and
 independent readback assertions remain local.

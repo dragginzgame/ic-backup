@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.58.1] - Unreleased
+
+### ⬆️ Dependencies
+
+- Adopt locked Testkit 0.85.1 and its exact server CLI. Existing managed simulator
+  builders supply the now-required endpoint; PocketIC 16.1.0 and Backup's fixture
+  custody, request bounds and recovery behavior remain unchanged.
+- Unify Testkit and production on Platform 0.22; retain the incoming Types 0.18.1
+  Principal Serde feature fix with unchanged canonical identities and bytes.
+
 ## [0.58.0] - 2026-11-04
 
 ### ⚠️ Breaking
