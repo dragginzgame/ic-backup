@@ -1,34 +1,27 @@
 # Current handoff — 2026-11-04
 
-## Pending 0.58.1
+## Delivered 0.58.1
 
-The user selected **0.58.1** delivery of both crates to `origin/main`, annotated
-`v0.58.1` and crates.io. Versions remain **0.58.0** before release preparation.
-The incoming lock now selects Testkit **0.85.1** and Types **0.18.1**. Their
-published archives/checksums and sources `3d371d7` / `2307ec3` are verified in
-`target/deploy-0581.qy4t0oqc/`. Testkit's 56 Rust files match 0.85.0; it shares
-Platform **0.22.0** with production, removing 0.21. Types explicitly enables
-external Principal Serde, already supplied here through Candid, without changing
-canonical identity, normalization or bytes. Production Rust is unchanged.
-
-Earlier focused proof in `target/testkit-085-adoption.u14w4_wb/` retains its actual
-0.85.0 / Types 0.18.0 inputs: exact CLI, offline admission, both simulator Clippy
-targets and four real-server complete/lost-reply cases passed. Existing managed
-builders supply the required endpoint; PocketIC **16.1.0**, bounds and fixture
-custody remain. The full release gate must freshly qualify the final input graph.
-
-## Delivered 0.58.0
-
-Both crates are published as **0.58.0**. Release commit
-`dc1a0dbb301b50b42ac3ace013b13df14b46ae63` and annotated `v0.58.0` are verified on
-`origin/main`; the [receipt](../release.json) binds source `1358f7a` and its complete
-Linux release gate. All **554 test cases** pass, with no failures or ignored cases,
+Both crates are published as **0.58.1**. Release commit
+`cad45b3c327dfb3d3af0129ed23e3ed07e0b31c7` and annotated `v0.58.1` are verified on
+`origin/main`; the [receipt](../release.json) binds source `761e1ff` and its complete
+Linux release gate. All **554 test cases** pass with no failures or ignored cases,
 including both simulator suites. Clippy, tools, source/format admission, release/
 hook fixtures, Rustdocs, independent consumers and archive compilation pass.
 Publication separately passes Cargo verification and the mandatory lint gate.
 Independent downloads match registry checksums, release provenance and all **341
-non-generated source files**. Evidence is in `target/deploy-0580.b8b51qgs/` and
+non-generated source files**. Evidence is in `target/deploy-0581.qy4t0oqc/` and
 `.git/release-state/`. No native macOS, live IC or installed Canic acceptance is claimed.
+
+Testkit **0.85.1** and its exact managed CLI are selected with Types **0.18.1**.
+Their archives/checksums and sources `3d371d7` / `2307ec3` are verified. Testkit's
+56 Rust files match 0.85.0; it shares Platform **0.22.0** with production, removing
+0.21. Types explicitly enables external Principal Serde, already supplied here
+through Candid, without changing canonical identity, normalization or bytes.
+Production Rust is unchanged. Existing managed builders supply the now-required
+endpoint; PocketIC **16.1.0**, bounds and fixture custody remain. Earlier focused
+proof in `target/testkit-085-adoption.u14w4_wb/` retains its actual 0.85.0 / Types
+0.18.0 inputs; the completed release gate freshly qualifies the final graph.
 
 `model::attempt_journal::MutationReservationError` now owns the four original
 pending-mutation refusals. Application, management, transfer-read and upload request
@@ -90,8 +83,8 @@ needed for this target-only selection, and no Wasm product qualification is clai
 
 Platform evidence is `target/platform-022-adoption.eutssg1n/`: verified published
 checksum/source `b95c9a2`, unchanged selected codecs and reviewed Agent export
-identities. The optional crypto/certification changes are not selected. Production
-uses 0.22 while Testkit uses 0.21, sharing Types, Candid, management DTO and SDK
+identities. The optional crypto/certification changes are not selected. That adoption
+used production 0.22 and Testkit 0.21, sharing Types, Candid, management DTO and SDK
 identities. Only Platform and required graph edges change; six unrelated Windows
 edge rewrites from resolution are reverted to their incoming selections. Strict
 library Clippy, 16 request/lifecycle codec and bounds cases, independent Core/Agent
@@ -113,7 +106,11 @@ effect, record bytes or protocol. These earlier focused receipts retain their
 original input identities and scope; the final release gate freshly qualifies the
 combined Linux source and dependency selection.
 
-## Previous baseline and custody
+## Previous baselines and custody
+
+Previous **0.58.0** is release commit `dc1a0db`, annotated `v0.58.0`, source
+`1358f7a` and handoff `d58fc62`. Its original full Linux gate and registry/source
+verification stay in `target/deploy-0580.b8b51qgs/` and Git history.
 
 Previous **0.57.1** is release commit `40d9e32` with annotated `v0.57.1`, source
 `8edede0` and handoff `bba30fe`. Its original receipt remains in Git history;
