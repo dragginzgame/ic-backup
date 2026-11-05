@@ -1,14 +1,13 @@
 # Current handoff — 2026-11-05
 
-## Pending 0.58.2
+## Delivered 0.58.2
 
-The user authorized Testkit 0.86 adoption, then Shared Tooling adoption and a full
-rule audit with local fixes. Versions remain **0.58.1**; the complete batch is
-ready for source commitment. The user selected **0.58.2** delivery of both crates
-to `origin/main`, annotated `v0.58.2` and crates.io. The full release gate precedes
-preparation; final receipt and remote/registry verification own the outcome.
-Pending notes stay **0.58.2** because contributor tooling/fixture changes do not
-change the published library API, record/wire bytes or production behavior.
+Both crates **0.58.2** are published on crates.io. Release
+`7ab98664c8de98faf5fc36f803ca5581b26be707` and annotated `v0.58.2` are on
+`origin/main`; source is `49512f06f40e982227a673d0a44863067a0969c6`.
+The user authorized Testkit adoption, Shared Tooling adoption/audit and deployment.
+Contributor tooling/fixture changes preserve the published library API,
+record/wire bytes and production behavior.
 
 Shared Tooling **0.30.0 at `07dce12cbe4a798fd4a6d263095518678c4f6b45`** is
 exported canonically: 155 payloads, 15 updates, six additions and 134 unchanged.
@@ -31,9 +30,18 @@ Testkit **0.86.0**, exact CLI and authenticated PocketIC **16.1.0** are selected
 All 56 Testkit Rust files match 0.85.1; only Testkit's lock identity changes in the
 incoming adoption. Its optional Wire feature stays disabled. Original Testkit
 proof is in `target/testkit-086-adoption._kp_7j1u/`, including two real simulator
-cases and both simulator-target Clippy checks. This audit preserves that lockfile.
+cases and both simulator-target Clippy checks. This batch preserves that selection.
 
 ## Latest qualification and command ownership
+
+The complete Linux `release-verify` gate passes: strict Clippy, **554 tests**,
+simulator/independent consumer workflows, packaging and all tooling checks. The
+[receipt](../release.json) binds original source and exact release inputs. Standard
+delivery committed, tagged and atomically pushed; `make publish` then verified and
+uploaded both crates. Independent registry checks confirm non-yanked versions,
+archive checksums, clean release VCS identities and **341 source files** against
+the release commit. Remote branch/tag identities match. Evidence is retained in
+`target/deploy-0582.ft4gpnz7/` and `.git/release-state/`.
 
 Audit evidence is `target/shared-030-audit.rwc459mo/`: incoming dirty inputs,
 canonical export/source proof, all-target/all-feature strict Clippy for both
@@ -58,8 +66,8 @@ Runtime **0.19.1** are selected. The incoming Platform patch arrived after the a
 its checksum/source `fcf540b` and 63 unchanged consumed-source files are reviewed
 in `target/deploy-0582.ft4gpnz7/`. Only unselected crypto modules change. No
 executable catalog or compiler update is selected. Linux proof does not establish
-native macOS, live IC or installed Canic acceptance. The full release gate and
-hosted CI have not run for this pending batch; no release-stage reuse is enabled.
+native macOS, live IC or installed Canic acceptance. Hosted CI was not dispatched;
+no release-stage reuse is enabled.
 
 ## Recovery and retained contracts
 
@@ -77,11 +85,9 @@ accounting to bypass admission. No migration, evidence cleanup or refund is prov
 See [the migration](../canic-adoption.md#058-api-migration) and
 [implementation contracts](../implementation-contracts.md).
 
-## Delivered baseline
+## Earlier evidence
 
-Both crates **0.58.1** are published. Release `cad45b3c327dfb3d3af0129ed23e3ed07e0b31c7`,
-annotated `v0.58.1`, source `761e1ff` and handoff `37eec89` are in history/main.
-The [receipt](../release.json) binds the complete Linux release gate (554 passing
-cases). Independently verified registry archives and source bytes remain in
-`target/deploy-0581.qy4t0oqc/` and `.git/release-state/`. Earlier release/recovery
-proof stays at its original owner and Git revision; no retained evidence is removed.
+The 0.58.1 release `cad45b3c327dfb3d3af0129ed23e3ed07e0b31c7`, original receipt
+and registry proof remain in history and `target/deploy-0581.qy4t0oqc/`.
+Earlier release/recovery proof stays at its original owner and Git revision;
+no retained evidence is removed.
