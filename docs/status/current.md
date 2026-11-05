@@ -1,11 +1,11 @@
 # Current handoff — 2026-11-05
 
-## Pending upstream adoption
+## Delivered 0.58.3
 
-The user requested Shared Tooling and IC dependency adoption, then selected
-**0.58.3** delivery of both crates to `origin/main`, annotated `v0.58.3` and
-crates.io. Package versions remain **0.58.2** until standard release preparation;
-the full release gate and final remote/registry verification own completion.
+Both crates **0.58.3** are published on crates.io. Release
+`b1c16b05ed601b0ad516abc7581bcf6037903b2e` and annotated `v0.58.3` are on
+`origin/main`; original source is `974fd8cb96aaf4df81f682781aa0a4ce2dfdecaa`.
+The user authorized adoption and deployment of the complete pending batch.
 
 Production requires Platform **0.23.0** and Host Artifacts/FS/Process **0.74.4**.
 Build **0.74.4** is the installed/offline-admitted release metadata editor.
@@ -23,7 +23,7 @@ are unchanged. Runtime IC0 changes only lint annotations; CDK changes are unused
 Published archive checksums, official Rust/original-manifest source comparisons
 and diffs belong to `target/ic-deps-adoption.sq2a3wsj/`.
 
-## Current focused qualification
+## Adoption qualification
 
 IC adoption proof in that directory binds stable Cargo/Make/compiler inputs and
 unchanged product Rust. Strict all-target/all-feature Clippy, **89 tests**, both
@@ -49,21 +49,22 @@ explicit overrides and failed evidence retain their owners. Existing tests/
 ownership, checked lint expectations and ordinary Cargo fixture discovery remain.
 Agent transport qualification uses `cargo test -p ic-backup-agent --example standalone`.
 Candidate projection and group proof migration remain unselected. No service or
-schedule is activated. Full workspace/release gates and hosted CI were not rerun
-for this batch; Linux proof does not establish native macOS, live IC or installed
-Canic acceptance. No release-stage reuse is enabled.
+schedule is activated. Focused adoption proof precedes the complete release gate
+below. Hosted CI was not manually dispatched; Linux proof does not establish
+native macOS, live IC or installed Canic acceptance. No release-stage reuse is enabled.
 
-## Delivered baseline
+## Release and registry qualification
 
-Both crates **0.58.2** are published. Release
-`7ab98664c8de98faf5fc36f803ca5581b26be707`, annotated `v0.58.2` and handoff
-`07da92a` are in `origin/main`; original source is
-`49512f06f40e982227a673d0a44863067a0969c6`. The [receipt](../release.json)
-binds the original complete Linux release gate: strict Clippy, 554 tests,
-independent workflows and packaging. Registry checksums, clean VCS identities and
-341 source files were independently verified against the release commit.
-Proof stays in `target/deploy-0582.ft4gpnz7/` and `.git/release-state/`.
-Earlier source/recovery/adoption evidence stays at its original owner and revision.
+The [receipt](../release.json) binds the complete Linux `release-verify` gate:
+strict Clippy, **554 tests**, independent workflows, docs, packaging and tooling.
+Standard delivery committed, tagged and atomically pushed; `make publish` verified
+and uploaded both crates. Independent checks confirm non-yanked registry versions,
+archive checksums, clean VCS identities and **341 source files** against the release
+commit. Remote branch/tag identities match. Proof stays in
+`target/deploy-0583.cl8y8lzv/` and `.git/release-state/`.
+The 0.58.2 release/source receipt remains in Git history and
+`target/deploy-0582.ft4gpnz7/`. Earlier source/recovery/adoption evidence stays at its
+original owner and revision; no retained evidence is removed.
 
 ## Recovery and retained contracts
 
