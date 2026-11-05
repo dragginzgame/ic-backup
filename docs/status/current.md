@@ -1,13 +1,13 @@
 # Current handoff — 2026-11-05
 
-## Pending Testkit adoption and 0.58.4 delivery
+## Delivered 0.58.4
 
-The user committed the Shared Tooling cleanup as `42ffa824362227ce9fa5ce61eec5efa9c8c12de9`,
-then requested new Testkit adoption and deployment. The selected delivery is both
-crates **0.58.4** to `origin/main`, annotated `v0.58.4` and crates.io. Versions
-remain **0.58.3** until standard preparation; full validation and independent
-remote/registry verification own completion. No history or artifact cleanup is
-part of delivery.
+Both crates **0.58.4** are published on crates.io. Release
+`c43c196582ccc8249263c6a01dfee8b8ac70c748` and annotated `v0.58.4` are on
+`origin/main`; original source is `6f27877da34e6d54ea6ca06fb9abdeb730c2db3f`.
+The user authorized new Testkit adoption and deployment, including the committed
+Shared Tooling cleanup at `42ffa824362227ce9fa5ce61eec5efa9c8c12de9`.
+No history rewriting or additional artifact cleanup occurred during delivery.
 
 Testkit **0.87.0** is checksum/source-verified at published commit
 `e3b8a88539c54cb1da3ae471954fa234beabdecf`; its exact CLI and authenticated
@@ -34,8 +34,9 @@ comparison, strict all-target/all-feature Clippy, complete upload/restore,
 lost-load refusal and independent cold-process restore/terminal replay pass.
 Actual registries preserve all 34 Core and 37 Agent example cases from 0.58.3.
 Initial mechanical migration failures are retained. Candid/dependency/format/link
-checks pass. The complete release gate has not yet run for this source; native
-macOS, installed IC and Canic acceptance remain separate.
+checks pass. The complete Linux release gate also passes, as recorded below. Native macOS,
+installed IC and Canic acceptance remain separate; hosted CI was not manually
+dispatched.
 
 Shared **0.30.4** at `2aa41c7394300302fe802b69b31b855bdc89b671` remains selected
 with 157 exact payloads. Candid checks cover all 324 Rust files and 36 named
@@ -48,17 +49,17 @@ remain in custody. Prior focused tooling/hook proof and limits belong to
 `target/evidence/shared-0304.x_mz38e6/`. No service, schedule, candidate projection
 or release-stage reuse is selected.
 
-## Delivered baseline
+## Release and registry qualification
 
-Both crates **0.58.3** are published. Release
-`b1c16b05ed601b0ad516abc7581bcf6037903b2e`, annotated `v0.58.3` and handoff
-`f241568` are in history/main; original source is
-`974fd8cb96aaf4df81f682781aa0a4ce2dfdecaa`. The [receipt](../release.json)
-binds its complete Linux gate: strict Clippy, 554 tests, independent workflows,
-docs, tooling and packaging. Registry checksums, clean VCS identities and 341
-source files were independently verified. Proof stays in
-`target/deploy-0583.cl8y8lzv/` and `.git/release-state/` at that original revision;
-it does not qualify this new Testkit source.
+The [receipt](../release.json) binds the complete Linux `release-verify` gate:
+strict Clippy, **554 tests**, independent normal consumers, docs, tooling and
+packaging. Standard delivery committed, tagged and atomically pushed; `make publish`
+then verified and uploaded both crates. Independent checks confirm non-yanked
+registry versions, archive checksums, clean VCS identities and **341 source files**
+against the release commit. Remote branch/tag identities match. Proof stays in
+`target/evidence/testkit-deploy-0584.yt3b8nrm/` and `.git/release-state/`.
+The 0.58.3 receipt and proof remain at their original Git revision and in
+`target/deploy-0583.cl8y8lzv/`; no historical evidence is relabelled or removed.
 
 ## Recovery and retained contracts
 
