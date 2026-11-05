@@ -75,7 +75,7 @@ management calls, qualify that implementation and its exact original accounting
 through Core's original stage/attempt guards and the application adapter below.
 Do not assert that the host Agent is the controller of a Root-controlled participant.
 
-The [canonical consumer](../crates/ic-backup-agent/tests/independent/consumer/mod.rs)
+The [canonical consumer](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/consumer/mod.rs)
 demonstrates these public interfaces across cold processes. Its private fixed key,
 single target, exclusive controller custody, fixture acceptance files and
 `NoIrreversibleEffects` safety lane are test conditions. A deployed Blob-backed
@@ -143,7 +143,7 @@ Backup **0.49.0** supplies the application adapter requested by
 `AgentApplicationIngressProvider` accepts Core's distinct original application
 mutation and recovery-observation requests and reuses the existing single-submit
 owner. The [transport guide](agent-transport.md#opaque-application-ingress) and
-[independent consumer](../crates/ic-backup-agent/tests/independent/consumer/application/mod.rs)
+[independent consumer](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/consumer/application/mod.rs)
 show exact payload binding, mandatory ingress/reply retention and separately
 budgeted recovery without pretending that every Root command acquires a fence.
 

@@ -159,7 +159,7 @@ cancellation, retention failure and process death preserve original uncertainty.
 Settled replay uses the existing coordinator without signing or submission.
 `ReservedUpdate` now has two additional variants; exhaustive consumer matches
 must explicitly handle them. The independent normal consumer's
-[application adapter](../crates/ic-backup-agent/tests/independent/consumer/application/mod.rs)
+[application adapter](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/consumer/application/mod.rs)
 shows original stage/attempt ownership, durable retention, separately budgeted
 recovery and cold effect-free replay through real HTTP/PocketIC. Its exclusive
 single-canister custody is a fixture condition, not production Canic acceptance.
@@ -235,11 +235,13 @@ Both ports preserve their own admission, reply limits and evidence domains.
 
 ## Independent normal consumer
 
-The [consumer harness](../crates/ic-backup-agent/tests/independent/mod.rs) runs in
-`pocketic_transport`. Its fixture entrypoint builds the exact
+The [consumer harness](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/mod.rs) runs in
+the standalone example’s `tests::pocketic_transport` module. Its fixture entrypoint builds the exact
 [standalone example assembly](../crates/ic-backup-agent/examples/standalone/README.md)
 in a temporary independent workspace, deriving its external requirements and MSRV
-from the owning package and using the candidate Core/Agent paths. The existing
+from the owning package and using the candidate Core/Agent paths. Explicit Cargo
+library/binary targets select the maintained assembly and runner; source embedding,
+copy lists and path-inclusion shims are absent. The existing
 offline consumer graph checker requires unchanged resolved package identities and
 excludes Testkit, PocketIC and WAT. No sibling patches, new permanent workspace,
 registry publication or installed production CLI is implied.
@@ -292,7 +294,7 @@ in the caller-owned temporary roots on success and failure.
 The pending #75 composition uses bounded `advance_execution_workflow` and typed
 whole-workflow inspection. Restore pauses between the settled load and unprepared
 start stages; inspection exposes unresolved original attempts without changing files.
-The additional [operator cases](../crates/ic-backup-agent/tests/independent/operator/mod.rs)
+The additional [operator cases](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/operator/mod.rs)
 refuse signed-ingress retention, refuse reply retention after actual capture, and
 interrupt data transfer after one admitted chunk. Original spending and partial
 staging survive; no incomplete manifest or new restore stage is published. Fresh
@@ -304,7 +306,7 @@ separately in the [handoff](status/current.md). Production application authentic
 multi-canister fencing/obligations, installed Canic delivery and native macOS/
 installed-IC acceptance retain their own scope. See the
 [Canic adoption guide](canic-adoption.md) for the integration sequence.
-Run `cargo test --offline --locked -p ic-backup-agent --test pocketic_transport independent:: -- --nocapture`
+Run `cargo test --offline --locked -p ic-backup-agent --example standalone tests::pocketic_transport::independent:: -- --nocapture`
 for candidate paths. Set `IC_BACKUP_CONSUMER_REGISTRY=1` on that same command for
 release-specific registry-only qualification. It selects exactly the owning package
 version for both Core and Agent, with default features disabled; only the two

@@ -1,6 +1,10 @@
 //! Public local obligation, source-reference and spent-attempt recovery; no IC/fence backend.
 
 use crate::support::create_json_durable;
+#[expect(
+    dead_code,
+    reason = "this integration target uses only a subset of the shared fixture helpers"
+)]
 mod support;
 
 use ic_backup::{

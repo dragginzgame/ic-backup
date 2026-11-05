@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.58.2] - Unreleased
+
+### ⬆️ Dependencies
+
+- Adopt Testkit 0.86.0 and its exact server CLI. Its optional Wire upgrade stays
+  disabled; managed simulator code, PocketIC 16.1.0 and Backup's recovery contracts
+  are unchanged.
+- Retain the incoming locked Platform 0.22.1 patch. Its changed cryptography
+  modules are not selected; consumed codecs, management and Agent adapters match
+  0.22.0.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.30.0 and its categorized schema-2 LOC report; legacy
+  runtime/test report fields are removed. Use the shared `cloc.sh` entrypoint.
+
+### 🧪 Testing
+
+- Qualify the standalone assembly through ordinary Cargo targets instead of
+  embedded Rust source and path-inclusion shims. Run Agent transport qualification
+  with `cargo test -p ic-backup-agent --example standalone`; normal test discovery
+  remains enabled.
+- Replace global fixture lint allowances with checked target-scoped expectations,
+  remove obsolete support, and keep default fixture scratch under `target/tmp`.
+  Required staging inspections now fail on directory-entry errors.
+
 ## [0.58.1] - 2026-11-04
 
 ### ⬆️ Dependencies

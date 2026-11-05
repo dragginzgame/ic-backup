@@ -20,31 +20,39 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The selected source is Shared Tooling **0.29.4**, committed revision
-`628ccc75d813bfd9bae777bfbaef55838d25b1b2`, observed on upstream main.
-The canonical exporter reads that exact committed source. The refresh from
-`1fa2d90` retains **149 payloads**: eight updates, one addition and 140 unchanged
-files. Common executable catalogs and Rust 1.99.1 declarations are unchanged.
+The selected source is Shared Tooling **0.30.0**, committed revision
+`07dce12cbe4a798fd4a6d263095518678c4f6b45`. The canonical exporter reads that
+exact committed source. The refresh from `628ccc7` retains **155 payloads**:
+15 updates, six additions and 134 unchanged files. Common executable catalogs,
+Rust 1.99.1 and the incoming Testkit 0.86.0 dependency selection are preserved.
 
-The release runner now checks retained Git-side tool state before locks and around
-consumer hooks. Its read-only checker enforces a 512 MiB aggregate budget, a 32 MiB
-per-file budget, a 30-day age bound on bulk evidence, and rejects embedded build/
-cache/checkout directories or symlinks. It preserves all evidence on refusal.
-Backup's current release/publication state passes admission. This refresh performs
-no release, cleanup, dependency update or product Rust change. The retention and
-checkout policy clarifications do not authorize deleting journals or artifacts.
+`cloc.sh` now uses schema 2 with Library/app, Tests, Examples, Benchmarks,
+Build/tooling, Unclassified and total counts. Backup uses the same shared
+classifier through `make cloc`; there is no local classifier or schema-1 alias.
+The report has no unclassified source or legacy singular test owner. Its two
+macro notes identify intentional source-written test instrumentation/capture
+macros, rather than unresolved modules. Static source categories are not shipped
+binary measurements or evidence of code deletion.
 
-The earlier 0.29.3 adoption transferred the native-client ownership exception to
-Testkit and aligned Backup's test source layout. That completed migration is
-retained; standalone host-driven backup/restore and existing safety contracts remain.
+The rule audit removes all eight Rust `allow` attributes. Core's selectively used
+fixture helpers have checked expectations at their integration-target module
+boundaries; Agent's shared helper allowances are unnecessary after qualification
+moves beside the standalone example. The unused reply-file helper is removed.
+`unfulfilled_lint_expectations` remains denied and both crates pass strict Clippy.
 
-The test rule accepts both `tests.rs` and `tests/`; existing test directories need
-no bulk rename. Backup externalizes the two remaining production-file inline test
-modules and places shared fixtures, regressions and the read-count probe beneath
-`tests/`. Original test bodies, byte assertions and process-death coverage remain;
-child-process selectors follow their relocated module names. Small conditional
-read wrappers stay at the real IO boundaries so the probe measures production reads.
-Production modules keep their directory layout and introduce no `#[path]` override.
+The Agent example now owns its HTTP and simulator tests under `examples/standalone/tests/`.
+Its Cargo target explicitly enables tests, preserving normal `cargo test` discovery.
+The independent consumer declares a library target at the canonical example and
+a binary target at its maintained runner. Ordinary modules replace the embedded
+Rust copy list and `include!` shim; no generated application source is patched.
+Disposable consumer manifests declare their test role. The existing registered
+Agent cases are preserved, and source visibility remains unchanged in production.
+
+Fixture roots default to `target/tmp`, with explicit `TMPDIR` selection retained.
+Required staging-directory assertions reject failed entry reads instead of
+silently filtering them. Original journals, artifacts, obligations and failed
+qualification evidence remain in custody. Shared's retained-state admission is
+still read-only; adoption performs no release or cleanup.
 
 Backup keeps its single coordinated release, root changelog and existing complete
 release gate. Group validation plans, additional checkouts and reduced CI paths
@@ -58,7 +66,7 @@ The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
 pin; no local exception is needed.
 Backup retains one coordinated release group, workspace-version inheritance and
 its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.74.2** is selected as the release editor and locked Testkit **0.85.1** owns
+Build **0.74.2** is selected as the release editor and locked Testkit **0.86.0** owns
 simulator setup and offline admission. The accompanying Host/Platform dependency
 adoption and public Host identity migration are documented separately in
 [the Platform boundary](ic-platform.md). Snapshot adoption changes no

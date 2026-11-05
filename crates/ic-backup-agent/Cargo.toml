@@ -33,3 +33,4 @@ workspace = true
 name = "standalone"
 path = "examples/standalone/lib.rs"
 crate-type = ["rlib"]
+test = true

@@ -23,7 +23,7 @@ reference custody continue to qualify through the maintained restore workflows.
 
 ## Current simulator dependency boundary
 
-Testkit 0.85.1 owns the maintained `ic_testkit::pocket_ic` client, managed
+Testkit 0.86.0 owns the maintained `ic_testkit::pocket_ic` client, managed
 server startup, authenticated assets and harness extensions. Both libraries use
 that published client directly in simulator tests, with no Platform simulator
 feature or separate client package. Production management DTOs remain Platform's
@@ -41,6 +41,8 @@ exact management bytes, bounded calls, signed transport, original journals and
 independent readback assertions remain local.
 
 Testkit has no Metrics dependency, and its optional Wire interface is disabled.
+The 0.86 Wire upgrade adds no dependency or fixture migration here; all 56 Rust
+source files match 0.85.1.
 The authenticated server remains PocketIC 16.1.0. The locked
 Testkit package also selects its exact managed CLI; after a Testkit update, run
 `make install-testkit-server` before the offline admission check.
@@ -259,7 +261,7 @@ server cleanup. Simulator packages remain development-only.
 
 The [maintained standalone assembly](../crates/ic-backup-agent/examples/standalone/README.md)
 is the canonical complete journey. The normal consumer supplies its
-[fixture application adapter](../crates/ic-backup-agent/tests/independent/consumer/authority/mod.rs). It runs from a separate temporary workspace and
+[fixture application adapter](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/consumer/authority/mod.rs). It runs from a separate temporary workspace and
 target directory with ordinary library dependencies. Testkit and the application's
 fresh checks stay in the parent. The Core suite retains focused capture, transfer,
 restore, malformed-reply and recovery cases without a second complete driver.
@@ -281,12 +283,12 @@ The canonical Agent fixture has an empty chunk store. Core's focused restore
 cases additionally clear a nonempty live chunk store and verify restoration of
 the original stored chunk bytes.
 
-Registered [journey cases](../crates/ic-backup-agent/tests/independent/mod.rs)
+Registered [journey cases](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/mod.rs)
 cover complete cold capture/restore/accepted start/terminal replay, process death
 after authenticated load and cold continuation after every restore stage. Each
 continuation reconstructs the consumer from original retained bytes, catalogues,
 manifest, allocation and post-load acceptance; settled prefixes remain unchanged.
-[Additional lost-reply cases](../crates/ic-backup-agent/tests/independent/restore_failures/mod.rs)
+[Additional lost-reply cases](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/restore_failures/mod.rs)
 cover allocation, the second data upload and start. Each discards a real reply
 after its effect and before settlement. Its original attempt stays pending with
 no allowance left; retained reentry refuses without preparing a successor or
@@ -295,7 +297,7 @@ changing original files. Oracle reply bytes grant no recovery authority.
 The consumer's [terminal provider](../crates/ic-backup-agent/examples/standalone/workflow/restore/mod.rs)
 replays the complete workflow under its original journal lock, verifies source
 artifact/manifest provenance and requires fresh exact post-load acceptance. The
-[parent terminal checks](../crates/ic-backup-agent/tests/independent/terminal/mod.rs)
+[parent terminal checks](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/terminal/mod.rs)
 withhold and substitute acceptance before start, preserve an unrelated unfinished
 restore reference after release, and reject changed acceptance even on
 already-released replay. Successful replay changes no file bytes. No artifact or

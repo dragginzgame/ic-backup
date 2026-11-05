@@ -5,19 +5,19 @@ mod authority;
 mod command;
 mod config;
 mod evidence;
-mod standalone;
+use ::standalone::workflow as standalone;
 
 use clap::Parser;
-pub(super) use command::Mode;
+pub(crate) use command::Mode;
 use command::{Action, Arguments};
-pub(super) use config::{ApplicationConfig, Config};
+pub(crate) use config::{ApplicationConfig, Config};
 use ic_backup::model::attempt_journal::AttemptBudgetRecord;
 use ic_backup::workflow::execution_workflow::ExecutionWorkflowAdvance;
-pub(super) use standalone::{Stage, error, read, retain};
+pub(crate) use standalone::{Stage, error, read, retain};
 use std::io;
 
 #[tokio::main(flavor = "multi_thread")]
-pub(super) async fn entry() {
+pub(crate) async fn main() {
     if let Err(error) = run().await {
         eprintln!("consumer refused: {error}");
         std::process::exit(1);

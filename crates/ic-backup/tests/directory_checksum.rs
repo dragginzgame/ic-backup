@@ -8,6 +8,10 @@ use ic_host_artifacts::artifact::{
 use std::path::PathBuf;
 
 #[cfg(unix)]
+#[expect(
+    dead_code,
+    reason = "this integration target uses only a subset of the shared fixture helpers"
+)]
 mod support;
 
 fn entry(name: &str, bytes: &[u8]) -> (PathBuf, Sha256Digest) {

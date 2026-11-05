@@ -2,6 +2,10 @@
 
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_platform::candid::contract;
+#[expect(
+    dead_code,
+    reason = "this integration target uses only a subset of the shared fixture helpers"
+)]
 mod support;
 
 use crate::ready::ready;

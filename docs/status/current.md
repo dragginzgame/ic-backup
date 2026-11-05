@@ -1,119 +1,87 @@
-# Current handoff — 2026-11-04
+# Current handoff — 2026-11-05
 
-## Delivered 0.58.1
+## Pending 0.58.2
 
-Both crates are published as **0.58.1**. Release commit
-`cad45b3c327dfb3d3af0129ed23e3ed07e0b31c7` and annotated `v0.58.1` are verified on
-`origin/main`; the [receipt](../release.json) binds source `761e1ff` and its complete
-Linux release gate. All **554 test cases** pass with no failures or ignored cases,
-including both simulator suites. Clippy, tools, source/format admission, release/
-hook fixtures, Rustdocs, independent consumers and archive compilation pass.
-Publication separately passes Cargo verification and the mandatory lint gate.
-Independent downloads match registry checksums, release provenance and all **341
-non-generated source files**. Evidence is in `target/deploy-0581.qy4t0oqc/` and
-`.git/release-state/`. No native macOS, live IC or installed Canic acceptance is claimed.
+The user authorized Testkit 0.86 adoption, then Shared Tooling adoption and a full
+rule audit with local fixes. Versions remain **0.58.1**; the complete batch is
+ready for source commitment. The user selected **0.58.2** delivery of both crates
+to `origin/main`, annotated `v0.58.2` and crates.io. The full release gate precedes
+preparation; final receipt and remote/registry verification own the outcome.
+Pending notes stay **0.58.2** because contributor tooling/fixture changes do not
+change the published library API, record/wire bytes or production behavior.
 
-Testkit **0.85.1** and its exact managed CLI are selected with Types **0.18.1**.
-Their archives/checksums and sources `3d371d7` / `2307ec3` are verified. Testkit's
-56 Rust files match 0.85.0; it shares Platform **0.22.0** with production, removing
-0.21. Types explicitly enables external Principal Serde, already supplied here
-through Candid, without changing canonical identity, normalization or bytes.
-Production Rust is unchanged. Existing managed builders supply the now-required
-endpoint; PocketIC **16.1.0**, bounds and fixture custody remain. Earlier focused
-proof in `target/testkit-085-adoption.u14w4_wb/` retains its actual 0.85.0 / Types
-0.18.0 inputs; the completed release gate freshly qualifies the final graph.
+Shared Tooling **0.30.0 at `07dce12cbe4a798fd4a6d263095518678c4f6b45`** is
+exported canonically: 155 payloads, 15 updates, six additions and 134 unchanged.
+Linked reference docs/catalog/inactive unit templates complete the documentation
+closure; no service or schedule is activated. Source/mode provenance and per-rule
+review belong to [the adoption review](../shared-tooling-review.json).
 
-`model::attempt_journal::MutationReservationError` now owns the four original
-pending-mutation refusals. Application, management, transfer-read and upload request
-errors carry it through `Reservation`, including a typed standard error source.
-Former flat variants and manual conversions are removed. Checks and their order
-are unchanged; observation-specific denials keep their current owners. Application
-payload validation now lives with its sole ingress owner, preserving argument/method/
-reply/receiver/target admission order and exact hashes. Immutable records use one
-validator-based read path under the original root, lock, decode and byte bounds.
-See [the API migration](../canic-adoption.md#058-api-migration).
+All eight authored Rust `allow` attributes are removed. Core's shared fixtures use
+checked dead-code expectations at their integration-target boundaries; Agent's
+obsolete allowance/helper is retired. Unfulfilled expectations remain denied.
+Agent HTTP/simulator qualification now lives under `examples/standalone/tests/`.
+The example explicitly enables test discovery; all 41 Agent cases match the prior
+registered cases after module-prefix normalization. Its independent consumer uses
+explicit Cargo library/bin targets at maintained sources, without embedded Rust,
+source copy lists or `include!`/`#[path]` shims. Fixture manifests declare test roles.
+Default fixture scratch is `target/tmp`; explicit `TMPDIR` overrides and retained
+artifacts remain untouched. Required staging scans fail on entry-read errors.
 
-The earlier cuts retire the independent capture-consistency and application-fence
-framework and Agent adapter. Mandatory application admission, accounted application
-ingress and fenced same-ID restore requirements remain. `ApplicationFenceState`
-now belongs to `model::restore_safety` with unchanged meanings. Complete upload
-planning/sessions replace public single-chunk preparation. Advancement carries one
-checkpoint learned commitment to every successor, without per-successor overrides.
+Testkit **0.86.0**, exact CLI and authenticated PocketIC **16.1.0** are selected.
+All 56 Testkit Rust files match 0.85.1; only Testkit's lock identity changes in the
+incoming adoption. Its optional Wire feature stays disabled. Original Testkit
+proof is in `target/testkit-086-adoption._kp_7j1u/`, including two real simulator
+cases and both simulator-target Clippy checks. This audit preserves that lockfile.
 
-Guarded root checks refuse retained `consistency-requirement.json` or
-`fence-obligation.json`, including malformed bytes/symlinks, before record use or
-spending. Retained distinct-edge continuations refuse before callbacks without
-rewriting bindings/journals. Recover these originals with **0.57.1 and the original
-integration before upgrading**. Preserve bytes, pending attempts, references,
-artifacts and external obligations. Never remove markers, rebuild plans, reinterpret
-payloads or reset accounting to bypass admission. No migration or cleanup is provided.
-Current v1 attempt/workflow/binding/artifact formats and recovery contracts remain.
+## Latest qualification and command ownership
 
-Production LOC is **16,530**, down **99** in the latest batch and **2,119** from
-18,649 before the cleanup. This comprises **15,344 library lines** and the unchanged
-**1,186-line standalone example**. Separate tests comprise 39,177 LOC and 554 test
-functions. Retired API fixtures are removed; new public error-source and retained-
-state/fan-out refusal regressions cover the current contract. Standalone host-driven
-backup/restore remains supported. Current Canic production inspection found no calls
-to removed APIs or flat reservation-error matches; installed acceptance is separate.
+Audit evidence is `target/shared-030-audit.rwc459mo/`: incoming dirty inputs,
+canonical export/source proof, all-target/all-feature strict Clippy for both
+crates, 17 JSON persistence cases and all 37 relocated HTTP/simulator cases pass.
+The latter include independent cold capture/restore, process death, lost-effect
+recovery and effect-free terminal replay. Initial compile failures are retained.
+Release metadata-only fixtures and both exact unpacked archives compile/verify;
+latest archive evidence is `target/package-check.hzmiDc/`. Normal consumers exclude simulator
+packages. Dependency, formatting, shell/Perl, local-link and LOC checks pass.
 
-## Current tooling and evidence
+`make cloc` uses schema 2: Library/app, Tests, Examples, Benchmarks, Build/tooling,
+Unclassified and total. It reports no unclassified Rust or legacy singular test
+owner. Two intentional test-macro notes are retained. These categories do not
+measure code removal; prior runtime/test totals use a different classification.
+Agent transport checks now use `cargo test -p ic-backup-agent --example standalone`
+with `tests::http_boundary::` or `tests::pocketic_transport::` filters when needed.
+The ordinary Make test gate includes the enabled example without another runner.
 
-Host Artifacts/FS/Process **0.74.3**, Testkit **0.85.1** and Build release editor
-**0.74.2** are explicitly selected. The earlier tooling adoption's lockfile selected Host
-0.74.3; release preparation changes only Backup's package versions. Published
-archives/VCS were verified; Artifacts
-and consumed editor source are unchanged, while FS/Process relocate tests. Tool
-and editor admission, 34 focused native cases, normal consumers and actual editor
-preparation fixtures pass in `target/tooling-adoption-058.v843s4en/`.
+Rust minimum and exact compiler stay **1.99.1**. Host Artifacts/FS/Process **0.74.3**,
+Build release editor **0.74.2**, Platform **0.22.1**, Types **0.18.1** and target-only
+Runtime **0.19.1** are selected. The incoming Platform patch arrived after the audit;
+its checksum/source `fcf540b` and 63 unchanged consumed-source files are reviewed
+in `target/deploy-0582.ft4gpnz7/`. Only unselected crypto modules change. No
+executable catalog or compiler update is selected. Linux proof does not establish
+native macOS, live IC or installed Canic acceptance. The full release gate and
+hosted CI have not run for this pending batch; no release-stage reuse is enabled.
 
-Shared Tooling **0.29.4 at `628ccc7`** is adopted canonically: 149 payloads, eight
-updates and one addition. Current retained-state admission, source/mode integrity,
-changed-script checks and consumer receipt/recovery fixtures pass without cleanup.
-See [the adoption review](../shared-tooling-review.json). Rust stays **1.99.1**;
-Production and Testkit now share Platform **0.22.0**. Types **0.18.1**
-and authenticated PocketIC **16.1.0** remain.
-Runtime **0.19.1** is adopted through Testkit's Wasm-only IC0 edge; the incoming
-lockfile already selected it; release preparation preserves that selection. The published checksum/source
-commit `74a5071` and unchanged selected IC0 source are verified. Six normal graphs
-(both libraries on Linux and both macOS architectures) exclude Runtime; the Wasm
-development graph enables only IC0. Rust 1.99.1 admission passes. Evidence is in
-`target/runtime-adoption-058.vbdr3mto/`; no host compilation or IC-effect rerun is
-needed for this target-only selection, and no Wasm product qualification is claimed.
+## Recovery and retained contracts
 
-Platform evidence is `target/platform-022-adoption.eutssg1n/`: verified published
-checksum/source `b95c9a2`, unchanged selected codecs and reviewed Agent export
-identities. The optional crypto/certification changes are not selected. That adoption
-used production 0.22 and Testkit 0.21, sharing Types, Candid, management DTO and SDK
-identities. Only Platform and required graph edges change; six unrelated Windows
-edge rewrites from resolution are reverted to their incoming selections. Strict
-library Clippy, 16 request/lifecycle codec and bounds cases, independent Core/Agent
-consumers (`target/msrv-consumers.3G7EQ2/`) and the focused HTTP signed-retention,
-single-dispatch/lost-reply case pass on Rust 1.99.1. No new simulator, macOS native,
-live IC or full release qualification was claimed by that focused adoption.
+Standalone host-driven backup/restore, mandatory application admission and fenced
+same-ID restore safety remain. Current v1 records/hashes and bounded attempt
+spending are unchanged; persist intent before effects, reconcile lost replies,
+and preserve unfinished journals, artifacts, references and external obligations.
 
-Cleanup proof is `target/request-cleanup-058.m2dcuayv/`: pre-edit archive, untouched
-index/Cargo hashes, retained first compile failure, strict both-package all-target/
-all-feature Clippy, 112 affected unit cases, five public application cases, normal
-Core/Agent consumers (`target/msrv-consumers.jiUQo7/`), warning-free Rustdocs and LOC.
-Both focused HTTP application admission/retention checks pass. Earlier
-runtime proof retains its exact source/dependency selection: 96 workflow cases,
-retired-layout/artifact/restore checks and 22 selected simulator cases, including
-cold standalone same-ID restore, process death, lost replies and terminal replay,
-in `target/scope-cut-058.zh17kmds/`. Its failed simulator assertion and corrected
-single-case retry remain retained. The request/error simplification changes no IC
-effect, record bytes or protocol. These earlier focused receipts retain their
-original input identities and scope; the final release gate freshly qualifies the
-combined Linux source and dependency selection.
+Layouts containing `consistency-requirement.json` or `fence-obligation.json` refuse
+before record use/spending, including malformed bytes and symlinks. Distinct-edge
+learned continuations refuse without rewriting bindings. Recover those originals
+with **0.57.1 and the original qualified integration before upgrading**. Never
+remove markers, rebuild plans, reinterpret payloads, re-sign requests or reset
+accounting to bypass admission. No migration, evidence cleanup or refund is provided.
+See [the migration](../canic-adoption.md#058-api-migration) and
+[implementation contracts](../implementation-contracts.md).
 
-## Previous baselines and custody
+## Delivered baseline
 
-Previous **0.58.0** is release commit `dc1a0db`, annotated `v0.58.0`, source
-`1358f7a` and handoff `d58fc62`. Its original full Linux gate and registry/source
-verification stay in `target/deploy-0580.b8b51qgs/` and Git history.
-
-Previous **0.57.1** is release commit `40d9e32` with annotated `v0.57.1`, source
-`8edede0` and handoff `bba30fe`. Its original receipt remains in Git history;
-publication/source evidence stays in `target/deploy-0571.ytcigfjv/` and
-`.git/release-state/`. Preserve original/failed qualification, unfinished journals,
-referenced/partial artifacts, obligations and tool generations.
+Both crates **0.58.1** are published. Release `cad45b3c327dfb3d3af0129ed23e3ed07e0b31c7`,
+annotated `v0.58.1`, source `761e1ff` and handoff `37eec89` are in history/main.
+The [receipt](../release.json) binds the complete Linux release gate (554 passing
+cases). Independently verified registry archives and source bytes remain in
+`target/deploy-0581.qy4t0oqc/` and `.git/release-state/`. Earlier release/recovery
+proof stays at its original owner and Git revision; no retained evidence is removed.

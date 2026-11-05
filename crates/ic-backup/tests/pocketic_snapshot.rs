@@ -4,6 +4,10 @@
 
 mod pic_journey;
 mod ready;
+#[expect(
+    dead_code,
+    reason = "this integration target uses only a subset of the shared fixture helpers"
+)]
 mod support;
 
 #[test]

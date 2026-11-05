@@ -37,6 +37,8 @@ name = "$consumer"
 version = "0.0.0"
 edition = "2024"
 rust-version = "$msrv"
+[package.metadata.shared-tooling.loc]
+category = "tests"
 [dependencies]
 $package = { path = $dependency }
 TOML

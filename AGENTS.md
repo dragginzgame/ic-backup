@@ -1,7 +1,7 @@
 # AGENTS.md
 
 For scope, delegated delivery, validation, compiler support and reporting, use
-[Shared policy at 628ccc7](https://github.com/dragginzgame/shared-tooling/blob/628ccc75d813bfd9bae777bfbaef55838d25b1b2/DRAGGINZGAME.md)
+[Shared policy at 07dce12](https://github.com/dragginzgame/shared-tooling/blob/07dce12cbe4a798fd4a6d263095518678c4f6b45/DRAGGINZGAME.md)
 and its revision-bound references over older snapshot or local-guide wording.
 This includes Rust 1.99.1 as minimum and pinned development/release compiler;
 check local declarations and qualification before claiming adoption is complete.
@@ -128,7 +128,7 @@ journals and recovery evidence retain their local custody requirements.
 - Rust edition 2024. Versions and dependencies inherit from the owning workspace;
   `make dependency-pins-check` enforces the shared Cargo inheritance gate.
 - Use directory modules with `mod.rs` for production code. Tests and test-only
-  helpers use `tests.rs` or a `tests/` directory with ordinary module discovery;
+  helpers use `tests.rs`, `*_tests.rs` or a `tests/` directory with ordinary module discovery;
   no `#[path]` module layout overrides.
 - DTOs are passive boundary data; persisted schema types end in `Record`; views
   are read-only projections. Requests do not implement non-neutral `Default`.

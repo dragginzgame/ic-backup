@@ -349,7 +349,7 @@ fn held_parent_publication_does_not_switch_to_a_replaced_path() {
 fn assert_no_staging_file(root: &Path, target_name: &str) {
     let staging_files = fs::read_dir(root)
         .expect("read temp root")
-        .filter_map(Result::ok)
+        .map(|entry| entry.expect("read each staging-directory entry"))
         .filter(|entry| entry.file_name() != target_name)
         .collect::<Vec<_>>();
     assert!(staging_files.is_empty(), "staging files remain");

@@ -2,7 +2,7 @@
 mod application_ingress;
 mod http_capture;
 mod recovery;
-mod support;
+use super::support;
 const TARGET: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 use ic_backup::ports::ic_mutation::{IcMutationProvider, IcMutationProviderError};
 use ic_backup::{

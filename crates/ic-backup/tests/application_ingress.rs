@@ -6,6 +6,10 @@ use ic_backup::workflow::execution_workflow::advance_execution_workflow;
 use std::num::NonZeroUsize;
 
 mod ready;
+#[expect(
+    dead_code,
+    reason = "this integration target uses only a subset of the shared fixture helpers"
+)]
 mod support;
 
 use ic_backup::{

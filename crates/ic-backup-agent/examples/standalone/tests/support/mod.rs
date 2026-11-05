@@ -16,7 +16,19 @@ use ic_platform::agent::{AnonymousIdentity, Identity};
 use std::{fs, path::PathBuf, sync::Arc};
 
 pub fn root(label: &str) -> PathBuf {
-    let selected_temp = std::env::temp_dir()
+    let parent = std::env::var_os("TMPDIR").map_or_else(
+        || {
+            let parent = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .ancestors()
+                .nth(2)
+                .unwrap()
+                .join("target/tmp");
+            std::fs::create_dir_all(&parent).expect("create workspace fixture parent");
+            parent
+        },
+        PathBuf::from,
+    );
+    let selected_temp = parent
         .canonicalize()
         .expect("resolve selected fixture parent");
     ic_host_fs::testing::create_fixture_directory(
@@ -58,16 +70,6 @@ fn retain_file(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
     file.sync_all()
 }
 
-/// Retain a single evidence file and synchronize its existing parent.
-#[allow(
-    dead_code,
-    reason = "shared support also compiles in binaries retaining only signed ingress"
-)]
-pub fn retain_bytes(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
-    retain_file(path, bytes)?;
-    fs::File::open(path.parent().unwrap())?.sync_all()
-}
-
 pub fn identity() -> Arc<dyn Identity> {
     Arc::new(AnonymousIdentity)
 }
@@ -83,10 +85,6 @@ pub fn payload(
     })
     .unwrap()
 }
-#[allow(
-    dead_code,
-    reason = "HTTP fixtures bind the default declaration; PocketIC supplies its actual context before admission"
-)]
 pub fn plan(target: &str, digest: &ArtifactChecksumRecord, sequence: u64) -> OperationPlanRecord {
     OperationPlanRecord::new(plan_request(target, digest, sequence)).unwrap()
 }

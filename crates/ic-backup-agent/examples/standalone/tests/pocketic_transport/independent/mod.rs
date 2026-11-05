@@ -272,7 +272,7 @@ async fn normal_consumer_cold_reentry_after_each_restore_stage_preserves_origina
 }
 
 async fn captured(identity_seed: [u8; 32]) -> (Fixture, PathBuf) {
-    let _: fn() = consumer::entry;
+    let _: fn() = consumer::main;
     build::binary();
     let mut fixture = Fixture::new(Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(
         &identity_seed,

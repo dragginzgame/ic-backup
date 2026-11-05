@@ -45,7 +45,7 @@ fn a_live_incomplete_body_retains_exact_socket_and_json_evidence() {
         io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
     ));
     assert!(error.raw_os_error().is_some());
-    let root = crate::support::root("partial-http");
+    let root = crate::tests::support::root("partial-http");
     capture.retain(&root, 0).unwrap();
     assert_eq!(fs::read(root.join("http-request-0.bin")).unwrap(), partial);
     let record: serde_json::Value =

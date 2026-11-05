@@ -3,10 +3,6 @@
 use std::path::PathBuf;
 
 /// Decode golden bytes strictly; this support module is compiled outside the library.
-#[allow(
-    dead_code,
-    reason = "support also compiles in binaries without hexadecimal fixtures"
-)]
 pub(crate) fn hex_bytes(hex: &str) -> Vec<u8> {
     let (pairs, remainder) = hex.as_bytes().as_chunks::<2>();
     assert!(
@@ -27,7 +23,19 @@ pub(crate) fn hex_bytes(hex: &str) -> Vec<u8> {
 
 /// Reserve a fresh root before a public integration journey writes any children.
 pub(crate) fn temp_root(prefix: &str) -> PathBuf {
-    let selected_temp = std::env::temp_dir()
+    let parent = std::env::var_os("TMPDIR").map_or_else(
+        || {
+            let parent = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .ancestors()
+                .nth(2)
+                .unwrap()
+                .join("target/tmp");
+            std::fs::create_dir_all(&parent).expect("create workspace fixture parent");
+            parent
+        },
+        PathBuf::from,
+    );
+    let selected_temp = parent
         .canonicalize()
         .unwrap_or_else(|error| panic!("resolve integration fixture parent: {error}"));
     let root = ic_host_fs::testing::create_fixture_directory(&selected_temp, prefix)
@@ -40,10 +48,6 @@ pub(crate) fn temp_root(prefix: &str) -> PathBuf {
 }
 
 /// Publish a finite private JSON fixture; this is test setup, not product authority.
-#[allow(
-    dead_code,
-    reason = "this shared module also compiles in integration binaries without JSON fixtures"
-)]
 pub(crate) fn create_json_durable(
     path: &std::path::Path,
     value: &impl serde::Serialize,
@@ -63,10 +67,6 @@ pub(crate) fn create_json_durable(
 }
 
 /// Decode fixture evidence with Host's bounded, regular no-follow reader.
-#[allow(
-    dead_code,
-    reason = "shared support also compiles in binaries without JSON fixtures"
-)]
 pub(crate) fn read_json<T: serde::de::DeserializeOwned>(
     path: &std::path::Path,
     max_bytes: u64,
@@ -76,10 +76,6 @@ pub(crate) fn read_json<T: serde::de::DeserializeOwned>(
 }
 
 /// Broad finite admission for trusted fixture oracles, independent of product limits.
-#[allow(
-    dead_code,
-    reason = "shared support also compiles without Candid fixture oracles"
-)]
 pub(crate) const WIRE_ORACLE_LIMITS: ic_platform::candid::DecodeLimits =
     ic_platform::candid::DecodeLimits {
         reply_bytes: 64 * 1024 * 1024,
@@ -90,10 +86,6 @@ pub(crate) const WIRE_ORACLE_LIMITS: ic_platform::candid::DecodeLimits =
     };
 
 /// One valid single-target declaration; corruption tests retain their explicit JSON inputs.
-#[allow(
-    dead_code,
-    reason = "support also compiles in unrelated integration binaries"
-)]
 pub(crate) fn single_operation_plan(
     target: &str,
     sequence: u64,
@@ -150,10 +142,6 @@ pub(crate) fn single_operation_plan(
 
 /// Complete a native byte fixture through the actual IC artifact writer (no IC calls).
 #[cfg(unix)]
-#[allow(
-    dead_code,
-    reason = "shared support compiles in unrelated integration binaries"
-)]
 pub(crate) fn finish_ic_artifact(
     journal: &mut ic_backup::ops::persistence::DownloadJournalGuard<'_>,
     target: &str,

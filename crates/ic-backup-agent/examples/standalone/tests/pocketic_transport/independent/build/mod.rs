@@ -21,7 +21,7 @@ fn build() -> PathBuf {
         .to_owned();
     let evidence = super::super::support::root("independent-build");
     let selected = evidence.join("consumer");
-    write_sources(&selected);
+    fs::create_dir_all(&selected).unwrap();
     let registry = registry_selected();
     let original = fs::read(root.join("Cargo.lock")).unwrap();
     snapshot(&root, &evidence);
@@ -47,67 +47,6 @@ fn registry_selected() -> bool {
         Ok(value) if value == "1" => true,
         _ => panic!("IC_BACKUP_CONSUMER_REGISTRY must be absent or exactly 1"),
     }
-}
-
-fn write_sources(selected: &Path) {
-    for (name, bytes) in [
-        ("mod.rs", include_str!("../consumer/mod.rs")),
-        ("config/mod.rs", include_str!("../consumer/config/mod.rs")),
-        ("command/mod.rs", include_str!("../consumer/command/mod.rs")),
-        (
-            "config/tests/mod.rs",
-            include_str!("../consumer/config/tests/mod.rs"),
-        ),
-        (
-            "evidence/mod.rs",
-            include_str!("../consumer/evidence/mod.rs"),
-        ),
-        (
-            "application/mod.rs",
-            include_str!("../consumer/application/mod.rs"),
-        ),
-        (
-            "authority/mod.rs",
-            include_str!("../consumer/authority/mod.rs"),
-        ),
-        (
-            "standalone/mod.rs",
-            include_str!("../../../examples/standalone/workflow/mod.rs"),
-        ),
-        (
-            "standalone/application/mod.rs",
-            include_str!("../../../examples/standalone/workflow/application/mod.rs"),
-        ),
-        (
-            "standalone/connection/mod.rs",
-            include_str!("../../../examples/standalone/workflow/connection/mod.rs"),
-        ),
-        (
-            "standalone/metadata/mod.rs",
-            include_str!("../../../examples/standalone/workflow/metadata/mod.rs"),
-        ),
-        (
-            "standalone/restore/mod.rs",
-            include_str!("../../../examples/standalone/workflow/restore/mod.rs"),
-        ),
-        (
-            "standalone/stage/mod.rs",
-            include_str!("../../../examples/standalone/workflow/stage/mod.rs"),
-        ),
-        (
-            "standalone/transfer/mod.rs",
-            include_str!("../../../examples/standalone/workflow/transfer/mod.rs"),
-        ),
-    ] {
-        let path = selected.join("src/consumer").join(name);
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(path, bytes).unwrap();
-    }
-    fs::write(
-        selected.join("src/main.rs"),
-        "mod consumer;\nfn main() { consumer::entry(); }\n",
-    )
-    .unwrap();
 }
 
 fn snapshot(root: &Path, evidence: &Path) {
@@ -173,6 +112,14 @@ fn write_manifest(root: &Path, evidence: &Path, selected: &Path, registry: bool)
         manifest,
         "clap = {{ version = {:?}, default-features = false, features = [\"derive\", \"std\"] }}",
         requirement("clap")
+    )
+    .unwrap();
+    let example = root.join("crates/ic-backup-agent/examples/standalone");
+    write!(
+        manifest,
+        "\n[package.metadata.shared-tooling.loc]\ncategory = \"tests\"\n\n[lib]\nname = \"standalone\"\npath = {}\n\n[[bin]]\nname = \"ic-backup-journey-consumer\"\npath = {}\n",
+        serde_json::to_string(&example.join("lib.rs")).unwrap(),
+        serde_json::to_string(&example.join("tests/pocketic_transport/independent/consumer/mod.rs")).unwrap(),
     )
     .unwrap();
     fs::write(selected.join("Cargo.toml"), manifest).unwrap();

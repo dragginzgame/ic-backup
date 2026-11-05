@@ -21,7 +21,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.22.0, which re-exports the
+not selected by Backup. Production selects Platform 0.22.1, which re-exports the
 canonical owned Principal from Platform Types 0.18.1.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
@@ -34,7 +34,7 @@ remain private to tests and never enter a normal consumer.
 Platform 0.21 removes the unused PocketIC facade; the prior Testkit migration
 already supplies its replacement. Verified published archives retain identical
 Candid, native management, Principal and Agent adapter source and dependencies.
-Testkit 0.85.1 and production share Platform 0.22.0. The older 0.21 facade leaves
+Testkit 0.86.0 and production share Platform 0.22.1. The older 0.21 facade leaves
 the development lockfile.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
@@ -109,8 +109,8 @@ client, so removal of Platform's simulator feature requires no further migration
 Backup retains its exact management ingress, method-specific response bounds and
 original accounting rather than adopting a second snapshot workflow.
 Testkit 0.84 embeds the maintained client previously supplied by Platform's
-0.20 client package. Current Testkit 0.85.1 and Backup's production dependencies
-share Platform 0.22.0. Canonical Types 0.18 and the
+0.20 client package. Current Testkit 0.86.0 and Backup's production dependencies
+share Platform 0.22.1. Canonical Types 0.18 and the
 same external DTO identities
 remain selected. Testkit 0.84.1's Rust
 source matches reviewed 0.84.0. Review against the earlier client found namespace,
@@ -147,6 +147,12 @@ Platform 0.22. Types 0.18.1 explicitly enables external Principal Serde; Backup
 already receives that capability through Candid. Its canonical Principal code
 and normalization/hash bytes are unchanged; only the external-adapter test gate
 and regression fixtures change.
+Testkit 0.86 updates its optional Wire dependency to 0.17. Backup leaves that
+feature disabled; no Wire package enters its lockfile. All 56 published Rust files
+match 0.85.1, and the consumed dependency identities and features remain unchanged.
+The incoming locked Platform 0.22.1 patch changes only unselected BLS/signature
+modules. Its other 63 Rust files match 0.22.0, including the consumed codecs,
+native management, Principal and Agent adapters. No consumer migration is needed.
 Platform operations return checked
 results; expected canister rejections are extracted from `ClientError::Canister`,
 preserving the original structured reply rather than accepting transport failure.

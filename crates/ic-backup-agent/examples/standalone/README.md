@@ -11,7 +11,7 @@ original catalogs and journals.
 The [workflow module](workflow/mod.rs) is the assembly used by the independent
 consumer qualification. Its [application boundary](workflow/application/mod.rs)
 has required callbacks and no default authority. The test adapter, fixed test keys,
-PocketIC setup, oracle bytes and fault modes live under `tests/independent`.
+PocketIC setup, oracle bytes and fault modes live under `tests/pocketic_transport/independent`.
 
 ## Embed the example
 
@@ -103,10 +103,11 @@ cargo build --offline --locked -p ic-backup-agent --example standalone
 After explicit Testkit setup, run its real consumer qualification with:
 
 ```bash
-cargo test --offline --locked -p ic-backup-agent --test pocketic_transport independent:: -- --nocapture
+cargo test --offline --locked -p ic-backup-agent --example standalone tests::pocketic_transport::independent:: -- --nocapture
 ```
 
-The isolated normal-dependency build copies the exact example sources and excludes
+The isolated normal-dependency build declares targets at the maintained example
+library and fixture runner, and excludes
 Testkit/PocketIC from the child graph. Its application adapter qualifies an
 exclusively owned inspected fixture, including a different supplied signer for the
 successful journey. Cold stage continuation, lost allocation/upload/load/start

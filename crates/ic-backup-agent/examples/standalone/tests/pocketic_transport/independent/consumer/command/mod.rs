@@ -55,7 +55,7 @@ pub(super) enum Action {
 }
 
 impl Mode {
-    pub(in super::super) fn lost_reply(self) -> Option<(Stage, u64)> {
+    pub(crate) fn lost_reply(self) -> Option<(Stage, u64)> {
         match self {
             Self::LoseAllocation => Some((Stage::Allocation, Stage::Allocation.sequence())),
             Self::LoseLoad => Some((Stage::Load, Stage::Load.sequence())),

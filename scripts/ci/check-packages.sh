@@ -56,6 +56,8 @@ name = "ic-backup-package-consumer"
 version = "0.0.0"
 edition = "2024"
 rust-version = "$compiler"
+[package.metadata.shared-tooling.loc]
+category = "tests"
 [dependencies]
 ic-backup = { path = $core }
 ic-backup-agent = { path = $agent }

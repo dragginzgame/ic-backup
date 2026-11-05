@@ -91,7 +91,7 @@ async fn exercise(lane: RecoveryLane, mode: RecoveryMode) {
     let metadata_request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(
         &metadata_request,
-        include_bytes!("../upload-metadata.candid"),
+        include_bytes!("../../upload-metadata.candid"),
     )
     .unwrap();
     let source = support::plan(TARGET, &metadata_request.digest(), 11);

@@ -62,7 +62,19 @@ const CRASH_BARRIER_TIMEOUT: Duration = Duration::from_secs(30);
 
 // Allocate one private test root without reclaiming an existing entry.
 pub fn temp_dir(prefix: &str) -> PathBuf {
-    let selected_temp = std::env::temp_dir()
+    let parent = std::env::var_os("TMPDIR").map_or_else(
+        || {
+            let parent = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .ancestors()
+                .nth(2)
+                .unwrap()
+                .join("target/tmp");
+            std::fs::create_dir_all(&parent).expect("create workspace fixture parent");
+            parent
+        },
+        PathBuf::from,
+    );
+    let selected_temp = parent
         .canonicalize()
         .expect("resolve selected fixture parent");
     ic_host_fs::testing::create_fixture_directory(&selected_temp, prefix)

@@ -1,43 +1,74 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "628ccc75d813bfd9bae777bfbaef55838d25b1b2",
-  "label": "0.29.4",
-  "reviewed_on": "2026-11-04",
-  "previous_revision": "1fa2d90879650780d23ad8f045f5825771b696ad",
+  "revision": "07dce12cbe4a798fd4a6d263095518678c4f6b45",
+  "label": "0.30.0",
+  "reviewed_on": "2026-11-05",
+  "previous_revision": "628ccc75d813bfd9bae777bfbaef55838d25b1b2",
   "consumer_baseline": {
-    "commit": "bba30fec6e8d27074b3865c69f725d3d576c7340",
-    "version": "0.57.1",
-    "pending_notes": "0.58.0"
+    "commit": "37eec8931a39e7eb834827c8248c01ba7867d441",
+    "version": "0.58.1",
+    "pending_notes": "0.58.2",
+    "incoming_work": "Preserve the already qualified uncommitted Testkit 0.86.0 adoption."
   },
   "provenance": {
-    "selection": "Observed upstream main; exact committed source exported canonically from the clean supplier checkout. No additional checkout or source contribution.",
+    "selection": "Exact committed source exported canonically from the normal supplier checkout; no sibling edits or extra implementation checkout.",
     "export": {
-      "payloads": 149,
-      "added": 1,
-      "updated": 8,
-      "unchanged": 140,
-      "removed": 0
+      "payloads": 155,
+      "added": 6,
+      "removed": 0,
+      "updated": 15,
+      "unchanged": 134
     },
-    "catalogs": "ci/tool-versions.env and ci/ic-tools.tsv unchanged; Cargo and compiler inputs unchanged."
+    "catalogs": "Common host/Cargo/IC catalogs and Rust 1.99.1 unchanged.",
+    "documentation_closure": "Select the linked fleet/stack reference documents, catalog and inactive unit templates so exported policy links resolve. This activates no fleet report, schedule or service."
   },
   "consumer_decisions": [
-    "Adopt read-only retained-state admission around release hooks. Current Git-side release/publication evidence is admitted; no evidence is deleted.",
-    "Keep one coordinated release and its full gate. Do not run a release or adopt independent groups/proof reuse.",
-    "Keep original Testkit fixture custody and the completed tests.rs/tests layout.",
-    "The subsequent authorized 0.58 cut retires unused application scaffolding; retain original 0.57.1 recovery for retired obligations, current guarded refusal and standalone/fenced-restore safeguards."
+    "Use schema-2 LOC categories through the shared cloc.sh; no local classifier, schema alias or legacy singular test owner. Review the two intentional macro notes.",
+    "Eliminate all eight authored Rust allow attributes. Place checked dead-code expectations at the 22 Core integration-target module boundaries; retain unfulfilled_lint_expectations=deny. Agent no longer needs helper allowances.",
+    "Make the standalone example own its HTTP/simulator qualification. Explicit Cargo library/bin paths and ordinary modules replace source embedding and include!. No production visibility or dependency boundary is widened.",
+    "Preserve default cargo test registration and all 41 Agent cases. The relocated named example executes 37 HTTP/simulator cases; existing library tests stay separate.",
+    "Default new fixture scratch to target/tmp, preserve explicit TMPDIR overrides and prior artifacts, and reject failed required staging-directory entries.",
+    "Declare disposable consumer roles in generated manifests. Keep the one coordinated workspace and full release gate; do not opt into unqualified stage reuse, candidate pipelines or new groups."
   ],
+  "rule_audit": {
+    "rust-workspaces.md": "Two production packages remain in a virtual workspace, with root inheritance and one version owner. Example/tests roles and generated fixture metadata are explicit.",
+    "cargo-dependencies.md": "Inheritance and external-IC boundary gates pass; Core/Agent normal archive consumers exclude Testkit, PocketIC and WAT. No dependency updates in this audit.",
+    "dependency-pinning.md": "Cargo lock preserved; Actions use full SHAs; no sibling patches or direct upstream IC declarations. Existing qualified external identities remain local constraints.",
+    "git-hooks.md": "Canonical hook bytes and executable catalogs unchanged; existing core.hooksPath=.githooks retained. Matching grouped fmt/fmt-check routes cover the moved modules.",
+    "changelogs.md": "Extend compatible pending 0.58.2 for contributor tooling/test changes. Preserve published history and package versions.",
+    "contributions.md": "Local reviewable changes only; no index, commits, PR, push, release, cleanup or sibling source changes.",
+    "agent-maintenance.md": "No recurring maintenance/CI/issue schedule activated. GitHub identity/description inspected and consistent with the host-library scope.",
+    "change-reporting.md": "Report outcomes and scoped proof; LOC categories do not imply code removal. No symbol/change ledger added.",
+    "rpc-budgets.md": "Backup owns no deployed cross-runtime RPC/binding generator. Opaque application payload budgets and external management bounds remain with their actual owners.",
+    "engineering-details.md": "Review encoding, Host/Platform ownership, process/error boundaries, scratch/evidence, native CI, release callers and recovery. No owned Candid models, unsafe/native SDK bypass or custom gzip/metrics implementation found; no new product mode introduced.",
+    "principles": "Apply one semantic owner, carried authority and narrow interfaces. The fixture consumes the maintained assembly as an ordinary library; product records, custody, settlement and effect bounds are unchanged."
+  },
   "qualification": {
-    "evidence_directory": "/home/adam/projects/ic-backup/target/trim-audit-0571.s7rrg11m",
-    "checks": [
-      "source-verification",
-      "retained-state",
-      "changed-shell-lint",
-      "changed-perl-syntax",
-      "receipt-caller",
-      "formatting",
-      "local documentation links",
-      "unchanged product/Cargo/compiler inputs and preserved index"
+    "evidence_directory": "/home/adam/projects/ic-backup/target/shared-030-audit.rwc459mo",
+    "strict_clippy": "Both crates, all targets/features, -D warnings passed; initial relocation/obsolete-helper compile failures retained.",
+    "focused_tests": {
+      "json_persistence": 17,
+      "relocated_agent_example": 37
+    },
+    "registry": "All 41 Agent registrations match the last delivered release after normalizing only the new module prefixes. Normal Cargo discovery includes the example.",
+    "consumer_boundaries": "Release metadata-only fixtures and both exact unpacked archives pass. Independent runtime consumer graph admits normal dependencies only.",
+    "checks": "Snapshot source/mode verification, dependency gates, format, links, changed-shell/Perl syntax, LOC classification and diff checks.",
+    "limits": [
+      "Linux execution only; native macOS and installed Canic remain separate.",
+      "No full workspace/release gate, hosted CI dispatch, delivery or evidence cleanup."
     ],
-    "limits": "Focused tooling adoption and source inspection; no new product Rust, IC, native macOS, Canic acceptance or release qualification claimed."
+    "archive_evidence_directory": "target/package-check.hzmiDc",
+    "rule_files_reviewed": {
+      "rules/agent-maintenance.md": "3b5ba8695cf4a29e1f89c6b902806a1d02021d031fbe1dfbf9320424545a370e",
+      "rules/cargo-dependencies.md": "addd391bf1e03e70a019d5959975c1ba79ba7ba31baa0e19eb6046016f02e12c",
+      "rules/change-reporting.md": "6c25fe09f631d92a88d8ebb62cc20279f57f43a753d3a19dc254bb6ff0433b76",
+      "rules/changelogs.md": "014bbb55799dc494f6c62fdadbb5f8954daa6b3af4a01178c74ebccdc6909fe1",
+      "rules/contributions.md": "f1015a1c15225dece1309fd2696e884a4e4e864b4ecf201a97354ae2e25ebf64",
+      "rules/dependency-pinning.md": "b0b4c00e2183a787791314f21d33d270b8003a1ec67286ce8a681b028214ff75",
+      "rules/engineering-details.md": "a71b4719f490e4037a2ac25d1585b9d5bb1b29cac1796eaeaeabbf6d5f9928ec",
+      "rules/git-hooks.md": "24c8e33db7212d998e9fdcc97146840f3b54258cf6fd7d8c2b3c06c49dd5b35a",
+      "rules/rpc-budgets.md": "e3aed908dd9b08bf93255328bb056bed57298dab39944e3726aad2726548e653",
+      "rules/rust-workspaces.md": "0ae2ade60be55406a8efe21c0f17af45cf9dc725c9a867dcf3b34830f83f55c0"
+    }
   }
 }

@@ -1273,9 +1273,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.22.0"
+version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19b0b5b5a8399051037aeb0f6d0832b8191eef1f7c9e727a9cf9baed951fc968"
+checksum = "229f2ea285da3b2cfd9b780e50f32c3313be5972c3a5fda70646111dbe794a07"
 dependencies = [
  "candid",
  "ic-agent",
@@ -1307,9 +1307,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.85.1"
+version = "0.86.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf1947d60280dd91d84083c2cbf5e51ede06c03ce7f744cb58dbbde239c03002"
+checksum = "7f140a5aef804f8bc9ca838f42992fa6e63c6a76c9bf09ce97b1d1ee670d1288"
 dependencies = [
  "backon",
  "base64 0.23.1",

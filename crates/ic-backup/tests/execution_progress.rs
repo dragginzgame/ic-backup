@@ -1,5 +1,9 @@
 //! Public local progress recovery; fixture receipts qualify no remote effects.
 
+#[expect(
+    dead_code,
+    reason = "this integration target uses only a subset of the shared fixture helpers"
+)]
 mod support;
 
 use ic_backup::{

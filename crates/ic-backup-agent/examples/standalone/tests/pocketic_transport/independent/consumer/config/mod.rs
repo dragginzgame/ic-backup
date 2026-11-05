@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::{io, path::Path, sync::Arc, time::Duration};
 
 #[derive(Deserialize, Serialize)]
-pub(in super::super) struct Config {
+pub(crate) struct Config {
     pub context: PlanContextRecord,
     pub target: String,
     pub endpoint: String,
@@ -16,7 +16,7 @@ pub(in super::super) struct Config {
 }
 
 impl Config {
-    pub(in super::super) fn read(root: &Path) -> io::Result<Self> {
+    pub(crate) fn read(root: &Path) -> io::Result<Self> {
         Ok(serde_json::from_slice(&super::read(
             &root.join("config.json"),
         )?)?)
@@ -61,7 +61,7 @@ impl Config {
 }
 
 #[derive(Deserialize, Serialize)]
-pub(in super::super) struct ApplicationConfig {
+pub(crate) struct ApplicationConfig {
     #[serde(flatten)]
     pub connection: Config,
     pub reply_limit: usize,

@@ -38,7 +38,7 @@ help:
 	@echo "ci                          Run the full gate against prepared dependencies"
 	@echo "clean                       Explicitly remove build artifacts"
 	@echo "clippy                      Lint native targets with warnings denied"
-	@echo "cloc                        Report Rust workspace source and test LOC"
+	@echo "cloc                        Report categorized Rust source LOC"
 	@echo "compiler-check              Admit and record Cargo/rustc against local compiler policy"
 	@echo "dependency-boundaries-check Check direct IC and WAT dependency ownership"
 	@echo "dependency-pins-check       Check dependency declarations and exceptions"
