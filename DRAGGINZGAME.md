@@ -1,5 +1,5 @@
 # Dragginzgame Engineering Baseline
-<!-- Shared companions: rules/engineering-details.md rules/rpc-budgets.md -->
+<!-- Shared companions: audits/README.md docs/principles/rust-code-hygiene.md rules/change-reporting.md rules/contributions.md rules/engineering-details.md rules/rpc-budgets.md rules/rust-workspaces.md -->
 
 Shared Tooling owns the common engineering rules for `dragginzgame` repositories.
 Read this core, the local `AGENTS.md` and the current handoff when present. Read

@@ -1,74 +1,67 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "07dce12cbe4a798fd4a6d263095518678c4f6b45",
-  "label": "0.30.0",
+  "revision": "0c5eebc49534e99b09326c49b003a0adfd2348cb",
+  "label": "0.30.1",
   "reviewed_on": "2026-11-05",
-  "previous_revision": "628ccc75d813bfd9bae777bfbaef55838d25b1b2",
+  "previous_revision": "07dce12cbe4a798fd4a6d263095518678c4f6b45",
+  "previous_review": {
+    "commit": "07da92a9ba85e37f67fbcfd49ebb13faa7a5a83b",
+    "path": "docs/shared-tooling-review.json",
+    "qualification": "/home/adam/projects/ic-backup/target/shared-030-audit.rwc459mo"
+  },
   "consumer_baseline": {
-    "commit": "37eec8931a39e7eb834827c8248c01ba7867d441",
-    "version": "0.58.1",
-    "pending_notes": "0.58.2",
-    "incoming_work": "Preserve the already qualified uncommitted Testkit 0.86.0 adoption."
+    "commit": "07da92a9ba85e37f67fbcfd49ebb13faa7a5a83b",
+    "version": "0.58.2",
+    "pending_notes": "0.58.3",
+    "incoming_work": "Clean checkout; preserve all Cargo dependency selections, product sources and release receipt."
   },
   "provenance": {
-    "selection": "Exact committed source exported canonically from the normal supplier checkout; no sibling edits or extra implementation checkout.",
+    "selection": "Canonical impact preview and export from the normal supplier checkout, pinned to the independently observed origin/main commit. No sibling modifications.",
     "export": {
       "payloads": 155,
-      "added": 6,
+      "added": 0,
       "removed": 0,
-      "updated": 15,
-      "unchanged": 134
+      "updated": 28,
+      "unchanged": 127
     },
     "catalogs": "Common host/Cargo/IC catalogs and Rust 1.99.1 unchanged.",
-    "documentation_closure": "Select the linked fleet/stack reference documents, catalog and inactive unit templates so exported policy links resolve. This activates no fleet report, schedule or service."
+    "documentation_closure": "Companion declarations retain the same 155-file selection; no new service, schedule or fleet command activated."
   },
   "consumer_decisions": [
-    "Use schema-2 LOC categories through the shared cloc.sh; no local classifier, schema alias or legacy singular test owner. Review the two intentional macro notes.",
-    "Eliminate all eight authored Rust allow attributes. Place checked dead-code expectations at the 22 Core integration-target module boundaries; retain unfulfilled_lint_expectations=deny. Agent no longer needs helper allowances.",
-    "Make the standalone example own its HTTP/simulator qualification. Explicit Cargo library/bin paths and ordinary modules replace source embedding and include!. No production visibility or dependency boundary is widened.",
-    "Preserve default cargo test registration and all 41 Agent cases. The relocated named example executes 37 HTTP/simulator cases; existing library tests stay separate.",
-    "Default new fixture scratch to target/tmp, preserve explicit TMPDIR overrides and prior artifacts, and reject failed required staging-directory entries.",
-    "Declare disposable consumer roles in generated manifests. Keep the one coordinated workspace and full release gate; do not opt into unqualified stage reuse, candidate pipelines or new groups."
+    "Adopt simplified single-workspace LOC tables and queued source classification. Keep schema-2 JSON and verify unchanged source categories and per-file hashes against the previous report.",
+    "Use canonical formatting scratch defaults and preserve explicit temporary-directory overrides and failed formatting evidence; qualify the actual Backup hooks and formatting callers.",
+    "Keep normal release finalization and exact receipt recovery. The new finalized-heading check is opt-in; candidate source preparation and per-group proof migration are not selected.",
+    "Update local policy/provenance references and compatible pending tooling notes. Preserve package versions, dependency lock, public APIs and backup/recovery contracts."
   ],
   "rule_audit": {
-    "rust-workspaces.md": "Two production packages remain in a virtual workspace, with root inheritance and one version owner. Example/tests roles and generated fixture metadata are explicit.",
-    "cargo-dependencies.md": "Inheritance and external-IC boundary gates pass; Core/Agent normal archive consumers exclude Testkit, PocketIC and WAT. No dependency updates in this audit.",
-    "dependency-pinning.md": "Cargo lock preserved; Actions use full SHAs; no sibling patches or direct upstream IC declarations. Existing qualified external identities remain local constraints.",
-    "git-hooks.md": "Canonical hook bytes and executable catalogs unchanged; existing core.hooksPath=.githooks retained. Matching grouped fmt/fmt-check routes cover the moved modules.",
-    "changelogs.md": "Extend compatible pending 0.58.2 for contributor tooling/test changes. Preserve published history and package versions.",
-    "contributions.md": "Local reviewable changes only; no index, commits, PR, push, release, cleanup or sibling source changes.",
-    "agent-maintenance.md": "No recurring maintenance/CI/issue schedule activated. GitHub identity/description inspected and consistent with the host-library scope.",
-    "change-reporting.md": "Report outcomes and scoped proof; LOC categories do not imply code removal. No symbol/change ledger added.",
-    "rpc-budgets.md": "Backup owns no deployed cross-runtime RPC/binding generator. Opaque application payload budgets and external management bounds remain with their actual owners.",
-    "engineering-details.md": "Review encoding, Host/Platform ownership, process/error boundaries, scratch/evidence, native CI, release callers and recovery. No owned Candid models, unsafe/native SDK bypass or custom gzip/metrics implementation found; no new product mode introduced.",
-    "principles": "Apply one semantic owner, carried authority and narrow interfaces. The fixture consumes the maintained assembly as an ordinary library; product records, custody, settlement and effect bounds are unchanged."
+    "delta": "Policy edits add explicit documentation companions; substantive production rules and compiler/catalog selections are unchanged. Previous complete rule audit remains at its original source.",
+    "rust_source_layout_and_lints": "No Rust changes or new suppressions. The qualified tests/ ownership and target-scoped expect attributes remain.",
+    "contributions": "Uncommitted adoption only; no staging, commit, PR, push, release or cleanup."
   },
   "qualification": {
-    "evidence_directory": "/home/adam/projects/ic-backup/target/shared-030-audit.rwc459mo",
-    "strict_clippy": "Both crates, all targets/features, -D warnings passed; initial relocation/obsolete-helper compile failures retained.",
-    "focused_tests": {
-      "json_persistence": 17,
-      "relocated_agent_example": 37
-    },
-    "registry": "All 41 Agent registrations match the last delivered release after normalizing only the new module prefixes. Normal Cargo discovery includes the example.",
-    "consumer_boundaries": "Release metadata-only fixtures and both exact unpacked archives pass. Independent runtime consumer graph admits normal dependencies only.",
-    "checks": "Snapshot source/mode verification, dependency gates, format, links, changed-shell/Perl syntax, LOC classification and diff checks.",
+    "evidence_directory": "/home/adam/projects/ic-backup/target/shared-0301-adoption.3nbqn9wj",
+    "status": "Passed focused consumer qualification",
     "limits": [
-      "Linux execution only; native macOS and installed Canic remain separate.",
-      "No full workspace/release gate, hosted CI dispatch, delivery or evidence cleanup."
+      "Linux tooling checks only; no product Rust changes, full repository/release suite, hosted CI, native macOS or installed Canic acceptance."
     ],
-    "archive_evidence_directory": "target/package-check.hzmiDc",
-    "rule_files_reviewed": {
-      "rules/agent-maintenance.md": "3b5ba8695cf4a29e1f89c6b902806a1d02021d031fbe1dfbf9320424545a370e",
-      "rules/cargo-dependencies.md": "addd391bf1e03e70a019d5959975c1ba79ba7ba31baa0e19eb6046016f02e12c",
-      "rules/change-reporting.md": "6c25fe09f631d92a88d8ebb62cc20279f57f43a753d3a19dc254bb6ff0433b76",
-      "rules/changelogs.md": "014bbb55799dc494f6c62fdadbb5f8954daa6b3af4a01178c74ebccdc6909fe1",
-      "rules/contributions.md": "f1015a1c15225dece1309fd2696e884a4e4e864b4ecf201a97354ae2e25ebf64",
-      "rules/dependency-pinning.md": "b0b4c00e2183a787791314f21d33d270b8003a1ec67286ce8a681b028214ff75",
-      "rules/engineering-details.md": "a71b4719f490e4037a2ac25d1585b9d5bb1b29cac1796eaeaeabbf6d5f9928ec",
-      "rules/git-hooks.md": "24c8e33db7212d998e9fdcc97146840f3b54258cf6fd7d8c2b3c06c49dd5b35a",
-      "rules/rpc-budgets.md": "e3aed908dd9b08bf93255328bb056bed57298dab39944e3726aad2726548e653",
-      "rules/rust-workspaces.md": "0ae2ade60be55406a8efe21c0f17af45cf9dc725c9a867dcf3b34830f83f55c0"
-    }
+    "source_provenance": "All 155 payload bytes and modes match the independently selected exact supplier commit; offline snapshot integrity also passes.",
+    "formatting_hooks": "make hooks-check passes against actual current Backup sources: formatter/refusal status, grouped dependencies, selected index refresh, partial-stage rejection, unrelated edits and retained failure evidence.",
+    "release_metadata": "Existing --metadata-only and --preparation-only consumer fixtures pass; no Git delivery or registry effects.",
+    "loc": {
+      "source_files": 324,
+      "totals": {
+        "benchmarks": 0,
+        "build_tooling": 0,
+        "examples": 1186,
+        "library_app": 15187,
+        "tests": 39373,
+        "total": 55746,
+        "unclassified": 0
+      },
+      "comparison": "All source hashes, per-file roles/counts, totals and diagnostic membership match the prior qualified report; diagnostic ordering changed with queued visits."
+    },
+    "loc_output": "Actual make cloc and --subcrates use the workspace name without a duplicate TOTAL row; JSON schema 2 and help guidance remain.",
+    "static_checks": "Documentation links, non-mutating grouped fmt-check, changed-shell syntax/ShellCheck -x, Perl syntax and git diff --check pass.",
+    "retained_initial_attempts": "The initial ShellCheck invocation selected a nonexistent local path; rerunning the installed ShellCheck passed. Initial LOC comparison differed only in diagnostic ordering, preserved in the comparison note."
   }
 }

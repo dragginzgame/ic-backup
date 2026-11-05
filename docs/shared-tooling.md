@@ -20,11 +20,23 @@ options. It remains opt-in; Backup retains its existing local publication and
 exact release-recovery adapters. Snapshot refresh alone activates no publication
 command or additional release effect.
 
-The selected source is Shared Tooling **0.30.0**, committed revision
-`07dce12cbe4a798fd4a6d263095518678c4f6b45`. The canonical exporter reads that
-exact committed source. The refresh from `628ccc7` retains **155 payloads**:
-15 updates, six additions and 134 unchanged files. Common executable catalogs,
-Rust 1.99.1 and the incoming Testkit 0.86.0 dependency selection are preserved.
+The selected source is Shared Tooling **0.30.1**, committed revision
+`0c5eebc49534e99b09326c49b003a0adfd2348cb`. The canonical exporter reads that
+exact committed source. The refresh from `07dce12` retains **155 payloads**:
+28 updates and 127 unchanged files, with no additions or removals. Common
+executable catalogs, Rust 1.99.1 and Cargo dependency selections are preserved.
+
+Single-workspace LOC tables show the workspace name once and label unclassified
+counts `???`; JSON retains schema 2 and per-file diagnostics. Queued module visits
+bound the classifier's resident token trees while counting the same captured
+source bytes. Formatting scratch defaults to the consumer's `target/tmp`; LOC
+scratch uses the selected Cargo target directory. Explicit temporary-directory
+overrides and failed formatting evidence retain their owners.
+
+The shared changelog finalizer also validates exact finalized headings for the
+opt-in candidate projection path. Backup retains its own metadata/recovery
+adapter and normal finalization arguments; candidate source preparation and
+group proof migration remain separate, unselected capabilities.
 
 `cloc.sh` now uses schema 2 with Library/app, Tests, Examples, Benchmarks,
 Build/tooling, Unclassified and total counts. Backup uses the same shared
@@ -66,7 +78,7 @@ The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
 pin; no local exception is needed.
 Backup retains one coordinated release group, workspace-version inheritance and
 its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.74.2** is selected as the release editor and locked Testkit **0.86.0** owns
+Build **0.74.4** is selected as the release editor and locked Testkit **0.86.0** owns
 simulator setup and offline admission. The accompanying Host/Platform dependency
 adoption and public Host identity migration are documented separately in
 [the Platform boundary](ic-platform.md). Snapshot adoption changes no
@@ -231,12 +243,11 @@ across release metadata preparation and checks. Its publication Make adapter is
 opt-in; Backup retains its existing publication and exact-resume adapters.
 No publication or release command runs during adoption.
 
-The module/lint review found no path-based module wiring. All seven remaining
-`dead_code` allowances apply to shared integration helpers that are used in some
-test binaries and unused in others. Their local reasons retain that configuration
-scope: an unconditional expectation would fail when the helper is used.
-Unfulfilled lint expectations remain denied. Backup ships no Rust CLI or
-private native FFI owner to migrate under the refreshed guidance.
+The module/lint review found no path-based module wiring. The 0.30.0 adoption
+removed all authored Rust allowances and placed checked expectations at the
+integration-target boundaries where shared helpers are selectively unused.
+Unfulfilled lint expectations remain denied. Backup ships no Rust CLI or private
+native FFI owner to migrate under the refreshed guidance.
 
 ## Current guard and recovery integration
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.58.3] - Unreleased
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.23.0 and Host Artifacts/FS/Process 0.74.4; select Build 0.74.4
+  for release metadata. Preserve the incoming Candid 0.10.40 decoder fix and
+  target-only Runtime 0.19.2 update. Testkit remains at the current 0.86.0.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.30.1: simplify LOC tables, reduce classification memory
+  use and keep formatting/report scratch under the owning target directory.
+  Explicit temporary-directory overrides remain supported.
+
 ## [0.58.2] - 2026-11-05
 
 ### ⬆️ Dependencies
