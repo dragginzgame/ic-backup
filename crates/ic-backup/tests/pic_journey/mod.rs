@@ -39,19 +39,19 @@ fn management(backend: &Backend, method: Method, id: Option<Vec<u8>>) -> IcManag
     .unwrap()
 }
 
-fn lifecycle(
+async fn lifecycle(
     backend: &mut Backend,
     method: Method,
     id: Option<Vec<u8>>,
     fault: Fault,
-    verify: impl FnOnce(&mut Backend) -> Option<ArtifactChecksumRecord>,
+    verify: impl AsyncFnOnce(&mut Backend) -> Option<ArtifactChecksumRecord>,
 ) -> Option<u64> {
     let expected = match method {
         Method::StopCanister => CanisterStatusType::Running,
         Method::LoadCanisterSnapshot | Method::StartCanister => CanisterStatusType::Stopped,
         _ => panic!("fixture mutation lane"),
     };
-    status(backend, expected);
+    status(backend, expected).await;
     let request = management(backend, method, id);
     let discard = matches!(
         (method, fault),
@@ -62,13 +62,15 @@ fn lifecycle(
                 Fault::Load | Fault::LoadObservation
             )
     );
-    let (index, raw) = backend.call(
-        request.method().name(),
-        request.arguments(),
-        &request.digest(),
-        |raw| IcLifecycleReply::decode(&request, raw).unwrap().digest(),
-        discard,
-    );
+    let (index, raw) = backend
+        .call(
+            request.method().name(),
+            request.arguments(),
+            &request.digest(),
+            |raw| IcLifecycleReply::decode(&request, raw).unwrap().digest(),
+            discard,
+        )
+        .await;
     if raw.is_none() {
         if !recovery::lifecycle(
             backend,
@@ -76,12 +78,14 @@ fn lifecycle(
             &request,
             fault == Fault::LoadObservation,
             verify,
-        ) {
+        )
+        .await
+        {
             return Some(index);
         }
     } else {
         assert_eq!(
-            verify(backend).is_some(),
+            verify(backend).await.is_some(),
             method == Method::LoadCanisterSnapshot
         );
     }
@@ -133,32 +137,56 @@ pub(super) enum Fault {
     LoadObservation,
 }
 
-pub(super) fn run(fault: Fault) {
-    if matches!(fault, Fault::Stop | Fault::Start | Fault::Capture) {
-        let mut backend = Backend::new();
-        assert!(lifecycle(&mut backend, Method::StopCanister, None, fault, |_| None).is_none());
-        match fault {
-            Fault::Start => {
-                assert!(
-                    lifecycle(&mut backend, Method::StartCanister, None, fault, |_| None).is_none()
-                );
-                backend.assert_state(42);
-                backend.assert_calls("start_canister", 1);
-            }
-            Fault::Capture => {
-                capture(&mut backend);
-                backend.assert_calls("take_canister_snapshot", 1);
-                backend.assert_calls("read_canister_snapshot_metadata", 0);
-            }
-            Fault::Stop => backend.assert_calls("stop_canister", 1),
-            _ => unreachable!(),
+async fn run_lifecycle(fault: Fault) {
+    let mut backend = Backend::new().await;
+    assert!(
+        lifecycle(
+            &mut backend,
+            Method::StopCanister,
+            None,
+            fault,
+            async |_| None
+        )
+        .await
+        .is_none()
+    );
+    match fault {
+        Fault::Start => {
+            assert!(
+                lifecycle(
+                    &mut backend,
+                    Method::StartCanister,
+                    None,
+                    fault,
+                    async |_| None
+                )
+                .await
+                .is_none()
+            );
+            backend.assert_state(42).await;
+            backend.assert_calls("start_canister", 1);
         }
-        backend.assert_local_replay(None);
-        backend.complete(match fault {
+        Fault::Capture => {
+            capture(&mut backend).await;
+            backend.assert_calls("take_canister_snapshot", 1);
+            backend.assert_calls("read_canister_snapshot_metadata", 0);
+        }
+        Fault::Stop => backend.assert_calls("stop_canister", 1),
+        _ => unreachable!(),
+    }
+    backend.assert_local_replay(None);
+    backend
+        .complete(match fault {
             Fault::Start => "start-reply-discarded",
             Fault::Capture => "capture-reply-discarded",
             _ => "stop-reply-discarded",
-        });
+        })
+        .await;
+}
+
+pub(super) async fn run(fault: Fault) {
+    if matches!(fault, Fault::Stop | Fault::Start | Fault::Capture) {
+        run_lifecycle(fault).await;
         return;
     }
 
@@ -170,7 +198,7 @@ pub(super) fn run(fault: Fault) {
         snapshot,
         raw_metadata,
         source,
-    } = planned_runner::capture_source();
+    } = planned_runner::capture_source().await;
     let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
     let layout = BackupLayoutGuard::acquire(&source.root).unwrap();
@@ -180,10 +208,10 @@ pub(super) fn run(fault: Fault) {
     let mut pending = None;
     match fault {
         Fault::Metadata | Fault::Data => {
-            recover_upload(&mut backend, &plan, &journal, &metadata, fault);
+            recover_upload(&mut backend, &plan, &journal, &metadata, fault).await;
         }
         Fault::Load | Fault::LoadObservation => {
-            change_live_state(&mut backend);
+            change_live_state(&mut backend).await;
             // Original native snapshot suffices for lifecycle recovery; uploaded destinations
             // and full transfer/load/start composition are checked by the Agent consumer.
             pending = lifecycle(
@@ -191,18 +219,14 @@ pub(super) fn run(fault: Fault) {
                 Method::LoadCanisterSnapshot,
                 Some(snapshot.id().to_vec()),
                 fault,
-                |backend| {
-                    Some(verify_loaded(
-                        backend,
-                        &metadata,
-                        snapshot.id(),
-                        &source.chunks,
-                    ))
+                async |backend| {
+                    Some(verify_loaded(backend, &metadata, snapshot.id(), &source.chunks).await)
                 },
-            );
+            )
+            .await;
             backend.assert_calls("load_canister_snapshot", 1);
             backend.assert_calls("start_canister", 1); // Only the deliberate pre-load mutation.
-            status(&mut backend, CanisterStatusType::Stopped);
+            status(&mut backend, CanisterStatusType::Stopped).await;
         }
         _ => panic!("focused recovery requires a fault"),
     }
@@ -224,16 +248,18 @@ pub(super) fn run(fault: Fault) {
         backend.assert_pending_lifecycle_replay(sequence);
     }
     backend.assert_local_replay(pending);
-    backend.complete(match fault {
-        Fault::Metadata => "metadata-reply-discarded",
-        Fault::Data => "data-reply-discarded",
-        Fault::Load => "load-reply-discarded",
-        Fault::LoadObservation => "load-and-status-replies-discarded",
-        _ => unreachable!(),
-    });
+    backend
+        .complete(match fault {
+            Fault::Metadata => "metadata-reply-discarded",
+            Fault::Data => "data-reply-discarded",
+            Fault::Load => "load-reply-discarded",
+            Fault::LoadObservation => "load-and-status-replies-discarded",
+            _ => unreachable!(),
+        })
+        .await;
 }
 
-fn recover_upload(
+async fn recover_upload(
     backend: &mut Backend,
     plan: &ic_backup::model::operation_plan::OperationPlanRecord,
     journal: &DownloadJournalGuard<'_>,
@@ -243,12 +269,14 @@ fn recover_upload(
     let upload = journal
         .prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata)
         .unwrap();
-    let destination = allocate(backend, &upload, fault);
+    let destination = allocate(backend, &upload, fault).await;
     backend.assert_calls("upload_canister_snapshot_metadata", 1);
     if fault == Fault::Data {
         let request =
             IcSnapshotMetadataRequest::new(&backend.target.to_text(), &destination).unwrap();
-        let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(&request));
+        let (_, raw) = backend
+            .read(IcSnapshotTransferReadPayload::Metadata(&request))
+            .await;
         let destination_metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
         let kind = extents(metadata).into_iter().next().unwrap();
         // This recovery fixture owns the exact previously published source bytes.
@@ -282,16 +310,18 @@ fn recover_upload(
             &bytes[usize::try_from(*offset).unwrap()..usize::try_from(offset + size).unwrap()],
         )
         .unwrap();
-        let (sequence, raw) = backend.call(
-            payload.method(),
-            payload.arguments(),
-            &payload.binding_digest(),
-            |_| panic!("reply is deliberately lost"),
-            true,
-        );
+        let (sequence, raw) = backend
+            .call(
+                payload.method(),
+                payload.arguments(),
+                &payload.binding_digest(),
+                |_| panic!("reply is deliberately lost"),
+                true,
+            )
+            .await;
         assert!(raw.is_none());
         let read = IcSnapshotDataRequest::new(&destination_metadata, kind).unwrap();
-        recovery::data(backend, sequence, &payload, &read);
+        recovery::data(backend, sequence, &payload, &read).await;
         backend.assert_calls("upload_canister_snapshot_data", 1);
     } else {
         backend.assert_calls("upload_canister_snapshot_data", 0);
@@ -317,32 +347,36 @@ struct Downloaded {
     chunks: Vec<Vec<u8>>,
 }
 
-fn allocate(
+async fn allocate(
     backend: &mut Backend,
     metadata_upload: &ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest<'_>,
     fault: Fault,
 ) -> Vec<u8> {
     let list = management(backend, Method::ListCanisterSnapshots, None);
-    let (_, baseline_raw) = backend.call(
-        list.method().name(),
-        list.arguments(),
-        &list.digest(),
-        |raw| IcSnapshotReply::decode(&list, raw).unwrap().digest(),
-        false,
-    );
+    let (_, baseline_raw) = backend
+        .call(
+            list.method().name(),
+            list.arguments(),
+            &list.digest(),
+            |raw| IcSnapshotReply::decode(&list, raw).unwrap().digest(),
+            false,
+        )
+        .await;
     let baseline_raw = baseline_raw.unwrap();
     let upload_baseline = IcSnapshotReply::decode(&list, &baseline_raw).unwrap();
-    let (allocation_index, raw) = backend.call(
-        metadata_upload.method(),
-        metadata_upload.arguments(),
-        &metadata_upload.binding_digest(),
-        |raw| {
-            IcSnapshotUploadReply::decode(metadata_upload, raw)
-                .unwrap()
-                .digest()
-        },
-        fault == Fault::Metadata,
-    );
+    let (allocation_index, raw) = backend
+        .call(
+            metadata_upload.method(),
+            metadata_upload.arguments(),
+            &metadata_upload.binding_digest(),
+            |raw| {
+                IcSnapshotUploadReply::decode(metadata_upload, raw)
+                    .unwrap()
+                    .digest()
+            },
+            fault == Fault::Metadata,
+        )
+        .await;
     let destination = if let Some(raw) = raw {
         let upload_reply = IcSnapshotUploadReply::decode(metadata_upload, &raw).unwrap();
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = upload_reply.kind() else {
@@ -357,6 +391,7 @@ fn allocate(
             &list,
             &upload_baseline,
         )
+        .await
     };
     assert_ne!(
         destination,
@@ -365,7 +400,7 @@ fn allocate(
     destination
 }
 
-fn verify_destination(
+async fn verify_destination(
     backend: &mut Backend,
     metadata: &IcSnapshotMetadataReply<'_>,
     destination: &[u8],
@@ -379,9 +414,11 @@ fn verify_destination(
     );
     let destination_request =
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), destination).unwrap();
-    let (_, destination_raw) = backend.read(IcSnapshotTransferReadPayload::Metadata(
-        &destination_request,
-    ));
+    let (_, destination_raw) = backend
+        .read(IcSnapshotTransferReadPayload::Metadata(
+            &destination_request,
+        ))
+        .await;
     let destination_metadata =
         IcSnapshotMetadataReply::decode(&destination_request, &destination_raw).unwrap();
     // Compare exactly the original restored-state fields. Timestamp/source identity
@@ -403,7 +440,9 @@ fn verify_destination(
     let mut evidence = vec![metadata.digest(), destination_metadata.digest()];
     for (kind, expected) in kinds.iter().zip(original_chunks) {
         let request = IcSnapshotDataRequest::new(&destination_metadata, kind.clone()).unwrap();
-        let (_, raw) = backend.read(IcSnapshotTransferReadPayload::Data(&request));
+        let (_, raw) = backend
+            .read(IcSnapshotTransferReadPayload::Data(&request))
+            .await;
         let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
         assert_eq!(reply.chunk(), expected);
         evidence.push(reply.digest());
@@ -411,39 +450,45 @@ fn verify_destination(
     ArtifactChecksumRecord::from_bytes(&serde_json::to_vec(&evidence).unwrap())
 }
 
-fn capture(backend: &mut Backend) {
+async fn capture(backend: &mut Backend) {
     let list = management(backend, Method::ListCanisterSnapshots, None);
-    let (_, baseline_raw) = backend.call(
-        list.method().name(),
-        list.arguments(),
-        &list.digest(),
-        |raw| IcSnapshotReply::decode(&list, raw).unwrap().digest(),
-        false,
-    );
+    let (_, baseline_raw) = backend
+        .call(
+            list.method().name(),
+            list.arguments(),
+            &list.digest(),
+            |raw| IcSnapshotReply::decode(&list, raw).unwrap().digest(),
+            false,
+        )
+        .await;
     let baseline_raw = baseline_raw.unwrap();
     let baseline = IcSnapshotReply::decode(&list, &baseline_raw).unwrap();
     assert_eq!(baseline.snapshots().len(), 0, "fresh fixture baseline");
     let capture = management(backend, Method::TakeCanisterSnapshot, None);
-    let (index, raw) = backend.call(
-        capture.method().name(),
-        capture.arguments(),
-        &capture.digest(),
-        |_| panic!("discarded capture reply never enters decoding"),
-        true,
-    );
+    let (index, raw) = backend
+        .call(
+            capture.method().name(),
+            capture.arguments(),
+            &capture.digest(),
+            |_| panic!("discarded capture reply never enters decoding"),
+            true,
+        )
+        .await;
     assert!(raw.is_none());
-    recovery::capture(backend, index, &capture, &list, &baseline);
+    recovery::capture(backend, index, &capture, &list, &baseline).await;
 }
 
-fn status(backend: &mut Backend, expected: CanisterStatusType) {
+async fn status(backend: &mut Backend, expected: CanisterStatusType) {
     let request = management(backend, Method::CanisterStatus, None);
-    let (_, raw) = backend.call(
-        request.method().name(),
-        request.arguments(),
-        &request.digest(),
-        |raw| IcLifecycleReply::decode(&request, raw).unwrap().digest(),
-        false,
-    );
+    let (_, raw) = backend
+        .call(
+            request.method().name(),
+            request.arguments(),
+            &request.digest(),
+            |raw| IcLifecycleReply::decode(&request, raw).unwrap().digest(),
+            false,
+        )
+        .await;
     let raw = raw.unwrap();
     let reply = IcLifecycleReply::decode(&request, &raw).unwrap();
     let IcLifecycleReplyKind::Status(info) = reply.kind() else {
@@ -456,29 +501,31 @@ fn status(backend: &mut Backend, expected: CanisterStatusType) {
     );
 }
 
-fn verify_loaded(
+async fn verify_loaded(
     backend: &mut Backend,
     metadata: &IcSnapshotMetadataReply<'_>,
     destination: &[u8],
     original_chunks: &[Vec<u8>],
 ) -> ArtifactChecksumRecord {
-    status(backend, CanisterStatusType::Stopped);
+    status(backend, CanisterStatusType::Stopped).await;
     // Explicit fresh verification allocates another retained snapshot under a
     // distinct original plan/budget. It neither retries load nor reuses capture allowance.
     let request = management(backend, Method::TakeCanisterSnapshot, None);
-    let (sequence, raw) = backend.call(
-        request.method().name(),
-        request.arguments(),
-        &request.digest(),
-        |raw| IcSnapshotReply::decode(&request, raw).unwrap().digest(),
-        false,
-    );
+    let (sequence, raw) = backend
+        .call(
+            request.method().name(),
+            request.arguments(),
+            &request.digest(),
+            |raw| IcSnapshotReply::decode(&request, raw).unwrap().digest(),
+            false,
+        )
+        .await;
     let raw = raw.unwrap();
     let snapshot = IcSnapshotReply::decode(&request, &raw).unwrap();
     let actual = snapshot.snapshots()[0].id();
     assert_ne!(actual, destination);
     assert_ne!(actual, metadata.request().snapshot_id());
-    let evidence = verify_destination(backend, metadata, actual, original_chunks);
+    let evidence = verify_destination(backend, metadata, actual, original_chunks).await;
     let verification = evidence::PostLoadVerificationRecord::new(
         &metadata.digest(),
         destination,
@@ -494,15 +541,15 @@ fn verify_loaded(
     evidence
 }
 
-#[test]
-fn readback_requires_complete_expected_chunks_before_management_calls() {
+#[tokio::test]
+async fn readback_requires_complete_expected_chunks_before_management_calls() {
     let CapturedSource {
         mut backend,
         snapshot,
         raw_metadata,
         source,
         ..
-    } = planned_runner::capture_source();
+    } = planned_runner::capture_source().await;
     let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw_metadata).unwrap();
     let (_, incomplete) = source
@@ -511,21 +558,48 @@ fn readback_requires_complete_expected_chunks_before_management_calls() {
         .expect("fixture retains at least one expected chunk");
     let calls = backend.calls;
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        verify_destination(&mut backend, &metadata, snapshot.id(), incomplete)
+        crate::ready::ready(verify_destination(
+            &mut backend,
+            &metadata,
+            snapshot.id(),
+            incomplete,
+        ))
     }));
     assert!(result.is_err(), "incomplete byte oracle must reject");
     assert_eq!(
         backend.calls, calls,
         "refuse before another management call"
     );
+
+    backend.close().await;
 }
 
 // Deliberate fixture mutation after the original capture, independently accounted
 // through Backend's retained per-call plans. This is not a product workflow step.
-fn change_live_state(backend: &mut Backend) {
-    assert!(lifecycle(backend, Method::StartCanister, None, Fault::None, |_| None).is_none());
-    backend.write_state(99);
-    backend.assert_state(99);
-    backend.clear_fixture_chunk_store();
-    assert!(lifecycle(backend, Method::StopCanister, None, Fault::None, |_| None).is_none());
+async fn change_live_state(backend: &mut Backend) {
+    assert!(
+        lifecycle(
+            backend,
+            Method::StartCanister,
+            None,
+            Fault::None,
+            async |_| None
+        )
+        .await
+        .is_none()
+    );
+    backend.write_state(99).await;
+    backend.assert_state(99).await;
+    backend.clear_fixture_chunk_store().await;
+    assert!(
+        lifecycle(
+            backend,
+            Method::StopCanister,
+            None,
+            Fault::None,
+            async |_| None
+        )
+        .await
+        .is_none()
+    );
 }

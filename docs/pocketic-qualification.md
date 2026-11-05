@@ -23,16 +23,19 @@ reference custody continue to qualify through the maintained restore workflows.
 
 ## Current simulator dependency boundary
 
-Testkit 0.86.0 owns the maintained `ic_testkit::pocket_ic` client, managed
+Testkit 0.87.0 owns the maintained async `ic_testkit::pocket_ic` client, managed
 server startup, authenticated assets and harness extensions. Both libraries use
 that published client directly in simulator tests, with no Platform simulator
 feature or separate client package. Production management DTOs remain Platform's
 qualified 0.11.0 identities; canonical Types remains 0.18.
-Each fixture uses Testkit's bounded `build_instance` / `build_instance_async`,
+Each fixture awaits Testkit's bounded `build_instance`,
 retaining its original topology, state directory and output files. The managed
 owner stays intact through fixture setup, then transfers the client/server pair
-into explicit client-before-server field order. Preserve typed client failures,
-original output paths and managed cleanup custody.
+into explicit client-before-server field order. Network operations and lifecycle
+helpers run on the caller's test runtime; there is no blocking client wrapper.
+Successful fixtures await deletion before releasing the server and retain any
+teardown failure. Preserve typed client failures, original output paths and
+managed cleanup custody; panic cleanup still stops/reaps the owned server.
 Testkit 0.85 requires an explicit client endpoint and removes implicit server
 launch/download. The managed builders supply that endpoint from the admitted
 server; Backup uses no client-owned launcher or endpoint-free constructor.
@@ -41,8 +44,9 @@ exact management bytes, bounded calls, signed transport, original journals and
 independent readback assertions remain local.
 
 Testkit has no Metrics dependency, and its optional Wire interface is disabled.
-The 0.86 Wire upgrade adds no dependency or fixture migration here; all 56 Rust
-source files match 0.85.1.
+The earlier 0.86 Wire-only upgrade needed no fixture migration. The 0.87 async
+client migration changes fixture execution and explicit teardown while preserving
+the original plans, journals, byte comparisons and management-call bounds.
 The authenticated server remains PocketIC 16.1.0. The locked
 Testkit package also selects its exact managed CLI; after a Testkit update, run
 `make install-testkit-server` before the offline admission check.

@@ -49,7 +49,7 @@ executable generations and failed bundles; no old selection supplies a fallback.
 
 The common host/Rust catalogs belong to [ci/tool-versions.env](../ci/tool-versions.env).
 The compiler floor and exact development/release toolchain both remain 1.99.1.
-Testkit **0.86.0** owns simulator assets/lifecycle; Build **0.74.4** owns metadata
+Testkit **0.87.0** owns simulator assets/lifecycle; Build **0.74.4** owns metadata
 editing. [The Platform boundary](ic-platform.md) owns dependency compatibility.
 
 Formatting uses grouped Cargo sorting followed by Rustfmt through the shared

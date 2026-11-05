@@ -1,63 +1,64 @@
 # Current handoff — 2026-11-05
 
-## Pending Shared Tooling adoption and cleanup
+## Pending Testkit adoption and 0.58.4 delivery
 
-The user requested the new Shared Tooling and cleanup. Shared **0.30.4** at
-`2aa41c7394300302fe802b69b31b855bdc89b671` is canonically exported: 157 payloads,
-three updates, two additions and 152 unchanged. Package versions stay **0.58.3**;
-compatible pending notes are **0.58.4**. The batch is uncommitted, with no staging,
-delivery, publication, history rewriting or target/tool-store cleanup.
+The user committed the Shared Tooling cleanup as `42ffa824362227ce9fa5ce61eec5efa9c8c12de9`,
+then requested new Testkit adoption and deployment. The selected delivery is both
+crates **0.58.4** to `origin/main`, annotated `v0.58.4` and crates.io. Versions
+remain **0.58.3** until standard preparation; full validation and independent
+remote/registry verification own completion. No history or artifact cleanup is
+part of delivery.
 
-`make candid-boundary-check` now runs once in CI/release before Clippy. All **324
-Rust files** are covered, including the explicitly selected inventory target
-module, which sits beneath a normally pruned directory name. Its **36 exact
-allowances** cover nine bounded management projections, one management encoder
-and 26 external wire fixtures. Domain/persisted records and owned application
-payloads receive no exemption. Macro expansion/type resolution remain separate.
+Testkit **0.87.0** is checksum/source-verified at published commit
+`e3b8a88539c54cb1da3ae471954fa234beabdecf`; its exact CLI and authenticated
+PocketIC **16.1.0** are installed/offline-admitted. Core fixture coordinators now
+await client and provider operations on caller-owned Tokio test runtimes. Async
+restore providers share a Tokio mutex instead of RefCell borrows across simulator IO.
+Agent uses the single async client path. Successful fixture owners explicitly
+await instance deletion while retaining their servers, preserve deletion failures
+and never retry cleanup. Panic Drop still stops/reaps the owned server. Immediate
+polling remains only for in-memory fakes and pre-dispatch refusal checks.
 
-Cleanup removes **183** superseded audit reports/handoff archives (**3,407,885
-bytes**) from the maintained tree. [The compact retention summary](../reports/README.md)
-preserves conclusions and links exact original Git sources. The adoption guide is
-139 lines; historical provenance pointers now identify their original revision.
-Root source/license provenance, product qualification records, contract vectors,
-the release receipt, journals/artifacts, failed bundles and prior ignored evidence
-are retained. Historical adoption records change only their reference/scope
-guidance. No hash/summary claims that absent raw logs still exist.
+Testkit now uses Platform **0.23.0** protocol/CBOR codecs in development and shares
+that facade with production; Platform 0.22.3 and unused Tokio support packages
+leave the lock. Normal production features, Types **0.18.1**, external Principal
+**0.1.5**, management DTO **0.11.0**, Agent **0.49.3**, Candid **0.10.40** and
+Wasm-only Runtime **0.19.2** remain. Host/Build **0.74.4** and Rust minimum/exact
+compiler **1.99.1** are unchanged. Core's new Tokio declaration is test-only;
+public APIs, v1 records, original accounting and backup/restore behavior stay.
 
-## Focused qualification
+## Current qualification
 
-Source/mode verification and offline integrity pass for all 157 payloads. Actual
-consumer tooling and hook checks pass, including CI/Make Candid selection,
-unreviewed application rejection, pending documentation deletion and new broken
-link refusal. Dependency gates, grouped formatting, shell/Perl syntax and lint,
-local links, LOC table/JSON and diff checks pass. Required roster reads/writes
-fail on IO errors. Current evidence is `target/evidence/shared-0304.x_mz38e6/` and
-[the adoption review](../shared-tooling-review.json).
+Evidence is `target/evidence/testkit-deploy-0584.yt3b8nrm/`: official archive/source
+comparison, strict all-target/all-feature Clippy, complete upload/restore,
+lost-load refusal and independent cold-process restore/terminal replay pass.
+Actual registries preserve all 34 Core and 37 Agent example cases from 0.58.3.
+Initial mechanical migration failures are retained. Candid/dependency/format/link
+checks pass. The complete release gate has not yet run for this source; native
+macOS, installed IC and Canic acceptance remain separate.
 
-All 324 Rust file hashes, categories and counts match prior qualified source;
-LOC is 15,187 library/app, 39,373 tests, 1,186 examples and zero unclassified.
-No Rust, dependency, compiler, release-receipt or backup/recovery behavior changes
-are selected. Full product/release tests were not rerun for this tooling batch.
-Linux tooling execution does not establish native macOS, installed IC or Canic
-acceptance. No service, schedule, candidate projection or stage reuse is enabled.
+Shared **0.30.4** at `2aa41c7394300302fe802b69b31b855bdc89b671` remains selected
+with 157 exact payloads. Candid checks cover all 324 Rust files and 36 named
+external declarations, including the explicitly selected inventory target module.
+Cleanup removed 183 historical reports/handoffs (3,407,885 bytes), retaining
+[compact conclusions and original Git sources](../reports/README.md). Product
+source/license provenance, vectors, release/recovery records and ignored artifacts
+remain in custody. Prior focused tooling/hook proof and limits belong to
+[the adoption review](../shared-tooling-review.json) and
+`target/evidence/shared-0304.x_mz38e6/`. No service, schedule, candidate projection
+or release-stage reuse is selected.
 
 ## Delivered baseline
 
 Both crates **0.58.3** are published. Release
 `b1c16b05ed601b0ad516abc7581bcf6037903b2e`, annotated `v0.58.3` and handoff
-`f241568` are in `origin/main`; original source is
+`f241568` are in history/main; original source is
 `974fd8cb96aaf4df81f682781aa0a4ce2dfdecaa`. The [receipt](../release.json)
-binds the original complete Linux release gate: strict Clippy, 554 tests,
-independent workflows, docs, tooling and packaging. Registry checksums, clean VCS
-identities and 341 source files were independently verified. Proof stays in
-`target/deploy-0583.cl8y8lzv/` and `.git/release-state/`.
-
-Production Platform **0.23.0**, Host Artifacts/FS/Process and Build **0.74.4**,
-Testkit **0.86.0**, PocketIC **16.1.0**, Types **0.18.1**, target-only Runtime
-**0.19.2** and Candid **0.10.40** remain selected. Testkit retains Platform 0.22.3;
-normal consumers exclude it and all simulator/runtime/WAT packages. Rust minimum
-and exact compiler remain **1.99.1**. Source/codec and independent consumer proof
-remains at `target/ic-deps-adoption.sq2a3wsj/` and its original Git revision.
+binds its complete Linux gate: strict Clippy, 554 tests, independent workflows,
+docs, tooling and packaging. Registry checksums, clean VCS identities and 341
+source files were independently verified. Proof stays in
+`target/deploy-0583.cl8y8lzv/` and `.git/release-state/` at that original revision;
+it does not qualify this new Testkit source.
 
 ## Recovery and retained contracts
 

@@ -7,6 +7,10 @@ pub(super) use lifecycle::lifecycle;
 
 use super::backend::Backend;
 use ic_backup::{
+    model::ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest,
+    policy::ic_snapshot_upload_observation::validate_settlement,
+};
+use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::{AttemptJournalRecordError, ObservationReceiptRequest},
@@ -19,7 +23,7 @@ use ic_backup::{
 };
 use std::fs;
 
-pub(super) fn capture(
+pub(super) async fn capture(
     backend: &mut Backend,
     index: u64,
     mutation: &IcManagementRequestRecord,
@@ -47,7 +51,9 @@ pub(super) fn capture(
         .unwrap();
     let request =
         IcObservationRequest::new(&plan, index, journal.record().unwrap(), mutation, list).unwrap();
-    let raw = backend.management(list.method().name(), list.arguments());
+    let raw = backend
+        .management(list.method().name(), list.arguments())
+        .await;
     fs::write(layout.root().join("observation-reply.candid"), &raw).unwrap();
     let inventory = IcSnapshotReply::decode(list, &raw).unwrap();
     // This exact instance has one fixture owner and exactly one submitted capture.
@@ -110,17 +116,13 @@ pub(super) fn capture(
     assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
 }
 
-pub(super) fn allocation(
+pub(super) async fn allocation(
     backend: &mut Backend,
     index: u64,
     mutation: &ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest<'_>,
     list: &IcManagementRequestRecord,
     baseline: &IcSnapshotReply<'_>,
 ) -> Vec<u8> {
-    use ic_backup::{
-        model::ic_snapshot_upload_observation::IcSnapshotUploadObservationRequest,
-        policy::ic_snapshot_upload_observation::validate_settlement,
-    };
     let plan = backend.retained_plan(index);
     let layout = backend.layout(index);
     let mut journal =
@@ -147,7 +149,9 @@ pub(super) fn allocation(
         list,
     )
     .unwrap();
-    let raw = backend.management(list.method().name(), list.arguments());
+    let raw = backend
+        .management(list.method().name(), list.arguments())
+        .await;
     fs::write(layout.root().join("observation-reply.candid"), &raw).unwrap();
     let inventory = IcSnapshotReply::decode(list, &raw).unwrap();
     // Independently controlled completed original ingress, exclusive allocation and
@@ -218,7 +222,7 @@ pub(super) fn allocation(
     result
 }
 
-pub(super) fn data(
+pub(super) async fn data(
     backend: &mut Backend,
     index: u64,
     mutation: &ic_backup::model::ic_snapshot_upload::IcSnapshotUploadRequest<'_>,
@@ -260,7 +264,7 @@ pub(super) fn data(
         read,
     )
     .unwrap();
-    let raw = backend.management(read.method(), read.arguments());
+    let raw = backend.management(read.method(), read.arguments()).await;
     fs::write(layout.root().join("observation-reply.candid"), &raw).unwrap();
     let reply = IcSnapshotDataReply::decode(read, &raw).unwrap();
     let evidence = backend.recovery_evidence(

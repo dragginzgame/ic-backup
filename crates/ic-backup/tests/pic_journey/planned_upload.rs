@@ -2,7 +2,6 @@
 
 use super::stage::Stage;
 use super::{Backend, CapturedSource, TOKEN, extents, planned_runner, verify_destination};
-use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
 use ic_backup::{
@@ -101,59 +100,57 @@ pub(super) struct Provider<'a> {
     pub(super) submitted: BTreeSet<(String, u32)>,
 }
 impl IcSnapshotUploadProvider for Provider<'_> {
-    fn submit_upload(
+    async fn submit_upload(
         &mut self,
         request: &IcSnapshotUploadAttempt<'_, '_>,
         journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            assert!(self.submitted.insert((
-                request.authority().digest().hash().into(),
-                request.mutation_attempt()
-            )));
-            let payload = request.payload();
-            let actual = self.backend.plan(
-                &payload.binding_digest(),
-                request.authority().binding().operation_sequence(),
-            );
-            assert_eq!(request.plan().context(), actual.context());
-            assert_eq!(payload.receiver(), "aaaaa-aa");
-            assert_eq!(payload.target(), self.backend.target.to_text());
-            let raw = self
-                .backend
-                .management(payload.method(), payload.arguments());
-            let stage = match payload.kind() {
-                IcSnapshotUploadKind::Metadata => Stage::Allocation,
-                IcSnapshotUploadKind::Data { .. } => Stage::Upload,
-            };
-            let fault = self
-                .failure
-                .reply_at(stage, request.authority().binding().operation_sequence());
-            if fault.is_some() {
-                // The independent test oracle never enters outcome/destination admission.
-                fs::write(
-                    self.backend.root.join("discarded-upload-oracle.candid"),
-                    &raw,
-                )
-                .unwrap();
-            }
-            let reply = match fault {
-                Some(ReplyFault::Lost) => return Err(IcMutationProviderError::Indeterminate),
-                Some(ReplyFault::Malformed) => vec![],
-                None => raw,
-            };
-            IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: actual.context().clone(),
-                target: self.backend.target.to_text(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .map_err(|_| IcMutationProviderError::Indeterminate)
-        })())
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        assert!(self.submitted.insert((
+            request.authority().digest().hash().into(),
+            request.mutation_attempt()
+        )));
+        let payload = request.payload();
+        let actual = self.backend.plan(
+            &payload.binding_digest(),
+            request.authority().binding().operation_sequence(),
+        );
+        assert_eq!(request.plan().context(), actual.context());
+        assert_eq!(payload.receiver(), "aaaaa-aa");
+        assert_eq!(payload.target(), self.backend.target.to_text());
+        let raw = self
+            .backend
+            .management(payload.method(), payload.arguments())
+            .await;
+        let stage = match payload.kind() {
+            IcSnapshotUploadKind::Metadata => Stage::Allocation,
+            IcSnapshotUploadKind::Data { .. } => Stage::Upload,
+        };
+        let fault = self
+            .failure
+            .reply_at(stage, request.authority().binding().operation_sequence());
+        if fault.is_some() {
+            // The independent test oracle never enters outcome/destination admission.
+            fs::write(
+                self.backend.root.join("discarded-upload-oracle.candid"),
+                &raw,
+            )
+            .unwrap();
+        }
+        let reply = match fault {
+            Some(ReplyFault::Lost) => return Err(IcMutationProviderError::Indeterminate),
+            Some(ReplyFault::Malformed) => vec![],
+            None => raw,
+        };
+        IcMutationAcknowledgement::new(IcUpdateResponseInput {
+            authority: request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: actual.context().clone(),
+            target: self.backend.target.to_text(),
+            evidence: ArtifactChecksumRecord::from_bytes(&reply),
+            reply,
+        })
+        .map_err(|_| IcMutationProviderError::Indeterminate)
     }
 }
 fn retain_reply(
@@ -263,14 +260,14 @@ fn assert_failed(
     clippy::too_many_lines,
     reason = "retain the isolated source/allocation/data custody chronology in one qualification trace"
 )]
-pub(crate) fn run(failure: Failure) {
+pub(crate) async fn run(failure: Failure) {
     let CapturedSource {
         mut backend,
         plan: source_plan,
         snapshot,
         raw_metadata: raw,
         source,
-    } = planned_runner::capture_source();
+    } = planned_runner::capture_source().await;
     let request = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     let source_layout = BackupLayoutGuard::acquire(&source.root).unwrap();
@@ -321,7 +318,7 @@ pub(crate) fn run(failure: Failure) {
         failure,
         submitted: BTreeSet::new(),
     };
-    let result = ready(allocate_snapshot(
+    let result = allocate_snapshot(
         &stage,
         0,
         &upload,
@@ -346,7 +343,8 @@ pub(crate) fn run(failure: Failure) {
                 evidence: reply.digest().hash().into(),
             })
         },
-    ));
+    )
+    .await;
     if failure.reply_at(Stage::Allocation, 0).is_some() {
         let result = match result {
             Err(IcSnapshotAllocationExecutionError::Upload(source)) => Err(source),
@@ -361,6 +359,7 @@ pub(crate) fn run(failure: Failure) {
             source_layout.restore_references().unwrap(),
             original_references
         );
+        backend.close().await;
         return;
     }
     let (acknowledgement, predecessor) = result.unwrap();
@@ -385,6 +384,7 @@ pub(crate) fn run(failure: Failure) {
         assert_eq!(provider.backend.calls, calls);
         assert!(!layout.root().join("execution-stage-7").exists());
         assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
+        backend.close().await;
         return;
     }
     let data = planned.unwrap();
@@ -402,7 +402,7 @@ pub(crate) fn run(failure: Failure) {
             source_plan.digest().hash(),
         )
         .unwrap();
-    let result = ready(upload_snapshot_data(
+    let result = upload_snapshot_data(
         &stage,
         &data,
         &source_journal,
@@ -431,7 +431,7 @@ pub(crate) fn run(failure: Failure) {
                 evidence: admitted.digest().hash().into(),
             })
         },
-    ));
+    ).await;
     if let Some(fault) = failure.reply().filter(|fault| fault.stage == Stage::Upload) {
         let pending = fault.operation.unwrap_or(0);
         assert_data_failed(
@@ -442,7 +442,8 @@ pub(crate) fn run(failure: Failure) {
             &mut provider,
             pending,
             result,
-        );
+        )
+        .await;
         assert_eq!(
             provider.submitted.len(),
             usize::try_from(pending).unwrap() + 2
@@ -452,6 +453,7 @@ pub(crate) fn run(failure: Failure) {
             source_layout.restore_references().unwrap(),
             original_references
         );
+        backend.close().await;
         return;
     }
     let checkpoint = result.unwrap();
@@ -464,7 +466,7 @@ pub(crate) fn run(failure: Failure) {
     );
     let calls = provider.backend.calls;
     assert!(matches!(
-        ready(upload_snapshot_data(
+        upload_snapshot_data(
             &stage,
             &data,
             &source_journal,
@@ -474,11 +476,12 @@ pub(crate) fn run(failure: Failure) {
             async |_, _| -> Result<MutationReceiptRequest, Infallible> {
                 panic!("Applied cannot settle again")
             }
-        )),
+        )
+        .await,
         Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
     ));
     assert_eq!(provider.backend.calls, calls);
-    verify_destination(provider.backend, &metadata, destination, &source.chunks);
+    verify_destination(provider.backend, &metadata, destination, &source.chunks).await;
     assert_eq!(fs::read(source_journal.path()).unwrap(), original_source);
     assert_eq!(
         source_layout.restore_references().unwrap(),
@@ -503,7 +506,8 @@ pub(crate) fn run(failure: Failure) {
         &source,
         failure,
         &restore_source,
-    );
+    )
+    .await;
     assert_eq!(
         source_journal
             .verify_ic_snapshot_artifact(&source_plan, TOKEN, &metadata)
@@ -526,9 +530,11 @@ pub(crate) fn run(failure: Failure) {
             .iter()
             .all(|entry| retained_references.entries().contains(entry))
     );
+
+    backend.close().await;
 }
 
-fn assert_data_failed(
+async fn assert_data_failed(
     stage: ExecutionStageGuard<'_>,
     workflow_layout: &BackupLayoutGuard,
     data: &ic_backup::model::ic_snapshot_upload::IcSnapshotDataUploadPlan<'_, '_, '_>,
@@ -571,7 +577,7 @@ fn assert_data_failed(
     assert_eq!(u64::try_from(view.applied_operations).unwrap(), pending);
     let calls = provider.backend.calls;
     assert!(matches!(
-        ready(upload_snapshot_data(
+        upload_snapshot_data(
             &stage,
             data,
             source,
@@ -581,7 +587,8 @@ fn assert_data_failed(
             async |_, _| -> Result<MutationReceiptRequest, Infallible> {
                 panic!("pending cannot settle without evidence")
             }
-        )),
+        )
+        .await,
         Err(IcSnapshotDataUploadExecutionError::AlreadyAttempted)
     ));
     assert_eq!(provider.backend.calls, calls);

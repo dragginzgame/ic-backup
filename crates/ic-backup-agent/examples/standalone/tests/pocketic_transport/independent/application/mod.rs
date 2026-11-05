@@ -47,14 +47,7 @@ async fn exercise(mode: Mode) {
         .canister_status(fixture.principal(), Some(fixture.caller()))
         .await
         .unwrap();
-    assert_eq!(status.settings.controllers, vec![fixture.caller()]);
-    assert_eq!(
-        ic_host_artifacts::artifact::Sha256Digest::from_bytes(
-            status.module_hash.as_deref().unwrap().try_into().unwrap()
-        )
-        .to_string(),
-        fixture.release.hash()
-    );
+    assert_admitted_release(&fixture, &status);
     consumer::retain(&root.join("admission.json"), &serde_json::to_vec(&serde_json::json!({"context":config.connection.context,"target":fixture.target,"controllers":status.settings.controllers})).unwrap()).unwrap();
     child(&fixture, &root, mode)
         .await
@@ -81,6 +74,7 @@ async fn exercise(mode: Mode) {
         assert_once_applied(&fixture).await;
         if mode != Mode::ApplicationDie {
             assert!(!root.join("execution-stage-0/mutation-reply.bin").exists());
+            fixture.close().await;
             return;
         }
         assert_eq!(
@@ -118,7 +112,23 @@ async fn exercise(mode: Mode) {
         "Independent opaque application evidence retained: {}",
         root.display()
     );
+
+    fixture.close().await;
 }
+fn assert_admitted_release(
+    fixture: &Fixture,
+    status: &ic_platform::management_canister_types::CanisterStatusResult,
+) {
+    assert_eq!(status.settings.controllers, vec![fixture.caller()]);
+    assert_eq!(
+        ic_host_artifacts::artifact::Sha256Digest::from_bytes(
+            status.module_hash.as_deref().unwrap().try_into().unwrap()
+        )
+        .to_string(),
+        fixture.release.hash()
+    );
+}
+
 async fn assert_once_applied(fixture: &Fixture) {
     assert_eq!(
         state(fixture).await,

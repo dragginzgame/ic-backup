@@ -142,6 +142,8 @@ async fn failure(mode: Mode) {
         "Independent operator failure evidence retained: {}",
         fixture.root.display()
     );
+
+    fixture.close().await;
 }
 
 fn partial(root: &Path) {

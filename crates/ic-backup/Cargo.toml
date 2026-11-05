@@ -25,6 +25,7 @@ thiserror.workspace = true
 ic-host-artifacts = { workspace = true, features = ["wasm-text"] }
 ic-host-process = { workspace = true, features = ["test-support"] }
 ic-testkit.workspace = true
+tokio = { workspace = true, features = ["sync"] }
 
 [dev-dependencies]
 ic-host-fs = { workspace = true, features = ["test-support"] }

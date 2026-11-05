@@ -2,6 +2,13 @@
 
 ## [0.58.4] - Unreleased
 
+### ⬆️ Dependencies
+
+- Adopt Testkit 0.87.0 and its exact CLI. Await simulator calls and explicit
+  instance deletion while retaining managed server custody and teardown failures.
+  Testkit now shares Platform 0.23 with production; PocketIC 16.1, management
+  identities, original accounting and backup/restore behavior are unchanged.
+
 ### 🛠️ Tooling
 
 - Adopt Shared Tooling 0.30.4, including portable LOC reporting and a CI check

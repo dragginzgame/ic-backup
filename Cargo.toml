@@ -27,7 +27,7 @@ tokio = { version = "1.50", features = ["rt-multi-thread", "macros"] }
 
 # Tests and tooling only
 clap = { version = "4.6.7", default-features = false, features = ["derive", "std"] }
-ic-testkit = "0.86.0"
+ic-testkit = "0.87.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

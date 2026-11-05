@@ -34,13 +34,14 @@ remain private to tests and never enter a normal consumer.
 Platform 0.21 removes the unused PocketIC facade; the prior Testkit migration
 already supplies its replacement. Verified published archives retain identical
 Candid, native management, Principal and Agent adapter source and dependencies.
-Testkit 0.86.0 retains Platform 0.22.3 while production selects 0.23.0. Both share
-Types 0.18.1 and the qualified external management and Principal identities.
+Testkit 0.87.0 and production share Platform 0.23.0, Types 0.18.1 and the qualified
+external management and Principal identities. The old 0.22.3 facade leaves the lock.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
 
-Platform 0.23 adds optional protocol and certificate-CBOR codecs; Backup selects
-neither. Its consumed Candid, Principal, native management and Agent adapter source
+Platform 0.23 adds optional protocol and certificate-CBOR codecs. Testkit selects
+them only in development; normal Backup consumers select neither. Consumed
+Candid, Principal, native management and Agent adapter source
 matches 0.22.1. Other changes include lint annotations in the unselected maintained
 Wasm DTOs and ledger modules. No public Backup API or record migration is needed.
 The incoming Candid 0.10.40 patch fixes sequence consumption: oversized vectors
@@ -119,10 +120,9 @@ client, so removal of Platform's simulator feature requires no further migration
 Backup retains its exact management ingress, method-specific response bounds and
 original accounting rather than adopting a second snapshot workflow.
 Testkit 0.84 embeds the maintained client previously supplied by Platform's
-0.20 client package. Current Testkit 0.86.0 and Backup's production dependencies
-select distinct Platform facades while sharing canonical Types 0.18.1 and the
-same external DTO identities
-remain selected. Testkit 0.84.1's Rust
+0.20 client package. Current Testkit 0.87.0 and Backup's production dependencies
+share Platform 0.23, canonical Types 0.18.1 and the same external DTO identities.
+Testkit 0.84.1's historical Rust
 source matches reviewed 0.84.0. Review against the earlier client found namespace,
 lint and formatting changes in production source; its client failure fixture also
 sets blocking socket mode explicitly for macOS. Its Apache-2.0 copyrights and
@@ -141,14 +141,18 @@ the selected IC0 source is byte-identical to 0.19.0. Changes relocate tests in
 unselected CDK modules. All three supported normal host target graphs exclude
 Runtime for both Backup libraries. No direct Runtime declaration or executor
 feature is needed.
-Both fixtures use Testkit's `build_instance` / `build_instance_async` with their
+Both fixtures await Testkit's `build_instance` with their
 original topology, state directory, request bound and retained raw output files.
 Its existing 120-second startup deadline covers readiness and instance creation.
 Keep the managed instance owner through fixture setup. Then `into_parts` transfers
 the client and exact owned server into the fixture's
-explicit client-before-server field order. The temporary URL bridge and local
-blocking startup worker are removed; Testkit owns asynchronous readiness and
-cancellation cleanup. No reset, retry or funding policy is adopted.
+explicit client-before-server field order. All network operations are awaited on
+the test's runtime. Successful fixtures explicitly await instance deletion while
+retaining the managed server and persist deletion failures before failing the
+test. Panic Drop still stops/reaps the owned server. The old immediate-poll helper
+serves only in-memory providers or pre-dispatch refusal assertions. Testkit owns
+asynchronous readiness and cancellation cleanup; no blocking facade, reset,
+hidden retry or funding policy is adopted.
 Testkit 0.85 requires an explicit client endpoint and removes its implicit server
 launcher/downloader. Backup's existing managed builders supply that endpoint and
 retain server custody. Direct client flate2/semver dependencies are removed; gzip

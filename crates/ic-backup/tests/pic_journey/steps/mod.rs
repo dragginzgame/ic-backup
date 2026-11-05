@@ -6,7 +6,6 @@ use super::{
     evidence::{MetadataEvidence, retain_bytes},
     lifecycle, management, status,
 };
-use crate::ready::ready;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -43,8 +42,8 @@ use ic_backup::{
 use ic_platform::management_canister_types::CanisterStatusType;
 use std::{convert::Infallible, fs, io, os::unix::fs::DirBuilderExt, path::Path};
 
-pub(super) fn stopped_backend() -> Backend {
-    let mut backend = Backend::new();
+pub(super) async fn stopped_backend() -> Backend {
+    let mut backend = Backend::new().await;
     // Actual fixture setup keeps stop/status under the original accounting owner.
     // This isolated application has no external effects or concurrent controllers.
     assert!(
@@ -53,11 +52,12 @@ pub(super) fn stopped_backend() -> Backend {
             Method::StopCanister,
             None,
             Fault::None,
-            |_| None
+            async |_| None
         )
+        .await
         .is_none()
     );
-    status(&mut backend, CanisterStatusType::Stopped);
+    status(&mut backend, CanisterStatusType::Stopped).await;
     backend
 }
 
@@ -119,47 +119,45 @@ pub(super) struct CaptureProvider<'a> {
     pub(super) submitted: bool,
 }
 impl IcMutationProvider for CaptureProvider<'_> {
-    fn submit_mutation(
+    async fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
         journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            assert!(!self.submitted);
-            self.submitted = true;
-            let payload = request.payload();
-            assert_eq!(payload.method(), Method::TakeCanisterSnapshot);
-            assert_eq!(payload.receiver(), "aaaaa-aa");
-            assert_eq!(payload.target(), self.backend.target.to_text());
-            let actual = self.backend.plan(
-                &payload.digest(),
-                request.authority().binding().operation_sequence(),
-            );
-            assert_eq!(request.plan().context(), actual.context());
-            let raw = self
-                .backend
-                .management(payload.method().name(), payload.arguments());
-            fs::write(self.oracle, &raw).unwrap();
-            if self.failure == CaptureFailure::Lost {
-                return Err(IcMutationProviderError::Indeterminate);
-            }
-            let reply = if self.failure == CaptureFailure::Malformed {
-                Vec::new()
-            } else {
-                raw
-            };
-            IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: actual.context().clone(),
-                target: self.backend.target.to_text(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .map_err(|_| IcMutationProviderError::Indeterminate)
-        })())
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        assert!(!self.submitted);
+        self.submitted = true;
+        let payload = request.payload();
+        assert_eq!(payload.method(), Method::TakeCanisterSnapshot);
+        assert_eq!(payload.receiver(), "aaaaa-aa");
+        assert_eq!(payload.target(), self.backend.target.to_text());
+        let actual = self.backend.plan(
+            &payload.digest(),
+            request.authority().binding().operation_sequence(),
+        );
+        assert_eq!(request.plan().context(), actual.context());
+        let raw = self
+            .backend
+            .management(payload.method().name(), payload.arguments())
+            .await;
+        fs::write(self.oracle, &raw).unwrap();
+        if self.failure == CaptureFailure::Lost {
+            return Err(IcMutationProviderError::Indeterminate);
+        }
+        let reply = if self.failure == CaptureFailure::Malformed {
+            Vec::new()
+        } else {
+            raw
+        };
+        IcMutationAcknowledgement::new(IcUpdateResponseInput {
+            authority: request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: actual.context().clone(),
+            target: self.backend.target.to_text(),
+            evidence: ArtifactChecksumRecord::from_bytes(&reply),
+            reply,
+        })
+        .map_err(|_| IcMutationProviderError::Indeterminate)
     }
 }
 
@@ -170,34 +168,30 @@ pub(super) struct ReadProvider<'a> {
     pub(super) calls: usize,
 }
 impl IcSnapshotTransferReadProvider for ReadProvider<'_> {
-    fn read_snapshot(
+    async fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
         journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<
-        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
-    > {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            let index = self.calls;
-            self.calls += 1;
-            let response = ready(self.backend.read_snapshot(request, journal))?;
-            if self.failure.position() != Some(index) {
-                return Ok(response);
-            }
-            // Retained fixture oracle is never outcome/retry evidence for the workflow.
-            fs::write(self.oracle, &response.input().reply).unwrap();
-            if matches!(self.failure, ReadFailure::Lost(_)) {
-                return Err(IcObservationProviderError::Indeterminate);
-            }
-            let mut input = response.input().clone();
-            input.reply.clear();
-            Ok(IcSnapshotTransferReadResponse::new(input).unwrap())
-        })())
+    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        request.validate_journal(journal).unwrap();
+        let index = self.calls;
+        self.calls += 1;
+        let response = self.backend.read_snapshot(request, journal).await?;
+        if self.failure.position() != Some(index) {
+            return Ok(response);
+        }
+        // Retained fixture oracle is never outcome/retry evidence for the workflow.
+        fs::write(self.oracle, &response.input().reply).unwrap();
+        if matches!(self.failure, ReadFailure::Lost(_)) {
+            return Err(IcObservationProviderError::Indeterminate);
+        }
+        let mut input = response.input().clone();
+        input.reply.clear();
+        Ok(IcSnapshotTransferReadResponse::new(input).unwrap())
     }
 }
 
-pub(super) fn capture(
+pub(super) async fn capture(
     backend: &mut Backend,
     stage: &ExecutionStageGuard<'_>,
     failure: CaptureFailure,
@@ -212,19 +206,14 @@ pub(super) fn capture(
         submitted: false,
     };
     retain_bytes(layout, "capture-arguments.candid", payload.arguments());
-    let result = ready(capture_snapshot(
-        stage,
-        0,
-        &payload,
-        &mut provider,
-        async |request| {
-            // Only this isolated stopped application qualifies direct control, full
-            // drain/no-external-effects consistency and original ingress custody.
-            assert_eq!(request.plan().context(), stage.plan().context());
-            assert_eq!(request.payload().digest(), payload.digest());
-            Ok::<(), Infallible>(())
-        },
-    ));
+    let result = capture_snapshot(stage, 0, &payload, &mut provider, async |request| {
+        // Only this isolated stopped application qualifies direct control, full
+        // drain/no-external-effects consistency and original ingress custody.
+        assert_eq!(request.plan().context(), stage.plan().context());
+        assert_eq!(request.payload().digest(), payload.digest());
+        Ok::<(), Infallible>(())
+    })
+    .await;
     assert!(provider.submitted);
     let acknowledgement = result?;
     retain_bytes(layout, "capture.candid", &acknowledgement.input().reply);
@@ -244,13 +233,13 @@ pub(super) fn capture(
     Ok((reply.snapshots()[0].clone(), reply.digest()))
 }
 
-pub(super) fn metadata(
+pub(super) async fn metadata(
     backend: &mut Backend,
     stage: &ExecutionStageGuard<'_>,
     request: IcSnapshotMetadataRequest,
 ) -> io::Result<(MetadataEvidence, ExecutionStagePredecessorRecord)> {
     let layout = stage.layout().unwrap();
-    let (response, checkpoint) = ready(read_snapshot_metadata(
+    let (response, checkpoint) = read_snapshot_metadata(
         stage,
         7,
         &request,
@@ -276,7 +265,8 @@ pub(super) fn metadata(
                 evidence: response.input().evidence.hash().into(),
             })
         },
-    ))
+    )
+    .await
     .map_err(io::Error::other)?;
     Ok((
         MetadataEvidence {
@@ -287,7 +277,7 @@ pub(super) fn metadata(
     ))
 }
 
-pub(super) fn download(
+pub(super) async fn download(
     backend: &mut Backend,
     stage: &ExecutionStageGuard<'_>,
     download: &IcSnapshotDownloadPlan<'_, '_>,
@@ -303,7 +293,7 @@ pub(super) fn download(
         calls: 0,
     };
     let mut chunks = Vec::new();
-    let result = ready(download_snapshot(
+    let result = download_snapshot(
         stage,
         download,
         writer,
@@ -340,7 +330,8 @@ pub(super) fn download(
                 evidence: response.input().evidence.hash().into(),
             })
         },
-    ));
+    )
+    .await;
     assert_eq!(
         provider.calls,
         failure

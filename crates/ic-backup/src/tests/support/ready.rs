@@ -1,4 +1,4 @@
-//! Poll immediate fixture providers without nesting a runtime around blocking Testkit.
+//! Poll immediate in-memory fixtures; never drive simulator IO.
 
 use std::{
     future::Future,

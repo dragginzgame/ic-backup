@@ -408,4 +408,6 @@ async fn exercise(mode: Mode) {
         "Independent authenticated consumer evidence retained: {}",
         fixture.root.display()
     );
+
+    fixture.close().await;
 }

@@ -2,7 +2,6 @@
 
 use super::stage::{self, Stage};
 use super::{backend::Backend, management};
-use crate::ready::ready;
 use ic_backup::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use ic_backup::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use ic_backup::{
@@ -40,7 +39,7 @@ pub(super) fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
         &ArtifactChecksumRecord::from_bytes(b"capture contract"),
     )
 }
-fn capture(
+async fn capture(
     backend: &mut Backend,
     layout: &BackupLayoutGuard,
     workflow: &ExecutionWorkflowRecord,
@@ -62,7 +61,7 @@ fn capture(
         .unwrap();
     let references = stage_layout.restore_references().unwrap();
     let calls = backend.calls;
-    let result = super::steps::capture(backend, &stage, failure);
+    let result = super::steps::capture(backend, &stage, failure).await;
     let journal =
         AttemptJournalGuard::open(stage_layout, &stage.plan().attempt_authority(0).unwrap())
             .unwrap();
@@ -106,7 +105,7 @@ fn capture(
             submitted: false,
         };
         assert!(
-            ready(capture_snapshot(
+            capture_snapshot(
                 &stage,
                 0,
                 &payload,
@@ -114,7 +113,8 @@ fn capture(
                 async |_| -> Result<(), Infallible> {
                     panic!("pending capture never reaches fresh admission")
                 }
-            ))
+            )
+            .await
             .is_err()
         );
         assert!(!provider.submitted);
@@ -136,8 +136,8 @@ fn capture(
     Some((snapshot, stage.reconcile_checkpoint(evidence).unwrap()))
 }
 
-fn prepare() -> (Backend, BackupLayoutGuard, ExecutionWorkflowRecord) {
-    let backend = super::steps::stopped_backend();
+async fn prepare() -> (Backend, BackupLayoutGuard, ExecutionWorkflowRecord) {
+    let backend = super::steps::stopped_backend().await;
     let root = backend.root.join("planned-workflow");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -146,20 +146,27 @@ fn prepare() -> (Backend, BackupLayoutGuard, ExecutionWorkflowRecord) {
     (backend, layout, workflow)
 }
 
-pub(crate) fn capture_failure(failure: CaptureFailure) {
+pub(crate) async fn capture_failure(failure: CaptureFailure) {
     assert!(failure != CaptureFailure::None);
-    let (mut backend, layout, workflow) = prepare();
-    assert!(capture(&mut backend, &layout, &workflow, failure).is_none());
+    let (mut backend, layout, workflow) = prepare().await;
+    assert!(
+        capture(&mut backend, &layout, &workflow, failure)
+            .await
+            .is_none()
+    );
+
+    backend.close().await;
 }
 
 #[expect(
     clippy::too_many_lines,
     reason = "keep the isolated ingress, spending and retained-byte chronology in one qualification trace"
 )]
-pub(crate) fn run(failure: ReadFailure) {
-    let (mut backend, layout, workflow) = prepare();
-    let (snapshot, capture) =
-        capture(&mut backend, &layout, &workflow, CaptureFailure::None).unwrap();
+pub(crate) async fn run(failure: ReadFailure) {
+    let (mut backend, layout, workflow) = prepare().await;
+    let (snapshot, capture) = capture(&mut backend, &layout, &workflow, CaptureFailure::None)
+        .await
+        .unwrap();
     let metadata_request =
         IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let metadata_plan = backend.plan(&metadata_request.digest(), 7);
@@ -169,7 +176,9 @@ pub(crate) fn run(failure: ReadFailure) {
         ExecutionStageGuard::prepare(&layout, metadata_binding.clone(), metadata_plan.clone())
             .unwrap();
     let (evidence, original) =
-        super::steps::metadata(&mut backend, &metadata_stage, metadata_request).unwrap();
+        super::steps::metadata(&mut backend, &metadata_stage, metadata_request)
+            .await
+            .unwrap();
     let metadata_request = &evidence.request;
     let raw_metadata = &evidence.raw;
     let metadata = IcSnapshotMetadataReply::decode(metadata_request, raw_metadata).unwrap();
@@ -196,7 +205,7 @@ pub(crate) fn run(failure: ReadFailure) {
         .stage_ic_snapshot_artifact(token, &metadata, raw_metadata)
         .unwrap();
     let calls_before_data = backend.calls;
-    let result = super::steps::download(&mut backend, &stage, &download, writer, failure);
+    let result = super::steps::download(&mut backend, &stage, &download, writer, failure).await;
     if let Some(index) = failure.position() {
         if matches!(failure, ReadFailure::Malformed(_)) {
             let Err(IcSnapshotDownloadExecutionError::Read(
@@ -266,6 +275,7 @@ pub(crate) fn run(failure: ReadFailure) {
         assert_eq!(current.restore_references().unwrap(), references);
         assert_eq!(backend.calls, calls_before_data + u64::from(dispatched));
         assert!(ExecutionStageGuard::prepare(&layout, binding, plan.clone()).is_err());
+        backend.close().await;
         return;
     }
     let (checksum, _) = result.unwrap();
@@ -302,13 +312,16 @@ pub(crate) fn run(failure: ReadFailure) {
         references
     );
     assert_eq!(backend.calls, calls);
+
+    backend.close().await;
 }
 
-pub(crate) fn metadata_failure(failure: ReadFailure) {
+pub(crate) async fn metadata_failure(failure: ReadFailure) {
     assert_eq!(failure.position(), Some(0));
-    let (mut backend, layout, workflow) = prepare();
-    let (snapshot, capture) =
-        capture(&mut backend, &layout, &workflow, CaptureFailure::None).unwrap();
+    let (mut backend, layout, workflow) = prepare().await;
+    let (snapshot, capture) = capture(&mut backend, &layout, &workflow, CaptureFailure::None)
+        .await
+        .unwrap();
     let payload = IcSnapshotMetadataRequest::new(&backend.target.to_text(), snapshot.id()).unwrap();
     let plan = backend.plan(&payload.digest(), 7);
     let binding = ExecutionStageBindingRecord::new(&workflow, 7, &plan, vec![capture]).unwrap();
@@ -334,14 +347,15 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
         oracle: &oracle,
         calls: 0,
     };
-    let result = ready(read_snapshot_metadata(
+    let result = read_snapshot_metadata(
         &stage,
         7,
         &payload,
         &mut provider,
         async |_| Ok::<_, Infallible>(()),
         async |_, _| -> Result<_, Infallible> { panic!("lost/malformed metadata cannot qualify") },
-    ));
+    )
+    .await;
     if matches!(failure, ReadFailure::Lost(_)) {
         assert!(matches!(
             result,
@@ -377,14 +391,15 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
     assert_eq!(progress.attempts.mutations_used, 1);
     assert_eq!(progress.applied_operations, 0);
     assert!(
-        ready(read_snapshot_metadata(
+        read_snapshot_metadata(
             &stage,
             7,
             &payload,
             &mut provider,
             async |_| -> Result<(), Infallible> { panic!("pending read never admitted") },
             async |_, _| -> Result<_, Infallible> { panic!("no reissue") }
-        ))
+        )
+        .await
         .is_err()
     );
     assert_eq!(provider.calls, 1);
@@ -399,4 +414,6 @@ pub(crate) fn metadata_failure(failure: ReadFailure) {
     assert!(!layout.root().join("execution-stage-9").exists());
     assert!(!stage.layout().unwrap().root().join("artifacts").exists());
     assert_eq!(provider.backend.calls, calls + 1);
+
+    backend.close().await;
 }

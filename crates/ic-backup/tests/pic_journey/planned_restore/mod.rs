@@ -5,7 +5,6 @@ use super::{
     verify_loaded,
 };
 use super::{planned_upload::ReplyFault, stage::Stage};
-use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
@@ -32,61 +31,60 @@ use ic_backup::{
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 use std::{
-    cell::RefCell,
     fs,
     io::{self, Write},
 };
+use tokio::sync::Mutex;
 
 pub(super) struct Provider<'a, 'b> {
-    pub(super) backend: &'a RefCell<&'b mut Backend>,
+    pub(super) backend: &'a Mutex<&'b mut Backend>,
     pub(super) failure: Failure,
 }
 impl IcMutationProvider for Provider<'_, '_> {
-    fn submit_mutation(
+    async fn submit_mutation(
         &mut self,
         request: &IcMutationRequest<'_>,
         journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            let mut backend = self.backend.borrow_mut();
-            let actual = backend.plan(
-                &request.payload().digest(),
-                request.authority().binding().operation_sequence(),
-            );
-            assert_eq!(request.plan().context(), actual.context());
-            assert_eq!(request.payload().target(), backend.target.to_text());
-            let raw = backend.management(
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        let mut backend = self.backend.lock().await;
+        let actual = backend.plan(
+            &request.payload().digest(),
+            request.authority().binding().operation_sequence(),
+        );
+        assert_eq!(request.plan().context(), actual.context());
+        assert_eq!(request.payload().target(), backend.target.to_text());
+        let raw = backend
+            .management(
                 request.payload().method().name(),
                 request.payload().arguments(),
-            );
-            let stage = match request.payload().method() {
-                Method::LoadCanisterSnapshot => Stage::Load,
-                Method::StartCanister => Stage::Start,
-                _ => panic!("restore provider requires load or start"),
-            };
-            let fault = self
-                .failure
-                .reply_at(stage, request.authority().binding().operation_sequence());
-            if fault.is_some() {
-                fs::write(backend.root.join("discarded-restore-oracle.candid"), &raw).unwrap();
-            }
-            let reply = match fault {
-                Some(ReplyFault::Lost) => return Err(IcMutationProviderError::Indeterminate),
-                Some(ReplyFault::Malformed) => vec![],
-                None => raw,
-            };
-            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: actual.context().clone(),
-                target: backend.target.to_text(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap())
-        })())
+            )
+            .await;
+        let stage = match request.payload().method() {
+            Method::LoadCanisterSnapshot => Stage::Load,
+            Method::StartCanister => Stage::Start,
+            _ => panic!("restore provider requires load or start"),
+        };
+        let fault = self
+            .failure
+            .reply_at(stage, request.authority().binding().operation_sequence());
+        if fault.is_some() {
+            fs::write(backend.root.join("discarded-restore-oracle.candid"), &raw).unwrap();
+        }
+        let reply = match fault {
+            Some(ReplyFault::Lost) => return Err(IcMutationProviderError::Indeterminate),
+            Some(ReplyFault::Malformed) => vec![],
+            None => raw,
+        };
+        Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
+            authority: request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: actual.context().clone(),
+            target: backend.target.to_text(),
+            evidence: ArtifactChecksumRecord::from_bytes(&reply),
+            reply,
+        })
+        .unwrap())
     }
 }
 fn child(
@@ -105,7 +103,7 @@ fn child(
     clippy::too_many_lines,
     reason = "keep the complete upload/load/verification/start chronology and stopped failure proof together"
 )]
-pub(super) fn run(
+pub(super) async fn run(
     backend: &mut Backend,
     source_plan: &OperationPlanRecord,
     source_layout: &BackupLayoutGuard,
@@ -117,11 +115,31 @@ pub(super) fn run(
     restore_source: &IcRestoreSource<'_>,
 ) {
     // Independently change live state so successful load must restore the original.
-    assert!(lifecycle(backend, Method::StartCanister, None, Fault::None, |_| None).is_none());
-    backend.write_state(99);
-    backend.assert_state(99);
-    backend.clear_fixture_chunk_store();
-    assert!(lifecycle(backend, Method::StopCanister, None, Fault::None, |_| None).is_none());
+    assert!(
+        lifecycle(
+            backend,
+            Method::StartCanister,
+            None,
+            Fault::None,
+            async |_| None
+        )
+        .await
+        .is_none()
+    );
+    backend.write_state(99).await;
+    backend.assert_state(99).await;
+    backend.clear_fixture_chunk_store().await;
+    assert!(
+        lifecycle(
+            backend,
+            Method::StopCanister,
+            None,
+            Fault::None,
+            async |_| None
+        )
+        .await
+        .is_none()
+    );
     let load = management(
         backend,
         Method::LoadCanisterSnapshot,
@@ -161,11 +179,11 @@ pub(super) fn run(
         .unwrap();
     let source_bytes = fs::read(source_journal.path()).unwrap();
     let source_references = source_layout.restore_references().unwrap();
-    let backend = RefCell::new(backend);
+    let backend = Mutex::new(backend);
     let mut predecessor = None;
     let mut acceptance = None;
     for (sequence, payload, plan) in [(17, &load, load_plan), (3, &start, start_plan)] {
-        status(&mut backend.borrow_mut(), CanisterStatusType::Stopped);
+        status(&mut **backend.lock().await, CanisterStatusType::Stopped).await;
         let binding = ExecutionStageBindingRecord::new(
             &workflow,
             sequence,
@@ -214,7 +232,7 @@ pub(super) fn run(
             backend: &backend,
             failure,
         };
-        let result = ready(restore_snapshot(
+        let result = restore_snapshot(
             &stage,
             restore_source.clone(),
             &safety,
@@ -222,7 +240,7 @@ pub(super) fn run(
             async |request, safety| {
                 assert_eq!(
                     request.payload().target(),
-                    backend.borrow().target.to_text()
+                    backend.lock().await.target.to_text()
                 );
                 assert_eq!(
                     source_journal
@@ -241,7 +259,7 @@ pub(super) fn run(
                         source_plan_intent: source_plan.digest(),
                         source_artifacts: source.manifest.clone(),
                         targets: vec![TargetRestoreEvidence {
-                            target: backend.borrow().target.to_text(),
+                            target: backend.lock().await.target.to_text(),
                             state: CanisterStatusType::Stopped,
                             lifecycle_evidence: ArtifactChecksumRecord::from_bytes(
                                 b"exclusive fixture fresh stopped/control history",
@@ -280,7 +298,8 @@ pub(super) fn run(
                     evidence: acknowledgement.input().evidence.hash().into(),
                 })
             },
-        ));
+        )
+        .await;
         if failure
             .reply_at(Stage::from_sequence(sequence), sequence)
             .is_some()
@@ -292,7 +311,7 @@ pub(super) fn run(
                 }) => assert_eq!(acknowledgement.input().reply, [] as [u8; 0]),
                 result => panic!("original restore safe stop: {result:?}"),
             }
-            let calls = backend.borrow().calls;
+            let calls = backend.lock().await.calls;
             let journal = fs::read(
                 stage
                     .layout()
@@ -325,17 +344,18 @@ pub(super) fn run(
             )
             .unwrap();
             assert!(
-                ready(restore_snapshot(
+                restore_snapshot(
                     &stage,
                     restore_source.clone(),
                     &safety,
                     &mut provider,
                     async |_, _| -> Result<_, io::Error> { panic!("pending never admits") },
                     async |_, _| -> Result<_, io::Error> { panic!("pending never settles") }
-                ))
+                )
+                .await
                 .is_err()
             );
-            assert_eq!(backend.borrow().calls, calls);
+            assert_eq!(backend.lock().await.calls, calls);
             assert_eq!(
                 fs::read(
                     stage
@@ -362,15 +382,18 @@ pub(super) fn run(
         drop(safety);
         drop(stage);
         if sequence == 17 {
-            acceptance = Some(verify_loaded(
-                &mut backend.borrow_mut(),
-                metadata,
-                destination,
-                &source.chunks,
-            ));
+            acceptance = Some(
+                verify_loaded(
+                    &mut **backend.lock().await,
+                    metadata,
+                    destination,
+                    &source.chunks,
+                )
+                .await,
+            );
         }
     }
-    backend.borrow().assert_state(42);
+    backend.lock().await.assert_state(42).await;
     assert_eq!(fs::read(source_journal.path()).unwrap(), source_bytes);
     assert_eq!(
         source_layout.restore_references().unwrap(),

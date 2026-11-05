@@ -14,12 +14,12 @@ use ic_backup::{
 };
 use ic_platform::management_canister_types::CanisterStatusType;
 
-pub(in crate::pic_journey) fn lifecycle(
+pub(in crate::pic_journey) async fn lifecycle(
     backend: &mut Backend,
     index: u64,
     mutation: &IcManagementRequestRecord,
     discard_observation: bool,
-    verify: impl FnOnce(&mut Backend) -> Option<ArtifactChecksumRecord>,
+    verify: impl AsyncFnOnce(&mut Backend) -> Option<ArtifactChecksumRecord>,
 ) -> bool {
     let plan = backend.retained_plan(index);
     let layout = backend.layout(index);
@@ -43,7 +43,9 @@ pub(in crate::pic_journey) fn lifecycle(
     let request =
         IcObservationRequest::new(&plan, index, journal.record().unwrap(), mutation, &status)
             .unwrap();
-    let raw = backend.management(status.method().name(), status.arguments());
+    let raw = backend
+        .management(status.method().name(), status.arguments())
+        .await;
     if discard_observation {
         assert_eq!(mutation.method(), Method::LoadCanisterSnapshot);
         fs::write(
@@ -64,7 +66,7 @@ pub(in crate::pic_journey) fn lifecycle(
     };
     assert_status(&status, &raw, state);
     let decoded = IcLifecycleReply::decode(&status, &raw).unwrap();
-    let restored = verify(backend);
+    let restored = verify(backend).await;
     assert_eq!(
         restored.is_some(),
         mutation.method() == Method::LoadCanisterSnapshot

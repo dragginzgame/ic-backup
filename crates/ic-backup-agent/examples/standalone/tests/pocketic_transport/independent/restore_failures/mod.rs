@@ -88,4 +88,6 @@ async fn lost_reply(mode: Mode) {
         "Independent lost-reply evidence retained: {}",
         fixture.root.display()
     );
+
+    fixture.close().await;
 }

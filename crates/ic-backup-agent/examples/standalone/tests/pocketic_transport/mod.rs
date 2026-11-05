@@ -28,7 +28,7 @@ use ic_backup_agent::{
 use ic_platform::management_canister_types::{CanisterStatusType, SnapshotDataKind};
 use ic_testkit::{
     pic::{PocketIcManagedServer, PocketIcStartupConfig},
-    pocket_ic::{PocketIcBuilder, nonblocking::PocketIc},
+    pocket_ic::{PocketIc, PocketIcBuilder},
 };
 use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 
@@ -167,6 +167,8 @@ async fn original_capture_stage_awaits_accounted_fresh_admission_then_retains_on
         original
     );
     assert_eq!(fs::read(status_path).unwrap(), original_status);
+
+    fixture.close().await;
 }
 
 // Keep the exact original operation identity with its guarded call directory.
@@ -242,7 +244,7 @@ impl Fixture {
             server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
         };
         let mut managed = startup
-            .build_instance_async(builder)
+            .build_instance(builder)
             .await
             .expect("bounded Testkit-managed async instance");
         let pic = managed.instance_mut();
@@ -285,6 +287,14 @@ impl Fixture {
             release,
             identity,
         }
+    }
+    async fn close(self) {
+        let result = self.pic.drop().await;
+        if let Err(error) = &result {
+            fs::write(self.root.join("teardown-error.txt"), error.to_string())
+                .expect("retain explicit instance deletion failure");
+        }
+        result.expect("delete fixture instance while retaining its managed server");
     }
     fn caller(&self) -> ic_platform::principal::ExternalPrincipal {
         self.identity.sender().unwrap()
@@ -620,6 +630,8 @@ async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserv
         .unwrap();
     assert_eq!(restored, [42_u64.to_le_bytes(); 3].concat());
     fs::write(fixture.root.join("qualification.json"),serde_json::to_vec_pretty(&serde_json::json!({"transport":"ic-agent 0.49.2","actual_signed_caller":fixture.caller().to_text(),"calls":fixture.sequence,"source_id":source_id,"original_reservations_pending":true,"automatic_receipts":false,"same_id_restore":true,"complete_heap_stable_global_state":true,"scope":"isolated stopped no-external-effects fixture; no generic application safety or full runner qualification"})).unwrap()).unwrap();
+
+    fixture.close().await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -672,6 +684,8 @@ async fn wrong_trusted_root_rejects_actual_reply_without_settling_applied_stop()
         .unwrap(),
         serde_json::to_value(CanisterStatusType::Stopped).unwrap()
     );
+
+    fixture.close().await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -702,6 +716,8 @@ async fn discarded_actual_stop_reply_halts_with_pending_original_and_no_reissue(
         .unwrap(),
         serde_json::to_value(CanisterStatusType::Stopped).unwrap()
     );
+
+    fixture.close().await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -772,6 +788,8 @@ async fn reserved_agent_status_after_discarded_stop_reply_retains_both_pending_a
         IcObservationProviderError::Unavailable
     );
     assert_eq!(fs::read(guard.path()).unwrap(), before);
+
+    fixture.close().await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -993,4 +1011,6 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
             .unwrap_err(),
         IcObservationProviderError::Unavailable
     );
+
+    fixture.close().await;
 }

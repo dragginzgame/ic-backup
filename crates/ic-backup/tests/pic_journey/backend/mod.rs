@@ -1,6 +1,5 @@
 //! Explicit local simulator custody/accounting. No mainnet provider or retry loop.
 
-use crate::ready::ready;
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
 use ic_backup::{
     model::{
@@ -45,7 +44,7 @@ use std::{
 
 pub(super) struct Backend {
     pub pic: PocketIc,
-    // Instance teardown precedes the managed server, retaining its original output files.
+    // Explicit async teardown retains the server; panic Drop still stops/reaps it.
     _server: PocketIcManagedServer,
     pub target: ExternalPrincipal,
     pub root: PathBuf,
@@ -58,7 +57,7 @@ pub(super) struct Backend {
 }
 
 impl Backend {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         let root = crate::support::temp_root("ic-backup-pocketic");
         fs::write(
             root.join("original.wasm"),
@@ -112,16 +111,20 @@ impl Backend {
             server_output_files: Some((root.join("server.stdout"), root.join("server.stderr"))),
         }
         .build_instance(builder)
+        .await
         .expect("bounded Testkit-managed instance");
         let pic = managed.instance();
         let wasm = fs::read(root.join("original.wasm")).unwrap();
         let release = ArtifactChecksumRecord::from_bytes(&wasm);
         fs::write(root.join("fixture.wasm"), &wasm).unwrap();
         // Explicit simulator fixture setup, outside backup/restore authority.
-        let target = pic.create_canister().unwrap();
-        pic.add_cycles(target, 100_000_000_000_000).unwrap();
-        pic.install_canister(target, wasm, vec![], None).unwrap();
+        let target = pic.create_canister().await.unwrap();
+        pic.add_cycles(target, 100_000_000_000_000).await.unwrap();
+        pic.install_canister(target, wasm, vec![], None)
+            .await
+            .unwrap();
         pic.upload_chunk(target, None, b"retained chunk-store state".to_vec())
+            .await
             .unwrap();
         fs::create_dir(root.join("calls")).unwrap();
         let (pic, server) = managed.into_parts();
@@ -138,9 +141,18 @@ impl Backend {
             started: Instant::now(),
             trace: Vec::new(),
         };
-        backend.write_state(42);
-        backend.assert_state(42);
+        backend.write_state(42).await;
+        backend.assert_state(42).await;
         backend
+    }
+
+    pub async fn close(self) {
+        let result = self.pic.drop().await;
+        if let Err(error) = &result {
+            fs::write(self.root.join("teardown-error.txt"), error.to_string())
+                .expect("retain explicit instance deletion failure");
+        }
+        result.expect("delete fixture instance while retaining its managed server");
     }
 
     pub fn plan(&self, digest: &ArtifactChecksumRecord, sequence: u64) -> OperationPlanRecord {
@@ -165,7 +177,7 @@ impl Backend {
         let network = ArtifactChecksumRecord::from_bytes(
             format!(
                 "explicit PocketIC instance {} at {}",
-                self.pic.instance_id(),
+                self.pic.instance_id,
                 self.pic.get_server_url()
             )
             .as_bytes(),
@@ -217,7 +229,7 @@ impl Backend {
         read_operation_plan(&self.layout(index), &self.plans[&index]).unwrap()
     }
 
-    pub fn management(&mut self, method: &str, arguments: &[u8]) -> Vec<u8> {
+    pub async fn management(&mut self, method: &str, arguments: &[u8]) -> Vec<u8> {
         assert!(self.calls < 64, "finite simulator management-call ceiling");
         self.calls += 1;
         let raw = self
@@ -229,8 +241,9 @@ impl Backend {
                 method,
                 arguments.into(),
             )
+            .await
             .unwrap_or_else(|error| panic!("PocketIC {method}: {error:?}"));
-        self.trace.push(json!({"sequence":self.calls,"instance":self.pic.instance_id(),"receiver":"aaaaa-aa","target":self.target.to_text(),"caller":ExternalPrincipal::anonymous().to_text(),"method":method,"arguments_sha256":ArtifactChecksumRecord::from_bytes(arguments).hash(),"reply_sha256":ArtifactChecksumRecord::from_bytes(&raw).hash()}));
+        self.trace.push(json!({"sequence":self.calls,"instance":self.pic.instance_id,"receiver":"aaaaa-aa","target":self.target.to_text(),"caller":ExternalPrincipal::anonymous().to_text(),"method":method,"arguments_sha256":ArtifactChecksumRecord::from_bytes(arguments).hash(),"reply_sha256":ArtifactChecksumRecord::from_bytes(&raw).hash()}));
         fs::write(
             self.root.join("management-trace.json"),
             serde_json::to_vec_pretty(&self.trace).unwrap(),
@@ -239,7 +252,7 @@ impl Backend {
         raw
     }
 
-    pub fn call(
+    pub async fn call(
         &mut self,
         method: &str,
         arguments: &[u8],
@@ -251,7 +264,7 @@ impl Backend {
         let mut journal =
             AttemptJournalGuard::create(&layout, plan.attempt_authority(index).unwrap()).unwrap();
         let attempt = journal.reserve_mutation().unwrap();
-        let raw = self.management(method, arguments);
+        let raw = self.management(method, arguments).await;
         if lose_reply {
             // Test oracle retains the actually executed reply separately. Recovery
             // code sees no reply and cannot use this file to settle the mutation.
@@ -270,7 +283,7 @@ impl Backend {
         (index, Some(raw))
     }
 
-    pub fn read(&mut self, payload: IcSnapshotTransferReadPayload<'_, '_>) -> (u64, Vec<u8>) {
+    pub async fn read(&mut self, payload: IcSnapshotTransferReadPayload<'_, '_>) -> (u64, Vec<u8>) {
         let digest = payload.digest();
         let (index, layout, plan) = self.begin_call(payload.method(), payload.arguments(), &digest);
         let mut journal =
@@ -279,7 +292,10 @@ impl Backend {
         let request =
             IcSnapshotTransferReadRequest::new(&plan, index, journal.record().unwrap(), payload)
                 .unwrap();
-        let response = ready(self.read_snapshot(&request, journal.record().unwrap())).unwrap();
+        let response = self
+            .read_snapshot(&request, journal.record().unwrap())
+            .await
+            .unwrap();
         let view = validate_response(&request, journal.record().unwrap(), &response).unwrap();
         let evidence = match view.reply() {
             IcSnapshotTransferReadReply::Metadata(reply) => reply.digest(),
@@ -344,7 +360,7 @@ impl Backend {
         assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
     }
 
-    pub fn write_state(&self, value: u64) {
+    pub async fn write_state(&self, value: u64) {
         self.pic
             .update_call(
                 self.target,
@@ -352,15 +368,16 @@ impl Backend {
                 "write",
                 value.to_le_bytes().into(),
             )
+            .await
             .unwrap();
     }
 
-    pub fn clear_fixture_chunk_store(&self) {
+    pub async fn clear_fixture_chunk_store(&self) {
         // Explicit pre-restore fixture mutation, outside backup/restore spending.
         // Retained source artifacts and both remote source/destination snapshots survive.
-        self.pic.clear_chunk_store(self.target, None).unwrap();
+        self.pic.clear_chunk_store(self.target, None).await.unwrap();
         assert_eq!(
-            self.pic.stored_chunks(self.target, None).unwrap(),
+            self.pic.stored_chunks(self.target, None).await.unwrap(),
             Vec::<Vec<u8>>::new()
         );
         fs::write(
@@ -370,10 +387,11 @@ impl Backend {
         .unwrap();
     }
 
-    pub fn assert_state(&self, expected: u64) {
+    pub async fn assert_state(&self, expected: u64) {
         let raw = self
             .pic
             .query_call(self.target, ExternalPrincipal::anonymous(), "read", vec![])
+            .await
             .unwrap();
         assert_eq!(
             raw,
@@ -497,59 +515,56 @@ impl Backend {
         );
     }
 
-    pub fn complete(&self, case: &str) {
+    pub async fn complete(self, case: &str) {
         assert_eq!(self.trace.len(), usize::try_from(self.calls).unwrap());
         let lock = fs::read(self.root.join("Cargo.lock")).unwrap();
-        let result = json!({"case":case,"result":"passed","server":ic_testkit::pic::POCKET_IC_SERVER_VERSION,
-            "dependency_lock_sha256":ArtifactChecksumRecord::from_bytes(&lock).hash(),
-            "instance":self.pic.instance_id(),"target":self.target.to_text(),"release_sha256":self.release.hash(),
-            "management_calls":self.calls,"elapsed_ms":self.started.elapsed().as_millis(),
-            "journey_restored":self.root.join("post-load-verification.json").exists(),
-            "pending_lifecycle":self.root.join("pending-lifecycle.json").exists(),
-            "originals":self.plans.iter().map(|(sequence, digest)| json!({"sequence":sequence,"plan_sha256":digest.hash()})).collect::<Vec<_>>()});
+        let result = json! ({"case":case,"result":"passed","server":ic_testkit::pic::POCKET_IC_SERVER_VERSION,
+        "dependency_lock_sha256":ArtifactChecksumRecord::from_bytes(&lock).hash(),
+        "instance":self.pic.instance_id,"target":self.target.to_text(),"release_sha256":self.release.hash(),
+        "management_calls":self.calls,"elapsed_ms":self.started.elapsed().as_millis(),
+        "journey_restored":self.root.join("post-load-verification.json").exists(),
+        "pending_lifecycle":self.root.join("pending-lifecycle.json").exists(),
+        "originals":self.plans.iter().map(|(sequence, digest)| json!({"sequence":sequence,"plan_sha256":digest.hash()})).collect::<Vec<_>>()});
         fs::write(
             self.root.join("qualification-result.json"),
             serde_json::to_vec_pretty(&result).unwrap(),
         )
         .unwrap();
         eprintln!("PocketIC recovery evidence: {}", self.root.display());
+        self.close().await;
     }
 }
 
 impl IcSnapshotTransferReadProvider for Backend {
-    fn read_snapshot(
+    async fn read_snapshot(
         &mut self,
         request: &IcSnapshotTransferReadRequest<'_, '_>,
         journal: &ic_backup::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<
-        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
-    > {
-        std::future::ready({
-            request.validate_journal(journal).unwrap();
-            // This private fixture owns the isolated instance and original ingress history.
-            // It never reconstructs this memory as a production never-dispatched proof.
-            let payload = request.payload();
-            let actual = self.plan(
-                &payload.digest(),
-                request.authority().binding().operation_sequence(),
-            );
-            assert_eq!(request.plan().context(), actual.context());
-            assert_eq!(payload.receiver(), "aaaaa-aa");
-            assert_eq!(payload.target(), self.target.to_text());
-            assert!(self.submitted_reads.insert((
-                request.authority().digest().hash().into(),
-                request.mutation_attempt()
-            )));
-            let raw = self.management(payload.method(), payload.arguments());
-            IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: actual.context().clone(),
-                target: self.target.to_text(),
-                evidence: ArtifactChecksumRecord::from_bytes(&raw),
-                reply: raw,
-            })
-            .map_err(|_| IcObservationProviderError::Indeterminate)
+    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        request.validate_journal(journal).unwrap();
+        // This private fixture owns the isolated instance and original ingress history.
+        // It never reconstructs this memory as a production never-dispatched proof.
+        let payload = request.payload();
+        let actual = self.plan(
+            &payload.digest(),
+            request.authority().binding().operation_sequence(),
+        );
+        assert_eq!(request.plan().context(), actual.context());
+        assert_eq!(payload.receiver(), "aaaaa-aa");
+        assert_eq!(payload.target(), self.target.to_text());
+        assert!(self.submitted_reads.insert((
+            request.authority().digest().hash().into(),
+            request.mutation_attempt()
+        )));
+        let raw = self.management(payload.method(), payload.arguments()).await;
+        IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
+            authority: request.authority().digest(),
+            mutation_attempt: request.mutation_attempt(),
+            context: actual.context().clone(),
+            target: self.target.to_text(),
+            evidence: ArtifactChecksumRecord::from_bytes(&raw),
+            reply: raw,
         })
+        .map_err(|_| IcObservationProviderError::Indeterminate)
     }
 }

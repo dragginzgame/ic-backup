@@ -11,7 +11,6 @@ use super::{
     management,
     planned_download::{CaptureFailure, ReadFailure, workflow as allocated_workflow},
 };
-use crate::ready::ready;
 use crate::support::read_json;
 use ic_backup::workflow::execution_workflow::ExecutionWorkflowAdvance;
 use ic_backup::{
@@ -35,10 +34,10 @@ use ic_backup::{
         ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
     },
 };
-use std::{collections::BTreeMap, fs, future::Future, io, os::unix::fs::DirBuilderExt, path::Path};
+use std::{collections::BTreeMap, fs, io, os::unix::fs::DirBuilderExt, path::Path};
 
-pub(crate) fn run(lose_reply: bool) {
-    let backend = super::steps::stopped_backend();
+pub(crate) async fn run(lose_reply: bool) {
+    let backend = super::steps::stopped_backend().await;
     let root = backend.root.join("one-shot-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -51,13 +50,14 @@ pub(crate) fn run(lose_reply: bool) {
         CaptureFailure::None
     };
     create_execution_workflow(&layout, &workflow).unwrap();
-    let result = ready(advance_execution_workflow(
+    let result = advance_execution_workflow(
         &layout,
         &workflow.digest(),
         &BTreeMap::new(),
         NonZeroUsize::new(workflow.stages().len()).unwrap(),
         &mut driver,
-    ));
+    )
+    .await;
     assert_eq!(driver.binds, [0]);
     assert_eq!(driver.stages, [0]);
     if lose_reply {
@@ -90,6 +90,8 @@ pub(crate) fn run(lose_reply: bool) {
         "PocketIC one-shot workflow evidence: {}",
         driver.backend.root.display()
     );
+
+    driver.backend.close().await;
 }
 
 struct CompleteDriver {
@@ -132,24 +134,35 @@ impl CompleteDriver {
             ..Self::new(backend, workflow)
         }
     }
-    fn capture(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
+    async fn capture(
+        &mut self,
+        stage: &ExecutionStageGuard<'_>,
+    ) -> io::Result<ArtifactChecksumRecord> {
         let (snapshot, _) = super::steps::capture(&mut self.backend, stage, self.capture_failure)
+            .await
             .map_err(io::Error::other)?;
         let learned = ArtifactChecksumRecord::from_bytes(snapshot.id());
         self.snapshot = Some(snapshot);
         Ok(learned)
     }
 
-    fn metadata(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
+    async fn metadata(
+        &mut self,
+        stage: &ExecutionStageGuard<'_>,
+    ) -> io::Result<ArtifactChecksumRecord> {
         let snapshot = self.snapshot.as_ref().unwrap();
         let request =
             IcSnapshotMetadataRequest::new(&self.backend.target.to_text(), snapshot.id()).unwrap();
-        let (metadata, checkpoint) = super::steps::metadata(&mut self.backend, stage, request)?;
+        let (metadata, checkpoint) =
+            super::steps::metadata(&mut self.backend, stage, request).await?;
         self.metadata = Some(metadata);
         Ok(checkpoint.learned_evidence().clone())
     }
 
-    fn data(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<ArtifactChecksumRecord> {
+    async fn data(
+        &mut self,
+        stage: &ExecutionStageGuard<'_>,
+    ) -> io::Result<ArtifactChecksumRecord> {
         let snapshot = self.snapshot.as_ref().unwrap();
         let evidence = self.metadata.as_ref().unwrap();
         let raw = &evidence.raw;
@@ -178,6 +191,7 @@ impl CompleteDriver {
             writer,
             self.data_failure,
         )
+        .await
         .map_err(io::Error::other)?;
         assert_eq!(
             artifacts
@@ -252,16 +266,16 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
         })
     }
 
-    fn execute_stage(
+    async fn execute_stage(
         &mut self,
         stage: &ExecutionStageGuard<'_>,
-    ) -> impl Future<Output = Result<ArtifactChecksumRecord, Self::Error>> {
+    ) -> Result<ArtifactChecksumRecord, Self::Error> {
         let sequence = stage.binding().stage_sequence();
         self.stages.push(sequence);
         let result = match Stage::from_sequence(sequence) {
-            Stage::Capture => self.capture(stage),
-            Stage::Metadata => self.metadata(stage),
-            Stage::Download => self.data(stage),
+            Stage::Capture => self.capture(stage).await,
+            Stage::Metadata => self.metadata(stage).await,
+            Stage::Download => self.data(stage).await,
             Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
                 Err(io::Error::other("capture fixture has no restore stages"))
             }
@@ -273,16 +287,16 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                 evidence.hash().as_bytes(),
             );
         }
-        std::future::ready(result)
+        result
     }
 }
 
-pub(crate) fn run_complete(data_failure: ReadFailure) {
-    complete_capture(data_failure);
+pub(crate) async fn run_complete(data_failure: ReadFailure) {
+    complete_capture(data_failure).await.backend.close().await;
 }
 
-pub(super) fn capture_source() -> super::CapturedSource {
-    let mut driver = complete_capture(ReadFailure::None);
+pub(super) async fn capture_source() -> super::CapturedSource {
+    let mut driver = complete_capture(ReadFailure::None).await;
     let (plan, source) = driver.source.take().unwrap();
     super::CapturedSource {
         backend: driver.backend,
@@ -293,8 +307,8 @@ pub(super) fn capture_source() -> super::CapturedSource {
     }
 }
 
-fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
-    let backend = super::steps::stopped_backend();
+async fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
+    let backend = super::steps::stopped_backend().await;
     let workflow = allocated_workflow(&backend);
     let root = backend.root.join("complete-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
@@ -302,13 +316,14 @@ fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
     let mut driver = CompleteDriver::new(backend, &workflow);
     driver.data_failure = data_failure;
     create_execution_workflow(&layout, &workflow).unwrap();
-    let result = ready(advance_execution_workflow(
+    let result = advance_execution_workflow(
         &layout,
         &workflow.digest(),
         &BTreeMap::new(),
         NonZeroUsize::new(workflow.stages().len()).unwrap(),
         &mut driver,
-    ));
+    )
+    .await;
     assert_eq!(driver.stages, [0, 7, 9]);
     let calls = driver.backend.calls;
     if data_failure == ReadFailure::None {
@@ -435,7 +450,7 @@ fn read_retained_prefix(root: &Path, backend: &Backend) -> RetainedCapture {
     }
 }
 
-fn refuse_changed_retained_capture_edges(
+async fn refuse_changed_retained_capture_edges(
     root: &Path,
     layout: &BackupLayoutGuard,
     workflow: &ExecutionWorkflowRecord,
@@ -458,13 +473,14 @@ fn refuse_changed_retained_capture_edges(
         let mut supplied = retained.clone();
         supplied.insert(0, evidence);
         assert!(matches!(
-            ready(advance_execution_workflow(
+            advance_execution_workflow(
                 layout,
                 &workflow.digest(),
                 &supplied,
                 NonZeroUsize::new(workflow.stages().len()).unwrap(),
                 driver
-            )),
+            )
+            .await,
             Err(ExecutionWorkflowRunError::RetainedLearnedMismatch(7))
         ));
         assert_eq!(driver.stages, [0, 7]);
@@ -481,8 +497,8 @@ fn refuse_changed_retained_capture_edges(
     }
 }
 
-pub(crate) fn run_retained() {
-    let backend = super::steps::stopped_backend();
+pub(crate) async fn run_retained() {
+    let backend = super::steps::stopped_backend().await;
     let workflow = allocated_workflow(&backend);
     let root = backend.root.join("retained-workflow-runner");
     fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
@@ -491,13 +507,14 @@ pub(crate) fn run_retained() {
     driver.stop_before = Some(9);
     create_execution_workflow(&layout, &workflow).unwrap();
     assert!(matches!(
-        ready(advance_execution_workflow(
+        advance_execution_workflow(
             &layout,
             &workflow.digest(),
             &BTreeMap::new(),
             NonZeroUsize::new(workflow.stages().len()).unwrap(),
             &mut driver,
-        )),
+        )
+        .await,
         Err(ExecutionWorkflowRunError::Driver(_))
     ));
     assert_eq!(driver.stages, [0, 7]);
@@ -519,18 +536,20 @@ pub(crate) fn run_retained() {
         &mut driver,
         &capture,
         &metadata,
-    );
+    )
+    .await;
     // Drop the original driver state. Rebuild only from retained raw replies,
     // exact original bindings and the still-running isolated backend.
     let backend = driver.backend;
     let mut resumed = CompleteDriver::from_retained(backend, &workflow, snapshot, evidence);
-    let ExecutionWorkflowAdvance::Complete(view) = ready(advance_execution_workflow(
+    let ExecutionWorkflowAdvance::Complete(view) = advance_execution_workflow(
         &layout,
         &workflow.digest(),
         &retained,
         NonZeroUsize::new(workflow.stages().len()).unwrap(),
         &mut resumed,
-    ))
+    )
+    .await
     .unwrap() else {
         panic!("expected complete workflow")
     };
@@ -562,4 +581,6 @@ pub(crate) fn run_retained() {
         "PocketIC retained workflow evidence: {}",
         resumed.backend.root.display()
     );
+
+    resumed.backend.close().await;
 }
