@@ -214,6 +214,13 @@ the existing full gate. Repository-wide CI remains separate and unchanged.
 
 ## Changelogs and artifact preservation
 
+Keep decisions and compact results in Git, not raw experiment archives. Routine
+checks need no new evidence report. Experimental evidence defaults to one current
+summary and at most two small data files per topic, 100 KiB combined, with a 5 MiB
+repository budget; raw output belongs under `target/evidence/`. See the
+[retention contract](rules/engineering-details.md#changelogs-and-artifact-preservation)
+for exceptions, historical cleanup and protected release/recovery records.
+
 Use IcyDB-style emoji category sections in the owning release changelog; read the
 [changelog rules](rules/changelogs.md) when updating them. Every issue fixed must
 have a direct link in that changelog before handoff: root `CHANGELOG.md` for a

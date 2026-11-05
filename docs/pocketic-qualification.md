@@ -60,11 +60,12 @@ fixture roots. No Testkit snapshot retry, baseline reset or funding policy is us
 
 The single [consumer-owned matrix](shared-tooling.md#consumer-owned-ic-pins)
 selects PocketIC 16.1, explicitly installed and admitted before tests. Ordinary
-checks do not download servers. All ten core simulator cases and three Agent
-gateway cases pass on Linux with the final Host 0.8 / Metrics 0.2.14 graph.
-Current logs and fixture state live under `target/testkit-adoption-090`;
-[the source-bound review](reports/audits/2026/10/08/testkit-adoption/01/report.md)
-keeps preliminary Testkit 0.24 / PocketIC 16.0 results separate. These results
+checks do not download servers. The original ten Core and three Agent cases were
+qualified on the historical Host 0.8 / Metrics 0.2.14 graph. The
+[original source-bound review](https://github.com/dragginzgame/ic-backup/blob/f241568f3714c0fd9283fd505ff34007c6bcf3e8/docs/reports/audits/2026/10/08/testkit-adoption/01/report.md)
+keeps preliminary Testkit 0.24 / PocketIC 16.0 results separate. Current selections
+and execution evidence belong to [the handoff](status/current.md); see also
+[historical retention](reports/README.md). These historical results
 qualify the isolated fixture and transport; full workflow runners, generic
 application safety, Canic adoption and native macOS acceptance remain separate.
 

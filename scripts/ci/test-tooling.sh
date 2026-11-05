@@ -93,6 +93,42 @@ for changed in Cargo.toml Cargo.lock; do
 done
 echo 'Consumer manifest/lock checkpoints: PASS (changed inputs stop later CI dispatch).'
 
+# The shared lexer owns generic syntax cases; this fixture qualifies our Make
+# selection and proves an owned application declaration cannot bypass it.
+candid="$FIXTURE/candid"
+mkdir -p "$candid/ci" "$candid/crates"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$candid" \
+    Makefile make/consumer.mk scripts/ci/check-candid-boundary.pl \
+    crates/ic-backup/src/model/inventory/target/mod.rs
+printf '{"schema":1,"allowances":[]}\n' > "$candid/ci/candid-boundary.json"
+printf 'struct ApplicationRequest;\n' > "$candid/crates/application.rs"
+make --no-print-directory -s -C "$candid" candid-boundary-check > "$candid/passing.log" 2>&1
+grep -Fx candid-boundary-check "$golden/ci-targets.log" >/dev/null
+printf '#[derive(CandidType)] struct ApplicationRequest;\n' > "$candid/crates/application.rs"
+if make --no-print-directory -s -C "$candid" candid-boundary-check > "$candid/rejected.log" 2>&1; then
+    echo 'consumer Candid gate admitted an unreviewed application declaration' >&2; exit 1
+fi
+grep -F 'crates/application.rs:1: Candid trait reference' "$candid/rejected.log" >/dev/null
+echo 'Consumer Candid boundary: PASS (selected in CI; actual Make target refuses application derives).'
+
+# Qualify working-source selection separately from Shared's Markdown parser.
+documents="$FIXTURE/documents"
+mkdir -p "$documents"
+bash "$ROOT/scripts/ci/prepare-script-fixture.sh" "$ROOT" "$documents" \
+    scripts/ci/check-doc-links.sh scripts/ci/check-documentation-links.pl
+git -C "$documents" init --quiet
+printf '# Retired documentation\n' > "$documents/retired.md"
+git -C "$documents" add -- retired.md
+rm "$documents/retired.md"
+printf '# Current documentation\n' > "$documents/current.md"
+bash "$documents/scripts/ci/check-doc-links.sh" > "$documents/passing.log" 2>&1
+printf '[Missing target](missing.md)\n' >> "$documents/current.md"
+if bash "$documents/scripts/ci/check-doc-links.sh" > "$documents/rejected.log" 2>&1; then
+    echo 'working documentation selection hid a new broken link' >&2; exit 1
+fi
+grep -F 'missing.md' "$documents/rejected.log" >/dev/null
+echo 'Consumer documentation selection: PASS (pending deletions omitted; new broken links refuse).'
+
 # Exercise the actual local Make boundary target with both common and local policy.
 # Metadata is substituted only inside this tooling fixture; production uses Cargo.
 boundary="$FIXTURE/boundary"

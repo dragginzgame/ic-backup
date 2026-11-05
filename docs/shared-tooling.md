@@ -2,298 +2,138 @@
 
 ## What this adoption means
 
-Shared Tooling owns the reviewed engineering baseline and common setup,
-formatting, hook, validation and release mechanisms. Backup owns its product
-contracts, qualification selection, ordered Testkit extension, release metadata
-adapter and exact recovery receipt checks. Owner CI and successful setup do not
-qualify Backup behavior or authorize a release.
+Shared Tooling **0.30.4**, committed revision
+`2aa41c7394300302fe802b69b31b855bdc89b671`, owns the reviewed engineering
+baseline and common setup, formatting, hook, validation and release mechanisms.
+The canonical refresh from `0c5eebc` selects **157 payloads**: three updates,
+two additions and 152 unchanged. Catalogs, Cargo selections and Rust **1.99.1**
+are unchanged. Snapshot payloads are never locally patched.
 
-The reviewed baseline keeps reusable core upgrades separate from framework integration
-constraints. Backup has no Canic runtime or control-plane dependency. Its current
-Testkit qualification graph coexists with the selected production Platform, so
-this adoption needs no integration workspace split or public versioning change.
-Independent normal consumers and authenticated composition checks retain their
-separate proof responsibilities.
+Backup owns product contracts, qualification selection, the ordered Testkit setup
+extension, release metadata adapter and exact resume receipt checks. Owner CI or
+successful tool setup does not qualify Backup behavior or authorize delivery.
+Backup has no Canic runtime/control-plane dependency and keeps one coordinated
+release, root changelog and complete release gate. Optional groups, candidate
+sources and stage-proof reuse are not selected.
 
-Shared's publication adapter now accepts structured Cargo path and feature
-options. It remains opt-in; Backup retains its existing local publication and
-exact release-recovery adapters. Snapshot refresh alone activates no publication
-command or additional release effect.
-
-The selected source is Shared Tooling **0.30.1**, committed revision
-`0c5eebc49534e99b09326c49b003a0adfd2348cb`. The canonical exporter reads that
-exact committed source. The refresh from `07dce12` retains **155 payloads**:
-28 updates and 127 unchanged files, with no additions or removals. Common
-executable catalogs, Rust 1.99.1 and Cargo dependency selections are preserved.
-
-Single-workspace LOC tables show the workspace name once and label unclassified
-counts `???`; JSON retains schema 2 and per-file diagnostics. Queued module visits
-bound the classifier's resident token trees while counting the same captured
-source bytes. Formatting scratch defaults to the consumer's `target/tmp`; LOC
-scratch uses the selected Cargo target directory. Explicit temporary-directory
-overrides and failed formatting evidence retain their owners.
-
-The shared changelog finalizer also validates exact finalized headings for the
-opt-in candidate projection path. Backup retains its own metadata/recovery
-adapter and normal finalization arguments; candidate source preparation and
-group proof migration remain separate, unselected capabilities.
-
-`cloc.sh` now uses schema 2 with Library/app, Tests, Examples, Benchmarks,
-Build/tooling, Unclassified and total counts. Backup uses the same shared
-classifier through `make cloc`; there is no local classifier or schema-1 alias.
-The report has no unclassified source or legacy singular test owner. Its two
-macro notes identify intentional source-written test instrumentation/capture
-macros, rather than unresolved modules. Static source categories are not shipped
-binary measurements or evidence of code deletion.
-
-The rule audit removes all eight Rust `allow` attributes. Core's selectively used
-fixture helpers have checked expectations at their integration-target module
-boundaries; Agent's shared helper allowances are unnecessary after qualification
-moves beside the standalone example. The unused reply-file helper is removed.
-`unfulfilled_lint_expectations` remains denied and both crates pass strict Clippy.
-
-The Agent example now owns its HTTP and simulator tests under `examples/standalone/tests/`.
-Its Cargo target explicitly enables tests, preserving normal `cargo test` discovery.
-The independent consumer declares a library target at the canonical example and
-a binary target at its maintained runner. Ordinary modules replace the embedded
-Rust copy list and `include!` shim; no generated application source is patched.
-Disposable consumer manifests declare their test role. The existing registered
-Agent cases are preserved, and source visibility remains unchanged in production.
-
-Fixture roots default to `target/tmp`, with explicit `TMPDIR` selection retained.
-Required staging-directory assertions reject failed entry reads instead of
-silently filtering them. Original journals, artifacts, obligations and failed
-qualification evidence remain in custody. Shared's retained-state admission is
-still read-only; adoption performs no release or cleanup.
-
-Backup keeps its single coordinated release, root changelog and existing complete
-release gate. Group validation plans, additional checkouts and reduced CI paths
-are not enabled by this refresh. Metrics is absent; no unrelated math/reporting
-dependency is added. The catalog now labels shared production/test dependencies
-explicitly without changing its parsed values, versions, features or lockfile.
-Further supplier refreshes remain explicit maintenance rather than an automatic
-response to each upstream release.
-
-The shared compiler policy matches Backup's adopted Rust **1.99.1** floor and
-pin; no local exception is needed.
-Backup retains one coordinated release group, workspace-version inheritance and
-its root changelog. Common host/Rust/IC executable catalogs are unchanged;
-Build **0.74.4** is selected as the release editor and locked Testkit **0.86.0** owns
-simulator setup and offline admission. The accompanying Host/Platform dependency
-adoption and public Host identity migration are documented separately in
-[the Platform boundary](ic-platform.md). Snapshot adoption changes no
-backup/restore contract.
-
-Cargo tool setup now fingerprints managed native build inputs rather than every
-installed Linux application, records each checkout's current tool requirements,
-and discards successful compilation scratch after executable/receipt admission.
-After installer/build-identity changes, run `make install-tools`, then
-`make tools-check`; changed build identities require new selections. Existing executable generations and
-failed bundles remain retained. Explicit store reclamation and compiler-cache
-maintenance are separate owner operations under the
-[shared maintenance contract](tool-store-maintenance.md); adoption runs neither.
-
-The adopted baseline keeps cross-repository work and delivery with each requested
-owner; it grants no standing sibling adoption/PR authority. Platform's capability
-ownership guidance preserves Backup's facade use for management DTOs, Candid,
-hashes and Agent transport. Optional group proof reuse, bootstrap observation
-and pending-VERSION release modes are not activated by this adoption.
+The refresh adds the shared lexical Candid boundary check and fixes empty-option
+LOC reporting for Bash 3.2. Current experimental-retention rules keep compact
+conclusions in Git and raw output under `target/evidence/`. The authorized cleanup
+retires superseded per-run reports/handoffs; [the retention summary](reports/README.md)
+records the retained conclusions and exact historical source. Product provenance,
+release receipts, journals, artifacts and recovery evidence retain their owners.
+No ignored bundles or tool stores are cleaned by adoption.
 
 ## Reviewed sources
 
-[The snapshot manifest](../.shared-tooling.snapshot) binds the committed revision,
-selected paths, checksums and executable modes. [The review](shared-tooling-review.json)
-records provenance and consumer qualification. [AGENTS.md](../AGENTS.md) is the
-local overlay. Selected dependency versions belong to [Cargo.toml](../Cargo.toml)
-and [Cargo.lock](../Cargo.lock); current evidence and material limits belong to
+[The snapshot manifest](../.shared-tooling.snapshot) binds the exact committed
+revision, paths, checksums and executable modes. [The review](shared-tooling-review.json)
+records consumer decisions and focused qualification. [AGENTS.md](../AGENTS.md)
+is the product overlay. Current selections belong to [Cargo.toml](../Cargo.toml)
+and [Cargo.lock](../Cargo.lock); status and limitations belong to
 [the handoff](status/current.md).
 
-Adoption compares every exported byte and executable mode with an independently
-selected full commit through the trusted source verifier's paired `--source` and
-`--revision` options. Ordinary builds retain the offline local integrity check;
-that check alone does not establish source provenance. The review records the
-selected revision and both kinds of evidence.
-
-Refresh deliberately using [the canonical procedure](consuming-snapshots.md).
-Inspect the complete exported change and qualify affected consumer boundaries.
-Never patch snapshot payloads in place or use a moving sibling checkout. Every
-listed path is excluded from local branding and documentation rewrites; consumer
-guidance belongs in unlisted local documents.
-
-Shared permits justified narrow internal source links while snapshot payloads
-and packages remain regular files. Backup retains its stricter repository
-inventory check and existing product filesystem and custody admission.
+Refresh with [the canonical exporter](consuming-snapshots.md) at a reviewed full
+commit. Compare payload bytes/modes with an independently selected source through
+the trusted verifier's paired `--source` and `--revision` arguments. Ordinary
+builds retain offline local integrity checking; integrity alone is not provenance.
+Backup keeps its stricter regular-file inventory and product filesystem admission.
 
 ## Required setup and offline admission
 
-`make install-tools` prepares common host and Cargo tools, fetches locked
-workspace dependencies, then prepares the locked Testkit CLI/server and the
-release editor selected by `RELEASE_EDITOR_VERSION` in [Makefile](../Makefile).
-`make tools-check` checks the prepared selections offline and never installs.
-Required executable paths are `.tools/host/bin` and `.tools/rust/common/bin`;
-Testkit and the editor use admitted absolute paths. Previous bundles and failed
-evidence remain retained and supply no fallback.
+`make install-tools` prepares common host/Cargo tools, fetches locked workspace
+dependencies, then prepares the locked Testkit CLI/server and Build release
+metadata editor selected in [Makefile](../Makefile). `make tools-check` admits
+those prepared selections offline and never installs. Setup retains previous
+executable generations and failed bundles; no old selection supplies a fallback.
 
-Standard Rust formatting delegates to the shared driver for per-pass progress and
-reuse of identical successful inputs. Prepared tools are checked before reuse;
-staged-hook worktrees always run their formatters. Backup keeps grouped manifest
-sorting followed by Rustfmt, with no additional workspaces or derive-sorting pass.
-Use `make fmt-check FORMAT_RUST_ARGS=--no-cache` to run every pass explicitly.
+The common host/Rust catalogs belong to [ci/tool-versions.env](../ci/tool-versions.env).
+The compiler floor and exact development/release toolchain both remain 1.99.1.
+Testkit **0.86.0** owns simulator assets/lifecycle; Build **0.74.4** owns metadata
+editing. [The Platform boundary](ic-platform.md) owns dependency compatibility.
 
-Common catalogs live in [ci/tool-versions.env](../ci/tool-versions.env). Testkit
-owns its authenticated PocketIC selection and process lifecycle; the unique
-locked Testkit package also selects its CLI through the shared Cargo installer.
-Both simulator suites check the library-owned server assets offline before
-startup. See [development](development.md#quick-start) for prerequisites and
-[releasing](releasing.md) for editor preparation and recovery authority.
+Formatting uses grouped Cargo sorting followed by Rustfmt through the shared
+driver. Hooks format selected files, reject partial staging and preserve unrelated
+edits; CI/release use non-mutating checks. `make fmt-check
+FORMAT_RUST_ARGS=--no-cache` forces every pass. Installer identity changes require
+explicit setup and offline admission; store reclamation and compiler-cache
+maintenance are separate [owner operations](tool-store-maintenance.md).
 
 ## Consumer-owned IC pins
 
-The snapshot-owned [IC catalog](../ci/ic-tools.tsv) owns selections for the five
-optional IC executable versions. Manual setup and offline checks require the same
-explicit `IC_TOOLS` selection, for example `make install-ic-tools IC_TOOLS=wasm-opt`
-and `make ic-tools-check IC_TOOLS=wasm-opt`, through
-[the shared installer](ic-tools.md). A quoted list selects multiple executables;
-no full bundle is selected by default. These manual targets are not
-prerequisites of aggregate setup, CI or release preflight, and their directory is
-not added to the default PATH. An operator using these executables must select
-and admit them explicitly; installation supplies no live-effect authority.
+The [optional IC executable catalog](../ci/ic-tools.tsv) is snapshot-owned.
+Manual setup/checks require the same explicit selection, for example
+`make install-ic-tools IC_TOOLS=wasm-opt` and
+`make ic-tools-check IC_TOOLS=wasm-opt`. Aggregate host/Cargo setup, CI and release
+preflight select no IC executable bundle or IC PATH.
 
-PocketIC is selected solely by locked Testkit, not by that optional catalog.
-Backup maintains no second server catalog, version equality rule, reset/funding
-policy or fallback to an old shared bundle. Required Testkit admission and fixture
-custody remain independent of optional executable setup.
+PocketIC is selected solely by locked Testkit, including its exact CLI through
+Shared's Cargo installer. `make install-testkit-server` prepares it;
+`make testkit-server-check` prints the offline-admitted absolute path. Both
+simulator suites independently check Testkit's library-owned assets before
+managed startup. Backup supplies fixture custody, original journals and exact
+management ingress; no baseline reset, hidden retry, funding policy or receipt
+inference is adopted. Native application acceptance remains separate.
 
 ## Consumer qualification selection
 
-The local [Makefile](../Makefile), [CI workflow](../.github/workflows/ci.yml) and
-consumer fixtures select Backup's checks; Shared Tooling's owner suites do not
-become consumer gates. Focused validation covers affected routing, ordering,
-refusal and evidence custody, with early strict Clippy before expensive product
-checks. Reuse passing evidence only for unchanged source and graph scope.
+The local [Makefile](../Makefile) and [CI workflow](../.github/workflows/ci.yml)
+select Backup's checks. Shared's producer matrices stay upstream. Local tooling,
+hook and release fixtures qualify actual consumer routing, refusal and evidence
+custody. Use [focused checks](development.md) for ordinary work; full repository
+and release gates need their own authority. Native Linux, macOS, cross-compilation
+and installed IC acceptance are distinct proof.
 
-Native Linux, native macOS, cross-compilation and installed-IC acceptance are
-distinct evidence. The direct dependency gate and independent package consumers
-also have distinct scopes; see [the Platform boundary](ic-platform.md).
+`make candid-boundary-check` scans both crates, including tests and the standalone
+example, once in the sequential CI/release gate. Its
+[declaration policy](../ci/candid-boundary.json) uses the shared checker's JSON
+input format. All 36 exact allowances serve named external management protocols:
+private bounded projections, management argument encoding and adversarial wire
+fixtures. Domain/persisted records and owned application payloads receive no
+allowance. Prefer existing Platform DTOs; bounded projections retain product
+allocation/work limits and explicit conversions.
 
-The baseline keeps Candid derives at named external-protocol boundaries, uses
-the existing `thiserror` dependency for mechanical native errors and requires
-strict input admission, bounded process capture and safe terminal rendering.
-Backup's bounded management wire adapters remain external Candid projections;
-domain and persisted records do not acquire a Candid contract. Snapshot adoption
-does not install new source scanners or qualify every existing input boundary.
+The checker prunes directories named `target`; Make explicitly selects the
+maintained `inventory/target/mod.rs` as well, covering all 324 Rust files. New
+source under a pruned directory needs an explicit selection too.
 
-The reviewed Shared Tooling 0.27.11 snapshot includes the
-[asynchronous CI cadence](../DRAGGINZGAME.md#validation-and-evidence) for ordinary
-development and authorized merges. Focused checks, review and enforced GitHub
-requirements still apply. Report exact pending run/source identities without
-polling the full matrix or claiming its native-host qualification. Release,
-publication, deployment and application acceptance remain separate.
+The [shared checker](candid-boundary.md) is lexical, not type resolution or macro
+expansion. Review generated implementations and cross-module aliases separately.
+Source review found no hidden Candid re-export, application source injection or
+path-based module override. The source check does not prove codec
+compatibility, caller authority or IC effects.
 
-Backup keeps its existing Linux, Apple Silicon and Intel macOS CI matrix; the
-producer's optional documentation-only job deduplication is not enabled here.
-Maintenance remains report-only and offline, with no schedule activated by this
-adoption. The revised single-tool freshness inspection is optional; copying it
-adds no automatic lookup or consumer gate.
-
-The shared validation runner owns failure summaries, bounded excerpts and atomic
-latest-log publication. It selects each failed-target excerpt once and prints
-details in the outer runner's final summary, retaining complete raw logs and
-the same highlighted evidence. Relative retained-log paths resolve from the caller,
-including leading-dash paths, independently of inherited `CDPATH`.
-Backup qualifies its actual callers and evidence custody;
-it keeps no alternate summary implementation. ShellCheck follows sourced helpers
-with `-x`. The checksum verifier rejects NUL-corrupted tool output before shell
-capture. Optional producer download helpers are not consumer dependencies.
-
-The adopted baseline includes
-[#300 — Clarify runtime approval boundaries](https://github.com/dragginzgame/shared-tooling/issues/300):
-enforced GitHub requirements and runtime approval restrictions remain distinct.
-Optional hosted CI supplies no additional approval requirement, and runtime
-rejection must be reported without switching execution paths to evade it.
-The snapshot also includes the shared [CI/release integrity audit](../audits/ci-release-integrity.md).
-Its availability adds no recurring audit or new product gate.
-
-Explicit Cargo tool setup now waits up to 60 seconds for an admitted owner of the
-selected tool slot. `SHARED_TOOLING_SETUP_WAIT_SECONDS` selects a canonical 0..300
-second budget; zero refuses immediately. Setup preserves the owner and failed
-evidence, then rechecks compiler/build identity, locked selection, source checksum
-and receipt before reuse. Offline `--check`/`--preflight` admission remains
-immediate and never repairs selections. The wait tolerates record withdrawal only
-for the same previously admitted physical lock; missing initial records and
-replacement claims still refuse.
-
-Source-cache initialization now uses admitted idempotent directory creation,
-without a global installation lock. Cargo owns download serialization; old
-source-preparation slots and previous generations remain retained. This changes
-the build-policy digest. When a refresh changes that digest, run `make install-tools`
-once to refresh the common Cargo tools, locked Testkit CLI/server and release editor. See
-[the canonical setup guidance](local-setup.md#standard-cargo-tool-build-environment).
-
-The baseline assigns shared Rust metrics and logging engines to
-`ic-metrics` and `ic-logging`. Backup currently supplies no such engine or
-instrumentation, so adoption adds no unused dependency. Diagnostic output and
-retained effect evidence keep their existing product owners. The earlier 0.27.7
-refresh changed governance and audit guidance; producer stack/dashboard changes
-remain outside Backup's selected snapshot.
-
-The 0.27.11 refresh also retains validation input checkpoints in the runner's
-declared companion closure and shares independent Cargo workspace admission
-across release metadata preparation and checks. Its publication Make adapter is
-opt-in; Backup retains its existing publication and exact-resume adapters.
-No publication or release command runs during adoption.
-
-The module/lint review found no path-based module wiring. The 0.30.0 adoption
-removed all authored Rust allowances and placed checked expectations at the
-integration-target boundaries where shared helpers are selectively unused.
-Unfulfilled lint expectations remain denied. Backup ships no Rust CLI or private
-native FFI owner to migrate under the refreshed guidance.
+`make cloc` uses schema-2 source categories and counts each admitted path once,
+including shared target roles and inline tests. Use `--json` for hashes/diagnostic
+notes and `--subcrates` for member rows. Categories do not measure binary size or
+code removal. Tests use `tests/`, `tests.rs` or `*_tests.rs`; fixtures declare
+roles in their manifests. Checked target-scoped lint expectations retain the
+selective helper-use boundary; unfulfilled expectations remain denied.
 
 ## Current guard and recovery integration
 
-The direct dependency target composes Shared's reviewed
-[external IC inventory](../ci/external-ic-dependencies.txt) through `--external-ic`
-with Backup's [additional exclusions](../ci/cargo-dependency-boundaries.json).
-The common guard owns Candid, Principal, Agent, CDK, simulator and other known IC
-package declarations; the local overlay retains three additional retired IC
-packages and direct WAT exclusion. Cargo metadata preserves package identity
-through aliases and includes normal/build/dev, optional and target-specific
-entries. The actual Make target has focused composition/refusal coverage.
+The dependency gate combines Shared's [external IC inventory](../ci/external-ic-dependencies.txt)
+with Backup's [local exclusions](../ci/cargo-dependency-boundaries.json). Independent
+normal consumers separately exclude simulator, runtime and WAT packages. Role
+labels and declaration checks do not establish deployment admission.
 
-These declaration checks are separate from resolved normal-graph simulator/WAT
-exclusions in the independent consumer fixtures. Backup is a host library and
-ships no deployed canister entrypoint binding target/features, a locked build and
-an artifact digest. Neither role labels nor the declaration guard supply that
-missing deployment admission. Application consumers retain that responsibility.
+The shared validation runner retains failure logs/excerpts and observes declared
+Cargo inputs. Documentation selection omits Git-reported pending deletions while
+still checking new documents and broken links. Formatting/report scratch follows
+the owning target directory; explicit temporary-directory overrides remain.
+`make tools-report` retains all offline failures; `tools-check` is fail-fast.
+Admitted contention never authorizes lock removal or installation fallback.
 
-`make tools-report` runs all existing offline tool checks and retains every
-failure; `tools-check` remains fail-fast. Cargo setup reports phases on stderr
-while stdout remains path-only. Offline Cargo admission remains immediate by
-default; explicit `--check --wait-seconds N` allows bounded read-only waiting.
-Status 75 means admitted contention, including timeout, and never authorizes
-installation or lock cleanup. Backup preserves that status and distinguishes it
-from a missing Testkit selection; the release editor adapter already propagates
-its admission failure without setup fallback.
-
-Normal release commands start fresh from current clean, committed metadata without
-reading historical plans. The selected candidate's stale plan and staging roster
-are superseded; other plans, Backup's metadata backups and validation logs remain
-retained. Backup archives an earlier validation sidecar before recording fresh
-proof. Use `release-resume VERSION=X.Y.Z` for exact saved-attempt recovery, including
-the mandatory original receipt check. Consumer fixtures qualify fresh attempts,
-failed-gate retention and explicit recovery through the actual Make/adapters.
-
-The compact baseline delegates detailed contracts to task-specific rules and
-makes line/symbol accounting opt-in. The npm SDK boundary remains optional;
-Backup's Rust-only graph needs no npm tooling. Snapshot adoption supplies neither
-application deployment admission nor release/publication authority.
-
-Root release notes follow the shared IcyDB-style emoji category sections. Use
-only relevant sections, including a single summary for small entries, while
-preserving older release content and identities. Presentation adds no release gate.
+Normal releases start fresh from committed source. Backup retains original
+manifest/lock/notes, its v1 receipt and exact saved-source validation. Use
+`release-resume VERSION=X.Y.Z` only for the selected retained attempt. The shared
+runner owns Git effects; publication remains a separate command. See
+[releasing](releasing.md) for delivery authority and interrupted-effect recovery.
 
 ## Adoption history
 
-The [archived adoption record](status/archive-shared-tooling-2026-10-21.md)
-preserves the complete earlier guide, exact revisions, setup transitions and
-qualification receipts. It is evidence rather than current command guidance.
+Earlier adoption and audit text remains at its original Git revision, linked from
+[historical retention](reports/README.md). Historical counts, hashes and local
+paths do not qualify current code or prove that raw bundles are still available.
+Current source/review/status replace per-run documentation copies; protected
+product provenance and recovery records remain separate.

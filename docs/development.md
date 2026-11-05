@@ -586,11 +586,19 @@ adoption, retained evidence and Testkit command routing. Its proof owners are:
 | Obligation | Consumer check |
 | --- | --- |
 | Exact snapshot bytes/modes and tamper refusal | `shared-tooling-check`, `scripts/ci/test-tooling.sh` |
+| Named external Candid declarations; reject owned application traits | `candid-boundary-check`; `scripts/ci/test-tooling.sh` qualifies the actual Make/CI selection |
 | Input-change stop, later-stage refusal and original failure retention | `scripts/ci/test-tooling.sh`, `make release-check` |
 | Independent snapshot vectors and contract JSON match their generators | `golden-check`; `scripts/ci/test-tooling.sh` rejects drift in every generated output |
 | Local documentation, pins and package graph | `check-doc-links`, `dependency-pins-check`, `check`, `package` |
 | Prepared host/IC/Cargo/Testkit tools and formatting | `tools-check`, `testkit-server-check`, `fmt-check`, `hooks-check` |
 | Evidence checksum/archive behavior and Testkit CLI routing | `tooling-check`'s three retained focused fixtures |
+
+The [Candid policy](../ci/candid-boundary.json) covers exact management-protocol
+declarations, including bounded projections and hostile reply fixtures. The
+[shared checker](candid-boundary.md) is lexical; macro expansion, cross-module
+aliases, protocol correctness and IC effects remain separate review/test duties.
+Documentation checks exclude Git-reported pending deletions and still inspect
+new documents. Historical run output follows [the retention summary](reports/README.md).
 
 Shared Tooling's generic implementation regressions remain in its own CI; this
 consumer no longer dispatches their entire fixture matrix on every local gate.

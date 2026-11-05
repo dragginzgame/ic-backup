@@ -236,9 +236,10 @@ wire format. They are separate from Backup's domain and persisted records.
 
 ## Adoption history
 
-The [archived adoption record](status/archive-platform-adoption-2026-10-21.md)
+The [archived adoption record](https://github.com/dragginzgame/ic-backup/blob/f241568f3714c0fd9283fd505ff34007c6bcf3e8/docs/status/archive-platform-adoption-2026-10-21.md)
 preserves exact package versions, archive checksums, source identities, original
 adoption receipts and resolved blockers. Those receipts retain their original
 graph and host scope. Current qualification is recorded in the handoff; neither
 cross-compilation nor owner CI establishes native macOS, installed-IC or complete
-application acceptance.
+application acceptance. [The retention summary](reports/README.md) explains which
+historical material remains in Git rather than the maintained tree.

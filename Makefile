@@ -17,7 +17,7 @@ RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
-CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check check-doc-links shell-check fmt-check golden-check clippy tooling-check release-check hooks-check test doc check-msrv package
+CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check candid-boundary-check check-doc-links shell-check fmt-check golden-check clippy tooling-check release-check hooks-check test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
         help hooks-check package publish publish-dry-run \
@@ -28,9 +28,10 @@ CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-c
         tags tasks test tooling-check validate version
 .PHONY: dependency-boundaries-check dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 .PHONY: install-release-editor release-editor-check repository-files-check
-.PHONY: compiler-check golden-check
+.PHONY: candid-boundary-check compiler-check golden-check
 
 help:
+	@echo "candid-boundary-check       Check reviewed external Candid declarations"
 	@echo "check                       Compile this library's native targets"
 	@echo "check-cargo-tool-versions   Inspect Cargo tool versions online without installing"
 	@echo "check-doc-links             Check maintained local Markdown targets"
@@ -100,6 +101,10 @@ check:
 
 check-doc-links:
 	bash scripts/ci/check-doc-links.sh
+
+candid-boundary-check:
+	perl scripts/ci/check-candid-boundary.pl "$(CURDIR)" ci/candid-boundary.json crates \
+	    crates/ic-backup/src/model/inventory/target/mod.rs
 
 check-msrv:
 	+bash scripts/ci/check-msrv-consumers.sh

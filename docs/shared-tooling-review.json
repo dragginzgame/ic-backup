@@ -1,52 +1,57 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "0c5eebc49534e99b09326c49b003a0adfd2348cb",
-  "label": "0.30.1",
+  "revision": "2aa41c7394300302fe802b69b31b855bdc89b671",
+  "label": "0.30.4",
   "reviewed_on": "2026-11-05",
-  "previous_revision": "07dce12cbe4a798fd4a6d263095518678c4f6b45",
+  "previous_revision": "0c5eebc49534e99b09326c49b003a0adfd2348cb",
   "previous_review": {
-    "commit": "07da92a9ba85e37f67fbcfd49ebb13faa7a5a83b",
-    "path": "docs/shared-tooling-review.json",
-    "qualification": "/home/adam/projects/ic-backup/target/shared-030-audit.rwc459mo"
+    "commit": "f241568f3714c0fd9283fd505ff34007c6bcf3e8",
+    "path": "docs/shared-tooling-review.json"
   },
   "consumer_baseline": {
-    "commit": "07da92a9ba85e37f67fbcfd49ebb13faa7a5a83b",
-    "version": "0.58.2",
-    "pending_notes": "0.58.3",
-    "incoming_work": "Clean checkout; preserve all Cargo dependency selections, product sources and release receipt."
+    "commit": "f241568f3714c0fd9283fd505ff34007c6bcf3e8",
+    "version": "0.58.3",
+    "pending_notes": "0.58.4",
+    "incoming_work": "Clean checkout. Preserve compiler, dependency selections, product source and release/recovery records."
   },
   "provenance": {
-    "selection": "Canonical impact preview and export from the normal supplier checkout, pinned to the independently observed origin/main commit. No sibling modifications.",
+    "selection": "Canonical impact preview and refresh from the normal clean supplier checkout at the independently observed origin/main commit. No sibling edits.",
     "export": {
-      "payloads": 155,
-      "added": 0,
+      "payloads": 157,
+      "added": 2,
       "removed": 0,
-      "updated": 28,
-      "unchanged": 127
+      "updated": 3,
+      "unchanged": 152
     },
     "catalogs": "Common host/Cargo/IC catalogs and Rust 1.99.1 unchanged.",
-    "documentation_closure": "Companion declarations retain the same 155-file selection; no new service, schedule or fleet command activated."
+    "new_selection": "docs/candid-boundary.md brings the canonical checker and existing RustSource lexer through declared companions."
   },
   "consumer_decisions": [
-    "Adopt simplified single-workspace LOC tables and queued source classification. Keep schema-2 JSON and verify unchanged source categories and per-file hashes against the previous report.",
-    "Use canonical formatting scratch defaults and preserve explicit temporary-directory overrides and failed formatting evidence; qualify the actual Backup hooks and formatting callers.",
-    "Keep normal release finalization and exact receipt recovery. The new finalized-heading check is opt-in; candidate source preparation and per-group proof migration are not selected.",
-    "Update local policy/provenance references and compatible pending tooling notes. Preserve package versions, dependency lock, public APIs and backup/recovery contracts."
+    "Run candid-boundary-check once in the sequential CI/release gate, selecting both crates and the inventory target module explicitly because target directories are otherwise pruned.",
+    "Review 36 exact external-protocol allowances: nine bounded wire projections, one management argument encoder and 26 positive/adversarial external wire fixtures. No domain or owned application DTO exemption; macro/alias limits remain explicit.",
+    "Qualify actual Make source selection, rejection and working documentation selection through consumer tooling fixtures; shared syntax matrices remain upstream.",
+    "Retire 183 superseded historical reports/handoffs and replace them with one compact conclusion/retention summary. Repair maintained references with exact original Git URLs; do not relabel raw output as fixtures or claim local artifacts still exist.",
+    "Preserve root source/license provenance, current contract vectors, release receipt and every ignored product/recovery artifact. Do not rewrite history, clean targets/tools or activate services.",
+    "Refresh the current adoption guide and compatible pending notes while leaving package versions and Rust/dependency inputs unchanged."
   ],
-  "rule_audit": {
-    "delta": "Policy edits add explicit documentation companions; substantive production rules and compiler/catalog selections are unchanged. Previous complete rule audit remains at its original source.",
-    "rust_source_layout_and_lints": "No Rust changes or new suppressions. The qualified tests/ ownership and target-scoped expect attributes remain.",
-    "contributions": "Uncommitted adoption only; no staging, commit, PR, push, release or cleanup."
+  "cleanup": {
+    "retired_files": 183,
+    "retired_bytes": 3407885,
+    "summary": "docs/reports/README.md",
+    "historical_commit": "f241568f3714c0fd9283fd505ff34007c6bcf3e8",
+    "protected": "Root source/license provenance, product qualification records, contracts/vectors, release receipt, journals, artifacts, failed bundles and prior ignored evidence retained. Historical adoption metadata changes only its pointers/scope guidance."
   },
   "qualification": {
-    "evidence_directory": "/home/adam/projects/ic-backup/target/shared-0301-adoption.3nbqn9wj",
+    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-0304.x_mz38e6",
     "status": "Passed focused consumer qualification",
     "limits": [
-      "Linux tooling checks only; no product Rust changes, full repository/release suite, hosted CI, native macOS or installed Canic acceptance."
+      "Lexical Candid source checks do not perform type resolution or macro expansion.",
+      "Linux tooling qualification only; no full repository/release suite, native macOS or installed IC/Canic acceptance."
     ],
-    "source_provenance": "All 155 payload bytes and modes match the independently selected exact supplier commit; offline snapshot integrity also passes.",
-    "formatting_hooks": "make hooks-check passes against actual current Backup sources: formatter/refusal status, grouped dependencies, selected index refresh, partial-stage rejection, unrelated edits and retained failure evidence.",
-    "release_metadata": "Existing --metadata-only and --preparation-only consumer fixtures pass; no Git delivery or registry effects.",
+    "source_provenance": "157 payload byte/mode identities match the independently selected supplier commit; offline integrity passes.",
+    "source_boundary": "324 Rust files, 36 exact external declarations; inventory target module explicitly selected. Consumer CI/Make inclusion and unreviewed application refusal pass.",
+    "tooling_hooks": "make tooling-check and make hooks-check pass. Actual CI, documentation selection, command routing and retained failures are qualified.",
+    "static_checks": "Dependency ownership/inheritance, grouped fmt-check, 753 links across 80 documents, changed-shell syntax/ShellCheck -x, Perl syntax and diff checks pass.",
     "loc": {
       "source_files": 324,
       "totals": {
@@ -58,10 +63,8 @@
         "total": 55746,
         "unclassified": 0
       },
-      "comparison": "All source hashes, per-file roles/counts, totals and diagnostic membership match the prior qualified report; diagnostic ordering changed with queued visits."
+      "comparison": "All per-file hashes, categories, counts and diagnostic membership match the prior qualified report."
     },
-    "loc_output": "Actual make cloc and --subcrates use the workspace name without a duplicate TOTAL row; JSON schema 2 and help guidance remain.",
-    "static_checks": "Documentation links, non-mutating grouped fmt-check, changed-shell syntax/ShellCheck -x, Perl syntax and git diff --check pass.",
-    "retained_initial_attempts": "The initial ShellCheck invocation selected a nonexistent local path; rerunning the installed ShellCheck passed. Initial LOC comparison differed only in diagnostic ordering, preserved in the comparison note."
+    "initial_correction": "The declaration-prefix check refused the management encoder allowance until its actual trailing parameter comma was included; no Rust change or broad allowance was used."
   }
 }

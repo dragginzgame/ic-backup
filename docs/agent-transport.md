@@ -210,14 +210,13 @@ exact destination bytes match and retained ingress refuses repeat dispatch. The
 readback wire exceeds 1 MiB and exercises the distinct 2 MiB data-response bound.
 This isolated fixture does not establish generic allocation attribution or settlement.
 Fixtures retain exact original plans/journals, signed
-requests/IDs, raw replies and simulator state. Current Testkit evidence is under
-`target/testkit-adoption-090`; the original released transport evidence stays under
-`target/agent-hard-cut-080`.
-[The current review](reports/audits/2026/10/08/testkit-adoption/01/report.md)
-records the final graph, 158 focused cases and tooling correction.
-
-[The source-bound review](reports/audits/2026/10/08/agent-transport/01/report.md)
-records dependencies, commands, results and failed/corrected attempts. Linux
+requests/IDs, raw replies and simulator state. Original October transport and
+Testkit reviews remain at their
+[historical source](https://github.com/dragginzgame/ic-backup/tree/f241568f3714c0fd9283fd505ff34007c6bcf3e8/docs/reports/audits/2026/10/08).
+Their 158-case result belongs to that graph; current dependency and qualification
+evidence belongs to [the handoff](status/current.md). The
+[retention summary](reports/README.md) separates retained conclusions from old raw
+output; historical paths alone do not prove that local bundles still exist. Linux
 qualification does not supply current native macOS proof; configured CI selects
 both libraries on Linux, Intel macOS and Apple Silicon macOS. The complete runner,
 authenticated application providers, production identities/endpoints, exclusive

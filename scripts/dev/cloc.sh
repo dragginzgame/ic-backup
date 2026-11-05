@@ -92,7 +92,7 @@ report_repositories() (
         | if all(.workspaces[]; .report == null) then .totals |= with_entries(.value="n/a") else . end
     ' "$report_dir/rows" > "$report_dir/report.json"
     flags=(); if [[ "$subcrates" == true ]]; then flags+=(--subcrates); fi
-    perl "$ROOT/scripts/dev/cloc-classify.pl" --table "$report_dir/report.json" "${flags[@]}"
+    perl "$ROOT/scripts/dev/cloc-classify.pl" --table "$report_dir/report.json" ${flags[@]+"${flags[@]}"}
     exit "$status"
 )
 
@@ -201,5 +201,5 @@ if [[ "$json" == true ]]; then
     cat "$FILE_LIST_DIR/report.json"
 else
     flags=(); if [[ "$subcrates" == true ]]; then flags+=(--subcrates); fi
-    perl "$ROOT/scripts/dev/cloc-classify.pl" --table "$FILE_LIST_DIR/report.json" "${flags[@]}"
+    perl "$ROOT/scripts/dev/cloc-classify.pl" --table "$FILE_LIST_DIR/report.json" ${flags[@]+"${flags[@]}"}
 fi

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.58.4] - Unreleased
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.30.4, including portable LOC reporting and a CI check
+  restricting Candid traits to reviewed external management declarations.
+- Replace superseded audit/handoff archives with a compact historical summary,
+  repair source references and refresh contributor guidance. Documentation checks
+  now handle pending Git deletions while retaining link validation.
+
 ## [0.58.3] - 2026-11-05
 
 ### ⬆️ Dependencies

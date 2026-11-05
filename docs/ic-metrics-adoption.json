@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "review_scope": "Historical 0.2 adoption evidence below; current Metrics 0.7 qualification is owned by current_review.",
-  "current_review": "reports/audits/2026/10/12/metrics-070/01/report.md",
+  "review_scope": "Historical 0.2 source evidence and 0.7 qualification at current_review; Metrics is not a current dependency. These results retain their original graph and source.",
+  "current_review": "https://github.com/dragginzgame/ic-backup/blob/f241568f3714c0fd9283fd505ff34007c6bcf3e8/docs/reports/audits/2026/10/12/metrics-070/01/report.md",
   "inspection_date": "2026-10-08",
   "registry_package": "ic-metrics",
   "selected_version": "0.2.11",

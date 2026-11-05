@@ -1,0 +1,257 @@
+{
+  "schema": 1,
+  "allowances": [
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct Settings"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct Status"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct MissingSettings"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct MissingStatus"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct EmptySettings"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct MissingControllers"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct OptionalSettings"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct OptionalControllers"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct WrongStatus"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    enum UnknownStatus"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Unknown"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Extended"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireStatus"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_lifecycle_reply/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireSettings"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_data/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_data",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Extra"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_data/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_data",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Wrong"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_data/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_data",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireData"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Extra"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct MetadataShape"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    enum Unknown"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    enum BadSource"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireMetadata"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireChunk"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_metadata/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: read_canister_snapshot_metadata",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nenum WireSource"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: take_canister_snapshot and list_canister_snapshots",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Extended"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: take_canister_snapshot and list_canister_snapshots",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct Incomplete"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: take_canister_snapshot and list_canister_snapshots",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n    #[candid_path(\"ic_platform::candid::contract\")]\n    struct WrongNumber"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: take_canister_snapshot and list_canister_snapshots",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireSnapshot"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_reply/wire/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: take_canister_snapshot and list_canister_snapshots",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireInventory"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload/reply/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: upload_canister_snapshot_metadata",
+      "reason": "Decode the external management reply through a private projection with caller-owned allocation and work limits.",
+      "declaration": "#[derive(CandidType, Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireMetadataReply"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_snapshot_upload/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: upload_canister_snapshot_metadata",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(contract::CandidType, serde::Deserialize)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct ExtendedUploadReply"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/settlement/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(contract::CandidType)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct Settings"
+    },
+    {
+      "path": "crates/ic-backup/src/policy/ic_observation/settlement/tests/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(contract::CandidType)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct WireStatus"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_lifecycle_reply.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct Settings"
+    },
+    {
+      "path": "crates/ic-backup/tests/ic_lifecycle_reply.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister: canister_status",
+      "reason": "Construct exact or deliberately invalid external management replies to test decoder bounds and retained evidence.",
+      "declaration": "#[derive(CandidType)]\n#[candid_path(\"ic_platform::candid::contract\")]\nstruct Status"
+    },
+    {
+      "path": "crates/ic-backup/src/model/ic_request/mod.rs",
+      "kind": "external-protocol",
+      "protocol": "IC management canister ingress",
+      "reason": "Encode only the approved method-specific management DTOs after request admission; application payloads do not call this helper.",
+      "declaration": "pub(super) fn encode_arguments(value: impl contract::CandidType,)"
+    }
+  ]
+}
