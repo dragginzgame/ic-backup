@@ -1,65 +1,53 @@
 # Current handoff — 2026-11-06
 
-## Pending 0.58.6 deployment
+## Delivered 0.58.6
 
-Source commit `e7854cc` contains the cleanup, Testkit update and #78 fix. The first
-release attempt stopped after the release-helper suite passed: concurrent lockfile
-edits changed `cc` 1.11.0 to 1.11.1. No version preparation, release tag, push or
-publication occurred. Dependency edits are now confirmed finished; retain `cc`
-1.11.1 and restart the complete gate. Original logs: `target/evidence/issue-78/release-0586.log`.
+Both **ic-backup 0.58.6** and **ic-backup-agent 0.58.6** are published on crates.io.
+Release `ca37252a55dee1f535ab9656a0ba273a7e7131d4` and annotated `v0.58.6` are on
+`origin/main`; qualified source is `9806ae163e830267da527c5abeb5735f0ea2f396`.
+Registry readback confirms non-yanked versions, matching archive checksums and
+VCS provenance, and all **330 packaged Rust files** match the release commit.
+The later handoff commit changes documentation only.
 
-[Issue #78](https://github.com/dragginzgame/ic-backup/issues/78) is fixed locally:
-the management encoder allowance includes its return type. Installed Shared
-`2aa41c7` accepted the old prefix, but committed checker `be377103` treats the
-argument's `impl` as an inherent implementation and requires the complete header.
-The new prefix is the shortest supported by both; snapshot and Rust source stay
-unchanged. Both checkers pass all 330 selected files and reject extra owned Candid
-declarations in the encoder file and explicitly selected inventory `target` file.
-Focused lexical evidence is in `target/evidence/issue-78/`; no Rust build was needed.
+The complete Linux `release-verify` gate passes: strict all-target/all-feature
+Clippy, **544 tests**, documentation, tooling/release/hook regressions, independent
+consumers and packaging. One online registry-preparation test is deliberately
+ignored in the normal gate; it passes explicitly after publication. The registry-only
+normal consumer then passes authenticated capture/restore, application acceptance
+and effect-free terminal replay against the published packages. Native macOS and
+Canic acceptance remain separate; hosted CI was not manually dispatched.
 
-The audit cleanup is implemented over `cb605a8`. Dependencies now select Testkit **0.88.0** for the requested 0.58.6 deployment. Platform remains
-**0.23.2** and PocketIC **16.1.0**. Testkit archive checksum and all published
-source files match `0bc2cc4`; exact proof and successful setup are retained in
-`target/evidence/issue-78/`. Its removed APIs require no Backup source migration.
-Snapshot workflow cancellation shares one
-exclusion/byte-retention helper and suspended provider. HTTP provider tests share
-scenario/setup/postcondition owners. Upload tests separate source setup, planning,
-execution and restore admission while preserving all existing Rust cases. The
-source-inspected registry adds only one explicitly ignored online preparation case.
+[Issue #78](https://github.com/dragginzgame/ic-backup/issues/78) is closed. Its
+management encoder allowance includes the return type: installed Shared `2aa41c7`
+accepted the old prefix, but committed checker `be377103` treats the argument's
+`impl` as an inherent implementation and requires the complete header. Both
+checkers pass all 330 selected files and reject extra owned Candid declarations,
+including in the explicitly selected inventory `target` file. Rust wire code and
+the Shared 0.30.4 snapshot remain unchanged.
 
-The standalone dispatcher delegates capture settlement and shares stage-binding
-reads with exact sequence and 512 KiB raw-byte admission. Restore preparation uses
-one held source scope for destination, acceptance and load planning. It rechecks
-bytes after the application acceptance callback; effects and terminal acceptance
-retain their independent admission. Adjacent verification duplicates are removed;
-no runtime speed-up is claimed. Registry preparation uses an isolated consumer
-lockfile and reports nested graph diagnostics; normal tests stay offline. Repeated
-workflow prose links to the canonical implementation contracts.
+Testkit **0.88.0** replaces 0.87.0; its checksum and all 51 published source files
+match `0bc2cc4`. Its removed APIs require no Backup migration and remove ten unused
+lockfile packages. Platform remains **0.23.2**, PocketIC **16.1.0**, and the finished
+lockfile includes `cc` **1.11.1**. The earlier release attempt stopped after detecting
+a concurrent lock edit; no release effects occurred. The successful retry reran the
+entire gate against the finished inputs. Original attempts remain retained.
 
-Focused qualification in `target/evidence/cleanup-0586/` passes: 55 snapshot workflow
-cases, nine upload-plan cases, 15 HTTP cases, two authenticated cold-process consumer
-journeys, explicit registry preparation, strict Core library/tests and Agent
-example/tests Clippy, local tooling integration, snapshot integrity and documentation
-links. The original mechanical compile failures remain retained. Full release,
-other-host and Canic qualification were not rerun for this pending batch.
+The cleanup shares cancellation/provider and HTTP retention test helpers, separates
+upload fixture ownership, extracts standalone capture assembly, and consolidates
+restore preparation within held source scopes. Fresh checks after application
+callbacks and across effects remain. Stage bindings enforce the existing 512 KiB
+bound with exact-sequence and malformed/oversized regressions. Registry cache setup
+is explicit; ordinary consumer tests remain offline. Canonical contracts own repeated
+workflow documentation. Public planning-error consolidation remains deferred.
 
-Follow-up evidence in `target/evidence/cleanup-0586-followup/` passes two binding
-boundary tests, five cancellation tests, all 12 selected normal-consumer scenarios,
-strict Agent example/tests Clippy, formatting and documentation links. The consumer
-selection includes restore, cold reentry, terminal replay, lost allocation/upload/
-load/start replies and application/operator failures. Earlier mechanical failures
-remain retained. Cancellation callers no longer repeat their helper's assertion.
-
-Current Shared counts are **38,160 test**, **15,187 production** and **1,211 example**
-lines. Against 0.58.5, the setup and boundary regressions give a net increase of 26
-test and 25 example lines; this batch improves ownership and admission rather than
-providing a net LOC cut. File splitting is organization, not code removal.
-Broader workflow rejection matrices remain at
-their typed boundaries; the descriptor-dependent upload tests retain their local
-fixture ownership. Backup's own consumer-graph and distinct fixture-retention
-proofs stay. Public planning-error consolidation remains deferred to an intentional
-API compatibility change. Deployment is authorized: commit this batch, run the complete release gate, push
-`origin/main` and `v0.58.6`, then publish both crates before closing #78.
+Evidence is in `target/evidence/issue-78/`, including release/publication logs,
+registry archives, provenance and remote-ref verification. Release receipts and
+publication attempts remain under `.git/release-state/`. Registry consumer evidence
+is in `target/tmp/ic-backup-agent-independent-build-468527-0/` and
+`target/tmp/ic-backup-agent-pocketic-468527-1/`. Earlier focused cleanup evidence is
+in `target/evidence/cleanup-0586/` and `target/evidence/cleanup-0586-followup/`.
+Shared counts at this cleanup are 38,160 test, 15,187 production and 1,211 example
+lines: net +26 test/+25 example against 0.58.5, with no production LOC change.
 
 ## Delivered 0.58.5
 
