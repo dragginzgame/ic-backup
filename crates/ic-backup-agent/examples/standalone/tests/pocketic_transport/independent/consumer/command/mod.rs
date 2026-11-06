@@ -55,42 +55,62 @@ pub(super) enum Action {
     Start,
 }
 
+// Resolved once at argv admission; callbacks receive faults without reinterpreting modes.
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(super) enum Fault {
+    None,
+    CaptureIngress,
+    CaptureRetention,
+    CapturePartial,
+    LostReply(Stage, u64),
+    ApplicationReply,
+    ApplicationExit,
+}
+
 impl Mode {
+    // The parent harness projects the same parsed fault without another mode catalog.
+    #[cfg(test)]
     pub(crate) fn lost_reply(self) -> Option<(Stage, u64)> {
-        match self {
-            Self::LoseAllocation => Some((Stage::Allocation, Stage::Allocation.sequence())),
-            Self::LoseLoad => Some((Stage::Load, Stage::Load.sequence())),
-            Self::LoseStart => Some((Stage::Start, Stage::Start.sequence())),
-            Self::LoseUploadFirst => Some((Stage::Upload, 0)),
-            Self::LoseUploadSecond => Some((Stage::Upload, 1)),
+        match self.configuration().1 {
+            Fault::LostReply(stage, sequence) => Some((stage, sequence)),
             _ => None,
         }
     }
 
-    pub(super) fn action(self) -> Action {
+    pub(super) fn configuration(self) -> (Action, Fault) {
+        use Action as A;
+        use Fault as F;
         match self {
-            Self::ApplicationDie
-            | Self::ApplicationInit
-            | Self::ApplicationRefuseReply
-            | Self::ApplicationSmall => Action::ApplicationNew,
-            Self::ApplicationObserve => Action::ApplicationObserve,
-            Self::ApplicationReplay | Self::ApplicationResume => Action::ApplicationRetained,
-            Self::Capture
-            | Self::CaptureFailIngress
-            | Self::CaptureFailPartial
-            | Self::CaptureFailRetention => Action::CaptureNew,
-            Self::CaptureContinue => Action::CaptureContinue,
-            Self::InspectCapture => Action::InspectCapture,
-            Self::InspectRestore => Action::InspectRestore,
-            Self::LoseAllocation
-            | Self::LoseLoad
-            | Self::LoseStart
-            | Self::LoseUploadFirst
-            | Self::LoseUploadSecond => Action::LoseReply,
-            Self::Replay => Action::Replay,
-            Self::Restore => Action::Restore,
-            Self::RestoreStep => Action::RestoreStep,
-            Self::Start => Action::Start,
+            Self::ApplicationInit | Self::ApplicationSmall => (A::ApplicationNew, F::None),
+            Self::ApplicationDie => (A::ApplicationNew, F::ApplicationExit),
+            Self::ApplicationRefuseReply => (A::ApplicationNew, F::ApplicationReply),
+            Self::ApplicationObserve => (A::ApplicationObserve, F::None),
+            Self::ApplicationReplay | Self::ApplicationResume => (A::ApplicationRetained, F::None),
+            Self::Capture => (A::CaptureNew, F::None),
+            Self::CaptureFailIngress => (A::CaptureNew, F::CaptureIngress),
+            Self::CaptureFailPartial => (A::CaptureNew, F::CapturePartial),
+            Self::CaptureFailRetention => (A::CaptureNew, F::CaptureRetention),
+            Self::CaptureContinue => (A::CaptureContinue, F::None),
+            Self::InspectCapture => (A::InspectCapture, F::None),
+            Self::InspectRestore => (A::InspectRestore, F::None),
+            Self::LoseAllocation => (
+                A::LoseReply,
+                F::LostReply(Stage::Allocation, Stage::Allocation.sequence()),
+            ),
+            Self::LoseLoad => (
+                A::LoseReply,
+                F::LostReply(Stage::Load, Stage::Load.sequence()),
+            ),
+            Self::LoseStart => (
+                A::LoseReply,
+                F::LostReply(Stage::Start, Stage::Start.sequence()),
+            ),
+            Self::LoseUploadFirst => (A::LoseReply, F::LostReply(Stage::Upload, 0)),
+            Self::LoseUploadSecond => (A::LoseReply, F::LostReply(Stage::Upload, 1)),
+            Self::Replay => (A::Replay, F::None),
+            Self::Restore => (A::Restore, F::None),
+            Self::RestoreStep => (A::RestoreStep, F::None),
+            Self::Start => (A::Start, F::None),
         }
     }
 }

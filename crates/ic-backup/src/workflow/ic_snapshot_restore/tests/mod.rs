@@ -111,7 +111,6 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
                     &stage.layout().unwrap().root().join("retained-reply.candid"),
                     &reply.input().reply,
                 )?;
-                fs::File::open(stage.layout().unwrap().root())?.sync_all()?;
                 Ok(receipt(request, reply))
             },
         ))
@@ -214,7 +213,6 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
                 AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
             );
             let _file = write_synced(&reply_path, &reply.input().reply)?;
-            fs::File::open(&fixture.root)?.sync_all()?;
             std::future::pending::<()>().await;
             Ok(receipt(request, reply))
         },

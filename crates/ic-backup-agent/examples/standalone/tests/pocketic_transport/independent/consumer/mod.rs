@@ -27,10 +27,10 @@ pub(crate) async fn main() {
 async fn run() -> io::Result<()> {
     let Arguments { mode, root } =
         Arguments::try_parse().map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;
-    let action = mode.action();
+    let (action, fault) = mode.configuration();
     let (phase, create) = match action {
         Action::ApplicationNew | Action::ApplicationObserve | Action::ApplicationRetained => {
-            return application::run(&root, mode, action).await;
+            return application::run(&root, fault, action).await;
         }
         Action::CaptureNew => (standalone::Phase::Capture, true),
         Action::CaptureContinue | Action::InspectCapture => (standalone::Phase::Capture, false),
@@ -47,6 +47,7 @@ async fn run() -> io::Result<()> {
         root: root.clone(),
         config,
         mode,
+        fault,
     };
     let mut driver = standalone::Driver::new(root, connection, &authority);
     if create {

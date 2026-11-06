@@ -35,9 +35,7 @@ impl DownloadJournalGuard<'_> {
         &'a self,
         plan: &'a OperationPlanRecord,
     ) -> Result<DurableDownloadView<'a>, DownloadIntegrityError> {
-        self.check_usable()?;
-        read_operation_plan(self.layout, &plan.digest())?;
-        self.require_unchanged_integrity_journal()?;
+        self.admit_integrity_original(plan)?;
         let view = validate(plan, &self.record)?;
         self.check_artifact_parent()?;
         for artifact in view.artifacts() {
@@ -46,10 +44,19 @@ impl DownloadJournalGuard<'_> {
         }
         // Detect changed retained declarations or a replaced root during traversal.
         // This does not turn individual byte reads into an atomic whole-set snapshot.
+        self.admit_integrity_original(plan)?;
+        Ok(view)
+    }
+
+    // Both generic and IC verification re-admit original records around byte IO.
+    // Method-specific policy remains with each caller, in its original order.
+    pub(super) fn admit_integrity_original(
+        &self,
+        plan: &OperationPlanRecord,
+    ) -> Result<(), DownloadIntegrityError> {
         self.check_usable()?;
         read_operation_plan(self.layout, &plan.digest())?;
-        self.require_unchanged_integrity_journal()?;
-        Ok(view)
+        self.require_unchanged_integrity_journal()
     }
 
     pub(super) fn require_unchanged_integrity_journal(&self) -> Result<(), DownloadIntegrityError> {

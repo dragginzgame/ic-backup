@@ -1,5 +1,42 @@
 # Current handoff — 2026-11-06
 
+## Pending 0.58.7 cleanup
+
+The follow-up audit over `8be4f62` has eight implemented simplifications: shared
+native download setup/accounting assertions, one standalone phase/stage catalog,
+checksum-bearing artifact progress, paired download requests/plan, resolved fixture
+command/fault configuration, shared checkpoint finishing and parent-synced native
+reply retention, and Host file-identity comparison. Public paths/types, error causes,
+JSON fields/order, digest framing, attempts and effect/replay boundaries remain.
+No tests were removed or product modes added. Package versions remain 0.58.6;
+deployment to `origin/main` and crates.io is now authorized.
+
+Two audit items intentionally stay: settlement already shares operation identity;
+its remaining status/readback checks have distinct errors, so another comparison
+abstraction adds machinery without a simpler owner. Public planning-error merging
+remains deferred to an intentional API break. All ten audit items are accounted for.
+
+Evidence in `target/evidence/cleanup-0587/` passes **176 distinct selected tests**:
+80 download/model/persistence cases, 41 execution-workflow cases, ten metadata and
+four restore cases, 22 Core simulator cases, 17 independent-consumer cases and two
+stage-binding cases. The explicit online registry setup remains ignored. Exact
+four-state JSON bytes and existing independent digest goldens pass; strict Core
+library/tests and Agent example/tests Clippy pass. Earlier mechanical compile
+failure and warning output remain retained. Full CI/release, other-host and Canic
+qualification were not rerun during focused cleanup.
+
+Follow-up artifact verification now shares guarded plan/journal admission without
+moving domain policy or changing opening/closing check order. Restore references
+use the same phase catalog as stage paths. A later concurrent dependency edit
+selected flate2 **1.1.11**; it is preserved. All **176 selected tests**, both strict
+Clippy selections, formatting and documentation checks pass again against this
+current lockfile. Before/after SHA-256 confirms the lockfile stayed unchanged.
+Evidence is in `target/evidence/cleanup-0587-followup/`, with the independent
+consumer graph/build at `target/tmp/ic-backup-agent-independent-build-308335-0/`.
+This refresh supersedes the earlier focused selection for current-lock readiness;
+the authorized deployment now requires the full release gate; other-host and
+Canic qualification remain separate.
+
 ## Delivered 0.58.6
 
 Both **ic-backup 0.58.6** and **ic-backup-agent 0.58.6** are published on crates.io.
@@ -49,73 +86,20 @@ in `target/evidence/cleanup-0586/` and `target/evidence/cleanup-0586-followup/`.
 Shared counts at this cleanup are 38,160 test, 15,187 production and 1,211 example
 lines: net +26 test/+25 example against 0.58.5, with no production LOC change.
 
-## Delivered 0.58.5
+## Prior delivery and qualification
 
-Both **ic-backup 0.58.5** and **ic-backup-agent 0.58.5** are published on crates.io.
-Release `210a517c4dd88d7cd922e4e754e530101d183db3` and annotated `v0.58.5` are on
-`origin/main`; qualified source is `176467c026babbd397f22e8a375563d3e1eeae7e`.
-The standard runner committed, tagged and atomically pushed, then `make publish`
-verified and uploaded both packages. Independent registry readback confirms both
-versions are non-yanked, archive checksums match, VCS provenance selects the clean
-release commit, and **342 packaged source files** match that commit byte for byte.
-Remote branch/tag identities match; the later handoff commit changes documentation only.
-
-The [release receipt](../release.json) binds the complete Linux `release-verify`
-gate: strict all-target/all-feature Clippy, **542 tests**, independent consumers,
-documentation, tooling and packaging. After publication, the registry-only normal
-consumer also passes complete authenticated capture/restore, acceptance and
-terminal replay against the exact published packages. Its first offline attempt
-stopped before runtime because the packages were not cached; fetching the exact
-consumer lockfile admitted the successful rerun. Original attempts are retained.
-
-Delivery and registry proof are in `target/evidence/deploy-0585.b88i271n/` and
-`.git/release-state/`. Registry consumer graph/build and simulator evidence are in
-`target/tmp/ic-backup-agent-independent-build-1984251-0/` and
-`target/tmp/ic-backup-agent-pocketic-1984251-1/`. Native macOS, installed IC and
-Canic acceptance remain separate; hosted CI was not manually dispatched.
-
-## Released test consolidation and selected dependencies
-
-Shared's count is **38,134 test lines**, down **1,417** from 39,551 at baseline
-`b70084f`; production remains **15,187**. Public APIs, product logic, stored formats
-and standalone behavior remain. Native suites share workflow providers,
-identity-fault assertions, artifact fixtures and immutable IO checks. Eight model
-suites share explicit schema-field checks; duplicate-version regressions retain
-both the original first-serialized-version case and explicit root duplication.
-
-The independent standalone consumer owns the complete upload/restore journey,
-including a known stored Wasm chunk, a cleared live store, changed live state,
-complete byte/state verification, acceptance and terminal replay. First and second
-lost uploads have separate cold-process checks; successors follow stage order.
-Twelve superseded Core cases and the overlapping direct Agent round trip are
-retired after transferring distinct regression coverage. All **22 retained Core
-simulator-target cases** and **37 Agent example cases** pass the release gate.
-Core capture/download, retained-prefix and explicit reconciliation probes remain;
-native matrices cover malformed second-upload and start replies. Five direct
-Agent probes retain signed ingress, trust rejection and passive upload/readback
-proof. [Coverage ownership](../development.md#simulator-coverage-ownership)
-distinguishes native validation/order proof from actual IC effects.
-
-Original source snapshots, case mappings, counts and focused qualification remain
-in `target/evidence/test-cleanup-0585/`,
-`target/evidence/test-convergence-0585/` and
-`target/evidence/test-trim-0585-03/`. Earlier mechanical and sandbox failures remain
-in their original evidence; authenticated simulator runs used loopback networking.
-
-The qualified lockfile selects Platform **0.23.2**, checksum/source-verified at
-`81b3f05f53ed113d02a671d47d13f1a36222e845`. Its additive create-canister DTO/protocol
-exports are unused by Backup. Testkit **0.87.0**, authenticated PocketIC **16.1.0**,
-Host/Build **0.74.4**, Types **0.18.1**, external Principal **0.1.5**, management
-DTO **0.11.0**, Agent **0.49.3**, Candid **0.10.40** and Wasm-only Runtime **0.19.2**
-remain selected. Rust minimum and exact development/release compiler are **1.99.1**.
-Shared **0.30.4** at `2aa41c7394300302fe802b69b31b855bdc89b671` retains its 157
-exact payloads; adoption review is [recorded separately](../shared-tooling-review.json).
-
-Prior 0.58.4 release `c43c196582ccc8249263c6a01dfee8b8ac70c748`, its receipt and
-qualification remain in Git and `target/evidence/testkit-deploy-0584.yt3b8nrm/`.
-Earlier async Testkit migration and historical report consolidation are recorded
-at `b70084f` and in [retained report conclusions](../reports/README.md).
-No historical evidence is relabelled or removed.
+0.58.5 release `210a517c4dd88d7cd922e4e754e530101d183db3` published both crates from
+source `176467c026babbd397f22e8a375563d3e1eeae7e`, with 542 full-gate tests and a
+published-consumer capture/restore journey. Evidence remains in
+`target/evidence/deploy-0585.b88i271n/` and `.git/release-state/`.
+The test consolidation, case mappings and independent qualification remain in
+`target/evidence/test-cleanup-0585/`, `target/evidence/test-convergence-0585/` and
+`target/evidence/test-trim-0585-03/`; the detailed handoff is retained at `8be4f62`.
+[Coverage ownership](../development.md#simulator-coverage-ownership) identifies
+retained IC effects, signed transport probes and native rejection matrices.
+Earlier release/compiler qualification remains in Git and its original evidence.
+Shared 0.30.4 at `2aa41c7394300302fe802b69b31b855bdc89b671` still owns 157 exact
+payloads; [the adoption review](../shared-tooling-review.json) remains unchanged.
 
 ## Recovery and retained contracts
 

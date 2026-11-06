@@ -1,5 +1,6 @@
 //! Isolated application authority and fault injection; never part of the supported assembly.
 
+use super::command::Fault;
 use super::evidence::{AcceptanceRecord, AdmissionRecord};
 use super::{Config, Mode, Stage, error, read, retain, standalone};
 use ic_backup::{
@@ -29,6 +30,7 @@ pub(super) struct Authority {
     pub root: PathBuf,
     pub config: Config,
     pub mode: Mode,
+    pub fault: Fault,
 }
 
 impl standalone::Application for Authority {
@@ -63,7 +65,7 @@ impl standalone::Application for Authority {
         request: &ReservedUpdate<'_>,
         prepared: &PreparedUpdate<'_>,
     ) -> io::Result<()> {
-        if stage == Stage::Capture && self.mode == Mode::CaptureFailIngress {
+        if stage == Stage::Capture && self.fault == Fault::CaptureIngress {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
         standalone::retain_ingress(root, request, prepared)
@@ -74,11 +76,11 @@ impl standalone::Application for Authority {
         reply: standalone::Reply<'_>,
     ) -> impl std::future::Future<Output = io::Result<MutationReceiptRequest>> {
         std::future::ready((|| {
-            if self.mode.lost_reply() == Some((reply.stage, reply.sequence)) {
+            if self.fault == Fault::LostReply(reply.stage, reply.sequence) {
                 retain(&reply.root.join("discarded-oracle.candid"), reply.bytes)?;
                 std::process::exit(75);
             }
-            if reply.stage == Stage::Capture && self.mode == Mode::CaptureFailRetention {
+            if reply.stage == Stage::Capture && self.fault == Fault::CaptureRetention {
                 return Err(io::Error::other("fixture durable reply retention refused"));
             }
             assert_eq!(reply.plan.context(), &self.config.context);
@@ -88,7 +90,7 @@ impl standalone::Application for Authority {
                 standalone::retain_applied_reply(&reply, &Digest::from_bytes(reply.bytes))?;
             if reply.stage == Stage::Download
                 && reply.sequence == 1
-                && self.mode == Mode::CaptureFailPartial
+                && self.fault == Fault::CapturePartial
             {
                 return Err(io::Error::other(
                     "fixture interrupted transfer after first admitted chunk",

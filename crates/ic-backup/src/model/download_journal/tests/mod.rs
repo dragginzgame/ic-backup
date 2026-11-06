@@ -84,6 +84,21 @@ fn canonical_transitions_update_evidence_together_and_project_resume_actions() {
             usize::from(state != ArtifactStateRecord::Durable)
         );
         let bytes = serde_json::to_vec(&record).expect("serialize exact state");
+        // Pin the v1 field order and nullable checksum independently of the serializer.
+        let checksum_json = match state {
+            ArtifactStateRecord::ChecksumVerified | ArtifactStateRecord::Durable => {
+                format!(r#"{{"algorithm":"sha256","hash":"{}"}}"#, checksum.hash())
+            }
+            _ => "null".into(),
+        };
+        let expected = format!(
+            concat!(
+                r#"{{"version":1,"intent":"{}","artifacts":[{{"canister_id":"aaaaa-aa","snapshot_id":"snap-1","snapshot_taken_at_timestamp":18446744073709551615,"snapshot_total_size_bytes":18446744073709551615,"staging_path":"artifacts/aaaaa-aa.tmp","artifact_path":"artifacts/aaaaa-aa","state":"{:?}","checksum":{}}}]}}"#
+            ),
+            HASH, state, checksum_json
+        );
+        assert_eq!(bytes, expected.as_bytes());
+
         assert_eq!(
             serde_json::from_slice::<DownloadJournalRecord>(&bytes).expect("decode state"),
             record

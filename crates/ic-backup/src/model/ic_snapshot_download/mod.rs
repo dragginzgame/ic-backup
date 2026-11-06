@@ -29,8 +29,13 @@ use thiserror::Error;
 pub struct IcSnapshotDownloadPlan<'workflow, 'metadata> {
     binding: LearnedDataStage<'workflow>,
     metadata: &'metadata IcSnapshotMetadataReply<'metadata>,
+    reads: Option<DataReads<'metadata>>,
+}
+
+// Read-free snapshots have no requests or placeholder plan; nonempty reads carry both.
+struct DataReads<'metadata> {
     requests: Vec<IcSnapshotDataRequest<'metadata>>,
-    plan: Option<OperationPlanRecord>,
+    plan: OperationPlanRecord,
 }
 impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
     /// Derive exact data payloads within the original target and mutation allocation.
@@ -69,14 +74,15 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
                 evidence: metadata.digest(),
             },
             metadata,
-            requests,
-            plan,
+            reads: plan.map(|plan| DataReads { requests, plan }),
         })
     }
     /// Read exact ordered requests; operation IDs are their zero-based indices.
     #[must_use]
     pub fn requests(&self) -> &[IcSnapshotDataRequest<'metadata>] {
-        &self.requests
+        self.reads
+            .as_ref()
+            .map_or(&[], |reads| reads.requests.as_slice())
     }
     // Every immutable request was constructed from this same original metadata.
     pub(crate) fn matches_metadata(&self, metadata: &IcSnapshotMetadataReply<'_>) -> bool {
@@ -86,7 +92,10 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
     /// not that capture, durable publication or complete transfer is qualified.
     #[must_use]
     pub const fn plan(&self) -> Option<&OperationPlanRecord> {
-        self.plan.as_ref()
+        match &self.reads {
+            Some(reads) => Some(&reads.plan),
+            None => None,
+        }
     }
 
     /// Re-admit an exact retained data-stage binding and its original metadata evidence.
@@ -96,8 +105,7 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
         binding: &ExecutionStageBindingRecord,
     ) -> Result<(), IcSnapshotDownloadPlanningError> {
         let plan = self
-            .plan
-            .as_ref()
+            .plan()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
         Ok(self.binding.validate(binding, plan)?)
     }
@@ -117,8 +125,7 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
         predecessors: Vec<ExecutionStagePredecessorRecord>,
     ) -> Result<ExecutionStageBindingRecord, IcSnapshotDownloadPlanningError> {
         let plan = self
-            .plan
-            .as_ref()
+            .plan()
             .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
         self.binding
             .bind(

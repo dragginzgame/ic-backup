@@ -70,7 +70,6 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
         admit,
         async |_, response| {
             let _file = write_synced(&retained, &response.input().reply).unwrap();
-            fs::File::open(&root).unwrap().sync_all().unwrap();
             std::future::pending::<Result<MutationReceiptRequest, Infallible>>().await
         },
     ));

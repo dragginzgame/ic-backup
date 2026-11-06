@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.58.7]
+
+### 🧹 Cleanup
+
+- Keep verified artifact checksums with their progress state and nonempty download
+  requests with their plan, preserving v1 JSON, digest framing and public interfaces.
+- Consolidate standalone stage catalogs, fixture command interpretation and local
+  checkpoint finishing. Reuse Host file identities with existing custody checks.
+- Share original-record admission across generic and IC artifact verification,
+  retaining checks around byte IO. Derive restore-reference paths from the stage catalog.
+
+### 🧪 Testing
+
+- Share download provider setup, accounting assertions and durable reply retention.
+  Preserve fault scenarios and pin exact journal JSON for every artifact state.
+
 ## [0.58.6] - 2026-11-06
 
 ### ⬆️ Dependencies

@@ -3,8 +3,8 @@
 use super::{
     Application, BackupLayoutGuard, CHUNK, Digest, DirBuilderExt, Driver, ExecutionStageGuard,
     ExecutionStagePredecessorRecord, ExecutionWorkflowRecord, IcSnapshotDownloadPlan,
-    IcSnapshotReply, Method, OperationPlanRecord, PreparedUpdate, Reply, ReservedUpdate, Stage,
-    TOKEN, error, fs, io, metadata,
+    IcSnapshotReply, Method, OperationPlanRecord, Phase, PreparedUpdate, Reply, ReservedUpdate,
+    Stage, TOKEN, error, fs, io, metadata,
 };
 use ic_backup::ports::ic_mutation::IcMutationProviderError;
 use ic_backup::{
@@ -144,7 +144,10 @@ impl<A: Application> Driver<'_, A> {
         let snapshot = &capture_reply.snapshots()[0];
         layout
             .retain_restore(
-                &self.root.join("restore/execution-workflow.json"),
+                &self
+                    .root
+                    .join(Phase::Restore.name())
+                    .join("execution-workflow.json"),
                 self.restore.digest().hash(),
             )
             .map_err(error)?;

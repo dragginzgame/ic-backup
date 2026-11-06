@@ -10,7 +10,7 @@ mod transfer;
 
 pub use application::{Application, Reply, retain_applied_reply};
 pub use connection::Connection;
-pub use stage::Stage;
+pub use stage::{Phase, Stage};
 
 use ic_backup::{
     model::{
@@ -116,15 +116,6 @@ pub struct Driver<'application, A> {
     application: &'application A,
 }
 
-/// Select an original catalog; this does not create a new execution mode or journal.
-#[derive(Clone, Copy)]
-pub enum Phase {
-    /// Capture, metadata and complete local download.
-    Capture,
-    /// Source-bound allocation/upload, same-ID load and accepted start.
-    Restore,
-}
-
 impl<'application, A: Application> Driver<'application, A> {
     /// Bind this assembly to explicit connection/application inputs without effects.
     /// The caller owns a stable private root and all application evidence lifetimes.
@@ -144,7 +135,8 @@ impl<'application, A: Application> Driver<'application, A> {
     /// # Errors
     /// Occupied/unsafe paths or persistence failures retain all partial evidence.
     pub fn create(&self) -> io::Result<()> {
-        for (name, original) in [("capture", &self.capture), ("restore", &self.restore)] {
+        for phase in [Phase::Capture, Phase::Restore] {
+            let (name, original) = self.original(phase);
             fs::DirBuilder::new()
                 .mode(0o700)
                 .create(self.root.join(name))?;
@@ -192,15 +184,17 @@ impl<'application, A: Application> Driver<'application, A> {
     /// # Errors
     /// Refuses unfinished originals, absent acceptance or unqualified terminal/command evidence.
     pub fn release(&self) -> io::Result<()> {
-        let layout = BackupLayoutGuard::acquire(&self.root.join("restore")).map_err(error)?;
+        let layout =
+            BackupLayoutGuard::acquire(&self.root.join(Phase::Restore.name())).map_err(error)?;
         self.terminal(&layout)
     }
 
     fn original(&self, phase: Phase) -> (&'static str, &ExecutionWorkflowRecord) {
-        match phase {
-            Phase::Capture => ("capture", &self.capture),
-            Phase::Restore => ("restore", &self.restore),
-        }
+        let original = match phase {
+            Phase::Capture => &self.capture,
+            Phase::Restore => &self.restore,
+        };
+        (phase.name(), original)
     }
 
     fn payload(&self, method: Method, snapshot_id: Option<Vec<u8>>) -> IcManagementRequestRecord {
@@ -315,11 +309,12 @@ impl<A: Application> ExecutionWorkflowStageDriver for Driver<'_, A> {
 }
 
 fn workflow(config: &Connection, restore: Option<&Digest>) -> ExecutionWorkflowRecord {
-    let stages = if restore.is_some() {
-        Stage::RESTORE.as_slice()
+    let phase = if restore.is_some() {
+        Phase::Restore
     } else {
-        Stage::CAPTURE.as_slice()
+        Phase::Capture
     };
+    let stages = phase.stages();
     let mut previous = None;
     let mut graph = vec![];
     let mut operations = vec![];

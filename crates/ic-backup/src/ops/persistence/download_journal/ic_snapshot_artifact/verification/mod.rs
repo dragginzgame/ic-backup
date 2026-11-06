@@ -7,17 +7,12 @@ use super::{
 };
 use crate::{
     model::operation_plan::OperationPlanRecord,
-    ops::{
-        artifacts::ArtifactError,
-        persistence::{DownloadIntegrityError, read_operation_plan},
-    },
+    ops::{artifacts::ArtifactError, persistence::DownloadIntegrityError},
     policy::download_integrity::validate,
 };
 use ic_host_artifacts::artifact::{ArtifactError as InputError, hash_exact_reader};
-use std::{
-    io::{self, Read},
-    os::unix::fs::MetadataExt,
-};
+use ic_host_fs::identity::FileIdentity;
+use std::io::{self, Read};
 
 impl DownloadJournalGuard<'_> {
     /// Explicitly verify one published IC tree against exact original metadata and intent.
@@ -73,9 +68,7 @@ impl DownloadJournalGuard<'_> {
         &self,
         plan: &OperationPlanRecord,
     ) -> Result<(), DownloadIntegrityError> {
-        self.check_usable()?;
-        read_operation_plan(self.layout, &plan.digest())?;
-        self.require_unchanged_integrity_journal()?;
+        self.admit_integrity_original(plan)?;
         validate(plan, &self.record)?;
         Ok(())
     }
@@ -148,8 +141,7 @@ pub(super) fn checksum_child_with<E: From<IcSnapshotArtifactError>>(
     .metadata()
     .map_err(IcSnapshotArtifactError::from)?;
     if !current.is_file()
-        || original.dev() != current.dev()
-        || original.ino() != current.ino()
+        || FileIdentity::from_metadata(&original) != FileIdentity::from_metadata(&current)
         || original.len() != current.len()
         || original.len() != held.len()
     {

@@ -17,7 +17,7 @@ use crate::{
     ports::ic_observation::IcObservationProviderError,
     tests::support::temp_dir,
 };
-use fixture::{DownloadFixture, with_download, writer};
+use fixture::{DownloadFixture, assert_progress, with_download, writer};
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind};
 use std::{convert::Infallible, fs, io, path::PathBuf};
@@ -89,6 +89,11 @@ enum ReadFailure {
 struct Provider {
     calls: usize,
     failure: ReadFailure,
+}
+impl Provider {
+    fn new(failure: ReadFailure) -> Self {
+        Self { calls: 0, failure }
+    }
 }
 impl IcSnapshotTransferReadProvider for Provider {
     fn read_snapshot(
@@ -180,10 +185,7 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
                 .join(artifacts.record().unwrap().artifacts()[0].staging_path())
                 .join("wasm-module.bin");
             let writer = writer(&mut artifacts, metadata, raw);
-            let mut provider = Provider {
-                calls: 0,
-                failure: ReadFailure::None,
-            };
+            let mut provider = Provider::new(ReadFailure::None);
             let qualified = Cell::new(0);
             let mut future = Box::pin(download_snapshot(
                 &stage,
@@ -198,7 +200,6 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
                         &response.input().reply,
                     )
                     .unwrap();
-                    fs::File::open(root).unwrap().sync_all().unwrap();
                     qualified.set(qualified.get() + 1);
                     if sequence == 1 {
                         std::future::pending::<()>().await;
@@ -217,10 +218,7 @@ fn cancelled_second_qualification_retains_partial_bytes_first_receipt_and_pendin
             drop(future);
             assert_eq!(provider.calls, 2);
             assert_eq!(qualified.get(), 2);
-            let progress =
-                read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-            assert_eq!(progress.applied_operations, 1);
-            assert_eq!(progress.attempts.mutations_used, 2);
+            assert_progress(&stage, 1, 2);
             let journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
             assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
             drop(journal);
@@ -268,10 +266,7 @@ fn streams_every_exact_region_and_known_chunk_with_explicit_receipts_then_publis
             let references = stage.layout().unwrap().restore_references().unwrap();
             let mut artifacts = artifacts(&stage, metadata, stage.plan().digest().hash());
             let writer = writer(&mut artifacts, metadata, raw);
-            let mut provider = Provider {
-                calls: 0,
-                failure: ReadFailure::None,
-            };
+            let mut provider = Provider::new(ReadFailure::None);
             let checksum = ready(download_snapshot(
                 &stage,
                 download,
@@ -343,7 +338,7 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
                 let mut artifacts = artifacts(&stage, metadata, stage.plan().digest().hash());
                 let writer = writer(&mut artifacts, metadata, raw);
                 let path = writer.path().to_path_buf();
-                let mut provider = Provider { calls: 0, failure };
+                let mut provider = Provider::new(failure);
                 let error = ready(download_snapshot(
                     &stage,
                     download,
@@ -384,11 +379,7 @@ fn lost_or_malformed_second_read_preserves_first_receipt_partial_bytes_and_pendi
                         .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
                         .is_err()
                 );
-                let progress =
-                    read_execution_progress(stage.layout().unwrap(), &stage.plan().digest())
-                        .unwrap();
-                assert_eq!(progress.applied_operations, 1);
-                assert_eq!(progress.attempts.mutations_used, 2);
+                let progress = assert_progress(&stage, 1, 2);
                 let original =
                     fs::read(stage.layout().unwrap().root().join("attempt-1.json")).unwrap();
                 assert!(
@@ -431,10 +422,7 @@ fn qualification_rejection_retains_exact_response_and_does_not_append_or_record_
             let mut artifacts = artifacts(&stage, metadata, stage.plan().digest().hash());
             let writer = writer(&mut artifacts, metadata, raw);
             let path = writer.path().to_path_buf();
-            let mut provider = Provider {
-                calls: 0,
-                failure: ReadFailure::None,
-            };
+            let mut provider = Provider::new(ReadFailure::None);
             let error = ready(download_snapshot(
                 &stage,
                 download,
@@ -459,10 +447,7 @@ fn qualification_rejection_retains_exact_response_and_does_not_append_or_record_
                 fs::read(path.join("wasm-module.bin")).unwrap(),
                 [] as [u8; 0]
             );
-            let progress =
-                read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
-            assert_eq!(progress.applied_operations, 0);
-            assert_eq!(progress.attempts.mutations_used, 1);
+            assert_progress(&stage, 0, 1);
             drop(artifacts);
             drop(stage);
         },
@@ -488,10 +473,7 @@ fn changed_receipt_or_negative_outcome_rejects_before_append_and_retains_pending
                 let mut artifacts = artifacts(&stage, metadata, stage.plan().digest().hash());
                 let writer = writer(&mut artifacts, metadata, raw);
                 let path = writer.path().to_path_buf();
-                let mut provider = Provider {
-                    calls: 0,
-                    failure: ReadFailure::None,
-                };
+                let mut provider = Provider::new(ReadFailure::None);
                 let error = ready(download_snapshot(
                     &stage,
                     download,
@@ -517,11 +499,7 @@ fn changed_receipt_or_negative_outcome_rejects_before_append_and_retains_pending
                     fs::read(path.join("wasm-module.bin")).unwrap(),
                     [] as [u8; 0]
                 );
-                let progress =
-                    read_execution_progress(stage.layout().unwrap(), &stage.plan().digest())
-                        .unwrap();
-                assert_eq!(progress.applied_operations, 0);
-                assert_eq!(progress.attempts.mutations_used, 1);
+                assert_progress(&stage, 0, 1);
                 drop(artifacts);
                 drop(stage);
             },
@@ -570,10 +548,7 @@ fn consumed_missing_or_held_originals_never_enter_fresh_admission_or_provider() 
                 }
                 let mut artifacts = artifacts(&stage, metadata, stage.plan().digest().hash());
                 let writer = writer(&mut artifacts, metadata, raw);
-                let mut provider = Provider {
-                    calls: 0,
-                    failure: ReadFailure::None,
-                };
+                let mut provider = Provider::new(ReadFailure::None);
                 let error = ready(download_snapshot(
                     &stage,
                     download,
@@ -613,10 +588,7 @@ fn stage_or_local_byte_drift_during_qualification_retains_reply_and_pending_atte
                 let mut artifacts = artifacts(&stage, metadata, stage.plan().digest().hash());
                 let writer = writer(&mut artifacts, metadata, raw);
                 let path = writer.path().to_path_buf();
-                let mut provider = Provider {
-                    calls: 0,
-                    failure: ReadFailure::None,
-                };
+                let mut provider = Provider::new(ReadFailure::None);
                 let error = ready(download_snapshot(
                     &stage,
                     download,
@@ -728,10 +700,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
                 } else {
                     download
                 };
-                let mut provider = Provider {
-                    calls: 0,
-                    failure: ReadFailure::None,
-                };
+                let mut provider = Provider::new(ReadFailure::None);
                 let error = ready(download_snapshot(
                     &stage,
                     selected,
@@ -782,10 +751,7 @@ fn receipt_persistence_failure_retains_appended_bytes_reply_and_original_pending
             let path = writer.path().to_path_buf();
             let journal_path = stage.layout().unwrap().root().join("attempt-0.json");
             let retained = journal_path.with_extension("retained-original");
-            let mut provider = Provider {
-                calls: 0,
-                failure: ReadFailure::None,
-            };
+            let mut provider = Provider::new(ReadFailure::None);
             let error = ready(download_snapshot(
                 &stage,
                 download,

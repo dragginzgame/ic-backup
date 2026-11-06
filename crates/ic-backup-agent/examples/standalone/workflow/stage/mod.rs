@@ -4,6 +4,30 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Select an original catalog; this does not create a new execution mode or journal.
+#[derive(Clone, Copy)]
+pub enum Phase {
+    /// Capture, metadata and complete local download.
+    Capture,
+    /// Source-bound allocation/upload, same-ID load and accepted start.
+    Restore,
+}
+
+impl Phase {
+    pub(super) const fn name(self) -> &'static str {
+        match self {
+            Self::Capture => "capture",
+            Self::Restore => "restore",
+        }
+    }
+    pub(super) const fn stages(self) -> &'static [Stage] {
+        match self {
+            Self::Capture => &Stage::CAPTURE,
+            Self::Restore => &Stage::RESTORE,
+        }
+    }
+}
+
 /// Original catalog identities shared by the example and qualification.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u64)]
@@ -33,9 +57,10 @@ impl Stage {
     /// # Errors
     /// Rejects identities outside this catalog.
     pub fn from_sequence(sequence: u64) -> io::Result<Self> {
-        Self::CAPTURE
+        [Phase::Capture, Phase::Restore]
             .into_iter()
-            .chain(Self::RESTORE)
+            .flat_map(Phase::stages)
+            .copied()
             .find(|stage| stage.sequence() == sequence)
             .ok_or_else(|| io::ErrorKind::InvalidInput.into())
     }
@@ -55,11 +80,12 @@ impl Stage {
     /// Resolve the retained stage directory below a caller-owned root.
     #[must_use]
     pub fn path(self, root: &Path) -> PathBuf {
-        let workflow = match self {
-            Self::Capture | Self::Metadata | Self::Download => "capture",
-            Self::Allocation | Self::Upload | Self::Load | Self::Start => "restore",
+        let phase = if Phase::Capture.stages().contains(&self) {
+            Phase::Capture
+        } else {
+            Phase::Restore
         };
-        root.join(workflow)
+        root.join(phase.name())
             .join(format!("execution-stage-{}", self.sequence()))
     }
 }

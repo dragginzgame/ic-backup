@@ -49,3 +49,16 @@ pub(super) fn writer<'journal, 'layout, 'metadata>(
         .stage_ic_snapshot_artifact(TOKEN, metadata, raw)
         .unwrap()
 }
+
+// The scenarios keep typed errors, retained bytes and no-reentry checks at their boundary.
+pub(super) fn assert_progress(
+    stage: &ExecutionStageGuard<'_>,
+    applied: usize,
+    mutations: u32,
+) -> crate::policy::execution_progress::ExecutionProgressView {
+    let progress =
+        read_execution_progress(stage.layout().unwrap(), &stage.plan().digest()).unwrap();
+    assert_eq!(progress.applied_operations, applied);
+    assert_eq!(progress.attempts.mutations_used, mutations);
+    progress
+}

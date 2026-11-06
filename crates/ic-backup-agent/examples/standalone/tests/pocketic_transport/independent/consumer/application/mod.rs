@@ -5,7 +5,7 @@ use ic_backup::workflow::execution_workflow::advance_execution_workflow;
 use super::evidence::ObservedContext;
 use super::{
     ApplicationConfig, AttemptBudgetRecord,
-    command::{Action, Mode},
+    command::{Action, Fault},
 };
 use super::{error, read, retain};
 use ic_backup::{
@@ -93,12 +93,12 @@ fn ingress(
 }
 fn reply(
     root: &Path,
-    mode: Mode,
+    fault: Fault,
     request: &ReservedUpdate<'_>,
     id: &RequestId,
     bytes: &[u8],
 ) -> Result<(), ProviderError> {
-    if mode == Mode::ApplicationRefuseReply {
+    if fault == Fault::ApplicationReply {
         return Err(ProviderError::Unavailable);
     }
     retain(&root.join(format!("{}-reply.bin", lane(request))), bytes)
@@ -108,7 +108,7 @@ fn reply(
         id.to_string().as_bytes(),
     )
     .map_err(|_| ProviderError::Unavailable)?;
-    if mode == Mode::ApplicationDie {
+    if fault == Fault::ApplicationExit {
         std::process::exit(75);
     }
     Ok(())
@@ -127,7 +127,7 @@ struct Driver<'a> {
     config: &'a ApplicationConfig,
     plan: &'a OperationPlanRecord,
     payload: &'a ApplicationIngressPayload,
-    mode: Mode,
+    fault: Fault,
     callbacks: usize,
 }
 impl ExecutionWorkflowStageDriver for Driver<'_> {
@@ -171,7 +171,7 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
                 ingress(root, request, prepared)
             },
             |request: &ReservedUpdate<'_>, id: &RequestId, bytes: &[u8]| {
-                reply(root, self.mode, request, id, bytes)
+                reply(root, self.fault, request, id, bytes)
             },
         );
         let response = provider
@@ -201,7 +201,7 @@ impl ExecutionWorkflowStageDriver for Driver<'_> {
     }
 }
 
-pub(super) async fn run(root: &Path, mode: Mode, action: Action) -> io::Result<()> {
+pub(super) async fn run(root: &Path, fault: Fault, action: Action) -> io::Result<()> {
     let config: ApplicationConfig = serde_json::from_slice(&read(&root.join("config.json"))?)?;
     let payload = payload(&config, "apply");
     let plan = plan(&config, &payload);
@@ -228,7 +228,7 @@ pub(super) async fn run(root: &Path, mode: Mode, action: Action) -> io::Result<(
         config: &config,
         plan: &plan,
         payload: &payload,
-        mode,
+        fault,
         callbacks: 0,
     };
     if action == Action::ApplicationNew {
@@ -311,7 +311,7 @@ async fn observe(
             ingress(root, request, prepared)
         },
         |request: &ReservedUpdate<'_>, id: &RequestId, bytes: &[u8]| {
-            reply(root, Mode::ApplicationObserve, request, id, bytes)
+            reply(root, Fault::None, request, id, bytes)
         },
     );
     let response = provider

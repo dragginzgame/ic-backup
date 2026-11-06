@@ -54,13 +54,7 @@ impl<'a> ExecutionStageGuard<'a> {
     ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
         let settlement = reconcile_execution_settlement(self.layout()?, &self.plan.digest())?;
         after_reconciliation();
-        self.layout()?;
-        Ok(ExecutionStagePredecessorRecord::new(
-            self.binding.stage_sequence(),
-            self.binding.digest(),
-            settlement.digest(),
-            learned_evidence,
-        ))
+        self.checkpoint(settlement.digest(), learned_evidence)
     }
     /// Reconstruct an exact predecessor after a lost checkpoint response.
     ///
@@ -75,11 +69,19 @@ impl<'a> ExecutionStageGuard<'a> {
         learned_evidence: ArtifactChecksumRecord,
     ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
         let settlement = replay_execution_settlement(self.layout()?, &self.plan.digest())?;
+        self.checkpoint(settlement.digest(), learned_evidence)
+    }
+    // Both checkpoint entrypoints close admission after their distinct settlement operation.
+    fn checkpoint(
+        &self,
+        settlement: ArtifactChecksumRecord,
+        learned_evidence: ArtifactChecksumRecord,
+    ) -> Result<ExecutionStagePredecessorRecord, ExecutionStageCheckpointError> {
         self.layout()?;
         Ok(ExecutionStagePredecessorRecord::new(
             self.binding.stage_sequence(),
             self.binding.digest(),
-            settlement.digest(),
+            settlement,
             learned_evidence,
         ))
     }

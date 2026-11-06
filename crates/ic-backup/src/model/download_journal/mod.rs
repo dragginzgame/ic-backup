@@ -46,17 +46,6 @@ pub enum ArtifactStateRecord {
     Durable,
 }
 
-impl ArtifactStateRecord {
-    const fn can_advance_to(self, next: Self) -> bool {
-        matches!(
-            (self, next),
-            (Self::Created, Self::Downloaded)
-                | (Self::Downloaded, Self::ChecksumVerified)
-                | (Self::ChecksumVerified, Self::Durable)
-        )
-    }
-}
-
 // Internal transition inputs cannot pair a state with inappropriate checksum
 // evidence. Persisted fields retain their independent decoding/corruption checks.
 pub(crate) enum ArtifactTransition {
@@ -85,8 +74,42 @@ pub struct DownloadArtifactRecord {
     snapshot_total_size_bytes: u64,
     staging_path: String,
     artifact_path: String,
-    state: ArtifactStateRecord,
-    checksum: Option<ArtifactChecksumRecord>,
+    #[serde(flatten)]
+    progress: ArtifactProgress,
+}
+
+// Keep verified evidence in the state that requires it; only boundary fields are independent.
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum ArtifactProgress {
+    Created,
+    Downloaded,
+    ChecksumVerified(ArtifactChecksumRecord),
+    Durable(ArtifactChecksumRecord),
+}
+impl ArtifactProgress {
+    const fn state(&self) -> ArtifactStateRecord {
+        match self {
+            Self::Created => ArtifactStateRecord::Created,
+            Self::Downloaded => ArtifactStateRecord::Downloaded,
+            Self::ChecksumVerified(_) => ArtifactStateRecord::ChecksumVerified,
+            Self::Durable(_) => ArtifactStateRecord::Durable,
+        }
+    }
+    const fn checksum(&self) -> Option<&ArtifactChecksumRecord> {
+        match self {
+            Self::ChecksumVerified(checksum) | Self::Durable(checksum) => Some(checksum),
+            Self::Created | Self::Downloaded => None,
+        }
+    }
+}
+impl Serialize for ArtifactProgress {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut fields = serializer.serialize_struct("ArtifactProgress", 2)?;
+        fields.serialize_field("state", &self.state())?;
+        fields.serialize_field("checksum", &self.checksum())?;
+        fields.end()
+    }
 }
 
 #[derive(Deserialize)]
@@ -118,17 +141,15 @@ impl TryFrom<ArtifactFields> for DownloadArtifactRecord {
         {
             return Err(DownloadJournalRecordError::ArtifactPathMismatch);
         }
-        let requires_checksum = matches!(
-            fields.state,
-            ArtifactStateRecord::ChecksumVerified | ArtifactStateRecord::Durable
-        );
-        if requires_checksum != fields.checksum.is_some() {
-            return Err(DownloadJournalRecordError::InvalidChecksumState(
-                fields.state,
-            ));
-        }
-        record.state = fields.state;
-        record.checksum = fields.checksum;
+        record.progress = match (fields.state, fields.checksum) {
+            (ArtifactStateRecord::Created, None) => ArtifactProgress::Created,
+            (ArtifactStateRecord::Downloaded, None) => ArtifactProgress::Downloaded,
+            (ArtifactStateRecord::ChecksumVerified, Some(checksum)) => {
+                ArtifactProgress::ChecksumVerified(checksum)
+            }
+            (ArtifactStateRecord::Durable, Some(checksum)) => ArtifactProgress::Durable(checksum),
+            (state, _) => return Err(DownloadJournalRecordError::InvalidChecksumState(state)),
+        };
         Ok(record)
     }
 }
@@ -152,8 +173,7 @@ impl DownloadArtifactRecord {
             snapshot_id: request.snapshot_id,
             snapshot_taken_at_timestamp: request.snapshot_taken_at_timestamp,
             snapshot_total_size_bytes: request.snapshot_total_size_bytes,
-            state: ArtifactStateRecord::Created,
-            checksum: None,
+            progress: ArtifactProgress::Created,
         })
     }
 
@@ -190,12 +210,12 @@ impl DownloadArtifactRecord {
     /// Return retained local lifecycle state.
     #[must_use]
     pub const fn state(&self) -> ArtifactStateRecord {
-        self.state
+        self.progress.state()
     }
     /// Return the retained exact checksum when verification has completed.
     #[must_use]
     pub const fn checksum(&self) -> Option<&ArtifactChecksumRecord> {
-        self.checksum.as_ref()
+        self.progress.checksum()
     }
 }
 
@@ -295,14 +315,14 @@ impl DownloadJournalRecord {
             }
             bytes.u64_be(entry.snapshot_taken_at_timestamp);
             bytes.u64_be(entry.snapshot_total_size_bytes);
-            bytes.byte(match entry.state {
+            bytes.byte(match entry.state() {
                 ArtifactStateRecord::Created => 0,
                 ArtifactStateRecord::Downloaded => 1,
                 ArtifactStateRecord::ChecksumVerified => 2,
                 ArtifactStateRecord::Durable => 3,
             });
-            bytes.byte(u8::from(entry.checksum.is_some()));
-            if let Some(checksum) = &entry.checksum {
+            bytes.byte(u8::from(entry.checksum().is_some()));
+            if let Some(checksum) = entry.checksum() {
                 bytes.checksum(checksum);
             }
         }
@@ -341,18 +361,23 @@ impl DownloadJournalRecord {
     ) -> Result<(), DownloadJournalRecordError> {
         let index = self.artifact_index(canister, snapshot)?;
         let entry = &mut self.artifacts[index];
-        let from = entry.state;
-        let next = transition.state();
-        if !from.can_advance_to(next) {
-            return Err(DownloadJournalRecordError::InvalidStateTransition { from, to: next });
-        }
-        let checksum = match transition {
-            ArtifactTransition::Downloaded => None,
-            ArtifactTransition::ChecksumVerified(checksum) => Some(checksum),
-            ArtifactTransition::Durable => entry.checksum.clone(),
+        entry.progress = match (&entry.progress, transition) {
+            (ArtifactProgress::Created, ArtifactTransition::Downloaded) => {
+                ArtifactProgress::Downloaded
+            }
+            (ArtifactProgress::Downloaded, ArtifactTransition::ChecksumVerified(checksum)) => {
+                ArtifactProgress::ChecksumVerified(checksum)
+            }
+            (ArtifactProgress::ChecksumVerified(checksum), ArtifactTransition::Durable) => {
+                ArtifactProgress::Durable(checksum.clone())
+            }
+            (_, transition) => {
+                return Err(DownloadJournalRecordError::InvalidStateTransition {
+                    from: entry.state(),
+                    to: transition.state(),
+                });
+            }
         };
-        entry.state = next;
-        entry.checksum = checksum;
         Ok(())
     }
 }
