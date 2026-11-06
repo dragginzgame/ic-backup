@@ -1,6 +1,12 @@
 # Current handoff — 2026-11-06
 
-## Pending 0.58.6 cleanup
+## Pending 0.58.6 deployment
+
+Source commit `e7854cc` contains the cleanup, Testkit update and #78 fix. The first
+release attempt stopped after the release-helper suite passed: concurrent lockfile
+edits changed `cc` 1.11.0 to 1.11.1. No version preparation, release tag, push or
+publication occurred. Dependency edits are now confirmed finished; retain `cc`
+1.11.1 and restart the complete gate. Original logs: `target/evidence/issue-78/release-0586.log`.
 
 [Issue #78](https://github.com/dragginzgame/ic-backup/issues/78) is fixed locally:
 the management encoder allowance includes its return type. Installed Shared
