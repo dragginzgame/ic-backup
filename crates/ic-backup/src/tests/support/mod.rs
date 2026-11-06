@@ -9,10 +9,12 @@ pub mod ic_snapshot_metadata;
 pub mod ic_snapshot_upload;
 pub mod ic_snapshot_upload_data_observation;
 pub mod operation_plan;
+pub mod provider;
 pub mod ready;
 pub mod response_fault;
 pub mod restore_safety;
 pub mod retained_reply;
+pub mod schema;
 pub mod update;
 
 /// Decode independent fixture bytes without a production encoder or silent truncation.

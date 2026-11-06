@@ -417,51 +417,6 @@ impl Fixture {
         fs::write(root.join("reply.candid"), &raw).unwrap();
         raw
     }
-    async fn upload(&mut self, payload: &IcSnapshotUploadRequest<'_>) -> Vec<u8> {
-        use ic_backup::{
-            ports::ic_mutation::IcMutationProviderError,
-            ports::ic_snapshot_upload::IcSnapshotUploadProvider,
-        };
-        let OriginalCall {
-            plan,
-            layout,
-            sequence,
-        } = self.original(&payload.binding_digest());
-        let root = layout.root().to_path_buf();
-        let stage = prepare_stage(&layout, &plan, sequence);
-        let transport = self.transport(&plan);
-        let mut provider = ic_backup_agent::AgentUpdateProvider::new(
-            &transport,
-            |_: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
-                support::retain_signed(&root, prepared)
-                    .map_err(|_| IcMutationProviderError::Unavailable)
-            },
-        );
-        let authority = plan.attempt_authority(sequence).unwrap();
-        let mut journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
-        journal.reserve_planned_mutation(&plan.digest()).unwrap();
-        let request =
-            IcSnapshotUploadAttempt::new(&plan, sequence, journal.record().unwrap(), payload)
-                .unwrap();
-        assert_eq!(request.plan().context(), plan.context());
-        tokio::task::yield_now().await;
-        assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
-        let acknowledgement = provider
-            .submit_upload(&request, journal.record().unwrap())
-            .await
-            .unwrap();
-        ic_backup::policy::ic_snapshot_upload::validate_acknowledgement(
-            &request,
-            journal.record().unwrap(),
-            &acknowledgement,
-        )
-        .unwrap();
-        drop(journal);
-        assert_pending(&stage, sequence);
-        let raw = acknowledgement.input().reply.clone();
-        fs::write(root.join("reply.candid"), &raw).unwrap();
-        raw
-    }
 }
 // Share only local preparation and retained-accounting assertions. Each caller
 // still owns fresh method-specific admission and the actual provider invocation.
@@ -525,113 +480,18 @@ async fn read_complete_regions(
             offset += length;
         }
     }
-    assert_eq!(
-        metadata.metadata().wasm_chunk_store,
-        Vec::<ic_platform::management_canister_types::ChunkHash>::new()
-    );
-    chunks
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn real_agent_capture_complete_transfer_upload_and_same_id_restore_preserve_originals() {
-    let mut fixture = Fixture::new(Arc::new(ic_platform::agent::BasicIdentity::from_raw_key(
-        &[7; 32],
-    )))
-    .await;
-    fixture.mutation(Method::StopCanister, None, false).await;
-    assert_eq!(
-        serde_json::to_value(
-            fixture
-                .pic
-                .canister_status(fixture.principal(), Some(fixture.caller()))
-                .await
-                .unwrap()
-                .status
-        )
-        .unwrap(),
-        serde_json::to_value(CanisterStatusType::Stopped).unwrap()
-    );
-    let (source_plan, raw) = fixture
-        .mutation(Method::TakeCanisterSnapshot, None, false)
-        .await;
-    // Transport evidence alone writes no automatic journal receipt.
-    let capture = support::payload(Method::TakeCanisterSnapshot, &fixture.target, None);
-    let source_id = IcSnapshotReply::decode(&capture, &raw).unwrap().snapshots()[0]
-        .id()
-        .to_vec();
-    let metadata_request = IcSnapshotMetadataRequest::new(&fixture.target, &source_id).unwrap();
-    let raw = fixture
-        .read(IcSnapshotTransferReadPayload::Metadata(&metadata_request))
-        .await;
-    let metadata = IcSnapshotMetadataReply::decode(&metadata_request, &raw).unwrap();
-    assert_eq!(metadata.metadata().certified_data, 42_u64.to_le_bytes());
-    let chunks = read_complete_regions(&mut fixture, &metadata).await;
-    let complete = ArtifactChecksumRecord::from_bytes(
-        &chunks
-            .iter()
-            .flat_map(|(_, bytes)| bytes.iter().copied())
-            .collect::<Vec<_>>(),
-    );
-    let upload = IcSnapshotUploadRequest::metadata(&source_plan, &metadata, &complete).unwrap();
-    let raw = fixture.upload(&upload).await;
-    let allocation = IcSnapshotUploadReply::decode(&upload, &raw).unwrap();
-    let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = allocation.kind() else {
-        panic!("allocation ID required")
-    };
-    let destination = snapshot_id.clone();
-    assert_ne!(source_id, destination);
-    for (kind, bytes) in chunks {
-        let payload = IcSnapshotUploadRequest::data(&upload, &destination, kind, &bytes).unwrap();
-        let raw = fixture.upload(&payload).await;
-        assert!(matches!(
-            IcSnapshotUploadReply::decode(&payload, &raw)
-                .unwrap()
-                .kind(),
-            IcSnapshotUploadReplyKind::DataAcknowledgement
-        ));
+    for chunk in &metadata.metadata().wasm_chunk_store {
+        let kind = SnapshotDataKind::WasmChunk {
+            hash: chunk.hash.clone(),
+        };
+        let payload = IcSnapshotDataRequest::new(metadata, kind.clone()).unwrap();
+        let raw = fixture
+            .read(IcSnapshotTransferReadPayload::Data(&payload))
+            .await;
+        let reply = IcSnapshotDataReply::decode(&payload, &raw).unwrap();
+        chunks.push((kind, reply.chunk().to_vec()));
     }
-    fixture.mutation(Method::StartCanister, None, false).await;
-    fixture
-        .pic
-        .update_call(
-            fixture.principal(),
-            ic_platform::principal::ExternalPrincipal::anonymous(),
-            "write",
-            99_u64.to_le_bytes().to_vec(),
-        )
-        .await
-        .unwrap();
-    fixture.mutation(Method::StopCanister, None, false).await;
-    fixture
-        .mutation(Method::LoadCanisterSnapshot, Some(destination), false)
-        .await;
-    assert_eq!(
-        serde_json::to_value(
-            fixture
-                .pic
-                .canister_status(fixture.principal(), Some(fixture.caller()))
-                .await
-                .unwrap()
-                .status
-        )
-        .unwrap(),
-        serde_json::to_value(CanisterStatusType::Stopped).unwrap()
-    );
-    fixture.mutation(Method::StartCanister, None, false).await;
-    let restored = fixture
-        .pic
-        .query_call(
-            fixture.principal(),
-            ic_platform::principal::ExternalPrincipal::anonymous(),
-            "read",
-            vec![],
-        )
-        .await
-        .unwrap();
-    assert_eq!(restored, [42_u64.to_le_bytes(); 3].concat());
-    fs::write(fixture.root.join("qualification.json"),serde_json::to_vec_pretty(&serde_json::json!({"transport":"ic-agent 0.49.2","actual_signed_caller":fixture.caller().to_text(),"calls":fixture.sequence,"source_id":source_id,"original_reservations_pending":true,"automatic_receipts":false,"same_id_restore":true,"complete_heap_stable_global_state":true,"scope":"isolated stopped no-external-effects fixture; no generic application safety or full runner qualification"})).unwrap()).unwrap();
-
-    fixture.close().await;
+    chunks
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::attempt_journal::OperationBindingRequest;
+use crate::tests::support::schema as schema_checks;
 use serde_json::json;
 
 #[derive(Deserialize)]
@@ -297,14 +298,11 @@ fn admits_only_closed_required_v1_fields_and_bounded_byte_arrays() {
         Some(vec![1, 2]),
     );
     let value = serde_json::to_value(&record).expect("record");
-    for field in ["version", "method", "target", "snapshot_id"] {
-        let mut changed = value.clone();
-        changed.as_object_mut().expect("object").remove(field);
-        assert!(
-            serde_json::from_value::<IcManagementRequestRecord>(changed).is_err(),
-            "{field}"
-        );
-    }
+    schema_checks::required_fields::<IcManagementRequestRecord>(
+        &value,
+        "",
+        &["version", "method", "target", "snapshot_id"],
+    );
     for field in [
         "arguments",
         "target_bytes",

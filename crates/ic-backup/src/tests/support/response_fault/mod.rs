@@ -71,6 +71,20 @@ impl ResponseFault {
         Self::Target,
     ];
 
+    pub(crate) fn assert_identity(self, actual: &crate::policy::ResponseIdentityMismatch) {
+        use crate::policy::ResponseIdentityMismatch as E;
+        let expected = match self {
+            Self::Authority => E::Authority,
+            Self::Attempt => E::Attempt,
+            Self::Network | Self::Caller | Self::Release => E::Context,
+            Self::Target => E::Target,
+            Self::InvalidWire | Self::OversizedMetadata => {
+                panic!("{self:?} is not an identity fault")
+            }
+        };
+        assert_eq!(actual, &expected, "{self:?}");
+    }
+
     pub(crate) fn apply_with_later_failures(
         self,
         input: &mut IcUpdateResponseInput,

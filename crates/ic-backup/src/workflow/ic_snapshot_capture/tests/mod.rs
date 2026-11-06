@@ -2,7 +2,9 @@
 
 use super::*;
 use crate::ops::persistence::AttemptJournalGuard;
+use crate::tests::support::execution_workflow::assert_pending;
 use crate::tests::support::execution_workflow::{child_request, workflow};
+use crate::tests::support::provider::Provider;
 use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use crate::{
@@ -11,7 +13,6 @@ use crate::{
         attempt_journal::{AttemptJournalRecord, MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::ExecutionStageBindingRecord,
         ic_request::IcManagementRequest,
-        ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
     ops::persistence::BackupLayoutGuard,
@@ -65,7 +66,7 @@ fn cancellation_during_admission_or_submission_releases_lock_without_reset_or_re
         let before = fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap();
         drop(future);
         assert_eq!(provider.calls, usize::from(!suspend_admission));
-        assert_pending(&stage, &plan);
+        assert_pending(&stage, 42);
         assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, usize::from(!suspend_admission));
         assert_eq!(
@@ -115,67 +116,13 @@ fn prepare(
 fn admit(_: &IcMutationRequest<'_>) -> impl std::future::Future<Output = Result<(), Infallible>> {
     std::future::ready(Ok(()))
 }
-struct Provider {
-    calls: usize,
-    reply: Result<Vec<u8>, IcMutationProviderError>,
-    change_stage: Option<PathBuf>,
-    replace_layout: Option<PathBuf>,
-    target: Option<&'static str>,
-}
-impl Provider {
-    fn new(reply: Result<Vec<u8>, IcMutationProviderError>) -> Self {
-        Self {
-            calls: 0,
-            reply,
-            change_stage: None,
-            replace_layout: None,
-            target: None,
-        }
-    }
-}
-impl IcMutationProvider for Provider {
-    fn submit_mutation(
-        &mut self,
-        request: &IcMutationRequest<'_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            self.calls += 1;
-            assert_eq!(
-                request.payload().method(),
-                IcManagementMethodRecord::TakeCanisterSnapshot
-            );
-            if let Some(path) = &self.change_stage {
-                fs::write(path, b"{}").unwrap();
-            }
-            if let Some(path) = &self.replace_layout {
-                fs::rename(path, path.with_extension("retained-original")).unwrap();
-                fs::create_dir(path).unwrap();
-            }
-            IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: self.target.unwrap_or(request.payload().target()).into(),
-                reply: self.reply.clone()?,
-                evidence: ArtifactChecksumRecord::from_bytes(b"passive fixture association"),
-            })
-            .map_err(|_| IcMutationProviderError::Indeterminate)
-        })())
-    }
-}
-fn assert_pending(stage: &ExecutionStageGuard<'_>, plan: &OperationPlanRecord) {
-    let journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &plan.attempt_authority(42).unwrap(),
-    )
-    .unwrap();
-    let view = journal.record().unwrap().view();
-    assert_eq!(view.pending_mutation, Some(1));
-    assert_eq!(view.mutations_used, 1);
-    assert!(!view.applied);
+fn provider(reply: Result<Vec<u8>, IcMutationProviderError>) -> Provider<IcMutationProviderError> {
+    let mut provider = Provider::new(reply);
+    provider.method = Some(IcManagementMethodRecord::TakeCanisterSnapshot);
+    provider.evidence = Some(ArtifactChecksumRecord::from_bytes(
+        b"passive fixture association",
+    ));
+    provider
 }
 
 #[test]
@@ -185,7 +132,7 @@ fn one_durably_reserved_capture_holds_exclusion_and_leaves_receipt_qualification
     let (root, layout, binding, plan) = prepare(&payload);
     let stage =
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new(Ok(raw.clone()));
+    let mut provider = provider(Ok(raw.clone()));
     let acknowledgement = ready(capture_snapshot(
         &stage,
         42,
@@ -209,7 +156,7 @@ fn one_durably_reserved_capture_holds_exclusion_and_leaves_receipt_qualification
     ))
     .unwrap();
     assert_eq!(acknowledgement.input().reply, raw);
-    assert_pending(&stage, &plan);
+    assert_pending(&stage, 42);
     assert!(
         ready(capture_snapshot(
             &stage,
@@ -269,7 +216,7 @@ fn every_other_management_method_rejects_before_spending_callback_or_provider() 
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let path = stage.layout().unwrap().root().join("attempt-42.json");
         let original = fs::read(&path).unwrap();
-        let mut provider = Provider::new(Ok(reply(method)));
+        let mut provider = provider(Ok(reply(method)));
         assert!(matches!(
             ready(capture_snapshot(
                 &stage,
@@ -298,7 +245,7 @@ fn changed_payload_unknown_operation_missing_and_held_originals_refuse_without_c
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let path = stage.layout().unwrap().root().join("attempt-42.json");
     let original = fs::read(&path).unwrap();
-    let mut provider = Provider::new(Ok(reply(payload.method())));
+    let mut provider = provider(Ok(reply(payload.method())));
     let other = IcManagementRequestRecord::new(IcManagementRequest {
         method: payload.method(),
         target: "aaaaa-aa".into(),
@@ -339,10 +286,10 @@ fn changed_payload_unknown_operation_missing_and_held_originals_refuse_without_c
 #[test]
 fn fresh_consistency_rejection_consumes_original_reservation_without_dispatch_or_recapture() {
     let payload = payload(IcManagementMethodRecord::TakeCanisterSnapshot);
-    let (root, layout, binding, plan) = prepare(&payload);
+    let (root, layout, binding, _) = prepare(&payload);
     let stage =
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new(Ok(reply(payload.method())));
+    let mut provider = provider(Ok(reply(payload.method())));
     assert!(matches!(
         ready(capture_snapshot(
             &stage,
@@ -353,7 +300,7 @@ fn fresh_consistency_rejection_consumes_original_reservation_without_dispatch_or
         )),
         Err(IcSnapshotCaptureExecutionError::Admission(_))
     ));
-    assert_pending(&stage, &plan);
+    assert_pending(&stage, 42);
     assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 0);
     drop(stage);
@@ -377,11 +324,11 @@ fn provider_failures_retain_original_pending_spending_and_references_across_resu
             .retain_restore(&root.join("unfinished-restore.json"), plan.digest().hash())
             .unwrap();
         let references = stage_layout.restore_references().unwrap();
-        let mut provider = Provider::new(Err(failure));
+        let mut provider = provider(Err(failure));
         assert!(
             matches!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)), Err(IcSnapshotCaptureExecutionError::Provider(actual)) if actual == failure)
         );
-        assert_pending(&stage, &plan);
+        assert_pending(&stage, 42);
         let path = stage_layout.root().join("attempt-42.json");
         let original = fs::read(&path).unwrap();
         drop(stage);
@@ -405,7 +352,7 @@ fn provider_failures_retain_original_pending_spending_and_references_across_resu
 fn malformed_and_wrong_target_acknowledgements_retain_original_bytes_without_receipts() {
     for malformed in [true, false] {
         let payload = payload(IcManagementMethodRecord::TakeCanisterSnapshot);
-        let (root, layout, binding, plan) = prepare(&payload);
+        let (root, layout, binding, _) = prepare(&payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let raw = if malformed {
@@ -413,7 +360,7 @@ fn malformed_and_wrong_target_acknowledgements_retain_original_bytes_without_rec
         } else {
             reply(payload.method())
         };
-        let mut provider = Provider::new(Ok(raw.clone()));
+        let mut provider = provider(Ok(raw.clone()));
         if !malformed {
             provider.target = Some("aaaaa-aa");
         }
@@ -428,7 +375,7 @@ fn malformed_and_wrong_target_acknowledgements_retain_original_bytes_without_rec
         };
         assert_eq!(acknowledgement.input().reply, raw);
         assert_eq!(provider.calls, 1);
-        assert_pending(&stage, &plan);
+        assert_pending(&stage, 42);
         drop(stage);
         drop(layout);
         fs::remove_dir_all(root).unwrap();
@@ -457,7 +404,7 @@ fn drift_at_admission_stops_dispatch_and_post_reply_stage_or_layout_drift_retain
         let stage_root = stage.layout().unwrap().root().to_path_buf();
         let path = stage_root.join("stage-binding.json");
         let raw = reply(payload.method());
-        let mut provider = Provider::new(Ok(raw.clone()));
+        let mut provider = provider(Ok(raw.clone()));
         match boundary {
             Drift::StageAfterReply => provider.change_stage = Some(path.clone()),
             Drift::LayoutAfterReply => provider.replace_layout = Some(stage_root.clone()),

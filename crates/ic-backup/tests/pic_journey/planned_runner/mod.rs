@@ -260,9 +260,6 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
                     .unwrap()
                     .clone()
             }
-            Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
-                return Err(io::Error::other("capture fixture has no restore stages"));
-            }
         })
     }
 
@@ -276,9 +273,6 @@ impl ExecutionWorkflowStageDriver for CompleteDriver {
             Stage::Capture => self.capture(stage).await,
             Stage::Metadata => self.metadata(stage).await,
             Stage::Download => self.data(stage).await,
-            Stage::Allocation | Stage::Upload | Stage::Load | Stage::Start => {
-                Err(io::Error::other("capture fixture has no restore stages"))
-            }
         };
         if let Ok(evidence) = &result {
             retain_bytes(

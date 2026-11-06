@@ -3,16 +3,12 @@
 use super::*;
 use crate::{
     model::restore_safety::RestoreSafetyLaneRecord,
-    ops::persistence::JournalLock,
     tests::support::{
         restore_safety::{plan, requirement, source},
         temp_dir,
     },
 };
-use std::{
-    fs, io,
-    os::unix::fs::{PermissionsExt, symlink},
-};
+use std::{fs, io};
 
 fn layouts() -> (std::path::PathBuf, BackupLayoutGuard, BackupLayoutGuard) {
     let root = temp_dir("ic-backup-restore-safety");
@@ -48,10 +44,6 @@ fn requires_both_retained_original_plans_and_reconciles_creation_without_replace
     let path = layout.root().join("restore-safety-requirement.json");
     let bytes = fs::read(&path).unwrap();
     assert_eq!(
-        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
-        0o600
-    );
-    assert_eq!(
         read_restore_safety_requirement(
             &layout,
             &source_layout,
@@ -75,20 +67,6 @@ fn requires_both_retained_original_plans_and_reconciles_creation_without_replace
         Err(RestoreSafetyPersistenceError::DigestMismatch)
     ));
     assert_eq!(fs::read(&path).unwrap(), bytes);
-    let lock = JournalLock::acquire(&path).unwrap();
-    assert!(matches!(
-        read_restore_safety_requirement(
-            &layout,
-            &source_layout,
-            &plan,
-            &source,
-            &original.digest()
-        ),
-        Err(RestoreSafetyPersistenceError::Lock(
-            JournalLockError::Locked { .. }
-        ))
-    ));
-    drop(lock);
     drop(layout);
     drop(source_layout);
     let layout = BackupLayoutGuard::acquire(&root.join("restore")).unwrap();
@@ -164,7 +142,7 @@ fn oversized_malformed_and_rebound_requirements_preserve_exact_rejected_bytes() 
     fs::remove_dir_all(root).unwrap();
 }
 #[test]
-fn rejects_symlinks_and_replaced_restore_or_source_roots_without_repair() {
+fn replaced_restore_or_source_roots_refuse_without_repair() {
     for replace_source in [false, true] {
         let (root, layout, source_layout) = layouts();
         let plan = plan();
@@ -174,28 +152,6 @@ fn rejects_symlinks_and_replaced_restore_or_source_roots_without_repair() {
         super::super::create_operation_plan(&source_layout, &source).unwrap();
         create_restore_safety_requirement(&layout, &source_layout, &plan, &source, &original)
             .unwrap();
-        let path = layout.root().join("restore-safety-requirement.json");
-        let retained = layout.root().join("retained.json");
-        fs::rename(&path, &retained).unwrap();
-        symlink(&retained, &path).unwrap();
-        assert!(
-            read_restore_safety_requirement(
-                &layout,
-                &source_layout,
-                &plan,
-                &source,
-                &original.digest()
-            )
-            .is_err()
-        );
-        assert!(
-            fs::symlink_metadata(&path)
-                .unwrap()
-                .file_type()
-                .is_symlink()
-        );
-        fs::remove_file(&path).unwrap();
-        fs::rename(&retained, &path).unwrap();
         let selected = if replace_source {
             source_layout.root()
         } else {

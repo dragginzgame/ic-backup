@@ -14,7 +14,7 @@ use ic_backup::{
         artifacts::ChecksumError,
         attempt_journal::AttemptJournalRecordError,
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
-        ic_snapshot_reply::{IcSnapshotReply, IcSnapshotReplyError},
+        ic_snapshot_reply::IcSnapshotReply,
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
@@ -35,11 +35,7 @@ fn request(method: IcManagementMethodRecord, target: &str) -> IcManagementReques
 }
 
 #[test]
-#[expect(
-    clippy::too_many_lines,
-    reason = "one linear public recovery journey keeps original bytes, spending and replay assertions together"
-)]
-fn retains_original_spending_and_reply_bytes_across_reopen_and_decode_failures() {
+fn retains_original_spending_and_reply_bytes_across_reopen_and_association_failure() {
     let root = support::temp_root("ic-backup-public-reply");
     let layout = BackupLayoutGuard::acquire(&root).expect("layout exclusion");
     let capture = request(
@@ -112,27 +108,6 @@ fn retains_original_spending_and_reply_bytes_across_reopen_and_decode_failures()
         wrong_association.digest().verify(expected_reply.hash()),
         Err(ChecksumError::ChecksumMismatch { .. })
     ));
-    assert_eq!(
-        IcSnapshotReply::decode(&inventory, &retained).unwrap_err(),
-        IcSnapshotReplyError::InvalidReply
-    );
-    assert_eq!(
-        IcSnapshotReply::decode(&capture, b"lost or malformed reply").unwrap_err(),
-        IcSnapshotReplyError::InvalidReply
-    );
-    let duplicate = contract::encode_one(vec![
-        Snapshot {
-            id: vec![1],
-            taken_at_timestamp: 0,
-            total_size: 0
-        };
-        2
-    ])
-    .expect("ambiguous inventory");
-    assert_eq!(
-        IcSnapshotReply::decode(&inventory, &duplicate).unwrap_err(),
-        IcSnapshotReplyError::DuplicateSnapshotId
-    );
     assert_eq!(
         journal.record().expect("unchanged accounting").view(),
         retained_view

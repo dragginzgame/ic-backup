@@ -1,6 +1,7 @@
 //! Fresh exact accounting cases adapted from Canic's pending and receipt regressions.
 
 use super::*;
+use crate::tests::support::schema;
 
 fn binding_request() -> OperationBindingRequest {
     OperationBindingRequest {
@@ -357,19 +358,7 @@ fn decoding_requires_closed_fields_and_valid_chronology() {
         ),
         ("/authority/budget", vec!["mutations", "observations"]),
     ] {
-        for field in fields {
-            let mut invalid = value.clone();
-            invalid
-                .pointer_mut(container)
-                .expect("container")
-                .as_object_mut()
-                .expect("object")
-                .remove(field);
-            assert!(
-                serde_json::from_value::<AttemptJournalRecord>(invalid).is_err(),
-                "missing {field}"
-            );
-        }
+        schema::required_fields::<AttemptJournalRecord>(&value, container, &fields);
     }
     for event in [
         serde_json::json!({"event":"mutation_reserved","attempt":2}),
@@ -395,12 +384,7 @@ fn decoding_requires_closed_fields_and_valid_chronology() {
     let mut invalid = value.clone();
     invalid["projection"] = serde_json::json!({"applied":true});
     assert!(serde_json::from_value::<AttemptJournalRecord>(invalid).is_err());
-    let duplicate = serde_json::to_string(&value).expect("json").replacen(
-        "\"version\":1",
-        "\"version\":1,\"version\":1",
-        1,
-    );
-    assert!(serde_json::from_str::<AttemptJournalRecord>(&duplicate).is_err());
+    schema::duplicate_versions::<AttemptJournalRecord>(&value);
     let mut valid = record.clone();
     valid.reserve_mutation().expect("claim");
     valid

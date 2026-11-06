@@ -1,6 +1,6 @@
 //! Real bounded downloads under one original workflow; this is an isolated test driver.
 
-use super::stage::{self, Stage};
+use super::stage;
 use super::{backend::Backend, management};
 use ic_backup::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use ic_backup::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
@@ -35,7 +35,6 @@ use super::steps::{CaptureProvider, ReadProvider};
 pub(super) fn workflow(backend: &Backend) -> ExecutionWorkflowRecord {
     stage::catalog(
         backend,
-        &Stage::CAPTURE,
         &ArtifactChecksumRecord::from_bytes(b"capture contract"),
     )
 }

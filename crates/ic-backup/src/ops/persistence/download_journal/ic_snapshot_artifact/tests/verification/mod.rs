@@ -81,15 +81,12 @@ impl VerificationFault {
 }
 
 fn plan() -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version": 1,
-        "context": {"network": "ab".repeat(32), "caller": "2vxsx-fae", "release": "cd".repeat(32)},
-        "inventory": {"version": 1, "targets": [{"canister_id": TARGET, "parent_canister_id": null, "role": null, "module_hash": null}]},
-        "selected_targets": [TARGET],
-        "graph": {"version": 1, "nodes": [{"operation_sequence": 7, "depends_on": []}]},
-        "operations": [{"operation_sequence": 7, "target": TARGET, "request": "ef".repeat(32), "budget": {"mutations": 1, "observations": 0}}],
-        "budget": {"mutations": 1, "observations": 0}
-    })).unwrap()
+    OperationPlanRecord::new(crate::tests::support::ic_snapshot_upload::plan_request(
+        &"ef".repeat(32),
+        7,
+        0,
+    ))
+    .unwrap()
 }
 
 #[test]
@@ -217,17 +214,11 @@ fn maximum_chunks_and_region_bytes_verify_without_an_aggregate_buffer() {
     let raw = contract::encode_one(values).unwrap();
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let mut guard = DownloadJournalGuard::create(
+    let mut guard = journal(
         &layout,
         plan.digest().hash(),
-        vec![DownloadArtifactRequest {
-            canister_id: TARGET.into(),
-            snapshot_id: TOKEN.into(),
-            snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-            snapshot_total_size_bytes: u64::MAX,
-        }],
-    )
-    .unwrap();
+        metadata.metadata().taken_at_timestamp,
+    );
     let mut writer = guard
         .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
         .unwrap();
@@ -378,17 +369,11 @@ fn non_durable_originals_and_replaced_layout_reject_before_artifact_reads() {
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let guard = DownloadJournalGuard::create(
+    let guard = journal(
         &layout,
         plan.digest().hash(),
-        vec![DownloadArtifactRequest {
-            canister_id: TARGET.into(),
-            snapshot_id: TOKEN.into(),
-            snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-            snapshot_total_size_bytes: u64::MAX,
-        }],
-    )
-    .unwrap();
+        metadata.metadata().taken_at_timestamp,
+    );
     assert!(matches!(
         guard.verify_ic_snapshot_artifact(&plan, TOKEN, &metadata),
         Err(IcSnapshotArtifactError::Integrity(

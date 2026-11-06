@@ -8,6 +8,11 @@ async fn normal_consumer_lost_allocation_retains_pending_without_upload_or_redis
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn normal_consumer_lost_first_upload_retains_pending_without_applied_prefix() {
+    lost_reply(Mode::LoseUploadFirst).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn normal_consumer_lost_second_upload_retains_applied_prefix_and_source() {
     lost_reply(Mode::LoseUploadSecond).await;
 }
@@ -40,12 +45,13 @@ async fn lost_reply(mode: Mode) {
     assert_eq!(attempts["mutations_remaining"], 0);
     assert_eq!(
         row["applied_operations"],
-        usize::from(stage == Stage::Upload)
+        usize::from(stage == Stage::Upload && sequence != 0)
     );
     assert!(stage.path(&root).join("discarded-oracle.candid").is_file());
     for successor in Stage::RESTORE
         .into_iter()
-        .filter(|candidate| candidate.sequence() > stage.sequence())
+        .skip_while(|candidate| *candidate != stage)
+        .skip(1)
     {
         assert_eq!(
             operator::stage_row(&progress, successor)["state"]["state"],

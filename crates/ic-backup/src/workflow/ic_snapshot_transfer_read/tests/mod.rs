@@ -2,7 +2,9 @@
 
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
+use crate::tests::support::execution_workflow::assert_pending;
 use crate::tests::support::execution_workflow::{child_request, workflow};
+use crate::tests::support::provider::Provider;
 use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::{
@@ -12,7 +14,6 @@ use crate::{
         execution_workflow::ExecutionStageBindingRecord,
         ic_snapshot_data::IcSnapshotDataRequest,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-        ic_update_response::IcUpdateResponseInput,
         operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
     },
     ops::persistence::BackupLayoutGuard,
@@ -60,64 +61,14 @@ fn admit(
 ) -> impl std::future::Future<Output = Result<(), Infallible>> {
     std::future::ready(Ok(()))
 }
-struct Provider {
-    calls: usize,
+fn provider(
     reply: Result<Vec<u8>, IcObservationProviderError>,
-    change_stage: Option<PathBuf>,
-    replace_layout: Option<PathBuf>,
-    target: Option<&'static str>,
-}
-impl Provider {
-    fn new(reply: Result<Vec<u8>, IcObservationProviderError>) -> Self {
-        Self {
-            calls: 0,
-            reply,
-            change_stage: None,
-            replace_layout: None,
-            target: None,
-        }
-    }
-}
-impl IcSnapshotTransferReadProvider for Provider {
-    fn read_snapshot(
-        &mut self,
-        request: &IcSnapshotTransferReadRequest<'_, '_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<
-        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
-    > {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            self.calls += 1;
-            if let Some(path) = &self.change_stage {
-                fs::write(path, b"{}").unwrap();
-            }
-            if let Some(path) = &self.replace_layout {
-                fs::rename(path, path.with_extension("retained-original")).unwrap();
-                fs::create_dir(path).unwrap();
-            }
-            IcSnapshotTransferReadResponse::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: self.target.unwrap_or(request.payload().target()).into(),
-                reply: self.reply.clone()?,
-                evidence: ArtifactChecksumRecord::from_bytes(b"fixture association only"),
-            })
-            .map_err(|_| IcObservationProviderError::Indeterminate)
-        })())
-    }
-}
-fn assert_pending(stage: &ExecutionStageGuard<'_>, plan: &OperationPlanRecord) {
-    let journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &plan.attempt_authority(42).unwrap(),
-    )
-    .unwrap();
-    let view = journal.record().unwrap().view();
-    assert_eq!(view.pending_mutation, Some(1));
-    assert!(!view.applied);
-    assert_eq!(view.mutations_used, 1);
+) -> Provider<IcObservationProviderError> {
+    let mut provider = Provider::new(reply);
+    provider.evidence = Some(ArtifactChecksumRecord::from_bytes(
+        b"fixture association only",
+    ));
+    provider
 }
 
 struct SuspendedProvider {
@@ -178,7 +129,7 @@ fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() 
             let path = stage.layout().unwrap().root().join("attempt-42.json");
             let before = fs::read(&path).unwrap();
             drop(future);
-            assert_pending(&stage, &plan);
+            assert_pending(&stage, 42);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
@@ -213,7 +164,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         let (root, layout, binding, plan) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
-        let mut provider = Provider::new(Ok(raw.clone()));
+        let mut provider = provider(Ok(raw.clone()));
         let response = ready(dispatch_pending(
             &stage,
             42,
@@ -239,7 +190,7 @@ fn one_locked_durable_read_leaves_pending_until_explicit_integration_receipt() {
         .unwrap();
         assert_eq!(response.input().reply, raw);
         assert_eq!(provider.calls, 1);
-        assert_pending(&stage, &plan);
+        assert_pending(&stage, 42);
         assert!(
             ready(dispatch_pending(
                 &stage,
@@ -288,7 +239,7 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let path = stage.layout().unwrap().root().join("attempt-42.json");
     let original = fs::read(&path).unwrap();
-    let mut provider = Provider::new(Ok(metadata_wire()));
+    let mut provider = provider(Ok(metadata_wire()));
     let other = IcSnapshotMetadataRequest::new(request.target(), &[1]).unwrap();
     assert!(matches!(
         ready(dispatch_pending(
@@ -333,10 +284,10 @@ fn wrong_payload_unknown_operation_missing_and_locked_originals_do_not_spend_or_
 fn fresh_admission_rejection_retains_spending_without_provider_or_redispatch() {
     let request = metadata_request();
     let payload = IcSnapshotTransferReadPayload::Metadata(&request);
-    let (root, layout, binding, plan) = prepare(payload);
+    let (root, layout, binding, _) = prepare(payload);
     let stage =
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new(Ok(metadata_wire()));
+    let mut provider = provider(Ok(metadata_wire()));
     assert!(matches!(
         ready(dispatch_pending(
             &stage,
@@ -347,7 +298,7 @@ fn fresh_admission_rejection_retains_spending_without_provider_or_redispatch() {
         )),
         Err(IcSnapshotTransferReadExecutionError::Admission(_))
     ));
-    assert_pending(&stage, &plan);
+    assert_pending(&stage, 42);
     assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
     assert_eq!(provider.calls, 0);
     drop(stage);
@@ -364,14 +315,14 @@ fn each_provider_failure_retains_pending_original_across_resume_without_reissue(
     ] {
         let request = metadata_request();
         let payload = IcSnapshotTransferReadPayload::Metadata(&request);
-        let (root, layout, binding, plan) = prepare(payload);
+        let (root, layout, binding, _) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
-        let mut provider = Provider::new(Err(failure));
+        let mut provider = provider(Err(failure));
         assert!(
             matches!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)), Err(IcSnapshotTransferReadExecutionError::Provider(actual)) if actual == failure)
         );
-        assert_pending(&stage, &plan);
+        assert_pending(&stage, 42);
         let path = stage.layout().unwrap().root().join("attempt-42.json");
         let original = fs::read(&path).unwrap();
         drop(stage);
@@ -391,11 +342,11 @@ fn each_provider_failure_retains_pending_original_across_resume_without_reissue(
 fn malformed_reply_retains_returned_bytes_and_original_pending_reservation() {
     let request = metadata_request();
     let payload = IcSnapshotTransferReadPayload::Metadata(&request);
-    let (root, layout, binding, plan) = prepare(payload);
+    let (root, layout, binding, _) = prepare(payload);
     let stage =
         ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
     let raw = b"invalid bounded candid".to_vec();
-    let mut provider = Provider::new(Ok(raw.clone()));
+    let mut provider = provider(Ok(raw.clone()));
     let error = ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).unwrap_err();
     let IcSnapshotTransferReadExecutionError::AfterReply {
         source: IcSnapshotTransferReadReplyError::Association(_),
@@ -406,7 +357,7 @@ fn malformed_reply_retains_returned_bytes_and_original_pending_reservation() {
     };
     assert_eq!(response.input().reply, raw);
     assert_eq!(provider.calls, 1);
-    assert_pending(&stage, &plan);
+    assert_pending(&stage, 42);
     drop(stage);
     drop(layout);
     fs::remove_dir_all(root).unwrap();
@@ -417,13 +368,13 @@ fn changed_stage_at_admission_stops_dispatch_and_changed_stage_after_reply_retai
     for after_reply in [false, true] {
         let request = metadata_request();
         let payload = IcSnapshotTransferReadPayload::Metadata(&request);
-        let (root, layout, binding, plan) = prepare(payload);
+        let (root, layout, binding, _) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let path = stage.layout().unwrap().root().join("stage-binding.json");
         let original = fs::read(&path).unwrap();
         let raw = metadata_wire();
-        let mut provider = Provider::new(Ok(raw.clone()));
+        let mut provider = provider(Ok(raw.clone()));
         if after_reply {
             provider.change_stage = Some(path.clone());
         }
@@ -457,7 +408,7 @@ fn changed_stage_at_admission_stops_dispatch_and_changed_stage_after_reply_retai
         }
         assert_eq!(provider.calls, usize::from(after_reply));
         fs::write(&path, original).unwrap(); // Restore only this fixture's deliberately changed declaration.
-        assert_pending(&stage, &plan);
+        assert_pending(&stage, 42);
         drop(stage);
         drop(layout);
         fs::remove_dir_all(root).unwrap();
@@ -474,7 +425,7 @@ fn wrong_claim_and_replaced_layout_retain_reply_without_outcome_or_repair() {
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let stage_root = stage.layout().unwrap().root().to_path_buf();
         let raw = metadata_wire();
-        let mut provider = Provider::new(Ok(raw.clone()));
+        let mut provider = provider(Ok(raw.clone()));
         if replaced {
             provider.replace_layout = Some(stage_root.clone());
         } else {

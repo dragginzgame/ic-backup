@@ -9,6 +9,7 @@ mod terminal;
 
 use super::*;
 use consumer::{Mode, Stage};
+const STORED_CHUNK: &[u8] = b"retained chunk-store state";
 use std::{
     collections::BTreeMap,
     os::unix::fs::OpenOptionsExt,
@@ -193,6 +194,7 @@ async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
     )
     .unwrap();
     let expected = IcSnapshotMetadataReply::decode(&original_request, &raw).unwrap();
+    assert_eq!(expected.metadata().wasm_chunk_store.len(), 1);
     let (_, raw) = fixture
         .mutation(Method::TakeCanisterSnapshot, None, false)
         .await;
@@ -218,6 +220,13 @@ async fn verify(fixture: &mut Fixture, root: &Path) -> serde_json::Value {
     });
     assert_eq!(actual_state, expected_state);
     let chunks = read_complete_regions(fixture, &actual).await;
+    let stored: Vec<_> = chunks
+        .iter()
+        .filter_map(|(kind, bytes)| {
+            matches!(kind, SnapshotDataKind::WasmChunk { .. }).then_some(bytes.as_slice())
+        })
+        .collect();
+    assert_eq!(stored, [STORED_CHUNK]);
     let capture: ic_backup::model::execution_workflow::ExecutionWorkflowRecord =
         serde_json::from_slice(&fs::read(root.join("capture/execution-workflow.json")).unwrap())
             .unwrap();
@@ -278,6 +287,17 @@ async fn captured(identity_seed: [u8; 32]) -> (Fixture, PathBuf) {
         &identity_seed,
     )))
     .await;
+    // Fixture setup is outside backup authority. The complete consumer must
+    // transfer this stored chunk and restore it after the live store is cleared.
+    fixture
+        .pic
+        .upload_chunk(
+            fixture.principal(),
+            Some(fixture.caller()),
+            STORED_CHUNK.to_vec(),
+        )
+        .await
+        .unwrap();
     fixture.mutation(Method::StopCanister, None, false).await;
     let root = fixture.root.join("independent-consumer");
     std::os::unix::fs::DirBuilderExt::mode(&mut fs::DirBuilder::new(), 0o700)
@@ -294,6 +314,19 @@ async fn captured(identity_seed: [u8; 32]) -> (Fixture, PathBuf) {
         .await
         .assert_status(0);
     assert_eq!(files(&root), before);
+    fixture
+        .pic
+        .clear_chunk_store(fixture.principal(), Some(fixture.caller()))
+        .await
+        .unwrap();
+    assert_eq!(
+        fixture
+            .pic
+            .stored_chunks(fixture.principal(), Some(fixture.caller()))
+            .await
+            .unwrap(),
+        Vec::<Vec<u8>>::new()
+    );
     fixture.mutation(Method::StartCanister, None, false).await;
     fixture
         .pic

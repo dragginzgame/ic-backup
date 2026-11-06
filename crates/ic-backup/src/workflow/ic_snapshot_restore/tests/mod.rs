@@ -1,6 +1,7 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
+use crate::tests::support::provider::Provider;
 use crate::tests::support::retained_reply::write_synced;
 mod fixture;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
@@ -50,33 +51,6 @@ fn single(method: Method) -> OperationPlanRecord {
     request.budget = PlanBudgetRecord::new(1, 1).unwrap();
     OperationPlanRecord::new(request).unwrap()
 }
-struct Provider {
-    calls: usize,
-    reply: Result<Vec<u8>, IcMutationProviderError>,
-}
-impl IcMutationProvider for Provider {
-    fn submit_mutation(
-        &mut self,
-        request: &IcMutationRequest<'_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            self.calls += 1;
-            let reply = self.reply.clone()?;
-            Ok(
-                IcMutationAcknowledgement::new(crate::tests::support::update::input(
-                    request.authority(),
-                    request.mutation_attempt(),
-                    request.plan().context(),
-                    reply,
-                ))
-                .unwrap(),
-            )
-        })())
-    }
-}
 fn receipt(
     request: &IcMutationRequest<'_>,
     reply: &IcMutationAcknowledgement,
@@ -115,10 +89,7 @@ fn load_and_start_qualify_under_exclusion_then_checkpoint_without_reissue() {
             },
         )
         .unwrap();
-        let mut provider = Provider {
-            calls: 0,
-            reply: Ok(b"DIDL\0\0".to_vec()),
-        };
+        let mut provider = Provider::new(Ok(b"DIDL\0\0".to_vec()));
         let (reply, checkpoint) = ready(restore_snapshot(
             &stage,
             existing(&fixture.source_layout, &fixture.source),
@@ -230,10 +201,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
         },
     )
     .unwrap();
-    let mut provider = Provider {
-        calls: 0,
-        reply: Ok(b"DIDL\0\0".to_vec()),
-    };
+    let mut provider = Provider::new(Ok(b"DIDL\0\0".to_vec()));
     let reply_path = fixture.root.join("retained-reply.candid");
     let mut future = Box::pin(restore_snapshot(
         &stage,
@@ -287,6 +255,7 @@ enum RestoreFailure {
     RunningTarget,
     LostReply,
     MalformedReply,
+    MalformedStartReply,
     Qualification,
     WrongReceipt,
     ChangedRequirement,
@@ -297,11 +266,12 @@ enum RestoreFailure {
     MissingRequirement,
 }
 impl RestoreFailure {
-    const ALL: [Self; 12] = [
+    const ALL: [Self; 13] = [
         Self::Admission,
         Self::RunningTarget,
         Self::LostReply,
         Self::MalformedReply,
+        Self::MalformedStartReply,
         Self::Qualification,
         Self::WrongReceipt,
         Self::ChangedRequirement,
@@ -314,7 +284,8 @@ impl RestoreFailure {
     fn starts(self) -> bool {
         matches!(
             self,
-            Self::MissingAcceptance
+            Self::MalformedStartReply
+                | Self::MissingAcceptance
                 | Self::InactiveFence
                 | Self::MissingControlledExecution
                 | Self::MissingRequirement
@@ -358,14 +329,11 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
             },
         )
         .unwrap();
-        let mut provider = Provider {
-            calls: 0,
-            reply: match failure {
-                RestoreFailure::LostReply => Err(IcMutationProviderError::Indeterminate),
-                RestoreFailure::MalformedReply => Ok(vec![]),
-                _ => Ok(b"DIDL\0\0".to_vec()),
-            },
-        };
+        let mut provider = Provider::new(match failure {
+            RestoreFailure::LostReply => Err(IcMutationProviderError::Indeterminate),
+            RestoreFailure::MalformedReply | RestoreFailure::MalformedStartReply => Ok(vec![]),
+            _ => Ok(b"DIDL\0\0".to_vec()),
+        });
         let requirement_path = stage
             .layout()
             .unwrap()
@@ -465,6 +433,7 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
             ) => {}
             (
                 RestoreFailure::MalformedReply
+                | RestoreFailure::MalformedStartReply
                 | RestoreFailure::Qualification
                 | RestoreFailure::WrongReceipt
                 | RestoreFailure::OccupiedCheckpoint,
@@ -473,7 +442,10 @@ fn failure_boundaries_retain_pending_or_applied_and_never_repeat_provider() {
                 }),
             ) => assert_eq!(
                 acknowledgement.input().reply,
-                if failure == RestoreFailure::MalformedReply {
+                if matches!(
+                    failure,
+                    RestoreFailure::MalformedReply | RestoreFailure::MalformedStartReply
+                ) {
                     &[][..]
                 } else {
                     &b"DIDL\0\0"[..]
@@ -591,10 +563,9 @@ fn independently_valid_load_plan_cannot_rebind_the_admitted_snapshot_source() {
         },
     )
     .unwrap();
-    let mut provider = Provider {
-        calls: 0,
-        reply: Ok(crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec()),
-    };
+    let mut provider = Provider::new(Ok(
+        crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec()
+    ));
     let result = ready(restore_snapshot(
         &stage,
         existing(&source_layout, &original_source),

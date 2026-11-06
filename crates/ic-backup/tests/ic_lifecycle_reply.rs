@@ -13,7 +13,7 @@ use ic_backup::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
         attempt_journal::AttemptJournalRecordError,
-        ic_lifecycle_reply::{IcLifecycleReply, IcLifecycleReplyError, IcLifecycleReplyKind},
+        ic_lifecycle_reply::{IcLifecycleReply, IcLifecycleReplyKind},
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
         operation_plan::OperationPlanRecord,
     },
@@ -145,18 +145,6 @@ fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
         rebound.digest().verify(expected_load.hash()),
         Err(ChecksumError::ChecksumMismatch { .. })
     ));
-    assert_eq!(
-        IcLifecycleReply::decode(&load, &retained_status).unwrap_err(),
-        IcLifecycleReplyError::InvalidReply
-    );
-    assert_eq!(
-        IcLifecycleReply::decode(&status, &retained_load).unwrap_err(),
-        IcLifecycleReplyError::InvalidReply
-    );
-    assert_eq!(
-        IcLifecycleReply::decode(&status, b"lost status reply").unwrap_err(),
-        IcLifecycleReplyError::InvalidReply
-    );
     assert_eq!(
         journal.record().expect("unchanged accounting").view(),
         original_view

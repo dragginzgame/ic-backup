@@ -12,7 +12,7 @@ use ic_backup::{
     model::{
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
         ic_snapshot_coverage::{IcSnapshotDataCoverage, IcSnapshotDataCoverageError},
-        ic_snapshot_data::{IcSnapshotDataError, IcSnapshotDataReply, IcSnapshotDataRequest},
+        ic_snapshot_data::{IcSnapshotDataReply, IcSnapshotDataRequest},
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         operation_plan::OperationPlanRecord,
     },
@@ -139,10 +139,7 @@ fn retained_case(case: Case, raw_metadata: &[u8]) {
     assert_eq!(admitted.digest().hash(), case.digest);
     assert_eq!(admitted.chunk_checksum(), &checksum);
     assert_eq!(admitted.chunk(), [0, 255, 17]);
-    assert_eq!(
-        IcSnapshotDataReply::decode(&request, &stored[..stored.len() - 1]).unwrap_err(),
-        IcSnapshotDataError::InvalidReply
-    );
+
     assert_eq!(journal.record().unwrap().view(), original_view);
     assert_eq!(original_view.pending_mutation, Some(mutation));
     assert_eq!(original_view.pending_observation, Some(observation));

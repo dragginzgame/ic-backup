@@ -112,6 +112,7 @@ fn with_data_stage_then<T>(
 enum Failure {
     None,
     LostSecond,
+    MalformedSecond,
     QualificationSecond,
     WrongReceiptSecond,
     Admission,
@@ -196,6 +197,18 @@ impl Failure {
         operations: usize,
     ) -> ExpectedProgress {
         match self {
+            Failure::MalformedSecond => {
+                assert!(matches!(result,
+                    Err(IcSnapshotDataUploadExecutionError::Upload(
+                        IcSnapshotUploadExecutionError::AfterReply { acknowledgement, .. }
+                    )) if acknowledgement.input().reply.is_empty()
+                ));
+                ExpectedProgress {
+                    mutations_used: 2,
+                    applied_operations: 1,
+                    provider_calls: 2,
+                }
+            }
             Failure::LostSecond => {
                 assert!(matches!(
                     result,
@@ -307,7 +320,11 @@ impl IcSnapshotUploadProvider for Provider {
             if self.failure == Failure::LostSecond && self.calls == 2 {
                 return Err(IcMutationProviderError::Indeterminate);
             }
-            let reply = crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec();
+            let reply = if self.failure == Failure::MalformedSecond && self.calls == 2 {
+                vec![]
+            } else {
+                crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec()
+            };
             Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
                 authority: request.authority().digest(),
                 mutation_attempt: request.mutation_attempt(),
@@ -538,6 +555,7 @@ fn assert_not_reissued(
 fn failures_stop_before_successors_and_preserve_pending_applied_and_occupied_evidence() {
     for failure in [
         Failure::LostSecond,
+        Failure::MalformedSecond,
         Failure::QualificationSecond,
         Failure::WrongReceiptSecond,
         Failure::Admission,
@@ -694,17 +712,11 @@ fn batch_plans_empty_regions_and_known_empty_chunks_without_placeholder_writes()
         values.wasm_chunk_store = if known_empty { vec![empty] } else { vec![] };
         let raw = contract::encode_one(values).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut source = DownloadJournalGuard::create(
+        let mut source = journal(
             &layout,
             plan.digest().hash(),
-            vec![DownloadArtifactRequest {
-                canister_id: TARGET.into(),
-                snapshot_id: TOKEN.into(),
-                snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-                snapshot_total_size_bytes: u64::MAX,
-            }],
-        )
-        .unwrap();
+            metadata.metadata().taken_at_timestamp,
+        );
         let writer = source
             .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
             .unwrap();

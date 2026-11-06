@@ -1,4 +1,5 @@
 use super::*;
+use crate::tests::support::schema as schema_checks;
 use crate::tests::support::{
     execution_settlement::{applied, record},
     operation_plan::{hash, plan},
@@ -34,11 +35,11 @@ fn strict_v1_rows_reject_missing_unknown_invalid_and_duplicate_identities() {
     let plan = plan();
     let record = record(&plan, &applied(&plan));
     let value = serde_json::to_value(&record).unwrap();
-    for field in ["version", "plan_intent", "journals"] {
-        let mut changed = value.clone();
-        changed.as_object_mut().unwrap().remove(field);
-        assert!(serde_json::from_value::<ExecutionSettlementRecord>(changed).is_err());
-    }
+    schema_checks::required_fields::<ExecutionSettlementRecord>(
+        &value,
+        "",
+        &["version", "plan_intent", "journals"],
+    );
     for (field, replacement) in [
         ("version", json!(2)),
         ("version", json!(null)),

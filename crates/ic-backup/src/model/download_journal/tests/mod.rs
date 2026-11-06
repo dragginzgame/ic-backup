@@ -1,6 +1,7 @@
 //! Adapted Canic state/validation cases and exact local identity regressions.
 
 use super::*;
+use crate::tests::support::schema;
 use ic_platform::Principal;
 
 const HASH: &str = "abababababababababababababababababababababababababababababababab";
@@ -164,34 +165,25 @@ fn current_schema_requires_every_field_and_closed_state_evidence() {
             "invalid checksum state {state:?}"
         );
     }
-    for field in ["version", "intent", "artifacts"] {
-        let mut invalid = value.clone();
-        invalid.as_object_mut().expect("object").remove(field);
-        assert!(
-            serde_json::from_value::<DownloadJournalRecord>(invalid).is_err(),
-            "missing {field}"
-        );
-    }
-    for field in [
-        "canister_id",
-        "snapshot_id",
-        "snapshot_taken_at_timestamp",
-        "snapshot_total_size_bytes",
-        "staging_path",
-        "artifact_path",
-        "state",
-        "checksum",
-    ] {
-        let mut invalid = value.clone();
-        invalid["artifacts"][0]
-            .as_object_mut()
-            .expect("entry")
-            .remove(field);
-        assert!(
-            serde_json::from_value::<DownloadJournalRecord>(invalid).is_err(),
-            "missing {field}"
-        );
-    }
+    schema::required_fields::<DownloadJournalRecord>(
+        &value,
+        "",
+        &["version", "intent", "artifacts"],
+    );
+    schema::required_fields::<DownloadJournalRecord>(
+        &value,
+        "/artifacts/0",
+        &[
+            "canister_id",
+            "snapshot_id",
+            "snapshot_taken_at_timestamp",
+            "snapshot_total_size_bytes",
+            "staging_path",
+            "artifact_path",
+            "state",
+            "checksum",
+        ],
+    );
     for (field, invalid_value) in [
         ("state", serde_json::json!("ChecksumVerified")),
         ("state", serde_json::json!("Durable")),
@@ -217,12 +209,7 @@ fn current_schema_requires_every_field_and_closed_state_evidence() {
         invalid[field] = serde_json::json!(2);
         assert!(serde_json::from_value::<DownloadJournalRecord>(invalid).is_err());
     }
-    let duplicated = serde_json::to_string(&value).expect("json").replacen(
-        "\"version\":1",
-        "\"version\":1,\"version\":1",
-        1,
-    );
-    assert!(serde_json::from_str::<DownloadJournalRecord>(&duplicated).is_err());
+    schema::duplicate_versions::<DownloadJournalRecord>(&value);
 }
 
 #[test]

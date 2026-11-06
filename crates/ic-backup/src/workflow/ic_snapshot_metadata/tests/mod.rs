@@ -4,6 +4,7 @@ use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
 use crate::tests::support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::provider::Provider;
 use crate::tests::support::{response_fault::ReceiptFault, retained_reply::write_synced};
 
 use crate::tests::support::ic_snapshot_download::{source, source_plan, values, workflow};
@@ -33,41 +34,8 @@ fn prepare(
         source_plan(payload),
     )
 }
-struct Provider {
-    calls: usize,
-    reply: Result<Vec<u8>, IcObservationProviderError>,
-}
-impl Provider {
-    fn new() -> Self {
-        Self {
-            calls: 0,
-            reply: Ok(contract::encode_one(values()).unwrap()),
-        }
-    }
-}
-impl IcSnapshotTransferReadProvider for Provider {
-    fn read_snapshot(
-        &mut self,
-        request: &IcSnapshotTransferReadRequest<'_, '_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<
-        Output = Result<IcSnapshotTransferReadResponse, IcObservationProviderError>,
-    > {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            self.calls += 1;
-            let raw = self.reply.clone()?;
-            Ok(
-                IcSnapshotTransferReadResponse::new(crate::tests::support::update::input(
-                    request.authority(),
-                    request.mutation_attempt(),
-                    request.plan().context(),
-                    raw,
-                ))
-                .unwrap(),
-            )
-        })())
-    }
+fn provider() -> Provider<IcObservationProviderError> {
+    Provider::new(Ok(contract::encode_one(values()).unwrap()))
 }
 fn admit(
     _: &IcSnapshotTransferReadRequest<'_, '_>,
@@ -92,7 +60,7 @@ fn cancelled_qualification_retains_reply_and_original_pending_spending() {
     let (root, layout, binding) = prepare(&workflow, &payload);
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new();
+    let mut provider = provider();
     let retained = root.join("retained-metadata.candid");
     let mut future = Box::pin(read_snapshot_metadata(
         &stage,
@@ -145,7 +113,7 @@ fn explicit_receipt_checkpoints_exact_metadata_and_admits_original_data_stage() 
     let (root, layout, binding) = prepare(&workflow, &payload);
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new();
+    let mut provider = provider();
     let (response, predecessor) = ready(read_snapshot_metadata(
         &stage,
         42,
@@ -209,10 +177,7 @@ fn lost_and_malformed_metadata_stop_pending_without_checkpoint_or_data_stage() {
         let (_, layout, binding) = prepare(&workflow, &payload);
         let stage =
             ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-        let mut provider = Provider {
-            calls: 0,
-            reply: raw,
-        };
+        let mut provider = Provider::new(raw);
         assert!(
             ready(read_snapshot_metadata(
                 &stage,
@@ -242,7 +207,7 @@ fn qualification_rejection_retains_returned_bytes_and_pending_original() {
     let (_, layout, binding) = prepare(&workflow, &payload);
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new();
+    let mut provider = provider();
     let expected = provider.reply.clone().unwrap();
     let Err(IcSnapshotMetadataExecutionError::AfterReply {
         source: IcSnapshotMetadataSettlementError::Qualification(_),
@@ -274,7 +239,7 @@ fn non_applied_wrong_attempt_and_wrong_request_receipts_cannot_checkpoint() {
         let (_, layout, binding) = prepare(&workflow, &payload);
         let stage =
             ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-        let mut provider = Provider::new();
+        let mut provider = provider();
         let result = ready(read_snapshot_metadata(
             &stage,
             42,
@@ -305,7 +270,7 @@ fn occupied_checkpoint_retains_applied_receipt_and_reply_without_reissue() {
     let (_, layout, binding) = prepare(&workflow, &payload);
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new();
+    let mut provider = provider();
     let result = ready(read_snapshot_metadata(
         &stage,
         42,
@@ -360,7 +325,7 @@ fn changed_stage_during_qualification_retains_reply_and_pending_spending() {
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
     let path = stage.layout().unwrap().root().join("stage-binding.json");
-    let mut provider = Provider::new();
+    let mut provider = provider();
     let result = ready(read_snapshot_metadata(
         &stage,
         42,
@@ -392,7 +357,7 @@ fn wrong_payload_sequence_missing_or_held_original_refuse_before_effects() {
     let (_, layout, binding) = prepare(&workflow, &payload);
     let stage =
         ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = Provider::new();
+    let mut provider = provider();
     let wrong = IcSnapshotMetadataRequest::new(payload.target(), &[1]).unwrap();
     for (sequence, request) in [(41, &payload), (42, &wrong)] {
         assert!(matches!(
@@ -448,7 +413,7 @@ fn fresh_admission_and_invalid_receipt_evidence_keep_original_pending() {
         let (_, layout, binding) = prepare(&workflow, &payload);
         let stage =
             ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-        let mut provider = Provider::new();
+        let mut provider = provider();
         let result = ready(read_snapshot_metadata(
             &stage,
             42,
@@ -511,7 +476,7 @@ fn multi_operation_stage_rejects_before_any_original_spending() {
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     create_execution_workflow(&layout, &workflow).unwrap();
     let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
-    let mut provider = Provider::new();
+    let mut provider = provider();
     assert!(matches!(
         ready(read_snapshot_metadata(
             &stage,

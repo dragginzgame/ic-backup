@@ -1,6 +1,7 @@
 //! Fresh declaration regressions adapted from Canic topology and graph inputs.
 
 use super::*;
+use crate::tests::support::schema;
 use ic_platform::Principal;
 
 const ROOT: &str = "aaaaa-aa";
@@ -161,25 +162,7 @@ fn schema_requires_all_fields_and_validates_declared_graph_on_decode() {
             vec!["canister_id", "parent_canister_id", "role", "module_hash"],
         ),
     ] {
-        for field in fields {
-            let mut bad = value.clone();
-            bad.pointer_mut(path)
-                .expect("object")
-                .as_object_mut()
-                .expect("fields")
-                .remove(field);
-            assert!(
-                serde_json::from_value::<InventoryRecord>(bad).is_err(),
-                "missing {field}"
-            );
-        }
-        let mut bad = value.clone();
-        bad.pointer_mut(path)
-            .expect("object")
-            .as_object_mut()
-            .expect("fields")
-            .insert("extra".into(), serde_json::json!(true));
-        assert!(serde_json::from_value::<InventoryRecord>(bad).is_err());
+        schema::closed_fields::<InventoryRecord>(&value, path, &fields);
     }
     for (path, entry) in [
         ("/version", serde_json::json!(2)),
@@ -191,12 +174,7 @@ fn schema_requires_all_fields_and_validates_declared_graph_on_decode() {
         *bad.pointer_mut(path).expect("field") = entry;
         assert!(serde_json::from_value::<InventoryRecord>(bad).is_err());
     }
-    let text = serde_json::to_string(&value).expect("json").replacen(
-        "\"version\":1",
-        "\"version\":1,\"version\":1",
-        1,
-    );
-    assert!(serde_json::from_str::<InventoryRecord>(&text).is_err());
+    schema::duplicate_versions::<InventoryRecord>(&value);
 }
 
 #[test]

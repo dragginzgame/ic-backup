@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::model::effect_graph::{EffectNodeRecord, EffectNodeRequest};
+use crate::tests::support::schema;
 
 use crate::tests::support::operation_plan::*;
 
@@ -257,25 +258,7 @@ fn closed_schema_revalidates_all_bindings_and_never_accepts_derived_authority_or
         ),
         ("/budget", vec!["mutations", "observations"]),
     ] {
-        for field in fields {
-            let mut bad = value.clone();
-            bad.pointer_mut(path)
-                .expect("object")
-                .as_object_mut()
-                .expect("fields")
-                .remove(field);
-            assert!(
-                serde_json::from_value::<OperationPlanRecord>(bad).is_err(),
-                "missing {field}"
-            );
-        }
-        let mut bad = value.clone();
-        bad.pointer_mut(path)
-            .expect("object")
-            .as_object_mut()
-            .expect("fields")
-            .insert("extra".into(), serde_json::json!(true));
-        assert!(serde_json::from_value::<OperationPlanRecord>(bad).is_err());
+        schema::closed_fields::<OperationPlanRecord>(&value, path, &fields);
     }
     for (path, bad_entry) in [
         ("/version", serde_json::json!(2)),
@@ -297,12 +280,7 @@ fn closed_schema_revalidates_all_bindings_and_never_accepts_derived_authority_or
         bad[field] = serde_json::json!(true);
         assert!(serde_json::from_value::<OperationPlanRecord>(bad).is_err());
     }
-    let duplicate = serde_json::to_string(&value).expect("json").replacen(
-        "\"version\":1",
-        "\"version\":1,\"version\":1",
-        1,
-    );
-    assert!(serde_json::from_str::<OperationPlanRecord>(&duplicate).is_err());
+    schema::duplicate_versions::<OperationPlanRecord>(&value);
 }
 
 #[test]

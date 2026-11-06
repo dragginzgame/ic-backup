@@ -1,6 +1,7 @@
 //! Original source/safety admission, exact request identities and bounded actual rows.
 
 use super::*;
+use crate::tests::support::schema;
 use crate::{
     model::ic_request::IcManagementRequest,
     tests::support::{
@@ -53,21 +54,18 @@ fn strict_original_requirements_roundtrip_normalize_and_bind_all_original_fields
             serde_json::from_value::<RestoreSafetyRequirementRecord>(upper).unwrap(),
             original
         );
-        for field in [
-            "version",
-            "plan_intent",
-            "source_plan_intent",
-            "source_artifacts",
-            "safety",
-            "expected_fence",
-        ] {
-            let mut missing = value.clone();
-            missing.as_object_mut().unwrap().remove(field);
-            assert!(
-                serde_json::from_value::<RestoreSafetyRequirementRecord>(missing).is_err(),
-                "{field}"
-            );
-        }
+        schema::required_fields::<RestoreSafetyRequirementRecord>(
+            &value,
+            "",
+            &[
+                "version",
+                "plan_intent",
+                "source_plan_intent",
+                "source_artifacts",
+                "safety",
+                "expected_fence",
+            ],
+        );
         for (field, replacement) in [
             ("version", json!(2)),
             ("plan_intent", json!("bad")),

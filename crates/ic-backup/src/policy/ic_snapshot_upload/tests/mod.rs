@@ -1,5 +1,4 @@
 use super::*;
-use crate::policy::ResponseIdentityMismatch;
 use crate::tests::support::ic_snapshot_metadata::raw;
 use crate::tests::support::response_fault::ResponseFault;
 use crate::{
@@ -128,25 +127,17 @@ fn actual_claim_mismatches_invalid_wire_and_lost_recovery_reply_stay_pending() {
         change.apply_with_later_failures(&mut fields, ArtifactChecksumRecord::from_bytes(b"wrong"));
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error = validate_acknowledgement(&request, &journal, &acknowledgement).unwrap_err();
-        assert!(match change {
-            ResponseFault::Authority => matches!(
-                error,
-                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Authority)
-            ),
-            ResponseFault::Attempt => matches!(
-                error,
-                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Attempt)
-            ),
-            ResponseFault::Network | ResponseFault::Caller | ResponseFault::Release => matches!(
-                error,
-                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Context)
-            ),
-            ResponseFault::Target => matches!(
-                error,
-                IcSnapshotUploadAssociationError::Identity(ResponseIdentityMismatch::Target)
-            ),
-            _ => matches!(error, IcSnapshotUploadAssociationError::Reply(_)),
-        });
+        match error {
+            IcSnapshotUploadAssociationError::Identity(identity) => {
+                change.assert_identity(&identity);
+            }
+            IcSnapshotUploadAssociationError::Reply(_) => {
+                assert_eq!(change, ResponseFault::InvalidWire);
+            }
+            other @ IcSnapshotUploadAssociationError::Reservation(_) => {
+                panic!("unexpected association rejection: {other:?}")
+            }
+        }
         assert_eq!(journal, before);
     }
     let mut stale_fields = input(&request, b"invalid wire".to_vec());

@@ -4,6 +4,7 @@ use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
 use crate::tests::support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::provider::Provider;
 
 use crate::tests::support::{ready::ready, response_fault::ContextFault};
 use crate::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
@@ -13,7 +14,6 @@ use crate::{
         attempt_journal::{MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::{ExecutionStageBindingRecord, ExecutionWorkflowRecord},
         ic_lifecycle_reply::EMPTY_CANDID_REPLY,
-        ic_update_response::IcUpdateResponseInput,
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{BackupLayoutGuard, create_execution_workflow, read_execution_progress},
@@ -49,48 +49,6 @@ fn prepare(plan: OperationPlanRecord) -> (PathBuf, BackupLayoutGuard, ExecutionS
         7,
         plan,
     )
-}
-struct Provider {
-    calls: usize,
-    reply: Result<Vec<u8>, IcMutationProviderError>,
-    change: Option<PathBuf>,
-    target: Option<&'static str>,
-}
-impl Provider {
-    fn new(reply: Vec<u8>) -> Self {
-        Self {
-            calls: 0,
-            reply: Ok(reply),
-            change: None,
-            target: None,
-        }
-    }
-}
-impl IcSnapshotUploadProvider for Provider {
-    fn submit_upload(
-        &mut self,
-        request: &IcSnapshotUploadAttempt<'_, '_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            self.calls += 1;
-            if let Some(path) = &self.change {
-                fs::write(path, b"{}").unwrap();
-            }
-            let reply = self.reply.clone()?;
-            IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: self.target.unwrap_or(request.payload().target()).into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .map_err(|_| IcMutationProviderError::Indeterminate)
-        })())
-    }
 }
 fn admit(
     _: &IcSnapshotUploadAttempt<'_, '_>,
@@ -155,7 +113,7 @@ fn exact_metadata_and_data_are_durably_reserved_locked_and_remain_pending_on_suc
         let (_, layout, binding) = prepare(upload_plan(payload));
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
-        let mut provider = Provider::new(raw.clone());
+        let mut provider = Provider::new(Ok(raw.clone()));
         let response = ready(dispatch_pending(
             &stage,
             7,
@@ -219,7 +177,7 @@ fn failed_provider_preserves_original_journals_and_references_across_reopen() {
                 )
                 .unwrap();
             let references = stage.layout().unwrap().restore_references().unwrap();
-            let mut provider = Provider::new(raw.clone());
+            let mut provider = Provider::new(Ok(raw.clone()));
             provider.reply = Err(failure);
             assert!(matches!(
                 ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)),
@@ -264,7 +222,7 @@ fn malformed_or_mismatched_reply_retains_exact_returned_bytes_and_pending_spendi
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
             let expected = if mismatched { raw.clone() } else { vec![] };
-            let mut provider = Provider::new(expected.clone());
+            let mut provider = Provider::new(Ok(expected.clone()));
             if mismatched {
                 provider.target = Some("aaaaa-aa");
             }
@@ -288,7 +246,7 @@ fn fresh_admission_rejection_keeps_consumed_allowance_without_provider_call() {
         let (_, layout, binding) = prepare(upload_plan(payload));
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
-        let mut provider = Provider::new(raw);
+        let mut provider = Provider::new(Ok(raw));
         assert!(matches!(
             ready(dispatch_pending(
                 &stage,
@@ -332,7 +290,7 @@ fn changed_payload_source_network_or_release_reject_before_spending() {
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
-            let mut provider = Provider::new(raw.clone());
+            let mut provider = Provider::new(Ok(raw.clone()));
             assert!(matches!(
                 ready(dispatch_pending(
                     &stage,
@@ -361,7 +319,7 @@ fn held_missing_and_applied_journals_never_grant_dispatch() {
         let (_, layout, binding) = prepare(upload_plan(payload));
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
-        let mut provider = Provider::new(raw);
+        let mut provider = Provider::new(Ok(raw));
         let mut journal = AttemptJournalGuard::open(
             stage.layout().unwrap(),
             &stage.plan().attempt_authority(7).unwrap(),
@@ -399,9 +357,9 @@ fn changed_stage_before_dispatch_or_after_reply_preserves_original_reservation()
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
             let path = stage.layout().unwrap().root().join("stage-binding.json");
-            let mut provider = Provider::new(raw.clone());
+            let mut provider = Provider::new(Ok(raw.clone()));
             if after_reply {
-                provider.change = Some(path.clone());
+                provider.change_stage = Some(path.clone());
             }
             let result = ready(dispatch_pending(
                 &stage,
@@ -466,7 +424,7 @@ fn dependent_upload_requires_retained_applied_prerequisite_not_pending_acknowled
         let layout = BackupLayoutGuard::acquire(&root).unwrap();
         create_execution_workflow(&layout, &workflow).unwrap();
         let stage = ExecutionStageGuard::prepare(&layout, binding, plan).unwrap();
-        let mut provider = Provider::new(raw);
+        let mut provider = Provider::new(Ok(raw));
         assert!(ready(dispatch_pending(&stage, 8, payload, &mut provider, admit)).is_err());
         ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).unwrap();
         assert!(ready(dispatch_pending(&stage, 8, payload, &mut provider, admit)).is_err());

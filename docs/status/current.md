@@ -1,4 +1,47 @@
-# Current handoff — 2026-11-05
+# Current handoff — 2026-11-06
+
+## Pending test consolidation
+
+The cleanup is prepared for the user-authorized **0.58.5 deployment** from `main`
+to `origin/main` and crates.io. The original cleanup baseline is `b70084f`; full
+release validation and delivery remain pending. Native suites share workflow providers,
+identity-fault assertions and artifact fixtures. Common immutable IO tests live
+at their owner; two-layout restore checks remain local. Eight model suites share
+explicit schema-field checks. Duplicate-version tests retain their original
+first-serialized-version case and also explicitly reject duplicate root versions,
+including when an embedded record is serialized first.
+
+The independent standalone consumer owns the complete upload/restore journey,
+including a known stored Wasm chunk, a cleared live store, changed live state,
+complete byte/state verification, acceptance and terminal replay. First and second
+lost uploads have separate cold-process checks; successors follow stage order,
+not numeric IDs. Twelve superseded Core cases and the overlapping direct Agent
+round trip are retired. The direct trip's sole-use upload helper is removed.
+Core capture/download, retained-prefix and explicit reconciliation probes remain;
+native matrices cover malformed second-upload and start replies. Direct Agent
+probes retain signed ingress, trust rejection and passive upload/readback proof.
+[The coverage map](../development.md#simulator-coverage-ownership) distinguishes
+native validation/order proof from actual IC effects.
+
+Shared's count is **38,134 test lines**, down **1,417** across the cleanup from
+39,551; the latest pass removes **167** from 38,301. Production remains **15,187**.
+Public APIs, product logic, stored formats and standalone behavior stay.
+The incoming lockfile update selects Platform **0.23.2**: published source
+`81b3f05f53ed113d02a671d47d13f1a36222e845` and archive checksum
+`8e18706c6bac24e9d0bc0afa3568cafa14c1cf20901780c8d27d40cd4b38a0af`
+are verified. Only unused additive create-canister DTO/protocol exports change;
+management 0.11.0, Types 0.18.1, external Principal 0.1.5 and SDK suppliers stay.
+The release gate will qualify this current lockfile. Earlier source snapshots, counts and qualification remain in
+`target/evidence/test-cleanup-0585/` and `target/evidence/test-convergence-0585/`,
+including all **22 retained Core simulator-target cases**, **13 selected consumer
+cases**, persistence checks and transferred native fault matrices.
+
+The latest source/case mapping and logs are in `target/evidence/test-trim-0585-03/`:
+**47 affected native tests**, all **five retained direct Agent simulator probes**
+and the complete consumer round trip pass. Strict Core library/test and Agent
+standalone/test Clippy pass on Rust/Cargo **1.99.1**. Full release and other-host
+gates were not rerun. Earlier sandbox loopback and mechanical failures remain in
+their original evidence; real simulator qualification used loopback-enabled runs.
 
 ## Delivered 0.58.4
 
@@ -27,7 +70,7 @@ Wasm-only Runtime **0.19.2** remain. Host/Build **0.74.4** and Rust minimum/exac
 compiler **1.99.1** are unchanged. Core's new Tokio declaration is test-only;
 public APIs, v1 records, original accounting and backup/restore behavior stay.
 
-## Current qualification
+## Delivered 0.58.4 qualification
 
 Evidence is `target/evidence/testkit-deploy-0584.yt3b8nrm/`: official archive/source
 comparison, strict all-target/all-feature Clippy, complete upload/restore,

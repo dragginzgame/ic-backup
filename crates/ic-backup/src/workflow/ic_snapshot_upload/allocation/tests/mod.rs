@@ -4,6 +4,7 @@ use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
 use crate::tests::support::operation_plan::{declaration, graph, operation_request};
+use crate::tests::support::provider::Provider;
 
 use crate::tests::support::{ready::ready, response_fault::ReceiptFault};
 use crate::{
@@ -47,40 +48,8 @@ fn prepare(
     );
     (layout, binding)
 }
-struct Provider {
-    calls: usize,
-    reply: Result<Vec<u8>, IcMutationProviderError>,
-}
-impl Provider {
-    fn new() -> Self {
-        Self {
-            calls: 0,
-            reply: Ok(unhex("4449444c026c01b6b897890f016d7b0100031500ff")),
-        }
-    }
-}
-impl IcSnapshotUploadProvider for Provider {
-    fn submit_upload(
-        &mut self,
-        request: &IcSnapshotUploadAttempt<'_, '_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> impl std::future::Future<Output = Result<IcMutationAcknowledgement, IcMutationProviderError>>
-    {
-        std::future::ready((|| {
-            request.validate_journal(journal).unwrap();
-            self.calls += 1;
-            let reply = self.reply.clone()?;
-            Ok(
-                IcMutationAcknowledgement::new(crate::tests::support::update::input(
-                    request.authority(),
-                    request.mutation_attempt(),
-                    request.plan().context(),
-                    reply,
-                ))
-                .unwrap(),
-            )
-        })())
-    }
+fn provider() -> Provider<IcMutationProviderError> {
+    Provider::new(Ok(unhex("4449444c026c01b6b897890f016d7b0100031500ff")))
 }
 fn admit(
     _: &IcSnapshotUploadAttempt<'_, '_>,
@@ -112,7 +81,7 @@ fn cancelled_allocation_qualification_retains_exact_reply_and_pending_original()
         let (layout, binding) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
-        let mut provider = Provider::new();
+        let mut provider = provider();
         let root = stage.layout().unwrap().root().to_path_buf();
         let mut future = Box::pin(allocate_snapshot(
             &stage,
@@ -186,7 +155,7 @@ fn qualified_retained_reply_checkpoints_exact_allocation_without_reissue_on_reop
         let (layout, binding) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
-        let mut provider = Provider::new();
+        let mut provider = provider();
         let (acknowledgement, predecessor) = ready(allocate_snapshot(
             &stage,
             7,
@@ -262,7 +231,7 @@ fn data_sequence_and_multi_operation_stages_refuse_before_spending_or_provider()
         let (layout, binding) = prepare(payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
-        let mut provider = Provider::new();
+        let mut provider = provider();
         for (sequence, request) in [(6, payload), (7, &data)] {
             assert!(matches!(
                 ready(allocate_snapshot(
@@ -337,7 +306,7 @@ fn lost_malformed_or_unqualified_allocation_cannot_checkpoint_or_reissue() {
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
-            let mut provider = Provider::new();
+            let mut provider = provider();
             if failure == AllocationFailure::LostReply {
                 provider.reply = Err(IcMutationProviderError::Indeterminate);
             }
@@ -417,7 +386,7 @@ fn wrong_or_invalid_receipts_retain_reply_and_original_pending_spending() {
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
-            let mut provider = Provider::new();
+            let mut provider = provider();
             let result = ready(allocate_snapshot(
                 &stage,
                 7,
@@ -469,7 +438,7 @@ fn changed_stage_during_qualification_keeps_original_pending_and_returned_reply(
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest()).unwrap();
         let root = stage.layout().unwrap().root().to_path_buf();
-        let mut provider = Provider::new();
+        let mut provider = provider();
         let result = ready(allocate_snapshot(
             &stage,
             7,
@@ -509,7 +478,7 @@ fn occupied_checkpoint_preserves_applied_receipt_reply_and_original_evidence() {
             .unwrap()
             .root()
             .join("execution-settlement.json");
-        let mut provider = Provider::new();
+        let mut provider = provider();
         let result = ready(allocate_snapshot(
             &stage,
             7,

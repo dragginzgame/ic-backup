@@ -50,10 +50,14 @@ fn root() -> PathBuf {
     root
 }
 
-fn journal(layout: &BackupLayoutGuard, timestamp: u64) -> DownloadJournalGuard<'_> {
+fn journal<'a>(
+    layout: &'a BackupLayoutGuard,
+    intent: &str,
+    timestamp: u64,
+) -> DownloadJournalGuard<'a> {
     DownloadJournalGuard::create(
         layout,
-        INTENT,
+        intent,
         vec![DownloadArtifactRequest {
             canister_id: TARGET.into(),
             snapshot_id: TOKEN.into(),
@@ -424,7 +428,7 @@ fn original_mismatches_reject_before_creation_and_replaced_custody_receives_no_w
         } else {
             metadata.metadata().taken_at_timestamp
         };
-        let mut journal = journal(&layout, timestamp);
+        let mut journal = journal(&layout, INTENT, timestamp);
         let original = fs::read(journal.path()).unwrap();
         if action == "canonical" {
             fs::create_dir(root.join(format!("artifacts/{TARGET}"))).unwrap();
@@ -520,7 +524,7 @@ fn zero_regions_maximum_chunks_and_streamed_maximum_replies_keep_exact_bytes() {
             .collect();
         let raw = contract::encode_one(values).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
+        let mut journal = journal(&layout, INTENT, metadata.metadata().taken_at_timestamp);
         let mut writer = journal
             .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
             .unwrap();
@@ -577,7 +581,7 @@ fn closing_publication_custody_drift_rejects_and_retains_the_completed_local_evi
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
         let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
+        let mut journal = journal(&layout, INTENT, metadata.metadata().taken_at_timestamp);
         let writer = journal
             .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
             .unwrap();
@@ -637,7 +641,7 @@ fn acknowledged_process_death_retains_partial_or_exact_verified_publication_reco
         let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
         let raw = contract::encode_one(values()).unwrap();
         let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let mut journal = journal(&layout, metadata.metadata().taken_at_timestamp);
+        let mut journal = journal(&layout, INTENT, metadata.metadata().taken_at_timestamp);
         let writer = journal
             .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
             .unwrap();

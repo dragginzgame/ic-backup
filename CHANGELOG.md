@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.58.5] - Unreleased
+
+### 🧪 Testing
+
+- Consolidate native workflow providers, response identity assertions and artifact
+  journal fixtures. Keep recovery journeys focused on retained bytes, original
+  spending and custody; decoder owners retain malformed-wire regression coverage.
+- Use the independent standalone consumer for complete upload/restore qualification,
+  including non-empty chunk-store restoration and first/second lost uploads.
+  Retire duplicate Core and direct Agent journeys while retaining reconciliation,
+  transport and native malformed-reply/allowance regressions.
+- Share required-field and duplicate-version checks, explicitly rejecting root
+  version duplicates alongside existing nested cases. Qualify common immutable
+  record IO at its owner.
+
+### ⬆️ Dependencies
+
+- Select Platform 0.23.2 in the lockfile. Its additive create-canister exports do
+  not change Backup's supported methods, management identities or restore scope.
+
 ## [0.58.4] - 2026-11-05
 
 ### ⬆️ Dependencies

@@ -1,6 +1,7 @@
 //! Fresh explicit dependency regressions adapted from Canic phase and restore ordering.
 
 use super::*;
+use crate::tests::support::schema;
 
 fn node(sequence: u64, deps: &[u64]) -> EffectNodeRecord {
     EffectNodeRecord::new(EffectNodeRequest {
@@ -150,25 +151,7 @@ fn decoding_requires_closed_fields_valid_dependencies_and_recomputed_order() {
         ("", vec!["version", "nodes"]),
         ("/nodes/0", vec!["operation_sequence", "depends_on"]),
     ] {
-        for field in fields {
-            let mut bad = value.clone();
-            bad.pointer_mut(path)
-                .expect("object")
-                .as_object_mut()
-                .expect("fields")
-                .remove(field);
-            assert!(
-                serde_json::from_value::<EffectGraphRecord>(bad).is_err(),
-                "missing {field}"
-            );
-        }
-        let mut bad = value.clone();
-        bad.pointer_mut(path)
-            .expect("object")
-            .as_object_mut()
-            .expect("fields")
-            .insert("extra".into(), serde_json::json!(true));
-        assert!(serde_json::from_value::<EffectGraphRecord>(bad).is_err());
+        schema::closed_fields::<EffectGraphRecord>(&value, path, &fields);
     }
     for (path, entry) in [
         ("/version", serde_json::json!(2)),
@@ -185,12 +168,7 @@ fn decoding_requires_closed_fields_valid_dependencies_and_recomputed_order() {
     let mut bad = value.clone();
     bad["order"] = serde_json::json!([3, 2, 1, 0]);
     assert!(serde_json::from_value::<EffectGraphRecord>(bad).is_err());
-    let text = serde_json::to_string(&value).expect("json").replacen(
-        "\"version\":1",
-        "\"version\":1,\"version\":1",
-        1,
-    );
-    assert!(serde_json::from_str::<EffectGraphRecord>(&text).is_err());
+    schema::duplicate_versions::<EffectGraphRecord>(&value);
 }
 
 #[test]

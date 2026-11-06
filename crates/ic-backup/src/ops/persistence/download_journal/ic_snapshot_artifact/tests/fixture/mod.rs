@@ -19,7 +19,7 @@ pub(super) fn with_created(check: impl FnOnce(CreatedArtifact<'_>)) -> PathBuf {
     let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
     let raw = contract::encode_one(values()).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let journal = journal(&layout, metadata.metadata().taken_at_timestamp);
+    let journal = journal(&layout, INTENT, metadata.metadata().taken_at_timestamp);
     check(CreatedArtifact {
         root: &root,
         layout: &layout,
@@ -39,17 +39,11 @@ pub(super) fn retained<'a>(
     raw: &[u8],
 ) -> DownloadJournalGuard<'a> {
     create_operation_plan(layout, plan).unwrap();
-    let mut guard = DownloadJournalGuard::create(
+    let mut guard = journal(
         layout,
         plan.digest().hash(),
-        vec![DownloadArtifactRequest {
-            canister_id: TARGET.into(),
-            snapshot_id: TOKEN.into(),
-            snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-            snapshot_total_size_bytes: u64::MAX,
-        }],
-    )
-    .unwrap();
+        metadata.metadata().taken_at_timestamp,
+    );
     complete(
         guard
             .stage_ic_snapshot_artifact(TOKEN, metadata, raw)

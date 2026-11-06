@@ -298,17 +298,11 @@ fn maximum_bounded_descriptor_slice_does_not_buffer_the_whole_region() {
     values.wasm_chunk_store.clear();
     let raw = contract::encode_one(values).unwrap();
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let mut guard = DownloadJournalGuard::create(
+    let mut guard = journal(
         &layout,
         plan.digest().hash(),
-        vec![DownloadArtifactRequest {
-            canister_id: TARGET.into(),
-            snapshot_id: TOKEN.into(),
-            snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
-            snapshot_total_size_bytes: u64::MAX,
-        }],
-    )
-    .unwrap();
+        metadata.metadata().taken_at_timestamp,
+    );
     let mut writer = guard
         .stage_ic_snapshot_artifact(TOKEN, &metadata, &raw)
         .unwrap();

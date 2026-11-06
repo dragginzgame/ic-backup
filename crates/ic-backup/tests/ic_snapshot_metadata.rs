@@ -9,9 +9,7 @@ mod support;
 use ic_backup::{
     model::{
         ic_request::{IcManagementMethodRecord, IcManagementRequest, IcManagementRequestRecord},
-        ic_snapshot_metadata::{
-            IcSnapshotMetadataError, IcSnapshotMetadataReply, IcSnapshotMetadataRequest,
-        },
+        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
@@ -79,11 +77,6 @@ fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_rel
     assert_eq!(admitted.digest(), digest);
     assert_eq!(admitted.metadata().wasm_module_size, u64::MAX);
     assert!(admitted.metadata().globals[5].is_none());
-    assert_eq!(
-        IcSnapshotMetadataReply::decode(&reconstructed, &retained[..retained.len() - 1])
-            .unwrap_err(),
-        IcSnapshotMetadataError::InvalidReply
-    );
     assert_eq!(journal.record().unwrap().view(), original_view);
     assert_eq!(original_view.pending_mutation, Some(mutation));
     assert_eq!(original_view.pending_observation, Some(observation));

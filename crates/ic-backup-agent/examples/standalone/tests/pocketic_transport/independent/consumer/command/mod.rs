@@ -31,6 +31,7 @@ pub(crate) enum Mode {
     LoseAllocation,
     LoseLoad,
     LoseStart,
+    LoseUploadFirst,
     LoseUploadSecond,
     Replay,
     Restore,
@@ -60,6 +61,7 @@ impl Mode {
             Self::LoseAllocation => Some((Stage::Allocation, Stage::Allocation.sequence())),
             Self::LoseLoad => Some((Stage::Load, Stage::Load.sequence())),
             Self::LoseStart => Some((Stage::Start, Stage::Start.sequence())),
+            Self::LoseUploadFirst => Some((Stage::Upload, 0)),
             Self::LoseUploadSecond => Some((Stage::Upload, 1)),
             _ => None,
         }
@@ -80,9 +82,11 @@ impl Mode {
             Self::CaptureContinue => Action::CaptureContinue,
             Self::InspectCapture => Action::InspectCapture,
             Self::InspectRestore => Action::InspectRestore,
-            Self::LoseAllocation | Self::LoseLoad | Self::LoseStart | Self::LoseUploadSecond => {
-                Action::LoseReply
-            }
+            Self::LoseAllocation
+            | Self::LoseLoad
+            | Self::LoseStart
+            | Self::LoseUploadFirst
+            | Self::LoseUploadSecond => Action::LoseReply,
             Self::Replay => Action::Replay,
             Self::Restore => Action::Restore,
             Self::RestoreStep => Action::RestoreStep,

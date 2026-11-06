@@ -1,5 +1,4 @@
 use super::*;
-use crate::policy::ResponseIdentityMismatch;
 use crate::tests::support::response_fault::ResponseFault;
 use crate::{
     model::{
@@ -73,24 +72,10 @@ fn different_authority_attempt_actual_context_and_target_reject() {
         let acknowledgement = IcMutationAcknowledgement::new(fields).unwrap();
         let error =
             validate_acknowledgement(&request, &original.journal, &acknowledgement).unwrap_err();
-        assert!(match change {
-            ResponseFault::Authority => matches!(
-                error,
-                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Authority)
-            ),
-            ResponseFault::Attempt => matches!(
-                error,
-                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Attempt)
-            ),
-            ResponseFault::Network | ResponseFault::Caller | ResponseFault::Release => matches!(
-                error,
-                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Context)
-            ),
-            _ => matches!(
-                error,
-                IcMutationAssociationError::Identity(ResponseIdentityMismatch::Target)
-            ),
-        });
+        let IcMutationAssociationError::Identity(identity) = error else {
+            panic!("expected identity rejection: {error:?}");
+        };
+        change.assert_identity(&identity);
     }
 }
 

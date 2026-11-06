@@ -72,3 +72,6 @@ where
     validate(&record)?;
     Ok(record)
 }
+
+#[cfg(all(test, unix))]
+mod tests;

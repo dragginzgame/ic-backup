@@ -1,7 +1,6 @@
 //! Original accounting and typed association denial; no fake IC qualification.
 
 use super::*;
-use crate::policy::ResponseIdentityMismatch;
 use crate::tests::support::response_fault::ResponseFault;
 use crate::{
     model::{
@@ -18,18 +17,7 @@ use ic_platform::management_canister_types::{ReadCanisterSnapshotDataResult, Sna
 use sha2::{Digest, Sha256};
 
 fn metadata_wire() -> Vec<u8> {
-    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
-        "../../../model/ic_snapshot_metadata/tests/golden.json"
-    ))
-    .unwrap();
-    crate::tests::support::hex_bytes(
-        cases
-            .iter()
-            .find(|case| case["name"] == "data-source")
-            .unwrap()["reply_hex"]
-            .as_str()
-            .unwrap(),
-    )
+    crate::tests::support::ic_snapshot_metadata::raw("data-source")
 }
 
 fn plan(payload: IcSnapshotTransferReadPayload<'_, '_>) -> OperationPlanRecord {
@@ -192,34 +180,18 @@ fn actual_claims_attempt_and_bounded_wire_fail_without_settlement() {
         change.apply_with_later_failures(&mut input, hash("12"));
         let response = IcSnapshotTransferReadResponse::new(input).unwrap();
         let error = validate_response(&request, &journal, &response).unwrap_err();
-        assert!(match change {
-            ResponseFault::Authority => matches!(
-                error,
-                IcSnapshotTransferReadAssociationError::Identity(
-                    ResponseIdentityMismatch::Authority
-                )
-            ),
-            ResponseFault::Attempt => matches!(
-                error,
-                IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Attempt)
-            ),
-            ResponseFault::Network | ResponseFault::Caller | ResponseFault::Release => matches!(
-                error,
-                IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Context)
-            ),
-            ResponseFault::Target => matches!(
-                error,
-                IcSnapshotTransferReadAssociationError::Identity(ResponseIdentityMismatch::Target)
-            ),
-            ResponseFault::InvalidWire =>
-                matches!(error, IcSnapshotTransferReadAssociationError::Metadata(_)),
-            ResponseFault::OversizedMetadata => matches!(
-                error,
-                IcSnapshotTransferReadAssociationError::Metadata(
-                    IcSnapshotMetadataError::ReplyTooLarge
-                )
-            ),
-        });
+        match error {
+            IcSnapshotTransferReadAssociationError::Identity(identity) => {
+                change.assert_identity(&identity);
+            }
+            IcSnapshotTransferReadAssociationError::Metadata(
+                IcSnapshotMetadataError::ReplyTooLarge,
+            ) => assert_eq!(change, ResponseFault::OversizedMetadata),
+            IcSnapshotTransferReadAssociationError::Metadata(_) => {
+                assert_eq!(change, ResponseFault::InvalidWire);
+            }
+            other => panic!("unexpected association rejection: {other:?}"),
+        }
         assert_eq!(journal, before);
     }
     for attempt in [0, 1025] {
