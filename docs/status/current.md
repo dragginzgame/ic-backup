@@ -1,6 +1,21 @@
 # Current handoff — 2026-11-06
 
-## Pending 0.58.9 tooling adoption
+## Delivered 0.58.9
+
+Both **ic-backup 0.58.9** and **ic-backup-agent 0.58.9** are published on crates.io.
+Release `478602d53b8043ec6cdfb92e030269fe82102224` and annotated `v0.58.9` are on
+`origin/main`; qualified source is `b9327a33e9459505991bac3146b94f5e0438575c`.
+Registry readback confirms non-yanked versions, matching archive checksums and VCS
+provenance; all **330 packaged Rust files** match the release commit byte for byte.
+Remote branch/tag identities match; the subsequent handoff commit is documentation only.
+
+The complete Linux `release-verify` gate passes: strict all-target/all-feature
+Clippy, **544 tests**, documentation, tooling/release/hook regressions, independent
+consumers and packaging. Explicit registry cache preparation passes separately;
+the registry-only normal consumer then passes authenticated capture/restore,
+application acceptance and effect-free terminal replay against both exact published
+packages. Native macOS and Canic acceptance remain separate; hosted CI was not
+manually dispatched.
 
 Shared **0.30.7** at `22a853e26c05ec323f06c57fa316c08b808f252b` replaces 0.30.6:
 160 canonical payloads, six updates/two additions/152 unchanged. GitHub main
@@ -15,70 +30,34 @@ inherited active selections. No frozen delivery checkout was created or qualifie
 CI already omits the duplicate root check after Clippy; independent consumer and
 archive checks own distinct contracts and remain. No elapsed-time saving is claimed.
 
-Focused evidence in `target/evidence/shared-0307.qztZdV/` passes canonical snapshot
-provenance, tooling/hook regressions, routing refusal, ShellCheck/Perl syntax,
-formatting, compiler admission, dependency ownership/inheritance and Candid/CBOR
-source admission. `make release-check` passes the complete isolated consumer suite,
-including default Make routing, recovery/publication substitutes and real private
-index boundaries; fixtures remain in `target/shared-release-tests.4TZY2o/`.
-No full product CI/release, other-host or Canic qualification was run.
+The qualified lockfile selects Platform **0.23.3**, Platform Types **0.18.2**,
+Testkit **0.89.1**, its exact CLI and PocketIC **16.1.0**. Published archive checksums
+match the lockfile; source review binds Platform `e71e8a6` and Testkit `7d7ffbf`.
+Platform's production changes concern the unused ledger adapter and dependency
+feature declarations; Testkit's library source is unchanged. Product Rust source,
+public APIs, records, IC protocols and custody requirements remain unchanged.
 
-The requested 0.58.9 delivery includes the existing Platform **0.23.3** and Testkit
-**0.89.1** lockfile edits. Published source review binds Platform `e71e8a6` and
-Testkit `7d7ffbf`: Platform's production changes concern the unused ledger adapter
-and dependency feature declarations; Testkit's library source is unchanged.
-The tooling-only checks above do not qualify these updates. Delivery will run the
-complete Linux gate and registry-only backup/restore journey; evidence belongs in
-`target/evidence/deploy-0589/`. Before/after adoption hashes bind unchanged manifest,
-lockfile and compiler declarations. Package versions remain **0.58.8** until shared
-release preparation. Product Rust source, records, IC protocols, journals, artifacts,
-tool stores and release evidence stay.
+Delivery logs, registry archives, byte/provenance verification and remote refs are
+in `target/evidence/deploy-0589/`; receipts/publication attempts remain under
+`.git/release-state/` and [the release receipt](../release.json). Registry-only
+graph/build evidence is in `target/tmp/ic-backup-agent-independent-build-41051-0/`
+and authenticated runtime evidence in `target/tmp/ic-backup-agent-pocketic-41051-1/`.
+Focused snapshot provenance remains in `target/evidence/shared-0307.qztZdV/`;
+full-gate release fixtures remain in `target/shared-release-tests.6XoOya/`.
+No journals, artifacts, failed bundles or earlier release evidence were removed.
 
 ## Delivered 0.58.8
 
-Both **ic-backup 0.58.8** and **ic-backup-agent 0.58.8** are published on crates.io.
-Release `78a0fa3dbf9e34b96e872ed7811ddf6a058c9e4c` and annotated `v0.58.8` are on
-`origin/main`; qualified source is `cbddde14ecb1e7b59671e34ff0c28b9e0a99962c`.
-Registry readback confirms non-yanked versions, matching archive checksums and VCS
-provenance, and all **330 packaged Rust files** match the release commit byte for
-byte. Remote branch/tag identities match; the later handoff commit is documentation only.
-
-The complete Linux `release-verify` gate passes: strict all-target/all-feature
-Clippy, **544 tests**, documentation, tooling/release/hook regressions, independent
-consumers and packaging. The one explicit online registry-preparation test stays
-ignored in the normal gate and passes separately after publication. The registry-only
-normal consumer then passes authenticated capture/restore, application acceptance
-and effect-free terminal replay against both exact published packages. Native macOS
-and Canic acceptance remain separate; hosted CI was not manually dispatched.
-
-Shared **0.30.6** at `45c0295e23d3d23225e31f47c018c30ff0c75581` supplies **158**
-canonical payloads. [The adoption review](../shared-tooling-review.json) owns the
-pinned source, decisions and focused evidence; the supplier's uncommitted 0.30.7
-was excluded. The existing source gate enforces Candid/CBOR ownership across all
-330 Rust files, explicitly including inventory `target`; all 36 external Candid
-allowances remain live, with no CBOR exception or product-format migration.
-Generated consumers receive Cargo boundary admission before compilation; generated
-MSRV API probes get their own source check. There are no maintained browser roots
-or alternate manifest templates. Checks are lexical, not semantic authentication.
-
-The qualified lockfile selects Platform **0.23.2**, Platform Types **0.18.2**,
-Testkit **0.89.0**, its exact CLI and PocketIC **16.1.0**. Rust minimum and pinned
-compiler remain **1.99.1**. Types and Testkit archive checksums and published sources
-match their VCS commits `5eeb016` and `094d144`. Types changes dependency features
-and Principal lint annotations; canonical identity/byte goldens pass. Testkit removes
-automatic client logging, unused by Backup, and fifteen transitive packages leave
-the lockfile. Explicit server output, HTTP evidence, original journals and async
-cleanup retain their owners. No product Rust code or public Backup API changed.
-
-Delivery logs, registry archives/provenance, verification scripts and remote refs
-are in `target/evidence/deploy-0588.vRuWtx/`; receipts/publication attempts remain
-under `.git/release-state/` and [the release receipt](../release.json). Published
-consumer graph/build evidence is in
-`target/tmp/ic-backup-agent-independent-build-874235-0/` and authenticated runtime
-evidence in `target/tmp/ic-backup-agent-pocketic-874235-1/`.
-Earlier focused checks and corrected mechanical failures remain under
-`target/evidence/shared-0306.TCumgu/` and
-`target/evidence/types-0182-testkit-089.rHqTdd/`; no retained evidence was removed.
+Release `78a0fa3dbf9e34b96e872ed7811ddf6a058c9e4c` published both 0.58.8 crates from
+source `cbddde14ecb1e7b59671e34ff0c28b9e0a99962c`, with 544 full-gate tests and
+registry-only authenticated backup/restore qualification. It adopted Shared 0.30.6,
+Platform Types 0.18.2 and Testkit 0.89.0, enforcing Candid/CBOR source boundaries in
+root and generated consumers. All 36 external Candid allowances remain live; there
+is no CBOR exception or format migration. Explicit server output, HTTP evidence,
+original journals and async cleanup retain their owners. Detailed qualification is
+retained at `ab19b40`, with delivery evidence in `target/evidence/deploy-0588.vRuWtx/`.
+Earlier focused checks remain under `target/evidence/shared-0306.TCumgu/` and
+`target/evidence/types-0182-testkit-089.rHqTdd/`.
 
 ## Delivered 0.58.7
 
