@@ -1,90 +1,59 @@
 # Current handoff — 2026-11-06
 
-## Pending 0.58.7 cleanup
+## Delivered 0.58.7
 
-The follow-up audit over `8be4f62` has eight implemented simplifications: shared
-native download setup/accounting assertions, one standalone phase/stage catalog,
-checksum-bearing artifact progress, paired download requests/plan, resolved fixture
-command/fault configuration, shared checkpoint finishing and parent-synced native
-reply retention, and Host file-identity comparison. Public paths/types, error causes,
-JSON fields/order, digest framing, attempts and effect/replay boundaries remain.
-No tests were removed or product modes added. Package versions remain 0.58.6;
-deployment to `origin/main` and crates.io is now authorized.
-
-Two audit items intentionally stay: settlement already shares operation identity;
-its remaining status/readback checks have distinct errors, so another comparison
-abstraction adds machinery without a simpler owner. Public planning-error merging
-remains deferred to an intentional API break. All ten audit items are accounted for.
-
-Evidence in `target/evidence/cleanup-0587/` passes **176 distinct selected tests**:
-80 download/model/persistence cases, 41 execution-workflow cases, ten metadata and
-four restore cases, 22 Core simulator cases, 17 independent-consumer cases and two
-stage-binding cases. The explicit online registry setup remains ignored. Exact
-four-state JSON bytes and existing independent digest goldens pass; strict Core
-library/tests and Agent example/tests Clippy pass. Earlier mechanical compile
-failure and warning output remain retained. Full CI/release, other-host and Canic
-qualification were not rerun during focused cleanup.
-
-Follow-up artifact verification now shares guarded plan/journal admission without
-moving domain policy or changing opening/closing check order. Restore references
-use the same phase catalog as stage paths. A later concurrent dependency edit
-selected flate2 **1.1.11**; it is preserved. All **176 selected tests**, both strict
-Clippy selections, formatting and documentation checks pass again against this
-current lockfile. Before/after SHA-256 confirms the lockfile stayed unchanged.
-Evidence is in `target/evidence/cleanup-0587-followup/`, with the independent
-consumer graph/build at `target/tmp/ic-backup-agent-independent-build-308335-0/`.
-This refresh supersedes the earlier focused selection for current-lock readiness;
-the authorized deployment now requires the full release gate; other-host and
-Canic qualification remain separate.
-
-## Delivered 0.58.6
-
-Both **ic-backup 0.58.6** and **ic-backup-agent 0.58.6** are published on crates.io.
-Release `ca37252a55dee1f535ab9656a0ba273a7e7131d4` and annotated `v0.58.6` are on
-`origin/main`; qualified source is `9806ae163e830267da527c5abeb5735f0ea2f396`.
-Registry readback confirms non-yanked versions, matching archive checksums and
-VCS provenance, and all **330 packaged Rust files** match the release commit.
-The later handoff commit changes documentation only.
+Both **ic-backup 0.58.7** and **ic-backup-agent 0.58.7** are published on crates.io.
+Release `4774dc7343272b0ae8e55f5ab998c9a855384b54` and annotated `v0.58.7` are on
+`origin/main`; qualified source is `a3d520c2cfb768b4d10f2b4a51058ca6f9a00349`.
+Registry readback confirms non-yanked versions, matching archive checksums and VCS
+provenance, and all **330 packaged Rust files** match the release commit byte for
+byte. Remote branch/tag identities match; the later handoff commit is documentation only.
 
 The complete Linux `release-verify` gate passes: strict all-target/all-feature
 Clippy, **544 tests**, documentation, tooling/release/hook regressions, independent
-consumers and packaging. One online registry-preparation test is deliberately
-ignored in the normal gate; it passes explicitly after publication. The registry-only
+consumers and packaging. The one explicit online registry-preparation test is
+ignored in the normal gate and passes separately after publication. The registry-only
 normal consumer then passes authenticated capture/restore, application acceptance
-and effect-free terminal replay against the published packages. Native macOS and
-Canic acceptance remain separate; hosted CI was not manually dispatched.
+and effect-free terminal replay against both exact published packages. Native macOS
+and Canic acceptance remain separate; hosted CI was not manually dispatched.
 
-[Issue #78](https://github.com/dragginzgame/ic-backup/issues/78) is closed. Its
-management encoder allowance includes the return type: installed Shared `2aa41c7`
-accepted the old prefix, but committed checker `be377103` treats the argument's
-`impl` as an inherent implementation and requires the complete header. Both
-checkers pass all 330 selected files and reject extra owned Candid declarations,
-including in the explicitly selected inventory `target` file. Rust wire code and
-the Shared 0.30.4 snapshot remain unchanged.
+Artifact progress now keeps checksums in verified/durable states; nonempty download
+requests carry their plan. Exact four-state v1 JSON bytes and independent digest
+goldens pass. Native tests share download setup/accounting and parent-synced reply
+retention. The standalone phase/stage catalog also derives restore-reference paths;
+fixture commands resolve action/fault interpretation at admission. Checkpoint
+finishing and original-record verification admission share existing owners. Opening/
+closing checks, callback revalidation, typed errors, original spending and effect-free
+replay remain. No fault cases or public interfaces were removed.
 
-Testkit **0.88.0** replaces 0.87.0; its checksum and all 51 published source files
-match `0bc2cc4`. Its removed APIs require no Backup migration and remove ten unused
-lockfile packages. Platform remains **0.23.2**, PocketIC **16.1.0**, and the finished
-lockfile includes `cc` **1.11.1**. The earlier release attempt stopped after detecting
-a concurrent lock edit; no release effects occurred. The successful retry reran the
-entire gate against the finished inputs. Original attempts remain retained.
+Settlement retains its existing shared operation identity and distinct domain errors;
+a further comparison abstraction added no simpler owner. Public planning-error
+consolidation remains deferred to an intentional API break.
 
-The cleanup shares cancellation/provider and HTTP retention test helpers, separates
-upload fixture ownership, extracts standalone capture assembly, and consolidates
-restore preparation within held source scopes. Fresh checks after application
-callbacks and across effects remain. Stage bindings enforce the existing 512 KiB
-bound with exact-sequence and malformed/oversized regressions. Registry cache setup
-is explicit; ordinary consumer tests remain offline. Canonical contracts own repeated
-workflow documentation. Public planning-error consolidation remains deferred.
+The qualified lockfile includes flate2 **1.1.11**, Testkit **0.88.0**, Platform
+**0.23.2** and PocketIC **16.1.0**; the minimum and pinned compiler remain **1.99.1**.
+The later flate2 edit was requalified through all 176 focused selections and then
+the complete release gate. No dependency edits occurred during this release.
 
-Evidence is in `target/evidence/issue-78/`, including release/publication logs,
-registry archives, provenance and remote-ref verification. Release receipts and
-publication attempts remain under `.git/release-state/`. Registry consumer evidence
-is in `target/tmp/ic-backup-agent-independent-build-468527-0/` and
-`target/tmp/ic-backup-agent-pocketic-468527-1/`. Earlier focused cleanup evidence is
-in `target/evidence/cleanup-0586/` and `target/evidence/cleanup-0586-followup/`.
-Shared counts at this cleanup are 38,160 test, 15,187 production and 1,211 example
-lines: net +26 test/+25 example against 0.58.5, with no production LOC change.
+Delivery logs, registry archives/provenance, verification scripts and remote-ref
+proof are in `target/evidence/deploy-0587.yiDOdu/`; receipts/publication attempts
+remain under `.git/release-state/` and [the release receipt](../release.json).
+Registry-only consumer evidence is in
+`target/tmp/ic-backup-agent-independent-build-2516776-0/` and
+`target/tmp/ic-backup-agent-pocketic-2516776-1/`. Earlier focused qualification and
+mechanical failures remain in `target/evidence/cleanup-0587/` and
+`target/evidence/cleanup-0587-followup/`; no retained evidence was removed.
+
+## Delivered 0.58.6
+
+Release `ca37252a55dee1f535ab9656a0ba273a7e7131d4` published both 0.58.6 crates
+from qualified source `9806ae163e830267da527c5abeb5735f0ea2f396`, with 544 full-gate
+tests and registry-only authenticated backup/restore qualification. It adopted
+Testkit 0.88.0 and closed [#78](https://github.com/dragginzgame/ic-backup/issues/78).
+Its declaration allowance passes both installed Shared `2aa41c7` and committed
+checker `be377103`; extra owned Candid declarations still reject, including under
+the explicitly selected inventory `target` file. Evidence remains in
+`target/evidence/issue-78/`; the detailed handoff is retained at `8be4f62`.
 
 ## Prior delivery and qualification
 
