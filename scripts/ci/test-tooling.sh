@@ -63,22 +63,37 @@ done
 make --no-print-directory -s -C "$golden" golden-check > "$golden/restored.log" 2>&1
 echo 'Consumer golden parity: PASS (all vector and contract outputs reject drift).'
 
-# Shared's new optional wrapper must not select an unqualified delivery path here.
-for target in release-patch release-minor release-major release-resume release-plan publish publish-dry-run; do
-    if make --no-print-directory -s -C "$golden" "$target" RELEASE_FROZEN_GROUPS=backup \
-        > "$golden/frozen-$target.log" 2>&1; then
-        echo "unqualified frozen delivery reached $target" >&2; exit 1
+# The real-Git release fixture owns lifecycle effects; pin the consumer defaults here.
+cat >> "$golden/Makefile" <<'MAKE'
+fixture-frozen-settings:
+	@printf '%s\n' '$(RELEASE_GROUP)' '$(RELEASE_GROUPS)' '$(RELEASE_SETUP_TARGET)' '$(RELEASE_PUBLISH_TARGET)'
+MAKE
+make --no-print-directory -s -C "$golden" fixture-frozen-settings > "$golden/frozen-settings.log"
+printf 'backup\nbackup\nrelease-candidate-setup\n\n' > "$golden/frozen-expected.log"
+cmp "$golden/frozen-expected.log" "$golden/frozen-settings.log"
+for target in release-patch release-minor release-major; do
+    if make --no-print-directory -s -C "$golden" "$target" RELEASE_GROUPS= \
+        > "$golden/cleared-$target.log" 2>&1; then
+        echo "selected Backup group bypassed frozen capture: $target" >&2; exit 1
     fi
-    grep -F 'Frozen release batches are not qualified for ic-backup' "$golden/frozen-$target.log" >/dev/null
+    grep -F 'A selected release group requires batch capture' "$golden/cleared-$target.log" >/dev/null
 done
-if RELEASE_FROZEN_GROUPS=backup FROZEN_RELEASE_ACTIVE=1 \
-    make --no-print-directory -s -C "$golden" release-patch > "$golden/frozen-environment.log" 2>&1; then
-    echo 'inherited frozen delivery bypassed consumer admission' >&2; exit 1
-fi
-grep -F 'Frozen release batches are not qualified for ic-backup' "$golden/frozen-environment.log" >/dev/null
+for setting in RELEASE_FROZEN_GROUPS RELEASE_FROZEN_PUBLISH_TARGET RELEASE_FROZEN_SETUP_TARGET RELEASE_FROZEN_SETUP_MODE FROZEN_RELEASE_ACTIVE; do
+    for origin in argument environment; do
+        status=0
+        if [[ "$origin" == argument ]]; then
+            make --no-print-directory -s -C "$golden" release-patch "$setting=" \
+                > "$golden/retired-$setting-$origin.log" 2>&1 || status=$?
+        else
+            env "$setting=" make --no-print-directory -s -C "$golden" release-patch \
+                > "$golden/retired-$setting-$origin.log" 2>&1 || status=$?
+        fi
+        [[ "$status" != 0 ]] || { echo "retired release setting accepted: $setting" >&2; exit 1; }
+        grep -F 'Retired release settings:' "$golden/retired-$setting-$origin.log" >/dev/null
+    done
+done
 [[ ! -e "$golden/target/release-frozen" && ! -e "$golden/.git/release-state" ]]
-echo 'Consumer release routing: PASS (unqualified frozen selections refuse before effects).'
-
+echo 'Consumer release routing: PASS (automatic batch, cleared roster/retired settings refuse, publication explicit).'
 
 # Exercise this consumer's actual CI recipe, without compilation or duplicate
 # recipes. Only these unique targets substitute the graph-edit/next-stage effects.
@@ -390,6 +405,22 @@ reset_consumer
 mkdir -p "$CONSUMER/target"
 printf 'retained evidence\n' >"$CONSUMER/target/evidence"
 verify >"$FIXTURE/valid.log" 2>&1
+
+# Exercise Backup's actual Make admission with a NUL-emitting digest backend.
+# Shared owns the backend/status matrix; keep this consumer bootstrap proof local.
+mkdir "$FIXTURE/checksum-bin"
+cat > "$FIXTURE/checksum-bin/sha256sum" <<'SH'
+#!/usr/bin/env bash
+printf '%064d\0  -\n' 0
+SH
+chmod +x "$FIXTURE/checksum-bin/sha256sum"
+cp "$ROOT/Makefile" "$CONSUMER/Makefile"
+if PATH="$FIXTURE/checksum-bin:$PATH" make --no-print-directory -s -C "$CONSUMER" shared-tooling-check \
+    > "$FIXTURE/nul-checksum.log" 2>&1; then
+    echo 'consumer snapshot gate accepted a NUL checksum' >&2; exit 1
+fi
+grep -F 'NUL' "$FIXTURE/nul-checksum.log" >/dev/null
+[[ "$(cat "$CONSUMER/target/evidence")" == 'retained evidence' ]] || exit 1
 
 # Qualify the bootstrap against this consumer's exact file set. The inspected
 # helper must never execute, even when it would falsely approve every payload.

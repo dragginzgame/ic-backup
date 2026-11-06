@@ -13,8 +13,10 @@ ROOT="${ROOT%/.}"
 # Current recovery behavior belongs to docs/releasing.md. The canonical shared
 # suite owns increment/phase and generic lost-reply matrices.
 unset RELEASE_SOURCE RELEASE_PREVIOUS RELEASE_VERSION RELEASE_DATE RELEASE_KIND RELEASE_COMMIT \
-    RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE RELEASE_DELIVERY VERSION \
-    RELEASE_FROZEN_GROUPS RELEASE_FROZEN_PUBLISH_TARGET FROZEN_RELEASE_ACTIVE \
+    RELEASE_REMOTE RELEASE_BRANCH RELEASE_MAKE RELEASE_DELIVERY RELEASE_GROUP VERSION \
+    RELEASE_GROUPS RELEASE_PUBLISH_TARGET RELEASE_SETUP_TARGET \
+    RELEASE_SETUP_MODE RELEASE_BATCH_ACTIVE BATCH PUBLICATION_RESULT \
+    SHARED_RELEASE_BATCH SHARED_PUBLICATION_RESULT \
     MAKEFLAGS MAKEOVERRIDES MFLAGS MAKELEVEL GNUMAKEFLAGS MAKEFILES
 unset VALIDATION_REPOSITORY_ROOT VALIDATION_RUNNER_SNAPSHOT_PATH
 metadata_only=false
@@ -86,6 +88,11 @@ create_fixture() {
         scripts/ci/cargo-release-metadata.sh scripts/ci/cargo-workspace-members.jq \
         scripts/ci/compare-stable-versions.pl
     cd "$FIXTURE"
+    # Existing historical-receipt cases deliberately exercise the ungrouped lane.
+    # The dedicated real-Git fixture owns default frozen/grouped delivery.
+    printf 'RELEASE_GROUP :=\nRELEASE_GROUPS :=\n' > target/fixture-make
+    cat Makefile >> target/fixture-make
+    mv target/fixture-make Makefile
     cat > Cargo.toml <<TOML
 [workspace]
 members = ["crates/ic-backup"]

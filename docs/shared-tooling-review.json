@@ -1,50 +1,57 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "22a853e26c05ec323f06c57fa316c08b808f252b",
-  "label": "0.30.7",
+  "revision": "74313941af2fce4399bec0e6909ca6229673c3f8",
+  "label": "0.31.0",
   "reviewed_on": "2026-11-06",
-  "previous_revision": "45c0295e23d3d23225e31f47c018c30ff0c75581",
+  "previous_revision": "8ae62680fa2d3ea590c4e85061664612957efd68",
+  "uncommitted_previous_review": "target/evidence/shared-031/previous-review-03010.json",
   "previous_review": {
-    "commit": "ab19b406edcb4316082be9f34300ee08639c8bac",
+    "commit": "806965fd6768e16181ed71782c59d9b33f555085",
     "path": "docs/shared-tooling-review.json"
   },
   "consumer_baseline": {
-    "commit": "ab19b406edcb4316082be9f34300ee08639c8bac",
-    "version": "0.58.8",
-    "pending_notes": "0.58.9",
-    "incoming_work": "Existing Cargo.lock edits select Platform 0.23.3 and Testkit 0.89.1; preserved exactly, with dependency/product qualification outside this tooling adoption."
+    "commit": "806965fd6768e16181ed71782c59d9b33f555085",
+    "version": "0.58.9",
+    "pending_notes": "0.58.10",
+    "incoming_work": "Continue the uncommitted frozen-delivery batch, preserving the Agent member catalog entry and incoming Platform 0.23.4/Testkit 0.89.3 lock selection. No package-version or dependency edits."
   },
   "provenance": {
-    "selection": "GitHub origin/main independently observed at the selected full commit. Canonical impact/export uses --revision from the normal supplier checkout; no sibling edits.",
+    "selection": "GitHub's revision-bound VERSION confirms 0.31.0 at 7431394, including the integrated checksum fixes. Canonical impact/export uses that full --revision from the normal clean supplier checkout. No sibling edits.",
     "export": {
       "payloads": 160,
       "added": 2,
-      "removed": 0,
-      "updated": 6,
-      "unchanged": 152
+      "removed": 2,
+      "updated": 9,
+      "unchanged": 149
     },
     "catalogs": "Host/Cargo/IC catalogs and local Rust 1.99.1 declarations are unchanged."
   },
   "consumer_decisions": [
-    "Adopt release-efficiency and direct-delivery guidance, plus the canonical opt-in frozen runner companion. Do not opt Backup into frozen execution: normal-checkout release/publication receipts and recovery hooks retain their existing qualified mode.",
-    "Refuse nonempty RELEASE_FROZEN_GROUPS through release, resume, plan and publication entrypoints, including inherited active selections, before effects. Clear new parent frozen variables only within isolated release fixtures.",
-    "Keep full-gate-only release validation and no stage reuse. The root CI roster already omits check after all-target/all-feature Clippy; independent normal-dependency consumers and package archives have different inputs and remain required.",
+    "Hard-cut local hooks, fixture context and documentation to RELEASE_GROUPS/RELEASE_PUBLISH_TARGET/RELEASE_SETUP_TARGET/RELEASE_SETUP_MODE/RELEASE_BATCH_ACTIVE. Use the renamed canonical runner/guide without aliases. Actual Make tests reject every retired setting from CLI/environment, including empty values.",
+    "Require schema-2 intent and the recorded publication commit in the actual consumer integration. There are no real pre-0.31 batch journals here; preserve all earlier fixture evidence and recovery paths. Finish any external older batch with its original tooling, never by rewriting schema or inferring identity.",
+    "Adopt snapshot checksum NUL/backend-status fixes and annotated-export admission. Qualify Backup's actual Make bootstrap against NUL output. VERSION base alignment/npm schema-3 changes need no local migration because those maintained roots are absent.",
+    "Adopt canonical candidate setup/context, saved phase/index admission, publication identity checks and batch lifecycle interfaces, retaining the 0.30.8 underscore fix. Upstream owns execution/lifecycle regressions; do not copy or rerun producer matrices here.",
+    "Use Shared's automatic single-group frozen selection from RELEASE_GROUP. Remove the duplicate local RELEASE_FROZEN_GROUPS default; qualify the actual Make refusal when a selected Backup group attempts to clear its frozen roster.",
+    "Enable frozen delivery for one coordinated backup group, preserving workspace inheritance/root ledger and completing the root member catalog. Shared owns all dispatch and lifecycle orchestration. Candidate setup prepares tools before version lookup and checks selections offline during recovery; exact receipt checks remain mandatory. New tags/plans carry the backup prefix; historical recovery explicitly selects an empty group.",
+    "Clear new setup/batch/publication context variables only within the isolated release fixture child process; preserve the calling environment.",
+    "Keep full-gate-only release validation, with no stage reuse or selective mapping. No timing improvement or new product behavior is claimed.",
     "Keep Candid/CBOR source selection, exact external allowances, generated-consumer gates, compiler policy and original product custody/recovery unchanged. No source/record migration or package version change.",
-    "Preserve incoming dependency edits, tool stores, release receipts, journals, artifacts and failed evidence; do not create a managed delivery checkout or run Shared producer matrices."
+    "Preserve incoming dependency edits, tool stores, release receipts, journals, artifacts and failed evidence. Execute actual managed checkouts/Git effects only in reproducible fixtures; no primary-repository delivery or registry upload. Publication remains explicit and binds the exact delivered commit/tag/receipt."
   ],
   "qualification": {
     "status": "Passed focused consumer qualification",
-    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-0307.qztZdV",
-    "snapshot": "160 canonical payload bytes/modes match the independently selected source commit; offline integrity passes.",
-    "consumer_routing": "Actual Make entrypoints reject unqualified frozen release/resume/plan/publication selection from CLI and environment before effect/state creation. Default entrypoints pass the existing full isolated release-adapter suite.",
-    "release_adapters": "make release-check passes Make/gate/recovery substitutes and real private-index boundaries; fixture evidence is target/shared-release-tests.4TZY2o. No real checkout release/publication was executed.",
-    "efficiency_review": "CI_TARGETS has no root check after Clippy. Separate consumer manifests/normal-dependency features and archive verification own distinct contracts. No selective scope, stage reuse or timing saving is claimed.",
-    "other_checks": "Local tooling and hooks, ShellCheck/syntax, formatter, compiler admission, dependency inheritance/ownership and Candid/CBOR boundary checks pass. New frozen runner Perl syntax passes.",
-    "inputs": "Cargo.toml, incoming Cargo.lock and rust-toolchain.toml are byte-identical to the adoption baseline.",
+    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-031",
+    "snapshot_evidence": "Canonical impact/export selects 160 payloads: nine updates, two additions/two retirements and 149 unchanged. No snapshot payload was locally patched.",
+    "selection": "Actual batch setup/native/archive/recovery integration, complete historical receipt/publication adapter suite, local routing/cleared-roster/retired-setting refusal, Make checksum-NUL admission, shell/Perl syntax, formatting, compiler, dependency and documentation admission. No package version change.",
+    "results": "All selected checks pass. All 160 canonical payload bytes/modes match the pinned supplier, including required annotations. The schema-2 fixture binds its recorded publication commit and passes actual installed setup/native/archive checks, deferred lock custody, exact recovery, uncertain publication, completed replay, reconciliation and retirement. Manifest, incoming lockfile and compiler declarations remain byte-identical to this refresh baseline.",
+    "batch_fixture": "target/frozen-delivery-tests.L8NVJc (batch-gpmNJuIq), captured Platform 0.23.4/Testkit 0.89.3. Actual sources/tools/Git/archives; only upload and one lost reply substituted. Required receipts remain outside its retired batch.",
+    "legacy_fixture": "target/shared-release-tests.hlWtN8: complete historical Make/gate/recovery/publication substitutes and real private-index boundaries pass with empty group/roster.",
+    "fixture_capture": "The initial attempt correctly failed on the two canonically retired tracked files. The fixture inventory now respects pending working-tree deletions while admitting only regular files; the full retry passes. Original failure/evidence retained.",
+    "previous_qualification": "0.30.10 actual setup/build/archive/lifecycle integration passed on Platform 0.23.4/Testkit 0.89.3; its source, receipts and failed setup evidence remain in target/evidence/shared-0310 and the original fixture directories.",
     "limits": [
-      "Linux focused tooling qualification; no full product CI/release, native macOS or Canic checks.",
-      "Frozen release execution remains unsupported/unqualified for Backup; the supplied producer runner is not consumer delivery qualification.",
-      "Existing Platform/Testkit lockfile updates remain separate dependency work."
+      "Linux focused tooling checks; no new full product CI, release, native macOS or Canic qualification.",
+      "Frozen adapter qualification is Linux-only. The fixture narrows validation to actual native/source/archive leaves; real releases still run the complete gate. Upload is substituted, never a live registry operation.",
+      "Current Platform 0.23.4/Testkit 0.89.3 lockfile requires the complete product release gate; focused native/archive integration does not replace it."
     ]
   }
 }

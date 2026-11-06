@@ -13,15 +13,31 @@ RELEASE_REMOTE ?= origin
 RELEASE_BRANCH ?= main
 RELEASE_DELIVERY ?= direct
 export RELEASE_DELIVERY
+RELEASE_GROUP ?= backup
+export RELEASE_GROUP
+RELEASE_SETUP_TARGET := release-candidate-setup
+# Standard release commands remain Git-only; deployment explicitly selects publish.
+RELEASE_PUBLISH_TARGET ?=
+# Shared rejects inherited Cargo contexts; the candidate owns its own target.
+ifneq ($(filter release-patch release-minor release-major release-batch-%,$(MAKECMDGOALS)),)
+ifneq ($(RELEASE_BATCH_ACTIVE),1)
+unexport CARGO_TARGET_DIR
+endif
+endif
 RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
 
-# The shared frozen workflow is opt-in; Backup's hooks retain normal-checkout receipts.
-ifneq ($(filter $(SHARED_RELEASE_TARGETS) release-plan publish publish-dry-run,$(MAKECMDGOALS)),)
-ifneq ($(strip $(RELEASE_FROZEN_GROUPS)),)
-$(error Frozen release batches are not qualified for ic-backup; use the normal release commands)
+# The two libraries are one coordinated group, including inside a frozen batch.
+ifneq ($(strip $(RELEASE_GROUP)),)
+ifneq ($(RELEASE_GROUP),backup)
+$(error Unknown Backup release group)
+endif
+endif
+ifneq ($(strip $(RELEASE_GROUPS)),)
+ifneq ($(RELEASE_GROUPS),backup)
+$(error Select the complete backup frozen roster)
 endif
 endif
 CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check candid-boundary-check check-doc-links shell-check fmt-check golden-check clippy tooling-check release-check hooks-check test doc check-msrv package
@@ -36,6 +52,7 @@ CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-c
 .PHONY: dependency-boundaries-check dependency-pins-check install-testkit-server testkit-server-check release-delivery-check
 .PHONY: install-release-editor release-editor-check repository-files-check
 .PHONY: candid-boundary-check compiler-check golden-check
+.PHONY: release-candidate-setup frozen-delivery-check
 
 help:
 	@echo "candid-boundary-check       Check Candid declarations and CBOR ownership"
@@ -56,6 +73,7 @@ help:
 	@echo "fmt                         Sort Cargo manifests and format Rust"
 	@echo "fmt-check                   Check Cargo ordering and Rust formatting"
 	@echo "format-tools-check          Check prepared Cargo formatters offline"
+	@echo "frozen-delivery-check       Qualify frozen delivery through real local adapters"
 	@echo "golden-check                Check independent snapshot vectors and contract JSON"
 	@echo "help                        Show available commands"
 	@echo "hooks-check                 Test the pre-commit formatter"
@@ -71,6 +89,11 @@ help:
 	@echo "package                     Verify both library packages locally"
 	@echo "publish                     Publish both libraries to crates.io"
 	@echo "publish-dry-run             Verify Cargo publication without uploading"
+	@echo "release-batch-reconcile     Fast-forward a clean checkout to a completed batch"
+	@echo "release-batch-resume        Resume the selected frozen BATCH"
+	@echo "release-batch-retire        Explicitly retire a reconciled completed BATCH"
+	@echo "release-batch-status        Inspect the selected frozen BATCH"
+	@echo "release-candidate-setup     Prepare/admit tools inside a frozen candidate"
 	@echo "release-check               Test release helpers with isolated substitutes"
 	@echo "release-delivery-check      Verify the supported direct release policy without effects"
 	@echo "release-editor-check        Admit the prepared Cargo release editor offline"
@@ -193,13 +216,20 @@ publish-dry-run:
 
 release-check:
 	+bash scripts/release/test-release.sh
+	+bash scripts/release/test-frozen-delivery.sh
+
+frozen-delivery-check:
+	+bash scripts/release/test-frozen-delivery.sh
+
+release-candidate-setup:
+	+@$(RELEASE) candidate-setup
 
 release-delivery-check:
 	@[[ "$${RELEASE_DELIVERY:-direct}" == direct ]] || { echo 'This repository supports direct release delivery; PR delivery needs a qualified consumer adapter.' >&2; exit 2; }
 
 # Product delivery admission and exact resumed-receipt verification remain local;
 # the common include owns dispatch and failure propagation.
-release-patch release-minor release-major release-resume: release-delivery-check
+release-patch release-minor release-major release-resume release-batch-resume: release-delivery-check
 
 release-plan:
 	+@$(RELEASE) plan "$(if $(VERSION),$(VERSION),patch)"

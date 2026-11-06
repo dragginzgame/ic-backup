@@ -1,5 +1,43 @@
 # Current handoff — 2026-11-06
 
+## Pending 0.58.10 frozen delivery
+
+Shared **0.31.0** at `74313941af2fce4399bec0e6909ca6229673c3f8` replaces the
+uncommitted 0.30.10 snapshot: 160 canonical payloads, nine updates/two additions/
+two retirements/149 unchanged. It includes the integrated checksum fixes.
+Hooks and docs use `RELEASE_GROUPS`, `RELEASE_PUBLISH_TARGET`, `RELEASE_SETUP_TARGET`,
+`RELEASE_SETUP_MODE` and `RELEASE_BATCH_ACTIVE`; retired settings refuse even empty.
+`run-release-batch.pl`/`release-batches.md` replace their old names. Schema-2 batch
+journals require the recorded publication commit, with no HEAD inference. There
+are no real pre-0.31 batch journals here; finish any older batch with its original
+tooling rather than rewriting schemas. Recovery storage paths/source pins stay.
+Backup now enables the shared frozen workflow for one coordinated `backup` group.
+Workspace-version inheritance and the root changelog remain; the root catalog now
+includes both members. New tags/plans carry the `backup-` prefix. Historical `v…`
+recovery explicitly selects an empty group in its original qualified checkout.
+Candidate setup prepares tools before version lookup; recovery checks them offline.
+Exact v1 receipts and mandatory resumed-validation checks remain unchanged.
+Publication is explicit and requires the exact delivered commit/tag/receipt.
+
+[The review](../shared-tooling-review.json) records provenance, consumer decisions
+and latest qualification in `target/evidence/shared-031/`. Real installed setup,
+locked native build, archive-consumer and local Git integration passes in
+`target/frozen-delivery-tests.L8NVJc/`: schema 2/recorded commit, deferred lock custody,
+exact offline recovery, uncertain upload refusal, completed replay, reconciliation
+and explicit retirement. Only upload/lost reply are substituted; required fixture
+receipts remain outside its retired batch. The complete historical adapter suite
+passes in `target/shared-release-tests.hlWtN8/`; tooling proves cleared-roster,
+retired-setting and checksum-NUL refusal. Syntax, formatting, compiler, dependency
+and documentation gates pass; annotated provenance matches the supplier commit.
+The fixture captures Platform **0.23.4**/Testkit **0.89.3**. Manifest, lockfile and
+compiler hashes are unchanged by this refresh. Earlier qualification, setup/cache
+failures and the corrected pending-deletion fixture failure remain retained.
+No complete new product gate, live upload, macOS or Canic acceptance was run;
+the current dependencies still need the complete gate before release.
+Rust **1.99.1**, package versions **0.58.9**, product Rust code,
+protocols and retained recovery evidence remain unchanged. Changes are uncommitted.
+No primary-repository frozen batch, release refs or publication was created.
+
 ## Delivered 0.58.9
 
 Both **ic-backup 0.58.9** and **ic-backup-agent 0.58.9** are published on crates.io.
@@ -17,18 +55,10 @@ application acceptance and effect-free terminal replay against both exact publis
 packages. Native macOS and Canic acceptance remain separate; hosted CI was not
 manually dispatched.
 
-Shared **0.30.7** at `22a853e26c05ec323f06c57fa316c08b808f252b` replaces 0.30.6:
-160 canonical payloads, six updates/two additions/152 unchanged. GitHub main
-independently selected that commit; [the review](../shared-tooling-review.json)
-records decisions and provenance. AGENTS references the selected baseline;
-host/Cargo/IC catalogs and minimum/pinned Rust **1.99.1** remain unchanged.
-
-Backup retains its qualified normal-checkout, full-gate-only release path, with
-no stage reuse or selective implementation mapping. Nonempty `RELEASE_FROZEN_GROUPS`
-refuses through release/resume/plan/publication entrypoints before effects, including
-inherited active selections. No frozen delivery checkout was created or qualified.
-CI already omits the duplicate root check after Clippy; independent consumer and
-archive checks own distinct contracts and remain. No elapsed-time saving is claimed.
+Delivered 0.58.9 used Shared **0.30.7**, the normal-checkout release path and
+Rust **1.99.1**. Detailed historical decisions remain at `806965f`. Current batch
+adoption above retains the full gate without stage reuse or selective mapping;
+independent consumer/archive proofs remain distinct. No timing saving is claimed.
 
 The qualified lockfile selects Platform **0.23.3**, Platform Types **0.18.2**,
 Testkit **0.89.1**, its exact CLI and PocketIC **16.1.0**. Published archive checksums
@@ -46,56 +76,20 @@ Focused snapshot provenance remains in `target/evidence/shared-0307.qztZdV/`;
 full-gate release fixtures remain in `target/shared-release-tests.6XoOya/`.
 No journals, artifacts, failed bundles or earlier release evidence were removed.
 
-## Delivered 0.58.8
+## Earlier delivery and qualification
 
-Release `78a0fa3dbf9e34b96e872ed7811ddf6a058c9e4c` published both 0.58.8 crates from
-source `cbddde14ecb1e7b59671e34ff0c28b9e0a99962c`, with 544 full-gate tests and
-registry-only authenticated backup/restore qualification. It adopted Shared 0.30.6,
-Platform Types 0.18.2 and Testkit 0.89.0, enforcing Candid/CBOR source boundaries in
-root and generated consumers. All 36 external Candid allowances remain live; there
-is no CBOR exception or format migration. Explicit server output, HTTP evidence,
-original journals and async cleanup retain their owners. Detailed qualification is
-retained at `ab19b40`, with delivery evidence in `target/evidence/deploy-0588.vRuWtx/`.
-Earlier focused checks remain under `target/evidence/shared-0306.TCumgu/` and
-`target/evidence/types-0182-testkit-089.rHqTdd/`.
-
-## Delivered 0.58.7
-
-Release `4774dc7343272b0ae8e55f5ab998c9a855384b54` published both 0.58.7 crates from
-source `a3d520c2cfb768b4d10f2b4a51058ca6f9a00349`, with 544 full-gate tests and
-registry-only authenticated backup/restore qualification. It consolidated artifact
-progress, paired download plans, standalone catalogs, fixture faults, checkpoint
-finishing and artifact-verification admission while preserving v1 bytes and recovery.
-Evidence remains in `target/evidence/deploy-0587.yiDOdu/`,
-`target/evidence/cleanup-0587/` and `target/evidence/cleanup-0587-followup/`; the
-full handoff is retained at `95d39fc`. Public planning-error consolidation remains
-deferred to an intentional API break; distinct settlement errors keep their owner.
-
-## Delivered 0.58.6
-
-Release `ca37252a55dee1f535ab9656a0ba273a7e7131d4` published both 0.58.6 crates
-from qualified source `9806ae163e830267da527c5abeb5735f0ea2f396`, with 544 full-gate
-tests and registry-only authenticated backup/restore qualification. It adopted
-Testkit 0.88.0 and closed [#78](https://github.com/dragginzgame/ic-backup/issues/78).
-Its declaration allowance passes both installed Shared `2aa41c7` and committed
-checker `be377103`; extra owned Candid declarations still reject, including under
-the explicitly selected inventory `target` file. Evidence remains in
-`target/evidence/issue-78/`; the detailed handoff is retained at `8be4f62`.
-
-## Prior delivery and qualification
-
-0.58.5 release `210a517c4dd88d7cd922e4e754e530101d183db3` published both crates from
-source `176467c026babbd397f22e8a375563d3e1eeae7e`, with 542 full-gate tests and a
-published-consumer capture/restore journey. Evidence remains in
-`target/evidence/deploy-0585.b88i271n/` and `.git/release-state/`.
-The test consolidation, case mappings and independent qualification remain in
-`target/evidence/test-cleanup-0585/`, `target/evidence/test-convergence-0585/` and
-`target/evidence/test-trim-0585-03/`; the detailed handoff is retained at `8be4f62`.
+Full prior handoffs remain at `ab19b40` (0.58.8), `95d39fc` (0.58.7) and
+`8be4f62` (0.58.6/0.58.5). Registry journeys, exact source/ref identities and
+compiler qualification remain in Git and their original evidence directories.
+Delivery evidence stays under `target/evidence/deploy-0588.vRuWtx/`,
+`target/evidence/deploy-0587.yiDOdu/` and `target/evidence/deploy-0585.b88i271n/`;
+issue-78 qualification remains under `target/evidence/issue-78/`.
+Test consolidation/case mappings and cleanup evidence remain in their original
+directories. All 36 external Candid allowances remain live; there is no CBOR
+exception or product-format migration. Public planning-error consolidation remains
+deferred to an intentional API break; distinct settlement errors retain their owner.
 [Coverage ownership](../development.md#simulator-coverage-ownership) identifies
 retained IC effects, signed transport probes and native rejection matrices.
-Earlier release/compiler qualification remains in Git and its original evidence.
-Historical Shared 0.30.4 at `2aa41c7394300302fe802b69b31b855bdc89b671` supplied
-157 payloads; its adoption review remains in the prior Git handoff.
 
 ## Recovery and retained contracts
 

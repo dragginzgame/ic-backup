@@ -2,27 +2,58 @@
 
 ## What this adoption means
 
-Shared Tooling **0.30.7**, committed revision
-`22a853e26c05ec323f06c57fa316c08b808f252b`, owns the reviewed engineering
+Shared Tooling **0.31.0**, committed revision
+`74313941af2fce4399bec0e6909ca6229673c3f8`, owns the reviewed engineering
 baseline and common setup, formatting, hook, validation and release mechanisms.
-The canonical refresh from `45c0295` selects **160 payloads**: six updates,
-two additions and 152 unchanged. Host/Cargo/IC catalogs and Rust **1.99.1** are
-unchanged. Snapshot payloads are never locally patched. Existing lockfile edits
-selecting Platform 0.23.3 and Testkit 0.89.1 are preserved separately; this tooling
-review does not claim their product qualification.
+The canonical refresh from `8ae6268` selects **160 payloads**: nine updates,
+two additions, two retirements and 149 unchanged. Host/Cargo/IC catalogs and Rust
+**1.99.1** are unchanged. Snapshot payloads are never locally patched. The incoming
+lockfile edits selecting Platform 0.23.4 and Testkit 0.89.3 are preserved separately; this tooling
+review does not replace complete product qualification. Delivered 0.58.9 qualified
+Platform 0.23.3 and Testkit 0.89.1.
 
 Backup owns product contracts, qualification selection, the ordered Testkit setup
 extension, release metadata adapter and exact resume receipt checks. Owner CI or
 successful tool setup does not qualify Backup behavior or authorize delivery.
 Backup has no Canic runtime/control-plane dependency and keeps one coordinated
-release, root changelog and complete release gate. Optional groups, candidate
-sources and stage-proof reuse are not selected.
+release, root changelog and complete release gate. Independent groups, stage-only
+validation candidates and stage-proof reuse are not selected.
 
-The refresh adds optional frozen release batches and release-efficiency guidance.
-Backup does not opt in to frozen execution: its actual release/publication hooks
-have not been qualified in that mode. Nonempty `RELEASE_FROZEN_GROUPS` refuses
-through normal release/plan/publication entrypoints before effects, including
-inherited active selections. The standard qualified runner and exact receipts remain.
+The snapshot supplies release batches and release-efficiency guidance. Version
+0.31 hard-cuts to `RELEASE_GROUPS`, `RELEASE_PUBLISH_TARGET`, `RELEASE_SETUP_TARGET`,
+`RELEASE_SETUP_MODE` and `RELEASE_BATCH_ACTIVE`; old settings refuse even when
+empty. Canonical `run-release-batch.pl` and `release-batches.md` replace their old
+names. Schema-2 journals require the recorded publication commit; pre-0.31 batches
+must finish with their original tooling, with no schema rewrite or HEAD inference.
+There are no real pre-0.31 batch journals in this checkout. Earlier reproducible
+fixture evidence is preserved. Recovery storage paths/source pins remain unchanged.
+Upstream owns generic batch execution/lifecycle regressions. Shared derives the
+single-group roster from `RELEASE_GROUP`, and clearing it cannot select live
+delivery. Backup retains its coordinated `backup` group. Shared
+owns setup dispatch, batch recovery, fast-forward reconciliation and explicit
+retirement; Backup retains actual setup, complete validation, original-source
+receipts and exact resumed-receipt admission. Fresh candidate setup installs tools
+once; recovery checks them offline. New tags use `backup-v…`; historical `v…`
+recovery explicitly selects an empty group. The group catalog retains workspace
+inheritance and the root ledger, adding the complete member dependency catalog.
+
+Consumer qualification uses actual sources, installed setup, clean locked native
+builds, verified archives and local-only Git delivery. It loses a real commit
+reply, defers a normal-tree lock edit, and substitutes only registry upload while
+checking archive/source identities and uncertain-publication refusal. Completed
+replay, dirty reconciliation refusal, preserved deferred work and explicit fixture
+retirement pass. This is adapter qualification, not a new complete product test
+or live delivery. The 0.31 integration passes for renamed hooks, schema-2 intent
+and recorded publication identity on captured Platform 0.23.4/Testkit 0.89.3.
+See [releasing](releasing.md)
+for authority and receipt custody.
+
+Snapshot export now requires version/entrypoint annotations, while historical
+manifest inspection remains available. Checksum verification rejects NUL output
+before shell capture and distinguishes backend failure statuses. The consumer
+bootstrap checks the actual Make refusal and retains evidence. VERSION/changelog
+base alignment and npm lock schema 3 were reviewed; Backup has neither a VERSION
+ledger nor maintained npm manifests to migrate.
 
 Backup is full-gate-only, with no qualified stage reuse or isolated implementation
 mapping. CI already omits the duplicate root `check` after Clippy; independent

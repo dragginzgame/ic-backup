@@ -3,6 +3,11 @@
   "inspection_date": "2026-10-26",
   "issue": "https://github.com/dragginzgame/ic-backup/issues/18",
   "consumer_fixture": "scripts/release/test-release.sh",
+  "frozen_consumer_fixture": {
+    "path": "scripts/release/test-frozen-delivery.sh",
+    "scope": "Actual Backup workspace, Make/setup/metadata/receipt/native/archive hooks and local Git remotes; only registry upload and one lost commit reply are substituted.",
+    "owners": "Single coordinated group, deferred lock custody, exact offline recovery, uncertain publication, completed replay, explicit reconciliation/retirement. Shared owns generic group-order/lifecycle matrices; this fixture does not copy them."
+  },
   "original_fixture_sha256": "ade433be8349efe2f3431904e5d918af864968b6e28e7373f3d5cace6d9d8443",
   "shared_fixture": "https://github.com/dragginzgame/shared-tooling/blob/a7f85d45d4212d4c39225f58597580560a333550/scripts/ci/test-release-runner.sh",
   "shared_fixture_sha256": "e06e168a3324dc0cac64da6b5fd75682414dcded792b799d90728e3e221aeb77",

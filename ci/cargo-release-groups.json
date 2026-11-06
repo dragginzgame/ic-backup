@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "groups": [
+    {
+      "name": "backup",
+      "primary": "ic-backup",
+      "version": "workspace",
+      "members": ["ic-backup", "ic-backup-agent"],
+      "dependencies": ["ic-backup", "ic-backup-agent"],
+      "changelog": "CHANGELOG.md",
+      "metadata_files": ["docs/release.json"]
+    }
+  ]
+}

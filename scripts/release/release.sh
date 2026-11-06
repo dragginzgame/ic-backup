@@ -40,6 +40,16 @@ validation_check() {
     perl "$DATA" validation-check "$proof" "$RELEASE_SOURCE" "$RELEASE_DATE" \
         "$RELEASE_PREVIOUS" "$RELEASE_VERSION" "$mode" "$@"
 }
+candidate_setup() {
+    [[ "${RELEASE_BATCH_ACTIVE:-}" == 1 && "${RELEASE_GROUP:-}" == backup ]] || fail 'candidate setup requires the frozen backup group'
+    make --no-print-directory shared-tooling-check
+    case "${RELEASE_SETUP_MODE:-}" in
+        prepare) make --no-print-directory install-tools ;;
+        check) ;;
+        *) fail 'candidate setup requires prepare or check mode' ;;
+    esac
+    make --no-print-directory tools-check
+}
 preflight() {
     context
     [[ "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$(version)" == "$RELEASE_PREVIOUS" ]] || fail 'original source/version changed'
@@ -52,9 +62,11 @@ preflight() {
     git diff --cached --quiet "$RELEASE_SOURCE" -- Cargo.toml Cargo.lock docs/release.json || fail 'staged original release metadata changed'
     perl "$DATA" changelog-check "$RELEASE_VERSION" "$RELEASE_DATE" "$RELEASE_PREVIOUS"
     make --no-print-directory shared-tooling-check
-    # Only original-source preflight prepares the common and locked tools. Saved
-    # prepared/committed/tagged releases reconcile without replaying setup.
-    make --no-print-directory install-tools
+    # Frozen candidate setup owns preparation before version lookup. Historical
+    # direct preflight retains setup; saved releases never replay installation.
+    if [[ "${RELEASE_BATCH_ACTIVE:-}" != 1 ]]; then
+        make --no-print-directory install-tools
+    fi
     make --no-print-directory tools-check
     [[ "$(git rev-parse HEAD)" == "$RELEASE_SOURCE" && "$(version)" == "$RELEASE_PREVIOUS" ]] || fail 'original source/version changed during setup'
     bash "$ROOT/scripts/ci/check-release-source.sh" --allow CHANGELOG.md
@@ -123,8 +135,9 @@ tag_check() {
     selected="$(git rev-parse "${1:-HEAD}")"
     perl "$DATA" verify --commit "$selected"
     current="$(perl "$DATA" version --commit "$selected")"
-    [[ "$(git cat-file -t "refs/tags/v$current")" == tag ]] || fail 'release tag must be annotated'
-    [[ "$(git rev-parse "refs/tags/v$current^{commit}")" == "$(git rev-parse "$selected")" ]] || fail 'tag differs from release commit'
+    local tag="refs/tags/${RELEASE_GROUP:+$RELEASE_GROUP-}v$current"
+    [[ "$(git cat-file -t "$tag")" == tag ]] || fail 'release tag must be annotated'
+    [[ "$(git rev-parse "$tag^{commit}")" == "$(git rev-parse "$selected")" ]] || fail 'tag differs from release commit'
     [[ "$(git log -1 --format=%P "$selected")" == "$(perl "$DATA" source --commit "$selected")" ]] || fail 'release parent differs from receipt'
 }
 lock_release() {
@@ -143,6 +156,10 @@ publish() {
     local arguments=()
     [[ "${1:-}" != --dry-run ]] || mode=check
     source="$(git rev-parse --verify HEAD)"
+    if [[ "${RELEASE_BATCH_ACTIVE:-}" == 1 ]]; then
+        [[ "${RELEASE_GROUP:-}" == backup && "${RELEASE_COMMIT:-}" == "$source" ]] || fail 'frozen publication requires the exact delivered backup commit'
+        tag_check "$source"
+    fi
     make --no-print-directory clippy || return "$?"
     [[ ! -L "$parent" ]] || fail 'publication evidence is symlinked'
     mkdir -p "$parent"
@@ -169,9 +186,10 @@ case "$command" in
     plan)
         next="$(perl "$DATA" next "${1:-patch}")"
         printf 'Current: %s\nTarget:  %s\n' "$(version)" "$next"
-        echo 'Maintainer workflow: preflight -> validate -> prepare -> stage -> commit/tag -> atomic push'
-        echo 'Normal targets start fresh; release-resume selects only one saved version. No effects performed.' ;;
+        echo 'Maintainer workflow: capture source -> candidate setup -> validate -> prepare -> commit/tag -> atomic push'
+        echo 'Frozen batches retain deferred edits; release-batch-resume selects their saved intent. No effects performed.' ;;
     ensure-clean) ensure_clean ;;
+    candidate-setup) candidate_setup ;;
     preflight) preflight ;;
     prepare) prepare ;;
     prepared-check) verify_prepared ;;
@@ -195,11 +213,11 @@ case "$command" in
         [[ "$requested" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail 'expected exact saved release version'
         # The runner owns plan selection. Its completed tag identifies the
         # consumer receipt, even if HEAD now includes newer reviewed fixes.
-        selected="$(git rev-parse "refs/tags/v$requested^{commit}")"
+        selected="$(git rev-parse "refs/tags/${RELEASE_GROUP:+$RELEASE_GROUP-}v$requested^{commit}")"
         tag_check "$selected"
         state="$(git rev-parse --git-path release-state)"
         [[ ! -L "$state" && ! -L "$state/$requested.validation.json" ]] || fail 'resumed validation is symlinked'
         perl "$DATA" resume-validation-check "$state/$requested.validation.json" "$requested" --commit "$selected" ;;
     publish) lock_release; publish "$@" ;;
-    *) fail 'expected version, plan, ensure-clean, preflight, prepare, prepared-check, commit-check, committed-check, tagged-check, push-check, validation-record, files, tag-check, resume-check, or publish' ;;
+    *) fail 'expected version, plan, ensure-clean, candidate-setup, preflight, prepare, prepared-check, commit-check, committed-check, tagged-check, push-check, validation-record, files, tag-check, resume-check, or publish' ;;
 esac

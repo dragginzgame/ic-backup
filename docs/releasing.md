@@ -42,11 +42,52 @@ the runner creates state or calls Git. Changing delivery requires a qualified
 consumer adapter and explicit policy adoption; a failed direct push never selects
 another lane. Ordinary contributions continue through authorized PRs.
 
-Shared's [frozen release batches](frozen-releases.md) are not qualified for Backup.
-The standard release/publication entrypoints reject nonempty `RELEASE_FROZEN_GROUPS`
-before effects, including inherited selections. Backup keeps one coordinated group,
-normal-checkout source receipts and exact saved-version recovery. Snapshot adoption
-does not activate a managed delivery checkout or defer live lockfile edits.
+Backup adopts Shared's [frozen release batches](release-batches.md). Both libraries
+remain one coordinated `backup` group in [the explicit catalog](../ci/cargo-release-groups.json),
+using workspace-version inheritance and the root changelog. New plans use
+`backup-X.Y.Z.plan` and annotated tags use `backup-vX.Y.Z`; historical `vX.Y.Z`
+identities and receipts remain intact.
+
+Shared 0.31 uses `RELEASE_GROUPS`, `RELEASE_PUBLISH_TARGET`, `RELEASE_SETUP_TARGET`,
+`RELEASE_SETUP_MODE` and `RELEASE_BATCH_ACTIVE`. Retired settings refuse even when
+empty; no aliases are retained. New batch journals use schema 2 and require their
+recorded publication commit. Finish pre-0.31 batches with their original tooling
+before upgrading; never edit journal schemas or infer missing identities from HEAD.
+Recovery paths/source pins and Backup's own v1 receipt format remain unchanged.
+
+Patch/minor/major capture clean committed source into `target/release-frozen/BATCH`.
+Shared derives the frozen roster from `RELEASE_GROUP=backup`; Backup adds no
+second roster default. Clearing `RELEASE_GROUPS` while selecting that group
+refuses before effects rather than falling back to live-checkout delivery.
+Durable Git state, plans, validation and publication receipts live beneath
+`.git/release-state/frozen/BATCH`. Candidate setup prepares the exact tools before
+version lookup; recovery admits those saved selections offline. Product preflight,
+the complete gate and unchanged v1 original-source receipt run inside the candidate.
+Later normal-checkout edits remain deferred and are never stashed, reset or merged
+automatically. Only the outer Make-owned target binding is unexported for shared
+dispatch; candidate commands keep their own target and tool directories.
+
+Standard release commands are Git-only. A delegated deployment can explicitly set
+`RELEASE_PUBLISH_TARGET=publish` on the selected increment; the saved batch
+then publishes both exact libraries after release delivery. Frozen publication
+requires the exact delivered commit and annotated tag/receipt before Clippy and
+the existing publication adapter. Standalone `make publish` remains an independent
+operation against the current clean checkout.
+
+Use `release-batch-status BATCH=…` to inspect, `release-batch-resume BATCH=…` to
+recover, and `release-batch-reconcile BATCH=…` to fast-forward a clean normal branch.
+Save deferred edits on a durable branch before reconciliation and reapply them
+deliberately afterward. Uncertain publication requires registry/receipt verification
+and an explicit `PUBLICATION_RESULT=published` or `not-published`; resume never
+infers a lost upload result. Completed replay performs no second publication.
+
+`release-batch-retire BATCH=…` explicitly removes only that completed, reconciled
+candidate and its durable state. Preserve required plans, validation/publication
+receipts, journals, artifacts and failure evidence outside the batch first; tag
+import alone does not preserve those files. There is no automatic retirement.
+Historical ungrouped recovery uses `make release-resume VERSION=X.Y.Z RELEASE_GROUP=`
+in its original qualified checkout; historical tag inspection likewise selects
+`RELEASE_GROUP=`. The mandatory exact validation/receipt check still applies.
 
 Backup remains full-gate-only: it has no qualified selective implementation mapping
 or reusable stage receipts. The CI roster already omits the root `check` after
@@ -58,10 +99,14 @@ saving or equivalent native/installed evidence is inferred from stage counts.
 | --- | --- | --- |
 | `make release-plan VERSION=minor` | Preview the proposed version without effects | Contributor |
 | `make release-check` | Run isolated release adapter/runner regressions | Contributor |
-| `make release-patch` | Increment patch, validate, prepare, commit/tag and atomically push | Maintainer |
+| `make release-patch` | Capture source, increment patch, validate, prepare, commit/tag and atomically push | Maintainer |
 | `make release-minor` | Increment minor/reset patch through the same workflow | Maintainer |
 | `make release-major` | Increment major/reset lower components through the same workflow | Maintainer |
-| `make release-resume VERSION=X.Y.Z` | Continue that exact retained release plan | Maintainer |
+| `make release-resume VERSION=X.Y.Z` | Continue an exact plan inside its candidate; normally use batch resume | Maintainer |
+| `make release-batch-status BATCH=…` | Inspect one saved batch | Contributor |
+| `make release-batch-resume BATCH=…` | Continue its saved setup/release/publication roster | Maintainer |
+| `make release-batch-reconcile BATCH=…` | Fast-forward the clean normal branch | Maintainer |
+| `make release-batch-retire BATCH=…` | Explicitly delete the reconciled completed batch's state/build tree | Maintainer |
 | `make release-tag-check` | Inspect current local annotated tag and receipt | Contributor |
 | `make publish-dry-run` | Run Cargo registry admission without uploading | Maintainer |
 | `make publish` | Upload the current package to crates.io | Maintainer |
@@ -112,7 +157,15 @@ a candidate. No local regex imposes another manifest layout.
 
 ## Release fixture ownership
 
-`make release-check` runs the consumer adapter fixture.
+`make release-check` runs the historical adapter fixtures and the real frozen
+delivery integration. `make frozen-delivery-check` selects only the latter.
+It uses the actual Backup workspace, Make hooks, installed setup, locked native
+build, archives and local-only Git remotes. The fixture narrows its gate to real
+native/source/archive leaves to avoid recursively running release fixtures; live
+delivery still uses the complete gate. Only registry upload and one lost commit
+reply are substituted. It proves deferred lock custody, offline exact recovery,
+uncertain publication refusal, completed replay, reconciliation and explicit
+retirement, retaining required receipts outside the retired fixture batch.
 [The assertion map](release-fixture-ownership.json) binds consumer assertions to
 their owners. Shared Tooling runs the generic increment, phase, restart, lost-reply
 and destination matrices at its own source; Backup does not vendor or rerun that
@@ -130,7 +183,9 @@ models different evidence. No new shared mock framework is needed to remove the
 runner-only cases. Fixture substitutes reject unsupported calls; their behavior
 under conditional shell evaluation remains locally checked.
 
-The fixtures create no real Git commit/tag/push or registry upload. Native shell
+The historical substitutes create no real Git effects; the frozen integration
+creates commits/tags/pushes only in disposable repositories under `target/`, with
+no registry upload. Native shell
 delivery remains distinct from local Linux checks; see
 [issue #18](https://github.com/dragginzgame/ic-backup/issues/18).
 
@@ -180,7 +235,7 @@ and the complete reviewed common Cargo set plus the declared Rust toolchains.
 Prepare toolchains before setup; ordinary validation never installs tools. Supported host evidence
 remains separately qualified.
 
-Normal commands require clean committed source, including pending notes, before
+Normal batch commands require clean committed source, including pending notes, before
 selecting a fresh attempt. The product adapter additionally reports every staged,
 unstaged and untracked path outside the phase's exact metadata allowance, quoting
 unusual names and retaining Git errors. Its preflight permits pending
@@ -213,7 +268,7 @@ single push URL from clean committed inputs before mutation. Product preflight r
 staged/unstaged/untracked work and changed original manifest/lock/receipt. Staged
 and working changes are checked independently, so restoring working bytes cannot
 hide an unrelated index edit or a changed staged original package/receipt. It verifies
-the snapshot and runs `make install-tools`: common host and Cargo setup,
+the snapshot. Shared candidate setup runs `make install-tools`: common host and Cargo setup,
 then root-workspace `cargo fetch --locked`, Testkit and release editor setup in
 order. Offline `make tools-check` runs common checks followed by Testkit and
 editor admission before the full gate. Optional IC executables are not required.
@@ -235,11 +290,11 @@ manifest/lock/member/changelog hashes. Exact original backups remain under
 `target/release-backup.*`; ordinary preparation failure restores the original metadata.
 
 The shared runner alone stages the four explicit release files, records the exact
-index tree, creates `Release X.Y.Z` and annotated `vX.Y.Z`, and pushes exactly:
+index tree, creates `Release backup X.Y.Z` and annotated `backup-vX.Y.Z`, and pushes exactly:
 
 ```bash
 git push --no-follow-tags --atomic -- "$destination" \
-  "$push_source:refs/heads/$branch" "refs/tags/v$candidate:refs/tags/v$candidate"
+  "$push_source:refs/heads/$branch" "refs/tags/backup-v$candidate:refs/tags/backup-v$candidate"
 ```
 
 The runner captures exactly one push URL and checks it again after validation and

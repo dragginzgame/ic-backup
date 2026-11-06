@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.58.10]
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.23.4 and Testkit 0.89.3 with its exact CLI/server selection.
+  Keep Platform-owned IC identities and explicit managed-server custody; Backup
+  does not select Testkit's reusable pool modes.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.31.0 and enable automatic frozen delivery for both libraries as one
+  coordinated `backup` group. Release from captured inputs while preserving later
+  normal-checkout edits; clearing the frozen roster cannot select live delivery.
+  Support explicit batch recovery, reconciliation and retirement.
+- New releases use `backup-v…` tags. Keep exact receipt checks, historical `v…`
+  recovery and explicit publication authority; package versions and the root ledger
+  remain coordinated.
+- Adopt the new release configuration names and schema-2 batch journals. Complete
+  pre-0.31 batches with their original tooling before upgrading; old settings refuse.
+- Harden snapshot checksum admission against NUL output and ambiguous backend
+  failures ([Shared #360](https://github.com/dragginzgame/shared-tooling/issues/360)).
+
 ## [0.58.9] - 2026-11-06
 
 ### ⬆️ Dependencies
