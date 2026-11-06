@@ -1,51 +1,50 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "45c0295e23d3d23225e31f47c018c30ff0c75581",
-  "label": "0.30.6",
+  "revision": "22a853e26c05ec323f06c57fa316c08b808f252b",
+  "label": "0.30.7",
   "reviewed_on": "2026-11-06",
-  "previous_revision": "2aa41c7394300302fe802b69b31b855bdc89b671",
+  "previous_revision": "45c0295e23d3d23225e31f47c018c30ff0c75581",
   "previous_review": {
-    "commit": "95d39fc36f22a3879ad238064abb6f087b9b98f0",
+    "commit": "ab19b406edcb4316082be9f34300ee08639c8bac",
     "path": "docs/shared-tooling-review.json"
   },
   "consumer_baseline": {
-    "commit": "95d39fc36f22a3879ad238064abb6f087b9b98f0",
-    "version": "0.58.7",
-    "pending_notes": "0.58.8",
-    "incoming_work": "Pre-existing Cargo.lock edit selects ic-platform-types 0.18.2 instead of 0.18.1; preserved exactly, not part of this tooling refresh."
+    "commit": "ab19b406edcb4316082be9f34300ee08639c8bac",
+    "version": "0.58.8",
+    "pending_notes": "0.58.9",
+    "incoming_work": "Existing Cargo.lock edits select Platform 0.23.3 and Testkit 0.89.1; preserved exactly, with dependency/product qualification outside this tooling adoption."
   },
   "provenance": {
-    "selection": "GitHub origin/main independently observed at the selected full commit. Canonical exporter uses --revision from the normal supplier checkout; unrelated uncommitted 0.30.7 changes are excluded. Exporter helpers admit their own committed bytes/modes.",
+    "selection": "GitHub origin/main independently observed at the selected full commit. Canonical impact/export uses --revision from the normal supplier checkout; no sibling edits.",
     "export": {
-      "payloads": 158,
-      "added": 1,
+      "payloads": 160,
+      "added": 2,
       "removed": 0,
-      "updated": 11,
-      "unchanged": 146
+      "updated": 6,
+      "unchanged": 152
     },
-    "catalogs": "Host, Cargo, IC executable catalogs and Rust 1.99.1 selectors unchanged."
+    "catalogs": "Host/Cargo/IC catalogs and local Rust 1.99.1 declarations are unchanged."
   },
   "consumer_decisions": [
-    "Enable --cbor on the existing Candid source target, selecting both crates and inventory/target/mod.rs explicitly. All 36 external Candid declarations stay live; no CBOR exceptions or owned CBOR migration is needed.",
-    "Keep named external IC management bytes and opaque signed CBOR ingress evidence. Production codecs remain owned by Platform; no product Rust or persisted protocol changed.",
-    "Run shared external-IC/CBOR Cargo admission on every actual materialized consumer workspace through consumer-fixture.sh, on its selected compiler, after exact graph admission and before compilation.",
-    "Check generated MSRV API probe sources with their own empty policy. Standalone consumer paths refer to first-party Rust already selected under crates. No browser roots or alternate executable manifest templates exist.",
-    "Qualify actual Make and generated-consumer callers with local rejection probes; leave Shared syntax/package matrices upstream. Do not copy the shared CBOR inventory or add bypass allowances.",
-    "Update AGENTS baseline reference and local adoption documentation; preserve package versions, manifests, locks, compiler selection, tool stores and product/recovery evidence. Shared-only work-version changes do not change Backup release adapters."
+    "Adopt release-efficiency and direct-delivery guidance, plus the canonical opt-in frozen runner companion. Do not opt Backup into frozen execution: normal-checkout release/publication receipts and recovery hooks retain their existing qualified mode.",
+    "Refuse nonempty RELEASE_FROZEN_GROUPS through release, resume, plan and publication entrypoints, including inherited active selections, before effects. Clear new parent frozen variables only within isolated release fixtures.",
+    "Keep full-gate-only release validation and no stage reuse. The root CI roster already omits check after all-target/all-feature Clippy; independent normal-dependency consumers and package archives have different inputs and remain required.",
+    "Keep Candid/CBOR source selection, exact external allowances, generated-consumer gates, compiler policy and original product custody/recovery unchanged. No source/record migration or package version change.",
+    "Preserve incoming dependency edits, tool stores, release receipts, journals, artifacts and failed evidence; do not create a managed delivery checkout or run Shared producer matrices."
   ],
   "qualification": {
     "status": "Passed focused consumer qualification",
-    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-0306.TCumgu",
-    "source_provenance": "Canonical export independently verifies all 158 payload byte/mode identities against the selected committed revision.",
-    "source_boundary": "Candid/CBOR check passes 330 Rust files and all 36 allowances; actual Make rejects unreviewed application derives and CBOR imports, including under inventory/target.",
-    "dependency_boundary": "Root declarations and renamed optional/target-specific normal/build/dev CBOR rejection through actual Make pass. The actual generated-workspace preparation owner rejects forbidden CBOR declarations.",
-    "independent_consumers": "Both independent libraries compile on Rust 1.99.1 with actual Cargo and generated-source boundary logs. Full candidate standalone capture/restore, application acceptance and terminal replay passes through the new gate.",
-    "tooling": "Local tooling, hook fixtures, ShellCheck/syntax, formatting and prepared-tools admission pass. Original fixture metadata-input/output collision failure is retained; corrected fixtures pass.",
-    "inputs": "Cargo.toml, Cargo.lock and rust-toolchain.toml remain byte-identical to the incoming selection.",
+    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-0307.qztZdV",
+    "snapshot": "160 canonical payload bytes/modes match the independently selected source commit; offline integrity passes.",
+    "consumer_routing": "Actual Make entrypoints reject unqualified frozen release/resume/plan/publication selection from CLI and environment before effect/state creation. Default entrypoints pass the existing full isolated release-adapter suite.",
+    "release_adapters": "make release-check passes Make/gate/recovery substitutes and real private-index boundaries; fixture evidence is target/shared-release-tests.4TZY2o. No real checkout release/publication was executed.",
+    "efficiency_review": "CI_TARGETS has no root check after Clippy. Separate consumer manifests/normal-dependency features and archive verification own distinct contracts. No selective scope, stage reuse or timing saving is claimed.",
+    "other_checks": "Local tooling and hooks, ShellCheck/syntax, formatter, compiler admission, dependency inheritance/ownership and Candid/CBOR boundary checks pass. New frozen runner Perl syntax passes.",
+    "inputs": "Cargo.toml, incoming Cargo.lock and rust-toolchain.toml are byte-identical to the adoption baseline.",
     "limits": [
-      "Lexical checks do not perform type resolution, macro expansion, dynamic-source discovery or external-byte authentication.",
-      "Linux focused qualification only; full CI/release matrix, native macOS and Canic acceptance were not rerun.",
-      "Existing Platform Types lockfile update is preserved and used for focused checks; this is not a separate dependency-adoption review."
+      "Linux focused tooling qualification; no full product CI/release, native macOS or Canic checks.",
+      "Frozen release execution remains unsupported/unqualified for Backup; the supplied producer runner is not consumer delivery qualification.",
+      "Existing Platform/Testkit lockfile updates remain separate dependency work."
     ]
   }
 }

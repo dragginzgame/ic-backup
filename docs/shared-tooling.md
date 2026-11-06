@@ -2,15 +2,14 @@
 
 ## What this adoption means
 
-Shared Tooling **0.30.6**, committed revision
-`45c0295e23d3d23225e31f47c018c30ff0c75581`, owns the reviewed engineering
+Shared Tooling **0.30.7**, committed revision
+`22a853e26c05ec323f06c57fa316c08b808f252b`, owns the reviewed engineering
 baseline and common setup, formatting, hook, validation and release mechanisms.
-The canonical refresh from `2aa41c7` selects **158 payloads**: eleven updates,
-one addition and 146 unchanged. Host/Cargo/IC catalogs and Rust **1.99.1** are
-unchanged. The supplier's uncommitted 0.30.7 draft is not selected. Snapshot
-payloads are never locally patched. The initially preserved Platform Types 0.18.2
-lockfile edit is qualified separately with Testkit 0.89; see the
-[dependency boundary](ic-platform.md#types-0182-and-testkit-089).
+The canonical refresh from `45c0295` selects **160 payloads**: six updates,
+two additions and 152 unchanged. Host/Cargo/IC catalogs and Rust **1.99.1** are
+unchanged. Snapshot payloads are never locally patched. Existing lockfile edits
+selecting Platform 0.23.3 and Testkit 0.89.1 are preserved separately; this tooling
+review does not claim their product qualification.
 
 Backup owns product contracts, qualification selection, the ordered Testkit setup
 extension, release metadata adapter and exact resume receipt checks. Owner CI or
@@ -19,8 +18,18 @@ Backup has no Canic runtime/control-plane dependency and keeps one coordinated
 release, root changelog and complete release gate. Optional groups, candidate
 sources and stage-proof reuse are not selected.
 
-The refresh admits complete generic inherent Candid headers and centralizes CBOR
-package ownership. Backup enables the shared lexical Candid/CBOR check once for
+The refresh adds optional frozen release batches and release-efficiency guidance.
+Backup does not opt in to frozen execution: its actual release/publication hooks
+have not been qualified in that mode. Nonempty `RELEASE_FROZEN_GROUPS` refuses
+through normal release/plan/publication entrypoints before effects, including
+inherited active selections. The standard qualified runner and exact receipts remain.
+
+Backup is full-gate-only, with no qualified stage reuse or isolated implementation
+mapping. CI already omits the duplicate root `check` after Clippy; independent
+normal-dependency consumers and package archives establish different contracts.
+They remain required. No runtime or elapsed-time improvement is claimed.
+
+The existing Candid/CBOR boundary and central package inventory stay active. Backup enables the shared lexical Candid/CBOR check once for
 both crates, including tests/examples and the explicitly selected inventory
 `target` module. Its 36 external Candid allowances remain live; no CBOR exception
 is needed. Signed ingress bytes retained as `.cbor` are external protocol evidence,
@@ -64,8 +73,9 @@ executable generations and failed bundles; no old selection supplies a fallback.
 
 The common host/Rust catalogs belong to [ci/tool-versions.env](../ci/tool-versions.env).
 The compiler floor and exact development/release toolchain both remain 1.99.1.
-Testkit **0.89.0** owns simulator assets/lifecycle; Build **0.74.4** owns metadata
-editing. [The Platform boundary](ic-platform.md) owns dependency compatibility.
+The last delivered qualification selected Testkit **0.89.0** for simulator
+assets/lifecycle and Build **0.74.4** for metadata editing. Incoming lockfile
+updates retain their separate dependency qualification. [The Platform boundary](ic-platform.md) owns dependency compatibility.
 
 Formatting uses grouped Cargo sorting followed by Rustfmt through the shared
 driver. Hooks format selected files, reject partial staging and preserve unrelated

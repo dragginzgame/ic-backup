@@ -63,6 +63,23 @@ done
 make --no-print-directory -s -C "$golden" golden-check > "$golden/restored.log" 2>&1
 echo 'Consumer golden parity: PASS (all vector and contract outputs reject drift).'
 
+# Shared's new optional wrapper must not select an unqualified delivery path here.
+for target in release-patch release-minor release-major release-resume release-plan publish publish-dry-run; do
+    if make --no-print-directory -s -C "$golden" "$target" RELEASE_FROZEN_GROUPS=backup \
+        > "$golden/frozen-$target.log" 2>&1; then
+        echo "unqualified frozen delivery reached $target" >&2; exit 1
+    fi
+    grep -F 'Frozen release batches are not qualified for ic-backup' "$golden/frozen-$target.log" >/dev/null
+done
+if RELEASE_FROZEN_GROUPS=backup FROZEN_RELEASE_ACTIVE=1 \
+    make --no-print-directory -s -C "$golden" release-patch > "$golden/frozen-environment.log" 2>&1; then
+    echo 'inherited frozen delivery bypassed consumer admission' >&2; exit 1
+fi
+grep -F 'Frozen release batches are not qualified for ic-backup' "$golden/frozen-environment.log" >/dev/null
+[[ ! -e "$golden/target/release-frozen" && ! -e "$golden/.git/release-state" ]]
+echo 'Consumer release routing: PASS (unqualified frozen selections refuse before effects).'
+
+
 # Exercise this consumer's actual CI recipe, without compilation or duplicate
 # recipes. Only these unique targets substitute the graph-edit/next-stage effects.
 checkpoint="$FIXTURE/input-checkpoint"

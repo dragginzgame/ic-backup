@@ -1,7 +1,7 @@
 # AGENTS.md
 
 For scope, delegated delivery, validation, compiler support and reporting, use
-[Shared policy at 45c0295](https://github.com/dragginzgame/shared-tooling/blob/45c0295e23d3d23225e31f47c018c30ff0c75581/DRAGGINZGAME.md)
+[Shared policy at 22a853e](https://github.com/dragginzgame/shared-tooling/blob/22a853e26c05ec323f06c57fa316c08b808f252b/DRAGGINZGAME.md)
 and its revision-bound references over older snapshot or local-guide wording.
 This includes Rust 1.99.1 as minimum and pinned development/release compiler;
 check local declarations and qualification before claiming adoption is complete.

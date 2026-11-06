@@ -34,13 +34,25 @@ and destination. That request includes its documented Git effects under the
 do not authorize a release; publication remains a separate explicit action.
 Build, validation and recovery artifacts remain retained.
 
-This repository explicitly supports `RELEASE_DELIVERY=direct`. The reviewed common
-0.1.21 runner also offers PR delivery, but this consumer's original-source receipts
+This repository explicitly supports `RELEASE_DELIVERY=direct`. The shared
+runner also offers PR delivery, but this consumer's original-source receipts
 and recovery adapter do not yet qualify merged-source validation. Patch/minor/major
 and resume reject `pr` or invalid selections through `release-delivery-check` before
 the runner creates state or calls Git. Changing delivery requires a qualified
 consumer adapter and explicit policy adoption; a failed direct push never selects
 another lane. Ordinary contributions continue through authorized PRs.
+
+Shared's [frozen release batches](frozen-releases.md) are not qualified for Backup.
+The standard release/publication entrypoints reject nonempty `RELEASE_FROZEN_GROUPS`
+before effects, including inherited selections. Backup keeps one coordinated group,
+normal-checkout source receipts and exact saved-version recovery. Snapshot adoption
+does not activate a managed delivery checkout or defer live lockfile edits.
+
+Backup remains full-gate-only: it has no qualified selective implementation mapping
+or reusable stage receipts. The CI roster already omits the root `check` after
+all-target/all-feature Clippy. Independent normal-dependency consumers and package
+archive verification own different inputs/features and remain required. No elapsed-time
+saving or equivalent native/installed evidence is inferred from stage counts.
 
 | Command | Effect | Owner |
 | --- | --- | --- |

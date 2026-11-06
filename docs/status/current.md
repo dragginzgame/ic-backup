@@ -1,5 +1,39 @@
 # Current handoff — 2026-11-06
 
+## Pending 0.58.9 tooling adoption
+
+Shared **0.30.7** at `22a853e26c05ec323f06c57fa316c08b808f252b` replaces 0.30.6:
+160 canonical payloads, six updates/two additions/152 unchanged. GitHub main
+independently selected that commit; [the review](../shared-tooling-review.json)
+records decisions and provenance. AGENTS references the selected baseline;
+host/Cargo/IC catalogs and minimum/pinned Rust **1.99.1** remain unchanged.
+
+Backup retains its qualified normal-checkout, full-gate-only release path, with
+no stage reuse or selective implementation mapping. Nonempty `RELEASE_FROZEN_GROUPS`
+refuses through release/resume/plan/publication entrypoints before effects, including
+inherited active selections. No frozen delivery checkout was created or qualified.
+CI already omits the duplicate root check after Clippy; independent consumer and
+archive checks own distinct contracts and remain. No elapsed-time saving is claimed.
+
+Focused evidence in `target/evidence/shared-0307.qztZdV/` passes canonical snapshot
+provenance, tooling/hook regressions, routing refusal, ShellCheck/Perl syntax,
+formatting, compiler admission, dependency ownership/inheritance and Candid/CBOR
+source admission. `make release-check` passes the complete isolated consumer suite,
+including default Make routing, recovery/publication substitutes and real private
+index boundaries; fixtures remain in `target/shared-release-tests.4TZY2o/`.
+No full product CI/release, other-host or Canic qualification was run.
+
+The requested 0.58.9 delivery includes the existing Platform **0.23.3** and Testkit
+**0.89.1** lockfile edits. Published source review binds Platform `e71e8a6` and
+Testkit `7d7ffbf`: Platform's production changes concern the unused ledger adapter
+and dependency feature declarations; Testkit's library source is unchanged.
+The tooling-only checks above do not qualify these updates. Delivery will run the
+complete Linux gate and registry-only backup/restore journey; evidence belongs in
+`target/evidence/deploy-0589/`. Before/after adoption hashes bind unchanged manifest,
+lockfile and compiler declarations. Package versions remain **0.58.8** until shared
+release preparation. Product Rust source, records, IC protocols, journals, artifacts,
+tool stores and release evidence stay.
+
 ## Delivered 0.58.8
 
 Both **ic-backup 0.58.8** and **ic-backup-agent 0.58.8** are published on crates.io.

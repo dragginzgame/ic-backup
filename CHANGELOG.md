@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.58.9]
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.23.3 and Testkit 0.89.1 with its exact CLI. Preserve Platform-owned
+  Principal/management identities, explicit server custody and application admission.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.30.7 and its release-efficiency guidance. Keep Backup's
+  qualified normal-checkout release path; reject unqualified frozen batch selections
+  before effects and retain distinct consumer/archive qualification.
+
 ## [0.58.8] - 2026-11-06
 
 ### ⬆️ Dependencies

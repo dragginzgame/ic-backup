@@ -17,6 +17,13 @@ RELEASE := bash scripts/release/release.sh
 override RELEASE_RESUME_CHECK_COMMAND = $(RELEASE) resume-check "$(VERSION)"
 override SHARED_TOOLING_ROOT := $(CURDIR)
 include make/consumer.mk
+
+# The shared frozen workflow is opt-in; Backup's hooks retain normal-checkout receipts.
+ifneq ($(filter $(SHARED_RELEASE_TARGETS) release-plan publish publish-dry-run,$(MAKECMDGOALS)),)
+ifneq ($(strip $(RELEASE_FROZEN_GROUPS)),)
+$(error Frozen release batches are not qualified for ic-backup; use the normal release commands)
+endif
+endif
 CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-check dependency-pins-check dependency-boundaries-check candid-boundary-check check-doc-links shell-check fmt-check golden-check clippy tooling-check release-check hooks-check test doc check-msrv package
 
 .PHONY: check check-cargo-tool-versions check-doc-links check-msrv ci clean clippy deps doc ensure-clean \
