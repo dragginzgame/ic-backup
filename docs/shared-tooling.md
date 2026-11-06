@@ -7,10 +7,10 @@ Shared Tooling **0.31.0**, committed revision
 baseline and common setup, formatting, hook, validation and release mechanisms.
 The canonical refresh from `8ae6268` selects **160 payloads**: nine updates,
 two additions, two retirements and 149 unchanged. Host/Cargo/IC catalogs and Rust
-**1.99.1** are unchanged. Snapshot payloads are never locally patched. The incoming
-lockfile edits selecting Platform 0.23.4 and Testkit 0.89.3 are preserved separately; this tooling
-review does not replace complete product qualification. Delivered 0.58.9 qualified
-Platform 0.23.3 and Testkit 0.89.1.
+**1.99.1** are unchanged. Snapshot payloads are never locally patched. The
+Platform 0.23.4/Testkit 0.89.3 lock selection is qualified by delivered **0.58.10**:
+the complete Linux release gate and registry-only backup/restore acceptance pass.
+This focused tooling review and the delivery evidence retain their separate scopes.
 
 Backup owns product contracts, qualification selection, the ordered Testkit setup
 extension, release metadata adapter and exact resume receipt checks. Owner CI or
