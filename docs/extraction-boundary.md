@@ -2109,152 +2109,63 @@ qualification, Canic adoption, full restore or terminal/fence/reference release.
 
 ### Provider-driven snapshot capture step
 
-Capture, upload and transfer-read coordinators preserve post-reply evidence in
-`AfterReply` with a typed Journal, Association or Stage cause. Their association
-policies share `policy::ResponseIdentityMismatch` for exact authority, mutation
-attempt, context and target denials, in that order. Reservation admission still
-precedes those checks and bounded decoding follows them.
+The public [capture coordinator](../crates/ic-backup/src/workflow/ic_snapshot_capture/mod.rs)
+owns the exact TakeCanisterSnapshot step. Its returned acknowledgement remains
+pending until the integration independently qualifies and records a receipt.
+The canonical [async effect contract](implementation-contracts.md#async-effect-coordination)
+owns reservation, exclusion, admission, cancellation and post-reply evidence rules;
+[wire admission](implementation-contracts.md#management-wire-and-response-admission)
+owns exact identity order and bounds.
 
-`workflow::ic_snapshot_capture::capture_snapshot` accepts only the exact original
-`TakeCanisterSnapshot` payload under a retained execution stage. Canonical target/
-wire binding rejects before spending. Open the existing original journal, never
-create it; complete original-plan progress owns the durable reservation. Hold the
-selected journal across awaited mandatory fallible fresh integration admission, one
-`IcMutationProvider::submit_mutation` invocation and existing bounded passive
-acknowledgement association. Recheck stage/ancestors before dispatch and after
-the reply. Fresh actual control, capture consistency, quiescence/fence obligations,
-authentication and never-dispatched command custody remain integration-owned.
-Remote preflight has its own prior accounting; no default provider or lane exists.
+The [mutation port contract](contracts/ic-mutation-port.json) records the machine
+boundary. [Simulator coverage ownership](development.md#simulator-coverage-ownership)
+and [application acceptance](canic-adoption.md#required-application-acceptance)
+separate fixture qualification from integration responsibilities.
 
-Success stays pending until an independently qualified integration explicitly
-records a receipt. Every post-reservation failure retains original consumption;
-association and post-reply errors retain the bounded returned acknowledgement.
-Pending/Applied, missing/held originals, changed binding or unfulfilled prerequisites
-cannot invoke the callback/provider again. No new schema, journal, allowance,
-decoder, refund, automatic uncertainty or reference/fence disposition is added.
-Reuse existing 1,024-attempt, 256-ID-byte, 4 KiB argument and 1 MiB raw-reply bounds.
-Sequential checks do not fence noncooperating actors.
-
-The isolated Testkit download driver uses this public step before its explicit
-qualified capture receipt and existing metadata/data read steps. Successful capture
-joins durable artifact publication; lost/malformed capture replies preserve pending
-originals and source references, with no recapture, checkpoint or successor stage.
-These cases qualify the controlled stopped fixture only. Full backup/restore,
-configured full Agent runner, default application admission and terminal/custody/fence/reference
-release remain with the [application acceptance owners](canic-adoption.md#required-application-acceptance).
-See the [mutation port contract](contracts/ic-mutation-port.json).
 
 ### Provider-driven snapshot transfer read step
 
-The private shared transfer-read engine coordinates exactly one
-metadata/data replicated update under `ExecutionStageGuard`. Payload target/wire
-binding reuses the model owner before spending. The existing selected journal is
-opened, never created, and canonical `reserve_planned_mutation` admits the complete
-original set and Applied prerequisites before durable consumption. The guard holds
-the selected journal throughout mandatory fresh admission, one provider invocation
-and bounded passive reply association. Retained stage and ancestor admission runs
-again after the callback and after an associated reply.
+The private [transfer-read engine](../crates/ic-backup/src/workflow/ic_snapshot_transfer_read/mod.rs)
+performs one reserved metadata/data update. Public metadata and download
+coordinators supply qualification and explicit receipts. The canonical
+[async effect contract](implementation-contracts.md#async-effect-coordination)
+owns exclusion, spending, fresh admission and cancellation; the
+[wire contract](implementation-contracts.md#management-wire-and-response-admission)
+owns bounded decoding and exact response identity checks.
 
-The explicit fallible callback qualifies actual fresh read permission, original
-snapshot/metadata custody, current application requirements and exclusive original
-command custody. It has no library default or persisted permission flag. Any remote
-preflight work needs its own prior accounting. The existing provider owns actual
-authentication and a single exact ingress, without hidden calls or retries. These
-sequential local checks do not fence noncooperating filesystem actors.
+See the [transfer-read port contract](contracts/ic-snapshot-transfer-read-port.json)
+for the machine boundary and [coverage ownership](development.md#simulator-coverage-ownership)
+for native and authenticated simulator proof.
 
-The shared read engine associates an immutable bounded response while spending remains pending;
-public stage continuations then qualify it and explicitly record receipts.
-Only separately authenticated integration evidence may enter the existing receipt
-owner. Lost, unavailable, unsupported or malformed replies never refund consumption,
-settle uncertainty or permit repetition; a second invocation rejects the pending
-attempt before callback/provider entry. Typed association and post-reply failures
-retain the exact returned bounded response. No journal/schema, artifact progress,
-fence obligation or source reference changes beyond the original reservation.
-Original 1,024-attempt, 4 KiB argument, 1 MiB metadata and 2 MiB raw-data limits and
-all decoder quotas remain with their existing owners.
-
-The public simulator download fixture uses the complete stage coordinators for metadata and every
-planned data call. Complete artifact publication and lost/malformed second-read
-retention are qualified for that isolated stopped application only. This installs
-shared internal dispatch, while public metadata and download coordinators own
-qualification, receipts and completion. Applications still own full transfer, fresh membership/consistency,
-restore safety, stable custody and terminal/fence/reference release. See
-[application acceptance](canic-adoption.md#required-application-acceptance) and the
-[port contract](contracts/ic-snapshot-transfer-read-port.json).
 
 ### Original metadata-stage coordination
 
-The transfer-read provider and metadata/download coordinators are async.
-Providers receive the currently guarded original journal; selected exclusion spans
-admission/submission or independent qualification awaits. The configured
-`AgentSnapshotTransferReadProvider` requires durable exact signed-envelope/request-ID
-retention before one update. Qualifiers retain replies before cancellable work.
-Cancellation releases exclusion while preserving consumed pending/Applied spending,
-earlier download receipts and partial files; reentry cannot dispatch a pending read.
-No runtime dependency, `Send` bound, new schema or automatic receipt is introduced.
-Actual Agent simulator reads use the configured adapter under explicit original guards;
-the Testkit driver separately qualifies the complete metadata/download loop.
+The public [metadata coordinator](../crates/ic-backup/src/workflow/ic_snapshot_metadata/mod.rs)
+requires an exact singleton stage. Independently qualified request/reply bytes
+precede its explicit Applied receipt; the checkpoint binds exact request/raw
+metadata evidence. Successor preparation remains explicit.
 
-`workflow::ic_snapshot_metadata::read_snapshot_metadata` accepts exactly one
-original metadata operation under its retained stage. Reuse the private read engine for
-complete original-journal admission, durable reservation, fresh integration admission
-and one provider call. Keep the selected journal locked through bounded response
-admission and independently qualified exact Applied receipt preparation. Qualification owns
-actual authentication/attribution and durable retention of original request/reply
-bytes before returning; no default callback or new byte store is installed.
+The [async effect contract](implementation-contracts.md#async-effect-coordination)
+owns guard lifetimes and failure behavior. The
+[checkpoint contract](implementation-contracts.md#workflow-preparation-and-checkpoints)
+owns replay and retained histories. See
+[coverage ownership](development.md#simulator-coverage-ownership) for qualification.
 
-Check stage/ancestor identity before recording the receipt through the sole attempt
-owner. Release its lock before canonical all-Applied checkpoint publication, binding
-the exact metadata request/raw-reply digest as learned evidence. Return original
-response/predecessor for existing metadata decoding and `IcSnapshotDownloadPlan::bind`.
-Data-stage preparation, generic token/raw-ID association and writer creation stay
-explicit; no metadata-derived permission, data call or automatic artifact appears.
-
-Lost/malformed replies remain pending and block successors. Qualification or receipt
-rejection retains exact returned bytes and consumption. Checkpoint failure may follow
-an Applied receipt; retain it and any occupied checkpoint. Resume and explicit
-checkpoint recovery reuse exact originals and never repeat the metadata update.
-Existing bounds, v1 records, spending, references and obligations remain unchanged.
-The actual Testkit download fixture now uses the coordinator, including lost/malformed
-metadata cases with no data stage or reissue. This qualifies the isolated application,
-not full application runners, terminal proof or fence/reference release.
 
 ### Complete original snapshot data transfer
 
-`workflow::ic_snapshot_download::download_snapshot` joins a nonempty exact
-`IcSnapshotDownloadPlan`, retained data stage and existing private artifact writer.
-Reject changed bindings/metadata/writer origins, prior writer coverage and any
-original mutation/observation consumption before a provider call. Complete original
-journal admission still owns missing/held evidence. A read-free plan creates no
-placeholder operation; it is refused by this data-stage entrypoint.
+The public [download coordinator](../crates/ic-backup/src/workflow/ic_snapshot_download/mod.rs)
+streams the original finite plan through the existing artifact writer. Each
+qualified reply is appended before its Applied receipt. The canonical
+[async effect contract](implementation-contracts.md#async-effect-coordination)
+owns call order, partial evidence and refusal to repeat consumed operations;
+[snapshot artifact contracts](implementation-contracts.md#snapshot-artifacts-and-transfer)
+own byte custody, completion and durable publication.
 
-For each original ordinal, reuse the private read engine for durable reservation, mandatory
-fresh read admission and one provider invocation. Reopen the selected original
-journal, re-admit the exact bounded response and require an integration-qualified
-exact Applied receipt. The integration independently authenticates attribution;
-successful wire shape never generates that receipt. Append decoded bytes through
-the existing writer before the sole attempt owner persists the receipt. Only then
-can the next dependent read enter admission. Closing stage/ancestor checks remain
-mandatory. No new schema, journal, allowance, decoder or progress owner is introduced.
+Manifest and checkpoint publication remain explicit. See
+[coverage ownership](development.md#simulator-coverage-ownership) for complete
+consumer and retained-prefix regression responsibilities.
 
-Any failure consumes the writer, retaining partial bytes, every original reservation
-and recorded receipt. Post-read errors retain the bounded returned response; lost
-replies stay pending and stop without follow-up. Failed receipt persistence can leave
-accepted bytes with pending spending; those bytes grant no restart or completion.
-Do not reconstruct coverage or repeat reads after interruption. Complete original
-Applied evidence and exact coverage precede existing fresh checksum/durable publication.
-Post-publication stage rejection retains the returned checksum in its typed error.
-Immutable manifest/checkpoint publication and ordinary effect-free resume remain
-separate owners; source references and fence obligations are unchanged.
-
-The actual isolated capture-to-download fixture now uses this loop, retaining
-complete publication and lost/malformed second-read cases. Pure adversarial tests
-also cover wrong receipts/outcomes, failed qualification/persistence, changed
-metadata/intent/coverage and stage/byte custody. These qualify the stopped fixture,
-not arbitrary application consistency, stable noncooperating byte custody, complete
-product manifests, full Agent/backup/restore orchestration or terminal/fence/reference
-release. Those remain [application acceptance](canic-adoption.md#required-application-acceptance)
-obligations.
 
 ### Original snapshot upload coordination
 

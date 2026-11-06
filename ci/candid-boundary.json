@@ -251,7 +251,7 @@
       "kind": "external-protocol",
       "protocol": "IC management canister ingress",
       "reason": "Encode only the approved method-specific management DTOs after request admission; application payloads do not call this helper.",
-      "declaration": "pub(super) fn encode_arguments(value: impl contract::CandidType,)"
+      "declaration": "fn encode_arguments(value: impl contract::CandidType,) -> Result<Vec<u8>, IcRequestError>"
     }
   ]
 }

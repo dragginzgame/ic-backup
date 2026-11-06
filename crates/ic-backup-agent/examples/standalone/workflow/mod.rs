@@ -1,6 +1,7 @@
 // Supported single-canister direct-management workflow assembly. See README.md.
 
 mod application;
+mod capture;
 mod connection;
 mod metadata;
 mod restore;
@@ -16,9 +17,7 @@ use ic_backup::{
         artifacts::ArtifactChecksumRecord as Digest,
         attempt_journal::{AttemptBudgetRecord, MutationOutcomeRecord, MutationReceiptRequest},
         effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
-        execution_workflow::{
-            ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
-        },
+        execution_workflow::{ExecutionStagePredecessorRecord, ExecutionWorkflowRecord},
         ic_request::{
             IcManagementMethodRecord as Method, IcManagementRequest, IcManagementRequestRecord,
         },
@@ -30,15 +29,12 @@ use ic_backup::{
         },
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
+        BackupLayoutGuard, ExecutionStageGuard, create_execution_workflow,
         read_execution_workflow_progress,
     },
-    workflow::{
-        execution_workflow::{
-            ExecutionWorkflowAdvance, ExecutionWorkflowStageDriver, RetainedStageEvidence,
-            advance_execution_workflow,
-        },
-        ic_snapshot_capture::capture_snapshot,
+    workflow::execution_workflow::{
+        ExecutionWorkflowAdvance, ExecutionWorkflowStageDriver, RetainedStageEvidence,
+        advance_execution_workflow,
     },
 };
 use ic_backup_agent::{PreparedUpdate, ReservedUpdate};
@@ -305,51 +301,7 @@ impl<A: Application> ExecutionWorkflowStageDriver for Driver<'_, A> {
     async fn execute_stage(&mut self, stage: &ExecutionStageGuard<'_>) -> io::Result<Digest> {
         let sequence = stage.binding().stage_sequence();
         let learned = match Stage::from_sequence(sequence)? {
-            Stage::Capture => {
-                let payload = self.payload(Method::TakeCanisterSnapshot, None);
-                let transport = &self.config.transport;
-                let root = stage.layout().map_err(error)?.root();
-                let mut provider = ic_backup_agent::AgentUpdateProvider::new(
-                    transport,
-                    |request: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
-                        self.application
-                            .retain_ingress(Stage::Capture, root, request, prepared)
-                            .map_err(|_| {
-                                ic_backup::ports::ic_mutation::IcMutationProviderError::Unavailable
-                            })
-                    },
-                );
-                let reply = capture_snapshot(stage, 0, &payload, &mut provider, async |_| {
-                    self.application
-                        .admit(Stage::Capture, stage.plan())
-                        .await
-                        .map(|_| ())
-                })
-                .await
-                .map_err(error)?;
-                let receipt = self
-                    .application
-                    .qualify_reply(Reply {
-                        root,
-                        stage: Stage::Capture,
-                        plan: stage.plan(),
-                        sequence: 0,
-                        attempt: 1,
-                        request: &payload.digest(),
-                        arguments: payload.arguments(),
-                        bytes: &reply.input().reply,
-                    })
-                    .await?;
-                let mut journal = AttemptJournalGuard::open(
-                    stage.layout().map_err(error)?,
-                    &stage.plan().attempt_authority(0).map_err(error)?,
-                )
-                .map_err(error)?;
-                journal.record_mutation(receipt).map_err(error)?;
-                IcSnapshotReply::decode(&payload, &reply.input().reply)
-                    .map_err(error)?
-                    .digest()
-            }
+            Stage::Capture => self.capture_stage(stage).await?,
             Stage::Metadata | Stage::Download => self.transfer(stage).await?,
             Stage::Allocation | Stage::Upload => self.upload(stage).await?,
             Stage::Load | Stage::Start => self.restore_stage(stage).await?,
@@ -413,8 +365,7 @@ fn retained(
         if !root.exists() {
             continue;
         }
-        let binding: ExecutionStageBindingRecord =
-            serde_json::from_slice(&read(&root.join("stage-binding.json"))?)?;
+        let binding = stage::read_binding(&root, sequence)?;
         // Missing learned evidence is an explicit refusal, never a placeholder
         // digest, reconstructed oracle or permission to repeat a pending effect.
         let bytes = read(&root.join("learned.sha256"))?;

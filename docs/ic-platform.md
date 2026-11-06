@@ -21,7 +21,7 @@ remain. Application protocols owned by IC Wire keep their existing representatio
 
 The selected feature families retain upstream Candid, management DTO, Agent and
 external Principal Rust identities. Platform's separately owned ICRC packaging is
-not selected by Backup. Production selects Platform 0.23.0, which re-exports the
+not selected by Backup. Production selects Platform 0.23.2, which re-exports the
 canonical owned Principal from Platform Types 0.18.1.
 Backup keeps its Platform imports; no direct Types dependency or runtime handle
 is introduced. Native external Principal, management DTO and Agent SDK exports
@@ -34,7 +34,7 @@ remain private to tests and never enter a normal consumer.
 Platform 0.21 removes the unused PocketIC facade; the prior Testkit migration
 already supplies its replacement. Verified published archives retain identical
 Candid, native management, Principal and Agent adapter source and dependencies.
-Testkit 0.87.0 and production share Platform 0.23.0, Types 0.18.1 and the qualified
+Testkit 0.88.0 and production share Platform 0.23.2, Types 0.18.1 and the qualified
 external management and Principal identities. The old 0.22.3 facade leaves the lock.
 Independent normal consumers still qualify Core and Agent without development
 features supplying their production capabilities.
@@ -120,7 +120,7 @@ client, so removal of Platform's simulator feature requires no further migration
 Backup retains its exact management ingress, method-specific response bounds and
 original accounting rather than adopting a second snapshot workflow.
 Testkit 0.84 embeds the maintained client previously supplied by Platform's
-0.20 client package. Current Testkit 0.87.0 and Backup's production dependencies
+0.20 client package. Current Testkit 0.88.0 and Backup's production dependencies
 share Platform 0.23, canonical Types 0.18.1 and the same external DTO identities.
 Testkit 0.84.1's historical Rust
 source matches reviewed 0.84.0. Review against the earlier client found namespace,
@@ -131,9 +131,10 @@ is MIT AND Apache-2.0. No client implementation is copied into Backup.
 The older Platform/client packages and unused `zlib-rs` leave the development lock.
 Testkit uses the Rust backend for gzip; no compressed-byte identity is inferred
 from source similarity. Other package versions/checksums remain selected. Canonical
-Types 0.18.1 and target-specific Runtime 0.19.2 remain; optional Wire/Metrics stay
-disabled. Neither production graph gains simulator or runtime features.
-Runtime 0.19.2 is selected through Testkit's Wasm-only `ic0` dependency. Relative to
+Types 0.18.1 remains; optional Wire/Metrics stay disabled. Neither production graph
+gains simulator or runtime features. Testkit 0.88 removes its Wasm Runtime
+dependency along with unused schema, logging and temporary-state dependencies.
+Historically, Runtime 0.19.2 was selected through Testkit's Wasm-only `ic0` dependency. Relative to
 0.19.1, IC0 changes only lint annotations; CDK error/lint changes are unselected.
 It matches the published checksum and source commit `5e9437f`. The earlier 0.19.1
 published archive matches the registry checksum and source commit `74a5071`;

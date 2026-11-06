@@ -4,7 +4,7 @@ use super::*;
 use crate::policy::ResponseIdentityMismatch;
 use crate::tests::support::execution_workflow::assert_pending;
 use crate::tests::support::execution_workflow::{child_request, workflow};
-use crate::tests::support::provider::Provider;
+use crate::tests::support::provider::{Provider, SuspendedProvider};
 use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
 use crate::{
@@ -71,21 +71,6 @@ fn provider(
     provider
 }
 
-struct SuspendedProvider {
-    calls: usize,
-}
-impl IcSnapshotTransferReadProvider for SuspendedProvider {
-    async fn read_snapshot(
-        &mut self,
-        request: &IcSnapshotTransferReadRequest<'_, '_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
-        request.validate_journal(journal).unwrap();
-        self.calls += 1;
-        std::future::pending().await
-    }
-}
-
 #[test]
 fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() {
     let original = metadata_request();
@@ -101,39 +86,26 @@ fn cancellation_retains_exact_metadata_or_data_reservation_and_denies_reentry() 
         IcSnapshotTransferReadPayload::Data(&data),
     ] {
         for suspend_admission in [true, false] {
-            let (_root, layout, binding, plan) = prepare(payload);
+            let (_root, layout, binding, _plan) = prepare(payload);
             let stage =
                 ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest())
                     .unwrap();
             let mut provider = SuspendedProvider { calls: 0 };
-            let mut future = Box::pin(dispatch_pending(
-                &stage,
-                42,
-                payload,
-                &mut provider,
-                async |_| {
-                    if suspend_admission {
-                        std::future::pending::<()>().await;
-                    }
-                    Ok::<(), Infallible>(())
-                },
-            ));
-            crate::tests::support::ready::assert_pending(future.as_mut());
-            assert!(
-                AttemptJournalGuard::open(
-                    stage.layout().unwrap(),
-                    &plan.attempt_authority(42).unwrap()
-                )
-                .is_err()
-            );
-            let path = stage.layout().unwrap().root().join("attempt-42.json");
-            let before = fs::read(&path).unwrap();
-            drop(future);
-            assert_pending(&stage, 42);
+            let future = dispatch_pending(&stage, 42, payload, &mut provider, async |_| {
+                if suspend_admission {
+                    std::future::pending::<()>().await;
+                }
+                Ok::<(), Infallible>(())
+            });
+            let before =
+                crate::tests::support::execution_workflow::cancel_pending(&stage, 42, future);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert!(ready(dispatch_pending(&stage, 42, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
-            assert_eq!(fs::read(path).unwrap(), before);
+            assert_eq!(
+                fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap(),
+                before
+            );
         }
     }
 }

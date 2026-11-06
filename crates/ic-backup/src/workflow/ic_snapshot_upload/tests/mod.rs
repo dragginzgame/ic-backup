@@ -4,7 +4,7 @@ use super::*;
 use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{PlanBudgetRecord, PlannedOperationRecord};
 use crate::tests::support::operation_plan::{declaration, graph, operation_request};
-use crate::tests::support::provider::Provider;
+use crate::tests::support::provider::{Provider, SuspendedProvider};
 
 use crate::tests::support::{ready::ready, response_fault::ContextFault};
 use crate::workflow::ic_snapshot_upload::IcSnapshotUploadReplyError;
@@ -56,21 +56,6 @@ fn admit(
     std::future::ready(Ok(()))
 }
 
-struct SuspendedProvider {
-    calls: usize,
-}
-impl IcSnapshotUploadProvider for SuspendedProvider {
-    async fn submit_upload(
-        &mut self,
-        request: &IcSnapshotUploadAttempt<'_, '_>,
-        journal: &crate::model::attempt_journal::AttemptJournalRecord,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        request.validate_journal(journal).unwrap();
-        self.calls += 1;
-        std::future::pending().await
-    }
-}
-
 #[test]
 fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() {
     with_uploads(|payload, _| {
@@ -80,29 +65,21 @@ fn cancellation_retains_metadata_or_data_spending_and_denies_provider_reentry() 
                 ExecutionStageGuard::open(&layout, binding.workflow(), 7, &binding.digest())
                     .unwrap();
             let mut provider = SuspendedProvider { calls: 0 };
-            let mut future = Box::pin(dispatch_pending(
-                &stage,
-                7,
-                payload,
-                &mut provider,
-                async |_| {
-                    if suspend_admission {
-                        std::future::pending::<()>().await;
-                    }
-                    Ok::<(), Infallible>(())
-                },
-            ));
-            crate::tests::support::ready::assert_pending(future.as_mut());
-            let authority = stage.plan().attempt_authority(7).unwrap();
-            assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
-            let path = stage.layout().unwrap().root().join("attempt-7.json");
-            let original = fs::read(&path).unwrap();
-            drop(future);
-            crate::tests::support::execution_workflow::assert_pending(&stage, 7);
+            let future = dispatch_pending(&stage, 7, payload, &mut provider, async |_| {
+                if suspend_admission {
+                    std::future::pending::<()>().await;
+                }
+                Ok::<(), Infallible>(())
+            });
+            let original =
+                crate::tests::support::execution_workflow::cancel_pending(&stage, 7, future);
             assert_eq!(provider.calls, usize::from(!suspend_admission));
             assert!(ready(dispatch_pending(&stage, 7, payload, &mut provider, admit)).is_err());
             assert_eq!(provider.calls, usize::from(!suspend_admission));
-            assert_eq!(fs::read(path).unwrap(), original);
+            assert_eq!(
+                fs::read(stage.layout().unwrap().root().join("attempt-7.json")).unwrap(),
+                original
+            );
         }
     });
 }

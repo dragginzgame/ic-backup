@@ -1,5 +1,60 @@
 # Current handoff — 2026-11-06
 
+## Pending 0.58.6 cleanup
+
+[Issue #78](https://github.com/dragginzgame/ic-backup/issues/78) is fixed locally:
+the management encoder allowance includes its return type. Installed Shared
+`2aa41c7` accepted the old prefix, but committed checker `be377103` treats the
+argument's `impl` as an inherent implementation and requires the complete header.
+The new prefix is the shortest supported by both; snapshot and Rust source stay
+unchanged. Both checkers pass all 330 selected files and reject extra owned Candid
+declarations in the encoder file and explicitly selected inventory `target` file.
+Focused lexical evidence is in `target/evidence/issue-78/`; no Rust build was needed.
+
+The audit cleanup is implemented over `cb605a8`. Dependencies now select Testkit **0.88.0** for the requested 0.58.6 deployment. Platform remains
+**0.23.2** and PocketIC **16.1.0**. Testkit archive checksum and all published
+source files match `0bc2cc4`; exact proof and successful setup are retained in
+`target/evidence/issue-78/`. Its removed APIs require no Backup source migration.
+Snapshot workflow cancellation shares one
+exclusion/byte-retention helper and suspended provider. HTTP provider tests share
+scenario/setup/postcondition owners. Upload tests separate source setup, planning,
+execution and restore admission while preserving all existing Rust cases. The
+source-inspected registry adds only one explicitly ignored online preparation case.
+
+The standalone dispatcher delegates capture settlement and shares stage-binding
+reads with exact sequence and 512 KiB raw-byte admission. Restore preparation uses
+one held source scope for destination, acceptance and load planning. It rechecks
+bytes after the application acceptance callback; effects and terminal acceptance
+retain their independent admission. Adjacent verification duplicates are removed;
+no runtime speed-up is claimed. Registry preparation uses an isolated consumer
+lockfile and reports nested graph diagnostics; normal tests stay offline. Repeated
+workflow prose links to the canonical implementation contracts.
+
+Focused qualification in `target/evidence/cleanup-0586/` passes: 55 snapshot workflow
+cases, nine upload-plan cases, 15 HTTP cases, two authenticated cold-process consumer
+journeys, explicit registry preparation, strict Core library/tests and Agent
+example/tests Clippy, local tooling integration, snapshot integrity and documentation
+links. The original mechanical compile failures remain retained. Full release,
+other-host and Canic qualification were not rerun for this pending batch.
+
+Follow-up evidence in `target/evidence/cleanup-0586-followup/` passes two binding
+boundary tests, five cancellation tests, all 12 selected normal-consumer scenarios,
+strict Agent example/tests Clippy, formatting and documentation links. The consumer
+selection includes restore, cold reentry, terminal replay, lost allocation/upload/
+load/start replies and application/operator failures. Earlier mechanical failures
+remain retained. Cancellation callers no longer repeat their helper's assertion.
+
+Current Shared counts are **38,160 test**, **15,187 production** and **1,211 example**
+lines. Against 0.58.5, the setup and boundary regressions give a net increase of 26
+test and 25 example lines; this batch improves ownership and admission rather than
+providing a net LOC cut. File splitting is organization, not code removal.
+Broader workflow rejection matrices remain at
+their typed boundaries; the descriptor-dependent upload tests retain their local
+fixture ownership. Backup's own consumer-graph and distinct fixture-retention
+proofs stay. Public planning-error consolidation remains deferred to an intentional
+API compatibility change. Deployment is authorized: commit this batch, run the complete release gate, push
+`origin/main` and `v0.58.6`, then publish both crates before closing #78.
+
 ## Delivered 0.58.5
 
 Both **ic-backup 0.58.5** and **ic-backup-agent 0.58.5** are published on crates.io.
@@ -25,7 +80,7 @@ Delivery and registry proof are in `target/evidence/deploy-0585.b88i271n/` and
 `target/tmp/ic-backup-agent-pocketic-1984251-1/`. Native macOS, installed IC and
 Canic acceptance remain separate; hosted CI was not manually dispatched.
 
-## Test consolidation and selected dependencies
+## Released test consolidation and selected dependencies
 
 Shared's count is **38,134 test lines**, down **1,417** from 39,551 at baseline
 `b70084f`; production remains **15,187**. Public APIs, product logic, stored formats

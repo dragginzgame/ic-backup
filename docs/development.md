@@ -268,6 +268,20 @@ fresh authority, automatic retries or reference release.
 
 ## Focused product checks and fixtures
 
+For post-publication registry qualification, explicitly cache the exact published
+workspace versions using the ignored setup case, then run the offline journey:
+
+```bash
+cargo test --offline --locked -p ic-backup-agent --example standalone prepare_registry_consumer -- --ignored --nocapture
+IC_BACKUP_CONSUMER_REGISTRY=1 cargo test --offline --locked -p ic-backup-agent --example standalone normal_consumer_cold_capture_restore_acceptance_and_terminal_replay -- --nocapture
+```
+
+The setup case performs online Cargo fetch only in its isolated consumer workspace,
+checks the exact registry graph and leaves the root lockfile unchanged. It requires
+already-published versions; it is never part of normal test or release execution.
+Both commands retain their original logs. Graph failures print the nested
+`consumer/preparation.log` path as well as the wrapper diagnostics.
+
 Prepare the locked tools and dependencies using the quick start before running
 checks. Select the tests that exercise the changed boundary; a native model or
 filesystem test does not qualify an IC effect. See the current handoff for actual
@@ -683,3 +697,10 @@ every pass explicitly. Isolated staged-hook worktrees always run their formatter
 The helper's rejection fixtures run in normal tooling checks and explicitly
 under macOS system Bash 3.2. Native qualification belongs to the configured
 consumer jobs, independently from a Linux pass or upstream source adoption.
+
+Generic snapshot content-drift and duplicate-record regression coverage belongs to
+Shared Tooling's `scripts/ci/test-snapshot-distribution.sh` at the installed revision
+`2aa41c7394300302fe802b69b31b855bdc89b671`. Backup retains selected-payload integrity,
+bootstrap tampering and its existing mode/path/custody integration checks. The local
+consumer-graph matrix remains because `consumer-graph.jq` is Backup-owned; fixture
+failure-retention probes remain pending an exact upstream coverage replacement.

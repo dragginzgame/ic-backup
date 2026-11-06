@@ -366,10 +366,9 @@ done < "$CONSUMER/scripts/distribution/governance-files.txt"
 perl "$ROOT/scripts/ci/check-documentation-links.pl" --root "$CONSUMER" \
     "${governance_documents[@]}" > "$FIXTURE/governance-links.log" 2>&1
 
-printf '\nchanged bytes\n' >>"$CONSUMER/docs/principles/README.md"
-expect_rejection changed-bytes
-reset_consumer
-
+# Generic content drift and duplicate manifest records are qualified by Shared's
+# revision-bound test-snapshot-distribution.sh. Keep Backup's bootstrap tampering,
+# exact selected payloads, native modes, missing/symlink and path refusal checks.
 chmod +x "$CONSUMER/docs/principles/README.md"
 expect_rejection changed-mode
 reset_consumer
@@ -385,10 +384,6 @@ reset_consumer
 rm "$CONSUMER/docs/principles/README.md"
 ln -s "$ROOT/docs/principles/README.md" "$CONSUMER/docs/principles/README.md"
 expect_rejection symlink
-reset_consumer
-
-sed -n '/^file/{p;q;}' "$ROOT/.shared-tooling.snapshot" >>"$CONSUMER/.shared-tooling.snapshot"
-expect_rejection duplicate-path
 reset_consumer
 
 printf 'file\t%064d\t-\t../outside\n' 0 >>"$CONSUMER/.shared-tooling.snapshot"

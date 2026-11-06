@@ -142,3 +142,44 @@ impl IcSnapshotTransferReadProvider for Provider<IcObservationProviderError> {
         )
     }
 }
+
+/// Suspends after validating the exact reserved request; cancellation tests own polling.
+#[derive(Default)]
+pub(crate) struct SuspendedProvider {
+    pub calls: usize,
+}
+impl IcMutationProvider for SuspendedProvider {
+    async fn submit_mutation(
+        &mut self,
+        request: &IcMutationRequest<'_>,
+        journal: &AttemptJournalRecord,
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        self.calls += 1;
+        std::future::pending().await
+    }
+}
+
+impl IcSnapshotTransferReadProvider for SuspendedProvider {
+    async fn read_snapshot(
+        &mut self,
+        request: &IcSnapshotTransferReadRequest<'_, '_>,
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> Result<IcSnapshotTransferReadResponse, IcObservationProviderError> {
+        request.validate_journal(journal).unwrap();
+        self.calls += 1;
+        std::future::pending().await
+    }
+}
+
+impl IcSnapshotUploadProvider for SuspendedProvider {
+    async fn submit_upload(
+        &mut self,
+        request: &IcSnapshotUploadAttempt<'_, '_>,
+        journal: &crate::model::attempt_journal::AttemptJournalRecord,
+    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
+        request.validate_journal(journal).unwrap();
+        self.calls += 1;
+        std::future::pending().await
+    }
+}

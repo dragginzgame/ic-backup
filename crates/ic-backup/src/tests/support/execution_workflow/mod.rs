@@ -98,3 +98,31 @@ pub(crate) fn record_applied(stage: &ExecutionStageGuard<'_>, sequence: u64, evi
         .unwrap();
     // Journal exclusion ends before the caller enters checkpoint admission.
 }
+
+/// Poll while excluded, retain exact journal bytes, then cancel and verify pending spending.
+pub(crate) fn cancel_pending(
+    stage: &ExecutionStageGuard<'_>,
+    sequence: u64,
+    future: impl std::future::Future,
+) -> Vec<u8> {
+    let mut future = Box::pin(future);
+    crate::tests::support::ready::assert_pending(future.as_mut());
+    assert!(
+        crate::ops::persistence::AttemptJournalGuard::open(
+            stage.layout().unwrap(),
+            &stage.plan().attempt_authority(sequence).unwrap()
+        )
+        .is_err()
+    );
+    let original = std::fs::read(
+        stage
+            .layout()
+            .unwrap()
+            .root()
+            .join(format!("attempt-{sequence}.json")),
+    )
+    .unwrap();
+    drop(future);
+    assert_pending(stage, sequence);
+    original
+}

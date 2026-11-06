@@ -20,15 +20,7 @@ use ic_backup_agent::{AgentTransport, MAX_HTTP_RESPONSE_BYTES, TransportError};
 
 #[tokio::test]
 async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or_lost_pending() {
-    for (label, retention, response) in [
-        (
-            "retention-refused",
-            Retention::Refuse,
-            ResponseBehavior::Respond,
-        ),
-        ("accepted", Retention::Allow, ResponseBehavior::Respond),
-        ("lost", Retention::Allow, ResponseBehavior::Disconnect),
-    ] {
+    for (label, retention, response) in Retention::CASES {
         let root = support::root(label);
         let mut server = Server::new(&root, "202 Accepted", vec![], response);
         let payload = support::payload(Method::StopCanister, TARGET, None);
@@ -37,14 +29,7 @@ async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or
         let guard = support::retain(&layout, &plan, 1);
         let before = fs::read(guard.path()).unwrap();
         let request = IcMutationRequest::new(&plan, 1, guard.record().unwrap(), &payload).unwrap();
-        let transport = AgentTransport::new(
-            plan.context().clone(),
-            &server.endpoint,
-            support::identity(),
-            vec![1],
-            Duration::from_secs(1),
-        )
-        .unwrap();
+        let transport = server.transport(plan.context());
         let mut provider = AgentUpdateProvider::new(
             &transport,
             |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
@@ -72,16 +57,7 @@ async fn async_provider_requires_retention_before_one_call_and_keeps_accepted_or
                 IcMutationProviderError::Indeterminate
             }
         );
-        server.finish().unwrap();
-        assert_eq!(
-            server.requests.lock().unwrap().len(),
-            usize::from(retention == Retention::Allow)
-        );
-        assert_eq!(fs::read(guard.path()).unwrap(), before);
-        if retention == Retention::Allow {
-            let requests = server.requests.lock().unwrap();
-            requests[0].assert_signed_ingress(&root);
-        }
+        server.assert_retained(&guard.path(), &before, retention);
     }
 }
 #[tokio::test]
@@ -98,23 +74,7 @@ async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failu
             ic_snapshot_transfer_read::IcSnapshotTransferReadProvider,
         },
     };
-    for (label, retention, response) in [
-        (
-            "transfer-retention-refused",
-            Retention::Refuse,
-            ResponseBehavior::Respond,
-        ),
-        (
-            "transfer-accepted",
-            Retention::Allow,
-            ResponseBehavior::Respond,
-        ),
-        (
-            "transfer-lost",
-            Retention::Allow,
-            ResponseBehavior::Disconnect,
-        ),
-    ] {
+    for (label, retention, response) in Retention::CASES {
         let root = support::root(label);
         let mut server = Server::new(&root, "202 Accepted", vec![], response);
         let payload = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
@@ -129,14 +89,7 @@ async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failu
             IcSnapshotTransferReadPayload::Metadata(&payload),
         )
         .unwrap();
-        let transport = AgentTransport::new(
-            plan.context().clone(),
-            &server.endpoint,
-            support::identity(),
-            vec![1],
-            Duration::from_secs(1),
-        )
-        .unwrap();
+        let transport = server.transport(plan.context());
         let mut provider = AgentSnapshotTransferReadProvider::new(
             &transport,
             |actual: &IcSnapshotTransferReadRequest<'_, '_>, prepared: &PreparedUpdate<'_>| {
@@ -161,16 +114,7 @@ async fn transfer_provider_retains_exact_ingress_before_one_call_and_keeps_failu
                 IcObservationProviderError::Indeterminate
             }
         );
-        server.finish().unwrap();
-        assert_eq!(
-            server.requests.lock().unwrap().len(),
-            usize::from(retention == Retention::Allow)
-        );
-        assert_eq!(fs::read(guard.path()).unwrap(), before);
-        if retention == Retention::Allow {
-            let requests = server.requests.lock().unwrap();
-            requests[0].assert_signed_ingress(&root);
-        }
+        server.assert_retained(&guard.path(), &before, retention);
     }
 }
 
@@ -218,23 +162,7 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
     )
     .unwrap();
     for payload in [&upload, &data] {
-        for (label, retention, response) in [
-            (
-                "upload-retention-refused",
-                Retention::Refuse,
-                ResponseBehavior::Respond,
-            ),
-            (
-                "upload-accepted",
-                Retention::Allow,
-                ResponseBehavior::Respond,
-            ),
-            (
-                "upload-lost",
-                Retention::Allow,
-                ResponseBehavior::Disconnect,
-            ),
-        ] {
+        for (label, retention, response) in Retention::CASES {
             let root = support::root(label);
             let mut server = Server::new(&root, "202 Accepted", vec![], response);
             let plan = support::plan(TARGET, &payload.binding_digest(), 1);
@@ -243,14 +171,7 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
             let original = fs::read(guard.path()).unwrap();
             let request =
                 IcSnapshotUploadAttempt::new(&plan, 1, guard.record().unwrap(), payload).unwrap();
-            let transport = AgentTransport::new(
-                plan.context().clone(),
-                &server.endpoint,
-                support::identity(),
-                vec![1],
-                Duration::from_secs(1),
-            )
-            .unwrap();
+            let transport = server.transport(plan.context());
             let mut provider = AgentUpdateProvider::new(
                 &transport,
                 |actual: &ReservedUpdate<'_>, prepared: &PreparedUpdate<'_>| {
@@ -278,16 +199,7 @@ async fn upload_provider_requires_signed_retention_and_keeps_metadata_or_data_pe
                     IcMutationProviderError::Indeterminate
                 }
             );
-            server.finish().unwrap();
-            assert_eq!(
-                server.requests.lock().unwrap().len(),
-                usize::from(retention == Retention::Allow)
-            );
-            assert_eq!(fs::read(guard.path()).unwrap(), original);
-            if retention == Retention::Allow {
-                let requests = server.requests.lock().unwrap();
-                requests[0].assert_signed_ingress(&root);
-            }
+            server.assert_retained(&guard.path(), &original, retention);
         }
     }
 }
@@ -305,6 +217,14 @@ enum Retention {
     Refuse,
 }
 
+impl Retention {
+    const CASES: [(&'static str, Self, ResponseBehavior); 3] = [
+        ("retention-refused", Self::Refuse, ResponseBehavior::Respond),
+        ("accepted", Self::Allow, ResponseBehavior::Respond),
+        ("lost", Self::Allow, ResponseBehavior::Disconnect),
+    ];
+}
+
 struct Server {
     endpoint: String,
     requests: Arc<Mutex<Vec<http_capture::CapturedRequest>>>,
@@ -313,6 +233,27 @@ struct Server {
     root: PathBuf,
 }
 impl Server {
+    fn transport(&self, context: &PlanContextRecord) -> AgentTransport {
+        AgentTransport::new(
+            context.clone(),
+            &self.endpoint,
+            support::identity(),
+            vec![1],
+            Duration::from_secs(1),
+        )
+        .unwrap()
+    }
+
+    fn assert_retained(&mut self, journal: &Path, original: &[u8], retention: Retention) {
+        self.finish().unwrap();
+        let requests = self.requests.lock().unwrap();
+        assert_eq!(requests.len(), usize::from(retention == Retention::Allow));
+        assert_eq!(fs::read(journal).unwrap(), original);
+        if retention == Retention::Allow {
+            requests[0].assert_signed_ingress(&self.root);
+        }
+    }
+
     fn new(root: &Path, status: &str, body: Vec<u8>, behavior: ResponseBehavior) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();

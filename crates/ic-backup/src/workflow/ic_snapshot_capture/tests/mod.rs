@@ -4,7 +4,7 @@ use super::*;
 use crate::ops::persistence::AttemptJournalGuard;
 use crate::tests::support::execution_workflow::assert_pending;
 use crate::tests::support::execution_workflow::{child_request, workflow};
-use crate::tests::support::provider::Provider;
+use crate::tests::support::provider::{Provider, SuspendedProvider};
 use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
 use crate::{
@@ -20,53 +20,22 @@ use crate::{
 };
 use std::{convert::Infallible, fs, path::PathBuf};
 
-struct SuspendedProvider {
-    calls: usize,
-}
-impl IcMutationProvider for SuspendedProvider {
-    async fn submit_mutation(
-        &mut self,
-        request: &IcMutationRequest<'_>,
-        journal: &AttemptJournalRecord,
-    ) -> Result<IcMutationAcknowledgement, IcMutationProviderError> {
-        request.validate_journal(journal).unwrap();
-        self.calls += 1;
-        std::future::pending().await
-    }
-}
-
 #[test]
 fn cancellation_during_admission_or_submission_releases_lock_without_reset_or_reissue() {
     for suspend_admission in [true, false] {
         let payload = payload(IcManagementMethodRecord::TakeCanisterSnapshot);
-        let (_root, layout, binding, plan) = prepare(&payload);
+        let (_root, layout, binding, _plan) = prepare(&payload);
         let stage =
             ExecutionStageGuard::open(&layout, binding.workflow(), 0, &binding.digest()).unwrap();
         let mut provider = SuspendedProvider { calls: 0 };
-        let mut future = Box::pin(capture_snapshot(
-            &stage,
-            42,
-            &payload,
-            &mut provider,
-            async |_| {
-                if suspend_admission {
-                    std::future::pending::<()>().await;
-                }
-                Ok::<(), Infallible>(())
-            },
-        ));
-        crate::tests::support::ready::assert_pending(future.as_mut());
-        assert!(
-            AttemptJournalGuard::open(
-                stage.layout().unwrap(),
-                &plan.attempt_authority(42).unwrap()
-            )
-            .is_err()
-        );
-        let before = fs::read(stage.layout().unwrap().root().join("attempt-42.json")).unwrap();
-        drop(future);
+        let future = capture_snapshot(&stage, 42, &payload, &mut provider, async |_| {
+            if suspend_admission {
+                std::future::pending::<()>().await;
+            }
+            Ok::<(), Infallible>(())
+        });
+        let before = crate::tests::support::execution_workflow::cancel_pending(&stage, 42, future);
         assert_eq!(provider.calls, usize::from(!suspend_admission));
-        assert_pending(&stage, 42);
         assert!(ready(capture_snapshot(&stage, 42, &payload, &mut provider, admit)).is_err());
         assert_eq!(provider.calls, usize::from(!suspend_admission));
         assert_eq!(

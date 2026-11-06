@@ -6,7 +6,10 @@ use super::{
     retain, transfer::RetainedSource,
 };
 use ic_backup::{
-    model::restore_safety::{RestoreSafetyRequest, RestoreSafetyRequestInput},
+    model::{
+        ic_snapshot_upload::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind},
+        restore_safety::{RestoreSafetyRequest, RestoreSafetyRequestInput},
+    },
     ops::persistence::{
         JournalLock, RestoreTerminalEvidenceProvider, create_restore_safety_requirement,
         read_complete_execution_workflow_locked,
@@ -18,9 +21,12 @@ use ic_backup::{
 impl<A: Application> Driver<'_, A> {
     pub(super) fn acceptance(&self) -> io::Result<Digest> {
         let original = self.metadata_evidence()?;
-        let metadata = original.decode()?;
+        let layout = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
+        let source = RetainedSource::open(self, &layout, &original)?;
+        let journal = source.journal()?;
+        let destination = source.destination(self, &journal)?;
         self.application
-            .acceptance(&self.restore, &metadata, &self.destination()?)
+            .acceptance(&self.restore, &source.metadata, &destination)
     }
 
     #[expect(
@@ -33,35 +39,37 @@ impl<A: Application> Driver<'_, A> {
     ) -> io::Result<Digest> {
         let sequence = stage.binding().stage_sequence();
         let kind = Stage::from_sequence(sequence)?;
-        let destination = self.destination()?;
-        let accepted = if kind == Stage::Start {
-            Some(self.acceptance()?)
-        } else {
-            None
-        };
         let source_layout = BackupLayoutGuard::acquire(&self.source()).map_err(error)?;
         let original = self.metadata_evidence()?;
         let source = RetainedSource::open(self, &source_layout, &original)?;
         let source_plan = &source.plan;
         let metadata = &source.metadata;
         let journal = source.journal()?;
-        journal
-            .verify_ic_snapshot_artifact(source_plan, TOKEN, metadata)
-            .map_err(error)?;
+        // One freshly verified allocation supplies both destination and load planning.
+        let upload = source.upload(&journal)?;
+        let allocation_raw = self.raw(Stage::Allocation)?;
+        let allocation = IcSnapshotUploadReply::decode(&upload, &allocation_raw).map_err(error)?;
+        let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = allocation.kind() else {
+            return Err(io::ErrorKind::InvalidData.into());
+        };
+        let destination = snapshot_id.clone();
+        let accepted = if kind == Stage::Start {
+            let accepted = self
+                .application
+                .acceptance(&self.restore, metadata, &destination)?;
+            // Application callbacks are a separate boundary: re-admit bytes afterward.
+            journal
+                .verify_ic_snapshot_artifact(source_plan, TOKEN, metadata)
+                .map_err(error)?;
+            Some(accepted)
+        } else {
+            None
+        };
         let manifest = journal.record().map_err(error)?.digest();
         journal
             .read_download_manifest(source_plan, &manifest)
             .map_err(error)?;
         let restore_source = if kind == Stage::Load {
-            let upload = journal
-                .prepare_ic_snapshot_upload_metadata(source_plan, TOKEN, metadata)
-                .map_err(error)?;
-            let allocation_raw = self.raw(Stage::Allocation)?;
-            let allocation = ic_backup::model::ic_snapshot_upload::IcSnapshotUploadReply::decode(
-                &upload,
-                &allocation_raw,
-            )
-            .map_err(error)?;
             let data = journal
                 .prepare_ic_snapshot_data_upload_plan(
                     &self.restore,
@@ -191,15 +199,13 @@ impl<A: Application> RestoreTerminalEvidenceProvider for Terminal<'_, '_, A> {
         let original = self.driver.metadata_evidence()?;
         let source = RetainedSource::open(self.driver, self.source, &original)?;
         let download = source.journal()?;
-        download
-            .verify_ic_snapshot_artifact(&source.plan, TOKEN, &source.metadata)
-            .map_err(error)?;
+        // Destination preparation verifies the source under this same held journal.
+        let snapshot_id = source.destination(self.driver, &download)?;
         download
             .read_download_manifest(&source.plan, &download.record().map_err(error)?.digest())
             .map_err(error)?;
-        // Re-admit acceptance through the already-held source journal. Calling
-        // Driver::destination here would attempt to reacquire the same source lock.
-        let snapshot_id = source.destination(self.driver, &download)?;
+        // Fresh terminal acceptance remains separate from its earlier admission.
+        // Reuse only this scope's verified metadata and destination.
         if self
             .driver
             .application

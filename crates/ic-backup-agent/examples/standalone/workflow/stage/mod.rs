@@ -63,3 +63,25 @@ impl Stage {
             .join(format!("execution-stage-{}", self.sequence()))
     }
 }
+
+// Decode original evidence once; callers still admit plans and predecessor commitments.
+pub(super) fn read_binding(
+    root: &Path,
+    sequence: u64,
+) -> io::Result<ic_backup::model::execution_workflow::ExecutionStageBindingRecord> {
+    let bytes = ic_host_fs::read::read_file_no_follow(
+        &root.join("stage-binding.json"),
+        usize::try_from(ic_backup::model::execution_workflow::MAX_EXECUTION_STAGE_BYTES)
+            .map_err(super::error)?,
+    )
+    .map_err(super::error)?;
+    let binding: ic_backup::model::execution_workflow::ExecutionStageBindingRecord =
+        serde_json::from_slice(&bytes)?;
+    if binding.stage_sequence() != sequence {
+        return Err(io::ErrorKind::InvalidData.into());
+    }
+    Ok(binding)
+}
+
+#[cfg(test)]
+mod tests;

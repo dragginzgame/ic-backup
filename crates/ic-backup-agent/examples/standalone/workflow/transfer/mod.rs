@@ -1,10 +1,10 @@
 //! Metadata, durable source publication and source-bound uploads through public APIs.
 
 use super::{
-    Application, BackupLayoutGuard, CHUNK, Digest, DirBuilderExt, Driver,
-    ExecutionStageBindingRecord, ExecutionStageGuard, ExecutionStagePredecessorRecord,
-    ExecutionWorkflowRecord, IcSnapshotDownloadPlan, IcSnapshotReply, Method, OperationPlanRecord,
-    PreparedUpdate, Reply, ReservedUpdate, Stage, TOKEN, error, fs, io, metadata, read,
+    Application, BackupLayoutGuard, CHUNK, Digest, DirBuilderExt, Driver, ExecutionStageGuard,
+    ExecutionStagePredecessorRecord, ExecutionWorkflowRecord, IcSnapshotDownloadPlan,
+    IcSnapshotReply, Method, OperationPlanRecord, PreparedUpdate, Reply, ReservedUpdate, Stage,
+    TOKEN, error, fs, io, metadata,
 };
 use ic_backup::ports::ic_mutation::IcMutationProviderError;
 use ic_backup::{
@@ -49,7 +49,7 @@ impl<'layout, 'metadata> RetainedSource<'layout, 'metadata> {
         DownloadJournalGuard::open(self.layout, self.plan.digest().hash()).map_err(error)
     }
 
-    fn upload(
+    pub(super) fn upload(
         &self,
         journal: &DownloadJournalGuard<'_>,
     ) -> io::Result<IcSnapshotUploadRequest<'_>> {
@@ -119,9 +119,10 @@ impl<A: Application> Driver<'_, A> {
             CHUNK,
         )
         .map_err(error)?;
-        let binding: ExecutionStageBindingRecord = serde_json::from_slice(&read(
-            &Stage::Metadata.path(&self.root).join("stage-binding.json"),
-        )?)?;
+        let binding = super::stage::read_binding(
+            &Stage::Metadata.path(&self.root),
+            Stage::Metadata.sequence(),
+        )?;
         let metadata_layout =
             BackupLayoutGuard::acquire(&Stage::Metadata.path(&self.root)).map_err(error)?;
         let metadata_plan = read_operation_plan(&metadata_layout, binding.plan()).map_err(error)?;
@@ -237,11 +238,10 @@ impl<A: Application> Driver<'_, A> {
                 CHUNK,
             )
             .map_err(error)?;
-        let binding: ExecutionStageBindingRecord = serde_json::from_slice(&read(
-            &Stage::Allocation
-                .path(&self.root)
-                .join("stage-binding.json"),
-        )?)?;
+        let binding = super::stage::read_binding(
+            &Stage::Allocation.path(&self.root),
+            Stage::Allocation.sequence(),
+        )?;
         let allocation =
             BackupLayoutGuard::acquire(&Stage::Allocation.path(&self.root)).map_err(error)?;
         let plan = read_operation_plan(&allocation, binding.plan()).map_err(error)?;
@@ -260,9 +260,7 @@ impl<A: Application> Driver<'_, A> {
         journal
             .read_download_manifest(&source.plan, &manifest)
             .map_err(error)?;
-        journal
-            .verify_ic_snapshot_artifact(&source.plan, TOKEN, &source.metadata)
-            .map_err(error)?;
+        // Metadata preparation freshly verifies this exact source under the held journal.
         let upload = source.upload(&journal)?;
         let transport = &self.config.transport;
         let root = stage.layout().map_err(error)?.root();

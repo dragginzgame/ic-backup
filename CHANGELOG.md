@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.58.6]
+
+### ⬆️ Dependencies
+
+- Adopt Testkit 0.88.0 for simulator qualification and its matching server CLI.
+  Backup uses the retained client APIs and keeps PocketIC 16.1.0.
+
+### 🧪 Testing
+
+- Share cancellation/exclusion assertions and suspended providers across snapshot
+  workflows, and common HTTP retention scenarios without removing regression cases.
+  Separate upload planning, execution, restore admission and retained-source setup.
+
+### 🛠️ Tooling
+
+- Repair the management encoder's Candid declaration allowance for newer Shared
+  checkers while preserving the external protocol boundary ([#78](https://github.com/dragginzgame/ic-backup/issues/78)).
+- Add explicit registry-consumer cache preparation and expose nested graph failure
+  logs. Keep normal qualification offline and preserve the root dependency lockfile.
+- Reuse Shared's content-drift and duplicate-manifest regressions while retaining
+  Backup-specific snapshot, caller and evidence checks.
+
+### 🧹 Cleanup
+
+- Simplify standalone capture and restore assembly. Reuse freshly verified source
+  and allocation evidence within each held scope, retaining checks after application
+  acceptance and across effects. Admit stage-binding reads within the existing
+  512 KiB bound, with exact sequence and malformed/oversized evidence regressions.
+- Link workflow boundary documentation to the canonical implementation contracts.
+
 ## [0.58.5] - 2026-11-06
 
 ### 🧪 Testing
