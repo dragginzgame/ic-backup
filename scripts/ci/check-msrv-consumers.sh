@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared companions: scripts/ci/check-rust-toolchain.sh
+# Shared companions: scripts/ci/check-rust-toolchain.sh scripts/ci/check-candid-boundary.pl
 set -euo pipefail
 
 # Qualify each public library independently, without dev-feature unification.
@@ -85,6 +85,10 @@ RUST
     else
         printf 'use %s as _;\nfn main() {}\n' "${package//-/_}" > "$selected/src/main.rs"
     fi
+    # These generated API probes are outside the repository source selection.
+    printf '{"schema":1,"allowances":[]}\n' > "$selected/candid-boundary.json"
+    perl "$ROOT/scripts/ci/check-candid-boundary.pl" --cbor "$selected" \
+        candid-boundary.json src > "$selected/source-boundaries.log" 2>&1
     consumer_fixture_prepare "$ROOT" "$fixture" "$selected" "$consumer" "$msrv"
     if [[ "$package" == ic-backup ]]; then
         jq -e 'all(.packages[]; .name != "ic-agent")

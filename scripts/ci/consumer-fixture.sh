@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared companions: scripts/ci/check-rust-toolchain.sh
+# Shared companions: scripts/ci/check-rust-toolchain.sh scripts/ci/check-cargo-dependency-boundaries.sh
 # Common offline graph preparation for independent Cargo consumer fixtures.
 # Callers own their temporary directory, manifest, API probe and extra admission.
 
@@ -25,11 +25,14 @@ consumer_fixture_prepare() {
     [[ "$source_mode" == candidate || "$source_mode" == registry ]] || {
         echo "invalid consumer source mode: $source_mode" >&2; return 2;
     }
+    if [[ -z "$rust_version" ]]; then
+        rust_version="$(bash "$root/scripts/ci/check-rust-toolchain.sh")" || return "$?"
+    fi
     cp "$fixture/original.lock" "$selected/Cargo.lock"
     # Preparation may prune unused packages and add only the fixture root.
     consumer_fixture_cargo "$root" "$rust_version" metadata --offline \
         --manifest-path "$selected/Cargo.toml" --format-version 1 \
-        > "$selected/metadata.json" 2> "$selected/preparation.log"
+        > "$selected/metadata.json" 2> "$selected/preparation.log" || return "$?"
     jq -L "$root/scripts/ci" -e --arg consumer "$consumer" \
         --arg source_mode "$source_mode" --slurpfile original "$fixture/original.json" '
         include "consumer-graph";
@@ -37,5 +40,8 @@ consumer_fixture_prepare() {
          then published_graph_admitted($original[0]; $consumer)
          else original_graph_admitted($original[0]; $consumer) end)
         or error("Independent consumer changed selected packages or retained test/tooling dependencies")
-    ' "$selected/metadata.json" >/dev/null
+    ' "$selected/metadata.json" >/dev/null || return "$?"
+    # Admit this actual materialized workspace before its caller compiles it.
+    RUSTUP_TOOLCHAIN="$rust_version" bash "$root/scripts/ci/check-cargo-dependency-boundaries.sh" \
+        --consumer "$selected" --external-ic > "$selected/boundaries.log" 2>&1
 }

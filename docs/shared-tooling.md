@@ -2,12 +2,15 @@
 
 ## What this adoption means
 
-Shared Tooling **0.30.4**, committed revision
-`2aa41c7394300302fe802b69b31b855bdc89b671`, owns the reviewed engineering
+Shared Tooling **0.30.6**, committed revision
+`45c0295e23d3d23225e31f47c018c30ff0c75581`, owns the reviewed engineering
 baseline and common setup, formatting, hook, validation and release mechanisms.
-The canonical refresh from `0c5eebc` selects **157 payloads**: three updates,
-two additions and 152 unchanged. Catalogs, Cargo selections and Rust **1.99.1**
-are unchanged. Snapshot payloads are never locally patched.
+The canonical refresh from `2aa41c7` selects **158 payloads**: eleven updates,
+one addition and 146 unchanged. Host/Cargo/IC catalogs and Rust **1.99.1** are
+unchanged. The supplier's uncommitted 0.30.7 draft is not selected. Snapshot
+payloads are never locally patched. The initially preserved Platform Types 0.18.2
+lockfile edit is qualified separately with Testkit 0.89; see the
+[dependency boundary](ic-platform.md#types-0182-and-testkit-089).
 
 Backup owns product contracts, qualification selection, the ordered Testkit setup
 extension, release metadata adapter and exact resume receipt checks. Owner CI or
@@ -16,13 +19,25 @@ Backup has no Canic runtime/control-plane dependency and keeps one coordinated
 release, root changelog and complete release gate. Optional groups, candidate
 sources and stage-proof reuse are not selected.
 
-The refresh adds the shared lexical Candid boundary check and fixes empty-option
-LOC reporting for Bash 3.2. Current experimental-retention rules keep compact
-conclusions in Git and raw output under `target/evidence/`. The authorized cleanup
-retires superseded per-run reports/handoffs; [the retention summary](reports/README.md)
-records the retained conclusions and exact historical source. Product provenance,
-release receipts, journals, artifacts and recovery evidence retain their owners.
-No ignored bundles or tool stores are cleaned by adoption.
+The refresh admits complete generic inherent Candid headers and centralizes CBOR
+package ownership. Backup enables the shared lexical Candid/CBOR check once for
+both crates, including tests/examples and the explicitly selected inventory
+`target` module. Its 36 external Candid allowances remain live; no CBOR exception
+is needed. Signed ingress bytes retained as `.cbor` are external protocol evidence,
+not a local codec or owned CBOR record. No persisted byte/hash migration is needed.
+
+The Cargo boundary runs for the root and each materialized independent consumer
+before compilation. Generated MSRV API probes also receive their own empty-policy
+Candid/CBOR source check; the standalone consumer uses Rust files already selected
+under `crates`. There are no maintained browser roots or alternate manifest templates.
+The shared inventories own forbidden package names; no local list duplicates them.
+These are declaration/literal-source checks, not macro expansion, type resolution,
+authentication or external-byte compatibility proof.
+
+Current retention rules keep compact conclusions in Git and raw output under
+`target/evidence/`; [the prior retention summary](reports/README.md) owns historical
+cleanup conclusions. Product artifacts, journals, release receipts, failed bundles
+and tool stores are not cleaned by adoption.
 
 ## Reviewed sources
 
@@ -49,7 +64,7 @@ executable generations and failed bundles; no old selection supplies a fallback.
 
 The common host/Rust catalogs belong to [ci/tool-versions.env](../ci/tool-versions.env).
 The compiler floor and exact development/release toolchain both remain 1.99.1.
-Testkit **0.88.0** owns simulator assets/lifecycle; Build **0.74.4** owns metadata
+Testkit **0.89.0** owns simulator assets/lifecycle; Build **0.74.4** owns metadata
 editing. [The Platform boundary](ic-platform.md) owns dependency compatibility.
 
 Formatting uses grouped Cargo sorting followed by Rustfmt through the shared
@@ -113,7 +128,8 @@ selective helper-use boundary; unfulfilled expectations remain denied.
 ## Current guard and recovery integration
 
 The dependency gate combines Shared's [external IC inventory](../ci/external-ic-dependencies.txt)
-with Backup's [local exclusions](../ci/cargo-dependency-boundaries.json). Independent
+and [CBOR inventory](../ci/cbor-dependencies.json) with Backup's
+[local exclusions](../ci/cargo-dependency-boundaries.json). Independent
 normal consumers separately exclude simulator, runtime and WAT packages. Role
 labels and declaration checks do not establish deployment admission.
 

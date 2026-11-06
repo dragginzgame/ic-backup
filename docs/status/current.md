@@ -1,5 +1,56 @@
 # Current handoff — 2026-11-06
 
+## Pending 0.58.8 tooling and dependency adoption
+
+Shared **0.30.6** at `45c0295e23d3d23225e31f47c018c30ff0c75581` replaces 0.30.4:
+158 canonical payloads, eleven updates/one addition/146 unchanged. GitHub main
+independently selected that commit; the supplier's uncommitted 0.30.7 draft stays
+excluded. [The adoption review](../shared-tooling-review.json) owns exact decisions.
+AGENTS now references the selected baseline; catalogs and Rust **1.99.1** stay.
+
+The existing source gate now enforces Candid/CBOR ownership across all 330 Rust
+files, explicitly including inventory `target`. All 36 external Candid allowances
+stay live; no CBOR exception or product-format migration is needed. Materialized
+independent Cargo consumers receive the shared dependency gate before compilation;
+generated MSRV probes also receive their own empty-policy source check. Standalone
+consumer Rust is already covered under `crates`; no browser roots/templates exist.
+
+Focused evidence in `target/evidence/shared-0306.TCumgu/` passes snapshot provenance,
+source/dependency/inheritance gates, compiler admission, tooling/hook regressions,
+shell/Perl syntax, prepared-tools admission, formatting, both independent library
+checks and one complete authenticated standalone consumer journey. Generated
+consumer evidence: `target/msrv-consumers.q6KxAu/` and
+`target/tmp/ic-backup-agent-independent-build-2026458-0/`. The original fixture
+metadata collision failure is retained; corrected checks pass. Full CI/release,
+other-host and Canic qualification remain separate; checks are lexical, not semantic.
+At tooling-adoption time, the incoming Types **0.18.2** edit was preserved separately;
+those evidence hashes bind that earlier selection. The current graph is qualified below.
+Deployment is authorized: commit this batch, run the full release gate, push
+`origin/main` and `v0.58.8`, then publish both crates. Package versions remain
+0.58.7 until the standard runner prepares release metadata.
+
+Platform Types **0.18.2** is now explicitly qualified through Platform **0.23.2**;
+no direct Types dependency is added. Testkit advances to **0.89.0**, with its exact
+CLI prepared and PocketIC **16.1.0** admitted offline. Both archive checksums and
+all published source files match their VCS commits: Types `5eeb016` (12 files) and
+Testkit `094d144` (51 files). Types changes normalized dependency feature settings
+and Principal lint annotations only; canonical identities/bytes remain qualified.
+Testkit removes automatic client logging, unused by Backup; explicit server output,
+HTTP evidence, original journals and async cleanup retain their owners. Fifteen
+unused transitive packages leave the lockfile; no logging replacement is added.
+
+Evidence in `target/evidence/types-0182-testkit-089.rHqTdd/` passes **188 selected
+tests** (144 model, 22 Core simulator, 22 Agent simulator/consumer), strict both-crate
+all-target/all-feature Clippy, independent Core/Agent consumer builds, compiler and
+dependency/source admission, exact CLI/server checks, formatting and documentation.
+The explicit registry-cache test stays ignored. Independent consumer build evidence
+is in `target/tmp/ic-backup-agent-independent-build-2674089-0/`; model tests cover
+Principal normalization, external conversions, exact Candid and hash goldens.
+Input hashes confirm no concurrent manifest/lock/toolchain edits during validation.
+The initial byte-identical Types assertion found annotation-only drift; source and
+manifest diffs retain the correction. Full release, other-host and Canic qualification
+were not rerun. No product Rust code, format or public Backup API change is required.
+
 ## Delivered 0.58.7
 
 Both **ic-backup 0.58.7** and **ic-backup-agent 0.58.7** are published on crates.io.
@@ -67,8 +118,8 @@ The test consolidation, case mappings and independent qualification remain in
 [Coverage ownership](../development.md#simulator-coverage-ownership) identifies
 retained IC effects, signed transport probes and native rejection matrices.
 Earlier release/compiler qualification remains in Git and its original evidence.
-Shared 0.30.4 at `2aa41c7394300302fe802b69b31b855bdc89b671` still owns 157 exact
-payloads; [the adoption review](../shared-tooling-review.json) remains unchanged.
+Historical Shared 0.30.4 at `2aa41c7394300302fe802b69b31b855bdc89b671` supplied
+157 payloads; its adoption review remains in the prior Git handoff.
 
 ## Recovery and retained contracts
 

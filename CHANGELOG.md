@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.58.8]
+
+### ⬆️ Dependencies
+
+- Qualify Platform Types 0.18.2 through Platform and adopt Testkit 0.89.0 with its
+  exact CLI. Retain Principal identities, management bytes and caller-owned server
+  evidence; no automatic client logging or replacement subscriber is configured.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.30.6. Enforce CBOR ownership alongside reviewed external
+  Candid declarations, including generated consumer workspaces and API probes.
+
 ## [0.58.7] - 2026-11-06
 
 ### 🧹 Cleanup

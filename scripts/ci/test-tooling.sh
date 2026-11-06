@@ -109,7 +109,17 @@ if make --no-print-directory -s -C "$candid" candid-boundary-check > "$candid/re
     echo 'consumer Candid gate admitted an unreviewed application declaration' >&2; exit 1
 fi
 grep -F 'crates/application.rs:1: Candid trait reference' "$candid/rejected.log" >/dev/null
-echo 'Consumer Candid boundary: PASS (selected in CI; actual Make target refuses application derives).'
+printf 'struct ApplicationRequest;\n' > "$candid/crates/application.rs"
+for source in crates/application.rs crates/ic-backup/src/model/inventory/target/mod.rs; do
+    printf 'use serde_cbor as unreviewed_codec;\n' > "$candid/$source"
+    if make --no-print-directory -s -C "$candid" candid-boundary-check > "$candid/cbor-rejected.log" 2>&1; then
+        echo "consumer CBOR source gate skipped $source" >&2; exit 1
+    fi
+    grep -F "$source:1: direct CBOR crate reference" "$candid/cbor-rejected.log" >/dev/null
+    printf 'struct ApplicationRequest;\n' > "$candid/$source"
+done
+echo 'Consumer Candid/CBOR boundary: PASS (actual Make selection includes inventory target source).'
+
 
 # Qualify working-source selection separately from Shared's Markdown parser.
 documents="$FIXTURE/documents"
@@ -144,7 +154,7 @@ cat "$BOUNDARY_METADATA"
 CARGO
 chmod +x "$boundary/bin/cargo"
 export BOUNDARY_METADATA="$boundary/metadata.json"
-for dependency in ic-platform ic0 wat; do
+for dependency in ic-platform ic0 wat serde_cbor; do
     for kind in normal build dev; do
         jq -n --arg name "$dependency" --arg kind "$kind" --arg root "$boundary" '{
             version:1,workspace_root:$root,workspace_members:["fixture"],
@@ -164,8 +174,32 @@ for dependency in ic-platform ic0 wat; do
         fi
     done
 done
+# The shared preparation owner must admit each generated workspace, not only the root.
+preparation="$FIXTURE/consumer-preparation"
+mkdir -p "$preparation"
+printf 'version = 4\n' > "$preparation/original.lock"
+source "$ROOT/scripts/ci/consumer-fixture.sh"
+export BOUNDARY_METADATA="$preparation/cargo-metadata.json"
+for dependency in ic-platform serde_cbor; do
+    jq -n --arg name "$dependency" --arg root "$boundary" '{
+        version:1,workspace_root:$root,workspace_members:["fixture"],
+        packages:[{id:"fixture",name:"boundary-fixture",version:"0.0.0",source:null,
+            dependencies:[{name:$name,rename:"renamed_codec",kind:"dev",target:"cfg(unix)",optional:true}]}]
+    }' > "$BOUNDARY_METADATA"
+    cp "$BOUNDARY_METADATA" "$preparation/original.json"
+    status=0
+    PATH="$boundary/bin:$PATH" consumer_fixture_prepare "$ROOT" "$preparation" "$boundary" \
+        boundary-fixture 1.99.1 > "$preparation/$dependency.log" 2>&1 || status=$?
+    if [[ "$dependency" == ic-platform ]]; then
+        [[ "$status" == 0 ]] || { cat "$preparation/$dependency.log" >&2; exit 1; }
+    else
+        [[ "$status" != 0 ]] || { echo 'generated consumer skipped CBOR admission' >&2; exit 1; }
+        grep -F 'boundary-fixture -> serde_cbor' "$boundary/boundaries.log" >/dev/null
+    fi
+done
 unset BOUNDARY_METADATA
-echo 'Consumer dependency boundaries: PASS (common IC and local WAT rules compose through Make).'
+echo 'Consumer dependency boundaries: PASS (root Make and generated workspace preparation reject CBOR).'
+
 
 # Independent consumers contain only their selected production graph. Check
 # package identities, including a renamed transitive test/tool dependency.

@@ -1,70 +1,51 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "2aa41c7394300302fe802b69b31b855bdc89b671",
-  "label": "0.30.4",
-  "reviewed_on": "2026-11-05",
-  "previous_revision": "0c5eebc49534e99b09326c49b003a0adfd2348cb",
+  "revision": "45c0295e23d3d23225e31f47c018c30ff0c75581",
+  "label": "0.30.6",
+  "reviewed_on": "2026-11-06",
+  "previous_revision": "2aa41c7394300302fe802b69b31b855bdc89b671",
   "previous_review": {
-    "commit": "f241568f3714c0fd9283fd505ff34007c6bcf3e8",
+    "commit": "95d39fc36f22a3879ad238064abb6f087b9b98f0",
     "path": "docs/shared-tooling-review.json"
   },
   "consumer_baseline": {
-    "commit": "f241568f3714c0fd9283fd505ff34007c6bcf3e8",
-    "version": "0.58.3",
-    "pending_notes": "0.58.4",
-    "incoming_work": "Clean checkout. Preserve compiler, dependency selections, product source and release/recovery records."
+    "commit": "95d39fc36f22a3879ad238064abb6f087b9b98f0",
+    "version": "0.58.7",
+    "pending_notes": "0.58.8",
+    "incoming_work": "Pre-existing Cargo.lock edit selects ic-platform-types 0.18.2 instead of 0.18.1; preserved exactly, not part of this tooling refresh."
   },
   "provenance": {
-    "selection": "Canonical impact preview and refresh from the normal clean supplier checkout at the independently observed origin/main commit. No sibling edits.",
+    "selection": "GitHub origin/main independently observed at the selected full commit. Canonical exporter uses --revision from the normal supplier checkout; unrelated uncommitted 0.30.7 changes are excluded. Exporter helpers admit their own committed bytes/modes.",
     "export": {
-      "payloads": 157,
-      "added": 2,
+      "payloads": 158,
+      "added": 1,
       "removed": 0,
-      "updated": 3,
-      "unchanged": 152
+      "updated": 11,
+      "unchanged": 146
     },
-    "catalogs": "Common host/Cargo/IC catalogs and Rust 1.99.1 unchanged.",
-    "new_selection": "docs/candid-boundary.md brings the canonical checker and existing RustSource lexer through declared companions."
+    "catalogs": "Host, Cargo, IC executable catalogs and Rust 1.99.1 selectors unchanged."
   },
   "consumer_decisions": [
-    "Run candid-boundary-check once in the sequential CI/release gate, selecting both crates and the inventory target module explicitly because target directories are otherwise pruned.",
-    "Review 36 exact external-protocol allowances: nine bounded wire projections, one management argument encoder and 26 positive/adversarial external wire fixtures. No domain or owned application DTO exemption; macro/alias limits remain explicit.",
-    "Qualify actual Make source selection, rejection and working documentation selection through consumer tooling fixtures; shared syntax matrices remain upstream.",
-    "Retire 183 superseded historical reports/handoffs and replace them with one compact conclusion/retention summary. Repair maintained references with exact original Git URLs; do not relabel raw output as fixtures or claim local artifacts still exist.",
-    "Preserve root source/license provenance, current contract vectors, release receipt and every ignored product/recovery artifact. Do not rewrite history, clean targets/tools or activate services.",
-    "Refresh the current adoption guide and compatible pending notes while leaving package versions and Rust/dependency inputs unchanged."
+    "Enable --cbor on the existing Candid source target, selecting both crates and inventory/target/mod.rs explicitly. All 36 external Candid declarations stay live; no CBOR exceptions or owned CBOR migration is needed.",
+    "Keep named external IC management bytes and opaque signed CBOR ingress evidence. Production codecs remain owned by Platform; no product Rust or persisted protocol changed.",
+    "Run shared external-IC/CBOR Cargo admission on every actual materialized consumer workspace through consumer-fixture.sh, on its selected compiler, after exact graph admission and before compilation.",
+    "Check generated MSRV API probe sources with their own empty policy. Standalone consumer paths refer to first-party Rust already selected under crates. No browser roots or alternate executable manifest templates exist.",
+    "Qualify actual Make and generated-consumer callers with local rejection probes; leave Shared syntax/package matrices upstream. Do not copy the shared CBOR inventory or add bypass allowances.",
+    "Update AGENTS baseline reference and local adoption documentation; preserve package versions, manifests, locks, compiler selection, tool stores and product/recovery evidence. Shared-only work-version changes do not change Backup release adapters."
   ],
-  "cleanup": {
-    "retired_files": 183,
-    "retired_bytes": 3407885,
-    "summary": "docs/reports/README.md",
-    "historical_commit": "f241568f3714c0fd9283fd505ff34007c6bcf3e8",
-    "protected": "Root source/license provenance, product qualification records, contracts/vectors, release receipt, journals, artifacts, failed bundles and prior ignored evidence retained. Historical adoption metadata changes only its pointers/scope guidance."
-  },
   "qualification": {
-    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-0304.x_mz38e6",
     "status": "Passed focused consumer qualification",
+    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-0306.TCumgu",
+    "source_provenance": "Canonical export independently verifies all 158 payload byte/mode identities against the selected committed revision.",
+    "source_boundary": "Candid/CBOR check passes 330 Rust files and all 36 allowances; actual Make rejects unreviewed application derives and CBOR imports, including under inventory/target.",
+    "dependency_boundary": "Root declarations and renamed optional/target-specific normal/build/dev CBOR rejection through actual Make pass. The actual generated-workspace preparation owner rejects forbidden CBOR declarations.",
+    "independent_consumers": "Both independent libraries compile on Rust 1.99.1 with actual Cargo and generated-source boundary logs. Full candidate standalone capture/restore, application acceptance and terminal replay passes through the new gate.",
+    "tooling": "Local tooling, hook fixtures, ShellCheck/syntax, formatting and prepared-tools admission pass. Original fixture metadata-input/output collision failure is retained; corrected fixtures pass.",
+    "inputs": "Cargo.toml, Cargo.lock and rust-toolchain.toml remain byte-identical to the incoming selection.",
     "limits": [
-      "Lexical Candid source checks do not perform type resolution or macro expansion.",
-      "Linux tooling qualification only; no full repository/release suite, native macOS or installed IC/Canic acceptance."
-    ],
-    "source_provenance": "157 payload byte/mode identities match the independently selected supplier commit; offline integrity passes.",
-    "source_boundary": "324 Rust files, 36 exact external declarations; inventory target module explicitly selected. Consumer CI/Make inclusion and unreviewed application refusal pass.",
-    "tooling_hooks": "make tooling-check and make hooks-check pass. Actual CI, documentation selection, command routing and retained failures are qualified.",
-    "static_checks": "Dependency ownership/inheritance, grouped fmt-check, 753 links across 80 documents, changed-shell syntax/ShellCheck -x, Perl syntax and diff checks pass.",
-    "loc": {
-      "source_files": 324,
-      "totals": {
-        "benchmarks": 0,
-        "build_tooling": 0,
-        "examples": 1186,
-        "library_app": 15187,
-        "tests": 39373,
-        "total": 55746,
-        "unclassified": 0
-      },
-      "comparison": "All per-file hashes, categories, counts and diagnostic membership match the prior qualified report."
-    },
-    "initial_correction": "The declaration-prefix check refused the management encoder allowance until its actual trailing parameter comma was included; no Rust change or broad allowance was used."
+      "Lexical checks do not perform type resolution, macro expansion, dynamic-source discovery or external-byte authentication.",
+      "Linux focused qualification only; full CI/release matrix, native macOS and Canic acceptance were not rerun.",
+      "Existing Platform Types lockfile update is preserved and used for focused checks; this is not a separate dependency-adoption review."
+    ]
   }
 }

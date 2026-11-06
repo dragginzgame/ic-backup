@@ -31,7 +31,7 @@ CI_TARGETS := compiler-check shared-tooling-check tools-check repository-files-c
 .PHONY: candid-boundary-check compiler-check golden-check
 
 help:
-	@echo "candid-boundary-check       Check reviewed external Candid declarations"
+	@echo "candid-boundary-check       Check Candid declarations and CBOR ownership"
 	@echo "check                       Compile this library's native targets"
 	@echo "check-cargo-tool-versions   Inspect Cargo tool versions online without installing"
 	@echo "check-doc-links             Check maintained local Markdown targets"
@@ -103,7 +103,7 @@ check-doc-links:
 	bash scripts/ci/check-doc-links.sh
 
 candid-boundary-check:
-	perl scripts/ci/check-candid-boundary.pl "$(CURDIR)" ci/candid-boundary.json crates \
+	perl scripts/ci/check-candid-boundary.pl --cbor "$(CURDIR)" ci/candid-boundary.json crates \
 	    crates/ic-backup/src/model/inventory/target/mod.rs
 
 check-msrv:
