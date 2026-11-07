@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.59.1]
+
+### ⬆️ Dependencies
+
+- Adopt Testkit 0.92.0 for simulator qualification, aligning startup/cleanup and
+  client codec error identities with Host 0.75 and Platform 0.24. Retain explicit
+  request deadlines, managed server custody and PocketIC 16.1.0.
+
 ## [0.59.0] - 2026-11-07
 
 ### 💥 Breaking changes

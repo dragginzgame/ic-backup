@@ -341,8 +341,8 @@ importing public Host error types must align with that family; the independent
 consumer checks exercise the checksum-error conversion and publication-error payload.
 Management DTOs remain exactly 0.11.0, Types 0.18.2 and Agent SDK 0.49.3. Backup
 already uses bounded Candid helpers and does not select the removed offline-key
-feature. Testkit 0.90.0 retains older development-only Host/Platform dependencies;
-they do not enter the independent production consumer graphs.
+feature. Testkit remains development-only and does not enter the independent
+production consumer graphs.
 
 ## 0.58 API migration
 

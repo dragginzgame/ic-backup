@@ -1,5 +1,33 @@
 # Current handoff — 2026-11-07
 
+## Pending 0.59.1
+
+Adopt published Testkit 0.92.0, source
+`ceb99e1c682a92026a80d743bfccada350319c08`. Its source matches 0.91.0; the
+dependency change aligns client codec errors with Platform 0.24.0 and removes
+Platform 0.23.6 from the development graph. The pending 0.91 adoption already
+aligned startup/cleanup errors with Host 0.75.0 and removed three older Host
+0.74.4 packages. No unrelated lock versions changed. Production and test graphs
+now share Platform 0.24.0; Testkit remains development-only. Rust 1.99.1,
+management DTO 0.11.0, PocketIC 16.1.0,
+60-second request budgets and 120-second startup bounds remain unchanged.
+
+The matching 0.92.0 CLI is prepared and offline server admission passes. Strict
+all-target/all-feature Clippy, compiler/snapshot/dependency/Candid boundaries,
+formatting and documentation checks pass. All 20 Core PocketIC and 22 selected
+Agent tests pass, including independent authenticated capture/restore/acceptance,
+terminal replay, interrupted reentry and lost-reply/process-death recovery. The
+explicit online registry-preparation case remains ignored. Evidence is under
+`target/evidence/adopt-testkit092/`; independent graph/build and runtime roots
+are recorded in the Agent log (3099548 fixture family). Prior 0.91 evidence remains
+under `target/evidence/adopt-testkit091/`. The selected lock remained stable
+through validation. Follow-up review found no further source migration: local
+Testkit setup/check routing and original-selection refusal fixtures pass, along
+with six exact management-request and ten reply codec/bounds cases on the unified
+Platform graph. Their logs remain with the 0.92 adoption evidence.
+Changes are uncommitted; package versions remain 0.59.0. No new complete release
+gate, publication, native macOS or current Canic acceptance is claimed.
+
 ## Delivered 0.59.0
 
 Preserve standalone host-driven same-release/same-ID backup/restore, mandatory
