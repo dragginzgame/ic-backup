@@ -1,11 +1,13 @@
 # Current handoff — 2026-11-07
 
-## Pending 0.59.0
+## Delivered 0.59.0
 
 Preserve standalone host-driven same-release/same-ID backup/restore, mandatory
-application admission, original spending and retained recovery evidence. Packages
-remain 0.58.11; the pending changelog selects 0.59.0 for breaking APIs. Changes are
-uncommitted. Release, native macOS and current Canic acceptance remain separate.
+application admission, original spending and retained recovery evidence. Both
+crates are published as 0.59.0. Release `b2585a3f0e332ce1423f83cc77bedbd66812fd9e`
+and annotated `backup-v0.59.0` match origin/main; qualified source is
+`7abb1ff9fc8bef76cc363835f4f82a58571fc817`. The normal checkout is reconciled.
+Native macOS and current Canic acceptance remain separate.
 
 Each transfer stage now owns one artifact. Constructors take one request;
 collections, persisted Downloaded recovery, verify_artifact and resume projections
@@ -46,17 +48,28 @@ Host 0.75 family and Platform 0.24. Types 0.18.2, management DTO 0.11.0, Agent S
 0.49.3 and Rust 1.99.1 remain unchanged. No unrelated lock versions changed; the
 new selected lock is stable through validation. Shared 0.31.5 now selects 160
 verified payloads (three companion-annotation updates; executables unchanged).
-The requested frozen minor delivery will run the complete Linux gate and publish
-both crates as 0.59.0; native macOS and current Canic acceptance remain separate.
+The frozen minor delivery passed the complete Linux gate and published both crates.
 
-## Focused evidence
+## Release and focused evidence
+
+Batch `batch-Cm_12MIv` passed compiler/snapshot/tool admission, strict Clippy,
+boundary/golden/format checks, tooling/release/hook regressions, 527 tests,
+documentation, both independent Rust 1.99.1 consumers and archive verification.
+The explicit online registry-preparation case is the gate's sole ignored test;
+post-publication preparation and registry-only authenticated capture/restore,
+application acceptance and effect-free terminal replay then passed separately.
+Crates.io checksums and VCS metadata match the release; all 324 packaged Rust files
+(279 Core, 45 Agent) and original manifests match the delivered source. Evidence
+is under `target/evidence/deploy-0590/`; registry build/runtime roots are
+`target/tmp/ic-backup-agent-independent-build-4048577-0/` and
+`target/tmp/ic-backup-agent-pocketic-4048577-1/`. No live IC/provider work occurred.
 
 The first requested 0.59.0 delivery, `batch-5pqpnHYc`, stopped at release-check
 before real version preparation, push or publication. Its local patch fixture
 copied the caller's minor pending notes; the fixture now creates its own matching
 notes before committing its disposable source. Preserve the failed batch and
-`target/evidence/deploy-0590/delivery.log`. A fresh source/candidate must pass the
-complete gate before delivery.
+`target/evidence/deploy-0590/delivery.log`. The corrected fresh candidate passed
+that fixture and the complete gate before delivery.
 
 The requested Host/Platform adoption passes root locked metadata, dependency
 boundaries/inheritance, independent Core/Agent public-type builds and Clippy,
@@ -112,6 +125,10 @@ is under `target/evidence/deploy-05811/`, including its registry-only 2256280
 consumer roots and explicit 2252982 preparation. No live IC/provider work occurred.
 
 ## Preserved delivery and recovery state
+
+Batch `batch-Cm_12MIv` is complete/reconciled, not retired. Preserve its candidate
+at `target/release-frozen/batch-Cm_12MIv/`, source pin and durable receipts under
+`.git/release-state/frozen/batch-Cm_12MIv/`. Failed `batch-5pqpnHYc` remains intact.
 
 Batch `batch-_jjlBLUV` is complete/reconciled, not retired. Preserve
 `target/release-frozen/batch-_jjlBLUV/`, its source pin and durable Git/plan/

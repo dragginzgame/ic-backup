@@ -14,8 +14,8 @@ create parents on fresh runs. Backup's four override-aware validation scripts no
 create their selected scratch parent. The 0.31.2 release-editor repair changes
 Shared's own fixture; it supplies no additional consumer payload.
 Host/Cargo/IC catalogs and Rust **1.99.1** are unchanged. Snapshot payloads are
-never locally patched. Delivered **0.58.11** qualifies Platform **0.23.5** and
-Testkit **0.90.0** through the complete Linux release gate and independent
+never locally patched. Delivered **0.59.0** qualifies Host **0.75.0**, Platform
+**0.24.0** and Testkit **0.90.0** through the complete Linux release gate and independent
 registry-only backup/restore acceptance. [The handoff](status/current.md) records
 the exact source, receipts and separate native macOS/Canic scope. Focused adoption
 and subsequent release evidence retain their distinct identities.

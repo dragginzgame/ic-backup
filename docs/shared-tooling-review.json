@@ -32,13 +32,24 @@
     "Retain standalone same-release/same-ID backup and restore, bounded original authority and application acceptance. Native macOS and current Canic acceptance remain separately qualified."
   ],
   "qualification": {
-    "status": "Canonical export and independent revision-bound verification passed; complete release gate pending",
+    "status": "Passed full Linux release gate and independent registry-only authenticated acceptance",
     "evidence_directory": "target/evidence/deploy-0590/",
     "selection": "All 160 payload bytes/modes; actual consumer compiler, snapshot, formatting, documentation and full frozen release gate.",
     "limits": [
-      "Do not infer full delivery from snapshot verification.",
-      "Native macOS and current Canic acceptance remain separate.",
-      "Preserve all previous delivery and recovery evidence."
-    ]
+      "Native macOS and current Canic/application acceptance remain separate.",
+      "No live IC/provider effects occurred. Earlier delivery, recovery and failed batches remain retained."
+    ],
+    "results": "All 160 snapshot payloads match the published committed source. Full gate passes compiler/tool/boundary/golden/formatting admission, strict Clippy, tooling/release/hook regressions, 527 tests, documentation, independent Rust 1.99.1 consumers and archive verification. Explicit registry setup and published normal-consumer capture/restore/application acceptance/effect-free terminal replay pass. Registry checksums, VCS metadata, all 324 packaged Rust files and original manifests match the delivered release."
+  },
+  "delivery": {
+    "version": "0.59.0",
+    "release_commit": "b2585a3f0e332ce1423f83cc77bedbd66812fd9e",
+    "qualified_source": "7abb1ff9fc8bef76cc363835f4f82a58571fc817",
+    "tag": "backup-v0.59.0",
+    "batch": "batch-Cm_12MIv",
+    "state": "complete and reconciled; not retired",
+    "evidence_directory": "target/evidence/deploy-0590/",
+    "registry": "Both crates published and independently verified; registry-only authenticated normal-consumer acceptance passes.",
+    "failed_attempt": "batch-5pqpnHYc retained; local fixture pending-note mismatch fixed before fresh complete qualification."
   }
 }
