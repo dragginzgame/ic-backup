@@ -35,6 +35,8 @@
 ### 🛠️ Tooling
 
 - Adopt Shared Tooling 0.31.5 with complete release-batch companion annotations.
+- Give local frozen-delivery qualification its own patch notes so pending minor
+  releases and finalized caller notes cannot conflict with its selected version.
 
 ### 🧪 Testing
 

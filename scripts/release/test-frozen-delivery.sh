@@ -48,6 +48,12 @@ cat >> "$FROZEN_FIXTURE/Makefile" <<'MAKE'
 # tooling/release fixtures or a second full product simulator suite.
 CI_TARGETS := compiler-check shared-tooling-check tools-check dependency-pins-check dependency-boundaries-check candid-boundary-check fmt-check check package
 MAKE
+# The fixture always exercises a patch release. Give it matching owned notes;
+# the caller may have pending minor notes or an already finalized changelog.
+previous="$(cd "$FROZEN_FIXTURE" && perl scripts/release/release-data.pl version)"
+version="$(bash "$ROOT/scripts/ci/next-release-version.sh" "$previous" patch)"
+printf '# Changelog\n\n## [%s]\n\n### 🧪 Testing\n\n- Qualify frozen delivery and exact recovery in the local fixture.\n' \
+    "$version" > "$FROZEN_FIXTURE/CHANGELOG.md"
 git init -q --bare "$fixture/remote.git"
 git -C "$FROZEN_FIXTURE" init -q -b main
 git -C "$FROZEN_FIXTURE" config user.name 'Backup frozen fixture'
@@ -57,8 +63,6 @@ git -C "$FROZEN_FIXTURE" commit -qm 'Reproducible Backup fixture source'
 git -C "$FROZEN_FIXTURE" remote add fixture "$fixture/remote.git"
 git -C "$FROZEN_FIXTURE" push -q fixture main
 base="$(git -C "$FROZEN_FIXTURE" rev-parse HEAD)"
-previous="$(cd "$FROZEN_FIXTURE" && perl scripts/release/release-data.pl version)"
-version="$(bash "$ROOT/scripts/ci/next-release-version.sh" "$previous" patch)"
 
 cat > "$fixture/bin/make" <<'SH'
 #!/usr/bin/env bash

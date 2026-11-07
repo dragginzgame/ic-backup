@@ -51,6 +51,13 @@ both crates as 0.59.0; native macOS and current Canic acceptance remain separate
 
 ## Focused evidence
 
+The first requested 0.59.0 delivery, `batch-5pqpnHYc`, stopped at release-check
+before real version preparation, push or publication. Its local patch fixture
+copied the caller's minor pending notes; the fixture now creates its own matching
+notes before committing its disposable source. Preserve the failed batch and
+`target/evidence/deploy-0590/delivery.log`. A fresh source/candidate must pass the
+complete gate before delivery.
+
 The requested Host/Platform adoption passes root locked metadata, dependency
 boundaries/inheritance, independent Core/Agent public-type builds and Clippy,
 affected native identity/codec/publication/crash cases, shared formatting, docs and
