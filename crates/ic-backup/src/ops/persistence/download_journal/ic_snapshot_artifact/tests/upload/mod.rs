@@ -138,13 +138,13 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
             match case {
                 SourceFault::Changed => fs::write(&module, [42; 5]).unwrap(),
                 SourceFault::Symlink => {
-                    Replacement::Symlink.apply(&module, &root.join("retained-module"))
+                    Replacement::Symlink.apply(&module, &root.join("retained-module"));
                 }
                 SourceFault::Fifo => {
-                    Replacement::Fifo.apply(&module, &root.join("retained-module"))
+                    Replacement::Fifo.apply(&module, &root.join("retained-module"));
                 }
                 SourceFault::Directory => {
-                    Replacement::Directory.apply(&module, &root.join("retained-module"))
+                    Replacement::Directory.apply(&module, &root.join("retained-module"));
                 }
                 SourceFault::Extra => fs::write(directory.join("extra"), []).unwrap(),
                 SourceFault::Metadata => fs::write(directory.join("metadata.candid"), []).unwrap(),
@@ -156,7 +156,7 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
                     .unwrap();
                 }
                 SourceFault::Missing => {
-                    Replacement::Missing.apply(&module, &root.join("retained-module"))
+                    Replacement::Missing.apply(&module, &root.join("retained-module"));
                 }
             }
             assert!(matches!(
