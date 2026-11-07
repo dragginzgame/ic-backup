@@ -1,7 +1,7 @@
 //! Local bounded byte hashing and payload binding; no management effects.
 
 use super::*;
-use crate::tests::support::ic_snapshot_metadata::raw;
+use crate::tests::support::ic_snapshot_metadata::values;
 use crate::{
     model::ic_snapshot_data::MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES,
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
@@ -28,12 +28,7 @@ impl Read for Counted<'_> {
 fn streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_input() {
     let plan = source_plan();
     let request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let mut values: ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(
-            &raw("upload-source"),
-            crate::tests::support::WIRE_ORACLE_LIMITS,
-        )
-        .unwrap();
+    let mut values = values("upload-source");
     let length = MAX_IC_SNAPSHOT_DATA_CHUNK_BYTES + 1;
     values.wasm_module_size = length as u64;
     let raw = contract::encode_one(values).unwrap();

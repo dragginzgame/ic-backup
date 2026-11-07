@@ -2,25 +2,15 @@
 
 use super::*;
 use crate::tests::support::write_json_durable;
-use crate::{
-    model::{artifacts::ArtifactChecksumRecord, command_custody::CommandCustodyRecord},
-    ops::persistence::CommandLifetimeLock,
-    tests::support::temp_dir,
-};
+use crate::{model::artifacts::ArtifactChecksumRecord, tests::support::temp_dir};
 use serde::{Deserialize, Serialize};
-use std::{
-    fs, io,
-    path::PathBuf,
-    process::Command,
-    thread,
-    time::{Duration, Instant},
-};
+use std::{fs, io, path::PathBuf};
 
 #[derive(Deserialize, Serialize)]
 struct Terminal {
     complete: bool,
     authority: ArtifactChecksumRecord,
-    commands: Vec<CommandCustodyRecord>,
+    commands: Vec<serde_json::Value>,
 }
 
 struct Validator;
@@ -32,12 +22,11 @@ impl RestoreTerminalEvidenceProvider for Validator {
         bytes: &[u8],
     ) -> Result<TerminalRestoreEvidence, Self::Error> {
         let terminal: Terminal = serde_json::from_slice(bytes)?;
-        if !terminal.complete {
+        if !terminal.complete || !terminal.commands.is_empty() {
             return Err(io::ErrorKind::InvalidData.into());
         }
-        Ok(TerminalRestoreEvidence::new(
+        Ok(TerminalRestoreEvidence::for_in_process_restore(
             terminal.authority,
-            terminal.commands,
         ))
     }
 }
@@ -129,100 +118,44 @@ fn incomplete_terminal_and_wrong_original_intent_preserve_reference_bytes() {
 }
 
 #[test]
-fn live_command_custody_refuses_until_its_real_holder_exits() {
-    let mut f = Fixture::new();
-    let mut custody = CommandLifetimeLock::acquire(&f.journal, 7).unwrap();
-    f.terminal.commands.push(custody.record().clone());
-    f.write();
-    let references = f.references();
-    let mut command = Command::new("sleep");
-    command.arg("30");
-    let mut child = custody.spawn(command).unwrap();
-    drop(custody);
-    assert!(matches!(
-        f.layout.release_restore(&f.lock, &Validator),
-        Err(RestoreReferenceReleaseError::Custody(
-            CommandLifetimeLockError::InFlight { .. }
-        ))
-    ));
-    assert_eq!(f.references(), references);
-    child.kill().unwrap();
-    child.wait().unwrap();
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
-        match f.layout.release_restore(&f.lock, &Validator) {
-            Ok(outcome) => {
-                assert_eq!(outcome, RestoreReferenceReleaseOutcome::Released);
-                break;
-            }
-            Err(RestoreReferenceReleaseError::Custody(CommandLifetimeLockError::InFlight {
-                ..
-            })) if Instant::now() < deadline => {
-                assert_eq!(f.references(), references);
-                thread::sleep(Duration::from_millis(5));
-            }
-            result => panic!("command custody did not settle after child exit: {result:?}"),
-        }
-    }
-}
-
-#[test]
-fn missing_or_replaced_sidecar_cannot_create_fresh_quiescence() {
-    let mut f = Fixture::new();
-    let custody = CommandLifetimeLock::acquire(&f.journal, 7).unwrap();
-    let path = custody.path().to_path_buf();
-    f.terminal.commands.push(custody.record().clone());
-    f.write();
-    let original_inode = fs::File::open(&path).unwrap();
-    drop(custody);
-    let references = f.references();
-    fs::remove_file(&path).unwrap();
-    assert!(matches!(
-        f.layout.release_restore(&f.lock, &Validator),
-        Err(RestoreReferenceReleaseError::Custody(_))
-    ));
-    assert!(!path.exists());
-    fs::write(&path, b"replacement").unwrap();
-    assert!(matches!(
-        f.layout.release_restore(&f.lock, &Validator),
-        Err(RestoreReferenceReleaseError::Custody(_))
-    ));
-    assert_eq!(f.references(), references);
-    drop(original_inode);
-}
-
-#[test]
-fn cross_journal_and_duplicate_command_sets_refuse_without_release() {
+fn command_backed_originals_refuse_without_changing_references() {
     let mut f = Fixture::new();
     let references = f.references();
-    let other = CommandLifetimeLock::acquire(&f.parent.join("other.json"), 7).unwrap();
-    f.terminal.commands = vec![other.record().clone()];
+    f.terminal
+        .commands
+        .push(serde_json::json!({"operation_sequence": 7}));
     f.write();
     assert!(matches!(
         f.layout.release_restore(&f.lock, &Validator),
-        Err(RestoreReferenceReleaseError::InvalidCommandSet)
+        Err(RestoreReferenceReleaseError::Terminal(_))
     ));
     assert_eq!(f.references(), references);
-    let custody = CommandLifetimeLock::acquire(&f.journal, 7).unwrap();
-    // Keep the first command locked so rejection cannot depend on quiescence.
-    for commands in [
-        vec![custody.record().clone(), custody.record().clone()],
-        vec![custody.record().clone(), other.record().clone()],
-    ] {
-        f.terminal.commands = commands;
-        f.write();
-        let result = f.layout.release_restore(&f.lock, &Validator);
-        assert!(
-            matches!(result, Err(RestoreReferenceReleaseError::InvalidCommandSet)),
-            "invalid complete command set must precede custody probes: {result:?}"
-        );
-        assert_eq!(f.references(), references);
-    }
 }
 
 #[test]
-fn journal_change_during_product_qualification_preserves_references() {
-    struct Changing;
+fn retained_command_sidecars_refuse_even_with_empty_product_declaration() {
+    let f = Fixture::new();
+    let references = f.references();
+    let sidecar = f.parent.join("restore.json.command-7.lock");
+    fs::write(&sidecar, b"retained original custody").unwrap();
+    assert!(matches!(
+        f.layout.release_restore(&f.lock, &Validator),
+        Err(RestoreReferenceReleaseError::RetiredCommandState)
+    ));
+    assert_eq!(fs::read(&sidecar).unwrap(), b"retained original custody");
+    assert_eq!(f.references(), references);
+    fs::remove_file(&sidecar).unwrap();
+    std::os::unix::fs::symlink("missing", &sidecar).unwrap();
+    assert!(matches!(
+        f.layout.release_restore(&f.lock, &Validator),
+        Err(RestoreReferenceReleaseError::RetiredCommandState)
+    ));
+    assert_eq!(f.references(), references);
+}
+
+#[test]
+fn journal_or_command_evidence_change_during_qualification_preserves_references() {
+    struct Changing(bool);
     impl RestoreTerminalEvidenceProvider for Changing {
         type Error = io::Error;
         fn qualify_terminal(
@@ -231,15 +164,31 @@ fn journal_change_during_product_qualification_preserves_references() {
             bytes: &[u8],
         ) -> Result<TerminalRestoreEvidence, Self::Error> {
             let evidence = Validator.qualify_terminal(journal, bytes)?;
-            fs::write(journal, b"changed after qualification")?;
+            if self.0 {
+                fs::write(journal, b"changed after qualification")?;
+            } else {
+                let mut sidecar = journal.as_os_str().to_os_string();
+                sidecar.push(".command-malformed");
+                fs::write(PathBuf::from(sidecar), b"retained during qualification")?;
+            }
             Ok(evidence)
         }
     }
-    let f = Fixture::new();
-    let references = f.references();
-    assert!(matches!(
-        f.layout.release_restore(&f.lock, &Changing),
-        Err(RestoreReferenceReleaseError::JournalChanged)
-    ));
-    assert_eq!(f.references(), references);
+    for change_journal in [true, false] {
+        let f = Fixture::new();
+        let references = f.references();
+        let result = f.layout.release_restore(&f.lock, &Changing(change_journal));
+        if change_journal {
+            assert!(matches!(
+                result,
+                Err(RestoreReferenceReleaseError::JournalChanged)
+            ));
+        } else {
+            assert!(matches!(
+                result,
+                Err(RestoreReferenceReleaseError::RetiredCommandState)
+            ));
+        }
+        assert_eq!(f.references(), references);
+    }
 }

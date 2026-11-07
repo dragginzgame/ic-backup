@@ -85,12 +85,12 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let mut downloads = DownloadJournalGuard::create(
         &source_layout,
         original.digest().hash(),
-        vec![DownloadArtifactRequest {
+        DownloadArtifactRequest {
             canister_id: TARGET.into(),
             snapshot_id: TOKEN.into(),
             snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
             snapshot_total_size_bytes: u64::MAX,
-        }],
+        },
     )
     .unwrap();
     let writer = downloads
@@ -126,7 +126,9 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     let mut attempts =
         AttemptJournalGuard::create(&upload_layout, upload_plan.attempt_authority(7).unwrap())
             .unwrap();
-    attempts.reserve_mutation().unwrap();
+    attempts
+        .reserve_planned_mutation(&upload_plan.digest())
+        .unwrap();
     let attempt_bytes = fs::read(attempts.path()).unwrap();
     let retained_attempt = attempts.record().unwrap().clone();
     let attempt =
@@ -160,7 +162,11 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);
     assert!(!attempts.record().unwrap().view().applied);
-    assert!(attempts.reserve_mutation().is_err());
+    assert!(
+        attempts
+            .reserve_planned_mutation(&upload_plan.digest())
+            .is_err()
+    );
 
     // The test declares an independently qualified destination; the passive reply supplied no permit.
     // The integration retains these exact source bytes; complete workflow source IO
@@ -182,7 +188,9 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
     create_operation_plan(&data_layout, &data_plan).unwrap();
     let mut data_attempts =
         AttemptJournalGuard::create(&data_layout, data_plan.attempt_authority(7).unwrap()).unwrap();
-    data_attempts.reserve_mutation().unwrap();
+    data_attempts
+        .reserve_planned_mutation(&data_plan.digest())
+        .unwrap();
     let data_attempt_bytes = fs::read(data_attempts.path()).unwrap();
     let record = data_attempts.record().unwrap();
     let attempt = IcSnapshotUploadAttempt::new(&data_plan, 7, record, &data).unwrap();
@@ -253,7 +261,11 @@ fn exact_source_new_destination_and_independent_pending_attempts_survive_reopen(
         data_attempts.record().unwrap().view().pending_mutation,
         Some(1)
     );
-    assert!(data_attempts.reserve_mutation().is_err());
+    assert!(
+        data_attempts
+            .reserve_planned_mutation(&data_plan.digest())
+            .is_err()
+    );
     data_attempts = upload_data_observation::retained_readback(
         &retained_data,
         &data,

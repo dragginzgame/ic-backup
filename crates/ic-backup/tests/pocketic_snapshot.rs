@@ -38,17 +38,11 @@ async fn original_workflow_runner_replays_retained_prefix_before_data_stage() {
 }
 
 #[tokio::test]
-async fn planned_download_uses_one_original_stage_and_publishes_complete_artifact() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::None).await;
-}
-#[tokio::test]
-async fn planned_download_lost_reply_retains_pending_stage_and_partial_bytes() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Lost(1)).await;
-}
-#[tokio::test]
 async fn planned_download_malformed_reply_retains_pending_stage_without_followup() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Malformed(1))
-        .await;
+    pic_journey::planned_runner::run_complete(
+        pic_journey::planned_download::ReadFailure::Malformed(1),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -104,7 +98,8 @@ async fn lost_load_and_status_replies_keep_pending_reservations_and_stop_before_
 
 #[tokio::test]
 async fn planned_download_lost_first_reply_retains_created_bytes_without_followup() {
-    pic_journey::planned_download::run(pic_journey::planned_download::ReadFailure::Lost(0)).await;
+    pic_journey::planned_runner::run_complete(pic_journey::planned_download::ReadFailure::Lost(0))
+        .await;
 }
 
 #[tokio::test]

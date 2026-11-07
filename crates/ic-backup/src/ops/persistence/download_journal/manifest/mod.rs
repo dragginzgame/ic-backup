@@ -69,7 +69,7 @@ impl DownloadJournalGuard<'_> {
         self.check_usable()?;
         let path = self.layout.root().join(MANIFEST_FILE);
         let _lock = JournalLock::acquire(&path)?;
-        self.verify_durable_artifacts(plan)?;
+        self.verify_manifest_source(plan)?;
         let bytes = encode_json(self.record()?, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         writer(&path, &bytes)?;
         Ok(self.record()?.digest())

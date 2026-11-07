@@ -10,7 +10,7 @@ use std::path::Path;
 
 /// Result of publishing a temporary artifact or recovering its published tree.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ArtifactCommitOutcome {
+pub(crate) enum ArtifactCommitOutcome {
     /// The verified staging tree was published.
     Published,
     /// The verified canonical tree was adopted after a lost publication reply.
@@ -24,7 +24,7 @@ pub enum ArtifactCommitOutcome {
 ///
 /// # Errors
 /// Rejects conflicting paths, changed bytes, unsafe entries and IO failures.
-pub fn commit_artifact_directory(
+pub(crate) fn commit_artifact_directory(
     temporary: &Path,
     canonical: &Path,
     expected_checksum: &str,

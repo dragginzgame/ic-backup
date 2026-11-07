@@ -124,9 +124,11 @@ fn prepare_original_evidence(
         .unwrap();
     let references = source_layout.restore_references().unwrap();
     let mut journal = AttemptJournalGuard::create(&layout, authority).unwrap();
-    let mutation = journal.reserve_mutation().unwrap();
+    let mutation = journal
+        .reserve_planned_mutation(&original.digest())
+        .unwrap();
     journal
-        .reserve_observation(mutation, hash("bc").hash())
+        .reserve_planned_observation(&original.digest(), mutation, hash("bc").hash())
         .unwrap();
     let journal_record = journal.record().unwrap().clone();
     let request =

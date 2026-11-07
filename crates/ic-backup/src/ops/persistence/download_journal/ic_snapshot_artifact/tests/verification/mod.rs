@@ -191,7 +191,10 @@ fn changed_unsafe_missing_extra_and_unbounded_children_reject_without_repair() {
             ),
         }
         assert_eq!(fs::read(guard.path()).unwrap(), journal_bytes);
-        assert!(guard.record().unwrap().resume_view().is_complete);
+        assert_eq!(
+            guard.record().unwrap().artifacts()[0].state(),
+            crate::model::download_journal::ArtifactStateRecord::Durable
+        );
         assert!(directory.exists());
     }
 }

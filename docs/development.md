@@ -246,8 +246,8 @@ prove application safety or establish that a remote operation succeeded.
 ## Product contracts and ownership
 
 Read [implementation contracts](implementation-contracts.md) before product changes.
-The [record/API boundary](extraction-boundary.md) owns detailed limits, evidence
-requirements and recovery semantics. [Agent transport](agent-transport.md) describes
+The [record/API boundary](extraction-boundary.md) indexes the exact specifications;
+implementation contracts own effect, evidence and recovery obligations. [Agent transport](agent-transport.md) describes
 configuration and single-update submission. The [current handoff](status/current.md)
 records source-specific qualification and outstanding integration limits;
 [release notes](../CHANGELOG.md) own historical API removals and migration actions.
@@ -482,12 +482,10 @@ commands or ignored failures cannot appear to validate a release or formatting.
 They use locked dependencies and crates.io. Cargo checks package cleanliness and
 publication eligibility; receipt/tag checks belong to repository release commands.
 
-Native custody regressions require Python 3 on the selected Unix host. They use
-real inherited descriptors and acknowledged owner/direct-child/descendant exit
-with bounded fixture waits. The production library delegates owned child descriptor
-setup and custody to published Host Process and contains no Rust unsafe code.
-It does not invoke Python; those commands are local test fixtures. A transport
-still needs its own output/deadline/retry and inherited-descriptor qualification.
+Native persistence regressions use acknowledged process-death barriers supplied
+by development-only Host Process. Production Core has no process dependency or
+external-command custody adapter. Retained command-backed restores require their
+original qualified integration; current terminal release admits in-process execution.
 
 The Makefile exports this checkout's absolute `target/` directory. Never point
 it at Canic's target or add Cargo patches to sibling checkouts. Before editing

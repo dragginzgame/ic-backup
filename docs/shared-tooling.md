@@ -2,11 +2,13 @@
 
 ## What this adoption means
 
-Shared Tooling **0.31.3**, committed revision
-`d2a2f395bc06b22cb3f18afc7d2978a150726360`, owns the reviewed engineering
+Shared Tooling **0.31.5**, committed revision
+`b2026a118e38de4af1555c527af327cb604eacdf`, owns the reviewed engineering
 baseline and common setup, formatting, hook, validation and release mechanisms.
-The canonical refresh from `7431394` selects **160 payloads**: three updates and
-157 unchanged, with no additions or retirements. It adopts Bash 3.2 checksum
+The canonical refresh from `d2a2f39` selects **160 payloads**: three updates and
+157 unchanged, with no additions or retirements. It closes release-batch companion
+annotations in the release and engineering guides; executable payloads are unchanged.
+Earlier 0.31.3 adoption supplies the consumer behavior below. It adopts Bash 3.2 checksum
 parsing, missing-scratch diagnostics and the rule requiring output owners to
 create parents on fresh runs. Backup's four override-aware validation scripts now
 create their selected scratch parent. The 0.31.2 release-editor repair changes

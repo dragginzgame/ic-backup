@@ -12,6 +12,7 @@ use ic_backup::{
     model::{
         artifacts::{ArtifactChecksumRecord, ChecksumError},
         download_journal::DownloadArtifactRequest,
+        ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         operation_plan::OperationPlanRecord,
         restore_safety::{
             RestoreFenceBindingRecord, RestoreSafetyLaneRecord, RestoreSafetyRequirementRecord,
@@ -19,7 +20,7 @@ use ic_backup::{
         },
     },
     ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, DownloadIntegrityError, DownloadJournalGuard,
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, IcSnapshotArtifactError,
         create_operation_plan, create_restore_safety_requirement, read_restore_safety_requirement,
     },
 };
@@ -35,11 +36,10 @@ fn source_plan() -> OperationPlanRecord {
         "inventory":{"version":1,"targets":[
             {"canister_id":ROOT,"parent_canister_id":null,"role":null,"module_hash":null},
             {"canister_id":APP,"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[ROOT,APP],
-        "graph":{"version":1,"nodes":[{"operation_sequence":0,"depends_on":[]},{"operation_sequence":7,"depends_on":[]}]},
-        "operations":[{"operation_sequence":0,"target":ROOT,"request":"ef".repeat(32),"budget":{"mutations":1,"observations":1}},
-            {"operation_sequence":7,"target":APP,"request":"01".repeat(32),"budget":{"mutations":1,"observations":1}}],
-        "budget":{"mutations":2,"observations":2}
+        "selected_targets":[APP],
+        "graph":{"version":1,"nodes":[{"operation_sequence":7,"depends_on":[]}]},
+        "operations":[{"operation_sequence":7,"target":APP,"request":"01".repeat(32),"budget":{"mutations":1,"observations":1}}],
+        "budget":{"mutations":1,"observations":1}
     })).expect("original immutable source plan")
 }
 
@@ -75,6 +75,20 @@ fn retain_requirement(
     requirement
 }
 
+// This native fixture independently selected the raw IC ID in finish_ic_artifact.
+// Never infer it from the journal's opaque local token.
+fn verify_ic_source(
+    journal: &DownloadJournalGuard<'_>,
+    plan: &OperationPlanRecord,
+) -> Result<ArtifactChecksumRecord, IcSnapshotArtifactError> {
+    let entry = &journal.record().unwrap().artifacts()[0];
+    let root = journal.path().parent().unwrap().to_path_buf();
+    let raw = fs::read(root.join(entry.artifact_path()).join("metadata.candid")).unwrap();
+    let request = IcSnapshotMetadataRequest::new(APP, &[0, 255, 17]).unwrap();
+    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
+    journal.verify_ic_snapshot_artifact(plan, entry.snapshot_id(), &metadata)
+}
+
 // Test-only composition of current public owners, with before/after retained admission.
 // Applications still own stable bytes, authentic IC evidence and actual subset safety.
 fn verify_source(
@@ -102,18 +116,9 @@ fn verify_source(
             .unwrap();
     };
     admit();
-    let view = journal.verify_durable_artifacts(source).unwrap();
+    verify_ic_source(journal, source).unwrap();
     assert_eq!(restore.selected_targets(), [APP]);
     assert_ne!(restore.context().caller(), source.context().caller());
-    assert_eq!(view.artifacts().len(), 2);
-    for entry in view.artifacts() {
-        assert_eq!(
-            entry.artifact().snapshot_id(),
-            format!("snapshot-{}", entry.artifact().canister_id())
-        );
-        assert_eq!(entry.artifact().snapshot_taken_at_timestamp(), u64::MAX);
-        assert_eq!(entry.artifact().snapshot_total_size_bytes(), u64::MAX);
-    }
     admit();
 }
 
@@ -138,18 +143,16 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
     let mut journal = DownloadJournalGuard::create(
         &source_layout,
         source.digest().hash(),
-        [ROOT, APP]
-            .into_iter()
-            .map(|target| DownloadArtifactRequest {
-                canister_id: target.into(),
-                snapshot_id: format!("snapshot-{target}"),
-                snapshot_taken_at_timestamp: u64::MAX,
-                snapshot_total_size_bytes: u64::MAX,
-            })
-            .collect(),
+        DownloadArtifactRequest {
+            canister_id: APP.into(),
+            snapshot_id: format!("snapshot-{APP}"),
+            snapshot_taken_at_timestamp: u64::MAX,
+            snapshot_total_size_bytes: u64::MAX,
+        },
     )
     .unwrap();
-    for target in [ROOT, APP] {
+    {
+        let target = APP;
         let snapshot = format!("snapshot-{target}");
         support::finish_ic_artifact(&mut journal, target, &snapshot, target.as_bytes());
     }
@@ -157,9 +160,11 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
     let requirement = retain_requirement(&layout, &source_layout, &restore, &source, manifest);
     let mut attempts =
         AttemptJournalGuard::create(&layout, restore.attempt_authority(7).unwrap()).unwrap();
-    let mutation = attempts.reserve_mutation().unwrap();
+    let mutation = attempts
+        .reserve_planned_mutation(&restore.digest())
+        .unwrap();
     let observation = attempts
-        .reserve_observation(mutation, &"02".repeat(32))
+        .reserve_planned_observation(&restore.digest(), mutation, &"02".repeat(32))
         .unwrap();
     let spent = attempts.record().unwrap().view();
     assert_eq!(spent.pending_mutation, Some(mutation));
@@ -192,22 +197,22 @@ fn fresh_verification_preserves_pending_spending_and_restore_references() {
         &journal,
         &requirement,
     );
-    // ROOT is outside the restore subset; the complete source still must be checked.
-    let published = source_root.join(format!("artifacts/{ROOT}/wasm-module.bin"));
-    fs::write(&published, b"changed published bytes").unwrap();
+    // The original single-artifact source must still be checked after manifest replay.
+    let published = source_root.join(format!("artifacts/{APP}/wasm-module.bin"));
+    fs::write(&published, vec![b'x'; APP.len()]).unwrap();
     journal
         .read_download_manifest(&source, requirement.source_artifacts())
         .unwrap();
     assert!(matches!(
-        journal.verify_durable_artifacts(&source),
-        Err(DownloadIntegrityError::Checksum(
+        verify_ic_source(&journal, &source),
+        Err(IcSnapshotArtifactError::Checksum(
             ChecksumError::ChecksumMismatch { .. }
         ))
     ));
     for (name, bytes) in names.iter().zip(&original) {
         assert_eq!(&fs::read(root.join(name)).unwrap(), bytes);
     }
-    fs::write(&published, ROOT.as_bytes()).unwrap();
+    fs::write(&published, APP.as_bytes()).unwrap();
     drop(attempts);
     drop(journal);
     drop(layout);

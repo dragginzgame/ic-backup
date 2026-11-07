@@ -10,6 +10,7 @@ use ic_backup::{
 use std::fs;
 
 pub(crate) struct PendingObservation {
+    intent: ic_backup::model::artifacts::ArtifactChecksumRecord,
     mutation: u32,
     observation: u32,
     view: AttemptJournalView,
@@ -34,9 +35,12 @@ impl PendingObservation {
         let references = layout.restore_references().unwrap();
         let mut journal =
             AttemptJournalGuard::create(layout, plan.attempt_authority(7).unwrap()).unwrap();
-        let mutation = journal.reserve_mutation().unwrap();
-        let observation = journal.reserve_observation(mutation, request).unwrap();
+        let mutation = journal.reserve_planned_mutation(&plan.digest()).unwrap();
+        let observation = journal
+            .reserve_planned_observation(&plan.digest(), mutation, request)
+            .unwrap();
         let original = Self {
+            intent: plan.digest(),
             mutation,
             observation,
             view: journal.record().unwrap().view(),
@@ -64,8 +68,12 @@ impl PendingObservation {
             ),
             (0, 0)
         );
-        assert!(journal.reserve_mutation().is_err());
-        assert!(journal.reserve_observation(self.mutation, request).is_err());
+        assert!(journal.reserve_planned_mutation(&self.intent).is_err());
+        assert!(
+            journal
+                .reserve_planned_observation(&self.intent, self.mutation, request)
+                .is_err()
+        );
         assert_eq!(fs::read(journal.path()).unwrap(), self.journal_bytes);
         assert_eq!(
             fs::read(layout.root().join("operation-plan.json")).unwrap(),

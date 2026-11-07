@@ -8,11 +8,14 @@ use crate::model::{
         ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
         ExecutionWorkflowRecord,
     },
+    ic_snapshot_data::IcSnapshotDataError,
+    ic_snapshot_upload::IcSnapshotUploadError,
     operation_plan::{
         OperationPlanError, OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord,
         PlannedOperationRecord, PlannedOperationRequest,
     },
 };
+use thiserror::Error;
 
 /// Original workflow edge and exact learned evidence shared by data-stage plans.
 pub(crate) struct LearnedDataStage<'a> {
@@ -26,10 +29,10 @@ impl LearnedDataStage<'_> {
         &self,
         binding: &ExecutionStageBindingRecord,
         plan: &OperationPlanRecord,
-    ) -> Result<(), LearnedDataStageError> {
+    ) -> Result<(), SnapshotDataPlanningError> {
         binding.validate(self.workflow, plan)?;
         if !binding.has_learned_evidence(self.sequence, &self.evidence) {
-            return Err(LearnedDataStageError::Mismatch);
+            return Err(SnapshotDataPlanningError::OriginalMismatch);
         }
         Ok(())
     }
@@ -41,7 +44,7 @@ impl LearnedDataStage<'_> {
         source_plan: &OperationPlanRecord,
         source_request: &str,
         predecessors: Vec<ExecutionStagePredecessorRecord>,
-    ) -> Result<ExecutionStageBindingRecord, LearnedDataStageError> {
+    ) -> Result<ExecutionStageBindingRecord, SnapshotDataPlanningError> {
         source_binding.validate(self.workflow, source_plan)?;
         if !source_binding.matches_learned_predecessor(
             source_plan,
@@ -49,7 +52,7 @@ impl LearnedDataStage<'_> {
             &self.evidence,
             &predecessors,
         ) {
-            return Err(LearnedDataStageError::Mismatch);
+            return Err(SnapshotDataPlanningError::OriginalMismatch);
         }
         Ok(ExecutionStageBindingRecord::new(
             self.workflow,
@@ -60,23 +63,12 @@ impl LearnedDataStage<'_> {
     }
 }
 
-// Preserve structural workflow failures separately from learned-evidence mismatch.
-pub(crate) enum LearnedDataStageError {
-    Workflow(ExecutionWorkflowError),
-    Mismatch,
-}
-impl From<ExecutionWorkflowError> for LearnedDataStageError {
-    fn from(error: ExecutionWorkflowError) -> Self {
-        Self::Workflow(error)
-    }
-}
-
 /// Build one sequential, single-update operation per original ordered request digest.
 pub(crate) fn build(
     original: &OperationPlanRecord,
     stage: &PlannedOperationRecord,
     requests: impl ExactSizeIterator<Item = ArtifactChecksumRecord>,
-) -> Result<Option<OperationPlanRecord>, DataStagePlanError> {
+) -> Result<Option<OperationPlanRecord>, SnapshotDataPlanningError> {
     if requests.len() == 0 {
         return Ok(None);
     }
@@ -84,7 +76,7 @@ pub(crate) fn build(
     let mut operations = Vec::with_capacity(requests.len());
     for (index, request) in requests.enumerate() {
         let operation_sequence =
-            u64::try_from(index).map_err(|_| DataStagePlanError::CountOverflow)?;
+            u64::try_from(index).map_err(|_| SnapshotDataPlanningError::CountOverflow)?;
         nodes.push(EffectNodeRecord::new(EffectNodeRequest {
             operation_sequence,
             depends_on: operation_sequence.checked_sub(1).into_iter().collect(),
@@ -106,27 +98,46 @@ pub(crate) fn build(
     })?))
 }
 
-pub(crate) enum DataStagePlanError {
+/// Pure rejection of an original metadata-derived download or upload data stage.
+/// No error resets allocation, creates a stage or grants transfer/retry authority.
+#[derive(Debug, Error)]
+pub enum SnapshotDataPlanningError {
+    /// Per-call data chunk size must be in 1..=1 MiB.
+    #[error("invalid snapshot data chunk size")]
+    InvalidChunkSize,
+    /// Declared extent count overflows nat64 or host indexing.
+    #[error("snapshot data request count overflow")]
     CountOverflow,
-    Graph(EffectGraphError),
-    Plan(OperationPlanError),
-    Budget(AttemptJournalRecordError),
-}
-
-impl From<EffectGraphError> for DataStagePlanError {
-    fn from(error: EffectGraphError) -> Self {
-        Self::Graph(error)
-    }
-}
-
-impl From<OperationPlanError> for DataStagePlanError {
-    fn from(error: OperationPlanError) -> Self {
-        Self::Plan(error)
-    }
-}
-
-impl From<AttemptJournalRecordError> for DataStagePlanError {
-    fn from(error: AttemptJournalRecordError) -> Self {
-        Self::Budget(error)
-    }
+    /// Complete data calls exceed the stage's original mutation allocation.
+    #[error("snapshot data needs {required} updates; original allocation is {original}")]
+    InsufficientAllowance {
+        /// Complete required data-call count.
+        required: u64,
+        /// Original stage mutation ceiling, excluding workflow headroom.
+        original: u32,
+    },
+    /// Target, original source request, allocation or learned evidence differs.
+    #[error("snapshot data originals differ")]
+    OriginalMismatch,
+    /// Empty data has no placeholder child plan or binding.
+    #[error("snapshot data has no operations to bind")]
+    NoDataOperations,
+    /// Original operation-plan admission failed.
+    #[error(transparent)]
+    Plan(#[from] OperationPlanError),
+    /// Explicit dependency-graph admission failed.
+    #[error(transparent)]
+    Graph(#[from] EffectGraphError),
+    /// Original workflow or learned stage binding failed.
+    #[error(transparent)]
+    Workflow(#[from] ExecutionWorkflowError),
+    /// Metadata-bound read request admission failed.
+    #[error(transparent)]
+    Data(#[from] IcSnapshotDataError),
+    /// Source/destination upload request admission failed.
+    #[error(transparent)]
+    Upload(#[from] IcSnapshotUploadError),
+    /// Original per-operation attempt admission failed.
+    #[error(transparent)]
+    Budget(#[from] AttemptJournalRecordError),
 }

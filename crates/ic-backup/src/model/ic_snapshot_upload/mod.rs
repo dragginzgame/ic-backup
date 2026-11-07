@@ -10,7 +10,7 @@ mod reply;
 pub(crate) use attempt::original_authority;
 pub use attempt::{IcSnapshotUploadAttempt, IcSnapshotUploadAttemptError};
 pub(crate) use plan::DataUploadPreparation;
-pub use plan::{IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError};
+pub use plan::IcSnapshotDataUploadPlan;
 pub use reply::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind};
 
 use super::{

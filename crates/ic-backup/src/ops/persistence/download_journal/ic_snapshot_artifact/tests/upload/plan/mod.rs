@@ -1,6 +1,6 @@
 //! Real retained-source IO and original journal failures; no IC effect simulation.
 use super::*;
-use crate::model::ic_update_response::IcUpdateResponseInput;
+use crate::model::data_stage_plan::SnapshotDataPlanningError;
 use crate::tests::support::ready::ready;
 use crate::{
     model::{
@@ -10,8 +10,7 @@ use crate::{
         },
         ic_mutation::IcMutationAcknowledgement,
         ic_snapshot_upload::{
-            IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadAttempt,
-            IcSnapshotUploadReply,
+            IcSnapshotDataUploadPlan, IcSnapshotUploadAttempt, IcSnapshotUploadReply,
         },
     },
     ops::persistence::{
@@ -58,7 +57,7 @@ fn insufficient_allocation_refuses_before_any_source_verification_or_journal_cha
             assert!(matches!(
                 source.prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &reply, 4),
                 Err(IcSnapshotDataUploadPreparationError::Planning(
-                    IcSnapshotDataUploadPlanningError::InsufficientAllowance {
+                    SnapshotDataPlanningError::InsufficientAllowance {
                         required: 6,
                         original: 1
                     }

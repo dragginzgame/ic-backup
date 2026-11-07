@@ -101,7 +101,7 @@ fn exact_budget_thresholds_and_extreme_nat64_reject_before_request_allocation() 
     let too_small = workflow(1);
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&too_small, 7, &metadata, 4),
-        Err(IcSnapshotDownloadPlanningError::InsufficientAllowance {
+        Err(SnapshotDataPlanningError::InsufficientAllowance {
             required: 2,
             original: 1
         })
@@ -109,7 +109,7 @@ fn exact_budget_thresholds_and_extreme_nat64_reject_before_request_allocation() 
     for chunk in [0, 1024 * 1024 + 1, u64::MAX] {
         assert!(matches!(
             IcSnapshotDownloadPlan::new(&admitted, 7, &metadata, chunk),
-            Err(IcSnapshotDownloadPlanningError::InvalidChunkSize)
+            Err(SnapshotDataPlanningError::InvalidChunkSize)
         ));
     }
     values.wasm_module_size = u64::MAX;
@@ -118,11 +118,11 @@ fn exact_budget_thresholds_and_extreme_nat64_reject_before_request_allocation() 
         IcSnapshotMetadataReply::decode(&request, &contract::encode_one(values).unwrap()).unwrap();
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&admitted, 7, &huge, 1),
-        Err(IcSnapshotDownloadPlanningError::CountOverflow)
+        Err(SnapshotDataPlanningError::CountOverflow)
     ));
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&admitted, 7, &huge, 1024 * 1024),
-        Err(IcSnapshotDownloadPlanningError::InsufficientAllowance { .. })
+        Err(SnapshotDataPlanningError::InsufficientAllowance { .. })
     ));
 }
 
@@ -144,7 +144,7 @@ fn empty_regions_need_no_placeholder_but_known_empty_chunks_still_need_reads() {
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &original, vec![]).unwrap();
     assert!(matches!(
         empty.bind(&binding, &original, vec![predecessor(&binding, &metadata)]),
-        Err(IcSnapshotDownloadPlanningError::NoDataReads)
+        Err(SnapshotDataPlanningError::NoDataOperations)
     ));
     values.wasm_chunk_store.push(ChunkHash {
         hash: sha2::Digest::finalize(sha2::Sha256::new()).to_vec(),
@@ -178,7 +178,7 @@ fn changed_metadata_input_or_source_request_cannot_bind_the_same_download() {
     );
     assert!(matches!(
         download.bind(&binding, &original, vec![wrong]),
-        Err(IcSnapshotDownloadPlanningError::MetadataMismatch)
+        Err(SnapshotDataPlanningError::OriginalMismatch)
     ));
     let other_request = IcSnapshotMetadataRequest::new(request.target(), &[9]).unwrap();
     let other_plan = source_plan(&other_request);
@@ -190,7 +190,7 @@ fn changed_metadata_input_or_source_request_cannot_bind_the_same_download() {
             &other_plan,
             vec![predecessor(&other_binding, &metadata)]
         ),
-        Err(IcSnapshotDownloadPlanningError::MetadataMismatch)
+        Err(SnapshotDataPlanningError::OriginalMismatch)
     ));
 }
 
@@ -202,19 +202,19 @@ fn wrong_target_unknown_stage_and_missing_original_predecessor_reject() {
     let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&workflow, 99, &metadata, 1024 * 1024),
-        Err(IcSnapshotDownloadPlanningError::Plan(_))
+        Err(SnapshotDataPlanningError::Plan(_))
     ));
     let other_request = IcSnapshotMetadataRequest::new("2vxsx-fae", &[0, 255, 17]).unwrap();
     let other_metadata = IcSnapshotMetadataReply::decode(&other_request, &raw).unwrap();
     assert!(matches!(
         IcSnapshotDownloadPlan::new(&workflow, 7, &other_metadata, 1024 * 1024),
-        Err(IcSnapshotDownloadPlanningError::MetadataMismatch)
+        Err(SnapshotDataPlanningError::OriginalMismatch)
     ));
     let download = IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 1024 * 1024).unwrap();
     let original = source_plan(&request);
     let binding = ExecutionStageBindingRecord::new(&workflow, 0, &original, vec![]).unwrap();
     assert!(matches!(
         download.bind(&binding, &original, vec![]),
-        Err(IcSnapshotDownloadPlanningError::MetadataMismatch)
+        Err(SnapshotDataPlanningError::OriginalMismatch)
     ));
 }

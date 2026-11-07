@@ -24,8 +24,9 @@ use std::{
 fn prepare() -> (PathBuf, BackupLayoutGuard, OperationPlanRecord) {
     let root = temp_dir("ic-backup-download-manifest");
     let mut value = serde_json::to_value(plan()).unwrap();
-    value["selected_targets"] = json!(["aaaaa-aa", crate::tests::support::operation_plan::APP]);
+    value["selected_targets"] = json!(["aaaaa-aa"]);
     value["operations"][0]["target"] = json!("aaaaa-aa");
+    value["operations"][1]["target"] = json!("aaaaa-aa");
     let plan: OperationPlanRecord = serde_json::from_value(value).unwrap();
     for id in plan.selected_targets() {
         let staging = root.join(format!("artifacts/{id}.tmp"));
@@ -37,21 +38,17 @@ fn prepare() -> (PathBuf, BackupLayoutGuard, OperationPlanRecord) {
     let mut journal = DownloadJournalGuard::create(
         &layout,
         plan.digest().hash(),
-        plan.selected_targets()
-            .iter()
-            .map(|id| DownloadArtifactRequest {
-                canister_id: id.clone(),
-                snapshot_id: format!("Snap-{id}"),
-                snapshot_taken_at_timestamp: u64::MAX,
-                snapshot_total_size_bytes: u64::MAX,
-            })
-            .collect(),
+        DownloadArtifactRequest {
+            canister_id: "aaaaa-aa".into(),
+            snapshot_id: "Snap-aaaaa-aa".into(),
+            snapshot_taken_at_timestamp: u64::MAX,
+            snapshot_total_size_bytes: u64::MAX,
+        },
     )
     .unwrap();
     for id in plan.selected_targets() {
         let snapshot = format!("Snap-{id}");
-        super::super::tests::retain_downloaded_fixture(&mut journal, id, &snapshot).unwrap();
-        journal.verify_artifact(id, &snapshot).unwrap();
+        super::super::tests::retain_verified_fixture(&mut journal, id, &snapshot).unwrap();
         journal.finalize_artifact(id, &snapshot).unwrap();
     }
     drop(journal);

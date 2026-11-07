@@ -1,20 +1,14 @@
 //! Bounded metadata-derived exact download plans; no calls, spending or transfer proof.
 
 use crate::model::{
-    attempt_journal::AttemptJournalRecordError,
-    data_stage_plan::{self, DataStagePlanError, LearnedDataStage, LearnedDataStageError},
-    effect_graph::EffectGraphError,
+    data_stage_plan::{self, LearnedDataStage, SnapshotDataPlanningError},
     execution_workflow::{
-        ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
-        ExecutionWorkflowRecord,
+        ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
     },
-    ic_snapshot_data::{
-        ExtentPlanningError, IcSnapshotDataError, IcSnapshotDataRequest, planned_extents,
-    },
+    ic_snapshot_data::{IcSnapshotDataRequest, planned_extents},
     ic_snapshot_metadata::IcSnapshotMetadataReply,
-    operation_plan::{OperationPlanError, OperationPlanRecord},
+    operation_plan::OperationPlanRecord,
 };
-use thiserror::Error;
 
 /// Exact finite data requests and their original allocation-bound ordinary child plan.
 ///
@@ -51,13 +45,12 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
         sequence: u64,
         metadata: &'metadata IcSnapshotMetadataReply<'metadata>,
         chunk_bytes: u64,
-    ) -> Result<Self, IcSnapshotDownloadPlanningError> {
+    ) -> Result<Self, SnapshotDataPlanningError> {
         let stage = workflow.stage(sequence)?;
         if stage.target() != metadata.request().target() {
-            return Err(IcSnapshotDownloadPlanningError::MetadataMismatch);
+            return Err(SnapshotDataPlanningError::OriginalMismatch);
         }
-        let kinds = planned_extents(metadata, chunk_bytes, stage.budget().mutations())
-            .map_err(IcSnapshotDownloadPlanningError::from)?;
+        let kinds = planned_extents(metadata, chunk_bytes, stage.budget().mutations())?;
         let requests = kinds
             .into_iter()
             .map(|kind| IcSnapshotDataRequest::new(metadata, kind))
@@ -103,11 +96,11 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
     pub(crate) fn validate_binding(
         &self,
         binding: &ExecutionStageBindingRecord,
-    ) -> Result<(), IcSnapshotDownloadPlanningError> {
+    ) -> Result<(), SnapshotDataPlanningError> {
         let plan = self
             .plan()
-            .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
-        Ok(self.binding.validate(binding, plan)?)
+            .ok_or(SnapshotDataPlanningError::NoDataOperations)?;
+        self.binding.validate(binding, plan)
     }
     /// Bind the exact original metadata stage and reply evidence before stage creation.
     ///
@@ -123,93 +116,19 @@ impl<'workflow, 'metadata> IcSnapshotDownloadPlan<'workflow, 'metadata> {
         metadata_binding: &ExecutionStageBindingRecord,
         metadata_plan: &OperationPlanRecord,
         predecessors: Vec<ExecutionStagePredecessorRecord>,
-    ) -> Result<ExecutionStageBindingRecord, IcSnapshotDownloadPlanningError> {
+    ) -> Result<ExecutionStageBindingRecord, SnapshotDataPlanningError> {
         let plan = self
             .plan()
-            .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
-        self.binding
-            .bind(
-                plan,
-                metadata_binding,
-                metadata_plan,
-                self.metadata.request().digest().hash(),
-                predecessors,
-            )
-            .map_err(Into::into)
-    }
-}
-
-/// Pure planning failure; no filesystem, provider, reservation or receipt changes.
-#[derive(Debug, Error)]
-pub enum IcSnapshotDownloadPlanningError {
-    /// Chunk size is outside the existing 1..=1 MiB request boundary.
-    #[error("invalid snapshot download chunk size")]
-    InvalidChunkSize,
-    /// Combined remote declared region counts cannot fit nat64.
-    #[error("snapshot download request count overflow")]
-    CountOverflow,
-    /// Original stage cannot pay for every exact required data request.
-    #[error("snapshot download needs {required} updates; original allocation is {original}")]
-    InsufficientAllowance {
-        /// Complete exact required update count.
-        required: u64,
-        /// Original stage mutation ceiling, excluding workflow headroom.
-        original: u32,
-    },
-    /// Target, original metadata stage/request or exact reply evidence changed.
-    #[error("snapshot download metadata differs from original stage")]
-    MetadataMismatch,
-    /// There is no data call to bind; no placeholder operation is created.
-    #[error("snapshot download has no data reads to bind")]
-    NoDataReads,
-    /// Canonical original plan or allocation rejected.
-    #[error(transparent)]
-    Plan(#[from] OperationPlanError),
-    /// Existing explicit graph owner rejected.
-    #[error(transparent)]
-    Graph(#[from] EffectGraphError),
-    /// Existing immutable stage owner rejected.
-    #[error(transparent)]
-    Workflow(#[from] ExecutionWorkflowError),
-    /// Existing exact metadata-bound data request owner rejected.
-    #[error(transparent)]
-    Data(#[from] IcSnapshotDataError),
-    /// Existing per-operation budget owner rejected.
-    #[error(transparent)]
-    Budget(#[from] AttemptJournalRecordError),
-}
-
-impl From<LearnedDataStageError> for IcSnapshotDownloadPlanningError {
-    fn from(error: LearnedDataStageError) -> Self {
-        match error {
-            LearnedDataStageError::Workflow(error) => Self::Workflow(error),
-            LearnedDataStageError::Mismatch => Self::MetadataMismatch,
-        }
+            .ok_or(SnapshotDataPlanningError::NoDataOperations)?;
+        self.binding.bind(
+            plan,
+            metadata_binding,
+            metadata_plan,
+            self.metadata.request().digest().hash(),
+            predecessors,
+        )
     }
 }
 
 #[cfg(test)]
 mod tests;
-
-impl From<ExtentPlanningError> for IcSnapshotDownloadPlanningError {
-    fn from(error: ExtentPlanningError) -> Self {
-        match error {
-            ExtentPlanningError::InvalidChunkSize => Self::InvalidChunkSize,
-            ExtentPlanningError::CountOverflow => Self::CountOverflow,
-            ExtentPlanningError::InsufficientAllowance { required, original } => {
-                Self::InsufficientAllowance { required, original }
-            }
-        }
-    }
-}
-
-impl From<DataStagePlanError> for IcSnapshotDownloadPlanningError {
-    fn from(error: DataStagePlanError) -> Self {
-        match error {
-            DataStagePlanError::CountOverflow => Self::CountOverflow,
-            DataStagePlanError::Graph(error) => Self::Graph(error),
-            DataStagePlanError::Plan(error) => Self::Plan(error),
-            DataStagePlanError::Budget(error) => Self::Budget(error),
-        }
-    }
-}

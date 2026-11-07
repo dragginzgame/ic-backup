@@ -35,9 +35,7 @@ const TOKEN: &str = "opaque-backend-token";
 const INTENT: &str = "abababababababababababababababababababababababababababababababab";
 
 fn values() -> ReadCanisterSnapshotMetadataResult {
-    let raw = crate::tests::support::ic_snapshot_metadata::raw("data-source");
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&raw, crate::tests::support::WIRE_ORACLE_LIMITS).unwrap();
+    let mut values = crate::tests::support::ic_snapshot_metadata::values("data-source");
     values.wasm_module_size = 5;
     values.wasm_memory_size = 3;
     values.stable_memory_size = 1;
@@ -58,12 +56,12 @@ fn journal<'a>(
     DownloadJournalGuard::create(
         layout,
         intent,
-        vec![DownloadArtifactRequest {
+        DownloadArtifactRequest {
             canister_id: TARGET.into(),
             snapshot_id: TOKEN.into(),
             snapshot_taken_at_timestamp: timestamp,
             snapshot_total_size_bytes: u64::MAX,
-        }],
+        },
     )
     .unwrap()
 }
@@ -199,7 +197,10 @@ fn interleaved_bytes_metadata_and_empty_chunks_publish_under_the_original_journa
             drop(journal);
             fs::rename(&canonical, root.join("retained-canonical")).unwrap();
             let journal = DownloadJournalGuard::open(layout, INTENT).unwrap();
-            assert!(journal.record().unwrap().resume_view().is_complete);
+            assert_eq!(
+                journal.record().unwrap().artifacts()[0].state(),
+                crate::model::download_journal::ArtifactStateRecord::Durable
+            );
             drop(journal);
         },
     );
@@ -624,7 +625,10 @@ fn closing_publication_custody_drift_rejects_and_retains_the_completed_local_evi
         );
         drop(journal);
         let reopened = DownloadJournalGuard::open(&layout, INTENT).unwrap();
-        assert!(reopened.record().unwrap().resume_view().is_complete);
+        assert_eq!(
+            reopened.record().unwrap().artifacts()[0].state(),
+            crate::model::download_journal::ArtifactStateRecord::Durable
+        );
         drop(reopened);
         drop(layout);
         fs::remove_dir_all(root).unwrap();

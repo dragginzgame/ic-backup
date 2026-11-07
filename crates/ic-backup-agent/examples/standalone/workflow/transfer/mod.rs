@@ -157,12 +157,12 @@ impl<A: Application> Driver<'_, A> {
         let mut journal = DownloadJournalGuard::create(
             layout,
             stage.plan().digest().hash(),
-            vec![DownloadArtifactRequest {
+            DownloadArtifactRequest {
                 canister_id: self.config.target.clone(),
                 snapshot_id: TOKEN.into(),
                 snapshot_taken_at_timestamp: snapshot.taken_at_timestamp(),
                 snapshot_total_size_bytes: snapshot.total_size(),
-            }],
+            },
         )
         .map_err(error)?;
         let writer = journal

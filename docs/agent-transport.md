@@ -9,7 +9,7 @@ Host FS's `NamedWriteError<std::io::Error>` directly. Consumers matching that va
 align direct Host FS imports with [the workspace selection](../Cargo.toml).
 
 The ICP transport/probe and older transport/error surfaces are retired. Original
-journals and historical evidence remain retained; [the extraction boundary](extraction-boundary.md#direct-agent-transport-hard-cut)
+journals and historical evidence remain retained; [the extraction boundary](implementation-contracts.md#agent-transport-and-qualification)
 records that cut. Testkit owns simulator selection/admission through
 [the setup contract](development.md); shared IC executables supply no product backend.
 

@@ -162,9 +162,13 @@ fn retained_case(
     }
     let authority = plan.attempt_authority(42).unwrap();
     let mut journal = AttemptJournalGuard::create(&layout, authority.clone()).unwrap();
-    let mutation_attempt = journal.reserve_mutation().unwrap();
+    let mutation_attempt = journal.reserve_planned_mutation(&plan.digest()).unwrap();
     let observation_attempt = journal
-        .reserve_observation(mutation_attempt, observation.digest().hash())
+        .reserve_planned_observation(
+            &plan.digest(),
+            mutation_attempt,
+            observation.digest().hash(),
+        )
         .unwrap();
     let journal_bytes = fs::read(journal.path()).unwrap();
     let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();
@@ -246,10 +250,15 @@ fn assert_reopened(
         // Local late-reply association makes no provider call and writes no receipt.
         validate_response(&request, journal.record().unwrap(), response).unwrap();
     }
-    assert!(journal.reserve_mutation().is_err());
     assert!(
         journal
-            .reserve_observation(
+            .reserve_planned_mutation(&original.plan().digest())
+            .is_err()
+    );
+    assert!(
+        journal
+            .reserve_planned_observation(
+                &original.plan().digest(),
                 original.mutation_attempt(),
                 original.payload().digest().hash()
             )
@@ -397,10 +406,15 @@ fn record_receipt_and_reopen(
         progress.applied,
         outcome == ObservationOutcomeRecord::Applied
     );
-    assert!(journal.reserve_mutation().is_err());
     assert!(
         journal
-            .reserve_observation(
+            .reserve_planned_mutation(&request.plan().digest())
+            .is_err()
+    );
+    assert!(
+        journal
+            .reserve_planned_observation(
+                &request.plan().digest(),
                 request.mutation_attempt(),
                 request.payload().digest().hash()
             )

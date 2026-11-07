@@ -1,6 +1,6 @@
 //! Common exact identity and explicit new-candidate checks for inventory settlements.
 
-use crate::model::inventory_settlement::IcInventoryAttribution;
+use crate::model::inventory_settlement::{IcInventoryAttribution, IcInventorySettlement};
 
 use super::{
     settlement_identity::{SettlementIdentity, SettlementIdentityMismatch},
@@ -17,6 +17,22 @@ pub(crate) struct InventorySettlementIdentity<'a> {
     pub baseline: &'a ArtifactChecksumRecord,
     pub inventory: &'a ArtifactChecksumRecord,
     pub observation_evidence: &'a ArtifactChecksumRecord,
+}
+
+impl<'a> From<&'a IcInventorySettlement> for InventorySettlementIdentity<'a> {
+    fn from(settlement: &'a IcInventorySettlement) -> Self {
+        Self {
+            operation: SettlementIdentity {
+                authority: &settlement.authority,
+                mutation_attempt: settlement.mutation_attempt,
+                observation_attempt: settlement.observation_attempt,
+                challenge: &settlement.challenge,
+            },
+            baseline: &settlement.baseline,
+            inventory: &settlement.inventory,
+            observation_evidence: &settlement.observation_evidence,
+        }
+    }
 }
 
 impl InventorySettlementIdentity<'_> {

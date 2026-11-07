@@ -33,7 +33,7 @@ below to find the document that matches your task.
 | Document | Use it for |
 | --- | --- |
 | [Current status](status/current.md) | Released baseline, current implementation evidence and remaining work |
-| [Implemented extraction boundary](extraction-boundary.md) | Exact behavior currently provided by the library and what it does not establish |
+| [Record and API contracts](extraction-boundary.md) | Exact behavior currently provided by the library and what it does not establish |
 | [Ownership boundary](ownership.md) | Current dependency owners, retained adapters and extraction cleanup |
 | [Platform boundary](ic-platform.md) | Completed IC dependency ownership, selected features and qualification |
 | [Canic adoption](canic-adoption.md) | Verified consumer state, integration interfaces and application acceptance sequence |

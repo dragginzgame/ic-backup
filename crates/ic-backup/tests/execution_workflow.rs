@@ -132,7 +132,11 @@ fn learned_snapshot_payload_is_bound_once_and_pending_read_retains_original_allo
         journal.record().unwrap().view().pending_mutation,
         Some(attempt)
     );
-    assert!(journal.reserve_mutation().is_err());
+    assert!(
+        journal
+            .reserve_planned_mutation(&stage.plan().digest())
+            .is_err()
+    );
     assert_eq!(fs::read(journal.path()).unwrap(), bytes);
     drop(journal);
     drop(stage);

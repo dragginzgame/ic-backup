@@ -139,7 +139,9 @@ async fn exercise(lane: RecoveryLane, mode: RecoveryMode) {
     let plan = support::plan(TARGET, &original, 1);
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
     let mut guard = support::retain(&layout, &plan, 1);
-    guard.reserve_observation(1, digest.hash()).unwrap();
+    guard
+        .reserve_planned_observation(&plan.digest(), 1, digest.hash())
+        .unwrap();
     let before = fs::read(guard.path()).unwrap();
     let request = match lane {
         RecoveryLane::Status | RecoveryLane::Capture => RecoveryRequest::Original(

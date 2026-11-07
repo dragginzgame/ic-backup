@@ -10,7 +10,6 @@ description = "Host-side snapshot backup and same-release recovery for Internet 
 readme = "../../README.md"
 
 [target.'cfg(unix)'.dependencies]
-ic-host-process.workspace = true
 rustix.workspace = true
 
 [dependencies]

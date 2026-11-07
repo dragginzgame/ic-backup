@@ -1,21 +1,21 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "d2a2f395bc06b22cb3f18afc7d2978a150726360",
-  "label": "0.31.3",
+  "revision": "b2026a118e38de4af1555c527af327cb604eacdf",
+  "label": "0.31.5",
   "reviewed_on": "2026-11-07",
-  "previous_revision": "74313941af2fce4399bec0e6909ca6229673c3f8",
+  "previous_revision": "d2a2f395bc06b22cb3f18afc7d2978a150726360",
   "previous_review": {
-    "commit": "b1c1c33f1e9d80c2c22a605ed4b39383b281ede7",
+    "commit": "d6bf34c490e676240b23426ceef8fc3d59d0f2c5",
     "path": "docs/shared-tooling-review.json"
   },
   "consumer_baseline": {
-    "commit": "b1c1c33f1e9d80c2c22a605ed4b39383b281ede7",
-    "version": "0.58.10",
-    "pending_notes": "0.58.11",
-    "incoming_work": "Preserve the uncommitted cleanup and incoming Platform 0.23.5 graph; adopt only the requested Testkit 0.90.0 dependency and Shared snapshot. No package version, Git delivery or registry publication effects."
+    "commit": "d6bf34c490e676240b23426ceef8fc3d59d0f2c5",
+    "version": "0.58.11",
+    "pending_notes": "0.59.0",
+    "incoming_work": "Preserve the reviewed pending hard cut and Host 0.75.0/Platform 0.24.0 adoption. Explicit deployment authorizes coordinated Backup source integration, minor release and publication."
   },
   "provenance": {
-    "selection": "GitHub VERSION confirms 0.31.3. Canonical impact/export and independently revision-bound verification select the complete committed d2a2f395 tree; no supplier edits or locally patched payloads.",
+    "selection": "Published GitHub VERSION and main commit independently select 0.31.5. Canonical committed-source impact/export and revision-bound verification match all selected bytes and modes.",
     "export": {
       "payloads": 160,
       "added": 0,
@@ -23,49 +23,22 @@
       "updated": 3,
       "unchanged": 157
     },
-    "catalogs": "Host/Cargo/IC catalogs and compiler declarations remain unchanged at Rust 1.99.1."
+    "catalogs": "No selected executable, catalog or compiler changes; minimum and pinned compiler remain Rust 1.99.1."
   },
   "consumer_decisions": [
-    "Adopt the Bash 3.2-compatible checksum reader without weakening NUL rejection or backend error propagation; qualify the actual Backup Make bootstrap with NUL-emitting checksum output.",
-    "Adopt missing captured-scratch diagnostics in the LOC classifier. Run Backup's actual LOC command with a previously absent TMPDIR parent; retain complete schema-2 output, without cleaning the existing target or recovery evidence.",
-    "Apply the fresh-output-parent rule to override-aware local package/MSRV and Testkit/failure-evidence fixtures. Existing default-only owners and the documentation checker already create their selected parents.",
-    "The 0.31.2 release-editor repair is an upstream fixture correction and changes no selected consumer payload. No production batch runner, release contract or custody migration is introduced.",
-    "Preserve the coordinated backup group, full release gate, schema-2 batch recovery, exact resume receipts and original 0.58.10 completed-but-not-retired batch. Do not replay unrelated producer regression matrices or perform delivery.",
-    "Migrate both development-only PocketIC builders to published Testkit 0.90.0 with explicit 60-second request budgets; retain separate 120-second startup allowances, original journals, signed transport, failure evidence and same-ID restore/terminal assertions. No compatibility wrappers or sibling Cargo patches."
+    "Adopt the release-batches companion annotations in the release, contribution and engineering guides. The companion is already selected; no new consumer payload or local override is needed.",
+    "Upstream 0.31.4/0.31.5 fixture repairs do not change selected executable payloads. Qualify Backup through its actual unchanged release adapter, not a replay of producer regression matrices.",
+    "Use the coordinated backup group, full Linux gate, frozen schema-2 publication intent and exact resumed receipts. Preserve all completed and failed earlier batches, source pins, journals and product evidence.",
+    "Retain standalone same-release/same-ID backup and restore, bounded original authority and application acceptance. Native macOS and current Canic acceptance remain separately qualified."
   ],
   "qualification": {
-    "status": "Passed focused Linux consumer qualification",
-    "evidence_directory": "target/evidence/adopt-testkit090-shared0313/",
-    "selection": "Canonical snapshot provenance; actual Make checksum refusal, fresh-parent LOC, Testkit routing and CI-evidence callers; selected Core PocketIC/Agent standalone strict Clippy and five installed recovery/capture/restore cases.",
-    "results": "All 160 payload bytes/modes match the independently selected commit. Actual Make rejects NUL checksum output. Fresh-parent LOC produces complete schema-2 output; local routing and five CI-evidence modes pass. Both selected Clippy targets and all five actual PocketIC cases pass: three Core capture/recovery and two Agent pending-authority/independent normal-consumer round-trip cases. Compiler, dependency admission, formatting, edited documentation links, JSON and diff checks pass.",
-    "testkit": {
-      "version": "0.90.0",
-      "source_commit": "c03161b9f1395c343756fda6b8721e957798c3df",
-      "registry_checksum": "aeeb9dd0920b5a4343aed61f2cb7c0266488823dab5f7b19e0b632b54b7d8f5a",
-      "server": "PocketIC 16.1.0",
-      "consumer_graph": "Platform 0.23.5, Types 0.18.2, Host 0.74.4, Agent SDK 0.49.3, Rust 1.99.1",
-      "issue": "https://github.com/dragginzgame/ic-backup/issues/79",
-      "disposition": "Delivered in 0.58.11; issue #79 closed after registry and independent published-consumer acceptance. Original focused adoption evidence remains separate from the full release gate."
-    },
+    "status": "Canonical export and independent revision-bound verification passed; complete release gate pending",
+    "evidence_directory": "target/evidence/deploy-0590/",
+    "selection": "All 160 payload bytes/modes; actual consumer compiler, snapshot, formatting, documentation and full frozen release gate.",
     "limits": [
-      "Linux focused consumer qualification, not a new full release gate or registry-only qualification.",
-      "Native macOS and current Canic application acceptance remain separate.",
-      "All original delivery, recovery, failed fixture and tool-store evidence remains retained."
-    ]
-  },
-  "delivery": {
-    "version": "0.58.11",
-    "release_commit": "e6471464406e97d77b1c4b610dd2a5c22991f27c",
-    "qualified_source": "16527d4b5cd97f5f699b80f125ca5ecd1290b1c1",
-    "tag": "backup-v0.58.11",
-    "batch": "batch-_jjlBLUV",
-    "state": "complete and reconciled; not retired",
-    "evidence_directory": "target/evidence/deploy-05811/",
-    "results": "Full Linux gate: strict Clippy, 544 tests, documentation, tooling/release/hook regressions, independent consumers and archives. Registry checksums/VCS provenance and all 330 packaged Rust files match the release. Explicit registry setup and registry-only authenticated capture/restore/acceptance/terminal replay pass.",
-    "issue_79": "closed",
-    "limits": [
-      "Native macOS and current Canic/application acceptance remain separate.",
-      "Earlier failed batches, journals, receipts and recovery artifacts remain retained."
+      "Do not infer full delivery from snapshot verification.",
+      "Native macOS and current Canic acceptance remain separate.",
+      "Preserve all previous delivery and recovery evidence."
     ]
   }
 }

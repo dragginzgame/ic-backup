@@ -1,18 +1,11 @@
-//! Exact local artifact identity and model-owned download lifecycle transitions.
+//! One IC snapshot artifact per original transfer stage, with model-owned publication.
 
 use crate::model::evidence_digest::EvidenceDigest;
-mod view;
-pub use view::{DownloadArtifactView, DownloadJournalView, ResumeAction};
 
-use super::{
-    artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash},
-    bounded_sequence,
-};
-use serde::{Deserialize, Deserializer, Serialize};
+use super::artifacts::{ArtifactChecksumRecord, ChecksumError, canonical_hash};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-/// Maximum artifact entries in a local download journal.
-pub const MAX_DOWNLOAD_ARTIFACTS: usize = 1024;
 /// Maximum encoded journal bytes admitted by persistence operations.
 pub const MAX_DOWNLOAD_JOURNAL_BYTES: u64 = 1024 * 1024;
 /// Maximum ASCII bytes in an opaque backend snapshot identifier.
@@ -33,13 +26,11 @@ pub struct DownloadArtifactRequest {
     pub snapshot_total_size_bytes: u64,
 }
 
-/// Ordered local artifact lifecycle adapted from Canic's download journal.
+/// Local IC artifact publication states; partial transfers retain Created.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ArtifactStateRecord {
     /// Exact snapshot identity retained before local download completion.
     Created,
-    /// Caller attested a complete staged backend artifact.
-    Downloaded,
     /// Local bytes verified and their canonical checksum retained.
     ChecksumVerified,
     /// Verified bytes durably published at the canonical location.
@@ -49,7 +40,6 @@ pub enum ArtifactStateRecord {
 // Internal transition inputs cannot pair a state with inappropriate checksum
 // evidence. Persisted fields retain their independent decoding/corruption checks.
 pub(crate) enum ArtifactTransition {
-    Downloaded,
     ChecksumVerified(ArtifactChecksumRecord),
     Durable,
 }
@@ -57,7 +47,6 @@ pub(crate) enum ArtifactTransition {
 impl ArtifactTransition {
     const fn state(&self) -> ArtifactStateRecord {
         match self {
-            Self::Downloaded => ArtifactStateRecord::Downloaded,
             Self::ChecksumVerified(_) => ArtifactStateRecord::ChecksumVerified,
             Self::Durable => ArtifactStateRecord::Durable,
         }
@@ -82,7 +71,6 @@ pub struct DownloadArtifactRecord {
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum ArtifactProgress {
     Created,
-    Downloaded,
     ChecksumVerified(ArtifactChecksumRecord),
     Durable(ArtifactChecksumRecord),
 }
@@ -90,7 +78,6 @@ impl ArtifactProgress {
     const fn state(&self) -> ArtifactStateRecord {
         match self {
             Self::Created => ArtifactStateRecord::Created,
-            Self::Downloaded => ArtifactStateRecord::Downloaded,
             Self::ChecksumVerified(_) => ArtifactStateRecord::ChecksumVerified,
             Self::Durable(_) => ArtifactStateRecord::Durable,
         }
@@ -98,7 +85,7 @@ impl ArtifactProgress {
     const fn checksum(&self) -> Option<&ArtifactChecksumRecord> {
         match self {
             Self::ChecksumVerified(checksum) | Self::Durable(checksum) => Some(checksum),
-            Self::Created | Self::Downloaded => None,
+            Self::Created => None,
         }
     }
 }
@@ -143,7 +130,6 @@ impl TryFrom<ArtifactFields> for DownloadArtifactRecord {
         }
         record.progress = match (fields.state, fields.checksum) {
             (ArtifactStateRecord::Created, None) => ArtifactProgress::Created,
-            (ArtifactStateRecord::Downloaded, None) => ArtifactProgress::Downloaded,
             (ArtifactStateRecord::ChecksumVerified, Some(checksum)) => {
                 ArtifactProgress::ChecksumVerified(checksum)
             }
@@ -227,7 +213,7 @@ impl DownloadArtifactRecord {
 pub struct DownloadJournalRecord {
     version: u16,
     intent: String,
-    artifacts: Vec<DownloadArtifactRecord>,
+    artifacts: [DownloadArtifactRecord; 1],
 }
 
 #[derive(Deserialize)]
@@ -235,19 +221,17 @@ pub struct DownloadJournalRecord {
 struct JournalFields {
     version: u16,
     intent: String,
-    #[serde(deserialize_with = "read_bounded_artifacts")]
-    artifacts: Vec<DownloadArtifactRecord>,
+    artifacts: [DownloadArtifactRecord; 1],
 }
 
 impl TryFrom<JournalFields> for DownloadJournalRecord {
     type Error = DownloadJournalRecordError;
-    fn try_from(mut fields: JournalFields) -> Result<Self, Self::Error> {
+    fn try_from(fields: JournalFields) -> Result<Self, Self::Error> {
         if fields.version != 1 {
             return Err(DownloadJournalRecordError::UnsupportedVersion(
                 fields.version,
             ));
         }
-        validate_entries(&mut fields.artifacts)?;
         Ok(Self {
             version: 1,
             intent: canonical_hash(&fields.intent)?,
@@ -257,25 +241,17 @@ impl TryFrom<JournalFields> for DownloadJournalRecord {
 }
 
 impl DownloadJournalRecord {
-    /// Admit a nonempty exact physical set before any local transfer completion.
-    ///
+    /// Admit one snapshot artifact under its original transfer intent.
     /// # Errors
-    /// Rejects invalid identities/digests, duplicate principals and exceeded count bounds.
+    /// Rejects invalid source identities, tokens and intent digests.
     pub fn new(
         intent: &str,
-        requests: Vec<DownloadArtifactRequest>,
+        request: DownloadArtifactRequest,
     ) -> Result<Self, DownloadJournalRecordError> {
-        if requests.len() > MAX_DOWNLOAD_ARTIFACTS {
-            return Err(DownloadJournalRecordError::TooManyArtifacts);
-        }
-        let artifacts = requests
-            .into_iter()
-            .map(DownloadArtifactRecord::new)
-            .collect::<Result<Vec<_>, _>>()?;
         JournalFields {
             version: 1,
             intent: intent.to_owned(),
-            artifacts,
+            artifacts: [DownloadArtifactRecord::new(request)?],
         }
         .try_into()
     }
@@ -285,9 +261,9 @@ impl DownloadJournalRecord {
     pub fn intent(&self) -> &str {
         &self.intent
     }
-    /// Read entries in canonical principal-text order.
+    /// Read the sole artifact in the retained v1 singleton wire envelope.
     #[must_use]
-    pub fn artifacts(&self) -> &[DownloadArtifactRecord] {
+    pub const fn artifacts(&self) -> &[DownloadArtifactRecord; 1] {
         &self.artifacts
     }
 
@@ -296,7 +272,7 @@ impl DownloadJournalRecord {
     /// The NUL-terminated v1 domain precedes 64 ASCII intent bytes and a big-endian
     /// u64 entry count. Each canonical entry has four u32-length-prefixed UTF-8
     /// strings (principal, snapshot token, staging path, artifact path), two u64
-    /// metadata values, a state byte (Created=0 through Durable=3), then a checksum
+    /// metadata values, a state byte (Created=0, ChecksumVerified=2, Durable=3), then a checksum
     /// presence byte and its 64 ASCII hash when present. Integers are big-endian.
     /// This grants no transfer, snapshot authenticity or terminal proof.
     #[must_use]
@@ -317,7 +293,6 @@ impl DownloadJournalRecord {
             bytes.u64_be(entry.snapshot_total_size_bytes);
             bytes.byte(match entry.state() {
                 ArtifactStateRecord::Created => 0,
-                ArtifactStateRecord::Downloaded => 1,
                 ArtifactStateRecord::ChecksumVerified => 2,
                 ArtifactStateRecord::Durable => 3,
             });
@@ -334,23 +309,23 @@ impl DownloadJournalRecord {
         canister: &str,
         snapshot: &str,
     ) -> Result<&DownloadArtifactRecord, DownloadJournalRecordError> {
-        Ok(&self.artifacts[self.artifact_index(canister, snapshot)?])
+        self.admit_identity(canister, snapshot)?;
+        Ok(&self.artifacts[0])
     }
 
-    fn artifact_index(
+    fn admit_identity(
         &self,
         canister: &str,
         snapshot: &str,
-    ) -> Result<usize, DownloadJournalRecordError> {
+    ) -> Result<(), DownloadJournalRecordError> {
         let canister = normalize_principal(canister)?;
-        let index = self
-            .artifacts
-            .binary_search_by(|entry| entry.canister_id.cmp(&canister))
-            .map_err(|_| DownloadJournalRecordError::UnknownArtifact)?;
-        if self.artifacts[index].snapshot_id != snapshot {
+        if self.artifacts[0].canister_id != canister {
+            return Err(DownloadJournalRecordError::UnknownArtifact);
+        }
+        if self.artifacts[0].snapshot_id != snapshot {
             return Err(DownloadJournalRecordError::SnapshotMismatch);
         }
-        Ok(index)
+        Ok(())
     }
 
     pub(crate) fn advance(
@@ -359,13 +334,10 @@ impl DownloadJournalRecord {
         snapshot: &str,
         transition: ArtifactTransition,
     ) -> Result<(), DownloadJournalRecordError> {
-        let index = self.artifact_index(canister, snapshot)?;
-        let entry = &mut self.artifacts[index];
+        self.admit_identity(canister, snapshot)?;
+        let entry = &mut self.artifacts[0];
         entry.progress = match (&entry.progress, transition) {
-            (ArtifactProgress::Created, ArtifactTransition::Downloaded) => {
-                ArtifactProgress::Downloaded
-            }
-            (ArtifactProgress::Downloaded, ArtifactTransition::ChecksumVerified(checksum)) => {
+            (ArtifactProgress::Created, ArtifactTransition::ChecksumVerified(checksum)) => {
                 ArtifactProgress::ChecksumVerified(checksum)
             }
             (ArtifactProgress::ChecksumVerified(checksum), ArtifactTransition::Durable) => {
@@ -386,50 +358,12 @@ fn normalize_principal(value: &str) -> Result<String, DownloadJournalRecordError
     super::principal::canonical_text(value).ok_or(DownloadJournalRecordError::InvalidPrincipal)
 }
 
-fn validate_entries(
-    entries: &mut [DownloadArtifactRecord],
-) -> Result<(), DownloadJournalRecordError> {
-    if entries.is_empty() {
-        return Err(DownloadJournalRecordError::EmptyArtifacts);
-    }
-    if entries.len() > MAX_DOWNLOAD_ARTIFACTS {
-        return Err(DownloadJournalRecordError::TooManyArtifacts);
-    }
-    entries.sort_by(|left, right| left.canister_id.cmp(&right.canister_id));
-    if entries
-        .windows(2)
-        .any(|pair| pair[0].canister_id == pair[1].canister_id)
-    {
-        return Err(DownloadJournalRecordError::DuplicateCanister);
-    }
-    Ok(())
-}
-
-fn read_bounded_artifacts<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> Result<Vec<DownloadArtifactRecord>, D::Error> {
-    bounded_sequence::deserialize::<_, _, MAX_DOWNLOAD_ARTIFACTS>(
-        deserializer,
-        "a bounded artifact list",
-        DownloadJournalRecordError::TooManyArtifacts,
-    )
-}
-
 /// Typed local journal identity, schema or transition rejection.
 #[derive(Debug, Error)]
 pub enum DownloadJournalRecordError {
     /// Only v1 records are maintained.
     #[error("unsupported download journal version {0}")]
     UnsupportedVersion(u16),
-    /// An empty physical set cannot claim completion.
-    #[error("download journal artifacts must not be empty")]
-    EmptyArtifacts,
-    /// The bounded artifact count was exceeded.
-    #[error("download journal artifact count exceeds {MAX_DOWNLOAD_ARTIFACTS}")]
-    TooManyArtifacts,
-    /// More than one snapshot was selected for the same physical canister.
-    #[error("duplicate download canister identity")]
-    DuplicateCanister,
     /// The supplied principal failed canonical admission.
     #[error("invalid download canister principal")]
     InvalidPrincipal,

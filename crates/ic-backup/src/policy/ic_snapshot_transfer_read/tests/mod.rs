@@ -21,9 +21,7 @@ fn metadata_wire() -> Vec<u8> {
 }
 
 fn plan(payload: IcSnapshotTransferReadPayload<'_, '_>) -> OperationPlanRecord {
-    let mut value = serde_json::to_value(ic_mutation::plan(&ic_mutation::stop())).unwrap();
-    value["operations"][1]["request"] = serde_json::json!(payload.digest().hash());
-    serde_json::from_value(value).unwrap()
+    crate::tests::support::operation_plan::plan_for_request(&payload.digest())
 }
 
 fn fields(

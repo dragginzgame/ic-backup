@@ -92,7 +92,7 @@ impl<'a> AttemptJournalGuard<'a> {
     ///
     /// # Errors
     /// Rejects unresolved attempts, exhaustion, applied operations and persistence failures.
-    pub fn reserve_mutation(&mut self) -> Result<u32, AttemptJournalError> {
+    pub(crate) fn reserve_mutation(&mut self) -> Result<u32, AttemptJournalError> {
         self.reserve_with(AttemptJournalRecord::reserve_mutation, write_encoded)
     }
     /// Reserve only after admitting the exact persisted plan and all original journals.
@@ -129,7 +129,7 @@ impl<'a> AttemptJournalGuard<'a> {
     /// Fresh authority, paid-effect settlement and ended command custody remain caller-owned.
     /// # Errors
     /// Rejects wrong attempts/requests, unresolved observations, exhaustion and failed writes.
-    pub fn reserve_observation(
+    pub(crate) fn reserve_observation(
         &mut self,
         mutation: u32,
         request: &str,

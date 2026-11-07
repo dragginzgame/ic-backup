@@ -6,11 +6,10 @@
 )]
 mod support;
 
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 use ic_backup::{
     model::attempt_journal::{
-        AttemptAuthorityRecord, AttemptBudgetRecord, AttemptJournalRecordError,
-        ObservationOutcomeRecord, ObservationReceiptRequest, OperationBindingRecord,
-        OperationBindingRequest,
+        AttemptJournalRecordError, ObservationOutcomeRecord, ObservationReceiptRequest,
     },
     ops::persistence::{AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard},
 };
@@ -20,23 +19,13 @@ use std::fs;
 fn exhausted_pending_attempt_reconciles_under_the_original_public_authority() {
     let root = support::temp_root("ic-backup-public-attempt");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclude other layout users");
-    let authority = AttemptAuthorityRecord::new(
-        OperationBindingRecord::new(&OperationBindingRequest {
-            intent: "ab".repeat(32),
-            operation_sequence: 3,
-            network: "cd".repeat(32),
-            caller: "2vxsx-fae".into(),
-            target: "aaaaa-aa".into(),
-            release: "ef".repeat(32),
-            request: "01".repeat(32),
-        })
-        .expect("exact selected binding"),
-        AttemptBudgetRecord::new(1, 1).expect("original finite ceilings"),
-    );
+    let plan = support::single_operation_plan("aaaaa-aa", 3, &"01".repeat(32));
+    ic_backup::ops::persistence::create_operation_plan(&layout, &plan).unwrap();
+    let authority = plan.attempt_authority(3).unwrap();
     let mut guard =
         AttemptJournalGuard::create(&layout, authority.clone()).expect("retain original authority");
     let mutation = guard
-        .reserve_mutation()
+        .reserve_planned_mutation(&plan.digest())
         .expect("consume before caller-owned effect");
     drop(guard);
     let mut guard =
@@ -50,14 +39,14 @@ fn exhausted_pending_attempt_reconciles_under_the_original_public_authority() {
         0
     );
     assert!(matches!(
-        guard.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        guard.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::MutationPending { attempt: 1 }
-        ))
+        )))
     ));
     let request = "45".repeat(32);
     let observation = guard
-        .reserve_observation(mutation, &request)
+        .reserve_planned_observation(&plan.digest(), mutation, &request)
         .expect("consume separate observation authority");
     guard
         .record_observation(ObservationReceiptRequest {

@@ -86,8 +86,5 @@ pub fn stop() -> IcManagementRequestRecord {
         .unwrap()
 }
 pub fn plan(wire: &IcManagementRequestRecord) -> OperationPlanRecord {
-    let original = crate::tests::support::operation_plan::plan();
-    let mut value = serde_json::to_value(original).unwrap();
-    value["operations"][1]["request"] = serde_json::json!(wire.digest().hash());
-    serde_json::from_value(value).unwrap()
+    crate::tests::support::operation_plan::plan_for_request(&wire.digest())
 }

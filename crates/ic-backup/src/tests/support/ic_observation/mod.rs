@@ -18,6 +18,42 @@ pub struct Original {
     pub plan: OperationPlanRecord,
     pub journal: AttemptJournalRecord,
 }
+
+impl Original {
+    pub fn request(&self) -> IcObservationRequest<'_> {
+        IcObservationRequest::new(&self.plan, 7, &self.journal, &self.mutation, &self.payload)
+            .unwrap()
+    }
+}
+
+pub fn original_for_mutation(mutation: Method, observation: Method) -> Original {
+    let mut original = ic_mutation::original(mutation);
+    let payload = IcManagementRequestRecord::new(IcManagementRequest {
+        method: observation,
+        target: original.payload.target().into(),
+        snapshot_id: None,
+    })
+    .unwrap();
+    original
+        .journal
+        .reserve_observation(1, payload.digest().hash())
+        .unwrap();
+    Original {
+        mutation: original.payload,
+        payload,
+        plan: original.plan,
+        journal: original.journal,
+    }
+}
+
+pub fn snapshot(id: &[u8]) -> ic_platform::management_canister_types::Snapshot {
+    ic_platform::management_canister_types::Snapshot {
+        id: id.into(),
+        taken_at_timestamp: 42,
+        total_size: 123,
+    }
+}
+
 pub fn original(method: Method) -> Original {
     let mutation = ic_mutation::original(Method::TakeCanisterSnapshot);
     let mut plan = serde_json::to_value(&mutation.plan).unwrap();

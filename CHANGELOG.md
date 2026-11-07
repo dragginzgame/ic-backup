@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.59.0]
+
+### 💥 Breaking changes
+
+- Narrow each download journal to one IC snapshot artifact. Constructors accept one
+  request; collection admission, persisted `Downloaded` recovery, `verify_artifact`
+  and resume projections are retired. Valid singleton v1 bytes/hashes and
+  checksum-verified publication recovery retain their meaning.
+- Retire the external-command custody adapter and its production Host Process
+  dependency. Terminal providers declare exclusively in-process restores through
+  `TerminalRestoreEvidence::for_in_process_restore`; retained command sidecars
+  refuse release even when no process holds them. Recover command-backed restores
+  and retired download records with 0.58.11 and their original qualified integration.
+
+- Keep directory publication internal to the guarded artifact journal; retire the
+  generic publishing entrypoint/outcome, generic integrity views and public tree-only
+  verification. Public source checks use exact metadata-bound IC verification.
+- Use one `model::data_stage_plan::SnapshotDataPlanningError` for download/upload
+  planning, removing translation enums. Empty stages report `NoDataOperations`;
+  changed originals report `OriginalMismatch`. Record bytes and spending stay unchanged.
+
+- Require planned public durable mutation/observation reservations; raw persistence
+  helpers are crate-private. Retain in-memory accounting, read/open and qualified
+  receipt recording, including Canic's production observation settlement path.
+
+### ⬆️ Dependencies
+
+- Adopt published Host Artifacts/FS/Process 0.75.0 and Platform 0.24.0. Public Host
+  error identities now use the 0.75 family; consumers sharing them must align.
+  Preserve bounded codecs, management DTO 0.11.0, Types 0.18.2 and Agent SDK 0.49.3.
+  Testkit remains 0.90.0 with its separate older development-only dependencies.
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.31.5 with complete release-batch companion annotations.
+
+### 🧪 Testing
+
+- Consolidate real capture/download qualification on the original workflow driver,
+  retaining malformed/lost replies, bounded spending, pending/successor refusal,
+  exact journal/reference preservation and manifest replay.
+
+- Keep declared-tree ordering, changed canonical bytes and acknowledged crash recovery
+  with the publication owner; remove overlapping generic public recovery journeys.
+
+### 🧹 Cleanup
+
+- Replace the extraction ledger with a current contract index; keep exact schema,
+  wire and hash specifications with their owners, preserve historical provenance
+  through revision-bound links and remove stale implementation-status claims.
+
+- Share capture/allocation settlement identity projection while preserving distinct
+  method, destination and error checks.
+- Consolidate positive metadata/allocation test setup and reuse cancellation and
+  reply-retention helpers, preserving scenario-specific recovery assertions.
+- Share original-observation fixtures and passive upload replies; retain separate
+  typed failure checks while reusing their identical progress expectations.
+- Reuse decoded metadata fixture values and typed positive plan construction,
+  keeping raw wire vectors and malformed-record inputs explicit.
+
 ## [0.58.11] - 2026-11-07
 
 ### ⬆️ Dependencies
@@ -383,10 +443,10 @@
 
 - Replace removed optional preflight helpers with integration-owned fresh checks
   in the existing mandatory callbacks; see the
-  [current admission contract](docs/extraction-boundary.md#current-membership-controller-and-read-admission).
+  [current admission contract](https://github.com/dragginzgame/ic-backup/blob/d6bf34c490e676240b23426ceef8fc3d59d0f2c5/docs/extraction-boundary.md#current-membership-controller-and-read-admission).
   Existing persisted journals and recovery evidence keep their original format.
 - Replace local-source convenience calls with explicit guarded composition;
-  [source verification](docs/extraction-boundary.md#fresh-original-local-restore-source-verification)
+  [source verification](https://github.com/dragginzgame/ic-backup/blob/d6bf34c490e676240b23426ceef8fc3d59d0f2c5/docs/extraction-boundary.md#fresh-original-local-restore-source-verification)
   documents before/after admission and the separate fresh byte check.
 
 ## [0.55.3] - 2026-11-02

@@ -10,24 +10,19 @@ use serde_json::json;
 use std::{fs, io, os::unix::fs::symlink, path::PathBuf};
 
 const ROOT: &str = "aaaaa-aa";
-const APP: &str = "renrk-eyaaa-aaaaa-aaada-cai";
 
 fn plan() -> OperationPlanRecord {
-    serde_json::from_value(json!({
-        "version":1,"context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},
-        "inventory":{"version":1,"targets":[
-            {"canister_id":ROOT,"parent_canister_id":null,"role":null,"module_hash":null},
-            {"canister_id":APP,"parent_canister_id":null,"role":null,"module_hash":null}]},
-        "selected_targets":[ROOT,APP],"graph":{"version":1,"nodes":[{"operation_sequence":0,"depends_on":[]},{"operation_sequence":7,"depends_on":[]}]},
-        "operations":[{"operation_sequence":0,"target":ROOT,"request":"ef".repeat(32),"budget":{"mutations":1,"observations":0}},
-            {"operation_sequence":7,"target":APP,"request":"01".repeat(32),"budget":{"mutations":1,"observations":0}}],
-        "budget":{"mutations":2,"observations":0}
-    })).expect("original plan")
+    let mut value = serde_json::to_value(crate::tests::support::operation_plan::plan()).unwrap();
+    value["selected_targets"] = json!([ROOT]);
+    value["operations"][0]["target"] = json!(ROOT);
+    value["operations"][1]["target"] = json!(ROOT);
+    serde_json::from_value(value).unwrap()
 }
 
 fn fixture() -> PathBuf {
     let root = temp_dir("ic-backup-download-integrity");
-    for target in [ROOT, APP] {
+    {
+        let target = ROOT;
         let directory = root.join(format!("artifacts/{target}.tmp/nested"));
         fs::create_dir_all(&directory).expect("private staging");
         fs::write(directory.join("heap.bin"), target.as_bytes()).expect("exact fixture bytes");
@@ -43,25 +38,20 @@ fn guard<'a>(
     let mut guard = DownloadJournalGuard::create(
         layout,
         plan.digest().hash(),
-        [ROOT, APP]
-            .into_iter()
-            .map(|id| DownloadArtifactRequest {
-                canister_id: id.into(),
-                snapshot_id: format!("snap-{id}"),
-                snapshot_taken_at_timestamp: 17,
-                snapshot_total_size_bytes: 123,
-            })
-            .collect(),
+        DownloadArtifactRequest {
+            canister_id: ROOT.into(),
+            snapshot_id: format!("snap-{ROOT}"),
+            snapshot_taken_at_timestamp: 17,
+            snapshot_total_size_bytes: 123,
+        },
     )
     .expect("original journal");
     if durable {
-        for target in [ROOT, APP] {
+        {
+            let target = ROOT;
             let snapshot = format!("snap-{target}");
-            super::super::tests::retain_downloaded_fixture(&mut guard, target, &snapshot)
+            super::super::tests::retain_verified_fixture(&mut guard, target, &snapshot)
                 .expect("local complete-artifact attestation");
-            guard
-                .verify_artifact(target, &snapshot)
-                .expect("staged byte verification");
             guard
                 .finalize_artifact(target, &snapshot)
                 .expect("durable publication");
@@ -78,19 +68,15 @@ fn checks_every_selected_published_tree_and_preserves_exact_evidence() {
     create_operation_plan(&layout, &plan).expect("retained original plan");
     let guard = guard(&layout, &plan, true);
     let bytes = fs::read(guard.path()).expect("retained bytes");
-    let view = guard
-        .verify_durable_artifacts(&plan)
-        .expect("fresh local verification");
-    assert_eq!(view.artifacts().len(), 2);
-    assert_eq!(view.journal().resume_view().pending_artifacts, 0);
-    for entry in view.artifacts() {
-        assert_eq!(entry.artifact().state(), ArtifactStateRecord::Durable);
-        assert_eq!(
-            checksum_directory(&root.join(entry.artifact().artifact_path()))
-                .expect("fixture checksum"),
-            *entry.checksum()
-        );
-    }
+    guard
+        .verify_manifest_source(&plan)
+        .expect("fresh manifest source verification");
+    let entry = &guard.record().unwrap().artifacts()[0];
+    assert_eq!(entry.state(), ArtifactStateRecord::Durable);
+    assert_eq!(
+        checksum_directory(&root.join(entry.artifact_path())).unwrap(),
+        *entry.checksum().unwrap()
+    );
     assert_eq!(
         fs::read(guard.path()).expect("journal bytes unchanged"),
         bytes
@@ -101,7 +87,7 @@ fn checks_every_selected_published_tree_and_preserves_exact_evidence() {
 }
 
 #[test]
-fn ordinary_reopen_skips_but_explicit_verification_rejects_changed_second_tree() {
+fn ordinary_reopen_skips_but_explicit_verification_rejects_changed_tree() {
     let root = fixture();
     let layout = BackupLayoutGuard::acquire(&root).expect("layout");
     let plan = plan();
@@ -111,22 +97,18 @@ fn ordinary_reopen_skips_but_explicit_verification_rejects_changed_second_tree()
     let bytes = fs::read(&path).expect("retained journal");
     drop(original);
     fs::write(
-        root.join(format!("artifacts/{APP}/nested/heap.bin")),
+        root.join(format!("artifacts/{ROOT}/nested/heap.bin")),
         b"changed exact bytes",
     )
     .expect("fixture corruption");
     let reopened = DownloadJournalGuard::open(&layout, plan.digest().hash())
         .expect("local replay does not verify bytes");
     assert_eq!(
-        reopened
-            .record()
-            .expect("retained projection")
-            .resume_view()
-            .pending_artifacts,
-        0
+        reopened.record().unwrap().artifacts()[0].state(),
+        ArtifactStateRecord::Durable
     );
     assert!(matches!(
-        reopened.verify_durable_artifacts(&plan),
+        reopened.verify_manifest_source(&plan),
         Err(DownloadIntegrityError::Checksum(
             ChecksumError::ChecksumMismatch { .. }
         ))
@@ -145,7 +127,7 @@ fn rejects_non_durable_set_before_attempting_any_artifact_reads() {
     create_operation_plan(&layout, &plan).expect("plan");
     let guard = guard(&layout, &plan, false);
     assert!(matches!(
-        guard.verify_durable_artifacts(&plan),
+        guard.verify_manifest_source(&plan),
         Err(DownloadIntegrityError::Policy(
             DownloadIntegrityPolicyError::NonDurableArtifact { .. }
         ))
@@ -162,7 +144,7 @@ fn requires_original_persisted_plan_and_unchanged_guarded_journal() {
     let plan = plan();
     let guard = guard(&layout, &plan, true);
     assert!(
-        matches!(guard.verify_durable_artifacts(&plan),Err(DownloadIntegrityError::Plan(
+        matches!(guard.verify_manifest_source(&plan),Err(DownloadIntegrityError::Plan(
         OperationPlanPersistenceError::Persistence(PersistenceError::Io(error)))) if error.kind()==io::ErrorKind::NotFound)
     );
     create_operation_plan(&layout, &plan).expect("plan retained");
@@ -175,7 +157,7 @@ fn requires_original_persisted_plan_and_unchanged_guarded_journal() {
     )
     .expect("simulated external journal edit");
     assert!(matches!(
-        guard.verify_durable_artifacts(&plan),
+        guard.verify_manifest_source(&plan),
         Err(DownloadIntegrityError::JournalChanged)
     ));
     assert_eq!(
@@ -201,7 +183,7 @@ fn rejects_replaced_original_plan_without_rebinding_the_download_journal() {
     let changed_bytes = serde_json::to_vec(&changed).expect("changed plan bytes");
     fs::write(&plan_path, &changed_bytes).expect("simulated external plan replacement");
     assert!(matches!(
-        guard.verify_durable_artifacts(&plan),
+        guard.verify_manifest_source(&plan),
         Err(DownloadIntegrityError::Plan(
             OperationPlanPersistenceError::DigestMismatch
         ))
@@ -227,16 +209,15 @@ fn rejects_missing_regular_file_and_symlink_artifact_substitutions() {
         let plan = plan();
         create_operation_plan(&layout, &plan).expect("plan");
         let guard = guard(&layout, &plan, true);
-        let path = root.join(format!("artifacts/{APP}"));
-        fs::rename(&path, root.join("retained-second-tree"))
-            .expect("retain substituted fixture evidence");
+        let path = root.join(format!("artifacts/{ROOT}"));
+        fs::rename(&path, root.join("retained-tree")).expect("retain substituted fixture evidence");
         if kind == "file" {
             fs::write(&path, b"regular file replacement").expect("file");
         }
         if kind == "symlink" {
-            symlink(root.join("retained-second-tree"), &path).expect("symlink");
+            symlink(root.join("retained-tree"), &path).expect("symlink");
         }
-        let result = guard.verify_durable_artifacts(&plan);
+        let result = guard.verify_manifest_source(&plan);
         if kind == "file" {
             assert!(matches!(
                 result,
@@ -250,7 +231,7 @@ fn rejects_missing_regular_file_and_symlink_artifact_substitutions() {
                 Err(DownloadIntegrityError::Artifact(ArtifactError::Io(_)))
             ));
         }
-        assert!(root.join("retained-second-tree/nested/heap.bin").exists());
+        assert!(root.join("retained-tree/nested/heap.bin").exists());
         drop(guard);
         drop(layout);
         fs::remove_dir_all(&root).expect("clean successful owned fixture");
@@ -266,7 +247,7 @@ fn unusable_custody_and_corrupt_retained_journal_stop_without_changes() {
     let mut guard = guard(&layout, &plan, true);
     guard.usable = false;
     assert!(matches!(
-        guard.verify_durable_artifacts(&plan),
+        guard.verify_manifest_source(&plan),
         Err(DownloadIntegrityError::Journal(
             DownloadJournalError::IndeterminateWrite
         ))
@@ -274,7 +255,7 @@ fn unusable_custody_and_corrupt_retained_journal_stop_without_changes() {
     guard.usable = true;
     fs::write(guard.path(), b"corrupt retained journal").expect("fixture corruption");
     assert!(matches!(
-        guard.verify_durable_artifacts(&plan),
+        guard.verify_manifest_source(&plan),
         Err(DownloadIntegrityError::Persistence(PersistenceError::Json(
             _
         )))

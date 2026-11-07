@@ -2,6 +2,7 @@
 
 use crate::support::create_json_durable;
 use crate::support::read_json;
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 use ic_platform::candid::contract;
 #[expect(
     dead_code,
@@ -72,7 +73,7 @@ fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
         .expect("original exact load");
     let mut journal = AttemptJournalGuard::create(&layout, authority).expect("original journal");
     let mutation = journal
-        .reserve_mutation()
+        .reserve_planned_mutation(&plan.digest())
         .expect("reserve original mutation");
     status
         .validate_observation_binding(
@@ -81,7 +82,7 @@ fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
         )
         .expect("independent exact observation");
     let observation = journal
-        .reserve_observation(mutation, status.digest().hash())
+        .reserve_planned_observation(&plan.digest(), mutation, status.digest().hash())
         .expect("consume original observation allowance");
     // Local immutable integration fixtures, not authenticated replies or receipts.
     let load_wire = b"DIDL\0\0".to_vec();
@@ -153,8 +154,8 @@ fn status_and_acknowledgement_replay_preserves_pending_load_and_observation() {
     assert_eq!(original_view.pending_observation, Some(observation));
     assert_eq!(original_view.mutations_remaining, 0);
     assert_eq!(original_view.observations_remaining, 0);
-    assert!(matches!(journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(AttemptJournalRecordError::ObservationPending { attempt }))
+    assert!(matches!(journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(AttemptJournalRecordError::ObservationPending { attempt })))
         if attempt == observation));
     assert_eq!(
         fs::read(&journal_path).expect("journal bytes preserved"),

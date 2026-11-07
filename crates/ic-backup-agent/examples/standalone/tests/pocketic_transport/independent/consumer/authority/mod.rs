@@ -174,6 +174,8 @@ impl standalone::Application for Authority {
     ) -> io::Result<TerminalRestoreEvidence> {
         // This fixture uses in-process Agent calls exclusively, with no children,
         // external obligations, timers or fence. Its complete command set is empty.
-        Ok(TerminalRestoreEvidence::new(restore.digest(), vec![]))
+        Ok(TerminalRestoreEvidence::for_in_process_restore(
+            restore.digest(),
+        ))
     }
 }

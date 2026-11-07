@@ -6,6 +6,7 @@
 )]
 mod support;
 
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 use ic_backup::{
     model::attempt_journal::AttemptJournalRecordError,
     ops::persistence::{
@@ -30,7 +31,7 @@ fn original_plan_authority_reopens_consumed_attempts_without_rebinding_or_replen
         AttemptJournalGuard::create(&layout, authority.clone()).expect("one original journal");
     assert_eq!(
         guard
-            .reserve_mutation()
+            .reserve_planned_mutation(&plan.digest())
             .expect("consume locally before caller-owned call"),
         1
     );
@@ -47,10 +48,10 @@ fn original_plan_authority_reopens_consumed_attempts_without_rebinding_or_replen
     assert_eq!(view.mutations_remaining, 0);
     assert_eq!(view.pending_mutation, Some(1));
     assert!(matches!(
-        guard.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        guard.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::MutationPending { attempt: 1 }
-        ))
+        )))
     ));
     drop(guard);
     assert!(AttemptJournalGuard::create(&layout, repeated).is_err());

@@ -2,6 +2,7 @@
 
 use crate::support::create_json_durable;
 use crate::support::read_json;
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 #[expect(
     dead_code,
     reason = "this integration target uses only a subset of the shared fixture helpers"
@@ -69,7 +70,7 @@ fn preserves_typed_payload_and_independent_observation_allowance_through_reopen(
     let mut journal =
         AttemptJournalGuard::create(&layout, authority).expect("original finite ledger");
     let mutation = journal
-        .reserve_mutation()
+        .reserve_planned_mutation(&plan.digest())
         .expect("consume locally, without dispatch");
     drop(journal);
     drop(layout);
@@ -92,7 +93,7 @@ fn preserves_typed_payload_and_independent_observation_allowance_through_reopen(
         .validate_observation_binding(authority.binding(), &digest)
         .expect("same target with independent observer payload");
     let observation = journal
-        .reserve_observation(mutation, digest.hash())
+        .reserve_planned_observation(&plan.digest(), mutation, digest.hash())
         .expect("consume separate allowance without remote observation");
     journal
         .record_observation(ObservationReceiptRequest {
@@ -110,7 +111,7 @@ fn preserves_typed_payload_and_independent_observation_allowance_through_reopen(
     assert_eq!(view.pending_mutation, Some(mutation));
     assert_eq!(view.pending_observation, None);
     assert!(
-        matches!(journal.reserve_mutation(), Err(AttemptJournalError::Record(AttemptJournalRecordError::MutationPending { attempt })) if attempt == mutation)
+        matches!(journal.reserve_planned_mutation(&plan.digest()), Err(ProgressError::Journal(AttemptJournalError::Record(AttemptJournalRecordError::MutationPending { attempt }))) if attempt == mutation)
     );
     assert!(create_json_durable(&path, &observer).is_err());
     assert_eq!(

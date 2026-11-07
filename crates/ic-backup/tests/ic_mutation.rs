@@ -150,7 +150,9 @@ fn retained_case(method: Method, failure: Option<IcMutationProviderError>) {
     let mut journal =
         AttemptJournalGuard::create(&layout, originals.plan.attempt_authority(42).unwrap())
             .unwrap();
-    let attempt = journal.reserve_mutation().unwrap();
+    let attempt = journal
+        .reserve_planned_mutation(&originals.plan.digest())
+        .unwrap();
     let bytes = fs::read(journal.path()).unwrap();
     let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();
     let evidence = RetainedEvidence {
@@ -194,7 +196,11 @@ fn retained_case(method: Method, failure: Option<IcMutationProviderError>) {
     );
     assert_eq!(fs::read(journal.path()).unwrap(), evidence.journal);
     assert_eq!(layout.restore_references().unwrap(), evidence.references);
-    assert!(journal.reserve_mutation().is_err());
+    assert!(
+        journal
+            .reserve_planned_mutation(&originals.plan.digest())
+            .is_err()
+    );
     drop(journal);
     drop(layout);
     assert_reopened(
@@ -235,7 +241,9 @@ fn assert_reopened(
     assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
     assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
     assert!(!journal.record().unwrap().view().applied);
-    journal.reserve_observation(1, hash("34").hash()).unwrap();
+    journal
+        .reserve_planned_observation(&originals.plan.digest(), 1, hash("34").hash())
+        .unwrap();
     if let Some(acknowledgement) = acknowledgement {
         assert!(matches!(
             validate_acknowledgement(&request, journal.record().unwrap(), acknowledgement),

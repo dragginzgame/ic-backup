@@ -209,7 +209,7 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
     ///
     /// Complete declared coverage is required. The fixed closed tree must match hashes
     /// computed from the actual admitted bytes, including original metadata and request.
-    /// Existing model transitions derive `Downloaded` and `ChecksumVerified` together; their
+    /// The model advances directly from `Created` to `ChecksumVerified`; the
     /// exact checksum is persisted atomically before the existing durable publisher runs.
     /// On interruption, reopen the journal and use its ordinary `ChecksumVerified` publication
     /// recovery without another read or transfer. Created partial trees cannot be resumed
@@ -250,15 +250,11 @@ impl<'layout> IcSnapshotArtifactWriter<'_, 'layout, '_> {
         checksum_directory(&self.path)?.verify(expected.hash())?;
         self.check_custody()?;
         let target = self.coverage.metadata().request().target();
-        let mut next = self
-            .journal
-            .next(target, &self.snapshot, ArtifactTransition::Downloaded)?;
-        next.advance(
+        let next = self.journal.next(
             target,
             &self.snapshot,
             ArtifactTransition::ChecksumVerified(expected.clone()),
-        )
-        .map_err(DownloadJournalError::from)?;
+        )?;
         self.journal.store(next, write_encoded)?;
         publish(self.journal, target, &self.snapshot)?;
         self.journal.check_usable()?;

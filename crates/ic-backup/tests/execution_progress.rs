@@ -58,13 +58,14 @@ fn retain_pending_fixture() -> RetainedFixture {
     let mut first =
         AttemptJournalGuard::create(&layout, plan.attempt_authority(0).expect("first authority"))
             .expect("first original journal");
-    let mut second = AttemptJournalGuard::create(
+    let second = AttemptJournalGuard::create(
         &layout,
         plan.attempt_authority(7).expect("second authority"),
     )
     .expect("second original journal");
+    drop(second);
     let mutation = first
-        .reserve_mutation()
+        .reserve_planned_mutation(&plan.digest())
         .expect("original allowance consumed");
     first
         .record_mutation(MutationReceiptRequest {
@@ -74,17 +75,19 @@ fn retain_pending_fixture() -> RetainedFixture {
             evidence: "12".repeat(32),
         })
         .expect("caller-qualified local receipt fixture");
+    let first_record = first.record().unwrap().clone();
+    let first_bytes = fs::read(first.path()).expect("first journal bytes");
+    drop(first);
+    let mut second =
+        AttemptJournalGuard::open(&layout, &plan.attempt_authority(7).unwrap()).unwrap();
     let mutation = second
-        .reserve_mutation()
+        .reserve_planned_mutation(&plan.digest())
         .expect("dependent original allowance consumed");
     let request = "23".repeat(32);
     let observation = second
-        .reserve_observation(mutation, &request)
+        .reserve_planned_observation(&plan.digest(), mutation, &request)
         .expect("observation consumption retained before reply");
-    let references = [
-        second.record().expect("second journal"),
-        first.record().expect("first journal"),
-    ];
+    let references = [second.record().expect("second journal"), &first_record];
     let before = progress(&ExecutionProgressRequest {
         plan: &plan,
         journals: &references,
@@ -102,9 +105,7 @@ fn retain_pending_fixture() -> RetainedFixture {
         before.attempts.mutations_remaining, 0,
         "unassigned plan headroom is excluded"
     );
-    let first_bytes = fs::read(first.path()).expect("first journal bytes");
     let second_bytes = fs::read(second.path()).expect("second journal bytes");
-    drop(first);
     drop(second);
     drop(layout);
 

@@ -1,6 +1,7 @@
 //! Real retained originals and rejection boundaries; providers here prove no IC effects.
 
 use super::*;
+use crate::tests::support::execution_workflow::cancel_pending;
 use crate::tests::support::provider::Provider;
 use crate::tests::support::retained_reply::write_synced;
 mod fixture;
@@ -202,7 +203,7 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
     .unwrap();
     let mut provider = Provider::new(Ok(b"DIDL\0\0".to_vec()));
     let reply_path = fixture.root.join("retained-reply.candid");
-    let mut future = Box::pin(restore_snapshot(
+    let future = restore_snapshot(
         &stage,
         existing(&fixture.source_layout, &fixture.source),
         &safety,
@@ -216,21 +217,14 @@ fn cancellation_during_qualification_keeps_durable_reply_and_pending_original() 
             std::future::pending::<()>().await;
             Ok(receipt(request, reply))
         },
-    ));
-    crate::tests::support::ready::assert_pending(future.as_mut());
-    let authority = stage.plan().attempt_authority(sequence).unwrap();
-    assert!(AttemptJournalGuard::open(stage.layout().unwrap(), &authority).is_err());
+    );
     let journal_path = stage
         .layout()
         .unwrap()
         .root()
         .join(format!("attempt-{sequence}.json"));
-    let original = fs::read(&journal_path).unwrap();
-    drop(future);
+    let original = cancel_pending(&stage, sequence, future);
     assert_eq!(provider.calls, 1);
-    let journal = AttemptJournalGuard::open(stage.layout().unwrap(), &authority).unwrap();
-    assert_eq!(journal.record().unwrap().view().pending_mutation, Some(1));
-    drop(journal);
     assert!(
         ready(restore_snapshot(
             &stage,

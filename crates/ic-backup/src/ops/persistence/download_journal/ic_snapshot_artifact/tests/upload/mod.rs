@@ -100,7 +100,10 @@ fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty
                 .binding_digest(),
             upload.binding_digest()
         );
-        assert!(reopened.record().unwrap().resume_view().is_complete);
+        assert_eq!(
+            reopened.record().unwrap().artifacts()[0].state(),
+            crate::model::download_journal::ArtifactStateRecord::Durable
+        );
         assert_eq!(fs::read(reopened.path()).unwrap(), journal_bytes);
     });
 }

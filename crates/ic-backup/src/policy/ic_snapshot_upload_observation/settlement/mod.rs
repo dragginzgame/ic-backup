@@ -92,17 +92,7 @@ pub fn validate_settlement<'a>(
         request.payload().target(),
         baseline,
         inventory,
-        &InventorySettlementIdentity {
-            operation: SettlementIdentity {
-                authority: &settlement.authority,
-                mutation_attempt: settlement.mutation_attempt,
-                observation_attempt: settlement.observation_attempt,
-                challenge: &settlement.challenge,
-            },
-            baseline: &settlement.baseline,
-            inventory: &settlement.inventory,
-            observation_evidence: &settlement.observation_evidence,
-        },
+        &InventorySettlementIdentity::from(settlement),
         &SettlementIdentity {
             authority: &authority,
             mutation_attempt: request.mutation_attempt(),

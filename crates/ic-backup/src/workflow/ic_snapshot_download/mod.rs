@@ -1,10 +1,11 @@
 //! Complete original planned data transfer with explicit integration-qualified receipts.
 
+use crate::model::data_stage_plan::SnapshotDataPlanningError;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
         attempt_journal::MutationReceiptRequest,
-        ic_snapshot_download::{IcSnapshotDownloadPlan, IcSnapshotDownloadPlanningError},
+        ic_snapshot_download::IcSnapshotDownloadPlan,
         ic_snapshot_transfer_read::{
             IcSnapshotTransferReadPayload, IcSnapshotTransferReadRequest,
             IcSnapshotTransferReadResponse,
@@ -67,7 +68,7 @@ pub async fn download_snapshot<E: std::error::Error + 'static>(
     download.validate_binding(stage.binding())?;
     let plan = download
         .plan()
-        .ok_or(IcSnapshotDownloadPlanningError::NoDataReads)?;
+        .ok_or(SnapshotDataPlanningError::NoDataOperations)?;
     if stage.plan() != plan
         || !download.matches_metadata(writer.coverage().metadata())
         || writer.coverage().covered_region_bytes() != [0; 3]
@@ -157,7 +158,7 @@ pub enum IcSnapshotDownloadExecutionError<E: std::error::Error + 'static> {
     AlreadyAttempted,
     /// Existing original download plan/binding admission.
     #[error(transparent)]
-    Planning(#[from] IcSnapshotDownloadPlanningError),
+    Planning(#[from] SnapshotDataPlanningError),
     /// Existing retained stage/ancestor admission.
     #[error(transparent)]
     Stage(#[from] ExecutionWorkflowPersistenceError),

@@ -89,6 +89,11 @@ impl Failure {
         stage: &ExecutionStageGuard<'_>,
         operations: usize,
     ) -> ExpectedProgress {
+        let second_pending = ExpectedProgress {
+            mutations_used: 2,
+            applied_operations: 1,
+            provider_calls: 2,
+        };
         match self {
             Failure::MalformedSecond => {
                 assert!(matches!(result,
@@ -96,11 +101,7 @@ impl Failure {
                         IcSnapshotUploadExecutionError::AfterReply { acknowledgement, .. }
                     )) if acknowledgement.input().reply.is_empty()
                 ));
-                ExpectedProgress {
-                    mutations_used: 2,
-                    applied_operations: 1,
-                    provider_calls: 2,
-                }
+                second_pending
             }
             Failure::LostSecond => {
                 assert!(matches!(
@@ -109,11 +110,7 @@ impl Failure {
                         IcSnapshotUploadExecutionError::Provider(_)
                     ))
                 ));
-                ExpectedProgress {
-                    mutations_used: 2,
-                    applied_operations: 1,
-                    provider_calls: 2,
-                }
+                second_pending
             }
             Failure::QualificationSecond => {
                 assert!(
@@ -123,11 +120,7 @@ impl Failure {
                         acknowledgement,
                     }) if acknowledgement.input().reply == crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY)
                 );
-                ExpectedProgress {
-                    mutations_used: 2,
-                    applied_operations: 1,
-                    provider_calls: 2,
-                }
+                second_pending
             }
             Failure::WrongReceiptSecond => {
                 assert!(matches!(
@@ -138,11 +131,7 @@ impl Failure {
                         ..
                     })
                 ));
-                ExpectedProgress {
-                    mutations_used: 2,
-                    applied_operations: 1,
-                    provider_calls: 2,
-                }
+                second_pending
             }
             Failure::Admission => {
                 assert!(result.is_err());
@@ -218,15 +207,15 @@ impl IcSnapshotUploadProvider for Provider {
             } else {
                 crate::model::ic_lifecycle_reply::EMPTY_CANDID_REPLY.to_vec()
             };
-            Ok(IcMutationAcknowledgement::new(IcUpdateResponseInput {
-                authority: request.authority().digest(),
-                mutation_attempt: request.mutation_attempt(),
-                context: request.plan().context().clone(),
-                target: request.payload().target().into(),
-                evidence: ArtifactChecksumRecord::from_bytes(&reply),
-                reply,
-            })
-            .unwrap())
+            Ok(
+                IcMutationAcknowledgement::new(crate::tests::support::update::input(
+                    request.authority(),
+                    request.mutation_attempt(),
+                    request.plan().context(),
+                    reply,
+                ))
+                .unwrap(),
+            )
         })())
     }
 }
@@ -520,7 +509,10 @@ fn missing_original_journal_refuses_without_creating_or_dispatching() {
         assert_eq!(provider.calls, 0);
         assert!(!path.exists());
         assert_eq!(fs::read(retained).unwrap(), bytes);
-        assert!(source.record().unwrap().resume_view().is_complete);
+        assert_eq!(
+            source.record().unwrap().artifacts()[0].state(),
+            crate::model::download_journal::ArtifactStateRecord::Durable
+        );
     });
 }
 

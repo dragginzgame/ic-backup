@@ -11,3 +11,9 @@ pub fn raw(name: &str) -> Vec<u8> {
             .unwrap(),
     )
 }
+
+pub fn values(
+    name: &str,
+) -> ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult {
+    ic_platform::candid::decode_one(&raw(name), crate::tests::support::WIRE_ORACLE_LIMITS).unwrap()
+}

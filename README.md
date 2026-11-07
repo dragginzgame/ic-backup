@@ -268,7 +268,7 @@ the separately authorized release workflow.
 | [Documentation index](docs/README.md) | Choose the right product, development, evidence or governance document |
 | [Current handoff](docs/status/current.md) | Current implementation state, evidence and next work |
 | [Extraction and implementation design](docs/extraction-design.md) | Complete proposed product behavior and safety design |
-| [Implemented extraction boundary](docs/extraction-boundary.md) | Exact behavior currently provided by the library |
+| [Record and API contracts](docs/extraction-boundary.md) | Exact behavior currently provided by the library |
 | [Ownership boundary](docs/ownership.md) | Current dependency owners, retained adapters and extraction cleanup |
 | [Development commands](docs/development.md) | Local development and validation workflow |
 | [Release workflow](docs/releasing.md) | Maintainer release process |

@@ -1,6 +1,6 @@
 //! Original allowance thresholds, canonical complete extents and exact learned binding.
 use super::*;
-use crate::tests::support::ic_snapshot_metadata::raw;
+use crate::tests::support::ic_snapshot_metadata::values;
 use crate::{
     model::ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
     tests::support::ic_snapshot_upload::{
@@ -26,13 +26,6 @@ fn with_values(
     .unwrap();
     check(&upload);
 }
-fn values() -> ReadCanisterSnapshotMetadataResult {
-    ic_platform::candid::decode_one(
-        &raw("upload-source"),
-        crate::tests::support::WIRE_ORACLE_LIMITS,
-    )
-    .unwrap()
-}
 fn allocation<'a, 'b>(payload: &'a IcSnapshotUploadRequest<'b>) -> IcSnapshotUploadReply<'a, 'b> {
     IcSnapshotUploadReply::decode(
         payload,
@@ -42,7 +35,7 @@ fn allocation<'a, 'b>(payload: &'a IcSnapshotUploadRequest<'b>) -> IcSnapshotUpl
 }
 #[test]
 fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
-    let mut values = values();
+    let mut values = values("upload-source");
     values.wasm_module_size = 5;
     values.wasm_memory_size = 3;
     values.stable_memory_size = 0;
@@ -108,7 +101,7 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
         );
         assert!(matches!(
             data.bind(&binding, &original, vec![wrong]),
-            Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
+            Err(SnapshotDataPlanningError::OriginalMismatch)
         ));
         assert!(
             DataUploadPreparation::new(&workflow, 7, &reply, 4)
@@ -120,7 +113,7 @@ fn complete_exact_extents_keep_stage_headroom_and_allocation_reply_binding() {
 }
 #[test]
 fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
-    let mut input = values();
+    let mut input = values("upload-source");
     input.wasm_chunk_store.clear();
     input.wasm_module_size = 8;
     input.wasm_memory_size = 0;
@@ -136,7 +129,7 @@ fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
         );
         assert!(matches!(
             DataUploadPreparation::new(&data_workflow(metadata, 1), 7, &reply, 4),
-            Err(IcSnapshotDataUploadPlanningError::InsufficientAllowance {
+            Err(SnapshotDataPlanningError::InsufficientAllowance {
                 required: 2,
                 original: 1
             })
@@ -144,12 +137,12 @@ fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
         for chunk in [0, 1024 * 1024 + 1, u64::MAX] {
             assert!(matches!(
                 DataUploadPreparation::new(&data_workflow(metadata, 2), 7, &reply, chunk),
-                Err(IcSnapshotDataUploadPlanningError::InvalidChunkSize)
+                Err(SnapshotDataPlanningError::InvalidChunkSize)
             ));
         }
         assert!(matches!(
             DataUploadPreparation::new(&data_workflow(metadata, 2), 99, &reply, 4),
-            Err(IcSnapshotDataUploadPlanningError::Plan(_))
+            Err(SnapshotDataPlanningError::Plan(_))
         ));
     });
     input.wasm_module_size = u64::MAX;
@@ -159,17 +152,17 @@ fn complete_count_rejects_insufficient_original_allowance_and_extreme_nat64() {
         let workflow = data_workflow(metadata, 2);
         assert!(matches!(
             DataUploadPreparation::new(&workflow, 7, &reply, 1),
-            Err(IcSnapshotDataUploadPlanningError::CountOverflow)
+            Err(SnapshotDataPlanningError::CountOverflow)
         ));
         assert!(matches!(
             DataUploadPreparation::new(&workflow, 7, &reply, 1024 * 1024),
-            Err(IcSnapshotDataUploadPlanningError::InsufficientAllowance { .. })
+            Err(SnapshotDataPlanningError::InsufficientAllowance { .. })
         ));
     });
 }
 #[test]
 fn empty_regions_make_no_placeholder_but_known_empty_chunk_requires_a_write() {
-    let mut input = values();
+    let mut input = values("upload-source");
     input.wasm_module_size = 0;
     input.wasm_memory_size = 0;
     input.stable_memory_size = 0;
@@ -201,7 +194,7 @@ fn empty_regions_make_no_placeholder_but_known_empty_chunk_requires_a_write() {
 }
 #[test]
 fn changed_original_context_and_data_acknowledgement_cannot_plan_allocation() {
-    let mut values = values();
+    let mut values = values("upload-source");
     values.wasm_module_size = 8;
     values.wasm_memory_size = 8;
     values.stable_memory_size = 8;
@@ -219,7 +212,7 @@ fn changed_original_context_and_data_acknowledgement_cannot_plan_allocation() {
         let changed = serde_json::from_value(fields).unwrap();
         assert!(matches!(
             DataUploadPreparation::new(&changed, 7, &allocation(metadata), 1024 * 1024),
-            Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
+            Err(SnapshotDataPlanningError::OriginalMismatch)
         ));
         let data = IcSnapshotUploadRequest::data(
             metadata,
@@ -235,7 +228,7 @@ fn changed_original_context_and_data_acknowledgement_cannot_plan_allocation() {
         .unwrap();
         assert!(matches!(
             DataUploadPreparation::new(&workflow, 7, &reply, 1024 * 1024),
-            Err(IcSnapshotDataUploadPlanningError::OriginalMismatch)
+            Err(SnapshotDataPlanningError::OriginalMismatch)
         ));
     });
 }

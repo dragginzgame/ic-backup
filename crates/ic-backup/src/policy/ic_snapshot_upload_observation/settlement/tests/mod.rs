@@ -1,4 +1,5 @@
 use super::*;
+use crate::tests::support::ic_observation::snapshot;
 use crate::{
     model::{
         attempt_journal::ObservationReceiptRequest,
@@ -9,13 +10,6 @@ use crate::{
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::Snapshot;
 
-fn snapshot(id: &[u8]) -> Snapshot {
-    Snapshot {
-        id: id.into(),
-        taken_at_timestamp: 42,
-        total_size: 123,
-    }
-}
 fn response(
     request: &IcSnapshotUploadObservationRequest<'_, '_>,
     snapshots: Vec<Snapshot>,

@@ -71,12 +71,12 @@ fn artifacts<'a>(
     DownloadJournalGuard::create(
         stage.layout().unwrap(),
         intent,
-        vec![DownloadArtifactRequest {
+        DownloadArtifactRequest {
             canister_id: metadata.request().target().into(),
             snapshot_id: TOKEN.into(),
             snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
             snapshot_total_size_bytes: u64::MAX,
-        }],
+        },
     )
     .unwrap()
 }
@@ -717,7 +717,7 @@ fn changed_writer_metadata_intent_prior_coverage_and_read_free_plan_reject_witho
                     IcSnapshotDownloadExecutionError::OriginalMismatch
                         | IcSnapshotDownloadExecutionError::Artifact(_)
                         | IcSnapshotDownloadExecutionError::Planning(
-                            IcSnapshotDownloadPlanningError::NoDataReads
+                            SnapshotDataPlanningError::NoDataOperations
                         )
                 ));
                 assert_eq!(provider.calls, 0);

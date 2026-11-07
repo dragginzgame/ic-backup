@@ -1,6 +1,7 @@
 //! Explicit local simulator custody/accounting. No mainnet provider or retry loop.
 
 use ic_backup::model::ic_update_response::IcUpdateResponseInput;
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 use ic_backup::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -262,7 +263,7 @@ impl Backend {
         let (index, layout, plan) = self.begin_call(method, arguments, digest);
         let mut journal =
             AttemptJournalGuard::create(&layout, plan.attempt_authority(index).unwrap()).unwrap();
-        let attempt = journal.reserve_mutation().unwrap();
+        let attempt = journal.reserve_planned_mutation(&plan.digest()).unwrap();
         let raw = self.management(method, arguments).await;
         if lose_reply {
             // Test oracle retains the actually executed reply separately. Recovery
@@ -287,7 +288,7 @@ impl Backend {
         let (index, layout, plan) = self.begin_call(payload.method(), payload.arguments(), &digest);
         let mut journal =
             AttemptJournalGuard::create(&layout, plan.attempt_authority(index).unwrap()).unwrap();
-        let attempt = journal.reserve_mutation().unwrap();
+        let attempt = journal.reserve_planned_mutation(&plan.digest()).unwrap();
         let request =
             IcSnapshotTransferReadRequest::new(&plan, index, journal.record().unwrap(), payload)
                 .unwrap();
@@ -455,14 +456,14 @@ impl Backend {
             .unwrap()
             .to_owned();
         for denial in [
-            journal.reserve_mutation(),
-            journal.reserve_observation(1, &observation_request),
+            journal.reserve_planned_mutation(&plan.digest()),
+            journal.reserve_planned_observation(&plan.digest(), 1, &observation_request),
         ] {
             assert!(matches!(
                 denial,
-                Err(AttemptJournalError::Record(
+                Err(ProgressError::Journal(AttemptJournalError::Record(
                     AttemptJournalRecordError::ObservationPending { attempt: 2 }
-                ))
+                )))
             ));
         }
         assert_eq!(fs::read(journal.path()).unwrap(), original);

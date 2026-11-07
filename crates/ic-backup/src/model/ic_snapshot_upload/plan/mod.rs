@@ -1,23 +1,16 @@
 //! Exact bounded data-upload declarations, retaining no aggregate payload bytes.
 
-use super::{
-    IcSnapshotUploadError, IcSnapshotUploadReply, IcSnapshotUploadReplyKind,
-    IcSnapshotUploadRequest,
-};
+use super::{IcSnapshotUploadReply, IcSnapshotUploadReplyKind, IcSnapshotUploadRequest};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
-    attempt_journal::AttemptJournalRecordError,
-    data_stage_plan::{self, DataStagePlanError, LearnedDataStage, LearnedDataStageError},
-    effect_graph::EffectGraphError,
+    data_stage_plan::{self, LearnedDataStage, SnapshotDataPlanningError},
     execution_workflow::{
-        ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowError,
-        ExecutionWorkflowRecord,
+        ExecutionStageBindingRecord, ExecutionStagePredecessorRecord, ExecutionWorkflowRecord,
     },
-    ic_snapshot_data::{ExtentPlanningError, planned_extents},
-    operation_plan::{OperationPlanError, OperationPlanRecord, PlannedOperationRecord},
+    ic_snapshot_data::planned_extents,
+    operation_plan::{OperationPlanRecord, PlannedOperationRecord},
 };
 use ic_platform::management_canister_types::SnapshotDataKind;
-use thiserror::Error;
 
 /// Complete ordered extents and source-bound request digests for one original data stage.
 ///
@@ -72,17 +65,17 @@ impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 's
         sequence: u64,
         allocation: &IcSnapshotUploadReply<'request, 'source>,
         chunk_bytes: u64,
-    ) -> Result<Self, IcSnapshotDataUploadPlanningError> {
+    ) -> Result<Self, SnapshotDataPlanningError> {
         let metadata = allocation.request();
         let stage = workflow.stage(sequence)?;
         let IcSnapshotUploadReplyKind::Metadata { snapshot_id } = allocation.kind() else {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+            return Err(SnapshotDataPlanningError::OriginalMismatch);
         };
         metadata.validate_data_destination(snapshot_id)?;
         if stage.target() != metadata.target()
             || !super::attempt::source_context_matches(workflow.allocation(), metadata)
         {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+            return Err(SnapshotDataPlanningError::OriginalMismatch);
         }
         let kinds = planned_extents(metadata.source(), chunk_bytes, stage.budget().mutations())?;
         Ok(Self {
@@ -108,12 +101,10 @@ impl<'workflow, 'request, 'source> DataUploadPreparation<'workflow, 'request, 's
     pub(crate) fn finish(
         self,
         bindings: &[ArtifactChecksumRecord],
-    ) -> Result<
-        IcSnapshotDataUploadPlan<'workflow, 'request, 'source>,
-        IcSnapshotDataUploadPlanningError,
-    > {
+    ) -> Result<IcSnapshotDataUploadPlan<'workflow, 'request, 'source>, SnapshotDataPlanningError>
+    {
         if bindings.len() != self.kinds.len() {
-            return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+            return Err(SnapshotDataPlanningError::OriginalMismatch);
         }
         let plan = data_stage_plan::build(
             self.workflow.allocation(),
@@ -148,23 +139,23 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
         binding: &ExecutionStageBindingRecord,
         plan: &OperationPlanRecord,
         learned: &ArtifactChecksumRecord,
-    ) -> Result<UploadCompletion, IcSnapshotDataUploadPlanningError> {
+    ) -> Result<UploadCompletion, SnapshotDataPlanningError> {
         if let Some(expected) = self.plan() {
             self.validate_binding(binding)?;
             if plan != expected {
-                return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+                return Err(SnapshotDataPlanningError::OriginalMismatch);
             }
             Ok(UploadCompletion::Data)
         } else {
             binding.validate(self.binding.workflow, plan)?;
             let [operation] = plan.operations() else {
-                return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+                return Err(SnapshotDataPlanningError::OriginalMismatch);
             };
             if operation.target() != self.metadata.target()
                 || operation.request() != self.metadata.binding_digest().hash()
                 || learned != &self.binding.evidence
             {
-                return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch);
+                return Err(SnapshotDataPlanningError::OriginalMismatch);
             }
             Ok(UploadCompletion::Allocation {
                 sequence: operation.operation_sequence(),
@@ -211,99 +202,26 @@ impl<'request, 'source> IcSnapshotDataUploadPlan<'_, 'request, 'source> {
         allocation_binding: &ExecutionStageBindingRecord,
         allocation_plan: &OperationPlanRecord,
         predecessors: Vec<ExecutionStagePredecessorRecord>,
-    ) -> Result<ExecutionStageBindingRecord, IcSnapshotDataUploadPlanningError> {
+    ) -> Result<ExecutionStageBindingRecord, SnapshotDataPlanningError> {
         let plan = self
             .plan()
-            .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
-        self.binding
-            .bind(
-                plan,
-                allocation_binding,
-                allocation_plan,
-                self.metadata.binding_digest().hash(),
-                predecessors,
-            )
-            .map_err(Into::into)
+            .ok_or(SnapshotDataPlanningError::NoDataOperations)?;
+        self.binding.bind(
+            plan,
+            allocation_binding,
+            allocation_plan,
+            self.metadata.binding_digest().hash(),
+            predecessors,
+        )
     }
     pub(crate) fn validate_binding(
         &self,
         binding: &ExecutionStageBindingRecord,
-    ) -> Result<(), IcSnapshotDataUploadPlanningError> {
+    ) -> Result<(), SnapshotDataPlanningError> {
         let plan = self
             .plan()
-            .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
-        Ok(self.binding.validate(binding, plan)?)
-    }
-}
-
-/// Planning rejection changes no source bytes, journal, allowance or remote effects.
-#[derive(Debug, Error)]
-pub enum IcSnapshotDataUploadPlanningError {
-    /// Chunk size is outside the existing 1..=1 MiB data boundary.
-    #[error("invalid snapshot data upload chunk size")]
-    InvalidChunkSize,
-    /// Complete declared extent counts overflow nat64 or host indexing.
-    #[error("snapshot data upload count overflow")]
-    CountOverflow,
-    /// Complete data writes cannot fit their original stage allocation.
-    #[error("snapshot data upload needs {required} updates; original allocation is {original}")]
-    InsufficientAllowance {
-        /// Complete required update count, excluding metadata allocation.
-        required: u64,
-        /// Original data-stage ceiling, excluding unassigned workflow headroom.
-        original: u32,
-    },
-    /// Original context, source, allocation, request or predecessor evidence differs.
-    #[error("snapshot data upload originals differ")]
-    OriginalMismatch,
-    /// Empty data has no placeholder child plan or checkpoint.
-    #[error("snapshot data upload has no data writes to bind")]
-    NoDataWrites,
-    /// Existing immutable operation plan admission.
-    #[error(transparent)]
-    Plan(#[from] OperationPlanError),
-    /// Existing explicit graph admission.
-    #[error(transparent)]
-    Graph(#[from] EffectGraphError),
-    /// Existing original stage binding admission.
-    #[error(transparent)]
-    Workflow(#[from] ExecutionWorkflowError),
-    /// Existing exact source/destination codec admission.
-    #[error(transparent)]
-    Upload(#[from] IcSnapshotUploadError),
-    /// Existing original per-operation attempt admission.
-    #[error(transparent)]
-    Budget(#[from] AttemptJournalRecordError),
-}
-impl From<ExtentPlanningError> for IcSnapshotDataUploadPlanningError {
-    fn from(error: ExtentPlanningError) -> Self {
-        match error {
-            ExtentPlanningError::InvalidChunkSize => Self::InvalidChunkSize,
-            ExtentPlanningError::CountOverflow => Self::CountOverflow,
-            ExtentPlanningError::InsufficientAllowance { required, original } => {
-                Self::InsufficientAllowance { required, original }
-            }
-        }
-    }
-}
-
-impl From<DataStagePlanError> for IcSnapshotDataUploadPlanningError {
-    fn from(error: DataStagePlanError) -> Self {
-        match error {
-            DataStagePlanError::CountOverflow => Self::CountOverflow,
-            DataStagePlanError::Graph(error) => Self::Graph(error),
-            DataStagePlanError::Plan(error) => Self::Plan(error),
-            DataStagePlanError::Budget(error) => Self::Budget(error),
-        }
-    }
-}
-
-impl From<LearnedDataStageError> for IcSnapshotDataUploadPlanningError {
-    fn from(error: LearnedDataStageError) -> Self {
-        match error {
-            LearnedDataStageError::Workflow(error) => Self::Workflow(error),
-            LearnedDataStageError::Mismatch => Self::OriginalMismatch,
-        }
+            .ok_or(SnapshotDataPlanningError::NoDataOperations)?;
+        self.binding.validate(binding, plan)
     }
 }
 

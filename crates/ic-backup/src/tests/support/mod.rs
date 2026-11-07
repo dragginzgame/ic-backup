@@ -131,16 +131,6 @@ pub fn wait_for_child_path(child: &mut Child, path: &Path, description: &str) {
     .expect("wait for direct child marker");
 }
 
-#[cfg(unix)]
-pub fn wait_for_path(path: &Path, description: &str) {
-    ic_host_process::testing::crash_barrier::wait_for_path(
-        path,
-        description,
-        CRASH_BARRIER_TIMEOUT,
-    )
-    .expect("wait for parent marker");
-}
-
 /// Encode a bounded test fixture before publishing through the production owner.
 pub(crate) fn create_json_durable(
     path: &std::path::Path,

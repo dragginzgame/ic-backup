@@ -89,7 +89,7 @@ pub fn retained_inventory_observation(
     let plan_bytes = fs::read(layout.root().join("operation-plan.json")).unwrap();
     assert_eq!(
         attempts
-            .reserve_observation(1, list.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, list.digest().hash())
             .unwrap(),
         2
     );
@@ -139,10 +139,10 @@ pub fn retained_inventory_observation(
         (0, 0)
     );
     assert!(!progress.applied);
-    assert!(attempts.reserve_mutation().is_err());
+    assert!(attempts.reserve_planned_mutation(&plan.digest()).is_err());
     assert!(
         attempts
-            .reserve_observation(1, list.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, list.digest().hash())
             .is_err()
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), before);
@@ -257,10 +257,10 @@ fn retained_settlement(
         )
         .is_err()
     );
-    assert!(reopened.reserve_mutation().is_err());
+    assert!(reopened.reserve_planned_mutation(&plan.digest()).is_err());
     assert!(
         reopened
-            .reserve_observation(1, list.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, list.digest().hash())
             .is_err()
     );
     assert_eq!(fs::read(reopened.path()).unwrap(), settled);

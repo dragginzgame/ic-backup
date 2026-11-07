@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::pic_journey::{backend::Backend, management};
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 use ic_backup::{
     model::attempt_journal::AttemptAuthorityRecord,
     model::{
@@ -26,10 +27,10 @@ pub(in crate::pic_journey) async fn lifecycle(
     let mut journal =
         AttemptJournalGuard::open(&layout, &plan.attempt_authority(index).unwrap()).unwrap();
     assert!(matches!(
-        journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::MutationPending { attempt: 1 }
-        ))
+        )))
     ));
     let status = management(backend, Method::CanisterStatus, None);
     fs::write(
@@ -38,7 +39,7 @@ pub(in crate::pic_journey) async fn lifecycle(
     )
     .unwrap();
     let observation = journal
-        .reserve_observation(1, status.digest().hash())
+        .reserve_planned_observation(&plan.digest(), 1, status.digest().hash())
         .unwrap();
     let request =
         IcObservationRequest::new(&plan, index, journal.record().unwrap(), mutation, &status)
@@ -115,7 +116,7 @@ pub(in crate::pic_journey) async fn lifecycle(
             evidence: settlement.evidence.hash().into(),
         })
         .unwrap();
-    assert_settled_reopen(&layout, request.authority(), journal);
+    assert_settled_reopen(&layout, &plan, request.authority(), journal);
     true
 }
 
@@ -133,6 +134,7 @@ fn assert_status(request: &IcManagementRequestRecord, raw: &[u8], expected: Cani
 
 fn assert_settled_reopen(
     layout: &BackupLayoutGuard,
+    plan: &ic_backup::model::operation_plan::OperationPlanRecord,
     authority: &AttemptAuthorityRecord,
     mut journal: AttemptJournalGuard<'_>,
 ) {
@@ -148,10 +150,10 @@ fn assert_settled_reopen(
     );
     let bytes = fs::read(journal.path()).unwrap();
     assert!(matches!(
-        journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::AlreadyApplied
-        ))
+        )))
     ));
     assert_eq!(fs::read(journal.path()).unwrap(), bytes);
     drop(journal);

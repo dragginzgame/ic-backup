@@ -29,7 +29,10 @@ use ic_backup::{
         ic_snapshot_reply::{IcSnapshotInfo, IcSnapshotReply},
         operation_plan::OperationPlanRecord,
     },
-    ops::persistence::{BackupLayoutGuard, ExecutionStageGuard, read_complete_execution_workflow},
+    ops::persistence::{
+        AttemptJournalGuard, BackupLayoutGuard, DownloadJournalGuard, ExecutionStageGuard,
+        read_complete_execution_workflow, read_execution_progress,
+    },
     workflow::execution_workflow::{
         ExecutionWorkflowRunError, ExecutionWorkflowStageDriver, RetainedStageEvidence,
     },
@@ -184,15 +187,37 @@ impl CompleteDriver {
         let writer = artifacts
             .stage_ic_snapshot_artifact(token, &metadata, raw)
             .unwrap();
-        let (checksum, chunks) = super::steps::download(
+        let reference_bytes = fs::read(layout.root().join("restore-references.json")).unwrap();
+        let calls = self.backend.calls;
+        let result = super::steps::download(
             &mut self.backend,
             stage,
             &download,
             writer,
             self.data_failure,
         )
-        .await
-        .map_err(io::Error::other)?;
+        .await;
+        assert_eq!(
+            fs::read(layout.root().join("restore-references.json")).unwrap(),
+            reference_bytes
+        );
+        if let Some(index) = self.data_failure.position() {
+            assert_eq!(
+                self.backend.calls,
+                calls + u64::try_from(index + 1).unwrap()
+            );
+            let error = result.unwrap_err();
+            refuse_data_reentry(stage, artifacts, self.data_failure, &error);
+            return Err(io::Error::other(error));
+        }
+        let (checksum, chunks) = result.unwrap();
+        let view = read_execution_progress(layout, &plan.digest()).unwrap();
+        assert_eq!(view.applied_operations, download.requests().len());
+        assert_eq!(view.attempts.mutations_remaining, 0);
+        assert_eq!(
+            self.backend.calls,
+            calls + u64::try_from(download.requests().len()).unwrap()
+        );
         assert_eq!(
             artifacts
                 .verify_ic_snapshot_artifact(plan, token, &metadata)
@@ -212,6 +237,84 @@ impl CompleteDriver {
         Ok(manifest)
     }
 }
+fn refuse_data_reentry(
+    stage: &ExecutionStageGuard<'_>,
+    artifacts: DownloadJournalGuard<'_>,
+    failure: ReadFailure,
+    error: &ic_backup::workflow::ic_snapshot_download::IcSnapshotDownloadExecutionError<
+        std::convert::Infallible,
+    >,
+) {
+    use ic_backup::ports::ic_observation::IcObservationProviderError;
+    use ic_backup::workflow::{
+        ic_snapshot_download::IcSnapshotDownloadExecutionError as DownloadError,
+        ic_snapshot_transfer_read::{
+            IcSnapshotTransferReadExecutionError as ReadError,
+            IcSnapshotTransferReadReplyError as ReplyError,
+        },
+    };
+    if matches!(failure, ReadFailure::Malformed(_)) {
+        let DownloadError::Read(ReadError::AfterReply {
+            source: ReplyError::Association(_),
+            response,
+        }) = error
+        else {
+            panic!("retained malformed reply")
+        };
+        assert_eq!(response.input().reply, [] as [u8; 0]);
+    } else {
+        assert!(matches!(
+            error,
+            DownloadError::Read(ReadError::Provider(
+                IcObservationProviderError::Indeterminate
+            ))
+        ));
+    }
+    let pending = u64::try_from(failure.position().unwrap()).unwrap();
+    let layout = stage.layout().unwrap();
+    let plan = stage.plan();
+    let progress = read_execution_progress(layout, &plan.digest()).unwrap();
+    assert_eq!(
+        progress.attempts.mutations_used,
+        u32::try_from(pending + 1).unwrap()
+    );
+    assert_eq!(
+        progress.applied_operations,
+        usize::try_from(pending).unwrap()
+    );
+    let record = artifacts.record().unwrap().clone();
+    assert_eq!(
+        record.artifacts()[0].state(),
+        ic_backup::model::download_journal::ArtifactStateRecord::Created
+    );
+    assert!(!layout.root().join("download-manifest.json").exists());
+    assert!(
+        !layout
+            .root()
+            .join(record.artifacts()[0].artifact_path())
+            .exists()
+    );
+    let original = fs::read(layout.root().join(format!("attempt-{pending}.json"))).unwrap();
+    let artifact_bytes = fs::read(artifacts.path()).unwrap();
+    for sequence in [pending + 1, pending] {
+        let mut journal =
+            AttemptJournalGuard::open(layout, &plan.attempt_authority(sequence).unwrap()).unwrap();
+        assert!(journal.reserve_planned_mutation(&plan.digest()).is_err());
+    }
+    drop(artifacts);
+    let reopened = DownloadJournalGuard::open(layout, plan.digest().hash()).unwrap();
+    assert_eq!(reopened.record().unwrap(), &record);
+    assert_eq!(fs::read(reopened.path()).unwrap(), artifact_bytes);
+    assert_eq!(
+        fs::read(layout.root().join(format!("attempt-{pending}.json"))).unwrap(),
+        original
+    );
+    assert_eq!(
+        read_execution_progress(layout, &plan.digest()).unwrap(),
+        progress
+    );
+}
+
 impl ExecutionWorkflowStageDriver for CompleteDriver {
     type Error = io::Error;
 
@@ -349,6 +452,34 @@ async fn complete_capture(data_failure: ReadFailure) -> CompleteDriver {
                 .exists()
         );
         assert!(read_complete_execution_workflow(&layout, &workflow.digest()).is_err());
+    }
+    let binding: ExecutionStageBindingRecord = read_json(
+        &root.join("execution-stage-9/stage-binding.json"),
+        MAX_EXECUTION_STAGE_BYTES,
+    )
+    .unwrap();
+    let (stage, progress) =
+        ExecutionStageGuard::resume(&layout, &workflow.digest(), 9, &binding.digest()).unwrap();
+    if data_failure == ReadFailure::None {
+        let (plan, source) = driver.source.as_ref().unwrap();
+        let artifacts =
+            DownloadJournalGuard::open(stage.layout().unwrap(), plan.digest().hash()).unwrap();
+        assert_eq!(
+            artifacts
+                .read_download_manifest(plan, &source.manifest)
+                .unwrap(),
+            *artifacts.record().unwrap()
+        );
+        assert_eq!(progress.applied_operations, plan.operations().len());
+    } else {
+        let binding = stage.binding().clone();
+        let plan = stage.plan().clone();
+        assert_eq!(
+            progress.attempts.mutations_used,
+            u32::try_from(data_failure.position().unwrap() + 1).unwrap()
+        );
+        drop(stage);
+        assert!(ExecutionStageGuard::prepare(&layout, binding, plan).is_err());
     }
     assert_eq!(driver.backend.calls, calls);
     eprintln!(

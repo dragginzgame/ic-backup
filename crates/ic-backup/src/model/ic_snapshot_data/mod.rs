@@ -3,7 +3,7 @@
 mod extents;
 mod kind;
 mod wire;
-pub(crate) use extents::{ExtentPlanningError, planned_extents};
+pub(crate) use extents::planned_extents;
 pub(crate) use kind::{DataExtent, SnapshotRegion};
 
 use super::{

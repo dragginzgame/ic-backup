@@ -1,32 +1,32 @@
 {
   "version": 1,
-  "kind": "ephemeral local integrity projection; no persisted product record",
+  "kind": "borrowed durable checksum; no persisted product record",
   "entry_points": {
     "pure": "policy::download_integrity::validate",
-    "fresh_bytes": "ops::persistence::DownloadJournalGuard::verify_durable_artifacts"
+    "fresh_bytes": "ops::persistence::DownloadJournalGuard::verify_ic_snapshot_artifact"
   },
   "owners": {
     "original_plan": "model::operation_plan::OperationPlanRecord",
     "journal": "model::download_journal::DownloadJournalRecord",
     "checksum": "model::artifacts::ArtifactChecksumRecord",
-    "byte_traversal": "ops::artifacts::checksum_directory"
+    "byte_traversal": "metadata-bound closed IC tree verification; private manifest publication also hashes the original tree"
   },
   "admission": {
     "intent": "journal intent equals the full canonical original plan digest",
-    "coverage": "exact canonical selected target set; no missing, extra or substituted targets",
-    "state": "every entry Durable with its required retained checksum",
+    "coverage": "exactly one original stage target and one artifact; missing, extra or substituted targets reject",
+    "state": "sole artifact Durable with its required retained checksum",
     "snapshot": "identity and metadata stay exactly journal-owned; original pre-capture plan cannot establish later captured ID"
   },
   "fresh_checks": [
-    "admit retained original plan by exact digest and require held journal equality before traversal",
-    "require artifact parent and every derived artifact path to be directories",
-    "stream every published tree through existing no-follow checksum implementation",
-    "recheck held root, retained original plan and journal after traversal"
+    "admit retained original plan by exact digest and require held journal equality before byte IO",
+    "require original metadata timestamp, exact raw metadata/request hashes and independently qualified token/raw-ID association",
+    "verify bounded region/chunk identities and the fixed closed tree with no-follow descriptors",
+    "recheck file/directory custody and retained original plan/journal after traversal"
   ],
   "bounds": {
     "plan_input_and_canonical_output_bytes": 1048576,
     "journal_input_and_canonical_output_bytes": 1048576,
-    "selected_targets_and_artifact_references": 1024,
+    "selected_targets_and_artifact_references": 1,
     "snapshot_token_ascii_bytes": 256
   },
   "errors": {
@@ -35,26 +35,11 @@
       "TargetSetMismatch",
       "NonDurableArtifact"
     ],
-    "ops": [
-      "JournalChanged",
-      "Journal",
-      "Plan",
-      "Policy",
-      "Persistence",
-      "Artifact",
-      "Checksum"
-    ]
-  },
-  "view": {
-    "borrowed_plan_and_journal": true,
-    "read_only": true,
-    "serde_or_default": false,
-    "freshness_flag_or_receipt": false,
-    "structural_view_alone_proves_bytes": false
+    "ops": "IcSnapshotArtifactError retains original/shape/custody/coverage/checksum and original-record failures; private manifest hashing retains DownloadIntegrityError"
   },
   "custody": {
-    "cooperating_layout_and_journal_exclusion": "existing guards; returned view borrows held journal/layout lifetime",
-    "verification": "sequential observations, not atomic tree/set snapshot",
+    "cooperating_layout_and_journal_exclusion": "existing guards; checksum borrows the admitted journal, but does not carry byte custody",
+    "verification": "sequential observations, not an atomic filesystem snapshot",
     "integration": "maintain stable byte custody and authenticate retained capture/receipt and backend transfer evidence"
   },
   "retention": [
@@ -69,5 +54,12 @@
     "no application consistency or distributed checkpoint",
     "no effect settlement, terminal proof, restart or dispatch permit"
   ],
-  "qualification": "fresh native pure-policy, no-follow filesystem and public pending-attempt/restore-reference recovery tests; no actual IC backend"
+  "qualification": "native policy, private manifest/publication and public metadata-bound source recovery checks; IC effects require separate authenticated qualification",
+  "result": {
+    "borrowed_durable_checksum": true,
+    "read_only": true,
+    "serialized_receipt": false,
+    "freshness_flag": false,
+    "structural_checksum_alone_proves_bytes": false
+  }
 }

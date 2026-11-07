@@ -1,6 +1,6 @@
 //! Independently declared original source/destination data; no simulated IC effects.
 
-use crate::tests::support::ic_snapshot_metadata::raw;
+use crate::tests::support::ic_snapshot_metadata::values;
 use crate::{
     model::{
         artifacts::ArtifactChecksumRecord,
@@ -17,9 +17,7 @@ use crate::{
     },
 };
 use ic_platform::candid::contract;
-use ic_platform::management_canister_types::{
-    ReadCanisterSnapshotMetadataResult, SnapshotDataKind, SnapshotSource,
-};
+use ic_platform::management_canister_types::{SnapshotDataKind, SnapshotSource};
 
 pub fn with_original(
     kind: SnapshotDataKind,
@@ -33,11 +31,7 @@ pub fn with_original(
 ) {
     let source = source_plan();
     let source_request = IcSnapshotMetadataRequest::new(TARGET, SOURCE_ID).unwrap();
-    let mut values: ReadCanisterSnapshotMetadataResult = ic_platform::candid::decode_one(
-        &raw("upload-source"),
-        crate::tests::support::WIRE_ORACLE_LIMITS,
-    )
-    .unwrap();
+    let mut values = values("upload-source");
     values.wasm_module_size = 1024 * 1024;
     values.wasm_memory_size = 1024 * 1024;
     values.stable_memory_size = 1024 * 1024;

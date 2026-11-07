@@ -335,7 +335,7 @@ restore fence outside the rewindable snapshot. A generic default cannot certify
 that property. Canic's custody restrictions and blob/auth service contracts
 remain their owners' qualification work; extraction must not bypass them.
 
-The [current restore-safety boundary](extraction-boundary.md#original-same-id-loadstart-coordination)
+The [current restore-safety boundary](implementation-contracts.md#async-effect-coordination)
 owns exact original source/requirement binding and fresh load/start admission.
 The complete product must preserve those checks when adding application adapters.
 
@@ -480,7 +480,7 @@ byte/attempt associations and exact rejection rules are not restated here.
 
 Retired generic restore-copy staging grants no new migration path. Preserve
 retained copies and unfinished obligations and settle them with their original
-qualified tool before adoption; see [the retirement boundary](extraction-boundary.md#retired-generic-restore-artifact-copies).
+qualified tool before adoption; see [the retirement boundary](extraction-boundary.md#retained-recovery-boundaries).
 
 ## 12. Filesystem custody, durability and retention
 

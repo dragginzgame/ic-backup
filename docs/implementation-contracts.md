@@ -2,7 +2,7 @@
 
 Read the relevant sections before changing planning, persistence, transport or
 recovery. These are current obligations. [The extraction boundary](extraction-boundary.md)
-specifies record and API details; [the design](extraction-design.md) retains
+indexes the canonical record/wire specifications; [the design](extraction-design.md) retains
 rationale and proposed complete-product behavior. It supplies no additional
 implemented recovery modes or current status ledger. Dependency selections belong
 to manifests and the lockfile, migration history to the
@@ -86,10 +86,12 @@ Preserve these bounds, strict version/field admission and canonical encodings:
 | Workflow/stage binding | 1 MiB workflow, 512 KiB binding, 1,024 predecessors; exact catalog purpose/target/ceilings and learned child plan |
 | Execution settlement | 8,192 rows, 2 MiB IO; full original plan plus exact complete chronological journal fingerprints |
 | Restore requirement | Strict immutable v1, 1 KiB IO; exact original plans and requirement/fence/revision bindings |
-| Download manifest | Existing v1 download-journal schema, 1 MiB IO, 1,024 artifacts, 256-byte tokens; exact metadata, derived paths and checksums |
+| Download manifest | Existing v1 download-journal schema, 1 MiB IO, one artifact per transfer stage, 256-byte tokens; exact metadata, derived paths and checksums |
 
 Preserve hash domains, field order, length framing and integer byte order,
-including Agent's little-endian attempt IDs. Directory framing orders relative
+including Agent's little-endian attempt IDs. Download/upload data planning
+share `model::data_stage_plan::SnapshotDataPlanningError`; bounds and check order
+remain with their existing extent, plan and learned-input owners. Directory framing orders relative
 UTF-8 path components and emits path/NUL/lowercase-digest/newline; malformed or
 duplicate rows reject through Host's `DirectoryChecksumError` with Backup's error
 projection. Declaration hashing performs no IO or durability check. Checksum JSON
@@ -103,6 +105,13 @@ admission still checks argument size, method, reply bound, receiver and target i
 that order. Immutable record reads retain root admission, journal locking, bounded
 read/model decoding, canonical-output size admission and typed validation under the
 same lock. Error/API consolidation grants no reservation or retry permission.
+
+Public durable reservations use `reserve_planned_mutation` and
+`reserve_planned_observation`; raw durable reservation helpers are crate-private.
+They require the exact retained original plan and complete original journals before
+consumption. Existing in-memory model transitions and qualified receipt recording
+remain available; receipts require independent attribution and settlement. No
+journal fields, hash domain, consumed allowance or recovery outcome changes.
 
 A physical inventory does not imply dispatch/lifecycle order. Progress requires
 exact complete original journal coverage, authority/context/request/limits and
@@ -165,6 +174,16 @@ lanes through existing progress policy; absent rows imply no never-dispatched
 custody. This sequential read performs no scheduling, artifact reads or learned
 evidence inference. Applied rows do not establish checkpoint or terminal completion.
 
+### Data-upload checkpoint encoding
+
+Data-upload checkpoint evidence hashes the NUL-terminated
+`ic-backup/ic-snapshot-data-upload/v1` domain, 64 lowercase ASCII original data-plan
+hash bytes, then each ordered 64-byte lowercase ASCII canonical upload-reply digest.
+The full original plan binds operation count/order; each reply digest binds its
+exact request and raw reply. This learned evidence grants no terminal authority.
+See the [producer](../crates/ic-backup/src/workflow/ic_snapshot_upload/data/mod.rs)
+and its [independent native check](../crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/tests/upload/plan/execution.rs).
+
 ## Filesystem publication and command custody
 
 - Keep layout lifetime exclusion, 0700 parents and 0600 regular no-follow sidecars,
@@ -180,10 +199,10 @@ evidence inference. Applied rows do not establish checkpoint or terminal complet
   creation. Intentional root aliases must be resolved at input admission. Host
   rejects NUL paths before publication effects. These checks grant no root
   confinement or immunity to namespace races.
-- Command custody preserves v1 filesystem identities, journal/operation binding,
-  the descriptor environment name and 250 ms grace/5 ms polling. Existing sidecars
-  and inherited locks bind descendant custody. Group cleanup, simulator reset or a
-  managed process exit cannot substitute for command quiescence.
+- External-command custody is retired. Command-backed restores require 0.58.11
+  and their original qualified integration. Never remove command sidecars to bypass
+  admission. In-process terminal providers must establish that no command was ever
+  dispatched; absent sidecars alone cannot establish that fact.
 - Preserve original partial/canonical trees after publication errors. Recovery
   synchronizes and admits retained evidence; it never recreates spending authority.
   Persistence guards retain no diagnostic synchronization or metrics state;
@@ -270,8 +289,9 @@ supply an authenticated outcome or automatic receipt.
 
 ## Snapshot artifacts and transfer
 
-Download journals retain immutable snapshot identity, model-owned four-state
-transitions and derived resume views under layout exclusion. Coverage retains three
+Each transfer stage retains one immutable IC snapshot artifact identity under
+layout exclusion. Model-owned transitions are Created → ChecksumVerified → Durable;
+there is no generic artifact collection, Downloaded state or resume-action projection. Coverage retains three
 contiguous nat64 region cursors and at most 1,024 chunk bits under original metadata
 request/raw evidence. Reject gaps, overlaps and duplicates without state changes;
 regions may interleave and chunks may arrive in any order. Empty regions need no
@@ -280,8 +300,10 @@ empty and supplies no partial-transfer resume or journal authority.
 
 The private v1 artifact writer retains exact metadata wire/arguments and fixed files.
 Fresh completion uses this writer. Arbitrary-directory completion attestation is
-retired; retained v1 `Downloaded` entries keep checksum verification and publication
-recovery through `verify_artifact` and `finalize_artifact`.
+retired. Old multi-artifact journals and `Downloaded` entries reject without
+rewriting; recover them with 0.58.11 and the original qualified integration before
+upgrading. Valid singleton v1 fields and hashes are unchanged. `finalize_artifact`
+retains same-contract ChecksumVerified publication recovery.
 Host FS creates no-follow named files and synchronizes the staging directory before
 returning; content still needs its own sync and qualification. Regions use Host
 `HashingWriter<File>` while Backup checks held identities, exact extents and original
@@ -298,16 +320,20 @@ Durable selection; admit exact metadata timestamp, wire/request hashes, region
 lengths and known chunk hashes. Keep both closed-tree checks, no-follow bounded
 reads and closing directory/file/journal identity/extent admission.
 
+Directory publication is internal to the artifact journal. Generic public
+publication/outcome and integrity views are retired. Pure integrity admission
+returns the sole retained checksum; public fresh source checks use original
+metadata-bound `verify_ic_snapshot_artifact`.
 Manifest publication verifies original-plan-bound bytes before create-only
 publication. Replay admits only exact retained local declarations and never reads
 trees or calls providers. Integrations that bind a local manifest for restoration
 compose the existing requirement, manifest and fresh artifact-verification owners.
 Hold both layouts and the original source journal, admit both plans/requirement
-and exact manifest before and after fresh verification, and check every original
-source artifact, including outside a restore subset. The optional join/view is
+and exact manifest before and after fresh verification, and check the original
+single artifact. Multi-canister composition retains separate per-stage journals. The optional join/view is
 retired; the underlying checks remain. Generic integration artifact digests keep
 their meaning. Preserve 1 KiB requirements,
-1 MiB IO, 1,024 artifacts and 256-byte tokens. Source/manifest verification never
+1 MiB IO, one artifact per transfer stage and 256-byte tokens. Source/manifest verification never
 changes progress, references or allowance.
 
 IC upload reads verified original artifacts directly. Generic restore-copy staging,
@@ -443,15 +469,15 @@ Status/readback, attribution and destination denials remain domain-specific.
 
 ## Terminal evidence and reference release
 
-`BackupLayoutGuard::release_restore` requires actual held layout/journal guards,
-fresh bounded terminal bytes, exact original intent and the integration's complete
-retained command-custody set. Preserve 16 MiB terminal input and 8,192-command bounds.
-Integrations authenticate their journal, settle effects/application obligations and
-qualify completeness. Applied counters alone are insufficient. Validate the complete
-command set and reject duplicate or cross-journal identities before probing custody.
-Reject missing/replaced sidecars and active descendants.
-Hold existing inode-bound quiescence guards through durable reference publication,
-recheck terminal bytes/layout and synchronize exact absent-reference replay.
+`BackupLayoutGuard::release_restore` requires held layout/journal guards, fresh
+bounded terminal bytes and exact original intent. Preserve the 16 MiB terminal
+input bound. Providers authenticate complete original application/effect obligations
+and establish exclusively in-process execution, with no external commands ever
+dispatched. Applied counters and absence of sidecars are insufficient. Any retained
+`<journal>.command-*` entry, including malformed names or symlinks, refuses before
+qualification and again before publication. Recover command-backed originals with
+0.58.11 and their original qualified integration; never remove their evidence.
+Recheck terminal bytes/layout and synchronize exact absent-reference replay.
 Providers validating a workflow journal can call
 `read_complete_execution_workflow_locked` with that same held `JournalLock`;
 the complete original stage replay retains its ordinary bounds and digest checks.

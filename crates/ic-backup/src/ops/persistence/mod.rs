@@ -2,7 +2,6 @@
 
 mod artifact_commit;
 mod attempt_journal;
-mod command_lifetime_lock;
 mod download_journal;
 mod execution_progress;
 mod execution_settlement;
@@ -16,12 +15,8 @@ mod operation_plan;
 mod restore_reference_release;
 mod restore_safety;
 
-pub use artifact_commit::{ArtifactCommitOutcome, commit_artifact_directory};
+pub(crate) use artifact_commit::commit_artifact_directory;
 pub use attempt_journal::{AttemptJournalError, AttemptJournalGuard};
-pub use command_lifetime_lock::{
-    COMMAND_CUSTODY_DESCRIPTOR_ENV, CommandLifetimeLock, CommandLifetimeLockError,
-    CommandQuiescenceGuard,
-};
 pub use download_journal::{
     DownloadIntegrityError, DownloadJournalError, DownloadJournalGuard, DownloadManifestError,
     read_download_manifest,

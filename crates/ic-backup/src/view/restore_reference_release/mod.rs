@@ -1,41 +1,28 @@
-//! Product-qualified terminal intent and its complete original command identities.
+//! Product-qualified terminal intent for an exclusively in-process restore.
 
-use crate::model::{artifacts::ArtifactChecksumRecord, command_custody::CommandCustodyRecord};
+use crate::model::artifacts::ArtifactChecksumRecord;
 
-/// Read-only result of a product's fresh complete terminal-journal validation.
+/// Fresh complete terminal evidence supplied by the owning integration.
 ///
-/// Construction declares no terminal permission by itself. The guarded release
-/// boundary checks the current journal binding and actual quiescence of every
-/// retained command, while product qualification owns complete effect/application
-/// obligations and the completeness of this original command set.
+/// The provider must authenticate the original journal, settle all application and
+/// external-effect obligations, and establish that no external commands were ever
+/// dispatched. Absence of command sidecars is insufficient. Command-backed restores
+/// require their original qualified integration; this API cannot release them.
 #[derive(Debug)]
 pub struct TerminalRestoreEvidence {
     authority: ArtifactChecksumRecord,
-    commands: Vec<CommandCustodyRecord>,
 }
 
 impl TerminalRestoreEvidence {
-    /// Declare the validated original restore intent and complete original command set.
+    /// Declare complete qualification of an exclusively in-process restore.
     #[must_use]
-    pub const fn new(
-        authority: ArtifactChecksumRecord,
-        commands: Vec<CommandCustodyRecord>,
-    ) -> Self {
-        Self {
-            authority,
-            commands,
-        }
+    pub const fn for_in_process_restore(authority: ArtifactChecksumRecord) -> Self {
+        Self { authority }
     }
 
-    /// Return immutable original intent, independently compared with retained references.
+    /// Read original intent, independently compared with retained references.
     #[must_use]
     pub const fn authority(&self) -> &ArtifactChecksumRecord {
         &self.authority
-    }
-
-    /// Return original command identities; no sidecar is created or inferred.
-    #[must_use]
-    pub fn commands(&self) -> &[CommandCustodyRecord] {
-        &self.commands
     }
 }

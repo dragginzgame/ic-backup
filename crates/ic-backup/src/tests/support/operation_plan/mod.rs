@@ -109,6 +109,18 @@ pub fn plan() -> OperationPlanRecord {
     OperationPlanRecord::new(request()).expect("original qualified plan fixture")
 }
 
+pub(crate) fn plan_for_request(
+    digest: &crate::model::artifacts::ArtifactChecksumRecord,
+) -> OperationPlanRecord {
+    let mut original = request();
+    original.operations[1] = PlannedOperationRecord::new(PlannedOperationRequest {
+        request: digest.hash().into(),
+        ..operation_request(&original.operations[1])
+    })
+    .unwrap();
+    OperationPlanRecord::new(original).unwrap()
+}
+
 pub fn hash(pair: &str) -> crate::model::artifacts::ArtifactChecksumRecord {
     crate::model::artifacts::ArtifactChecksumRecord::from_hash(&pair.repeat(32))
         .expect("opaque exact SHA-256")

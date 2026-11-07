@@ -597,7 +597,7 @@ async fn reserved_agent_status_after_discarded_stop_reply_retains_both_pending_a
     let mutation = support::payload(Method::StopCanister, &fixture.target, None);
     let observation = support::payload(Method::CanisterStatus, &fixture.target, None);
     guard
-        .reserve_observation(1, observation.digest().hash())
+        .reserve_planned_observation(&plan.digest(), 1, observation.digest().hash())
         .unwrap();
     let before = fs::read(guard.path()).unwrap();
     let request =
@@ -727,7 +727,7 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
         fs::write(root.join("allocation-reply.candid"), &ack.input().reply).unwrap();
         let list = support::payload(Method::ListCanisterSnapshots, &fixture.target, None);
         journal
-            .reserve_observation(1, list.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, list.digest().hash())
             .unwrap();
         let before = fs::read(journal.path()).unwrap();
         let request = IcSnapshotUploadObservationRequest::new(
@@ -822,7 +822,7 @@ async fn actual_agent_allocation_list_and_full_mib_readback_keep_both_originals_
     ));
     fs::write(root.join("write-reply.candid"), &ack.input().reply).unwrap();
     journal
-        .reserve_observation(1, read.digest().hash())
+        .reserve_planned_observation(&plan.digest(), 1, read.digest().hash())
         .unwrap();
     let before = fs::read(journal.path()).unwrap();
     let request = IcSnapshotUploadDataObservationRequest::new(

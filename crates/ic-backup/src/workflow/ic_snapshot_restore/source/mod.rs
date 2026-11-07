@@ -1,14 +1,13 @@
 //! Exact existing-snapshot or completed-upload provenance for one restore step.
 
+use crate::model::data_stage_plan::SnapshotDataPlanningError;
 use crate::{
     model::{
         attempt_journal::AppliedReceiptEvidence,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_request::{IcManagementMethodRecord, IcManagementRequestRecord},
         ic_snapshot_metadata::IcSnapshotMetadataRequest,
-        ic_snapshot_upload::{
-            IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, UploadCompletion,
-        },
+        ic_snapshot_upload::{IcSnapshotDataUploadPlan, UploadCompletion},
         operation_plan::OperationPlanRecord,
     },
     ops::persistence::{
@@ -170,7 +169,7 @@ pub enum IcRestoreSourceError {
     Mismatch,
     /// Original allocation/data-plan admission failed.
     #[error(transparent)]
-    Planning(#[from] IcSnapshotDataUploadPlanningError),
+    Planning(#[from] SnapshotDataPlanningError),
     /// Original stage/ancestor admission failed.
     #[error(transparent)]
     Stage(#[from] ExecutionWorkflowPersistenceError),

@@ -7,8 +7,7 @@ use crate::{
         ic_request::{IcManagementRequest, IcManagementRequestRecord},
     },
     tests::support::{
-        ic_mutation,
-        ic_observation::{self, Original},
+        ic_observation::{self, original_for_mutation as original, snapshot},
         operation_plan::hash,
         response_fault::ObservationFault,
     },
@@ -16,42 +15,6 @@ use crate::{
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::Snapshot;
 
-fn original(mutation: Method, observation: Method) -> Original {
-    let mut original = ic_mutation::original(mutation);
-    let payload = IcManagementRequestRecord::new(IcManagementRequest {
-        method: observation,
-        target: original.payload.target().into(),
-        snapshot_id: None,
-    })
-    .unwrap();
-    original
-        .journal
-        .reserve_observation(1, payload.digest().hash())
-        .unwrap();
-    Original {
-        mutation: original.payload,
-        payload,
-        plan: original.plan,
-        journal: original.journal,
-    }
-}
-fn request(original: &Original) -> IcObservationRequest<'_> {
-    IcObservationRequest::new(
-        &original.plan,
-        7,
-        &original.journal,
-        &original.mutation,
-        &original.payload,
-    )
-    .unwrap()
-}
-fn snapshot(id: &[u8]) -> Snapshot {
-    Snapshot {
-        id: id.into(),
-        taken_at_timestamp: 42,
-        total_size: 123,
-    }
-}
 fn input(
     request: &IcObservationRequest<'_>,
     snapshots: Vec<Snapshot>,
@@ -85,7 +48,7 @@ fn claims(
 #[test]
 fn explicit_new_id_attribution_preserves_exact_originals_and_spending() {
     let original = original(Method::TakeCanisterSnapshot, Method::ListCanisterSnapshots);
-    let request = request(&original);
+    let request = original.request();
     let bytes = contract::encode_one(vec![snapshot(&[1])]).unwrap();
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     // The attributed candidate need not be a singleton, first or smallest ID.
@@ -127,7 +90,7 @@ fn explicit_new_id_attribution_preserves_exact_originals_and_spending() {
 #[test]
 fn cardinality_never_infers_outcomes_and_only_new_bounded_ids_can_be_attributed() {
     let original = original(Method::TakeCanisterSnapshot, Method::ListCanisterSnapshots);
-    let request = request(&original);
+    let request = original.request();
     let bytes = contract::encode_one(vec![snapshot(&[1])]).unwrap();
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     for count in 0..=3_u8 {
@@ -207,7 +170,7 @@ fn cardinality_never_infers_outcomes_and_only_new_bounded_ids_can_be_attributed(
 #[test]
 fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
     let original = original(Method::TakeCanisterSnapshot, Method::ListCanisterSnapshots);
-    let request = request(&original);
+    let request = original.request();
     let bytes = contract::encode_one(vec![snapshot(&[1]), snapshot(&[2])]).unwrap();
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     let response = IcObservationResponse::new(input(
@@ -302,7 +265,7 @@ fn changed_identity_challenge_and_exact_raw_inventory_evidence_reject() {
 #[test]
 fn full_closed_baseline_and_original_methods_remain_mandatory() {
     let original = original(Method::TakeCanisterSnapshot, Method::ListCanisterSnapshots);
-    let request = request(&original);
+    let request = original.request();
     let bytes = contract::encode_one(vec![snapshot(&[1])]).unwrap();
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     for change in 0..3 {
@@ -351,7 +314,7 @@ fn full_closed_baseline_and_original_methods_remain_mandatory() {
         Method::LoadCanisterSnapshot,
     ] {
         let other = self::original(method, Method::ListCanisterSnapshots);
-        let other_request = self::request(&other);
+        let other_request = other.request();
         let response =
             IcObservationResponse::new(input(&other_request, vec![snapshot(&[1])])).unwrap();
         let claim = claims(&other_request, &baseline, &response);
@@ -372,13 +335,13 @@ fn full_closed_baseline_and_original_methods_remain_mandatory() {
 #[test]
 fn status_and_foreign_or_singleton_baselines_cannot_replace_original_list_evidence() {
     let original = original(Method::TakeCanisterSnapshot, Method::ListCanisterSnapshots);
-    let request = request(&original);
+    let request = original.request();
     let bytes = contract::encode_one(Vec::<Snapshot>::new()).unwrap();
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     let response = IcObservationResponse::new(input(&request, vec![])).unwrap();
     let claim = claims(&request, &baseline, &response);
     let other = self::original(Method::TakeCanisterSnapshot, Method::CanisterStatus);
-    let other_request = self::request(&other);
+    let other_request = other.request();
     let status = IcObservationResponse::new(ic_observation::input(&other_request)).unwrap();
     assert!(matches!(
         validate_capture_settlement(
@@ -431,7 +394,7 @@ fn status_and_foreign_or_singleton_baselines_cannot_replace_original_list_eviden
 #[test]
 fn association_wire_and_current_reservations_cannot_be_bypassed() {
     let original = original(Method::TakeCanisterSnapshot, Method::ListCanisterSnapshots);
-    let request = request(&original);
+    let request = original.request();
     let bytes = contract::encode_one(Vec::<Snapshot>::new()).unwrap();
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     let response = IcObservationResponse::new(input(&request, vec![])).unwrap();

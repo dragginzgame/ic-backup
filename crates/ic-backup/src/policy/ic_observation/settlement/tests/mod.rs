@@ -4,11 +4,9 @@ use crate::{
         attempt_journal::ObservationReceiptRequest,
         ic_lifecycle_reply::IcLifecycleReply,
         ic_observation::{IcObservationRequest, IcObservationResponseInput},
-        ic_request::{IcManagementRequest, IcManagementRequestRecord},
     },
     tests::support::{
-        ic_mutation,
-        ic_observation::{self, Original},
+        ic_observation::{self, original_for_mutation as original},
         operation_plan::hash,
         response_fault::ObservationFault,
     },
@@ -16,35 +14,6 @@ use crate::{
 use ic_platform::candid::contract;
 use ic_platform::management_canister_types::CanisterStatusType as Status;
 
-fn original(method: Method, observation: Method) -> Original {
-    let mut original = ic_mutation::original(method);
-    let payload = IcManagementRequestRecord::new(IcManagementRequest {
-        method: observation,
-        target: original.payload.target().into(),
-        snapshot_id: None,
-    })
-    .unwrap();
-    original
-        .journal
-        .reserve_observation(1, payload.digest().hash())
-        .unwrap();
-    Original {
-        mutation: original.payload,
-        payload,
-        plan: original.plan,
-        journal: original.journal,
-    }
-}
-fn request(original: &Original) -> IcObservationRequest<'_> {
-    IcObservationRequest::new(
-        &original.plan,
-        7,
-        &original.journal,
-        &original.mutation,
-        &original.payload,
-    )
-    .unwrap()
-}
 #[derive(contract::CandidType)]
 #[candid_path("ic_platform::candid::contract")]
 struct Settings {
@@ -102,7 +71,7 @@ fn statuses_never_infer_original_outcomes_or_change_spending() {
     ] {
         let original = original(method, Method::CanisterStatus);
         let before = original.journal.clone();
-        let request = request(&original);
+        let request = original.request();
         for status in [Status::Stopped, Status::Running, Status::Stopping] {
             let response = IcObservationResponse::new(input(&request, status, 42)).unwrap();
             let mut claim = settlement(&request, &response);
@@ -156,7 +125,7 @@ fn capture_and_inventory_have_no_lifecycle_settlement_lane() {
         (Method::LoadCanisterSnapshot, Method::ListCanisterSnapshots),
     ] {
         let original = original(method, observation);
-        let request = request(&original);
+        let request = original.request();
         let response = IcObservationResponse::new(ic_observation::input(&request)).unwrap();
         let claim = IcLifecycleSettlement {
             authority: request.authority().digest(),
@@ -186,7 +155,7 @@ fn capture_and_inventory_have_no_lifecycle_settlement_lane() {
 #[test]
 fn changed_settlement_identity_challenge_and_exact_evidence_reject() {
     let original = original(Method::LoadCanisterSnapshot, Method::CanisterStatus);
-    let request = request(&original);
+    let request = original.request();
     let response = IcObservationResponse::new(input(&request, Status::Stopped, 42)).unwrap();
     let initial = settlement(&request, &response);
     let before = original.journal.clone();
@@ -289,7 +258,7 @@ fn changed_settlement_identity_challenge_and_exact_evidence_reject() {
 #[test]
 fn existing_association_wire_and_current_journal_admission_remain_mandatory() {
     let original = original(Method::StopCanister, Method::CanisterStatus);
-    let request = request(&original);
+    let request = original.request();
     let response = IcObservationResponse::new(input(&request, Status::Stopped, 42)).unwrap();
     let claim = settlement(&request, &response);
     for fault in [

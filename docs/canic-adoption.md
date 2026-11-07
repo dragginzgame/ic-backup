@@ -294,6 +294,56 @@ coordination tracker, with its unresolved requirements explicitly retained in
 those Canic issues. That disposition does not complete application adoption or
 enable live backup creation.
 
+## 0.59 API migration
+
+Download-journal constructors now accept one request per original transfer stage.
+The v1 wire envelope retains its one-element array; existing singleton
+Created/ChecksumVerified/Durable fields and hashes are unchanged. Remove use of
+artifact collections, Downloaded recovery, `verify_artifact` and resume projections.
+Read retained state directly; use `finalize_artifact` only to reconcile the original
+checksum-verified publication. Multi-canister workflows keep per-stage journals.
+
+The command-custody model and process adapter are removed. Terminal providers use
+`TerminalRestoreEvidence::for_in_process_restore` only after authenticating the
+complete original journal and establishing that no external command was ever
+dispatched, plus all application/effect obligations. Any retained command sidecar
+refuses reference release; missing sidecars are not evidence of command-free
+execution. Recover command-backed restores and retired download records with
+**0.58.11 and the original qualified integration before upgrading**. Do not delete
+sidecars or journals, rebuild intent or reset spending to bypass admission. No
+migration is supplied. This change does not qualify Canic's own consumer adoption.
+
+Download/upload data planning now returns
+`model::data_stage_plan::SnapshotDataPlanningError`. Import it from that owner;
+replace NoDataReads/NoDataWrites with NoDataOperations and MetadataMismatch with
+OriginalMismatch. Original extent/budget checks, typed underlying errors, records
+and request hashes keep their meaning.
+
+Generic directory publication/outcome and integrity views are removed from the
+public API. Publish through the original guarded artifact journal. Pure
+`download_integrity::validate` returns a borrowed durable checksum. Replace
+`verify_durable_artifacts` with `verify_ic_snapshot_artifact` using independently
+qualified original metadata/token association. Manifest publication still performs
+fresh original-bound tree verification; replay remains record-only.
+
+Durable reservations must use `reserve_planned_mutation` and
+`reserve_planned_observation` with the exact retained plan digest. Their complete
+original-journal admission takes sequential locks: hold only the selected journal.
+Raw durable reservation helpers are crate-private. Planned methods return
+`ExecutionProgressPersistenceError`, preserving journal refusals under `Journal`.
+Model accounting transitions,
+read/open and explicit qualified receipt methods remain available, including
+Canic's observation settlement path. No schema, hash or allowance changes; recover
+missing originals with the original tool rather than synthesizing replacement plans.
+
+Host Artifacts/FS/Process select 0.75.0 and Platform selects 0.24.0. Consumers
+importing public Host error types must align with that family; the independent
+consumer checks exercise the checksum-error conversion and publication-error payload.
+Management DTOs remain exactly 0.11.0, Types 0.18.2 and Agent SDK 0.49.3. Backup
+already uses bounded Candid helpers and does not select the removed offline-key
+feature. Testkit 0.90.0 retains older development-only Host/Platform dependencies;
+they do not enter the independent production consumer graphs.
+
 ## 0.58 API migration
 
 Current inspected Canic production code uses application ingress, stage advancement

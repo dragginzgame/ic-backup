@@ -116,7 +116,7 @@ pub fn retained_readback<'layout>(
     let plan_bytes = fs::read(layout.root().join("operation-plan.json")).unwrap();
     assert_eq!(
         attempts
-            .reserve_observation(1, read.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, read.digest().hash())
             .unwrap(),
         2
     );
@@ -168,10 +168,10 @@ pub fn retained_readback<'layout>(
         (0, 0)
     );
     assert!(!progress.applied);
-    assert!(attempts.reserve_mutation().is_err());
+    assert!(attempts.reserve_planned_mutation(&plan.digest()).is_err());
     assert!(
         attempts
-            .reserve_observation(1, read.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, read.digest().hash())
             .is_err()
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), before);
@@ -280,10 +280,10 @@ pub fn retained_settled_readback(
         )
         .is_err()
     );
-    assert!(reopened.reserve_mutation().is_err());
+    assert!(reopened.reserve_planned_mutation(&plan.digest()).is_err());
     assert!(
         reopened
-            .reserve_observation(1, read.digest().hash())
+            .reserve_planned_observation(&plan.digest(), 1, read.digest().hash())
             .is_err()
     );
     assert_eq!(fs::read(path).unwrap(), retained);

@@ -2,6 +2,7 @@
 
 use crate::support::create_json_durable;
 use crate::support::read_json;
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 use ic_platform::candid::contract;
 #[expect(
     dead_code,
@@ -77,7 +78,7 @@ fn singleton_and_ambiguous_deltas_preserve_pending_capture_and_original_evidence
         .expect("original capture");
     let mut journal = AttemptJournalGuard::create(&layout, authority).expect("original journal");
     let mutation = journal
-        .reserve_mutation()
+        .reserve_planned_mutation(&plan.digest())
         .expect("reserve before any effect");
     list.validate_observation_binding(
         journal.record().expect("record").authority().binding(),
@@ -85,7 +86,7 @@ fn singleton_and_ambiguous_deltas_preserve_pending_capture_and_original_evidence
     )
     .expect("exact independent list request");
     let observation = journal
-        .reserve_observation(mutation, list.digest().hash())
+        .reserve_planned_observation(&plan.digest(), mutation, list.digest().hash())
         .expect("reserve original observation");
     let observed_wire = wire(&[2, 1]);
     let observed_path = root.join("observed-bytes.json");
@@ -153,8 +154,8 @@ fn singleton_and_ambiguous_deltas_preserve_pending_capture_and_original_evidence
     assert_eq!(original_view.pending_observation, Some(observation));
     assert_eq!(original_view.mutations_remaining, 0);
     assert_eq!(original_view.observations_remaining, 0);
-    assert!(matches!(journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(AttemptJournalRecordError::ObservationPending { attempt }))
+    assert!(matches!(journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(AttemptJournalRecordError::ObservationPending { attempt })))
         if attempt == observation));
     assert_eq!(
         fs::read(&journal_path).expect("journal preserved"),

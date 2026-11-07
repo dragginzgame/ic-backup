@@ -1,6 +1,7 @@
 //! Reserved real recovery under exclusive simulator fixture custody.
 
 use ic_backup::model::inventory_settlement::{IcInventoryAttribution, IcInventorySettlement};
+use ic_backup::ops::persistence::ExecutionProgressPersistenceError as ProgressError;
 
 mod lifecycle;
 pub(super) use lifecycle::lifecycle;
@@ -35,10 +36,10 @@ pub(super) async fn capture(
     let mut journal =
         AttemptJournalGuard::open(&layout, &plan.attempt_authority(index).unwrap()).unwrap();
     assert!(matches!(
-        journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::MutationPending { .. }
-        ))
+        )))
     ));
     assert_eq!(journal.record().unwrap().view().mutations_remaining, 0);
     fs::write(
@@ -47,7 +48,7 @@ pub(super) async fn capture(
     )
     .unwrap();
     journal
-        .reserve_observation(1, list.digest().hash())
+        .reserve_planned_observation(&plan.digest(), 1, list.digest().hash())
         .unwrap();
     let request =
         IcObservationRequest::new(&plan, index, journal.record().unwrap(), mutation, list).unwrap();
@@ -128,10 +129,10 @@ pub(super) async fn allocation(
     let mut journal =
         AttemptJournalGuard::open(&layout, &plan.attempt_authority(index).unwrap()).unwrap();
     assert!(matches!(
-        journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::MutationPending { .. }
-        ))
+        )))
     ));
     fs::write(
         layout.root().join("observation-arguments.candid"),
@@ -139,7 +140,7 @@ pub(super) async fn allocation(
     )
     .unwrap();
     journal
-        .reserve_observation(1, list.digest().hash())
+        .reserve_planned_observation(&plan.digest(), 1, list.digest().hash())
         .unwrap();
     let request = IcSnapshotUploadObservationRequest::new(
         &plan,
@@ -243,10 +244,10 @@ pub(super) async fn data(
     let mut journal =
         AttemptJournalGuard::open(&layout, &plan.attempt_authority(index).unwrap()).unwrap();
     assert!(matches!(
-        journal.reserve_mutation(),
-        Err(AttemptJournalError::Record(
+        journal.reserve_planned_mutation(&plan.digest()),
+        Err(ProgressError::Journal(AttemptJournalError::Record(
             AttemptJournalRecordError::MutationPending { .. }
-        ))
+        )))
     ));
     fs::write(
         layout.root().join("observation-arguments.candid"),
@@ -254,7 +255,7 @@ pub(super) async fn data(
     )
     .unwrap();
     journal
-        .reserve_observation(1, read.digest().hash())
+        .reserve_planned_observation(&plan.digest(), 1, read.digest().hash())
         .unwrap();
     let request = IcSnapshotUploadDataObservationRequest::new(
         &plan,

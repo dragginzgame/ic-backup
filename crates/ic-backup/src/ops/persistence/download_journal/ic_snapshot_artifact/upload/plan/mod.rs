@@ -3,12 +3,10 @@
 mod source;
 
 use super::{DownloadJournalGuard, IcSnapshotUploadArtifactError};
+use crate::model::data_stage_plan::SnapshotDataPlanningError;
 use crate::model::{
     execution_workflow::ExecutionWorkflowRecord,
-    ic_snapshot_upload::{
-        DataUploadPreparation, IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError,
-        IcSnapshotUploadReply,
-    },
+    ic_snapshot_upload::{DataUploadPreparation, IcSnapshotDataUploadPlan, IcSnapshotUploadReply},
 };
 use thiserror::Error;
 
@@ -60,7 +58,7 @@ impl DownloadJournalGuard<'_> {
 pub enum IcSnapshotDataUploadPreparationError {
     /// Exact original workflow, allocation or finite plan admission failed.
     #[error(transparent)]
-    Planning(#[from] IcSnapshotDataUploadPlanningError),
+    Planning(#[from] SnapshotDataPlanningError),
     /// Existing original guarded source/byte preparation failed.
     #[error(transparent)]
     Source(#[from] IcSnapshotUploadArtifactError),

@@ -79,12 +79,12 @@ pub(super) fn artifact_journal<'layout>(
     DownloadJournalGuard::create(
         layout,
         plan.digest().hash(),
-        vec![DownloadArtifactRequest {
+        DownloadArtifactRequest {
             canister_id: target.into(),
             snapshot_id: token.into(),
             snapshot_taken_at_timestamp: snapshot.taken_at_timestamp(),
             snapshot_total_size_bytes: snapshot.total_size(),
-        }],
+        },
     )
     .map_err(io::Error::other)
 }

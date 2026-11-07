@@ -72,9 +72,9 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
     let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();
     let mut attempts =
         AttemptJournalGuard::create(&layout, plan.attempt_authority(7).unwrap()).unwrap();
-    let mutation = attempts.reserve_mutation().unwrap();
+    let mutation = attempts.reserve_planned_mutation(&plan.digest()).unwrap();
     let observation = attempts
-        .reserve_observation(mutation, observe.digest().hash())
+        .reserve_planned_observation(&plan.digest(), mutation, observe.digest().hash())
         .unwrap();
     let attempt_bytes = fs::read(attempts.path()).unwrap();
     let attempt_view = attempts.record().unwrap().view();
@@ -100,12 +100,12 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
     let mut downloads = DownloadJournalGuard::create(
         &layout,
         plan.digest().hash(),
-        vec![DownloadArtifactRequest {
+        DownloadArtifactRequest {
             canister_id: TARGET.into(),
             snapshot_id: TOKEN.into(),
             snapshot_taken_at_timestamp: metadata.metadata().taken_at_timestamp,
             snapshot_total_size_bytes: u64::MAX,
-        }],
+        },
     )
     .unwrap();
     let mut writer = downloads
@@ -164,7 +164,10 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
     let mut attempts =
         AttemptJournalGuard::open(&layout, &original.attempt_authority(7).unwrap()).unwrap();
     let downloads = DownloadJournalGuard::open(&layout, original.digest().hash()).unwrap();
-    assert!(downloads.record().unwrap().resume_view().is_complete);
+    assert_eq!(
+        downloads.record().unwrap().artifacts()[0].state(),
+        ic_backup::model::download_journal::ArtifactStateRecord::Durable
+    );
     assert!(matches!(
         downloads.verify_ic_snapshot_artifact(&original, TOKEN, &metadata),
         Err(IcSnapshotArtifactError::Io(_))
@@ -185,10 +188,10 @@ fn durable_bytes_and_local_reopen_never_settle_capture_or_replenish_spending() {
         ),
         (0, 0)
     );
-    assert!(attempts.reserve_mutation().is_err());
+    assert!(attempts.reserve_planned_mutation(&plan.digest()).is_err());
     assert!(
         attempts
-            .reserve_observation(mutation, observe.digest().hash())
+            .reserve_planned_observation(&plan.digest(), mutation, observe.digest().hash())
             .is_err()
     );
     assert_eq!(fs::read(attempts.path()).unwrap(), attempt_bytes);

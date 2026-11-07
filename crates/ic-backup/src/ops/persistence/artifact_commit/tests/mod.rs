@@ -9,12 +9,25 @@ use crate::{
 use std::{fs, io};
 
 #[test]
-fn publishes_and_recovers_the_exact_verified_tree() {
+fn declared_tree_identity_is_verified_before_publication_and_recovery() {
     let root = temp_dir("ic-backup-artifact-commit");
     let temporary = root.join("snapshot.tmp");
     let canonical = root.join("snapshot");
-    write_tree(&temporary);
-    let expected = checksum(&temporary);
+    fs::create_dir_all(temporary.join("a")).unwrap();
+    fs::write(temporary.join("a/leaf"), b"a").unwrap();
+    fs::write(temporary.join("a-file"), b"b").unwrap();
+    let expected = ic_host_artifacts::artifact::tree::checksum_relative_files(vec![
+        (
+            "a-file".into(),
+            ic_host_artifacts::artifact::Sha256Digest::compute(b"b"),
+        ),
+        (
+            "a/leaf".into(),
+            ic_host_artifacts::artifact::Sha256Digest::compute(b"a"),
+        ),
+    ])
+    .unwrap()
+    .to_string();
 
     let published = commit_with_hook(&temporary, &canonical, &expected, |_, _| Ok(()))
         .expect("publish artifact");
@@ -26,7 +39,15 @@ fn publishes_and_recovers_the_exact_verified_tree() {
         .expect("recover artifact");
     assert_eq!(recovered, ArtifactCommitOutcome::Recovered);
     assert_eq!(checksum(&canonical), expected);
-
+    fs::write(canonical.join("a-file"), b"drifted").unwrap();
+    assert!(matches!(
+        commit_with_hook(&temporary, &canonical, &expected, |_, _| Ok(())),
+        Err(PersistenceError::Checksum(
+            crate::model::artifacts::ChecksumError::ChecksumMismatch { .. }
+        ))
+    ));
+    assert_eq!(fs::read(canonical.join("a-file")).unwrap(), b"drifted");
+    assert!(!temporary.exists());
     fs::remove_dir_all(root).expect("remove temp root");
 }
 

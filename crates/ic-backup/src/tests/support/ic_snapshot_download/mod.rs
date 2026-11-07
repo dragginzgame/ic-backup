@@ -11,9 +11,7 @@ use crate::model::{
 use ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult;
 
 pub(crate) fn values() -> ReadCanisterSnapshotMetadataResult {
-    let bytes = crate::tests::support::ic_snapshot_metadata::raw("data-source");
-    let mut values: ReadCanisterSnapshotMetadataResult =
-        ic_platform::candid::decode_one(&bytes, crate::tests::support::WIRE_ORACLE_LIMITS).unwrap();
+    let mut values = crate::tests::support::ic_snapshot_metadata::values("data-source");
     values.wasm_module_size = 64;
     values.wasm_memory_size = 64;
     values.stable_memory_size = 64;

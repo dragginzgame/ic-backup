@@ -1,15 +1,14 @@
 //! Complete finite original data uploads with explicit integration-qualified receipts.
 
 use super::{IcSnapshotUploadExecutionError, upload_snapshot_with};
+use crate::model::data_stage_plan::SnapshotDataPlanningError;
 use crate::{
     model::{
         attempt_journal::MutationReceiptRequest,
         evidence_digest::EvidenceDigest,
         execution_workflow::ExecutionStagePredecessorRecord,
         ic_mutation::IcMutationAcknowledgement,
-        ic_snapshot_upload::{
-            IcSnapshotDataUploadPlan, IcSnapshotDataUploadPlanningError, IcSnapshotUploadAttempt,
-        },
+        ic_snapshot_upload::{IcSnapshotDataUploadPlan, IcSnapshotUploadAttempt},
     },
     ops::persistence::{
         AttemptJournalError, DownloadJournalGuard, ExecutionProgressPersistenceError,
@@ -63,9 +62,9 @@ pub async fn upload_snapshot_data<E: std::error::Error + 'static>(
     upload.validate_binding(stage.binding())?;
     let plan = upload
         .plan()
-        .ok_or(IcSnapshotDataUploadPlanningError::NoDataWrites)?;
+        .ok_or(SnapshotDataPlanningError::NoDataOperations)?;
     if stage.plan() != plan {
-        return Err(IcSnapshotDataUploadPlanningError::OriginalMismatch.into());
+        return Err(SnapshotDataPlanningError::OriginalMismatch.into());
     }
     let progress = read_execution_progress(stage.layout()?, &plan.digest())?;
     if !progress.is_unattempted() {
@@ -129,7 +128,7 @@ pub enum IcSnapshotDataUploadExecutionError<E: std::error::Error + 'static> {
     AlreadyAttempted,
     /// Existing exact original data-plan/binding admission.
     #[error(transparent)]
-    Planning(#[from] IcSnapshotDataUploadPlanningError),
+    Planning(#[from] SnapshotDataPlanningError),
     /// Existing retained workflow/stage/ancestor admission.
     #[error(transparent)]
     Stage(#[from] ExecutionWorkflowPersistenceError),

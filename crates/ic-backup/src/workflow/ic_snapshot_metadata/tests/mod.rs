@@ -5,7 +5,9 @@ use crate::model::attempt_journal::AttemptBudgetRecord;
 use crate::model::operation_plan::{OperationPlanRecord, PlanBudgetRecord, PlannedOperationRecord};
 use crate::tests::support::operation_plan::{declaration, graph, operation_request};
 use crate::tests::support::provider::Provider;
-use crate::tests::support::{response_fault::ReceiptFault, retained_reply::write_synced};
+use crate::tests::support::{
+    execution_workflow::cancel_pending, response_fault::ReceiptFault, retained_reply::write_synced,
+};
 
 use crate::tests::support::ic_snapshot_download::{source, source_plan, values, workflow};
 use crate::tests::support::ready::ready;
@@ -37,6 +39,40 @@ fn prepare(
 fn provider() -> Provider<IcObservationProviderError> {
     Provider::new(Ok(contract::encode_one(values()).unwrap()))
 }
+
+struct MetadataFixture<'a> {
+    root: &'a PathBuf,
+    layout: &'a BackupLayoutGuard,
+    workflow: &'a ExecutionWorkflowRecord,
+    binding: &'a ExecutionStageBindingRecord,
+    payload: &'a IcSnapshotMetadataRequest,
+}
+
+fn with_metadata_stage(
+    check: impl FnOnce(
+        MetadataFixture<'_>,
+        ExecutionStageGuard<'_>,
+        Provider<IcObservationProviderError>,
+    ),
+) {
+    let workflow = workflow(12);
+    let payload = source();
+    let (root, layout, binding) = prepare(&workflow, &payload);
+    let stage =
+        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
+    check(
+        MetadataFixture {
+            root: &root,
+            layout: &layout,
+            workflow: &workflow,
+            binding: &binding,
+            payload: &payload,
+        },
+        stage,
+        provider(),
+    );
+}
+
 fn admit(
     _: &IcSnapshotTransferReadRequest<'_, '_>,
 ) -> impl std::future::Future<Output = Result<(), Infallible>> {
@@ -55,175 +91,158 @@ fn receipt(
 
 #[test]
 fn cancelled_qualification_retains_reply_and_original_pending_spending() {
-    let workflow = workflow(12);
-    let payload = source();
-    let (root, layout, binding) = prepare(&workflow, &payload);
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = provider();
-    let retained = root.join("retained-metadata.candid");
-    let mut future = Box::pin(read_snapshot_metadata(
-        &stage,
-        42,
-        &payload,
-        &mut provider,
-        admit,
-        async |_, response| {
-            let _file = write_synced(&retained, &response.input().reply).unwrap();
-            std::future::pending::<Result<MutationReceiptRequest, Infallible>>().await
-        },
-    ));
-    crate::tests::support::ready::assert_pending(future.as_mut());
-    assert!(
-        AttemptJournalGuard::open(
-            stage.layout().unwrap(),
-            &stage.plan().attempt_authority(42).unwrap()
-        )
-        .is_err()
-    );
-    let path = stage.layout().unwrap().root().join("attempt-42.json");
-    let before = fs::read(&path).unwrap();
-    drop(future);
-    crate::tests::support::execution_workflow::assert_pending(&stage, 42);
-    assert_eq!(provider.calls, 1);
-    assert_eq!(
-        fs::read(&retained).unwrap(),
-        contract::encode_one(values()).unwrap()
-    );
-    assert!(
-        ready(read_snapshot_metadata(
+    with_metadata_stage(|fixture, stage, mut provider| {
+        let retained = fixture.root.join("retained-metadata.candid");
+        let future = read_snapshot_metadata(
             &stage,
             42,
-            &payload,
+            fixture.payload,
             &mut provider,
             admit,
-            async |_, _| -> Result<_, Infallible> { panic!("no requalification") },
-        ))
-        .is_err()
-    );
-    assert_eq!(provider.calls, 1);
-    assert_eq!(fs::read(path).unwrap(), before);
+            async |_, response| {
+                let _file = write_synced(&retained, &response.input().reply).unwrap();
+                std::future::pending::<Result<MutationReceiptRequest, Infallible>>().await
+            },
+        );
+        let path = stage.layout().unwrap().root().join("attempt-42.json");
+        let before = cancel_pending(&stage, 42, future);
+        assert_eq!(provider.calls, 1);
+        assert_eq!(
+            fs::read(&retained).unwrap(),
+            contract::encode_one(values()).unwrap()
+        );
+        assert!(
+            ready(read_snapshot_metadata(
+                &stage,
+                42,
+                fixture.payload,
+                &mut provider,
+                admit,
+                async |_, _| -> Result<_, Infallible> { panic!("no requalification") },
+            ))
+            .is_err()
+        );
+        assert_eq!(provider.calls, 1);
+        assert_eq!(fs::read(path).unwrap(), before);
+    });
 }
 
 #[test]
 fn explicit_receipt_checkpoints_exact_metadata_and_admits_original_data_stage() {
-    let workflow = workflow(12);
-    let payload = source();
-    let (root, layout, binding) = prepare(&workflow, &payload);
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = provider();
-    let (response, predecessor) = ready(read_snapshot_metadata(
-        &stage,
-        42,
-        &payload,
-        &mut provider,
-        admit,
-        async |request, response| {
-            assert!(
-                AttemptJournalGuard::open(stage.layout().unwrap(), request.authority()).is_err()
-            );
-            // Simulate integration-owned durable original reply retention before receipt.
-            let _file = write_synced(
-                &root.join("retained-metadata.candid"),
-                &response.input().reply,
-            )
-            .unwrap();
-            Ok::<_, Infallible>(receipt(request, response))
-        },
-    ))
-    .unwrap();
-    assert_eq!(provider.calls, 1);
-    let metadata = IcSnapshotMetadataReply::decode(&payload, &response.input().reply).unwrap();
-    assert_eq!(predecessor.learned_evidence(), &metadata.digest());
-    let download = IcSnapshotDownloadPlan::new(&workflow, 7, &metadata, 32).unwrap();
-    let bound = download
-        .bind(&binding, stage.plan(), vec![predecessor])
-        .unwrap();
-    drop(stage);
-    let data_stage =
-        ExecutionStageGuard::prepare(&layout, bound, download.plan().unwrap().clone()).unwrap();
-    assert_eq!(
-        read_execution_progress(data_stage.layout().unwrap(), &data_stage.plan().digest())
-            .unwrap()
-            .attempts
-            .mutations_used,
-        0
-    );
-    drop(data_stage);
-    let (reopened, progress) =
-        ExecutionStageGuard::resume(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    assert_eq!(progress.applied_operations, 1);
-    assert!(
-        ready(read_snapshot_metadata(
-            &reopened,
+    with_metadata_stage(|fixture, stage, mut provider| {
+        let (response, predecessor) = ready(read_snapshot_metadata(
+            &stage,
             42,
-            &payload,
+            fixture.payload,
             &mut provider,
             admit,
-            async |_, _| -> Result<_, Infallible> { panic!("no reissue") }
+            async |request, response| {
+                assert!(
+                    AttemptJournalGuard::open(stage.layout().unwrap(), request.authority())
+                        .is_err()
+                );
+                // Simulate integration-owned durable original reply retention before receipt.
+                let _file = write_synced(
+                    &fixture.root.join("retained-metadata.candid"),
+                    &response.input().reply,
+                )
+                .unwrap();
+                Ok::<_, Infallible>(receipt(request, response))
+            },
         ))
-        .is_err()
-    );
-    assert_eq!(provider.calls, 1);
+        .unwrap();
+        assert_eq!(provider.calls, 1);
+        let metadata =
+            IcSnapshotMetadataReply::decode(fixture.payload, &response.input().reply).unwrap();
+        assert_eq!(predecessor.learned_evidence(), &metadata.digest());
+        let download = IcSnapshotDownloadPlan::new(fixture.workflow, 7, &metadata, 32).unwrap();
+        let bound = download
+            .bind(fixture.binding, stage.plan(), vec![predecessor])
+            .unwrap();
+        drop(stage);
+        let data_stage =
+            ExecutionStageGuard::prepare(fixture.layout, bound, download.plan().unwrap().clone())
+                .unwrap();
+        assert_eq!(
+            read_execution_progress(data_stage.layout().unwrap(), &data_stage.plan().digest())
+                .unwrap()
+                .attempts
+                .mutations_used,
+            0
+        );
+        drop(data_stage);
+        let (reopened, progress) = ExecutionStageGuard::resume(
+            fixture.layout,
+            &fixture.workflow.digest(),
+            0,
+            &fixture.binding.digest(),
+        )
+        .unwrap();
+        assert_eq!(progress.applied_operations, 1);
+        assert!(
+            ready(read_snapshot_metadata(
+                &reopened,
+                42,
+                fixture.payload,
+                &mut provider,
+                admit,
+                async |_, _| -> Result<_, Infallible> { panic!("no reissue") }
+            ))
+            .is_err()
+        );
+        assert_eq!(provider.calls, 1);
+    });
 }
 
 #[test]
 fn lost_and_malformed_metadata_stop_pending_without_checkpoint_or_data_stage() {
     for raw in [Err(IcObservationProviderError::Indeterminate), Ok(vec![])] {
-        let workflow = workflow(12);
-        let payload = source();
-        let (_, layout, binding) = prepare(&workflow, &payload);
-        let stage =
-            ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-        let mut provider = Provider::new(raw);
-        assert!(
-            ready(read_snapshot_metadata(
-                &stage,
-                42,
-                &payload,
-                &mut provider,
-                admit,
-                async |_, _| -> Result<_, Infallible> { panic!("unadmitted reply") }
-            ))
-            .is_err()
-        );
-        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
-        assert_eq!(provider.calls, 1);
-        assert!(!layout.root().join("execution-stage-7").exists());
-        assert!(
-            stage
-                .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"no outcome"))
+        with_metadata_stage(|fixture, stage, mut provider| {
+            provider.reply = raw;
+            assert!(
+                ready(read_snapshot_metadata(
+                    &stage,
+                    42,
+                    fixture.payload,
+                    &mut provider,
+                    admit,
+                    async |_, _| -> Result<_, Infallible> { panic!("unadmitted reply") }
+                ))
                 .is_err()
-        );
+            );
+            crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+            assert_eq!(provider.calls, 1);
+            assert!(!fixture.layout.root().join("execution-stage-7").exists());
+            assert!(
+                stage
+                    .reconcile_checkpoint(ArtifactChecksumRecord::from_bytes(b"no outcome"))
+                    .is_err()
+            );
+        });
     }
 }
 
 #[test]
 fn qualification_rejection_retains_returned_bytes_and_pending_original() {
-    let workflow = workflow(12);
-    let payload = source();
-    let (_, layout, binding) = prepare(&workflow, &payload);
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = provider();
-    let expected = provider.reply.clone().unwrap();
-    let Err(IcSnapshotMetadataExecutionError::AfterReply {
-        source: IcSnapshotMetadataSettlementError::Qualification(_),
-        response,
-    }) = ready(read_snapshot_metadata(
-        &stage,
-        42,
-        &payload,
-        &mut provider,
-        async |_| Ok::<_, io::Error>(()),
-        async |_, _| Err(io::Error::other("no durable authenticated originals")),
-    ))
-    else {
-        panic!("qualification must reject")
-    };
-    assert_eq!(response.input().reply, expected);
-    crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+    with_metadata_stage(|fixture, stage, mut provider| {
+        let expected = provider.reply.clone().unwrap();
+        let Err(IcSnapshotMetadataExecutionError::AfterReply {
+            source: IcSnapshotMetadataSettlementError::Qualification(_),
+            response,
+        }) = ready(read_snapshot_metadata(
+            &stage,
+            42,
+            fixture.payload,
+            &mut provider,
+            async |_| Ok::<_, io::Error>(()),
+            async |_, _| Err(io::Error::other("no durable authenticated originals")),
+        ))
+        else {
+            panic!("qualification must reject")
+        };
+        assert_eq!(response.input().reply, expected);
+        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+    });
 }
 
 #[test]
@@ -233,223 +252,204 @@ fn non_applied_wrong_attempt_and_wrong_request_receipts_cannot_checkpoint() {
         ReceiptFault::Attempt,
         ReceiptFault::Request,
     ] {
-        let workflow = workflow(12);
-        let payload = source();
-        let (_, layout, binding) = prepare(&workflow, &payload);
-        let stage =
-            ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-        let mut provider = provider();
-        let result = ready(read_snapshot_metadata(
-            &stage,
-            42,
-            &payload,
-            &mut provider,
-            admit,
-            async |request, response| {
-                let mut receipt = receipt(request, response);
-                fault.apply(&mut receipt, &"00".repeat(32));
-                Ok::<_, Infallible>(receipt)
-            },
-        ));
-        assert!(matches!(
-            result,
-            Err(IcSnapshotMetadataExecutionError::AfterReply {
-                source: IcSnapshotMetadataSettlementError::ReceiptRequired,
-                ..
-            })
-        ));
-        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+        with_metadata_stage(|fixture, stage, mut provider| {
+            let result = ready(read_snapshot_metadata(
+                &stage,
+                42,
+                fixture.payload,
+                &mut provider,
+                admit,
+                async |request, response| {
+                    let mut receipt = receipt(request, response);
+                    fault.apply(&mut receipt, &"00".repeat(32));
+                    Ok::<_, Infallible>(receipt)
+                },
+            ));
+            assert!(matches!(
+                result,
+                Err(IcSnapshotMetadataExecutionError::AfterReply {
+                    source: IcSnapshotMetadataSettlementError::ReceiptRequired,
+                    ..
+                })
+            ));
+            crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+        });
     }
 }
 
 #[test]
 fn occupied_checkpoint_retains_applied_receipt_and_reply_without_reissue() {
-    let workflow = workflow(12);
-    let payload = source();
-    let (_, layout, binding) = prepare(&workflow, &payload);
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = provider();
-    let result = ready(read_snapshot_metadata(
-        &stage,
-        42,
-        &payload,
-        &mut provider,
-        admit,
-        async |request, response| {
-            fs::write(
-                stage
-                    .layout()
-                    .unwrap()
-                    .root()
-                    .join("execution-settlement.json"),
-                b"occupied original evidence",
-            )
-            .unwrap();
-            Ok::<_, Infallible>(receipt(request, response))
-        },
-    ));
-    assert!(matches!(
-        result,
-        Err(IcSnapshotMetadataExecutionError::AfterReply {
-            source: IcSnapshotMetadataSettlementError::Checkpoint(_),
-            ..
-        })
-    ));
-    assert_eq!(
-        read_execution_progress(stage.layout().unwrap(), &stage.plan().digest())
-            .unwrap()
-            .applied_operations,
-        1
-    );
-    assert!(
-        ready(read_snapshot_metadata(
+    with_metadata_stage(|fixture, stage, mut provider| {
+        let result = ready(read_snapshot_metadata(
             &stage,
             42,
-            &payload,
+            fixture.payload,
             &mut provider,
             admit,
-            async |_, _| -> Result<_, Infallible> { panic!("no repeat") }
-        ))
-        .is_err()
-    );
-    assert_eq!(provider.calls, 1);
+            async |request, response| {
+                fs::write(
+                    stage
+                        .layout()
+                        .unwrap()
+                        .root()
+                        .join("execution-settlement.json"),
+                    b"occupied original evidence",
+                )
+                .unwrap();
+                Ok::<_, Infallible>(receipt(request, response))
+            },
+        ));
+        assert!(matches!(
+            result,
+            Err(IcSnapshotMetadataExecutionError::AfterReply {
+                source: IcSnapshotMetadataSettlementError::Checkpoint(_),
+                ..
+            })
+        ));
+        assert_eq!(
+            read_execution_progress(stage.layout().unwrap(), &stage.plan().digest())
+                .unwrap()
+                .applied_operations,
+            1
+        );
+        assert!(
+            ready(read_snapshot_metadata(
+                &stage,
+                42,
+                fixture.payload,
+                &mut provider,
+                admit,
+                async |_, _| -> Result<_, Infallible> { panic!("no repeat") }
+            ))
+            .is_err()
+        );
+        assert_eq!(provider.calls, 1);
+    });
 }
 
 #[test]
 fn changed_stage_during_qualification_retains_reply_and_pending_spending() {
-    let workflow = workflow(12);
-    let payload = source();
-    let (_, layout, binding) = prepare(&workflow, &payload);
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let path = stage.layout().unwrap().root().join("stage-binding.json");
-    let mut provider = provider();
-    let result = ready(read_snapshot_metadata(
-        &stage,
-        42,
-        &payload,
-        &mut provider,
-        admit,
-        async |request, response| {
-            fs::write(&path, b"{}").unwrap();
-            Ok::<_, Infallible>(receipt(request, response))
-        },
-    ));
-    assert!(matches!(
-        result,
-        Err(IcSnapshotMetadataExecutionError::AfterReply {
-            source: IcSnapshotMetadataSettlementError::Stage(_),
-            ..
-        })
-    ));
-    let journal: crate::model::attempt_journal::AttemptJournalRecord =
-        serde_json::from_slice(&fs::read(path.parent().unwrap().join("attempt-42.json")).unwrap())
-            .unwrap();
-    assert_eq!(journal.view().pending_mutation, Some(1));
+    with_metadata_stage(|fixture, stage, mut provider| {
+        let path = stage.layout().unwrap().root().join("stage-binding.json");
+        let result = ready(read_snapshot_metadata(
+            &stage,
+            42,
+            fixture.payload,
+            &mut provider,
+            admit,
+            async |request, response| {
+                fs::write(&path, b"{}").unwrap();
+                Ok::<_, Infallible>(receipt(request, response))
+            },
+        ));
+        assert!(matches!(
+            result,
+            Err(IcSnapshotMetadataExecutionError::AfterReply {
+                source: IcSnapshotMetadataSettlementError::Stage(_),
+                ..
+            })
+        ));
+        let journal: crate::model::attempt_journal::AttemptJournalRecord = serde_json::from_slice(
+            &fs::read(path.parent().unwrap().join("attempt-42.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(journal.view().pending_mutation, Some(1));
+    });
 }
 
 #[test]
 fn wrong_payload_sequence_missing_or_held_original_refuse_before_effects() {
-    let workflow = workflow(12);
-    let payload = source();
-    let (_, layout, binding) = prepare(&workflow, &payload);
-    let stage =
-        ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-    let mut provider = provider();
-    let wrong = IcSnapshotMetadataRequest::new(payload.target(), &[1]).unwrap();
-    for (sequence, request) in [(41, &payload), (42, &wrong)] {
-        assert!(matches!(
+    with_metadata_stage(|fixture, stage, mut provider| {
+        let wrong = IcSnapshotMetadataRequest::new(fixture.payload.target(), &[1]).unwrap();
+        for (sequence, request) in [(41, fixture.payload), (42, &wrong)] {
+            assert!(matches!(
+                ready(read_snapshot_metadata(
+                    &stage,
+                    sequence,
+                    request,
+                    &mut provider,
+                    admit,
+                    async |_, _| -> Result<_, Infallible> { panic!("no qualification") }
+                )),
+                Err(IcSnapshotMetadataExecutionError::OriginalMismatch)
+            ));
+        }
+        let journal = AttemptJournalGuard::open(
+            stage.layout().unwrap(),
+            &stage.plan().attempt_authority(42).unwrap(),
+        )
+        .unwrap();
+        assert!(
             ready(read_snapshot_metadata(
                 &stage,
-                sequence,
-                request,
+                42,
+                fixture.payload,
                 &mut provider,
                 admit,
-                async |_, _| -> Result<_, Infallible> { panic!("no qualification") }
-            )),
-            Err(IcSnapshotMetadataExecutionError::OriginalMismatch)
-        ));
-    }
-    let journal = AttemptJournalGuard::open(
-        stage.layout().unwrap(),
-        &stage.plan().attempt_authority(42).unwrap(),
-    )
-    .unwrap();
-    assert!(
-        ready(read_snapshot_metadata(
-            &stage,
-            42,
-            &payload,
-            &mut provider,
-            admit,
-            async |_, _| -> Result<_, Infallible> { panic!("held original") }
-        ))
-        .is_err()
-    );
-    let path = journal.path().clone();
-    drop(journal);
-    fs::rename(&path, path.with_extension("retained-original")).unwrap();
-    assert!(
-        ready(read_snapshot_metadata(
-            &stage,
-            42,
-            &payload,
-            &mut provider,
-            admit,
-            async |_, _| -> Result<_, Infallible> { panic!("missing original") }
-        ))
-        .is_err()
-    );
-    assert_eq!(provider.calls, 0);
+                async |_, _| -> Result<_, Infallible> { panic!("held original") }
+            ))
+            .is_err()
+        );
+        let path = journal.path().clone();
+        drop(journal);
+        fs::rename(&path, path.with_extension("retained-original")).unwrap();
+        assert!(
+            ready(read_snapshot_metadata(
+                &stage,
+                42,
+                fixture.payload,
+                &mut provider,
+                admit,
+                async |_, _| -> Result<_, Infallible> { panic!("missing original") }
+            ))
+            .is_err()
+        );
+        assert_eq!(provider.calls, 0);
+    });
 }
 
 #[test]
 fn fresh_admission_and_invalid_receipt_evidence_keep_original_pending() {
     for rejected_admission in [true, false] {
-        let workflow = workflow(12);
-        let payload = source();
-        let (_, layout, binding) = prepare(&workflow, &payload);
-        let stage =
-            ExecutionStageGuard::open(&layout, &workflow.digest(), 0, &binding.digest()).unwrap();
-        let mut provider = provider();
-        let result = ready(read_snapshot_metadata(
-            &stage,
-            42,
-            &payload,
-            &mut provider,
-            async |_| {
-                if rejected_admission {
-                    Err(io::Error::other("not freshly admitted"))
-                } else {
-                    Ok(())
-                }
-            },
-            async |request, response| {
-                let mut receipt = receipt(request, response);
-                receipt.evidence.clear();
-                Ok(receipt)
-            },
-        ));
-        if rejected_admission {
-            assert!(matches!(
-                result,
-                Err(IcSnapshotMetadataExecutionError::Read(
-                    IcSnapshotTransferReadExecutionError::Admission(_)
-                ))
+        with_metadata_stage(|fixture, stage, mut provider| {
+            let result = ready(read_snapshot_metadata(
+                &stage,
+                42,
+                fixture.payload,
+                &mut provider,
+                async |_| {
+                    if rejected_admission {
+                        Err(io::Error::other("not freshly admitted"))
+                    } else {
+                        Ok(())
+                    }
+                },
+                async |request, response| {
+                    let mut receipt = receipt(request, response);
+                    receipt.evidence.clear();
+                    Ok(receipt)
+                },
             ));
-            assert_eq!(provider.calls, 0);
-        } else {
-            assert!(matches!(
-                result,
-                Err(IcSnapshotMetadataExecutionError::AfterReply {
-                    source: IcSnapshotMetadataSettlementError::Journal(_),
-                    ..
-                })
-            ));
-            assert_eq!(provider.calls, 1);
-        }
-        crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+            if rejected_admission {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotMetadataExecutionError::Read(
+                        IcSnapshotTransferReadExecutionError::Admission(_)
+                    ))
+                ));
+                assert_eq!(provider.calls, 0);
+            } else {
+                assert!(matches!(
+                    result,
+                    Err(IcSnapshotMetadataExecutionError::AfterReply {
+                        source: IcSnapshotMetadataSettlementError::Journal(_),
+                        ..
+                    })
+                ));
+                assert_eq!(provider.calls, 1);
+            }
+            crate::tests::support::execution_workflow::assert_pending(&stage, 42);
+        });
     }
 }
 

@@ -2,7 +2,6 @@
 
 use super::*;
 use crate::tests::support::schema;
-use ic_platform::Principal;
 
 const HASH: &str = "abababababababababababababababababababababababababababababababab";
 const CANISTER: &str = "aaaaa-aa";
@@ -17,16 +16,14 @@ fn request(canister: &str, snapshot: &str) -> DownloadArtifactRequest {
 }
 
 fn journal() -> DownloadJournalRecord {
-    DownloadJournalRecord::new(HASH, vec![request(CANISTER, "snap-1")]).expect("exact selection")
+    DownloadJournalRecord::new(HASH, request(CANISTER, "snap-1")).expect("exact selection")
 }
 
 #[test]
 fn canonical_identity_and_exact_metadata_survive_roundtrip() {
-    let record = DownloadJournalRecord::new(
-        &HASH.to_uppercase(),
-        vec![request("AAAAA-AA", "Snapshot-X")],
-    )
-    .expect("normalize principal and digest");
+    let record =
+        DownloadJournalRecord::new(&HASH.to_uppercase(), request("AAAAA-AA", "Snapshot-X"))
+            .expect("normalize principal and digest");
     let entry = &record.artifacts()[0];
     assert_eq!(record.intent(), HASH);
     assert_eq!(entry.canister_id(), CANISTER);
@@ -49,112 +46,45 @@ fn canonical_identity_and_exact_metadata_survive_roundtrip() {
 }
 
 #[test]
-fn canonical_transitions_update_evidence_together_and_project_resume_actions() {
+fn exact_transitions_preserve_identity_and_cannot_reset_spending_evidence() {
     let mut record = journal();
     let checksum = ArtifactChecksumRecord::from_bytes(b"actual staged bytes");
-    for (state, action, transition) in [
-        (ArtifactStateRecord::Created, ResumeAction::Download, None),
-        (
-            ArtifactStateRecord::Downloaded,
-            ResumeAction::VerifyChecksum,
-            Some(ArtifactTransition::Downloaded),
-        ),
-        (
-            ArtifactStateRecord::ChecksumVerified,
-            ResumeAction::Finalize,
-            Some(ArtifactTransition::ChecksumVerified(checksum.clone())),
-        ),
-        (
-            ArtifactStateRecord::Durable,
-            ResumeAction::Skip,
-            Some(ArtifactTransition::Durable),
-        ),
-    ] {
-        if let Some(transition) = transition {
-            record
-                .advance(CANISTER, "snap-1", transition)
-                .expect("canonical transition");
-        }
-        let view = record.resume_view();
-        assert_eq!(view.artifacts[0].state, state);
-        assert_eq!(view.artifacts[0].resume_action, action);
-        assert_eq!(view.is_complete, state == ArtifactStateRecord::Durable);
-        assert_eq!(
-            view.pending_artifacts,
-            usize::from(state != ArtifactStateRecord::Durable)
-        );
-        let bytes = serde_json::to_vec(&record).expect("serialize exact state");
-        // Pin the v1 field order and nullable checksum independently of the serializer.
-        let checksum_json = match state {
-            ArtifactStateRecord::ChecksumVerified | ArtifactStateRecord::Durable => {
-                format!(r#"{{"algorithm":"sha256","hash":"{}"}}"#, checksum.hash())
-            }
-            _ => "null".into(),
-        };
-        let expected = format!(
-            concat!(
-                r#"{{"version":1,"intent":"{}","artifacts":[{{"canister_id":"aaaaa-aa","snapshot_id":"snap-1","snapshot_taken_at_timestamp":18446744073709551615,"snapshot_total_size_bytes":18446744073709551615,"staging_path":"artifacts/aaaaa-aa.tmp","artifact_path":"artifacts/aaaaa-aa","state":"{:?}","checksum":{}}}]}}"#
-            ),
-            HASH, state, checksum_json
-        );
-        assert_eq!(bytes, expected.as_bytes());
-
-        assert_eq!(
-            serde_json::from_slice::<DownloadJournalRecord>(&bytes).expect("decode state"),
-            record
-        );
-    }
-    assert_eq!(record.artifacts()[0].checksum(), Some(&checksum));
-}
-
-#[test]
-fn rejected_transitions_preserve_all_fields_and_never_rebind_identity() {
-    let mut record = journal();
     let original = record.clone();
-    for transition in [
-        ArtifactTransition::ChecksumVerified(ArtifactChecksumRecord::from_bytes(b"bytes")),
-        ArtifactTransition::Durable,
-    ] {
-        assert!(matches!(
-            record.advance(CANISTER, "snap-1", transition),
-            Err(DownloadJournalRecordError::InvalidStateTransition { .. })
-        ));
-        assert_eq!(record, original);
-    }
-    assert!(matches!(
-        record.advance(
-            CANISTER,
-            "different-snapshot",
-            ArtifactTransition::Downloaded
-        ),
-        Err(DownloadJournalRecordError::SnapshotMismatch)
-    ));
+    assert!(
+        record
+            .advance(CANISTER, "snap-1", ArtifactTransition::Durable)
+            .is_err()
+    );
     assert_eq!(record, original);
-    record
-        .advance(CANISTER, "snap-1", ArtifactTransition::Downloaded)
-        .expect("download");
-    let downloaded = record.clone();
-    assert!(matches!(
-        record.advance(CANISTER, "snap-1", ArtifactTransition::Downloaded),
-        Err(DownloadJournalRecordError::InvalidStateTransition { .. })
-    ));
-    assert_eq!(record, downloaded);
     record
         .advance(
             CANISTER,
             "snap-1",
-            ArtifactTransition::ChecksumVerified(ArtifactChecksumRecord::from_bytes(b"bytes")),
+            ArtifactTransition::ChecksumVerified(checksum.clone()),
         )
-        .expect("verify");
+        .unwrap();
+    let verified = record.clone();
+    assert!(
+        record
+            .advance(CANISTER, "wrong", ArtifactTransition::Durable)
+            .is_err()
+    );
+    assert_eq!(record, verified);
     record
         .advance(CANISTER, "snap-1", ArtifactTransition::Durable)
-        .expect("publish");
+        .unwrap();
+    assert_eq!(record.artifacts()[0].checksum(), Some(&checksum));
     let durable = record.clone();
-    assert!(matches!(
-        record.advance(CANISTER, "snap-1", ArtifactTransition::Downloaded),
-        Err(DownloadJournalRecordError::InvalidStateTransition { .. })
-    ));
-    assert_eq!(record, durable);
+    for transition in [
+        ArtifactTransition::Durable,
+        ArtifactTransition::ChecksumVerified(checksum),
+    ] {
+        assert!(record.advance(CANISTER, "snap-1", transition).is_err());
+        assert_eq!(record, durable);
+    }
+    let roundtrip: DownloadJournalRecord =
+        serde_json::from_slice(&serde_json::to_vec(&record).unwrap()).unwrap();
+    assert_eq!(record, roundtrip);
 }
 
 #[test]
@@ -163,10 +93,6 @@ fn current_schema_requires_every_field_and_closed_state_evidence() {
     for (state, checksum) in [
         (
             ArtifactStateRecord::Created,
-            Some(ArtifactChecksumRecord::from_bytes(b"bytes")),
-        ),
-        (
-            ArtifactStateRecord::Downloaded,
             Some(ArtifactChecksumRecord::from_bytes(b"bytes")),
         ),
         (ArtifactStateRecord::ChecksumVerified, None),
@@ -203,6 +129,7 @@ fn current_schema_requires_every_field_and_closed_state_evidence() {
         ("state", serde_json::json!("ChecksumVerified")),
         ("state", serde_json::json!("Durable")),
         ("state", serde_json::json!("Unknown")),
+        ("state", serde_json::json!("Downloaded")),
         (
             "checksum",
             serde_json::json!({"algorithm":"sha256","hash":HASH}),
@@ -228,50 +155,14 @@ fn current_schema_requires_every_field_and_closed_state_evidence() {
 }
 
 #[test]
-fn empty_duplicate_and_excessive_selections_reject_before_resume() {
-    assert!(matches!(
-        DownloadJournalRecord::new(HASH, vec![]),
-        Err(DownloadJournalRecordError::EmptyArtifacts)
-    ));
-    assert!(matches!(
-        DownloadJournalRecord::new(
-            HASH,
-            vec![request(CANISTER, "snap-1"), request("AAAAA-AA", "snap-2")]
-        ),
-        Err(DownloadJournalRecordError::DuplicateCanister)
-    ));
-    assert!(matches!(
-        DownloadJournalRecord::new(
-            HASH,
-            vec![request(CANISTER, "s"); MAX_DOWNLOAD_ARTIFACTS + 1]
-        ),
-        Err(DownloadJournalRecordError::TooManyArtifacts)
-    ));
-    let mut value = serde_json::to_value(journal()).expect("json");
-    let entry = value["artifacts"][0].clone();
-    value["artifacts"] = serde_json::json!(vec![entry; MAX_DOWNLOAD_ARTIFACTS + 1]);
-    assert!(
-        serde_json::from_value::<DownloadJournalRecord>(value)
-            .expect_err("bounded collection")
-            .to_string()
-            .contains("artifact count exceeds")
-    );
-    let requests = (0..MAX_DOWNLOAD_ARTIFACTS)
-        .map(|index| request(&Principal::from_slice(&index.to_be_bytes()).to_text(), "s"))
-        .collect();
-    let record = DownloadJournalRecord::new(HASH, requests).expect("exact count limit");
-    assert_eq!(record.artifacts().len(), MAX_DOWNLOAD_ARTIFACTS);
-    assert_eq!(
-        record.resume_view().pending_artifacts,
-        MAX_DOWNLOAD_ARTIFACTS
-    );
-    assert_eq!(
-        serde_json::from_slice::<DownloadJournalRecord>(
-            &serde_json::to_vec(&record).expect("json")
-        )
-        .expect("decode limit"),
-        record
-    );
+fn only_one_artifact_is_admitted_without_reinterpreting_old_sets() {
+    let original = serde_json::to_value(journal()).unwrap();
+    let entry = original["artifacts"][0].clone();
+    for entries in [serde_json::json!([]), serde_json::json!([entry, entry])] {
+        let mut invalid = original.clone();
+        invalid["artifacts"] = entries;
+        assert!(serde_json::from_value::<DownloadJournalRecord>(invalid).is_err());
+    }
 }
 
 #[test]
@@ -285,20 +176,17 @@ fn snapshot_tokens_are_exact_bounded_ascii_and_principals_are_validated() {
         &"x".repeat(MAX_SNAPSHOT_ID_BYTES + 1),
     ] {
         assert!(matches!(
-            DownloadJournalRecord::new(HASH, vec![request(CANISTER, value)]),
+            DownloadJournalRecord::new(HASH, request(CANISTER, value)),
             Err(DownloadJournalRecordError::InvalidSnapshotId)
         ));
     }
     assert!(
-        DownloadJournalRecord::new(
-            HASH,
-            vec![request(CANISTER, &"x".repeat(MAX_SNAPSHOT_ID_BYTES))]
-        )
-        .is_ok()
+        DownloadJournalRecord::new(HASH, request(CANISTER, &"x".repeat(MAX_SNAPSHOT_ID_BYTES)))
+            .is_ok()
     );
     for value in ["bad", "aaaaaaa", &"a".repeat(64)] {
         assert!(matches!(
-            DownloadJournalRecord::new(HASH, vec![request(value, "s")]),
+            DownloadJournalRecord::new(HASH, request(value, "s")),
             Err(DownloadJournalRecordError::InvalidPrincipal)
         ));
     }
@@ -330,22 +218,9 @@ fn download_manifest_independent_goldens_cover_states_metadata_and_exact_tokens(
             assert_ne!(record.digest(), changed.digest());
         }
     }
-}
-
-#[test]
-fn download_manifest_fingerprint_is_canonical_and_binds_each_checksum() {
-    let requests = vec![request(CANISTER, "snap-1"), request("2vxsx-fae", "snap-2")];
-    let record = DownloadJournalRecord::new(HASH, requests.clone()).unwrap();
-    let reordered = DownloadJournalRecord::new(HASH, requests.into_iter().rev().collect()).unwrap();
-    assert_eq!(record.digest(), reordered.digest());
-    let mut first = serde_json::to_value(&record).unwrap();
-    for entry in first["artifacts"].as_array_mut().unwrap() {
-        entry["state"] = serde_json::json!("Durable");
-        entry["checksum"] = serde_json::json!({"algorithm":"sha256","hash":HASH});
+    for rejected in contract["rejected_records"].as_array().unwrap() {
+        assert!(
+            serde_json::from_value::<DownloadJournalRecord>(rejected["record"].clone()).is_err()
+        );
     }
-    let mut second = first.clone();
-    second["artifacts"][1]["checksum"]["hash"] = serde_json::json!("cd".repeat(32));
-    let first: DownloadJournalRecord = serde_json::from_value(first).unwrap();
-    let second: DownloadJournalRecord = serde_json::from_value(second).unwrap();
-    assert_ne!(first.digest(), second.digest());
 }

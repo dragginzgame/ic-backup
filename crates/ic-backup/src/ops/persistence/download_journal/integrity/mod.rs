@@ -12,40 +12,28 @@ use crate::{
         artifacts::{ArtifactError, checksum_directory},
         persistence::{OperationPlanPersistenceError, PersistenceError, read_operation_plan},
     },
-    policy::download_integrity::{DownloadIntegrityPolicyError, DurableDownloadView, validate},
+    policy::download_integrity::{DownloadIntegrityPolicyError, validate},
 };
 use thiserror::Error;
 
 impl DownloadJournalGuard<'_> {
-    /// Explicitly reverify every published artifact under the retained original plan.
-    ///
-    /// Requires the exact persisted plan and unchanged held journal before and after
-    /// no-follow checksumming. The returned view borrows journal/layout custody.
-    /// This reads local bytes; ordinary journal reopen/resume remains effect-free
-    /// and does not trigger verification. Nothing is written, pruned or released.
-    ///
-    /// File checks are sequential observations, not an atomic filesystem snapshot.
-    /// Integrations retain stable byte custody and qualify complete backend transfer,
-    /// authentic snapshot/receipt identity and terminal/reference-release evidence.
-    ///
-    /// # Errors
-    /// Rejects unusable/replaced custody, missing/changed plans or journals, incomplete
-    /// exact selected coverage, non-durable entries, unsafe/missing trees and changed bytes.
-    pub fn verify_durable_artifacts<'a>(
-        &'a self,
-        plan: &'a OperationPlanRecord,
-    ) -> Result<DurableDownloadView<'a>, DownloadIntegrityError> {
+    // Manifest publication rechecks original records around its fresh tree hash.
+    pub(super) fn verify_manifest_source(
+        &self,
+        plan: &OperationPlanRecord,
+    ) -> Result<(), DownloadIntegrityError> {
         self.admit_integrity_original(plan)?;
-        let view = validate(plan, &self.record)?;
+        let expected = validate(plan, &self.record)?;
         self.check_artifact_parent()?;
-        for artifact in view.artifacts() {
-            let path = self.layout.root().join(artifact.artifact().artifact_path());
-            checksum_directory(&path)?.verify(artifact.checksum().hash())?;
-        }
+        let path = self
+            .layout
+            .root()
+            .join(self.record.artifacts()[0].artifact_path());
+        checksum_directory(&path)?.verify(expected.hash())?;
         // Detect changed retained declarations or a replaced root during traversal.
         // This does not turn individual byte reads into an atomic whole-set snapshot.
         self.admit_integrity_original(plan)?;
-        Ok(view)
+        Ok(())
     }
 
     // Both generic and IC verification re-admit original records around byte IO.

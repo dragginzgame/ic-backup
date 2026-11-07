@@ -190,12 +190,12 @@ fn immutable_download_manifest_replay_retains_unfinished_restore_references() {
     let mut journal = DownloadJournalGuard::create(
         &source_layout,
         source.digest().hash(),
-        vec![DownloadArtifactRequest {
+        DownloadArtifactRequest {
             canister_id: target.clone(),
             snapshot_id: snapshot.into(),
             snapshot_taken_at_timestamp: u64::MAX,
             snapshot_total_size_bytes: u64::MAX,
-        }],
+        },
     )
     .unwrap();
     support::finish_ic_artifact(

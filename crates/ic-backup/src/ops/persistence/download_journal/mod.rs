@@ -24,7 +24,7 @@ use crate::{
             DownloadJournalRecord, DownloadJournalRecordError, MAX_DOWNLOAD_JOURNAL_BYTES,
         },
     },
-    ops::artifacts::{ArtifactError, checksum_directory},
+    ops::artifacts::ArtifactError,
 };
 use std::{fs, io, path::PathBuf};
 use thiserror::Error;
@@ -51,12 +51,12 @@ impl<'a> DownloadJournalGuard<'a> {
     pub fn create(
         layout: &'a BackupLayoutGuard,
         intent: &str,
-        artifacts: Vec<DownloadArtifactRequest>,
+        artifact: DownloadArtifactRequest,
     ) -> Result<Self, DownloadJournalError> {
         layout.check_root()?;
         let path = layout.root().join(JOURNAL_FILE);
         let lock = JournalLock::acquire(&path)?;
-        let record = DownloadJournalRecord::new(intent, artifacts)?;
+        let record = DownloadJournalRecord::new(intent, artifact)?;
         let bytes = encode_json(&record, MAX_DOWNLOAD_JOURNAL_BYTES)?;
         create_encoded(&path, &bytes)?;
         Ok(Self {
@@ -105,37 +105,6 @@ impl<'a> DownloadJournalGuard<'a> {
     #[must_use]
     pub fn path(&self) -> PathBuf {
         self.layout.root().join(JOURNAL_FILE)
-    }
-
-    /// Recover a retained `Downloaded` entry by verifying its staged bytes.
-    ///
-    /// Fresh IC artifacts complete through `IcSnapshotArtifactWriter::finish`.
-    /// This operation preserves verification for existing v1 download journals.
-    ///
-    /// # Errors
-    /// Rejects wrong identity/state, unsafe or missing bytes and failed persistence.
-    pub fn verify_artifact(
-        &mut self,
-        canister: &str,
-        snapshot: &str,
-    ) -> Result<(), DownloadJournalError> {
-        self.check_usable()?;
-        let entry = self.record.artifact(canister, snapshot)?;
-        if entry.state() != ArtifactStateRecord::Downloaded {
-            return Err(DownloadJournalRecordError::InvalidStateTransition {
-                from: entry.state(),
-                to: ArtifactStateRecord::ChecksumVerified,
-            }
-            .into());
-        }
-        self.check_artifact_parent()?;
-        let checksum = checksum_directory(&self.layout.root().join(entry.staging_path()))?;
-        let next = self.next(
-            canister,
-            snapshot,
-            ArtifactTransition::ChecksumVerified(checksum),
-        )?;
-        self.store(next, write_encoded)
     }
 
     /// Publish exact verified bytes or adopt a matching tree after a lost response.
