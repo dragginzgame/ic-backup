@@ -14,6 +14,8 @@
 
 - Adopt Shared Tooling 0.31.3 with checksum portability and LOC scratch diagnostics;
   create caller-selected scratch parents before local validation fixture allocation.
+- Isolate tooling fixtures from enclosing release/publication settings so deployment
+  gates exercise the fixture's own configuration.
 
 ### 🧹 Cleanup
 
